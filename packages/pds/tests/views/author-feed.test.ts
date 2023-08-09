@@ -309,15 +309,16 @@ describe('pds author feed views', () => {
         headers: sc.getHeaders(alice),
       },
     )
-    const { data: imagesOnlyFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
-      {
-        actor: bob,
-        filter: 'posts_with_media',
-      },
-      {
-        headers: sc.getHeaders(alice),
-      },
-    )
+    const { data: imagesOnlyFeed } =
+      await agent.api.app.bsky.feed.getAuthorFeed(
+        {
+          actor: bob,
+          filter: 'posts_with_media',
+        },
+        {
+          headers: sc.getHeaders(alice),
+        },
+      )
 
     expect(
       mediaFeed.feed.every(({ post }) => {
