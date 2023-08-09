@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
 
       // As long as user has triage permission, we know that they are a moderator user and can see taken down profiles
       const canViewTakendownProfile =
-        'triage' in auth.credentials && auth.credentials.triage
+        auth.credentials.type === 'role' && auth.credentials.triage
       const { actor } = params
       const { db, services } = ctx
       const actorService = services.appView.actor(db)

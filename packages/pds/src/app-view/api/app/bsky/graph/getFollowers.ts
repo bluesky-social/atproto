@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const canViewTakendownProfile =
-        'triage' in auth.credentials && auth.credentials.triage
+        auth.credentials.type === 'role' && auth.credentials.triage
       const { actor, limit, cursor } = params
       const { services, db } = ctx
       const { ref } = db.db.dynamic

@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
       const { actor, limit, cursor } = params
       const requester = 'did' in auth.credentials ? auth.credentials.did : null
       const canViewTakendownProfile =
-        'triage' in auth.credentials && auth.credentials.triage
+        auth.credentials.type === 'role' && auth.credentials.triage
       const { services, db } = ctx
       const { ref } = db.db.dynamic
 

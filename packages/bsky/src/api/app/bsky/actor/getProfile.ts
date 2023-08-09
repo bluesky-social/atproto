@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
       const { actor } = params
       const requester = 'did' in auth.credentials ? auth.credentials.did : null
       const canViewTakendownProfile =
-        'triage' in auth.credentials && auth.credentials.triage
+        auth.credentials.type === 'role' && auth.credentials.triage
       const { db, services } = ctx
       const actorService = services.actor(db)
 
