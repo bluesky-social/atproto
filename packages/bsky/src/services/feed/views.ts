@@ -215,12 +215,15 @@ export class FeedViews {
       $type: 'app.bsky.feed.defs#blockedPost',
       uri: post.uri,
       blocked: true as const,
-      viewer: post.author.viewer
-        ? {
-            blockedBy: post.author.viewer?.blockedBy,
-            blocking: post.author.viewer?.blocking,
-          }
-        : undefined,
+      author: {
+        did: post.author.did,
+        viewer: post.author.viewer
+          ? {
+              blockedBy: post.author.viewer?.blockedBy,
+              blocking: post.author.viewer?.blocking,
+            }
+          : undefined,
+      },
     }
   }
 

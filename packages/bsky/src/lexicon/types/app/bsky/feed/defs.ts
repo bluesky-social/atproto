@@ -171,7 +171,7 @@ export function validateNotFoundPost(v: unknown): ValidationResult {
 export interface BlockedPost {
   uri: string
   blocked: true
-  viewer?: AppBskyActorDefs.ViewerState
+  author?: BlockedAuthor
   [k: string]: unknown
 }
 
@@ -185,6 +185,24 @@ export function isBlockedPost(v: unknown): v is BlockedPost {
 
 export function validateBlockedPost(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#blockedPost', v)
+}
+
+export interface BlockedAuthor {
+  did: string
+  viewer?: AppBskyActorDefs.ViewerState
+  [k: string]: unknown
+}
+
+export function isBlockedAuthor(v: unknown): v is BlockedAuthor {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#blockedAuthor'
+  )
+}
+
+export function validateBlockedAuthor(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#blockedAuthor', v)
 }
 
 export interface GeneratorView {

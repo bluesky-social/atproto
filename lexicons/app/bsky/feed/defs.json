@@ -88,6 +88,14 @@
       "properties": {
         "uri": {"type": "string", "format": "at-uri"},
         "blocked": {"type": "boolean", "const": true},
+        "author": {"type": "ref", "ref": "#blockedAuthor"}
+      }
+    },
+    "blockedAuthor": {
+      "type": "object",
+      "required": ["did"],
+      "properties": {
+        "did": {"type": "string", "format": "did"},
         "viewer": { "type": "ref", "ref": "app.bsky.actor.defs#viewerState" }
       }
     },

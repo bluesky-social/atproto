@@ -4488,6 +4488,20 @@ export const schemaDict = {
             type: 'boolean',
             const: true,
           },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#blockedAuthor',
+          },
+        },
+      },
+      blockedAuthor: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#viewerState',
