@@ -12,6 +12,7 @@ import SqlRepoStorage from '../../sql-repo-storage'
 import { ImageInvalidator } from '../../image/invalidator'
 import { ImageUriBuilder } from '../../image/uri'
 import { TAKEDOWN } from '../../lexicon/types/com/atproto/admin/defs'
+import { addHoursToDate } from '../../util/date'
 
 export class ModerationService {
   constructor(
@@ -263,7 +264,6 @@ export class ModerationService {
     createdBy: string
     createdAt?: Date
     durationInHours?: number
-    expiresAt?: string
   }): Promise<ModerationActionRow> {
     this.db.assertTransaction()
     const {
@@ -273,7 +273,6 @@ export class ModerationService {
       subject,
       subjectBlobCids,
       durationInHours,
-      expiresAt,
       createdAt = new Date(),
     } = info
     const createLabelVals =
@@ -341,7 +340,9 @@ export class ModerationService {
         createLabelVals,
         negateLabelVals,
         durationInHours,
-        expiresAt,
+        expiresAt: durationInHours
+          ? addHoursToDate(durationInHours, createdAt).toISOString()
+          : undefined,
         ...subjectInfo,
       })
       .returningAll()

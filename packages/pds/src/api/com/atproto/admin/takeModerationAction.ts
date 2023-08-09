@@ -10,7 +10,6 @@ import {
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
 import { getSubject, getAction } from '../moderation/util'
-import { addHoursToDate } from '../../../../util/date'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { authPassthru } from './util'
 
@@ -116,10 +115,6 @@ export default function (server: Server, ctx: AppContext) {
         const moderationTxn = services.moderation(dbTxn)
         const labelTxn = services.appView.label(dbTxn)
 
-        const expiresAt = durationInHours
-          ? addHoursToDate(durationInHours).toISOString()
-          : undefined
-
         const result = await moderationTxn.logAction({
           action: getAction(action),
           subject: getSubject(subject),
@@ -129,7 +124,6 @@ export default function (server: Server, ctx: AppContext) {
           createdBy,
           reason,
           durationInHours,
-          expiresAt,
         })
 
         if (
