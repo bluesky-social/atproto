@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { actor, limit, cursor } = params
       const viewer = auth.credentials.did
-      const db = ctx.db.db
+      const db = ctx.db.getReplica().db
       const { ref } = db.dynamic
 
       // first verify there is not a block between requester & subject

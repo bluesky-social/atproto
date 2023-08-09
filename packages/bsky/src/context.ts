@@ -1,6 +1,6 @@
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
-import { Database, Primary } from './db'
+import { DatabaseCoordinator } from './db'
 import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
@@ -12,8 +12,7 @@ import { MountedAlgos } from './feed-gen/types'
 export class AppContext {
   constructor(
     private opts: {
-      db: Database
-      dbPrimary: Database & Primary
+      db: DatabaseCoordinator
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       services: Services
@@ -24,12 +23,7 @@ export class AppContext {
     },
   ) {}
 
-  get dbPrimary(): Database & Primary {
-    return this.opts.dbPrimary
-  }
-
-  // this db is not necessarily the primary, though it could be.
-  get db(): Database {
+  get db(): DatabaseCoordinator {
     return this.opts.db
   }
 

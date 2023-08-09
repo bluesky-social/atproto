@@ -1,4 +1,4 @@
-import Database from '../../db'
+import { Database } from '../../db'
 import { ImageUriBuilder } from '../../image/uri'
 import { ProfileView } from '../../lexicon/types/app/bsky/actor/defs'
 import { List } from '../../db/tables/list'

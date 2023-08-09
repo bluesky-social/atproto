@@ -8,7 +8,8 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, input }) => {
       const { actor } = input.body
       const requester = auth.credentials.did
-      const { dbPrimary: db, services } = ctx
+      const { services } = ctx
+      const db = ctx.db.getPrimary()
 
       const subjectDid = await services.actor(db).getActorDid(actor)
       if (!subjectDid) {

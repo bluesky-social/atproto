@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import Database from '../../db'
+import { Database } from '../../db'
 import { DbRef, notSoftDeletedClause } from '../../db/util'
 import { ActorViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
