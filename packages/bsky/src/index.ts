@@ -69,9 +69,7 @@ export class BskyAppView {
     const idResolver = new IdResolver({ plcUrl: config.didPlcUrl, didCache })
 
     const imgUriBuilder = new ImageUriBuilder(
-      config.imgUriEndpoint || `${config.publicUrl}/image`,
-      config.imgUriSalt,
-      config.imgUriKey,
+      config.imgUriEndpoint || `${config.publicUrl}/img`,
     )
 
     let imgProcessingServer: ImageProcessingServer | undefined
@@ -128,7 +126,7 @@ export class BskyAppView {
     app.use(health.createRouter(ctx))
     app.use(blobResolver.createRouter(ctx))
     if (imgProcessingServer) {
-      app.use('/image', imgProcessingServer.app)
+      app.use('/img', imgProcessingServer.app)
     }
     app.use(server.xrpc.router)
     app.use(error.handler)

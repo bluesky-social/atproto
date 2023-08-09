@@ -13,6 +13,7 @@
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "start": "node dist/bin.js",
+    "start:network": "../dev-infra/with-test-redis-and-db.sh node dist/bin-network.js",
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",

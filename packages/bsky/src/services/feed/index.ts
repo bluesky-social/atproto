@@ -200,11 +200,7 @@ export class FeedService {
     return actors.reduce((acc, cur) => {
       const actorLabels = labels[cur.did] ?? []
       const avatar = cur.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
-            'avatar',
-            cur.did,
-            cur.avatarCid,
-          )
+        ? this.imgUriBuilder.getPresetUri('avatar', cur.did, cur.avatarCid)
         : undefined
       const mutedByList =
         cur.requesterMutedByList && listViews[cur.requesterMutedByList]
