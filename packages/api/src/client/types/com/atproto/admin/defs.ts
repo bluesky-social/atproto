@@ -14,7 +14,7 @@ export interface ActionView {
   id: number
   action: ActionType
   /** Indicates how long this action was meant to be in effect before automatically expiring. */
-  actionDurationInHours?: number
+  durationInHours?: number
   subject:
     | RepoRef
     | ComAtprotoRepoStrongRef.Main
@@ -46,7 +46,7 @@ export interface ActionViewDetail {
   id: number
   action: ActionType
   /** Indicates how long this action was meant to be in effect before automatically expiring. */
-  actionDurationInHours?: number
+  durationInHours?: number
   subject:
     | RepoView
     | RepoViewNotFound
@@ -80,7 +80,7 @@ export interface ActionViewCurrent {
   id: number
   action: ActionType
   /** Indicates how long this action was meant to be in effect before automatically expiring. */
-  actionDurationInHours?: number
+  durationInHours?: number
   [k: string]: unknown
 }
 

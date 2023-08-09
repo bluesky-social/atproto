@@ -27,7 +27,7 @@ export interface InputSchema {
   negateLabelVals?: string[]
   reason: string
   /** Indicates how long this action was meant to be in effect before automatically expiring. */
-  actionDurationInHours?: number
+  durationInHours?: number
   createdBy: string
   [k: string]: unknown
 }

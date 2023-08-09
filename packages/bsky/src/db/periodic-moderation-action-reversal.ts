@@ -31,9 +31,7 @@ export class PeriodicModerationActionReversal {
 
     // We shouldn't have too many actions due for reversal at any given time, so running in parallel is probably fine
     // Internally, each reversal runs within its own transaction
-    await Promise.allSettled(
-      actionsDueForReversal.map(this.revertAction.bind(this)),
-    )
+    await Promise.all(actionsDueForReversal.map(this.revertAction.bind(this)))
   }
 
   async run() {

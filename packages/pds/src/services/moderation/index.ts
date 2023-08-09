@@ -262,8 +262,8 @@ export class ModerationService {
     negateLabelVals?: string[]
     createdBy: string
     createdAt?: Date
-    actionDurationInHours?: number
-    actionExpiresAt?: string
+    durationInHours?: number
+    expiresAt?: string
   }): Promise<ModerationActionRow> {
     this.db.assertTransaction()
     const {
@@ -272,8 +272,8 @@ export class ModerationService {
       reason,
       subject,
       subjectBlobCids,
-      actionDurationInHours,
-      actionExpiresAt,
+      durationInHours,
+      expiresAt,
       createdAt = new Date(),
     } = info
     const createLabelVals =
@@ -340,8 +340,8 @@ export class ModerationService {
         createdBy,
         createLabelVals,
         negateLabelVals,
-        actionDurationInHours,
-        actionExpiresAt,
+        durationInHours,
+        expiresAt,
         ...subjectInfo,
       })
       .returningAll()
@@ -378,9 +378,9 @@ export class ModerationService {
   > {
     const actionsDueForReversal = await this.db.db
       .selectFrom('moderation_action')
-      // Get entries that have an actionDurationInHours that has passed and have not been reversed
-      .where('actionDurationInHours', 'is not', null)
-      .where('actionExpiresAt', '<', new Date().toISOString())
+      // Get entries that have an durationInHours that has passed and have not been reversed
+      .where('durationInHours', 'is not', null)
+      .where('expiresAt', '<', new Date().toISOString())
       .where('reversedAt', 'is', null)
       .select(['id', 'createdBy'])
       .execute()

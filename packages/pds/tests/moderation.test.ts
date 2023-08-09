@@ -1019,7 +1019,7 @@ describe('moderation', () => {
             },
             // Use negative value to set the expiry time in the past so that the action is automatically reversed
             // right away without having to wait n number of hours for a successful assertion
-            actionDurationInHours: -1,
+            durationInHours: -1,
           },
           {
             encoding: 'application/json',
@@ -1027,10 +1027,7 @@ describe('moderation', () => {
           },
         )
       // In the actual app, this will be instantiated and run on server startup
-      const periodicReversal = new PeriodicModerationActionReversal(
-        server.ctx.db,
-        server.ctx,
-      )
+      const periodicReversal = new PeriodicModerationActionReversal(server.ctx)
       await periodicReversal.findAndRevertDueActions()
 
       const { data: reversedAction } =

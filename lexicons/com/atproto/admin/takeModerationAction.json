@@ -39,7 +39,7 @@
               "items": { "type": "string" }
             },
             "reason": { "type": "string" },
-            "actionDurationInHours": {
+            "durationInHours": {
               "type": "integer",
               "description": "Indicates how long this action was meant to be in effect before automatically expiring."
             },

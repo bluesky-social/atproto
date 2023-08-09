@@ -84,7 +84,7 @@ export default function (server: Server, ctx: AppContext) {
         createLabelVals,
         negateLabelVals,
         subjectBlobCids,
-        actionDurationInHours,
+        durationInHours,
       } = input.body
 
       // apply access rules
@@ -116,8 +116,8 @@ export default function (server: Server, ctx: AppContext) {
         const moderationTxn = services.moderation(dbTxn)
         const labelTxn = services.appView.label(dbTxn)
 
-        const actionExpiresAt = actionDurationInHours
-          ? addHoursToDate(actionDurationInHours).toISOString()
+        const expiresAt = durationInHours
+          ? addHoursToDate(durationInHours).toISOString()
           : undefined
 
         const result = await moderationTxn.logAction({
@@ -128,8 +128,8 @@ export default function (server: Server, ctx: AppContext) {
           negateLabelVals,
           createdBy,
           reason,
-          actionDurationInHours,
-          actionExpiresAt,
+          durationInHours,
+          expiresAt,
         })
 
         if (

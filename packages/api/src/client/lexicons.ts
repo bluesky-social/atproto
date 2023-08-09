@@ -28,7 +28,7 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionType',
           },
-          actionDurationInHours: {
+          durationInHours: {
             type: 'integer',
             description:
               'Indicates how long this action was meant to be in effect before automatically expiring.',
@@ -101,7 +101,7 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionType',
           },
-          actionDurationInHours: {
+          durationInHours: {
             type: 'integer',
             description:
               'Indicates how long this action was meant to be in effect before automatically expiring.',
@@ -169,7 +169,7 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionType',
           },
-          actionDurationInHours: {
+          durationInHours: {
             type: 'integer',
             description:
               'Indicates how long this action was meant to be in effect before automatically expiring.',
@@ -1279,7 +1279,7 @@ export const schemaDict = {
               reason: {
                 type: 'string',
               },
-              actionDurationInHours: {
+              durationInHours: {
                 type: 'integer',
                 description:
                   'Indicates how long this action was meant to be in effect before automatically expiring.',
