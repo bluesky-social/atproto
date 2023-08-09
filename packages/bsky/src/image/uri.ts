@@ -8,7 +8,7 @@ export type ImagePreset =
   | 'feed_thumbnail'
   | 'feed_fullsize'
 
-const PATH_REGEX = /^\/(.+?)\/plain\/(.+?)\/(.+?)\.(.+?)$/
+const PATH_REGEX = /^\/(.+?)\/plain\/(.+?)\/(.+?)@(.+?)$/
 
 export class ImageUriBuilder {
   constructor(public endpoint: string) {}
@@ -37,7 +37,7 @@ export class ImageUriBuilder {
 
   static getPath(opts: { preset: ImagePreset } & BlobLocation) {
     const { format } = presets[opts.preset]
-    return `/${opts.preset}/plain/${opts.did}/${opts.cid.toString()}.${format}`
+    return `/${opts.preset}/plain/${opts.did}/${opts.cid.toString()}@${format}`
   }
 
   static getOptions(

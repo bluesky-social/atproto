@@ -15,27 +15,27 @@ describe('image uri builder', () => {
 
   it('generates paths.', () => {
     expect(ImageUriBuilder.getPath({ preset: 'banner', did, cid })).toEqual(
-      `/banner/plain/${did}/${cid.toString()}.jpeg`,
+      `/banner/plain/${did}/${cid.toString()}@jpeg`,
     )
     expect(
       ImageUriBuilder.getPath({ preset: 'feed_thumbnail', did, cid }),
-    ).toEqual(`/feed_thumbnail/plain/${did}/${cid.toString()}.jpeg`)
+    ).toEqual(`/feed_thumbnail/plain/${did}/${cid.toString()}@jpeg`)
   })
 
   it('generates uris.', () => {
     expect(uriBuilder.getPresetUri('banner', did, cid)).toEqual(
-      `https://example.com/img/banner/plain/${did}/${cid.toString()}.jpeg`,
+      `https://example.com/img/banner/plain/${did}/${cid.toString()}@jpeg`,
     )
     expect(
       uriBuilder.getPresetUri('feed_thumbnail', did, cid.toString()),
     ).toEqual(
-      `https://example.com/img/feed_thumbnail/plain/${did}/${cid.toString()}.jpeg`,
+      `https://example.com/img/feed_thumbnail/plain/${did}/${cid.toString()}@jpeg`,
     )
   })
 
   it('parses options.', () => {
     expect(
-      ImageUriBuilder.getOptions(`/banner/plain/${did}/${cid.toString()}.png`),
+      ImageUriBuilder.getOptions(`/banner/plain/${did}/${cid.toString()}@png`),
     ).toEqual({
       did: 'did:plc:xyz',
       cid,
@@ -48,7 +48,7 @@ describe('image uri builder', () => {
     })
     expect(
       ImageUriBuilder.getOptions(
-        `/feed_thumbnail/plain/${did}/${cid.toString()}.jpeg`,
+        `/feed_thumbnail/plain/${did}/${cid.toString()}@jpeg`,
       ),
     ).toEqual({
       did: 'did:plc:xyz',
@@ -64,20 +64,20 @@ describe('image uri builder', () => {
 
   it('errors on bad url pattern.', () => {
     expect(tryGetOptions(`/a`)).toThrow(new BadPathError('Invalid path'))
-    expect(tryGetOptions(`/banner/plain/${did}.jpeg`)).toThrow(
+    expect(tryGetOptions(`/banner/plain/${did}@jpeg`)).toThrow(
       new BadPathError('Invalid path'),
     )
   })
 
   it('errors on bad preset.', () => {
     expect(
-      tryGetOptions(`/bad_banner/plain/${did}/${cid.toString()}.jpeg`),
+      tryGetOptions(`/bad_banner/plain/${did}/${cid.toString()}@jpeg`),
     ).toThrow(new BadPathError('Invalid path: bad preset'))
   })
 
   it('errors on bad format.', () => {
     expect(
-      tryGetOptions(`/banner/plain/${did}/${cid.toString()}.webp`),
+      tryGetOptions(`/banner/plain/${did}/${cid.toString()}@webp`),
     ).toThrow(new BadPathError('Invalid path: bad format'))
   })
 
