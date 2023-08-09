@@ -388,12 +388,8 @@ export class ModerationService {
     if (info.blobCids) {
       await Promise.all(
         info.blobCids.map(async (cid) => {
-          const paths = ImageUriBuilder.commonSignedUris.map((id) => {
-            const uri = this.imgUriBuilder.getCommonSignedUri(
-              id,
-              info.uri.host,
-              cid,
-            )
+          const paths = ImageUriBuilder.presets.map((id) => {
+            const uri = this.imgUriBuilder.getPresetUri(id, info.uri.host, cid)
             return uri.replace(this.imgUriBuilder.endpoint, '')
           })
           await this.imgInvalidator.invalidate(cid.toString(), paths)
