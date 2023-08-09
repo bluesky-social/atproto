@@ -50,6 +50,8 @@ export type PostBlocksMap = {
   [uri: string]: { reply?: boolean; embed?: boolean }
 }
 
+export const kSelfLabels = Symbol('selfLabels')
+
 export type ActorInfo = {
   did: string
   handle: string
@@ -63,6 +65,8 @@ export type ActorInfo = {
     followedBy?: string
   }
   labels?: Label[]
+  // allows threading self-labels through if they are going to be applied later, i.e. when using skipLabels option.
+  [kSelfLabels]?: Label[]
 }
 export type ActorInfoMap = { [did: string]: ActorInfo }
 
