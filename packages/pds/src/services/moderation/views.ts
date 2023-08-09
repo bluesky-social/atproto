@@ -107,8 +107,7 @@ export class ModerationViews {
             ? {
                 id: action.id,
                 action: action.action,
-                durationInHours:
-                  action.durationInHours ?? undefined,
+                durationInHours: action.durationInHours ?? undefined,
               }
             : undefined,
         },
@@ -234,8 +233,7 @@ export class ModerationViews {
             ? {
                 id: action.id,
                 action: action.action,
-                durationInHours:
-                  action.durationInHours ?? undefined,
+                durationInHours: action.durationInHours ?? undefined,
               }
             : undefined,
         },
@@ -598,8 +596,7 @@ export class ModerationViews {
             ? {
                 id: action.id,
                 action: action.action,
-                durationInHours:
-                  action.durationInHours ?? undefined,
+                durationInHours: action.durationInHours ?? undefined,
               }
             : undefined,
         },
