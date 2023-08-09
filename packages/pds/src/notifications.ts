@@ -133,7 +133,6 @@ export class NotificationServer {
         },
       )
     } catch (error) {
-      console.log(error) // TODO: delete this line
       throw new Error('Failed to send push notification')
     }
   }
