@@ -249,7 +249,9 @@ describe('pds author feed views', () => {
     expect(
       allFeed.feed.some(({ post }) => {
         return (
-          isEmbedRecordWithMedia(post.embed) && isImageEmbed(post.embed?.media)
+          (isEmbedRecordWithMedia(post.embed) &&
+            isImageEmbed(post.embed?.media)) ||
+          isImageEmbed(post.embed)
         )
       }),
     ).toBeTruthy()
@@ -258,12 +260,23 @@ describe('pds author feed views', () => {
       actor: carol,
       filter: 'posts_with_media',
     })
+    const { data: imagesOnlyFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: bob,
+      filter: 'posts_with_media',
+    })
 
     expect(
       mediaFeed.feed.every(({ post }) => {
         return (
-          isEmbedRecordWithMedia(post.embed) && isImageEmbed(post.embed?.media)
+          (isEmbedRecordWithMedia(post.embed) &&
+            isImageEmbed(post.embed?.media)) ||
+          isImageEmbed(post.embed)
         )
+      }),
+    ).toBeTruthy()
+    expect(
+      imagesOnlyFeed.feed.every(({ post }) => {
+        return isImageEmbed(post.embed)
       }),
     ).toBeTruthy()
 
