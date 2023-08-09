@@ -37,7 +37,9 @@ export const authOptionalAccessOrRoleVerifier = (
   const verifyAccess = authVerifier(idResolver, { aud: cfg.serverDid })
   const verifyRole = roleVerifier(cfg)
   return async (ctx: { req: express.Request; res: express.Response }) => {
-    const defaultUnAuthorizedCredentials = { credentials: { did: null } }
+    const defaultUnAuthorizedCredentials = {
+      credentials: { did: null, type: 'unauthed' as const },
+    }
     if (!ctx.req.headers.authorization) {
       return defaultUnAuthorizedCredentials
     }
@@ -53,18 +55,13 @@ export const authOptionalAccessOrRoleVerifier = (
         },
       }
     }
-    try {
-      const result = await verifyAccess(ctx)
-      return {
-        ...result,
-        credentials: {
-          type: 'access' as const,
-          ...result.credentials,
-        },
-      }
-      // If access check fails, we can just return unauthorized credentials since this verifier is optional
-    } catch (err) {
-      return defaultUnAuthorizedCredentials
+    const result = await verifyAccess(ctx)
+    return {
+      ...result,
+      credentials: {
+        type: 'access' as const,
+        ...result.credentials,
+      },
     }
   }
 }
