@@ -2,7 +2,7 @@
 
 exports[`proxies view requests actor.getProfile 1`] = `
 Object {
-  "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+  "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
   "description": "hi im bob label_me",
   "did": "user(0)",
   "displayName": "bobby",
@@ -25,7 +25,7 @@ exports[`proxies view requests actor.getProfiles 1`] = `
 Object {
   "profiles": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
       "description": "its me!",
       "did": "user(0)",
       "displayName": "ali",
@@ -41,7 +41,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "description": "hi im bob label_me",
       "did": "user(2)",
       "displayName": "bobby",
@@ -66,7 +66,7 @@ exports[`proxies view requests actor.getSuggestions 1`] = `
 Object {
   "actors": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
       "description": "hi im bob label_me",
       "did": "user(1)",
       "displayName": "bobby",
@@ -96,7 +96,7 @@ Object {
 exports[`proxies view requests actor.searchActor 1`] = `
 Array [
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "description": "its me!",
     "did": "user(0)",
     "displayName": "ali",
@@ -109,7 +109,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
     "description": "hi im bob label_me",
     "did": "user(2)",
     "displayName": "bobby",
@@ -150,7 +150,7 @@ Array [
 exports[`proxies view requests actor.searchActorTypeahead 1`] = `
 Array [
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "did": "user(0)",
     "displayName": "ali",
     "handle": "alice.test",
@@ -160,7 +160,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
     "did": "user(2)",
     "displayName": "bobby",
     "handle": "bob.test",
@@ -200,7 +200,7 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
           "did": "user(0)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -218,8 +218,8 @@ Object {
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(1)/cids(2)@jpeg",
-              "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(1)/cids(2)@jpeg",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(1)/cids(2)@jpeg",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(1)/cids(2)@jpeg",
             },
           ],
         },
@@ -283,7 +283,7 @@ Object {
         "parent": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
-            "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
             "did": "user(2)",
             "displayName": "ali",
             "handle": "alice.test",
@@ -310,7 +310,7 @@ Object {
         "root": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
-            "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
             "did": "user(2)",
             "displayName": "ali",
             "handle": "alice.test",
@@ -339,7 +339,7 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
           "did": "user(0)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -369,7 +369,7 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
           "did": "user(0)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -411,7 +411,7 @@ Object {
   "view": Object {
     "cid": "cids(0)",
     "creator": Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(1)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
       "did": "user(1)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -437,7 +437,7 @@ Object {
     Object {
       "cid": "cids(0)",
       "creator": Object {
-        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
         "did": "user(1)",
         "displayName": "ali",
         "handle": "alice.test",
@@ -464,7 +464,7 @@ Object {
   "likes": Array [
     Object {
       "actor": Object {
-        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
         "description": "hi im bob label_me",
         "did": "user(0)",
         "displayName": "bobby",
@@ -483,7 +483,7 @@ Object {
     },
     Object {
       "actor": Object {
-        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
         "description": "its me!",
         "did": "user(2)",
         "displayName": "ali",
@@ -508,7 +508,7 @@ Object {
   "posts": Array [
     Object {
       "author": Object {
-        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
         "displayName": "bobby",
         "handle": "bob.test",
@@ -558,13 +558,13 @@ Object {
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(3)/cids(3)@jpeg",
-              "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(3)/cids(3)@jpeg",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(3)@jpeg",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(3)@jpeg",
             },
             Object {
               "alt": "tests/image/fixtures/key-alt.jpg",
-              "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(3)/cids(4)@jpeg",
-              "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(3)/cids(4)@jpeg",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(4)@jpeg",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(4)@jpeg",
             },
           ],
         },
@@ -572,7 +572,7 @@ Object {
           "record": Object {
             "$type": "app.bsky.embed.record#viewRecord",
             "author": Object {
-              "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
               "did": "user(0)",
               "displayName": "bobby",
               "handle": "bob.test",
@@ -683,7 +683,7 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1).jpeg",
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
@@ -759,13 +759,13 @@ Object {
                   "images": Array [
                     Object {
                       "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                      "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(6)/cids(4)@jpeg",
-                      "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(6)/cids(4)@jpeg",
+                      "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(4).jpeg",
+                      "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(4).jpeg",
                     },
                     Object {
                       "alt": "tests/image/fixtures/key-alt.jpg",
-                      "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(6)/cids(5)@jpeg",
-                      "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(6)/cids(5)@jpeg",
+                      "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(5).jpeg",
+                      "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(5).jpeg",
                     },
                   ],
                 },
@@ -773,7 +773,7 @@ Object {
                   "record": Object {
                     "$type": "app.bsky.embed.record#viewRecord",
                     "author": Object {
-                      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(1)@jpeg",
+                      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1).jpeg",
                       "did": "user(4)",
                       "displayName": "bobby",
                       "handle": "bob.test",
@@ -901,7 +901,7 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1).jpeg",
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
@@ -939,7 +939,7 @@ Object {
         "parent": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
-            "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(1)@jpeg",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1).jpeg",
             "did": "user(4)",
             "displayName": "bobby",
             "handle": "bob.test",
@@ -957,8 +957,8 @@ Object {
             "images": Array [
               Object {
                 "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(5)/cids(4)@jpeg",
-                "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(5)/cids(4)@jpeg",
+                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(4).jpeg",
+                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(4).jpeg",
               },
             ],
           },
@@ -1021,7 +1021,7 @@ Object {
         "root": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
-            "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1).jpeg",
             "did": "user(0)",
             "displayName": "ali",
             "handle": "alice.test",
@@ -1088,7 +1088,7 @@ Object {
         "parent": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
-            "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1).jpeg",
             "did": "user(0)",
             "displayName": "ali",
             "handle": "alice.test",
@@ -1115,7 +1115,7 @@ Object {
         "root": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
-            "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1).jpeg",
             "did": "user(0)",
             "displayName": "ali",
             "handle": "alice.test",
@@ -1144,7 +1144,7 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(1)@jpeg",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1).jpeg",
           "did": "user(4)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -1162,8 +1162,8 @@ Object {
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(5)/cids(4)@jpeg",
-              "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(5)/cids(4)@jpeg",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(4).jpeg",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(4).jpeg",
             },
           ],
         },
@@ -1227,7 +1227,7 @@ Object {
         "parent": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
-            "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1).jpeg",
             "did": "user(0)",
             "displayName": "ali",
             "handle": "alice.test",
@@ -1254,7 +1254,7 @@ Object {
         "root": Object {
           "$type": "app.bsky.feed.defs#postView",
           "author": Object {
-            "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1).jpeg",
             "did": "user(0)",
             "displayName": "ali",
             "handle": "alice.test",
@@ -1283,7 +1283,7 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1).jpeg",
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
@@ -1437,7 +1437,7 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(1)@jpeg",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1).jpeg",
           "did": "user(4)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -1467,7 +1467,7 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1).jpeg",
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
@@ -1529,13 +1529,13 @@ Object {
                   "images": Array [
                     Object {
                       "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                      "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(6)/cids(4)@jpeg",
-                      "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(6)/cids(4)@jpeg",
+                      "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(4).jpeg",
+                      "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(4).jpeg",
                     },
                     Object {
                       "alt": "tests/image/fixtures/key-alt.jpg",
-                      "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(6)/cids(5)@jpeg",
-                      "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(6)/cids(5)@jpeg",
+                      "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(5).jpeg",
+                      "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(5).jpeg",
                     },
                   ],
                 },
@@ -1543,7 +1543,7 @@ Object {
                   "record": Object {
                     "$type": "app.bsky.embed.record#viewRecord",
                     "author": Object {
-                      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(1)@jpeg",
+                      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1).jpeg",
                       "did": "user(4)",
                       "displayName": "bobby",
                       "handle": "bob.test",
@@ -1701,13 +1701,13 @@ Object {
             "images": Array [
               Object {
                 "alt": "tests/image/fixtures/key-landscape-small.jpg",
-                "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(6)/cids(4)@jpeg",
-                "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(6)/cids(4)@jpeg",
+                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(4).jpeg",
+                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(4).jpeg",
               },
               Object {
                 "alt": "tests/image/fixtures/key-alt.jpg",
-                "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(6)/cids(5)@jpeg",
-                "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(6)/cids(5)@jpeg",
+                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(5).jpeg",
+                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(5).jpeg",
               },
             ],
           },
@@ -1715,7 +1715,7 @@ Object {
             "record": Object {
               "$type": "app.bsky.embed.record#viewRecord",
               "author": Object {
-                "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(1)@jpeg",
+                "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1).jpeg",
                 "did": "user(4)",
                 "displayName": "bobby",
                 "handle": "bob.test",
@@ -1799,7 +1799,7 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(1)@jpeg",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1).jpeg",
           "did": "user(4)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -1833,7 +1833,7 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1).jpeg",
           "did": "user(0)",
           "displayName": "ali",
           "handle": "alice.test",
@@ -1878,7 +1878,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
       "description": "hi im bob label_me",
       "did": "user(1)",
       "displayName": "bobby",
@@ -1913,7 +1913,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(0)@jpeg",
       "description": "its me!",
       "did": "user(3)",
       "displayName": "ali",
@@ -1927,7 +1927,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "description": "hi im bob label_me",
     "did": "user(0)",
     "displayName": "bobby",
@@ -1960,7 +1960,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(0)@jpeg",
       "description": "its me!",
       "did": "user(3)",
       "displayName": "ali",
@@ -1974,7 +1974,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "description": "hi im bob label_me",
     "did": "user(0)",
     "displayName": "bobby",
@@ -2010,7 +2010,7 @@ Object {
     },
     Object {
       "subject": Object {
-        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(0)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(0)@jpeg",
         "description": "its me!",
         "did": "user(1)",
         "displayName": "ali",
@@ -2027,7 +2027,7 @@ Object {
   "list": Object {
     "cid": "cids(1)",
     "creator": Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(0)@jpeg",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -2060,7 +2060,7 @@ Object {
     Object {
       "cid": "cids(0)",
       "creator": Object {
-        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
         "description": "hi im bob label_me",
         "did": "user(0)",
         "displayName": "bobby",
@@ -2086,7 +2086,7 @@ Object {
     Object {
       "cid": "cids(2)",
       "creator": Object {
-        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
         "description": "hi im bob label_me",
         "did": "user(0)",
         "displayName": "bobby",
