@@ -10,6 +10,8 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {
   token: string
   platform: 'ios' | 'android' | 'web'
+  endpoint?: string
+  appId?: string
 }
 
 export type InputSchema = undefined

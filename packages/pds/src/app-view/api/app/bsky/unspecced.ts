@@ -195,7 +195,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.putNotificationPushToken({
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
-      const { token, platform } = params
+      const { token, platform, appId, endpoint } = params
       const {
         credentials: { did },
       } = auth
@@ -205,6 +205,8 @@ export default function (server: Server, ctx: AppContext) {
           did,
           platform,
           token,
+          endpoint,
+          appId,
         )
       } catch (error) {
         throw new Error('Failed to register device push notification token')

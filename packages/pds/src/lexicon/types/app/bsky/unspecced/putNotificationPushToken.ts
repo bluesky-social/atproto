@@ -11,6 +11,8 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 export interface QueryParams {
   token: string
   platform: 'ios' | 'android' | 'web'
+  endpoint?: string
+  appId?: string
 }
 
 export type InputSchema = undefined

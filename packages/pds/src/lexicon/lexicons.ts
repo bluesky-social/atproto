@@ -6479,6 +6479,12 @@ export const schemaDict = {
               type: 'string',
               enum: ['ios', 'android', 'web'],
             },
+            endpoint: {
+              type: 'string',
+            },
+            appId: {
+              type: 'string',
+            },
           },
         },
       },
