@@ -1,19 +1,18 @@
 import { wait } from '@atproto/common'
 import { Leader } from './leader'
 import { dbLogger } from '../logger'
-import Database from '.'
 import AppContext from '../context'
 
 export const MODERATION_ACTION_REVERSAL_ID = 1011
 
 export class PeriodicModerationActionReversal {
-  leader = new Leader(MODERATION_ACTION_REVERSAL_ID, this.db)
+  leader = new Leader(MODERATION_ACTION_REVERSAL_ID, this.appContext.db)
   destroyed = false
 
-  constructor(public db: Database, private appContext: AppContext) {}
+  constructor(private appContext: AppContext) {}
 
   async revertAction({ id, createdBy }: { id: number; createdBy: string }) {
-    return this.db.transaction(async (dbTxn) => {
+    return this.appContext.db.transaction(async (dbTxn) => {
       const moderationTxn = this.appContext.services.moderation(dbTxn)
       await moderationTxn.revertAction({
         id,
@@ -25,7 +24,9 @@ export class PeriodicModerationActionReversal {
   }
 
   async findAndRevertDueActions() {
-    const moderationService = this.appContext.services.moderation(this.db)
+    const moderationService = this.appContext.services.moderation(
+      this.appContext.db,
+    )
     const actionsDueForReversal =
       await moderationService.getActionsDueForReversal()
 

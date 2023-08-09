@@ -68,7 +68,7 @@ const main = async () => {
   const viewMaintainerRunning = viewMaintainer.run()
 
   const periodicModerationActionReversal = new PeriodicModerationActionReversal(
-    pds.ctx,
+    bsky.ctx,
   )
   const periodicModerationActionReversalRunning =
     periodicModerationActionReversal.run()
