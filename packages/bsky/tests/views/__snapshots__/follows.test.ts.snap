@@ -5,7 +5,7 @@ Object {
   "cursor": "0000000000000::bafycid",
   "followers": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "description": "descript-eve",
       "did": "user(2)",
       "displayName": "display-eve",
@@ -20,7 +20,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
       "description": "descript-dan",
       "did": "user(4)",
       "displayName": "display-dan",
@@ -35,7 +35,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(7)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
       "description": "descript-bob",
       "did": "user(6)",
       "displayName": "display-bob",
@@ -50,7 +50,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(9)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(9)/cids(0)@jpeg",
       "description": "descript-carol",
       "did": "user(8)",
       "displayName": "display-carol",
@@ -66,7 +66,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "description": "descript-alice",
     "did": "user(0)",
     "displayName": "display-alice",
@@ -86,7 +86,7 @@ Object {
   "cursor": "0000000000000::bafycid",
   "followers": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "description": "descript-dan",
       "did": "user(2)",
       "displayName": "display-dan",
@@ -101,7 +101,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
       "description": "descript-alice",
       "did": "user(4)",
       "displayName": "display-alice",
@@ -115,7 +115,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "description": "descript-bob",
     "did": "user(0)",
     "displayName": "display-bob",
@@ -137,7 +137,7 @@ Object {
   "cursor": "0000000000000::bafycid",
   "followers": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "description": "descript-eve",
       "did": "user(2)",
       "displayName": "display-eve",
@@ -152,7 +152,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
       "description": "descript-bob",
       "did": "user(4)",
       "displayName": "display-bob",
@@ -167,7 +167,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(7)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
       "description": "descript-alice",
       "did": "user(6)",
       "displayName": "display-alice",
@@ -181,7 +181,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "description": "descript-carol",
     "did": "user(0)",
     "displayName": "display-carol",
@@ -203,7 +203,7 @@ Object {
   "cursor": "0000000000000::bafycid",
   "followers": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "description": "descript-alice",
       "did": "user(2)",
       "displayName": "display-alice",
@@ -217,7 +217,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "description": "descript-dan",
     "did": "user(0)",
     "displayName": "display-dan",
@@ -239,7 +239,7 @@ Object {
   "cursor": "0000000000000::bafycid",
   "followers": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "description": "descript-dan",
       "did": "user(2)",
       "displayName": "display-dan",
@@ -254,7 +254,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
       "description": "descript-alice",
       "did": "user(4)",
       "displayName": "display-alice",
@@ -268,7 +268,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "description": "descript-eve",
     "did": "user(0)",
     "displayName": "display-eve",
@@ -290,7 +290,7 @@ Object {
   "cursor": "0000000000000::bafycid",
   "follows": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "description": "descript-eve",
       "did": "user(2)",
       "displayName": "display-eve",
@@ -305,7 +305,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
       "description": "descript-dan",
       "did": "user(4)",
       "displayName": "display-dan",
@@ -320,7 +320,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(7)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
       "description": "descript-carol",
       "did": "user(6)",
       "displayName": "display-carol",
@@ -335,7 +335,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(9)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(9)/cids(0)@jpeg",
       "description": "descript-bob",
       "did": "user(8)",
       "displayName": "display-bob",
@@ -351,7 +351,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "description": "descript-alice",
     "did": "user(0)",
     "displayName": "display-alice",
@@ -371,7 +371,7 @@ Object {
   "cursor": "0000000000000::bafycid",
   "follows": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "description": "descript-carol",
       "did": "user(2)",
       "displayName": "display-carol",
@@ -386,7 +386,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
       "description": "descript-alice",
       "did": "user(4)",
       "displayName": "display-alice",
@@ -400,7 +400,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "description": "descript-bob",
     "did": "user(0)",
     "displayName": "display-bob",
@@ -422,7 +422,7 @@ Object {
   "cursor": "0000000000000::bafycid",
   "follows": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "description": "descript-alice",
       "did": "user(2)",
       "displayName": "display-alice",
@@ -436,7 +436,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "description": "descript-carol",
     "did": "user(0)",
     "displayName": "display-carol",
@@ -458,7 +458,7 @@ Object {
   "cursor": "0000000000000::bafycid",
   "follows": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "description": "descript-eve",
       "did": "user(2)",
       "displayName": "display-eve",
@@ -473,7 +473,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
       "description": "descript-bob",
       "did": "user(4)",
       "displayName": "display-bob",
@@ -488,7 +488,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(7)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(7)/cids(0)@jpeg",
       "description": "descript-alice",
       "did": "user(6)",
       "displayName": "display-alice",
@@ -502,7 +502,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "description": "descript-dan",
     "did": "user(0)",
     "displayName": "display-dan",
@@ -524,7 +524,7 @@ Object {
   "cursor": "0000000000000::bafycid",
   "follows": Array [
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
       "description": "descript-carol",
       "did": "user(2)",
       "displayName": "display-carol",
@@ -539,7 +539,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(5)/cids(0)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(0)@jpeg",
       "description": "descript-alice",
       "did": "user(4)",
       "displayName": "display-alice",
@@ -553,7 +553,7 @@ Object {
     },
   ],
   "subject": Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "description": "descript-eve",
     "did": "user(0)",
     "displayName": "display-eve",

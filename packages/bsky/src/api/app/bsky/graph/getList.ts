@@ -62,7 +62,7 @@ export default function (server: Server, ctx: AppContext) {
           ? JSON.parse(listRes.descriptionFacets)
           : undefined,
         avatar: listRes.avatarCid
-          ? ctx.imgUriBuilder.getCommonSignedUri(
+          ? ctx.imgUriBuilder.getPresetUri(
               'avatar',
               listRes.creator,
               listRes.avatarCid,

@@ -3,7 +3,7 @@
 exports[`mute views fetches mutes for the logged-in user. 1`] = `
 Array [
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
     "did": "user(0)",
     "displayName": "Dr. Lowell DuBuque",
     "handle": "elta48.test",
@@ -15,7 +15,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(0)@jpeg",
     "did": "user(2)",
     "displayName": "Sally Funk",
     "handle": "magnus53.test",
@@ -36,7 +36,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(6)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(6)/cids(0)@jpeg",
     "did": "user(5)",
     "displayName": "Patrick Sawayn",
     "handle": "jeffrey-sawayn87.test",
@@ -48,7 +48,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(8)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(8)/cids(0)@jpeg",
     "did": "user(7)",
     "displayName": "Kim Streich",
     "handle": "adrienne49.test",
@@ -60,7 +60,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(10)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(10)/cids(0)@jpeg",
     "did": "user(9)",
     "displayName": "Carlton Abernathy IV",
     "handle": "aliya-hodkiewicz.test",
@@ -82,7 +82,7 @@ Array [
     },
   },
   Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(13)/cids(0)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(13)/cids(0)@jpeg",
     "description": "hi im bob label_me",
     "did": "user(12)",
     "displayName": "bobby",
@@ -103,7 +103,7 @@ Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
     "author": Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -171,7 +171,7 @@ Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
         "author": Object {
-          "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(1)@jpeg",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -189,8 +189,8 @@ Object {
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(4)/cids(4)@jpeg",
-              "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(4)/cids(4)@jpeg",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(4)@jpeg",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(4)@jpeg",
             },
           ],
         },
