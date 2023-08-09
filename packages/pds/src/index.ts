@@ -244,7 +244,7 @@ export class PDS {
       backgroundQueue,
       crawlers,
       algos,
-      notifServer: notifServer,
+      notifServer,
     })
 
     let server = createServer({
