@@ -118,18 +118,10 @@ export class ActorViews {
 
     return profileInfos.reduce((acc, cur) => {
       const avatar = cur?.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
-            'avatar',
-            cur.did,
-            cur.avatarCid,
-          )
+        ? this.imgUriBuilder.getPresetUri('avatar', cur.did, cur.avatarCid)
         : undefined
       const banner = cur?.bannerCid
-        ? this.imgUriBuilder.getCommonSignedUri(
-            'banner',
-            cur.did,
-            cur.bannerCid,
-          )
+        ? this.imgUriBuilder.getPresetUri('banner', cur.did, cur.bannerCid)
         : undefined
       const mutedByList =
         cur.requesterMutedByList && listViews[cur.requesterMutedByList]
@@ -279,11 +271,7 @@ export class ActorViews {
 
     return profileInfos.reduce((acc, cur) => {
       const avatar = cur?.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
-            'avatar',
-            cur.did,
-            cur.avatarCid,
-          )
+        ? this.imgUriBuilder.getPresetUri('avatar', cur.did, cur.avatarCid)
         : undefined
       const mutedByList =
         cur.requesterMutedByList && listViews[cur.requesterMutedByList]

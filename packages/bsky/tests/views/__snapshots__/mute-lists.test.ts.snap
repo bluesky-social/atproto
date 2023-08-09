@@ -3,7 +3,7 @@
 exports[`bsky views with mutes from mute lists embeds lists in posts 1`] = `
 Object {
   "author": Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
     "did": "user(0)",
     "displayName": "ali",
     "handle": "alice.test",
@@ -37,7 +37,7 @@ Object {
       "$type": "app.bsky.graph.defs#listView",
       "cid": "cids(4)",
       "creator": Object {
-        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
         "did": "user(0)",
         "displayName": "ali",
         "handle": "alice.test",
@@ -83,7 +83,7 @@ Object {
   "$type": "app.bsky.feed.defs#threadViewPost",
   "post": Object {
     "author": Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
       "did": "user(0)",
       "displayName": "ali",
       "handle": "alice.test",
@@ -142,7 +142,7 @@ Object {
             "following": "record(7)",
             "muted": true,
             "mutedByList": Object {
-              "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
               "cid": "cids(4)",
               "indexedAt": "1970-01-01T00:00:00.000Z",
               "name": "alice mutes",
@@ -183,7 +183,7 @@ Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {
         "author": Object {
-          "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(1)@jpeg",
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
           "did": "user(3)",
           "displayName": "bobby",
           "handle": "bob.test",
@@ -193,7 +193,7 @@ Object {
             "following": "record(10)",
             "muted": true,
             "mutedByList": Object {
-              "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
               "cid": "cids(4)",
               "indexedAt": "1970-01-01T00:00:00.000Z",
               "name": "alice mutes",
@@ -211,8 +211,8 @@ Object {
           "images": Array [
             Object {
               "alt": "tests/image/fixtures/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/image/sig()/rs:fit:2000:2000:1:0/plain/user(4)/cids(6)@jpeg",
-              "thumb": "https://bsky.public.url/image/sig()/rs:fit:1000:1000:1:0/plain/user(4)/cids(6)@jpeg",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(6)@jpeg",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(6)@jpeg",
             },
           ],
         },
@@ -284,7 +284,7 @@ Object {
     Object {
       "cid": "cids(0)",
       "creator": Object {
-        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
         "description": "its me!",
         "did": "user(0)",
         "displayName": "ali",
@@ -324,10 +324,10 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
       "cid": "cids(3)",
       "creator": Object {
-        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
         "description": "its me!",
         "did": "user(0)",
         "displayName": "ali",
@@ -377,7 +377,7 @@ Object {
     Object {
       "cid": "cids(0)",
       "creator": Object {
-        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
         "description": "its me!",
         "did": "user(0)",
         "displayName": "ali",
@@ -417,10 +417,10 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
       "cid": "cids(3)",
       "creator": Object {
-        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
         "description": "its me!",
         "did": "user(0)",
         "displayName": "ali",
@@ -477,7 +477,7 @@ Object {
           "followedBy": "record(1)",
           "muted": true,
           "mutedByList": Object {
-            "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
             "cid": "cids(0)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "name": "alice mutes",
@@ -492,7 +492,7 @@ Object {
     },
     Object {
       "subject": Object {
-        "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(3)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
         "description": "hi im bob label_me",
         "did": "user(2)",
         "displayName": "bobby",
@@ -504,7 +504,7 @@ Object {
           "following": "record(2)",
           "muted": true,
           "mutedByList": Object {
-            "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
             "cid": "cids(0)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "name": "alice mutes",
@@ -519,10 +519,10 @@ Object {
     },
   ],
   "list": Object {
-    "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
     "cid": "cids(0)",
     "creator": Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(1)/cids(1)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
       "description": "its me!",
       "did": "user(4)",
       "displayName": "ali",

@@ -65,7 +65,7 @@ export class FeedViews {
         ? JSON.parse(info.descriptionFacets)
         : undefined,
       avatar: info.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
+        ? this.imgUriBuilder.getPresetUri(
             'avatar',
             info.creator,
             info.avatarCid,
@@ -240,12 +240,12 @@ export class FeedViews {
 
   imagesEmbedView(did: string, embed: EmbedImages) {
     const imgViews = embed.images.map((img) => ({
-      thumb: this.imgUriBuilder.getCommonSignedUri(
+      thumb: this.imgUriBuilder.getPresetUri(
         'feed_thumbnail',
         did,
         img.image.ref,
       ),
-      fullsize: this.imgUriBuilder.getCommonSignedUri(
+      fullsize: this.imgUriBuilder.getPresetUri(
         'feed_fullsize',
         did,
         img.image.ref,
@@ -267,11 +267,7 @@ export class FeedViews {
         title,
         description,
         thumb: thumb
-          ? this.imgUriBuilder.getCommonSignedUri(
-              'feed_thumbnail',
-              did,
-              thumb.ref,
-            )
+          ? this.imgUriBuilder.getPresetUri('feed_thumbnail', did, thumb.ref)
           : undefined,
       },
     }
