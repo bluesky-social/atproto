@@ -255,10 +255,10 @@ export const forSnapshot = (obj: unknown) => {
         .replace(did, take(users, did))
         .replace(cid, take(cids, cid))
     }
-    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+\.[\w]+$/)) {
+    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
       // Match image urls (bsky w/ presets)
       const match = str.match(
-        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/]+)\.[\w]+$/,
+        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
       )
       if (!match) return str
       const [, did, cid] = match
