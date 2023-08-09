@@ -55,14 +55,17 @@ export class TestBsky {
 
     // shared across server, ingester, and indexer in order to share pool, avoid too many pg connections.
     const db = bsky.Database.postgres({
-      url: cfg.dbPostgresUrl,
+      url: cfg.dbPrimaryPostgresUrl,
       schema: cfg.dbPostgresSchema,
       poolSize: 10,
     })
 
+    const dbPrimary = new bsky.Database(db.db, db.cfg, true).asPrimary()
+
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
     const migrationDb = bsky.Database.postgres({
-      url: cfg.dbPostgresUrl,
+      isPrimary: true,
+      url: cfg.dbPrimaryPostgresUrl,
       schema: cfg.dbPostgresSchema,
     })
     if (cfg.migration) {
@@ -73,7 +76,12 @@ export class TestBsky {
     await migrationDb.close()
 
     // api server
-    const server = bsky.BskyAppView.create({ db, config, algos: cfg.algos })
+    const server = bsky.BskyAppView.create({
+      dbPrimary,
+      dbReplica: db,
+      config,
+      algos: cfg.algos,
+    })
     // indexer
     const ns = cfg.dbPostgresSchema
       ? await randomIntFromSeed(cfg.dbPostgresSchema, 10000)
@@ -84,7 +92,7 @@ export class TestBsky {
       didCacheMaxTTL: DAY,
       labelerDid: 'did:example:labeler',
       redisHost: cfg.redisHost,
-      dbPostgresUrl: cfg.dbPostgresUrl,
+      dbPostgresUrl: cfg.dbPrimaryPostgresUrl,
       dbPostgresSchema: cfg.dbPostgresSchema,
       didPlcUrl: cfg.plcUrl,
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
@@ -99,14 +107,14 @@ export class TestBsky {
     })
     const indexer = bsky.BskyIndexer.create({
       cfg: indexerCfg,
-      db,
+      db: dbPrimary,
       redis: indexerRedis,
     })
     // ingester
     const ingesterCfg = new bsky.IngesterConfig({
       version: '0.0.0',
       redisHost: cfg.redisHost,
-      dbPostgresUrl: cfg.dbPostgresUrl,
+      dbPostgresUrl: cfg.dbPrimaryPostgresUrl,
       dbPostgresSchema: cfg.dbPostgresSchema,
       repoProvider: cfg.repoProvider,
       ingesterNamespace: `ns${ns}`,
@@ -120,7 +128,7 @@ export class TestBsky {
     })
     const ingester = bsky.BskyIngester.create({
       cfg: ingesterCfg,
-      db,
+      db: dbPrimary,
       redis: ingesterRedis,
     })
     await ingester.start()
@@ -198,9 +206,10 @@ export async function getIngester(
     ...config,
   })
   const db = bsky.Database.postgres({
+    isPrimary: true,
     url: cfg.dbPostgresUrl,
     schema: cfg.dbPostgresSchema,
-  })
+  }).asPrimary()
   assert(cfg.redisHost)
   const redis = new bsky.Redis({
     host: cfg.redisHost,
@@ -235,9 +244,10 @@ export async function getIndexers(
     ...config,
   }
   const db = bsky.Database.postgres({
+    isPrimary: true,
     url: baseCfg.dbPostgresUrl,
     schema: baseCfg.dbPostgresSchema,
-  })
+  }).asPrimary()
   assert(baseCfg.redisHost)
   const redis = new bsky.Redis({
     host: baseCfg.redisHost,

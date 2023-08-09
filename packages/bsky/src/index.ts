@@ -7,7 +7,7 @@ import cors from 'cors'
 import compression from 'compression'
 import { IdResolver } from '@atproto/identity'
 import API, { health, blobResolver } from './api'
-import Database from './db'
+import Database, { Primary } from './db'
 import * as error from './error'
 import { dbLogger, loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
@@ -49,12 +49,14 @@ export class BskyAppView {
   }
 
   static create(opts: {
-    db: Database
+    dbPrimary: Database & Primary
+    dbReplica?: Database
     config: ServerConfig
     imgInvalidator?: ImageInvalidator
     algos?: MountedAlgos
   }): BskyAppView {
-    const { db, config, algos = {} } = opts
+    const { dbReplica, dbPrimary, config, algos = {} } = opts
+    const db = dbReplica || dbPrimary
     let maybeImgInvalidator = opts.imgInvalidator
     const app = express()
     app.use(cors())
@@ -62,7 +64,7 @@ export class BskyAppView {
     app.use(compression())
 
     const didCache = new DidSqlCache(
-      db,
+      dbPrimary,
       config.didCacheStaleTTL,
       config.didCacheMaxTTL,
     )
@@ -104,6 +106,7 @@ export class BskyAppView {
 
     const ctx = new AppContext({
       db,
+      dbPrimary,
       cfg: config,
       services,
       imgUriBuilder,

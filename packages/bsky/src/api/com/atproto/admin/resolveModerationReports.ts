@@ -5,7 +5,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.resolveModerationReports({
     auth: ctx.roleVerifier,
     handler: async ({ input }) => {
-      const { db, services } = ctx
+      const { dbPrimary: db, services } = ctx
       const moderationService = services.moderation(db)
       const { actionId, reportIds, createdBy } = input.body
 

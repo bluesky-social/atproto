@@ -4,7 +4,7 @@ import { CID } from 'multiformats/cid'
 import { IdResolver } from '@atproto/identity'
 import { Labeler } from './base'
 import { keywordLabeling } from './util'
-import Database from '../db'
+import Database, { Primary } from '../db'
 import { BackgroundQueue } from '../background'
 import { IndexerConfig } from '../indexer/config'
 import { retryHttp } from '../util/retry'
@@ -20,7 +20,7 @@ export class HiveLabeler extends Labeler {
   constructor(
     hiveApiKey: string,
     protected ctx: {
-      db: Database
+      db: Database & Primary
       idResolver: IdResolver
       cfg: IndexerConfig
       backgroundQueue: BackgroundQueue

@@ -17,12 +17,13 @@ const main = async () => {
   // await migrateDb.migrateToLatestOrThrow()
   // await migrateDb.close()
   const db = Database.postgres({
+    isPrimary: true,
     url: env.dbPostgresUrl,
     schema: env.dbPostgresSchema,
     poolSize: env.dbPoolSize,
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
-  })
+  }).asPrimary()
   const cfg = IndexerConfig.readEnv({
     version: env.version,
     dbPostgresUrl: env.dbPostgresUrl,

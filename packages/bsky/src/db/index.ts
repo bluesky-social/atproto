@@ -25,7 +25,11 @@ export class Database {
   txEvt = new EventEmitter() as TxnEmitter
   destroyed = false
 
-  constructor(public db: DatabaseSchema, public cfg: PgConfig) {
+  constructor(
+    public db: DatabaseSchema,
+    public cfg: PgConfig,
+    public isPrimary = false,
+  ) {
     this.migrator = new Migrator({
       db,
       migrationTableSchema: cfg.schema,
@@ -65,16 +69,20 @@ export class Database {
       dialect: new PostgresDialect({ pool }),
     })
 
-    return new Database(db, { dialect: 'pg', pool, schema, url })
+    return new Database(
+      db,
+      { dialect: 'pg', pool, schema, url },
+      opts.isPrimary,
+    )
   }
 
-  async transaction<T>(fn: (db: Database) => Promise<T>): Promise<T> {
+  async transaction<T>(fn: (db: this) => Promise<T>): Promise<T> {
     const leakyTxPlugin = new LeakyTxPlugin()
     const { dbTxn, txRes } = await this.db
       .withPlugin(leakyTxPlugin)
       .transaction()
       .execute(async (txn) => {
-        const dbTxn = new Database(txn, this.cfg)
+        const dbTxn = new Database(txn, this.cfg, this.isPrimary) as this // preserve Primary constraint
         const txRes = await fn(dbTxn)
           .catch(async (err) => {
             leakyTxPlugin.endTx()
@@ -108,6 +116,15 @@ export class Database {
 
   assertNotTransaction() {
     assert(!this.isTransaction, 'Cannot be in a transaction')
+  }
+
+  assertPrimary(): asserts this is Primary {
+    assert(this.isPrimary, 'Primary db required')
+  }
+
+  asPrimary() {
+    this.assertPrimary()
+    return this
   }
 
   async close(): Promise<void> {
@@ -185,6 +202,10 @@ export class Database {
   }
 }
 
+export interface Primary {
+  isPrimary: true
+}
+
 export default Database
 
 export type PgConfig = {
@@ -201,6 +222,7 @@ type PgOptions = {
   poolSize?: number
   poolMaxUses?: number
   poolIdleTimeoutMs?: number
+  isPrimary?: boolean
 }
 
 class LeakyTxPlugin implements KyselyPlugin {

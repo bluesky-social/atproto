@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.roleVerifier,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
-      const { db, services } = ctx
+      const { dbPrimary: db, services } = ctx
       const moderationService = services.moderation(db)
       const {
         action,

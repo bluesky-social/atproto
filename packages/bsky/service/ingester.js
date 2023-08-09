@@ -14,12 +14,13 @@ const main = async () => {
   const env = getEnv()
   // No migration: ingester only uses pg for a lock
   const db = Database.postgres({
+    isPrimary: true,
     url: env.dbPostgresUrl,
     schema: env.dbPostgresSchema,
     poolSize: env.dbPoolSize,
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
-  })
+  }).asPrimary()
   const cfg = IngesterConfig.readEnv({
     version: env.version,
     dbPostgresUrl: env.dbPostgresUrl,

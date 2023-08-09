@@ -1,6 +1,6 @@
 import { IdResolver } from '@atproto/identity'
 import { BackgroundQueue } from '../background'
-import Database from '../db'
+import Database, { Primary } from '../db'
 import DidSqlCache from '../did-cache'
 import log from './logger'
 import { dbLogger } from '../logger'
@@ -26,7 +26,7 @@ export class BskyIndexer {
   }
 
   static create(opts: {
-    db: Database
+    db: Database & Primary
     redis: Redis
     cfg: IndexerConfig
   }): BskyIndexer {

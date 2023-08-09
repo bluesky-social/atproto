@@ -7,13 +7,17 @@ import { AddressInfo } from 'net'
 const run = async () => {
   const cfg = ServerConfig.readEnv()
   const db = Database.postgres({
-    url: cfg.dbPostgresUrl,
+    isPrimary: true,
+    url: cfg.dbPrimaryPostgresUrl,
     schema: cfg.dbPostgresSchema,
-  })
+  }).asPrimary()
 
   await db.migrateToLatestOrThrow()
 
-  const bsky = BskyAppView.create({ db, config: cfg })
+  const bsky = BskyAppView.create({
+    dbPrimary: db,
+    config: cfg,
+  })
   await bsky.start()
 
   const { address, port, family } = bsky.server?.address() as AddressInfo
