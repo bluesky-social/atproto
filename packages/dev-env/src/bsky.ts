@@ -39,9 +39,6 @@ export class TestBsky {
       didPlcUrl: cfg.plcUrl,
       publicUrl: 'https://bsky.public.url',
       serverDid,
-      imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
-      imgUriKey:
-        'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
       didCacheStaleTTL: HOUR,
       didCacheMaxTTL: DAY,
       ...cfg,
@@ -126,6 +123,9 @@ export class TestBsky {
     await ingester.start()
     await indexer.start()
     await server.start()
+
+    // we refresh label cache by hand in `processAll` instead of on a timer
+    server.ctx.labelCache.stop()
     return new TestBsky(url, port, server, indexer, ingester)
   }
 
@@ -164,13 +164,14 @@ export class TestBsky {
     await Promise.all([
       this.ctx.backgroundQueue.processAll(),
       this.indexer.ctx.backgroundQueue.processAll(),
+      this.ctx.labelCache.fullRefresh(),
     ])
   }
 
   async close() {
     await this.server.destroy({ skipDb: true })
     await this.ingester.destroy({ skipDb: true })
-    this.indexer.destroy() // closes shared db
+    await this.indexer.destroy() // closes shared db
   }
 }
 

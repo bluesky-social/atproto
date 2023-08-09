@@ -63,18 +63,20 @@ export class LabelService {
 
   async getLabelsForUris(
     subjects: string[],
-    includeNeg?: boolean,
-    skipCache?: boolean,
+    opts?: {
+      includeNeg?: boolean
+      skipCache?: boolean
+    },
   ): Promise<Labels> {
     if (subjects.length < 1) return {}
-    const res = skipCache
+    const res = opts?.skipCache
       ? await this.db.db
           .selectFrom('label')
           .where('label.uri', 'in', subjects)
-          .if(!includeNeg, (qb) => qb.where('neg', '=', 0))
+          .if(!opts?.includeNeg, (qb) => qb.where('neg', '=', 0))
           .selectAll()
           .execute()
-      : this.cache.forSubjects(subjects, includeNeg)
+      : this.cache.forSubjects(subjects, opts?.includeNeg)
     return res.reduce((acc, cur) => {
       acc[cur.uri] ??= []
       acc[cur.uri].push({
@@ -89,8 +91,10 @@ export class LabelService {
   // gets labels for any record. when did is present, combine labels for both did & profile record.
   async getLabelsForSubjects(
     subjects: string[],
-    includeNeg?: boolean,
-    skipCache?: boolean,
+    opts?: {
+      includeNeg?: boolean
+      skipCache?: boolean
+    },
   ): Promise<Labels> {
     if (subjects.length < 1) return {}
     const expandedSubjects = subjects.flatMap((subject) => {
@@ -102,11 +106,7 @@ export class LabelService {
       }
       return subject
     })
-    const labels = await this.getLabelsForUris(
-      expandedSubjects,
-      includeNeg,
-      skipCache,
-    )
+    const labels = await this.getLabelsForUris(expandedSubjects, opts)
     return Object.keys(labels).reduce((acc, cur) => {
       const uri = cur.startsWith('at://') ? new AtUri(cur) : null
       if (
@@ -127,18 +127,23 @@ export class LabelService {
 
   async getLabels(
     subject: string,
-    includeNeg?: boolean,
-    skipCache?: boolean,
+    opts?: {
+      includeNeg?: boolean
+      skipCache?: boolean
+    },
   ): Promise<Label[]> {
-    const labels = await this.getLabelsForUris([subject], includeNeg, skipCache)
+    const labels = await this.getLabelsForUris([subject], opts)
     return labels[subject] ?? []
   }
 
   async getLabelsForProfile(
     did: string,
-    includeNeg?: boolean,
+    opts?: {
+      includeNeg?: boolean
+      skipCache?: boolean
+    },
   ): Promise<Label[]> {
-    const labels = await this.getLabelsForSubjects([did], includeNeg)
+    const labels = await this.getLabelsForSubjects([did], opts)
     return labels[did] ?? []
   }
 }

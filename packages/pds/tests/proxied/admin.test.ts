@@ -285,7 +285,7 @@ describe('proxies admin requests', () => {
     )
     const labelsA = await services.appView
       .label(db)
-      .getLabels(sc.dids.alice, false, true)
+      .getLabels(sc.dids.alice, { includeNeg: false, skipCache: true })
     expect(labelsA.map((l) => l.val)).toEqual(['dogs'])
     // reverse action
     await agent.api.com.atproto.admin.reverseModerationAction(
@@ -314,7 +314,7 @@ describe('proxies admin requests', () => {
     )
     const labelsB = await services.appView
       .label(db)
-      .getLabels(sc.dids.alice, false, true)
+      .getLabels(sc.dids.alice, { includeNeg: false, skipCache: true })
     expect(labelsB.map((l) => l.val)).toEqual(['cats'])
   })
 
@@ -356,7 +356,7 @@ describe('proxies admin requests', () => {
     await expect(tryGetPostAppview).rejects.toThrow(NotFoundError)
     const labelsA = await services.appView
       .label(db)
-      .getLabels(post.ref.uriStr, false, true)
+      .getLabels(post.ref.uriStr, { includeNeg: false, skipCache: true })
     expect(labelsA.map((l) => l.val)).toEqual(['dogs'])
     // reverse action
     await agent.api.com.atproto.admin.reverseModerationAction(
@@ -385,7 +385,7 @@ describe('proxies admin requests', () => {
     )
     const labelsB = await services.appView
       .label(db)
-      .getLabels(post.ref.uriStr, false, true)
+      .getLabels(post.ref.uriStr, { includeNeg: false, skipCache: true })
     expect(labelsB.map((l) => l.val)).toEqual(['cats'])
   })
 

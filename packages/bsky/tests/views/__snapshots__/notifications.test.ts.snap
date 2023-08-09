@@ -173,7 +173,7 @@ Array [
   },
   Object {
     "author": Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(10)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(10)@jpeg",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -201,7 +201,7 @@ Array [
   },
   Object {
     "author": Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(10)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(10)@jpeg",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -273,7 +273,7 @@ Array [
   },
   Object {
     "author": Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(10)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(10)@jpeg",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -305,7 +305,7 @@ Array [
   },
   Object {
     "author": Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(10)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(10)@jpeg",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -590,7 +590,7 @@ Array [
   },
   Object {
     "author": Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(13)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(13)@jpeg",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -618,7 +618,7 @@ Array [
   },
   Object {
     "author": Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(13)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(13)@jpeg",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -690,7 +690,7 @@ Array [
   },
   Object {
     "author": Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(13)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(13)@jpeg",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -722,7 +722,7 @@ Array [
   },
   Object {
     "author": Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(4)/cids(13)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(13)@jpeg",
       "description": "hi im bob label_me",
       "did": "user(3)",
       "displayName": "bobby",
@@ -785,7 +785,7 @@ Array [
   },
   Object {
     "author": Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(3)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(3)@jpeg",
       "description": "its me!",
       "did": "user(1)",
       "displayName": "ali",
@@ -812,7 +812,7 @@ Array [
   },
   Object {
     "author": Object {
-      "avatar": "https://bsky.public.url/image/sig()/rs:fill:1000:1000:1:0/plain/user(2)/cids(3)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(3)@jpeg",
       "description": "its me!",
       "did": "user(1)",
       "displayName": "ali",

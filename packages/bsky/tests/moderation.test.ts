@@ -1067,7 +1067,7 @@ describe('moderation', () => {
       post = sc.posts[sc.dids.carol][0]
       blob = post.images[1]
       imageUri = ctx.imgUriBuilder
-        .getCommonSignedUri(
+        .getPresetUri(
           'feed_thumbnail',
           sc.dids.carol,
           blob.image.ref.toString(),

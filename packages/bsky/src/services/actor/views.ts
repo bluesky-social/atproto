@@ -11,12 +11,17 @@ import { Actor } from '../../db/tables/actor'
 import { ImageUriBuilder } from '../../image/uri'
 import { LabelService } from '../label'
 import { GraphService } from '../graph'
+import { LabelCache } from '../../label-cache'
 
 export class ActorViews {
-  constructor(private db: Database, private imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    private db: Database,
+    private imgUriBuilder: ImageUriBuilder,
+    private labelCache: LabelCache,
+  ) {}
 
   services = {
-    label: LabelService.creator()(this.db),
+    label: LabelService.creator(this.labelCache)(this.db),
     graph: GraphService.creator(this.imgUriBuilder)(this.db),
   }
 
@@ -110,18 +115,10 @@ export class ActorViews {
     return profileInfos.reduce((acc, cur) => {
       const actorLabels = labels[cur.did] ?? []
       const avatar = cur?.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
-            'avatar',
-            cur.did,
-            cur.avatarCid,
-          )
+        ? this.imgUriBuilder.getPresetUri('avatar', cur.did, cur.avatarCid)
         : undefined
       const banner = cur?.bannerCid
-        ? this.imgUriBuilder.getCommonSignedUri(
-            'banner',
-            cur.did,
-            cur.bannerCid,
-          )
+        ? this.imgUriBuilder.getPresetUri('banner', cur.did, cur.bannerCid)
         : undefined
       const mutedByList =
         cur.requesterMutedByList && listViews[cur.requesterMutedByList]
@@ -260,11 +257,7 @@ export class ActorViews {
     return profileInfos.reduce((acc, cur) => {
       const actorLabels = labels[cur.did] ?? []
       const avatar = cur?.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
-            'avatar',
-            cur.did,
-            cur.avatarCid,
-          )
+        ? this.imgUriBuilder.getPresetUri('avatar', cur.did, cur.avatarCid)
         : undefined
       const mutedByList =
         cur.requesterMutedByList && listViews[cur.requesterMutedByList]
