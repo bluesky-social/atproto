@@ -214,6 +214,46 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
+  server.app.bsky.unspecced.registerPushNotificationEndpoint({
+    auth: ctx.accessVerifier,
+    handler: async ({ auth, params, req }) => {
+      const { token, platform, appId, endpoint } = params
+      const {
+        credentials: { did },
+      } = auth
+
+      const { appviewAgent } = ctx
+
+      if (ctx.canProxyWrite()) {
+        try {
+          // const headers = await ctx.serviceAuthHeaders(did)
+          // const called = await appviewAgent.api.xrpc.call(
+          //   'app.bsky.unspecced.putNotificationPushToken',
+          //   {
+          //     token,
+          //     platform,
+          //     appId,
+          //     endpoint,
+          //   },
+          //   headers,
+          // )
+          const res =
+            await appviewAgent.api.app.bsky.unspecced.putNotificationPushToken(
+              {
+                token,
+                platform,
+                appId,
+                endpoint,
+              },
+              await ctx.serviceAuthHeaders(did),
+            )
+        } catch (error) {
+          throw new Error('Failed to register device push notification token')
+        }
+      }
+    },
+  })
+
   server.app.bsky.unspecced.applyLabels({
     auth: ctx.roleVerifier,
     handler: async ({ auth, input }) => {

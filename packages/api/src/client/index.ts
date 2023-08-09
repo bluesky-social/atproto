@@ -127,6 +127,7 @@ import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopul
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 import * as AppBskyUnspeccedPutNotificationPushToken from './types/app/bsky/unspecced/putNotificationPushToken'
+import * as AppBskyUnspeccedRegisterPushNotificationEndpoint from './types/app/bsky/unspecced/registerPushNotificationEndpoint'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
@@ -248,6 +249,7 @@ export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopul
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 export * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 export * as AppBskyUnspeccedPutNotificationPushToken from './types/app/bsky/unspecced/putNotificationPushToken'
+export * as AppBskyUnspeccedRegisterPushNotificationEndpoint from './types/app/bsky/unspecced/registerPushNotificationEndpoint'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -2102,6 +2104,22 @@ export class UnspeccedNS {
       )
       .catch((e) => {
         throw AppBskyUnspeccedPutNotificationPushToken.toKnownErr(e)
+      })
+  }
+
+  registerPushNotificationEndpoint(
+    params?: AppBskyUnspeccedRegisterPushNotificationEndpoint.QueryParams,
+    opts?: AppBskyUnspeccedRegisterPushNotificationEndpoint.CallOptions,
+  ): Promise<AppBskyUnspeccedRegisterPushNotificationEndpoint.Response> {
+    return this._service.xrpc
+      .call(
+        'app.bsky.unspecced.registerPushNotificationEndpoint',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw AppBskyUnspeccedRegisterPushNotificationEndpoint.toKnownErr(e)
       })
   }
 }

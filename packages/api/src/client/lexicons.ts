@@ -6490,6 +6490,36 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedRegisterPushNotificationEndpoint: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.registerPushNotificationEndpoint',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'An unspecced route to upload a push notification token for a user',
+        parameters: {
+          type: 'params',
+          required: ['token', 'platform', 'endpoint', 'appId'],
+          properties: {
+            token: {
+              type: 'string',
+            },
+            platform: {
+              type: 'string',
+              enum: ['ios', 'android', 'web'],
+            },
+            endpoint: {
+              type: 'string',
+            },
+            appId: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -6623,4 +6653,6 @@ export const ids = {
   AppBskyUnspeccedGetTimelineSkeleton: 'app.bsky.unspecced.getTimelineSkeleton',
   AppBskyUnspeccedPutNotificationPushToken:
     'app.bsky.unspecced.putNotificationPushToken',
+  AppBskyUnspeccedRegisterPushNotificationEndpoint:
+    'app.bsky.unspecced.registerPushNotificationEndpoint',
 }

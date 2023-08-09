@@ -107,6 +107,7 @@ import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopul
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 import * as AppBskyUnspeccedPutNotificationPushToken from './types/app/bsky/unspecced/putNotificationPushToken'
+import * as AppBskyUnspeccedRegisterPushNotificationEndpoint from './types/app/bsky/unspecced/registerPushNotificationEndpoint'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -1084,6 +1085,16 @@ export class UnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.putNotificationPushToken' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  registerPushNotificationEndpoint<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedRegisterPushNotificationEndpoint.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.registerPushNotificationEndpoint' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
