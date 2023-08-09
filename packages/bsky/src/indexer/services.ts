@@ -13,7 +13,7 @@ export function createServices(resources: {
   const { idResolver, labeler, backgroundQueue } = resources
   return {
     indexing: IndexingService.creator(idResolver, labeler, backgroundQueue),
-    label: LabelService.creator(),
+    label: LabelService.creator(null),
   }
 }
 

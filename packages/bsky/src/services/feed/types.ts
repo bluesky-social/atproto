@@ -1,3 +1,4 @@
+import { Selectable } from 'kysely'
 import { View as ImagesEmbedView } from '../../lexicon/types/app/bsky/embed/images'
 import { View as ExternalEmbedView } from '../../lexicon/types/app/bsky/embed/external'
 import {
@@ -16,7 +17,6 @@ import {
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import { FeedGenerator } from '../../db/tables/feed-generator'
 import { ListView } from '../../lexicon/types/app/bsky/graph/defs'
-import { Selectable } from 'kysely'
 
 export type PostEmbedViews = {
   [uri: string]: PostEmbedView

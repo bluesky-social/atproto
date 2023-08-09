@@ -1,5 +1,6 @@
 import { mapDefined } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/identifier'
+import { jsonStringToLex } from '@atproto/lexicon'
 import {
   ProfileViewDetailed,
   ProfileView,
@@ -11,13 +12,17 @@ import { Actor } from '../../db/tables/actor'
 import { ImageUriBuilder } from '../../image/uri'
 import { LabelService, getSelfLabels } from '../label'
 import { GraphService } from '../graph'
-import { jsonStringToLex } from '@atproto/lexicon'
+import { LabelCache } from '../../label-cache'
 
 export class ActorViews {
-  constructor(private db: Database, private imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    private db: Database,
+    private imgUriBuilder: ImageUriBuilder,
+    private labelCache: LabelCache,
+  ) {}
 
   services = {
-    label: LabelService.creator()(this.db),
+    label: LabelService.creator(this.labelCache)(this.db),
     graph: GraphService.creator(this.imgUriBuilder)(this.db),
   }
 

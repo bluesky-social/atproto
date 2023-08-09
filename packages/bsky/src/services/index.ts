@@ -6,18 +6,20 @@ import { GraphService } from './graph'
 import { ModerationService } from './moderation'
 import { LabelService } from './label'
 import { ImageInvalidator } from '../image/invalidator'
+import { LabelCache } from '../label-cache'
 
 export function createServices(resources: {
   imgUriBuilder: ImageUriBuilder
   imgInvalidator: ImageInvalidator
+  labelCache: LabelCache
 }): Services {
-  const { imgUriBuilder, imgInvalidator } = resources
+  const { imgUriBuilder, imgInvalidator, labelCache } = resources
   return {
-    actor: ActorService.creator(imgUriBuilder),
-    feed: FeedService.creator(imgUriBuilder),
+    actor: ActorService.creator(imgUriBuilder, labelCache),
+    feed: FeedService.creator(imgUriBuilder, labelCache),
     graph: GraphService.creator(imgUriBuilder),
     moderation: ModerationService.creator(imgUriBuilder, imgInvalidator),
-    label: LabelService.creator(),
+    label: LabelService.creator(labelCache),
   }
 }
 

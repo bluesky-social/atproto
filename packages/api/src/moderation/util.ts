@@ -34,15 +34,19 @@ export function takeHighestPriorityDecision(
 
 export function downgradeDecision(
   decision: ModerationDecision,
-  { alert }: { alert: boolean },
+  to: 'blur' | 'alert' | 'noop',
 ) {
-  decision.blur = false
-  decision.blurMedia = false
   decision.filter = false
   decision.noOverride = false
-  decision.alert = alert
-  if (!alert) {
+  if (to === 'noop') {
+    decision.blur = false
+    decision.blurMedia = false
+    decision.alert = false
     delete decision.cause
+  } else if (to === 'alert') {
+    decision.blur = false
+    decision.blurMedia = false
+    decision.alert = true
   }
 }
 

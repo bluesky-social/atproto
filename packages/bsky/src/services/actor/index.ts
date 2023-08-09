@@ -5,15 +5,20 @@ import { ActorViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
 import { Actor } from '../../db/tables/actor'
 import { TimeCidKeyset } from '../../db/pagination'
+import { LabelCache } from '../../label-cache'
 
 export class ActorService {
-  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    public db: Database,
+    public imgUriBuilder: ImageUriBuilder,
+    public labelCache: LabelCache,
+  ) {}
 
-  static creator(imgUriBuilder: ImageUriBuilder) {
-    return (db: Database) => new ActorService(db, imgUriBuilder)
+  static creator(imgUriBuilder: ImageUriBuilder, labelCache: LabelCache) {
+    return (db: Database) => new ActorService(db, imgUriBuilder, labelCache)
   }
 
-  views = new ActorViews(this.db, this.imgUriBuilder)
+  views = new ActorViews(this.db, this.imgUriBuilder, this.labelCache)
 
   async getActorDid(handleOrDid: string): Promise<string | null> {
     if (handleOrDid.startsWith('did:')) {
