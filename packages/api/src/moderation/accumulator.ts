@@ -47,14 +47,12 @@ export class ModerationCauseAccumulator {
     }
 
     // look up the label preference
-    // TODO use the find() when 3P labelers support lands
-    // const labelerSettings = opts.labelerSettings.find(
-    //   (s) => s.labeler.did === label.src,
-    // )
-    const labelerSettings = opts.labelerSettings[0]
-    if (!labelerSettings) {
-      // ignore labels from labelers we don't use
-      return
+    const isSelf = label.src === this.did
+    const labeler = isSelf
+      ? undefined
+      : opts.labelers.find((s) => s.labeler.did === label.src)
+    if (!isSelf && !labeler) {
+      return // skip labelers not configured by the user
     }
 
     // establish the label preference for interpretation
@@ -63,8 +61,10 @@ export class ModerationCauseAccumulator {
       labelPref = labelDef.preferences[0]
     } else if (labelDef.flags.includes('adult') && !opts.adultContentEnabled) {
       labelPref = 'hide'
-    } else if (labelerSettings.settings[label.val]) {
-      labelPref = labelerSettings.settings[label.val]
+    } else if (labeler?.labels[label.val]) {
+      labelPref = labeler.labels[label.val]
+    } else if (opts.labels[label.val]) {
+      labelPref = opts.labels[label.val]
     }
 
     // ignore labels the user has asked to ignore
@@ -88,9 +88,11 @@ export class ModerationCauseAccumulator {
 
     this.causes.push({
       type: 'label',
+      source: isSelf
+        ? { type: 'user' }
+        : { type: 'labeler', labeler: labeler!.labeler },
       label,
       labelDef,
-      labeler: labelerSettings.labeler,
       setting: labelPref,
       priority,
     })
