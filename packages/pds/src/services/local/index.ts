@@ -1,3 +1,4 @@
+import util from 'util'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { cborToLexRecord } from '@atproto/repo'
@@ -31,32 +32,39 @@ import {
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { ImageUriBuilder } from '../../image/uri'
 
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
 export class LocalService {
   constructor(
     public db: Database,
-    public imgUriBuilder: ImageUriBuilder,
     public signingKey: Keypair,
     public appviewAgent?: AtpAgent,
     public appviewDid?: string,
+    public appviewCdnUrlPattern?: string,
   ) {}
 
   static creator(
-    imgUriBuilder: ImageUriBuilder,
     signingKey: Keypair,
     appviewAgent?: AtpAgent,
     appviewDid?: string,
+    appviewCdnUrlPattern?: string,
   ) {
     return (db: Database) =>
-      new LocalService(db, imgUriBuilder, signingKey, appviewAgent, appviewDid)
+      new LocalService(
+        db,
+        signingKey,
+        appviewAgent,
+        appviewDid,
+        appviewCdnUrlPattern,
+      )
   }
 
-  // @TODO calculate appview uris instead of pds
-  getImageUrl(did: string, cid: string, id: CommonSignedUris) {
-    return this.imgUriBuilder.getCommonSignedUri(id, cid)
+  getImageUrl(pattern: CommonSignedUris, did: string, cid: string) {
+    if (!this.appviewCdnUrlPattern) {
+      return ''
+    }
+    return util.format(this.appviewCdnUrlPattern, pattern, did, cid)
   }
 
   async serviceAuthHeaders(did: string) {
@@ -140,7 +148,7 @@ export class LocalService {
       handle: res.handle,
       displayName: record?.displayName,
       avatar: record?.avatar
-        ? this.getImageUrl(did, record.avatar.ref.toString(), 'avatar')
+        ? this.getImageUrl('avatar', did, record.avatar.ref.toString())
         : undefined,
     }
   }
@@ -182,14 +190,14 @@ export class LocalService {
     if (isEmbedImages(embed)) {
       const images = embed.images.map((img) => ({
         thumb: this.getImageUrl(
+          'feed_thumbnail',
           did,
           img.image.ref.toString(),
-          'feed_thumbnail',
         ),
         fullsize: this.getImageUrl(
+          'feed_fullsize',
           did,
           img.image.ref.toString(),
-          'feed_fullsize',
         ),
         alt: img.alt,
       }))
@@ -205,7 +213,7 @@ export class LocalService {
         title,
         description,
         thumb: thumb
-          ? this.getImageUrl(did, thumb.ref.toString(), 'feed_thumbnail')
+          ? this.getImageUrl('feed_thumbnail', did, thumb.ref.toString())
           : undefined,
       }
     }
@@ -299,7 +307,7 @@ export class LocalService {
       ...view,
       displayName: record.displayName,
       avatar: record.avatar
-        ? this.getImageUrl(view.did, record.avatar.ref.toString(), 'avatar')
+        ? this.getImageUrl('avatar', view.did, record.avatar.ref.toString())
         : undefined,
     }
   }
@@ -318,7 +326,7 @@ export class LocalService {
     return {
       ...this.updateProfileView(view, record),
       banner: record.banner
-        ? this.getImageUrl(view.did, record.banner.ref.toString(), 'banner')
+        ? this.getImageUrl('banner', view.did, record.banner.ref.toString())
         : undefined,
     }
   }

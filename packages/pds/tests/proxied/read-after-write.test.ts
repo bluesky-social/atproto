@@ -1,3 +1,4 @@
+import util from 'util'
 import AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { SeedClient } from '../seeds/client'
@@ -40,6 +41,28 @@ describe('proxy read after write', () => {
     )
     expect(res.data.displayName).toEqual('blah')
     expect(res.data.description).toBeUndefined()
+  })
+
+  it('handles image formatting', async () => {
+    const blob = await sc.uploadFile(
+      alice,
+      'tests/image/fixtures/key-landscape-small.jpg',
+      'image/jpeg',
+    )
+    await sc.updateProfile(alice, { displayName: 'blah', avatar: blob.image })
+
+    const res = await agent.api.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
+    )
+    expect(res.data.avatar).toEqual(
+      util.format(
+        network.pds.ctx.cfg.bskyAppViewCdnUrlPattern,
+        'avatar',
+        alice,
+        blob.image.ref.toString(),
+      ),
+    )
   })
 
   it('handles read after write on getAuthorFeed', async () => {

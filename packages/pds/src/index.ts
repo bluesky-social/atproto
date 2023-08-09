@@ -221,6 +221,7 @@ export class PDS {
       contentReporter,
       appviewAgent,
       appviewDid: config.bskyAppViewDid,
+      appviewCdnUrlPattern: config.bskyAppViewCdnUrlPattern,
       backgroundQueue,
       crawlers,
     })

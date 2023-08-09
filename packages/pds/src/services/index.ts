@@ -33,6 +33,7 @@ export function createServices(resources: {
   contentReporter?: ContentReporter
   appviewAgent?: AtpAgent
   appviewDid?: string
+  appviewCdnUrlPattern?: string
   backgroundQueue: BackgroundQueue
   crawlers: Crawlers
 }): Services {
@@ -47,6 +48,7 @@ export function createServices(resources: {
     contentReporter,
     appviewAgent,
     appviewDid,
+    appviewCdnUrlPattern,
     backgroundQueue,
     crawlers,
   } = resources
@@ -64,10 +66,10 @@ export function createServices(resources: {
       contentReporter,
     ),
     local: LocalService.creator(
-      imgUriBuilder,
       repoSigningKey,
       appviewAgent,
       appviewDid,
+      appviewCdnUrlPattern,
     ),
     moderation: ModerationService.creator(
       messageDispatcher,
