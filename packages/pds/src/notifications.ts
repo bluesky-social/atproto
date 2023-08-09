@@ -27,17 +27,13 @@ export class NotificationServer {
   }
 
   async getUserTokens(did: string) {
-    try {
-      const userTokens = await this.db.db
-        .selectFrom('notification_push_token')
-        .where('did', '=', did)
-        .selectAll()
-        .execute()
+    const userTokens = await this.db.db
+      .selectFrom('notification_push_token')
+      .where('did', '=', did)
+      .selectAll()
+      .execute()
 
-      return userTokens
-    } catch (error) {
-      throw new Error('Failed to get user tokens')
-    }
+    return userTokens
   }
 
   async prepareNotifsToSend(notifications: UserNotification[]) {
@@ -46,9 +42,8 @@ export class NotificationServer {
     for (const notif of notifications) {
       const { userDid } = notif
       const userTokens = await this.getUserTokens(userDid)
-
       // if user has no tokens, skip
-      if (userTokens.length === 0) {
+      if (!userTokens || userTokens.length === 0) {
         continue
       }
 

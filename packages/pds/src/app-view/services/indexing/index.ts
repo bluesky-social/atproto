@@ -69,12 +69,13 @@ export class IndexingService {
         obj,
         timestamp,
       )
-      // send notification for new record
+      // send notification for new record asynchronously
       if (insertedRecords) {
-        const preparedNotifs = await this.notifServer.prepareNotifsToSend(
-          insertedRecords,
-        )
-        await this.notifServer.sendPushNotifications(preparedNotifs)
+        /* don't await */ this.notifServer
+          .prepareNotifsToSend(insertedRecords)
+          .then((preparedNotifs) => {
+            this.notifServer.sendPushNotifications(preparedNotifs)
+          })
       }
     } else {
       await indexer.updateRecord(uri, cid, obj, timestamp)
