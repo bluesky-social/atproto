@@ -299,6 +299,8 @@ describe('Moderation', () => {
     )
   })
 
+  /*
+  TODO enable when 3P labeler support is addded
   it('Ignores labels from unknown labelers', () => {
     const res1 = moderateProfile(
       mock.profileViewBasic({
@@ -328,5 +330,5 @@ describe('Moderation', () => {
       JSON.stringify(res1, null, 2),
       true,
     )
-  })
+  })*/
 })

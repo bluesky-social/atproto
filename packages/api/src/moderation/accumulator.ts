@@ -51,9 +51,11 @@ export class ModerationCauseAccumulator {
     const labeler = isSelf
       ? undefined
       : opts.labelers.find((s) => s.labeler.did === label.src)
+
+    /* TODO when 3P labelers are supported
     if (!isSelf && !labeler) {
       return // skip labelers not configured by the user
-    }
+    }*/
 
     // establish the label preference for interpretation
     let labelPref: LabelPreference = 'ignore'
@@ -88,9 +90,10 @@ export class ModerationCauseAccumulator {
 
     this.causes.push({
       type: 'label',
-      source: isSelf
-        ? { type: 'user' }
-        : { type: 'labeler', labeler: labeler!.labeler },
+      source:
+        isSelf || !labeler
+          ? { type: 'user' }
+          : { type: 'labeler', labeler: labeler.labeler },
       label,
       labelDef,
       setting: labelPref,
