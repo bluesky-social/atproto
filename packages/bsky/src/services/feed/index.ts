@@ -39,8 +39,9 @@ import {
   PostInfo,
   RecordEmbedViewRecord,
   PostBlocksMap,
+  kSelfLabels,
 } from './types'
-import { LabelService, Labels } from '../label'
+import { LabelService, Labels, getSelfLabels } from '../label'
 import { ActorService } from '../actor'
 import { GraphService } from '../graph'
 import { FeedViews } from './views'
@@ -136,15 +137,18 @@ export class FeedService {
       this.db.db
         .selectFrom('actor')
         .leftJoin('profile', 'profile.creator', 'actor.did')
+        .leftJoin('record', 'record.uri', 'profile.uri')
         .where('actor.did', 'in', dids)
         .where(notSoftDeletedClause(ref('actor')))
         .selectAll('actor')
         .select([
           'profile.uri as profileUri',
+          'profile.cid as profileCid',
           'profile.displayName as displayName',
           'profile.description as description',
           'profile.avatarCid as avatarCid',
           'profile.indexedAt as indexedAt',
+          'record.json as profileJson',
           this.db.db
             .selectFrom('follow')
             .if(!viewer, (q) => q.where(noMatch))
@@ -198,7 +202,6 @@ export class FeedService {
       .filter((list) => !!list)
     const listViews = await this.services.graph.getListViews(listUris, viewer)
     return actors.reduce((acc, cur) => {
-      const actorLabels = labels[cur.did] ?? []
       const avatar = cur.avatarCid
         ? this.imgUriBuilder.getPresetUri('avatar', cur.did, cur.avatarCid)
         : undefined
@@ -208,6 +211,15 @@ export class FeedService {
               listViews[cur.requesterMutedByList],
             )
           : undefined
+      const actorLabels = labels[cur.did] ?? []
+      const selfLabels = getSelfLabels({
+        uri: cur.profileUri,
+        cid: cur.profileCid,
+        record:
+          cur.profileJson !== null
+            ? (jsonStringToLex(cur.profileJson) as Record<string, unknown>)
+            : null,
+      })
       return {
         ...acc,
         [cur.did]: {
@@ -225,7 +237,8 @@ export class FeedService {
                 followedBy: cur?.requesterFollowedBy || undefined,
               }
             : undefined,
-          labels: skipLabels ? undefined : actorLabels,
+          labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
+          [kSelfLabels]: selfLabels,
         },
       }
     }, {} as ActorInfoMap)

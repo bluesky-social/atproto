@@ -64,7 +64,7 @@ interface Labeler {
 
 export interface LabelerSettings {
   labeler: Labeler
-  settings: Record<string, LabelPreference>
+  labels: Record<string, LabelPreference>
 }
 
 // subjects
@@ -95,13 +95,14 @@ export type ModerationSubject =
 export type ModerationCauseSource =
   | { type: 'user' }
   | { type: 'list'; list: AppBskyGraphDefs.ListViewBasic }
+  | { type: 'labeler'; labeler: Labeler }
 
 export type ModerationCause =
   | { type: 'blocking'; source: ModerationCauseSource; priority: 3 }
   | { type: 'blocked-by'; source: ModerationCauseSource; priority: 4 }
   | {
       type: 'label'
-      labeler: Labeler
+      source: ModerationCauseSource
       label: Label
       labelDef: LabelDefinition
       setting: LabelPreference
@@ -112,7 +113,8 @@ export type ModerationCause =
 export interface ModerationOpts {
   userDid: string
   adultContentEnabled: boolean
-  labelerSettings: LabelerSettings[]
+  labels: Record<string, LabelPreference>
+  labelers: LabelerSettings[]
 }
 
 export class ModerationDecision {

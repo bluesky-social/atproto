@@ -5,6 +5,7 @@ import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { notSoftDeletedClause } from '../../../../db/util'
+import { getSelfLabels } from '../../../../services/label'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.listNotifications({
@@ -94,16 +95,26 @@ export default function (server: Server, ctx: AppContext) {
       const notifications = mapDefined(notifs, (notif) => {
         const author = authors[notif.authorDid]
         if (!author) return undefined
+        const record = jsonStringToLex(notif.recordJson) as Record<
+          string,
+          unknown
+        >
+        const recordLabels = labels[notif.uri] ?? []
+        const recordSelfLabels = getSelfLabels({
+          uri: notif.uri,
+          cid: notif.cid,
+          record,
+        })
         return {
           uri: notif.uri,
           cid: notif.cid,
           author,
           reason: notif.reason,
           reasonSubject: notif.reasonSubject || undefined,
-          record: jsonStringToLex(notif.recordJson) as Record<string, unknown>,
+          record,
           isRead: seenAt ? notif.indexedAt <= seenAt : false,
           indexedAt: notif.indexedAt,
-          labels: labels[notif.uri] ?? [],
+          labels: [...recordLabels, ...recordSelfLabels],
         }
       })
 

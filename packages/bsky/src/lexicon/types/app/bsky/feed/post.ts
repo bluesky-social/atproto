@@ -10,6 +10,7 @@ import * as AppBskyEmbedImages from '../embed/images'
 import * as AppBskyEmbedExternal from '../embed/external'
 import * as AppBskyEmbedRecord from '../embed/record'
 import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia'
+import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef'
 
 export interface Record {
@@ -25,6 +26,9 @@ export interface Record {
     | AppBskyEmbedRecordWithMedia.Main
     | { $type: string; [k: string]: unknown }
   langs?: string[]
+  labels?:
+    | ComAtprotoLabelDefs.SelfLabels
+    | { $type: string; [k: string]: unknown }
   createdAt: string
   [k: string]: unknown
 }

@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { cborToLexRecord } from '@atproto/repo'
 import {
   ProfileViewDetailed,
   ProfileView,
@@ -7,7 +8,7 @@ import {
 import { DidHandle } from '../../../db/tables/did-handle'
 import Database from '../../../db'
 import { ImageUriBuilder } from '../../../image/uri'
-import { LabelService } from '../label'
+import { LabelService, getSelfLabels } from '../label'
 import { GraphService } from '../graph'
 import { LabelCache } from '../../../label-cache'
 import { notSoftDeletedClause } from '../../../db/util'
@@ -42,6 +43,11 @@ export class ActorViews {
       .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .leftJoin('profile', 'profile.creator', 'did_handle.did')
       .leftJoin('profile_agg', 'profile_agg.did', 'did_handle.did')
+      .leftJoin('ipld_block', (join) =>
+        join
+          .onRef('ipld_block.cid', '=', 'profile.cid')
+          .onRef('ipld_block.creator', '=', 'profile.creator'),
+      )
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('repo_root'))),
       )
@@ -49,6 +55,7 @@ export class ActorViews {
         'did_handle.did as did',
         'did_handle.handle as handle',
         'profile.uri as profileUri',
+        'profile.cid as profileCid',
         'profile.displayName as displayName',
         'profile.description as description',
         'profile.avatarCid as avatarCid',
@@ -57,6 +64,7 @@ export class ActorViews {
         'profile_agg.followsCount as followsCount',
         'profile_agg.followersCount as followersCount',
         'profile_agg.postsCount as postsCount',
+        'ipld_block.content as profileBytes',
         this.db.db
           .selectFrom('follow')
           .where('creator', '=', viewer)
@@ -108,7 +116,6 @@ export class ActorViews {
     const listViews = await this.services.graph.getListViews(listUris, viewer)
 
     return profileInfos.reduce((acc, cur) => {
-      const actorLabels = labels[cur.did] ?? []
       const avatar = cur?.avatarCid
         ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
         : undefined
@@ -121,6 +128,12 @@ export class ActorViews {
               listViews[cur.requesterMutedByList],
             )
           : undefined
+      const actorLabels = labels[cur.did] ?? []
+      const selfLabels = getSelfLabels({
+        uri: cur.profileUri,
+        cid: cur.profileCid,
+        record: cur.profileBytes && cborToLexRecord(cur.profileBytes),
+      })
       const profile = {
         did: cur.did,
         handle: cur.handle,
@@ -140,7 +153,7 @@ export class ActorViews {
           following: cur?.requesterFollowing || undefined,
           followedBy: cur?.requesterFollowedBy || undefined,
         },
-        labels: skipLabels ? undefined : actorLabels,
+        labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
       }
       acc[cur.did] = profile
       return acc
@@ -181,6 +194,11 @@ export class ActorViews {
       .where('did_handle.did', 'in', dids)
       .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .leftJoin('profile', 'profile.creator', 'did_handle.did')
+      .leftJoin('ipld_block', (join) =>
+        join
+          .onRef('ipld_block.cid', '=', 'profile.cid')
+          .onRef('ipld_block.creator', '=', 'profile.creator'),
+      )
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('repo_root'))),
       )
@@ -188,10 +206,12 @@ export class ActorViews {
         'did_handle.did as did',
         'did_handle.handle as handle',
         'profile.uri as profileUri',
+        'profile.cid as profileCid',
         'profile.displayName as displayName',
         'profile.description as description',
         'profile.avatarCid as avatarCid',
         'profile.indexedAt as indexedAt',
+        'ipld_block.content as profileBytes',
         this.db.db
           .selectFrom('follow')
           .where('creator', '=', viewer)
@@ -243,7 +263,6 @@ export class ActorViews {
     const listViews = await this.services.graph.getListViews(listUris, viewer)
 
     return profileInfos.reduce((acc, cur) => {
-      const actorLabels = labels[cur.did] ?? []
       const avatar = cur.avatarCid
         ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
         : undefined
@@ -253,6 +272,12 @@ export class ActorViews {
               listViews[cur.requesterMutedByList],
             )
           : undefined
+      const actorLabels = labels[cur.did] ?? []
+      const selfLabels = getSelfLabels({
+        uri: cur.profileUri,
+        cid: cur.profileCid,
+        record: cur.profileBytes && cborToLexRecord(cur.profileBytes),
+      })
       const profile = {
         did: cur.did,
         handle: cur.handle,
@@ -268,7 +293,7 @@ export class ActorViews {
           following: cur?.requesterFollowing || undefined,
           followedBy: cur?.requesterFollowedBy || undefined,
         },
-        labels: skipLabels ? undefined : actorLabels,
+        labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
       }
       acc[cur.did] = profile
       return acc

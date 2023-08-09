@@ -121,7 +121,7 @@ export class SeedClient {
     by: string,
     displayName: string,
     description: string,
-    fromUser?: string,
+    selfLabels?: string[],
   ) {
     AVATAR_IMG ??= await fs.readFile(
       'tests/image/fixtures/key-portrait-small.jpg',
@@ -131,7 +131,7 @@ export class SeedClient {
     {
       const res = await this.agent.api.com.atproto.repo.uploadBlob(AVATAR_IMG, {
         encoding: 'image/jpeg',
-        headers: this.getHeaders(fromUser || by),
+        headers: this.getHeaders(by),
       } as any)
       avatarBlob = res.data.blob
     }
@@ -143,8 +143,14 @@ export class SeedClient {
           displayName,
           description,
           avatar: avatarBlob,
+          labels: selfLabels
+            ? {
+                $type: 'com.atproto.label.defs#selfLabels',
+                values: selfLabels.map((val) => ({ val })),
+              }
+            : undefined,
         },
-        this.getHeaders(fromUser || by),
+        this.getHeaders(by),
       )
       this.profiles[by] = {
         displayName,
