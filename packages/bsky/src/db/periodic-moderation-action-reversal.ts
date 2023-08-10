@@ -2,24 +2,42 @@ import { wait } from '@atproto/common'
 import { Leader } from './leader'
 import { dbLogger } from '../logger'
 import AppContext from '../context'
+import AtpAgent from '@atproto/api'
+import { buildBasicAuth } from '../auth'
 
 export const MODERATION_ACTION_REVERSAL_ID = 1011
 
 export class PeriodicModerationActionReversal {
   leader = new Leader(MODERATION_ACTION_REVERSAL_ID, this.appContext.db)
   destroyed = false
+  pushAgent: AtpAgent
 
-  constructor(private appContext: AppContext) {}
+  constructor(private appContext: AppContext) {
+    if (appContext.cfg.moderationActionReverseUrl) {
+      const url = new URL(appContext.cfg.moderationActionReverseUrl)
+      this.pushAgent = new AtpAgent({ service: url.origin })
+      this.pushAgent.api.setHeader(
+        'authorization',
+        buildBasicAuth(url.username, url.password),
+      )
+    }
+  }
 
   async revertAction({ id, createdBy }: { id: number; createdBy: string }) {
     return this.appContext.db.transaction(async (dbTxn) => {
       const moderationTxn = this.appContext.services.moderation(dbTxn)
-      await moderationTxn.revertAction({
+      const reverseAction = {
         id,
         createdBy,
         createdAt: new Date(),
         reason: `[SCHEDULED_REVERSAL] Reverting action as originally scheduled`,
-      })
+      }
+      await moderationTxn.revertAction(reverseAction)
+      if (this.pushAgent) {
+        await this.pushAgent.com.atproto.admin.reverseModerationAction(
+          reverseAction,
+        )
+      }
     })
   }
 

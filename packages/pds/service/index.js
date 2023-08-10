@@ -89,8 +89,13 @@ const main = async () => {
   const periodicModerationActionReversal = new PeriodicModerationActionReversal(
     pds.ctx,
   )
+
+  // If the PDS is configured to proxy moderation, we don't need to run the automatic reversal
+  // since the app-view will take care of that and let the PDS know when it's done.
   const periodicModerationActionReversalRunning =
-    periodicModerationActionReversal.run()
+    pds.ctx.shouldProxyModeration()
+      ? new Promise((resolve) => resolve())
+      : periodicModerationActionReversal.run()
 
   await pds.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
