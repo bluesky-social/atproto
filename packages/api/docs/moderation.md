@@ -26,14 +26,22 @@ Every moderation function takes a set of options which look like this:
   // is adult content allowed?
   adultContentEnabled: true,
 
-  // the user's labeler settings
-  labelerSettings: [
+  // the global label settings (used on self-labels)
+  labels: {
+    porn: 'hide',
+    sexual: 'warn',
+    nudity: 'ignore',
+    // ...
+  },
+
+  // the per-labeler settings
+  labelers: [
     {
       labeler: {
         did: '...',
         displayName: 'My mod service'
       },
-      settings: {
+      labels: {
         porn: 'hide',
         sexual: 'warn',
         nudity: 'ignore',
@@ -50,7 +58,8 @@ This should match the following interfaces:
 interface ModerationOpts {
   userDid: string
   adultContentEnabled: boolean
-  labelerSettings: LabelerSettings[]
+  labels: Record<string, LabelPreference>
+  labelers: LabelerSettings[]
 }
 
 interface Labeler {
@@ -62,7 +71,7 @@ type LabelPreference = 'ignore' | 'warn' | 'hide'
 
 interface LabelerSettings {
   labeler: Labeler
-  settings: Record<string, LabelPreference>
+  labels: Record<string, LabelPreference>
 }
 ```
 
