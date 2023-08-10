@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {
-      const { actor, limit, cursor } = params
+      const { actor, limit, cursor, filter } = params
       const viewer = auth.credentials.did
       const db = ctx.db.db
       const { ref } = db.dynamic
@@ -46,9 +46,23 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
+      // defaults to posts, reposts, and replies
       let feedItemsQb = feedService
         .selectFeedItemQb()
         .where('originatorDid', '=', did)
+
+      if (filter === 'posts_with_media') {
+        // only posts with media
+        feedItemsQb = feedItemsQb.whereExists((qb) =>
+          qb
+            .selectFrom('post_embed_image')
+            .select('post_embed_image.postUri')
+            .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
+        )
+      } else if (filter === 'posts_no_replies') {
+        // only posts, no replies
+        feedItemsQb = feedItemsQb.where('post.replyParent', 'is', null)
+      }
 
       if (viewer !== null) {
         feedItemsQb = feedItemsQb.where((qb) =>

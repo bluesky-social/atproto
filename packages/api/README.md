@@ -222,14 +222,22 @@ function getOpts() {
     // is adult content allowed?
     adultContentEnabled: true,
 
-    // the user's labeler settings
-    labelerSettings: [
+    // the global label settings (used on self-labels)
+    labels: {
+      porn: 'hide',
+      sexual: 'warn',
+      nudity: 'ignore',
+      // ...
+    },
+
+    // the per-labeler settings
+    labelers: [
       {
         labeler: {
           did: '...',
           displayName: 'My mod service'
         },
-        settings: {
+        labels: {
           porn: 'hide',
           sexual: 'warn',
           nudity: 'ignore',

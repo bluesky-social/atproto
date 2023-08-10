@@ -1441,6 +1441,36 @@ export const schemaDict = {
           },
         },
       },
+      selfLabels: {
+        type: 'object',
+        description:
+          'Metadata tags on an atproto record, published by the author within the record.',
+        required: ['values'],
+        properties: {
+          values: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#selfLabel',
+            },
+            maxLength: 10,
+          },
+        },
+      },
+      selfLabel: {
+        type: 'object',
+        description:
+          'Metadata tag on an atproto record, published by the author within the record. Note -- schemas should use #selfLabels, not #selfLabel.',
+        required: ['val'],
+        properties: {
+          val: {
+            type: 'string',
+            maxLength: 128,
+            description:
+              'the short string name of the value or type of this label',
+          },
+        },
+      },
     },
   },
   ComAtprotoLabelQueryLabels: {
@@ -3925,6 +3955,10 @@ export const schemaDict = {
               accept: ['image/png', 'image/jpeg'],
               maxSize: 1000000,
             },
+            labels: {
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
           },
         },
       },
@@ -4689,6 +4723,10 @@ export const schemaDict = {
               accept: ['image/png', 'image/jpeg'],
               maxSize: 1000000,
             },
+            labels: {
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
             createdAt: {
               type: 'string',
               format: 'datetime',
@@ -4769,6 +4807,15 @@ export const schemaDict = {
             },
             cursor: {
               type: 'string',
+            },
+            filter: {
+              type: 'string',
+              knownValues: [
+                'posts_with_replies',
+                'posts_no_replies',
+                'posts_with_media',
+              ],
+              default: 'posts_with_replies',
             },
           },
         },
@@ -5338,6 +5385,10 @@ export const schemaDict = {
                 type: 'string',
                 format: 'language',
               },
+            },
+            labels: {
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
             },
             createdAt: {
               type: 'string',
@@ -5957,6 +6008,10 @@ export const schemaDict = {
               type: 'blob',
               accept: ['image/png', 'image/jpeg'],
               maxSize: 1000000,
+            },
+            labels: {
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
             },
             createdAt: {
               type: 'string',

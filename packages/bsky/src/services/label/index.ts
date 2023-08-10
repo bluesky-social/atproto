@@ -1,8 +1,9 @@
+import { sql } from 'kysely'
 import { AtUri } from '@atproto/uri'
 import Database from '../../db'
-import { Label } from '../../lexicon/types/com/atproto/label/defs'
+import { Label, isSelfLabels } from '../../lexicon/types/com/atproto/label/defs'
 import { ids } from '../../lexicon/lexicons'
-import { sql } from 'kysely'
+import { toSimplifiedISOSafe } from '../indexing/util'
 import { LabelCache } from '../../label-cache'
 
 export type Labels = Record<string, Label[]>
@@ -147,4 +148,22 @@ export class LabelService {
     const labels = await this.getLabelsForSubjects([did], opts)
     return labels[did] ?? []
   }
+}
+
+export function getSelfLabels(details: {
+  uri: string | null
+  cid: string | null
+  record: Record<string, unknown> | null
+}): Label[] {
+  const { uri, cid, record } = details
+  if (!uri || !cid || !record) return []
+  if (!isSelfLabels(record.labels)) return []
+  const src = new AtUri(uri).host // record creator
+  const cts =
+    typeof record.createdAt === 'string'
+      ? toSimplifiedISOSafe(record.createdAt)
+      : new Date(0).toISOString()
+  return record.labels.values.map(({ val }) => {
+    return { src, uri, cid, val, cts, neg: false }
+  })
 }

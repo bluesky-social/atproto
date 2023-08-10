@@ -37,6 +37,30 @@
           "description": "timestamp when this label was created"
         }
       }
+    },
+    "selfLabels": {
+      "type": "object",
+      "description": "Metadata tags on an atproto record, published by the author within the record.",
+      "required": ["values"],
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#selfLabel" },
+          "maxLength": 10
+        }
+      }
+    },
+    "selfLabel": {
+      "type": "object",
+      "description": "Metadata tag on an atproto record, published by the author within the record. Note -- schemas should use #selfLabels, not #selfLabel.",
+      "required": ["val"],
+      "properties": {
+        "val": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "the short string name of the value or type of this label"
+        }
+      }
     }
   }
 }
