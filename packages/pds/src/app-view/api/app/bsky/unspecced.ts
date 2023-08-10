@@ -217,7 +217,7 @@ export default function (server: Server, ctx: AppContext) {
           //   headers,
           // )
           const res =
-            await appviewAgent.api.app.bsky.unspecced.putNotificationPushToken(
+            await appviewAgent.api.app.bsky.unspecced.registerPushNotificationEndpoint(
               {
                 token,
                 platform,

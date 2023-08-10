@@ -24,9 +24,6 @@ type InsertableNotif = Insertable<Notification>
 
 export class NotificationServer {
   constructor(public db: Database) {}
-  static creator() {
-    return (db: Database) => new NotificationServer(db)
-  }
 
   async getUserTokens(did: string) {
     const userTokens = await this.db.db
