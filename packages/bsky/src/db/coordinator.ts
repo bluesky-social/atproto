@@ -2,9 +2,10 @@ import { Migrator } from 'kysely'
 import PrimaryDatabase from './primary'
 import Database from './db'
 import { PgOptions } from './types'
+import { dbLogger } from '../logger'
 
-type ReplicaTag = 'timeline'
-type ReplicaOptions = PgOptions & { tag?: ReplicaTag }
+type ReplicaTag = 'timeline' | '*'
+type ReplicaOptions = PgOptions & { tags?: ReplicaTag[] }
 
 type CoordinatorOptions = {
   schema?: string
@@ -25,6 +26,7 @@ export class DatabaseCoordinator {
   private allReplicas: Database[]
   private tagged: Record<string, ReplicaGroup>
   private untagged: ReplicaGroup
+  private tagWarns = new Set<string>()
 
   constructor(public opts: CoordinatorOptions) {
     this.primary = new PrimaryDatabase({
@@ -43,14 +45,27 @@ export class DatabaseCoordinator {
         ...cfg,
       })
       this.allReplicas.push(db)
-      if (cfg.tag) {
-        this.tagged[cfg.tag] ??= {
-          dbs: [],
-          roundRobinIdx: 0,
+      if (cfg.tags) {
+        for (const tag of cfg.tags) {
+          if (tag === '*') {
+            this.untagged.dbs.push(db)
+          } else {
+            this.tagged[tag] ??= {
+              dbs: [],
+              roundRobinIdx: 0,
+            }
+            this.tagged[tag].dbs.push(db)
+          }
         }
-        this.tagged[cfg.tag].dbs.push(db)
       } else {
         this.untagged.dbs.push(db)
+      }
+    }
+    if (!this.untagged.dbs.length) {
+      if (this.allReplicas.length) {
+        this.untagged.dbs = [...this.allReplicas]
+      } else {
+        this.untagged.dbs = [this.primary]
       }
     }
   }
@@ -61,14 +76,13 @@ export class DatabaseCoordinator {
 
   getReplica(tag?: string): Database {
     if (tag && this.tagged[tag]) {
-      this.tagged[tag].roundRobinIdx =
-        (this.tagged[tag].roundRobinIdx + 1) % this.tagged[tag].dbs.length
-      return this.tagged[tag].dbs[this.tagged[tag].roundRobinIdx]
-    } else {
-      this.untagged.roundRobinIdx =
-        (this.untagged.roundRobinIdx + 1) % this.untagged.dbs.length
-      return this.untagged.dbs[this.untagged.roundRobinIdx]
+      return nextDb(this.tagged[tag])
     }
+    if (tag && !this.tagWarns.has(tag)) {
+      this.tagWarns.add(tag)
+      dbLogger.warn({ tag }, 'no replica for tag, falling back to any replica')
+    }
+    return nextDb(this.untagged)
   }
 
   async close(): Promise<void> {
@@ -77,4 +91,11 @@ export class DatabaseCoordinator {
       ...this.allReplicas.map((db) => db.close),
     ])
   }
+}
+
+// @NOTE mutates group incrementing roundRobinIdx
+const nextDb = (group: ReplicaGroup) => {
+  const db = group.dbs[group.roundRobinIdx]
+  group.roundRobinIdx = (group.roundRobinIdx + 1) % group.dbs.length
+  return db
 }
