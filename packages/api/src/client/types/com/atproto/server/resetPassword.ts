@@ -28,13 +28,13 @@ export interface Response {
 
 export class ExpiredTokenError extends XRPCError {
   constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
+    super(src.status, src.error, src.message, src.headers)
   }
 }
 
 export class InvalidTokenError extends XRPCError {
   constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
+    super(src.status, src.error, src.message, src.headers)
   }
 }
 
