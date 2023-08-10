@@ -144,10 +144,6 @@ export class NotificationServer {
       .execute()
   }
 
-  async registerPushNotificationsEndpoint() {}
-
-  async registerPushNotificationsToken() {}
-
   async getNotificationDisplayAttributes(notif: InsertableNotif) {
     const {
       author: authorDid,
