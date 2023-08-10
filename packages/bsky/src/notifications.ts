@@ -3,6 +3,7 @@ import Database from './db'
 import { Notification } from './db/tables/notification'
 import { AppBskyEmbedImages, AtUri } from '@atproto/api'
 import { Insertable } from 'kysely'
+import logger from './indexer/logger'
 
 type Platform = 'ios' | 'android' | 'web'
 type PushNotification = {
@@ -38,7 +39,17 @@ export class NotificationServer {
       const userTokens = await this.getUserTokens(userDid)
       const attr = await this.getNotificationDisplayAttributes(notif)
       // if user has no tokens or the post attr cannot be found, skip
-      if (!userTokens || userTokens.length === 0 || !attr) {
+      if (!userTokens || userTokens.length === 0) {
+        continue
+      }
+      if (!attr) {
+        logger.warn(
+          {
+            userDid,
+            notif,
+          },
+          'No notification display attributes found for this notification. Either profile or post data for this notification is missing.',
+        )
         continue
       }
       const { title, body } = attr

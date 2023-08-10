@@ -1,8 +1,10 @@
-import AtpAgent from '@atproto/api'
+import AtpAgent, { AtUri } from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import { NotificationServer } from '../src/notifications'
+import { Database } from '../src'
+import { sql } from 'kysely'
 
 describe('notification views', () => {
   let network: TestNetwork
@@ -52,7 +54,21 @@ describe('notification views', () => {
     it('gets user tokens from db', async () => {
       const tokens = await notifServer.getUserTokens(alice)
       console.log(tokens)
-      expect(tokens[0].token).toEqual(123)
+      expect(tokens[0].token).toEqual('123')
     })
+
+    it('gets notification display attributes: title and body', async () => {})
+
+    it('prepares notification to be sent', async () => {})
   })
+
+  async function getNotifications(db: Database, uri: AtUri) {
+    return await db.db
+      .selectFrom('notification')
+      .selectAll()
+      .select(sql`0`.as('id')) // Ignore notification ids in comparisons
+      .where('recordUri', '=', uri.toString())
+      .orderBy('sortAt')
+      .execute()
+  }
 })
