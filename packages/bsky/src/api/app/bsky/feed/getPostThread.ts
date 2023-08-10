@@ -19,6 +19,7 @@ import {
   getAncestorsAndSelfQb,
   getDescendentsQb,
 } from '../../../../services/util/post'
+import { setRepoRev } from '../../../util'
 
 export type PostThread = {
   post: FeedRow
@@ -29,14 +30,20 @@ export type PostThread = {
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.authOptionalVerifier,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, res }) => {
       const { uri, depth, parentHeight } = params
       const requester = auth.credentials.did
 
+      const actorService = ctx.services.actor(ctx.db)
       const feedService = ctx.services.feed(ctx.db)
       const labelService = ctx.services.label(ctx.db)
 
-      const threadData = await getThreadData(ctx, uri, depth, parentHeight)
+      const [threadData, repoRev] = await Promise.all([
+        getThreadData(ctx, uri, depth, parentHeight),
+        actorService.getRepoRev(requester),
+      ])
+      setRepoRev(res, repoRev)
+
       if (!threadData) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }

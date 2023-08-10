@@ -10,6 +10,7 @@ import { Record as FollowRecord } from '@atproto/api/src/client/types/app/bsky/g
 import { AtUri } from '@atproto/uri'
 import { BlobRef } from '@atproto/lexicon'
 import { adminAuth } from '../_util'
+import { ids } from '../../src/lexicon/lexicons'
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
@@ -158,6 +159,24 @@ export class SeedClient {
         avatar: avatarBlob,
         ref: new RecordRef(res.uri, res.cid),
       }
+    }
+    return this.profiles[by]
+  }
+
+  async updateProfile(by: string, record: Record<string, unknown>) {
+    const res = await this.agent.api.com.atproto.repo.putRecord(
+      {
+        repo: by,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+        record,
+      },
+      { headers: this.getHeaders(by), encoding: 'application/json' },
+    )
+    this.profiles[by] = {
+      ...(this.profiles[by] ?? {}),
+      ...record,
+      ref: new RecordRef(res.data.uri, res.data.cid),
     }
     return this.profiles[by]
   }

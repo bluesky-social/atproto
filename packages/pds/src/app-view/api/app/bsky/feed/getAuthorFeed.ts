@@ -4,7 +4,10 @@ import { FeedKeyset } from '../util/feed'
 import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
+import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
+import { handleReadAfterWrite } from '../util/read-after-write'
 import { authPassthru } from '../../../../../api/com/atproto/admin/util'
+import { LocalRecords } from '../../../../../services/local'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
@@ -19,6 +22,9 @@ export default function (server: Server, ctx: AppContext) {
             ? await ctx.serviceAuthHeaders(requester)
             : authPassthru(req),
         )
+        if (requester) {
+          return await handleReadAfterWrite(ctx, requester, res, getAuthorMunge)
+        }
         return {
           encoding: 'application/json',
           body: res.data,
@@ -126,5 +132,40 @@ async function assertNoBlocks(
       `Requester is blocked by actor: $${actor}`,
       'BlockedByActor',
     )
+  }
+}
+
+const getAuthorMunge = async (
+  ctx: AppContext,
+  original: OutputSchema,
+  local: LocalRecords,
+  requester: string,
+): Promise<OutputSchema> => {
+  const localSrvc = ctx.services.local(ctx.db)
+  const localProf = local.profile
+  let feed = original.feed
+  // first update any out of date profile pictures in feed
+  if (localProf) {
+    feed = feed.map((item) => {
+      if (item.post.author.did === requester) {
+        return {
+          ...item,
+          post: {
+            ...item.post,
+            author: localSrvc.updateProfileViewBasic(
+              item.post.author,
+              localProf.record,
+            ),
+          },
+        }
+      } else {
+        return item
+      }
+    })
+  }
+  feed = await localSrvc.formatAndInsertPostsInFeed(feed, local.posts)
+  return {
+    ...original,
+    feed,
   }
 }

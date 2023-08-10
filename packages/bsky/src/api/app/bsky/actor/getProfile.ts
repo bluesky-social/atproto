@@ -2,17 +2,22 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { softDeleted } from '../../../../db/util'
 import AppContext from '../../../../context'
+import { setRepoRev } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
     auth: ctx.authOptionalVerifier,
-    handler: async ({ auth, params }) => {
+    handler: async ({ auth, params, res }) => {
       const { actor } = params
       const requester = auth.credentials.did
       const { db, services } = ctx
       const actorService = services.actor(db)
 
-      const actorRes = await actorService.getActor(actor, true)
+      const [actorRes, repoRev] = await Promise.all([
+        actorService.getActor(actor, true),
+        actorService.getRepoRev(requester),
+      ])
+      setRepoRev(res, repoRev)
 
       if (!actorRes) {
         throw new InvalidRequestError('Profile not found')

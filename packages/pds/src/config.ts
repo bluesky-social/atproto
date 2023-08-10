@@ -69,6 +69,7 @@ export interface ServerConfigValues {
   bskyAppViewModeration?: boolean
   bskyAppViewDid?: string
   bskyAppViewProxy: boolean
+  bskyAppViewCdnUrlPattern?: string
 
   crawlersToNotify?: string[]
 }
@@ -218,6 +219,10 @@ export class ServerConfig {
     const bskyAppViewProxy =
       process.env.BSKY_APP_VIEW_PROXY === 'true' ? true : false
 
+    const bskyAppViewCdnUrlPattern = nonemptyString(
+      process.env.BSKY_APP_VIEW_CDN_URL_PATTERN,
+    )
+
     const crawlersEnv = process.env.CRAWLERS_TO_NOTIFY
     const crawlersToNotify =
       crawlersEnv && crawlersEnv.length > 0 ? crawlersEnv.split(',') : []
@@ -274,6 +279,7 @@ export class ServerConfig {
       bskyAppViewModeration,
       bskyAppViewDid,
       bskyAppViewProxy,
+      bskyAppViewCdnUrlPattern,
       crawlersToNotify,
       ...overrides,
     })
@@ -511,6 +517,10 @@ export class ServerConfig {
 
   get bskyAppViewProxy() {
     return this.cfg.bskyAppViewProxy
+  }
+
+  get bskyAppViewCdnUrlPattern() {
+    return this.cfg.bskyAppViewCdnUrlPattern
   }
 
   get crawlersToNotify() {

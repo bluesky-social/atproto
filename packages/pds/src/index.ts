@@ -9,6 +9,7 @@ import cors from 'cors'
 import http from 'http'
 import events from 'events'
 import { createTransport } from 'nodemailer'
+import { AtpAgent } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import { IdResolver } from '@atproto/identity'
@@ -205,6 +206,10 @@ export class PDS {
       })
     }
 
+    const appviewAgent = config.bskyAppViewEndpoint
+      ? new AtpAgent({ service: config.bskyAppViewEndpoint })
+      : undefined
+
     const services = createServices({
       repoSigningKey,
       messageDispatcher,
@@ -214,6 +219,9 @@ export class PDS {
       labeler,
       labelCache,
       contentReporter,
+      appviewAgent,
+      appviewDid: config.bskyAppViewDid,
+      appviewCdnUrlPattern: config.bskyAppViewCdnUrlPattern,
       backgroundQueue,
       crawlers,
     })
@@ -238,6 +246,7 @@ export class PDS {
       moderationMailer,
       imgUriBuilder,
       backgroundQueue,
+      appviewAgent,
       crawlers,
       algos,
     })

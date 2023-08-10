@@ -59,3 +59,4 @@ export * as _20230727T172043676Z from './20230727T172043676Z-user-account-cursor
 export * as _20230801T141349990Z from './20230801T141349990Z-invite-note'
 export * as _20230801T195109532Z from './20230801T195109532Z-remove-moderation-fkeys'
 export * as _20230807T035309811Z from './20230807T035309811Z-feed-item-delete-invite-for-user-idx'
+export * as _20230808T172813122Z from './20230808T172813122Z-repo-rev'

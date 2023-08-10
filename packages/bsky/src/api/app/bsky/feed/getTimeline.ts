@@ -5,11 +5,12 @@ import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
 import { SkeletonFeedPost } from '../../../../lexicon/types/app/bsky/feed/defs'
+import { setRepoRev } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
     auth: ctx.authVerifier,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, res }) => {
       const { algorithm, limit, cursor } = params
       const viewer = auth.credentials.did
 
@@ -17,7 +18,11 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
       }
 
-      const skeleton = await getTimelineSkeleton(ctx.db, viewer, limit, cursor)
+      const [skeleton, repoRev] = await Promise.all([
+        getTimelineSkeleton(ctx.db, viewer, limit, cursor),
+        ctx.services.actor(ctx.db).getRepoRev(viewer),
+      ])
+      setRepoRev(res, repoRev)
 
       const feedService = ctx.services.feed(ctx.db)
       const feedItems = await feedService.cleanFeedSkeleton(
