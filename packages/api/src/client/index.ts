@@ -126,7 +126,6 @@ import * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLa
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
-import * as AppBskyUnspeccedPutNotificationPushToken from './types/app/bsky/unspecced/putNotificationPushToken'
 import * as AppBskyUnspeccedRegisterPushNotificationEndpoint from './types/app/bsky/unspecced/registerPushNotificationEndpoint'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
@@ -248,7 +247,6 @@ export * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLa
 export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 export * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
-export * as AppBskyUnspeccedPutNotificationPushToken from './types/app/bsky/unspecced/putNotificationPushToken'
 export * as AppBskyUnspeccedRegisterPushNotificationEndpoint from './types/app/bsky/unspecced/registerPushNotificationEndpoint'
 
 export const COM_ATPROTO_ADMIN = {
@@ -2088,22 +2086,6 @@ export class UnspeccedNS {
       .call('app.bsky.unspecced.getTimelineSkeleton', params, undefined, opts)
       .catch((e) => {
         throw AppBskyUnspeccedGetTimelineSkeleton.toKnownErr(e)
-      })
-  }
-
-  putNotificationPushToken(
-    params?: AppBskyUnspeccedPutNotificationPushToken.QueryParams,
-    opts?: AppBskyUnspeccedPutNotificationPushToken.CallOptions,
-  ): Promise<AppBskyUnspeccedPutNotificationPushToken.Response> {
-    return this._service.xrpc
-      .call(
-        'app.bsky.unspecced.putNotificationPushToken',
-        params,
-        undefined,
-        opts,
-      )
-      .catch((e) => {
-        throw AppBskyUnspeccedPutNotificationPushToken.toKnownErr(e)
       })
   }
 

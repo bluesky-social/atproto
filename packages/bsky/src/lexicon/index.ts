@@ -106,7 +106,6 @@ import * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLa
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
-import * as AppBskyUnspeccedPutNotificationPushToken from './types/app/bsky/unspecced/putNotificationPushToken'
 import * as AppBskyUnspeccedRegisterPushNotificationEndpoint from './types/app/bsky/unspecced/registerPushNotificationEndpoint'
 
 export const COM_ATPROTO_ADMIN = {
@@ -1075,16 +1074,6 @@ export class UnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.getTimelineSkeleton' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  putNotificationPushToken<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyUnspeccedPutNotificationPushToken.Handler<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.putNotificationPushToken' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
