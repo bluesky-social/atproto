@@ -10,14 +10,14 @@ export default function (server: Server, ctx: AppContext) {
       const {
         credentials: { did },
       } = auth
-      const notifServer = ctx.notifServer
+      const { notifServer } = ctx
 
       await notifServer.registerDeviceForPushNotifications(
         did,
         platform,
         token,
-        endpoint,
         appId,
+        endpoint,
       )
     },
   })

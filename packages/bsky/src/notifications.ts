@@ -4,11 +4,6 @@ import { Notification } from './db/tables/notification'
 import { AppBskyEmbedImages, AtUri } from '@atproto/api'
 import { Insertable } from 'kysely'
 
-const PUSH_NOTIF_SERVER_BASE_URL = 'https://push.bsky.app'
-const PUSH_NOTIF_SERVER_ENDPOINT = '/api/push'
-export const PUSH_NOTIF_SERVER_URL =
-  PUSH_NOTIF_SERVER_BASE_URL + PUSH_NOTIF_SERVER_ENDPOINT
-export const BSKY_APP_ID = 'xyz.blueskyweb.app'
 type Platform = 'ios' | 'android' | 'web'
 type PushNotification = {
   tokens: string[]
@@ -23,7 +18,7 @@ type PushNotification = {
 type InsertableNotif = Insertable<Notification>
 
 export class NotificationServer {
-  constructor(public db: Database) {}
+  constructor(public db: Database, public pushEndpoint?: string) {}
 
   async getUserTokens(did: string) {
     const userTokens = await this.db.db
@@ -108,16 +103,16 @@ export class NotificationServer {
     4.  store response from `gorush` which contains the ID of the notification
     5. If notification needs to be updated or deleted, find the ID of the notification from the database and send a new notification to `gorush` with the ID (repeat step 2)
   */
-  async sendPushNotifications(
+  static async sendPushNotifications(
     notifications: PushNotification[],
-    pushEndpoint = PUSH_NOTIF_SERVER_URL,
+    pushServerEndpoint: string,
   ) {
     // if no notifications, skip and return early
     if (!notifications || notifications.length === 0) {
       return
     }
     await axios.post(
-      pushEndpoint,
+      pushServerEndpoint,
       {
         notifications: notifications,
       },
@@ -134,8 +129,8 @@ export class NotificationServer {
     did: string,
     platform: Platform,
     token: string,
-    endpoint = PUSH_NOTIF_SERVER_URL,
-    appId = BSKY_APP_ID,
+    appId: string,
+    endpoint: string,
   ) {
     // if token doesn't exist, insert it, on conflict do nothing
     await this.db.db
@@ -144,8 +139,8 @@ export class NotificationServer {
         did,
         token,
         platform,
-        endpoint,
         appId,
+        endpoint,
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
@@ -171,9 +166,7 @@ export class NotificationServer {
     if (!displayName || !displayName?.displayName) {
       throw new Error('Failed to get display name. User has no profile')
     }
-    const author = NotificationServer.sanitizeDisplayName(
-      displayName.displayName,
-    )
+    const author = displayName.displayName
 
     // 2. Get post data content
     // if reply, quote, or mention, get URI of the postRecord
@@ -246,17 +239,5 @@ export class NotificationServer {
     }
 
     return { title: title, body: body }
-  }
-
-  static sanitizeDisplayName(str: string): string {
-    // \u2705 = ✅
-    // \u2713 = ✓
-    // \u2714 = ✔
-    // \u2611 = ☑
-    const CHECK_MARKS_RE = /[\u2705\u2713\u2714\u2611]/gu
-    if (typeof str === 'string') {
-      return str.replace(CHECK_MARKS_RE, '').trim()
-    }
-    return ''
   }
 }
