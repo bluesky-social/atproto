@@ -17,6 +17,9 @@ export function decideQuotedPost(
         acc.addLabel(label, opts)
       }
     }
+  } else if (AppBskyEmbedRecord.isViewBlocked(subject.record)) {
+    acc.setDid(subject.record.author.did)
+    acc.addBlockOther(true)
   }
 
   return acc.finalizeDecision(opts)
@@ -46,6 +49,9 @@ export function decideQuotedPostWithMedia(
         acc.addLabel(label, opts)
       }
     }
+  } else if (AppBskyEmbedRecord.isViewBlocked(subject.record.record)) {
+    acc.setDid(subject.record.record.author.did)
+    acc.addBlockOther(true)
   }
 
   return acc.finalizeDecision(opts)

@@ -70,25 +70,13 @@ export function isModerationDecisionNoop(
 }
 
 export function isQuotedPost(embed: unknown): embed is AppBskyEmbedRecord.View {
-  return Boolean(
-    embed &&
-      AppBskyEmbedRecord.isView(embed) &&
-      AppBskyEmbedRecord.isViewRecord(embed.record) &&
-      AppBskyFeedPost.isRecord(embed.record.value) &&
-      AppBskyFeedPost.validateRecord(embed.record.value).success,
-  )
+  return Boolean(embed && AppBskyEmbedRecord.isView(embed))
 }
 
 export function isQuotedPostWithMedia(
   embed: unknown,
 ): embed is AppBskyEmbedRecordWithMedia.View {
-  return Boolean(
-    embed &&
-      AppBskyEmbedRecordWithMedia.isView(embed) &&
-      AppBskyEmbedRecord.isViewRecord(embed.record.record) &&
-      AppBskyFeedPost.isRecord(embed.record.record.value) &&
-      AppBskyFeedPost.validateRecord(embed.record.record.value).success,
-  )
+  return Boolean(embed && AppBskyEmbedRecordWithMedia.isView(embed))
 }
 
 export function toModerationUI(decision: ModerationDecision): ModerationUI {
