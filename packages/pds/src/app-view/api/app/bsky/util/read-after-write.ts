@@ -40,18 +40,11 @@ export const handleReadAfterWrite = async <T>(
   requester: string,
   res: ApiRes<T>,
   munge: MungeFn<T>,
-  collections?: string[],
 ): Promise<HandlerResponse<T>> => {
   let body: T
   let lag: number | undefined = undefined
   try {
-    const withLocal = await readAfterWriteInternal(
-      ctx,
-      requester,
-      res,
-      munge,
-      collections,
-    )
+    const withLocal = await readAfterWriteInternal(ctx, requester, res, munge)
     body = withLocal.data
     lag = withLocal.lag
   } catch (err) {
@@ -74,12 +67,11 @@ export const readAfterWriteInternal = async <T>(
   requester: string,
   res: ApiRes<T>,
   munge: MungeFn<T>,
-  collections?: string[],
 ): Promise<{ data: T; lag?: number }> => {
   const rev = getRepoRev(res.headers)
   if (!rev) return { data: res.data }
   const localSrvc = ctx.services.local(ctx.db)
-  const local = await localSrvc.getRecordsSinceRev(requester, rev, collections)
+  const local = await localSrvc.getRecordsSinceRev(requester, rev)
   const data = await munge(ctx, res.data, local, requester)
   return {
     data,

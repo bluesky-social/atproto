@@ -25,7 +25,6 @@ import {
   OutputSchema,
   QueryParams,
 } from '../../../../../lexicon/types/app/bsky/feed/getPostThread'
-import { ids } from '../../../../../lexicon/lexicons'
 import {
   LocalRecords,
   LocalService,
@@ -59,7 +58,6 @@ export default function (server: Server, ctx: AppContext) {
             requester,
             res,
             getPostThreadMunge,
-            [ids.AppBskyFeedPost],
           )
         } catch (err) {
           if (err instanceof AppBskyFeedGetPostThread.NotFoundError) {
@@ -420,9 +418,7 @@ const readAfterWriteNotFound = async (
     return null
   }
   const localSrvc = ctx.services.local(ctx.db)
-  const local = await localSrvc.getRecordsSinceRev(requester, rev, [
-    ids.AppBskyFeedPost,
-  ])
+  const local = await localSrvc.getRecordsSinceRev(requester, rev)
   const found = local.posts.find((p) => p.uri.toString() === uri.toString())
   if (!found) return null
   let thread = await threadPostView(localSrvc, found)

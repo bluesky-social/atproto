@@ -7,7 +7,6 @@ import { FeedRow } from '../../../../services/feed'
 import { filterMutesAndBlocks } from './getFeed'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getTimeline'
 import { handleReadAfterWrite } from '../util/read-after-write'
-import { ids } from '../../../../../lexicon/lexicons'
 import { LocalRecords } from '../../../../../services/local'
 
 export default function (server: Server, ctx: AppContext) {
@@ -25,13 +24,7 @@ export default function (server: Server, ctx: AppContext) {
           params,
           await ctx.serviceAuthHeaders(requester),
         )
-        return await handleReadAfterWrite(
-          ctx,
-          requester,
-          res,
-          getTimelineMunge,
-          [ids.AppBskyFeedPost],
-        )
+        return await handleReadAfterWrite(ctx, requester, res, getTimelineMunge)
       }
 
       if (ctx.cfg.bskyAppViewEndpoint) {

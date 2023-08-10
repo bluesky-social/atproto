@@ -164,4 +164,20 @@ describe('proxy read after write', () => {
     )
     expect(res.data.feed[0].post.uri).toEqual(postRes.uri)
   })
+
+  it('returns lag headers', async () => {
+    const postRes = await agent.api.app.bsky.feed.post.create(
+      { repo: alice },
+      {
+        text: 'poast',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
+    const res = await agent.api.app.bsky.feed.getTimeline(
+      {},
+      { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
+    )
+    expect(res.data.feed[0].post.uri).toEqual(postRes.uri)
+  })
 })

@@ -78,12 +78,8 @@ export class LocalService {
     })
   }
 
-  async getRecordsSinceRev(
-    did: string,
-    rev: string,
-    collections?: string[],
-  ): Promise<LocalRecords> {
-    let builder = this.db.db
+  async getRecordsSinceRev(did: string, rev: string): Promise<LocalRecords> {
+    const res = await this.db.db
       .selectFrom('record')
       .innerJoin('ipld_block', (join) =>
         join
@@ -99,10 +95,7 @@ export class LocalService {
       .where('did', '=', did)
       .where('repoRev', '>', rev)
       .orderBy('repoRev', 'asc')
-    if (collections !== undefined && collections.length > 0) {
-      builder = builder.where('collection', 'in', collections)
-    }
-    const res = await builder.execute()
+      .execute()
     return res.reduce(
       (acc, cur) => {
         const descript = {

@@ -1,6 +1,5 @@
 import AppContext from '../../../../../context'
 import { Server } from '../../../../../lexicon'
-import { ids } from '../../../../../lexicon/lexicons'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/actor/getProfiles'
 import { LocalRecords } from '../../../../../services/local'
 import { handleReadAfterWrite } from '../util/read-after-write'
@@ -22,7 +21,6 @@ export default function (server: Server, ctx: AppContext) {
             requester,
             res,
             getProfilesMunge,
-            [ids.AppBskyActorProfile],
           )
         }
         return {

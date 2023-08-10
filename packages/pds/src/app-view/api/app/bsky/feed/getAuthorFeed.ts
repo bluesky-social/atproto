@@ -6,7 +6,6 @@ import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import { handleReadAfterWrite } from '../util/read-after-write'
-import { ids } from '../../../../../lexicon/lexicons'
 import { authPassthru } from '../../../../../api/com/atproto/admin/util'
 import { LocalRecords } from '../../../../../services/local'
 
@@ -24,13 +23,7 @@ export default function (server: Server, ctx: AppContext) {
             : authPassthru(req),
         )
         if (requester) {
-          return await handleReadAfterWrite(
-            ctx,
-            requester,
-            res,
-            getAuthorMunge,
-            [ids.AppBskyActorProfile, ids.AppBskyFeedPost],
-          )
+          return await handleReadAfterWrite(ctx, requester, res, getAuthorMunge)
         }
         return {
           encoding: 'application/json',

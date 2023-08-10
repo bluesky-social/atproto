@@ -2,7 +2,6 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
 import { softDeleted } from '../../../../../db/util'
 import AppContext from '../../../../../context'
-import { ids } from '../../../../../lexicon/lexicons'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/actor/getProfile'
 import { handleReadAfterWrite } from '../util/read-after-write'
 import { LocalRecords } from '../../../../../services/local'
@@ -23,7 +22,6 @@ export default function (server: Server, ctx: AppContext) {
             requester,
             res,
             getProfileMunge,
-            [ids.AppBskyActorProfile],
           )
         }
         return {
