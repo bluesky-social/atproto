@@ -6,8 +6,9 @@ import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
 import { filterMutesAndBlocks } from './getFeed'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getTimeline'
-import { ApiRes, getRepoRev } from '../util/read-after-write'
+import { handleReadAfterWrite } from '../util/read-after-write'
 import { ids } from '../../../../../lexicon/lexicons'
+import { LocalRecords } from '../../../../../services/local'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
@@ -24,10 +25,13 @@ export default function (server: Server, ctx: AppContext) {
           params,
           await ctx.serviceAuthHeaders(requester),
         )
-        return {
-          encoding: 'application/json',
-          body: await ensureReadAfterWrite(ctx, requester, res),
-        }
+        return await handleReadAfterWrite(
+          ctx,
+          requester,
+          res,
+          getTimelineMunge,
+          [ids.AppBskyFeedPost],
+        )
       }
 
       if (ctx.cfg.bskyAppViewEndpoint) {
@@ -115,23 +119,16 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const ensureReadAfterWrite = async (
+const getTimelineMunge = async (
   ctx: AppContext,
-  requester: string,
-  res: ApiRes<OutputSchema>,
+  original: OutputSchema,
+  local: LocalRecords,
 ): Promise<OutputSchema> => {
-  const rev = getRepoRev(res.headers)
-  if (!rev) return res.data
-  const localSrvc = ctx.services.local(ctx.db)
-  const local = await localSrvc.getRecordsSinceRev(requester, rev, [
-    ids.AppBskyFeedPost,
-  ])
-  const feed = await localSrvc.formatAndInsertPostsInFeed(
-    [...res.data.feed],
-    local.posts,
-  )
+  const feed = await ctx.services
+    .local(ctx.db)
+    .formatAndInsertPostsInFeed([...original.feed], local.posts)
   return {
-    ...res.data,
+    ...original,
     feed,
   }
 }

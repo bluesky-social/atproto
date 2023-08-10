@@ -4,7 +4,8 @@ import { softDeleted } from '../../../../../db/util'
 import AppContext from '../../../../../context'
 import { ids } from '../../../../../lexicon/lexicons'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/actor/getProfile'
-import { ApiRes, getRepoRev } from '../util/read-after-write'
+import { handleReadAfterWrite } from '../util/read-after-write'
+import { LocalRecords } from '../../../../../services/local'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
@@ -16,9 +17,18 @@ export default function (server: Server, ctx: AppContext) {
           params,
           await ctx.serviceAuthHeaders(requester),
         )
+        if (res.data.did === requester) {
+          return await handleReadAfterWrite(
+            ctx,
+            requester,
+            res,
+            getProfileMunge,
+            [ids.AppBskyActorProfile],
+          )
+        }
         return {
           encoding: 'application/json',
-          body: await ensureReadAfterWrite(ctx, requester, res),
+          body: res.data,
         }
       }
 
@@ -53,18 +63,13 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const ensureReadAfterWrite = async (
+const getProfileMunge = async (
   ctx: AppContext,
-  requester: string,
-  res: ApiRes<OutputSchema>,
+  original: OutputSchema,
+  local: LocalRecords,
 ): Promise<OutputSchema> => {
-  const rev = getRepoRev(res.headers)
-  if (!rev) return res.data
-  if (res.data.did !== requester) return res.data
-  const localSrvc = ctx.services.local(ctx.db)
-  const local = await localSrvc.getRecordsSinceRev(requester, rev, [
-    ids.AppBskyActorProfile,
-  ])
-  if (!local.profile) return res.data
-  return localSrvc.updateProfileDetailed(res.data, local.profile.record)
+  if (!local.profile) return original
+  return ctx.services
+    .local(ctx.db)
+    .updateProfileDetailed(original, local.profile.record)
 }

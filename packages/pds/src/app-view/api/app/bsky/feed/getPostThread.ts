@@ -1,3 +1,6 @@
+import { AtUri } from '@atproto/uri'
+import { AppBskyFeedGetPostThread } from '@atproto/api'
+import { Headers } from '@atproto/xrpc'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
@@ -22,12 +25,17 @@ import {
   OutputSchema,
   QueryParams,
 } from '../../../../../lexicon/types/app/bsky/feed/getPostThread'
-import { AppBskyFeedGetPostThread } from '@atproto/api'
-import { ApiRes, getRepoRev } from '../util/read-after-write'
 import { ids } from '../../../../../lexicon/lexicons'
-import { LocalService, RecordDescript } from '../../../../../services/local'
-import { AtUri } from '@atproto/uri'
-import { Headers } from '@atproto/xrpc'
+import {
+  LocalRecords,
+  LocalService,
+  RecordDescript,
+} from '../../../../../services/local'
+import {
+  getLocalLag,
+  getRepoRev,
+  handleReadAfterWrite,
+} from '../util/read-after-write'
 
 export type PostThread = {
   post: FeedRow
@@ -47,19 +55,33 @@ export default function (server: Server, ctx: AppContext) {
             params,
             await ctx.serviceAuthHeaders(requester),
           )
-          body = await ensureReadAfterWrite(ctx, requester, res)
+          return await handleReadAfterWrite(
+            ctx,
+            requester,
+            res,
+            getPostThreadMunge,
+            [ids.AppBskyFeedPost],
+          )
         } catch (err) {
           if (err instanceof AppBskyFeedGetPostThread.NotFoundError) {
-            const attemptLocal = await readAfterWriteNotFound(
+            const local = await readAfterWriteNotFound(
               ctx,
               params,
               requester,
               err.headers,
             )
-            if (attemptLocal !== null) {
-              body = attemptLocal
-            } else {
+            if (local === null) {
               throw err
+            } else {
+              return {
+                encoding: 'application/json',
+                body: local.data,
+                headers: local.lag
+                  ? {
+                      'Atproto-Upstream-Lag': local.lag.toString(10),
+                    }
+                  : undefined,
+              }
             }
           } else {
             throw err
@@ -301,74 +323,21 @@ class ParentNotFoundError extends Error {
 // READ AFTER WRITE
 // ----------------
 
-const readAfterWriteNotFound = async (
+const getPostThreadMunge = async (
   ctx: AppContext,
-  params: QueryParams,
-  requester: string,
-  headers?: Headers,
-): Promise<OutputSchema | null> => {
-  if (!headers) return null
-  const rev = getRepoRev(headers)
-  if (!rev) return null
-  const uri = new AtUri(params.uri)
-  if (uri.hostname !== requester) {
-    return null
-  }
-  const localSrvc = ctx.services.local(ctx.db)
-  const local = await localSrvc.getRecordsSinceRev(requester, rev, [
-    ids.AppBskyFeedPost,
-  ])
-  const found = local.posts.find((p) => p.uri.toString() === uri.toString())
-  if (!found) return null
-  let thread = await threadPostView(localSrvc, found)
-  if (!thread) return null
-  const rest = local.posts.filter((p) => p.uri.toString() !== uri.toString())
-  thread = await addPostsToThread(localSrvc, thread, rest)
-  const highestParent = getHighestParent(thread)
-  if (highestParent) {
-    try {
-      const parentsRes = await ctx.appviewAgent.api.app.bsky.feed.getPostThread(
-        { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
-        await ctx.serviceAuthHeaders(requester),
-      )
-      thread.parent = parentsRes.data.thread
-    } catch (err) {
-      // do nothing
-    }
-  }
-  return {
-    thread,
-  }
-}
-
-const getHighestParent = (
-  thread: ThreadViewPost,
-  height = 0,
-): string | undefined => {
-  if (isThreadViewPost(thread.parent)) {
-    return getHighestParent(thread.parent, height + 1)
-  } else {
-    return (thread.post.record as PostRecord).reply?.parent.uri
-  }
-}
-
-const ensureReadAfterWrite = async (
-  ctx: AppContext,
-  requester: string,
-  res: ApiRes<OutputSchema>,
+  original: OutputSchema,
+  local: LocalRecords,
 ): Promise<OutputSchema> => {
-  const rev = getRepoRev(res.headers)
-  if (!rev) return res.data
-  if (!isThreadViewPost(res.data.thread)) {
-    return res.data
+  if (!isThreadViewPost(original.thread)) {
+    return original
   }
-  const localSrvc = ctx.services.local(ctx.db)
-  const local = await localSrvc.getRecordsSinceRev(requester, rev, [
-    ids.AppBskyFeedPost,
-  ])
-  const thread = await addPostsToThread(localSrvc, res.data.thread, local.posts)
+  const thread = await addPostsToThread(
+    ctx.services.local(ctx.db),
+    original.thread,
+    local.posts,
+  )
   return {
-    ...res.data,
+    ...original,
     thread,
   }
 }
@@ -436,5 +405,62 @@ const threadPostView = async (
   return {
     $type: 'app.bsky.feed.defs#threadViewPost',
     post: postView,
+  }
+}
+
+// Read after write on error
+// ---------------------
+
+const readAfterWriteNotFound = async (
+  ctx: AppContext,
+  params: QueryParams,
+  requester: string,
+  headers?: Headers,
+): Promise<{ data: OutputSchema; lag?: number } | null> => {
+  if (!headers) return null
+  const rev = getRepoRev(headers)
+  if (!rev) return null
+  const uri = new AtUri(params.uri)
+  if (uri.hostname !== requester) {
+    return null
+  }
+  const localSrvc = ctx.services.local(ctx.db)
+  const local = await localSrvc.getRecordsSinceRev(requester, rev, [
+    ids.AppBskyFeedPost,
+  ])
+  const found = local.posts.find((p) => p.uri.toString() === uri.toString())
+  if (!found) return null
+  let thread = await threadPostView(localSrvc, found)
+  if (!thread) return null
+  const rest = local.posts.filter((p) => p.uri.toString() !== uri.toString())
+  thread = await addPostsToThread(localSrvc, thread, rest)
+  const highestParent = getHighestParent(thread)
+  if (highestParent) {
+    try {
+      const parentsRes = await ctx.appviewAgent.api.app.bsky.feed.getPostThread(
+        { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
+        await ctx.serviceAuthHeaders(requester),
+      )
+      thread.parent = parentsRes.data.thread
+    } catch (err) {
+      // do nothing
+    }
+  }
+  return {
+    data: {
+      thread,
+    },
+    lag: getLocalLag(local),
+  }
+}
+
+const getHighestParent = (
+  thread: ThreadViewPost,
+  height = 0,
+): string | undefined => {
+  if (isThreadViewPost(thread.parent)) {
+    return getHighestParent(thread.parent, height + 1)
+  } else {
+    return (thread.post.record as PostRecord).reply?.parent.uri
   }
 }

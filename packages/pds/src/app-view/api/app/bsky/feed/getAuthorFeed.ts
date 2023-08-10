@@ -5,10 +5,10 @@ import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
-import { ApiRes, getRepoRev } from '../util/read-after-write'
-import { isReasonRepost } from '../../../../../lexicon/types/app/bsky/feed/defs'
+import { handleReadAfterWrite } from '../util/read-after-write'
 import { ids } from '../../../../../lexicon/lexicons'
 import { authPassthru } from '../../../../../api/com/atproto/admin/util'
+import { LocalRecords } from '../../../../../services/local'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
@@ -23,11 +23,18 @@ export default function (server: Server, ctx: AppContext) {
             ? await ctx.serviceAuthHeaders(requester)
             : authPassthru(req),
         )
+        if (requester) {
+          return await handleReadAfterWrite(
+            ctx,
+            requester,
+            res,
+            getAuthorMunge,
+            [ids.AppBskyActorProfile, ids.AppBskyFeedPost],
+          )
+        }
         return {
           encoding: 'application/json',
-          body: requester
-            ? await ensureReadAfterWrite(ctx, requester, res)
-            : res.data,
+          body: res.data,
         }
       }
 
@@ -135,25 +142,18 @@ async function assertNoBlocks(
   }
 }
 
-const ensureReadAfterWrite = async (
+const getAuthorMunge = async (
   ctx: AppContext,
+  original: OutputSchema,
+  local: LocalRecords,
   requester: string,
-  res: ApiRes<OutputSchema>,
 ): Promise<OutputSchema> => {
-  const rev = getRepoRev(res.headers)
-  if (!rev) return res.data
-  const author = getAuthor(res)
-  if (author !== requester) return res.data
   const localSrvc = ctx.services.local(ctx.db)
-  const local = await localSrvc.getRecordsSinceRev(requester, rev, [
-    ids.AppBskyActorProfile,
-    ids.AppBskyFeedPost,
-  ])
   const localProf = local.profile
-  let feed = res.data.feed
+  let feed = original.feed
   // first update any out of date profile pictures in feed
   if (localProf) {
-    feed = res.data.feed.map((item) => {
+    feed = feed.map((item) => {
       if (item.post.author.did === requester) {
         return {
           ...item,
@@ -172,17 +172,7 @@ const ensureReadAfterWrite = async (
   }
   feed = await localSrvc.formatAndInsertPostsInFeed(feed, local.posts)
   return {
-    ...res.data,
+    ...original,
     feed,
   }
-}
-
-const getAuthor = (res: ApiRes<OutputSchema>): string | undefined => {
-  const first = res.data.feed.at(0)
-  if (!first) return undefined
-  const reason = first.reason
-  if (reason && isReasonRepost(reason)) {
-    return reason.by.did
-  }
-  return first.post.author.did
 }

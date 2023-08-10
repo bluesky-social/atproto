@@ -2,7 +2,8 @@ import AppContext from '../../../../../context'
 import { Server } from '../../../../../lexicon'
 import { ids } from '../../../../../lexicon/lexicons'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/actor/getProfiles'
-import { ApiRes, getRepoRev } from '../util/read-after-write'
+import { LocalRecords } from '../../../../../services/local'
+import { handleReadAfterWrite } from '../util/read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfiles({
@@ -14,9 +15,19 @@ export default function (server: Server, ctx: AppContext) {
           params,
           await ctx.serviceAuthHeaders(requester),
         )
+        const hasSelf = res.data.profiles.some((prof) => prof.did === requester)
+        if (hasSelf) {
+          return await handleReadAfterWrite(
+            ctx,
+            requester,
+            res,
+            getProfilesMunge,
+            [ids.AppBskyActorProfile],
+          )
+        }
         return {
           encoding: 'application/json',
-          body: await ensureReadAfterWrite(ctx, requester, res),
+          body: res.data,
         }
       }
 
@@ -39,27 +50,22 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const ensureReadAfterWrite = async (
+const getProfilesMunge = async (
   ctx: AppContext,
+  original: OutputSchema,
+  local: LocalRecords,
   requester: string,
-  res: ApiRes<OutputSchema>,
 ): Promise<OutputSchema> => {
-  const rev = getRepoRev(res.headers)
-  if (!rev) return res.data
-  const hasSelf = res.data.profiles.some((prof) => prof.did === requester)
-  if (!hasSelf) return res.data
-  const localSrvc = ctx.services.local(ctx.db)
-  const local = await localSrvc.getRecordsSinceRev(requester, rev, [
-    ids.AppBskyActorProfile,
-  ])
   const localProf = local.profile
-  if (!localProf) return res.data
-  const profiles = res.data.profiles.map((prof) => {
+  if (!localProf) return original
+  const profiles = original.profiles.map((prof) => {
     if (prof.did !== requester) return prof
-    return localSrvc.updateProfileDetailed(prof, localProf.record)
+    return ctx.services
+      .local(ctx.db)
+      .updateProfileDetailed(prof, localProf.record)
   })
   return {
-    ...res.data,
+    ...original,
     profiles,
   }
 }
