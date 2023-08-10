@@ -1,12 +1,11 @@
-import AtpAgent, { AtUri } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import { NotificationServer } from '../src/notifications'
 import { Database } from '../src'
-import { sql } from 'kysely'
 
-describe('notification views', () => {
+describe('notification server', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
@@ -56,18 +55,45 @@ describe('notification views', () => {
       expect(tokens[0].token).toEqual('123')
     })
 
-    it('gets notification display attributes: title and body', async () => {})
+    it('gets notification display attributes: title and body', async () => {
+      const db = network.bsky.ctx.db
+      const notif = await getLikeNotification(db, alice)
+      if (!notif) throw new Error('no notification found')
+      const attr = await notifServer.getNotificationDisplayAttributes(notif)
+      if (!attr) throw new Error('no notification display attributes found')
+      expect(attr.title).toEqual('bobby liked your post')
+    })
 
-    it('prepares notification to be sent', async () => {})
+    it('prepares notification to be sent', async () => {
+      const db = network.bsky.ctx.db
+      const notif = await getLikeNotification(db, alice)
+      if (!notif) throw new Error('no notification found')
+      const notifAsArray = [notif]
+      const prepared = await notifServer.prepareNotifsToSend(notifAsArray)
+      expect(prepared).toEqual([
+        {
+          data: {
+            reason: notif.reason,
+            recordCid: notif.recordCid,
+            recordUri: notif.recordUri,
+          },
+          message: 'again',
+          platform: 1,
+          title: 'bobby liked your post',
+          tokens: ['123'],
+          topic: 'xyz.blueskyweb.app',
+        },
+      ])
+    })
   })
 
-  async function getNotifications(db: Database, uri: AtUri) {
+  async function getLikeNotification(db: Database, did: string) {
     return await db.db
       .selectFrom('notification')
       .selectAll()
-      .select(sql`0`.as('id')) // Ignore notification ids in comparisons
-      .where('recordUri', '=', uri.toString())
+      .where('did', '=', did)
+      .where('reason', '=', 'like')
       .orderBy('sortAt')
-      .execute()
+      .executeTakeFirst()
   }
 })
