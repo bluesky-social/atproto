@@ -103,13 +103,15 @@ export class IndexingService {
           obj,
           timestamp,
         )
-        // THIS WILL SEND THE NOTIFICATIONS
         if (insertedRecords) {
-          /* don't await */ this.notifServer
-            .prepareNotifsToSend(insertedRecords)
-            .then((preparedNotifs) => {
-              this.notifServer.sendPushNotifications(preparedNotifs)
-            })
+          // SEND NOTIFICATIONS as part of background queue process
+          this.backgroundQueue.add(async () => {
+            await this.notifServer
+              .prepareNotifsToSend(insertedRecords)
+              .then((preparedNotifs) => {
+                this.notifServer.sendPushNotifications(preparedNotifs)
+              })
+          })
         }
       } else {
         await indexer.updateRecord(uri, cid, obj, timestamp)
