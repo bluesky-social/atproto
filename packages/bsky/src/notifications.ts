@@ -223,7 +223,13 @@ export class NotificationServer {
     }
 
     if (title === '' && body === '') {
-      throw new Error('Failed to get title and body')
+      logger.warn(
+        {
+          notif,
+        },
+        'No notification display attributes found for this notification. Either profile or post data for this notification is missing.',
+      )
+      return
     }
 
     return { title: title, body: body }
