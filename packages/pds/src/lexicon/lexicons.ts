@@ -4512,7 +4512,7 @@ export const schemaDict = {
       },
       blockedPost: {
         type: 'object',
-        required: ['uri', 'blocked'],
+        required: ['uri', 'blocked', 'author'],
         properties: {
           uri: {
             type: 'string',
@@ -4521,6 +4521,24 @@ export const schemaDict = {
           blocked: {
             type: 'boolean',
             const: true,
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#blockedAuthor',
+          },
+        },
+      },
+      blockedAuthor: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#viewerState',
           },
         },
       },

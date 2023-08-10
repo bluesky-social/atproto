@@ -111,6 +111,15 @@ const composeThread = (
       $type: 'app.bsky.feed.defs#blockedPost',
       uri: threadData.post.postUri,
       blocked: true,
+      author: {
+        did: post.author.did,
+        viewer: post.author.viewer
+          ? {
+              blockedBy: post.author.viewer?.blockedBy,
+              blocking: post.author.viewer?.blocking,
+            }
+          : undefined,
+      },
     }
   }
 
