@@ -17,7 +17,6 @@ import * as subscription from './tables/subscription'
 import * as algo from './tables/algo'
 import * as viewParam from './tables/view-param'
 import * as suggestedFollow from './tables/suggested-follow'
-import * as notificationToken from './tables/notification-push-token'
 
 // @NOTE app-view also shares did-handle, record, and repo-root tables w/ main pds
 export type DatabaseSchemaType = duplicateRecords.PartialDB &
@@ -38,5 +37,4 @@ export type DatabaseSchemaType = duplicateRecords.PartialDB &
   subscription.PartialDB &
   algo.PartialDB &
   viewParam.PartialDB &
-  suggestedFollow.PartialDB &
-  notificationToken.PartialDB
+  suggestedFollow.PartialDB
