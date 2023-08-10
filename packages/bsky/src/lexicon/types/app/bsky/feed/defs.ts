@@ -171,7 +171,7 @@ export function validateNotFoundPost(v: unknown): ValidationResult {
 export interface BlockedPost {
   uri: string
   blocked: true
-  author?: BlockedAuthor
+  author: BlockedAuthor
   [k: string]: unknown
 }
 

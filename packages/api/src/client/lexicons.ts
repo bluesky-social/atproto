@@ -4478,7 +4478,7 @@ export const schemaDict = {
       },
       blockedPost: {
         type: 'object',
-        required: ['uri', 'blocked'],
+        required: ['uri', 'blocked', 'author'],
         properties: {
           uri: {
             type: 'string',
