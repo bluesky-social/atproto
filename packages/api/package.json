@@ -1,6 +1,6 @@
 {
   "name": "@atproto/api",
-  "version": "0.6.0",
+  "version": "0.6.2",
   "main": "src/index.ts",
   "scripts": {
     "codegen": "yarn docgen && node ./scripts/generate-code.mjs && lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
