@@ -19,7 +19,13 @@ export function decideQuotedPost(
     }
   } else if (AppBskyEmbedRecord.isViewBlocked(subject.record)) {
     acc.setDid(subject.record.author.did)
-    acc.addBlockOther(true)
+    if (subject.record.author.viewer?.blocking) {
+      acc.addBlocking(subject.record.author.viewer?.blocking)
+    } else if (subject.record.author.viewer?.blockedBy) {
+      acc.addBlockedBy(subject.record.author.viewer?.blockedBy)
+    } else {
+      acc.addBlockOther(true)
+    }
   }
 
   return acc.finalizeDecision(opts)
@@ -51,7 +57,13 @@ export function decideQuotedPostWithMedia(
     }
   } else if (AppBskyEmbedRecord.isViewBlocked(subject.record.record)) {
     acc.setDid(subject.record.record.author.did)
-    acc.addBlockOther(true)
+    if (subject.record.record.author.viewer?.blocking) {
+      acc.addBlocking(subject.record.record.author.viewer?.blocking)
+    } else if (subject.record.record.author.viewer?.blockedBy) {
+      acc.addBlockedBy(subject.record.record.author.viewer?.blockedBy)
+    } else {
+      acc.addBlockOther(true)
+    }
   }
 
   return acc.finalizeDecision(opts)
