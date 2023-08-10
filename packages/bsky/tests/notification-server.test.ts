@@ -2,11 +2,13 @@ import AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
+import { NotificationServer } from '../src/notifications'
 
 describe('notification views', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
+  let notifServer: NotificationServer
 
   // account dids, for convenience
   let alice: string
@@ -22,6 +24,7 @@ describe('notification views', () => {
     await network.processAll()
     await network.bsky.processAll()
     alice = sc.dids.alice
+    notifServer = network.bsky.ctx.notifServer
   })
 
   afterAll(async () => {
@@ -42,6 +45,14 @@ describe('notification views', () => {
         },
       )
       expect(res.success).toEqual(true)
+    })
+  })
+
+  describe('NotificationServer', () => {
+    it('gets user tokens from db', async () => {
+      const tokens = await notifServer.getUserTokens(alice)
+      console.log(tokens)
+      expect(tokens[0].token).toEqual(123)
     })
   })
 })
