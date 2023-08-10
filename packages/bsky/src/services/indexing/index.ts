@@ -1,4 +1,4 @@
-import { Insertable, sql } from 'kysely'
+import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import AtpAgent, { ComAtprotoSyncGetHead } from '@atproto/api'
 import {

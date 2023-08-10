@@ -103,16 +103,17 @@ export class NotificationServer {
     4.  store response from `gorush` which contains the ID of the notification
     5. If notification needs to be updated or deleted, find the ID of the notification from the database and send a new notification to `gorush` with the ID (repeat step 2)
   */
-  static async sendPushNotifications(
-    notifications: PushNotification[],
-    pushServerEndpoint: string,
-  ) {
+  async sendPushNotifications(notifications: PushNotification[]) {
     // if no notifications, skip and return early
     if (!notifications || notifications.length === 0) {
       return
     }
+    // if pushEndpoint is not defined, we are not running in the indexer service, so we can't send push notifications
+    if (!this.pushEndpoint) {
+      throw new Error('Push endpoint not defined')
+    }
     await axios.post(
-      pushServerEndpoint,
+      this.pushEndpoint,
       {
         notifications: notifications,
       },
