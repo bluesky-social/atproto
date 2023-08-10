@@ -24,6 +24,7 @@ describe('pds views with blocking', () => {
   let alice: string
   let carol: string
   let dan: string
+  let danBlockUri: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -57,6 +58,7 @@ describe('pds views with blocking', () => {
       { createdAt: new Date().toISOString(), subject: carol },
       sc.getHeaders(dan),
     )
+    danBlockUri = danBlockCarol.uri
     await network.processAll()
   })
 
@@ -74,6 +76,13 @@ describe('pds views with blocking', () => {
         $type: 'app.bsky.feed.defs#blockedPost',
         uri: sc.posts[carol][0].ref.uriStr,
         blocked: true,
+        author: {
+          did: carol,
+          viewer: {
+            blockedBy: false,
+            blocking: danBlockUri,
+          },
+        },
       },
     })
     const { data: threadCarol } = await agent.api.app.bsky.feed.getPostThread(
@@ -85,6 +94,12 @@ describe('pds views with blocking', () => {
         $type: 'app.bsky.feed.defs#blockedPost',
         uri: sc.posts[dan][0].ref.uriStr,
         blocked: true,
+        author: {
+          did: dan,
+          viewer: {
+            blockedBy: true,
+          },
+        },
       },
     })
   })

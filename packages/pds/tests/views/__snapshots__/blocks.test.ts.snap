@@ -136,6 +136,12 @@ Object {
     "$type": "app.bsky.feed.defs#threadViewPost",
     "parent": Object {
       "$type": "app.bsky.feed.defs#blockedPost",
+      "author": Object {
+        "did": "user(1)",
+        "viewer": Object {
+          "blockedBy": true,
+        },
+      },
       "blocked": true,
       "uri": "record(4)",
     },
@@ -253,6 +259,13 @@ Object {
     "replies": Array [
       Object {
         "$type": "app.bsky.feed.defs#blockedPost",
+        "author": Object {
+          "did": "user(1)",
+          "viewer": Object {
+            "blockedBy": false,
+            "blocking": "record(6)",
+          },
+        },
         "blocked": true,
         "uri": "record(5)",
       },
@@ -261,7 +274,7 @@ Object {
         "post": Object {
           "author": Object {
             "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-            "did": "user(1)",
+            "did": "user(2)",
             "displayName": "bobby",
             "handle": "bob.test",
             "labels": Array [
@@ -269,22 +282,22 @@ Object {
                 "cid": "cids(3)",
                 "cts": "1970-01-01T00:00:00.000Z",
                 "neg": false,
-                "src": "user(1)",
-                "uri": "record(8)",
+                "src": "user(2)",
+                "uri": "record(9)",
                 "val": "self-label-a",
               },
               Object {
                 "cid": "cids(3)",
                 "cts": "1970-01-01T00:00:00.000Z",
                 "neg": false,
-                "src": "user(1)",
-                "uri": "record(8)",
+                "src": "user(2)",
+                "uri": "record(9)",
                 "val": "self-label-b",
               },
             ],
             "viewer": Object {
               "blockedBy": false,
-              "following": "record(7)",
+              "following": "record(8)",
               "muted": false,
             },
           },
@@ -306,7 +319,7 @@ Object {
               "cts": "1970-01-01T00:00:00.000Z",
               "neg": false,
               "src": "did:example:labeler",
-              "uri": "record(6)",
+              "uri": "record(7)",
               "val": "test-label",
             },
             Object {
@@ -314,7 +327,7 @@ Object {
               "cts": "1970-01-01T00:00:00.000Z",
               "neg": false,
               "src": "did:example:labeler",
-              "uri": "record(6)",
+              "uri": "record(7)",
               "val": "test-label-2",
             },
           ],
@@ -352,7 +365,7 @@ Object {
           },
           "replyCount": 1,
           "repostCount": 0,
-          "uri": "record(6)",
+          "uri": "record(7)",
           "viewer": Object {},
         },
       },
