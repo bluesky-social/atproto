@@ -49,7 +49,6 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
       if (ctx.canProxyRead(req)) {
-        let body: OutputSchema
         try {
           const res = await ctx.appviewAgent.api.app.bsky.feed.getPostThread(
             params,
@@ -86,10 +85,6 @@ export default function (server: Server, ctx: AppContext) {
           } else {
             throw err
           }
-        }
-        return {
-          encoding: 'application/json',
-          body,
         }
       }
 
