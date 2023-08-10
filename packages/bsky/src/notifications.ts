@@ -155,7 +155,9 @@ export class NotificationServer {
       .execute()
   }
 
-  async getNotificationDisplayAttributes(notif: InsertableNotif) {
+  async getNotificationDisplayAttributes(
+    notif: InsertableNotif,
+  ): Promise<{ title: string; body: string } | undefined> {
     const {
       author: authorDid,
       reason,
