@@ -30,8 +30,9 @@ import {
   PostBlocksMap,
   RecordEmbedViewRecord,
   FeedHydrationOptions,
+  kSelfLabels,
 } from './types'
-import { LabelService, Labels } from '../label'
+import { LabelService, Labels, getSelfLabels } from '../label'
 import { ActorService } from '../actor'
 import { GraphService } from '../graph'
 import { FeedViews } from './views'
@@ -131,16 +132,23 @@ export class FeedService {
         .where('did_handle.did', 'in', dids)
         .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
         .leftJoin('profile', 'profile.creator', 'did_handle.did')
+        .leftJoin('ipld_block', (join) =>
+          join
+            .onRef('ipld_block.cid', '=', 'profile.cid')
+            .onRef('ipld_block.creator', '=', 'profile.creator'),
+        )
         .selectAll('did_handle')
         .if(!includeSoftDeleted, (qb) =>
           qb.where(notSoftDeletedClause(ref('repo_root'))),
         )
         .select([
           'profile.uri as profileUri',
+          'profile.cid as profileCid',
           'profile.displayName as displayName',
           'profile.description as description',
           'profile.avatarCid as avatarCid',
           'profile.indexedAt as indexedAt',
+          'ipld_block.content as profileBytes',
           this.db.db
             .selectFrom('follow')
             .where('creator', '=', requester ?? '')
@@ -191,7 +199,6 @@ export class FeedService {
       requester,
     )
     return actors.reduce((acc, cur) => {
-      const actorLabels = labels[cur.did] ?? []
       const avatar = cur.avatarCid
         ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
         : undefined
@@ -201,6 +208,12 @@ export class FeedService {
               listViews[cur.requesterMutedByList],
             )
           : undefined
+      const actorLabels = labels[cur.did] ?? []
+      const selfLabels = getSelfLabels({
+        uri: cur.profileUri,
+        cid: cur.profileCid,
+        record: cur.profileBytes && cborToLexRecord(cur.profileBytes),
+      })
       return {
         ...acc,
         [cur.did]: {
@@ -216,7 +229,8 @@ export class FeedService {
             following: cur?.requesterFollowing || undefined,
             followedBy: cur?.requesterFollowedBy || undefined,
           },
-          labels: skipLabels ? undefined : actorLabels,
+          labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
+          [kSelfLabels]: selfLabels,
         },
       }
     }, {} as ActorInfoMap)

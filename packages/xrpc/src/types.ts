@@ -85,16 +85,19 @@ export class XRPCResponse {
 
 export class XRPCError extends Error {
   success = false
+  headers?: Headers
 
   constructor(
     public status: ResponseType,
     public error?: string,
     message?: string,
+    headers?: Headers,
   ) {
     super(message || error || ResponseTypeStrings[status])
     if (!this.error) {
       this.error = ResponseTypeNames[status]
     }
+    this.headers = headers
   }
 }
 

@@ -3,11 +3,12 @@ import { FeedKeyset } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { setRepoRev } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.authOptionalVerifier,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, res }) => {
       const { actor, limit, cursor, filter } = params
       const viewer = auth.credentials.did
       const db = ctx.db.db
@@ -29,6 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
+      const actorService = ctx.services.actor(ctx.db)
       const feedService = ctx.services.feed(ctx.db)
       const graphService = ctx.services.graph(ctx.db)
 
@@ -86,7 +88,12 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
 
-      const feedItems = await feedItemsQb.execute()
+      const [feedItems, repoRev] = await Promise.all([
+        feedItemsQb.execute(),
+        actorService.getRepoRev(viewer),
+      ])
+      setRepoRev(res, repoRev)
+
       const feed = await feedService.hydrateFeed(feedItems, viewer)
 
       return {

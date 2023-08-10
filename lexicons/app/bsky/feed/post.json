@@ -34,6 +34,10 @@
             "maxLength": 3,
             "items": {"type": "string", "format": "language"}
           },
+          "labels": {
+            "type": "union",
+            "refs": ["com.atproto.label.defs#selfLabels"]
+          },
           "createdAt": {"type": "string", "format": "datetime"}
         }
       }

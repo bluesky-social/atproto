@@ -1,6 +1,6 @@
 {
   "name": "@atproto/dev-env",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "main": "src/index.ts",
   "bin": "dist/bin.js",
   "license": "MIT",

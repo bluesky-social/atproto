@@ -23,8 +23,6 @@ import { LabelCache } from './label-cache'
 import { ContentReporter } from './content-reporter'
 
 export class AppContext {
-  private _appviewAgent: AtpAgent | null
-
   constructor(
     private opts: {
       db: Database
@@ -46,16 +44,11 @@ export class AppContext {
       labelCache: LabelCache
       contentReporter?: ContentReporter
       backgroundQueue: BackgroundQueue
+      appviewAgent?: AtpAgent
       crawlers: Crawlers
       algos: MountedAlgos
     },
-  ) {
-    this._appviewAgent = opts.cfg.bskyAppViewEndpoint
-      ? new AtpAgent({
-          service: opts.cfg.bskyAppViewEndpoint,
-        })
-      : null
-  }
+  ) {}
 
   get db(): Database {
     return this.opts.db
@@ -186,10 +179,10 @@ export class AppContext {
   }
 
   get appviewAgent(): AtpAgent {
-    if (!this._appviewAgent) {
+    if (!this.opts.appviewAgent) {
       throw new Error('Could not find bsky appview endpoint')
     }
-    return this._appviewAgent
+    return this.opts.appviewAgent
   }
 
   canProxyRead(req: express.Request): boolean {

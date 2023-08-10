@@ -225,6 +225,7 @@ export class IndexingService {
         did: commit.did,
         commitCid: details.commit.toString(),
         commitDataCid: commit.data.toString(),
+        repoRev: commit.rev ?? null,
         rebaseCount: details.rebase ? 1 : 0,
         tooBigCount: details.tooBig ? 1 : 0,
       })
@@ -234,6 +235,7 @@ export class IndexingService {
         return oc.column('did').doUpdateSet({
           commitCid: sql`${excluded('commitCid')}`,
           commitDataCid: sql`${excluded('commitDataCid')}`,
+          repoRev: sql`${excluded('repoRev')}`,
           rebaseCount: sql`${sync('rebaseCount')} + ${excluded('rebaseCount')}`,
           tooBigCount: sql`${sync('tooBigCount')} + ${excluded('tooBigCount')}`,
         })
