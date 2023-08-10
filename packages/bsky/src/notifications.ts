@@ -165,25 +165,30 @@ export class NotificationServer {
     const author = displayName.displayName
 
     // 2. Get post data content
-    // if reply, quote, or mention, get URI of the postRecord
-    // if like, or custom feed like, or repost get the URI of the reasonSubject
     // if follow, get the URI of the author's profile
+    // if reply, or mention, get URI of the postRecord
+    // if like, or custom feed like, or repost get the URI of the reasonSubject
     let title = ''
     let body = ''
 
     // check follow first and mention first because they don't have subjectUri and return
+    // reply has subjectUri but the recordUri is the replied post
     if (reason === 'follow') {
       title = 'New follower!'
       body = `${author} has followed you`
       return { title, body }
-    } else if (reason === 'mention') {
-      title = `${author} mentioned you`
-      const mentionedPostData = await this.db.db
+    } else if (reason === 'mention' || reason === 'reply') {
+      // use recordUri for mention and reply
+      title =
+        reason === 'mention'
+          ? `${author} mentioned you`
+          : `${author} replied to your post`
+      const postData = await this.db.db
         .selectFrom('post')
         .where('uri', '=', recordUri)
         .selectAll()
         .executeTakeFirst()
-      body = mentionedPostData?.text || ''
+      body = postData?.text || ''
       return { title, body }
     }
 
@@ -211,9 +216,6 @@ export class NotificationServer {
         title = `${author} liked your custom feed`
         body = `${new AtUri(subjectUri).rkey}`
       }
-    } else if (reason === 'reply') {
-      title = `${author} replied to your post`
-      body = postData?.text || ''
     } else if (reason === 'quote') {
       title = `${author} quoted your post`
       body = postData?.text || ''
