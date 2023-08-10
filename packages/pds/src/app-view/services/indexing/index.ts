@@ -12,7 +12,6 @@ import * as ListItem from './plugins/list-item'
 import * as Profile from './plugins/profile'
 import * as FeedGenerator from './plugins/feed-generator'
 import { BackgroundQueue } from '../../../event-stream/background-queue'
-import { NotificationServer } from '../../../notifications'
 
 export class IndexingService {
   records: {
@@ -27,11 +26,7 @@ export class IndexingService {
     feedGenerator: FeedGenerator.PluginType
   }
 
-  constructor(
-    public db: Database,
-    public backgroundQueue: BackgroundQueue,
-    public notifServer: NotificationServer,
-  ) {
+  constructor(public db: Database, public backgroundQueue: BackgroundQueue) {
     this.records = {
       post: Post.makePlugin(this.db, backgroundQueue),
       like: Like.makePlugin(this.db, backgroundQueue),
@@ -45,12 +40,8 @@ export class IndexingService {
     }
   }
 
-  static creator(
-    backgroundQueue: BackgroundQueue,
-    notifServer: NotificationServer,
-  ) {
-    return (db: Database) =>
-      new IndexingService(db, backgroundQueue, notifServer)
+  static creator(backgroundQueue: BackgroundQueue) {
+    return (db: Database) => new IndexingService(db, backgroundQueue)
   }
 
   async indexRecord(
