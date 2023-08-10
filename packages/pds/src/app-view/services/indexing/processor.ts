@@ -72,7 +72,7 @@ export class RecordProcessor<T, S> {
     if (inserted) {
       this.aggregateOnCommit(inserted)
       await this.handleNotifs({ inserted })
-      return this.params.notifsForInsert(inserted)
+      return
     }
     // if duplicate, insert into duplicates table with no events
     const found = await this.params.findDuplicate(this.db, uri, obj)
@@ -154,7 +154,7 @@ export class RecordProcessor<T, S> {
         .where('duplicateOf', '=', uri.toString())
         .execute()
       await this.handleNotifs({ deleted })
-      return this.params.notifsForDelete(deleted, null)
+      return
     } else {
       const found = await this.db
         .selectFrom('duplicate_record')
@@ -194,7 +194,6 @@ export class RecordProcessor<T, S> {
   async handleNotifs(op: { deleted?: S; inserted?: S }) {
     let notifs: UserNotification[] = []
     const runOnCommit: ((db: Database) => Promise<void>)[] = []
-
     if (op.deleted) {
       const forDelete = this.params.notifsForDelete(
         op.deleted,
@@ -214,7 +213,6 @@ export class RecordProcessor<T, S> {
     } else if (op.inserted) {
       notifs = this.params.notifsForInsert(op.inserted)
     }
-
     if (notifs.length > 0) {
       runOnCommit.push(async (db) => {
         await db.db.insertInto('user_notification').values(notifs).execute()

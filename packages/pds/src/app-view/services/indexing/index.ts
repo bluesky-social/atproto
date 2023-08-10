@@ -54,12 +54,7 @@ export class IndexingService {
     this.db.assertTransaction()
     const indexer = this.findIndexerForCollection(uri.collection)
     if (action === WriteOpAction.Create) {
-      const insertedRecords = await indexer.insertRecord(
-        uri,
-        cid,
-        obj,
-        timestamp,
-      )
+      await indexer.insertRecord(uri, cid, obj, timestamp)
     } else {
       await indexer.updateRecord(uri, cid, obj, timestamp)
     }
