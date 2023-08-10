@@ -9,6 +9,11 @@
         "type": "params",
         "properties": {
           "algorithm": {"type": "string"},
+          "excludePostTypes": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Exclude post types: quote, reply, repost"
+          },
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
           "cursor": {"type": "string"}
         }

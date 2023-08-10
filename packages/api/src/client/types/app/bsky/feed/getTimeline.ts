@@ -10,6 +10,8 @@ import * as AppBskyFeedDefs from './defs'
 
 export interface QueryParams {
   algorithm?: string
+  /** Exclude post types: quote, reply, repost */
+  excludePostTypes?: string[]
   limit?: number
   cursor?: string
 }

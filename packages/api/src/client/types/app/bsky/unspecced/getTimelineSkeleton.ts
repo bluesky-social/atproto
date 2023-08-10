@@ -9,6 +9,8 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyFeedDefs from '../feed/defs'
 
 export interface QueryParams {
+  /** Exclude post types: quote, reply, repost */
+  excludePostTypes?: string[]
   limit?: number
   cursor?: string
 }
