@@ -162,7 +162,7 @@ export class LocalService {
     const formatted = maybeFormatted.filter((p) => p !== null) as PostView[]
     for (const post of formatted) {
       const idx = feed.findIndex((fi) => fi.post.indexedAt < post.indexedAt)
-      if (idx > 0) {
+      if (idx >= 0) {
         feed.splice(idx, 0, { post })
       } else {
         feed.push({ post })
