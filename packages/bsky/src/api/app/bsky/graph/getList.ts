@@ -9,10 +9,10 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { list, limit, cursor } = params
       const requester = auth.credentials.did
-      const { services, db } = ctx
+      const db = ctx.db.getReplica()
       const { ref } = db.db.dynamic
 
-      const graphService = ctx.services.graph(ctx.db)
+      const graphService = ctx.services.graph(db)
 
       const listRes = await graphService
         .getListsQb(requester)
@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
       })
       const itemsRes = await itemsReq.execute()
 
-      const actorService = services.actor(db)
+      const actorService = ctx.services.actor(db)
       const profiles = await actorService.views.hydrateProfiles(
         itemsRes,
         requester,

@@ -3,7 +3,7 @@ import { AtUri } from '@atproto/uri'
 import { CID } from 'multiformats/cid'
 import * as FeedGenerator from '../../../lexicon/types/app/bsky/feed/generator'
 import * as lex from '../../../lexicon/lexicons'
-import Database, { Primary } from '../../../db'
+import { PrimaryDatabase } from '../../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import { BackgroundQueue } from '../../../background'
 import RecordProcessor from '../processor'
@@ -71,7 +71,7 @@ export type PluginType = RecordProcessor<
 >
 
 export const makePlugin = (
-  db: Database & Primary,
+  db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
 ): PluginType => {
   return new RecordProcessor(db, backgroundQueue, {

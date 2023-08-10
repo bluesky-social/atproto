@@ -13,7 +13,7 @@ import { AtUri } from '@atproto/uri'
 import { IdResolver, getPds } from '@atproto/identity'
 import { DAY, chunkArray } from '@atproto/common'
 import { ValidationError } from '@atproto/lexicon'
-import Database, { Primary } from '../../db'
+import { PrimaryDatabase } from '../../db'
 import * as Post from './plugins/post'
 import * as Like from './plugins/like'
 import * as Repost from './plugins/repost'
@@ -43,7 +43,7 @@ export class IndexingService {
   }
 
   constructor(
-    public db: Database & Primary,
+    public db: PrimaryDatabase,
     public idResolver: IdResolver,
     public labeler: Labeler,
     public backgroundQueue: BackgroundQueue,
@@ -61,7 +61,7 @@ export class IndexingService {
     }
   }
 
-  transact(txn: Database & Primary) {
+  transact(txn: PrimaryDatabase) {
     txn.assertTransaction()
     return new IndexingService(
       txn,
@@ -76,7 +76,7 @@ export class IndexingService {
     labeler: Labeler,
     backgroundQueue: BackgroundQueue,
   ) {
-    return (db: Database & Primary) =>
+    return (db: PrimaryDatabase) =>
       new IndexingService(db, idResolver, labeler, backgroundQueue)
   }
 

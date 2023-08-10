@@ -1,4 +1,4 @@
-import Database, { Primary } from '../db'
+import { Database, PrimaryDatabase } from '../db'
 import { ImageUriBuilder } from '../image/uri'
 import { ActorService } from './actor'
 import { FeedService } from './feed'
@@ -31,4 +31,4 @@ export type Services = {
 
 type FromDb<T> = (db: Database) => T
 
-type FromDbPrimary<T> = (db: Database & Primary) => T
+type FromDbPrimary<T> = (db: PrimaryDatabase) => T

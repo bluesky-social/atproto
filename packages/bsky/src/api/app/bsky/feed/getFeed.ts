@@ -16,6 +16,7 @@ import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bs
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { AlgoResponse } from '../../../../feed-gen/types'
+import { Database } from '../../../../db'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeed({
@@ -23,7 +24,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const { feed } = params
       const viewer = auth.credentials.did
-      const feedService = ctx.services.feed(ctx.db)
+
+      const db = ctx.db.getReplica()
+      const feedService = ctx.services.feed(db)
       const localAlgo = ctx.algos[feed]
 
       const timerSkele = new ServerTimer('skele').start()
@@ -32,6 +35,7 @@ export default function (server: Server, ctx: AppContext) {
           ? await localAlgo(ctx, params, viewer)
           : await skeletonFromFeedGen(
               ctx,
+              db,
               params,
               viewer,
               req.headers['authorization'],
@@ -58,13 +62,14 @@ export default function (server: Server, ctx: AppContext) {
 
 async function skeletonFromFeedGen(
   ctx: AppContext,
+  db: Database,
   params: GetFeedParams,
   viewer: string,
   authorization?: string,
 ): Promise<AlgoResponse> {
   const { feed } = params
   // Resolve and fetch feed skeleton
-  const found = await ctx.db.db
+  const found = await db.db
     .selectFrom('feed_generator')
     .where('uri', '=', feed)
     .select('feedDid')
@@ -126,7 +131,7 @@ async function skeletonFromFeedGen(
 
   const { feed: skeletonFeed, ...rest } = skeleton
   const cleanedFeed = await ctx.services
-    .feed(ctx.db)
+    .feed(db)
     .cleanFeedSkeleton(skeletonFeed, params.limit, viewer)
 
   return {

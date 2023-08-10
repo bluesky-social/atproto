@@ -92,7 +92,7 @@ export class BskyAppView {
       throw new Error('Missing appview image invalidator')
     }
 
-    const backgroundQueue = new BackgroundQueue(db)
+    const backgroundQueue = new BackgroundQueue(db.getPrimary())
 
     const services = createServices({ imgUriBuilder, imgInvalidator })
 

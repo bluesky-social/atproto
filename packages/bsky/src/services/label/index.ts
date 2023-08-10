@@ -1,5 +1,5 @@
 import { AtUri } from '@atproto/uri'
-import Database from '../../db'
+import { Database } from '../../db'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import { ids } from '../../lexicon/lexicons'
 import { sql } from 'kysely'

@@ -74,7 +74,7 @@ export class DatabaseCoordinator {
     return this.primary
   }
 
-  getReplica(tag?: string): Database {
+  getReplica(tag?: ReplicaTag): Database {
     if (tag && this.tagged[tag]) {
       return nextDb(this.tagged[tag])
     }

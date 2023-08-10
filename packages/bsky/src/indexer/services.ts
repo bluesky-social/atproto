@@ -1,5 +1,5 @@
 import { IdResolver } from '@atproto/identity'
-import Database, { Primary } from '../db'
+import { PrimaryDatabase } from '../db'
 import { Labeler } from '../labeler'
 import { BackgroundQueue } from '../background'
 import { IndexingService } from '../services/indexing'
@@ -22,4 +22,4 @@ export type Services = {
   label: FromDbPrimary<LabelService>
 }
 
-type FromDbPrimary<T> = (db: Database & Primary) => T
+type FromDbPrimary<T> = (db: PrimaryDatabase) => T

@@ -9,8 +9,8 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params }) => {
       const { actor } = params
       const requester = auth.credentials.did
-      const { db, services } = ctx
-      const actorService = services.actor(db)
+      const db = ctx.db.getReplica()
+      const actorService = ctx.services.actor(db)
 
       const actorRes = await actorService.getActor(actor, true)
 

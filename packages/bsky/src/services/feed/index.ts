@@ -3,7 +3,7 @@ import { AtUri } from '@atproto/uri'
 import { dedupeStrs } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/identifier'
 import { jsonStringToLex } from '@atproto/lexicon'
-import Database from '../../db'
+import { Database } from '../../db'
 import {
   countAll,
   noMatch,
