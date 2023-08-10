@@ -321,6 +321,8 @@ const getPostThreadMunge = async (
   original: OutputSchema,
   local: LocalRecords,
 ): Promise<OutputSchema> => {
+  // @TODO if is NotFoundPost, handle similarly to error
+  // @NOTE not necessary right now as we never return those for the requested uri
   if (!isThreadViewPost(original.thread)) {
     return original
   }
@@ -445,12 +447,9 @@ const readAfterWriteNotFound = async (
   }
 }
 
-const getHighestParent = (
-  thread: ThreadViewPost,
-  height = 0,
-): string | undefined => {
+const getHighestParent = (thread: ThreadViewPost): string | undefined => {
   if (isThreadViewPost(thread.parent)) {
-    return getHighestParent(thread.parent, height + 1)
+    return getHighestParent(thread.parent)
   } else {
     return (thread.post.record as PostRecord).reply?.parent.uri
   }

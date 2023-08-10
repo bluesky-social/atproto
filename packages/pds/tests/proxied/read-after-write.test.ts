@@ -171,7 +171,7 @@ describe('proxy read after write', () => {
       { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
     )
     const lag = res.headers['atproto-upstream-lag']
-    expect(lag).toBeDefined
+    expect(lag).toBeDefined()
     const parsed = parseInt(lag)
     expect(parsed > 0).toBe(true)
   })

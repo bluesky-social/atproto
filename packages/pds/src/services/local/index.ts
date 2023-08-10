@@ -156,20 +156,15 @@ export class LocalService {
     const lastTime = feed.at(-1)?.post.indexedAt ?? new Date(0).toISOString()
     const inFeed = posts.filter((p) => p.indexedAt > lastTime)
     const newestToOldest = inFeed.reverse()
-    const maybedFormatted = await Promise.all(
+    const maybeFormatted = await Promise.all(
       newestToOldest.map((p) => this.getPost(p)),
     )
-    const formatted = maybedFormatted.filter((p) => p !== null) as PostView[]
+    const formatted = maybeFormatted.filter((p) => p !== null) as PostView[]
     for (const post of formatted) {
-      let inserted = false
-      for (let i = 0; i < feed.length; i++) {
-        if (feed[i].post.indexedAt < post.indexedAt) {
-          feed.splice(i, 0, { post })
-          inserted = true
-          break
-        }
-      }
-      if (!inserted) {
+      const idx = feed.findIndex((fi) => fi.post.indexedAt < post.indexedAt)
+      if (idx > 0) {
+        feed.splice(idx, 0, { post })
+      } else {
         feed.push({ post })
       }
     }
