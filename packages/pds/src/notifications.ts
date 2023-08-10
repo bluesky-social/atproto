@@ -145,18 +145,7 @@ export class NotificationServer {
     appId = BSKY_APP_ID,
   ) {
     try {
-      // check if token did pair already exists
-      const existing = await this.db.db
-        .selectFrom('notification_push_token')
-        .where('did', '=', did)
-        .where('token', '=', token)
-        .selectAll()
-        .executeTakeFirst()
-      if (existing) {
-        return
-      }
-
-      // if token doesn't exist, insert it
+      // if token doesn't exist, insert it, on conflict do nothing
       await this.db.db
         .insertInto('notification_push_token')
         .values({
@@ -166,6 +155,7 @@ export class NotificationServer {
           endpoint,
           appId,
         })
+        .onConflict((oc) => oc.doNothing())
         .execute()
     } catch (error) {
       throw new Error('Failed to insert notification token')
