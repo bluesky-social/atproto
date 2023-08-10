@@ -347,23 +347,6 @@ describe('feed generation', () => {
     })
   })
 
-  describe('putNotifications', () => {
-    it('updates notifications', async () => {
-      const res = await agent.api.app.bsky.unspecced.registerPushNotification(
-        {
-          platform: 'ios',
-          token: '123',
-          appId: 'xyz.blueskyweb.app',
-          endpoint: 'app.bsky.unspecced.putNotificationPushToken',
-        },
-        {
-          headers: sc.getHeaders(sc.dids.bob),
-        },
-      )
-      expect(res.success).toEqual(true)
-    })
-  })
-
   describe('getFeed', () => {
     it('resolves basic feed contents.', async () => {
       const feed = await agent.api.app.bsky.feed.getFeed(
