@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.unspecced.registerPushNotificationEndpoint",
+  "id": "app.bsky.unspecced.registerPushNotification",
   "defs": {
     "main": {
       "type": "query",
-      "description": "An unspecced route to upload a push notification token for a user",
+      "description": "An unspecced route to register a push notification token for a user at the specified endpoint",
       "parameters": {
         "type": "params",
         "required": ["token", "platform", "endpoint", "appId"],

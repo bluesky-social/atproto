@@ -126,7 +126,7 @@ import * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLa
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
-import * as AppBskyUnspeccedRegisterPushNotificationEndpoint from './types/app/bsky/unspecced/registerPushNotificationEndpoint'
+import * as AppBskyUnspeccedRegisterPushNotification from './types/app/bsky/unspecced/registerPushNotification'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
@@ -247,7 +247,7 @@ export * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLa
 export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 export * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
-export * as AppBskyUnspeccedRegisterPushNotificationEndpoint from './types/app/bsky/unspecced/registerPushNotificationEndpoint'
+export * as AppBskyUnspeccedRegisterPushNotification from './types/app/bsky/unspecced/registerPushNotification'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -2089,19 +2089,19 @@ export class UnspeccedNS {
       })
   }
 
-  registerPushNotificationEndpoint(
-    params?: AppBskyUnspeccedRegisterPushNotificationEndpoint.QueryParams,
-    opts?: AppBskyUnspeccedRegisterPushNotificationEndpoint.CallOptions,
-  ): Promise<AppBskyUnspeccedRegisterPushNotificationEndpoint.Response> {
+  registerPushNotification(
+    params?: AppBskyUnspeccedRegisterPushNotification.QueryParams,
+    opts?: AppBskyUnspeccedRegisterPushNotification.CallOptions,
+  ): Promise<AppBskyUnspeccedRegisterPushNotification.Response> {
     return this._service.xrpc
       .call(
-        'app.bsky.unspecced.registerPushNotificationEndpoint',
+        'app.bsky.unspecced.registerPushNotification',
         params,
         undefined,
         opts,
       )
       .catch((e) => {
-        throw AppBskyUnspeccedRegisterPushNotificationEndpoint.toKnownErr(e)
+        throw AppBskyUnspeccedRegisterPushNotification.toKnownErr(e)
       })
   }
 }

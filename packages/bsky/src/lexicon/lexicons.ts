@@ -6460,14 +6460,14 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyUnspeccedRegisterPushNotificationEndpoint: {
+  AppBskyUnspeccedRegisterPushNotification: {
     lexicon: 1,
-    id: 'app.bsky.unspecced.registerPushNotificationEndpoint',
+    id: 'app.bsky.unspecced.registerPushNotification',
     defs: {
       main: {
         type: 'query',
         description:
-          'An unspecced route to upload a push notification token for a user',
+          'An unspecced route to register a push notification token for a user at the specified endpoint',
         parameters: {
           type: 'params',
           required: ['token', 'platform', 'endpoint', 'appId'],
@@ -6621,6 +6621,6 @@ export const ids = {
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetTimelineSkeleton: 'app.bsky.unspecced.getTimelineSkeleton',
-  AppBskyUnspeccedRegisterPushNotificationEndpoint:
-    'app.bsky.unspecced.registerPushNotificationEndpoint',
+  AppBskyUnspeccedRegisterPushNotification:
+    'app.bsky.unspecced.registerPushNotification',
 }

@@ -192,7 +192,7 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
-  server.app.bsky.unspecced.registerPushNotificationEndpoint({
+  server.app.bsky.unspecced.registerPushNotification({
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
       const { token, platform, appId, endpoint } = params
@@ -216,7 +216,7 @@ export default function (server: Server, ctx: AppContext) {
         //   headers,
         // )
         const res =
-          await appviewAgent.api.app.bsky.unspecced.registerPushNotificationEndpoint(
+          await appviewAgent.api.app.bsky.unspecced.registerPushNotification(
             {
               token,
               platform,
