@@ -56,23 +56,10 @@ export class NotificationServer {
 
       for (const t of userTokens) {
         const { appId, platform, token } = t
-        if (platform === 'ios') {
+        if (platform === 'ios' || platform === 'android') {
           notifsToSend.push({
             tokens: [token],
-            platform: 1,
-            title: title,
-            message: body,
-            topic: appId,
-            data: {
-              reason: notif.reason,
-              recordUri: notif.recordUri,
-              recordCid: notif.recordCid,
-            },
-          })
-        } else if (platform === 'android') {
-          notifsToSend.push({
-            tokens: [token],
-            platform: 2,
+            platform: platform === 'ios' ? 1 : 2,
             title: title,
             message: body,
             topic: appId,
@@ -83,7 +70,7 @@ export class NotificationServer {
             },
           })
         } else {
-          // TODO: Handle web notifs
+          // @TODO: Handle web notifs
         }
       }
     }
