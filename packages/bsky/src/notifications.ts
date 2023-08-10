@@ -137,22 +137,18 @@ export class NotificationServer {
     endpoint = PUSH_NOTIF_SERVER_URL,
     appId = BSKY_APP_ID,
   ) {
-    try {
-      // if token doesn't exist, insert it, on conflict do nothing
-      await this.db.db
-        .insertInto('notification_push_token')
-        .values({
-          did,
-          token,
-          platform,
-          endpoint,
-          appId,
-        })
-        .onConflict((oc) => oc.doNothing())
-        .execute()
-    } catch (error) {
-      throw new Error('Failed to insert notification token')
-    }
+    // if token doesn't exist, insert it, on conflict do nothing
+    await this.db.db
+      .insertInto('notification_push_token')
+      .values({
+        did,
+        token,
+        platform,
+        endpoint,
+        appId,
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
   }
 
   async registerPushNotificationsEndpoint() {}

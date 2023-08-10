@@ -203,32 +203,28 @@ export default function (server: Server, ctx: AppContext) {
       const { appviewAgent } = ctx
 
       if (ctx.canProxyWrite()) {
-        try {
-          // TODO: hit the endpoint here so that 3rd party devs can run their own notification servers
-          // const headers = await ctx.serviceAuthHeaders(did)
-          // const called = await appviewAgent.api.xrpc.call(
-          //   'app.bsky.unspecced.putNotificationPushToken',
-          //   {
-          //     token,
-          //     platform,
-          //     appId,
-          //     endpoint,
-          //   },
-          //   headers,
-          // )
-          const res =
-            await appviewAgent.api.app.bsky.unspecced.registerPushNotificationEndpoint(
-              {
-                token,
-                platform,
-                appId,
-                endpoint,
-              },
-              await ctx.serviceAuthHeaders(did),
-            )
-        } catch (error) {
-          throw new Error('Failed to register device push notification token')
-        }
+        // TODO: hit the endpoint here so that 3rd party devs can run their own notification servers
+        // const headers = await ctx.serviceAuthHeaders(did)
+        // const called = await appviewAgent.api.xrpc.call(
+        //   'app.bsky.unspecced.putNotificationPushToken',
+        //   {
+        //     token,
+        //     platform,
+        //     appId,
+        //     endpoint,
+        //   },
+        //   headers,
+        // )
+        const res =
+          await appviewAgent.api.app.bsky.unspecced.registerPushNotificationEndpoint(
+            {
+              token,
+              platform,
+              appId,
+              endpoint,
+            },
+            await ctx.serviceAuthHeaders(did),
+          )
       }
     },
   })

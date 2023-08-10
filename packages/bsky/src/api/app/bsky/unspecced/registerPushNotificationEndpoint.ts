@@ -12,17 +12,13 @@ export default function (server: Server, ctx: AppContext) {
       } = auth
       const notifServer = ctx.notifServer
 
-      try {
-        await notifServer.registerDeviceForPushNotifications(
-          did,
-          platform,
-          token,
-          endpoint,
-          appId,
-        )
-      } catch (error) {
-        throw new Error('Failed to insert notification token')
-      }
+      await notifServer.registerDeviceForPushNotifications(
+        did,
+        platform,
+        token,
+        endpoint,
+        appId,
+      )
     },
   })
 }
