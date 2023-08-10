@@ -1,22 +1,20 @@
 import { Migrator } from 'kysely'
-import { NotEmptyArray } from '@atproto/common'
 import PrimaryDatabase from './primary'
 import Database from './db'
+import { PgOptions } from './types'
+
+type ReplicaTag = 'timeline'
+type ReplicaOptions = PgOptions & { tag?: ReplicaTag }
 
 type CoordinatorOptions = {
   schema?: string
-  primary: {
-    url: string
-    poolSize?: number
-    poolMaxUses?: number
-    poolIdleTimeoutMs?: number
-  }
-  replicas: {
-    urls: NotEmptyArray<string>
-    poolSize?: number
-    poolMaxUses?: number
-    poolIdleTimeoutMs?: number
-  }
+  primary: PgOptions
+  replicas: ReplicaOptions[]
+}
+
+type ReplicaGroup = {
+  dbs: Database[]
+  roundRobinIdx: number
 }
 
 export class DatabaseCoordinator {
@@ -24,43 +22,59 @@ export class DatabaseCoordinator {
   destroyed = false
 
   private primary: PrimaryDatabase
-  private replicas: Database[]
-  private roundRobinPosition: number
+  private allReplicas: Database[]
+  private tagged: Record<string, ReplicaGroup>
+  private untagged: ReplicaGroup
 
   constructor(public opts: CoordinatorOptions) {
     this.primary = new PrimaryDatabase({
-      url: opts.primary.url,
       schema: opts.schema,
-      poolSize: opts.primary.poolSize,
-      poolMaxUses: opts.primary.poolMaxUses,
-      poolIdleTimeoutMs: opts.primary.poolIdleTimeoutMs,
+      ...opts.primary,
     })
-    this.replicas = opts.replicas.urls.map(
-      (url) =>
-        new Database({
-          url,
-          schema: opts.schema,
-          poolSize: opts.replicas.poolSize,
-          poolMaxUses: opts.replicas.poolMaxUses,
-          poolIdleTimeoutMs: opts.replicas.poolIdleTimeoutMs,
-        }),
-    )
+    this.allReplicas = []
+    this.tagged = {}
+    this.untagged = {
+      dbs: [],
+      roundRobinIdx: 0,
+    }
+    for (const cfg of opts.replicas) {
+      const db = new Database({
+        schema: opts.schema,
+        ...cfg,
+      })
+      this.allReplicas.push(db)
+      if (cfg.tag) {
+        this.tagged[cfg.tag] ??= {
+          dbs: [],
+          roundRobinIdx: 0,
+        }
+        this.tagged[cfg.tag].dbs.push(db)
+      } else {
+        this.untagged.dbs.push(db)
+      }
+    }
   }
 
   getPrimary(): PrimaryDatabase {
     return this.primary
   }
 
-  getReplica(): Database {
-    this.roundRobinPosition =
-      (this.roundRobinPosition + 1) % this.replicas.length
-    return this.replicas[this.roundRobinPosition]
+  getReplica(tag?: string): Database {
+    if (tag && this.tagged[tag]) {
+      this.tagged[tag].roundRobinIdx =
+        (this.tagged[tag].roundRobinIdx + 1) % this.tagged[tag].dbs.length
+      return this.tagged[tag].dbs[this.tagged[tag].roundRobinIdx]
+    } else {
+      this.untagged.roundRobinIdx =
+        (this.untagged.roundRobinIdx + 1) % this.untagged.dbs.length
+      return this.untagged.dbs[this.untagged.roundRobinIdx]
+    }
   }
 
   async close(): Promise<void> {
     await Promise.all([
       this.primary.close(),
-      ...this.replicas.map((db) => db.close),
+      ...this.allReplicas.map((db) => db.close),
     ])
   }
 }

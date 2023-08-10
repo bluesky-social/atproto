@@ -13,7 +13,7 @@ if (process.argv.includes('--update-main-to-dist')) {
 
 require('esbuild').build({
   logLevel: 'info',
-  entryPoints: ['src/index.ts', 'src/bin.ts', 'src/db/index.ts'],
+  entryPoints: ['src/index.ts', 'src/db/index.ts'],
   bundle: true,
   sourcemap: true,
   outdir: 'dist',

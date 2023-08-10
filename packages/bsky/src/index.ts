@@ -7,7 +7,7 @@ import cors from 'cors'
 import compression from 'compression'
 import { IdResolver } from '@atproto/identity'
 import API, { health, blobResolver } from './api'
-import Database, { Primary } from './db'
+import { DatabaseCoordinator } from './db'
 import * as error from './error'
 import { dbLogger, loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
@@ -48,14 +48,12 @@ export class BskyAppView {
   }
 
   static create(opts: {
-    dbPrimary: Database & Primary
-    dbReplica?: Database
+    db: DatabaseCoordinator
     config: ServerConfig
     imgInvalidator?: ImageInvalidator
     algos?: MountedAlgos
   }): BskyAppView {
-    const { dbReplica, dbPrimary, config, algos = {} } = opts
-    const db = dbReplica || dbPrimary
+    const { db, config, algos = {} } = opts
     let maybeImgInvalidator = opts.imgInvalidator
     const app = express()
     app.use(cors())
@@ -63,7 +61,7 @@ export class BskyAppView {
     app.use(compression())
 
     const didCache = new DidSqlCache(
-      dbPrimary,
+      db.getPrimary(),
       config.didCacheStaleTTL,
       config.didCacheMaxTTL,
     )
@@ -100,7 +98,6 @@ export class BskyAppView {
 
     const ctx = new AppContext({
       db,
-      dbPrimary,
       cfg: config,
       services,
       imgUriBuilder,
@@ -133,25 +130,26 @@ export class BskyAppView {
   }
 
   async start(): Promise<http.Server> {
-    const { db, backgroundQueue } = this.ctx
-    const { pool } = db.cfg
-    this.dbStatsInterval = setInterval(() => {
-      dbLogger.info(
-        {
-          idleCount: pool.idleCount,
-          totalCount: pool.totalCount,
-          waitingCount: pool.waitingCount,
-        },
-        'db pool stats',
-      )
-      dbLogger.info(
-        {
-          runningCount: backgroundQueue.queue.pending,
-          waitingCount: backgroundQueue.queue.size,
-        },
-        'background queue stats',
-      )
-    }, 10000)
+    // @TODO re-enable stats
+    // const { db, backgroundQueue } = this.ctx
+    // const { pool } = db.cfg
+    // this.dbStatsInterval = setInterval(() => {
+    //   dbLogger.info(
+    //     {
+    //       idleCount: pool.idleCount,
+    //       totalCount: pool.totalCount,
+    //       waitingCount: pool.waitingCount,
+    //     },
+    //     'db pool stats',
+    //   )
+    //   dbLogger.info(
+    //     {
+    //       runningCount: backgroundQueue.queue.pending,
+    //       waitingCount: backgroundQueue.queue.size,
+    //     },
+    //     'background queue stats',
+    //   )
+    // }, 10000)
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
