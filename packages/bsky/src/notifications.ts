@@ -1,7 +1,7 @@
 import axios from 'axios'
 import Database from './db'
 import { Notification } from './db/tables/notification'
-import { AppBskyEmbedImages, AtUri } from '@atproto/api'
+import { AtUri } from '@atproto/api'
 import { Insertable } from 'kysely'
 import logger from './indexer/logger'
 
@@ -233,17 +233,6 @@ export class NotificationServer {
     } else if (reason === 'repost') {
       title = `${author} reposted your post`
       body = postData?.text || ''
-
-      // TODO: handle images
-      // let image
-      // if (
-      //   AppBskyEmbedImages.isView(
-      //     notification.additionalPost?.thread?.post.embed,
-      //   ) &&
-      //   notification.additionalPost?.thread?.post.embed.images[0]?.thumb
-      // ) {
-      //   image = notification.additionalPost.thread.post.embed.images[0].thumb
-      // }
     }
 
     if (title === '' && body === '') {
