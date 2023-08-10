@@ -17,6 +17,15 @@ export function decideQuotedPost(
         acc.addLabel(label, opts)
       }
     }
+  } else if (AppBskyEmbedRecord.isViewBlocked(subject.record)) {
+    acc.setDid(subject.record.author.did)
+    if (subject.record.author.viewer?.blocking) {
+      acc.addBlocking(subject.record.author.viewer?.blocking)
+    } else if (subject.record.author.viewer?.blockedBy) {
+      acc.addBlockedBy(subject.record.author.viewer?.blockedBy)
+    } else {
+      acc.addBlockOther(true)
+    }
   }
 
   return acc.finalizeDecision(opts)
@@ -45,6 +54,15 @@ export function decideQuotedPostWithMedia(
       for (const label of subject.record.record.labels) {
         acc.addLabel(label, opts)
       }
+    }
+  } else if (AppBskyEmbedRecord.isViewBlocked(subject.record.record)) {
+    acc.setDid(subject.record.record.author.did)
+    if (subject.record.record.author.viewer?.blocking) {
+      acc.addBlocking(subject.record.record.author.viewer?.blocking)
+    } else if (subject.record.record.author.viewer?.blockedBy) {
+      acc.addBlockedBy(subject.record.record.author.viewer?.blockedBy)
+    } else {
+      acc.addBlockOther(true)
     }
   }
 

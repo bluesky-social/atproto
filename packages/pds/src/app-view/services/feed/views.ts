@@ -289,12 +289,23 @@ export class FeedViews {
       return {
         $type: 'app.bsky.embed.record#viewNotFound',
         uri,
+        notFound: true,
       }
     }
     if (post.author.viewer?.blocking || post.author.viewer?.blockedBy) {
       return {
         $type: 'app.bsky.embed.record#viewBlocked',
         uri,
+        blocked: true,
+        author: {
+          did: post.author.did,
+          viewer: post.author.viewer
+            ? {
+                blockedBy: post.author.viewer?.blockedBy,
+                blocking: post.author.viewer?.blocking,
+              }
+            : undefined,
+        },
       }
     }
     return {

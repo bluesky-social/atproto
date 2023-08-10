@@ -38,6 +38,16 @@ export class ModerationCauseAccumulator {
     }
   }
 
+  addBlockOther(blockOther: boolean | undefined) {
+    if (blockOther) {
+      this.causes.push({
+        type: 'block-other',
+        source: { type: 'user' },
+        priority: 4,
+      })
+    }
+  }
+
   addLabel(label: Label, opts: ModerationOpts) {
     // look up the label definition
     const labelDef = LABELS[label.val]
@@ -134,7 +144,11 @@ export class ModerationCauseAccumulator {
     mod.additionalCauses = this.causes.slice(1)
 
     // blocked user
-    if (mod.cause.type === 'blocking' || mod.cause.type === 'blocked-by') {
+    if (
+      mod.cause.type === 'blocking' ||
+      mod.cause.type === 'blocked-by' ||
+      mod.cause.type === 'block-other'
+    ) {
       // filter and blur, dont allow override
       mod.filter = true
       mod.blur = true

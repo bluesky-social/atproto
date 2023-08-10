@@ -167,6 +167,7 @@ Array [
               "$type": "app.bsky.embed.record#view",
               "record": Object {
                 "$type": "app.bsky.embed.record#viewNotFound",
+                "notFound": true,
                 "uri": "record(7)",
               },
             },
@@ -294,6 +295,7 @@ Array [
         "$type": "app.bsky.embed.record#view",
         "record": Object {
           "$type": "app.bsky.embed.record#viewNotFound",
+          "notFound": true,
           "uri": "record(7)",
         },
       },
@@ -703,6 +705,7 @@ Array [
         "$type": "app.bsky.embed.record#view",
         "record": Object {
           "$type": "app.bsky.embed.record#viewNotFound",
+          "notFound": true,
           "uri": "record(9)",
         },
       },

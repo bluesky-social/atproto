@@ -100,6 +100,7 @@ export type ModerationCauseSource =
 export type ModerationCause =
   | { type: 'blocking'; source: ModerationCauseSource; priority: 3 }
   | { type: 'blocked-by'; source: ModerationCauseSource; priority: 4 }
+  | { type: 'block-other'; source: ModerationCauseSource; priority: 4 }
   | {
       type: 'label'
       source: ModerationCauseSource
