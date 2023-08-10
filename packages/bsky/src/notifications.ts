@@ -41,13 +41,10 @@ export class NotificationServer {
       if (!userTokens || userTokens.length === 0 || !attr) {
         continue
       }
+      const { title, body } = attr
 
       for (const t of userTokens) {
         const { appId, platform, token } = t
-        // get title and message of notification
-        // if no title or body, skip
-
-        const { title, body } = attr
         if (platform === 'ios') {
           notifsToSend.push({
             tokens: [token],
@@ -164,8 +161,10 @@ export class NotificationServer {
       .where('creator', '=', authorDid)
       .select(['displayName'])
       .executeTakeFirst()
+
+    // if no display name, dont send notification
     if (!displayName || !displayName?.displayName) {
-      throw new Error('Failed to get display name. User has no profile')
+      return
     }
     const author = displayName.displayName
 
@@ -192,17 +191,20 @@ export class NotificationServer {
       return { title, body }
     }
 
+    // if no subjectUri, don't send notification
+    // at this point, subjectUri should exist for all the other reasons
     if (!subjectUri) {
-      throw new Error('Failed to get subject URI')
+      return
     }
 
+    // if no post data, don't send notification
     const postData = await this.db.db
       .selectFrom('post')
       .where('uri', '=', subjectUri)
       .selectAll()
       .executeTakeFirst()
     if (!postData) {
-      throw new Error('Failed to get post data')
+      return
     }
 
     if (reason === 'like') {

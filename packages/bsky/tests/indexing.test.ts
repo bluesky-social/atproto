@@ -569,6 +569,23 @@ describe('indexing', () => {
     })
   })
 
+  describe('notificationServer', () => {
+    it('registers push notification token and device at specified endpoint or appview', async () => {
+      const res = await agent.api.app.bsky.unspecced.registerPushNotification(
+        {
+          platform: 'ios',
+          token: '123',
+          appId: 'xyz.blueskyweb.app',
+          endpoint: 'app.bsky.unspecced.registerPushNotification',
+        },
+        {
+          headers: await network.serviceHeaders(sc.dids.alice),
+        },
+      )
+      expect(res.success).toEqual(true)
+    })
+  })
+
   async function getNotifications(db: Database, uri: AtUri) {
     return await db.db
       .selectFrom('notification')
