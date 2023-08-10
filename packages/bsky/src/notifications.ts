@@ -41,19 +41,17 @@ export class NotificationServer {
     for (const notif of notifications) {
       const { did: userDid } = notif
       const userTokens = await this.getUserTokens(userDid)
-      // if user has no tokens, skip
-      if (!userTokens || userTokens.length === 0) {
+      const attr = await this.getNotificationDisplayAttributes(notif)
+      // if user has no tokens or the post attr cannot be found, skip
+      if (!userTokens || userTokens.length === 0 || !attr) {
         continue
       }
 
       for (const t of userTokens) {
         const { appId, platform, token } = t
         // get title and message of notification
-        const attr = await this.getNotificationDisplayAttributes(notif)
         // if no title or body, skip
-        if (!attr) {
-          continue
-        }
+
         const { title, body } = attr
         if (platform === 'ios') {
           notifsToSend.push({
@@ -118,22 +116,18 @@ export class NotificationServer {
     if (!notifications || notifications.length === 0) {
       return
     }
-    try {
-      await axios.post(
-        pushEndpoint,
-        {
-          notifications: notifications,
+    await axios.post(
+      pushEndpoint,
+      {
+        notifications: notifications,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          accept: 'application/json',
         },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            accept: 'application/json',
-          },
-        },
-      )
-    } catch (error) {
-      throw new Error('Failed to send push notification')
-    }
+      },
+    )
   }
 
   async registerDeviceForPushNotifications(
