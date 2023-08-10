@@ -16,6 +16,7 @@ const assert = require('assert')
 const { CloudfrontInvalidator } = require('@atproto/aws')
 const {
   Database,
+  DatabaseCoordinator,
   ServerConfig,
   BskyAppView,
   ViewMaintainer,
@@ -33,38 +34,31 @@ const main = async () => {
   })
   await migrateDb.migrateToLatestOrThrow()
   // Use lower-credentialed user to run the app.
-  // Only db primary configured: services all queries, 1 pool.
-  // Both db primary and non-primary configured: services all queries only using primary when needed, 2 pools.
-  // Neither db primary nor non-primary configured: not allowed, wont startup.
-  assert(
-    env.dbPrimaryPostgresUrl || env.dbPostgresUrl,
-    'missing configuration for db',
-  )
-  const dbPrimary = Database.postgres({
-    isPrimary: true,
-    url: env.dbPrimaryPostgresUrl || env.dbPostgresUrl,
-    schema: env.dbSchema,
-    poolSize: env.dbPrimaryPoolSize || env.dbPoolSize,
-    poolMaxUses: env.dbPoolMaxUses,
-    poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
-  }).asPrimary()
-  const dbReplica =
-    env.dbPrimaryPostgresUrl && env.dbPostgresUrl
-      ? Database.postgres({
-          url: env.dbPostgresUrl,
-          schema: env.dbSchema,
-          poolSize: env.dbPoolSize,
-          poolMaxUses: env.dbPoolMaxUses,
-          poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
-        })
-      : undefined
+  assert(env.dbPrimaryPostgresUrl, 'missing configuration for db')
+  const db = new DatabaseCoordinator({
+    schema: env.dbPostgresSchema,
+    primary: {
+      url: env.dbPrimaryPostgresUrl,
+      poolSize: env.dbPrimaryPoolSize || env.dbPoolSize,
+      poolMaxUses: env.dbPoolMaxUses,
+      poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
+    },
+    replicas: env.dbReplicaPostgresUrls?.map((url, i) => {
+      return {
+        url,
+        poolSize: env.dbPoolSize,
+        poolMaxUses: env.dbPoolMaxUses,
+        poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
+        tags: getTagsForIdx(env.dbReplicaTags, i),
+      }
+    }),
+  })
   const cfg = ServerConfig.readEnv({
     port: env.port,
     version: env.version,
-    dbPrimaryPostgresUrl: env.dbPrimaryPostgresUrl || env.dbPostgresUrl,
-    dbReplicaPostgresUrl: env.dbPrimaryPostgresUrl
-      ? env.dbPostgresUrl
-      : undefined,
+    dbPrimaryPostgresUrl: env.dbPrimaryPostgresUrl,
+    dbReplicaPostgresUrls: env.dbReplicaPostgresUrls,
+    dbReplicaTags: env.dbReplicaTags,
     dbPostgresSchema: env.dbPostgresSchema,
     publicUrl: env.publicUrl,
     didPlcUrl: env.didPlcUrl,
@@ -81,8 +75,7 @@ const main = async () => {
     : undefined
   const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const bsky = BskyAppView.create({
-    dbPrimary,
-    dbReplica,
+    db,
     config: cfg,
     imgInvalidator: cfInvalidator,
     algos,
@@ -102,17 +95,24 @@ const main = async () => {
 const getEnv = () => ({
   port: parseInt(process.env.PORT),
   version: process.env.BSKY_VERSION,
-  dbPostgresUrl: process.env.DB_POSTGRES_URL,
   dbMigratePostgresUrl:
-    process.env.DB_MIGRATE_POSTGRES_URL ||
-    process.env.DB_PRIMARY_POSTGRES_URL ||
-    process.env.DB_POSTGRES_URL,
+    process.env.DB_MIGRATE_POSTGRES_URL || process.env.DB_PRIMARY_POSTGRES_URL,
+  dbPrimaryPostgresUrl: process.env.DB_PRIMARY_POSTGRES_URL,
+  dbPrimaryPoolSize: maybeParseInt(process.env.DB_PRIMARY_POOL_SIZE),
+  dbReplicaPostgresUrls: process.env.DB_REPLICA_POSTGRES_URLS
+    ? process.env.DB_REPLICA_POSTGRES_URLS.split(',')
+    : undefined,
+  dbReplicaTags: {
+    '*': getTagIdxs(process.env.DB_REPLICA_TAGS_ANY), // e.g. DB_REPLICA_TAGS_ANY=0,1
+    timeline: getTagIdxs(process.env.DB_REPLICA_TAGS_TIMELINE),
+    feed: getTagIdxs(process.env.DB_REPLICA_TAGS_FEED),
+    search: getTagIdxs(process.env.DB_REPLICA_TAGS_SEARCH),
+    thread: getTagIdxs(process.env.DB_REPLICA_TAGS_THREAD),
+  },
   dbPostgresSchema: process.env.DB_POSTGRES_SCHEMA || undefined,
   dbPoolSize: maybeParseInt(process.env.DB_POOL_SIZE),
   dbPoolMaxUses: maybeParseInt(process.env.DB_POOL_MAX_USES),
   dbPoolIdleTimeoutMs: maybeParseInt(process.env.DB_POOL_IDLE_TIMEOUT_MS),
-  dbPrimaryPostgresUrl: process.env.DB_PRIMARY_POSTGRES_URL,
-  dbPrimaryPoolSize: maybeParseInt(process.env.DB_PRIMARY_POOL_SIZE),
   publicUrl: process.env.PUBLIC_URL,
   didPlcUrl: process.env.DID_PLC_URL,
   imgUriSalt: process.env.IMG_URI_SALT,
@@ -122,6 +122,27 @@ const getEnv = () => ({
   cfDistributionId: process.env.CF_DISTRIBUTION_ID,
   feedPublisherDid: process.env.FEED_PUBLISHER_DID,
 })
+
+/**
+ * @param {Record<string, number[]>} tags
+ * @param {number} idx
+ */
+const getTagsForIdx = (tags, idx) => {
+  const tags = []
+  for (const [tag, indexes] of Object.entries(tags)) {
+    if (indexes.includes(idx)) {
+      tags.push(tag)
+    }
+  }
+  return tags
+}
+
+/**
+ * @param {string} str
+ */
+const getTagIdxs = (str) => {
+  return str ? str.split(',').map((item) => parseInt(item, 10)) : []
+}
 
 const maybeParseInt = (str) => {
   const parsed = parseInt(str)

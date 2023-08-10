@@ -9,7 +9,8 @@ export interface ServerConfigValues {
   serverDid: string
   feedGenDid?: string
   dbPrimaryPostgresUrl: string
-  dbReplicaPostgresUrl?: string
+  dbReplicaPostgresUrls?: string[]
+  dbReplicaTags?: Record<string, number[]> // E.g. { timeline: [0], thread: [1] }
   dbPostgresSchema?: string
   didPlcUrl: string
   didCacheStaleTTL: number
@@ -56,14 +57,23 @@ export class ServerConfig {
       overrides?.dbPrimaryPostgresUrl ||
       process.env.DB_PRIMARY_POSTGRES_URL ||
       process.env.DB_POSTGRES_URL
-    let dbReplicaPostgresUrl = overrides?.dbReplicaPostgresUrl
-    if (
-      !dbReplicaPostgresUrl &&
-      process.env.DB_PRIMARY_POSTGRES_URL &&
-      process.env.DB_POSTGRES_URL
-    ) {
-      dbReplicaPostgresUrl = process.env.DB_POSTGRES_URL
+    let dbReplicaPostgresUrls = overrides?.dbReplicaPostgresUrls
+    if (!dbReplicaPostgresUrls && process.env.DB_REPLICA_POSTGRES_URLS) {
+      dbReplicaPostgresUrls = process.env.DB_REPLICA_POSTGRES_URLS.split(',')
     }
+    const dbReplicaTags = overrides?.dbReplicaTags ?? {
+      '*': getTagIdxs(process.env.DB_REPLICA_TAGS_ANY), // e.g. DB_REPLICA_TAGS_ANY=0,1
+      timeline: getTagIdxs(process.env.DB_REPLICA_TAGS_TIMELINE),
+      feed: getTagIdxs(process.env.DB_REPLICA_TAGS_FEED),
+      search: getTagIdxs(process.env.DB_REPLICA_TAGS_SEARCH),
+      thread: getTagIdxs(process.env.DB_REPLICA_TAGS_THREAD),
+    }
+    assert(
+      Object.values(dbReplicaTags)
+        .flat()
+        .every((idx) => idx < (dbReplicaPostgresUrls?.length ?? 0)),
+      'out of range index in replica tags',
+    )
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
     assert(dbPrimaryPostgresUrl)
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
@@ -78,7 +88,8 @@ export class ServerConfig {
       serverDid,
       feedGenDid,
       dbPrimaryPostgresUrl,
-      dbReplicaPostgresUrl,
+      dbReplicaPostgresUrls,
+      dbReplicaTags,
       dbPostgresSchema,
       didPlcUrl,
       didCacheStaleTTL,
@@ -137,7 +148,11 @@ export class ServerConfig {
   }
 
   get dbReplicaPostgresUrl() {
-    return this.cfg.dbReplicaPostgresUrl
+    return this.cfg.dbReplicaPostgresUrls
+  }
+
+  get dbReplicaTags() {
+    return this.cfg.dbReplicaTags
   }
 
   get dbPostgresSchema() {
@@ -187,6 +202,10 @@ export class ServerConfig {
   get triagePassword() {
     return this.cfg.triagePassword
   }
+}
+
+function getTagIdxs(str?: string): number[] {
+  return str ? str.split(',').map((item) => parseInt(item, 10)) : []
 }
 
 function stripUndefineds(
