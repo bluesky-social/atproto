@@ -7,10 +7,16 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getTimelineSkeleton({
     auth: ctx.authVerifier,
     handler: async ({ auth, params }) => {
-      const { limit, cursor } = params
+      const { excludePostTypes, limit, cursor } = params
       const viewer = auth.credentials.did
 
-      const skeleton = await getTimelineSkeleton(ctx.db, viewer, limit, cursor)
+      const skeleton = await getTimelineSkeleton(
+        ctx.db,
+        viewer,
+        limit,
+        excludePostTypes,
+        cursor,
+      )
       return {
         encoding: 'application/json',
         body: skeleton,

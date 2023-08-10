@@ -69,6 +69,18 @@ describe('proxies timeline skeleton', () => {
     expect([...pt1.data.feed, ...pt2.data.feed]).toEqual(res.data.feed)
   })
 
+  it('timeline skeleton construction with excludePostTypes', async () => {
+    const res = await agent.api.app.bsky.feed.getTimeline(
+      {
+        excludePostTypes: ['reply', 'repost', 'query'],
+      },
+      {
+        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+      },
+    )
+    expect(forSnapshot(res.data)).toMatchSnapshot()
+  })
+
   it('feed skeleton construction', async () => {
     const uri = AtUri.make(
       feedPublisherDid,

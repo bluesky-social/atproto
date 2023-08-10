@@ -129,6 +129,87 @@ describe('timeline views', () => {
     expect(defaultTL.data.feed).toEqual(reverseChronologicalTL.data.feed)
   })
 
+  it('full reverse-chronological feed', async () => {
+    const fullNoArgs = await agent.api.app.bsky.feed.getTimeline(
+      {
+        algorithm: FeedAlgorithm.ReverseChronological,
+      },
+      {
+        headers: sc.getHeaders(alice),
+      },
+    )
+    expect(fullNoArgs.data.feed.length).toEqual(13)
+
+    const fullDefaultArgs = await agent.api.app.bsky.feed.getTimeline(
+      {
+        algorithm: FeedAlgorithm.ReverseChronological,
+      },
+      {
+        headers: sc.getHeaders(alice),
+      },
+    )
+    expect(fullDefaultArgs.data.feed.length).toEqual(
+      fullNoArgs.data.feed.length,
+    )
+  })
+
+  it('reverse-chronological feed, no reposts', async () => {
+    const full = await agent.api.app.bsky.feed.getTimeline(
+      {
+        algorithm: FeedAlgorithm.ReverseChronological,
+        excludePostTypes: ['repost'],
+      },
+      { headers: sc.getHeaders(alice) },
+    )
+    const POST_COUNT_NO_REPOSTS = 11
+    expect(full.data.feed.length).toEqual(POST_COUNT_NO_REPOSTS)
+  })
+
+  it('reverse-chronological feed, no replies', async () => {
+    const full = await agent.api.app.bsky.feed.getTimeline(
+      {
+        algorithm: FeedAlgorithm.ReverseChronological,
+        excludePostTypes: ['reply'],
+      },
+      { headers: sc.getHeaders(alice) },
+    )
+    expect(full.data.feed.length).toEqual(10)
+  })
+
+  it('reverse-chronological feed, replies minimum like counts', async () => {
+    const minReplyLikeCountOneFeed = await agent.api.app.bsky.feed.getTimeline(
+      {
+        algorithm: FeedAlgorithm.ReverseChronological,
+        excludePostTypes: ['reply'],
+      },
+      { headers: sc.getHeaders(alice) },
+    )
+    expect(minReplyLikeCountOneFeed.data.feed.length).toEqual(10)
+  })
+
+  it('reverse-chronological feed, no quotes', async () => {
+    const timelineNoQuotes = await agent.api.app.bsky.feed.getTimeline(
+      {
+        algorithm: FeedAlgorithm.ReverseChronological,
+        excludePostTypes: ['quote'],
+      },
+      { headers: sc.getHeaders(alice) },
+    )
+    expect(timelineNoQuotes.data.feed.length).toEqual(10)
+  })
+
+  it('reverse-chronological feed, no quotes, no replies, no reposts', async () => {
+    const timelineNoQuotesNoRepliesNoReposts =
+      await agent.api.app.bsky.feed.getTimeline(
+        {
+          algorithm: FeedAlgorithm.ReverseChronological,
+          excludePostTypes: ['quote', 'reply', 'repost'],
+        },
+        { headers: sc.getHeaders(alice) },
+      )
+    expect(timelineNoQuotesNoRepliesNoReposts.data.feed.length).toEqual(6)
+  })
+
   it('omits posts and reposts of muted authors.', async () => {
     await agent.api.app.bsky.graph.muteActor(
       { actor: bob },
