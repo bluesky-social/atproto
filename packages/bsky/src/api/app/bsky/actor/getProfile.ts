@@ -17,6 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         actorService.getActor(actor, true),
         actorService.getRepoRev(requester),
       ])
+      setRepoRev(res, repoRev)
 
       if (!actorRes) {
         throw new InvalidRequestError('Profile not found')
@@ -35,7 +36,6 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Profile not found')
       }
 
-      setRepoRev(res, repoRev)
       return {
         encoding: 'application/json',
         body: profile,

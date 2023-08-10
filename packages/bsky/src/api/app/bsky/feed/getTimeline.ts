@@ -22,6 +22,7 @@ export default function (server: Server, ctx: AppContext) {
         getTimelineSkeleton(ctx.db, viewer, limit, cursor),
         ctx.services.actor(ctx.db).getRepoRev(viewer),
       ])
+      setRepoRev(res, repoRev)
 
       const feedService = ctx.services.feed(ctx.db)
       const feedItems = await feedService.cleanFeedSkeleton(
@@ -31,7 +32,6 @@ export default function (server: Server, ctx: AppContext) {
       )
       const feed = await feedService.hydrateFeed(feedItems, viewer)
 
-      setRepoRev(res, repoRev)
       return {
         encoding: 'application/json',
         body: {

@@ -11,7 +11,7 @@ import {
   ProfileView,
   ProfileViewDetailed,
 } from '../../lexicon/types/app/bsky/actor/defs'
-import { PostView } from '../../lexicon/types/app/bsky/feed/defs'
+import { FeedViewPost, PostView } from '../../lexicon/types/app/bsky/feed/defs'
 import {
   Main as EmbedImages,
   isMain as isEmbedImages,
@@ -151,6 +151,36 @@ export class LocalService {
         ? this.getImageUrl('avatar', did, record.avatar.ref.toString())
         : undefined,
     }
+  }
+
+  async formatAndInsertPostsInFeed(
+    feed: FeedViewPost[],
+    posts: RecordDescript<PostRecord>[],
+  ): Promise<FeedViewPost[]> {
+    if (posts.length === 0) {
+      return feed
+    }
+    const lastTime = feed.at(-1)?.post.indexedAt ?? new Date(0).toISOString()
+    const inFeed = posts.filter((p) => p.indexedAt > lastTime)
+    const newestToOldest = inFeed.reverse()
+    const maybedFormatted = await Promise.all(
+      newestToOldest.map((p) => this.getPost(p)),
+    )
+    const formatted = maybedFormatted.filter((p) => p !== null) as PostView[]
+    for (const post of formatted) {
+      let inserted = false
+      for (let i = 0; i < feed.length; i++) {
+        if (feed[i].post.indexedAt < post.indexedAt) {
+          feed.splice(i, 0, { post })
+          inserted = true
+          break
+        }
+      }
+      if (!inserted) {
+        feed.push({ post })
+      }
+    }
+    return feed
   }
 
   async getPost(

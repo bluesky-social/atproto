@@ -8,10 +8,6 @@ import { filterMutesAndBlocks } from './getFeed'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getTimeline'
 import { ApiRes, getRepoRev } from '../util/read-after-write'
 import { ids } from '../../../../../lexicon/lexicons'
-import { PostView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
-import { FeedViewPost } from '../../../../../lexicon/types/app/bsky/feed/defs'
-import { Record as PostRecord } from '../../../../../lexicon/types/app/bsky/feed/post'
-import { LocalService, RecordDescript } from '../../../../../services/local'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
@@ -130,43 +126,12 @@ const ensureReadAfterWrite = async (
   const local = await localSrvc.getRecordsSinceRev(requester, rev, [
     ids.AppBskyFeedPost,
   ])
-  const formatted = await findAndFormatPostsToInsert(
-    localSrvc,
+  const feed = await localSrvc.formatAndInsertPostsInFeed(
+    [...res.data.feed],
     local.posts,
-    res.data.feed,
   )
-  if (formatted.length === 0) return res.data
-  const feed = [...res.data.feed]
-  for (const post of formatted) {
-    let inserted = false
-    for (let i = 0; i < feed.length; i++) {
-      if (feed[i].post.indexedAt < post.indexedAt) {
-        feed.splice(i, 0, { post })
-        inserted = true
-        break
-      }
-    }
-    if (!inserted) {
-      feed.push({ post })
-    }
-  }
   return {
     ...res.data,
     feed,
   }
-}
-
-// ordered most to least recent
-const findAndFormatPostsToInsert = async (
-  localSrvc: LocalService,
-  posts: RecordDescript<PostRecord>[],
-  feed: FeedViewPost[],
-): Promise<PostView[]> => {
-  const lastTime = feed.at(-1)?.post.indexedAt ?? new Date(0).toISOString()
-  const inTimeline = posts.filter((p) => p.indexedAt > lastTime)
-  const newestToOldest = inTimeline.reverse()
-  const formatted = await Promise.all(
-    newestToOldest.map((p) => localSrvc.getPost(p)),
-  )
-  return formatted.filter((p) => p !== null) as PostView[]
 }

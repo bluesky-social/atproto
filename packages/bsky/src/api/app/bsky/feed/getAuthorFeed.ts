@@ -92,9 +92,10 @@ export default function (server: Server, ctx: AppContext) {
         feedItemsQb.execute(),
         actorService.getRepoRev(viewer),
       ])
+      setRepoRev(res, repoRev)
+
       const feed = await feedService.hydrateFeed(feedItems, viewer)
 
-      setRepoRev(res, repoRev)
       return {
         encoding: 'application/json',
         body: {

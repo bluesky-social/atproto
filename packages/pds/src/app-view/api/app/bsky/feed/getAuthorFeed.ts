@@ -147,25 +147,30 @@ const ensureReadAfterWrite = async (
   const localSrvc = ctx.services.local(ctx.db)
   const local = await localSrvc.getRecordsSinceRev(requester, rev, [
     ids.AppBskyActorProfile,
+    ids.AppBskyFeedPost,
   ])
   const localProf = local.profile
-  if (!localProf) return res.data
-  const feed = res.data.feed.map((item) => {
-    if (item.post.author.did === requester) {
-      return {
-        ...item,
-        post: {
-          ...item.post,
-          author: localSrvc.updateProfileViewBasic(
-            item.post.author,
-            localProf.record,
-          ),
-        },
+  let feed = res.data.feed
+  // first update any out of date profile pictures in feed
+  if (localProf) {
+    feed = res.data.feed.map((item) => {
+      if (item.post.author.did === requester) {
+        return {
+          ...item,
+          post: {
+            ...item.post,
+            author: localSrvc.updateProfileViewBasic(
+              item.post.author,
+              localProf.record,
+            ),
+          },
+        }
+      } else {
+        return item
       }
-    } else {
-      return item
-    }
-  })
+    })
+  }
+  feed = await localSrvc.formatAndInsertPostsInFeed(feed, local.posts)
   return {
     ...res.data,
     feed,

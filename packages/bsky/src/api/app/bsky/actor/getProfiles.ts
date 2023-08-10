@@ -15,8 +15,8 @@ export default function (server: Server, ctx: AppContext) {
         actorService.getActors(actors),
         actorService.getRepoRev(requester),
       ])
-
       setRepoRev(res, repoRev)
+
       return {
         encoding: 'application/json',
         body: {

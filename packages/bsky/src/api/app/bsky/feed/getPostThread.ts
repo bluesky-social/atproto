@@ -42,6 +42,8 @@ export default function (server: Server, ctx: AppContext) {
         getThreadData(ctx, uri, depth, parentHeight),
         actorService.getRepoRev(requester),
       ])
+      setRepoRev(res, repoRev)
+
       if (!threadData) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
@@ -71,7 +73,6 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
 
-      setRepoRev(res, repoRev)
       return {
         encoding: 'application/json',
         body: { thread },
