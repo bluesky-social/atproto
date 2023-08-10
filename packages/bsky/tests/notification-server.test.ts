@@ -53,7 +53,6 @@ describe('notification views', () => {
   describe('NotificationServer', () => {
     it('gets user tokens from db', async () => {
       const tokens = await notifServer.getUserTokens(alice)
-      console.log(tokens)
       expect(tokens[0].token).toEqual('123')
     })
 
