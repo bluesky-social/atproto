@@ -16,6 +16,7 @@ const assert = require('assert')
 const { CloudfrontInvalidator } = require('@atproto/aws')
 const {
   DatabaseCoordinator,
+  PrimaryDatabase,
   ServerConfig,
   BskyAppView,
   ViewMaintainer,
@@ -70,6 +71,12 @@ const main = async () => {
     imgInvalidator: cfInvalidator,
     algos,
   })
+  // separate db needed for more permissions
+  const migrateDb = new PrimaryDatabase({
+    url: env.dbMigratePostgresUrl,
+    schema: env.dbPostgresSchema,
+    poolSize: 2
+  })
   const viewMaintainer = new ViewMaintainer(migrateDb)
   const viewMaintainerRunning = viewMaintainer.run()
   await bsky.start()
@@ -85,6 +92,8 @@ const main = async () => {
 const getEnv = () => ({
   port: parseInt(process.env.PORT),
   version: process.env.BSKY_VERSION,
+  dbMigratePostgresUrl:
+    process.env.DB_MIGRATE_POSTGRES_URL || process.env.DB_POSTGRES_URL,
   dbPrimaryPostgresUrl: process.env.DB_PRIMARY_POSTGRES_URL,
   dbPrimaryPoolSize: maybeParseInt(process.env.DB_PRIMARY_POOL_SIZE),
   dbReplicaPostgresUrls: process.env.DB_REPLICA_POSTGRES_URLS
