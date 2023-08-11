@@ -10,7 +10,7 @@ type ReplicaOptions = PgOptions & { tags?: ReplicaTag[] }
 type CoordinatorOptions = {
   schema?: string
   primary: PgOptions
-  replicas: ReplicaOptions[]
+  replicas?: ReplicaOptions[]
 }
 
 type ReplicaGroup = {
@@ -39,7 +39,7 @@ export class DatabaseCoordinator {
       dbs: [],
       roundRobinIdx: 0,
     }
-    for (const cfg of opts.replicas) {
+    for (const cfg of opts.replicas ?? []) {
       const db = new Database({
         schema: opts.schema,
         ...cfg,
