@@ -45,6 +45,7 @@ export class DatabaseCoordinator {
         ...cfg,
       })
       this.allReplicas.push(db)
+      // setup different groups of replicas based on tag, each round-robins separately.
       if (cfg.tags) {
         for (const tag of cfg.tags) {
           if (tag === '*') {
@@ -61,6 +62,7 @@ export class DatabaseCoordinator {
         this.untagged.dbs.push(db)
       }
     }
+    // guarantee there is always a replica around to service any query, falling back to primary.
     if (!this.untagged.dbs.length) {
       if (this.allReplicas.length) {
         this.untagged.dbs = [...this.allReplicas]
@@ -72,6 +74,10 @@ export class DatabaseCoordinator {
 
   getPrimary(): PrimaryDatabase {
     return this.primary
+  }
+
+  getReplicas(): Database[] {
+    return this.allReplicas
   }
 
   getReplica(tag?: ReplicaTag): Database {
@@ -88,7 +94,7 @@ export class DatabaseCoordinator {
   async close(): Promise<void> {
     await Promise.all([
       this.primary.close(),
-      ...this.allReplicas.map((db) => db.close),
+      ...this.allReplicas.map((db) => db.close()),
     ])
   }
 }

@@ -9,7 +9,7 @@ import { IdResolver } from '@atproto/identity'
 import API, { health, blobResolver } from './api'
 import { DatabaseCoordinator } from './db'
 import * as error from './error'
-import { loggerMiddleware } from './logger'
+import { dbLogger, loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { createServer } from './lexicon'
 import { ImageUriBuilder } from './image/uri'
@@ -27,7 +27,7 @@ import { MountedAlgos } from './feed-gen/types'
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
 export { ServerConfig } from './config'
-export { Database, DatabaseCoordinator } from './db'
+export { Database, PrimaryDatabase, DatabaseCoordinator } from './db'
 export { Redis } from './redis'
 export { ViewMaintainer } from './db/views'
 export { AppContext } from './context'
@@ -130,26 +130,38 @@ export class BskyAppView {
   }
 
   async start(): Promise<http.Server> {
-    // @TODO re-enable stats
-    // const { db, backgroundQueue } = this.ctx
-    // const { pool } = db.cfg
-    // this.dbStatsInterval = setInterval(() => {
-    //   dbLogger.info(
-    //     {
-    //       idleCount: pool.idleCount,
-    //       totalCount: pool.totalCount,
-    //       waitingCount: pool.waitingCount,
-    //     },
-    //     'db pool stats',
-    //   )
-    //   dbLogger.info(
-    //     {
-    //       runningCount: backgroundQueue.queue.pending,
-    //       waitingCount: backgroundQueue.queue.size,
-    //     },
-    //     'background queue stats',
-    //   )
-    // }, 10000)
+    const { db, backgroundQueue } = this.ctx
+    const primary = db.getPrimary()
+    const replicas = db.getReplicas()
+    this.dbStatsInterval = setInterval(() => {
+      dbLogger.info(
+        {
+          idleCount: replicas.reduce(
+            (tot, replica) => tot + replica.pool.idleCount,
+            0,
+          ),
+          totalCount: replicas.reduce(
+            (tot, replica) => tot + replica.pool.totalCount,
+            0,
+          ),
+          waitingCount: replicas.reduce(
+            (tot, replica) => tot + replica.pool.waitingCount,
+            0,
+          ),
+          primaryIdleCount: primary.pool.idleCount,
+          primaryTotalCount: primary.pool.totalCount,
+          primaryWaitingCount: primary.pool.waitingCount,
+        },
+        'db pool stats',
+      )
+      dbLogger.info(
+        {
+          runningCount: backgroundQueue.queue.pending,
+          waitingCount: backgroundQueue.queue.size,
+        },
+        'background queue stats',
+      )
+    }, 10000)
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
