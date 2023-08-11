@@ -94,7 +94,7 @@ const main = async () => {
   // since the app-view will take care of that and let the PDS know when it's done.
   const periodicModerationActionReversalRunning =
     pds.ctx.shouldProxyModeration()
-      ? new Promise((resolve) => resolve())
+      ? Promise.resolve()
       : periodicModerationActionReversal.run()
 
   await pds.start()

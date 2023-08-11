@@ -10,7 +10,7 @@ export const MODERATION_ACTION_REVERSAL_ID = 1011
 export class PeriodicModerationActionReversal {
   leader = new Leader(MODERATION_ACTION_REVERSAL_ID, this.appContext.db)
   destroyed = false
-  pushAgent: AtpAgent
+  pushAgent?: AtpAgent
 
   constructor(private appContext: AppContext) {
     if (appContext.cfg.moderationActionReverseUrl) {
@@ -32,11 +32,12 @@ export class PeriodicModerationActionReversal {
         createdAt: new Date(),
         reason: `[SCHEDULED_REVERSAL] Reverting action as originally scheduled`,
       }
-      await moderationTxn.revertAction(reverseAction)
       if (this.pushAgent) {
         await this.pushAgent.com.atproto.admin.reverseModerationAction(
           reverseAction,
         )
+      } else {
+        await moderationTxn.revertAction(reverseAction)
       }
     })
   }
