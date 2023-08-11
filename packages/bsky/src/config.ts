@@ -47,9 +47,7 @@ export class ServerConfig {
     const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
     const blobCacheLocation = process.env.BLOB_CACHE_LOC
     const dbPrimaryPostgresUrl =
-      overrides?.dbPrimaryPostgresUrl ||
-      process.env.DB_PRIMARY_POSTGRES_URL ||
-      process.env.DB_POSTGRES_URL
+      overrides?.dbPrimaryPostgresUrl || process.env.DB_PRIMARY_POSTGRES_URL
     let dbReplicaPostgresUrls = overrides?.dbReplicaPostgresUrls
     if (!dbReplicaPostgresUrls && process.env.DB_REPLICA_POSTGRES_URLS) {
       dbReplicaPostgresUrls = process.env.DB_REPLICA_POSTGRES_URLS.split(',')
