@@ -2,18 +2,18 @@ import { once } from 'events'
 import { wait } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
 import { Database } from '../src'
-import { Primary } from '../src/db'
+import { PrimaryDatabase } from '../src/db'
 import { Leader } from '../src/db/leader'
 
 describe('db', () => {
   let network: TestNetwork
-  let db: Database & Primary
+  let db: PrimaryDatabase
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_db',
     })
-    db = network.bsky.ctx.dbPrimary
+    db = network.bsky.ctx.db.getPrimary()
   })
 
   afterAll(async () => {
@@ -162,60 +162,6 @@ describe('db', () => {
         .where('did', 'in', names)
         .execute()
       expect(res.length).toBe(0)
-    })
-  })
-
-  describe('primary dbs', () => {
-    let primaryDb: Database & Primary
-    let secondaryDb: Database
-
-    beforeAll(() => {
-      primaryDb = Database.postgres({
-        isPrimary: true,
-        url: network.bsky.ctx.cfg.dbPrimaryPostgresUrl,
-        schema: network.bsky.ctx.cfg.dbPostgresSchema,
-        poolSize: 1,
-      }).asPrimary()
-      secondaryDb = Database.postgres({
-        url: network.bsky.ctx.cfg.dbPrimaryPostgresUrl,
-        schema: network.bsky.ctx.cfg.dbPostgresSchema,
-        poolSize: 1,
-      })
-    })
-
-    afterAll(async () => {
-      await primaryDb.close()
-      await secondaryDb.close()
-    })
-
-    it('assertPrimary() and asPrimary() fail when not a primary', () => {
-      expect(() => secondaryDb.assertPrimary()).toThrow('Primary db required')
-      expect(() => secondaryDb.asPrimary()).toThrow('Primary db required')
-    })
-
-    it('assertPrimary() and asPrimary() succeed when a primary', () => {
-      expect(() => {
-        const maybePrimaryDb: Database = primaryDb
-        maybePrimaryDb.assertPrimary()
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const confirmingPrimary: Database & Primary = maybePrimaryDb // check type correctness
-      }).not.toThrow()
-      expect(() => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const confirmingPrimary: Database & Primary = primaryDb.asPrimary() // check type correctness
-      }).not.toThrow()
-    })
-
-    it('transactions provide a non-primary when original is not a primary.', async () => {
-      await secondaryDb.transaction(async (tx: Database) => {
-        expect(() => tx.assertPrimary()).toThrow('Primary db required')
-      })
-    })
-
-    it('transactions provide a primary when original is a primary.', async () => {
-      await primaryDb.transaction(async (tx: Database & Primary) => {
-        expect(() => tx.assertPrimary()).not.toThrow()
-      })
     })
   })
 

@@ -35,7 +35,7 @@ describe('timeline views', () => {
     const labelPostA = sc.posts[bob][0].ref
     const labelPostB = sc.posts[carol][0].ref
     await network.bsky.ctx.services
-      .label(network.bsky.ctx.dbPrimary)
+      .label(network.bsky.ctx.db.getPrimary())
       .formatAndCreate(
         network.bsky.ctx.cfg.labelerDid,
         labelPostA.uriStr,
@@ -43,7 +43,7 @@ describe('timeline views', () => {
         { create: ['kind'] },
       )
     await network.bsky.ctx.services
-      .label(network.bsky.ctx.dbPrimary)
+      .label(network.bsky.ctx.db.getPrimary())
       .formatAndCreate(
         network.bsky.ctx.cfg.labelerDid,
         labelPostB.uriStr,

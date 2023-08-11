@@ -3,27 +3,22 @@
 require('dd-trace/init') // Only works with commonjs
 
 // Tracer code above must come before anything else
-const { Database, IndexerConfig, BskyIndexer, Redis } = require('@atproto/bsky')
+const {
+  IndexerConfig,
+  BskyIndexer,
+  Redis,
+  PrimaryDatabase,
+} = require('@atproto/bsky')
 
 const main = async () => {
   const env = getEnv()
-  // Migrate using credentialed user
-  // @TODO temporarily disabled for testing purposes
-  // const migrateDb = Database.postgres({
-  //   url: env.dbMigratePostgresUrl,
-  //   schema: env.dbPostgresSchema,
-  //   poolSize: 2,
-  // })
-  // await migrateDb.migrateToLatestOrThrow()
-  // await migrateDb.close()
-  const db = Database.postgres({
-    isPrimary: true,
+  const db = new PrimaryDatabase({
     url: env.dbPostgresUrl,
     schema: env.dbPostgresSchema,
     poolSize: env.dbPoolSize,
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
-  }).asPrimary()
+  })
   const cfg = IndexerConfig.readEnv({
     version: env.version,
     dbPostgresUrl: env.dbPostgresUrl,

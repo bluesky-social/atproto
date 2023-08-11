@@ -80,6 +80,34 @@ export class PrimaryDatabase extends Database {
     this.destroyed = true
   }
 
+  async migrateToOrThrow(migration: string) {
+    if (this.schema) {
+      await this.db.schema.createSchema(this.schema).ifNotExists().execute()
+    }
+    const { error, results } = await this.migrator.migrateTo(migration)
+    if (error) {
+      throw error
+    }
+    if (!results) {
+      throw new Error('An unknown failure occurred while migrating')
+    }
+    return results
+  }
+
+  async migrateToLatestOrThrow() {
+    if (this.schema) {
+      await this.db.schema.createSchema(this.schema).ifNotExists().execute()
+    }
+    const { error, results } = await this.migrator.migrateToLatest()
+    if (error) {
+      throw error
+    }
+    if (!results) {
+      throw new Error('An unknown failure occurred while migrating')
+    }
+    return results
+  }
+
   async maintainMaterializedViews(opts: {
     views: string[]
     intervalSec: number

@@ -15,7 +15,6 @@ const path = require('path')
 const assert = require('assert')
 const { CloudfrontInvalidator } = require('@atproto/aws')
 const {
-  Database,
   DatabaseCoordinator,
   ServerConfig,
   BskyAppView,
@@ -25,15 +24,6 @@ const {
 
 const main = async () => {
   const env = getEnv()
-  // Migrate using credentialed user
-  const migrateDb = Database.postgres({
-    isPrimary: true,
-    url: env.dbMigratePostgresUrl,
-    schema: env.dbPostgresSchema,
-    poolSize: 2,
-  })
-  await migrateDb.migrateToLatestOrThrow()
-  // Use lower-credentialed user to run the app.
   assert(env.dbPrimaryPostgresUrl, 'missing configuration for db')
   const db = new DatabaseCoordinator({
     schema: env.dbPostgresSchema,
@@ -95,8 +85,6 @@ const main = async () => {
 const getEnv = () => ({
   port: parseInt(process.env.PORT),
   version: process.env.BSKY_VERSION,
-  dbMigratePostgresUrl:
-    process.env.DB_MIGRATE_POSTGRES_URL || process.env.DB_PRIMARY_POSTGRES_URL,
   dbPrimaryPostgresUrl: process.env.DB_PRIMARY_POSTGRES_URL,
   dbPrimaryPoolSize: maybeParseInt(process.env.DB_PRIMARY_POOL_SIZE),
   dbReplicaPostgresUrls: process.env.DB_REPLICA_POSTGRES_URLS

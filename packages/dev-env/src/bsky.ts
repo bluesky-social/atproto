@@ -54,17 +54,17 @@ export class TestBsky {
     })
 
     // shared across server, ingester, and indexer in order to share pool, avoid too many pg connections.
-    const db = bsky.Database.postgres({
-      url: cfg.dbPrimaryPostgresUrl,
+    const db = new bsky.DatabaseCoordinator({
       schema: cfg.dbPostgresSchema,
-      poolSize: 10,
+      primary: {
+        url: cfg.dbPrimaryPostgresUrl,
+        poolSize: 10,
+      },
+      replicas: [],
     })
 
-    const dbPrimary = new bsky.Database(db.db, db.cfg, true).asPrimary()
-
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
-    const migrationDb = bsky.Database.postgres({
-      isPrimary: true,
+    const migrationDb = new bsky.PrimaryDatabase({
       url: cfg.dbPrimaryPostgresUrl,
       schema: cfg.dbPostgresSchema,
     })
@@ -77,8 +77,7 @@ export class TestBsky {
 
     // api server
     const server = bsky.BskyAppView.create({
-      dbPrimary,
-      dbReplica: db,
+      db,
       config,
       algos: cfg.algos,
     })
@@ -107,7 +106,7 @@ export class TestBsky {
     })
     const indexer = bsky.BskyIndexer.create({
       cfg: indexerCfg,
-      db: dbPrimary,
+      db: db.getPrimary(),
       redis: indexerRedis,
     })
     // ingester
@@ -128,7 +127,7 @@ export class TestBsky {
     })
     const ingester = bsky.BskyIngester.create({
       cfg: ingesterCfg,
-      db: dbPrimary,
+      db: db.getPrimary(),
       redis: ingesterRedis,
     })
     await ingester.start()
@@ -201,11 +200,10 @@ export async function getIngester(
     ingesterNamespace: `ns${ns}`,
     ...config,
   })
-  const db = bsky.Database.postgres({
-    isPrimary: true,
+  const db = new bsky.PrimaryDatabase({
     url: cfg.dbPostgresUrl,
     schema: cfg.dbPostgresSchema,
-  }).asPrimary()
+  })
   assert(cfg.redisHost)
   const redis = new bsky.Redis({
     host: cfg.redisHost,
@@ -239,11 +237,10 @@ export async function getIndexers(
     indexerNamespace: `ns${ns}`,
     ...config,
   }
-  const db = bsky.Database.postgres({
-    isPrimary: true,
+  const db = new bsky.PrimaryDatabase({
     url: baseCfg.dbPostgresUrl,
     schema: baseCfg.dbPostgresSchema,
-  }).asPrimary()
+  })
   assert(baseCfg.redisHost)
   const redis = new bsky.Redis({
     host: baseCfg.redisHost,
