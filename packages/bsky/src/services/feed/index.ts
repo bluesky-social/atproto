@@ -39,27 +39,33 @@ import {
   PostInfo,
   RecordEmbedViewRecord,
   PostBlocksMap,
+  kSelfLabels,
 } from './types'
-import { LabelService, Labels } from '../label'
+import { LabelService, Labels, getSelfLabels } from '../label'
 import { ActorService } from '../actor'
 import { GraphService } from '../graph'
 import { FeedViews } from './views'
+import { LabelCache } from '../../label-cache'
 
 export * from './types'
 
 export class FeedService {
-  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    public db: Database,
+    public imgUriBuilder: ImageUriBuilder,
+    public labelCache: LabelCache,
+  ) {}
 
   views = new FeedViews(this.db, this.imgUriBuilder)
 
   services = {
-    label: LabelService.creator()(this.db),
-    actor: ActorService.creator(this.imgUriBuilder)(this.db),
+    label: LabelService.creator(this.labelCache)(this.db),
+    actor: ActorService.creator(this.imgUriBuilder, this.labelCache)(this.db),
     graph: GraphService.creator(this.imgUriBuilder)(this.db),
   }
 
-  static creator(imgUriBuilder: ImageUriBuilder) {
-    return (db: Database) => new FeedService(db, imgUriBuilder)
+  static creator(imgUriBuilder: ImageUriBuilder, labelCache: LabelCache) {
+    return (db: Database) => new FeedService(db, imgUriBuilder, labelCache)
   }
 
   selectPostQb() {
@@ -131,15 +137,18 @@ export class FeedService {
       this.db.db
         .selectFrom('actor')
         .leftJoin('profile', 'profile.creator', 'actor.did')
+        .leftJoin('record', 'record.uri', 'profile.uri')
         .where('actor.did', 'in', dids)
         .where(notSoftDeletedClause(ref('actor')))
         .selectAll('actor')
         .select([
           'profile.uri as profileUri',
+          'profile.cid as profileCid',
           'profile.displayName as displayName',
           'profile.description as description',
           'profile.avatarCid as avatarCid',
           'profile.indexedAt as indexedAt',
+          'record.json as profileJson',
           this.db.db
             .selectFrom('follow')
             .if(!viewer, (q) => q.where(noMatch))
@@ -193,13 +202,8 @@ export class FeedService {
       .filter((list) => !!list)
     const listViews = await this.services.graph.getListViews(listUris, viewer)
     return actors.reduce((acc, cur) => {
-      const actorLabels = labels[cur.did] ?? []
       const avatar = cur.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
-            'avatar',
-            cur.did,
-            cur.avatarCid,
-          )
+        ? this.imgUriBuilder.getPresetUri('avatar', cur.did, cur.avatarCid)
         : undefined
       const mutedByList =
         cur.requesterMutedByList && listViews[cur.requesterMutedByList]
@@ -207,6 +211,15 @@ export class FeedService {
               listViews[cur.requesterMutedByList],
             )
           : undefined
+      const actorLabels = labels[cur.did] ?? []
+      const selfLabels = getSelfLabels({
+        uri: cur.profileUri,
+        cid: cur.profileCid,
+        record:
+          cur.profileJson !== null
+            ? (jsonStringToLex(cur.profileJson) as Record<string, unknown>)
+            : null,
+      })
       return {
         ...acc,
         [cur.did]: {
@@ -224,7 +237,8 @@ export class FeedService {
                 followedBy: cur?.requesterFollowedBy || undefined,
               }
             : undefined,
-          labels: skipLabels ? undefined : actorLabels,
+          labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
+          [kSelfLabels]: selfLabels,
         },
       }
     }, {} as ActorInfoMap)
@@ -613,6 +627,7 @@ export class FeedService {
         recordEmbedViews[uri] = {
           $type: 'app.bsky.embed.record#viewNotFound',
           uri,
+          notFound: true,
         }
       }
     }
@@ -687,6 +702,16 @@ function applyEmbedBlock(
     return {
       $type: 'app.bsky.embed.record#viewBlocked',
       uri: view.uri,
+      blocked: true,
+      author: {
+        did: view.author.did,
+        viewer: view.author.viewer
+          ? {
+              blockedBy: view.author.viewer?.blockedBy,
+              blocking: view.author.viewer?.blocking,
+            }
+          : undefined,
+      },
     }
   }
   return view

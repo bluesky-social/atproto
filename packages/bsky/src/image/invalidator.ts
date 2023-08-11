@@ -1,4 +1,5 @@
 import { BlobCache } from './server'
+import { ImageUriBuilder } from './uri'
 
 // Invalidation is a general interface for propagating an image blob
 // takedown through any caches where a representation of it may be stored.
@@ -15,7 +16,13 @@ export class ImageProcessingServerInvalidator implements ImageInvalidator {
       paths.map(async (path) => {
         const [, signature] = path.split('/')
         if (!signature) throw new Error('Missing signature')
-        await this.cache.clear(signature)
+        const options = ImageUriBuilder.getOptions(path)
+        const cacheKey = [
+          options.did,
+          options.cid.toString(),
+          options.preset,
+        ].join('::')
+        await this.cache.clear(cacheKey)
       }),
     )
     const rejection = results.find(

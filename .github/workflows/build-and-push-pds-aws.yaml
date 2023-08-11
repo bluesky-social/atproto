@@ -11,6 +11,7 @@ env:
 
 jobs:
   pds-container-aws:
+    if: github.repository == 'bluesky-social/atproto'
     runs-on: ubuntu-latest
     permissions:
       contents: read

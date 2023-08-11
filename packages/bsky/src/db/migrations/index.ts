@@ -22,3 +22,4 @@ export * as _20230629T220835893Z from './20230629T220835893Z-remove-post-hierarc
 export * as _20230703T045536691Z from './20230703T045536691Z-feed-and-label-indices'
 export * as _20230720T164800037Z from './20230720T164800037Z-posts-cursor-idx'
 export * as _20230807T035309811Z from './20230807T035309811Z-feed-item-delete-invite-for-user-idx'
+export * as _20230808T172902639Z from './20230808T172902639Z-repo-rev'

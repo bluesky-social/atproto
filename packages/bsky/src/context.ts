@@ -8,6 +8,7 @@ import * as auth from './auth'
 import DidSqlCache from './did-cache'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
+import { LabelCache } from './label-cache'
 
 export class AppContext {
   constructor(
@@ -18,6 +19,7 @@ export class AppContext {
       services: Services
       idResolver: IdResolver
       didCache: DidSqlCache
+      labelCache: LabelCache
       backgroundQueue: BackgroundQueue
       algos: MountedAlgos
     },
@@ -49,6 +51,10 @@ export class AppContext {
 
   get didCache(): DidSqlCache {
     return this.opts.didCache
+  }
+
+  get labelCache(): LabelCache {
+    return this.opts.labelCache
   }
 
   get authVerifier() {

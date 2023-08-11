@@ -1,3 +1,4 @@
+import { Selectable } from 'kysely'
 import { View as ImagesEmbedView } from '../../lexicon/types/app/bsky/embed/images'
 import { View as ExternalEmbedView } from '../../lexicon/types/app/bsky/embed/external'
 import {
@@ -16,7 +17,6 @@ import {
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import { FeedGenerator } from '../../db/tables/feed-generator'
 import { ListView } from '../../lexicon/types/app/bsky/graph/defs'
-import { Selectable } from 'kysely'
 
 export type PostEmbedViews = {
   [uri: string]: PostEmbedView
@@ -50,6 +50,8 @@ export type PostBlocksMap = {
   [uri: string]: { reply?: boolean; embed?: boolean }
 }
 
+export const kSelfLabels = Symbol('selfLabels')
+
 export type ActorInfo = {
   did: string
   handle: string
@@ -63,6 +65,8 @@ export type ActorInfo = {
     followedBy?: string
   }
   labels?: Label[]
+  // allows threading self-labels through if they are going to be applied later, i.e. when using skipLabels option.
+  [kSelfLabels]?: Label[]
 }
 export type ActorInfoMap = { [did: string]: ActorInfo }
 

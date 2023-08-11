@@ -34,15 +34,19 @@ export function takeHighestPriorityDecision(
 
 export function downgradeDecision(
   decision: ModerationDecision,
-  { alert }: { alert: boolean },
+  to: 'blur' | 'alert' | 'noop',
 ) {
-  decision.blur = false
-  decision.blurMedia = false
   decision.filter = false
   decision.noOverride = false
-  decision.alert = alert
-  if (!alert) {
+  if (to === 'noop') {
+    decision.blur = false
+    decision.blurMedia = false
+    decision.alert = false
     delete decision.cause
+  } else if (to === 'alert') {
+    decision.blur = false
+    decision.blurMedia = false
+    decision.alert = true
   }
 }
 
@@ -66,25 +70,13 @@ export function isModerationDecisionNoop(
 }
 
 export function isQuotedPost(embed: unknown): embed is AppBskyEmbedRecord.View {
-  return Boolean(
-    embed &&
-      AppBskyEmbedRecord.isView(embed) &&
-      AppBskyEmbedRecord.isViewRecord(embed.record) &&
-      AppBskyFeedPost.isRecord(embed.record.value) &&
-      AppBskyFeedPost.validateRecord(embed.record.value).success,
-  )
+  return Boolean(embed && AppBskyEmbedRecord.isView(embed))
 }
 
 export function isQuotedPostWithMedia(
   embed: unknown,
 ): embed is AppBskyEmbedRecordWithMedia.View {
-  return Boolean(
-    embed &&
-      AppBskyEmbedRecordWithMedia.isView(embed) &&
-      AppBskyEmbedRecord.isViewRecord(embed.record.record) &&
-      AppBskyFeedPost.isRecord(embed.record.record.value) &&
-      AppBskyFeedPost.validateRecord(embed.record.record.value).success,
-  )
+  return Boolean(embed && AppBskyEmbedRecordWithMedia.isView(embed))
 }
 
 export function toModerationUI(decision: ModerationDecision): ModerationUI {

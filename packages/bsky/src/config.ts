@@ -15,8 +15,6 @@ export interface ServerConfigValues {
   didPlcUrl: string
   didCacheStaleTTL: number
   didCacheMaxTTL: number
-  imgUriSalt: string
-  imgUriKey: string
   imgUriEndpoint?: string
   blobCacheLocation?: string
   labelerDid: string
@@ -46,11 +44,6 @@ export class ServerConfig {
       process.env.DID_CACHE_MAX_TTL,
       DAY,
     )
-    const imgUriSalt =
-      process.env.IMG_URI_SALT || '9dd04221f5755bce5f55f47464c27e1e'
-    const imgUriKey =
-      process.env.IMG_URI_KEY ||
-      'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8'
     const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
     const blobCacheLocation = process.env.BLOB_CACHE_LOC
     const dbPrimaryPostgresUrl =
@@ -94,8 +87,6 @@ export class ServerConfig {
       didPlcUrl,
       didCacheStaleTTL,
       didCacheMaxTTL,
-      imgUriSalt,
-      imgUriKey,
       imgUriEndpoint,
       blobCacheLocation,
       labelerDid,
@@ -169,14 +160,6 @@ export class ServerConfig {
 
   get didPlcUrl() {
     return this.cfg.didPlcUrl
-  }
-
-  get imgUriSalt() {
-    return this.cfg.imgUriSalt
-  }
-
-  get imgUriKey() {
-    return this.cfg.imgUriKey
   }
 
   get imgUriEndpoint() {

@@ -20,6 +20,7 @@ import {
   getDescendentsQb,
 } from '../../../../services/util/post'
 import { Database } from '../../../../db'
+import { setRepoRev } from '../../../util'
 
 export type PostThread = {
   post: FeedRow
@@ -30,15 +31,21 @@ export type PostThread = {
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.authOptionalVerifier,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, res }) => {
       const { uri, depth, parentHeight } = params
       const requester = auth.credentials.did
 
       const db = ctx.db.getReplica('thread')
+      const actorService = ctx.services.actor(db)
       const feedService = ctx.services.feed(db)
       const labelService = ctx.services.label(db)
 
-      const threadData = await getThreadData(ctx, db, uri, depth, parentHeight)
+      const [threadData, repoRev] = await Promise.all([
+        getThreadData(ctx, db, uri, depth, parentHeight),
+        actorService.getRepoRev(requester),
+      ])
+      setRepoRev(res, repoRev)
+
       if (!threadData) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
@@ -106,6 +113,15 @@ const composeThread = (
       $type: 'app.bsky.feed.defs#blockedPost',
       uri: threadData.post.postUri,
       blocked: true,
+      author: {
+        did: post.author.did,
+        viewer: post.author.viewer
+          ? {
+              blockedBy: post.author.viewer?.blockedBy,
+              blocking: post.author.viewer?.blocking,
+            }
+          : undefined,
+      },
     }
   }
 
