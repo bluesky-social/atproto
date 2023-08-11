@@ -39,7 +39,6 @@
     "@atproto/identity": "*",
     "@atproto/lexicon": "*",
     "@atproto/repo": "*",
-    "@atproto/uri": "*",
     "@atproto/xrpc-server": "*",
     "@did-plc/lib": "^0.0.1",
     "better-sqlite3": "^7.6.2",

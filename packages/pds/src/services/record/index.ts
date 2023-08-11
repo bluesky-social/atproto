@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { AtUri, ensureValidAtUri } from '@atproto/uri'
+import { AtUri, ensureValidAtUri } from '@atproto/identifier'
 import * as ident from '@atproto/identifier'
 import { cborToLexRecord, WriteOpAction } from '@atproto/repo'
 import { dbLogger as log } from '../../logger'

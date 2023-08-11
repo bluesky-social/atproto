@@ -1,4 +1,4 @@
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/identifier'
 import { CID } from 'multiformats/cid'
 import * as FeedGenerator from '../../../../lexicon/types/app/bsky/feed/generator'
 import * as lex from '../../../../lexicon/lexicons'

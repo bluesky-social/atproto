@@ -1,6 +1,6 @@
 import { Selectable } from 'kysely'
 import { ArrayEl } from '@atproto/common'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/identifier'
 import { INVALID_HANDLE } from '@atproto/identifier'
 import { BlobRef, jsonStringToLex } from '@atproto/lexicon'
 import { Database } from '../../db'

@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/identifier'
 import { dedupeStrs } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/identifier'
 import { jsonStringToLex } from '@atproto/lexicon'

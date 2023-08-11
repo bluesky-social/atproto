@@ -1,5 +1,5 @@
 import { LexiconDoc, LexUserType } from '@atproto/lexicon'
-import { NSID } from '@atproto/nsid'
+import { NSID } from '@atproto/identifier'
 
 export interface DefTreeNodeUserType {
   nsid: string

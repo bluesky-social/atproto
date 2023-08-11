@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/identifier'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { jsonStringToLex } from '@atproto/lexicon'

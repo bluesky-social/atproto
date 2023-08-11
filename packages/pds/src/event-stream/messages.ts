@@ -1,7 +1,7 @@
 // Below specific to message dispatcher
 
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/identifier'
 import { WriteOpAction } from '@atproto/repo'
 
 export type IndexRecord = {

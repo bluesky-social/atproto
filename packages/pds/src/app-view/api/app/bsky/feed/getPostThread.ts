@@ -1,4 +1,4 @@
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/identifier'
 import { AppBskyFeedGetPostThread } from '@atproto/api'
 import { Headers } from '@atproto/xrpc'
 import { InvalidRequestError } from '@atproto/xrpc-server'

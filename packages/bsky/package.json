@@ -37,7 +37,6 @@
     "@atproto/identity": "*",
     "@atproto/lexicon": "*",
     "@atproto/repo": "*",
-    "@atproto/uri": "*",
     "@atproto/xrpc-server": "*",
     "@did-plc/lib": "^0.0.1",
     "@isaacs/ttlcache": "^1.4.1",

@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/identifier'
 import { cborDecode, wait } from '@atproto/common'
 import { DisconnectError } from '@atproto/xrpc-server'
 import {

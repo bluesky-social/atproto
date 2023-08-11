@@ -26,8 +26,6 @@
   "dependencies": {
     "@atproto/common-web": "*",
     "@atproto/identifier": "*",
-    "@atproto/nsid": "*",
-    "@atproto/uri": "*",
     "iso-datestring-validator": "^2.2.2",
     "multiformats": "^9.6.4",
     "zod": "^3.21.4"

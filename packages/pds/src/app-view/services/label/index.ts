@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/identifier'
 import Database from '../../../db'
 import {
   Label,

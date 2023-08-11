@@ -1,4 +1,4 @@
-export { AtUri } from '@atproto/uri'
+export { AtUri } from '@atproto/identifier'
 export {
   BlobRef,
   lexToJson,

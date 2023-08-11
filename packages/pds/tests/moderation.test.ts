@@ -1,5 +1,5 @@
 import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/identifier'
 import { BlobNotFoundError } from '@atproto/repo'
 import {
   adminAuth,
