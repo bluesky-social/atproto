@@ -110,7 +110,7 @@ export class IndexingService {
               const preparedNotifs = await this.notifServer.prepareNotifsToSend(
                 insertedRecords,
               )
-              return await this.notifServer.sendPushNotifications(
+              return await this.notifServer.addNotificationsToQueue(
                 preparedNotifs,
               )
             } catch (error) {

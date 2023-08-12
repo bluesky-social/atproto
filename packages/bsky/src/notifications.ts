@@ -4,6 +4,8 @@ import { Notification } from './db/tables/notification'
 import { AtUri } from '@atproto/api'
 import { Insertable } from 'kysely'
 import logger from './indexer/logger'
+import { BackgroundQueue } from './background'
+import { ServerConfig } from './config'
 
 type Platform = 'ios' | 'android' | 'web'
 type PushNotification = {
@@ -17,9 +19,16 @@ type PushNotification = {
   }
 }
 type InsertableNotif = Insertable<Notification>
-
+const NOTIFICATION_BATCH_SIZE = ServerConfig.readEnv().debugMode ? 2 : 50
 export class NotificationServer {
-  constructor(public db: Database, public pushEndpoint?: string) {}
+  private notificationBatch: PushNotification[] = []
+  private userNotificationRateLimit: Map<string, { timestamps: Date[] }> =
+    new Map() // key is token, value is timestamps of notifications
+  private backgroundQueue: BackgroundQueue
+
+  constructor(public db: Database, public pushEndpoint?: string) {
+    this.backgroundQueue = new BackgroundQueue(db)
+  }
 
   async getUserTokens(did: string) {
     const userTokens = await this.db.db
@@ -77,6 +86,49 @@ export class NotificationServer {
     return notifsToSend
   }
 
+  async addNotificationsToQueue(notifs: PushNotification[]) {
+    for (const notif of notifs) {
+      const { tokens } = notif
+      const token = tokens[0]
+      // Rate limiting
+      const userRateData = this.userNotificationRateLimit.get(token) || {
+        timestamps: [],
+      }
+      const now = new Date()
+      userRateData.timestamps = userRateData.timestamps.filter(
+        (timestamp) => now.getTime() - timestamp.getTime() < 20 * 60 * 1000,
+      )
+
+      if (userRateData.timestamps.length >= 20) {
+        // Skip adding notification to be sent as the rate limit reached
+        return
+      }
+
+      // Add to rate limit
+      userRateData.timestamps.push(now)
+      this.userNotificationRateLimit.set(token, userRateData)
+
+      // Add to batch
+      this.notificationBatch.push(notif)
+
+      // If batch size is 20, add task to background queue
+      if (this.notificationBatch.length >= NOTIFICATION_BATCH_SIZE) {
+        try {
+          this.backgroundQueue.add(async () => {
+            return await this.sendPushNotifications(this.notificationBatch)
+          })
+        } catch (error) {
+          logger.error({
+            notificationBatch: this.notificationBatch,
+            error,
+          })
+        } finally {
+          this.notificationBatch = []
+        }
+      }
+    }
+  }
+
   /**  1. Get the user's token (APNS or FCM for iOS and Android respectively) from the database
     User token will be in the format:
         did || token || platform (1 = iOS, 2 = Android, 3 = Web)
@@ -98,7 +150,7 @@ export class NotificationServer {
     4.  store response from `gorush` which contains the ID of the notification
     5. If notification needs to be updated or deleted, find the ID of the notification from the database and send a new notification to `gorush` with the ID (repeat step 2)
   */
-  async sendPushNotifications(notifications: PushNotification[]) {
+  private async sendPushNotifications(notifications: PushNotification[]) {
     // if no notifications, skip and return early
     if (!notifications || notifications.length === 0) {
       return
