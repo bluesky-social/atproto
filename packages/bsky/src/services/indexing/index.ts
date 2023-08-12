@@ -106,11 +106,16 @@ export class IndexingService {
         if (insertedRecords) {
           // SEND NOTIFICATIONS as part of background queue process
           this.backgroundQueue.add(async () => {
-            await this.notifServer
-              .prepareNotifsToSend(insertedRecords)
-              .then((preparedNotifs) => {
-                this.notifServer.sendPushNotifications(preparedNotifs)
-              })
+            try {
+              const preparedNotifs = await this.notifServer.prepareNotifsToSend(
+                insertedRecords,
+              )
+              return await this.notifServer.sendPushNotifications(
+                preparedNotifs,
+              )
+            } catch (error) {
+              subLogger.error({ error }, 'Error sending push notifications')
+            }
           })
         }
       } else {
