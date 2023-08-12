@@ -19,7 +19,7 @@ type PushNotification = {
   }
 }
 type InsertableNotif = Insertable<Notification>
-const NOTIFICATION_BATCH_SIZE = ServerConfig.readEnv().debugMode ? 2 : 50
+const NOTIFICATION_BATCH_SIZE = ServerConfig.readEnv().debugMode ? 2 : 50 // if debug mode, send 2 notifications at a time, otherwise send 50
 export class NotificationServer {
   private notificationBatch: PushNotification[] = []
   private userNotificationRateLimit: Map<string, { timestamps: Date[] }> =
