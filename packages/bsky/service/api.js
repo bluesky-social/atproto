@@ -124,9 +124,9 @@ const getEnv = () => ({
  * @param {Record<string, number[]>} tags
  * @param {number} idx
  */
-const getTagsForIdx = (tags, idx) => {
+const getTagsForIdx = (tagMap, idx) => {
   const tags = []
-  for (const [tag, indexes] of Object.entries(tags)) {
+  for (const [tag, indexes] of Object.entries(tagMap)) {
     if (indexes.includes(idx)) {
       tags.push(tag)
     }
