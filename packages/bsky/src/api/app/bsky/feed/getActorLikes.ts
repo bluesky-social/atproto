@@ -6,10 +6,10 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { setRepoRev } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.feed.getAuthorFeed({
+  server.app.bsky.feed.getActorLikes({
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth, res }) => {
-      const { actor, limit, cursor, filter } = params
+      const { actor, limit, cursor } = params
       const viewer = auth.credentials.did
       const db = ctx.db.db
       const { ref } = db.dynamic
@@ -32,7 +32,6 @@ export default function (server: Server, ctx: AppContext) {
 
       const actorService = ctx.services.actor(ctx.db)
       const feedService = ctx.services.feed(ctx.db)
-      const graphService = ctx.services.graph(ctx.db)
 
       let did = ''
       if (actor.startsWith('did:')) {
@@ -48,34 +47,10 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      // defaults to posts, reposts, and replies
       let feedItemsQb = feedService
         .selectFeedItemQb()
-        .where('originatorDid', '=', did)
-
-      if (filter === 'posts_with_media') {
-        // only posts with media
-        feedItemsQb = feedItemsQb.whereExists((qb) =>
-          qb
-            .selectFrom('post_embed_image')
-            .select('post_embed_image.postUri')
-            .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
-        )
-      } else if (filter === 'posts_no_replies') {
-        // only posts, no replies
-        feedItemsQb = feedItemsQb.where('post.replyParent', 'is', null)
-      }
-
-      if (viewer !== null) {
-        feedItemsQb = feedItemsQb.where((qb) =>
-          // Hide reposts of muted content
-          qb
-            .where('type', '=', 'post')
-            .orWhere((qb) =>
-              graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
-            ),
-        )
-      }
+        .innerJoin('like', 'like.subject', 'feed_item.uri')
+        .where('like.creator', '=', did)
 
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),

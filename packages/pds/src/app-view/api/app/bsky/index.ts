@@ -10,6 +10,7 @@ import getFeed from './feed/getFeed'
 import getLikes from './feed/getLikes'
 import getPostThread from './feed/getPostThread'
 import getPosts from './feed/getPosts'
+import getActorLikes from './feed/getActorLikes'
 import getProfile from './actor/getProfile'
 import getProfiles from './actor/getProfiles'
 import getRepostedBy from './feed/getRepostedBy'
@@ -43,6 +44,7 @@ export default function (server: Server, ctx: AppContext) {
   getLikes(server, ctx)
   getPostThread(server, ctx)
   getPosts(server, ctx)
+  getActorLikes(server, ctx)
   getProfile(server, ctx)
   getProfiles(server, ctx)
   getRepostedBy(server, ctx)
