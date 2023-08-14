@@ -11,7 +11,7 @@ import {
 } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { IdResolver, getPds } from '@atproto/identity'
-import { DAY, chunkArray } from '@atproto/common'
+import { DAY, HOUR, chunkArray } from '@atproto/common'
 import { ValidationError } from '@atproto/lexicon'
 import { PrimaryDatabase } from '../../db'
 import * as Post from './plugins/post'
@@ -28,6 +28,7 @@ import { subLogger } from '../../logger'
 import { retryHttp } from '../../util/retry'
 import { Labeler } from '../../labeler'
 import { BackgroundQueue } from '../../background'
+import { Actor } from '../../db/tables/actor'
 
 export class IndexingService {
   records: {
@@ -118,13 +119,7 @@ export class IndexingService {
       .where('did', '=', did)
       .selectAll()
       .executeTakeFirst()
-    const timestampAt = new Date(timestamp)
-    const lastIndexedAt = actor && new Date(actor.indexedAt)
-    const needsReindex =
-      force ||
-      !lastIndexedAt ||
-      timestampAt.getTime() - lastIndexedAt.getTime() > DAY
-    if (!needsReindex) {
+    if (!force && !needsHandleReindex(actor, timestamp)) {
       return
     }
     const atpData = await this.idResolver.did.resolveAtprotoData(did, true)
@@ -356,4 +351,15 @@ function* walkContentsWithCids(contents: RepoContentsWithCids) {
       yield { collection, rkey, cid, record: value }
     }
   }
+}
+
+const needsHandleReindex = (actor: Actor | undefined, timestamp: string) => {
+  if (!actor) return true
+  const timeDiff =
+    new Date(timestamp).getTime() - new Date(actor.indexedAt).getTime()
+  // revalidate daily
+  if (timeDiff > DAY) return true
+  // revalidate more aggressively for invalidated handles
+  if (actor.handle === null && timeDiff > HOUR) return true
+  return false
 }

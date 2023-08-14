@@ -20,28 +20,39 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
-      const available = await ctx.services
-        .account(ctx.db)
-        .isHandleAvailable(handle)
-      if (!available) {
+      const handleDid = await ctx.services.account(ctx.db).getHandleDid(handle)
+      if (handleDid !== requester) {
         throw new InvalidRequestError(`Handle already taken: ${handle}`)
       }
 
-      const seqHandleTok = await ctx.db.transaction(async (dbTxn) => {
-        let tok: HandleSequenceToken
-        try {
-          tok = await ctx.services
-            .account(dbTxn)
-            .updateHandle(requester, handle)
-        } catch (err) {
-          if (err instanceof UserAlreadyExistsError) {
-            throw new InvalidRequestError(`Handle already taken: ${handle}`)
-          }
-          throw err
+      let seqHandleTok: HandleSequenceToken
+      if (handleDid) {
+        if (handleDid !== requester) {
+          throw new InvalidRequestError(`Handle already taken: ${handle}`)
+        } else {
+          seqHandleTok = { did: requester, handle: handle }
         }
-        await ctx.plcClient.updateHandle(requester, ctx.plcRotationKey, handle)
-        return tok
-      })
+      } else {
+        seqHandleTok = await ctx.db.transaction(async (dbTxn) => {
+          let tok: HandleSequenceToken
+          try {
+            tok = await ctx.services
+              .account(dbTxn)
+              .updateHandle(requester, handle)
+          } catch (err) {
+            if (err instanceof UserAlreadyExistsError) {
+              throw new InvalidRequestError(`Handle already taken: ${handle}`)
+            }
+            throw err
+          }
+          await ctx.plcClient.updateHandle(
+            requester,
+            ctx.plcRotationKey,
+            handle,
+          )
+          return tok
+        })
+      }
 
       try {
         await ctx.db.transaction(async (dbTxn) => {
