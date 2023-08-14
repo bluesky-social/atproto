@@ -15,8 +15,8 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.roleVerifier,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
-      const { db, services } = ctx
-      const moderationService = services.moderation(db)
+      const db = ctx.db.getPrimary()
+      const moderationService = ctx.services.moderation(db)
       const {
         action,
         subject,
@@ -52,8 +52,8 @@ export default function (server: Server, ctx: AppContext) {
       validateLabels([...(createLabelVals ?? []), ...(negateLabelVals ?? [])])
 
       const moderationAction = await db.transaction(async (dbTxn) => {
-        const moderationTxn = services.moderation(dbTxn)
-        const labelTxn = services.label(dbTxn)
+        const moderationTxn = ctx.services.moderation(dbTxn)
+        const labelTxn = ctx.services.label(dbTxn)
 
         const result = await moderationTxn.logAction({
           action: getAction(action),

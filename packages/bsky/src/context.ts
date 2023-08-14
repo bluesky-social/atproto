@@ -1,6 +1,6 @@
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
-import { Database } from './db'
+import { DatabaseCoordinator } from './db'
 import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
@@ -13,7 +13,7 @@ import { LabelCache } from './label-cache'
 export class AppContext {
   constructor(
     private opts: {
-      db: Database
+      db: DatabaseCoordinator
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       services: Services
@@ -25,7 +25,7 @@ export class AppContext {
     },
   ) {}
 
-  get db(): Database {
+  get db(): DatabaseCoordinator {
     return this.opts.db
   }
 

@@ -11,8 +11,9 @@ export default function (server: Server, ctx: AppContext) {
 
       const uris = common.dedupeStrs(params.uris)
 
+      const db = ctx.db.getReplica()
       const postViews = await ctx.services
-        .feed(ctx.db)
+        .feed(db)
         .getPostViews(uris, requester)
 
       const posts: PostView[] = []

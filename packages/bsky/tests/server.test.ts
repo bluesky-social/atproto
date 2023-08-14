@@ -21,7 +21,7 @@ describe('server', () => {
     await basicSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
-    db = network.bsky.ctx.db
+    db = network.bsky.ctx.db.getPrimary()
   })
 
   afterAll(async () => {

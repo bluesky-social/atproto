@@ -10,18 +10,18 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { actor, limit, cursor } = params
       const requester = auth.credentials.did
-      const { services, db } = ctx
+      const db = ctx.db.getReplica()
       const { ref } = db.db.dynamic
 
-      const actorService = services.actor(db)
-      const graphService = services.graph(db)
+      const actorService = ctx.services.actor(db)
+      const graphService = ctx.services.graph(db)
 
       const subjectRes = await actorService.getActor(actor)
       if (!subjectRes) {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
       }
 
-      let followersReq = ctx.db.db
+      let followersReq = db.db
         .selectFrom('follow')
         .where('follow.subjectDid', '=', subjectRes.did)
         .innerJoin('actor as creator', 'creator.did', 'follow.creator')

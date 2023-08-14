@@ -14,7 +14,8 @@ export default function (server: Server, ctx: AppContext) {
       const { feed } = params
       const viewer = auth.credentials.did
 
-      const feedService = ctx.services.feed(ctx.db)
+      const db = ctx.db.getReplica()
+      const feedService = ctx.services.feed(db)
 
       const got = await feedService.getFeedGeneratorInfos([feed], viewer)
       const feedInfo = got[feed]

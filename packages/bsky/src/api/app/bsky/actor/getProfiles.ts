@@ -8,8 +8,8 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, res }) => {
       const { actors } = params
       const requester = auth.credentials.did
-      const { db, services } = ctx
-      const actorService = services.actor(db)
+      const db = ctx.db.getReplica()
+      const actorService = ctx.services.actor(db)
 
       const [actorsRes, repoRev] = await Promise.all([
         actorService.getActors(actors),

@@ -8,8 +8,8 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
     auth: ctx.roleVerifier,
     handler: async ({ params }) => {
-      const { db, services } = ctx
-      const moderationService = services.moderation(db)
+      const db = ctx.db.getPrimary()
+      const moderationService = ctx.services.moderation(db)
       const { term = '', limit, cursor, invitedBy } = params
       if (invitedBy) {
         throw new InvalidRequestError('The invitedBy parameter is unsupported')
@@ -19,7 +19,10 @@ export default function (server: Server, ctx: AppContext) {
 
       const { ref } = db.db.dynamic
       const keyset = new ListKeyset(ref('indexedAt'), ref('did'))
-      let resultQb = services.actor(db).searchQb(searchField, term).selectAll()
+      let resultQb = ctx.services
+        .actor(db)
+        .searchQb(searchField, term)
+        .selectAll()
       resultQb = paginate(resultQb, { keyset, cursor, limit })
 
       const results = await resultQb.execute()

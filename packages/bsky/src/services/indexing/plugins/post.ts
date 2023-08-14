@@ -15,7 +15,7 @@ import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { Notification } from '../../../db/tables/notification'
 import { toSimplifiedISOSafe } from '../util'
-import Database from '../../../db'
+import { PrimaryDatabase } from '../../../db'
 import { countAll, excluded } from '../../../db/util'
 import { BackgroundQueue } from '../../../background'
 import { getAncestorsAndSelfQb, getDescendentsQb } from '../../util/post'
@@ -354,7 +354,7 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
 
 export const makePlugin = (
-  db: Database,
+  db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
 ): PluginType => {
   return new RecordProcessor(db, backgroundQueue, {

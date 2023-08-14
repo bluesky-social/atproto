@@ -4,7 +4,7 @@ require('dd-trace/init') // Only works with commonjs
 
 // Tracer code above must come before anything else
 const {
-  Database,
+  PrimaryDatabase,
   IngesterConfig,
   BskyIngester,
   Redis,
@@ -13,7 +13,7 @@ const {
 const main = async () => {
   const env = getEnv()
   // No migration: ingester only uses pg for a lock
-  const db = Database.postgres({
+  const db = new PrimaryDatabase({
     url: env.dbPostgresUrl,
     schema: env.dbPostgresSchema,
     poolSize: env.dbPoolSize,
@@ -59,9 +59,8 @@ const main = async () => {
 // - INGESTER_SUB_LOCK_ID
 const getEnv = () => ({
   version: process.env.BSKY_VERSION,
-  dbPostgresUrl: process.env.DB_POSTGRES_URL,
-  dbMigratePostgresUrl:
-    process.env.DB_MIGRATE_POSTGRES_URL || process.env.DB_POSTGRES_URL,
+  dbPostgresUrl:
+    process.env.DB_PRIMARY_POSTGRES_URL || process.env.DB_POSTGRES_URL,
   dbPostgresSchema: process.env.DB_POSTGRES_SCHEMA || undefined,
   dbPoolSize: maybeParseInt(process.env.DB_POOL_SIZE),
   dbPoolMaxUses: maybeParseInt(process.env.DB_POOL_MAX_USES),

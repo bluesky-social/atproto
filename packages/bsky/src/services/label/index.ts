@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/uri'
-import Database from '../../db'
+import { Database } from '../../db'
 import { Label, isSelfLabels } from '../../lexicon/types/com/atproto/label/defs'
 import { ids } from '../../lexicon/lexicons'
 import { toSimplifiedISOSafe } from '../indexing/util'
@@ -50,8 +50,9 @@ export class LabelService {
     }))
     const { ref } = this.db.db.dynamic
     const excluded = (col: string) => ref(`excluded.${col}`)
-    await this.db.db
-      .insertInto('label')
+    await this.db
+      .asPrimary()
+      .db.insertInto('label')
       .values(dbVals)
       .onConflict((oc) =>
         oc.columns(['src', 'uri', 'cid', 'val']).doUpdateSet({
