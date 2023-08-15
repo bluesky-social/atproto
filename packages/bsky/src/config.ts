@@ -74,7 +74,7 @@ export class ServerConfig {
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const moderationActionReverseUrl =
       overrides?.moderationActionReverseUrl ||
-      process.env.LABELER_PUSH_URL ||
+      process.env.MODERATION_PUSH_URL ||
       undefined
     return new ServerConfig({
       version,
