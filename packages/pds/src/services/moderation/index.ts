@@ -340,9 +340,10 @@ export class ModerationService {
         createLabelVals,
         negateLabelVals,
         durationInHours,
-        expiresAt: durationInHours
-          ? addHoursToDate(durationInHours, createdAt).toISOString()
-          : undefined,
+        expiresAt:
+          durationInHours !== undefined
+            ? addHoursToDate(durationInHours, createdAt).toISOString()
+            : undefined,
         ...subjectInfo,
       })
       .returningAll()
