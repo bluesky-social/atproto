@@ -10,7 +10,7 @@ export const getDid = (doc: DidDocument): string => {
 }
 
 export const getKey = (doc: DidDocument): string | undefined => {
-  let did = getDid(doc)
+  const did = getDid(doc)
   let keys = doc.verificationMethod
   if (!keys) return undefined
   if (typeof keys !== 'object') return undefined

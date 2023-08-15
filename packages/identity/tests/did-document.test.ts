@@ -1,4 +1,4 @@
-import { DidResolver, validateDidDoc, ensureAtpDocument } from '../src'
+import { DidResolver, ensureAtpDocument } from '../src'
 
 describe('did parsing', () => {
   it('throws on bad DID document', async () => {
@@ -18,7 +18,7 @@ describe('did parsing', () => {
   ],
   "yarg": [ ]
 }`
-    let resolver = new DidResolver({})
+    const resolver = new DidResolver({})
     expect(() => {
       resolver.validateDidDoc(did, JSON.parse(docJson))
     }).toThrow()
@@ -51,7 +51,7 @@ describe('did parsing', () => {
     }
   ]
 }`
-    let resolver = new DidResolver({})
+    const resolver = new DidResolver({})
     const doc = resolver.validateDidDoc(did, JSON.parse(docJson))
     const atpData = ensureAtpDocument(doc)
     expect(atpData.did).toEqual(did)
@@ -90,7 +90,7 @@ describe('did parsing', () => {
     }
   ]
 }`
-    let resolver = new DidResolver({})
+    const resolver = new DidResolver({})
     const doc = resolver.validateDidDoc(did, JSON.parse(docJson))
     const atpData = ensureAtpDocument(doc)
     expect(atpData.did).toEqual(did)
