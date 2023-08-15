@@ -1,5 +1,3 @@
 export * from './readable-blockstore'
-export * from './repo-storage'
 export * from './memory-blockstore'
-export * from './sync-storage'
 export * from './types'

@@ -2,7 +2,7 @@ import { TID, streamToBuffer } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { RecordClaim, Repo, RepoContents } from '../../src'
 import { MemoryBlockstore } from '../../src/storage'
-import * as verify from '../../src/verify'
+import * as verify from '../../src/sync/verify'
 import * as sync from '../../src/sync'
 
 import * as util from '../_util'

@@ -3,6 +3,7 @@ import { schema as common, def as commonDef } from '@atproto/common'
 import { CID } from 'multiformats'
 import BlockMap from './block-map'
 import { RepoRecord } from '@atproto/lexicon'
+import CidSet from './cid-set'
 
 // Repo nodes
 // ---------------
@@ -10,18 +11,16 @@ import { RepoRecord } from '@atproto/lexicon'
 const unsignedCommit = z.object({
   did: z.string(),
   version: z.number(),
-  prev: common.cid.nullable(),
   data: common.cid,
-  rev: z.string().optional(),
+  rev: z.string(),
 })
 export type UnsignedCommit = z.infer<typeof unsignedCommit> & { sig?: never }
 
 const commit = z.object({
   did: z.string(),
   version: z.number(),
-  prev: common.cid.nullable(),
   data: common.cid,
-  rev: z.string().optional(),
+  rev: z.string(),
   sig: common.bytes,
 })
 export type Commit = z.infer<typeof commit>
@@ -93,27 +92,12 @@ export type WriteLog = RecordWriteDescript[][]
 // Updates/Commits
 // ---------------
 
-export type CommitBlockData = {
-  commit: CID
-  blocks: BlockMap
-}
-
-export type CommitData = CommitBlockData & {
-  prev: CID | null
-  rev?: string
-}
-
-export type RebaseData = {
-  commit: CID
-  rebased: CID
-  blocks: BlockMap
-  preservedCids: CID[]
-}
-
-export type CommitCidData = {
-  commit: CID
-  prev: CID | null
-  cids: CID[]
+export type CommitData = {
+  cid: CID
+  rev: string
+  repoBlocks: BlockMap
+  leafBlocks: BlockMap
+  removedCids: CidSet
 }
 
 export type RepoUpdate = CommitData & {
@@ -138,4 +122,17 @@ export type RecordClaim = {
   collection: string
   rkey: string
   record: RepoRecord | null
+}
+
+// Sync
+// ---------------
+
+export type VerifiedDiff = {
+  writes: RecordWriteDescript[]
+  commit: CommitData
+}
+
+export type VerifiedRepo = {
+  creates: RecordCreateDescript[]
+  commit: CommitData
 }
