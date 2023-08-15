@@ -25,6 +25,7 @@ export default function (server: Server, ctx: AppContext) {
         createLabelVals,
         negateLabelVals,
         subjectBlobCids,
+        durationInHours,
       } = input.body
 
       // apply access rules
@@ -63,6 +64,7 @@ export default function (server: Server, ctx: AppContext) {
           negateLabelVals,
           createdBy,
           reason,
+          durationInHours,
         })
 
         if (

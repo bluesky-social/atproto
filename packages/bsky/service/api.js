@@ -21,6 +21,7 @@ const {
   BskyAppView,
   ViewMaintainer,
   makeAlgos,
+  PeriodicModerationActionReversal,
 } = require('@atproto/bsky')
 
 const main = async () => {
@@ -79,9 +80,19 @@ const main = async () => {
   })
   const viewMaintainer = new ViewMaintainer(migrateDb)
   const viewMaintainerRunning = viewMaintainer.run()
+
+  const periodicModerationActionReversal = new PeriodicModerationActionReversal(
+    bsky.ctx,
+  )
+  const periodicModerationActionReversalRunning =
+    periodicModerationActionReversal.run()
+
   await bsky.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
+    // Gracefully shutdown periodic-moderation-action-reversal before destroying bsky instance
+    periodicModerationActionReversal.destroy()
+    await periodicModerationActionReversalRunning
     await bsky.destroy()
     viewMaintainer.destroy()
     await viewMaintainerRunning
