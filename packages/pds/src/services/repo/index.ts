@@ -1,14 +1,6 @@
 import { CID } from 'multiformats/cid'
 import * as crypto from '@atproto/crypto'
-import {
-  BlobStore,
-  CommitData,
-  RebaseData,
-  Repo,
-  WriteOpAction,
-} from '@atproto/repo'
-import * as repo from '@atproto/repo'
-import { AtUri } from '@atproto/uri'
+import { BlobStore, CommitData, Repo, WriteOpAction } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
@@ -104,7 +96,7 @@ export class RepoService {
     await Promise.all([
       storage.applyCommit(commit),
       this.indexWrites(writes, now),
-      this.blobs.processWriteBlobs(did, commit.commit, writes),
+      this.blobs.processWriteBlobs(did, commit.cid, writes),
     ])
     await this.afterWriteProcessing(did, commit, writes)
   }
@@ -127,7 +119,7 @@ export class RepoService {
       // & send to indexing
       this.indexWrites(writes, now, commitData.rev),
       // process blobs
-      this.blobs.processWriteBlobs(did, commitData.commit, writes),
+      this.blobs.processWriteBlobs(did, commitData.cid, writes),
       // do any other processing needed after write
     ])
     await this.afterWriteProcessing(did, commitData, writes)
@@ -253,93 +245,93 @@ export class RepoService {
     await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
-  async rebaseRepo(did: string, swapCommit?: CID) {
-    this.db.assertNotTransaction()
+  // async rebaseRepo(did: string, swapCommit?: CID) {
+  //   this.db.assertNotTransaction()
 
-    // rebases are expensive & should be done rarely, we don't try to re-process on concurrent writes
-    await this.serviceTx(async (srvcTx) => {
-      const rebaseData = await srvcTx.formatRebase(did, swapCommit)
-      await srvcTx.processRebase(did, rebaseData)
-    })
-  }
+  //   // rebases are expensive & should be done rarely, we don't try to re-process on concurrent writes
+  //   await this.serviceTx(async (srvcTx) => {
+  //     const rebaseData = await srvcTx.formatRebase(did, swapCommit)
+  //     await srvcTx.processRebase(did, rebaseData)
+  //   })
+  // }
 
-  async formatRebase(did: string, swapCommit?: CID): Promise<RebaseData> {
-    const storage = new SqlRepoStorage(this.db, did, new Date().toISOString())
-    const locked = await storage.lockRepo()
-    if (!locked) {
-      throw new ConcurrentWriteError()
-    }
+  // async formatRebase(did: string, swapCommit?: CID): Promise<RebaseData> {
+  //   const storage = new SqlRepoStorage(this.db, did, new Date().toISOString())
+  //   const locked = await storage.lockRepo()
+  //   if (!locked) {
+  //     throw new ConcurrentWriteError()
+  //   }
 
-    const currRoot = await storage.getHead()
-    if (!currRoot) {
-      throw new InvalidRequestError(
-        `${did} is not a registered repo on this server`,
-      )
-    } else if (swapCommit && !currRoot.equals(swapCommit)) {
-      throw new BadCommitSwapError(currRoot)
-    }
+  //   const currRoot = await storage.getHead()
+  //   if (!currRoot) {
+  //     throw new InvalidRequestError(
+  //       `${did} is not a registered repo on this server`,
+  //     )
+  //   } else if (swapCommit && !currRoot.equals(swapCommit)) {
+  //     throw new BadCommitSwapError(currRoot)
+  //   }
 
-    const records = await this.db.db
-      .selectFrom('record')
-      .where('did', '=', did)
-      .select(['uri', 'cid'])
-      .execute()
-    // this will do everything in memory & shouldn't touch storage until we do .getUnstoredBlocks
-    let data = await repo.MST.create(storage)
-    for (const record of records) {
-      const uri = new AtUri(record.uri)
-      const cid = CID.parse(record.cid)
-      const dataKey = repo.formatDataKey(uri.collection, uri.rkey)
-      data = await data.add(dataKey, cid)
-    }
-    // this looks for unstored blocks recursively & bails when it encounters a block it has
-    // in most cases, there should be no unstored blocks, but this allows for recovery of repos in a broken state
-    const unstoredData = await data.getUnstoredBlocks()
-    const commit = await repo.signCommit(
-      {
-        did,
-        version: 2,
-        prev: null,
-        data: unstoredData.root,
-      },
-      this.repoSigningKey,
-    )
-    const newBlocks = unstoredData.blocks
-    const currCids = await data.allCids()
-    const commitCid = await newBlocks.add(commit)
-    return {
-      commit: commitCid,
-      rebased: currRoot,
-      blocks: newBlocks,
-      preservedCids: currCids.toList(),
-    }
-  }
+  //   const records = await this.db.db
+  //     .selectFrom('record')
+  //     .where('did', '=', did)
+  //     .select(['uri', 'cid'])
+  //     .execute()
+  //   // this will do everything in memory & shouldn't touch storage until we do .getUnstoredBlocks
+  //   let data = await repo.MST.create(storage)
+  //   for (const record of records) {
+  //     const uri = new AtUri(record.uri)
+  //     const cid = CID.parse(record.cid)
+  //     const dataKey = repo.formatDataKey(uri.collection, uri.rkey)
+  //     data = await data.add(dataKey, cid)
+  //   }
+  //   // this looks for unstored blocks recursively & bails when it encounters a block it has
+  //   // in most cases, there should be no unstored blocks, but this allows for recovery of repos in a broken state
+  //   const unstoredData = await data.getUnstoredBlocks()
+  //   const commit = await repo.signCommit(
+  //     {
+  //       did,
+  //       version: 2,
+  //       prev: null,
+  //       data: unstoredData.root,
+  //     },
+  //     this.repoSigningKey,
+  //   )
+  //   const newBlocks = unstoredData.blocks
+  //   const currCids = await data.allCids()
+  //   const commitCid = await newBlocks.add(commit)
+  //   return {
+  //     commit: commitCid,
+  //     rebased: currRoot,
+  //     blocks: newBlocks,
+  //     preservedCids: currCids.toList(),
+  //   }
+  // }
 
-  async processRebase(did: string, rebaseData: RebaseData) {
-    this.db.assertTransaction()
+  // async processRebase(did: string, rebaseData: RebaseData) {
+  //   this.db.assertTransaction()
 
-    const storage = new SqlRepoStorage(this.db, did)
+  //   const storage = new SqlRepoStorage(this.db, did)
 
-    const recordCountBefore = await this.countRecordBlocks(did)
-    await Promise.all([
-      storage.applyRebase(rebaseData),
-      this.blobs.processRebaseBlobs(did, rebaseData.commit),
-    ])
-    const recordCountAfter = await this.countRecordBlocks(did)
-    // This is purely a dummy check on a very sensitive operation
-    if (recordCountBefore !== recordCountAfter) {
-      throw new Error(
-        `Record blocks deleted during rebase. Rolling back: ${did}`,
-      )
-    }
+  //   const recordCountBefore = await this.countRecordBlocks(did)
+  //   await Promise.all([
+  //     storage.applyRebase(rebaseData),
+  //     this.blobs.processRebaseBlobs(did, rebaseData.commit),
+  //   ])
+  //   const recordCountAfter = await this.countRecordBlocks(did)
+  //   // This is purely a dummy check on a very sensitive operation
+  //   if (recordCountBefore !== recordCountAfter) {
+  //     throw new Error(
+  //       `Record blocks deleted during rebase. Rolling back: ${did}`,
+  //     )
+  //   }
 
-    await this.afterRebaseProcessing(did, rebaseData)
-  }
+  //   await this.afterRebaseProcessing(did, rebaseData)
+  // }
 
-  async afterRebaseProcessing(did: string, rebaseData: RebaseData) {
-    const seqEvt = await sequencer.formatSeqRebase(did, rebaseData)
-    await sequencer.sequenceEvt(this.db, seqEvt)
-  }
+  // async afterRebaseProcessing(did: string, rebaseData: RebaseData) {
+  //   const seqEvt = await sequencer.formatSeqRebase(did, rebaseData)
+  //   await sequencer.sequenceEvt(this.db, seqEvt)
+  // }
 
   // used for integrity check
   private async countRecordBlocks(did: string): Promise<number> {
