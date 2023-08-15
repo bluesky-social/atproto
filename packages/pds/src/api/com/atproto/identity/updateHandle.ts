@@ -27,11 +27,7 @@ export default function (server: Server, ctx: AppContext) {
 
       let seqHandleTok: HandleSequenceToken
       if (handleDid) {
-        if (handleDid !== requester) {
-          throw new InvalidRequestError(`Handle already taken: ${handle}`)
-        } else {
-          seqHandleTok = { did: requester, handle: handle }
-        }
+        seqHandleTok = { did: requester, handle: handle }
       } else {
         seqHandleTok = await ctx.db.transaction(async (dbTxn) => {
           let tok: HandleSequenceToken
