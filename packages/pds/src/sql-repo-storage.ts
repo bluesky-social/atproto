@@ -157,64 +157,6 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
     ])
   }
 
-  // async indexCommits(commits: CommitData[]): Promise<void> {
-  //   this.db.assertTransaction()
-  //   const allBlocks = new BlockMap()
-  //   const cidData: CommitCidData[] = []
-  //   for (const commit of commits) {
-  //     const commitCids: CID[] = []
-  //     for (const block of commit.blocks.entries()) {
-  //       commitCids.push(block.cid)
-  //       allBlocks.set(block.cid, block.bytes)
-  //     }
-  //     cidData.push({
-  //       commit: commit.commit,
-  //       prev: commit.prev,
-  //       cids: commitCids,
-  //     })
-  //   }
-  //   await Promise.all([this.putMany(allBlocks), this.indexCommitCids(cidData)])
-  // }
-
-  // async indexCommitCids(commits: CommitCidData[]): Promise<void> {
-  //   this.db.assertTransaction()
-  //   const commitBlocks: RepoCommitBlock[] = []
-  //   const commitHistory: RepoCommitHistory[] = []
-  //   for (const commit of commits) {
-  //     for (const cid of commit.cids) {
-  //       commitBlocks.push({
-  //         commit: commit.commit.toString(),
-  //         block: cid.toString(),
-  //         creator: this.did,
-  //       })
-  //     }
-  //     commitHistory.push({
-  //       commit: commit.commit.toString(),
-  //       prev: commit.prev ? commit.prev.toString() : null,
-  //       creator: this.did,
-  //     })
-  //   }
-  //   const insertCommitBlocks = Promise.all(
-  //     chunkArray(commitBlocks, 500).map((batch) =>
-  //       this.db.db
-  //         .insertInto('repo_commit_block')
-  //         .values(batch)
-  //         .onConflict((oc) => oc.doNothing())
-  //         .execute(),
-  //     ),
-  //   )
-  //   const insertCommitHistory = Promise.all(
-  //     chunkArray(commitHistory, 500).map((batch) =>
-  //       this.db.db
-  //         .insertInto('repo_commit_history')
-  //         .values(batch)
-  //         .onConflict((oc) => oc.doNothing())
-  //         .execute(),
-  //     ),
-  //   )
-  //   await Promise.all([insertCommitBlocks, insertCommitHistory])
-  // }
-
   async updateHead(cid: CID, ensureSwap?: CID): Promise<void> {
     if (ensureSwap) {
       const res = await this.db.db
@@ -237,7 +179,9 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
           root: cid.toString(),
           indexedAt: this.getTimestamp(),
         })
-        .onConflict((oc) => oc.doUpdateSet({ root: cid.toString() }))
+        .onConflict((oc) =>
+          oc.column('did').doUpdateSet({ root: cid.toString() }),
+        )
         .execute()
     }
   }
@@ -246,84 +190,9 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
     return this.timestamp || new Date().toISOString()
   }
 
-  // async getCommitPath(
-  //   latest: CID,
-  //   earliest: CID | null,
-  // ): Promise<CID[] | null> {
-  //   const res = await this.db.db
-  //     .withRecursive('ancestor(commit, prev)', (cte) =>
-  //       cte
-  //         .selectFrom('repo_commit_history as commit')
-  //         .select(['commit.commit as commit', 'commit.prev as prev'])
-  //         .where('commit', '=', latest.toString())
-  //         .where('creator', '=', this.did)
-  //         .unionAll(
-  //           cte
-  //             .selectFrom('repo_commit_history as commit')
-  //             .select(['commit.commit as commit', 'commit.prev as prev'])
-  //             .innerJoin('ancestor', (join) =>
-  //               join
-  //                 .onRef('ancestor.prev', '=', 'commit.commit')
-  //                 .on('commit.creator', '=', this.did),
-  //             )
-  //             .if(earliest !== null, (qb) =>
-  //               // @ts-ignore
-  //               qb.where('commit.commit', '!=', earliest?.toString() as string),
-  //             ),
-  //         ),
-  //     )
-  //     .selectFrom('ancestor')
-  //     .select('commit')
-  //     .execute()
-  //   return res.map((row) => CID.parse(row.commit)).reverse()
-  // }
-
-  // async getAllBlocksForCommits(commits: CID[]): Promise<BlockForCommit[]> {
-  //   if (commits.length === 0) return []
-  //   const commitStrs = commits.map((commit) => commit.toString())
-  //   const res = await this.db.db
-  //     .selectFrom('repo_commit_block')
-  //     .where('repo_commit_block.creator', '=', this.did)
-  //     .whereRef('repo_commit_block.commit', 'in', valuesList(commitStrs))
-  //     .innerJoin('ipld_block', (join) =>
-  //       join
-  //         .onRef('ipld_block.cid', '=', 'repo_commit_block.block')
-  //         .onRef('ipld_block.creator', '=', 'repo_commit_block.creator'),
-  //     )
-  //     .select([
-  //       'repo_commit_block.commit',
-  //       'ipld_block.cid',
-  //       'ipld_block.content',
-  //     ])
-  //     .execute()
-  //   return res.map((row) => ({
-  //     cid: CID.parse(row.cid),
-  //     bytes: row.content,
-  //     commit: row.commit,
-  //   }))
-  // }
-
-  // async getBlocksForCommits(
-  //   commits: CID[],
-  // ): Promise<{ [commit: string]: BlockMap }> {
-  //   const allBlocks = await this.getAllBlocksForCommits(commits)
-  //   return allBlocks.reduce((acc, cur) => {
-  //     acc[cur.commit] ??= new BlockMap()
-  //     acc[cur.commit].set(cur.cid, cur.bytes)
-  //     this.cache.set(cur.cid, cur.bytes)
-  //     return acc
-  //   }, {})
-  // }
-
   async destroy(): Promise<void> {
     throw new Error('Destruction of SQL repo storage not allowed at runtime')
   }
 }
-
-// type BlockForCommit = {
-//   cid: CID
-//   bytes: Uint8Array
-//   commit: string
-// }
 
 export default SqlRepoStorage
