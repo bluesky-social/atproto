@@ -10,13 +10,16 @@ export const getDid = (doc: DidDocument): string => {
 }
 
 export const getKey = (doc: DidDocument): string | undefined => {
+  let did = getDid(doc)
   let keys = doc.verificationMethod
   if (!keys) return undefined
   if (typeof keys !== 'object') return undefined
   if (!Array.isArray(keys)) {
     keys = [keys]
   }
-  const found = keys.find((key) => key.id === '#atproto')
+  const found = keys.find(
+    (key) => key.id === '#atproto' || key.id === `${did}#atproto`,
+  )
   if (!found) return undefined
 
   // @TODO support jwk
@@ -28,6 +31,10 @@ export const getKey = (doc: DidDocument): string | undefined => {
     didKey = crypto.formatDidKey(crypto.P256_JWT_ALG, keyBytes)
   } else if (found.type === 'EcdsaSecp256k1VerificationKey2019') {
     didKey = crypto.formatDidKey(crypto.SECP256K1_JWT_ALG, keyBytes)
+  } else if (found.type === 'Multikey') {
+    const foundKey = `did:key:${found.publicKeyMultibase}`
+    const parsed = crypto.parseDidKey(foundKey)
+    didKey = crypto.formatDidKey(parsed.jwtAlg, parsed.keyBytes)
   }
   return didKey
 }
