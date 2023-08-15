@@ -11,14 +11,18 @@ export default function (server: Server, ctx: AppContext) {
 
       const uris = common.dedupeStrs(params.uris)
 
+      const db = ctx.db.getReplica()
       const postViews = await ctx.services
-        .feed(ctx.db)
+        .feed(db)
         .getPostViews(uris, requester)
 
       const posts: PostView[] = []
       for (const uri of uris) {
         const post = postViews[uri]
-        if (post) {
+        const isBlocked =
+          post?.author.viewer?.blockedBy === true ||
+          typeof post?.author.viewer?.blocking === 'string'
+        if (post && !isBlocked) {
           posts.push(post)
         }
       }

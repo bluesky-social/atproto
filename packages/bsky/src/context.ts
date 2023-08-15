@@ -1,6 +1,6 @@
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
-import { Database } from './db'
+import { DatabaseCoordinator } from './db'
 import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
@@ -8,22 +8,24 @@ import * as auth from './auth'
 import DidSqlCache from './did-cache'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
+import { LabelCache } from './label-cache'
 
 export class AppContext {
   constructor(
     private opts: {
-      db: Database
+      db: DatabaseCoordinator
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       services: Services
       idResolver: IdResolver
       didCache: DidSqlCache
+      labelCache: LabelCache
       backgroundQueue: BackgroundQueue
       algos: MountedAlgos
     },
   ) {}
 
-  get db(): Database {
+  get db(): DatabaseCoordinator {
     return this.opts.db
   }
 
@@ -49,6 +51,10 @@ export class AppContext {
 
   get didCache(): DidSqlCache {
     return this.opts.didCache
+  }
+
+  get labelCache(): LabelCache {
+    return this.opts.labelCache
   }
 
   get authVerifier() {

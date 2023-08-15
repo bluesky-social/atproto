@@ -97,6 +97,17 @@ Object {
         },
         "description": "its me!",
         "displayName": "ali",
+        "labels": Object {
+          "$type": "com.atproto.label.defs#selfLabels",
+          "values": Array [
+            Object {
+              "val": "self-label-a",
+            },
+            Object {
+              "val": "self-label-b",
+            },
+          ],
+        },
       },
     ],
   },
@@ -104,6 +115,14 @@ Object {
   "value": Object {
     "$type": "app.bsky.feed.post",
     "createdAt": "1970-01-01T00:00:00.000Z",
+    "labels": Object {
+      "$type": "com.atproto.label.defs#selfLabels",
+      "values": Array [
+        Object {
+          "val": "self-label",
+        },
+      ],
+    },
     "text": "hey there",
   },
 }
@@ -206,6 +225,17 @@ Object {
         },
         "description": "its me!",
         "displayName": "ali",
+        "labels": Object {
+          "$type": "com.atproto.label.defs#selfLabels",
+          "values": Array [
+            Object {
+              "val": "self-label-a",
+            },
+            Object {
+              "val": "self-label-b",
+            },
+          ],
+        },
       },
     ],
   },
@@ -213,6 +243,14 @@ Object {
   "value": Object {
     "$type": "app.bsky.feed.post",
     "createdAt": "1970-01-01T00:00:00.000Z",
+    "labels": Object {
+      "$type": "com.atproto.label.defs#selfLabels",
+      "values": Array [
+        Object {
+          "val": "self-label",
+        },
+      ],
+    },
     "text": "hey there",
   },
 }
@@ -332,6 +370,17 @@ Object {
         },
         "description": "its me!",
         "displayName": "ali",
+        "labels": Object {
+          "$type": "com.atproto.label.defs#selfLabels",
+          "values": Array [
+            Object {
+              "val": "self-label-a",
+            },
+            Object {
+              "val": "self-label-b",
+            },
+          ],
+        },
       },
     ],
   },
@@ -339,6 +388,14 @@ Object {
   "value": Object {
     "$type": "app.bsky.feed.post",
     "createdAt": "1970-01-01T00:00:00.000Z",
+    "labels": Object {
+      "$type": "com.atproto.label.defs#selfLabels",
+      "values": Array [
+        Object {
+          "val": "self-label",
+        },
+      ],
+    },
     "text": "hey there",
   },
 }

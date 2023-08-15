@@ -12,11 +12,11 @@ export default function (server: Server, ctx: AppContext) {
       const requester = 'did' in auth.credentials ? auth.credentials.did : null
       const canViewTakendownProfile =
         auth.credentials.type === 'role' && auth.credentials.triage
-      const { services, db } = ctx
+      const db = ctx.db.getReplica()
       const { ref } = db.db.dynamic
 
-      const actorService = services.actor(db)
-      const graphService = services.graph(db)
+      const actorService = ctx.services.actor(db)
+      const graphService = ctx.services.graph(db)
 
       const subjectRes = await actorService.getActor(
         actor,
@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
       }
 
-      let followersReq = ctx.db.db
+      let followersReq = db.db
         .selectFrom('follow')
         .where('follow.subjectDid', '=', subjectRes.did)
         .innerJoin('actor as creator', 'creator.did', 'follow.creator')

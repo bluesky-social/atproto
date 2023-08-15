@@ -3,7 +3,7 @@ import { AtpAgent } from '@atproto/api'
 import { cidForRecord } from '@atproto/repo'
 import { dedupe, getFieldsFromRecord } from './util'
 import { labelerLogger as log } from '../logger'
-import Database from '../db'
+import { PrimaryDatabase } from '../db'
 import { IdResolver } from '@atproto/identity'
 import { BackgroundQueue } from '../background'
 import { IndexerConfig } from '../indexer/config'
@@ -15,7 +15,7 @@ export abstract class Labeler {
   public pushAgent?: AtpAgent
   constructor(
     protected ctx: {
-      db: Database
+      db: PrimaryDatabase
       idResolver: IdResolver
       cfg: IndexerConfig
       backgroundQueue: BackgroundQueue

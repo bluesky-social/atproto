@@ -11,13 +11,12 @@ import {
   getFeedGen,
 } from '@atproto/identity'
 import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
-import { SkeletonFeedPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky/feed/getFeed'
 import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { FeedRow } from '../../../../services/feed/types'
 import { AlgoResponse } from '../../../../feed-gen/types'
+import { Database } from '../../../../db'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeed({
@@ -25,7 +24,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const { feed } = params
       const viewer = auth.credentials.did
-      const feedService = ctx.services.feed(ctx.db)
+
+      const db = ctx.db.getReplica()
+      const feedService = ctx.services.feed(db)
       const localAlgo = ctx.algos[feed]
 
       const timerSkele = new ServerTimer('skele').start()
@@ -34,6 +35,7 @@ export default function (server: Server, ctx: AppContext) {
           ? await localAlgo(ctx, params, viewer)
           : await skeletonFromFeedGen(
               ctx,
+              db,
               params,
               viewer,
               req.headers['authorization'],
@@ -60,13 +62,14 @@ export default function (server: Server, ctx: AppContext) {
 
 async function skeletonFromFeedGen(
   ctx: AppContext,
+  db: Database,
   params: GetFeedParams,
   viewer: string,
   authorization?: string,
 ): Promise<AlgoResponse> {
   const { feed } = params
   // Resolve and fetch feed skeleton
-  const found = await ctx.db.db
+  const found = await db.db
     .selectFrom('feed_generator')
     .where('uri', '=', feed)
     .select('feedDid')
@@ -127,68 +130,12 @@ async function skeletonFromFeedGen(
   }
 
   const { feed: skeletonFeed, ...rest } = skeleton
+  const cleanedFeed = await ctx.services
+    .feed(db)
+    .cleanFeedSkeleton(skeletonFeed, params.limit, viewer)
 
-  // Hydrate feed skeleton
-  const { ref } = ctx.db.db.dynamic
-  const feedService = ctx.services.feed(ctx.db)
-  const graphService = ctx.services.graph(ctx.db)
-  const feedItemUris = skeletonFeed.map(getSkeleFeedItemUri)
-
-  // @TODO apply mutes and blocks
-  const feedItems = feedItemUris.length
-    ? await feedService
-        .selectFeedItemQb()
-        .where('feed_item.uri', 'in', feedItemUris)
-        .where((qb) =>
-          // Hide posts and reposts of or by muted actors
-          graphService.whereNotMuted(qb, viewer, [
-            ref('post.creator'),
-            ref('originatorDid'),
-          ]),
-        )
-        .whereNotExists(
-          graphService.blockQb(viewer, [
-            ref('post.creator'),
-            ref('originatorDid'),
-          ]),
-        )
-        .execute()
-    : []
-
-  const orderedItems = getOrderedFeedItems(skeletonFeed, feedItems, params)
   return {
     ...rest,
-    feedItems: orderedItems,
+    feedItems: cleanedFeed,
   }
-}
-
-function getSkeleFeedItemUri(item: SkeletonFeedPost) {
-  if (typeof item.reason?.repost === 'string') {
-    return item.reason.repost
-  }
-  return item.post
-}
-
-function getOrderedFeedItems(
-  skeletonItems: SkeletonFeedPost[],
-  feedItems: FeedRow[],
-  params: GetFeedParams,
-) {
-  const SKIP = []
-  const feedItemsByUri = feedItems.reduce((acc, item) => {
-    return Object.assign(acc, { [item.uri]: item })
-  }, {} as Record<string, FeedRow>)
-  // enforce limit param in the case that the feedgen does not
-  if (skeletonItems.length > params.limit) {
-    skeletonItems = skeletonItems.slice(0, params.limit)
-  }
-  return skeletonItems.flatMap((item) => {
-    const uri = getSkeleFeedItemUri(item)
-    const feedItem = feedItemsByUri[uri]
-    if (!feedItem || item.post !== feedItem.postUri) {
-      // Couldn't find the record, or skeleton repost referenced the wrong post
-      return SKIP
-    }
-    return feedItem
-  })
 }

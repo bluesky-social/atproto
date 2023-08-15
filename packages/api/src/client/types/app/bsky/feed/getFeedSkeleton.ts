@@ -34,7 +34,7 @@ export interface Response {
 
 export class UnknownFeedError extends XRPCError {
   constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
+    super(src.status, src.error, src.message, src.headers)
   }
 }
 

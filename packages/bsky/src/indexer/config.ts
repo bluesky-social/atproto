@@ -29,7 +29,7 @@ export class IndexerConfig {
   static readEnv(overrides?: Partial<IndexerConfigValues>) {
     const version = process.env.BSKY_VERSION || '0.0.0'
     const dbPostgresUrl =
-      overrides?.dbPostgresUrl || process.env.DB_POSTGRES_URL
+      overrides?.dbPostgresUrl || process.env.DB_PRIMARY_POSTGRES_URL
     const dbPostgresSchema =
       overrides?.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
     const redisHost =

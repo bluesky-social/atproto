@@ -17,6 +17,10 @@
       "properties": {
         "id": { "type": "integer" },
         "action": { "type": "ref", "ref": "#actionType" },
+        "durationInHours": {
+          "type": "integer",
+          "description": "Indicates how long this action was meant to be in effect before automatically expiring."
+        },
         "subject": {
           "type": "union",
           "refs": ["#repoRef", "com.atproto.repo.strongRef"]
@@ -46,6 +50,10 @@
       "properties": {
         "id": { "type": "integer" },
         "action": { "type": "ref", "ref": "#actionType" },
+        "durationInHours": {
+          "type": "integer",
+          "description": "Indicates how long this action was meant to be in effect before automatically expiring."
+        },
         "subject": {
           "type": "union",
           "refs": [
@@ -76,7 +84,11 @@
       "required": ["id", "action"],
       "properties": {
         "id": { "type": "integer" },
-        "action": { "type": "ref", "ref": "#actionType" }
+        "action": { "type": "ref", "ref": "#actionType" },
+        "durationInHours": {
+          "type": "integer",
+          "description": "Indicates how long this action was meant to be in effect before automatically expiring."
+        }
       }
     },
     "actionReversal": {

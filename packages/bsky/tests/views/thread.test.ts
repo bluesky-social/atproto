@@ -4,6 +4,8 @@ import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { forSnapshot, stripViewerFromThread } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
+import assert from 'assert'
+import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 
 describe('pds thread views', () => {
   let network: TestNetwork
@@ -139,6 +141,29 @@ describe('pds thread views', () => {
       { headers: await network.serviceHeaders(bob) },
     )
     expect(forSnapshot(thread3.data.thread)).toMatchSnapshot()
+  })
+
+  it('reflects self-labels', async () => {
+    const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: sc.posts[alice][0].ref.uriStr },
+      { headers: await network.serviceHeaders(bob) },
+    )
+
+    assert(isThreadViewPost(thread.thread), 'post does not exist')
+    const post = thread.thread.post
+
+    const postSelfLabels = post.labels
+      ?.filter((label) => label.src === alice)
+      .map((label) => label.val)
+
+    expect(postSelfLabels).toEqual(['self-label'])
+
+    const authorSelfLabels = post.author.labels
+      ?.filter((label) => label.src === alice)
+      .map((label) => label.val)
+      .sort()
+
+    expect(authorSelfLabels).toEqual(['self-label-a', 'self-label-b'])
   })
 
   describe('takedown', () => {

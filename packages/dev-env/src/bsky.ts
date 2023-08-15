@@ -39,9 +39,6 @@ export class TestBsky {
       didPlcUrl: cfg.plcUrl,
       publicUrl: 'https://bsky.public.url',
       serverDid,
-      imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
-      imgUriKey:
-        'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
       didCacheStaleTTL: HOUR,
       didCacheMaxTTL: DAY,
       ...cfg,
@@ -54,15 +51,18 @@ export class TestBsky {
     })
 
     // shared across server, ingester, and indexer in order to share pool, avoid too many pg connections.
-    const db = bsky.Database.postgres({
-      url: cfg.dbPostgresUrl,
+    const db = new bsky.DatabaseCoordinator({
       schema: cfg.dbPostgresSchema,
-      poolSize: 10,
+      primary: {
+        url: cfg.dbPrimaryPostgresUrl,
+        poolSize: 10,
+      },
+      replicas: [],
     })
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
-    const migrationDb = bsky.Database.postgres({
-      url: cfg.dbPostgresUrl,
+    const migrationDb = new bsky.PrimaryDatabase({
+      url: cfg.dbPrimaryPostgresUrl,
       schema: cfg.dbPostgresSchema,
     })
     if (cfg.migration) {
@@ -73,7 +73,11 @@ export class TestBsky {
     await migrationDb.close()
 
     // api server
-    const server = bsky.BskyAppView.create({ db, config, algos: cfg.algos })
+    const server = bsky.BskyAppView.create({
+      db,
+      config,
+      algos: cfg.algos,
+    })
     // indexer
     const ns = cfg.dbPostgresSchema
       ? await randomIntFromSeed(cfg.dbPostgresSchema, 10000)
@@ -84,7 +88,7 @@ export class TestBsky {
       didCacheMaxTTL: DAY,
       labelerDid: 'did:example:labeler',
       redisHost: cfg.redisHost,
-      dbPostgresUrl: cfg.dbPostgresUrl,
+      dbPostgresUrl: cfg.dbPrimaryPostgresUrl,
       dbPostgresSchema: cfg.dbPostgresSchema,
       didPlcUrl: cfg.plcUrl,
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
@@ -99,14 +103,14 @@ export class TestBsky {
     })
     const indexer = bsky.BskyIndexer.create({
       cfg: indexerCfg,
-      db,
+      db: db.getPrimary(),
       redis: indexerRedis,
     })
     // ingester
     const ingesterCfg = new bsky.IngesterConfig({
       version: '0.0.0',
       redisHost: cfg.redisHost,
-      dbPostgresUrl: cfg.dbPostgresUrl,
+      dbPostgresUrl: cfg.dbPrimaryPostgresUrl,
       dbPostgresSchema: cfg.dbPostgresSchema,
       repoProvider: cfg.repoProvider,
       ingesterNamespace: `ns${ns}`,
@@ -120,12 +124,15 @@ export class TestBsky {
     })
     const ingester = bsky.BskyIngester.create({
       cfg: ingesterCfg,
-      db,
+      db: db.getPrimary(),
       redis: ingesterRedis,
     })
     await ingester.start()
     await indexer.start()
     await server.start()
+
+    // we refresh label cache by hand in `processAll` instead of on a timer
+    server.ctx.labelCache.stop()
     return new TestBsky(url, port, server, indexer, ingester)
   }
 
@@ -164,13 +171,14 @@ export class TestBsky {
     await Promise.all([
       this.ctx.backgroundQueue.processAll(),
       this.indexer.ctx.backgroundQueue.processAll(),
+      this.ctx.labelCache.fullRefresh(),
     ])
   }
 
   async close() {
     await this.server.destroy({ skipDb: true })
     await this.ingester.destroy({ skipDb: true })
-    this.indexer.destroy() // closes shared db
+    await this.indexer.destroy() // closes shared db
   }
 }
 
@@ -193,7 +201,7 @@ export async function getIngester(
     ingesterNamespace: `ns${ns}`,
     ...config,
   })
-  const db = bsky.Database.postgres({
+  const db = new bsky.PrimaryDatabase({
     url: cfg.dbPostgresUrl,
     schema: cfg.dbPostgresSchema,
   })
@@ -230,7 +238,7 @@ export async function getIndexers(
     indexerNamespace: `ns${ns}`,
     ...config,
   }
-  const db = bsky.Database.postgres({
+  const db = new bsky.PrimaryDatabase({
     url: baseCfg.dbPostgresUrl,
     schema: baseCfg.dbPostgresSchema,
   })

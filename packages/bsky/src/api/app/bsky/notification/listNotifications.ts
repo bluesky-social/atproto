@@ -5,6 +5,7 @@ import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { notSoftDeletedClause } from '../../../../db/util'
+import { getSelfLabels } from '../../../../services/label'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.listNotifications({
@@ -16,10 +17,11 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('The seenAt parameter is unsupported')
       }
 
-      const graphService = ctx.services.graph(ctx.db)
+      const db = ctx.db.getReplica()
+      const graphService = ctx.services.graph(db)
 
-      const { ref } = ctx.db.db.dynamic
-      let notifBuilder = ctx.db.db
+      const { ref } = db.db.dynamic
+      let notifBuilder = db.db
         .selectFrom('notification as notif')
         .innerJoin('record', 'record.uri', 'notif.recordUri')
         .innerJoin('actor as author', 'author.did', 'notif.author')
@@ -34,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
           clause
             .where('reasonSubject', 'is', null)
             .orWhereExists(
-              ctx.db.db
+              db.db
                 .selectFrom('record as subject')
                 .selectAll()
                 .whereRef('subject.uri', '=', ref('notif.reasonSubject')),
@@ -63,7 +65,7 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
 
-      const actorStateQuery = ctx.db.db
+      const actorStateQuery = db.db
         .selectFrom('actor_state')
         .selectAll()
         .where('did', '=', requester)
@@ -75,8 +77,8 @@ export default function (server: Server, ctx: AppContext) {
 
       const seenAt = actorState?.lastSeenNotifs
 
-      const actorService = ctx.services.actor(ctx.db)
-      const labelService = ctx.services.label(ctx.db)
+      const actorService = ctx.services.actor(db)
+      const labelService = ctx.services.label(db)
       const recordUris = notifs.map((notif) => notif.uri)
       const [authors, labels] = await Promise.all([
         actorService.views.profiles(
@@ -94,16 +96,26 @@ export default function (server: Server, ctx: AppContext) {
       const notifications = mapDefined(notifs, (notif) => {
         const author = authors[notif.authorDid]
         if (!author) return undefined
+        const record = jsonStringToLex(notif.recordJson) as Record<
+          string,
+          unknown
+        >
+        const recordLabels = labels[notif.uri] ?? []
+        const recordSelfLabels = getSelfLabels({
+          uri: notif.uri,
+          cid: notif.cid,
+          record,
+        })
         return {
           uri: notif.uri,
           cid: notif.cid,
           author,
           reason: notif.reason,
           reasonSubject: notif.reasonSubject || undefined,
-          record: jsonStringToLex(notif.recordJson) as Record<string, unknown>,
+          record,
           isRead: seenAt ? notif.indexedAt <= seenAt : false,
           indexedAt: notif.indexedAt,
-          labels: labels[notif.uri] ?? [],
+          labels: [...recordLabels, ...recordSelfLabels],
         }
       })
 

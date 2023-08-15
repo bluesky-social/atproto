@@ -12,16 +12,16 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params }) => {
       const { limit, cursor, query } = params
       const requester = auth.credentials.did
-      const db = ctx.db.db
-      const { ref } = db.dynamic
-      const feedService = ctx.services.feed(ctx.db)
+      const db = ctx.db.getReplica()
+      const { ref } = db.db.dynamic
+      const feedService = ctx.services.feed(db)
 
-      let inner = ctx.db.db
+      let inner = db.db
         .selectFrom('feed_generator')
         .select([
           'uri',
           'cid',
-          ctx.db.db
+          db.db
             .selectFrom('like')
             .whereRef('like.subject', '=', ref('feed_generator.uri'))
             .select(countAll.as('count'))
@@ -36,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      let builder = ctx.db.db.selectFrom(inner.as('feed_gens')).selectAll()
+      let builder = db.db.selectFrom(inner.as('feed_gens')).selectAll()
 
       const keyset = new LikeCountKeyset(ref('likeCount'), ref('cid'))
       builder = paginate(builder, { limit, cursor, keyset, direction: 'desc' })

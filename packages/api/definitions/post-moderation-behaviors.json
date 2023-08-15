@@ -676,7 +676,7 @@
       "author": "self",
       "labels": {"post": ["!hide"]},
       "behaviors": {
-        "content": {"cause": "label:!hide", "alert": true}
+        "content": {"cause": "label:!hide", "blur": true}
       }
     },
     "Self-post: Imperative label ('!hide') on author profile": {
@@ -700,7 +700,7 @@
       "quoteAuthor": "self",
       "labels": {"quotedPost": ["!hide"]},
       "behaviors": {
-        "embed": {"cause": "label:!hide", "alert": true}
+        "embed": {"cause": "label:!hide", "blur": true}
       }
     },
     "Self-post: Imperative label ('!hide') on quoted author account": {
@@ -710,6 +710,138 @@
       "quoteAuthor": "self",
       "labels": {"quotedAccount": ["!hide"]},
       "behaviors": {}
+    },
+
+    "Self-post: Imperative label ('!warn') on post": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "self",
+      "labels": {"post": ["!warn"]},
+      "behaviors": {
+        "content": {"cause": "label:!warn", "blur": true}
+      }
+    },
+    "Self-post: Imperative label ('!warn') on author profile": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "self",
+      "labels": {"profile": ["!warn"]},
+      "behaviors": {}
+    },
+    "Self-post: Imperative label ('!warn') on author account": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "self",
+      "labels": {"account": ["!warn"]},
+      "behaviors": {}
+    },
+    "Self-post: Imperative label ('!warn') on quoted post": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "self",
+      "quoteAuthor": "self",
+      "labels": {"quotedPost": ["!warn"]},
+      "behaviors": {
+        "embed": {"cause": "label:!warn", "blur": true}
+      }
+    },
+    "Self-post: Imperative label ('!warn') on quoted author account": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "self",
+      "quoteAuthor": "self",
+      "labels": {"quotedAccount": ["!warn"]},
+      "behaviors": {}
+    },
+
+    "Self-post: Blur-media label ('porn') on post (hide)": {
+      "cfg": "porn-hide",
+      "subject": "post",
+      "author": "self",
+      "labels": {"post": ["porn"]},
+      "behaviors": {
+        "embed": {"cause": "label:porn", "blur": true}
+      }
+    },
+    "Self-post: Blur-media label ('porn') on author profile (hide)": {
+      "cfg": "porn-hide",
+      "subject": "post",
+      "author": "self",
+      "labels": {"profile": ["porn"]},
+      "behaviors": {
+      }
+    },
+    "Self-post: Blur-media label ('porn') on author account (hide)": {
+      "cfg": "porn-hide",
+      "subject": "post",
+      "author": "self",
+      "labels": {"account": ["porn"]},
+      "behaviors": {
+      }
+    },
+    "Self-post: Blur-media label ('porn') on quoted post (hide)": {
+      "cfg": "porn-hide",
+      "subject": "post",
+      "author": "self",
+      "quoteAuthor": "self",
+      "labels": {"quotedPost": ["porn"]},
+      "behaviors": {
+        "embed": {"cause": "label:porn", "blur": true}
+      }
+    },
+    "Self-post: Blur-media label ('porn') on quoted author account (hide)": {
+      "cfg": "porn-hide",
+      "subject": "post",
+      "author": "self",
+      "quoteAuthor": "self",
+      "labels": {"quotedAccount": ["porn"]},
+      "behaviors": {
+      }
+    },
+
+    "Self-post: Blur-media label ('porn') on post (warn)": {
+      "cfg": "porn-warn",
+      "subject": "post",
+      "author": "self",
+      "labels": {"post": ["porn"]},
+      "behaviors": {
+        "embed": {"cause": "label:porn", "blur": true}
+      }
+    },
+    "Self-post: Blur-media label ('porn') on author profile (warn)": {
+      "cfg": "porn-warn",
+      "subject": "post",
+      "author": "self",
+      "labels": {"profile": ["porn"]},
+      "behaviors": {
+      }
+    },
+    "Self-post: Blur-media label ('porn') on author account (warn)": {
+      "cfg": "porn-warn",
+      "subject": "post",
+      "author": "self",
+      "labels": {"account": ["porn"]},
+      "behaviors": {
+      }
+    },
+    "Self-post: Blur-media label ('porn') on quoted post (warn)": {
+      "cfg": "porn-warn",
+      "subject": "post",
+      "author": "self",
+      "quoteAuthor": "self",
+      "labels": {"quotedPost": ["porn"]},
+      "behaviors": {
+        "embed": {"cause": "label:porn", "blur": true}
+      }
+    },
+    "Self-post: Blur-media label ('porn') on quoted author account (warn)": {
+      "cfg": "porn-warn",
+      "subject": "post",
+      "author": "self",
+      "quoteAuthor": "self",
+      "labels": {"quotedAccount": ["porn"]},
+      "behaviors": {
+      }
     },
 
     "Post with blocked author": {

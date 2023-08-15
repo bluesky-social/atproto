@@ -24,6 +24,7 @@ describe('pds views with blocking', () => {
   let alice: string
   let carol: string
   let dan: string
+  let danBlockUri: string
 
   beforeAll(async () => {
     server = await runTestServer({
@@ -57,6 +58,7 @@ describe('pds views with blocking', () => {
       { createdAt: new Date().toISOString(), subject: carol },
       sc.getHeaders(dan),
     )
+    danBlockUri = danBlockCarol.uri
     await server.processAll()
   })
 
@@ -74,6 +76,13 @@ describe('pds views with blocking', () => {
         $type: 'app.bsky.feed.defs#blockedPost',
         uri: sc.posts[carol][0].ref.uriStr,
         blocked: true,
+        author: {
+          did: carol,
+          viewer: {
+            blockedBy: false,
+            blocking: danBlockUri,
+          },
+        },
       },
     })
     const { data: threadCarol } = await agent.api.app.bsky.feed.getPostThread(
@@ -85,6 +94,12 @@ describe('pds views with blocking', () => {
         $type: 'app.bsky.feed.defs#blockedPost',
         uri: sc.posts[dan][0].ref.uriStr,
         blocked: true,
+        author: {
+          did: dan,
+          viewer: {
+            blockedBy: true,
+          },
+        },
       },
     })
   })
@@ -252,6 +267,28 @@ describe('pds views with blocking', () => {
       { headers: sc.getHeaders(alice) },
     )
     expect(resDan.data.followers.some((f) => f.did === carol)).toBe(false)
+  })
+
+  it('does not return posts from blocked users', async () => {
+    const alicePost = sc.posts[alice][0].ref.uriStr
+    const carolPost = sc.posts[carol][0].ref.uriStr
+    const danPost = sc.posts[dan][0].ref.uriStr
+
+    const resCarol = await agent.api.app.bsky.feed.getPosts(
+      { uris: [alicePost, carolPost, danPost] },
+      { headers: sc.getHeaders(carol) },
+    )
+    expect(resCarol.data.posts.some((p) => p.uri === alicePost)).toBe(true)
+    expect(resCarol.data.posts.some((p) => p.uri === carolPost)).toBe(true)
+    expect(resCarol.data.posts.some((p) => p.uri === danPost)).toBe(false)
+
+    const resDan = await agent.api.app.bsky.feed.getPosts(
+      { uris: [alicePost, carolPost, danPost] },
+      { headers: sc.getHeaders(dan) },
+    )
+    expect(resDan.data.posts.some((p) => p.uri === alicePost)).toBe(true)
+    expect(resDan.data.posts.some((p) => p.uri === carolPost)).toBe(false)
+    expect(resDan.data.posts.some((p) => p.uri === danPost)).toBe(true)
   })
 
   it('does not return notifs for blocked accounts', async () => {

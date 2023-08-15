@@ -2,17 +2,18 @@ import { once } from 'events'
 import { wait } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
 import { Database } from '../src'
+import { PrimaryDatabase } from '../src/db'
 import { Leader } from '../src/db/leader'
 
 describe('db', () => {
   let network: TestNetwork
-  let db: Database
+  let db: PrimaryDatabase
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_db',
     })
-    db = network.bsky.ctx.db
+    db = network.bsky.ctx.db.getPrimary()
   })
 
   afterAll(async () => {
