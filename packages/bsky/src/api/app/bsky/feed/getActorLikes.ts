@@ -32,6 +32,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const actorService = ctx.services.actor(ctx.db)
       const feedService = ctx.services.feed(ctx.db)
+      const graphService = ctx.services.graph(ctx.db)
 
       let did = ''
       if (actor.startsWith('did:')) {
@@ -52,6 +53,17 @@ export default function (server: Server, ctx: AppContext) {
         .innerJoin('like', 'like.subject', 'feed_item.uri')
         .where('like.creator', '=', did)
 
+      if (viewer !== null) {
+        feedItemsQb = feedItemsQb.where((qb) =>
+          // Hide reposts of muted content
+          qb
+            .where('type', '=', 'post')
+            .orWhere((qb) =>
+              graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
+            ),
+        )
+      }
+
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),
         ref('feed_item.cid'),
@@ -65,7 +77,6 @@ export default function (server: Server, ctx: AppContext) {
 
       const [feedItems, repoRev] = await Promise.all([
         feedItemsQb.execute(),
-        // TODO why
         actorService.getRepoRev(viewer),
       ])
       setRepoRev(res, repoRev)

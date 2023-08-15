@@ -34,14 +34,12 @@ export default function (server: Server, ctx: AppContext) {
 
       const { actor, limit, cursor } = params
 
-      // for access-based auth, enforce blocks and mutes
-      if (requester) {
-        await assertNoBlocks(ctx, { requester, actor })
-      }
-
       const { ref } = ctx.db.db.dynamic
+      const accountService = ctx.services.account(ctx.db)
       const feedService = ctx.services.appView.feed(ctx.db)
+      const graphService = ctx.services.appView.graph(ctx.db)
 
+      // resolve did
       const userLookupCol = actor.startsWith('did:')
         ? 'did_handle.did'
         : 'did_handle.handle'
@@ -56,6 +54,25 @@ export default function (server: Server, ctx: AppContext) {
         .selectFeedItemQb()
         .innerJoin('like', 'like.subject', 'feed_item.uri')
         .where('like.creator', '=', actorDidQb)
+
+      // for access-based auth, enforce blocks and mutes
+      if (requester) {
+        await assertNoBlocks(ctx, { requester, actor })
+        feedItemsQb = feedItemsQb
+          .where((qb) =>
+            // hide reposts of muted content
+            qb
+              .where('type', '=', 'post')
+              .orWhere((qb) =>
+                accountService.whereNotMuted(qb, requester, [
+                  ref('post.creator'),
+                ]),
+              ),
+          )
+          .whereNotExists(
+            graphService.blockQb(requester, [ref('post.creator')]),
+          )
+      }
 
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),

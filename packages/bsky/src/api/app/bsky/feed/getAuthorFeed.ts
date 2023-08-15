@@ -90,7 +90,6 @@ export default function (server: Server, ctx: AppContext) {
 
       const [feedItems, repoRev] = await Promise.all([
         feedItemsQb.execute(),
-        // TODO why
         actorService.getRepoRev(viewer),
       ])
       setRepoRev(res, repoRev)
