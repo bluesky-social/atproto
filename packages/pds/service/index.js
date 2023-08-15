@@ -87,9 +87,11 @@ const main = async () => {
   const viewMaintainerRunning = viewMaintainer.run()
 
   // If the PDS is configured to proxy moderation, this will be running on appview instead of pds.
-  const periodicModerationActionReversal = pds.ctx.shouldProxyModeration()
-    ? null
-    : new PeriodicModerationActionReversal(pds.ctx)
+  // Also don't run this on the sequencer leader, which may not be configured regarding moderation proxying at all.
+  const periodicModerationActionReversal =
+    pds.ctx.shouldProxyModeration() || pds.ctx.cfg.sequencerLeaderEnabled
+      ? null
+      : new PeriodicModerationActionReversal(pds.ctx)
   const periodicModerationActionReversalRunning =
     periodicModerationActionReversal?.run()
 
