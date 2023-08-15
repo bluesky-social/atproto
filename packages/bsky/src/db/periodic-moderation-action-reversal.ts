@@ -8,7 +8,10 @@ import { buildBasicAuth } from '../auth'
 export const MODERATION_ACTION_REVERSAL_ID = 1011
 
 export class PeriodicModerationActionReversal {
-  leader = new Leader(MODERATION_ACTION_REVERSAL_ID, this.appContext.db)
+  leader = new Leader(
+    MODERATION_ACTION_REVERSAL_ID,
+    this.appContext.db.getPrimary(),
+  )
   destroyed = false
   pushAgent?: AtpAgent
 
@@ -24,7 +27,7 @@ export class PeriodicModerationActionReversal {
   }
 
   async revertAction({ id, createdBy }: { id: number; createdBy: string }) {
-    return this.appContext.db.transaction(async (dbTxn) => {
+    return this.appContext.db.getPrimary().transaction(async (dbTxn) => {
       const moderationTxn = this.appContext.services.moderation(dbTxn)
       const reverseAction = {
         id,
@@ -44,7 +47,7 @@ export class PeriodicModerationActionReversal {
 
   async findAndRevertDueActions() {
     const moderationService = this.appContext.services.moderation(
-      this.appContext.db,
+      this.appContext.db.getPrimary(),
     )
     const actionsDueForReversal =
       await moderationService.getActionsDueForReversal()
