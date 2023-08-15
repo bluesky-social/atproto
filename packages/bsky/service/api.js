@@ -90,7 +90,7 @@ const main = async () => {
   await bsky.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
-    // Gracefully shutdown periodic-moderation-action-reversal before destroying pds instance
+    // Gracefully shutdown periodic-moderation-action-reversal before tearing down bsky
     periodicModerationActionReversal.destroy()
     await periodicModerationActionReversalRunning
     await bsky.destroy()

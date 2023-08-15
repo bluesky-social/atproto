@@ -86,22 +86,18 @@ const main = async () => {
   const viewMaintainer = new ViewMaintainer(migrateDb)
   const viewMaintainerRunning = viewMaintainer.run()
 
-  const periodicModerationActionReversal = new PeriodicModerationActionReversal(
-    pds.ctx,
-  )
-
-  // If the PDS is configured to proxy moderation, we don't need to run the automatic reversal
-  // since the app-view will take care of that and let the PDS know when it's done.
+  // If the PDS is configured to proxy moderation, this will be running on appview instead of pds.
+  const periodicModerationActionReversal = pds.ctx.shouldProxyModeration()
+    ? null
+    : new PeriodicModerationActionReversal(pds.ctx)
   const periodicModerationActionReversalRunning =
-    pds.ctx.shouldProxyModeration()
-      ? Promise.resolve()
-      : periodicModerationActionReversal.run()
+    periodicModerationActionReversal?.run()
 
   await pds.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
     // Gracefully shutdown periodic-moderation-action-reversal before destroying pds instance
-    periodicModerationActionReversal.destroy()
+    periodicModerationActionReversal?.destroy()
     await periodicModerationActionReversalRunning
 
     await pds.destroy()
