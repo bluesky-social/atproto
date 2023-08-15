@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { MemoryBlockstore, ReadableBlockstore } from '../storage'
+import { MemoryBlockstore, ReadableBlockstore, SyncStorage } from '../storage'
 import DataDiff from '../data-diff'
 import ReadableRepo from '../readable-repo'
 import * as util from '../util'
@@ -16,7 +16,10 @@ export const verifyDiff = async (
   did: string,
   signingKey: string,
 ): Promise<VerifiedDiff> => {
-  const updateStorage = new MemoryBlockstore(updateBlocks)
+  const stagedStorage = new MemoryBlockstore(updateBlocks)
+  const updateStorage = repo
+    ? new SyncStorage(stagedStorage, repo.storage)
+    : stagedStorage
   const updated = await verifyRepoRoot(
     updateStorage,
     updateRoot,

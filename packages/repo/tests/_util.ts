@@ -7,15 +7,15 @@ import { RepoStorage } from '../src/storage'
 import { MST } from '../src/mst'
 import {
   BlockMap,
-  collapseWriteLog,
   CollectionContents,
   RecordWriteOp,
   RepoContents,
   RecordPath,
-  WriteLog,
   WriteOpAction,
   RecordClaim,
   Commit,
+  DataDiff,
+  CommitData,
 } from '../src'
 import { Keypair, randomBytes } from '@atproto/crypto'
 
@@ -109,7 +109,7 @@ export const fillRepo = async (
   }
 }
 
-export const editRepo = async (
+export const formatCommit = async (
   repo: Repo,
   prevData: RepoContents,
   keypair: crypto.Keypair,
@@ -118,88 +118,76 @@ export const editRepo = async (
     updates?: number
     deletes?: number
   },
-): Promise<{ repo: Repo; data: RepoContents }> => {
+): Promise<{ commit: CommitData; data: RepoContents }> => {
   const { adds = 0, updates = 0, deletes = 0 } = params
   const repoData: RepoContents = {}
+  const writes: RecordWriteOp[] = []
   for (const collName of testCollections) {
-    const collData = prevData[collName]
+    const collData = { ...(prevData[collName] ?? {}) }
     const shuffled = shuffle(Object.entries(collData))
 
     for (let i = 0; i < adds; i++) {
       const object = generateObject()
       const rkey = TID.nextStr()
       collData[rkey] = object
-      repo = await repo.applyWrites(
-        {
-          action: WriteOpAction.Create,
-          collection: collName,
-          rkey,
-          record: object,
-        },
-        keypair,
-      )
+      writes.push({
+        action: WriteOpAction.Create,
+        collection: collName,
+        rkey,
+        record: object,
+      })
     }
 
     const toUpdate = shuffled.slice(0, updates)
     for (let i = 0; i < toUpdate.length; i++) {
       const object = generateObject()
       const rkey = toUpdate[i][0]
-      repo = await repo.applyWrites(
-        {
-          action: WriteOpAction.Update,
-          collection: collName,
-          rkey,
-          record: object,
-        },
-        keypair,
-      )
       collData[rkey] = object
+      writes.push({
+        action: WriteOpAction.Update,
+        collection: collName,
+        rkey,
+        record: object,
+      })
     }
 
     const toDelete = shuffled.slice(updates, deletes)
     for (let i = 0; i < toDelete.length; i++) {
       const rkey = toDelete[i][0]
-      repo = await repo.applyWrites(
-        {
-          action: WriteOpAction.Delete,
-          collection: collName,
-          rkey,
-        },
-        keypair,
-      )
       delete collData[rkey]
+      writes.push({
+        action: WriteOpAction.Delete,
+        collection: collName,
+        rkey,
+      })
     }
     repoData[collName] = collData
   }
+  const commit = await repo.formatCommit(writes, keypair)
   return {
-    repo,
+    commit,
     data: repoData,
   }
 }
 
-export const verifyRepoDiff = async (
-  writeLog: WriteLog,
-  before: RepoContents,
-  after: RepoContents,
-): Promise<void> => {
-  const getVal = (op: RecordWriteOp, data: RepoContents) => {
-    return (data[op.collection] || {})[op.rkey]
-  }
-  const ops = await collapseWriteLog(writeLog)
-
-  for (const op of ops) {
-    if (op.action === WriteOpAction.Create) {
-      expect(getVal(op, before)).toBeUndefined()
-      expect(getVal(op, after)).toEqual(op.record)
-    } else if (op.action === WriteOpAction.Update) {
-      expect(getVal(op, before)).toBeDefined()
-      expect(getVal(op, after)).toEqual(op.record)
-    } else if (op.action === WriteOpAction.Delete) {
-      expect(getVal(op, before)).toBeDefined()
-      expect(getVal(op, after)).toBeUndefined()
-    } else {
-      throw new Error('unexpected op type')
-    }
+export const formatWrites = async (
+  repo: Repo,
+  prevData: RepoContents,
+  keypair: crypto.Keypair,
+  params: {
+    adds?: number
+    updates?: number
+    deletes?: number
+  },
+): Promise<{ cid: CID; blocks: BlockMap; data: RepoContents }> => {
+  const { commit, data } = await formatCommit(repo, prevData, keypair, params)
+  const newBlocks = new BlockMap()
+  newBlocks.addMap(commit.repoBlocks)
+  newBlocks.addMap(commit.leafBlocks)
+  return {
+    cid: commit.cid,
+    blocks: newBlocks,
+    data,
   }
 }
 
@@ -233,23 +221,27 @@ export const addBadCommit = async (
   keypair: Keypair,
 ): Promise<Repo> => {
   const obj = generateObject()
-  const blocks = new BlockMap()
-  const cid = await blocks.add(obj)
+  const leafBlocks = new BlockMap()
+  const cid = await leafBlocks.add(obj)
   const updatedData = await repo.data.add(`com.example.test/${TID.next()}`, cid)
-  const unstoredData = await updatedData.getUnstoredBlocks()
-  blocks.addMap(unstoredData.blocks)
+  const dataCid = await updatedData.getPointer()
+  const diff = await DataDiff.of(updatedData, repo.data)
+  const repoBlocks = diff.newMstBlocks
   // we generate a bad sig by signing some other data
+  const rev = TID.nextStr(repo.commit.rev)
   const commit: Commit = {
     ...repo.commit,
-    prev: repo.cid,
-    data: unstoredData.root,
+    rev,
+    data: dataCid,
     sig: await keypair.sign(randomBytes(256)),
   }
-  const commitCid = await blocks.add(commit)
+  const commitCid = await repoBlocks.add(commit)
   await repo.storage.applyCommit({
-    commit: commitCid,
-    prev: repo.cid,
-    blocks: blocks,
+    cid: commitCid,
+    rev,
+    leafBlocks,
+    repoBlocks,
+    removedCids: diff.removedCids,
   })
   return await Repo.load(repo.storage, commitCid)
 }
