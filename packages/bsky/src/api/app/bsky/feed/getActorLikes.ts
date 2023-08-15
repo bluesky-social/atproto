@@ -54,14 +54,14 @@ export default function (server: Server, ctx: AppContext) {
         .where('like.creator', '=', did)
 
       if (viewer !== null) {
-        feedItemsQb = feedItemsQb.where((qb) =>
-          // Hide reposts of muted content
-          qb
-            .where('type', '=', 'post')
-            .orWhere((qb) =>
+        feedItemsQb = feedItemsQb
+          .where((qb) =>
+            qb.where((qb) =>
               graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
             ),
-        )
+          )
+          // TODO do we want this? was missing here
+          .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
       }
 
       const keyset = new FeedKeyset(

@@ -60,14 +60,11 @@ export default function (server: Server, ctx: AppContext) {
         await assertNoBlocks(ctx, { requester, actor })
         feedItemsQb = feedItemsQb
           .where((qb) =>
-            // hide reposts of muted content
-            qb
-              .where('type', '=', 'post')
-              .orWhere((qb) =>
-                accountService.whereNotMuted(qb, requester, [
-                  ref('post.creator'),
-                ]),
-              ),
+            qb.where((qb) =>
+              accountService.whereNotMuted(qb, requester, [
+                ref('post.creator'),
+              ]),
+            ),
           )
           .whereNotExists(
             graphService.blockQb(requester, [ref('post.creator')]),
