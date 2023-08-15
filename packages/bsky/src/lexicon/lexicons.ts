@@ -4303,21 +4303,33 @@ export const schemaDict = {
       },
       viewNotFound: {
         type: 'object',
-        required: ['uri'],
+        required: ['uri', 'notFound'],
         properties: {
           uri: {
             type: 'string',
             format: 'at-uri',
           },
+          notFound: {
+            type: 'boolean',
+            const: true,
+          },
         },
       },
       viewBlocked: {
         type: 'object',
-        required: ['uri'],
+        required: ['uri', 'blocked', 'author'],
         properties: {
           uri: {
             type: 'string',
             format: 'at-uri',
+          },
+          blocked: {
+            type: 'boolean',
+            const: true,
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#blockedAuthor',
           },
         },
       },

@@ -9,10 +9,10 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { limit, cursor } = params
       const requester = auth.credentials.did
-      const { services, db } = ctx
-      const { ref } = ctx.db.db.dynamic
+      const db = ctx.db.getReplica()
+      const { ref } = db.db.dynamic
 
-      let mutesReq = ctx.db.db
+      let mutesReq = db.db
         .selectFrom('mute')
         .innerJoin('actor', 'actor.did', 'mute.subjectDid')
         .where(notSoftDeletedClause(ref('actor')))
@@ -32,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const mutesRes = await mutesReq.execute()
 
-      const actorService = services.actor(db)
+      const actorService = ctx.services.actor(db)
 
       return {
         encoding: 'application/json',

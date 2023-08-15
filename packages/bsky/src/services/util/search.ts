@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import Database from '../../db'
+import { Database } from '../../db'
 import { notSoftDeletedClause, DbRef, AnyQb } from '../../db/util'
 import { GenericKeyset, paginate } from '../../db/pagination'
 

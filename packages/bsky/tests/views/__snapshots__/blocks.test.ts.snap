@@ -54,6 +54,14 @@ Object {
               "$type": "app.bsky.embed.record#view",
               "record": Object {
                 "$type": "app.bsky.embed.record#viewBlocked",
+                "author": Object {
+                  "did": "user(3)",
+                  "viewer": Object {
+                    "blockedBy": false,
+                    "blocking": "record(5)",
+                  },
+                },
+                "blocked": true,
                 "uri": "record(4)",
               },
             },

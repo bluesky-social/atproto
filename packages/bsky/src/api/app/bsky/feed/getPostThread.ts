@@ -19,6 +19,7 @@ import {
   getAncestorsAndSelfQb,
   getDescendentsQb,
 } from '../../../../services/util/post'
+import { Database } from '../../../../db'
 import { setRepoRev } from '../../../util'
 
 export type PostThread = {
@@ -34,12 +35,13 @@ export default function (server: Server, ctx: AppContext) {
       const { uri, depth, parentHeight } = params
       const requester = auth.credentials.did
 
-      const actorService = ctx.services.actor(ctx.db)
-      const feedService = ctx.services.feed(ctx.db)
-      const labelService = ctx.services.label(ctx.db)
+      const db = ctx.db.getReplica('thread')
+      const actorService = ctx.services.actor(db)
+      const feedService = ctx.services.feed(db)
+      const labelService = ctx.services.label(db)
 
       const [threadData, repoRev] = await Promise.all([
-        getThreadData(ctx, uri, depth, parentHeight),
+        getThreadData(ctx, db, uri, depth, parentHeight),
         actorService.getRepoRev(requester),
       ])
       setRepoRev(res, repoRev)
@@ -194,13 +196,14 @@ const getRelevantIds = (
 
 const getThreadData = async (
   ctx: AppContext,
+  db: Database,
   uri: string,
   depth: number,
   parentHeight: number,
 ): Promise<PostThread | null> => {
-  const feedService = ctx.services.feed(ctx.db)
+  const feedService = ctx.services.feed(db)
   const [parents, children] = await Promise.all([
-    getAncestorsAndSelfQb(ctx.db.db, { uri, parentHeight })
+    getAncestorsAndSelfQb(db.db, { uri, parentHeight })
       .selectFrom('ancestor')
       .innerJoin(
         feedService.selectPostQb().as('post'),
@@ -209,7 +212,7 @@ const getThreadData = async (
       )
       .selectAll('post')
       .execute(),
-    getDescendentsQb(ctx.db.db, { uri, depth })
+    getDescendentsQb(db.db, { uri, depth })
       .selectFrom('descendent')
       .innerJoin(
         feedService.selectPostQb().as('post'),

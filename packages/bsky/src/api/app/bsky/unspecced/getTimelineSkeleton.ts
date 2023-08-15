@@ -10,7 +10,9 @@ export default function (server: Server, ctx: AppContext) {
       const { limit, cursor } = params
       const viewer = auth.credentials.did
 
-      const skeleton = await getTimelineSkeleton(ctx.db, viewer, limit, cursor)
+      const db = ctx.db.getReplica('timeline')
+      const skeleton = await getTimelineSkeleton(db, viewer, limit, cursor)
+
       return {
         encoding: 'application/json',
         body: skeleton,

@@ -6,7 +6,7 @@ import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { toSimplifiedISOSafe } from '../util'
-import Database from '../../../db'
+import { PrimaryDatabase } from '../../../db'
 import { countAll, excluded } from '../../../db/util'
 import { BackgroundQueue } from '../../../background'
 
@@ -130,7 +130,7 @@ const updateAggregates = async (db: DatabaseSchema, repost: IndexedRepost) => {
 export type PluginType = RecordProcessor<Repost.Record, IndexedRepost>
 
 export const makePlugin = (
-  db: Database,
+  db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
 ): PluginType => {
   return new RecordProcessor(db, backgroundQueue, {

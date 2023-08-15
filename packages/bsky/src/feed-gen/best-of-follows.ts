@@ -10,10 +10,11 @@ const handler: AlgoHandler = async (
   viewer: string,
 ): Promise<AlgoResponse> => {
   const { limit, cursor } = params
-  const feedService = ctx.services.feed(ctx.db)
-  const graphService = ctx.services.graph(ctx.db)
+  const db = ctx.db.getReplica('feed')
+  const feedService = ctx.services.feed(db)
+  const graphService = ctx.services.graph(db)
 
-  const { ref } = ctx.db.db.dynamic
+  const { ref } = db.db.dynamic
 
   // candidates are ranked within a materialized view by like count, depreciated over time.
 

@@ -13,13 +13,13 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.roleVerifier,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
-      const { db, services } = ctx
-      const moderationService = services.moderation(db)
+      const db = ctx.db.getPrimary()
+      const moderationService = ctx.services.moderation(db)
       const { id, createdBy, reason } = input.body
 
       const moderationAction = await db.transaction(async (dbTxn) => {
-        const moderationTxn = services.moderation(dbTxn)
-        const labelTxn = services.label(dbTxn)
+        const moderationTxn = ctx.services.moderation(dbTxn)
+        const labelTxn = ctx.services.label(dbTxn)
         const now = new Date()
 
         const existing = await moderationTxn.getAction(id)

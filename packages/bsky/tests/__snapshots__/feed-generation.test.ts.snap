@@ -18,6 +18,7 @@ Object {
     "$type": "app.bsky.embed.record#view",
     "record": Object {
       "$type": "app.bsky.embed.record#viewNotFound",
+      "notFound": true,
       "uri": "record(1)",
     },
   },

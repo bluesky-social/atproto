@@ -7,8 +7,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, input }) => {
       const { list } = input.body
       const requester = auth.credentials.did
+      const db = ctx.db.getPrimary()
 
-      await ctx.services.graph(ctx.db).unmuteActorList({
+      await ctx.services.graph(db).unmuteActorList({
         list,
         mutedByDid: requester,
       })

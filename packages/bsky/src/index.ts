@@ -7,7 +7,7 @@ import cors from 'cors'
 import compression from 'compression'
 import { IdResolver } from '@atproto/identity'
 import API, { health, blobResolver } from './api'
-import Database from './db'
+import { DatabaseCoordinator } from './db'
 import * as error from './error'
 import { dbLogger, loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
@@ -28,7 +28,7 @@ import { LabelCache } from './label-cache'
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
 export { ServerConfig } from './config'
-export { Database } from './db'
+export { Database, PrimaryDatabase, DatabaseCoordinator } from './db'
 export { Redis } from './redis'
 export { ViewMaintainer } from './db/views'
 export { AppContext } from './context'
@@ -49,7 +49,7 @@ export class BskyAppView {
   }
 
   static create(opts: {
-    db: Database
+    db: DatabaseCoordinator
     config: ServerConfig
     imgInvalidator?: ImageInvalidator
     algos?: MountedAlgos
@@ -62,7 +62,7 @@ export class BskyAppView {
     app.use(compression())
 
     const didCache = new DidSqlCache(
-      db,
+      db.getPrimary(),
       config.didCacheStaleTTL,
       config.didCacheMaxTTL,
     )
@@ -91,8 +91,8 @@ export class BskyAppView {
       throw new Error('Missing appview image invalidator')
     }
 
-    const backgroundQueue = new BackgroundQueue(db)
-    const labelCache = new LabelCache(db)
+    const backgroundQueue = new BackgroundQueue(db.getPrimary())
+    const labelCache = new LabelCache(db.getPrimary())
 
     const services = createServices({
       imgUriBuilder,
@@ -136,13 +136,26 @@ export class BskyAppView {
 
   async start(): Promise<http.Server> {
     const { db, backgroundQueue } = this.ctx
-    const { pool } = db.cfg
+    const primary = db.getPrimary()
+    const replicas = db.getReplicas()
     this.dbStatsInterval = setInterval(() => {
       dbLogger.info(
         {
-          idleCount: pool.idleCount,
-          totalCount: pool.totalCount,
-          waitingCount: pool.waitingCount,
+          idleCount: replicas.reduce(
+            (tot, replica) => tot + replica.pool.idleCount,
+            0,
+          ),
+          totalCount: replicas.reduce(
+            (tot, replica) => tot + replica.pool.totalCount,
+            0,
+          ),
+          waitingCount: replicas.reduce(
+            (tot, replica) => tot + replica.pool.waitingCount,
+            0,
+          ),
+          primaryIdleCount: primary.pool.idleCount,
+          primaryTotalCount: primary.pool.totalCount,
+          primaryWaitingCount: primary.pool.waitingCount,
         },
         'db pool stats',
       )

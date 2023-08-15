@@ -2,7 +2,7 @@ import { Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import Database from '../../db'
+import { PrimaryDatabase } from '../../db'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { ModerationViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
@@ -12,7 +12,7 @@ import { addHoursToDate } from '../../util/date'
 
 export class ModerationService {
   constructor(
-    public db: Database,
+    public db: PrimaryDatabase,
     public imgUriBuilder: ImageUriBuilder,
     public imgInvalidator: ImageInvalidator,
   ) {}
@@ -21,7 +21,7 @@ export class ModerationService {
     imgUriBuilder: ImageUriBuilder,
     imgInvalidator: ImageInvalidator,
   ) {
-    return (db: Database) =>
+    return (db: PrimaryDatabase) =>
       new ModerationService(db, imgUriBuilder, imgInvalidator)
   }
 

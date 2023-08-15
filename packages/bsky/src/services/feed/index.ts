@@ -3,7 +3,7 @@ import { AtUri } from '@atproto/uri'
 import { dedupeStrs } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/identifier'
 import { jsonStringToLex } from '@atproto/lexicon'
-import Database from '../../db'
+import { Database } from '../../db'
 import {
   countAll,
   noMatch,
@@ -627,6 +627,7 @@ export class FeedService {
         recordEmbedViews[uri] = {
           $type: 'app.bsky.embed.record#viewNotFound',
           uri,
+          notFound: true,
         }
       }
     }
@@ -701,6 +702,16 @@ function applyEmbedBlock(
     return {
       $type: 'app.bsky.embed.record#viewBlocked',
       uri: view.uri,
+      blocked: true,
+      author: {
+        did: view.author.did,
+        viewer: view.author.viewer
+          ? {
+              blockedBy: view.author.viewer?.blockedBy,
+              blocking: view.author.viewer?.blocking,
+            }
+          : undefined,
+      },
     }
   }
   return view

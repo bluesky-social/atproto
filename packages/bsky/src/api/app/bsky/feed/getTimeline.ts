@@ -3,7 +3,7 @@ import { Server } from '../../../../lexicon'
 import { FeedAlgorithm, FeedKeyset, getFeedDateThreshold } from '../util/feed'
 import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
-import Database from '../../../../db'
+import { Database } from '../../../../db'
 import { SkeletonFeedPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { setRepoRev } from '../../../util'
 
@@ -17,14 +17,15 @@ export default function (server: Server, ctx: AppContext) {
       if (algorithm && algorithm !== FeedAlgorithm.ReverseChronological) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
       }
+      const db = ctx.db.getReplica('timeline')
 
       const [skeleton, repoRev] = await Promise.all([
-        getTimelineSkeleton(ctx.db, viewer, limit, cursor),
-        ctx.services.actor(ctx.db).getRepoRev(viewer),
+        getTimelineSkeleton(db, viewer, limit, cursor),
+        ctx.services.actor(db).getRepoRev(viewer),
       ])
       setRepoRev(res, repoRev)
 
-      const feedService = ctx.services.feed(ctx.db)
+      const feedService = ctx.services.feed(db)
       const feedItems = await feedService.cleanFeedSkeleton(
         skeleton.feed,
         limit,

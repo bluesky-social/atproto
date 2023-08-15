@@ -4,7 +4,7 @@ import * as Profile from '../../../lexicon/types/app/bsky/actor/profile'
 import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
-import Database from '../../../db'
+import { PrimaryDatabase } from '../../../db'
 import { BackgroundQueue } from '../../../background'
 
 const lexId = lex.ids.AppBskyActorProfile
@@ -63,7 +63,7 @@ const notifsForDelete = () => {
 export type PluginType = RecordProcessor<Profile.Record, IndexedProfile>
 
 export const makePlugin = (
-  db: Database,
+  db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
 ): PluginType => {
   return new RecordProcessor(db, backgroundQueue, {
