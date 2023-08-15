@@ -109,7 +109,7 @@ export const fillRepo = async (
   }
 }
 
-export const formatCommit = async (
+export const formatEdit = async (
   repo: Repo,
   prevData: RepoContents,
   keypair: crypto.Keypair,
@@ -170,27 +170,6 @@ export const formatCommit = async (
   }
 }
 
-export const formatWrites = async (
-  repo: Repo,
-  prevData: RepoContents,
-  keypair: crypto.Keypair,
-  params: {
-    adds?: number
-    updates?: number
-    deletes?: number
-  },
-): Promise<{ cid: CID; blocks: BlockMap; data: RepoContents }> => {
-  const { commit, data } = await formatCommit(repo, prevData, keypair, params)
-  const newBlocks = new BlockMap()
-  newBlocks.addMap(commit.repoBlocks)
-  newBlocks.addMap(commit.leafBlocks)
-  return {
-    cid: commit.cid,
-    blocks: newBlocks,
-    data,
-  }
-}
-
 export const contentsToClaims = (contents: RepoContents): RecordClaim[] => {
   const claims: RecordClaim[] = []
   for (const coll of Object.keys(contents)) {
@@ -221,12 +200,12 @@ export const addBadCommit = async (
   keypair: Keypair,
 ): Promise<Repo> => {
   const obj = generateObject()
-  const leafBlocks = new BlockMap()
-  const cid = await leafBlocks.add(obj)
+  const newBlocks = new BlockMap()
+  const cid = await newBlocks.add(obj)
   const updatedData = await repo.data.add(`com.example.test/${TID.next()}`, cid)
   const dataCid = await updatedData.getPointer()
   const diff = await DataDiff.of(updatedData, repo.data)
-  const repoBlocks = diff.newMstBlocks
+  newBlocks.addMap(diff.newMstBlocks)
   // we generate a bad sig by signing some other data
   const rev = TID.nextStr(repo.commit.rev)
   const commit: Commit = {
@@ -235,12 +214,11 @@ export const addBadCommit = async (
     data: dataCid,
     sig: await keypair.sign(randomBytes(256)),
   }
-  const commitCid = await repoBlocks.add(commit)
+  const commitCid = await newBlocks.add(commit)
   await repo.storage.applyCommit({
     cid: commitCid,
     rev,
-    leafBlocks,
-    repoBlocks,
+    newBlocks,
     removedCids: diff.removedCids,
   })
   return await Repo.load(repo.storage, commitCid)

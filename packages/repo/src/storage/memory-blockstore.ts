@@ -53,10 +53,7 @@ export class MemoryBlockstore
     for (const cid of rmCids) {
       this.blocks.delete(cid)
     }
-    commit.leafBlocks.forEach((bytes, cid) => {
-      this.blocks.set(cid, bytes)
-    })
-    commit.repoBlocks.forEach((bytes, cid) => {
+    commit.newBlocks.forEach((bytes, cid) => {
       this.blocks.set(cid, bytes)
     })
   }

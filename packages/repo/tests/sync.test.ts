@@ -66,22 +66,22 @@ describe('Repo Sync', () => {
 
   it('syncs a repo that is behind', async () => {
     // add more to providers's repo & have consumer catch up
-    const edited = await util.formatWrites(repo, repoData, keypair, {
+    const edit = await util.formatEdit(repo, repoData, keypair, {
       adds: 10,
       updates: 10,
       deletes: 10,
     })
     const verified = await sync.verifyDiff(
       repo,
-      edited.blocks,
-      edited.cid,
+      edit.commit.newBlocks,
+      edit.commit.cid,
       repoDid,
       keypair.did(),
     )
     await storage.applyCommit(verified.commit)
     repo = await Repo.load(storage, verified.commit.cid)
     const contents = await repo.getContents()
-    expect(contents).toEqual(edited.data)
+    expect(contents).toEqual(edit.data)
   })
 
   it('throws on a bad signature', async () => {

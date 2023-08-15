@@ -75,13 +75,13 @@ describe('Repo', () => {
   })
 
   it('edits and deletes content', async () => {
-    const edited = await util.formatCommit(repo, repoData, keypair, {
+    const edit = await util.formatEdit(repo, repoData, keypair, {
       adds: 20,
       updates: 20,
       deletes: 20,
     })
-    repo = await repo.applyCommit(edited.commit)
-    repoData = edited.data
+    repo = await repo.applyCommit(edit.commit)
+    repoData = edit.data
     const contents = await repo.getContents()
     expect(contents).toEqual(repoData)
   })

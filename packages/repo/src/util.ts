@@ -122,19 +122,14 @@ export const diffToWriteDescripts = (
   return Promise.all([
     ...diff.addList().map(async (add) => {
       const { collection, rkey } = parseDataKey(add.key)
-      try {
-        const value = await parse.getAndParseRecord(blocks, add.cid)
-        return {
-          action: WriteOpAction.Create,
-          collection,
-          rkey,
-          cid: add.cid,
-          record: value.record,
-        } as RecordCreateDescript
-      } catch (err) {
-        console.log(add)
-        throw err
-      }
+      const value = await parse.getAndParseRecord(blocks, add.cid)
+      return {
+        action: WriteOpAction.Create,
+        collection,
+        rkey,
+        cid: add.cid,
+        record: value.record,
+      } as RecordCreateDescript
     }),
     ...diff.updateList().map(async (upd) => {
       const { collection, rkey } = parseDataKey(upd.key)

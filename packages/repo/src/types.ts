@@ -95,8 +95,7 @@ export type WriteLog = RecordWriteDescript[][]
 export type CommitData = {
   cid: CID
   rev: string
-  repoBlocks: BlockMap
-  leafBlocks: BlockMap
+  newBlocks: BlockMap
   removedCids: CidSet
 }
 

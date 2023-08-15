@@ -33,6 +33,7 @@ export const verifyDiff = async (
   if (leaves.missing.length > 0) {
     throw new Error(`missing leaf blocks: ${leaves.missing}`)
   }
+  newBlocks.addMap(leaves.blocks)
   const removedCids = diff.removedCids
   const commitCid = await newBlocks.add(updated.commit)
   // ensure the commit cid actually changed
@@ -48,8 +49,7 @@ export const verifyDiff = async (
     commit: {
       cid: updated.cid,
       rev: updated.commit.rev,
-      repoBlocks: newBlocks,
-      leafBlocks: leaves.blocks,
+      newBlocks,
       removedCids,
     },
   }

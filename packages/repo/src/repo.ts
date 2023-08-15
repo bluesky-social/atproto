@@ -38,17 +38,17 @@ export class Repo extends ReadableRepo {
     keypair: crypto.Keypair,
     initialWrites: RecordCreateOp[] = [],
   ): Promise<CommitData> {
-    const leafBlocks = new BlockMap()
+    const newBlocks = new BlockMap()
 
     let data = await MST.create(storage)
     for (const record of initialWrites) {
-      const cid = await leafBlocks.add(record.record)
+      const cid = await newBlocks.add(record.record)
       const dataKey = util.formatDataKey(record.collection, record.rkey)
       data = await data.add(dataKey, cid)
     }
     const dataCid = await data.getPointer()
     const diff = await DataDiff.of(data, null)
-    const repoBlocks = diff.newMstBlocks
+    newBlocks.addMap(diff.newMstBlocks)
 
     const rev = TID.nextStr()
     const commit = await util.signCommit(
@@ -60,12 +60,11 @@ export class Repo extends ReadableRepo {
       },
       keypair,
     )
-    const commitCid = await repoBlocks.add(commit)
+    const commitCid = await newBlocks.add(commit)
     return {
       cid: commitCid,
       rev,
-      repoBlocks,
-      leafBlocks,
+      newBlocks,
       removedCids: diff.removedCids,
     }
   }
@@ -134,14 +133,14 @@ export class Repo extends ReadableRepo {
 
     const dataCid = await data.getPointer()
     const diff = await DataDiff.of(data, this.data)
-    const repoBlocks = diff.newMstBlocks
+    const newBlocks = diff.newMstBlocks
     const removedCids = diff.removedCids
 
     const addedLeaves = leaves.getMany(diff.newLeafCids.toList())
     if (addedLeaves.missing.length > 0) {
       throw new Error(`Missing leaf blocks: :${addedLeaves.missing}`)
     }
-    const leafBlocks = addedLeaves.blocks
+    newBlocks.addMap(addedLeaves.blocks)
 
     const rev = TID.nextStr(this.commit.rev)
     const commit = await util.signCommit(
@@ -153,11 +152,11 @@ export class Repo extends ReadableRepo {
       },
       keypair,
     )
-    const commitCid = await repoBlocks.add(commit)
+    const commitCid = await newBlocks.add(commit)
 
     // ensure the commit cid actually changed
     if (commitCid.equals(this.cid)) {
-      repoBlocks.delete(commitCid)
+      newBlocks.delete(commitCid)
     } else {
       removedCids.add(this.cid)
     }
@@ -165,8 +164,7 @@ export class Repo extends ReadableRepo {
     return {
       cid: commitCid,
       rev,
-      repoBlocks,
-      leafBlocks,
+      newBlocks,
       removedCids,
     }
   }
