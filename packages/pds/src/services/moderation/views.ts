@@ -392,7 +392,7 @@ export class ModerationViews {
     return {
       id: action.id,
       action: action.action,
-      durationInHours: action.durationInHours ?? undefined,
+      durationInHours: action.durationInHours,
       subject,
       subjectBlobs,
       createLabelVals: action.createLabelVals,
