@@ -38,6 +38,8 @@ describe('handle invalidation', () => {
       }
       return origResolve(handle)
     }
+    network.pds.ctx.idResolver.handle.resolve =
+      network.bsky.indexer.ctx.idResolver.handle.resolve
   })
 
   afterAll(async () => {
@@ -128,5 +130,35 @@ describe('handle invalidation', () => {
       { headers: await network.serviceHeaders(alice) },
     )
     expect(bobRes.data.handle).toEqual(sc.accounts[alice].handle)
+  })
+
+  it('validates handle before returning session', async () => {
+    const handle = 'broken.test'
+    const password = 'broken-pass'
+
+    mockHandles[handle] = null
+
+    await sc.createAccount('handle', {
+      handle,
+      email: 'brokenHandle@test.com',
+      password,
+    })
+
+    await network.processAll()
+
+    const loginRes = await pdsAgent.login({
+      identifier: handle,
+      password,
+    })
+
+    const res = await pdsAgent.api.com.atproto.server.getSession(
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${loginRes.data.accessJwt}`,
+        },
+      },
+    )
+    expect(res.data.handle).toEqual('handle.invalid')
   })
 })
