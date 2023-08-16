@@ -5,7 +5,6 @@ import { AtUri } from '@atproto/api'
 import { Insertable } from 'kysely'
 import logger from './indexer/logger'
 import { BackgroundQueue } from './background'
-import { ServerConfig } from './config'
 import { Redis } from './redis'
 
 type Platform = 'ios' | 'android' | 'web'
@@ -20,7 +19,6 @@ type PushNotification = {
   }
 }
 type InsertableNotif = Insertable<Notification>
-const NOTIFICATION_BATCH_SIZE = ServerConfig.readEnv().debugMode ? 2 : 50 // if debug mode, send 2 notifications at a time, otherwise send 50
 export class NotificationServer {
   private notificationBatch: PushNotification[] = []
   private backgroundQueue: BackgroundQueue
@@ -29,6 +27,7 @@ export class NotificationServer {
     public db: Database,
     public redis?: Redis,
     public pushEndpoint?: string,
+    private notificationBatchSize = 1, // if debug mode, send 1 notifications at a time, otherwise send whatever is specified in the config
   ) {
     this.backgroundQueue = new BackgroundQueue(db)
   }
@@ -132,7 +131,7 @@ export class NotificationServer {
         // Add to batch
         this.notificationBatch.push(notif)
         // If batch size is 20, add task to background queue
-        if (this.notificationBatch.length >= NOTIFICATION_BATCH_SIZE) {
+        if (this.notificationBatch.length >= this.notificationBatchSize) {
           try {
             this.backgroundQueue.add(async () => {
               return await this.sendPushNotifications(this.notificationBatch)

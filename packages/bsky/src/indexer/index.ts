@@ -59,6 +59,7 @@ export class BskyIndexer {
       db,
       redis,
       cfg.pushNotificationEndpoint,
+      cfg.pushNotificationBatchSize,
     )
     const services = createServices({
       idResolver,
