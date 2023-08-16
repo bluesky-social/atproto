@@ -72,7 +72,7 @@ export class ModerationViews {
           'in',
           results.map((r) => r.did),
         )
-        .select(['id', 'action', 'subjectDid'])
+        .select(['id', 'action', 'durationInHours', 'subjectDid'])
         .execute(),
       this.services
         .account(this.db)
@@ -104,7 +104,11 @@ export class ModerationViews {
         indexedAt: r.indexedAt,
         moderation: {
           currentAction: action
-            ? { id: action.id, action: action.action }
+            ? {
+                id: action.id,
+                action: action.action,
+                durationInHours: action.durationInHours ?? undefined,
+              }
             : undefined,
         },
         invitedBy: invitedBy[r.did],
@@ -194,7 +198,7 @@ export class ModerationViews {
           'in',
           results.map((r) => r.uri),
         )
-        .select(['id', 'action', 'subjectUri'])
+        .select(['id', 'action', 'durationInHours', 'subjectUri'])
         .execute(),
     ])
     const repos = await this.repo(repoResults, opts)
@@ -226,7 +230,11 @@ export class ModerationViews {
         repo,
         moderation: {
           currentAction: action
-            ? { id: action.id, action: action.action }
+            ? {
+                id: action.id,
+                action: action.action,
+                durationInHours: action.durationInHours ?? undefined,
+              }
             : undefined,
         },
       }
@@ -323,6 +331,7 @@ export class ModerationViews {
     const views = results.map((res) => ({
       id: res.id,
       action: res.action,
+      durationInHours: res.durationInHours ?? undefined,
       subject:
         res.subjectType === 'com.atproto.admin.defs#repoRef'
           ? {
@@ -383,6 +392,7 @@ export class ModerationViews {
     return {
       id: action.id,
       action: action.action,
+      durationInHours: action.durationInHours,
       subject,
       subjectBlobs,
       createLabelVals: action.createLabelVals,
@@ -556,7 +566,7 @@ export class ModerationViews {
           'subject_blob.actionId',
           'moderation_action.id',
         )
-        .select(['id', 'action', 'cid'])
+        .select(['id', 'action', 'durationInHours', 'cid'])
         .execute(),
     ])
     const actionByCid = actionResults.reduce(
@@ -583,7 +593,11 @@ export class ModerationViews {
             : undefined,
         moderation: {
           currentAction: action
-            ? { id: action.id, action: action.action }
+            ? {
+                id: action.id,
+                action: action.action,
+                durationInHours: action.durationInHours ?? undefined,
+              }
             : undefined,
         },
       }

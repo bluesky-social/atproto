@@ -19,6 +19,8 @@ import {
   getAncestorsAndSelfQb,
   getDescendentsQb,
 } from '../../../../services/util/post'
+import { Database } from '../../../../db'
+import { setRepoRev } from '../../../util'
 
 export type PostThread = {
   post: FeedRow
@@ -29,14 +31,21 @@ export type PostThread = {
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.authOptionalVerifier,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, res }) => {
       const { uri, depth, parentHeight } = params
       const requester = auth.credentials.did
 
-      const feedService = ctx.services.feed(ctx.db)
-      const labelService = ctx.services.label(ctx.db)
+      const db = ctx.db.getReplica('thread')
+      const actorService = ctx.services.actor(db)
+      const feedService = ctx.services.feed(db)
+      const labelService = ctx.services.label(db)
 
-      const threadData = await getThreadData(ctx, uri, depth, parentHeight)
+      const [threadData, repoRev] = await Promise.all([
+        getThreadData(ctx, db, uri, depth, parentHeight),
+        actorService.getRepoRev(requester),
+      ])
+      setRepoRev(res, repoRev)
+
       if (!threadData) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
@@ -104,6 +113,15 @@ const composeThread = (
       $type: 'app.bsky.feed.defs#blockedPost',
       uri: threadData.post.postUri,
       blocked: true,
+      author: {
+        did: post.author.did,
+        viewer: post.author.viewer
+          ? {
+              blockedBy: post.author.viewer?.blockedBy,
+              blocking: post.author.viewer?.blocking,
+            }
+          : undefined,
+      },
     }
   }
 
@@ -178,13 +196,14 @@ const getRelevantIds = (
 
 const getThreadData = async (
   ctx: AppContext,
+  db: Database,
   uri: string,
   depth: number,
   parentHeight: number,
 ): Promise<PostThread | null> => {
-  const feedService = ctx.services.feed(ctx.db)
+  const feedService = ctx.services.feed(db)
   const [parents, children] = await Promise.all([
-    getAncestorsAndSelfQb(ctx.db.db, { uri, parentHeight })
+    getAncestorsAndSelfQb(db.db, { uri, parentHeight })
       .selectFrom('ancestor')
       .innerJoin(
         feedService.selectPostQb().as('post'),
@@ -193,7 +212,7 @@ const getThreadData = async (
       )
       .selectAll('post')
       .execute(),
-    getDescendentsQb(ctx.db.db, { uri, depth })
+    getDescendentsQb(db.db, { uri, depth })
       .selectFrom('descendent')
       .innerJoin(
         feedService.selectPostQb().as('post'),

@@ -13,6 +13,8 @@ import * as ComAtprotoLabelDefs from '../label/defs'
 export interface ActionView {
   id: number
   action: ActionType
+  /** Indicates how long this action was meant to be in effect before automatically expiring. */
+  durationInHours?: number
   subject:
     | RepoRef
     | ComAtprotoRepoStrongRef.Main
@@ -43,6 +45,8 @@ export function validateActionView(v: unknown): ValidationResult {
 export interface ActionViewDetail {
   id: number
   action: ActionType
+  /** Indicates how long this action was meant to be in effect before automatically expiring. */
+  durationInHours?: number
   subject:
     | RepoView
     | RepoViewNotFound
@@ -75,6 +79,8 @@ export function validateActionViewDetail(v: unknown): ValidationResult {
 export interface ActionViewCurrent {
   id: number
   action: ActionType
+  /** Indicates how long this action was meant to be in effect before automatically expiring. */
+  durationInHours?: number
   [k: string]: unknown
 }
 

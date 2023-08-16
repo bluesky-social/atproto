@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import Database from '../../db'
+import { Database } from '../../db'
 import { DbRef, notSoftDeletedClause } from '../../db/util'
 import { ActorViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
@@ -104,6 +104,16 @@ export class ActorService {
       })
     }
     return builder
+  }
+
+  async getRepoRev(did: string | null): Promise<string | null> {
+    if (did === null) return null
+    const res = await this.db.db
+      .selectFrom('actor_sync')
+      .select('repoRev')
+      .where('did', '=', did)
+      .executeTakeFirst()
+    return res?.repoRev ?? null
   }
 }
 

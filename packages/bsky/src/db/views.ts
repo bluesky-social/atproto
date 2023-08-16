@@ -1,7 +1,7 @@
 import { jitter, wait } from '@atproto/common'
 import { Leader } from './leader'
 import { dbLogger } from '../logger'
-import Database from '.'
+import { PrimaryDatabase } from '.'
 
 export const VIEW_MAINTAINER_ID = 1010
 const VIEWS = ['algo_whats_hot_view']
@@ -11,7 +11,7 @@ export class ViewMaintainer {
   destroyed = false
 
   // @NOTE the db must be authed as the owner of the materialized view, per postgres.
-  constructor(public db: Database, public intervalSec = 60) {}
+  constructor(public db: PrimaryDatabase, public intervalSec = 60) {}
 
   async run() {
     while (!this.destroyed) {

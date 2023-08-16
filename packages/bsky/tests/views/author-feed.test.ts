@@ -4,6 +4,9 @@ import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
+import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
+import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
 
 describe('pds author feed views', () => {
   let network: TestNetwork
@@ -231,5 +234,61 @@ describe('pds author feed views', () => {
         headers: network.pds.adminAuthHeaders(),
       },
     )
+  })
+
+  it('can filter by type', async () => {
+    const { data: allFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: carol,
+    })
+
+    expect(
+      allFeed.feed.some(({ post }) => {
+        return isRecord(post.record) && Boolean(post.record.reply)
+      }),
+    ).toBeTruthy()
+    expect(
+      allFeed.feed.some(({ post }) => {
+        return (
+          (isEmbedRecordWithMedia(post.embed) &&
+            isImageEmbed(post.embed?.media)) ||
+          isImageEmbed(post.embed)
+        )
+      }),
+    ).toBeTruthy()
+
+    const { data: mediaFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: carol,
+      filter: 'posts_with_media',
+    })
+    const { data: imagesOnlyFeed } =
+      await agent.api.app.bsky.feed.getAuthorFeed({
+        actor: bob,
+        filter: 'posts_with_media',
+      })
+
+    expect(
+      mediaFeed.feed.every(({ post }) => {
+        return (
+          (isEmbedRecordWithMedia(post.embed) &&
+            isImageEmbed(post.embed?.media)) ||
+          isImageEmbed(post.embed)
+        )
+      }),
+    ).toBeTruthy()
+    expect(
+      imagesOnlyFeed.feed.every(({ post }) => {
+        return isImageEmbed(post.embed)
+      }),
+    ).toBeTruthy()
+
+    const { data: postsOnlyFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: carol, filter: 'posts_no_replies' },
+    )
+
+    expect(
+      postsOnlyFeed.feed.every(({ post }) => {
+        return isRecord(post.record) && !post.record.reply
+      }),
+    ).toBeTruthy()
   })
 })

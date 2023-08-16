@@ -10,7 +10,7 @@ import { TAKEDOWN } from '../lexicon/types/com/atproto/admin/defs'
 import AppContext from '../context'
 import { httpLogger as log } from '../logger'
 import { retryHttp } from '../util/retry'
-import Database from '../db'
+import { Database } from '../db'
 
 // Resolve and verify blob from its origin host
 
@@ -32,7 +32,8 @@ export const createRouter = (ctx: AppContext): express.Router => {
         return next(createError(400, 'Invalid cid'))
       }
 
-      const verifiedImage = await resolveBlob(did, cid, ctx)
+      const db = ctx.db.getReplica()
+      const verifiedImage = await resolveBlob(did, cid, db, ctx.idResolver)
 
       // Send chunked response, destroying stream early (before
       // closing chunk) if the bytes don't match the expected cid.
@@ -79,15 +80,13 @@ export const createRouter = (ctx: AppContext): express.Router => {
 export async function resolveBlob(
   did: string,
   cid: CID,
-  ctx: {
-    db: Database
-    idResolver: IdResolver
-  },
+  db: Database,
+  idResolver: IdResolver,
 ) {
   const cidStr = cid.toString()
   const [{ pds }, takedown] = await Promise.all([
-    ctx.idResolver.did.resolveAtprotoData(did), // @TODO cache did info
-    ctx.db.db
+    idResolver.did.resolveAtprotoData(did), // @TODO cache did info
+    db.db
       .selectFrom('moderation_action_subject_blob')
       .select('actionId')
       .innerJoin(

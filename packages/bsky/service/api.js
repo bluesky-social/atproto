@@ -12,36 +12,45 @@ require('dd-trace') // Only works with commonjs
 
 // Tracer code above must come before anything else
 const path = require('path')
+const assert = require('assert')
 const { CloudfrontInvalidator } = require('@atproto/aws')
 const {
-  Database,
+  DatabaseCoordinator,
+  PrimaryDatabase,
   ServerConfig,
   BskyAppView,
   ViewMaintainer,
   makeAlgos,
+  PeriodicModerationActionReversal,
 } = require('@atproto/bsky')
 
 const main = async () => {
   const env = getEnv()
-  // Migrate using credentialed user
-  const migrateDb = Database.postgres({
-    url: env.dbMigratePostgresUrl,
+  assert(env.dbPrimaryPostgresUrl, 'missing configuration for db')
+  const db = new DatabaseCoordinator({
     schema: env.dbPostgresSchema,
-    poolSize: 2,
-  })
-  await migrateDb.migrateToLatestOrThrow()
-  // Use lower-credentialed user to run the app
-  const db = Database.postgres({
-    url: env.dbPostgresUrl,
-    schema: env.dbPostgresSchema,
-    poolSize: env.dbPoolSize,
-    poolMaxUses: env.dbPoolMaxUses,
-    poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
+    primary: {
+      url: env.dbPrimaryPostgresUrl,
+      poolSize: env.dbPrimaryPoolSize || env.dbPoolSize,
+      poolMaxUses: env.dbPoolMaxUses,
+      poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
+    },
+    replicas: env.dbReplicaPostgresUrls?.map((url, i) => {
+      return {
+        url,
+        poolSize: env.dbPoolSize,
+        poolMaxUses: env.dbPoolMaxUses,
+        poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
+        tags: getTagsForIdx(env.dbReplicaTags, i),
+      }
+    }),
   })
   const cfg = ServerConfig.readEnv({
     port: env.port,
     version: env.version,
-    dbPostgresUrl: env.dbPostgresUrl,
+    dbPrimaryPostgresUrl: env.dbPrimaryPostgresUrl,
+    dbReplicaPostgresUrls: env.dbReplicaPostgresUrls,
+    dbReplicaTags: env.dbReplicaTags,
     dbPostgresSchema: env.dbPostgresSchema,
     publicUrl: env.publicUrl,
     didPlcUrl: env.didPlcUrl,
@@ -63,11 +72,27 @@ const main = async () => {
     imgInvalidator: cfInvalidator,
     algos,
   })
+  // separate db needed for more permissions
+  const migrateDb = new PrimaryDatabase({
+    url: env.dbMigratePostgresUrl,
+    schema: env.dbPostgresSchema,
+    poolSize: 2,
+  })
   const viewMaintainer = new ViewMaintainer(migrateDb)
   const viewMaintainerRunning = viewMaintainer.run()
+
+  const periodicModerationActionReversal = new PeriodicModerationActionReversal(
+    bsky.ctx,
+  )
+  const periodicModerationActionReversalRunning =
+    periodicModerationActionReversal.run()
+
   await bsky.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
+    // Gracefully shutdown periodic-moderation-action-reversal before destroying bsky instance
+    periodicModerationActionReversal.destroy()
+    await periodicModerationActionReversalRunning
     await bsky.destroy()
     viewMaintainer.destroy()
     await viewMaintainerRunning
@@ -78,9 +103,20 @@ const main = async () => {
 const getEnv = () => ({
   port: parseInt(process.env.PORT),
   version: process.env.BSKY_VERSION,
-  dbPostgresUrl: process.env.DB_POSTGRES_URL,
   dbMigratePostgresUrl:
-    process.env.DB_MIGRATE_POSTGRES_URL || process.env.DB_POSTGRES_URL,
+    process.env.DB_MIGRATE_POSTGRES_URL || process.env.DB_PRIMARY_POSTGRES_URL,
+  dbPrimaryPostgresUrl: process.env.DB_PRIMARY_POSTGRES_URL,
+  dbPrimaryPoolSize: maybeParseInt(process.env.DB_PRIMARY_POOL_SIZE),
+  dbReplicaPostgresUrls: process.env.DB_REPLICA_POSTGRES_URLS
+    ? process.env.DB_REPLICA_POSTGRES_URLS.split(',')
+    : undefined,
+  dbReplicaTags: {
+    '*': getTagIdxs(process.env.DB_REPLICA_TAGS_ANY), // e.g. DB_REPLICA_TAGS_ANY=0,1
+    timeline: getTagIdxs(process.env.DB_REPLICA_TAGS_TIMELINE),
+    feed: getTagIdxs(process.env.DB_REPLICA_TAGS_FEED),
+    search: getTagIdxs(process.env.DB_REPLICA_TAGS_SEARCH),
+    thread: getTagIdxs(process.env.DB_REPLICA_TAGS_THREAD),
+  },
   dbPostgresSchema: process.env.DB_POSTGRES_SCHEMA || undefined,
   dbPoolSize: maybeParseInt(process.env.DB_POOL_SIZE),
   dbPoolMaxUses: maybeParseInt(process.env.DB_POOL_MAX_USES),
@@ -94,6 +130,27 @@ const getEnv = () => ({
   cfDistributionId: process.env.CF_DISTRIBUTION_ID,
   feedPublisherDid: process.env.FEED_PUBLISHER_DID,
 })
+
+/**
+ * @param {Record<string, number[]>} tags
+ * @param {number} idx
+ */
+const getTagsForIdx = (tagMap, idx) => {
+  const tags = []
+  for (const [tag, indexes] of Object.entries(tagMap)) {
+    if (indexes.includes(idx)) {
+      tags.push(tag)
+    }
+  }
+  return tags
+}
+
+/**
+ * @param {string} str
+ */
+const getTagIdxs = (str) => {
+  return str ? str.split(',').map((item) => parseInt(item, 10)) : []
+}
 
 const maybeParseInt = (str) => {
   const parsed = parseInt(str)

@@ -166,6 +166,17 @@ Object {
         },
         "description": "hi im bob label_me",
         "displayName": "bobby",
+        "labels": Object {
+          "$type": "com.atproto.label.defs#selfLabels",
+          "values": Array [
+            Object {
+              "val": "self-label-a",
+            },
+            Object {
+              "val": "self-label-b",
+            },
+          ],
+        },
       },
     ],
   },
@@ -257,6 +268,17 @@ Object {
         },
         "description": "hi im bob label_me",
         "displayName": "bobby",
+        "labels": Object {
+          "$type": "com.atproto.label.defs#selfLabels",
+          "values": Array [
+            Object {
+              "val": "self-label-a",
+            },
+            Object {
+              "val": "self-label-b",
+            },
+          ],
+        },
       },
     ],
   },
@@ -377,6 +399,17 @@ Object {
         },
         "description": "hi im bob label_me",
         "displayName": "bobby",
+        "labels": Object {
+          "$type": "com.atproto.label.defs#selfLabels",
+          "values": Array [
+            Object {
+              "val": "self-label-a",
+            },
+            Object {
+              "val": "self-label-b",
+            },
+          ],
+        },
       },
     ],
   },
@@ -424,6 +457,17 @@ Array [
         },
         "description": "its me!",
         "displayName": "ali",
+        "labels": Object {
+          "$type": "com.atproto.label.defs#selfLabels",
+          "values": Array [
+            Object {
+              "val": "self-label-a",
+            },
+            Object {
+              "val": "self-label-b",
+            },
+          ],
+        },
       },
     ],
   },

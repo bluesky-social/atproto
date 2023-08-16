@@ -10,9 +10,10 @@ const handler: AlgoHandler = async (
   requester: string,
 ): Promise<AlgoResponse> => {
   const { cursor, limit = 50 } = params
-  const feedService = ctx.services.feed(ctx.db)
+  const db = ctx.db.getReplica('feed')
+  const feedService = ctx.services.feed(db)
 
-  const { ref } = ctx.db.db.dynamic
+  const { ref } = db.db.dynamic
 
   const keyset = new FeedKeyset(ref('post.indexedAt'), ref('post.cid'))
   const sortFrom = keyset.unpack(cursor)?.primary

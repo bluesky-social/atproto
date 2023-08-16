@@ -47,7 +47,24 @@ Array [
     "displayName": "bobby",
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": Array [
+      Object {
+        "cid": "cids(0)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "user(3)",
+        "uri": "record(5)",
+        "val": "self-label-a",
+      },
+      Object {
+        "cid": "cids(0)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "user(3)",
+        "uri": "record(5)",
+        "val": "self-label-b",
+      },
+    ],
     "viewer": Object {
       "blockedBy": false,
       "followedBy": "record(4)",

@@ -38,6 +38,16 @@ export class ModerationCauseAccumulator {
     }
   }
 
+  addBlockOther(blockOther: boolean | undefined) {
+    if (blockOther) {
+      this.causes.push({
+        type: 'block-other',
+        source: { type: 'user' },
+        priority: 4,
+      })
+    }
+  }
+
   addLabel(label: Label, opts: ModerationOpts) {
     // look up the label definition
     const labelDef = LABELS[label.val]
@@ -47,15 +57,15 @@ export class ModerationCauseAccumulator {
     }
 
     // look up the label preference
-    // TODO use the find() when 3P labelers support lands
-    // const labelerSettings = opts.labelerSettings.find(
-    //   (s) => s.labeler.did === label.src,
-    // )
-    const labelerSettings = opts.labelerSettings[0]
-    if (!labelerSettings) {
-      // ignore labels from labelers we don't use
-      return
-    }
+    const isSelf = label.src === this.did
+    const labeler = isSelf
+      ? undefined
+      : opts.labelers.find((s) => s.labeler.did === label.src)
+
+    /* TODO when 3P labelers are supported
+    if (!isSelf && !labeler) {
+      return // skip labelers not configured by the user
+    }*/
 
     // establish the label preference for interpretation
     let labelPref: LabelPreference = 'ignore'
@@ -63,8 +73,10 @@ export class ModerationCauseAccumulator {
       labelPref = labelDef.preferences[0]
     } else if (labelDef.flags.includes('adult') && !opts.adultContentEnabled) {
       labelPref = 'hide'
-    } else if (labelerSettings.settings[label.val]) {
-      labelPref = labelerSettings.settings[label.val]
+    } else if (labeler?.labels[label.val]) {
+      labelPref = labeler.labels[label.val]
+    } else if (opts.labels[label.val]) {
+      labelPref = opts.labels[label.val]
     }
 
     // ignore labels the user has asked to ignore
@@ -88,9 +100,12 @@ export class ModerationCauseAccumulator {
 
     this.causes.push({
       type: 'label',
+      source:
+        isSelf || !labeler
+          ? { type: 'user' }
+          : { type: 'labeler', labeler: labeler.labeler },
       label,
       labelDef,
-      labeler: labelerSettings.labeler,
       setting: labelPref,
       priority,
     })
@@ -129,7 +144,11 @@ export class ModerationCauseAccumulator {
     mod.additionalCauses = this.causes.slice(1)
 
     // blocked user
-    if (mod.cause.type === 'blocking' || mod.cause.type === 'blocked-by') {
+    if (
+      mod.cause.type === 'blocking' ||
+      mod.cause.type === 'blocked-by' ||
+      mod.cause.type === 'block-other'
+    ) {
       // filter and blur, dont allow override
       mod.filter = true
       mod.blur = true

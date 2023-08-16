@@ -1,4 +1,4 @@
-import Database from '../../db'
+import { Database } from '../../db'
 import {
   FeedViewPost,
   GeneratorView,
@@ -29,9 +29,9 @@ import {
   PostInfoMap,
   RecordEmbedViewRecord,
   PostBlocksMap,
+  kSelfLabels,
 } from './types'
-import { Labels } from '../label'
-import { ProfileView } from '../../lexicon/types/app/bsky/actor/defs'
+import { Labels, getSelfLabels } from '../label'
 import { ImageUriBuilder } from '../../image/uri'
 
 export class FeedViews {
@@ -43,14 +43,16 @@ export class FeedViews {
 
   formatFeedGeneratorView(
     info: FeedGenInfo,
-    profiles: Record<string, ProfileView>,
+    profiles: ActorInfoMap,
     labels?: Labels,
   ): GeneratorView {
     const profile = profiles[info.creator]
-    if (profile) {
+    if (profile && !profile.labels) {
       // If the creator labels are not hydrated yet, attempt to pull them
       // from labels: e.g. compatible with embedsForPosts() batching label hydration.
-      profile.labels ??= labels?.[info.creator] ?? []
+      const profileLabels = labels?.[info.creator] ?? []
+      const profileSelfLabels = profile[kSelfLabels] ?? []
+      profile.labels = [...profileLabels, ...profileSelfLabels]
     }
     return {
       uri: info.uri,
@@ -108,11 +110,13 @@ export class FeedViews {
         if (!originator) {
           continue
         } else {
+          const originatorLabels = labels[item.originatorDid] ?? []
+          const originatorSelfLabels = originator[kSelfLabels] ?? []
           feedPost['reason'] = {
             $type: 'app.bsky.feed.defs#reasonRepost',
             by: {
               ...originator,
-              labels: labels[item.originatorDid] ?? [],
+              labels: [...originatorLabels, ...originatorSelfLabels],
             },
             indexedAt: item.sortAt,
           }
@@ -161,7 +165,15 @@ export class FeedViews {
     if (!post || !author) return undefined
     // If the author labels are not hydrated yet, attempt to pull them
     // from labels: e.g. compatible with hydrateFeed() batching label hydration.
-    author.labels ??= labels[author.did] ?? []
+    const authorLabels = labels[author.did] ?? []
+    const authorSelfLabels = author[kSelfLabels] ?? []
+    author.labels ??= [...authorLabels, ...authorSelfLabels]
+    const postLabels = labels[uri] ?? []
+    const postSelfLabels = getSelfLabels({
+      uri: post.uri,
+      cid: post.cid,
+      record: post.record,
+    })
     return {
       uri: post.uri,
       cid: post.cid,
@@ -178,7 +190,7 @@ export class FeedViews {
             like: post.requesterLike ?? undefined,
           }
         : undefined,
-      labels: labels[uri] ?? [],
+      labels: [...postLabels, ...postSelfLabels],
     }
   }
 
@@ -202,7 +214,7 @@ export class FeedViews {
       blocks[uri]?.reply
     ) {
       if (!usePostViewUnion) return
-      return this.blockedPost(uri)
+      return this.blockedPost(post)
     }
     return {
       $type: 'app.bsky.feed.defs#postView',
@@ -210,11 +222,20 @@ export class FeedViews {
     }
   }
 
-  blockedPost(uri: string) {
+  blockedPost(post: PostView) {
     return {
       $type: 'app.bsky.feed.defs#blockedPost',
-      uri: uri,
+      uri: post.uri,
       blocked: true as const,
+      author: {
+        did: post.author.did,
+        viewer: post.author.viewer
+          ? {
+              blockedBy: post.author.viewer?.blockedBy,
+              blocking: post.author.viewer?.blocking,
+            }
+          : undefined,
+      },
     }
   }
 
@@ -270,12 +291,23 @@ export class FeedViews {
       return {
         $type: 'app.bsky.embed.record#viewNotFound',
         uri,
+        notFound: true,
       }
     }
     if (post.author.viewer?.blocking || post.author.viewer?.blockedBy) {
       return {
         $type: 'app.bsky.embed.record#viewBlocked',
         uri,
+        blocked: true,
+        author: {
+          did: post.author.did,
+          viewer: post.author.viewer
+            ? {
+                blockedBy: post.author.viewer?.blockedBy,
+                blocking: post.author.viewer?.blocking,
+              }
+            : undefined,
+        },
       }
     }
     return {

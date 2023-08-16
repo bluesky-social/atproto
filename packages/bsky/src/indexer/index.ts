@@ -1,6 +1,6 @@
 import { IdResolver } from '@atproto/identity'
 import { BackgroundQueue } from '../background'
-import Database from '../db'
+import { PrimaryDatabase } from '../db'
 import DidSqlCache from '../did-cache'
 import log from './logger'
 import { dbLogger } from '../logger'
@@ -27,7 +27,7 @@ export class BskyIndexer {
   }
 
   static create(opts: {
-    db: Database
+    db: PrimaryDatabase
     redis: Redis
     cfg: IndexerConfig
   }): BskyIndexer {
@@ -82,7 +82,7 @@ export class BskyIndexer {
 
   async start() {
     const { db, backgroundQueue } = this.ctx
-    const { pool } = db.cfg
+    const pool = db.pool
     this.dbStatsInterval = setInterval(() => {
       dbLogger.info(
         {

@@ -1,4 +1,4 @@
-import Database from '../../db'
+import { Database } from '../../db'
 import { ImageUriBuilder } from '../../image/uri'
 import { ProfileView } from '../../lexicon/types/app/bsky/actor/defs'
 import { List } from '../../db/tables/list'
@@ -19,8 +19,9 @@ export class GraphService {
     createdAt?: Date
   }) {
     const { subjectDid, mutedByDid, createdAt = new Date() } = info
-    await this.db.db
-      .insertInto('mute')
+    await this.db
+      .asPrimary()
+      .db.insertInto('mute')
       .values({
         subjectDid,
         mutedByDid,
@@ -32,8 +33,9 @@ export class GraphService {
 
   async unmuteActor(info: { subjectDid: string; mutedByDid: string }) {
     const { subjectDid, mutedByDid } = info
-    await this.db.db
-      .deleteFrom('mute')
+    await this.db
+      .asPrimary()
+      .db.deleteFrom('mute')
       .where('subjectDid', '=', subjectDid)
       .where('mutedByDid', '=', mutedByDid)
       .execute()
@@ -45,8 +47,9 @@ export class GraphService {
     createdAt?: Date
   }) {
     const { list, mutedByDid, createdAt = new Date() } = info
-    await this.db.db
-      .insertInto('list_mute')
+    await this.db
+      .asPrimary()
+      .db.insertInto('list_mute')
       .values({
         listUri: list,
         mutedByDid,
@@ -58,8 +61,9 @@ export class GraphService {
 
   async unmuteActorList(info: { list: string; mutedByDid: string }) {
     const { list, mutedByDid } = info
-    await this.db.db
-      .deleteFrom('list_mute')
+    await this.db
+      .asPrimary()
+      .db.deleteFrom('list_mute')
       .where('listUri', '=', list)
       .where('mutedByDid', '=', mutedByDid)
       .execute()

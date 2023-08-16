@@ -9,11 +9,11 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { actor, limit, cursor } = params
       const requester = auth.credentials.did
-      const { services, db } = ctx
+      const db = ctx.db.getReplica()
       const { ref } = db.db.dynamic
 
-      const actorService = services.actor(db)
-      const graphService = services.graph(db)
+      const actorService = ctx.services.actor(db)
+      const graphService = ctx.services.graph(db)
 
       const creatorRes = await actorService.getActor(actor)
       if (!creatorRes) {

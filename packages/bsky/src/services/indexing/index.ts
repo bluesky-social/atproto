@@ -13,7 +13,7 @@ import { AtUri } from '@atproto/uri'
 import { IdResolver, getPds } from '@atproto/identity'
 import { DAY, chunkArray } from '@atproto/common'
 import { ValidationError } from '@atproto/lexicon'
-import Database from '../../db'
+import { PrimaryDatabase } from '../../db'
 import * as Post from './plugins/post'
 import * as Like from './plugins/like'
 import * as Repost from './plugins/repost'
@@ -44,7 +44,7 @@ export class IndexingService {
   }
 
   constructor(
-    public db: Database,
+    public db: PrimaryDatabase,
     public idResolver: IdResolver,
     public labeler: Labeler,
     public backgroundQueue: BackgroundQueue,
@@ -63,7 +63,7 @@ export class IndexingService {
     }
   }
 
-  transact(txn: Database) {
+  transact(txn: PrimaryDatabase) {
     txn.assertTransaction()
     return new IndexingService(
       txn,
@@ -80,7 +80,7 @@ export class IndexingService {
     backgroundQueue: BackgroundQueue,
     notifServer: NotificationServer,
   ) {
-    return (db: Database) =>
+    return (db: PrimaryDatabase) =>
       new IndexingService(db, idResolver, labeler, backgroundQueue, notifServer)
   }
 
@@ -249,6 +249,7 @@ export class IndexingService {
         did: commit.did,
         commitCid: details.commit.toString(),
         commitDataCid: commit.data.toString(),
+        repoRev: commit.rev ?? null,
         rebaseCount: details.rebase ? 1 : 0,
         tooBigCount: details.tooBig ? 1 : 0,
       })
@@ -258,6 +259,7 @@ export class IndexingService {
         return oc.column('did').doUpdateSet({
           commitCid: sql`${excluded('commitCid')}`,
           commitDataCid: sql`${excluded('commitDataCid')}`,
+          repoRev: sql`${excluded('repoRev')}`,
           rebaseCount: sql`${sync('rebaseCount')} + ${excluded('rebaseCount')}`,
           tooBigCount: sql`${sync('tooBigCount')} + ${excluded('tooBigCount')}`,
         })

@@ -1,5 +1,5 @@
 import { IdResolver } from '@atproto/identity'
-import { Database } from '../db'
+import { PrimaryDatabase } from '../db'
 import { IndexerConfig } from './config'
 import { Services } from './services'
 import { BackgroundQueue } from '../background'
@@ -9,7 +9,7 @@ import { Redis } from '../redis'
 export class IndexerContext {
   constructor(
     private opts: {
-      db: Database
+      db: PrimaryDatabase
       redis: Redis
       cfg: IndexerConfig
       services: Services
@@ -19,7 +19,7 @@ export class IndexerContext {
     },
   ) {}
 
-  get db(): Database {
+  get db(): PrimaryDatabase {
     return this.opts.db
   }
 
