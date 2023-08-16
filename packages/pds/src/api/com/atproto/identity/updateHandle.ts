@@ -21,12 +21,12 @@ export default function (server: Server, ctx: AppContext) {
 
       // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
       const handleDid = await ctx.services.account(ctx.db).getHandleDid(handle)
-      if (handleDid !== requester) {
-        throw new InvalidRequestError(`Handle already taken: ${handle}`)
-      }
 
       let seqHandleTok: HandleSequenceToken
       if (handleDid) {
+        if (handleDid !== requester) {
+          throw new InvalidRequestError(`Handle already taken: ${handle}`)
+        }
         seqHandleTok = { did: requester, handle: handle }
       } else {
         seqHandleTok = await ctx.db.transaction(async (dbTxn) => {
