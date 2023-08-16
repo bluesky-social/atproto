@@ -7,7 +7,7 @@ import { CommitData } from '../types'
 
 export interface RepoStorage {
   // Writable
-  getHead(forUpdate?: boolean): Promise<CID | null>
+  getHead(): Promise<CID | null>
   putBlock(cid: CID, block: Uint8Array): Promise<void>
   putMany(blocks: BlockMap): Promise<void>
   updateHead(cid: CID): Promise<void>

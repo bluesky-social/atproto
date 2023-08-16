@@ -38,17 +38,25 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
     return CID.parse(res.root)
   }
 
-  // proactively cache all blocks from a particular commit (to prevent multiple roundtrips)
-  async cacheCommit(cid: CID): Promise<void> {
+  async getHeadDetailed(): Promise<{ cid: CID; rev: string } | null> {
     const res = await this.db.db
-      .selectFrom('repo_commit_block')
-      .innerJoin('ipld_block', (join) =>
-        join
-          .onRef('ipld_block.cid', '=', 'repo_commit_block.block')
-          .onRef('ipld_block.creator', '=', 'repo_commit_block.creator'),
-      )
-      .where('repo_commit_block.creator', '=', this.did)
-      .where('repo_commit_block.commit', '=', cid.toString())
+      .selectFrom('repo_root')
+      .selectAll()
+      .where('did', '=', this.did)
+      .executeTakeFirst()
+    if (!res) return null
+    return {
+      cid: CID.parse(res.root),
+      rev: res.rev ?? '', // @TODO add not-null constraint to rev
+    }
+  }
+
+  // proactively cache all blocks from a particular commit (to prevent multiple roundtrips)
+  async cacheRev(rev: string): Promise<void> {
+    const res = await this.db.db
+      .selectFrom('ipld_block')
+      .where('creator', '=', this.did)
+      .where('repoRev', '=', rev)
       .select(['ipld_block.cid', 'ipld_block.content'])
       .execute()
     for (const row of res) {

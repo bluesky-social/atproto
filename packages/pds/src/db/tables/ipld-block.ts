@@ -1,6 +1,7 @@
 export interface IpldBlock {
   cid: string
   creator: string
+  repoRev?: string
   size: number
   content: Uint8Array
 }

@@ -18,7 +18,6 @@ import * as sequencer from '../../sequencer'
 import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
 import { BackgroundQueue } from '../../event-stream/background-queue'
-import { countAll } from '../../db/util'
 import { Crawlers } from '../../crawlers'
 import { ContentReporter } from '../../content-reporter'
 
@@ -159,17 +158,17 @@ export class RepoService {
     writes: PreparedWrite[],
     swapCommit?: CID,
   ): Promise<CommitData> {
-    const currRoot = await storage.getHead()
+    const currRoot = await storage.getHeadDetailed()
     if (!currRoot) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
       )
     }
-    if (swapCommit && !currRoot.equals(swapCommit)) {
-      throw new BadCommitSwapError(currRoot)
+    if (swapCommit && !currRoot.cid.equals(swapCommit)) {
+      throw new BadCommitSwapError(currRoot.cid)
     }
     // cache last commit since there's likely overlap
-    await storage.cacheCommit(currRoot)
+    await storage.cacheRev(currRoot.rev)
     const recordTxn = this.services.record(this.db)
     for (const write of writes) {
       const { action, uri, swapCid } = write
@@ -192,7 +191,7 @@ export class RepoService {
       }
     }
     const writeOps = writes.map(writeToOp)
-    const repo = await Repo.load(storage, currRoot)
+    const repo = await Repo.load(storage, currRoot.cid)
     return repo.formatCommit(writeOps, this.repoSigningKey)
   }
 
@@ -245,35 +244,12 @@ export class RepoService {
     await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
-  // used for integrity check
-  private async countRecordBlocks(did: string): Promise<number> {
-    const res = await this.db.db
-      .selectFrom('record')
-      .where('record.did', '=', did)
-      .innerJoin('ipld_block', (join) =>
-        join
-          .onRef('ipld_block.creator', '=', 'record.did')
-          .onRef('ipld_block.cid', '=', 'record.cid'),
-      )
-      .select(countAll.as('count'))
-      .executeTakeFirst()
-    return res?.count ?? 0
-  }
-
   async deleteRepo(did: string) {
     // Not done in transaction because it would be too long, prone to contention.
     // Also, this can safely be run multiple times if it fails.
     // delete all blocks from this did & no other did
     await this.db.db.deleteFrom('repo_root').where('did', '=', did).execute()
     await this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute()
-    await this.db.db
-      .deleteFrom('repo_commit_block')
-      .where('creator', '=', did)
-      .execute()
-    await this.db.db
-      .deleteFrom('repo_commit_history')
-      .where('creator', '=', did)
-      .execute()
     await this.db.db
       .deleteFrom('ipld_block')
       .where('creator', '=', did)
