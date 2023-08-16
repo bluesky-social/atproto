@@ -55,7 +55,11 @@ export class BskyIndexer {
         backgroundQueue,
       })
     }
-    const notifServer = new NotificationServer(db, cfg.pushNotificationEndpoint)
+    const notifServer = new NotificationServer(
+      db,
+      redis,
+      cfg.pushNotificationEndpoint,
+    )
     const services = createServices({
       idResolver,
       labeler,

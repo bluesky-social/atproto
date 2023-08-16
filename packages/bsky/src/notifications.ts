@@ -6,6 +6,7 @@ import { Insertable } from 'kysely'
 import logger from './indexer/logger'
 import { BackgroundQueue } from './background'
 import { ServerConfig } from './config'
+import { Redis } from './redis'
 
 type Platform = 'ios' | 'android' | 'web'
 type PushNotification = {
@@ -22,11 +23,13 @@ type InsertableNotif = Insertable<Notification>
 const NOTIFICATION_BATCH_SIZE = ServerConfig.readEnv().debugMode ? 2 : 50 // if debug mode, send 2 notifications at a time, otherwise send 50
 export class NotificationServer {
   private notificationBatch: PushNotification[] = []
-  private userNotificationRateLimit: Map<string, { timestamps: Date[] }> =
-    new Map() // key is token, value is timestamps of notifications
   private backgroundQueue: BackgroundQueue
 
-  constructor(public db: Database, public pushEndpoint?: string) {
+  constructor(
+    public db: Database,
+    public redis?: Redis,
+    public pushEndpoint?: string,
+  ) {
     this.backgroundQueue = new BackgroundQueue(db)
   }
 
@@ -86,44 +89,62 @@ export class NotificationServer {
     return notifsToSend
   }
 
+  /**
+   * The function `addNotificationsToQueue` adds push notifications to a queue, taking into account rate
+   * limiting and batching the notifications for efficient processing.
+   * @param {PushNotification[]} notifs - An array of PushNotification objects. Each PushNotification
+   * object has a "tokens" property which is an array of tokens.
+   * @returns void
+   */
   async addNotificationsToQueue(notifs: PushNotification[]) {
+    if (!this.redis) {
+      throw new Error('Redis not defined in NotificationServer')
+    }
     for (const notif of notifs) {
       const { tokens } = notif
-      const token = tokens[0]
-      // Rate limiting
-      const userRateData = this.userNotificationRateLimit.get(token) || {
-        timestamps: [],
-      }
-      const now = new Date()
-      userRateData.timestamps = userRateData.timestamps.filter(
-        (timestamp) => now.getTime() - timestamp.getTime() < 20 * 60 * 1000,
-      )
+      for (const token of tokens) {
+        // RATE LIMITING
+        // Get rate limit data for user
+        const key = `notification_rate_limit:${token}`
+        const now = Date.now()
+        const twentyMinutesAgo = now - 20 * 60 * 1000
+        // Remove timestamps outside of 20 minutes window
+        await this.redis.zremrangebyscore(
+          key,
+          Number.NEGATIVE_INFINITY,
+          twentyMinutesAgo,
+        )
+        const currentUserRateCount = await this.redis.zcount(
+          key,
+          twentyMinutesAgo,
+          now,
+        )
+        // If rate limit reached, skip adding notification to be sent
+        if (currentUserRateCount >= 20) {
+          return
+        }
+        // Add timestamp to user's rate limit data
+        await this.redis.zadd(key, now, now)
+        // Set expiration for rate limit data to 25 minutes just in case
+        await this.redis.expire(key, 25 * 60)
 
-      if (userRateData.timestamps.length >= 20) {
-        // Skip adding notification to be sent as the rate limit reached
-        return
-      }
-
-      // Add to rate limit
-      userRateData.timestamps.push(now)
-      this.userNotificationRateLimit.set(token, userRateData)
-
-      // Add to batch
-      this.notificationBatch.push(notif)
-
-      // If batch size is 20, add task to background queue
-      if (this.notificationBatch.length >= NOTIFICATION_BATCH_SIZE) {
-        try {
-          this.backgroundQueue.add(async () => {
-            return await this.sendPushNotifications(this.notificationBatch)
-          })
-        } catch (error) {
-          logger.error({
-            notificationBatch: this.notificationBatch,
-            error,
-          })
-        } finally {
-          this.notificationBatch = []
+        // BATCHING
+        // Add to batch
+        this.notificationBatch.push(notif)
+        // If batch size is 20, add task to background queue
+        if (this.notificationBatch.length >= NOTIFICATION_BATCH_SIZE) {
+          try {
+            this.backgroundQueue.add(async () => {
+              return await this.sendPushNotifications(this.notificationBatch)
+            })
+          } catch (error) {
+            logger.error({
+              notificationBatch: this.notificationBatch,
+              error,
+            })
+          } finally {
+            this.notificationBatch = []
+          }
         }
       }
     }
