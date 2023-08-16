@@ -93,8 +93,8 @@ export class LocalService {
         'record.indexedAt',
       ])
       .where('did', '=', did)
-      .where('repoRev', '>', rev)
-      .orderBy('repoRev', 'asc')
+      .where('record.repoRev', '>', rev)
+      .orderBy('record.repoRev', 'asc')
       .execute()
     return res.reduce(
       (acc, cur) => {
