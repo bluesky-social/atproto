@@ -1,4 +1,5 @@
 import { once } from 'events'
+import { sql } from 'kysely'
 import { wait } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
 import { Database } from '../src'
@@ -18,6 +19,19 @@ describe('db', () => {
 
   afterAll(async () => {
     await network.close()
+  })
+
+  it('handles client errors without crashing.', async () => {
+    const tryKillConnection = db.transaction(async (dbTxn) => {
+      const result = await sql`select pg_backend_pid() as pid;`.execute(
+        dbTxn.db,
+      )
+      const pid = result.rows[0]?.['pid'] as number
+      await sql`select pg_terminate_backend(${pid});`.execute(db.db)
+      await sql`select 1;`.execute(dbTxn.db)
+    })
+    // This should throw, but no unhandled error
+    await expect(tryKillConnection).rejects.toThrow()
   })
 
   describe('transaction()', () => {
