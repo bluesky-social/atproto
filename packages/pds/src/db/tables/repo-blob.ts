@@ -1,7 +1,7 @@
 export interface RepoBlob {
   cid: string
   recordUri: string
-  commit: string
+  repoRev?: string
   did: string
   takedownId: number | null
 }

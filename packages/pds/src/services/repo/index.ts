@@ -95,7 +95,7 @@ export class RepoService {
     await Promise.all([
       storage.applyCommit(commit),
       this.indexWrites(writes, now),
-      this.blobs.processWriteBlobs(did, commit.cid, writes),
+      this.blobs.processWriteBlobs(did, commit.rev, writes),
     ])
     await this.afterWriteProcessing(did, commit, writes)
   }
@@ -118,7 +118,7 @@ export class RepoService {
       // & send to indexing
       this.indexWrites(writes, now, commitData.rev),
       // process blobs
-      this.blobs.processWriteBlobs(did, commitData.cid, writes),
+      this.blobs.processWriteBlobs(did, commitData.rev, writes),
       // do any other processing needed after write
     ])
     await this.afterWriteProcessing(did, commitData, writes)
