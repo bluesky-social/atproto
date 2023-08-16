@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: waverly-atp-did
+  namespace: waverly-fargate
+spec:
+  selector:
+    app: waverly-atp
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 2582
+  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: waverly-atp-pds
+  namespace: waverly-fargate
+spec:
+  selector:
+    app: waverly-atp
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 2583
+  type: NodePort
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: waverly-fargate
+  name: ingress-waverly-atp-service
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: waverly-fargate
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}, {"HTTP":80}]'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-2:504923666478:certificate/886823b2-d434-44e1-b921-663ef1dff174
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+spec:
+  rules:
+    - host: "did.${SUB_DOMAIN}.waverly.social"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: waverly-atp-did
+                port:
+                  number: 80
+    - host: "pds.${SUB_DOMAIN}.waverly.social"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: waverly-atp-pds
+                port:
+                  number: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: waverly-atp
+  namespace: waverly-fargate
+spec:
+  selector:
+    matchLabels:
+      app: waverly-atp
+  template:
+    metadata:
+      labels:
+        app: waverly-atp
+    spec:
+      containers:
+        - name: waverly-atp
+          image: 504923666478.dkr.ecr.us-east-2.amazonaws.com/waverly-atp:${GIT_VERSION}
+          resources:
+            requests:
+              memory: "3.7Gi"
+              cpu: "1"
+          ports:
+            - containerPort: 2582
+            - containerPort: 2583
+          env:
+            - name: EKS_CLUSTER_ENV
+              value: "${EKS_CLUSTER_ENV}"
+            - name: PUBLIC_URL
+              value: "${PUBLIC_URL}"
