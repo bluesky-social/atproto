@@ -34,6 +34,17 @@ describe('db', () => {
     await expect(tryKillConnection).rejects.toThrow()
   })
 
+  it('handles pool errors without crashing.', async () => {
+    const conn1 = await db.pool.connect()
+    const conn2 = await db.pool.connect()
+    const result = await conn1.query('select pg_backend_pid() as pid;')
+    const conn1pid: number = result.rows[0].pid
+    conn1.release()
+    await wait(100) // let release apply, conn is now idle on pool.
+    await conn2.query(`select pg_terminate_backend(${conn1pid});`)
+    conn2.release()
+  })
+
   describe('transaction()', () => {
     it('commits changes', async () => {
       const result = await db.transaction(async (dbTxn) => {
