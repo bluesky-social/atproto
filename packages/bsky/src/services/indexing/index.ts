@@ -2,11 +2,9 @@ import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import AtpAgent, { ComAtprotoSyncGetHead } from '@atproto/api'
 import {
-  MemoryBlockstore,
   readCarWithRoot,
   WriteOpAction,
-  verifyCheckoutWithCids,
-  RepoContentsWithCids,
+  verifyRepo,
   Commit,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
@@ -172,23 +170,16 @@ export class IndexingService {
     const { api } = new AtpAgent({ service: pds })
 
     const { data: car } = await retryHttp(() =>
-      api.com.atproto.sync.getCheckout({ did, commit }),
+      api.com.atproto.sync.getRepo({ did }),
     )
     const { root, blocks } = await readCarWithRoot(car)
-    const storage = new MemoryBlockstore(blocks)
-    const checkout = await verifyCheckoutWithCids(
-      storage,
-      root,
-      did,
-      signingKey,
-    )
+    const checkout = await verifyRepo(blocks, root, did, signingKey)
 
     // Wipe index for actor, prep for reindexing
     await this.unindexActor(did)
 
     // Iterate over all records and index them in batches
-    const contentList = [...walkContentsWithCids(checkout.contents)]
-    const chunks = chunkArray(contentList, 100)
+    const chunks = chunkArray(checkout.creates, 100)
 
     for (const chunk of chunks) {
       const processChunk = chunk.map(async (item) => {
@@ -346,14 +337,5 @@ export class IndexingService {
       )
       .execute()
     await this.db.db.deleteFrom('record').where('did', '=', did).execute()
-  }
-}
-
-function* walkContentsWithCids(contents: RepoContentsWithCids) {
-  for (const collection of Object.keys(contents)) {
-    for (const rkey of Object.keys(contents[collection])) {
-      const { cid, value } = contents[collection][rkey]
-      yield { collection, rkey, cid, record: value }
-    }
   }
 }
