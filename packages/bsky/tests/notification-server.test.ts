@@ -56,7 +56,7 @@ describe('notification server', () => {
     })
 
     it('gets notification display attributes: title and body', async () => {
-      const db = network.bsky.ctx.db
+      const db = network.bsky.ctx.db.getPrimary()
       const notif = await getLikeNotification(db, alice)
       if (!notif) throw new Error('no notification found')
       const attr = await notifServer.getNotificationDisplayAttributes(notif)
@@ -65,7 +65,7 @@ describe('notification server', () => {
     })
 
     it('prepares notification to be sent', async () => {
-      const db = network.bsky.ctx.db
+      const db = network.bsky.ctx.db.getPrimary()
       const notif = await getLikeNotification(db, alice)
       if (!notif) throw new Error('no notification found')
       const notifAsArray = [notif]
