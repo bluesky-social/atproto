@@ -1,5 +1,5 @@
 import axios from 'axios'
-import Database from './db'
+import Database from './db/primary'
 import { Notification } from './db/tables/notification'
 import { AtUri } from '@atproto/api'
 import { Insertable } from 'kysely'
