@@ -15,6 +15,7 @@ export interface ServerConfigValues {
   didPlcUrl: string
   didCacheStaleTTL: number
   didCacheMaxTTL: number
+  handleResolveNameservers?: string[]
   imgUriEndpoint?: string
   blobCacheLocation?: string
   labelerDid: string
@@ -44,6 +45,9 @@ export class ServerConfig {
       process.env.DID_CACHE_MAX_TTL,
       DAY,
     )
+    const handleResolveNameservers = process.env.HANDLE_RESOLVE_NAMESERVERS
+      ? process.env.HANDLE_RESOLVE_NAMESERVERS.split(',')
+      : []
     const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
     const blobCacheLocation = process.env.BLOB_CACHE_LOC
     const dbPrimaryPostgresUrl =
@@ -85,6 +89,7 @@ export class ServerConfig {
       didPlcUrl,
       didCacheStaleTTL,
       didCacheMaxTTL,
+      handleResolveNameservers,
       imgUriEndpoint,
       blobCacheLocation,
       labelerDid,
@@ -153,7 +158,11 @@ export class ServerConfig {
   }
 
   get didCacheMaxTTL() {
-    return this.cfg.didCacheStaleTTL
+    return this.cfg.didCacheMaxTTL
+  }
+
+  get handleResolveNameservers() {
+    return this.cfg.handleResolveNameservers
   }
 
   get didPlcUrl() {
