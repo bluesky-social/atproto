@@ -8,7 +8,7 @@ import {
 } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import * as repo from '@atproto/repo'
-import { MemoryBlockstore, readCar, WriteOpAction } from '@atproto/repo'
+import { readCar } from '@atproto/repo'
 import { byFrame, ErrorFrame, Frame, MessageFrame } from '@atproto/xrpc-server'
 import { WebSocket } from 'ws'
 import {
@@ -178,26 +178,6 @@ describe('repo subscribe repos', () => {
       expect(fromStreamOps[i].rkey).toEqual(fromRpcOps[i].rkey)
       expect(fromStreamOps[i].cid).toEqual(fromRpcOps[i].cid)
     }
-    // for (let i = 0; i < commits.length; i++) {
-    //   const commit = commits[i]
-    //   const evt = evts[i]
-    //   expect(evt.repo).toEqual(did)
-    //   expect(evt.commit.toString()).toEqual(commit.commit.toString())
-    //   expect(evt.prev?.toString()).toEqual(commits[i - 1]?.commit?.toString())
-    //   const car = await repo.readCarWithRoot(evt.blocks as Uint8Array)
-    //   expect(car.root.equals(commit.commit))
-    //   expect(car.blocks.equals(commit.blocks))
-    //   const writes = writeLog[i].map((w) => ({
-    //     action: w.action,
-    //     path: w.collection + '/' + w.rkey,
-    //     cid: w.action === WriteOpAction.Delete ? null : w.cid.toString(),
-    //   }))
-    //   const sortedOps = evt.ops
-    //     .sort((a, b) => a.path.localeCompare(b.path))
-    //     .map((op) => ({ ...op, cid: op.cid?.toString() ?? null }))
-    //   const sortedWrites = writes.sort((a, b) => a.path.localeCompare(b.path))
-    //   expect(sortedOps).toEqual(sortedWrites)
-    // }
   }
 
   const randomPost = (by: string) => sc.post(by, randomStr(8, 'base32'))

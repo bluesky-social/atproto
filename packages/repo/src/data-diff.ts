@@ -39,10 +39,15 @@ export class DataDiff {
 
   leafAdd(key: string, cid: CID) {
     this.adds[key] = { key, cid }
-    this.newLeafCids.add(cid)
+    if (this.removedCids.has(cid)) {
+      this.removedCids.delete(cid)
+    } else {
+      this.newLeafCids.add(cid)
+    }
   }
 
   leafUpdate(key: string, prev: CID, cid: CID) {
+    if (prev.equals(cid)) return
     this.updates[key] = { key, prev, cid }
     this.removedCids.add(prev)
     this.newLeafCids.add(cid)
@@ -50,7 +55,11 @@ export class DataDiff {
 
   leafDelete(key: string, cid: CID) {
     this.deletes[key] = { key, cid }
-    this.removedCids.add(cid)
+    if (this.newLeafCids.has(cid)) {
+      this.newLeafCids.delete(cid)
+    } else {
+      this.removedCids.add(cid)
+    }
   }
 
   treeAdd(cid: CID, bytes: Uint8Array) {
