@@ -28,6 +28,11 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionType',
           },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long this action was meant to be in effect before automatically expiring.',
+          },
           subject: {
             type: 'union',
             refs: [
@@ -96,6 +101,11 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionType',
           },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long this action was meant to be in effect before automatically expiring.',
+          },
           subject: {
             type: 'union',
             refs: [
@@ -158,6 +168,11 @@ export const schemaDict = {
           action: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionType',
+          },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long this action was meant to be in effect before automatically expiring.',
           },
         },
       },
@@ -1263,6 +1278,11 @@ export const schemaDict = {
               },
               reason: {
                 type: 'string',
+              },
+              durationInHours: {
+                type: 'integer',
+                description:
+                  'Indicates how long this action was meant to be in effect before automatically expiring.',
               },
               createdBy: {
                 type: 'string',
