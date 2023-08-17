@@ -19,7 +19,6 @@ import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/g
 import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
-import * as ComAtprotoAdminRebaseRepo from './types/com/atproto/admin/rebaseRepo'
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -39,7 +38,6 @@ import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRe
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
-import * as ComAtprotoRepoRebaseRepo from './types/com/atproto/repo/rebaseRepo'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
@@ -274,13 +272,6 @@ export class AdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  rebaseRepo<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, ComAtprotoAdminRebaseRepo.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'com.atproto.admin.rebaseRepo' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   resolveModerationReports<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -461,13 +452,6 @@ export class RepoNS {
     cfg: ConfigOf<AV, ComAtprotoRepoPutRecord.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.repo.putRecord' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  rebaseRepo<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, ComAtprotoRepoRebaseRepo.Handler<ExtractAuth<AV>>>,
-  ) {
-    const nsid = 'com.atproto.repo.rebaseRepo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

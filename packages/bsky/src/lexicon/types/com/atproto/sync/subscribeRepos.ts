@@ -36,7 +36,7 @@ export interface Commit {
   repo: string
   commit: CID
   prev: CID | null
-  rev: string
+  rev?: string
   /** CAR file containing relevant blocks */
   blocks: Uint8Array
   ops: RepoOp[]

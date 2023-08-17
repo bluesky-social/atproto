@@ -1026,44 +1026,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminRebaseRepo: {
-    lexicon: 1,
-    id: 'com.atproto.admin.rebaseRepo',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: "Administrative action to rebase an account's repo",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['repo'],
-            properties: {
-              repo: {
-                type: 'string',
-                format: 'at-identifier',
-                description: 'The handle or DID of the repo.',
-              },
-              swapCommit: {
-                type: 'string',
-                format: 'cid',
-                description:
-                  'Compare and swap with the previous commit by cid.',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidSwap',
-          },
-          {
-            name: 'ConcurrentWrites',
-          },
-        ],
-      },
-    },
-  },
   ComAtprotoAdminResolveModerationReports: {
     lexicon: 1,
     id: 'com.atproto.admin.resolveModerationReports',
@@ -2229,44 +2191,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoRepoRebaseRepo: {
-    lexicon: 1,
-    id: 'com.atproto.repo.rebaseRepo',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Simple rebase of repo that deletes history',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['repo'],
-            properties: {
-              repo: {
-                type: 'string',
-                format: 'at-identifier',
-                description: 'The handle or DID of the repo.',
-              },
-              swapCommit: {
-                type: 'string',
-                format: 'cid',
-                description:
-                  'Compare and swap with the previous commit by cid.',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidSwap',
-          },
-          {
-            name: 'ConcurrentWrites',
-          },
-        ],
-      },
-    },
-  },
   ComAtprotoRepoStrongRef: {
     lexicon: 1,
     id: 'com.atproto.repo.strongRef',
@@ -3426,7 +3350,6 @@ export const schemaDict = {
           'repo',
           'commit',
           'prev',
-          'rev',
           'blocks',
           'ops',
           'blobs',
@@ -6584,7 +6507,6 @@ export const ids = {
   ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
-  ComAtprotoAdminRebaseRepo: 'com.atproto.admin.rebaseRepo',
   ComAtprotoAdminResolveModerationReports:
     'com.atproto.admin.resolveModerationReports',
   ComAtprotoAdminReverseModerationAction:
@@ -6608,7 +6530,6 @@ export const ids = {
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
-  ComAtprotoRepoRebaseRepo: 'com.atproto.repo.rebaseRepo',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',

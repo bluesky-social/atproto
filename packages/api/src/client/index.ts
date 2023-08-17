@@ -18,7 +18,6 @@ import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/g
 import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
-import * as ComAtprotoAdminRebaseRepo from './types/com/atproto/admin/rebaseRepo'
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -40,7 +39,6 @@ import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRe
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
-import * as ComAtprotoRepoRebaseRepo from './types/com/atproto/repo/rebaseRepo'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
@@ -139,7 +137,6 @@ export * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/g
 export * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
-export * as ComAtprotoAdminRebaseRepo from './types/com/atproto/admin/rebaseRepo'
 export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -161,7 +158,6 @@ export * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRe
 export * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
-export * as ComAtprotoRepoRebaseRepo from './types/com/atproto/repo/rebaseRepo'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
@@ -448,17 +444,6 @@ export class AdminNS {
       })
   }
 
-  rebaseRepo(
-    data?: ComAtprotoAdminRebaseRepo.InputSchema,
-    opts?: ComAtprotoAdminRebaseRepo.CallOptions,
-  ): Promise<ComAtprotoAdminRebaseRepo.Response> {
-    return this._service.xrpc
-      .call('com.atproto.admin.rebaseRepo', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoAdminRebaseRepo.toKnownErr(e)
-      })
-  }
-
   resolveModerationReports(
     data?: ComAtprotoAdminResolveModerationReports.InputSchema,
     opts?: ComAtprotoAdminResolveModerationReports.CallOptions,
@@ -686,17 +671,6 @@ export class RepoNS {
       .call('com.atproto.repo.putRecord', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoRepoPutRecord.toKnownErr(e)
-      })
-  }
-
-  rebaseRepo(
-    data?: ComAtprotoRepoRebaseRepo.InputSchema,
-    opts?: ComAtprotoRepoRebaseRepo.CallOptions,
-  ): Promise<ComAtprotoRepoRebaseRepo.Response> {
-    return this._service.xrpc
-      .call('com.atproto.repo.rebaseRepo', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoRepoRebaseRepo.toKnownErr(e)
       })
   }
 
