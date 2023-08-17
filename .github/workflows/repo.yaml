@@ -21,7 +21,7 @@ jobs:
   test:
     strategy:
       matrix:
-        shard: [1/4, 2/4, 3/4, 4/4]
+        shard: [1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 8/8]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -30,7 +30,7 @@ jobs:
           node-version: 18
           cache: "yarn"
       - run: yarn install --frozen-lockfile
-      - run: yarn test:withFlags --maxWorkers=2 --shard=${{ matrix.shard }} --passWithNoTests
+      - run: yarn test:withFlags --maxWorkers=1 --shard=${{ matrix.shard }} --passWithNoTests
   verify:
     runs-on: ubuntu-latest
     steps:
