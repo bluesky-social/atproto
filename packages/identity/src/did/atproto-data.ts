@@ -113,13 +113,16 @@ const getServiceEndpoint = (
   doc: DidDocument,
   opts: { id: string; type: string },
 ) => {
+  const did = getDid(doc)
   let services = doc.service
   if (!services) return undefined
   if (typeof services !== 'object') return undefined
   if (!Array.isArray(services)) {
     services = [services]
   }
-  const found = services.find((service) => service.id === opts.id)
+  const found = services.find(
+    (service) => service.id === opts.id || service.id === `${did}${opts.id}`,
+  )
   if (!found) return undefined
   if (found.type !== opts.type) {
     return undefined
