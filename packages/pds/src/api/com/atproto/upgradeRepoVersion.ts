@@ -16,7 +16,7 @@ import { CID } from 'multiformats/cid'
 import { formatSeqCommit, sequenceEvt } from '../../../sequencer'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.unspecced.upgradeRepoVersion({
+  server.com.atproto.temp.upgradeRepoVersion({
     auth: ctx.roleVerifier,
     handler: async ({ input, auth }) => {
       if (!auth.credentials.admin) {
@@ -63,6 +63,11 @@ export default function (server: Server, ctx: AppContext) {
             .where('cid', 'in', cidStrs)
             .execute()
         }
+        await dbTxn.db
+          .deleteFrom('ipld_block')
+          .where('creator', '=', did)
+          .where('repoRev', 'is', null)
+          .execute()
         await dbTxn.db
           .updateTable('repo_blob')
           .set({ repoRev: rev })

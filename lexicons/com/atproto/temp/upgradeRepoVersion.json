@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.unspecced.upgradeRepoVersion",
+  "id": "com.atproto.temp.upgradeRepoVersion",
   "defs": {
     "main": {
       "type": "procedure",
