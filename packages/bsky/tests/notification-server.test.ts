@@ -33,19 +33,61 @@ describe('notification server', () => {
   })
 
   describe('registerPushNotification', () => {
-    it('registers push notification token and device at specified endpoint or appview', async () => {
-      const res = await agent.api.app.bsky.unspecced.registerPushNotification(
+    it('registers push notification token and device.', async () => {
+      const res = await agent.api.app.bsky.notification.registerPush(
         {
+          serviceDid: network.bsky.ctx.cfg.serverDid,
           platform: 'ios',
           token: '123',
           appId: 'xyz.blueskyweb.app',
-          endpoint: 'app.bsky.unspecced.registerPushNotification',
         },
         {
           headers: await network.serviceHeaders(alice),
         },
       )
       expect(res.success).toEqual(true)
+    })
+
+    it('allows reregistering push notification token.', async () => {
+      const res1 = await agent.api.app.bsky.notification.registerPush(
+        {
+          serviceDid: network.bsky.ctx.cfg.serverDid,
+          platform: 'web',
+          token: '234',
+          appId: 'xyz.blueskyweb.app',
+        },
+        {
+          headers: await network.serviceHeaders(alice),
+        },
+      )
+      const res2 = await agent.api.app.bsky.notification.registerPush(
+        {
+          serviceDid: network.bsky.ctx.cfg.serverDid,
+          platform: 'web',
+          token: '234',
+          appId: 'xyz.blueskyweb.app',
+        },
+        {
+          headers: await network.serviceHeaders(alice),
+        },
+      )
+      expect(res1.success).toEqual(true)
+      expect(res2.success).toEqual(true)
+    })
+
+    it('does not allows registering push notification at mismatching service.', async () => {
+      const tryRegister = agent.api.app.bsky.notification.registerPush(
+        {
+          serviceDid: 'did:web:notifservice.com',
+          platform: 'ios',
+          token: '123',
+          appId: 'xyz.blueskyweb.app',
+        },
+        {
+          headers: await network.serviceHeaders(alice),
+        },
+      )
+      await expect(tryRegister).rejects.toThrow('Invalid serviceDid.')
     })
   })
 
