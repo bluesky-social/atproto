@@ -165,14 +165,12 @@ describe('pds author feed views', () => {
         },
       )
 
-    try {
-      const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
+    expect(async () => {
+      await agent.api.app.bsky.feed.getAuthorFeed(
         { actor: alice },
         { headers: await network.serviceHeaders(carol) },
       )
-    } catch (e: any) {
-      expect(e.message).toEqual('Profile not found')
-    }
+    }).rejects.toThrow('Profile not found')
 
     // Cleanup
     await agent.api.com.atproto.admin.reverseModerationAction(

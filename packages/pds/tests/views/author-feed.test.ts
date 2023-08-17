@@ -197,14 +197,12 @@ describe('pds author feed views', () => {
       did: alice,
     })
 
-    try {
+    expect(async () => {
       await agent.api.app.bsky.feed.getAuthorFeed(
         { actor: alice },
         { headers: sc.getHeaders(carol) },
       )
-    } catch (e: any) {
-      expect(e.message).toEqual('Profile not found')
-    }
+    }).rejects.toThrow('Profile not found')
 
     // Cleanup
     await reverseModerationAction(action.id)
