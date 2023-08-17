@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         if (!available) {
           throw new InvalidRequestError(
             `Could not find root for DID: ${did}`,
-            'HeadNotFound',
+            'RootNotFound',
           )
         }
       }
@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
       if (root === null) {
         throw new InvalidRequestError(
           `Could not find root for DID: ${did}`,
-          'HeadNotFound',
+          'RootNotFound',
         )
       }
       return {

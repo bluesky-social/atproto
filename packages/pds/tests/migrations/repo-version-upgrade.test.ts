@@ -132,6 +132,7 @@ describe('repo version upgrade', () => {
     const aliceRepoAfter = await fetchAndVerifyRepo(alice)
     expect(aliceRepoAfter.creates).toEqual(aliceRepoBefore.creates)
 
+    // it updated the repo rev on all blocks/records/blobs
     const root = await db.db
       .selectFrom('repo_root')
       .where('did', '=', alice)
