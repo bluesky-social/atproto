@@ -111,9 +111,7 @@ export class IndexingService {
               const preparedNotifs = await this.notifServer.prepareNotifsToSend(
                 insertedRecords,
               )
-              return await this.notifServer.addNotificationsToQueue(
-                preparedNotifs,
-              )
+              await this.notifServer.addNotificationsToQueue(preparedNotifs)
             } catch (error) {
               subLogger.error({ error }, 'Error sending push notifications')
             }

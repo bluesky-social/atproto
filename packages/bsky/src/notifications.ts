@@ -1,6 +1,7 @@
 import axios from 'axios'
 import Database from './db/primary'
 import { Notification } from './db/tables/notification'
+import { NotificationPushToken as PushToken } from './db/tables/notification-push-token'
 import { AtUri } from '@atproto/api'
 import { Insertable } from 'kysely'
 import logger from './indexer/logger'
@@ -32,33 +33,36 @@ export class NotificationServer {
     this.backgroundQueue = new BackgroundQueue(db)
   }
 
-  async getUserTokens(did: string) {
-    const userTokens = await this.db.db
+  async getTokensByDid(dids: string[]) {
+    if (!dids.length) return {}
+    const tokens = await this.db.db
       .selectFrom('notification_push_token')
-      .where('did', '=', did)
+      .where('did', 'in', dids)
       .selectAll()
       .execute()
-
-    return userTokens
+    return tokens.reduce((acc, token) => {
+      acc[token.did] ??= []
+      acc[token.did].push(token)
+      return acc
+    }, {} as Record<string, PushToken[]>)
   }
 
   async prepareNotifsToSend(notifications: InsertableNotif[]) {
     const notifsToSend: PushNotification[] = []
-
+    const tokensByDid = await this.getTokensByDid(
+      unique(notifications.map((n) => n.did)),
+    )
     for (const notif of notifications) {
       const { did: userDid } = notif
-      const userTokens = await this.getUserTokens(userDid)
-      const attr = await this.getNotificationDisplayAttributes(notif)
+      const userTokens = tokensByDid[userDid] ?? []
       // if user has no tokens or the post attr cannot be found, skip
-      if (!userTokens || userTokens.length === 0) {
+      if (userTokens.length === 0) {
         continue
       }
+      const attr = await this.getNotificationDisplayAttributes(notif)
       if (!attr) {
         logger.warn(
-          {
-            userDid,
-            notif,
-          },
+          { userDid, notif },
           'No notification display attributes found for this notification. Either profile or post data for this notification is missing.',
         )
         continue
@@ -82,6 +86,7 @@ export class NotificationServer {
           })
         } else {
           // @TODO: Handle web notifs
+          logger.warn({ did: userDid }, 'cannot send web notification to user')
         }
       }
     }
@@ -132,18 +137,15 @@ export class NotificationServer {
         this.notificationBatch.push(notif)
         // If batch size is 20, add task to background queue
         if (this.notificationBatch.length >= this.notificationBatchSize) {
-          try {
-            this.backgroundQueue.add(async () => {
-              return await this.sendPushNotifications(this.notificationBatch)
-            })
-          } catch (error) {
-            logger.error({
-              notificationBatch: this.notificationBatch,
-              error,
-            })
-          } finally {
-            this.notificationBatch = []
-          }
+          const batch = [...this.notificationBatch]
+          this.notificationBatch = []
+          this.backgroundQueue.add(async () => {
+            try {
+              await this.sendPushNotifications(batch)
+            } catch (err) {
+              logger.error({ err, batch }, 'notification push batch failed')
+            }
+          })
         }
       }
     }
@@ -172,7 +174,7 @@ export class NotificationServer {
   */
   private async sendPushNotifications(notifications: PushNotification[]) {
     // if no notifications, skip and return early
-    if (!notifications || notifications.length === 0) {
+    if (notifications.length === 0) {
       return
     }
     // if pushEndpoint is not defined, we are not running in the indexer service, so we can't send push notifications
@@ -181,9 +183,7 @@ export class NotificationServer {
     }
     await axios.post(
       this.pushEndpoint,
-      {
-        notifications: notifications,
-      },
+      { notifications },
       {
         headers: {
           'Content-Type': 'application/json',
@@ -299,14 +299,14 @@ export class NotificationServer {
 
     if (title === '' && body === '') {
       logger.warn(
-        {
-          notif,
-        },
+        { notif },
         'No notification display attributes found for this notification. Either profile or post data for this notification is missing.',
       )
       return
     }
 
-    return { title: title, body: body }
+    return { title, body }
   }
 }
+
+const unique = (items: string[]) => [...new Set(items)]
