@@ -8,8 +8,8 @@ import { CommitData } from '../types'
 export interface RepoStorage {
   // Writable
   getRoot(): Promise<CID | null>
-  putBlock(cid: CID, block: Uint8Array): Promise<void>
-  putMany(blocks: BlockMap): Promise<void>
+  putBlock(cid: CID, block: Uint8Array, rev: string): Promise<void>
+  putMany(blocks: BlockMap, rev: string): Promise<void>
   updateRoot(cid: CID): Promise<void>
   applyCommit(commit: CommitData)
 

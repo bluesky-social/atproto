@@ -110,13 +110,14 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
     return { blocks, missing: missing.toList() }
   }
 
-  async putBlock(cid: CID, block: Uint8Array): Promise<void> {
+  async putBlock(cid: CID, block: Uint8Array, rev: string): Promise<void> {
     this.db.assertTransaction()
     await this.db.db
       .insertInto('ipld_block')
       .values({
         cid: cid.toString(),
         creator: this.did,
+        repoRev: rev,
         size: block.length,
         content: block,
       })
@@ -125,13 +126,14 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
     this.cache.set(cid, block)
   }
 
-  async putMany(toPut: BlockMap): Promise<void> {
+  async putMany(toPut: BlockMap, rev: string): Promise<void> {
     this.db.assertTransaction()
     const blocks: IpldBlock[] = []
     toPut.forEach((bytes, cid) => {
       blocks.push({
         cid: cid.toString(),
         creator: this.did,
+        repoRev: rev,
         size: bytes.length,
         content: bytes,
       })
@@ -161,7 +163,7 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
   async applyCommit(commit: CommitData) {
     await Promise.all([
       this.updateRoot(commit.cid, commit.prev ?? undefined),
-      this.putMany(commit.newBlocks),
+      this.putMany(commit.newBlocks, commit.rev),
       this.deleteMany(commit.removedCids.toList()),
     ])
   }
@@ -241,7 +243,7 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
     }))
   }
 
-  private getTimestamp(): string {
+  getTimestamp(): string {
     return this.timestamp || new Date().toISOString()
   }
 

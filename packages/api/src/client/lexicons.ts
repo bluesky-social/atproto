@@ -3426,6 +3426,7 @@ export const schemaDict = {
           'repo',
           'commit',
           'prev',
+          'rev',
           'blocks',
           'ops',
           'blobs',
@@ -3451,6 +3452,9 @@ export const schemaDict = {
           },
           prev: {
             type: 'cid-link',
+          },
+          rev: {
+            type: 'string',
           },
           blocks: {
             type: 'bytes',
@@ -3563,6 +3567,29 @@ export const schemaDict = {
           },
           cid: {
             type: 'cid-link',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoUnspeccedUpgradeRepoVersion: {
+    lexicon: 1,
+    id: 'com.atproto.unspecced.upgradeRepoVersion',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Upgrade a repo to v3',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
           },
         },
       },
@@ -6616,6 +6643,8 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
+  ComAtprotoUnspeccedUpgradeRepoVersion:
+    'com.atproto.unspecced.upgradeRepoVersion',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',

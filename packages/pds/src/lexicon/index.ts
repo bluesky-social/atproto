@@ -69,6 +69,7 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoUnspeccedUpgradeRepoVersion from './types/com/atproto/unspecced/upgradeRepoVersion'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
@@ -160,6 +161,7 @@ export class AtprotoNS {
   repo: RepoNS
   server: ServerNS
   sync: SyncNS
+  unspecced: UnspeccedNS
 
   constructor(server: Server) {
     this._server = server
@@ -170,6 +172,7 @@ export class AtprotoNS {
     this.repo = new RepoNS(server)
     this.server = new ServerNS(server)
     this.sync = new SyncNS(server)
+    this.unspecced = new UnspeccedNS(server)
   }
 }
 
@@ -709,6 +712,24 @@ export class SyncNS {
   ) {
     const nsid = 'com.atproto.sync.subscribeRepos' // @ts-ignore
     return this._server.xrpc.streamMethod(nsid, cfg)
+  }
+}
+
+export class UnspeccedNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  upgradeRepoVersion<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoUnspeccedUpgradeRepoVersion.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.unspecced.upgradeRepoVersion' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 
