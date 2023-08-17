@@ -13,6 +13,7 @@ const unsignedCommit = z.object({
   version: z.number(),
   data: common.cid,
   rev: z.string(),
+  prev: common.cid.nullable().optional(),
 })
 export type UnsignedCommit = z.infer<typeof unsignedCommit> & { sig?: never }
 
@@ -21,6 +22,7 @@ const commit = z.object({
   version: z.number(),
   data: common.cid,
   rev: z.string(),
+  prev: common.cid.nullable().optional(),
   sig: common.bytes,
 })
 export type Commit = z.infer<typeof commit>
@@ -95,6 +97,7 @@ export type WriteLog = RecordWriteDescript[][]
 export type CommitData = {
   cid: CID
   rev: string
+  prev: CID | null
   newBlocks: BlockMap
   removedCids: CidSet
 }

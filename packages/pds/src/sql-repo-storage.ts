@@ -159,7 +159,7 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
 
   async applyCommit(commit: CommitData) {
     await Promise.all([
-      this.updateHead(commit.cid),
+      this.updateHead(commit.cid, commit.prev ?? undefined),
       this.putMany(commit.newBlocks),
       this.deleteMany(commit.removedCids.toList()),
     ])

@@ -77,7 +77,7 @@ export const formatSeqCommit = async (
     tooBig,
     repo: did,
     commit: commitData.cid,
-    prev: null,
+    prev: commitData.prev,
     ops,
     blocks: carSlice,
     blobs: blobs.toList(),

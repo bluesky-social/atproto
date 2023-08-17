@@ -64,6 +64,7 @@ export class Repo extends ReadableRepo {
     return {
       cid: commitCid,
       rev,
+      prev: null,
       newBlocks,
       removedCids: diff.removedCids,
     }
@@ -164,6 +165,7 @@ export class Repo extends ReadableRepo {
     return {
       cid: commitCid,
       rev,
+      prev: this.cid,
       newBlocks,
       removedCids,
     }

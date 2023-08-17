@@ -218,6 +218,7 @@ export const addBadCommit = async (
   await repo.storage.applyCommit({
     cid: commitCid,
     rev,
+    prev: repo.cid,
     newBlocks,
     removedCids: diff.removedCids,
   })
