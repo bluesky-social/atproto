@@ -32,8 +32,7 @@ export const getKey = (doc: DidDocument): string | undefined => {
   } else if (found.type === 'EcdsaSecp256k1VerificationKey2019') {
     didKey = crypto.formatDidKey(crypto.SECP256K1_JWT_ALG, keyBytes)
   } else if (found.type === 'Multikey') {
-    const foundKey = `did:key:${found.publicKeyMultibase}`
-    const parsed = crypto.parseDidKey(foundKey)
+    const parsed = crypto.parseMultikey(found.publicKeyMultibase)
     didKey = crypto.formatDidKey(parsed.jwtAlg, parsed.keyBytes)
   }
   return didKey
