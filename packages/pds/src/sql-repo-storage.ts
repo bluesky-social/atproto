@@ -4,6 +4,7 @@ import {
   BlockMap,
   CidSet,
   ReadableBlockstore,
+  writeCarStream,
 } from '@atproto/repo'
 import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
@@ -28,7 +29,7 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
     return this.db.txAdvisoryLock(this.did)
   }
 
-  async getHead(): Promise<CID | null> {
+  async getRoot(): Promise<CID | null> {
     const res = await this.db.db
       .selectFrom('repo_root')
       .selectAll()
@@ -38,7 +39,7 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
     return CID.parse(res.root)
   }
 
-  async getHeadDetailed(): Promise<{ cid: CID; rev: string } | null> {
+  async getRootDetailed(): Promise<{ cid: CID; rev: string } | null> {
     const res = await this.db.db
       .selectFrom('repo_root')
       .selectAll()
@@ -159,13 +160,13 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
 
   async applyCommit(commit: CommitData) {
     await Promise.all([
-      this.updateHead(commit.cid, commit.prev ?? undefined),
+      this.updateRoot(commit.cid, commit.prev ?? undefined),
       this.putMany(commit.newBlocks),
       this.deleteMany(commit.removedCids.toList()),
     ])
   }
 
-  async updateHead(cid: CID, ensureSwap?: CID): Promise<void> {
+  async updateRoot(cid: CID, ensureSwap?: CID): Promise<void> {
     if (ensureSwap) {
       const res = await this.db.db
         .updateTable('repo_root')
@@ -194,6 +195,53 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
     }
   }
 
+  async getCarStream(rev?: string) {
+    const root = await this.getRoot()
+    if (!root) {
+      throw new RepoRootNotFoundError()
+    }
+    return writeCarStream(root, async (car) => {
+      let blocks = await this.getBlockRange(500, rev)
+      do {
+        for (const block of blocks) {
+          await car.put(block)
+        }
+        const cidCursor = blocks.at(-1)?.cid
+        if (!cidCursor) {
+          break
+        }
+        blocks = await this.getBlockRange(500, rev, cidCursor)
+      } while (blocks.length > 0)
+      await car.close()
+    })
+  }
+
+  async getBlockRange(
+    limit: number,
+    rev?: string,
+    cidCursor?: CID,
+  ): Promise<{ cid: CID; bytes: Uint8Array }[]> {
+    let builder = this.db.db
+      .selectFrom('ipld_block')
+      .where('creator', '=', this.did)
+      .orderBy('repoRev', 'asc')
+      .orderBy('cid', 'asc')
+      .select(['cid', 'content'])
+      .limit(limit)
+
+    if (rev) {
+      builder = builder.where('repoRev', '>=', rev)
+    }
+    if (cidCursor) {
+      builder = builder.where('cid', '>', cidCursor.toString())
+    }
+    const res = await builder.execute()
+    return res.map((row) => ({
+      cid: CID.parse(row.cid),
+      bytes: row.content,
+    }))
+  }
+
   private getTimestamp(): string {
     return this.timestamp || new Date().toISOString()
   }
@@ -204,3 +252,5 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
 }
 
 export default SqlRepoStorage
+
+export class RepoRootNotFoundError extends Error {}

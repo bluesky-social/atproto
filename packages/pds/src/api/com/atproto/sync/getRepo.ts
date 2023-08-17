@@ -1,8 +1,8 @@
-import { CID } from 'multiformats/cid'
-import * as repo from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import SqlRepoStorage from '../../../../sql-repo-storage'
+import SqlRepoStorage, {
+  RepoRootNotFoundError,
+} from '../../../../sql-repo-storage'
 import AppContext from '../../../../context'
 import { byteIterableToStream } from '@atproto/common'
 import { isUserOrAdmin } from '../../../../auth'
@@ -21,14 +21,17 @@ export default function (server: Server, ctx: AppContext) {
           throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
         }
       }
+
       const storage = new SqlRepoStorage(ctx.db, did)
-      const latest = params.latest
-        ? CID.parse(params.latest)
-        : await storage.getHead()
-      if (latest === null) {
-        throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
+      let carStream: AsyncIterable<Uint8Array>
+      try {
+        carStream = await storage.getCarStream(params.rev)
+      } catch (err) {
+        if (err instanceof RepoRootNotFoundError) {
+          throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
+        }
+        throw err
       }
-      const carStream = repo.getFullRepo(storage, latest)
 
       return {
         encoding: 'application/vnd.ipld.car',

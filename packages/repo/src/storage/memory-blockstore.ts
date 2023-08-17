@@ -9,7 +9,7 @@ export class MemoryBlockstore
   implements RepoStorage
 {
   blocks: BlockMap
-  head: CID | null = null
+  root: CID | null = null
 
   constructor(blocks?: BlockMap) {
     super()
@@ -19,8 +19,8 @@ export class MemoryBlockstore
     }
   }
 
-  async getHead(): Promise<CID | null> {
-    return this.head
+  async getRoot(): Promise<CID | null> {
+    return this.root
   }
 
   async getBytes(cid: CID): Promise<Uint8Array | null> {
@@ -43,12 +43,12 @@ export class MemoryBlockstore
     this.blocks.addMap(blocks)
   }
 
-  async updateHead(cid: CID): Promise<void> {
-    this.head = cid
+  async updateRoot(cid: CID): Promise<void> {
+    this.root = cid
   }
 
   async applyCommit(commit: CommitData): Promise<void> {
-    this.head = commit.cid
+    this.root = commit.cid
     const rmCids = commit.removedCids.toList()
     for (const cid of rmCids) {
       this.blocks.delete(cid)

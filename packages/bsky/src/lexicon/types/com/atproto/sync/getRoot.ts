@@ -11,16 +11,12 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 export interface QueryParams {
   /** The DID of the repo. */
   did: string
-  /** The most recent commit */
-  latest?: string
-  /** The earliest commit to start from */
-  earliest?: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cids: string[]
+  root: string
   [k: string]: unknown
 }
 
@@ -35,6 +31,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'RootNotFound'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

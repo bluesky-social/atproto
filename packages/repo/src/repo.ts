@@ -94,7 +94,7 @@ export class Repo extends ReadableRepo {
   }
 
   static async load(storage: RepoStorage, cid?: CID) {
-    const commitCid = cid || (await storage.getHead())
+    const commitCid = cid || (await storage.getRoot())
     if (!commitCid) {
       throw new Error('No cid provided and none in storage')
     }

@@ -86,11 +86,13 @@ describe('sql repo storage', () => {
       await storage.applyCommit({
         cid: commits[0].cid,
         rev: TID.nextStr(),
+        prev: null,
         newBlocks: blocks0,
         removedCids: new CidSet(),
       })
       await storage.applyCommit({
         cid: commits[1].cid,
+        prev: commits[0].cid,
         rev: TID.nextStr(),
         newBlocks: blocks1,
         removedCids: toRemove,
@@ -98,7 +100,7 @@ describe('sql repo storage', () => {
     })
 
     const storage = new SqlRepoStorage(db, did)
-    const head = await storage.getHead()
+    const head = await storage.getRoot()
     if (!head) {
       throw new Error('could not get repo head')
     }

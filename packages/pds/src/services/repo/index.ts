@@ -158,7 +158,7 @@ export class RepoService {
     writes: PreparedWrite[],
     swapCommit?: CID,
   ): Promise<CommitData> {
-    const currRoot = await storage.getHeadDetailed()
+    const currRoot = await storage.getRootDetailed()
     if (!currRoot) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,

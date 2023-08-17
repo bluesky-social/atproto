@@ -15,7 +15,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createIndex('ipld_block_repo_rev_idx')
     .on('ipld_block')
-    .columns(['creator', 'repoRev'])
+    .columns(['creator', 'repoRev', 'cid'])
     .execute()
 
   await db.schema

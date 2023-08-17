@@ -329,7 +329,7 @@ describe('indexing', () => {
         { headers: await network.serviceHeaders(sc.dids.alice) },
       )
       // Index
-      const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
+      const { data: head } = await pdsAgent.api.com.atproto.sync.getRoot({
         did: sc.dids.alice,
       })
       await services.indexing(db).indexRepo(sc.dids.alice, head.root)
@@ -373,7 +373,7 @@ describe('indexing', () => {
         sc.getHeaders(sc.dids.alice),
       )
       // Index
-      const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
+      const { data: head } = await pdsAgent.api.com.atproto.sync.getRoot({
         did: sc.dids.alice,
       })
       await services.indexing(db).indexRepo(sc.dids.alice, head.root)
@@ -419,7 +419,7 @@ describe('indexing', () => {
         .repo(pdsDb)
         .processWrites({ did: sc.dids.alice, writes }, 1)
       // Index
-      const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
+      const { data: head } = await pdsAgent.api.com.atproto.sync.getRoot({
         did: sc.dids.alice,
       })
       await services.indexing(db).indexRepo(sc.dids.alice, head.root)
