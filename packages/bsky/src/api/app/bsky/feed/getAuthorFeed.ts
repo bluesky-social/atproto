@@ -59,12 +59,11 @@ export default function (server: Server, ctx: AppContext) {
               .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
           )
       } else if (filter === 'posts_no_replies') {
-        feedItemsQb = feedItemsQb
-          .where((qb) => {
-            return qb
-              .where('post.replyParent', 'is', null)
-              .orWhere('type', '=', 'repost')
-          })
+        feedItemsQb = feedItemsQb.where((qb) => {
+          return qb
+            .where('post.replyParent', 'is', null)
+            .orWhere('type', '=', 'repost')
+        })
       }
 
       if (viewer !== null) {
