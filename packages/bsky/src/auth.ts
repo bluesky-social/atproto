@@ -30,6 +30,42 @@ export const authOptionalVerifier =
     return authVerifier(idResolver, opts)(reqCtx)
   }
 
+export const authOptionalAccessOrRoleVerifier = (
+  idResolver: IdResolver,
+  cfg: ServerConfig,
+) => {
+  const verifyAccess = authVerifier(idResolver, { aud: cfg.serverDid })
+  const verifyRole = roleVerifier(cfg)
+  return async (ctx: { req: express.Request; res: express.Response }) => {
+    const defaultUnAuthorizedCredentials = {
+      credentials: { did: null, type: 'unauthed' as const },
+    }
+    if (!ctx.req.headers.authorization) {
+      return defaultUnAuthorizedCredentials
+    }
+    // For non-admin tokens, we don't want to consider alternative verifiers and let it fail if it fails
+    const isRoleAuthToken = ctx.req.headers.authorization?.startsWith(BASIC)
+    if (isRoleAuthToken) {
+      const result = await verifyRole(ctx)
+      return {
+        ...result,
+        credentials: {
+          type: 'role' as const,
+          ...result.credentials,
+        },
+      }
+    }
+    const result = await verifyAccess(ctx)
+    return {
+      ...result,
+      credentials: {
+        type: 'access' as const,
+        ...result.credentials,
+      },
+    }
+  }
+}
+
 export const roleVerifier =
   (cfg: ServerConfig) =>
   async (reqCtx: { req: express.Request; res: express.Response }) => {

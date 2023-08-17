@@ -3,16 +3,20 @@ import { Server } from '../../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { notSoftDeletedClause } from '../../../../../db/util'
+import { authPassthru } from '../../../../../api/com/atproto/admin/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollows({
-    auth: ctx.accessVerifier,
+    auth: ctx.accessOrRoleVerifier,
     handler: async ({ req, params, auth }) => {
-      const requester = auth.credentials.did
+      const requester =
+        auth.credentials.type === 'access' ? auth.credentials.did : null
       if (ctx.canProxyRead(req)) {
         const res = await ctx.appviewAgent.api.app.bsky.graph.getFollows(
           params,
-          await ctx.serviceAuthHeaders(requester),
+          requester
+            ? await ctx.serviceAuthHeaders(requester)
+            : authPassthru(req),
         )
         return {
           encoding: 'application/json',
@@ -20,6 +24,8 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
+      const canViewTakendownProfile =
+        auth.credentials.type === 'role' && auth.credentials.triage
       const { actor, limit, cursor } = params
       const { services, db } = ctx
       const { ref } = db.db.dynamic
@@ -27,7 +33,10 @@ export default function (server: Server, ctx: AppContext) {
       const actorService = services.appView.actor(db)
       const graphService = services.appView.graph(db)
 
-      const creatorRes = await actorService.getActor(actor)
+      const creatorRes = await actorService.getActor(
+        actor,
+        canViewTakendownProfile,
+      )
       if (!creatorRes) {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
       }
@@ -41,7 +50,9 @@ export default function (server: Server, ctx: AppContext) {
           'subject_repo.did',
           'follow.subjectDid',
         )
-        .where(notSoftDeletedClause(ref('subject_repo')))
+        .if(!canViewTakendownProfile, (qb) =>
+          qb.where(notSoftDeletedClause(ref('subject_repo'))),
+        )
         .whereNotExists(
           graphService.blockQb(requester, [ref('follow.subjectDid')]),
         )
@@ -66,8 +77,12 @@ export default function (server: Server, ctx: AppContext) {
 
       const followsRes = await followsReq.execute()
       const [follows, subject] = await Promise.all([
-        actorService.views.hydrateProfiles(followsRes, requester),
-        actorService.views.profile(creatorRes, requester),
+        actorService.views.hydrateProfiles(followsRes, requester, {
+          includeSoftDeleted: canViewTakendownProfile,
+        }),
+        actorService.views.profile(creatorRes, requester, {
+          includeSoftDeleted: canViewTakendownProfile,
+        }),
       ])
       if (!subject) {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
