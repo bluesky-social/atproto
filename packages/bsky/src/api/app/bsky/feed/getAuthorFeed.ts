@@ -60,13 +60,10 @@ export default function (server: Server, ctx: AppContext) {
           )
       } else if (filter === 'posts_no_replies') {
         feedItemsQb = feedItemsQb
-          // only posts, no replies
-          .where('post.replyParent', 'is', null)
-          // or any reposted replies
-          .orWhere((qb) => {
+          .where((qb) => {
             return qb
-              .where('originatorDid', '=', actorDid)
-              .where('type', '=', 'repost')
+              .where('post.replyParent', 'is', null)
+              .orWhere('type', '=', 'repost')
           })
       }
 
