@@ -71,6 +71,10 @@ export class AppContext {
     })
   }
 
+  get authOptionalAccessOrRoleVerifier() {
+    return auth.authOptionalAccessOrRoleVerifier(this.idResolver, this.cfg)
+  }
+
   get roleVerifier() {
     return auth.roleVerifier(this.cfg)
   }
