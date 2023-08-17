@@ -2,7 +2,7 @@
 export interface RepoRoot {
   did: string
   root: string
-  rev?: string
+  rev: string | null
   indexedAt: string
   takedownId: number | null
 }

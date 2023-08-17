@@ -66,10 +66,17 @@ export default function (server: Server, ctx: AppContext) {
         await dbTxn.db
           .deleteFrom('ipld_block')
           .where('creator', '=', did)
-          .where('repoRev', 'is', null)
+          .where((qb) =>
+            qb.where('repoRev', 'is', null).orWhere('repoRev', '!=', rev),
+          )
           .execute()
         await dbTxn.db
           .updateTable('repo_blob')
+          .set({ repoRev: rev })
+          .where('did', '=', did)
+          .execute()
+        await dbTxn.db
+          .updateTable('record')
           .set({ repoRev: rev })
           .where('did', '=', did)
           .execute()
