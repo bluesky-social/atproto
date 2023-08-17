@@ -6350,20 +6350,13 @@ export const schemaDict = {
         description: 'Unregister for push notifications with a service',
         parameters: {
           type: 'params',
-          required: ['serviceDid', 'token', 'platform', 'appId'],
+          required: ['serviceDid', 'token'],
           properties: {
             serviceDid: {
               type: 'string',
               format: 'did',
             },
             token: {
-              type: 'string',
-            },
-            platform: {
-              type: 'string',
-              knownValues: ['ios', 'android', 'web'],
-            },
-            appId: {
               type: 'string',
             },
           },
