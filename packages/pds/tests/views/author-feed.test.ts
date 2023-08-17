@@ -12,7 +12,6 @@ import basicSeed from '../seeds/basic'
 import { isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
 import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 describe('pds author feed views', () => {
   let agent: AtpAgent
@@ -197,12 +196,11 @@ describe('pds author feed views', () => {
       did: alice,
     })
 
-    expect(async () => {
-      await agent.api.app.bsky.feed.getAuthorFeed(
-        { actor: alice },
-        { headers: sc.getHeaders(carol) },
-      )
-    }).rejects.toThrow('Profile not found')
+    const attempt = agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: alice },
+      { headers: sc.getHeaders(carol) },
+    )
+    expect(attempt).rejects.toThrow('Profile not found')
 
     // Cleanup
     await reverseModerationAction(action.id)
