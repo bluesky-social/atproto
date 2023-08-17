@@ -9,7 +9,12 @@
         "properties": {
           "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
           "cursor": {"type": "string"},
-          "seenAt": { "type": "string", "format": "datetime"}
+          "seenAt": { "type": "string", "format": "datetime"},
+          "reasons": {
+            "type": "array",
+            "description": "Filter notifications based on reason. Possible item values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'.",
+            "items": {"type": "string"}
+          }
         }
       },
       "output": {

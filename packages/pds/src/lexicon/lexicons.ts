@@ -6227,6 +6227,14 @@ export const schemaDict = {
               type: 'string',
               format: 'datetime',
             },
+            reasons: {
+              type: 'array',
+              description:
+                "Filter notifications based on reason. Possible item values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'.",
+              items: {
+                type: 'string',
+              },
+            },
           },
         },
         output: {

@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.listNotifications({
     auth: ctx.authVerifier,
     handler: async ({ params, auth }) => {
-      const { limit, cursor } = params
+      const { limit, cursor, reasons } = params
       const requester = auth.credentials.did
       if (params.seenAt) {
         throw new InvalidRequestError('The seenAt parameter is unsupported')
@@ -54,6 +54,11 @@ export default function (server: Server, ctx: AppContext) {
           'notif.sortAt as indexedAt',
           'record.json as recordJson',
         ])
+
+      const filteredReasons = filterReasons(reasons)
+      if (filteredReasons.length > 0) {
+        notifBuilder = notifBuilder.where('notif.reason', 'in', filteredReasons)
+      }
 
       const keyset = new NotifsKeyset(
         ref('notif.sortAt'),
@@ -135,4 +140,23 @@ class NotifsKeyset extends TimeCidKeyset<NotifRow> {
   labelResult(result: NotifRow) {
     return { primary: result.indexedAt, secondary: result.cid }
   }
+}
+
+const REASONS = new Set([
+  'follow',
+  'like',
+  'mention',
+  'quote',
+  'reply',
+  'repost',
+])
+
+function filterReasons(reasons: string[] | undefined): string[] {
+  let filteredReasons: string[] = []
+  if (Array.isArray(reasons)) {
+    filteredReasons = Array.from(
+      new Set(reasons.filter((reason) => REASONS.has(reason))),
+    )
+  }
+  return filteredReasons
 }

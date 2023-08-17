@@ -14,6 +14,8 @@ export interface QueryParams {
   limit: number
   cursor?: string
   seenAt?: string
+  /** Filter notifications based on reason. Possible item values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'. */
+  reasons?: string[]
 }
 
 export type InputSchema = undefined
