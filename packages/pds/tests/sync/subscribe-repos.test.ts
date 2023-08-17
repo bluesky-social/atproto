@@ -298,6 +298,7 @@ describe('repo subscribe repos', () => {
   it('syncs handle changes', async () => {
     await sc.updateHandle(alice, 'alice2.test')
     await sc.updateHandle(bob, 'bob2.test')
+    await sc.updateHandle(bob, 'bob2.test') // idempotent update re-sends
 
     const ws = new WebSocket(
       `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
@@ -308,9 +309,24 @@ describe('repo subscribe repos', () => {
     ws.terminate()
 
     await verifyCommitEvents(evts)
-    const handleEvts = getHandleEvts(evts.slice(-2))
+    const handleEvts = getHandleEvts(evts.slice(-3))
     verifyHandleEvent(handleEvts[0], alice, 'alice2.test')
     verifyHandleEvent(handleEvts[1], bob, 'bob2.test')
+  })
+
+  it('resends handle events on idempotent updates', async () => {
+    const update = sc.updateHandle(bob, 'bob2.test')
+
+    const ws = new WebSocket(
+      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos`,
+    )
+
+    const gen = byFrame(ws)
+    const evts = await readTillCaughtUp(gen, update)
+    ws.terminate()
+
+    const handleEvts = getHandleEvts(evts.slice(-1))
+    verifyHandleEvent(handleEvts[0], bob, 'bob2.test')
   })
 
   it('syncs tombstones', async () => {
