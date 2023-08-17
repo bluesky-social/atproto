@@ -65,11 +65,11 @@ export default function (server: Server, ctx: AppContext) {
       } else if (params.filter === 'posts_no_replies') {
         feedItemsQb = feedItemsQb
           // only posts, no replies
-          .where((qb) => {
-            return qb
+          .where((qb) =>
+            qb
               .where('post.replyParent', 'is', null)
-              .orWhere('type', '=', 'repost')
-          })
+              .orWhere('type', '=', 'repost'),
+          )
       }
 
       // for access-based auth, enforce blocks and mutes
