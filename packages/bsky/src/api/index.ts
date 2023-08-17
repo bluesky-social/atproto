@@ -51,6 +51,8 @@ import getRecord from './com/atproto/repo/getRecord'
 
 export * as health from './health'
 
+export * as wellKnown from './well-known'
+
 export * as blobResolver from './blob-resolver'
 
 export default function (server: Server, ctx: AppContext) {
