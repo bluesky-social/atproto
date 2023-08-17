@@ -50,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
           'creator_repo.did',
           'follow.creator',
         )
-        .if(canViewTakendownProfile, (qb) =>
+        .if(!canViewTakendownProfile, (qb) =>
           qb.where(notSoftDeletedClause(ref('creator_repo'))),
         )
         .whereNotExists(
