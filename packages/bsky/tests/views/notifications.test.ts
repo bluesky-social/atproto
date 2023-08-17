@@ -56,7 +56,7 @@ describe('notification views', () => {
         { headers: await network.serviceHeaders(alice) },
       )
 
-    expect(notifCountAlice.data.count).toBe(13)
+    expect(notifCountAlice.data.count).toBe(12)
 
     const notifCountBob = await agent.api.app.bsky.notification.getUnreadCount(
       {},
@@ -218,7 +218,7 @@ describe('notification views', () => {
     )
 
     const notifs = notifRes.data.notifications
-    expect(notifs.length).toBe(12)
+    expect(notifs.length).toBe(13)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map((n) => n.indexedAt <= seenAt))
