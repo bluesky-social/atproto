@@ -33,7 +33,7 @@
     },
     "commit": {
       "type": "object",
-      "required": ["seq", "rebase", "tooBig", "repo", "commit", "prev", "blocks", "ops", "blobs", "time"],
+      "required": ["seq", "rebase", "tooBig", "repo", "commit", "prev", "rev", "blocks", "ops", "blobs", "time"],
       "nullable": ["prev"],
       "properties": {
         "seq": {"type": "integer"},
@@ -42,6 +42,7 @@
         "repo": {"type": "string", "format": "did"},
         "commit": {"type": "cid-link"},
         "prev": {"type": "cid-link"},
+        "rev": {"type": "string"},
         "blocks": {
           "type": "bytes",
           "description": "CAR file containing relevant blocks",

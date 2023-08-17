@@ -10,7 +10,7 @@ import CidSet from './cid-set'
 
 const unsignedCommit = z.object({
   did: z.string(),
-  version: z.number(),
+  version: z.literal(3),
   data: common.cid,
   rev: z.string(),
   prev: common.cid.nullable().optional(),
@@ -19,7 +19,7 @@ export type UnsignedCommit = z.infer<typeof unsignedCommit> & { sig?: never }
 
 const commit = z.object({
   did: z.string(),
-  version: z.number(),
+  version: z.literal(3),
   data: common.cid,
   rev: z.string(),
   prev: common.cid.nullable().optional(),
@@ -27,9 +27,24 @@ const commit = z.object({
 })
 export type Commit = z.infer<typeof commit>
 
+const legacyV2Commit = z.object({
+  did: z.string(),
+  version: z.literal(2),
+  data: common.cid,
+  rev: z.string().optional(),
+  prev: common.cid.nullable(),
+  sig: common.bytes,
+})
+export type LegacyV2Commit = z.infer<typeof legacyV2Commit>
+
+const versionedCommit = z.union([commit, legacyV2Commit])
+export type VersionedCommit = z.infer<typeof versionedCommit>
+
 export const schema = {
   ...common,
   commit,
+  legacyV2Commit,
+  versionedCommit,
 }
 
 export const def = {
@@ -37,6 +52,10 @@ export const def = {
   commit: {
     name: 'commit',
     schema: schema.commit,
+  },
+  versionedCommit: {
+    name: 'versioned_commit',
+    schema: schema.versionedCommit,
   },
 }
 

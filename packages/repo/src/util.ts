@@ -11,6 +11,7 @@ import {
   schema,
   cidForCbor,
   byteIterableToStream,
+  TID,
 } from '@atproto/common'
 import { ipldToLex, lexToIpld, LexValue, RepoRecord } from '@atproto/lexicon'
 
@@ -18,6 +19,7 @@ import * as crypto from '@atproto/crypto'
 import DataDiff from './data-diff'
 import {
   Commit,
+  LegacyV2Commit,
   RecordCreateDescript,
   RecordDeleteDescript,
   RecordPath,
@@ -218,4 +220,16 @@ export const cborToLexRecord = (val: Uint8Array): RepoRecord => {
 
 export const cidForRecord = async (val: LexValue) => {
   return cidForCbor(lexToIpld(val))
+}
+
+export const ensureV3Commit = (commit: LegacyV2Commit | Commit): Commit => {
+  if (commit.version === 3) {
+    return commit
+  } else {
+    return {
+      ...commit,
+      version: 3,
+      rev: commit.rev ?? TID.nextStr(),
+    }
+  }
 }

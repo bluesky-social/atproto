@@ -98,13 +98,13 @@ export class Repo extends ReadableRepo {
     if (!commitCid) {
       throw new Error('No cid provided and none in storage')
     }
-    const commit = await storage.readObj(commitCid, def.commit)
+    const commit = await storage.readObj(commitCid, def.versionedCommit)
     const data = await MST.load(storage, commit.data)
     log.info({ did: commit.did }, 'loaded repo for')
     return new Repo({
       storage,
       data,
-      commit,
+      commit: util.ensureV3Commit(commit),
       cid: commitCid,
     })
   }
