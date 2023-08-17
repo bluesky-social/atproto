@@ -36,7 +36,11 @@ export class BskyIndexer {
       cfg.didCacheStaleTTL,
       cfg.didCacheMaxTTL,
     )
-    const idResolver = new IdResolver({ plcUrl: cfg.didPlcUrl, didCache })
+    const idResolver = new IdResolver({
+      plcUrl: cfg.didPlcUrl,
+      didCache,
+      backupNameservers: cfg.handleResolveNameservers,
+    })
     const backgroundQueue = new BackgroundQueue(db)
     let labeler: Labeler
     if (cfg.hiveApiKey) {

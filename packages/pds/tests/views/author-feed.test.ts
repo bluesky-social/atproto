@@ -12,7 +12,6 @@ import basicSeed from '../seeds/basic'
 import { isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
 import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 describe('pds author feed views', () => {
   let agent: AtpAgent

@@ -67,7 +67,11 @@ export class BskyAppView {
       config.didCacheStaleTTL,
       config.didCacheMaxTTL,
     )
-    const idResolver = new IdResolver({ plcUrl: config.didPlcUrl, didCache })
+    const idResolver = new IdResolver({
+      plcUrl: config.didPlcUrl,
+      didCache,
+      backupNameservers: config.handleResolveNameservers,
+    })
 
     const imgUriBuilder = new ImageUriBuilder(
       config.imgUriEndpoint || `${config.publicUrl}/img`,

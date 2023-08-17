@@ -3,6 +3,7 @@ import { Kysely, PostgresDialect } from 'kysely'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
 import { PgOptions } from './types'
+import { dbLogger } from '../logger'
 
 export class Database {
   pool: PgPool
@@ -40,7 +41,9 @@ export class Database {
       throw new Error(`Postgres schema must only contain [A-Za-z_]: ${schema}`)
     }
 
+    pool.on('error', onPoolError)
     pool.on('connect', (client) => {
+      client.on('error', onClientError)
       // Used for trigram indexes, e.g. on actor search
       client.query('SET pg_trgm.word_similarity_threshold TO .4;')
       if (schema) {
@@ -83,3 +86,6 @@ export class Database {
 }
 
 export default Database
+
+const onPoolError = (err: Error) => dbLogger.error({ err }, 'db pool error')
+const onClientError = (err: Error) => dbLogger.error({ err }, 'db client error')

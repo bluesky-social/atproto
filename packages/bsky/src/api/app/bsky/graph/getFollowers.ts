@@ -6,17 +6,22 @@ import { notSoftDeletedClause } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollowers({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authOptionalAccessOrRoleVerifier,
     handler: async ({ params, auth }) => {
       const { actor, limit, cursor } = params
-      const requester = auth.credentials.did
+      const requester = 'did' in auth.credentials ? auth.credentials.did : null
+      const canViewTakendownProfile =
+        auth.credentials.type === 'role' && auth.credentials.triage
       const db = ctx.db.getReplica()
       const { ref } = db.db.dynamic
 
       const actorService = ctx.services.actor(db)
       const graphService = ctx.services.graph(db)
 
-      const subjectRes = await actorService.getActor(actor)
+      const subjectRes = await actorService.getActor(
+        actor,
+        canViewTakendownProfile,
+      )
       if (!subjectRes) {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
       }
@@ -25,7 +30,9 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('follow')
         .where('follow.subjectDid', '=', subjectRes.did)
         .innerJoin('actor as creator', 'creator.did', 'follow.creator')
-        .where(notSoftDeletedClause(ref('creator')))
+        .if(!canViewTakendownProfile, (qb) =>
+          qb.where(notSoftDeletedClause(ref('creator'))),
+        )
         .whereNotExists(
           graphService.blockQb(requester, [ref('follow.creator')]),
         )
@@ -47,8 +54,12 @@ export default function (server: Server, ctx: AppContext) {
 
       const followersRes = await followersReq.execute()
       const [followers, subject] = await Promise.all([
-        actorService.views.hydrateProfiles(followersRes, requester),
-        actorService.views.profile(subjectRes, requester),
+        actorService.views.hydrateProfiles(followersRes, requester, {
+          includeSoftDeleted: canViewTakendownProfile,
+        }),
+        actorService.views.profile(subjectRes, requester, {
+          includeSoftDeleted: canViewTakendownProfile,
+        }),
       ])
       if (!subject) {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
