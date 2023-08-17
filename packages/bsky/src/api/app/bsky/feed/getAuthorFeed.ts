@@ -55,13 +55,16 @@ export default function (server: Server, ctx: AppContext) {
         .where('originatorDid', '=', did)
 
       if (filter === 'posts_with_media') {
-        // only posts with media
-        feedItemsQb = feedItemsQb.whereExists((qb) =>
-          qb
-            .selectFrom('post_embed_image')
-            .select('post_embed_image.postUri')
-            .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
-        )
+        feedItemsQb = feedItemsQb
+          // and only your own posts/reposts
+          .where('post.creator', '=', did)
+          // only posts with media
+          .whereExists((qb) =>
+            qb
+              .selectFrom('post_embed_image')
+              .select('post_embed_image.postUri')
+              .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
+          )
       } else if (filter === 'posts_no_replies') {
         // only posts, no replies
         feedItemsQb = feedItemsQb.where('post.replyParent', 'is', null)
