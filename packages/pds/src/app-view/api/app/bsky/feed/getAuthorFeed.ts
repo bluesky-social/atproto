@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
 import { FeedKeyset } from '../util/feed'

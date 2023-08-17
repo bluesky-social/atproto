@@ -65,7 +65,7 @@ export default function (server: Server, ctx: AppContext) {
           // or any reposted replies
           .orWhere((qb) => {
             return qb
-              .where('originatorDid', '=', did)
+              .where('originatorDid', '=', actorDid)
               .where('type', '=', 'repost')
           })
       }
