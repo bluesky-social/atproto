@@ -4,7 +4,6 @@ export interface NotificationPushToken {
   did: string
   platform: 'ios' | 'android' | 'web'
   token: string
-  endpoint: string
   appId: string
 }
 
