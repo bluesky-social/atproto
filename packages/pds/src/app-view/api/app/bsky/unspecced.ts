@@ -192,31 +192,6 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
-  server.app.bsky.unspecced.registerPushNotification({
-    auth: ctx.accessVerifier,
-    handler: async ({ auth, params }) => {
-      const { token, platform, appId, endpoint } = params
-      const {
-        credentials: { did },
-      } = auth
-
-      const { appviewAgent } = ctx
-
-      if (ctx.canProxyWrite()) {
-        // @TODO: hit the endpoint here so that 3rd party devs can run their own notification servers
-        await appviewAgent.api.app.bsky.unspecced.registerPushNotification(
-          {
-            token,
-            platform,
-            appId,
-            endpoint,
-          },
-          await ctx.serviceAuthHeaders(did),
-        )
-      }
-    },
-  })
-
   server.app.bsky.unspecced.applyLabels({
     auth: ctx.roleVerifier,
     handler: async ({ auth, input }) => {

@@ -30,6 +30,8 @@ import getSuggestions from './actor/getSuggestions'
 import listNotifications from './notification/listNotifications'
 import getUnreadCount from './notification/getUnreadCount'
 import updateSeen from './notification/updateSeen'
+import registerPush from './notification/registerPush'
+import unregisterPush from './notification/unregisterPush'
 import unspecced from './unspecced'
 
 export default function (server: Server, ctx: AppContext) {
@@ -63,5 +65,7 @@ export default function (server: Server, ctx: AppContext) {
   listNotifications(server, ctx)
   getUnreadCount(server, ctx)
   updateSeen(server, ctx)
+  registerPush(server, ctx)
+  unregisterPush(server, ctx)
   unspecced(server, ctx)
 }

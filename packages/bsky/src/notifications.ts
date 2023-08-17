@@ -7,7 +7,7 @@ import logger from './indexer/logger'
 import { BackgroundQueue } from './background'
 import { Redis } from './redis'
 
-type Platform = 'ios' | 'android' | 'web'
+export type Platform = 'ios' | 'android' | 'web'
 type PushNotification = {
   tokens: string[]
   platform: 1 | 2 // 1 = ios, 2 = android
@@ -195,22 +195,23 @@ export class NotificationServer {
 
   async registerDeviceForPushNotifications(
     did: string,
-    platform: Platform,
     token: string,
+    platform: Platform,
     appId: string,
-    endpoint: string,
   ) {
     // if token doesn't exist, insert it, on conflict do nothing
     await this.db.db
       .insertInto('notification_push_token')
-      .values({
-        did,
-        token,
-        platform,
-        appId,
-        endpoint,
-      })
+      .values({ did, token, platform, appId })
       .onConflict((oc) => oc.doNothing())
+      .execute()
+  }
+
+  async unregisterDeviceForPushNotifications(did: string, token: string) {
+    await this.db.db
+      .deleteFrom('notification_push_token')
+      .where('did', '=', did)
+      .where('token', '=', token)
       .execute()
   }
 

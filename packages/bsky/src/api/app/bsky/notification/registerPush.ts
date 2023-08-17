@@ -1,23 +1,30 @@
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { Platform } from '../../../../notifications'
 
-// THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.unspecced.registerPushNotification({
+  server.app.bsky.notification.registerPush({
     auth: ctx.authVerifier,
     handler: async ({ auth, params }) => {
-      const { token, platform, endpoint, appId } = params
+      const { token, platform, serviceDid, appId } = params
       const {
         credentials: { did },
       } = auth
+      if (serviceDid !== auth.artifacts.aud) {
+        throw new InvalidRequestError('Invalid serviceDid.')
+      }
       const { notifServer } = ctx
-
+      if (platform !== 'ios' && platform !== 'android' && platform !== 'web') {
+        throw new InvalidRequestError(
+          'Unsupported platform: must be "ios", "android", or "web".',
+        )
+      }
       await notifServer.registerDeviceForPushNotifications(
         did,
-        platform,
         token,
+        platform as Platform,
         appId,
-        endpoint,
       )
     },
   })

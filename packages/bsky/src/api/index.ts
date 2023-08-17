@@ -31,6 +31,8 @@ import getSuggestions from './app/bsky/actor/getSuggestions'
 import getUnreadCount from './app/bsky/notification/getUnreadCount'
 import listNotifications from './app/bsky/notification/listNotifications'
 import updateSeen from './app/bsky/notification/updateSeen'
+import registerPush from './app/bsky/notification/registerPush'
+import unregisterPush from './app/bsky/notification/unregisterPush'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
 import getTimelineSkeleton from './app/bsky/unspecced/getTimelineSkeleton'
 import createReport from './com/atproto/moderation/createReport'
@@ -46,7 +48,6 @@ import getModerationReport from './com/atproto/admin/getModerationReport'
 import getModerationReports from './com/atproto/admin/getModerationReports'
 import resolveHandle from './com/atproto/identity/resolveHandle'
 import getRecord from './com/atproto/repo/getRecord'
-import registerPushNotifications from './app/bsky/unspecced/registerPushNotifications'
 
 export * as health from './health'
 
@@ -85,9 +86,10 @@ export default function (server: Server, ctx: AppContext) {
   getUnreadCount(server, ctx)
   listNotifications(server, ctx)
   updateSeen(server, ctx)
+  registerPush(server, ctx)
+  unregisterPush(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTimelineSkeleton(server, ctx)
-  registerPushNotifications(server, ctx)
   // com.atproto
   createReport(server, ctx)
   resolveModerationReports(server, ctx)
