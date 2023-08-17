@@ -35,29 +35,22 @@ export default function (server: Server, ctx: AppContext) {
       const feedService = ctx.services.feed(db)
       const graphService = ctx.services.graph(db)
 
-      let did = ''
-      if (actor.startsWith('did:')) {
-        did = actor
-      } else {
-        const actorRes = await db.db
-          .selectFrom('actor')
-          .select('did')
-          .where('handle', '=', actor)
-          .executeTakeFirst()
-        if (actorRes) {
-          did = actorRes?.did
-        }
+      // maybe resolve did first
+      const actorRes = await actorService.getActor(actor)
+      if (!actorRes) {
+        throw new InvalidRequestError('Profile not found')
       }
+      const actorDid = actorRes.did
 
       // defaults to posts, reposts, and replies
       let feedItemsQb = feedService
         .selectFeedItemQb()
-        .where('originatorDid', '=', did)
+        .where('originatorDid', '=', actorDid)
 
       if (filter === 'posts_with_media') {
         feedItemsQb = feedItemsQb
           // and only your own posts/reposts
-          .where('post.creator', '=', did)
+          .where('post.creator', '=', actorDid)
           // only posts with media
           .whereExists((qb) =>
             qb

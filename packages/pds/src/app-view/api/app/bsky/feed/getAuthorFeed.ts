@@ -36,23 +36,16 @@ export default function (server: Server, ctx: AppContext) {
 
       const { ref } = ctx.db.db.dynamic
       const accountService = ctx.services.account(ctx.db)
+      const actorService = ctx.services.appView.actor(ctx.db)
       const feedService = ctx.services.appView.feed(ctx.db)
       const graphService = ctx.services.appView.graph(ctx.db)
 
       // maybe resolve did first
-      let actorDid = ''
-      if (actor.startsWith('did:')) {
-        actorDid = actor
-      } else {
-        const actorRes = await ctx.db.db
-          .selectFrom('did_handle')
-          .select('did')
-          .where('did_handle.handle', '=', actor)
-          .executeTakeFirst()
-        if (actorRes) {
-          actorDid = actorRes?.did
-        }
+      const actorRes = await actorService.getActor(actor)
+      if (!actorRes) {
+        throw new InvalidRequestError('Profile not found')
       }
+      const actorDid = actorRes.did
 
       // defaults to posts, reposts, and replies
       let feedItemsQb = feedService
