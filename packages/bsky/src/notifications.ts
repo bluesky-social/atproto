@@ -7,8 +7,11 @@ import { Insertable } from 'kysely'
 import logger from './indexer/logger'
 import { BackgroundQueue } from './background'
 import { Redis } from './redis'
+import { notSoftDeletedClause } from './db/util'
+import { ids } from './lexicon/lexicons'
 
 export type Platform = 'ios' | 'android' | 'web'
+
 type PushNotification = {
   tokens: string[]
   platform: 1 | 2 // 1 = ios, 2 = android
@@ -19,7 +22,15 @@ type PushNotification = {
     [key: string]: string
   }
 }
+
 type InsertableNotif = Insertable<Notification>
+
+type NotifDisplay = {
+  title: string
+  body: string
+  notif: InsertableNotif
+}
+
 export class NotificationServer {
   private notificationBatch: PushNotification[] = []
   private backgroundQueue: BackgroundQueue
@@ -52,36 +63,27 @@ export class NotificationServer {
     const tokensByDid = await this.getTokensByDid(
       unique(notifications.map((n) => n.did)),
     )
-    for (const notif of notifications) {
-      const { did: userDid } = notif
-      const userTokens = tokensByDid[userDid] ?? []
-      // if user has no tokens or the post attr cannot be found, skip
-      if (userTokens.length === 0) {
-        continue
-      }
-      const attr = await this.getNotificationDisplayAttributes(notif)
-      if (!attr) {
-        logger.warn(
-          { userDid, notif },
-          'No notification display attributes found for this notification. Either profile or post data for this notification is missing.',
-        )
-        continue
-      }
-      const { title, body } = attr
+    // views for all notifications that have tokens
+    const notificationViews = await this.getNotificationDisplayAttributes(
+      notifications.filter((n) => tokensByDid[n.did]),
+    )
 
+    for (const notifView of notificationViews) {
+      const { did: userDid } = notifView.notif
+      const userTokens = tokensByDid[userDid] ?? []
       for (const t of userTokens) {
         const { appId, platform, token } = t
         if (platform === 'ios' || platform === 'android') {
           notifsToSend.push({
             tokens: [token],
             platform: platform === 'ios' ? 1 : 2,
-            title: title,
-            message: body,
+            title: notifView.title,
+            message: notifView.body,
             topic: appId,
             data: {
-              reason: notif.reason,
-              recordUri: notif.recordUri,
-              recordCid: notif.recordCid,
+              reason: notifView.notif.reason,
+              recordUri: notifView.notif.recordUri,
+              recordCid: notifView.notif.recordCid,
             },
           })
         } else {
@@ -90,6 +92,7 @@ export class NotificationServer {
         }
       }
     }
+
     return notifsToSend
   }
 
@@ -216,96 +219,123 @@ export class NotificationServer {
   }
 
   async getNotificationDisplayAttributes(
-    notif: InsertableNotif,
-  ): Promise<{ title: string; body: string } | undefined> {
-    const {
-      author: authorDid,
-      reason,
-      reasonSubject: subjectUri, // if like/reply/quote/emtion, the post which was liked/replied to/mention is in/or quoted. if custom feed liked, the feed which was liked
-      recordUri,
-    } = notif
-    // 1. Get author's display name
-    const displayName = await this.db.db
-      .selectFrom('profile')
-      .where('creator', '=', authorDid)
-      .select(['displayName'])
-      .executeTakeFirst()
+    notifs: InsertableNotif[],
+  ): Promise<NotifDisplay[]> {
+    const { ref } = this.db.db.dynamic
+    const authorDids = notifs.map((n) => n.author)
+    const subjectUris = notifs.flatMap((n) => n.reasonSubject ?? [])
+    const recordUris = notifs.map((n) => n.recordUri)
+    const allUris = [...subjectUris, ...recordUris]
 
-    // if no display name, dont send notification
-    if (!displayName || !displayName?.displayName) {
-      return
-    }
-    const author = displayName.displayName
-
-    // 2. Get post data content
-    // if follow, get the URI of the author's profile
-    // if reply, or mention, get URI of the postRecord
-    // if like, or custom feed like, or repost get the URI of the reasonSubject
-    let title = ''
-    let body = ''
-
-    // check follow first and mention first because they don't have subjectUri and return
-    // reply has subjectUri but the recordUri is the replied post
-    if (reason === 'follow') {
-      title = 'New follower!'
-      body = `${author} has followed you`
-      return { title, body }
-    } else if (reason === 'mention' || reason === 'reply') {
-      // use recordUri for mention and reply
-      title =
-        reason === 'mention'
-          ? `${author} mentioned you`
-          : `${author} replied to your post`
-      const postData = await this.db.db
+    // gather potential display data for notifications in batch
+    const [authors, posts] = await Promise.all([
+      this.db.db
+        .selectFrom('profile')
+        .innerJoin('actor', 'actor.did', 'profile.creator')
+        .innerJoin('record', 'record.uri', 'profile.uri')
+        .where(notSoftDeletedClause(ref('actor')))
+        .where(notSoftDeletedClause(ref('record')))
+        .where('creator', 'in', authorDids.length ? authorDids : [''])
+        .select(['did', 'displayName'])
+        .execute(),
+      this.db.db
         .selectFrom('post')
-        .where('uri', '=', recordUri)
-        .selectAll()
-        .executeTakeFirst()
-      body = postData?.text || ''
-      return { title, body }
-    }
+        .innerJoin('actor', 'actor.did', 'post.creator')
+        .innerJoin('record', 'record.uri', 'post.uri')
+        .where(notSoftDeletedClause(ref('actor')))
+        .where(notSoftDeletedClause(ref('record')))
+        .where('uri', 'in', allUris.length ? allUris : [''])
+        .select(['uri', 'text'])
+        .execute(),
+    ])
 
-    // if no subjectUri, don't send notification
-    // at this point, subjectUri should exist for all the other reasons
-    if (!subjectUri) {
-      return
-    }
+    const authorsByDid = authors.reduce((acc, author) => {
+      acc[author.did] = author
+      return acc
+    }, {} as Record<string, { displayName: string | null }>)
+    const postsByUri = posts.reduce((acc, post) => {
+      acc[post.uri] = post
+      return acc
+    }, {} as Record<string, { text: string }>)
 
-    // if no post data, don't send notification
-    const postData = await this.db.db
-      .selectFrom('post')
-      .where('uri', '=', subjectUri)
-      .selectAll()
-      .executeTakeFirst()
-    if (!postData) {
-      return
-    }
+    const results: NotifDisplay[] = []
 
-    if (reason === 'like') {
-      title = `${author} liked your post`
-      body = postData?.text || ''
-      // custom feed like
-      if (subjectUri?.includes('feed.generator')) {
-        title = `${author} liked your custom feed`
-        body = `${new AtUri(subjectUri).rkey}`
+    for (const notif of notifs) {
+      const {
+        author: authorDid,
+        reason,
+        reasonSubject: subjectUri, // if like/reply/quote/emtion, the post which was liked/replied to/mention is in/or quoted. if custom feed liked, the feed which was liked
+        recordUri,
+      } = notif
+
+      const author = authorsByDid[authorDid]?.displayName
+      const postRecord = postsByUri[recordUri]
+      const postSubject = subjectUri ? postsByUri[subjectUri] : null
+
+      // if no display name, dont send notification
+      if (!author) {
+        continue
       }
-    } else if (reason === 'quote') {
-      title = `${author} quoted your post`
-      body = postData?.text || ''
-    } else if (reason === 'repost') {
-      title = `${author} reposted your post`
-      body = postData?.text || ''
+      // const author = displayName.displayName
+
+      // 2. Get post data content
+      // if follow, get the URI of the author's profile
+      // if reply, or mention, get URI of the postRecord
+      // if like, or custom feed like, or repost get the URI of the reasonSubject
+      let title = ''
+      let body = ''
+
+      // check follow first and mention first because they don't have subjectUri and return
+      // reply has subjectUri but the recordUri is the replied post
+      if (reason === 'follow') {
+        title = 'New follower!'
+        body = `${author} has followed you`
+        results.push({ title, body, notif })
+      } else if (reason === 'mention' || reason === 'reply') {
+        // use recordUri for mention and reply
+        title =
+          reason === 'mention'
+            ? `${author} mentioned you`
+            : `${author} replied to your post`
+        body = postRecord?.text || ''
+        results.push({ title, body, notif })
+      }
+
+      // if no subjectUri, don't send notification
+      // at this point, subjectUri should exist for all the other reasons
+      if (!postSubject) {
+        continue
+      }
+
+      if (reason === 'like') {
+        title = `${author} liked your post`
+        body = postSubject?.text || ''
+        // custom feed like
+        const uri = subjectUri ? new AtUri(subjectUri) : null
+        if (uri?.collection === ids.AppBskyFeedGenerator) {
+          title = `${author} liked your custom feed`
+          body = uri?.rkey ?? ''
+        }
+      } else if (reason === 'quote') {
+        title = `${author} quoted your post`
+        body = postSubject?.text || ''
+      } else if (reason === 'repost') {
+        title = `${author} reposted your post`
+        body = postSubject?.text || ''
+      }
+
+      if (title === '' && body === '') {
+        logger.warn(
+          { notif },
+          'No notification display attributes found for this notification. Either profile or post data for this notification is missing.',
+        )
+        continue
+      }
+
+      results.push({ title, body, notif })
     }
 
-    if (title === '' && body === '') {
-      logger.warn(
-        { notif },
-        'No notification display attributes found for this notification. Either profile or post data for this notification is missing.',
-      )
-      return
-    }
-
-    return { title, body }
+    return results
   }
 }
 
