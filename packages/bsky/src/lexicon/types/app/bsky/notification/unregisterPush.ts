@@ -9,9 +9,9 @@ import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {
+  serviceDid: string
   token: string
-  platform: 'ios' | 'android' | 'web'
-  endpoint: string
+  platform: 'ios' | 'android' | 'web' | (string & {})
   appId: string
 }
 

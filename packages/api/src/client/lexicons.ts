@@ -6311,6 +6311,66 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyNotificationRegisterPush: {
+    lexicon: 1,
+    id: 'app.bsky.notification.registerPush',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Register for push notifications with a service',
+        parameters: {
+          type: 'params',
+          required: ['serviceDid', 'token', 'platform', 'appId'],
+          properties: {
+            serviceDid: {
+              type: 'string',
+              format: 'did',
+            },
+            token: {
+              type: 'string',
+            },
+            platform: {
+              type: 'string',
+              knownValues: ['ios', 'android', 'web'],
+            },
+            appId: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationUnregisterPush: {
+    lexicon: 1,
+    id: 'app.bsky.notification.unregisterPush',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Unregister for push notifications with a service',
+        parameters: {
+          type: 'params',
+          required: ['serviceDid', 'token', 'platform', 'appId'],
+          properties: {
+            serviceDid: {
+              type: 'string',
+              format: 'did',
+            },
+            token: {
+              type: 'string',
+            },
+            platform: {
+              type: 'string',
+              knownValues: ['ios', 'android', 'web'],
+            },
+            appId: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationUpdateSeen: {
     lexicon: 1,
     id: 'app.bsky.notification.updateSeen',
@@ -6565,36 +6625,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyUnspeccedRegisterPushNotification: {
-    lexicon: 1,
-    id: 'app.bsky.unspecced.registerPushNotification',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'An unspecced route to register a push notification token for a user at the specified endpoint',
-        parameters: {
-          type: 'params',
-          required: ['token', 'platform', 'endpoint', 'appId'],
-          properties: {
-            token: {
-              type: 'string',
-            },
-            platform: {
-              type: 'string',
-              enum: ['ios', 'android', 'web'],
-            },
-            endpoint: {
-              type: 'string',
-            },
-            appId: {
-              type: 'string',
-            },
-          },
-        },
-      },
-    },
-  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -6719,6 +6749,8 @@ export const ids = {
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
+  AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
+  AppBskyNotificationUnregisterPush: 'app.bsky.notification.unregisterPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedApplyLabels: 'app.bsky.unspecced.applyLabels',
@@ -6726,6 +6758,4 @@ export const ids = {
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetTimelineSkeleton: 'app.bsky.unspecced.getTimelineSkeleton',
-  AppBskyUnspeccedRegisterPushNotification:
-    'app.bsky.unspecced.registerPushNotification',
 }

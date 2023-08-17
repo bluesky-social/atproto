@@ -8,9 +8,9 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
 export interface QueryParams {
+  serviceDid: string
   token: string
-  platform: 'ios' | 'android' | 'web'
-  endpoint: string
+  platform: 'ios' | 'android' | 'web' | (string & {})
   appId: string
 }
 

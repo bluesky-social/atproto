@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.notification.unregisterPush",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Unregister for push notifications with a service",
+      "parameters": {
+        "type": "params",
+        "required": ["serviceDid", "token", "platform", "appId"],
+        "properties": {
+          "serviceDid": {"type": "string", "format": "did"},
+          "token": {"type": "string"},
+          "platform": {"type": "string", "knownValues": ["ios", "android", "web"]},
+          "appId": {"type": "string"}
+        }
+      }
+    }
+  }
+}

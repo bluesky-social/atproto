@@ -101,12 +101,13 @@ import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
+import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
+import * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
-import * as AppBskyUnspeccedRegisterPushNotification from './types/app/bsky/unspecced/registerPushNotification'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -1020,6 +1021,23 @@ export class NotificationNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  registerPush<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, AppBskyNotificationRegisterPush.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'app.bsky.notification.registerPush' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  unregisterPush<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyNotificationUnregisterPush.Handler<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.notification.unregisterPush' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   updateSeen<AV extends AuthVerifier>(
     cfg: ConfigOf<AV, AppBskyNotificationUpdateSeen.Handler<ExtractAuth<AV>>>,
   ) {
@@ -1074,16 +1092,6 @@ export class UnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.getTimelineSkeleton' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  registerPushNotification<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyUnspeccedRegisterPushNotification.Handler<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.registerPushNotification' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

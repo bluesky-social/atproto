@@ -120,13 +120,14 @@ import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
+import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
+import * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
-import * as AppBskyUnspeccedRegisterPushNotification from './types/app/bsky/unspecced/registerPushNotification'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
@@ -241,13 +242,14 @@ export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
+export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
+export * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 export * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
 export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 export * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
-export * as AppBskyUnspeccedRegisterPushNotification from './types/app/bsky/unspecced/registerPushNotification'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -2013,6 +2015,28 @@ export class NotificationNS {
       })
   }
 
+  registerPush(
+    params?: AppBskyNotificationRegisterPush.QueryParams,
+    opts?: AppBskyNotificationRegisterPush.CallOptions,
+  ): Promise<AppBskyNotificationRegisterPush.Response> {
+    return this._service.xrpc
+      .call('app.bsky.notification.registerPush', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyNotificationRegisterPush.toKnownErr(e)
+      })
+  }
+
+  unregisterPush(
+    params?: AppBskyNotificationUnregisterPush.QueryParams,
+    opts?: AppBskyNotificationUnregisterPush.CallOptions,
+  ): Promise<AppBskyNotificationUnregisterPush.Response> {
+    return this._service.xrpc
+      .call('app.bsky.notification.unregisterPush', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyNotificationUnregisterPush.toKnownErr(e)
+      })
+  }
+
   updateSeen(
     data?: AppBskyNotificationUpdateSeen.InputSchema,
     opts?: AppBskyNotificationUpdateSeen.CallOptions,
@@ -2086,22 +2110,6 @@ export class UnspeccedNS {
       .call('app.bsky.unspecced.getTimelineSkeleton', params, undefined, opts)
       .catch((e) => {
         throw AppBskyUnspeccedGetTimelineSkeleton.toKnownErr(e)
-      })
-  }
-
-  registerPushNotification(
-    params?: AppBskyUnspeccedRegisterPushNotification.QueryParams,
-    opts?: AppBskyUnspeccedRegisterPushNotification.CallOptions,
-  ): Promise<AppBskyUnspeccedRegisterPushNotification.Response> {
-    return this._service.xrpc
-      .call(
-        'app.bsky.unspecced.registerPushNotification',
-        params,
-        undefined,
-        opts,
-      )
-      .catch((e) => {
-        throw AppBskyUnspeccedRegisterPushNotification.toKnownErr(e)
       })
   }
 }
