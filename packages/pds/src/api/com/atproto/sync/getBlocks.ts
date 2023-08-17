@@ -1,14 +1,14 @@
+import { CID } from 'multiformats/cid'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { byteIterableToStream } from '@atproto/common'
+import { blocksToCarStream } from '@atproto/repo'
 import { Server } from '../../../../lexicon'
-import SqlRepoStorage, {
-  RepoRootNotFoundError,
-} from '../../../../sql-repo-storage'
+import SqlRepoStorage from '../../../../sql-repo-storage'
 import AppContext from '../../../../context'
 import { isUserOrAdmin } from '../../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.sync.getRepo({
+  server.com.atproto.sync.getBlocks({
     auth: ctx.optionalAccessOrRoleVerifier,
     handler: async ({ params, auth }) => {
       const { did } = params
@@ -22,20 +22,18 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
+      const cids = params.cids.map((c) => CID.parse(c))
       const storage = new SqlRepoStorage(ctx.db, did)
-      let carStream: AsyncIterable<Uint8Array>
-      try {
-        carStream = await storage.getCarStream(params.rev)
-      } catch (err) {
-        if (err instanceof RepoRootNotFoundError) {
-          throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
-        }
-        throw err
+      const got = await storage.getBlocks(cids)
+      if (got.missing.length > 0) {
+        const missingStr = got.missing.map((c) => c.toString())
+        throw new InvalidRequestError(`Could not find cids: ${missingStr}`)
       }
+      const car = blocksToCarStream(null, got.blocks)
 
       return {
         encoding: 'application/vnd.ipld.car',
-        body: byteIterableToStream(carStream),
+        body: byteIterableToStream(car),
       }
     },
   })

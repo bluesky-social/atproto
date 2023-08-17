@@ -3032,6 +3032,100 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncGetBlocks: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getBlocks',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Gets blocks from a given repo.',
+        parameters: {
+          type: 'params',
+          required: ['did', 'cids'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+            cids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'cid',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/vnd.ipld.car',
+        },
+      },
+    },
+  },
+  ComAtprotoSyncGetCheckout: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getCheckout',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'DEPRECATED - please use com.atproto.sync.getRepo instead',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/vnd.ipld.car',
+        },
+      },
+    },
+  },
+  ComAtprotoSyncGetHead: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getHead',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'DEPRACATED - please use com.atproto.sync.getRoot instead',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['root'],
+            properties: {
+              root: {
+                type: 'string',
+                format: 'cid',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'RootNotFound',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoSyncGetRecord: {
     lexicon: 1,
     id: 'com.atproto.sync.getRecord',
@@ -3135,6 +3229,48 @@ export const schemaDict = {
             name: 'RootNotFound',
           },
         ],
+      },
+    },
+  },
+  ComAtprotoSyncListBlobs: {
+    lexicon: 1,
+    id: 'com.atproto.sync.listBlobs',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List blob cids since some revision',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+            rev: {
+              type: 'string',
+              format: 'cid',
+              description: 'Optional revision of the repo to list blobs since',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['cids'],
+            properties: {
+              cids: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'cid',
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -6469,9 +6605,13 @@ export const ids = {
   ComAtprotoServerResetPassword: 'com.atproto.server.resetPassword',
   ComAtprotoServerRevokeAppPassword: 'com.atproto.server.revokeAppPassword',
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
+  ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
+  ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
+  ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
   ComAtprotoSyncGetRoot: 'com.atproto.sync.getRoot',
+  ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
   ComAtprotoSyncListRepos: 'com.atproto.sync.listRepos',
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',

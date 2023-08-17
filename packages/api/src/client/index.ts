@@ -61,9 +61,13 @@ import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/serve
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
+import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
+import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
+import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 import * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
+import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
@@ -177,9 +181,13 @@ export * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/serve
 export * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
+export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
+export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
+export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 export * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
+export * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
@@ -902,6 +910,39 @@ export class SyncNS {
       })
   }
 
+  getBlocks(
+    params?: ComAtprotoSyncGetBlocks.QueryParams,
+    opts?: ComAtprotoSyncGetBlocks.CallOptions,
+  ): Promise<ComAtprotoSyncGetBlocks.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getBlocks', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetBlocks.toKnownErr(e)
+      })
+  }
+
+  getCheckout(
+    params?: ComAtprotoSyncGetCheckout.QueryParams,
+    opts?: ComAtprotoSyncGetCheckout.CallOptions,
+  ): Promise<ComAtprotoSyncGetCheckout.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getCheckout', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetCheckout.toKnownErr(e)
+      })
+  }
+
+  getHead(
+    params?: ComAtprotoSyncGetHead.QueryParams,
+    opts?: ComAtprotoSyncGetHead.CallOptions,
+  ): Promise<ComAtprotoSyncGetHead.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getHead', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetHead.toKnownErr(e)
+      })
+  }
+
   getRecord(
     params?: ComAtprotoSyncGetRecord.QueryParams,
     opts?: ComAtprotoSyncGetRecord.CallOptions,
@@ -932,6 +973,17 @@ export class SyncNS {
       .call('com.atproto.sync.getRoot', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoSyncGetRoot.toKnownErr(e)
+      })
+  }
+
+  listBlobs(
+    params?: ComAtprotoSyncListBlobs.QueryParams,
+    opts?: ComAtprotoSyncListBlobs.CallOptions,
+  ): Promise<ComAtprotoSyncListBlobs.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.listBlobs', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncListBlobs.toKnownErr(e)
       })
   }
 

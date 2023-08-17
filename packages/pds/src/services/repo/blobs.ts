@@ -201,13 +201,15 @@ export class RepoBlobs {
       .execute()
   }
 
-  async listSinceRev(did: string, rev: string): Promise<CID[]> {
-    const res = await this.db.db
+  async listSinceRev(did: string, rev?: string): Promise<CID[]> {
+    let builder = this.db.db
       .selectFrom('repo_blob')
       .where('did', '=', did)
-      .where('repoRev', '>', rev)
       .select('cid')
-      .execute()
+    if (rev) {
+      builder = builder.where('repoRev', '>', rev)
+    }
+    const res = await builder.execute()
     const cids = res.map((row) => CID.parse(row.cid))
     return new CidSet(cids).toList()
   }

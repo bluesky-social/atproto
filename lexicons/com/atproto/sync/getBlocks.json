@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.sync.getBlocks",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Gets blocks from a given repo.",
+      "parameters": {
+        "type": "params",
+        "required": ["did", "cids"],
+        "properties": {
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "The DID of the repo."
+          },
+          "cids": {
+            "type": "array", 
+            "items": {"type": "string", "format": "cid"}
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/vnd.ipld.car"
+      }
+    }
+  }
+}

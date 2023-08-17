@@ -1,14 +1,14 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { byteIterableToStream } from '@atproto/common'
-import { Server } from '../../../../lexicon'
+import { Server } from '../../../../../lexicon'
 import SqlRepoStorage, {
   RepoRootNotFoundError,
-} from '../../../../sql-repo-storage'
-import AppContext from '../../../../context'
-import { isUserOrAdmin } from '../../../../auth'
+} from '../../../../../sql-repo-storage'
+import AppContext from '../../../../../context'
+import { isUserOrAdmin } from '../../../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.sync.getRepo({
+  server.com.atproto.sync.getCheckout({
     auth: ctx.optionalAccessOrRoleVerifier,
     handler: async ({ params, auth }) => {
       const { did } = params
@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
       const storage = new SqlRepoStorage(ctx.db, did)
       let carStream: AsyncIterable<Uint8Array>
       try {
-        carStream = await storage.getCarStream(params.rev)
+        carStream = await storage.getCarStream()
       } catch (err) {
         if (err instanceof RepoRootNotFoundError) {
           throw new InvalidRequestError(`Could not find repo for DID: ${did}`)

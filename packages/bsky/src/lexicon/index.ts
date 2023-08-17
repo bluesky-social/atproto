@@ -58,9 +58,13 @@ import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/serve
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
+import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
+import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
+import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 import * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
+import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
@@ -630,6 +634,27 @@ export class SyncNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getBlocks<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncGetBlocks.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.getBlocks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getCheckout<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncGetCheckout.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.getCheckout' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getHead<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncGetHead.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.getHead' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getRecord<AV extends AuthVerifier>(
     cfg: ConfigOf<AV, ComAtprotoSyncGetRecord.Handler<ExtractAuth<AV>>>,
   ) {
@@ -648,6 +673,13 @@ export class SyncNS {
     cfg: ConfigOf<AV, ComAtprotoSyncGetRoot.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'com.atproto.sync.getRoot' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listBlobs<AV extends AuthVerifier>(
+    cfg: ConfigOf<AV, ComAtprotoSyncListBlobs.Handler<ExtractAuth<AV>>>,
+  ) {
+    const nsid = 'com.atproto.sync.listBlobs' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

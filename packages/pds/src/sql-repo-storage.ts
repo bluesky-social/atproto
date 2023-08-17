@@ -212,7 +212,6 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
         }
         blocks = await this.getBlockRange(500, rev, cidCursor)
       } while (blocks.length > 0)
-      await car.close()
     })
   }
 
