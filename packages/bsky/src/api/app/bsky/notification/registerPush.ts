@@ -6,8 +6,8 @@ import { Platform } from '../../../../notifications'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.registerPush({
     auth: ctx.authVerifier,
-    handler: async ({ auth, params }) => {
-      const { token, platform, serviceDid, appId } = params
+    handler: async ({ auth, input }) => {
+      const { token, platform, serviceDid, appId } = input.body
       const {
         credentials: { did },
       } = auth

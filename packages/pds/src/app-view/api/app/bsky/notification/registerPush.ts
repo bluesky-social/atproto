@@ -8,28 +8,29 @@ import { getDidDoc } from '../util/resolver'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.registerPush({
     auth: ctx.accessVerifier,
-    handler: async ({ auth, params }) => {
-      const { serviceDid } = params
+    handler: async ({ auth, input }) => {
+      const { serviceDid } = input.body
       const {
         credentials: { did },
       } = auth
 
-      const { appviewAgent } = ctx
+      const authHeaders = await ctx.serviceAuthHeaders(did, serviceDid)
 
       if (ctx.canProxyWrite() && ctx.cfg.bskyAppViewDid === serviceDid) {
-        await appviewAgent.api.app.bsky.notification.registerPush(
-          params,
-          await ctx.serviceAuthHeaders(did, serviceDid),
-        )
+        const { appviewAgent } = ctx
+        await appviewAgent.api.app.bsky.notification.registerPush(input.body, {
+          ...authHeaders,
+          encoding: 'application/json',
+        })
         return
       }
 
       const notifEndpoint = await getEndpoint(ctx, serviceDid)
       const agent = new AtpAgent({ service: notifEndpoint })
-      await agent.api.app.bsky.notification.registerPush(
-        params,
-        await ctx.serviceAuthHeaders(did, serviceDid),
-      )
+      await agent.api.app.bsky.notification.registerPush(input.body, {
+        ...authHeaders,
+        encoding: 'application/json',
+      })
     },
   })
 }
