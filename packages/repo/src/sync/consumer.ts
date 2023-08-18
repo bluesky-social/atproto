@@ -9,12 +9,45 @@ import { MST } from '../mst'
 import { cidForCbor } from '@atproto/common'
 import BlockMap from '../block-map'
 
+export const verifyRepoCar = async (
+  carBytes: Uint8Array,
+  did?: string,
+  signingKey?: string,
+): Promise<VerifiedRepo> => {
+  const car = await util.readCarWithRoot(carBytes)
+  return verifyRepo(car.blocks, car.root, did, signingKey)
+}
+
+export const verifyRepo = async (
+  blocks: BlockMap,
+  head: CID,
+  did?: string,
+  signingKey?: string,
+): Promise<VerifiedRepo> => {
+  const diff = await verifyDiff(null, blocks, head, did, signingKey)
+  const creates = util.ensureCreates(diff.writes)
+  return {
+    creates,
+    commit: diff.commit,
+  }
+}
+
+export const verifyDiffCar = async (
+  repo: ReadableRepo | null,
+  carBytes: Uint8Array,
+  did?: string,
+  signingKey?: string,
+): Promise<VerifiedDiff> => {
+  const car = await util.readCarWithRoot(carBytes)
+  return verifyDiff(repo, car.blocks, car.root, did, signingKey)
+}
+
 export const verifyDiff = async (
   repo: ReadableRepo | null,
   updateBlocks: BlockMap,
   updateRoot: CID,
-  did: string,
-  signingKey: string,
+  did?: string,
+  signingKey?: string,
 ): Promise<VerifiedDiff> => {
   const stagedStorage = new MemoryBlockstore(updateBlocks)
   const updateStorage = repo
@@ -56,36 +89,24 @@ export const verifyDiff = async (
   }
 }
 
-export const verifyRepo = async (
-  blocks: BlockMap,
-  head: CID,
-  did: string,
-  signingKey: string,
-): Promise<VerifiedRepo> => {
-  const diff = await verifyDiff(null, blocks, head, did, signingKey)
-  const creates = util.ensureCreates(diff.writes)
-  return {
-    creates,
-    commit: diff.commit,
-  }
-}
-
 // @NOTE only verifies the root, not the repo contents
 const verifyRepoRoot = async (
   storage: ReadableBlockstore,
   head: CID,
-  did: string,
-  signingKey: string,
+  did?: string,
+  signingKey?: string,
 ): Promise<ReadableRepo> => {
   const repo = await ReadableRepo.load(storage, head)
-  if (repo.did !== did) {
+  if (did !== undefined && repo.did !== did) {
     throw new RepoVerificationError(`Invalid repo did: ${repo.did}`)
   }
-  const validSig = await util.verifyCommitSig(repo.commit, signingKey)
-  if (!validSig) {
-    throw new RepoVerificationError(
-      `Invalid signature on commit: ${repo.cid.toString()}`,
-    )
+  if (signingKey !== undefined) {
+    const validSig = await util.verifyCommitSig(repo.commit, signingKey)
+    if (!validSig) {
+      throw new RepoVerificationError(
+        `Invalid signature on commit: ${repo.cid.toString()}`,
+      )
+    }
   }
   return repo
 }
