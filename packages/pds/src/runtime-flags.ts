@@ -61,17 +61,19 @@ class AppviewProxyFlags {
 
   constructor(private runtimeFlags: RuntimeFlags) {}
 
-  async shouldProxy(endpoint: string, did?: string) {
+  getThreshold(endpoint: string) {
     const val = this.runtimeFlags.get(`appview-proxy:${endpoint}`) || '0'
     const threshold = parseInt(val, 10)
-    if (threshold === 0 || !appviewFlagIsValid(threshold)) {
+    return appviewFlagIsValid(threshold) ? threshold : 0
+  }
+
+  async shouldProxy(endpoint: string, did: string) {
+    const threshold = this.getThreshold(endpoint)
+    if (threshold === 0) {
       return false
     }
     if (threshold === 10) {
       return true
-    }
-    if (!did) {
-      return false
     }
     // threshold is 0 to 10 inclusive, partitions are 0 to 9 inclusive.
     const partition = await this.partitionCache.fetch(did)
