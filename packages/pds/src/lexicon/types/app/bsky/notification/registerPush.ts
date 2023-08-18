@@ -8,15 +8,20 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
-export interface QueryParams {
+export interface QueryParams {}
+
+export interface InputSchema {
   serviceDid: string
   token: string
   platform: 'ios' | 'android' | 'web' | (string & {})
   appId: string
+  [k: string]: unknown
 }
 
-export type InputSchema = undefined
-export type HandlerInput = undefined
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
 
 export interface HandlerError {
   status: number

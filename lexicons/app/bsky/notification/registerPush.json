@@ -3,16 +3,19 @@
   "id": "app.bsky.notification.registerPush",
   "defs": {
     "main": {
-      "type": "query",
+      "type": "procedure",
       "description": "Register for push notifications with a service",
-      "parameters": {
-        "type": "params",
-        "required": ["serviceDid", "token", "platform", "appId"],
-        "properties": {
-          "serviceDid": {"type": "string", "format": "did"},
-          "token": {"type": "string"},
-          "platform": {"type": "string", "knownValues": ["ios", "android", "web"]},
-          "appId": {"type": "string"}
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["serviceDid", "token", "platform", "appId"],
+          "properties": {
+            "serviceDid": {"type": "string", "format": "did"},
+            "token": {"type": "string"},
+            "platform": {"type": "string", "knownValues": ["ios", "android", "web"]},
+            "appId": {"type": "string"}
+          }
         }
       }
     }

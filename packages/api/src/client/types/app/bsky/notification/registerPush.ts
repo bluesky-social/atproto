@@ -7,17 +7,20 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
-export interface QueryParams {
+export interface QueryParams {}
+
+export interface InputSchema {
   serviceDid: string
   token: string
   platform: 'ios' | 'android' | 'web' | (string & {})
   appId: string
+  [k: string]: unknown
 }
-
-export type InputSchema = undefined
 
 export interface CallOptions {
   headers?: Headers
+  qp?: QueryParams
+  encoding: 'application/json'
 }
 
 export interface Response {

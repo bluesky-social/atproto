@@ -2014,11 +2014,11 @@ export class NotificationNS {
   }
 
   registerPush(
-    params?: AppBskyNotificationRegisterPush.QueryParams,
+    data?: AppBskyNotificationRegisterPush.InputSchema,
     opts?: AppBskyNotificationRegisterPush.CallOptions,
   ): Promise<AppBskyNotificationRegisterPush.Response> {
     return this._service.xrpc
-      .call('app.bsky.notification.registerPush', params, undefined, opts)
+      .call('app.bsky.notification.registerPush', opts?.qp, data, opts)
       .catch((e) => {
         throw AppBskyNotificationRegisterPush.toKnownErr(e)
       })
