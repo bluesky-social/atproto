@@ -7,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxyRead(req)) {
+      if (await ctx.canProxyRead(req, requester)) {
         const res = await ctx.appviewAgent.api.app.bsky.graph.getListMutes(
           params,
           await ctx.serviceAuthHeaders(requester),

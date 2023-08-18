@@ -46,6 +46,7 @@ import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
 import { ContentReporter } from './content-reporter'
 import { ModerationService } from './services/moderation'
+import { RuntimeFlags } from './runtime-flags'
 
 export type { MountedAlgos } from './feed-gen/types'
 export type { ServerConfigValues } from './config'
@@ -227,6 +228,8 @@ export class PDS {
       crawlers,
     })
 
+    const runtimeFlags = new RuntimeFlags(db)
+
     const ctx = new AppContext({
       db,
       blobstore,
@@ -241,6 +244,7 @@ export class PDS {
       sequencerLeader,
       labeler,
       labelCache,
+      runtimeFlags,
       contentReporter,
       services,
       mailer,
@@ -309,6 +313,7 @@ export class PDS {
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
     this.ctx.labelCache.start()
+    await this.ctx.runtimeFlags.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     this.server.keepAliveTimeout = 90000
@@ -318,6 +323,7 @@ export class PDS {
   }
 
   async destroy(): Promise<void> {
+    this.ctx.runtimeFlags.destroy()
     this.ctx.labelCache.stop()
     await this.ctx.sequencerLeader?.destroy()
     await this.terminator?.terminate()
