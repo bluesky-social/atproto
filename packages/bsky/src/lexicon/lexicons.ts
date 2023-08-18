@@ -6341,29 +6341,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyNotificationUnregisterPush: {
-    lexicon: 1,
-    id: 'app.bsky.notification.unregisterPush',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Unregister for push notifications with a service',
-        parameters: {
-          type: 'params',
-          required: ['serviceDid', 'token'],
-          properties: {
-            serviceDid: {
-              type: 'string',
-              format: 'did',
-            },
-            token: {
-              type: 'string',
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyNotificationUpdateSeen: {
     lexicon: 1,
     id: 'app.bsky.notification.updateSeen',
@@ -6743,7 +6720,6 @@ export const ids = {
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
-  AppBskyNotificationUnregisterPush: 'app.bsky.notification.unregisterPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedApplyLabels: 'app.bsky.unspecced.applyLabels',

@@ -32,7 +32,6 @@ import getUnreadCount from './app/bsky/notification/getUnreadCount'
 import listNotifications from './app/bsky/notification/listNotifications'
 import updateSeen from './app/bsky/notification/updateSeen'
 import registerPush from './app/bsky/notification/registerPush'
-import unregisterPush from './app/bsky/notification/unregisterPush'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
 import getTimelineSkeleton from './app/bsky/unspecced/getTimelineSkeleton'
 import createReport from './com/atproto/moderation/createReport'
@@ -89,7 +88,6 @@ export default function (server: Server, ctx: AppContext) {
   listNotifications(server, ctx)
   updateSeen(server, ctx)
   registerPush(server, ctx)
-  unregisterPush(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTimelineSkeleton(server, ctx)
   // com.atproto

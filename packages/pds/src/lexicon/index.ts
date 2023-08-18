@@ -102,7 +102,6 @@ import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActor
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
-import * as AppBskyNotificationUnregisterPush from './types/app/bsky/notification/unregisterPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
@@ -1025,16 +1024,6 @@ export class NotificationNS {
     cfg: ConfigOf<AV, AppBskyNotificationRegisterPush.Handler<ExtractAuth<AV>>>,
   ) {
     const nsid = 'app.bsky.notification.registerPush' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  unregisterPush<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyNotificationUnregisterPush.Handler<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.notification.unregisterPush' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

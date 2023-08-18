@@ -210,14 +210,6 @@ export class NotificationServer {
       .execute()
   }
 
-  async unregisterDeviceForPushNotifications(did: string, token: string) {
-    await this.db.db
-      .deleteFrom('notification_push_token')
-      .where('did', '=', did)
-      .where('token', '=', token)
-      .execute()
-  }
-
   async getNotificationDisplayAttributes(
     notifs: InsertableNotif[],
   ): Promise<NotifDisplay[]> {
