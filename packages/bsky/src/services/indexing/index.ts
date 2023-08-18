@@ -52,15 +52,19 @@ export class IndexingService {
     public notifServer: NotificationServer,
   ) {
     this.records = {
-      post: Post.makePlugin(this.db, backgroundQueue),
-      like: Like.makePlugin(this.db, backgroundQueue),
-      repost: Repost.makePlugin(this.db, backgroundQueue),
-      follow: Follow.makePlugin(this.db, backgroundQueue),
-      profile: Profile.makePlugin(this.db, backgroundQueue),
-      list: List.makePlugin(this.db, backgroundQueue),
-      listItem: ListItem.makePlugin(this.db, backgroundQueue),
-      block: Block.makePlugin(this.db, backgroundQueue),
-      feedGenerator: FeedGenerator.makePlugin(this.db, backgroundQueue),
+      post: Post.makePlugin(this.db, backgroundQueue, notifServer),
+      like: Like.makePlugin(this.db, backgroundQueue, notifServer),
+      repost: Repost.makePlugin(this.db, backgroundQueue, notifServer),
+      follow: Follow.makePlugin(this.db, backgroundQueue, notifServer),
+      profile: Profile.makePlugin(this.db, backgroundQueue, notifServer),
+      list: List.makePlugin(this.db, backgroundQueue, notifServer),
+      listItem: ListItem.makePlugin(this.db, backgroundQueue, notifServer),
+      block: Block.makePlugin(this.db, backgroundQueue, notifServer),
+      feedGenerator: FeedGenerator.makePlugin(
+        this.db,
+        backgroundQueue,
+        notifServer,
+      ),
     }
   }
 
@@ -98,25 +102,7 @@ export class IndexingService {
       const indexer = indexingTx.findIndexerForCollection(uri.collection)
       if (!indexer) return
       if (action === WriteOpAction.Create) {
-        const insertedRecords = await indexer.insertRecord(
-          uri,
-          cid,
-          obj,
-          timestamp,
-        )
-        if (insertedRecords) {
-          // SEND NOTIFICATIONS as part of background queue process
-          this.backgroundQueue.add(async () => {
-            try {
-              const preparedNotifs = await this.notifServer.prepareNotifsToSend(
-                insertedRecords,
-              )
-              await this.notifServer.addNotificationsToQueue(preparedNotifs)
-            } catch (error) {
-              subLogger.error({ error }, 'Error sending push notifications')
-            }
-          })
-        }
+        await indexer.insertRecord(uri, cid, obj, timestamp)
       } else {
         await indexer.updateRecord(uri, cid, obj, timestamp)
       }

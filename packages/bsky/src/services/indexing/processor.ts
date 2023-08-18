@@ -8,6 +8,8 @@ import { Notification } from '../../db/tables/notification'
 import { chunkArray } from '@atproto/common'
 import { PrimaryDatabase } from '../../db'
 import { BackgroundQueue } from '../../background'
+import { NotificationServer } from '../../notifications'
+import { dbLogger } from '../../logger'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).
@@ -42,6 +44,7 @@ export class RecordProcessor<T, S> {
   constructor(
     private appDb: PrimaryDatabase,
     private backgroundQueue: BackgroundQueue,
+    private notifServer: NotificationServer,
     private params: RecordProcessorParams<T, S>,
   ) {
     this.db = appDb.db
@@ -84,7 +87,7 @@ export class RecordProcessor<T, S> {
     if (inserted) {
       this.aggregateOnCommit(inserted)
       await this.handleNotifs({ inserted })
-      return this.params.notifsForInsert(inserted)
+      return
     }
     // if duplicate, insert into duplicates table with no events
     const found = await this.params.findDuplicate(this.db, uri, obj)
@@ -204,7 +207,6 @@ export class RecordProcessor<T, S> {
         this.aggregateOnCommit(inserted)
       }
       await this.handleNotifs({ deleted, inserted: inserted ?? undefined })
-      return this.params.notifsForInsert(deleted)
     }
   }
 
@@ -231,6 +233,16 @@ export class RecordProcessor<T, S> {
       notifs = this.params.notifsForInsert(op.inserted)
     }
     for (const chunk of chunkArray(notifs, 500)) {
+      this.backgroundQueue.add(async () => {
+        try {
+          const preparedNotifs = await this.notifServer.prepareNotifsToSend(
+            chunk,
+          )
+          await this.notifServer.addNotificationsToQueue(preparedNotifs)
+        } catch (error) {
+          dbLogger.error({ error }, 'Error sending push notifications')
+        }
+      })
       runOnCommit.push(async (db) => {
         await db.db.insertInto('notification').values(chunk).execute()
       })
