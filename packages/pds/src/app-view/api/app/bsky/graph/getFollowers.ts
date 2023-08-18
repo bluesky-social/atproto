@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ req, params, auth }) => {
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null
-      if (ctx.canProxyRead(req)) {
+      if (await ctx.canProxyRead(req, requester)) {
         const res = await ctx.appviewAgent.api.app.bsky.graph.getFollowers(
           params,
           requester
