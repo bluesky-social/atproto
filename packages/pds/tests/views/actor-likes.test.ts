@@ -2,10 +2,6 @@ import AtpAgent, { AtUri } from '@atproto/api'
 import { runTestServer, CloseFn } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import {
-  BlockedByActorError,
-  BlockedActorError,
-} from '@atproto/api/src/client/types/app/bsky/feed/getActorLikes'
 
 describe('pds actor likes feed views', () => {
   let agent: AtpAgent
@@ -47,36 +43,48 @@ describe('pds actor likes feed views', () => {
 
     expect(bobLikes).toHaveLength(3)
 
-    const {
-      data: { feed: carolLikes },
-    } = await agent.api.app.bsky.feed.getActorLikes(
-      { actor: sc.accounts[carol].handle },
-      { headers: sc.getHeaders(carol) },
-    )
-
-    expect(carolLikes).toHaveLength(2)
-
-    const {
-      data: { feed: aliceLikes },
-    } = await agent.api.app.bsky.feed.getActorLikes(
-      { actor: sc.accounts[alice].handle },
-      { headers: sc.getHeaders(alice) },
-    )
-
-    expect(aliceLikes).toHaveLength(1)
-
-    const {
-      data: { feed: danLikes },
-    } = await agent.api.app.bsky.feed.getActorLikes(
-      { actor: sc.accounts[dan].handle },
-      { headers: sc.getHeaders(dan) },
-    )
-
-    expect(danLikes).toHaveLength(1)
+    await expect(
+      agent.api.app.bsky.feed.getActorLikes(
+        { actor: sc.accounts[bob].handle },
+        { headers: sc.getHeaders(carol) },
+      ),
+    ).rejects.toThrow('Likes are private')
   })
 
-  it('actor blocks viewer', async () => {
-    const aliceBlockBob = await agent.api.app.bsky.graph.block.create(
+  it('viewer has blocked author of liked post(s)', async () => {
+    const bobBlocksAlice = await agent.api.app.bsky.graph.block.create(
+      {
+        repo: bob, // bob blocks alice
+      },
+      {
+        subject: alice,
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(bob),
+    )
+
+    const {
+      data: { feed },
+    } = await agent.api.app.bsky.feed.getActorLikes(
+      { actor: sc.accounts[bob].handle },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    expect(
+      feed.every((item) => {
+        return item.post.author.did !== alice
+      }),
+    ).toBe(true)
+
+    // unblock
+    await agent.api.app.bsky.graph.block.delete(
+      { repo: bob, rkey: new AtUri(bobBlocksAlice.uri).rkey },
+      sc.getHeaders(bob),
+    )
+  })
+
+  it('liked post author has blocked viewer', async () => {
+    const aliceBlocksBob = await agent.api.app.bsky.graph.block.create(
       {
         repo: alice, // alice blocks bob
       },
@@ -87,89 +95,35 @@ describe('pds actor likes feed views', () => {
       sc.getHeaders(alice),
     )
 
-    try {
-      await agent.api.app.bsky.feed.getActorLikes(
-        { actor: sc.accounts[alice].handle },
-        { headers: sc.getHeaders(bob) },
-      )
-    } catch (e) {
-      expect(e).toBeInstanceOf(BlockedByActorError)
-    }
-
-    // unblock
-    await agent.api.app.bsky.graph.block.delete(
-      { repo: alice, rkey: new AtUri(aliceBlockBob.uri).rkey },
-      sc.getHeaders(alice),
-    )
-  })
-
-  it('viewer has blocked actor', async () => {
-    const bobBlockAlice = await agent.api.app.bsky.graph.block.create(
-      {
-        repo: bob, // alice blocks bob
-      },
-      {
-        subject: alice,
-        createdAt: new Date().toISOString(),
-      },
-      sc.getHeaders(bob),
-    )
-
-    try {
-      await agent.api.app.bsky.feed.getActorLikes(
-        { actor: sc.accounts[alice].handle },
-        { headers: sc.getHeaders(bob) },
-      )
-    } catch (e) {
-      expect(e).toBeInstanceOf(BlockedActorError)
-    }
-
-    // unblock
-    await agent.api.app.bsky.graph.block.delete(
-      { repo: bob, rkey: new AtUri(bobBlockAlice.uri).rkey },
-      sc.getHeaders(bob),
-    )
-  })
-
-  it('liked post(s) author(s) blocks viewer', async () => {
-    const aliceBlockDan = await agent.api.app.bsky.graph.block.create(
-      {
-        repo: alice, // alice blocks dan
-      },
-      {
-        subject: dan,
-        createdAt: new Date().toISOString(),
-      },
-      sc.getHeaders(alice),
-    )
-
-    const { data } = await agent.api.app.bsky.feed.getActorLikes(
-      { actor: sc.accounts[bob].handle }, // bob has liked alice's posts
-      { headers: sc.getHeaders(dan) },
+    const {
+      data: { feed },
+    } = await agent.api.app.bsky.feed.getActorLikes(
+      { actor: sc.accounts[bob].handle },
+      { headers: sc.getHeaders(bob) },
     )
 
     expect(
-      data.feed.every((item) => {
+      feed.every((item) => {
         return item.post.author.did !== alice
       }),
-    ).toBe(true) // alice's posts are filtered out
+    ).toBe(true)
 
     // unblock
     await agent.api.app.bsky.graph.block.delete(
-      { repo: alice, rkey: new AtUri(aliceBlockDan.uri).rkey },
+      { repo: alice, rkey: new AtUri(aliceBlocksBob.uri).rkey },
       sc.getHeaders(alice),
     )
   })
 
-  it('liked post(s) author(s) muted by viewer', async () => {
+  it('viewer has muted author of liked post(s)', async () => {
     await agent.api.app.bsky.graph.muteActor(
-      { actor: alice }, // dan mutes alice
-      { headers: sc.getHeaders(dan), encoding: 'application/json' },
+      { actor: alice }, // bob mutes alice
+      { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
 
     const { data } = await agent.api.app.bsky.feed.getActorLikes(
       { actor: sc.accounts[bob].handle }, // bob has liked alice's posts
-      { headers: sc.getHeaders(dan) },
+      { headers: sc.getHeaders(bob) },
     )
 
     expect(
@@ -180,7 +134,7 @@ describe('pds actor likes feed views', () => {
 
     await agent.api.app.bsky.graph.unmuteActor(
       { actor: alice }, // dan unmutes alice
-      { headers: sc.getHeaders(dan), encoding: 'application/json' },
+      { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
   })
 })

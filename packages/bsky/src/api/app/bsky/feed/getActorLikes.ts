@@ -11,47 +11,28 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, res }) => {
       const { actor, limit, cursor } = params
       const viewer = auth.credentials.did
-      const db = ctx.db.db
-      const { ref } = db.dynamic
+      const db = ctx.db.getReplica()
+      const { ref } = db.db.dynamic
 
-      // first verify there is not a block between requester & subject
-      if (viewer !== null) {
-        const blocks = await ctx.services.graph(ctx.db).getBlocks(viewer, actor)
-        if (blocks.blocking) {
-          throw new InvalidRequestError(
-            `Requester has blocked actor: ${actor}`,
-            'BlockedActor',
-          )
-        } else if (blocks.blockedBy) {
-          throw new InvalidRequestError(
-            `Requester is blocked by actor: $${actor}`,
-            'BlockedByActor',
-          )
-        }
+      const actorService = ctx.services.actor(db)
+      const feedService = ctx.services.feed(db)
+      const graphService = ctx.services.graph(db)
+
+      // maybe resolve did first
+      const actorRes = await actorService.getActor(actor)
+      if (!actorRes) {
+        throw new InvalidRequestError('Profile not found')
       }
+      const actorDid = actorRes.did
 
-      const actorService = ctx.services.actor(ctx.db)
-      const feedService = ctx.services.feed(ctx.db)
-      const graphService = ctx.services.graph(ctx.db)
-
-      let did = ''
-      if (actor.startsWith('did:')) {
-        did = actor
-      } else {
-        const actorRes = await db
-          .selectFrom('actor')
-          .select('did')
-          .where('handle', '=', actor)
-          .executeTakeFirst()
-        if (actorRes) {
-          did = actorRes?.did
-        }
+      if (!viewer || viewer !== actorDid) {
+        throw new InvalidRequestError('Likes are private')
       }
 
       let feedItemsQb = feedService
         .selectFeedItemQb()
         .innerJoin('like', 'like.subject', 'feed_item.uri')
-        .where('like.creator', '=', did)
+        .where('like.creator', '=', actorDid)
 
       if (viewer !== null) {
         feedItemsQb = feedItemsQb
@@ -60,7 +41,6 @@ export default function (server: Server, ctx: AppContext) {
               graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
             ),
           )
-          // TODO do we want this? was missing here
           .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
       }
 

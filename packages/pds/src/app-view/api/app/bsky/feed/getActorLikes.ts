@@ -36,28 +36,29 @@ export default function (server: Server, ctx: AppContext) {
 
       const { ref } = ctx.db.db.dynamic
       const accountService = ctx.services.account(ctx.db)
+      const actorService = ctx.services.appView.actor(ctx.db)
       const feedService = ctx.services.appView.feed(ctx.db)
       const graphService = ctx.services.appView.graph(ctx.db)
 
-      // resolve did
-      const userLookupCol = actor.startsWith('did:')
-        ? 'did_handle.did'
-        : 'did_handle.handle'
-      const actorDidQb = ctx.db.db
-        .selectFrom('did_handle')
-        .select('did')
-        .where(userLookupCol, '=', actor)
-        .limit(1)
+      // maybe resolve did first
+      const actorRes = await actorService.getActor(actor)
+      if (!actorRes) {
+        throw new InvalidRequestError('Profile not found')
+      }
+      const actorDid = actorRes.did
+
+      if (!requester || requester !== actorDid) {
+        throw new InvalidRequestError('Likes are private')
+      }
 
       // defaults to posts, reposts, and replies
       let feedItemsQb = feedService
         .selectFeedItemQb()
         .innerJoin('like', 'like.subject', 'feed_item.uri')
-        .where('like.creator', '=', actorDidQb)
+        .where('like.creator', '=', actorDid)
 
       // for access-based auth, enforce blocks and mutes
       if (requester) {
-        await assertNoBlocks(ctx, { requester, actor })
         feedItemsQb = feedItemsQb
           .where((qb) =>
             qb.where((qb) =>
@@ -96,27 +97,6 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
-}
-
-// throws when there's a block between the two users
-async function assertNoBlocks(
-  ctx: AppContext,
-  opts: { requester: string; actor: string },
-) {
-  const { requester, actor } = opts
-  const graphService = ctx.services.appView.graph(ctx.db)
-  const blocks = await graphService.getBlocks(requester, actor)
-  if (blocks.blocking) {
-    throw new InvalidRequestError(
-      `Requester has blocked actor: ${actor}`,
-      'BlockedActor',
-    )
-  } else if (blocks.blockedBy) {
-    throw new InvalidRequestError(
-      `Requester is blocked by actor: $${actor}`,
-      'BlockedByActor',
-    )
-  }
 }
 
 const getAuthorMunge = async (
