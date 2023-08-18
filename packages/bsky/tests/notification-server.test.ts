@@ -93,17 +93,18 @@ describe('notification server', () => {
 
   describe('NotificationServer', () => {
     it('gets user tokens from db', async () => {
-      const tokens = await notifServer.getUserTokens(alice)
-      expect(tokens[0].token).toEqual('123')
+      const tokens = await notifServer.getTokensByDid([alice])
+      expect(tokens[alice][0].token).toEqual('123')
     })
 
     it('gets notification display attributes: title and body', async () => {
       const db = network.bsky.ctx.db.getPrimary()
       const notif = await getLikeNotification(db, alice)
       if (!notif) throw new Error('no notification found')
-      const attr = await notifServer.getNotificationDisplayAttributes(notif)
-      if (!attr) throw new Error('no notification display attributes found')
-      expect(attr.title).toEqual('bobby liked your post')
+      const attrs = await notifServer.getNotificationDisplayAttributes([notif])
+      if (!attrs.length)
+        throw new Error('no notification display attributes found')
+      expect(attrs[0].title).toEqual('bobby liked your post')
     })
 
     it('prepares notification to be sent', async () => {

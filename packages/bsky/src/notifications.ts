@@ -235,8 +235,8 @@ export class NotificationServer {
         .innerJoin('record', 'record.uri', 'profile.uri')
         .where(notSoftDeletedClause(ref('actor')))
         .where(notSoftDeletedClause(ref('record')))
-        .where('creator', 'in', authorDids.length ? authorDids : [''])
-        .select(['did', 'displayName'])
+        .where('profile.creator', 'in', authorDids.length ? authorDids : [''])
+        .select(['profile.creator as did', 'displayName'])
         .execute(),
       this.db.db
         .selectFrom('post')
@@ -244,8 +244,8 @@ export class NotificationServer {
         .innerJoin('record', 'record.uri', 'post.uri')
         .where(notSoftDeletedClause(ref('actor')))
         .where(notSoftDeletedClause(ref('record')))
-        .where('uri', 'in', allUris.length ? allUris : [''])
-        .select(['uri', 'text'])
+        .where('post.uri', 'in', allUris.length ? allUris : [''])
+        .select(['post.uri as uri', 'text'])
         .execute(),
     ])
 
