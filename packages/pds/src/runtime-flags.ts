@@ -1,4 +1,4 @@
-import { wait } from '@atproto/common'
+import { bailableWait, wait } from '@atproto/common'
 import { randomIntFromSeed } from '@atproto/crypto'
 import { LRUCache } from 'lru-cache'
 import Database from './db'
@@ -10,9 +10,9 @@ export type FlagName = AppviewProxyFlagName
 
 export class RuntimeFlags {
   destroyed = false
+  private bailPoll?: () => void
   private flags = new Map<string, string>()
   public appviewProxy = new AppviewProxyFlags(this)
-
   constructor(public db: Database) {}
 
   async start() {
@@ -22,6 +22,7 @@ export class RuntimeFlags {
 
   destroy() {
     this.destroyed = true
+    this.bailPoll?.()
   }
 
   get(flag: FlagName) {
@@ -46,13 +47,15 @@ export class RuntimeFlags {
     } catch (err) {
       log.error({ err }, 'runtime flags failed to refresh')
     }
-    await wait(5000)
+    const { wait, bail } = bailableWait(5000)
+    this.bailPoll = bail
+    await wait
     this.poll()
   }
 }
 
 class AppviewProxyFlags {
-  private partitionCache = new LRUCache({
+  partitionCache = new LRUCache({
     max: 50000,
     fetchMethod(did: string) {
       return randomIntFromSeed(did, 10)
