@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
       }
 
-      if (ctx.canProxyRead(req)) {
+      if (await ctx.canProxyRead(req, requester)) {
         const res = await ctx.appviewAgent.api.app.bsky.feed.getTimeline(
           params,
           await ctx.serviceAuthHeaders(requester),

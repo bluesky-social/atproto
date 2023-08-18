@@ -2,7 +2,7 @@ import { wait } from '@atproto/common'
 import { randomIntFromSeed } from '@atproto/crypto'
 import { LRUCache } from 'lru-cache'
 import Database from './db'
-import { labelerLogger as log } from './logger'
+import { dbLogger as log } from './logger'
 
 type AppviewProxyFlagName = `appview-proxy:${string}`
 
@@ -61,17 +61,24 @@ class AppviewProxyFlags {
 
   constructor(private runtimeFlags: RuntimeFlags) {}
 
-  async shouldProxy(endpoint: string, did: string) {
+  async shouldProxy(endpoint: string, did?: string) {
     const val = this.runtimeFlags.get(`appview-proxy:${endpoint}`) || '0'
     const threshold = parseInt(val, 10)
-    if (threshold !== 0 && !appviewFlagIsValid(threshold)) {
+    if (threshold === 0 || !appviewFlagIsValid(threshold)) {
       return false
     }
+    if (threshold === 10) {
+      return true
+    }
+    if (!did) {
+      return false
+    }
+    // threshold is 0 to 10 inclusive, partitions are 0 to 9 inclusive.
     const partition = await this.partitionCache.fetch(did)
     return partition !== undefined && partition < threshold
   }
 }
 
 const appviewFlagIsValid = (val: number) => {
-  return 0 <= val && val < 10
+  return 0 <= val && val <= 10
 }
