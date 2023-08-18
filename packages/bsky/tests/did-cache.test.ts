@@ -84,7 +84,7 @@ describe('did cache', () => {
   })
 
   it('accurately reports expired dids & refreshes the cache', async () => {
-    const didCache = new DidSqlCache(network.bsky.ctx.db, 1, 60000)
+    const didCache = new DidSqlCache(network.bsky.ctx.db.getPrimary(), 1, 60000)
     const shortCacheResolver = new IdResolver({
       plcUrl: network.bsky.ctx.cfg.didPlcUrl,
       didCache,
@@ -113,7 +113,7 @@ describe('did cache', () => {
   })
 
   it('does not return expired dids & refreshes the cache', async () => {
-    const didCache = new DidSqlCache(network.bsky.ctx.db, 0, 1)
+    const didCache = new DidSqlCache(network.bsky.ctx.db.getPrimary(), 0, 1)
     const shortExpireResolver = new IdResolver({
       plcUrl: network.bsky.ctx.cfg.didPlcUrl,
       didCache,

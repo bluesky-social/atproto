@@ -4,7 +4,6 @@ import { cidForCbor, TID } from '@atproto/common'
 import * as pdsRepo from '@atproto/pds/src/repo/prepare'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
-import { Client } from '@did-plc/lib'
 import AtpAgent, {
   AppBskyActorProfile,
   AppBskyFeedPost,

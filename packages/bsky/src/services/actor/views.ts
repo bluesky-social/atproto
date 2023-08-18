@@ -6,7 +6,7 @@ import {
   ProfileView,
   ProfileViewBasic,
 } from '../../lexicon/types/app/bsky/actor/defs'
-import Database from '../../db'
+import { Database } from '../../db'
 import { noMatch, notSoftDeletedClause } from '../../db/util'
 import { Actor } from '../../db/tables/actor'
 import { ImageUriBuilder } from '../../image/uri'

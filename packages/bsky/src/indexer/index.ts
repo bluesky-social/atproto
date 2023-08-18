@@ -1,6 +1,6 @@
 import { IdResolver } from '@atproto/identity'
 import { BackgroundQueue } from '../background'
-import Database from '../db'
+import { PrimaryDatabase } from '../db'
 import DidSqlCache from '../did-cache'
 import log from './logger'
 import { dbLogger } from '../logger'
@@ -26,7 +26,7 @@ export class BskyIndexer {
   }
 
   static create(opts: {
-    db: Database
+    db: PrimaryDatabase
     redis: Redis
     cfg: IndexerConfig
   }): BskyIndexer {
@@ -36,7 +36,11 @@ export class BskyIndexer {
       cfg.didCacheStaleTTL,
       cfg.didCacheMaxTTL,
     )
-    const idResolver = new IdResolver({ plcUrl: cfg.didPlcUrl, didCache })
+    const idResolver = new IdResolver({
+      plcUrl: cfg.didPlcUrl,
+      didCache,
+      backupNameservers: cfg.handleResolveNameservers,
+    })
     const backgroundQueue = new BackgroundQueue(db)
     let labeler: Labeler
     if (cfg.hiveApiKey) {
@@ -75,7 +79,7 @@ export class BskyIndexer {
 
   async start() {
     const { db, backgroundQueue } = this.ctx
-    const { pool } = db.cfg
+    const pool = db.pool
     this.dbStatsInterval = setInterval(() => {
       dbLogger.info(
         {

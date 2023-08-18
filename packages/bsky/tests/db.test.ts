@@ -1,22 +1,48 @@
 import { once } from 'events'
+import { sql } from 'kysely'
 import { wait } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
 import { Database } from '../src'
+import { PrimaryDatabase } from '../src/db'
 import { Leader } from '../src/db/leader'
 
 describe('db', () => {
   let network: TestNetwork
-  let db: Database
+  let db: PrimaryDatabase
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_db',
     })
-    db = network.bsky.ctx.db
+    db = network.bsky.ctx.db.getPrimary()
   })
 
   afterAll(async () => {
     await network.close()
+  })
+
+  it('handles client errors without crashing.', async () => {
+    const tryKillConnection = db.transaction(async (dbTxn) => {
+      const result = await sql`select pg_backend_pid() as pid;`.execute(
+        dbTxn.db,
+      )
+      const pid = result.rows[0]?.['pid'] as number
+      await sql`select pg_terminate_backend(${pid});`.execute(db.db)
+      await sql`select 1;`.execute(dbTxn.db)
+    })
+    // This should throw, but no unhandled error
+    await expect(tryKillConnection).rejects.toThrow()
+  })
+
+  it('handles pool errors without crashing.', async () => {
+    const conn1 = await db.pool.connect()
+    const conn2 = await db.pool.connect()
+    const result = await conn1.query('select pg_backend_pid() as pid;')
+    const conn1pid: number = result.rows[0].pid
+    conn1.release()
+    await wait(100) // let release apply, conn is now idle on pool.
+    await conn2.query(`select pg_terminate_backend(${conn1pid});`)
+    conn2.release()
   })
 
   describe('transaction()', () => {

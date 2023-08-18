@@ -59,7 +59,7 @@ Object {
       "text": "thanks bob",
     },
     "replyCount": 0,
-    "repostCount": 1,
+    "repostCount": 2,
     "uri": "record(0)",
     "viewer": Object {
       "repost": "record(6)",
@@ -128,7 +128,7 @@ Object {
       "text": "thanks bob",
     },
     "replyCount": 0,
-    "repostCount": 1,
+    "repostCount": 2,
     "uri": "record(0)",
     "viewer": Object {
       "repost": "record(6)",
@@ -341,7 +341,7 @@ Object {
               "text": "thanks bob",
             },
             "replyCount": 0,
-            "repostCount": 1,
+            "repostCount": 2,
             "uri": "record(7)",
             "viewer": Object {
               "repost": "record(8)",
@@ -715,7 +715,7 @@ Object {
       "text": "thanks bob",
     },
     "replyCount": 0,
-    "repostCount": 1,
+    "repostCount": 2,
     "uri": "record(0)",
     "viewer": Object {
       "repost": "record(6)",
@@ -967,7 +967,7 @@ Object {
               "text": "thanks bob",
             },
             "replyCount": 0,
-            "repostCount": 1,
+            "repostCount": 2,
             "uri": "record(9)",
             "viewer": Object {
               "repost": "record(10)",
@@ -1135,7 +1135,7 @@ Object {
       "text": "thanks bob",
     },
     "replyCount": 0,
-    "repostCount": 1,
+    "repostCount": 2,
     "uri": "record(0)",
     "viewer": Object {
       "repost": "record(6)",
@@ -1868,7 +1868,7 @@ Object {
               "text": "thanks bob",
             },
             "replyCount": 0,
-            "repostCount": 1,
+            "repostCount": 2,
             "uri": "record(9)",
             "viewer": Object {
               "repost": "record(10)",

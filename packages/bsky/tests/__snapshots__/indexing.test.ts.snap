@@ -76,7 +76,7 @@ Array [
             "text": "thanks bob",
           },
           "replyCount": 0,
-          "repostCount": 0,
+          "repostCount": 1,
           "uri": "record(1)",
           "viewer": Object {},
         },

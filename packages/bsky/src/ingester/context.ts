@@ -1,17 +1,17 @@
-import { Database } from '../db'
+import { PrimaryDatabase } from '../db'
 import { Redis } from '../redis'
 import { IngesterConfig } from './config'
 
 export class IngesterContext {
   constructor(
     private opts: {
-      db: Database
+      db: PrimaryDatabase
       redis: Redis
       cfg: IngesterConfig
     },
   ) {}
 
-  get db(): Database {
+  get db(): PrimaryDatabase {
     return this.opts.db
   }
 

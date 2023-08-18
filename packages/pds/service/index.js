@@ -23,6 +23,7 @@ const {
   PDS,
   ViewMaintainer,
   makeAlgos,
+  PeriodicModerationActionReversal,
 } = require('@atproto/pds')
 const { Secp256k1Keypair } = require('@atproto/crypto')
 
@@ -84,12 +85,30 @@ const main = async () => {
   })
   const viewMaintainer = new ViewMaintainer(migrateDb)
   const viewMaintainerRunning = viewMaintainer.run()
+
+  // If the PDS is configured to proxy moderation, this will be running on appview instead of pds.
+  // Also don't run this on the sequencer leader, which may not be configured regarding moderation proxying at all.
+  const periodicModerationActionReversal =
+    pds.ctx.shouldProxyModeration() || pds.ctx.cfg.sequencerLeaderEnabled
+      ? null
+      : new PeriodicModerationActionReversal(pds.ctx)
+  const periodicModerationActionReversalRunning =
+    periodicModerationActionReversal?.run()
+
   await pds.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
+    // Gracefully shutdown periodic-moderation-action-reversal before destroying pds instance
+    periodicModerationActionReversal?.destroy()
+    await periodicModerationActionReversalRunning
+
     await pds.destroy()
+
+    // Gracefully shutdown view-maintainer
     viewMaintainer.destroy()
     await viewMaintainerRunning
+
+    // Gracefully shutdown db
     await migrateDb.close()
   })
 }

@@ -1,5 +1,5 @@
 import { wait } from '@atproto/common'
-import Database from './db'
+import { PrimaryDatabase } from './db'
 import { Label } from './db/tables/label'
 import { labelerLogger as log } from './logger'
 
@@ -10,7 +10,7 @@ export class LabelCache {
 
   destroyed = false
 
-  constructor(public db: Database) {}
+  constructor(public db: PrimaryDatabase) {}
 
   start() {
     this.poll()

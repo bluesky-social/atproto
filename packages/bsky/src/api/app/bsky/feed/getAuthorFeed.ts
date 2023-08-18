@@ -11,12 +11,13 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, res }) => {
       const { actor, limit, cursor, filter } = params
       const viewer = auth.credentials.did
-      const db = ctx.db.db
-      const { ref } = db.dynamic
+
+      const db = ctx.db.getReplica()
+      const { ref } = db.db.dynamic
 
       // first verify there is not a block between requester & subject
       if (viewer !== null) {
-        const blocks = await ctx.services.graph(ctx.db).getBlocks(viewer, actor)
+        const blocks = await ctx.services.graph(db).getBlocks(viewer, actor)
         if (blocks.blocking) {
           throw new InvalidRequestError(
             `Requester has blocked actor: ${actor}`,
@@ -30,40 +31,39 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const actorService = ctx.services.actor(ctx.db)
-      const feedService = ctx.services.feed(ctx.db)
-      const graphService = ctx.services.graph(ctx.db)
+      const actorService = ctx.services.actor(db)
+      const feedService = ctx.services.feed(db)
+      const graphService = ctx.services.graph(db)
 
-      let did = ''
-      if (actor.startsWith('did:')) {
-        did = actor
-      } else {
-        const actorRes = await db
-          .selectFrom('actor')
-          .select('did')
-          .where('handle', '=', actor)
-          .executeTakeFirst()
-        if (actorRes) {
-          did = actorRes?.did
-        }
+      // maybe resolve did first
+      const actorRes = await actorService.getActor(actor)
+      if (!actorRes) {
+        throw new InvalidRequestError('Profile not found')
       }
+      const actorDid = actorRes.did
 
       // defaults to posts, reposts, and replies
       let feedItemsQb = feedService
         .selectFeedItemQb()
-        .where('originatorDid', '=', did)
+        .where('originatorDid', '=', actorDid)
 
       if (filter === 'posts_with_media') {
-        // only posts with media
-        feedItemsQb = feedItemsQb.whereExists((qb) =>
-          qb
-            .selectFrom('post_embed_image')
-            .select('post_embed_image.postUri')
-            .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
-        )
+        feedItemsQb = feedItemsQb
+          // and only your own posts/reposts
+          .where('post.creator', '=', actorDid)
+          // only posts with media
+          .whereExists((qb) =>
+            qb
+              .selectFrom('post_embed_image')
+              .select('post_embed_image.postUri')
+              .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
+          )
       } else if (filter === 'posts_no_replies') {
-        // only posts, no replies
-        feedItemsQb = feedItemsQb.where('post.replyParent', 'is', null)
+        feedItemsQb = feedItemsQb.where((qb) =>
+          qb
+            .where('post.replyParent', 'is', null)
+            .orWhere('type', '=', 'repost'),
+        )
       }
 
       if (viewer !== null) {

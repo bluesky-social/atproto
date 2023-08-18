@@ -1,4 +1,4 @@
-import Database from '../db'
+import { PrimaryDatabase } from '../db'
 import log from './logger'
 import { dbLogger } from '../logger'
 import { Redis } from '../redis'
@@ -21,7 +21,7 @@ export class BskyIngester {
   }
 
   static create(opts: {
-    db: Database
+    db: PrimaryDatabase
     redis: Redis
     cfg: IngesterConfig
   }): BskyIngester {
@@ -40,7 +40,7 @@ export class BskyIngester {
 
   async start() {
     const { db } = this.ctx
-    const { pool } = db.cfg
+    const pool = db.pool
     this.dbStatsInterval = setInterval(() => {
       dbLogger.info(
         {

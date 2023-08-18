@@ -4,7 +4,7 @@ import { CID } from 'multiformats/cid'
 import { IdResolver } from '@atproto/identity'
 import { Labeler } from './base'
 import { keywordLabeling } from './util'
-import Database from '../db'
+import { PrimaryDatabase } from '../db'
 import { BackgroundQueue } from '../background'
 import { IndexerConfig } from '../indexer/config'
 import { retryHttp } from '../util/retry'
@@ -20,7 +20,7 @@ export class HiveLabeler extends Labeler {
   constructor(
     hiveApiKey: string,
     protected ctx: {
-      db: Database
+      db: PrimaryDatabase
       idResolver: IdResolver
       cfg: IndexerConfig
       backgroundQueue: BackgroundQueue
@@ -50,7 +50,12 @@ export class HiveLabeler extends Labeler {
   }
 
   async makeHiveReq(did: string, cid: CID): Promise<HiveResp> {
-    const { stream } = await resolveBlob(did, cid, this.ctx)
+    const { stream } = await resolveBlob(
+      did,
+      cid,
+      this.ctx.db,
+      this.ctx.idResolver,
+    )
     const form = new FormData()
     form.append('media', stream)
     const { data } = await axios.post(HIVE_ENDPOINT, form, {

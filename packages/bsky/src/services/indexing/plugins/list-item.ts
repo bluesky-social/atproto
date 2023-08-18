@@ -7,7 +7,7 @@ import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { toSimplifiedISOSafe } from '../util'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import Database from '../../../db'
+import { PrimaryDatabase } from '../../../db'
 import { BackgroundQueue } from '../../../background'
 
 const lexId = lex.ids.AppBskyGraphListitem
@@ -80,7 +80,7 @@ const notifsForDelete = () => {
 export type PluginType = RecordProcessor<ListItem.Record, IndexedListItem>
 
 export const makePlugin = (
-  db: Database,
+  db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
 ): PluginType => {
   return new RecordProcessor(db, backgroundQueue, {

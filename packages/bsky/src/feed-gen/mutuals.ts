@@ -10,12 +10,13 @@ const handler: AlgoHandler = async (
   viewer: string,
 ): Promise<AlgoResponse> => {
   const { limit = 50, cursor } = params
-  const feedService = ctx.services.feed(ctx.db)
-  const graphService = ctx.services.graph(ctx.db)
+  const db = ctx.db.getReplica('feed')
+  const feedService = ctx.services.feed(db)
+  const graphService = ctx.services.graph(db)
 
-  const { ref } = ctx.db.db.dynamic
+  const { ref } = db.db.dynamic
 
-  const mutualsSubquery = ctx.db.db
+  const mutualsSubquery = db.db
     .selectFrom('follow')
     .where('follow.creator', '=', viewer)
     .whereExists((qb) =>

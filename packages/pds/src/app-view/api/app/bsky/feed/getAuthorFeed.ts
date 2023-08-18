@@ -35,23 +35,41 @@ export default function (server: Server, ctx: AppContext) {
 
       const { ref } = ctx.db.db.dynamic
       const accountService = ctx.services.account(ctx.db)
+      const actorService = ctx.services.appView.actor(ctx.db)
       const feedService = ctx.services.appView.feed(ctx.db)
       const graphService = ctx.services.appView.graph(ctx.db)
 
+      // maybe resolve did first
+      const actorRes = await actorService.getActor(actor)
+      if (!actorRes) {
+        throw new InvalidRequestError('Profile not found')
+      }
+      const actorDid = actorRes.did
+
       // defaults to posts, reposts, and replies
-      let feedItemsQb = getFeedItemsQb(ctx, { actor })
+      let feedItemsQb = feedService
+        .selectFeedItemQb()
+        .where('originatorDid', '=', actorDid)
 
       if (params.filter === 'posts_with_media') {
-        // only posts with media
-        feedItemsQb = feedItemsQb.whereExists((qb) =>
-          qb
-            .selectFrom('post_embed_image')
-            .select('post_embed_image.postUri')
-            .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
-        )
+        feedItemsQb = feedItemsQb
+          // and only your own posts/reposts
+          .where('post.creator', '=', actorDid)
+          // only posts with media
+          .whereExists((qb) =>
+            qb
+              .selectFrom('post_embed_image')
+              .select('post_embed_image.postUri')
+              .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
+          )
       } else if (params.filter === 'posts_no_replies') {
-        // only posts, no replies
-        feedItemsQb = feedItemsQb.where('post.replyParent', 'is', null)
+        feedItemsQb = feedItemsQb
+          // only posts, no replies
+          .where((qb) =>
+            qb
+              .where('post.replyParent', 'is', null)
+              .orWhere('type', '=', 'repost'),
+          )
       }
 
       // for access-based auth, enforce blocks and mutes
@@ -98,20 +116,6 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
-}
-
-function getFeedItemsQb(ctx: AppContext, opts: { actor: string }) {
-  const { actor } = opts
-  const feedService = ctx.services.appView.feed(ctx.db)
-  const userLookupCol = actor.startsWith('did:')
-    ? 'did_handle.did'
-    : 'did_handle.handle'
-  const actorDidQb = ctx.db.db
-    .selectFrom('did_handle')
-    .select('did')
-    .where(userLookupCol, '=', actor)
-    .limit(1)
-  return feedService.selectFeedItemQb().where('originatorDid', '=', actorDidQb)
 }
 
 // throws when there's a block between the two users

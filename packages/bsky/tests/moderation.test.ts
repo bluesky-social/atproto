@@ -806,7 +806,7 @@ describe('moderation', () => {
     it('negates an existing label and reverses.', async () => {
       const { ctx } = network.bsky
       const post = sc.posts[sc.dids.bob][0].ref
-      const labelingService = ctx.services.label(ctx.db)
+      const labelingService = ctx.services.label(ctx.db.getPrimary())
       await labelingService.formatAndCreate(
         ctx.cfg.labelerDid,
         post.uriStr,
@@ -836,7 +836,7 @@ describe('moderation', () => {
     it('no-ops when negating an already-negated label and reverses.', async () => {
       const { ctx } = network.bsky
       const post = sc.posts[sc.dids.bob][0].ref
-      const labelingService = ctx.services.label(ctx.db)
+      const labelingService = ctx.services.label(ctx.db.getPrimary())
       const action = await actionWithLabels({
         negateLabelVals: ['bears'],
         subject: {
@@ -879,7 +879,7 @@ describe('moderation', () => {
     it('no-ops when creating an existing label and reverses.', async () => {
       const { ctx } = network.bsky
       const post = sc.posts[sc.dids.bob][0].ref
-      const labelingService = ctx.services.label(ctx.db)
+      const labelingService = ctx.services.label(ctx.db.getPrimary())
       await labelingService.formatAndCreate(
         ctx.cfg.labelerDid,
         post.uriStr,
@@ -918,7 +918,7 @@ describe('moderation', () => {
 
     it('creates and negates labels on a repo and reverses.', async () => {
       const { ctx } = network.bsky
-      const labelingService = ctx.services.label(ctx.db)
+      const labelingService = ctx.services.label(ctx.db.getPrimary())
       await labelingService.formatAndCreate(
         ctx.cfg.labelerDid,
         sc.dids.bob,
