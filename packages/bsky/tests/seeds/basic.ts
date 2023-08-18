@@ -117,7 +117,7 @@ export default async (sc: SeedClient, users = true) => {
     sc.posts[alice][1].ref,
     replies.carol[0],
   )
-  await sc.reply(
+  const alicesReplyToBob = await sc.reply(
     alice,
     sc.posts[alice][1].ref,
     sc.replies[bob][0].ref,
@@ -125,6 +125,7 @@ export default async (sc: SeedClient, users = true) => {
   )
   await sc.repost(carol, sc.posts[dan][1].ref)
   await sc.repost(dan, sc.posts[alice][1].ref)
+  await sc.repost(dan, alicesReplyToBob.ref)
 
   return sc
 }

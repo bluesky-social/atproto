@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
 import { FeedKeyset } from '../util/feed'
@@ -64,8 +63,13 @@ export default function (server: Server, ctx: AppContext) {
               .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
           )
       } else if (params.filter === 'posts_no_replies') {
-        // only posts, no replies
-        feedItemsQb = feedItemsQb.where('post.replyParent', 'is', null)
+        feedItemsQb = feedItemsQb
+          // only posts, no replies
+          .where((qb) =>
+            qb
+              .where('post.replyParent', 'is', null)
+              .orWhere('type', '=', 'repost'),
+          )
       }
 
       // for access-based auth, enforce blocks and mutes

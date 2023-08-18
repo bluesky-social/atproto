@@ -273,13 +273,31 @@ describe('pds author feed views', () => {
   })
 
   it('filters by posts_no_replies', async () => {
-    const { data: postsOnlyFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { actor: carol, filter: 'posts_no_replies' },
-    )
+    const { data: carolFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: carol,
+      filter: 'posts_no_replies',
+    })
 
     expect(
-      postsOnlyFeed.feed.every(({ post }) => {
-        return isRecord(post.record) && !post.record.reply
+      carolFeed.feed.every(({ post }) => {
+        return (
+          (isRecord(post.record) && !post.record.reply) ||
+          (isRecord(post.record) && post.record.reply)
+        )
+      }),
+    ).toBeTruthy()
+
+    const { data: danFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: dan,
+      filter: 'posts_no_replies',
+    })
+
+    expect(
+      danFeed.feed.every(({ post }) => {
+        return (
+          (isRecord(post.record) && !post.record.reply) ||
+          (isRecord(post.record) && post.record.reply)
+        )
       }),
     ).toBeTruthy()
   })
