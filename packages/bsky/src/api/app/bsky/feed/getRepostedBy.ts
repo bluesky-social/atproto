@@ -10,6 +10,7 @@ export default function (server: Server, ctx: AppContext) {
       const { uri, limit, cursor, cid } = params
       const requester = auth.credentials.did
       const db = ctx.db.getReplica()
+      const graphService = ctx.services.graph(db)
       const { ref } = db.db.dynamic
 
       let builder = db.db
@@ -17,6 +18,9 @@ export default function (server: Server, ctx: AppContext) {
         .where('repost.subject', '=', uri)
         .innerJoin('actor as creator', 'creator.did', 'repost.creator')
         .where(notSoftDeletedClause(ref('creator')))
+        .whereNotExists(
+          graphService.blockQb(requester, [ref('repost.creator')]),
+        )
         .selectAll('creator')
         .select(['repost.cid as cid', 'repost.sortAt as sortAt'])
 
