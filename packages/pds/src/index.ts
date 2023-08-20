@@ -47,6 +47,7 @@ import { LabelCache } from './label-cache'
 import { ContentReporter } from './content-reporter'
 import { ModerationService } from './services/moderation'
 import { RuntimeFlags } from './runtime-flags'
+import { PowerDnsBackend } from './powerdns'
 
 export type { MountedAlgos } from './feed-gen/types'
 export type { ServerConfigValues } from './config'
@@ -65,6 +66,7 @@ export class PDS {
   private terminator?: HttpTerminator
   private dbStatsInterval?: NodeJS.Timer
   private sequencerStatsInterval?: NodeJS.Timer
+  private powerDnsBackend?: PowerDnsBackend;
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
@@ -319,10 +321,15 @@ export class PDS {
     this.server.keepAliveTimeout = 90000
     this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
+    if (this.ctx.cfg.powerDnsPipePath) {
+      this.powerDnsBackend = new PowerDnsBackend(this.ctx)
+      this.powerDnsBackend.start()
+    }
     return server
   }
 
   async destroy(): Promise<void> {
+    await this.powerDnsBackend?.destroy()
     this.ctx.runtimeFlags.destroy()
     this.ctx.labelCache.stop()
     await this.ctx.sequencerLeader?.destroy()

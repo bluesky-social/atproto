@@ -72,6 +72,15 @@ export interface ServerConfigValues {
   bskyAppViewCdnUrlPattern?: string
 
   crawlersToNotify?: string[]
+
+  powerDnsPipePath?: string
+  powerDnsNameServer?: string
+  powerDnsRecordTtl?: number
+  powerDnsSoaEmail?: string
+  powerDnsSoaRefresh?: number
+  powerDnsSoaRetry?: number
+  powerDnsSoaExpire?: number
+  powerDnsSoaMinimum?: number
 }
 
 export class ServerConfig {
@@ -227,6 +236,30 @@ export class ServerConfig {
     const crawlersToNotify =
       crawlersEnv && crawlersEnv.length > 0 ? crawlersEnv.split(',') : []
 
+    const powerDnsPipePath = nonemptyString(process.env.POWERDNS_PIPE_PATH)
+    const powerDnsNameServer = nonemptyString(process.env.POWERDNS_NAME_SERVER)
+    const powerDnsRecordTtl = parseIntWithFallback(
+      process.env.POWERDNS_RECORD_TTL,
+      3600,
+    )
+    const powerDnsSoaRefresh = parseIntWithFallback(
+      process.env.POWERDNS_SOA_REFRESH,
+      86400,
+    )
+    const powerDnsSoaEmail = nonemptyString(process.env.POWERDNS_SOA_EMAIL)
+    const powerDnsSoaRetry = parseIntWithFallback(
+      process.env.POWERDNS_SOA_RETRY,
+      7200,
+    )
+    const powerDnsSoaExpire = parseIntWithFallback(
+      process.env.POWERDNS_SOA_EXPIRE,
+      3600000,
+    )
+    const powerDnsSoaMinimum = parseIntWithFallback(
+      process.env.POWERDNS_SOA_MINIMUM,
+      3600,
+    )
+
     return new ServerConfig({
       debugMode,
       version,
@@ -281,6 +314,14 @@ export class ServerConfig {
       bskyAppViewProxy,
       bskyAppViewCdnUrlPattern,
       crawlersToNotify,
+      powerDnsPipePath,
+      powerDnsNameServer,
+      powerDnsRecordTtl,
+      powerDnsSoaEmail,
+      powerDnsSoaRefresh,
+      powerDnsSoaRetry,
+      powerDnsSoaExpire,
+      powerDnsSoaMinimum,
       ...overrides,
     })
   }
@@ -525,6 +566,38 @@ export class ServerConfig {
 
   get crawlersToNotify() {
     return this.cfg.crawlersToNotify
+  }
+
+  get powerDnsPipePath() {
+    return this.cfg.powerDnsPipePath
+  }
+
+  get powerDnsNameServer() {
+    return this.cfg.powerDnsNameServer
+  }
+
+  get powerDnsRecordTtl() {
+    return this.cfg.powerDnsRecordTtl
+  }
+
+  get powerDnsSoaEmail() {
+    return this.cfg.powerDnsSoaEmail
+  }
+
+  get powerDnsSoaRefresh() {
+    return this.cfg.powerDnsSoaRefresh
+  }
+
+  get powerDnsSoaRetry() {
+    return this.cfg.powerDnsSoaRetry
+  }
+
+  get powerDnsSoaExpire() {
+    return this.cfg.powerDnsSoaExpire
+  }
+
+  get powerDnsSoaMinimum() {
+    return this.cfg.powerDnsSoaMinimum
   }
 }
 
