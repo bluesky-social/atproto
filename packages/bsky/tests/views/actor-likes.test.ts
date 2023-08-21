@@ -68,6 +68,8 @@ describe('bsky actor likes feed views', () => {
       sc.getHeaders(bob),
     )
 
+    await network.processAll()
+
     const {
       data: { feed },
     } = await agent.api.app.bsky.feed.getActorLikes(
@@ -100,6 +102,8 @@ describe('bsky actor likes feed views', () => {
       sc.getHeaders(alice),
     )
 
+    await network.processAll()
+
     const {
       data: { feed },
     } = await agent.api.app.bsky.feed.getActorLikes(
@@ -125,6 +129,8 @@ describe('bsky actor likes feed views', () => {
       { actor: alice }, // bob mutes alice
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
+
+    await network.processAll()
 
     const { data } = await agent.api.app.bsky.feed.getActorLikes(
       { actor: sc.accounts[bob].handle }, // bob has liked alice's posts
