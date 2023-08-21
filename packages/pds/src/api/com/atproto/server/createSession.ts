@@ -10,12 +10,12 @@ export default function (server: Server, ctx: AppContext) {
     rateLimit: [
       {
         durationMs: DAY,
-        points: 200,
+        points: 300,
         calcKey: ({ input }) => input.body.identifier,
       },
       {
         durationMs: 5 * MINUTE,
-        points: 10,
+        points: 30,
         calcKey: ({ input }) => input.body.identifier,
       },
     ],
