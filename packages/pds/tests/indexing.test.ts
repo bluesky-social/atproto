@@ -230,24 +230,20 @@ describe('indexing', () => {
       } as AppBskyFeedRepost.Record,
     })
 
-    await services
-      .repo(db)
-      .processWrites(
-        {
-          did: sc.dids.bob,
-          writes: [originalPost, ownLike, ownRepost],
-        },
-        1,
-      )
-    await services
-      .repo(db)
-      .processWrites(
-        {
-          did: sc.dids.alice,
-          writes: [aliceLike, aliceRepost],
-        },
-        1,
-      )
+    await services.repo(db).processWrites(
+      {
+        did: sc.dids.bob,
+        writes: [originalPost, ownLike, ownRepost],
+      },
+      1,
+    )
+    await services.repo(db).processWrites(
+      {
+        did: sc.dids.alice,
+        writes: [aliceLike, aliceRepost],
+      },
+      1,
+    )
 
     await server.processAll()
 
@@ -259,9 +255,11 @@ describe('indexing', () => {
     )
 
     expect(notifications).toHaveLength(2)
-    expect(notifications.every(n => {
-      return n.author.did !== sc.dids.bob
-    })).toBeTruthy()
+    expect(
+      notifications.every((n) => {
+        return n.author.did !== sc.dids.bob
+      }),
+    ).toBeTruthy()
 
     // Cleanup
     const del = (uri: AtUri) => {
@@ -273,31 +271,20 @@ describe('indexing', () => {
     }
 
     // Delete
-    await services
-      .repo(db)
-      .processWrites(
-        {
-          did: sc.dids.bob,
-          writes: [
-            del(originalPost.uri),
-            del(ownLike.uri),
-            del(ownRepost.uri),
-          ],
-        },
-        1,
-      )
-    await services
-      .repo(db)
-      .processWrites(
-        {
-          did: sc.dids.alice,
-          writes: [
-            del(aliceLike.uri),
-            del(aliceRepost.uri),
-          ],
-        },
-        1,
-      )
+    await services.repo(db).processWrites(
+      {
+        did: sc.dids.bob,
+        writes: [del(originalPost.uri), del(ownLike.uri), del(ownRepost.uri)],
+      },
+      1,
+    )
+    await services.repo(db).processWrites(
+      {
+        did: sc.dids.alice,
+        writes: [del(aliceLike.uri), del(aliceRepost.uri)],
+      },
+      1,
+    )
     await server.processAll()
   })
 

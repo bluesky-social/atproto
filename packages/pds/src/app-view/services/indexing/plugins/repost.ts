@@ -76,17 +76,19 @@ const notifsForInsert = (obj: IndexedRepost) => {
   const subjectUri = new AtUri(obj.subject)
   // prevent self-notifications
   const isSelf = subjectUri.host === obj.creator
-  return isSelf ? [] : [
-    {
-      userDid: subjectUri.host,
-      author: obj.creator,
-      recordUri: obj.uri,
-      recordCid: obj.cid,
-      reason: 'repost' as const,
-      reasonSubject: subjectUri.toString(),
-      indexedAt: obj.indexedAt,
-    },
-  ]
+  return isSelf
+    ? []
+    : [
+        {
+          userDid: subjectUri.host,
+          author: obj.creator,
+          recordUri: obj.uri,
+          recordCid: obj.cid,
+          reason: 'repost' as const,
+          reasonSubject: subjectUri.toString(),
+          indexedAt: obj.indexedAt,
+        },
+      ]
 }
 
 const deleteFn = async (

@@ -334,15 +334,19 @@ describe('indexing', () => {
 
     await network.bsky.processAll()
 
-    const { data: { notifications } } = await agent.api.app.bsky.notification.listNotifications(
+    const {
+      data: { notifications },
+    } = await agent.api.app.bsky.notification.listNotifications(
       {},
       { headers: await network.serviceHeaders(sc.dids.bob) },
     )
 
     expect(notifications).toHaveLength(2)
-    expect(notifications.every(n => {
-      return n.author.did !== sc.dids.bob
-    })).toBeTruthy()
+    expect(
+      notifications.every((n) => {
+        return n.author.did !== sc.dids.bob
+      }),
+    ).toBeTruthy()
 
     // Cleanup
     const del = (uri: AtUri) => {
