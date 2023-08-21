@@ -1340,7 +1340,11 @@ export class UnspeccedNS {
   }
 
   applyLabels<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyUnspeccedApplyLabels.Handler<ExtractAuth<AV>>>,
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedApplyLabels.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedApplyLabels.HandlerReqCtx<ExtractAuth<AV>>
+    >,
   ) {
     const nsid = 'app.bsky.unspecced.applyLabels' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
@@ -1391,11 +1395,12 @@ type RouteRateLimitOpts<T> = {
   calcKey?: (ctx: T) => string
   calcPoints?: (ctx: T) => number
 }
+type HandlerRateLimitOpts<T> = SharedRateLimitOpts<T> | RouteRateLimitOpts<T>
 type ConfigOf<Auth, Handler, ReqCtx> =
   | Handler
   | {
       auth?: Auth
-      rateLimit?: SharedRateLimitOpts<ReqCtx> | RouteRateLimitOpts<ReqCtx>
+      rateLimit?: HandlerRateLimitOpts<ReqCtx> | HandlerRateLimitOpts<ReqCtx>[]
       handler: Handler
     }
 type ExtractAuth<AV extends AuthVerifier | StreamAuthVerifier> = Extract<

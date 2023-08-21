@@ -1340,7 +1340,11 @@ export class UnspeccedNS {
   }
 
   applyLabels<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyUnspeccedApplyLabels.Handler<ExtractAuth<AV>>>,
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedApplyLabels.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedApplyLabels.HandlerReqCtx<ExtractAuth<AV>>
+    >,
   ) {
     const nsid = 'app.bsky.unspecced.applyLabels' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
