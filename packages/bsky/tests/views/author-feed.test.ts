@@ -169,7 +169,7 @@ describe('pds author feed views', () => {
       { actor: alice },
       { headers: await network.serviceHeaders(carol) },
     )
-    expect(attempt).rejects.toThrow('Profile not found')
+    await expect(attempt).rejects.toThrow('Profile not found')
 
     // Cleanup
     await agent.api.com.atproto.admin.reverseModerationAction(

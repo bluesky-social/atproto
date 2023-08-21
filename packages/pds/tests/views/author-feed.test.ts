@@ -200,7 +200,7 @@ describe('pds author feed views', () => {
       { actor: alice },
       { headers: sc.getHeaders(carol) },
     )
-    expect(attempt).rejects.toThrow('Profile not found')
+    await expect(attempt).rejects.toThrow('Profile not found')
 
     // Cleanup
     await reverseModerationAction(action.id)
