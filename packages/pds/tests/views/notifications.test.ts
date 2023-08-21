@@ -56,7 +56,7 @@ describe('pds notification views', () => {
         { headers: sc.getHeaders(alice) },
       )
 
-    expect(notifCountAlice.data.count).toBe(11)
+    expect(notifCountAlice.data.count).toBe(12)
 
     const notifCountBob = await agent.api.app.bsky.notification.getUnreadCount(
       {},
@@ -83,7 +83,7 @@ describe('pds notification views', () => {
         { headers: sc.getHeaders(alice) },
       )
 
-    expect(notifCountAlice.data.count).toBe(12)
+    expect(notifCountAlice.data.count).toBe(13)
 
     const notifCountBob = await agent.api.app.bsky.notification.getUnreadCount(
       {},
@@ -129,7 +129,7 @@ describe('pds notification views', () => {
     )
 
     const notifs = sort(notifRes.data.notifications)
-    expect(notifs.length).toBe(12)
+    expect(notifs.length).toBe(13)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map(() => false))
@@ -209,9 +209,9 @@ describe('pds notification views', () => {
     )
 
     const notifs = sort(notifRes.data.notifications)
-    expect(notifs.length).toBe(10)
+    expect(notifs.length).toBe(11)
     expect(forSnapshot(notifs)).toMatchSnapshot()
-    expect(notifCount.data.count).toBe(10)
+    expect(notifCount.data.count).toBe(11)
 
     // Cleanup
     await Promise.all(
@@ -257,7 +257,7 @@ describe('pds notification views', () => {
       },
     )
 
-    expect(full.data.notifications.length).toEqual(12)
+    expect(full.data.notifications.length).toEqual(13)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
@@ -300,7 +300,7 @@ describe('pds notification views', () => {
     )
 
     const notifs = sort(notifRes.data.notifications)
-    expect(notifs.length).toBe(12)
+    expect(notifs.length).toBe(13)
 
     const readStates = notifs.map((notif) => notif.isRead)
     expect(readStates).toEqual(notifs.map((_, i) => i >= 3))

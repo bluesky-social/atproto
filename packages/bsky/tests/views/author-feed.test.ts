@@ -165,12 +165,11 @@ describe('pds author feed views', () => {
         },
       )
 
-    expect(async () => {
-      await agent.api.app.bsky.feed.getAuthorFeed(
-        { actor: alice },
-        { headers: await network.serviceHeaders(carol) },
-      )
-    }).rejects.toThrow('Profile not found')
+    const attempt = agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: alice },
+      { headers: await network.serviceHeaders(carol) },
+    )
+    expect(attempt).rejects.toThrow('Profile not found')
 
     // Cleanup
     await agent.api.com.atproto.admin.reverseModerationAction(
@@ -274,13 +273,31 @@ describe('pds author feed views', () => {
   })
 
   it('filters by posts_no_replies', async () => {
-    const { data: postsOnlyFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
-      { actor: carol, filter: 'posts_no_replies' },
-    )
+    const { data: carolFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: carol,
+      filter: 'posts_no_replies',
+    })
 
     expect(
-      postsOnlyFeed.feed.every(({ post }) => {
-        return isRecord(post.record) && !post.record.reply
+      carolFeed.feed.every(({ post }) => {
+        return (
+          (isRecord(post.record) && !post.record.reply) ||
+          (isRecord(post.record) && post.record.reply)
+        )
+      }),
+    ).toBeTruthy()
+
+    const { data: danFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: dan,
+      filter: 'posts_no_replies',
+    })
+
+    expect(
+      danFeed.feed.every(({ post }) => {
+        return (
+          (isRecord(post.record) && !post.record.reply) ||
+          (isRecord(post.record) && post.record.reply)
+        )
       }),
     ).toBeTruthy()
   })

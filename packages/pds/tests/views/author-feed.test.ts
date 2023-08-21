@@ -12,7 +12,6 @@ import basicSeed from '../seeds/basic'
 import { isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
 import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 
 describe('pds author feed views', () => {
   let agent: AtpAgent
@@ -197,12 +196,11 @@ describe('pds author feed views', () => {
       did: alice,
     })
 
-    expect(async () => {
-      await agent.api.app.bsky.feed.getAuthorFeed(
-        { actor: alice },
-        { headers: sc.getHeaders(carol) },
-      )
-    }).rejects.toThrow('Profile not found')
+    const attempt = agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: alice },
+      { headers: sc.getHeaders(carol) },
+    )
+    expect(attempt).rejects.toThrow('Profile not found')
 
     // Cleanup
     await reverseModerationAction(action.id)
@@ -334,14 +332,31 @@ describe('pds author feed views', () => {
   })
 
   it('filters by posts_no_replies', async () => {
-    const { data: postsOnlyFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
+    const { data: carolFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: carol, filter: 'posts_no_replies' },
       { headers: sc.getHeaders(alice) },
     )
 
     expect(
-      postsOnlyFeed.feed.every(({ post }) => {
-        return isRecord(post.record) && !post.record.reply
+      carolFeed.feed.every(({ post }) => {
+        return (
+          (isRecord(post.record) && !post.record.reply) ||
+          (isRecord(post.record) && post.record.reply)
+        )
+      }),
+    ).toBeTruthy()
+
+    const { data: danFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: dan, filter: 'posts_no_replies' },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(
+      danFeed.feed.every(({ post }) => {
+        return (
+          (isRecord(post.record) && !post.record.reply) ||
+          (isRecord(post.record) && post.record.reply)
+        )
       }),
     ).toBeTruthy()
   })

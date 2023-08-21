@@ -59,19 +59,24 @@ export default function (server: Server, ctx: AppContext) {
               .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
           )
       } else if (filter === 'posts_no_replies') {
-        // only posts, no replies
-        feedItemsQb = feedItemsQb.where('post.replyParent', 'is', null)
+        feedItemsQb = feedItemsQb.where((qb) =>
+          qb
+            .where('post.replyParent', 'is', null)
+            .orWhere('type', '=', 'repost'),
+        )
       }
 
       if (viewer !== null) {
-        feedItemsQb = feedItemsQb.where((qb) =>
-          // Hide reposts of muted content
-          qb
-            .where('type', '=', 'post')
-            .orWhere((qb) =>
-              graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
-            ),
-        )
+        feedItemsQb = feedItemsQb
+          .where((qb) =>
+            // Hide reposts of muted content
+            qb
+              .where('type', '=', 'post')
+              .orWhere((qb) =>
+                graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
+              ),
+          )
+          .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
       }
 
       const keyset = new FeedKeyset(
