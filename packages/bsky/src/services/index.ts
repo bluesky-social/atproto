@@ -7,13 +7,11 @@ import { ModerationService } from './moderation'
 import { LabelService } from './label'
 import { ImageInvalidator } from '../image/invalidator'
 import { LabelCache } from '../label-cache'
-import { NotificationServer } from '../notifications'
 
 export function createServices(resources: {
   imgUriBuilder: ImageUriBuilder
   imgInvalidator: ImageInvalidator
   labelCache: LabelCache
-  notifServer: NotificationServer
 }): Services {
   const { imgUriBuilder, imgInvalidator, labelCache } = resources
   return {

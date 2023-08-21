@@ -105,7 +105,6 @@ export class BskyAppView {
       imgUriBuilder,
       imgInvalidator,
       labelCache,
-      notifServer,
     })
 
     const ctx = new AppContext({
