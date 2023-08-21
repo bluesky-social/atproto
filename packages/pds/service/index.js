@@ -37,7 +37,6 @@ const main = async () => {
     // view-maintainer lock then one for anything else.
     poolSize: 2,
   })
-  await migrateDb.migrateToLatestOrThrow()
   // Use lower-credentialed user to run the app
   const db = Database.postgres({
     url: pgUrl(env.dbCreds),

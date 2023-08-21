@@ -67,14 +67,16 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (viewer !== null) {
-        feedItemsQb = feedItemsQb.where((qb) =>
-          // Hide reposts of muted content
-          qb
-            .where('type', '=', 'post')
-            .orWhere((qb) =>
-              graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
-            ),
-        )
+        feedItemsQb = feedItemsQb
+          .where((qb) =>
+            // Hide reposts of muted content
+            qb
+              .where('type', '=', 'post')
+              .orWhere((qb) =>
+                graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
+              ),
+          )
+          .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
       }
 
       const keyset = new FeedKeyset(
