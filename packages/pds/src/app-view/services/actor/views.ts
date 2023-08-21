@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { cborToLexRecord } from '@atproto/repo'
 import {
   ProfileViewDetailed,
   ProfileView,
@@ -7,7 +8,7 @@ import {
 import { DidHandle } from '../../../db/tables/did-handle'
 import Database from '../../../db'
 import { ImageUriBuilder } from '../../../image/uri'
-import { LabelService } from '../label'
+import { LabelService, getSelfLabels } from '../label'
 import { GraphService } from '../graph'
 import { LabelCache } from '../../../label-cache'
 import { notSoftDeletedClause } from '../../../db/util'
@@ -26,7 +27,7 @@ export class ActorViews {
 
   async profilesDetailed(
     results: ActorResult[],
-    viewer: string,
+    viewer: string | null,
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<Record<string, ProfileViewDetailed>> {
     if (results.length === 0) return {}
@@ -42,6 +43,11 @@ export class ActorViews {
       .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .leftJoin('profile', 'profile.creator', 'did_handle.did')
       .leftJoin('profile_agg', 'profile_agg.did', 'did_handle.did')
+      .leftJoin('ipld_block', (join) =>
+        join
+          .onRef('ipld_block.cid', '=', 'profile.cid')
+          .onRef('ipld_block.creator', '=', 'profile.creator'),
+      )
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('repo_root'))),
       )
@@ -49,6 +55,7 @@ export class ActorViews {
         'did_handle.did as did',
         'did_handle.handle as handle',
         'profile.uri as profileUri',
+        'profile.cid as profileCid',
         'profile.displayName as displayName',
         'profile.description as description',
         'profile.avatarCid as avatarCid',
@@ -57,40 +64,41 @@ export class ActorViews {
         'profile_agg.followsCount as followsCount',
         'profile_agg.followersCount as followersCount',
         'profile_agg.postsCount as postsCount',
+        'ipld_block.content as profileBytes',
         this.db.db
           .selectFrom('follow')
-          .where('creator', '=', viewer)
+          .where('creator', '=', viewer ?? '')
           .whereRef('subjectDid', '=', ref('did_handle.did'))
           .select('uri')
           .as('requesterFollowing'),
         this.db.db
           .selectFrom('follow')
           .whereRef('creator', '=', ref('did_handle.did'))
-          .where('subjectDid', '=', viewer)
+          .where('subjectDid', '=', viewer ?? '')
           .select('uri')
           .as('requesterFollowedBy'),
         this.db.db
           .selectFrom('actor_block')
-          .where('creator', '=', viewer)
+          .where('creator', '=', viewer ?? '')
           .whereRef('subjectDid', '=', ref('did_handle.did'))
           .select('uri')
           .as('requesterBlocking'),
         this.db.db
           .selectFrom('actor_block')
           .whereRef('creator', '=', ref('did_handle.did'))
-          .where('subjectDid', '=', viewer)
+          .where('subjectDid', '=', viewer ?? '')
           .select('uri')
           .as('requesterBlockedBy'),
         this.db.db
           .selectFrom('mute')
           .whereRef('did', '=', ref('did_handle.did'))
-          .where('mutedByDid', '=', viewer)
+          .where('mutedByDid', '=', viewer ?? '')
           .select('did')
           .as('requesterMuted'),
         this.db.db
           .selectFrom('list_item')
           .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
-          .where('list_mute.mutedByDid', '=', viewer)
+          .where('list_mute.mutedByDid', '=', viewer ?? '')
           .whereRef('list_item.subjectDid', '=', ref('did_handle.did'))
           .select('list_item.listUri')
           .limit(1)
@@ -108,7 +116,6 @@ export class ActorViews {
     const listViews = await this.services.graph.getListViews(listUris, viewer)
 
     return profileInfos.reduce((acc, cur) => {
-      const actorLabels = labels[cur.did] ?? []
       const avatar = cur?.avatarCid
         ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
         : undefined
@@ -121,6 +128,12 @@ export class ActorViews {
               listViews[cur.requesterMutedByList],
             )
           : undefined
+      const actorLabels = labels[cur.did] ?? []
+      const selfLabels = getSelfLabels({
+        uri: cur.profileUri,
+        cid: cur.profileCid,
+        record: cur.profileBytes && cborToLexRecord(cur.profileBytes),
+      })
       const profile = {
         did: cur.did,
         handle: cur.handle,
@@ -140,7 +153,7 @@ export class ActorViews {
           following: cur?.requesterFollowing || undefined,
           followedBy: cur?.requesterFollowedBy || undefined,
         },
-        labels: skipLabels ? undefined : actorLabels,
+        labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
       }
       acc[cur.did] = profile
       return acc
@@ -158,7 +171,7 @@ export class ActorViews {
 
   async profileDetailed(
     result: ActorResult,
-    viewer: string,
+    viewer: string | null,
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ProfileViewDetailed | null> {
     const profiles = await this.profilesDetailed([result], viewer, opts)
@@ -167,7 +180,7 @@ export class ActorViews {
 
   async profiles(
     results: ActorResult[],
-    viewer: string,
+    viewer: string | null,
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<Record<string, ProfileView>> {
     if (results.length === 0) return {}
@@ -181,6 +194,11 @@ export class ActorViews {
       .where('did_handle.did', 'in', dids)
       .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .leftJoin('profile', 'profile.creator', 'did_handle.did')
+      .leftJoin('ipld_block', (join) =>
+        join
+          .onRef('ipld_block.cid', '=', 'profile.cid')
+          .onRef('ipld_block.creator', '=', 'profile.creator'),
+      )
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('repo_root'))),
       )
@@ -188,44 +206,46 @@ export class ActorViews {
         'did_handle.did as did',
         'did_handle.handle as handle',
         'profile.uri as profileUri',
+        'profile.cid as profileCid',
         'profile.displayName as displayName',
         'profile.description as description',
         'profile.avatarCid as avatarCid',
         'profile.indexedAt as indexedAt',
+        'ipld_block.content as profileBytes',
         this.db.db
           .selectFrom('follow')
-          .where('creator', '=', viewer)
+          .where('creator', '=', viewer ?? '')
           .whereRef('subjectDid', '=', ref('did_handle.did'))
           .select('uri')
           .as('requesterFollowing'),
         this.db.db
           .selectFrom('follow')
           .whereRef('creator', '=', ref('did_handle.did'))
-          .where('subjectDid', '=', viewer)
+          .where('subjectDid', '=', viewer ?? '')
           .select('uri')
           .as('requesterFollowedBy'),
         this.db.db
           .selectFrom('actor_block')
-          .where('creator', '=', viewer)
+          .where('creator', '=', viewer ?? '')
           .whereRef('subjectDid', '=', ref('did_handle.did'))
           .select('uri')
           .as('requesterBlocking'),
         this.db.db
           .selectFrom('actor_block')
           .whereRef('creator', '=', ref('did_handle.did'))
-          .where('subjectDid', '=', viewer)
+          .where('subjectDid', '=', viewer ?? '')
           .select('uri')
           .as('requesterBlockedBy'),
         this.db.db
           .selectFrom('mute')
           .whereRef('did', '=', ref('did_handle.did'))
-          .where('mutedByDid', '=', viewer)
+          .where('mutedByDid', '=', viewer ?? '')
           .select('did')
           .as('requesterMuted'),
         this.db.db
           .selectFrom('list_item')
           .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
-          .where('list_mute.mutedByDid', '=', viewer)
+          .where('list_mute.mutedByDid', '=', viewer ?? '')
           .whereRef('list_item.subjectDid', '=', ref('did_handle.did'))
           .select('list_item.listUri')
           .limit(1)
@@ -243,7 +263,6 @@ export class ActorViews {
     const listViews = await this.services.graph.getListViews(listUris, viewer)
 
     return profileInfos.reduce((acc, cur) => {
-      const actorLabels = labels[cur.did] ?? []
       const avatar = cur.avatarCid
         ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
         : undefined
@@ -253,6 +272,12 @@ export class ActorViews {
               listViews[cur.requesterMutedByList],
             )
           : undefined
+      const actorLabels = labels[cur.did] ?? []
+      const selfLabels = getSelfLabels({
+        uri: cur.profileUri,
+        cid: cur.profileCid,
+        record: cur.profileBytes && cborToLexRecord(cur.profileBytes),
+      })
       const profile = {
         did: cur.did,
         handle: cur.handle,
@@ -268,7 +293,7 @@ export class ActorViews {
           following: cur?.requesterFollowing || undefined,
           followedBy: cur?.requesterFollowedBy || undefined,
         },
-        labels: skipLabels ? undefined : actorLabels,
+        labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
       }
       acc[cur.did] = profile
       return acc
@@ -277,7 +302,7 @@ export class ActorViews {
 
   async hydrateProfiles(
     results: ActorResult[],
-    viewer: string,
+    viewer: string | null,
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ProfileView[]> {
     const profiles = await this.profiles(results, viewer, opts)
@@ -286,7 +311,7 @@ export class ActorViews {
 
   async profile(
     result: ActorResult,
-    viewer: string,
+    viewer: string | null,
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ProfileView | null> {
     const profiles = await this.profiles([result], viewer, opts)

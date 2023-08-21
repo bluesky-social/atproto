@@ -38,7 +38,7 @@ export class GraphService {
       .select(['list_item.cid as cid', 'list_item.createdAt as createdAt'])
   }
 
-  blockQb(requester: string, refs: NotEmptyArray<DbRef>) {
+  blockQb(requester: string | null, refs: NotEmptyArray<DbRef>) {
     const subjectRefs = sql.join(refs)
     return this.db.db
       .selectFrom('actor_block')
@@ -46,13 +46,32 @@ export class GraphService {
         outer
           .where((qb) =>
             qb
-              .where('actor_block.creator', '=', requester)
+              .where('actor_block.creator', '=', requester ?? '')
               .whereRef('actor_block.subjectDid', 'in', sql`(${subjectRefs})`),
           )
           .orWhere((qb) =>
             qb
-              .where('actor_block.subjectDid', '=', requester)
+              .where('actor_block.subjectDid', '=', requester ?? '')
               .whereRef('actor_block.creator', 'in', sql`(${subjectRefs})`),
+          ),
+      )
+      .select(['creator', 'subjectDid'])
+  }
+
+  blockRefQb(first: DbRef, second: DbRef) {
+    return this.db.db
+      .selectFrom('actor_block')
+      .where((outer) =>
+        outer
+          .where((qb) =>
+            qb
+              .whereRef('actor_block.creator', '=', first)
+              .whereRef('actor_block.subjectDid', '=', second),
+          )
+          .orWhere((qb) =>
+            qb
+              .whereRef('actor_block.subjectDid', '=', first)
+              .whereRef('actor_block.creator', '=', second),
           ),
       )
       .select(['creator', 'subjectDid'])

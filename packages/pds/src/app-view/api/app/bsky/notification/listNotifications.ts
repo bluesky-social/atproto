@@ -5,13 +5,14 @@ import { Server } from '../../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { notSoftDeletedClause, valuesList } from '../../../../../db/util'
+import { getSelfLabels } from '../../../../services/label'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.listNotifications({
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxyRead(req)) {
+      if (await ctx.canProxyRead(req, requester)) {
         const res =
           await ctx.appviewAgent.api.app.bsky.notification.listNotifications(
             params,
@@ -131,16 +132,23 @@ export default function (server: Server, ctx: AppContext) {
         const bytes = bytesByCid[notif.cid]
         const author = authors[notif.authorDid]
         if (!bytes || !author) return undefined
+        const record = common.cborBytesToRecord(bytes)
+        const recordLabels = labels[notif.uri] ?? []
+        const recordSelfLabels = getSelfLabels({
+          uri: notif.uri,
+          cid: notif.cid,
+          record,
+        })
         return {
           uri: notif.uri,
           cid: notif.cid,
           author: authors[notif.authorDid],
           reason: notif.reason,
           reasonSubject: notif.reasonSubject || undefined,
-          record: common.cborBytesToRecord(bytes),
+          record,
           isRead: notif.indexedAt <= userState.lastSeenNotifs,
           indexedAt: notif.indexedAt,
-          labels: labels[notif.uri] ?? [],
+          labels: [...recordLabels, ...recordSelfLabels],
         }
       })
 

@@ -1,22 +1,28 @@
 import { mapDefined } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/identifier'
+import { jsonStringToLex } from '@atproto/lexicon'
 import {
   ProfileViewDetailed,
   ProfileView,
   ProfileViewBasic,
 } from '../../lexicon/types/app/bsky/actor/defs'
-import Database from '../../db'
+import { Database } from '../../db'
 import { noMatch, notSoftDeletedClause } from '../../db/util'
 import { Actor } from '../../db/tables/actor'
 import { ImageUriBuilder } from '../../image/uri'
-import { LabelService } from '../label'
+import { LabelService, getSelfLabels } from '../label'
 import { GraphService } from '../graph'
+import { LabelCache } from '../../label-cache'
 
 export class ActorViews {
-  constructor(private db: Database, private imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    private db: Database,
+    private imgUriBuilder: ImageUriBuilder,
+    private labelCache: LabelCache,
+  ) {}
 
   services = {
-    label: LabelService.creator()(this.db),
+    label: LabelService.creator(this.labelCache)(this.db),
     graph: GraphService.creator(this.imgUriBuilder)(this.db),
   }
 
@@ -36,6 +42,7 @@ export class ActorViews {
       .where('actor.did', 'in', dids)
       .leftJoin('profile', 'profile.creator', 'actor.did')
       .leftJoin('profile_agg', 'profile_agg.did', 'actor.did')
+      .leftJoin('record', 'record.uri', 'profile.uri')
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('actor'))),
       )
@@ -43,6 +50,7 @@ export class ActorViews {
         'actor.did as did',
         'actor.handle as handle',
         'profile.uri as profileUri',
+        'profile.cid as profileCid',
         'profile.displayName as displayName',
         'profile.description as description',
         'profile.avatarCid as avatarCid',
@@ -51,6 +59,7 @@ export class ActorViews {
         'profile_agg.followsCount as followsCount',
         'profile_agg.followersCount as followersCount',
         'profile_agg.postsCount as postsCount',
+        'record.json as profileJson',
         this.db.db
           .selectFrom('follow')
           .if(!viewer, (q) => q.where(noMatch))
@@ -108,20 +117,11 @@ export class ActorViews {
     const listViews = await this.services.graph.getListViews(listUris, viewer)
 
     return profileInfos.reduce((acc, cur) => {
-      const actorLabels = labels[cur.did] ?? []
       const avatar = cur?.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
-            'avatar',
-            cur.did,
-            cur.avatarCid,
-          )
+        ? this.imgUriBuilder.getPresetUri('avatar', cur.did, cur.avatarCid)
         : undefined
       const banner = cur?.bannerCid
-        ? this.imgUriBuilder.getCommonSignedUri(
-            'banner',
-            cur.did,
-            cur.bannerCid,
-          )
+        ? this.imgUriBuilder.getPresetUri('banner', cur.did, cur.bannerCid)
         : undefined
       const mutedByList =
         cur.requesterMutedByList && listViews[cur.requesterMutedByList]
@@ -129,6 +129,15 @@ export class ActorViews {
               listViews[cur.requesterMutedByList],
             )
           : undefined
+      const actorLabels = labels[cur.did] ?? []
+      const selfLabels = getSelfLabels({
+        uri: cur.profileUri,
+        cid: cur.profileCid,
+        record:
+          cur.profileJson !== null
+            ? (jsonStringToLex(cur.profileJson) as Record<string, unknown>)
+            : null,
+      })
       const profile = {
         did: cur.did,
         handle: cur.handle ?? INVALID_HANDLE,
@@ -150,7 +159,7 @@ export class ActorViews {
               blocking: cur.requesterBlocking || undefined,
             }
           : undefined,
-        labels: skipLabels ? undefined : actorLabels,
+        labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
       }
       acc[cur.did] = profile
       return acc
@@ -190,6 +199,7 @@ export class ActorViews {
       .selectFrom('actor')
       .where('actor.did', 'in', dids)
       .leftJoin('profile', 'profile.creator', 'actor.did')
+      .leftJoin('record', 'record.uri', 'profile.uri')
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('actor'))),
       )
@@ -197,10 +207,12 @@ export class ActorViews {
         'actor.did as did',
         'actor.handle as handle',
         'profile.uri as profileUri',
+        'profile.cid as profileCid',
         'profile.displayName as displayName',
         'profile.description as description',
         'profile.avatarCid as avatarCid',
         'profile.indexedAt as indexedAt',
+        'record.json as profileJson',
         this.db.db
           .selectFrom('follow')
           .if(!viewer, (q) => q.where(noMatch))
@@ -258,13 +270,8 @@ export class ActorViews {
     const listViews = await this.services.graph.getListViews(listUris, viewer)
 
     return profileInfos.reduce((acc, cur) => {
-      const actorLabels = labels[cur.did] ?? []
       const avatar = cur?.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
-            'avatar',
-            cur.did,
-            cur.avatarCid,
-          )
+        ? this.imgUriBuilder.getPresetUri('avatar', cur.did, cur.avatarCid)
         : undefined
       const mutedByList =
         cur.requesterMutedByList && listViews[cur.requesterMutedByList]
@@ -272,6 +279,15 @@ export class ActorViews {
               listViews[cur.requesterMutedByList],
             )
           : undefined
+      const actorLabels = labels[cur.did] ?? []
+      const selfLabels = getSelfLabels({
+        uri: cur.profileUri,
+        cid: cur.profileCid,
+        record:
+          cur.profileJson !== null
+            ? (jsonStringToLex(cur.profileJson) as Record<string, unknown>)
+            : null,
+      })
       const profile = {
         did: cur.did,
         handle: cur.handle ?? INVALID_HANDLE,
@@ -289,7 +305,7 @@ export class ActorViews {
               followedBy: cur?.requesterFollowedBy || undefined,
             }
           : undefined,
-        labels: skipLabels ? undefined : actorLabels,
+        labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
       }
       acc[cur.did] = profile
       return acc

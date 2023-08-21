@@ -6,6 +6,7 @@ import { TestNetwork } from '@atproto/dev-env'
 import { getInfo } from '../../src/image/sharp'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
+import { ImageUriBuilder } from '../../src/image/uri'
 
 describe('image processing server', () => {
   let network: TestNetwork
@@ -16,11 +17,6 @@ describe('image processing server', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_image_processing_server',
-      bsky: {
-        imgUriKey:
-          'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8',
-        imgUriSalt: '9dd04221f5755bce5f55f47464c27e1e',
-      },
     })
     const pdsAgent = new AtpAgent({ service: network.pds.url })
     const sc = new SeedClient(pdsAgent)
@@ -30,7 +26,7 @@ describe('image processing server', () => {
     fileDid = sc.dids.carol
     fileCid = sc.posts[fileDid][0].images[0].image.ref
     client = axios.create({
-      baseURL: `${network.bsky.url}/image`,
+      baseURL: `${network.bsky.url}/img`,
       validateStatus: () => true,
     })
   })
@@ -41,42 +37,36 @@ describe('image processing server', () => {
 
   it('processes image from blob resolver.', async () => {
     const res = await client.get(
-      network.bsky.ctx.imgUriBuilder.getSignedPath({
+      ImageUriBuilder.getPath({
+        preset: 'feed_fullsize',
         did: fileDid,
         cid: fileCid,
-        format: 'jpeg',
-        fit: 'cover',
-        width: 500,
-        height: 500,
-        min: true,
       }),
       { responseType: 'stream' },
     )
 
     const info = await getInfo(res.data)
-    expect(info).toEqual(
-      expect.objectContaining({
-        height: 500,
-        width: 500,
-        size: 67221,
-      }),
-    )
+
+    expect(info).toEqual({
+      height: 580,
+      width: 1000,
+      size: 127578,
+      mime: 'image/jpeg',
+    })
     expect(res.headers).toEqual(
       expect.objectContaining({
         'content-type': 'image/jpeg',
         'cache-control': 'public, max-age=31536000',
-        'content-length': '67221',
+        'content-length': '127578',
       }),
     )
   })
 
   it('caches results.', async () => {
-    const path = network.bsky.ctx.imgUriBuilder.getSignedPath({
+    const path = ImageUriBuilder.getPath({
+      preset: 'avatar',
       did: fileDid,
       cid: fileCid,
-      format: 'jpeg',
-      width: 25, // Special number for this test
-      height: 25,
     })
     const res1 = await client.get(path, { responseType: 'arraybuffer' })
     expect(res1.headers['x-cache']).toEqual('miss')
@@ -88,32 +78,13 @@ describe('image processing server', () => {
     expect(Buffer.compare(res1.data, res3.data)).toEqual(0)
   })
 
-  it('errors on bad signature.', async () => {
-    const path = network.bsky.ctx.imgUriBuilder.getSignedPath({
-      did: fileDid,
-      cid: fileCid,
-      format: 'jpeg',
-      fit: 'cover',
-      width: 500,
-      height: 500,
-      min: true,
-    })
-    const res = await client.get(path.replace('/', '/_'), {})
-    expect(res.status).toEqual(400)
-    expect(res.data).toEqual({ message: 'Invalid path: bad signature' })
-  })
-
   it('errors on missing file.', async () => {
     const missingCid = await cidForCbor('missing-file')
     const res = await client.get(
-      network.bsky.ctx.imgUriBuilder.getSignedPath({
+      ImageUriBuilder.getPath({
+        preset: 'feed_fullsize',
         did: fileDid,
         cid: missingCid,
-        format: 'jpeg',
-        fit: 'cover',
-        width: 500,
-        height: 500,
-        min: true,
       }),
     )
     expect(res.status).toEqual(404)

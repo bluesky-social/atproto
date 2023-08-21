@@ -12,9 +12,11 @@ export interface IndexerConfigValues {
   didPlcUrl: string
   didCacheStaleTTL: number
   didCacheMaxTTL: number
+  handleResolveNameservers?: string[]
   labelerDid: string
   hiveApiKey?: string
   labelerKeywords: Record<string, string>
+  labelerPushUrl?: string
   indexerConcurrency?: number
   indexerPartitionIds: number[]
   indexerPartitionBatchSize?: number
@@ -28,7 +30,7 @@ export class IndexerConfig {
   static readEnv(overrides?: Partial<IndexerConfigValues>) {
     const version = process.env.BSKY_VERSION || '0.0.0'
     const dbPostgresUrl =
-      overrides?.dbPostgresUrl || process.env.DB_POSTGRES_URL
+      overrides?.dbPostgresUrl || process.env.DB_PRIMARY_POSTGRES_URL
     const dbPostgresSchema =
       overrides?.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
     const redisHost =
@@ -53,7 +55,12 @@ export class IndexerConfig {
       process.env.DID_CACHE_MAX_TTL,
       DAY,
     )
+    const handleResolveNameservers = process.env.HANDLE_RESOLVE_NAMESERVERS
+      ? process.env.HANDLE_RESOLVE_NAMESERVERS.split(',')
+      : []
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
+    const labelerPushUrl =
+      overrides?.labelerPushUrl || process.env.LABELER_PUSH_URL || undefined
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
     const indexerPartitionIds =
       overrides?.indexerPartitionIds ||
@@ -83,7 +90,9 @@ export class IndexerConfig {
       didPlcUrl,
       didCacheStaleTTL,
       didCacheMaxTTL,
+      handleResolveNameservers,
       labelerDid,
+      labelerPushUrl,
       hiveApiKey,
       indexerPartitionIds,
       indexerConcurrency,
@@ -135,8 +144,16 @@ export class IndexerConfig {
     return this.cfg.didCacheMaxTTL
   }
 
+  get handleResolveNameservers() {
+    return this.cfg.handleResolveNameservers
+  }
+
   get labelerDid() {
     return this.cfg.labelerDid
+  }
+
+  get labelerPushUrl() {
+    return this.cfg.labelerPushUrl
   }
 
   get hiveApiKey() {

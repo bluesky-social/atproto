@@ -68,6 +68,7 @@ export class TestPds {
       feedGenDid: 'did:example:feedGen',
       dbTxLockNonce: await randomStr(32, 'base32'),
       bskyAppViewProxy: !!cfg.bskyAppViewEndpoint,
+      bskyAppViewCdnUrlPattern: 'http://cdn.appview.com/%s/%s/%s',
       ...cfg,
     })
 

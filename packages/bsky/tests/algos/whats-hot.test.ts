@@ -77,13 +77,16 @@ describe.skip('algo whats-hot', () => {
     await network.bsky.processAll()
 
     // move the 3rd post 5 hours into the past to check gravity
-    await network.bsky.ctx.db.db
-      .updateTable('post')
+    await network.bsky.ctx.db
+      .getPrimary()
+      .db.updateTable('post')
       .where('uri', '=', three.ref.uriStr)
       .set({ indexedAt: new Date(Date.now() - 5 * HOUR).toISOString() })
       .execute()
 
-    await network.bsky.ctx.db.refreshMaterializedView('algo_whats_hot_view')
+    await network.bsky.ctx.db
+      .getPrimary()
+      .refreshMaterializedView('algo_whats_hot_view')
 
     const res = await agent.api.app.bsky.feed.getFeed(
       { feed: feedUri },

@@ -37,7 +37,7 @@ export interface Response {
 
 export class NotFoundError extends XRPCError {
   constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
+    super(src.status, src.error, src.message, src.headers)
   }
 }
 

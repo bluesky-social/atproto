@@ -10,6 +10,7 @@ import http from 'http'
 import events from 'events'
 import { createTransport } from 'nodemailer'
 import { Redis } from 'ioredis'
+import { AtpAgent } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import { IdResolver } from '@atproto/identity'
@@ -19,7 +20,7 @@ import {
   RateLimiterOpts,
   Options as XrpcServerOptions,
 } from '@atproto/xrpc-server'
-import { HOUR, MINUTE } from '@atproto/common'
+import { MINUTE } from '@atproto/common'
 import * as appviewConsumers from './app-view/event-stream/consumers'
 import inProcessAppView from './app-view/api'
 import API from './api'
@@ -54,12 +55,14 @@ import { LabelCache } from './label-cache'
 import { ContentReporter } from './content-reporter'
 import { ModerationService } from './services/moderation'
 import { getRedisClient } from './redis'
+import { RuntimeFlags } from './runtime-flags'
 
 export type { MountedAlgos } from './feed-gen/types'
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'
 export { ViewMaintainer } from './db/views'
+export { PeriodicModerationActionReversal } from './db/periodic-moderation-action-reversal'
 export { DiskBlobStore, MemoryBlobStore } from './storage'
 export { AppContext } from './context'
 export { makeAlgos } from './feed-gen'
@@ -214,6 +217,10 @@ export class PDS {
       })
     }
 
+    const appviewAgent = config.bskyAppViewEndpoint
+      ? new AtpAgent({ service: config.bskyAppViewEndpoint })
+      : undefined
+
     const services = createServices({
       repoSigningKey,
       messageDispatcher,
@@ -223,9 +230,14 @@ export class PDS {
       labeler,
       labelCache,
       contentReporter,
+      appviewAgent,
+      appviewDid: config.bskyAppViewDid,
+      appviewCdnUrlPattern: config.bskyAppViewCdnUrlPattern,
       backgroundQueue,
       crawlers,
     })
+
+    const runtimeFlags = new RuntimeFlags(db)
 
     let redis: Redis | undefined = undefined
     if (config.redisHost) {
@@ -247,12 +259,14 @@ export class PDS {
       sequencerLeader,
       labeler,
       labelCache,
+      runtimeFlags,
       contentReporter,
       services,
       mailer,
       moderationMailer,
       imgUriBuilder,
       backgroundQueue,
+      appviewAgent,
       crawlers,
       algos,
     })
@@ -342,6 +356,7 @@ export class PDS {
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
     this.ctx.labelCache.start()
+    await this.ctx.runtimeFlags.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     this.server.keepAliveTimeout = 90000
@@ -351,6 +366,7 @@ export class PDS {
   }
 
   async destroy(): Promise<void> {
+    this.ctx.runtimeFlags.destroy()
     this.ctx.labelCache.stop()
     await this.ctx.sequencerLeader?.destroy()
     await this.terminator?.terminate()

@@ -13,6 +13,7 @@ env:
 
 jobs:
   bsky-container-ghcr:
+    if: github.repository == 'bluesky-social/atproto'
     runs-on: ubuntu-latest
     permissions:
       contents: read

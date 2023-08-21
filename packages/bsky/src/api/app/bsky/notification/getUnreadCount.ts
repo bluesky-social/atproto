@@ -12,8 +12,9 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('The seenAt parameter is unsupported')
       }
 
-      const { ref } = ctx.db.db.dynamic
-      const result = await ctx.db.db
+      const db = ctx.db.getReplica()
+      const { ref } = db.db.dynamic
+      const result = await db.db
         .selectFrom('notification')
         .select(countAll.as('count'))
         .innerJoin('actor', 'actor.did', 'notification.did')

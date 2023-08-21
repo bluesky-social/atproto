@@ -1,5 +1,5 @@
 import { IdResolver } from '@atproto/identity'
-import Database from '../db'
+import { PrimaryDatabase } from '../db'
 import { Labeler } from '../labeler'
 import { BackgroundQueue } from '../background'
 import { IndexingService } from '../services/indexing'
@@ -13,13 +13,13 @@ export function createServices(resources: {
   const { idResolver, labeler, backgroundQueue } = resources
   return {
     indexing: IndexingService.creator(idResolver, labeler, backgroundQueue),
-    label: LabelService.creator(),
+    label: LabelService.creator(null),
   }
 }
 
 export type Services = {
-  indexing: FromDb<IndexingService>
-  label: FromDb<LabelService>
+  indexing: FromDbPrimary<IndexingService>
+  label: FromDbPrimary<LabelService>
 }
 
-type FromDb<T> = (db: Database) => T
+type FromDbPrimary<T> = (db: PrimaryDatabase) => T

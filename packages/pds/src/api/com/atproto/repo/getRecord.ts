@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
       }
     }
 
-    if (ctx.canProxyRead(req)) {
+    if (await ctx.canProxyRead(req)) {
       const res = await ctx.appviewAgent.api.com.atproto.repo.getRecord(params)
       return {
         encoding: 'application/json',

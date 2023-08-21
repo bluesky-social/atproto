@@ -125,7 +125,7 @@ export class RepoService {
       // persist the commit to repo storage
       storage.applyCommit(commitData),
       // & send to indexing
-      this.indexWrites(writes, now),
+      this.indexWrites(writes, now, commitData.rev),
       // process blobs
       this.blobs.processWriteBlobs(did, commitData.commit, writes),
       // do any other processing needed after write
@@ -204,7 +204,7 @@ export class RepoService {
     return repo.formatCommit(writeOps, this.repoSigningKey)
   }
 
-  async indexWrites(writes: PreparedWrite[], now: string) {
+  async indexWrites(writes: PreparedWrite[], now: string, rev?: string) {
     this.db.assertTransaction()
     const recordTxn = this.services.record(this.db)
     await Promise.all(
@@ -218,6 +218,7 @@ export class RepoService {
             write.cid,
             write.record,
             write.action,
+            rev,
             now,
           )
         } else if (write.action === WriteOpAction.Delete) {

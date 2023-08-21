@@ -7,7 +7,7 @@ import cors from 'cors'
 import compression from 'compression'
 import { IdResolver } from '@atproto/identity'
 import API, { health, blobResolver } from './api'
-import Database from './db'
+import { DatabaseCoordinator } from './db'
 import * as error from './error'
 import { dbLogger, loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
@@ -23,11 +23,13 @@ import {
 } from './image/invalidator'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
+import { LabelCache } from './label-cache'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
 export { ServerConfig } from './config'
-export { Database } from './db'
+export { Database, PrimaryDatabase, DatabaseCoordinator } from './db'
+export { PeriodicModerationActionReversal } from './db/periodic-moderation-action-reversal'
 export { Redis } from './redis'
 export { ViewMaintainer } from './db/views'
 export { AppContext } from './context'
@@ -48,7 +50,7 @@ export class BskyAppView {
   }
 
   static create(opts: {
-    db: Database
+    db: DatabaseCoordinator
     config: ServerConfig
     imgInvalidator?: ImageInvalidator
     algos?: MountedAlgos
@@ -61,16 +63,18 @@ export class BskyAppView {
     app.use(compression())
 
     const didCache = new DidSqlCache(
-      db,
+      db.getPrimary(),
       config.didCacheStaleTTL,
       config.didCacheMaxTTL,
     )
-    const idResolver = new IdResolver({ plcUrl: config.didPlcUrl, didCache })
+    const idResolver = new IdResolver({
+      plcUrl: config.didPlcUrl,
+      didCache,
+      backupNameservers: config.handleResolveNameservers,
+    })
 
     const imgUriBuilder = new ImageUriBuilder(
-      config.imgUriEndpoint || `${config.publicUrl}/image`,
-      config.imgUriSalt,
-      config.imgUriKey,
+      config.imgUriEndpoint || `${config.publicUrl}/img`,
     )
 
     let imgProcessingServer: ImageProcessingServer | undefined
@@ -92,9 +96,14 @@ export class BskyAppView {
       throw new Error('Missing appview image invalidator')
     }
 
-    const backgroundQueue = new BackgroundQueue(db)
+    const backgroundQueue = new BackgroundQueue(db.getPrimary())
+    const labelCache = new LabelCache(db.getPrimary())
 
-    const services = createServices({ imgUriBuilder, imgInvalidator })
+    const services = createServices({
+      imgUriBuilder,
+      imgInvalidator,
+      labelCache,
+    })
 
     const ctx = new AppContext({
       db,
@@ -103,6 +112,7 @@ export class BskyAppView {
       imgUriBuilder,
       idResolver,
       didCache,
+      labelCache,
       backgroundQueue,
       algos,
     })
@@ -121,7 +131,7 @@ export class BskyAppView {
     app.use(health.createRouter(ctx))
     app.use(blobResolver.createRouter(ctx))
     if (imgProcessingServer) {
-      app.use('/image', imgProcessingServer.app)
+      app.use('/img', imgProcessingServer.app)
     }
     app.use(server.xrpc.router)
     app.use(error.handler)
@@ -131,13 +141,26 @@ export class BskyAppView {
 
   async start(): Promise<http.Server> {
     const { db, backgroundQueue } = this.ctx
-    const { pool } = db.cfg
+    const primary = db.getPrimary()
+    const replicas = db.getReplicas()
     this.dbStatsInterval = setInterval(() => {
       dbLogger.info(
         {
-          idleCount: pool.idleCount,
-          totalCount: pool.totalCount,
-          waitingCount: pool.waitingCount,
+          idleCount: replicas.reduce(
+            (tot, replica) => tot + replica.pool.idleCount,
+            0,
+          ),
+          totalCount: replicas.reduce(
+            (tot, replica) => tot + replica.pool.totalCount,
+            0,
+          ),
+          waitingCount: replicas.reduce(
+            (tot, replica) => tot + replica.pool.waitingCount,
+            0,
+          ),
+          primaryIdleCount: primary.pool.idleCount,
+          primaryTotalCount: primary.pool.totalCount,
+          primaryWaitingCount: primary.pool.waitingCount,
         },
         'db pool stats',
       )
@@ -149,6 +172,7 @@ export class BskyAppView {
         'background queue stats',
       )
     }, 10000)
+    this.ctx.labelCache.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -160,6 +184,7 @@ export class BskyAppView {
   }
 
   async destroy(opts?: { skipDb: boolean }): Promise<void> {
+    this.ctx.labelCache.stop()
     await this.ctx.didCache.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()

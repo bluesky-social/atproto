@@ -25,6 +25,8 @@ export interface InputSchema {
   createLabelVals?: string[]
   negateLabelVals?: string[]
   reason: string
+  /** Indicates how long this action was meant to be in effect before automatically expiring. */
+  durationInHours?: number
   createdBy: string
   [k: string]: unknown
 }
@@ -45,7 +47,7 @@ export interface Response {
 
 export class SubjectHasActionError extends XRPCError {
   constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
+    super(src.status, src.error, src.message, src.headers)
   }
 }
 

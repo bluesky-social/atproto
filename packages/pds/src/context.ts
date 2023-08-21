@@ -22,10 +22,9 @@ import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
 import { ContentReporter } from './content-reporter'
+import { RuntimeFlags } from './runtime-flags'
 
 export class AppContext {
-  private _appviewAgent: AtpAgent | null
-
   constructor(
     private opts: {
       db: Database
@@ -46,18 +45,14 @@ export class AppContext {
       sequencerLeader: SequencerLeader | null
       labeler: Labeler
       labelCache: LabelCache
+      runtimeFlags: RuntimeFlags
       contentReporter?: ContentReporter
       backgroundQueue: BackgroundQueue
+      appviewAgent?: AtpAgent
       crawlers: Crawlers
       algos: MountedAlgos
     },
-  ) {
-    this._appviewAgent = opts.cfg.bskyAppViewEndpoint
-      ? new AtpAgent({
-          service: opts.cfg.bskyAppViewEndpoint,
-        })
-      : null
-  }
+  ) {}
 
   get db(): Database {
     return this.opts.db
@@ -151,6 +146,10 @@ export class AppContext {
     return this.opts.labelCache
   }
 
+  get runtimeFlags(): RuntimeFlags {
+    return this.opts.runtimeFlags
+  }
+
   get contentReporter(): ContentReporter | undefined {
     return this.opts.contentReporter
   }
@@ -192,24 +191,43 @@ export class AppContext {
   }
 
   get appviewAgent(): AtpAgent {
-    if (!this._appviewAgent) {
+    if (!this.opts.appviewAgent) {
       throw new Error('Could not find bsky appview endpoint')
     }
-    return this._appviewAgent
+    return this.opts.appviewAgent
   }
 
-  canProxyRead(req: express.Request): boolean {
-    return (
-      this.cfg.bskyAppViewProxy &&
-      this.cfg.bskyAppViewEndpoint !== undefined &&
-      req.get('x-appview-proxy') !== undefined
-    )
+  async canProxyRead(
+    req: express.Request,
+    did?: string | null,
+  ): Promise<boolean> {
+    if (!this.cfg.bskyAppViewProxy || !this.cfg.bskyAppViewEndpoint) {
+      return false
+    }
+    if (req.get('x-appview-proxy') !== undefined) {
+      return true
+    }
+    // e.g. /xrpc/a.b.c.d/ -> a.b.c.d/ -> a.b.c.d
+    const endpoint = req.path.replace('/xrpc/', '').replaceAll('/', '')
+    if (!did) {
+      // when no did assigned, only proxy reads if threshold is at max of 10
+      const threshold = this.runtimeFlags.appviewProxy.getThreshold(endpoint)
+      return threshold === 10
+    }
+    return await this.runtimeFlags.appviewProxy.shouldProxy(endpoint, did)
   }
 
   canProxyFeedConstruction(req: express.Request): boolean {
     return (
       this.cfg.bskyAppViewEndpoint !== undefined &&
       req.get('x-appview-proxy') !== undefined
+    )
+  }
+
+  shouldProxyModeration(): boolean {
+    return (
+      this.cfg.bskyAppViewEndpoint !== undefined &&
+      this.cfg.bskyAppViewModeration === true
     )
   }
 

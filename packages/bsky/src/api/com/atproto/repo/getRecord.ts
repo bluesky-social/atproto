@@ -7,14 +7,15 @@ import { jsonStringToLex } from '@atproto/lexicon'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.getRecord(async ({ params }) => {
     const { repo, collection, rkey, cid } = params
-    const did = await ctx.services.actor(ctx.db).getActorDid(repo)
+    const db = ctx.db.getReplica()
+    const did = await ctx.services.actor(db).getActorDid(repo)
     if (!did) {
       throw new InvalidRequestError(`Could not find repo: ${repo}`)
     }
 
     const uri = AtUri.make(did, collection, rkey)
 
-    let builder = ctx.db.db
+    let builder = db.db
       .selectFrom('record')
       .selectAll()
       .where('uri', '=', uri.toString())

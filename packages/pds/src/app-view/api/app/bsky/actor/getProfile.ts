@@ -2,23 +2,41 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
 import { softDeleted } from '../../../../../db/util'
 import AppContext from '../../../../../context'
+import { authPassthru } from '../../../../../api/com/atproto/admin/util'
+import { OutputSchema } from '../../../../../lexicon/types/app/bsky/actor/getProfile'
+import { handleReadAfterWrite } from '../util/read-after-write'
+import { LocalRecords } from '../../../../../services/local'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
-    auth: ctx.accessVerifier,
+    auth: ctx.accessOrRoleVerifier,
     handler: async ({ req, auth, params }) => {
-      const requester = auth.credentials.did
-      if (ctx.canProxyRead(req)) {
+      const requester =
+        auth.credentials.type === 'access' ? auth.credentials.did : null
+      if (await ctx.canProxyRead(req, requester)) {
         const res = await ctx.appviewAgent.api.app.bsky.actor.getProfile(
           params,
-          await ctx.serviceAuthHeaders(requester),
+          requester
+            ? await ctx.serviceAuthHeaders(requester)
+            : authPassthru(req),
         )
+        if (res.data.did === requester) {
+          return await handleReadAfterWrite(
+            ctx,
+            requester,
+            res,
+            getProfileMunge,
+          )
+        }
         return {
           encoding: 'application/json',
           body: res.data,
         }
       }
 
+      // As long as user has triage permission, we know that they are a moderator user and can see taken down profiles
+      const canViewTakendownProfile =
+        auth.credentials.type === 'role' && auth.credentials.triage
       const { actor } = params
       const { db, services } = ctx
       const actorService = services.appView.actor(db)
@@ -28,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
       if (!actorRes) {
         throw new InvalidRequestError('Profile not found')
       }
-      if (softDeleted(actorRes)) {
+      if (!canViewTakendownProfile && softDeleted(actorRes)) {
         throw new InvalidRequestError(
           'Account has been taken down',
           'AccountTakedown',
@@ -37,6 +55,7 @@ export default function (server: Server, ctx: AppContext) {
       const profile = await actorService.views.profileDetailed(
         actorRes,
         requester,
+        { includeSoftDeleted: canViewTakendownProfile },
       )
       if (!profile) {
         throw new InvalidRequestError('Profile not found')
@@ -48,4 +67,15 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+const getProfileMunge = async (
+  ctx: AppContext,
+  original: OutputSchema,
+  local: LocalRecords,
+): Promise<OutputSchema> => {
+  if (!local.profile) return original
+  return ctx.services
+    .local(ctx.db)
+    .updateProfileDetailed(original, local.profile.record)
 }

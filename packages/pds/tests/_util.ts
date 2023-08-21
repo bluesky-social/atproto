@@ -245,7 +245,7 @@ export const forSnapshot = (obj: unknown) => {
       return constantDidCursor
     }
     if (str.match(/\/image\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
-      // Match image urls
+      // Match image urls (pds)
       const match = str.match(
         /\/image\/([^/]+)\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
       )
@@ -255,6 +255,15 @@ export const forSnapshot = (obj: unknown) => {
         .replace(sig, 'sig()')
         .replace(did, take(users, did))
         .replace(cid, take(cids, cid))
+    }
+    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
+      // Match image urls (bsky w/ presets)
+      const match = str.match(
+        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
+      )
+      if (!match) return str
+      const [, did, cid] = match
+      return str.replace(did, take(users, did)).replace(cid, take(cids, cid))
     }
     if (str.startsWith('pds-public-url-')) {
       return 'invite-code'

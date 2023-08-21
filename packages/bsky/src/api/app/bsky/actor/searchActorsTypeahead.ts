@@ -9,10 +9,11 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActorsTypeahead({
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {
-      const { services, db } = ctx
       const { limit, term: rawTerm } = params
       const requester = auth.credentials.did
       const term = cleanTerm(rawTerm || '')
+
+      const db = ctx.db.getReplica('search')
 
       const results = term
         ? await getUserSearchQuerySimple(db, { term, limit })
@@ -20,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
             .execute()
         : []
 
-      const actors = await services
+      const actors = await ctx.services
         .actor(db)
         .views.hydrateProfilesBasic(results, requester)
 

@@ -12,7 +12,7 @@ export interface QueryParams {}
 
 export interface InputSchema {
   account: string
-  /** Additionally add a note describing why the invites were disabled */
+  /** Additionally add a note describing why the invites were enabled */
   note?: string
   [k: string]: unknown
 }

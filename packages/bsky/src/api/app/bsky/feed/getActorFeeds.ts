@@ -10,15 +10,16 @@ export default function (server: Server, ctx: AppContext) {
       const { actor, limit, cursor } = params
       const viewer = auth.credentials.did
 
-      const actorService = ctx.services.actor(ctx.db)
-      const feedService = ctx.services.feed(ctx.db)
+      const db = ctx.db.getReplica()
+      const actorService = ctx.services.actor(db)
+      const feedService = ctx.services.feed(db)
 
       const creatorRes = await actorService.getActor(actor)
       if (!creatorRes) {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
       }
 
-      const { ref } = ctx.db.db.dynamic
+      const { ref } = db.db.dynamic
       let feedsQb = feedService
         .selectFeedGeneratorQb(viewer)
         .where('feed_generator.creator', '=', creatorRes.did)
