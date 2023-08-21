@@ -1,4 +1,4 @@
-import { AuthRequiredError, getReqIp } from '@atproto/xrpc-server'
+import { AuthRequiredError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
@@ -10,15 +10,13 @@ export default function (server: Server, ctx: AppContext) {
     rateLimit: [
       {
         durationMs: DAY,
-        points: 200,
-        calcKey: ({ req, input }) =>
-          `${getReqIp(req)}-${input.body.identifier}`,
+        points: 300,
+        calcKey: ({ input }) => input.body.identifier,
       },
       {
         durationMs: 5 * MINUTE,
-        points: 10,
-        calcKey: ({ req, input }) =>
-          `${getReqIp(req)}-${input.body.identifier}`,
+        points: 30,
+        calcKey: ({ input }) => input.body.identifier,
       },
     ],
     handler: async ({ input }) => {

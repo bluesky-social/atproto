@@ -51,7 +51,7 @@ describe('rate limits', () => {
         identifier: sc.accounts[alice].handle,
         password: 'asdf1234',
       })
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 30; i++) {
       try {
         await attempt()
       } catch (err) {
