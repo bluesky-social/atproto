@@ -44,7 +44,7 @@ export class RecordProcessor<T, S> {
   constructor(
     private appDb: PrimaryDatabase,
     private backgroundQueue: BackgroundQueue,
-    private notifServer: NotificationServer,
+    private notifServer: NotificationServer | undefined,
     private params: RecordProcessorParams<T, S>,
   ) {
     this.db = appDb.db
@@ -233,16 +233,17 @@ export class RecordProcessor<T, S> {
       notifs = this.params.notifsForInsert(op.inserted)
     }
     for (const chunk of chunkArray(notifs, 500)) {
-      this.backgroundQueue.add(async () => {
-        try {
-          const preparedNotifs = await this.notifServer.prepareNotifsToSend(
-            chunk,
-          )
-          await this.notifServer.addNotificationsToQueue(preparedNotifs)
-        } catch (error) {
-          dbLogger.error({ error }, 'Error sending push notifications')
-        }
-      })
+      if (this.notifServer) {
+        const notifServer = this.notifServer
+        this.backgroundQueue.add(async () => {
+          try {
+            const preparedNotifs = await notifServer.prepareNotifsToSend(chunk)
+            await notifServer.addNotificationsToQueue(preparedNotifs)
+          } catch (error) {
+            dbLogger.error({ error }, 'Error sending push notifications')
+          }
+        })
+      }
       runOnCommit.push(async (db) => {
         await db.db.insertInto('notification').values(chunk).execute()
       })

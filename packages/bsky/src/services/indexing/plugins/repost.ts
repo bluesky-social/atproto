@@ -133,7 +133,7 @@ export type PluginType = RecordProcessor<Repost.Record, IndexedRepost>
 export const makePlugin = (
   db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
-  notifServer: NotificationServer,
+  notifServer?: NotificationServer,
 ): PluginType => {
   return new RecordProcessor(db, backgroundQueue, notifServer, {
     lexId,

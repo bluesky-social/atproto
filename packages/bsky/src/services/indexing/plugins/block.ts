@@ -75,7 +75,7 @@ export type PluginType = RecordProcessor<Block.Record, IndexedBlock>
 export const makePlugin = (
   db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
-  notifServer: NotificationServer,
+  notifServer?: NotificationServer,
 ): PluginType => {
   return new RecordProcessor(db, backgroundQueue, notifServer, {
     lexId,

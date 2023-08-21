@@ -49,7 +49,7 @@ export class IndexingService {
     public idResolver: IdResolver,
     public labeler: Labeler,
     public backgroundQueue: BackgroundQueue,
-    public notifServer: NotificationServer,
+    public notifServer?: NotificationServer,
   ) {
     this.records = {
       post: Post.makePlugin(this.db, backgroundQueue, notifServer),
@@ -83,7 +83,7 @@ export class IndexingService {
     idResolver: IdResolver,
     labeler: Labeler,
     backgroundQueue: BackgroundQueue,
-    notifServer: NotificationServer,
+    notifServer?: NotificationServer,
   ) {
     return (db: PrimaryDatabase) =>
       new IndexingService(db, idResolver, labeler, backgroundQueue, notifServer)

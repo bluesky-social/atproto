@@ -10,7 +10,7 @@ export function createServices(resources: {
   idResolver: IdResolver
   labeler: Labeler
   backgroundQueue: BackgroundQueue
-  notifServer: NotificationServer
+  notifServer?: NotificationServer
 }): Services {
   const { idResolver, labeler, backgroundQueue, notifServer } = resources
   return {

@@ -37,8 +37,8 @@ export class NotificationServer {
 
   constructor(
     public db: Database,
-    public redis?: Redis,
-    public pushEndpoint?: string,
+    public redis: Redis,
+    public pushEndpoint: string,
     private notificationBatchSize = 1, // if debug mode, send 1 notifications at a time, otherwise send whatever is specified in the config
   ) {
     this.backgroundQueue = new BackgroundQueue(db)
@@ -104,9 +104,6 @@ export class NotificationServer {
    * @returns void
    */
   async addNotificationsToQueue(notifs: PushNotification[]) {
-    if (!this.redis) {
-      throw new Error('Redis not defined in NotificationServer')
-    }
     for (const notif of notifs) {
       const { tokens } = notif
       for (const token of tokens) {
@@ -179,10 +176,6 @@ export class NotificationServer {
     // if no notifications, skip and return early
     if (notifications.length === 0) {
       return
-    }
-    // if pushEndpoint is not defined, we are not running in the indexer service, so we can't send push notifications
-    if (!this.pushEndpoint) {
-      throw new Error('Push endpoint not defined')
     }
     await axios.post(
       this.pushEndpoint,

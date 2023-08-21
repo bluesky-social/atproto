@@ -42,6 +42,7 @@ describe('notification server', () => {
           appId: 'xyz.blueskyweb.app',
         },
         {
+          encoding: 'application/json',
           headers: await network.serviceHeaders(alice),
         },
       )
@@ -57,6 +58,7 @@ describe('notification server', () => {
           appId: 'xyz.blueskyweb.app',
         },
         {
+          encoding: 'application/json',
           headers: await network.serviceHeaders(alice),
         },
       )
@@ -68,6 +70,7 @@ describe('notification server', () => {
           appId: 'xyz.blueskyweb.app',
         },
         {
+          encoding: 'application/json',
           headers: await network.serviceHeaders(alice),
         },
       )
@@ -84,6 +87,7 @@ describe('notification server', () => {
           appId: 'xyz.blueskyweb.app',
         },
         {
+          encoding: 'application/json',
           headers: await network.serviceHeaders(alice),
         },
       )
