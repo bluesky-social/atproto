@@ -53,7 +53,7 @@ describe('bsky actor likes feed views', () => {
         { actor: sc.accounts[bob].handle },
         { headers: await network.serviceHeaders(carol) },
       ),
-    ).rejects.toThrow('Likes are private')
+    ).rejects.toThrow('Profile not found')
   })
 
   it('viewer has blocked author of liked post(s)', async () => {

@@ -48,7 +48,7 @@ export default function (server: Server, ctx: AppContext) {
       const actorDid = actorRes.did
 
       if (!requester || requester !== actorDid) {
-        throw new InvalidRequestError('Likes are private')
+        throw new InvalidRequestError('Profile not found')
       }
 
       // defaults to posts, reposts, and replies
