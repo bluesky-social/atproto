@@ -323,7 +323,7 @@ export class PDS {
   }
 
   async destroy(): Promise<void> {
-    this.ctx.runtimeFlags.destroy()
+    await this.ctx.runtimeFlags.destroy()
     this.ctx.labelCache.stop()
     await this.ctx.sequencerLeader?.destroy()
     await this.terminator?.terminate()
