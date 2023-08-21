@@ -240,9 +240,9 @@ export class PDS {
     const runtimeFlags = new RuntimeFlags(db)
 
     let redisScratch: Redis | undefined = undefined
-    if (config.redisScratchHost) {
+    if (config.redisScratchAddress) {
       redisScratch = getRedisClient(
-        config.redisScratchHost,
+        config.redisScratchAddress,
         config.redisScratchPassword,
       )
     }

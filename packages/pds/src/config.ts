@@ -45,7 +45,7 @@ export interface ServerConfigValues {
 
   rateLimitsEnabled: boolean
   rateLimitBypassKey?: string
-  redisScratchHost?: string
+  redisScratchAddress?: string
   redisScratchPassword?: string
 
   appUrlPasswordReset: string
@@ -165,7 +165,9 @@ export class ServerConfig {
 
     const rateLimitsEnabled = process.env.RATE_LIMITS_ENABLED === 'true'
     const rateLimitBypassKey = nonemptyString(process.env.RATE_LIMIT_BYPASS_KEY)
-    const redisScratchHost = nonemptyString(process.env.REDIS_SCRATCH_HOST)
+    const redisScratchAddress = nonemptyString(
+      process.env.REDIS_SCRATCH_ADDRESS,
+    )
     const redisScratchPassword = nonemptyString(
       process.env.REDIS_SCRATCH_PASSWORD,
     )
@@ -273,7 +275,7 @@ export class ServerConfig {
       blobCacheLocation,
       rateLimitsEnabled,
       rateLimitBypassKey,
-      redisScratchHost,
+      redisScratchAddress,
       redisScratchPassword,
       appUrlPasswordReset,
       emailSmtpUrl,
@@ -463,8 +465,8 @@ export class ServerConfig {
     return this.cfg.rateLimitBypassKey
   }
 
-  get redisScratchHost() {
-    return this.cfg.redisScratchHost
+  get redisScratchAddress() {
+    return this.cfg.redisScratchAddress
   }
 
   get redisScratchPassword() {

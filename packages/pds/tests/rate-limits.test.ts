@@ -14,7 +14,7 @@ describe('rate limits', () => {
   beforeAll(async () => {
     server = await runTestServer({
       dbPostgresSchema: 'rate_limits',
-      redisScratchHost: process.env.REDIS_HOST,
+      redisScratchAddress: process.env.REDIS_HOST,
       redisScratchPassword: process.env.REDIS_PASSWORD,
       rateLimitsEnabled: true,
     })
