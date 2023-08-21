@@ -4,6 +4,8 @@ import { dbLogger } from '../logger'
 import AppContext from '../context'
 import AtpAgent from '@atproto/api'
 import { buildBasicAuth } from '../auth'
+import { LabelService } from '../services/label'
+import { ModerationActionRow } from '../services/moderation'
 
 export const MODERATION_ACTION_REVERSAL_ID = 1011
 
@@ -26,12 +28,34 @@ export class PeriodicModerationActionReversal {
     }
   }
 
-  async revertAction({ id, createdBy }: { id: number; createdBy: string }) {
+  // invert label creation & negations
+  async reverseLabels(labelTxn: LabelService, actionRow: ModerationActionRow) {
+    let uri: string
+    let cid: string | null = null
+
+    if (actionRow.subjectUri && actionRow.subjectCid) {
+      uri = actionRow.subjectUri
+      cid = actionRow.subjectCid
+    } else {
+      uri = actionRow.subjectDid
+    }
+
+    await labelTxn.formatAndCreate(this.appContext.cfg.labelerDid, uri, cid, {
+      create: actionRow.negateLabelVals
+        ? actionRow.negateLabelVals.split(' ')
+        : undefined,
+      negate: actionRow.createLabelVals
+        ? actionRow.createLabelVals.split(' ')
+        : undefined,
+    })
+  }
+
+  async revertAction(actionRow: ModerationActionRow) {
     return this.appContext.db.getPrimary().transaction(async (dbTxn) => {
       const moderationTxn = this.appContext.services.moderation(dbTxn)
       const reverseAction = {
-        id,
-        createdBy,
+        id: actionRow.id,
+        createdBy: actionRow.createdBy,
         createdAt: new Date(),
         reason: `[SCHEDULED_REVERSAL] Reverting action as originally scheduled`,
       }
@@ -41,6 +65,8 @@ export class PeriodicModerationActionReversal {
         )
       } else {
         await moderationTxn.revertAction(reverseAction)
+        const labelTxn = this.appContext.services.label(dbTxn)
+        await this.reverseLabels(labelTxn, actionRow)
       }
     })
   }

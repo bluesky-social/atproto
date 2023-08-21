@@ -375,16 +375,14 @@ export class ModerationService {
     return actionResult
   }
 
-  async getActionsDueForReversal(): Promise<
-    Array<{ id: number; createdBy: string }>
-  > {
+  async getActionsDueForReversal(): Promise<Array<ModerationActionRow>> {
     const actionsDueForReversal = await this.db.db
       .selectFrom('moderation_action')
       // Get entries that have an durationInHours that has passed and have not been reversed
       .where('durationInHours', 'is not', null)
       .where('expiresAt', '<', new Date().toISOString())
       .where('reversedAt', 'is', null)
-      .select(['id', 'createdBy'])
+      .selectAll()
       .execute()
 
     return actionsDueForReversal

@@ -338,15 +338,13 @@ export class ModerationService {
     return actionResult
   }
 
-  async getActionsDueForReversal(): Promise<
-    Array<{ id: number; createdBy: string }>
-  > {
+  async getActionsDueForReversal(): Promise<ModerationActionRow[]> {
     const actionsDueForReversal = await this.db.db
       .selectFrom('moderation_action')
       .where('durationInHours', 'is not', null)
       .where('expiresAt', '<', new Date().toISOString())
       .where('reversedAt', 'is', null)
-      .select(['id', 'createdBy'])
+      .selectAll()
       .execute()
 
     return actionsDueForReversal
@@ -354,15 +352,10 @@ export class ModerationService {
 
   async revertAction({
     id,
-    createdAt,
     createdBy,
+    createdAt,
     reason,
-  }: {
-    id: number
-    createdAt: Date
-    createdBy: string
-    reason: string
-  }) {
+  }: ReversibleModerationAction) {
     this.db.assertTransaction()
     const result = await this.logReverseAction({
       id,
@@ -394,12 +387,9 @@ export class ModerationService {
     return result
   }
 
-  async logReverseAction(info: {
-    id: number
-    reason: string
-    createdBy: string
-    createdAt?: Date
-  }): Promise<ModerationActionRow> {
+  async logReverseAction(
+    info: ReversibleModerationAction,
+  ): Promise<ModerationActionRow> {
     const { id, createdBy, reason, createdAt = new Date() } = info
 
     const result = await this.db.db
@@ -574,6 +564,12 @@ export class ModerationService {
 }
 
 export type ModerationActionRow = Selectable<ModerationAction>
+export type ReversibleModerationAction = Pick<
+  ModerationActionRow,
+  'id' | 'createdBy' | 'reason'
+> & {
+  createdAt?: Date
+}
 
 export type ModerationReportRow = Selectable<ModerationReport>
 export type ModerationReportRowWithHandle = ModerationReportRow & {
