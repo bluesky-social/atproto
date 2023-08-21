@@ -1,10 +1,9 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
+import { AuthRequiredError, getReqIp } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { AuthScope } from '../../../../auth'
 import { DAY, MINUTE } from '@atproto/common'
-import { getReqIp } from '@atproto/xrpc-server/src/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createSession({
