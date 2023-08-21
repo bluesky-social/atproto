@@ -53,7 +53,9 @@ const findDuplicate = async (
 
 const notifsForInsert = (obj: IndexedLike) => {
   const subjectUri = new AtUri(obj.subject)
-  return [
+  // prevent self-notifications
+  const isSelf = subjectUri.host === obj.creator
+  return isSelf ? [] : [
     {
       did: subjectUri.host,
       author: obj.creator,
