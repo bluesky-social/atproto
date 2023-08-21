@@ -7,10 +7,23 @@ import {
   UserAlreadyExistsError,
 } from '../../../../services/account'
 import { httpLogger } from '../../../../logger'
+import { DAY, MINUTE } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
     auth: ctx.accessVerifierCheckTakedown,
+    rateLimit: [
+      {
+        durationMs: 5 * MINUTE,
+        points: 10,
+        calcKey: ({ auth }) => auth.credentials.did,
+      },
+      {
+        durationMs: DAY,
+        points: 50,
+        calcKey: ({ auth }) => auth.credentials.did,
+      },
+    ],
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
       const handle = await normalizeAndValidateHandle({

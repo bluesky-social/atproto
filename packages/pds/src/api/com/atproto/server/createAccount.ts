@@ -9,113 +9,120 @@ import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
 import { AtprotoData } from '@atproto/identity'
+import { MINUTE } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.createAccount(async ({ input, req }) => {
-    const { email, password, inviteCode } = input.body
+  server.com.atproto.server.createAccount({
+    rateLimit: {
+      durationMs: 5 * MINUTE,
+      points: 100,
+    },
+    handler: async ({ input, req }) => {
+      const { email, password, inviteCode } = input.body
 
-    if (ctx.cfg.inviteRequired && !inviteCode) {
-      throw new InvalidRequestError(
-        'No invite code provided',
-        'InvalidInviteCode',
-      )
-    }
+      if (ctx.cfg.inviteRequired && !inviteCode) {
+        throw new InvalidRequestError(
+          'No invite code provided',
+          'InvalidInviteCode',
+        )
+      }
 
-    // normalize & ensure valid handle
-    const handle = await normalizeAndValidateHandle({
-      ctx,
-      handle: input.body.handle,
-      did: input.body.did,
-    })
+      // normalize & ensure valid handle
+      const handle = await normalizeAndValidateHandle({
+        ctx,
+        handle: input.body.handle,
+        did: input.body.did,
+      })
 
-    // check that the invite code still has uses
-    if (ctx.cfg.inviteRequired && inviteCode) {
-      await ensureCodeIsAvailable(ctx.db, inviteCode)
-    }
-
-    // determine the did & any plc ops we need to send
-    // if the provided did document is poorly setup, we throw
-    const { did, plcOp } = await getDidAndPlcOp(ctx, handle, input.body)
-
-    const now = new Date().toISOString()
-    const passwordScrypt = await scrypt.genSaltAndHash(password)
-
-    const result = await ctx.db.transaction(async (dbTxn) => {
-      const actorTxn = ctx.services.account(dbTxn)
-      const repoTxn = ctx.services.repo(dbTxn)
-
-      // it's a bit goofy that we run this logic twice,
-      // but we run it once for a sanity check before doing scrypt & plc ops
-      // & a second time for locking + integrity check
+      // check that the invite code still has uses
       if (ctx.cfg.inviteRequired && inviteCode) {
-        await ensureCodeIsAvailable(dbTxn, inviteCode, true)
+        await ensureCodeIsAvailable(ctx.db, inviteCode)
       }
 
-      // Register user before going out to PLC to get a real did
-      try {
-        await actorTxn.registerUser({ email, handle, did, passwordScrypt })
-      } catch (err) {
-        if (err instanceof UserAlreadyExistsError) {
-          const got = await actorTxn.getAccount(handle, true)
-          if (got) {
-            throw new InvalidRequestError(`Handle already taken: ${handle}`)
-          } else {
-            throw new InvalidRequestError(`Email already taken: ${email}`)
-          }
+      // determine the did & any plc ops we need to send
+      // if the provided did document is poorly setup, we throw
+      const { did, plcOp } = await getDidAndPlcOp(ctx, handle, input.body)
+
+      const now = new Date().toISOString()
+      const passwordScrypt = await scrypt.genSaltAndHash(password)
+
+      const result = await ctx.db.transaction(async (dbTxn) => {
+        const actorTxn = ctx.services.account(dbTxn)
+        const repoTxn = ctx.services.repo(dbTxn)
+
+        // it's a bit goofy that we run this logic twice,
+        // but we run it once for a sanity check before doing scrypt & plc ops
+        // & a second time for locking + integrity check
+        if (ctx.cfg.inviteRequired && inviteCode) {
+          await ensureCodeIsAvailable(dbTxn, inviteCode, true)
         }
-        throw err
-      }
 
-      // Generate a real did with PLC
-      if (plcOp) {
+        // Register user before going out to PLC to get a real did
         try {
-          await ctx.plcClient.sendOperation(did, plcOp)
+          await actorTxn.registerUser({ email, handle, did, passwordScrypt })
         } catch (err) {
-          req.log.error(
-            { didKey: ctx.plcRotationKey.did(), handle },
-            'failed to create did:plc',
-          )
+          if (err instanceof UserAlreadyExistsError) {
+            const got = await actorTxn.getAccount(handle, true)
+            if (got) {
+              throw new InvalidRequestError(`Handle already taken: ${handle}`)
+            } else {
+              throw new InvalidRequestError(`Email already taken: ${email}`)
+            }
+          }
           throw err
         }
-      }
 
-      // insert invite code use
-      if (ctx.cfg.inviteRequired && inviteCode) {
-        await dbTxn.db
-          .insertInto('invite_code_use')
-          .values({
-            code: inviteCode,
-            usedBy: did,
-            usedAt: now,
-          })
-          .execute()
-      }
+        // Generate a real did with PLC
+        if (plcOp) {
+          try {
+            await ctx.plcClient.sendOperation(did, plcOp)
+          } catch (err) {
+            req.log.error(
+              { didKey: ctx.plcRotationKey.did(), handle },
+              'failed to create did:plc',
+            )
+            throw err
+          }
+        }
 
-      const access = ctx.auth.createAccessToken({ did })
-      const refresh = ctx.auth.createRefreshToken({ did })
-      await ctx.services.auth(dbTxn).grantRefreshToken(refresh.payload, null)
+        // insert invite code use
+        if (ctx.cfg.inviteRequired && inviteCode) {
+          await dbTxn.db
+            .insertInto('invite_code_use')
+            .values({
+              code: inviteCode,
+              usedBy: did,
+              usedAt: now,
+            })
+            .execute()
+        }
 
-      // Setup repo root
-      await repoTxn.createRepo(did, [], now)
+        const access = ctx.auth.createAccessToken({ did })
+        const refresh = ctx.auth.createRefreshToken({ did })
+        await ctx.services.auth(dbTxn).grantRefreshToken(refresh.payload, null)
+
+        // Setup repo root
+        await repoTxn.createRepo(did, [], now)
+
+        return {
+          did,
+          accessJwt: access.jwt,
+          refreshJwt: refresh.jwt,
+        }
+      })
+
+      ctx.contentReporter?.checkHandle({ handle, did: result.did })
 
       return {
-        did,
-        accessJwt: access.jwt,
-        refreshJwt: refresh.jwt,
+        encoding: 'application/json',
+        body: {
+          handle,
+          did: result.did,
+          accessJwt: result.accessJwt,
+          refreshJwt: result.refreshJwt,
+        },
       }
-    })
-
-    ctx.contentReporter?.checkHandle({ handle, did: result.did })
-
-    return {
-      encoding: 'application/json',
-      body: {
-        handle,
-        did: result.did,
-        accessJwt: result.accessJwt,
-        refreshJwt: result.refreshJwt,
-      },
-    }
+    },
   })
 }
 

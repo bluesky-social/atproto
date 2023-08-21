@@ -9,10 +9,18 @@ import cors from 'cors'
 import http from 'http'
 import events from 'events'
 import { createTransport } from 'nodemailer'
+import { Redis } from 'ioredis'
 import { AtpAgent } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import { IdResolver } from '@atproto/identity'
+import {
+  RateLimiter,
+  RateLimiterCreator,
+  RateLimiterOpts,
+  Options as XrpcServerOptions,
+} from '@atproto/xrpc-server'
+import { MINUTE } from '@atproto/common'
 import * as appviewConsumers from './app-view/event-stream/consumers'
 import inProcessAppView from './app-view/api'
 import API from './api'
@@ -46,6 +54,7 @@ import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
 import { ContentReporter } from './content-reporter'
 import { ModerationService } from './services/moderation'
+import { getRedisClient } from './redis'
 import { RuntimeFlags } from './runtime-flags'
 
 export type { MountedAlgos } from './feed-gen/types'
@@ -230,9 +239,18 @@ export class PDS {
 
     const runtimeFlags = new RuntimeFlags(db)
 
+    let redisScratch: Redis | undefined = undefined
+    if (config.redisScratchAddress) {
+      redisScratch = getRedisClient(
+        config.redisScratchAddress,
+        config.redisScratchPassword,
+      )
+    }
+
     const ctx = new AppContext({
       db,
       blobstore,
+      redisScratch,
       repoSigningKey,
       plcRotationKey,
       idResolver,
@@ -256,14 +274,42 @@ export class PDS {
       algos,
     })
 
-    let server = createServer({
+    const xrpcOpts: XrpcServerOptions = {
       validateResponse: config.debugMode,
       payload: {
         jsonLimit: 100 * 1024, // 100kb
         textLimit: 100 * 1024, // 100kb
         blobLimit: 5 * 1024 * 1024, // 5mb
       },
-    })
+    }
+    if (config.rateLimitsEnabled) {
+      let rlCreator: RateLimiterCreator
+      if (redisScratch) {
+        rlCreator = (opts: RateLimiterOpts) =>
+          RateLimiter.redis(redisScratch, {
+            bypassSecret: config.rateLimitBypassKey,
+            ...opts,
+          })
+      } else {
+        rlCreator = (opts: RateLimiterOpts) =>
+          RateLimiter.memory({
+            bypassSecret: config.rateLimitBypassKey,
+            ...opts,
+          })
+      }
+      xrpcOpts['rateLimits'] = {
+        creator: rlCreator,
+        global: [
+          {
+            name: 'global-ip',
+            durationMs: 5 * MINUTE,
+            points: 3000,
+          },
+        ],
+      }
+    }
+
+    let server = createServer(xrpcOpts)
 
     server = API(server, ctx)
     server = inProcessAppView(server, ctx)
@@ -329,6 +375,7 @@ export class PDS {
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()
+    await this.ctx.redisScratch?.quit()
     clearInterval(this.dbStatsInterval)
     clearInterval(this.sequencerStatsInterval)
   }

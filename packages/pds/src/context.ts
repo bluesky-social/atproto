@@ -1,4 +1,5 @@
 import express from 'express'
+import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -28,6 +29,7 @@ export class AppContext {
     private opts: {
       db: Database
       blobstore: BlobStore
+      redisScratch?: Redis
       repoSigningKey: crypto.Keypair
       plcRotationKey: crypto.Keypair
       idResolver: IdResolver
@@ -58,6 +60,10 @@ export class AppContext {
 
   get blobstore(): BlobStore {
     return this.opts.blobstore
+  }
+
+  get redisScratch(): Redis | undefined {
+    return this.opts.redisScratch
   }
 
   get repoSigningKey(): crypto.Keypair {
