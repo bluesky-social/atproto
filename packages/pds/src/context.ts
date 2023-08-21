@@ -29,7 +29,7 @@ export class AppContext {
     private opts: {
       db: Database
       blobstore: BlobStore
-      redis?: Redis
+      redisScratch?: Redis
       repoSigningKey: crypto.Keypair
       plcRotationKey: crypto.Keypair
       idResolver: IdResolver
@@ -62,8 +62,8 @@ export class AppContext {
     return this.opts.blobstore
   }
 
-  get redis(): Redis | undefined {
-    return this.opts.redis
+  get redisScratch(): Redis | undefined {
+    return this.opts.redisScratch
   }
 
   get repoSigningKey(): crypto.Keypair {

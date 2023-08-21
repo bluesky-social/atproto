@@ -239,15 +239,18 @@ export class PDS {
 
     const runtimeFlags = new RuntimeFlags(db)
 
-    let redis: Redis | undefined = undefined
-    if (config.redisHost) {
-      redis = getRedisClient(config.redisHost, config.redisPassword)
+    let redisScratch: Redis | undefined = undefined
+    if (config.redisScratchHost) {
+      redisScratch = getRedisClient(
+        config.redisScratchHost,
+        config.redisScratchPassword,
+      )
     }
 
     const ctx = new AppContext({
       db,
       blobstore,
-      redis,
+      redisScratch,
       repoSigningKey,
       plcRotationKey,
       idResolver,
@@ -281,9 +284,9 @@ export class PDS {
     }
     if (config.rateLimitsEnabled) {
       let rlCreator: RateLimiterCreator
-      if (redis) {
+      if (redisScratch) {
         rlCreator = (opts: RateLimiterOpts) =>
-          RateLimiter.redis(redis, {
+          RateLimiter.redis(redisScratch, {
             bypassSecret: config.rateLimitBypassKey,
             ...opts,
           })
@@ -372,7 +375,7 @@ export class PDS {
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()
-    await this.ctx.redis?.quit()
+    await this.ctx.redisScratch?.quit()
     clearInterval(this.dbStatsInterval)
     clearInterval(this.sequencerStatsInterval)
   }

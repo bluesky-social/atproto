@@ -14,8 +14,8 @@ describe('rate limits', () => {
   beforeAll(async () => {
     server = await runTestServer({
       dbPostgresSchema: 'rate_limits',
-      redisHost: process.env.REDIS_HOST,
-      redisPassword: process.env.REDIS_PASSWORD,
+      redisScratchHost: process.env.REDIS_HOST,
+      redisScratchPassword: process.env.REDIS_PASSWORD,
       rateLimitsEnabled: true,
     })
     agent = new AtpAgent({ service: server.url })
