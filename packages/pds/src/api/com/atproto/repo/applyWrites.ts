@@ -18,23 +18,6 @@ import { ConcurrentWriteError } from '../../../../services/repo'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.applyWrites({
     auth: ctx.accessVerifierCheckTakedown,
-    rateLimit: {
-      name: 'repo-write',
-      calcKey: ({ auth }) => auth.credentials.did,
-      calcPoints: ({ input }) => {
-        let points = 0
-        for (const op of input.body.writes) {
-          if (isCreate(op)) {
-            points += 3
-          } else if (isUpdate(op)) {
-            points += 2
-          } else {
-            points += 1
-          }
-        }
-        return points
-      },
-    },
     handler: async ({ input, auth }) => {
       const tx = input.body
       const { repo, validate, swapCommit } = tx

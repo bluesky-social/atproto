@@ -289,13 +289,6 @@ export class PDS {
             points: 3000,
           },
         ],
-        shared: [
-          {
-            name: 'repo-write',
-            durationMs: HOUR,
-            points: 1200, // creates=3, puts=2, deletes=1
-          },
-        ],
       }
     }
 
