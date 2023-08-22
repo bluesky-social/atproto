@@ -89,6 +89,7 @@ import * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
 import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator'
 import * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
 import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
+import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes'
 import * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
@@ -209,6 +210,7 @@ export * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
 export * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator'
 export * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
 export * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
+export * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes'
 export * as AppBskyFeedGetAuthorFeed from './types/app/bsky/feed/getAuthorFeed'
 export * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 export * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
@@ -1243,6 +1245,17 @@ export class FeedNS {
       .call('app.bsky.feed.getActorFeeds', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetActorFeeds.toKnownErr(e)
+      })
+  }
+
+  getActorLikes(
+    params?: AppBskyFeedGetActorLikes.QueryParams,
+    opts?: AppBskyFeedGetActorLikes.CallOptions,
+  ): Promise<AppBskyFeedGetActorLikes.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getActorLikes', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetActorLikes.toKnownErr(e)
       })
   }
 
