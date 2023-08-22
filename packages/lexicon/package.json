@@ -24,10 +24,10 @@
     "directory": "packages/lexicon"
   },
   "dependencies": {
-    "@atproto/common-web": "*",
-    "@atproto/identifier": "*",
-    "@atproto/nsid": "*",
-    "@atproto/uri": "*",
+    "@atproto/common-web": "workspace:^",
+    "@atproto/identifier": "workspace:^",
+    "@atproto/nsid": "workspace:^",
+    "@atproto/uri": "workspace:^",
     "iso-datestring-validator": "^2.2.2",
     "multiformats": "^9.6.4",
     "zod": "^3.21.4"

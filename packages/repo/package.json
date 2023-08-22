@@ -27,11 +27,11 @@
     "postpublish": "npm run update-main-to-src"
   },
   "dependencies": {
-    "@atproto/common": "*",
-    "@atproto/crypto": "*",
-    "@atproto/identity": "*",
-    "@atproto/lexicon": "*",
-    "@atproto/nsid": "*",
+    "@atproto/common": "workspace:^",
+    "@atproto/crypto": "workspace:^",
+    "@atproto/identity": "workspace:^",
+    "@atproto/lexicon": "workspace:^",
+    "@atproto/nsid": "workspace:^",
     "@ipld/car": "^3.2.3",
     "@ipld/dag-cbor": "^7.0.0",
     "multiformats": "^9.6.4",

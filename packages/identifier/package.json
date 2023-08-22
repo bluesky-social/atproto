@@ -24,7 +24,7 @@
     "directory": "packages/identifier"
   },
   "dependencies": {
-    "@atproto/common-web": "*"
+    "@atproto/common-web": "workspace:^"
   },
   "browser": {
     "dns/promises": false

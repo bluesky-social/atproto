@@ -19,7 +19,7 @@
     "postbuild": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "@atproto/crypto": "*",
+    "@atproto/crypto": "workspace:^",
     "@aws-sdk/client-cloudfront": "^3.261.0",
     "@aws-sdk/client-kms": "^3.196.0",
     "@aws-sdk/client-s3": "^3.224.0",
