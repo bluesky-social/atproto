@@ -1326,7 +1326,11 @@ export class NotificationNS {
   }
 
   registerPush<AV extends AuthVerifier>(
-    cfg: ConfigOf<AV, AppBskyNotificationRegisterPush.Handler<ExtractAuth<AV>>>,
+    cfg: ConfigOf<
+      AV,
+      AppBskyNotificationRegisterPush.Handler<ExtractAuth<AV>>,
+      AppBskyNotificationRegisterPush.HandlerReqCtx<ExtractAuth<AV>>
+    >,
   ) {
     const nsid = 'app.bsky.notification.registerPush' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
