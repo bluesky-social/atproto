@@ -59,10 +59,9 @@ export default function (server: Server, ctx: AppContext) {
 
       // for access-based auth, enforce blocks
       if (requester) {
-        feedItemsQb = feedItemsQb
-          .whereNotExists(
-            graphService.blockQb(requester, [ref('post.creator')]),
-          )
+        feedItemsQb = feedItemsQb.whereNotExists(
+          graphService.blockQb(requester, [ref('post.creator')]),
+        )
       }
 
       const keyset = new FeedKeyset(

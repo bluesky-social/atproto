@@ -35,8 +35,9 @@ export default function (server: Server, ctx: AppContext) {
         .where('like.creator', '=', actorDid)
 
       if (viewer !== null) {
-        feedItemsQb = feedItemsQb
-          .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
+        feedItemsQb = feedItemsQb.whereNotExists(
+          graphService.blockQb(viewer, [ref('post.creator')]),
+        )
       }
 
       const keyset = new FeedKeyset(
