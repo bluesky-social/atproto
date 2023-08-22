@@ -35,7 +35,6 @@ export default function (server: Server, ctx: AppContext) {
       const { actor, limit, cursor } = params
 
       const { ref } = ctx.db.db.dynamic
-      const accountService = ctx.services.account(ctx.db)
       const actorService = ctx.services.appView.actor(ctx.db)
       const feedService = ctx.services.appView.feed(ctx.db)
       const graphService = ctx.services.appView.graph(ctx.db)
@@ -119,7 +118,6 @@ const getAuthorMunge = async (
       }
     })
   }
-  feed = await localSrvc.formatAndInsertPostsInFeed(feed, local.posts)
   return {
     ...original,
     feed,
