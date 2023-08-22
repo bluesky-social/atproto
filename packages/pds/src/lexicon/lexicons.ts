@@ -4816,13 +4816,13 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyFeedGetAuthorFeed: {
+  AppBskyFeedGetActorLikes: {
     lexicon: 1,
-    id: 'app.bsky.feed.getAuthorFeed',
+    id: 'app.bsky.feed.getActorLikes',
     defs: {
       main: {
         type: 'query',
-        description: "A view of an actor's feed.",
+        description: 'A view of the posts liked by an actor.',
         parameters: {
           type: 'params',
           required: ['actor'],
@@ -4839,15 +4839,6 @@ export const schemaDict = {
             },
             cursor: {
               type: 'string',
-            },
-            filter: {
-              type: 'string',
-              knownValues: [
-                'posts_with_replies',
-                'posts_no_replies',
-                'posts_with_media',
-              ],
-              default: 'posts_with_replies',
             },
           },
         },
@@ -4881,13 +4872,13 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyFeedGetActorLikes: {
+  AppBskyFeedGetAuthorFeed: {
     lexicon: 1,
-    id: 'app.bsky.feed.getActorLikes',
+    id: 'app.bsky.feed.getAuthorFeed',
     defs: {
       main: {
         type: 'query',
-        description: 'A view of the posts liked by an actor.',
+        description: "A view of an actor's feed.",
         parameters: {
           type: 'params',
           required: ['actor'],
@@ -4904,6 +4895,15 @@ export const schemaDict = {
             },
             cursor: {
               type: 'string',
+            },
+            filter: {
+              type: 'string',
+              knownValues: [
+                'posts_with_replies',
+                'posts_no_replies',
+                'posts_with_media',
+              ],
+              default: 'posts_with_replies',
             },
           },
         },
@@ -6713,8 +6713,8 @@ export const ids = {
   AppBskyFeedDescribeFeedGenerator: 'app.bsky.feed.describeFeedGenerator',
   AppBskyFeedGenerator: 'app.bsky.feed.generator',
   AppBskyFeedGetActorFeeds: 'app.bsky.feed.getActorFeeds',
-  AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetActorLikes: 'app.bsky.feed.getActorLikes',
+  AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetFeed: 'app.bsky.feed.getFeed',
   AppBskyFeedGetFeedGenerator: 'app.bsky.feed.getFeedGenerator',
   AppBskyFeedGetFeedGenerators: 'app.bsky.feed.getFeedGenerators',
