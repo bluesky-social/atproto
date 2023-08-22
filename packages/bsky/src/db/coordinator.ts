@@ -46,7 +46,7 @@ export class DatabaseCoordinator {
       })
       this.allReplicas.push(db)
       // setup different groups of replicas based on tag, each round-robins separately.
-      if (cfg.tags) {
+      if (cfg.tags?.length) {
         for (const tag of cfg.tags) {
           if (tag === '*') {
             this.untagged.dbs.push(db)

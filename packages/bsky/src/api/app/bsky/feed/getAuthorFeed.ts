@@ -7,10 +7,11 @@ import { setRepoRev } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authOptionalAccessOrRoleVerifier,
     handler: async ({ params, auth, res }) => {
       const { actor, limit, cursor, filter } = params
-      const viewer = auth.credentials.did
+      const viewer =
+        auth.credentials.type === 'access' ? auth.credentials.did : null
 
       const db = ctx.db.getReplica()
       const { ref } = db.db.dynamic
@@ -67,14 +68,16 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (viewer !== null) {
-        feedItemsQb = feedItemsQb.where((qb) =>
-          // Hide reposts of muted content
-          qb
-            .where('type', '=', 'post')
-            .orWhere((qb) =>
-              graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
-            ),
-        )
+        feedItemsQb = feedItemsQb
+          .where((qb) =>
+            // Hide reposts of muted content
+            qb
+              .where('type', '=', 'post')
+              .orWhere((qb) =>
+                graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
+              ),
+          )
+          .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
       }
 
       const keyset = new FeedKeyset(
