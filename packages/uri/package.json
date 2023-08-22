@@ -24,7 +24,7 @@
     "directory": "packages/uri"
   },
   "dependencies": {
-    "@atproto/identifier": "*",
-    "@atproto/nsid": "*"
+    "@atproto/identifier": "workspace:^",
+    "@atproto/nsid": "workspace:^"
   }
 }

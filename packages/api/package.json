@@ -22,15 +22,15 @@
     "directory": "packages/api"
   },
   "dependencies": {
-    "@atproto/common-web": "*",
-    "@atproto/uri": "*",
-    "@atproto/xrpc": "*",
+    "@atproto/common-web": "workspace:^",
+    "@atproto/uri": "workspace:^",
+    "@atproto/xrpc": "workspace:^",
     "tlds": "^1.234.0",
     "typed-emitter": "^2.1.0"
   },
   "devDependencies": {
-    "@atproto/lex-cli": "*",
-    "@atproto/pds": "*",
+    "@atproto/lex-cli": "workspace:^",
+    "@atproto/pds": "workspace:^",
     "common-tags": "^1.8.2"
   }
 }

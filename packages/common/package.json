@@ -24,7 +24,7 @@
     "postpublish": "npm run update-main-to-src"
   },
   "dependencies": {
-    "@atproto/common-web": "*",
+    "@atproto/common-web": "workspace:^",
     "@ipld/dag-cbor": "^7.0.3",
     "cbor-x": "^1.5.1",
     "multiformats": "^9.6.4",

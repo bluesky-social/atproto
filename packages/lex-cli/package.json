@@ -22,8 +22,8 @@
     "directory": "packages/lex-cli"
   },
   "dependencies": {
-    "@atproto/lexicon": "*",
-    "@atproto/nsid": "*",
+    "@atproto/lexicon": "workspace:^",
+    "@atproto/nsid": "workspace:^",
     "chalk": "^5.1.1",
     "commander": "^9.4.0",
     "ts-morph": "^16.0.0",

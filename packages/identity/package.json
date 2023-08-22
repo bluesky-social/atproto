@@ -25,8 +25,8 @@
     "postpublish": "npm run update-main-to-src"
   },
   "dependencies": {
-    "@atproto/common-web": "*",
-    "@atproto/crypto": "*",
+    "@atproto/common-web": "workspace:^",
+    "@atproto/crypto": "workspace:^",
     "axios": "^0.27.2",
     "zod": "^3.21.4"
   },
