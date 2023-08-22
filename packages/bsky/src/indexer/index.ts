@@ -84,7 +84,7 @@ export class BskyIndexer {
       subLockId: cfg.indexerSubLockId,
     })
 
-    const app = createServer(sub)
+    const app = createServer(sub, cfg)
 
     return new BskyIndexer({ ctx, sub, app })
   }

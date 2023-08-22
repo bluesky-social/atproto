@@ -1,11 +1,26 @@
 import express from 'express'
 import { IndexerSubscription } from './subscription'
+import { IndexerConfig } from './config'
+import { randomIntFromSeed } from '@atproto/crypto'
 
 export type CloseFn = () => Promise<void>
 
-export const createServer = (sub: IndexerSubscription): express.Application => {
+export const createServer = (
+  sub: IndexerSubscription,
+  cfg: IndexerConfig,
+): express.Application => {
   const app = express()
-  app.post('/reprocess/:did', (req, res) => {
+  app.post('/reprocess/:did', async (req, res) => {
+    const did = req.params.did
+    try {
+      const partition = await randomIntFromSeed(did, cfg.ingesterPartitionCount)
+      const supportedPartition = cfg.indexerPartitionIds.includes(partition)
+      if (!supportedPartition) {
+        return res.status(400).send(`unsupported partition: ${partition}`)
+      }
+    } catch (err) {
+      return res.status(500).send('could not calculate partition')
+    }
     sub.requestReprocess(req.params.did)
     res.send(200)
   })
