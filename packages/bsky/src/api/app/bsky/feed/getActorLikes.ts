@@ -36,11 +36,6 @@ export default function (server: Server, ctx: AppContext) {
 
       if (viewer !== null) {
         feedItemsQb = feedItemsQb
-          .where((qb) =>
-            qb.where((qb) =>
-              graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
-            ),
-          )
           .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
       }
 

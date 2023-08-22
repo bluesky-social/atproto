@@ -114,27 +114,4 @@ describe('pds actor likes feed views', () => {
       sc.getHeaders(alice),
     )
   })
-
-  it('viewer has muted author of liked post(s)', async () => {
-    await agent.api.app.bsky.graph.muteActor(
-      { actor: alice }, // bob mutes alice
-      { headers: sc.getHeaders(bob), encoding: 'application/json' },
-    )
-
-    const { data } = await agent.api.app.bsky.feed.getActorLikes(
-      { actor: sc.accounts[bob].handle }, // bob has liked alice's posts
-      { headers: sc.getHeaders(bob) },
-    )
-
-    expect(
-      data.feed.every((item) => {
-        return item.post.author.did !== alice
-      }),
-    ).toBe(true) // alice's posts are filtered out
-
-    await agent.api.app.bsky.graph.unmuteActor(
-      { actor: alice }, // dan unmutes alice
-      { headers: sc.getHeaders(bob), encoding: 'application/json' },
-    )
-  })
 })

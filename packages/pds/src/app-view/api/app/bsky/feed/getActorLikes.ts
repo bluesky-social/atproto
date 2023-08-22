@@ -57,16 +57,9 @@ export default function (server: Server, ctx: AppContext) {
         .innerJoin('like', 'like.subject', 'feed_item.uri')
         .where('like.creator', '=', actorDid)
 
-      // for access-based auth, enforce blocks and mutes
+      // for access-based auth, enforce blocks
       if (requester) {
         feedItemsQb = feedItemsQb
-          .where((qb) =>
-            qb.where((qb) =>
-              accountService.whereNotMuted(qb, requester, [
-                ref('post.creator'),
-              ]),
-            ),
-          )
           .whereNotExists(
             graphService.blockQb(requester, [ref('post.creator')]),
           )
