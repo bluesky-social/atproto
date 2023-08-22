@@ -7,7 +7,7 @@
     "url": "https://github.com/bluesky-social/atproto.git",
     "directory": "packages/pds"
   },
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "bin": "dist/bin.ts",
   "scripts": {
     "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
@@ -55,6 +55,7 @@
     "http-errors": "^2.0.0",
     "http-terminator": "^3.2.0",
     "ioredis": "^5.3.2",
+    "iso-datestring-validator": "^2.2.2",
     "jsonwebtoken": "^8.5.1",
     "kysely": "^0.22.0",
     "lru-cache": "^10.0.1",
