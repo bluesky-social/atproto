@@ -51,23 +51,25 @@ export class PeriodicModerationActionReversal {
   }
 
   async revertAction(actionRow: ModerationActionRow) {
-    return this.appContext.db.getPrimary().transaction(async (dbTxn) => {
+    const reverseAction = {
+      id: actionRow.id,
+      createdBy: actionRow.createdBy,
+      createdAt: new Date(),
+      reason: `[SCHEDULED_REVERSAL] Reverting action as originally scheduled`,
+    }
+
+    if (this.pushAgent) {
+      await this.pushAgent.com.atproto.admin.reverseModerationAction(
+        reverseAction,
+      )
+      return
+    }
+
+    await this.appContext.db.getPrimary().transaction(async (dbTxn) => {
       const moderationTxn = this.appContext.services.moderation(dbTxn)
-      const reverseAction = {
-        id: actionRow.id,
-        createdBy: actionRow.createdBy,
-        createdAt: new Date(),
-        reason: `[SCHEDULED_REVERSAL] Reverting action as originally scheduled`,
-      }
-      if (this.pushAgent) {
-        await this.pushAgent.com.atproto.admin.reverseModerationAction(
-          reverseAction,
-        )
-      } else {
-        await moderationTxn.revertAction(reverseAction)
-        const labelTxn = this.appContext.services.label(dbTxn)
-        await this.reverseLabels(labelTxn, actionRow)
-      }
+      await moderationTxn.revertAction(reverseAction)
+      const labelTxn = this.appContext.services.label(dbTxn)
+      await this.reverseLabels(labelTxn, actionRow)
     })
   }
 
