@@ -304,7 +304,7 @@ class RateLimiter {
     const last = this.rateLimitCache.get(key) ?? 0
     const current = last + 1
     this.rateLimitCache.set(key, current)
-    return current > this.limit
+    return current <= this.limit
   }
 }
 
