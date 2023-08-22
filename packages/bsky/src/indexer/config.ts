@@ -21,6 +21,7 @@ export interface IndexerConfigValues {
   indexerPartitionIds: number[]
   indexerPartitionBatchSize?: number
   indexerSubLockId?: number
+  indexerPort?: number
   indexerNamespace?: string
 }
 
@@ -75,6 +76,7 @@ export class IndexerConfig {
     const indexerConcurrency = maybeParseInt(process.env.INDEXER_CONCURRENCY)
     const indexerNamespace = overrides?.indexerNamespace
     const indexerSubLockId = maybeParseInt(process.env.INDEXER_SUB_LOCK_ID)
+    const indexerPort = maybeParseInt(process.env.INDEXER_PORT)
     const labelerKeywords = {}
     assert(dbPostgresUrl)
     assert(redisHost || (redisSentinelName && redisSentinelHosts?.length))
@@ -99,6 +101,7 @@ export class IndexerConfig {
       indexerPartitionBatchSize,
       indexerNamespace,
       indexerSubLockId,
+      indexerPort,
       labelerKeywords,
       ...stripUndefineds(overrides ?? {}),
     })
@@ -178,6 +181,10 @@ export class IndexerConfig {
 
   get indexerSubLockId() {
     return this.cfg.indexerSubLockId
+  }
+
+  get indexerPort() {
+    return this.cfg.indexerPort
   }
 
   get labelerKeywords() {
