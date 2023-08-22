@@ -238,7 +238,7 @@ export class RecordProcessor<T, S> {
         this.backgroundQueue.add(async () => {
           try {
             const preparedNotifs = await notifServer.prepareNotifsToSend(chunk)
-            await notifServer.addNotificationsToQueue(preparedNotifs)
+            await notifServer.processNotifications(preparedNotifs)
           } catch (error) {
             dbLogger.error({ error }, 'Error sending push notifications')
           }

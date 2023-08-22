@@ -23,7 +23,6 @@ export interface IndexerConfigValues {
   indexerSubLockId?: number
   indexerNamespace?: string
   pushNotificationEndpoint?: string
-  pushNotificationBatchSize?: number
 }
 
 export class IndexerConfig {
@@ -79,9 +78,6 @@ export class IndexerConfig {
     const indexerSubLockId = maybeParseInt(process.env.INDEXER_SUB_LOCK_ID)
     const labelerKeywords = {}
     const pushNotificationEndpoint = process.env.PUSH_NOTIFICATION_ENDPOINT
-    const pushNotificationBatchSize = maybeParseInt(
-      process.env.PUSH_NOTIFICATION_BATCH_SIZE,
-    )
     assert(dbPostgresUrl)
     assert(redisHost || (redisSentinelName && redisSentinelHosts?.length))
     assert(indexerPartitionIds.length > 0)
@@ -107,7 +103,6 @@ export class IndexerConfig {
       indexerSubLockId,
       labelerKeywords,
       pushNotificationEndpoint,
-      pushNotificationBatchSize,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -194,10 +189,6 @@ export class IndexerConfig {
 
   get pushNotificationEndpoint() {
     return this.cfg.pushNotificationEndpoint
-  }
-
-  get pushNotificationBatchSize() {
-    return this.cfg.pushNotificationBatchSize
   }
 }
 

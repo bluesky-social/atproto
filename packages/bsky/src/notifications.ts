@@ -1,14 +1,15 @@
 import axios from 'axios'
+import { Insertable } from 'kysely'
+import TTLCache from '@isaacs/ttlcache'
+import { AtUri } from '@atproto/api'
+import { MINUTE, chunkArray } from '@atproto/common'
 import Database from './db/primary'
 import { Notification } from './db/tables/notification'
 import { NotificationPushToken as PushToken } from './db/tables/notification-push-token'
-import { AtUri } from '@atproto/api'
-import { Insertable } from 'kysely'
 import logger from './indexer/logger'
-import { BackgroundQueue } from './background'
-import { Redis } from './redis'
 import { notSoftDeletedClause } from './db/util'
 import { ids } from './lexicon/lexicons'
+import { retryHttp } from './util/retry'
 
 export type Platform = 'ios' | 'android' | 'web'
 
@@ -32,17 +33,9 @@ type NotifDisplay = {
 }
 
 export class NotificationServer {
-  private notificationBatch: PushNotification[] = []
-  private backgroundQueue: BackgroundQueue
+  private rateLimiter = new RateLimiter(20, 20 * MINUTE)
 
-  constructor(
-    public db: Database,
-    public redis?: Redis,
-    public pushEndpoint?: string,
-    private notificationBatchSize = 1, // if debug mode, send 1 notifications at a time, otherwise send whatever is specified in the config
-  ) {
-    this.backgroundQueue = new BackgroundQueue(db)
-  }
+  constructor(public db: Database, public pushEndpoint?: string) {}
 
   async getTokensByDid(dids: string[]) {
     if (!dids.length) return {}
@@ -103,53 +96,16 @@ export class NotificationServer {
    * object has a "tokens" property which is an array of tokens.
    * @returns void
    */
-  async addNotificationsToQueue(notifs: PushNotification[]) {
-    if (!this.redis) {
-      throw new Error('Redis not defined in NotificationServer')
-    }
-    for (const notif of notifs) {
-      const { tokens } = notif
-      for (const token of tokens) {
-        // RATE LIMITING
-        // Get rate limit data for user
-        const key = `notification_rate_limit:${token}`
-        const now = Date.now()
-        const twentyMinutesAgo = now - 20 * 60 * 1000
-        // Remove timestamps outside of 20 minutes window
-        await this.redis.zremrangebyscore(
-          key,
-          Number.NEGATIVE_INFINITY,
-          twentyMinutesAgo,
-        )
-        const currentUserRateCount = await this.redis.zcount(
-          key,
-          twentyMinutesAgo,
-          now,
-        )
-        // If rate limit reached, skip adding notification to be sent
-        if (currentUserRateCount >= 20) {
-          return
-        }
-        // Add timestamp to user's rate limit data
-        await this.redis.zadd(key, now, now)
-        // Set expiration for rate limit data to 25 minutes just in case
-        await this.redis.expire(key, 25 * 60)
-
-        // BATCHING
-        // Add to batch
-        this.notificationBatch.push(notif)
-        // If batch size is 20, add task to background queue
-        if (this.notificationBatch.length >= this.notificationBatchSize) {
-          const batch = [...this.notificationBatch]
-          this.notificationBatch = []
-          this.backgroundQueue.add(async () => {
-            try {
-              await this.sendPushNotifications(batch)
-            } catch (err) {
-              logger.error({ err, batch }, 'notification push batch failed')
-            }
-          })
-        }
+  async processNotifications(notifs: PushNotification[]) {
+    const now = Date.now()
+    const permittedNotifs = notifs.filter((n) =>
+      n.tokens.every((token) => this.rateLimiter.check(token, now)),
+    )
+    for (const batch of chunkArray(permittedNotifs, 20)) {
+      try {
+        await this.sendPushNotifications(batch)
+      } catch (err) {
+        logger.error({ err, batch }, 'notification push batch failed')
       }
     }
   }
@@ -184,15 +140,18 @@ export class NotificationServer {
     if (notifications.length === 0) {
       return
     }
-    await axios.post(
-      this.pushEndpoint,
-      { notifications },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          accept: 'application/json',
+    const pushEndpoint = this.pushEndpoint
+    await retryHttp(() =>
+      axios.post(
+        pushEndpoint,
+        { notifications },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            accept: 'application/json',
+          },
         },
-      },
+      ),
     )
   }
 
@@ -332,3 +291,24 @@ export class NotificationServer {
 }
 
 const unique = (items: string[]) => [...new Set(items)]
+
+class RateLimiter {
+  private rateLimitCache = new TTLCache<string, number>({
+    max: 50000,
+    ttl: this.windowMs,
+    noUpdateTTL: true,
+  })
+  constructor(private limit: number, private windowMs: number) {}
+  check(token: string, now = Date.now()) {
+    const key = getRateLimitKey(token, now)
+    const last = this.rateLimitCache.get(key) ?? 0
+    const current = last + 1
+    this.rateLimitCache.set(key, current)
+    return current > this.limit
+  }
+}
+
+const getRateLimitKey = (token: string, now: number) => {
+  const iteration = Math.floor(now / (20 * MINUTE))
+  return `${iteration}:${token}`
+}

@@ -16,7 +16,7 @@ describe('notification server', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_views_notifications',
+      dbPostgresSchema: 'bsky_notification_server',
     })
     agent = network.bsky.getClient()
     const pdsAgent = network.pds.getClient()

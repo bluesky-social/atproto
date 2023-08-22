@@ -60,12 +60,7 @@ export class BskyIndexer {
       })
     }
     const notifServer = cfg.pushNotificationEndpoint
-      ? new NotificationServer(
-          db,
-          redis,
-          cfg.pushNotificationEndpoint,
-          cfg.pushNotificationBatchSize,
-        )
+      ? new NotificationServer(db, cfg.pushNotificationEndpoint)
       : undefined
     const services = createServices({
       idResolver,
