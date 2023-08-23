@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.sync.getRoot",
+  "id": "com.atproto.sync.getCurrent",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Gets the current root CID of a repo.",
+      "description": "Gets the current commit CID & revision of the repo.",
       "parameters": {
         "type": "params",
         "required": ["did"],
@@ -20,14 +20,15 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["root"],
+          "required": ["cid", "rev"],
           "properties": {
-            "root": {"type": "string", "format": "cid"}
+            "cid": {"type": "string", "format": "cid"},
+            "rev": {"type": "string"}
           }
         }
       },
       "errors": [
-        {"name": "RootNotFound"}
+        {"name": "RepoNotFound"}
       ]
     }
   }

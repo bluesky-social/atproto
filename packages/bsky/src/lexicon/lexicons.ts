@@ -3011,13 +3011,56 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncGetCurrent: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getCurrent',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Gets the current commit CID & revision of the repo.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['cid', 'rev'],
+            properties: {
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              rev: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'RepoNotFound',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoSyncGetHead: {
     lexicon: 1,
     id: 'com.atproto.sync.getHead',
     defs: {
       main: {
         type: 'query',
-        description: 'DEPRACATED - please use com.atproto.sync.getRoot instead',
+        description:
+          'DEPRACATED - please use com.atproto.sync.getCurrent instead',
         parameters: {
           type: 'params',
           required: ['did'],
@@ -3114,45 +3157,6 @@ export const schemaDict = {
         output: {
           encoding: 'application/vnd.ipld.car',
         },
-      },
-    },
-  },
-  ComAtprotoSyncGetRoot: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getRoot',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Gets the current root CID of a repo.',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['root'],
-            properties: {
-              root: {
-                type: 'string',
-                format: 'cid',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'RootNotFound',
-          },
-        ],
       },
     },
   },
@@ -3349,13 +3353,14 @@ export const schemaDict = {
           'tooBig',
           'repo',
           'commit',
-          'prev',
+          'rev',
+          'since',
           'blocks',
           'ops',
           'blobs',
           'time',
         ],
-        nullable: ['prev'],
+        nullable: ['prev', 'since'],
         properties: {
           seq: {
             type: 'integer',
@@ -3378,6 +3383,11 @@ export const schemaDict = {
           },
           rev: {
             type: 'string',
+            description: 'The rev of the emitted commit',
+          },
+          since: {
+            type: 'string',
+            description: 'The rev of the last emitted from this repo',
           },
           blocks: {
             type: 'bytes',
@@ -6555,10 +6565,10 @@ export const ids = {
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
   ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
+  ComAtprotoSyncGetCurrent: 'com.atproto.sync.getCurrent',
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
-  ComAtprotoSyncGetRoot: 'com.atproto.sync.getRoot',
   ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
   ComAtprotoSyncListRepos: 'com.atproto.sync.listRepos',
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',

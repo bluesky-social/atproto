@@ -2,7 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import getBlob from './getBlob'
 import getBlocks from './getBlocks'
-import getRoot from './getRoot'
+import getCurrent from './getCurrent'
 import getRecord from './getRecord'
 import getRepo from './getRepo'
 import subscribeRepos from './subscribeRepos'
@@ -14,7 +14,7 @@ import getHead from './deprecated/getHead'
 export default function (server: Server, ctx: AppContext) {
   getBlob(server, ctx)
   getBlocks(server, ctx)
-  getRoot(server, ctx)
+  getCurrent(server, ctx)
   getRecord(server, ctx)
   getRepo(server, ctx)
   subscribeRepos(server, ctx)

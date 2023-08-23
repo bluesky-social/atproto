@@ -13,8 +13,11 @@ export interface Commit {
   tooBig: boolean
   repo: string
   commit: CID
-  prev: CID | null
-  rev?: string
+  prev?: CID | null
+  /** The rev of the emitted commit */
+  rev: string
+  /** The rev of the last emitted from this repo */
+  since: string | null
   /** CAR file containing relevant blocks */
   blocks: Uint8Array
   ops: RepoOp[]

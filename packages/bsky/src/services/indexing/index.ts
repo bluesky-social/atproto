@@ -265,7 +265,7 @@ export class IndexingService {
     if (!pds) return false
     const { api } = new AtpAgent({ service: pds })
     try {
-      await retryHttp(() => api.com.atproto.sync.getRoot({ did }))
+      await retryHttp(() => api.com.atproto.sync.getCurrent({ did }))
       return true
     } catch (err) {
       if (err instanceof ComAtprotoSyncGetRoot.RootNotFoundError) {

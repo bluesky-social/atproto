@@ -116,6 +116,7 @@ export type WriteLog = RecordWriteDescript[][]
 export type CommitData = {
   cid: CID
   rev: string
+  since: string | null
   prev: CID | null
   newBlocks: BlockMap
   removedCids: CidSet

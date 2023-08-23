@@ -107,6 +107,7 @@ export default function (server: Server, ctx: AppContext) {
           cid: commitCid,
           rev,
           prev: prevCid,
+          since: null,
           newBlocks,
           removedCids: new CidSet(),
         }

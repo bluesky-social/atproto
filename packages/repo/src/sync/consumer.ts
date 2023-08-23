@@ -83,6 +83,7 @@ export const verifyDiff = async (
       cid: updated.cid,
       rev: updated.commit.rev,
       prev: repo?.cid ?? null,
+      since: repo?.commit.rev ?? null,
       newBlocks,
       removedCids,
     },

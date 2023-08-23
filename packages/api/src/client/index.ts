@@ -61,10 +61,10 @@ import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/r
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
+import * as ComAtprotoSyncGetCurrent from './types/com/atproto/sync/getCurrent'
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
-import * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
@@ -180,10 +180,10 @@ export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/r
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
+export * as ComAtprotoSyncGetCurrent from './types/com/atproto/sync/getCurrent'
 export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
-export * as ComAtprotoSyncGetRoot from './types/com/atproto/sync/getRoot'
 export * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
@@ -910,6 +910,17 @@ export class SyncNS {
       })
   }
 
+  getCurrent(
+    params?: ComAtprotoSyncGetCurrent.QueryParams,
+    opts?: ComAtprotoSyncGetCurrent.CallOptions,
+  ): Promise<ComAtprotoSyncGetCurrent.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getCurrent', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetCurrent.toKnownErr(e)
+      })
+  }
+
   getHead(
     params?: ComAtprotoSyncGetHead.QueryParams,
     opts?: ComAtprotoSyncGetHead.CallOptions,
@@ -940,17 +951,6 @@ export class SyncNS {
       .call('com.atproto.sync.getRepo', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoSyncGetRepo.toKnownErr(e)
-      })
-  }
-
-  getRoot(
-    params?: ComAtprotoSyncGetRoot.QueryParams,
-    opts?: ComAtprotoSyncGetRoot.CallOptions,
-  ): Promise<ComAtprotoSyncGetRoot.Response> {
-    return this._service.xrpc
-      .call('com.atproto.sync.getRoot', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoSyncGetRoot.toKnownErr(e)
       })
   }
 

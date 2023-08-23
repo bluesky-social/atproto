@@ -5,7 +5,7 @@ import AppContext from '../../../../context'
 import { isUserOrAdmin } from '../../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.sync.getRoot({
+  server.com.atproto.sync.getCurrent({
     auth: ctx.optionalAccessOrRoleVerifier,
     handler: async ({ params, auth }) => {
       const { did } = params
@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
       const storage = new SqlRepoStorage(ctx.db, did)
-      const root = await storage.getRoot()
+      const root = await storage.getRootDetailed()
       if (root === null) {
         throw new InvalidRequestError(
           `Could not find root for DID: ${did}`,
@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
       }
       return {
         encoding: 'application/json',
-        body: { root: root.toString() },
+        body: { cid: root.cid.toString(), rev: root.rev },
       }
     },
   })

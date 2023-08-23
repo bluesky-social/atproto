@@ -16,7 +16,8 @@ export interface QueryParams {
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  root: string
+  cid: string
+  rev: string
   [k: string]: unknown
 }
 
@@ -31,7 +32,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'RootNotFound'
+  error?: 'RepoNotFound'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

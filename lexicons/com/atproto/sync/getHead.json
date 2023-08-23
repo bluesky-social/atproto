@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "DEPRACATED - please use com.atproto.sync.getRoot instead",
+      "description": "DEPRACATED - please use com.atproto.sync.getCurrent instead",
       "parameters": {
         "type": "params",
         "required": ["did"],
