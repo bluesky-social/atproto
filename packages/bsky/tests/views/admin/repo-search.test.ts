@@ -48,23 +48,31 @@ describe('pds admin repo search views', () => {
   })
 
   it('gives relevant results when searched by handle', async () => {
+    const term = 'car'
     const result = await agent.api.com.atproto.admin.searchRepos(
-      { term: 'car' },
+      { term },
       { headers },
     )
 
     const shouldContain = [
-      'cara-wiegand69.test', // Present despite repo takedown
-      'eudora-dietrich4.test', // Carol Littel
-      'shane-torphy52.test', //Sadie Carter
-      'aliya-hodkiewicz.test', // Carlton Abernathy IV
+      // Present despite repo takedown
+      // First item in the array because of direct handle match
+      'cara-wiegand69.test',
       'carlos6.test',
+      'aliya-hodkiewicz.test', // Carlton Abernathy IV
+      'eudora-dietrich4.test', // Carol Littel
       'carolina-mcdermott77.test',
+      'shane-torphy52.test', // Sadie Carter
+      // Last item in the array because handle and display name none match very close to the the search term
+      'cayla-marquardt39.test',
     ]
 
     const handles = result.data.repos.map((u) => u.handle)
-
+    // Assert that all matches are found
     shouldContain.forEach((handle) => expect(handles).toContain(handle))
+    // Assert that the order is correct, showing the closest match by handle first
+    expect(handles[0].startsWith(term)).toBeTruthy()
+    expect(handles[handles.length - 1].startsWith(term)).toBeFalsy()
   })
 
   it('gives relevant results when searched by did', async () => {
