@@ -21,6 +21,8 @@ export interface IndexerConfigValues {
   indexerPartitionIds: number[]
   indexerPartitionBatchSize?: number
   indexerSubLockId?: number
+  indexerPort?: number
+  ingesterPartitionCount: number
   indexerNamespace?: string
   pushNotificationEndpoint?: string
 }
@@ -76,6 +78,9 @@ export class IndexerConfig {
     const indexerConcurrency = maybeParseInt(process.env.INDEXER_CONCURRENCY)
     const indexerNamespace = overrides?.indexerNamespace
     const indexerSubLockId = maybeParseInt(process.env.INDEXER_SUB_LOCK_ID)
+    const indexerPort = maybeParseInt(process.env.INDEXER_PORT)
+    const ingesterPartitionCount =
+      maybeParseInt(process.env.INGESTER_PARTITION_COUNT) ?? 64
     const labelerKeywords = {}
     const pushNotificationEndpoint = process.env.PUSH_NOTIFICATION_ENDPOINT
     assert(dbPostgresUrl)
@@ -101,6 +106,8 @@ export class IndexerConfig {
       indexerPartitionBatchSize,
       indexerNamespace,
       indexerSubLockId,
+      indexerPort,
+      ingesterPartitionCount,
       labelerKeywords,
       pushNotificationEndpoint,
       ...stripUndefineds(overrides ?? {}),
@@ -181,6 +188,14 @@ export class IndexerConfig {
 
   get indexerSubLockId() {
     return this.cfg.indexerSubLockId
+  }
+
+  get indexerPort() {
+    return this.cfg.indexerPort
+  }
+
+  get ingesterPartitionCount() {
+    return this.cfg.ingesterPartitionCount
   }
 
   get labelerKeywords() {
