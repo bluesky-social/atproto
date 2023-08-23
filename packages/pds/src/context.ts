@@ -1,4 +1,5 @@
 import express from 'express'
+import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -21,12 +22,14 @@ import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
 import { ContentReporter } from './content-reporter'
+import { RuntimeFlags } from './runtime-flags'
 
 export class AppContext {
   constructor(
     private opts: {
       db: Database
       blobstore: BlobStore
+      redisScratch?: Redis
       repoSigningKey: crypto.Keypair
       plcRotationKey: crypto.Keypair
       idResolver: IdResolver
@@ -42,6 +45,7 @@ export class AppContext {
       sequencerLeader: SequencerLeader | null
       labeler: Labeler
       labelCache: LabelCache
+      runtimeFlags: RuntimeFlags
       contentReporter?: ContentReporter
       backgroundQueue: BackgroundQueue
       appviewAgent?: AtpAgent
@@ -56,6 +60,10 @@ export class AppContext {
 
   get blobstore(): BlobStore {
     return this.opts.blobstore
+  }
+
+  get redisScratch(): Redis | undefined {
+    return this.opts.redisScratch
   }
 
   get repoSigningKey(): crypto.Keypair {
@@ -138,6 +146,10 @@ export class AppContext {
     return this.opts.labelCache
   }
 
+  get runtimeFlags(): RuntimeFlags {
+    return this.opts.runtimeFlags
+  }
+
   get contentReporter(): ContentReporter | undefined {
     return this.opts.contentReporter
   }
@@ -185,12 +197,24 @@ export class AppContext {
     return this.opts.appviewAgent
   }
 
-  canProxyRead(req: express.Request): boolean {
-    return (
-      this.cfg.bskyAppViewProxy &&
-      this.cfg.bskyAppViewEndpoint !== undefined &&
-      req.get('x-appview-proxy') !== undefined
-    )
+  async canProxyRead(
+    req: express.Request,
+    did?: string | null,
+  ): Promise<boolean> {
+    if (!this.cfg.bskyAppViewProxy || !this.cfg.bskyAppViewEndpoint) {
+      return false
+    }
+    if (req.get('x-appview-proxy') !== undefined) {
+      return true
+    }
+    // e.g. /xrpc/a.b.c.d/ -> a.b.c.d/ -> a.b.c.d
+    const endpoint = req.path.replace('/xrpc/', '').replaceAll('/', '')
+    if (!did) {
+      // when no did assigned, only proxy reads if threshold is at max of 10
+      const threshold = this.runtimeFlags.appviewProxy.getThreshold(endpoint)
+      return threshold === 10
+    }
+    return await this.runtimeFlags.appviewProxy.shouldProxy(endpoint, did)
   }
 
   canProxyFeedConstruction(req: express.Request): boolean {

@@ -1,39 +1,48 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import Database from '../../../../db'
+import { MINUTE } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.resetPassword(async ({ input }) => {
-    const { token, password } = input.body
+  server.com.atproto.server.resetPassword({
+    rateLimit: [
+      {
+        durationMs: 5 * MINUTE,
+        points: 50,
+      },
+    ],
+    handler: async ({ input }) => {
+      const { token, password } = input.body
 
-    const tokenInfo = await ctx.db.db
-      .selectFrom('user_account')
-      .select(['did', 'passwordResetGrantedAt'])
-      .where('passwordResetToken', '=', token.toUpperCase())
-      .executeTakeFirst()
+      const tokenInfo = await ctx.db.db
+        .selectFrom('user_account')
+        .select(['did', 'passwordResetGrantedAt'])
+        .where('passwordResetToken', '=', token.toUpperCase())
+        .executeTakeFirst()
 
-    if (!tokenInfo?.passwordResetGrantedAt) {
-      return createInvalidTokenError()
-    }
+      if (!tokenInfo?.passwordResetGrantedAt) {
+        return createInvalidTokenError()
+      }
 
-    const now = new Date()
-    const grantedAt = new Date(tokenInfo.passwordResetGrantedAt)
-    const expiresAt = new Date(grantedAt.getTime() + 15 * minsToMs)
+      const now = new Date()
+      const grantedAt = new Date(tokenInfo.passwordResetGrantedAt)
+      const expiresAt = new Date(grantedAt.getTime() + 15 * minsToMs)
 
-    if (now > expiresAt) {
-      await unsetResetToken(ctx.db, tokenInfo.did)
-      return createExpiredTokenError()
-    }
+      if (now > expiresAt) {
+        await unsetResetToken(ctx.db, tokenInfo.did)
+        return createExpiredTokenError()
+      }
 
-    await ctx.db.transaction(async (dbTxn) => {
-      await unsetResetToken(dbTxn, tokenInfo.did)
-      await ctx.services
-        .account(dbTxn)
-        .updateUserPassword(tokenInfo.did, password)
-      await await ctx.services
-        .auth(dbTxn)
-        .revokeRefreshTokensByDid(tokenInfo.did)
-    })
+      await ctx.db.transaction(async (dbTxn) => {
+        await unsetResetToken(dbTxn, tokenInfo.did)
+        await ctx.services
+          .account(dbTxn)
+          .updateUserPassword(tokenInfo.did, password)
+        await await ctx.services
+          .auth(dbTxn)
+          .revokeRefreshTokensByDid(tokenInfo.did)
+      })
+    },
   })
 }
 

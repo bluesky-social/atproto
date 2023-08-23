@@ -34,7 +34,7 @@ export default function (server: Server, ctx: AppContext) {
 
     // this is not someone on our server, but we help with resolving anyway
 
-    if (!did && ctx.canProxyRead(req)) {
+    if (!did && (await ctx.canProxyRead(req))) {
       did = await tryResolveFromAppview(ctx.appviewAgent, handle)
     }
 

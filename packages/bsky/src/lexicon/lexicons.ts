@@ -3488,6 +3488,8 @@ export const schemaDict = {
       },
       repoOp: {
         type: 'object',
+        description:
+          "A repo operation, ie a write of a single record. For creates and updates, cid is the record's CID as of this operation. For deletes, it's null.",
         required: ['action', 'path', 'cid'],
         nullable: ['cid'],
         properties: {
@@ -4749,6 +4751,62 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyFeedGetActorLikes: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getActorLikes',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'A view of the posts liked by an actor.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'BlockedActor',
+          },
+          {
+            name: 'BlockedByActor',
+          },
+        ],
       },
     },
   },
@@ -6592,6 +6650,7 @@ export const ids = {
   AppBskyFeedDescribeFeedGenerator: 'app.bsky.feed.describeFeedGenerator',
   AppBskyFeedGenerator: 'app.bsky.feed.generator',
   AppBskyFeedGetActorFeeds: 'app.bsky.feed.getActorFeeds',
+  AppBskyFeedGetActorLikes: 'app.bsky.feed.getActorLikes',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetFeed: 'app.bsky.feed.getFeed',
   AppBskyFeedGetFeedGenerator: 'app.bsky.feed.getFeedGenerator',

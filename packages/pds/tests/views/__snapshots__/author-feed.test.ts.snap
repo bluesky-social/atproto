@@ -52,7 +52,7 @@ Array [
         "text": "thanks bob",
       },
       "replyCount": 0,
-      "repostCount": 0,
+      "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {},
     },
@@ -1286,6 +1286,233 @@ Array [
       "cid": "cids(0)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
+      "likeCount": 0,
+      "record": Object {
+        "$type": "app.bsky.feed.post",
+        "createdAt": "1970-01-01T00:00:00.000Z",
+        "reply": Object {
+          "parent": Object {
+            "cid": "cids(3)",
+            "uri": "record(4)",
+          },
+          "root": Object {
+            "cid": "cids(2)",
+            "uri": "record(3)",
+          },
+        },
+        "text": "thanks bob",
+      },
+      "replyCount": 0,
+      "repostCount": 1,
+      "uri": "record(0)",
+      "viewer": Object {
+        "repost": "record(5)",
+      },
+    },
+    "reason": Object {
+      "$type": "app.bsky.feed.defs#reasonRepost",
+      "by": Object {
+        "did": "user(1)",
+        "handle": "dan.test",
+        "labels": Array [
+          Object {
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "did:example:labeler",
+            "uri": "user(1)",
+            "val": "repo-action-label",
+          },
+        ],
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
+      },
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+    },
+    "reply": Object {
+      "parent": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "did": "user(2)",
+          "displayName": "bobby",
+          "handle": "bob.test",
+          "labels": Array [
+            Object {
+              "cid": "cids(4)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "neg": false,
+              "src": "user(2)",
+              "uri": "record(9)",
+              "val": "self-label-a",
+            },
+            Object {
+              "cid": "cids(4)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "neg": false,
+              "src": "user(2)",
+              "uri": "record(9)",
+              "val": "self-label-b",
+            },
+          ],
+          "viewer": Object {
+            "blockedBy": false,
+            "following": "record(8)",
+            "muted": false,
+          },
+        },
+        "cid": "cids(3)",
+        "embed": Object {
+          "$type": "app.bsky.embed.images#view",
+          "images": Array [
+            Object {
+              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+              "fullsize": "https://pds.public.url/image/AiDXkxVbgBksxb1nfiRn1m6S4K8_mee6o8r-UGLNzOM/rs:fit:2000:2000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+              "thumb": "https://pds.public.url/image/uc7FGfiGv0mMqmk9XiqHXrIhNymLHaex7Ge8nEhmXqo/rs:fit:1000:1000:1:0/plain/bafkreigy5p3xxceipk2o6nqtnugpft26ol6yleqhboqziino7axvdngtci@jpeg",
+            },
+          ],
+        },
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [
+          Object {
+            "cid": "cids(3)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "did:example:labeler",
+            "uri": "record(4)",
+            "val": "test-label",
+          },
+          Object {
+            "cid": "cids(3)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "did:example:labeler",
+            "uri": "record(4)",
+            "val": "test-label-2",
+          },
+        ],
+        "likeCount": 0,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "embed": Object {
+            "$type": "app.bsky.embed.images",
+            "images": Array [
+              Object {
+                "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                "image": Object {
+                  "$type": "blob",
+                  "mimeType": "image/jpeg",
+                  "ref": Object {
+                    "$link": "cids(5)",
+                  },
+                  "size": 4114,
+                },
+              },
+            ],
+          },
+          "reply": Object {
+            "parent": Object {
+              "cid": "cids(2)",
+              "uri": "record(3)",
+            },
+            "root": Object {
+              "cid": "cids(2)",
+              "uri": "record(3)",
+            },
+          },
+          "text": "hear that label_me label_me_2",
+        },
+        "replyCount": 1,
+        "repostCount": 0,
+        "uri": "record(4)",
+        "viewer": Object {},
+      },
+      "root": Object {
+        "$type": "app.bsky.feed.defs#postView",
+        "author": Object {
+          "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+          "did": "user(0)",
+          "displayName": "ali",
+          "handle": "alice.test",
+          "labels": Array [
+            Object {
+              "cid": "cids(1)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "neg": false,
+              "src": "user(0)",
+              "uri": "record(2)",
+              "val": "self-label-a",
+            },
+            Object {
+              "cid": "cids(1)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "neg": false,
+              "src": "user(0)",
+              "uri": "record(2)",
+              "val": "self-label-b",
+            },
+          ],
+          "viewer": Object {
+            "blockedBy": false,
+            "followedBy": "record(1)",
+            "muted": false,
+          },
+        },
+        "cid": "cids(2)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [],
+        "likeCount": 3,
+        "record": Object {
+          "$type": "app.bsky.feed.post",
+          "createdAt": "1970-01-01T00:00:00.000000Z",
+          "text": "again",
+        },
+        "replyCount": 2,
+        "repostCount": 1,
+        "uri": "record(3)",
+        "viewer": Object {
+          "like": "record(7)",
+          "repost": "record(6)",
+        },
+      },
+    },
+  },
+  Object {
+    "post": Object {
+      "author": Object {
+        "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
+        "did": "user(0)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "labels": Array [
+          Object {
+            "cid": "cids(1)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(0)",
+            "uri": "record(2)",
+            "val": "self-label-a",
+          },
+          Object {
+            "cid": "cids(1)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(0)",
+            "uri": "record(2)",
+            "val": "self-label-b",
+          },
+        ],
+        "viewer": Object {
+          "blockedBy": false,
+          "followedBy": "record(1)",
+          "muted": false,
+        },
+      },
+      "cid": "cids(2)",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
       "likeCount": 3,
       "record": Object {
         "$type": "app.bsky.feed.post",
@@ -1294,10 +1521,10 @@ Array [
       },
       "replyCount": 2,
       "repostCount": 1,
-      "uri": "record(0)",
+      "uri": "record(3)",
       "viewer": Object {
-        "like": "record(4)",
-        "repost": "record(3)",
+        "like": "record(7)",
+        "repost": "record(6)",
       },
     },
     "reason": Object {
@@ -1341,13 +1568,13 @@ Array [
           "muted": false,
         },
       },
-      "cid": "cids(2)",
+      "cid": "cids(6)",
       "embed": Object {
         "$type": "app.bsky.embed.record#view",
         "record": Object {
           "$type": "app.bsky.embed.record#viewRecord",
           "author": Object {
-            "did": "user(2)",
+            "did": "user(3)",
             "handle": "carol.test",
             "labels": Array [],
             "viewer": Object {
@@ -1355,7 +1582,7 @@ Array [
               "muted": false,
             },
           },
-          "cid": "cids(3)",
+          "cid": "cids(7)",
           "embeds": Array [
             Object {
               "$type": "app.bsky.embed.recordWithMedia#view",
@@ -1379,23 +1606,23 @@ Array [
                   "$type": "app.bsky.embed.record#viewRecord",
                   "author": Object {
                     "avatar": "https://pds.public.url/image/KzkHFsMRQ6oAKCHCRKFA1H-rDdc7VOtvEVpUJ82TwyQ/rs:fill:1000:1000:1:0/plain/bafkreiaivizp4xldojmmpuzmiu75cmea7nq56dnntnuhzhsjcb63aou5ei@jpeg",
-                    "did": "user(3)",
+                    "did": "user(2)",
                     "displayName": "bobby",
                     "handle": "bob.test",
                     "labels": Array [
                       Object {
-                        "cid": "cids(7)",
+                        "cid": "cids(4)",
                         "cts": "1970-01-01T00:00:00.000Z",
                         "neg": false,
-                        "src": "user(3)",
+                        "src": "user(2)",
                         "uri": "record(9)",
                         "val": "self-label-a",
                       },
                       Object {
-                        "cid": "cids(7)",
+                        "cid": "cids(4)",
                         "cts": "1970-01-01T00:00:00.000Z",
                         "neg": false,
-                        "src": "user(3)",
+                        "src": "user(2)",
                         "uri": "record(9)",
                         "val": "self-label-b",
                       },
@@ -1406,10 +1633,10 @@ Array [
                       "muted": false,
                     },
                   },
-                  "cid": "cids(6)",
+                  "cid": "cids(9)",
                   "indexedAt": "1970-01-01T00:00:00.000Z",
                   "labels": Array [],
-                  "uri": "record(7)",
+                  "uri": "record(12)",
                   "value": Object {
                     "$type": "app.bsky.feed.post",
                     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -1425,7 +1652,7 @@ Array [
           ],
           "indexedAt": "1970-01-01T00:00:00.000Z",
           "labels": Array [],
-          "uri": "record(6)",
+          "uri": "record(11)",
           "value": Object {
             "$type": "app.bsky.feed.post",
             "createdAt": "1970-01-01T00:00:00.000Z",
@@ -1440,7 +1667,7 @@ Array [
                       "$type": "blob",
                       "mimeType": "image/jpeg",
                       "ref": Object {
-                        "$link": "cids(4)",
+                        "$link": "cids(5)",
                       },
                       "size": 4114,
                     },
@@ -1451,7 +1678,7 @@ Array [
                       "$type": "blob",
                       "mimeType": "image/jpeg",
                       "ref": Object {
-                        "$link": "cids(5)",
+                        "$link": "cids(8)",
                       },
                       "size": 12736,
                     },
@@ -1460,8 +1687,8 @@ Array [
               },
               "record": Object {
                 "record": Object {
-                  "cid": "cids(6)",
-                  "uri": "record(7)",
+                  "cid": "cids(9)",
+                  "uri": "record(12)",
                 },
               },
             },
@@ -1478,8 +1705,8 @@ Array [
         "embed": Object {
           "$type": "app.bsky.embed.record",
           "record": Object {
-            "cid": "cids(3)",
-            "uri": "record(6)",
+            "cid": "cids(7)",
+            "uri": "record(11)",
           },
         },
         "facets": Array [
@@ -1500,7 +1727,7 @@ Array [
       },
       "replyCount": 0,
       "repostCount": 1,
-      "uri": "record(5)",
+      "uri": "record(10)",
       "viewer": Object {},
     },
   },
@@ -1523,7 +1750,7 @@ Array [
           "muted": false,
         },
       },
-      "cid": "cids(8)",
+      "cid": "cids(10)",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [],
       "likeCount": 0,
@@ -1534,7 +1761,7 @@ Array [
       },
       "replyCount": 0,
       "repostCount": 0,
-      "uri": "record(10)",
+      "uri": "record(13)",
       "viewer": Object {},
     },
   },
@@ -1818,7 +2045,7 @@ Array [
         "text": "thanks bob",
       },
       "replyCount": 0,
-      "repostCount": 0,
+      "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {},
     },

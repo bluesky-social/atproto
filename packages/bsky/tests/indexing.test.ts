@@ -267,6 +267,103 @@ describe('indexing', () => {
     await services.indexing(db).deleteRecord(...del(originalPost[0]))
   })
 
+  it('does not notify user of own like or repost', async () => {
+    const { db, services } = network.bsky.indexer.ctx
+    const createdAt = new Date().toISOString()
+
+    const originalPost = await prepareCreate({
+      did: sc.dids.bob,
+      collection: ids.AppBskyFeedPost,
+      record: {
+        $type: ids.AppBskyFeedPost,
+        text: 'original post',
+        createdAt,
+      } as AppBskyFeedPost.Record,
+    })
+
+    const originalPostRef = {
+      uri: originalPost[0].toString(),
+      cid: originalPost[1].toString(),
+    }
+
+    // own actions
+    const ownLike = await prepareCreate({
+      did: sc.dids.bob,
+      collection: ids.AppBskyFeedLike,
+      record: {
+        $type: ids.AppBskyFeedLike,
+        subject: originalPostRef,
+        createdAt,
+      } as AppBskyFeedLike.Record,
+    })
+    const ownRepost = await prepareCreate({
+      did: sc.dids.bob,
+      collection: ids.AppBskyFeedRepost,
+      record: {
+        $type: ids.AppBskyFeedRepost,
+        subject: originalPostRef,
+        createdAt,
+      } as AppBskyFeedRepost.Record,
+    })
+
+    // other actions
+    const aliceLike = await prepareCreate({
+      did: sc.dids.alice,
+      collection: ids.AppBskyFeedLike,
+      record: {
+        $type: ids.AppBskyFeedLike,
+        subject: originalPostRef,
+        createdAt,
+      } as AppBskyFeedLike.Record,
+    })
+    const aliceRepost = await prepareCreate({
+      did: sc.dids.alice,
+      collection: ids.AppBskyFeedRepost,
+      record: {
+        $type: ids.AppBskyFeedRepost,
+        subject: originalPostRef,
+        createdAt,
+      } as AppBskyFeedRepost.Record,
+    })
+
+    await services.indexing(db).indexRecord(...originalPost)
+    await services.indexing(db).indexRecord(...ownLike)
+    await services.indexing(db).indexRecord(...ownRepost)
+    await services.indexing(db).indexRecord(...aliceLike)
+    await services.indexing(db).indexRecord(...aliceRepost)
+
+    await network.bsky.processAll()
+
+    const {
+      data: { notifications },
+    } = await agent.api.app.bsky.notification.listNotifications(
+      {},
+      { headers: await network.serviceHeaders(sc.dids.bob) },
+    )
+
+    expect(notifications).toHaveLength(2)
+    expect(
+      notifications.every((n) => {
+        return n.author.did !== sc.dids.bob
+      }),
+    ).toBeTruthy()
+
+    // Cleanup
+    const del = (uri: AtUri) => {
+      return prepareDelete({
+        did: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+    }
+
+    await services.indexing(db).deleteRecord(...del(ownLike[0]))
+    await services.indexing(db).deleteRecord(...del(ownRepost[0]))
+    await services.indexing(db).deleteRecord(...del(aliceLike[0]))
+    await services.indexing(db).deleteRecord(...del(aliceRepost[0]))
+    await services.indexing(db).deleteRecord(...del(originalPost[0]))
+  })
+
   it('handles profile aggregations out of order.', async () => {
     const { db, services } = network.bsky.indexer.ctx
     const createdAt = new Date().toISOString()
