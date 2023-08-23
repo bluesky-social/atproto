@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import { Database } from '../../db'
 import { notSoftDeletedClause } from '../../db/util'
 import { ActorViews } from './views'
@@ -11,7 +12,6 @@ import {
   getMatchingAccountsQb,
   getMatchingProfilesQb,
 } from '../util/search'
-import { sql } from 'kysely'
 
 export class ActorService {
   constructor(

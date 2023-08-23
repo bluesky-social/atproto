@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
     auth: ctx.roleVerifier,
     handler: async ({ req, params, auth }) => {
-      if (!ctx.shouldProxyModeration()) {
+      if (ctx.shouldProxyModeration()) {
         // @TODO merge invite details to this list view. could also add
         // support for invitedBy param, which is not supported by appview.
         const { data: result } =
