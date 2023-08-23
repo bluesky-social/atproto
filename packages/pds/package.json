@@ -7,8 +7,8 @@
     "url": "https://github.com/bluesky-social/atproto.git",
     "directory": "packages/pds"
   },
-  "main": "src/index.ts",
-  "bin": "dist/bin.ts",
+  "main": "dist/index.js",
+  "bin": "dist/bin.js",
   "scripts": {
     "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
     "build": "node ./build.js",
@@ -25,11 +25,7 @@
     "lint:fix": "pnpm lint --fix",
     "verify": "run-p prettier lint",
     "verify:fix": "pnpm prettier:fix && pnpm lint:fix",
-    "migration:create": "ts-node ./bin/migration-create.ts",
-    "update-main-to-dist": "node ./update-pkg.js --update-main-to-dist",
-    "update-main-to-src": "node ./update-pkg.js --update-main-to-src",
-    "prepublish": "npm run update-main-to-dist",
-    "postpublish": "npm run update-main-to-src"
+    "migration:create": "ts-node ./bin/migration-create.ts"
   },
   "dependencies": {
     "@atproto/api": "workspace:^",
