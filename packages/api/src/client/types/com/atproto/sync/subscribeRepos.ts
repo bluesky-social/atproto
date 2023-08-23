@@ -111,6 +111,7 @@ export function validateInfo(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.sync.subscribeRepos#info', v)
 }
 
+/** A repo operation, ie a write of a single record. For creates and updates, cid is the record's CID as of this operation. For deletes, it's null. */
 export interface RepoOp {
   action: 'create' | 'update' | 'delete' | (string & {})
   path: string

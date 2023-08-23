@@ -3575,6 +3575,8 @@ export const schemaDict = {
       },
       repoOp: {
         type: 'object',
+        description:
+          "A repo operation, ie a write of a single record. For creates and updates, cid is the record's CID as of this operation. For deletes, it's null.",
         required: ['action', 'path', 'cid'],
         nullable: ['cid'],
         properties: {
