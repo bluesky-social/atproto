@@ -59,7 +59,6 @@
     "uint8arrays": "3.0.0"
   },
   "devDependencies": {
-    "@atproto/api": "workspace:^",
     "@atproto/dev-env": "workspace:^",
     "@atproto/lex-cli": "workspace:^",
     "@atproto/pds": "workspace:^",
@@ -67,7 +66,9 @@
     "@did-plc/server": "^0.0.1",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
+    "@types/express-serve-static-core": "^4.17.36",
     "@types/pg": "^8.6.6",
+    "@types/qs": "^6.9.7",
     "@types/sharp": "^0.31.0",
     "axios": "^0.27.2"
   }
