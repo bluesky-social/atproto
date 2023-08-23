@@ -181,13 +181,13 @@ export class NotificationServer {
     // gather potential display data for notifications in batch
     const [authors, posts] = await Promise.all([
       this.db.db
-        .selectFrom('profile')
-        .innerJoin('actor', 'actor.did', 'profile.creator')
-        .innerJoin('record', 'record.uri', 'profile.uri')
+        .selectFrom('actor')
+        .leftJoin('profile', 'profile.creator', 'actor.did')
+        .leftJoin('record', 'record.uri', 'profile.uri')
         .where(notSoftDeletedClause(ref('actor')))
         .where(notSoftDeletedClause(ref('record')))
         .where('profile.creator', 'in', authorDids.length ? authorDids : [''])
-        .select(['profile.creator as did', 'displayName'])
+        .select(['actor.did as did', 'handle', 'displayName'])
         .execute(),
       this.db.db
         .selectFrom('post')
@@ -203,7 +203,7 @@ export class NotificationServer {
     const authorsByDid = authors.reduce((acc, author) => {
       acc[author.did] = author
       return acc
-    }, {} as Record<string, { displayName: string | null }>)
+    }, {} as Record<string, { displayName: string | null; handle: string | null }>)
     const postsByUri = posts.reduce((acc, post) => {
       acc[post.uri] = post
       return acc
@@ -219,7 +219,8 @@ export class NotificationServer {
         recordUri,
       } = notif
 
-      const author = authorsByDid[authorDid]?.displayName
+      const author =
+        authorsByDid[authorDid]?.displayName || authorsByDid[authorDid]?.handle
       const postRecord = postsByUri[recordUri]
       const postSubject = subjectUri ? postsByUri[subjectUri] : null
 
