@@ -22,9 +22,9 @@
     "prettier": "prettier --check src/ tests/",
     "prettier:fix": "prettier --write src/ tests/",
     "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "yarn lint --fix",
+    "lint:fix": "pnpm lint --fix",
     "verify": "run-p prettier lint",
-    "verify:fix": "yarn prettier:fix && yarn lint:fix",
+    "verify:fix": "pnpm prettier:fix && pnpm lint:fix",
     "migration:create": "ts-node ./bin/migration-create.ts",
     "update-main-to-dist": "node ./update-pkg.js --update-main-to-dist",
     "update-main-to-src": "node ./update-pkg.js --update-main-to-src",
@@ -40,6 +40,7 @@
     "@atproto/lexicon": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/uri": "workspace:^",
+    "@atproto/xrpc": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.1",
     "better-sqlite3": "^7.6.2",
@@ -58,7 +59,7 @@
     "jsonwebtoken": "^8.5.1",
     "kysely": "^0.22.0",
     "lru-cache": "^10.0.1",
-    "multiformats": "^9.6.4",
+    "multiformats": "^9.9.0",
     "nodemailer": "^6.8.0",
     "nodemailer-html-to-text": "^3.2.0",
     "p-queue": "^6.6.2",
@@ -67,7 +68,8 @@
     "pino-http": "^8.2.1",
     "sharp": "^0.31.2",
     "typed-emitter": "^2.1.0",
-    "uint8arrays": "3.0.0"
+    "uint8arrays": "3.0.0",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@atproto/api": "workspace:^",

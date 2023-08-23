@@ -12,21 +12,22 @@
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "yarn lint --fix",
+    "lint:fix": "pnpm lint --fix",
     "verify": "run-p prettier lint",
-    "verify:fix": "yarn prettier:fix && yarn lint:fix",
+    "verify:fix": "pnpm prettier:fix && pnpm lint:fix",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
     "@atproto/crypto": "workspace:^",
+    "@atproto/repo": "workspace:^",
     "@aws-sdk/client-cloudfront": "^3.261.0",
     "@aws-sdk/client-kms": "^3.196.0",
     "@aws-sdk/client-s3": "^3.224.0",
     "@aws-sdk/lib-storage": "^3.226.0",
     "@noble/curves": "^1.1.0",
     "key-encoder": "^2.0.3",
-    "multiformats": "^9.6.4",
+    "multiformats": "^9.9.0",
     "uint8arrays": "3.0.0"
   }
 }
