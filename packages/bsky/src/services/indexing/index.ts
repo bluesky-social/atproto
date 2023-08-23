@@ -160,7 +160,7 @@ export class IndexingService {
       .executeTakeFirst()
   }
 
-  async indexRepo(did: string, commit?: string, disableLabels?: boolean) {
+  async indexRepo(did: string, commit?: string) {
     this.db.assertNotTransaction()
     const now = new Date().toISOString()
     const { pds, signingKey } = await this.idResolver.did.resolveAtprotoData(
@@ -198,7 +198,6 @@ export class IndexingService {
               op.value,
               op.op === 'create' ? WriteOpAction.Create : WriteOpAction.Update,
               now,
-              { disableNotifs: true, disableLabels },
             )
           }
         } catch (err) {

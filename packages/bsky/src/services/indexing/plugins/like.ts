@@ -65,7 +65,7 @@ const notifsForInsert = (obj: IndexedLike) => {
           recordCid: obj.cid,
           reason: 'like' as const,
           reasonSubject: subjectUri.toString(),
-          sortAt: obj.indexedAt,
+          sortAt: obj.sortAt,
         },
       ]
 }
