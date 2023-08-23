@@ -95,7 +95,6 @@ export class TestBsky {
       indexerPartitionIds: [0],
       indexerNamespace: `ns${ns}`,
       indexerSubLockId: uniqueLockId(),
-      indexerPort: await getPort(),
       ingesterPartitionCount: 1,
     })
     assert(indexerCfg.redisHost)
@@ -238,7 +237,6 @@ export async function getIndexers(
     didPlcUrl: network.plc.url,
     indexerPartitionIds: [0],
     indexerNamespace: `ns${ns}`,
-    indexerPort: await getPort(),
     ingesterPartitionCount: config.ingesterPartitionCount ?? 1,
     ...config,
   }
