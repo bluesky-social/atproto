@@ -24,6 +24,7 @@ export interface IndexerConfigValues {
   indexerPort?: number
   ingesterPartitionCount: number
   indexerNamespace?: string
+  pushNotificationEndpoint?: string
 }
 
 export class IndexerConfig {
@@ -81,6 +82,7 @@ export class IndexerConfig {
     const ingesterPartitionCount =
       maybeParseInt(process.env.INGESTER_PARTITION_COUNT) ?? 64
     const labelerKeywords = {}
+    const pushNotificationEndpoint = process.env.PUSH_NOTIFICATION_ENDPOINT
     assert(dbPostgresUrl)
     assert(redisHost || (redisSentinelName && redisSentinelHosts?.length))
     assert(indexerPartitionIds.length > 0)
@@ -107,6 +109,7 @@ export class IndexerConfig {
       indexerPort,
       ingesterPartitionCount,
       labelerKeywords,
+      pushNotificationEndpoint,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -197,6 +200,10 @@ export class IndexerConfig {
 
   get labelerKeywords() {
     return this.cfg.labelerKeywords
+  }
+
+  get pushNotificationEndpoint() {
+    return this.cfg.pushNotificationEndpoint
   }
 }
 

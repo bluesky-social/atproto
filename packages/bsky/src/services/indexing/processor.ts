@@ -8,6 +8,8 @@ import { Notification } from '../../db/tables/notification'
 import { chunkArray } from '@atproto/common'
 import { PrimaryDatabase } from '../../db'
 import { BackgroundQueue } from '../../background'
+import { NotificationServer } from '../../notifications'
+import { dbLogger } from '../../logger'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).
@@ -42,6 +44,7 @@ export class RecordProcessor<T, S> {
   constructor(
     private appDb: PrimaryDatabase,
     private backgroundQueue: BackgroundQueue,
+    private notifServer: NotificationServer | undefined,
     private params: RecordProcessorParams<T, S>,
   ) {
     this.db = appDb.db
@@ -210,6 +213,7 @@ export class RecordProcessor<T, S> {
   async handleNotifs(op: { deleted?: S; inserted?: S }) {
     let notifs: Notif[] = []
     const runOnCommit: ((db: PrimaryDatabase) => Promise<void>)[] = []
+    const sendOnCommit: (() => Promise<void>)[] = []
     if (op.deleted) {
       const forDelete = this.params.notifsForDelete(
         op.deleted,
@@ -233,6 +237,17 @@ export class RecordProcessor<T, S> {
       runOnCommit.push(async (db) => {
         await db.db.insertInto('notification').values(chunk).execute()
       })
+      if (this.notifServer) {
+        const notifServer = this.notifServer
+        sendOnCommit.push(async () => {
+          try {
+            const preparedNotifs = await notifServer.prepareNotifsToSend(chunk)
+            await notifServer.processNotifications(preparedNotifs)
+          } catch (error) {
+            dbLogger.error({ error }, 'error sending push notifications')
+          }
+        })
+      }
     }
     if (runOnCommit.length) {
       // Need to ensure notif deletion always happens before creation, otherwise delete may clobber in a race.
@@ -240,6 +255,16 @@ export class RecordProcessor<T, S> {
         this.backgroundQueue.add(async (db) => {
           for (const fn of runOnCommit) {
             await fn(db)
+          }
+        })
+      })
+    }
+    if (sendOnCommit.length) {
+      // Need to ensure notif deletion always happens before creation, otherwise delete may clobber in a race.
+      this.appDb.onCommit(() => {
+        this.backgroundQueue.add(async () => {
+          for (const fn of sendOnCommit) {
+            await fn()
           }
         })
       })
