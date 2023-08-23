@@ -1,2 +1,4 @@
 packages:
   - "packages/*"
+  - "!packages/pds/service"
+  - "!packages/bsky/service"
