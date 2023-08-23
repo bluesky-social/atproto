@@ -1,11 +1,17 @@
-import { sql } from 'kysely'
 import { Database } from '../../db'
-import { DbRef, notSoftDeletedClause } from '../../db/util'
+import { notSoftDeletedClause } from '../../db/util'
 import { ActorViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
 import { Actor } from '../../db/tables/actor'
-import { TimeCidKeyset } from '../../db/pagination'
 import { LabelCache } from '../../label-cache'
+import { TimeCidKeyset, paginate } from '../../db/pagination'
+import {
+  SearchKeyset,
+  combineAccountsAndProfilesQb,
+  getMatchingAccountsQb,
+  getMatchingProfilesQb,
+} from '../util/search'
+import { sql } from 'kysely'
 
 export class ActorService {
   constructor(
@@ -77,33 +83,57 @@ export class ActorService {
     })
   }
 
-  searchQb(searchField: 'did' | 'handle' = 'handle', term?: string) {
+  async getSearchResults({
+    cursor,
+    limit = 25,
+    term = '',
+  }: {
+    cursor?: string
+    limit?: number
+    term?: string
+  }) {
+    const searchField = term.startsWith('did:') ? 'did' : 'handle'
+    let builder
     const { ref } = this.db.db.dynamic
-    let builder = this.db.db.selectFrom('actor')
+    const paginationOptions = {
+      limit,
+      cursor,
+      direction: 'asc' as const,
+    }
+    let keyset
 
-    // When searchField === 'did', the term will always be a valid string because
-    // searchField is set to 'did' after checking that the term is a valid did
-    if (searchField === 'did' && term) {
-      return builder.where('actor.did', '=', term)
+    if (term && searchField === 'handle') {
+      keyset = new SearchKeyset(ref('distance'), ref('actor.did'))
+      // Matching user accounts based on handle
+      const accountsQb = getMatchingAccountsQb(this.db, { term })
+        .orderBy('distance', 'asc')
+        .limit(limit)
+      // Matching profiles based on display name
+      const profilesQb = getMatchingProfilesQb(this.db, { term })
+        .orderBy('distance', 'asc')
+        .limit(limit)
+      // Combine and paginate result set
+      builder = combineAccountsAndProfilesQb(
+        this.db,
+        accountsQb,
+        profilesQb,
+      ).select('distance')
+    } else {
+      builder = this.db.db
+        .selectFrom('actor')
+        .select([sql<number>`0`.as('distance')])
+      keyset = new ListKeyset(ref('indexedAt'), ref('did'))
+
+      // When searchField === 'did', the term will always be a valid string because
+      // searchField is set to 'did' after checking that the term is a valid did
+      if (term && searchField === 'did') {
+        builder = builder.where('actor.did', '=', term)
+      }
     }
 
-    if (term) {
-      builder = builder.where((qb) => {
-        // Performing matching by word using "strict word similarity" operator.
-        // The more characters the user gives us, the more we can ratchet down
-        // the distance threshold for matching.
-        const threshold = term.length < 3 ? 0.9 : 0.8
-        return qb
-          .where(distance(term, ref('handle')), '<', threshold)
-          .orWhereExists((q) =>
-            q
-              .selectFrom('profile')
-              .whereRef('profile.creator', '=', 'actor.did')
-              .where(distance(term, ref('displayName')), '<', threshold),
-          )
-      })
-    }
-    return builder
+    const paginatedBuilder = paginate(builder, { keyset, ...paginationOptions })
+    const results: Actor[] = await paginatedBuilder.selectAll('actor').execute()
+    return { results, cursor: keyset.packFromResult(results) }
   }
 
   async getRepoRev(did: string | null): Promise<string | null> {
@@ -118,11 +148,6 @@ export class ActorService {
 }
 
 type ActorResult = Actor
-
-// Uses pg_trgm strict word similarity to check similarity between a search term and a stored value
-const distance = (term: string, ref: DbRef) =>
-  sql<number>`(${term} <<<-> ${ref})`
-
 export class ListKeyset extends TimeCidKeyset<{
   indexedAt: string
   did: string // handles are treated identically to cids in TimeCidKeyset

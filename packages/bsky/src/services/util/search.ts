@@ -69,7 +69,7 @@ export const getUserSearchQuerySimple = (
 }
 
 // Matching user accounts based on handle
-const getMatchingAccountsQb = (
+export const getMatchingAccountsQb = (
   db: Database,
   opts: { term: string; includeSoftDeleted?: boolean },
 ) => {
@@ -87,7 +87,7 @@ const getMatchingAccountsQb = (
 }
 
 // Matching profiles based on display name
-const getMatchingProfilesQb = (
+export const getMatchingProfilesQb = (
   db: Database,
   opts: { term: string; includeSoftDeleted?: boolean },
 ) => {
@@ -106,7 +106,7 @@ const getMatchingProfilesQb = (
 }
 
 // Combine profile and account result sets
-const combineAccountsAndProfilesQb = (
+export const combineAccountsAndProfilesQb = (
   db: Database,
   accountsQb: AnyQb,
   profilesQb: AnyQb,
