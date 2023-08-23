@@ -17,9 +17,9 @@
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "yarn lint --fix",
+    "lint:fix": "pnpm lint --fix",
     "verify": "run-p prettier lint",
-    "verify:fix": "yarn prettier:fix && yarn lint:fix",
+    "verify:fix": "pnpm prettier:fix && pnpm lint:fix",
     "update-main-to-dist": "node ./update-pkg.js --update-main-to-dist",
     "update-main-to-src": "node ./update-pkg.js --update-main-to-src",
     "prepublish": "npm run update-main-to-dist",
@@ -28,6 +28,7 @@
   "dependencies": {
     "@atproto/api": "workspace:^",
     "@atproto/bsky": "workspace:^",
+    "@atproto/common-web": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",
     "@atproto/pds": "workspace:^",
@@ -38,6 +39,7 @@
     "better-sqlite3": "^7.6.2",
     "chalk": "^5.0.1",
     "dotenv": "^16.0.1",
+    "express": "^4.18.2",
     "get-port": "^6.1.2",
     "sharp": "^0.31.2",
     "uint8arrays": "3.0.0"

@@ -3,7 +3,7 @@
   "version": "0.6.6",
   "main": "src/index.ts",
   "scripts": {
-    "codegen": "yarn docgen && node ./scripts/generate-code.mjs && lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
+    "codegen": "pnpm docgen && node ./scripts/generate-code.mjs && lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
     "docgen": "node ./scripts/generate-docs.mjs",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
@@ -23,8 +23,10 @@
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
+    "@atproto/lexicon": "workspace:^",
     "@atproto/uri": "workspace:^",
     "@atproto/xrpc": "workspace:^",
+    "multiformats": "^9.9.0",
     "tlds": "^1.234.0",
     "typed-emitter": "^2.1.0"
   },
