@@ -286,9 +286,6 @@ importers:
       pino:
         specifier: ^8.6.1
         version: 8.6.1
-      zod:
-        specifier: 3.21.4
-        version: 3.21.4
 
   packages/common-web:
     dependencies:
