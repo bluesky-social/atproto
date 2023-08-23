@@ -13,7 +13,7 @@
     "format": "pnpm -r --stream prettier:fix",
     "build": "pnpm -r --stream build",
     "test": "LOG_ENABLED=false NODE_ENV=development ./packages/dev-infra/with-test-redis-and-db.sh pnpm --stream test",
-    "test:withFlags": "LOG_ENABLED=false NODE_ENV=development ./packages/dev-infra/with-test-redis-and-db.sh pnpm --stream test --"
+    "test:withFlags": "LOG_ENABLED=false NODE_ENV=development ./packages/dev-infra/with-test-redis-and-db.sh pnpm --stream -r test --"
   },
   "devDependencies": {
     "@babel/core": "^7.18.6",
