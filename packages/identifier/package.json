@@ -1,7 +1,7 @@
 {
   "name": "@atproto/identifier",
   "version": "0.2.0",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "scripts": {
     "test": "jest",
     "prettier": "prettier --check src/ tests/",
@@ -11,11 +11,7 @@
     "verify": "run-p prettier lint",
     "verify:fix": "pnpm prettier:fix && pnpm lint:fix",
     "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ./update-pkg.js --update-main-to-dist",
-    "update-main-to-src": "node ./update-pkg.js --update-main-to-src",
-    "prepublish": "npm run update-main-to-dist",
-    "postpublish": "npm run update-main-to-src"
+    "postbuild": "tsc --build tsconfig.build.json"
   },
   "license": "MIT",
   "repository": {

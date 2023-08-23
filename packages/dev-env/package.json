@@ -1,7 +1,7 @@
 {
   "name": "@atproto/dev-env",
   "version": "0.2.3",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "bin": "dist/bin.js",
   "license": "MIT",
   "repository": {
@@ -19,11 +19,7 @@
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "pnpm lint --fix",
     "verify": "run-p prettier lint",
-    "verify:fix": "pnpm prettier:fix && pnpm lint:fix",
-    "update-main-to-dist": "node ./update-pkg.js --update-main-to-dist",
-    "update-main-to-src": "node ./update-pkg.js --update-main-to-src",
-    "prepublish": "npm run update-main-to-dist",
-    "postpublish": "npm run update-main-to-src"
+    "verify:fix": "pnpm prettier:fix && pnpm lint:fix"
   },
   "dependencies": {
     "@atproto/api": "workspace:^",
