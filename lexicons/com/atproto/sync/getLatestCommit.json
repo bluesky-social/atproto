@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.sync.getCurrent",
+  "id": "com.atproto.sync.getLatestCommit",
   "defs": {
     "main": {
       "type": "query",

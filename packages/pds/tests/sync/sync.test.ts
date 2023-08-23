@@ -113,9 +113,9 @@ describe('repo sync', () => {
     currRoot = car.root
   })
 
-  it('syncs current repo root', async () => {
-    const root = await agent.api.com.atproto.sync.getCurrent({ did })
-    expect(root.data.cid).toEqual(currRoot?.toString())
+  it('syncs latest repo commit', async () => {
+    const commit = await agent.api.com.atproto.sync.getLatestCommit({ did })
+    expect(commit.data.cid).toEqual(currRoot?.toString())
   })
 
   it('sync a record proof', async () => {
@@ -201,9 +201,9 @@ describe('repo sync', () => {
       await expect(tryGetRepoAdmin).resolves.toBeDefined()
     })
 
-    it('does not sync current root unauthed', async () => {
-      const tryGetCurrent = agent.api.com.atproto.sync.getCurrent({ did })
-      await expect(tryGetCurrent).rejects.toThrow(/Could not find root for DID/)
+    it('does not sync latest commit unauthed', async () => {
+      const tryGetLatest = agent.api.com.atproto.sync.getLatestCommit({ did })
+      await expect(tryGetLatest).rejects.toThrow(/Could not find root for DID/)
     })
 
     it('does not sync a record proof unauthed', async () => {

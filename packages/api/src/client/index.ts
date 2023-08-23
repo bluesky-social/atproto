@@ -61,8 +61,8 @@ import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/r
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
-import * as ComAtprotoSyncGetCurrent from './types/com/atproto/sync/getCurrent'
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
+import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
@@ -181,8 +181,8 @@ export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/r
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
-export * as ComAtprotoSyncGetCurrent from './types/com/atproto/sync/getCurrent'
 export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
+export * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 export * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
@@ -912,17 +912,6 @@ export class SyncNS {
       })
   }
 
-  getCurrent(
-    params?: ComAtprotoSyncGetCurrent.QueryParams,
-    opts?: ComAtprotoSyncGetCurrent.CallOptions,
-  ): Promise<ComAtprotoSyncGetCurrent.Response> {
-    return this._service.xrpc
-      .call('com.atproto.sync.getCurrent', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoSyncGetCurrent.toKnownErr(e)
-      })
-  }
-
   getHead(
     params?: ComAtprotoSyncGetHead.QueryParams,
     opts?: ComAtprotoSyncGetHead.CallOptions,
@@ -931,6 +920,17 @@ export class SyncNS {
       .call('com.atproto.sync.getHead', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoSyncGetHead.toKnownErr(e)
+      })
+  }
+
+  getLatestCommit(
+    params?: ComAtprotoSyncGetLatestCommit.QueryParams,
+    opts?: ComAtprotoSyncGetLatestCommit.CallOptions,
+  ): Promise<ComAtprotoSyncGetLatestCommit.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getLatestCommit', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetLatestCommit.toKnownErr(e)
       })
   }
 

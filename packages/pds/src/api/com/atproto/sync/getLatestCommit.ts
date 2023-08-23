@@ -5,7 +5,7 @@ import AppContext from '../../../../context'
 import { isUserOrAdmin } from '../../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.sync.getCurrent({
+  server.com.atproto.sync.getLatestCommit({
     auth: ctx.optionalAccessOrRoleVerifier,
     handler: async ({ params, auth }) => {
       const { did } = params

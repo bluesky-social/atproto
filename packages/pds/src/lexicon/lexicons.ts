@@ -3011,9 +3011,49 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoSyncGetCurrent: {
+  ComAtprotoSyncGetHead: {
     lexicon: 1,
-    id: 'com.atproto.sync.getCurrent',
+    id: 'com.atproto.sync.getHead',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'DEPRECATED - please use com.atproto.sync.getLatestCommit instead',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['root'],
+            properties: {
+              root: {
+                type: 'string',
+                format: 'cid',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'RootNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncGetLatestCommit: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getLatestCommit',
     defs: {
       main: {
         type: 'query',
@@ -3048,46 +3088,6 @@ export const schemaDict = {
         errors: [
           {
             name: 'RepoNotFound',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoSyncGetHead: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getHead',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'DEPRACATED - please use com.atproto.sync.getCurrent instead',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['root'],
-            properties: {
-              root: {
-                type: 'string',
-                format: 'cid',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'RootNotFound',
           },
         ],
       },
@@ -6623,8 +6623,8 @@ export const ids = {
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
   ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
-  ComAtprotoSyncGetCurrent: 'com.atproto.sync.getCurrent',
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
+  ComAtprotoSyncGetLatestCommit: 'com.atproto.sync.getLatestCommit',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
   ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',

@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import AtpAgent, { ComAtprotoSyncGetRoot } from '@atproto/api'
+import AtpAgent, { ComAtprotoSyncGetLatestCommit } from '@atproto/api'
 import {
   readCarWithRoot,
   WriteOpAction,
@@ -265,10 +265,10 @@ export class IndexingService {
     if (!pds) return false
     const { api } = new AtpAgent({ service: pds })
     try {
-      await retryHttp(() => api.com.atproto.sync.getCurrent({ did }))
+      await retryHttp(() => api.com.atproto.sync.getLatestCommit({ did }))
       return true
     } catch (err) {
-      if (err instanceof ComAtprotoSyncGetRoot.RootNotFoundError) {
+      if (err instanceof ComAtprotoSyncGetLatestCommit.RepoNotFoundError) {
         return false
       }
       return null

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "DEPRACATED - please use com.atproto.sync.getCurrent instead",
+      "description": "DEPRECATED - please use com.atproto.sync.getLatestCommit instead",
       "parameters": {
         "type": "params",
         "required": ["did"],
