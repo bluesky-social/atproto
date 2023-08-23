@@ -106,10 +106,10 @@ export class IndexerSubscription {
     }
   }
 
-  requestReprocess(did: string) {
+  requestReprocess(did: string, disableLabels: boolean) {
     this.repoQueue.add(did, async () => {
       try {
-        await this.indexingSvc.indexRepo(did)
+        await this.indexingSvc.indexRepo(did, undefined, disableLabels)
       } catch (err) {
         log.error({ did }, 'failed to reprocess repo')
       }

@@ -87,6 +87,7 @@ export class IndexingService {
     obj: unknown,
     action: WriteOpAction.Create | WriteOpAction.Update,
     timestamp: string,
+    disableLabels?: boolean,
   ) {
     this.db.assertNotTransaction()
     await this.db.transaction(async (txn) => {
@@ -99,7 +100,9 @@ export class IndexingService {
         await indexer.updateRecord(uri, cid, obj, timestamp)
       }
     })
-    this.labeler.processRecord(uri, obj)
+    if (!disableLabels) {
+      this.labeler.processRecord(uri, obj)
+    }
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {
@@ -157,7 +160,7 @@ export class IndexingService {
       .executeTakeFirst()
   }
 
-  async indexRepo(did: string, commit?: string) {
+  async indexRepo(did: string, commit?: string, disableLabels?: boolean) {
     this.db.assertNotTransaction()
     const now = new Date().toISOString()
     const { pds, signingKey } = await this.idResolver.did.resolveAtprotoData(
@@ -190,7 +193,14 @@ export class IndexingService {
         const { cid, collection, rkey, record } = item
         const uri = AtUri.make(did, collection, rkey)
         try {
-          await this.indexRecord(uri, cid, record, WriteOpAction.Create, now)
+          await this.indexRecord(
+            uri,
+            cid,
+            record,
+            WriteOpAction.Create,
+            now,
+            disableLabels,
+          )
         } catch (err) {
           if (err instanceof ValidationError) {
             subLogger.warn(

@@ -11,6 +11,7 @@ export const createServer = (
 ): express.Application => {
   const app = express()
   app.post('/reprocess/:did', async (req, res) => {
+    const disableLabels = req.query.labels !== 'true'
     const did = req.params.did
     try {
       const partition = await randomIntFromSeed(did, cfg.ingesterPartitionCount)
@@ -21,7 +22,7 @@ export const createServer = (
     } catch (err) {
       return res.status(500).send('could not calculate partition')
     }
-    sub.requestReprocess(req.params.did)
+    sub.requestReprocess(req.params.did, disableLabels)
     res.sendStatus(200)
   })
   return app
