@@ -1,3 +1,5 @@
-const base = 'https://waverly.social/mb'
+const base = 'https://waverly.social/profile'
+const subPath = 'w'
 
-export default (handle: string, rkey: string) => `${base}/${handle}/${rkey}`
+export default (handle: string, rkey: string) =>
+  `${base}/${handle}/${subPath}/${rkey}`

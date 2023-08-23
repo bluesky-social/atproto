@@ -10,17 +10,6 @@
     "@jridgewell/gen-mapping" "^0.1.0"
     "@jridgewell/trace-mapping" "^0.3.9"
 
-"@atproto/api@*":
-  version "0.4.4"
-  resolved "https://registry.yarnpkg.com/@atproto/api/-/api-0.4.4.tgz#24870e10d05a4193b2d1e9d05f5af995ea11ff12"
-  integrity sha512-U/6LiCzXioldGvuHauen9q7uUFn7b2agHkYsKCmdvGHB1CvIUmo+jTA8nynC5/XXJH8rAeZCg9gKcpAKV8noZA==
-  dependencies:
-    "@atproto/common-web" "*"
-    "@atproto/uri" "*"
-    "@atproto/xrpc" "*"
-    tlds "^1.234.0"
-    typed-emitter "^2.1.0"
-
 "@atproto/common@0.1.0":
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/@atproto/common/-/common-0.1.0.tgz#4216a8fef5b985ab62ac21252a0f8ca0f4a0f210"
@@ -40,76 +29,6 @@
     big-integer "^1.6.51"
     multiformats "^9.6.4"
     one-webcrypto "^1.0.3"
-    uint8arrays "3.0.0"
-
-"@atproto/dev-env@*":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@atproto/dev-env/-/dev-env-0.2.2.tgz#930cb63dc751b08fa0a1c69820e27587d7b38252"
-  integrity sha512-94KruFi2C52YHiSmvJKjPp3414KV9ev06Sla4BebJxm1z3/DKGhmPGDEHVke4+KPZOTR3vQ2x1WKuX87mtCp7w==
-  dependencies:
-    "@atproto/api" "*"
-    "@atproto/bsky" "*"
-    "@atproto/crypto" "*"
-    "@atproto/identity" "*"
-    "@atproto/pds" "*"
-    "@atproto/uri" "*"
-    "@atproto/xrpc-server" "*"
-    "@did-plc/lib" "^0.0.1"
-    "@did-plc/server" "^0.0.1"
-    better-sqlite3 "^7.6.2"
-    chalk "^5.0.1"
-    dotenv "^16.0.1"
-    get-port "^6.1.2"
-    sharp "^0.31.2"
-    uint8arrays "3.0.0"
-
-"@atproto/did-resolver@*":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@atproto/did-resolver/-/did-resolver-0.1.0.tgz#58f42447700aaad61bad2f0d70b721966268aa02"
-  integrity sha512-ztljyMMCqXvJSi/Qqa2zEQFvOm1AUUR7Bybr3cM1BCddbhW46gk6/g8BgdZeDt2sMBdye37qTctR9O/FjhigvQ==
-  dependencies:
-    "@atproto/common-web" "*"
-    "@atproto/crypto" "*"
-    axios "^0.27.2"
-    zod "^3.14.2"
-
-"@atproto/pds@*":
-  version "0.1.11"
-  resolved "https://registry.yarnpkg.com/@atproto/pds/-/pds-0.1.11.tgz#ed59803222558842a343021c20517dbf6d19dc42"
-  integrity sha512-5JE4IkZh1b+tRs1qnChVB74g6As1vDJ/nPkZPg8M57VUDy4gdb+bcctV0AHF45EQo6Mvy9lCw9ShWVT/P/tLoQ==
-  dependencies:
-    "@atproto/api" "*"
-    "@atproto/common" "*"
-    "@atproto/crypto" "*"
-    "@atproto/did-resolver" "*"
-    "@atproto/identifier" "*"
-    "@atproto/lexicon" "*"
-    "@atproto/repo" "*"
-    "@atproto/uri" "*"
-    "@atproto/xrpc-server" "*"
-    "@did-plc/lib" "^0.0.1"
-    better-sqlite3 "^7.6.2"
-    bytes "^3.1.2"
-    cors "^2.8.5"
-    dotenv "^16.0.0"
-    express "^4.17.2"
-    express-async-errors "^3.1.1"
-    file-type "^16.5.4"
-    form-data "^4.0.0"
-    handlebars "^4.7.7"
-    http-errors "^2.0.0"
-    http-terminator "^3.2.0"
-    jsonwebtoken "^8.5.1"
-    kysely "^0.22.0"
-    multiformats "^9.6.4"
-    nodemailer "^6.8.0"
-    nodemailer-html-to-text "^3.2.0"
-    p-queue "^6.6.2"
-    pg "^8.10.0"
-    pino "^8.6.1"
-    pino-http "^8.2.1"
-    sharp "^0.31.2"
-    typed-emitter "^2.1.0"
     uint8arrays "3.0.0"
 
 "@aws-crypto/crc32@2.0.0":
