@@ -238,7 +238,6 @@ export async function getIndexers(
     didPlcUrl: network.plc.url,
     indexerPartitionIds: [0],
     indexerNamespace: `ns${ns}`,
-    indexerPort: await getPort(),
     ingesterPartitionCount: config.ingesterPartitionCount ?? 1,
     ...config,
   }
@@ -251,14 +250,17 @@ export async function getIndexers(
     host: baseCfg.redisHost,
     namespace: baseCfg.indexerNamespace,
   })
-  const indexers = opts.partitionIdsByIndexer.map((indexerPartitionIds) => {
-    const cfg = new bsky.IndexerConfig({
-      ...baseCfg,
-      indexerPartitionIds,
-      indexerSubLockId: uniqueLockId(),
-    })
-    return bsky.BskyIndexer.create({ cfg, db, redis })
-  })
+  const indexers = await Promise.all(
+    opts.partitionIdsByIndexer.map(async (indexerPartitionIds) => {
+      const cfg = new bsky.IndexerConfig({
+        ...baseCfg,
+        indexerPartitionIds,
+        indexerSubLockId: uniqueLockId(),
+        indexerPort: await getPort(),
+      })
+      return bsky.BskyIndexer.create({ cfg, db, redis })
+    }),
+  )
   await db.migrateToLatestOrThrow()
   return {
     db,
