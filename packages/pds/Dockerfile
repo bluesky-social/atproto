@@ -20,18 +20,20 @@ COPY ./packages/repo ./packages/repo
 COPY ./packages/uri ./packages/uri
 COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
-RUN ATP_BUILD_SHALLOW=true yarn install --frozen-lockfile > /dev/null
-RUN yarn workspaces run build --update-main-to-dist > /dev/null
+
+RUN npm install -g pnpm
+RUN ATP_BUILD_SHALLOW=true pnpm install --frozen-lockfile > /dev/null
+RUN pnpm build > /dev/null
 # Remove non-prod deps
-RUN yarn install --production --ignore-scripts --prefer-offline > /dev/null
+RUN pnpm install --prod --ignore-scripts --prefer-offline > /dev/null
 
 WORKDIR packages/pds/service
+# PDS service uses yarn
 RUN yarn install --frozen-lockfile > /dev/null
 
 # Uses assets from build stage to reduce build size
 FROM node:18-alpine
 
-# RUN npm install -g yarn
 RUN apk add --update dumb-init
 
 # Avoid zombie processes, handle signal forwarding
