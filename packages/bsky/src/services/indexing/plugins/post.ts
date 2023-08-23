@@ -19,6 +19,7 @@ import { PrimaryDatabase } from '../../../db'
 import { countAll, excluded } from '../../../db/util'
 import { BackgroundQueue } from '../../../background'
 import { getAncestorsAndSelfQb, getDescendentsQb } from '../../util/post'
+import { NotificationServer } from '../../../notifications'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -356,8 +357,9 @@ export type PluginType = RecordProcessor<PostRecord, IndexedPost>
 export const makePlugin = (
   db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
+  notifServer?: NotificationServer,
 ): PluginType => {
-  return new RecordProcessor(db, backgroundQueue, {
+  return new RecordProcessor(db, backgroundQueue, notifServer, {
     lexId,
     insertFn,
     findDuplicate,

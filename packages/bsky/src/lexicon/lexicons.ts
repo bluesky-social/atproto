@@ -3575,6 +3575,8 @@ export const schemaDict = {
       },
       repoOp: {
         type: 'object',
+        description:
+          "A repo operation, ie a write of a single record. For creates and updates, cid is the record's CID as of this operation. For deletes, it's null.",
         required: ['action', 'path', 'cid'],
         nullable: ['cid'],
         properties: {
@@ -6367,6 +6369,39 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyNotificationRegisterPush: {
+    lexicon: 1,
+    id: 'app.bsky.notification.registerPush',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Register for push notifications with a service',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['serviceDid', 'token', 'platform', 'appId'],
+            properties: {
+              serviceDid: {
+                type: 'string',
+                format: 'did',
+              },
+              token: {
+                type: 'string',
+              },
+              platform: {
+                type: 'string',
+                knownValues: ['ios', 'android', 'web'],
+              },
+              appId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationUpdateSeen: {
     lexicon: 1,
     id: 'app.bsky.notification.updateSeen',
@@ -6746,6 +6781,7 @@ export const ids = {
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
+  AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedApplyLabels: 'app.bsky.unspecced.applyLabels',

@@ -121,6 +121,7 @@ import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
+import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
@@ -242,6 +243,7 @@ export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
+export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 export * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
@@ -2021,6 +2023,17 @@ export class NotificationNS {
       .call('app.bsky.notification.listNotifications', params, undefined, opts)
       .catch((e) => {
         throw AppBskyNotificationListNotifications.toKnownErr(e)
+      })
+  }
+
+  registerPush(
+    data?: AppBskyNotificationRegisterPush.InputSchema,
+    opts?: AppBskyNotificationRegisterPush.CallOptions,
+  ): Promise<AppBskyNotificationRegisterPush.Response> {
+    return this._service.xrpc
+      .call('app.bsky.notification.registerPush', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyNotificationRegisterPush.toKnownErr(e)
       })
   }
 

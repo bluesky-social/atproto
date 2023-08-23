@@ -28,6 +28,7 @@ import { subLogger } from '../../logger'
 import { retryHttp } from '../../util/retry'
 import { Labeler } from '../../labeler'
 import { BackgroundQueue } from '../../background'
+import { NotificationServer } from '../../notifications'
 import { Actor } from '../../db/tables/actor'
 
 export class IndexingService {
@@ -48,17 +49,22 @@ export class IndexingService {
     public idResolver: IdResolver,
     public labeler: Labeler,
     public backgroundQueue: BackgroundQueue,
+    public notifServer?: NotificationServer,
   ) {
     this.records = {
-      post: Post.makePlugin(this.db, backgroundQueue),
-      like: Like.makePlugin(this.db, backgroundQueue),
-      repost: Repost.makePlugin(this.db, backgroundQueue),
-      follow: Follow.makePlugin(this.db, backgroundQueue),
-      profile: Profile.makePlugin(this.db, backgroundQueue),
-      list: List.makePlugin(this.db, backgroundQueue),
-      listItem: ListItem.makePlugin(this.db, backgroundQueue),
-      block: Block.makePlugin(this.db, backgroundQueue),
-      feedGenerator: FeedGenerator.makePlugin(this.db, backgroundQueue),
+      post: Post.makePlugin(this.db, backgroundQueue, notifServer),
+      like: Like.makePlugin(this.db, backgroundQueue, notifServer),
+      repost: Repost.makePlugin(this.db, backgroundQueue, notifServer),
+      follow: Follow.makePlugin(this.db, backgroundQueue, notifServer),
+      profile: Profile.makePlugin(this.db, backgroundQueue, notifServer),
+      list: List.makePlugin(this.db, backgroundQueue, notifServer),
+      listItem: ListItem.makePlugin(this.db, backgroundQueue, notifServer),
+      block: Block.makePlugin(this.db, backgroundQueue, notifServer),
+      feedGenerator: FeedGenerator.makePlugin(
+        this.db,
+        backgroundQueue,
+        notifServer,
+      ),
     }
   }
 
@@ -69,6 +75,7 @@ export class IndexingService {
       this.idResolver,
       this.labeler,
       this.backgroundQueue,
+      this.notifServer,
     )
   }
 
@@ -76,9 +83,10 @@ export class IndexingService {
     idResolver: IdResolver,
     labeler: Labeler,
     backgroundQueue: BackgroundQueue,
+    notifServer?: NotificationServer,
   ) {
     return (db: PrimaryDatabase) =>
-      new IndexingService(db, idResolver, labeler, backgroundQueue)
+      new IndexingService(db, idResolver, labeler, backgroundQueue, notifServer)
   }
 
   async indexRecord(
