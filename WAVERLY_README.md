@@ -12,7 +12,7 @@ As the `atproto` ecosystem matures, our goal will be to move our change out of t
 
 ## The Waverly architecture
 
-Waverly posts are _miniblog_ posts, and are meant to be longer than bluesky posts. We store these in the user's PDS in the `social.waverly.miniblog` collection. Each miniblog post is associated with a bluesky post which contains a truncated version of the miniblog post together with a link `https://waverly.social/mb/philbeaudoin.waverly.social/3jwdwj2ctlk26` that references the miniblog post.
+Waverly posts are _miniblog_ posts, and are meant to be longer than bluesky posts. We store these in the user's PDS in the `social.waverly.miniblog` collection. Each miniblog post is associated with a bluesky post which contains a truncated version of the miniblog post together with a link `https://waverly.social/profile/philbeaudoin.waverly.social/w/3jwdwj2ctlk26` that references the miniblog post.
 
 This link corresponds to the following [AT URI](https://atproto.com/specs/at-uri-scheme): `at://philbeaudoin.waverly.social/social.waverly.miniblog/3jwdwj2ctlk26`. Following the https URL brings the user to the Waverly client which renders the full miniblog post.
 
@@ -28,15 +28,16 @@ Our default branch, which contains all our changes is [waverly](https://github.c
 
 ```sh
 git checkout main
+git remote add upstream https://github.com/bluesky-social/atproto.git
+git fetch upstream
 git pull origin main
 git checkout waverly
-git checkout -b waverly-update
+git pull
 git merge main
-git commit -m "Merge changes from main into waverly"
-git push origin waverly-update
+# Fix merge conflicts and `git add` the fixed files
+# git merge --continue
+git push
 ```
-
-Then see below to see how to create a PR with this `waverly-update` branch.
 
 ## Creating a PR
 
