@@ -588,6 +588,9 @@ importers:
       '@types/express':
         specifier: ^4.17.13
         version: 4.17.13
+      '@types/express-serve-static-core':
+        specifier: ^4.17.36
+        version: 4.17.36
       '@types/jsonwebtoken':
         specifier: ^8.5.9
         version: 8.5.9
@@ -597,6 +600,9 @@ importers:
       '@types/pg':
         specifier: ^8.6.6
         version: 8.6.6
+      '@types/qs':
+        specifier: ^6.9.7
+        version: 6.9.7
       '@types/sharp':
         specifier: ^0.31.0
         version: 0.31.0
@@ -4384,7 +4390,7 @@ packages:
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     dependencies:
       '@jest/types': 28.1.3
-      '@types/node': 18.0.0
+      '@types/node': 18.17.8
       chalk: 4.1.2
       jest-message-util: 28.1.3
       jest-util: 28.1.3
@@ -4447,7 +4453,7 @@ packages:
     dependencies:
       '@jest/fake-timers': 28.1.3
       '@jest/types': 28.1.3
-      '@types/node': 18.0.0
+      '@types/node': 18.17.8
       jest-mock: 28.1.3
     dev: true
 
@@ -4474,7 +4480,7 @@ packages:
     dependencies:
       '@jest/types': 28.1.3
       '@sinonjs/fake-timers': 9.1.2
-      '@types/node': 18.0.0
+      '@types/node': 18.17.8
       jest-message-util: 28.1.3
       jest-mock: 28.1.3
       jest-util: 28.1.3
@@ -4506,7 +4512,7 @@ packages:
       '@jest/transform': 28.1.3
       '@jest/types': 28.1.3
       '@jridgewell/trace-mapping': 0.3.19
-      '@types/node': 18.0.0
+      '@types/node': 18.17.8
       chalk: 4.1.2
       collect-v8-coverage: 1.0.2
       exit: 0.1.2
@@ -4594,7 +4600,7 @@ packages:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.4
       '@types/istanbul-reports': 3.0.1
-      '@types/node': 18.0.0
+      '@types/node': 18.17.8
       '@types/yargs': 16.0.5
       chalk: 4.1.2
     dev: true
@@ -4966,7 +4972,7 @@ packages:
   /@types/graceful-fs@4.1.6:
     resolution: {integrity: sha512-Sig0SNORX9fdW+bQuTEovKj3uHcUL6LQKbCrrqb1X7J6/ReAbhCXRAhc+SMejhLELFj2QcyuxmUooZ4bt5ReSw==}
     dependencies:
-      '@types/node': 18.0.0
+      '@types/node': 18.17.8
     dev: true
 
   /@types/http-errors@2.0.1:
@@ -7638,7 +7644,7 @@ packages:
       '@jest/expect': 28.1.3
       '@jest/test-result': 28.1.3
       '@jest/types': 28.1.3
-      '@types/node': 18.0.0
+      '@types/node': 18.17.8
       chalk: 4.1.2
       co: 4.6.0
       dedent: 0.7.0
@@ -7760,7 +7766,7 @@ packages:
       '@jest/environment': 28.1.3
       '@jest/fake-timers': 28.1.3
       '@jest/types': 28.1.3
-      '@types/node': 18.0.0
+      '@types/node': 18.17.8
       jest-mock: 28.1.3
       jest-util: 28.1.3
     dev: true
@@ -7776,7 +7782,7 @@ packages:
     dependencies:
       '@jest/types': 28.1.3
       '@types/graceful-fs': 4.1.6
-      '@types/node': 18.0.0
+      '@types/node': 18.17.8
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.11
@@ -7827,7 +7833,7 @@ packages:
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     dependencies:
       '@jest/types': 28.1.3
-      '@types/node': 18.0.0
+      '@types/node': 18.17.8
     dev: true
 
   /jest-pnp-resolver@1.2.3(jest-resolve@28.1.3):
@@ -7881,7 +7887,7 @@ packages:
       '@jest/test-result': 28.1.3
       '@jest/transform': 28.1.3
       '@jest/types': 28.1.3
-      '@types/node': 18.0.0
+      '@types/node': 18.17.8
       chalk: 4.1.2
       emittery: 0.10.2
       graceful-fs: 4.2.11
@@ -7967,7 +7973,7 @@ packages:
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     dependencies:
       '@jest/types': 28.1.3
-      '@types/node': 18.0.0
+      '@types/node': 18.17.8
       chalk: 4.1.2
       ci-info: 3.8.0
       graceful-fs: 4.2.11
@@ -7992,7 +7998,7 @@ packages:
     dependencies:
       '@jest/test-result': 28.1.3
       '@jest/types': 28.1.3
-      '@types/node': 18.0.0
+      '@types/node': 18.17.8
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       emittery: 0.10.2
@@ -8004,7 +8010,7 @@ packages:
     resolution: {integrity: sha512-CqRA220YV/6jCo8VWvAt1KKx6eek1VIHMPeLEbpcfSfkEeWyBNppynM/o6q+Wmw+sOhos2ml34wZbSX3G13//g==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     dependencies:
-      '@types/node': 18.0.0
+      '@types/node': 18.17.8
       merge-stream: 2.0.0
       supports-color: 8.1.1
     dev: true
