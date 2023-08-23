@@ -106,8 +106,8 @@ export class IndexerSubscription {
     }
   }
 
-  requestReprocess(did: string, disableLabels: boolean) {
-    this.repoQueue.add(did, async () => {
+  async requestReprocess(did: string, disableLabels: boolean) {
+    await this.repoQueue.add(did, async () => {
       try {
         await this.indexingSvc.indexRepo(did, undefined, disableLabels)
       } catch (err) {
