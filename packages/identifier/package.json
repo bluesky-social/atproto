@@ -2,6 +2,7 @@
   "name": "@atproto/identifier",
   "version": "0.2.0",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "jest",
     "prettier": "prettier --check src/ tests/",

@@ -8,6 +8,7 @@
     "directory": "packages/bsky"
   },
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": "dist/bin.js",
   "scripts": {
     "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
