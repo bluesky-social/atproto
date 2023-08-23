@@ -1,4 +1,9 @@
-import AtpAgent, { AppBskyActorProfile, AppBskyFeedPost } from '@atproto/api'
+import AtpAgent, {
+  AppBskyActorProfile,
+  AppBskyFeedPost,
+  AppBskyFeedLike,
+  AppBskyFeedRepost,
+} from '@atproto/api'
 import { AtUri } from '@atproto/uri'
 import { CloseFn, forSnapshot, runTestServer, TestServerInfo } from './_util'
 import { SeedClient } from './seeds/client'
@@ -164,6 +169,123 @@ describe('indexing', () => {
         deleteNotifications,
       }),
     ).toMatchSnapshot()
+  })
+
+  it('does not notify user of own like or repost', async () => {
+    const { db, services } = server.ctx
+    const createdAt = new Date().toISOString()
+
+    const originalPost = await prepareCreate({
+      did: sc.dids.bob,
+      collection: ids.AppBskyFeedPost,
+      record: {
+        $type: ids.AppBskyFeedPost,
+        text: 'original post',
+        createdAt,
+      } as AppBskyFeedPost.Record,
+    })
+
+    const originalPostRef = {
+      uri: originalPost.uri.toString(),
+      cid: originalPost.cid.toString(),
+    }
+
+    // own actions
+    const ownLike = await prepareCreate({
+      did: sc.dids.bob,
+      collection: ids.AppBskyFeedLike,
+      record: {
+        $type: ids.AppBskyFeedLike,
+        subject: originalPostRef,
+        createdAt,
+      } as AppBskyFeedLike.Record,
+    })
+    const ownRepost = await prepareCreate({
+      did: sc.dids.bob,
+      collection: ids.AppBskyFeedRepost,
+      record: {
+        $type: ids.AppBskyFeedRepost,
+        subject: originalPostRef,
+        createdAt,
+      } as AppBskyFeedRepost.Record,
+    })
+
+    // other actions
+    const aliceLike = await prepareCreate({
+      did: sc.dids.alice,
+      collection: ids.AppBskyFeedLike,
+      record: {
+        $type: ids.AppBskyFeedLike,
+        subject: originalPostRef,
+        createdAt,
+      } as AppBskyFeedLike.Record,
+    })
+    const aliceRepost = await prepareCreate({
+      did: sc.dids.alice,
+      collection: ids.AppBskyFeedRepost,
+      record: {
+        $type: ids.AppBskyFeedRepost,
+        subject: originalPostRef,
+        createdAt,
+      } as AppBskyFeedRepost.Record,
+    })
+
+    await services.repo(db).processWrites(
+      {
+        did: sc.dids.bob,
+        writes: [originalPost, ownLike, ownRepost],
+      },
+      1,
+    )
+    await services.repo(db).processWrites(
+      {
+        did: sc.dids.alice,
+        writes: [aliceLike, aliceRepost],
+      },
+      1,
+    )
+
+    await server.processAll()
+
+    const {
+      data: { notifications },
+    } = await agent.api.app.bsky.notification.listNotifications(
+      {},
+      { headers: sc.getHeaders(sc.dids.bob) },
+    )
+
+    expect(notifications).toHaveLength(2)
+    expect(
+      notifications.every((n) => {
+        return n.author.did !== sc.dids.bob
+      }),
+    ).toBeTruthy()
+
+    // Cleanup
+    const del = (uri: AtUri) => {
+      return prepareDelete({
+        did: uri.host,
+        collection: uri.collection,
+        rkey: uri.rkey,
+      })
+    }
+
+    // Delete
+    await services.repo(db).processWrites(
+      {
+        did: sc.dids.bob,
+        writes: [del(originalPost.uri), del(ownLike.uri), del(ownRepost.uri)],
+      },
+      1,
+    )
+    await services.repo(db).processWrites(
+      {
+        did: sc.dids.alice,
+        writes: [del(aliceLike.uri), del(aliceRepost.uri)],
+      },
+      1,
+    )
+    await server.processAll()
   })
 
   async function getNotifications(db: Database, uri: AtUri) {

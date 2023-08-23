@@ -1,19 +1,24 @@
 import { sql } from 'kysely'
-import Database from '../../db'
+import { Database } from '../../db'
 import { DbRef, notSoftDeletedClause } from '../../db/util'
 import { ActorViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
 import { Actor } from '../../db/tables/actor'
 import { TimeCidKeyset } from '../../db/pagination'
+import { LabelCache } from '../../label-cache'
 
 export class ActorService {
-  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    public db: Database,
+    public imgUriBuilder: ImageUriBuilder,
+    public labelCache: LabelCache,
+  ) {}
 
-  static creator(imgUriBuilder: ImageUriBuilder) {
-    return (db: Database) => new ActorService(db, imgUriBuilder)
+  static creator(imgUriBuilder: ImageUriBuilder, labelCache: LabelCache) {
+    return (db: Database) => new ActorService(db, imgUriBuilder, labelCache)
   }
 
-  views = new ActorViews(this.db, this.imgUriBuilder)
+  views = new ActorViews(this.db, this.imgUriBuilder, this.labelCache)
 
   async getActorDid(handleOrDid: string): Promise<string | null> {
     if (handleOrDid.startsWith('did:')) {
@@ -99,6 +104,16 @@ export class ActorService {
       })
     }
     return builder
+  }
+
+  async getRepoRev(did: string | null): Promise<string | null> {
+    if (did === null) return null
+    const res = await this.db.db
+      .selectFrom('actor_sync')
+      .select('repoRev')
+      .where('did', '=', did)
+      .executeTakeFirst()
+    return res?.repoRev ?? null
   }
 }
 

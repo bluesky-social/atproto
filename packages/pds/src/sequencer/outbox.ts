@@ -104,7 +104,7 @@ export class Outbox {
 
   // yields only historical events
   async *getBackfill(backfillCursor: number, backfillTime?: string) {
-    const PAGE_SIZE = 200
+    const PAGE_SIZE = 500
     while (true) {
       const evts = await this.sequencer.requestSeqRange({
         earliestTime: backfillTime,

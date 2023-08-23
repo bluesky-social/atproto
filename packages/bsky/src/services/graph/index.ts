@@ -1,4 +1,4 @@
-import Database from '../../db'
+import { Database } from '../../db'
 import { ImageUriBuilder } from '../../image/uri'
 import { ProfileView } from '../../lexicon/types/app/bsky/actor/defs'
 import { List } from '../../db/tables/list'
@@ -19,8 +19,9 @@ export class GraphService {
     createdAt?: Date
   }) {
     const { subjectDid, mutedByDid, createdAt = new Date() } = info
-    await this.db.db
-      .insertInto('mute')
+    await this.db
+      .asPrimary()
+      .db.insertInto('mute')
       .values({
         subjectDid,
         mutedByDid,
@@ -32,8 +33,9 @@ export class GraphService {
 
   async unmuteActor(info: { subjectDid: string; mutedByDid: string }) {
     const { subjectDid, mutedByDid } = info
-    await this.db.db
-      .deleteFrom('mute')
+    await this.db
+      .asPrimary()
+      .db.deleteFrom('mute')
       .where('subjectDid', '=', subjectDid)
       .where('mutedByDid', '=', mutedByDid)
       .execute()
@@ -45,8 +47,9 @@ export class GraphService {
     createdAt?: Date
   }) {
     const { list, mutedByDid, createdAt = new Date() } = info
-    await this.db.db
-      .insertInto('list_mute')
+    await this.db
+      .asPrimary()
+      .db.insertInto('list_mute')
       .values({
         listUri: list,
         mutedByDid,
@@ -58,8 +61,9 @@ export class GraphService {
 
   async unmuteActorList(info: { list: string; mutedByDid: string }) {
     const { list, mutedByDid } = info
-    await this.db.db
-      .deleteFrom('list_mute')
+    await this.db
+      .asPrimary()
+      .db.deleteFrom('list_mute')
       .where('listUri', '=', list)
       .where('mutedByDid', '=', mutedByDid)
       .execute()
@@ -133,6 +137,25 @@ export class GraphService {
       .select(['creator', 'subjectDid'])
   }
 
+  blockRefQb(first: DbRef, second: DbRef) {
+    return this.db.db
+      .selectFrom('actor_block')
+      .where((outer) =>
+        outer
+          .where((qb) =>
+            qb
+              .whereRef('actor_block.creator', '=', first)
+              .whereRef('actor_block.subjectDid', '=', second),
+          )
+          .orWhere((qb) =>
+            qb
+              .whereRef('actor_block.subjectDid', '=', first)
+              .whereRef('actor_block.creator', '=', second),
+          ),
+      )
+      .select(['creator', 'subjectDid'])
+  }
+
   async getBlocks(
     requester: string,
     subjectHandleOrDid: string,
@@ -199,7 +222,7 @@ export class GraphService {
         ? JSON.parse(list.descriptionFacets)
         : undefined,
       avatar: list.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
+        ? this.imgUriBuilder.getPresetUri(
             'avatar',
             list.creator,
             list.avatarCid,
@@ -219,7 +242,7 @@ export class GraphService {
       name: list.name,
       purpose: list.purpose,
       avatar: list.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
+        ? this.imgUriBuilder.getPresetUri(
             'avatar',
             list.creator,
             list.avatarCid,

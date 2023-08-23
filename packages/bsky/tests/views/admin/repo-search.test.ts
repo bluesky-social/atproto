@@ -23,7 +23,7 @@ describe('pds admin repo search views', () => {
     await usersBulkSeed(sc)
 
     // Skip did/handle resolution for expediency
-    const { db } = network.bsky.ctx
+    const db = network.bsky.ctx.db.getPrimary()
     const now = new Date().toISOString()
     await db.db
       .insertInto('actor')

@@ -7,6 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 import * as AppBskyGraphDefs from './defs'
 import * as AppBskyRichtextFacet from '../richtext/facet'
+import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 export interface Record {
   purpose: AppBskyGraphDefs.ListPurpose
@@ -14,6 +15,9 @@ export interface Record {
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: BlobRef
+  labels?:
+    | ComAtprotoLabelDefs.SelfLabels
+    | { $type: string; [k: string]: unknown }
   createdAt: string
   [k: string]: unknown
 }

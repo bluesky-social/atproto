@@ -9,13 +9,13 @@ export default function (server: Server, ctx: AppContext) {
       const { limit, cursor } = params
       const viewer = auth.credentials.did
 
-      const actorService = ctx.services.actor(ctx.db)
-      const graphService = ctx.services.graph(ctx.db)
+      const db = ctx.db.getReplica()
+      const actorService = ctx.services.actor(db)
+      const graphService = ctx.services.graph(db)
 
-      const db = ctx.db.db
-      const { ref } = db.dynamic
+      const { ref } = db.db.dynamic
 
-      let suggestionsQb = db
+      let suggestionsQb = db.db
         .selectFrom('suggested_follow')
         .innerJoin('actor', 'actor.did', 'suggested_follow.did')
         .innerJoin('profile_agg', 'profile_agg.did', 'actor.did')
@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         .orderBy('suggested_follow.order', 'asc')
 
       if (cursor) {
-        const cursorRow = await db
+        const cursorRow = await db.db
           .selectFrom('suggested_follow')
           .where('did', '=', cursor)
           .selectAll()

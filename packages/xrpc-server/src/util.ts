@@ -268,6 +268,10 @@ function decodeBodyStream(
   return stream
 }
 
+export const getReqIp = (req: express.Request): string => {
+  return req.ips.at(-1) ?? req.ip
+}
+
 export function serverTimingHeader(timings: ServerTiming[]) {
   return timings
     .map((timing) => {

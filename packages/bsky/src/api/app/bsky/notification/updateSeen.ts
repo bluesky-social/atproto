@@ -17,12 +17,14 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Invalid date')
       }
 
-      await ctx.db.db
+      const db = ctx.db.getPrimary()
+
+      await db.db
         .insertInto('actor_state')
         .values({ did: viewer, lastSeenNotifs: parsed })
         .onConflict((oc) =>
           oc.column('did').doUpdateSet({
-            lastSeenNotifs: excluded(ctx.db.db, 'lastSeenNotifs'),
+            lastSeenNotifs: excluded(db.db, 'lastSeenNotifs'),
           }),
         )
         .executeTakeFirst()

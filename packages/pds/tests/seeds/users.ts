@@ -1,20 +1,22 @@
 import { SeedClient } from './client'
 
-export default async (sc: SeedClient) => {
-  await sc.createAccount('alice', users.alice)
-  await sc.createAccount('bob', users.bob)
-  await sc.createAccount('carol', users.carol)
-  await sc.createAccount('dan', users.dan)
+export default async (sc: SeedClient, invite?: { code: string }) => {
+  await sc.createAccount('alice', { ...users.alice, inviteCode: invite?.code })
+  await sc.createAccount('bob', { ...users.bob, inviteCode: invite?.code })
+  await sc.createAccount('carol', { ...users.carol, inviteCode: invite?.code })
+  await sc.createAccount('dan', { ...users.dan, inviteCode: invite?.code })
 
   await sc.createProfile(
     sc.dids.alice,
     users.alice.displayName,
     users.alice.description,
+    users.alice.selfLabels,
   )
   await sc.createProfile(
     sc.dids.bob,
     users.bob.displayName,
     users.bob.description,
+    users.alice.selfLabels,
   )
 
   return sc
@@ -27,6 +29,7 @@ const users = {
     password: 'alice-pass',
     displayName: 'ali',
     description: 'its me!',
+    selfLabels: ['self-label-a', 'self-label-b'],
   },
   bob: {
     email: 'bob@test.com',
@@ -34,6 +37,7 @@ const users = {
     password: 'bob-pass',
     displayName: 'bobby',
     description: 'hi im bob label_me',
+    selfLabels: undefined,
   },
   carol: {
     email: 'carol@test.com',
@@ -41,6 +45,7 @@ const users = {
     password: 'carol-pass',
     displayName: undefined,
     description: undefined,
+    selfLabels: undefined,
   },
   dan: {
     email: 'dan@test.com',
@@ -48,5 +53,6 @@ const users = {
     password: 'dan-pass',
     displayName: undefined,
     description: undefined,
+    selfLabels: undefined,
   },
 }

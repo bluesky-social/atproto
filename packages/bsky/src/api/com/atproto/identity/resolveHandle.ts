@@ -7,8 +7,9 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.resolveHandle(async ({ req, params }) => {
     const handle = ident.normalizeHandle(params.handle || req.hostname)
 
+    const db = ctx.db.getReplica()
     let did: string | undefined
-    const user = await ctx.services.actor(ctx.db).getActor(handle, true)
+    const user = await ctx.services.actor(db).getActor(handle, true)
     if (user) {
       did = user.did
     } else {

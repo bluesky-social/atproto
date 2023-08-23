@@ -1,5 +1,7 @@
+import assert from 'assert'
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 import { Database } from '../../src'
 import {
   runTestServer,
@@ -163,6 +165,29 @@ describe('pds thread views', () => {
       { headers: sc.getHeaders(bob) },
     )
     expect(forSnapshot(thread3.data.thread)).toMatchSnapshot()
+  })
+
+  it('reflects self-labels', async () => {
+    const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: sc.posts[alice][0].ref.uriStr },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    assert(isThreadViewPost(thread.thread), 'post does not exist')
+    const post = thread.thread.post
+
+    const postSelfLabels = post.labels
+      ?.filter((label) => label.src === alice)
+      .map((label) => label.val)
+
+    expect(postSelfLabels).toEqual(['self-label'])
+
+    const authorSelfLabels = post.author.labels
+      ?.filter((label) => label.src === alice)
+      .map((label) => label.val)
+      .sort()
+
+    expect(authorSelfLabels).toEqual(['self-label-a', 'self-label-b'])
   })
 
   it('blocks post by actor takedown', async () => {

@@ -11,6 +11,7 @@ import getFeedSkeleton from './app/bsky/feed/getFeedSkeleton'
 import getLikes from './app/bsky/feed/getLikes'
 import getPostThread from './app/bsky/feed/getPostThread'
 import getPosts from './app/bsky/feed/getPosts'
+import getActorLikes from './app/bsky/feed/getActorLikes'
 import getProfile from './app/bsky/actor/getProfile'
 import getProfiles from './app/bsky/actor/getProfiles'
 import getRepostedBy from './app/bsky/feed/getRepostedBy'
@@ -64,6 +65,7 @@ export default function (server: Server, ctx: AppContext) {
   getLikes(server, ctx)
   getPostThread(server, ctx)
   getPosts(server, ctx)
+  getActorLikes(server, ctx)
   getProfile(server, ctx)
   getProfiles(server, ctx)
   getRepostedBy(server, ctx)

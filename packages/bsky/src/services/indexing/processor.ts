@@ -6,7 +6,7 @@ import DatabaseSchema from '../../db/database-schema'
 import { lexicons } from '../../lexicon/lexicons'
 import { Notification } from '../../db/tables/notification'
 import { chunkArray } from '@atproto/common'
-import Database from '../../db'
+import { PrimaryDatabase } from '../../db'
 import { BackgroundQueue } from '../../background'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
@@ -40,7 +40,7 @@ export class RecordProcessor<T, S> {
   collection: string
   db: DatabaseSchema
   constructor(
-    private appDb: Database,
+    private appDb: PrimaryDatabase,
     private backgroundQueue: BackgroundQueue,
     private params: RecordProcessorParams<T, S>,
   ) {
@@ -209,7 +209,7 @@ export class RecordProcessor<T, S> {
 
   async handleNotifs(op: { deleted?: S; inserted?: S }) {
     let notifs: Notif[] = []
-    const runOnCommit: ((db: Database) => Promise<void>)[] = []
+    const runOnCommit: ((db: PrimaryDatabase) => Promise<void>)[] = []
     if (op.deleted) {
       const forDelete = this.params.notifsForDelete(
         op.deleted,

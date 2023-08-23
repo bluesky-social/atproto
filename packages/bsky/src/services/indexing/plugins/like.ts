@@ -7,7 +7,7 @@ import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { toSimplifiedISOSafe } from '../util'
 import { countAll, excluded } from '../../../db/util'
-import Database from '../../../db'
+import { PrimaryDatabase } from '../../../db'
 import { BackgroundQueue } from '../../../background'
 
 const lexId = lex.ids.AppBskyFeedLike
@@ -53,17 +53,21 @@ const findDuplicate = async (
 
 const notifsForInsert = (obj: IndexedLike) => {
   const subjectUri = new AtUri(obj.subject)
-  return [
-    {
-      did: subjectUri.host,
-      author: obj.creator,
-      recordUri: obj.uri,
-      recordCid: obj.cid,
-      reason: 'like' as const,
-      reasonSubject: subjectUri.toString(),
-      sortAt: obj.indexedAt,
-    },
-  ]
+  // prevent self-notifications
+  const isSelf = subjectUri.host === obj.creator
+  return isSelf
+    ? []
+    : [
+        {
+          did: subjectUri.host,
+          author: obj.creator,
+          recordUri: obj.uri,
+          recordCid: obj.cid,
+          reason: 'like' as const,
+          reasonSubject: subjectUri.toString(),
+          sortAt: obj.indexedAt,
+        },
+      ]
 }
 
 const deleteFn = async (
@@ -105,7 +109,7 @@ const updateAggregates = async (db: DatabaseSchema, like: IndexedLike) => {
 export type PluginType = RecordProcessor<Like.Record, IndexedLike>
 
 export const makePlugin = (
-  db: Database,
+  db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
 ): PluginType => {
   return new RecordProcessor(db, backgroundQueue, {

@@ -4,10 +4,16 @@ import { Server } from '../../../../lexicon'
 import { BadCommitSwapError } from '../../../../repo'
 import AppContext from '../../../../context'
 import { ConcurrentWriteError } from '../../../../services/repo'
+import { DAY } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.rebaseRepo({
     auth: ctx.accessVerifierNotAppPassword,
+    rateLimit: {
+      durationMs: DAY,
+      points: 10,
+      calcKey: ({ auth }) => auth.credentials.did,
+    },
     handler: async ({ input, auth }) => {
       const { repo, swapCommit } = input.body
       const did = await ctx.services.account(ctx.db).getDidForActor(repo)

@@ -8,15 +8,15 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { limit, cursor } = params
       const requester = auth.credentials.did
-      const { db } = ctx
+      const db = ctx.db.getReplica()
       const { ref } = db.db.dynamic
 
-      const graphService = ctx.services.graph(ctx.db)
+      const graphService = ctx.services.graph(db)
 
       let listsReq = graphService
         .getListsQb(requester)
         .whereExists(
-          ctx.db.db
+          db.db
             .selectFrom('list_mute')
             .where('list_mute.mutedByDid', '=', requester)
             .whereRef('list_mute.listUri', '=', ref('list.uri'))
@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
       })
       const listsRes = await listsReq.execute()
 
-      const actorService = ctx.services.actor(ctx.db)
+      const actorService = ctx.services.actor(db)
       const profiles = await actorService.views.profiles(listsRes, requester)
 
       const lists = listsRes.map((row) =>

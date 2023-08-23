@@ -34,7 +34,7 @@ describe('sync', () => {
   })
 
   it('indexes permit history being replayed.', async () => {
-    const { db } = ctx
+    const db = ctx.db.getPrimary()
 
     // Generate some modifications and dupes
     const { alice, bob, carol, dan } = sc.dids
@@ -108,7 +108,7 @@ describe('sync', () => {
     await network.pds.ctx.sequencerLeader?.isCaughtUp()
     await network.processAll()
     // confirm jack was indexed as an actor despite the bad event
-    const actors = await dumpTable(ctx.db, 'actor', ['did'])
+    const actors = await dumpTable(ctx.db.getPrimary(), 'actor', ['did'])
     expect(actors.map((a) => a.handle)).toContain('jack.test')
     RepoService.prototype.afterWriteProcessing = afterWriteProcessingOriginal
   })

@@ -1,9 +1,9 @@
 import { PoolClient } from 'pg'
-import Database from '.'
+import PrimaryDatabase from './primary'
 
 export class Leader {
   session: Session | null = null
-  constructor(public id: number, public db: Database) {}
+  constructor(public id: number, public db: PrimaryDatabase) {}
 
   async run<T>(
     task: (ctx: { signal: AbortSignal }) => Promise<T>,
@@ -29,7 +29,7 @@ export class Leader {
 
     // Postgres implementation uses advisory locking, automatically released by ending connection.
 
-    const client = await this.db.cfg.pool.connect()
+    const client = await this.db.pool.connect()
     try {
       const lock = await client.query(
         'SELECT pg_try_advisory_lock($1) as acquired',

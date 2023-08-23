@@ -4,6 +4,10 @@ import { FeedKeyset } from '../util/feed'
 import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
+import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
+import { handleReadAfterWrite } from '../util/read-after-write'
+import { authPassthru } from '../../../../../api/com/atproto/admin/util'
+import { LocalRecords } from '../../../../../services/local'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
@@ -11,18 +15,16 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ req, params, auth }) => {
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null
-      if (ctx.canProxyRead(req)) {
+      if (await ctx.canProxyRead(req, requester)) {
         const res = await ctx.appviewAgent.api.app.bsky.feed.getAuthorFeed(
           params,
           requester
             ? await ctx.serviceAuthHeaders(requester)
-            : {
-                // @TODO use authPassthru() once it lands
-                headers: req.headers.authorization
-                  ? { authorization: req.headers.authorization }
-                  : {},
-              },
+            : authPassthru(req),
         )
+        if (requester) {
+          return await handleReadAfterWrite(ctx, requester, res, getAuthorMunge)
+        }
         return {
           encoding: 'application/json',
           body: res.data,
@@ -33,10 +35,42 @@ export default function (server: Server, ctx: AppContext) {
 
       const { ref } = ctx.db.db.dynamic
       const accountService = ctx.services.account(ctx.db)
+      const actorService = ctx.services.appView.actor(ctx.db)
       const feedService = ctx.services.appView.feed(ctx.db)
       const graphService = ctx.services.appView.graph(ctx.db)
 
-      let feedItemsQb = getFeedItemsQb(ctx, { actor })
+      // maybe resolve did first
+      const actorRes = await actorService.getActor(actor)
+      if (!actorRes) {
+        throw new InvalidRequestError('Profile not found')
+      }
+      const actorDid = actorRes.did
+
+      // defaults to posts, reposts, and replies
+      let feedItemsQb = feedService
+        .selectFeedItemQb()
+        .where('originatorDid', '=', actorDid)
+
+      if (params.filter === 'posts_with_media') {
+        feedItemsQb = feedItemsQb
+          // and only your own posts/reposts
+          .where('post.creator', '=', actorDid)
+          // only posts with media
+          .whereExists((qb) =>
+            qb
+              .selectFrom('post_embed_image')
+              .select('post_embed_image.postUri')
+              .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
+          )
+      } else if (params.filter === 'posts_no_replies') {
+        feedItemsQb = feedItemsQb
+          // only posts, no replies
+          .where((qb) =>
+            qb
+              .where('post.replyParent', 'is', null)
+              .orWhere('type', '=', 'repost'),
+          )
+      }
 
       // for access-based auth, enforce blocks and mutes
       if (requester) {
@@ -84,20 +118,6 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-function getFeedItemsQb(ctx: AppContext, opts: { actor: string }) {
-  const { actor } = opts
-  const feedService = ctx.services.appView.feed(ctx.db)
-  const userLookupCol = actor.startsWith('did:')
-    ? 'did_handle.did'
-    : 'did_handle.handle'
-  const actorDidQb = ctx.db.db
-    .selectFrom('did_handle')
-    .select('did')
-    .where(userLookupCol, '=', actor)
-    .limit(1)
-  return feedService.selectFeedItemQb().where('originatorDid', '=', actorDidQb)
-}
-
 // throws when there's a block between the two users
 async function assertNoBlocks(
   ctx: AppContext,
@@ -116,5 +136,40 @@ async function assertNoBlocks(
       `Requester is blocked by actor: $${actor}`,
       'BlockedByActor',
     )
+  }
+}
+
+const getAuthorMunge = async (
+  ctx: AppContext,
+  original: OutputSchema,
+  local: LocalRecords,
+  requester: string,
+): Promise<OutputSchema> => {
+  const localSrvc = ctx.services.local(ctx.db)
+  const localProf = local.profile
+  let feed = original.feed
+  // first update any out of date profile pictures in feed
+  if (localProf) {
+    feed = feed.map((item) => {
+      if (item.post.author.did === requester) {
+        return {
+          ...item,
+          post: {
+            ...item.post,
+            author: localSrvc.updateProfileViewBasic(
+              item.post.author,
+              localProf.record,
+            ),
+          },
+        }
+      } else {
+        return item
+      }
+    })
+  }
+  feed = await localSrvc.formatAndInsertPostsInFeed(feed, local.posts)
+  return {
+    ...original,
+    feed,
   }
 }

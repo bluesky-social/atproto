@@ -79,9 +79,11 @@ export class Database {
       throw new Error(`Postgres schema must only contain [A-Za-z_]: ${schema}`)
     }
 
+    pool.on('error', onPoolError)
     pool.on('connect', (client) => {
+      client.on('error', onClientError)
       // Used for trigram indexes, e.g. on actor search
-      client.query('SET pg_trgm.strict_word_similarity_threshold TO .1;')
+      client.query('SET pg_trgm.word_similarity_threshold TO .4;')
       if (schema) {
         // Shared objects such as extensions will go in the public schema
         client.query(`SET search_path TO "${schema}",public;`)
@@ -382,3 +384,6 @@ class LeakyTxPlugin implements KyselyPlugin {
 type TxLockRes = {
   rows: { acquired: true | false }[]
 }
+
+const onPoolError = (err: Error) => log.error({ err }, 'db pool error')
+const onClientError = (err: Error) => log.error({ err }, 'db client error')

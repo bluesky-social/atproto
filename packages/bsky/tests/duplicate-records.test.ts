@@ -3,13 +3,14 @@ import { cidForCbor, TID } from '@atproto/common'
 import { WriteOpAction } from '@atproto/repo'
 import { TestNetwork } from '@atproto/dev-env'
 import { Database } from '../src'
+import { PrimaryDatabase } from '../src/db'
 import * as lex from '../src/lexicon/lexicons'
 import { Services } from '../src/indexer/services'
 
 describe('duplicate record', () => {
   let network: TestNetwork
   let did: string
-  let db: Database
+  let db: PrimaryDatabase
   let services: Services
 
   beforeAll(async () => {

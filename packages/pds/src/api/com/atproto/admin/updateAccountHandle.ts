@@ -28,19 +28,24 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Account not found: ${did}`)
       }
 
-      const seqHandleTok = await ctx.db.transaction(async (dbTxn) => {
-        let tok: HandleSequenceToken
-        try {
-          tok = await ctx.services.account(dbTxn).updateHandle(did, handle)
-        } catch (err) {
-          if (err instanceof UserAlreadyExistsError) {
-            throw new InvalidRequestError(`Handle already taken: ${handle}`)
+      let seqHandleTok: HandleSequenceToken
+      if (existingAccnt.handle === handle) {
+        seqHandleTok = { handle, did }
+      } else {
+        seqHandleTok = await ctx.db.transaction(async (dbTxn) => {
+          let tok: HandleSequenceToken
+          try {
+            tok = await ctx.services.account(dbTxn).updateHandle(did, handle)
+          } catch (err) {
+            if (err instanceof UserAlreadyExistsError) {
+              throw new InvalidRequestError(`Handle already taken: ${handle}`)
+            }
+            throw err
           }
-          throw err
-        }
-        await ctx.plcClient.updateHandle(did, ctx.plcRotationKey, handle)
-        return tok
-      })
+          await ctx.plcClient.updateHandle(did, ctx.plcRotationKey, handle)
+          return tok
+        })
+      }
 
       try {
         await ctx.db.transaction(async (dbTxn) => {

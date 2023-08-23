@@ -12,13 +12,17 @@ export interface IndexerConfigValues {
   didPlcUrl: string
   didCacheStaleTTL: number
   didCacheMaxTTL: number
+  handleResolveNameservers?: string[]
   labelerDid: string
   hiveApiKey?: string
   labelerKeywords: Record<string, string>
+  labelerPushUrl?: string
   indexerConcurrency?: number
   indexerPartitionIds: number[]
   indexerPartitionBatchSize?: number
   indexerSubLockId?: number
+  indexerPort?: number
+  ingesterPartitionCount: number
   indexerNamespace?: string
 }
 
@@ -28,7 +32,7 @@ export class IndexerConfig {
   static readEnv(overrides?: Partial<IndexerConfigValues>) {
     const version = process.env.BSKY_VERSION || '0.0.0'
     const dbPostgresUrl =
-      overrides?.dbPostgresUrl || process.env.DB_POSTGRES_URL
+      overrides?.dbPostgresUrl || process.env.DB_PRIMARY_POSTGRES_URL
     const dbPostgresSchema =
       overrides?.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
     const redisHost =
@@ -53,7 +57,12 @@ export class IndexerConfig {
       process.env.DID_CACHE_MAX_TTL,
       DAY,
     )
+    const handleResolveNameservers = process.env.HANDLE_RESOLVE_NAMESERVERS
+      ? process.env.HANDLE_RESOLVE_NAMESERVERS.split(',')
+      : []
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
+    const labelerPushUrl =
+      overrides?.labelerPushUrl || process.env.LABELER_PUSH_URL || undefined
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
     const indexerPartitionIds =
       overrides?.indexerPartitionIds ||
@@ -68,6 +77,9 @@ export class IndexerConfig {
     const indexerConcurrency = maybeParseInt(process.env.INDEXER_CONCURRENCY)
     const indexerNamespace = overrides?.indexerNamespace
     const indexerSubLockId = maybeParseInt(process.env.INDEXER_SUB_LOCK_ID)
+    const indexerPort = maybeParseInt(process.env.INDEXER_PORT)
+    const ingesterPartitionCount =
+      maybeParseInt(process.env.INGESTER_PARTITION_COUNT) ?? 64
     const labelerKeywords = {}
     assert(dbPostgresUrl)
     assert(redisHost || (redisSentinelName && redisSentinelHosts?.length))
@@ -83,13 +95,17 @@ export class IndexerConfig {
       didPlcUrl,
       didCacheStaleTTL,
       didCacheMaxTTL,
+      handleResolveNameservers,
       labelerDid,
+      labelerPushUrl,
       hiveApiKey,
       indexerPartitionIds,
       indexerConcurrency,
       indexerPartitionBatchSize,
       indexerNamespace,
       indexerSubLockId,
+      indexerPort,
+      ingesterPartitionCount,
       labelerKeywords,
       ...stripUndefineds(overrides ?? {}),
     })
@@ -135,8 +151,16 @@ export class IndexerConfig {
     return this.cfg.didCacheMaxTTL
   }
 
+  get handleResolveNameservers() {
+    return this.cfg.handleResolveNameservers
+  }
+
   get labelerDid() {
     return this.cfg.labelerDid
+  }
+
+  get labelerPushUrl() {
+    return this.cfg.labelerPushUrl
   }
 
   get hiveApiKey() {
@@ -161,6 +185,14 @@ export class IndexerConfig {
 
   get indexerSubLockId() {
     return this.cfg.indexerSubLockId
+  }
+
+  get indexerPort() {
+    return this.cfg.indexerPort
+  }
+
+  get ingesterPartitionCount() {
+    return this.cfg.ingesterPartitionCount
   }
 
   get labelerKeywords() {
