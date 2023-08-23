@@ -95,6 +95,8 @@ export class TestBsky {
       indexerPartitionIds: [0],
       indexerNamespace: `ns${ns}`,
       indexerSubLockId: uniqueLockId(),
+      indexerPort: await getPort(),
+      ingesterPartitionCount: 1,
     })
     assert(indexerCfg.redisHost)
     const indexerRedis = new bsky.Redis({
@@ -236,6 +238,7 @@ export async function getIndexers(
     didPlcUrl: network.plc.url,
     indexerPartitionIds: [0],
     indexerNamespace: `ns${ns}`,
+    ingesterPartitionCount: config.ingesterPartitionCount ?? 1,
     ...config,
   }
   const db = new bsky.PrimaryDatabase({
@@ -247,14 +250,17 @@ export async function getIndexers(
     host: baseCfg.redisHost,
     namespace: baseCfg.indexerNamespace,
   })
-  const indexers = opts.partitionIdsByIndexer.map((indexerPartitionIds) => {
-    const cfg = new bsky.IndexerConfig({
-      ...baseCfg,
-      indexerPartitionIds,
-      indexerSubLockId: uniqueLockId(),
-    })
-    return bsky.BskyIndexer.create({ cfg, db, redis })
-  })
+  const indexers = await Promise.all(
+    opts.partitionIdsByIndexer.map(async (indexerPartitionIds) => {
+      const cfg = new bsky.IndexerConfig({
+        ...baseCfg,
+        indexerPartitionIds,
+        indexerSubLockId: uniqueLockId(),
+        indexerPort: await getPort(),
+      })
+      return bsky.BskyIndexer.create({ cfg, db, redis })
+    }),
+  )
   await db.migrateToLatestOrThrow()
   return {
     db,

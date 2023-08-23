@@ -1,3 +1,4 @@
+import express from 'express'
 import { IdResolver } from '@atproto/identity'
 import { BackgroundQueue } from '../background'
 import { PrimaryDatabase } from '../db'
@@ -10,6 +11,7 @@ import { createServices } from './services'
 import { IndexerSubscription } from './subscription'
 import { HiveLabeler, KeywordLabeler, Labeler } from '../labeler'
 import { Redis } from '../redis'
+import { CloseFn, createServer, startServer } from './server'
 
 export { IndexerConfig } from './config'
 export type { IndexerConfigValues } from './config'
@@ -17,12 +19,19 @@ export type { IndexerConfigValues } from './config'
 export class BskyIndexer {
   public ctx: IndexerContext
   public sub: IndexerSubscription
+  public app: express.Application
+  private closeServer?: CloseFn
   private dbStatsInterval: NodeJS.Timer
   private subStatsInterval: NodeJS.Timer
 
-  constructor(opts: { ctx: IndexerContext; sub: IndexerSubscription }) {
+  constructor(opts: {
+    ctx: IndexerContext
+    sub: IndexerSubscription
+    app: express.Application
+  }) {
     this.ctx = opts.ctx
     this.sub = opts.sub
+    this.app = opts.app
   }
 
   static create(opts: {
@@ -74,7 +83,10 @@ export class BskyIndexer {
       concurrency: cfg.indexerConcurrency,
       subLockId: cfg.indexerSubLockId,
     })
-    return new BskyIndexer({ ctx, sub })
+
+    const app = createServer(sub, cfg)
+
+    return new BskyIndexer({ ctx, sub, app })
   }
 
   async start() {
@@ -108,10 +120,12 @@ export class BskyIndexer {
       )
     }, 500)
     this.sub.run()
+    this.closeServer = startServer(this.app, this.ctx.cfg.indexerPort)
     return this
   }
 
   async destroy(opts?: { skipDb: boolean; skipRedis: true }): Promise<void> {
+    if (this.closeServer) await this.closeServer()
     await this.sub.destroy()
     clearInterval(this.subStatsInterval)
     if (!opts?.skipRedis) await this.ctx.redis.destroy()

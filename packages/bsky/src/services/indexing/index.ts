@@ -157,7 +157,7 @@ export class IndexingService {
       .executeTakeFirst()
   }
 
-  async indexRepo(did: string, commit: string) {
+  async indexRepo(did: string, commit?: string) {
     this.db.assertNotTransaction()
     const now = new Date().toISOString()
     const { pds, signingKey } = await this.idResolver.did.resolveAtprotoData(
