@@ -87,7 +87,7 @@ export class IndexingService {
     obj: unknown,
     action: WriteOpAction.Create | WriteOpAction.Update,
     timestamp: string,
-    disableLabels?: boolean,
+    opts?: { disableNotifs?: boolean; disableLabels?: boolean },
   ) {
     this.db.assertNotTransaction()
     await this.db.transaction(async (txn) => {
@@ -95,12 +95,12 @@ export class IndexingService {
       const indexer = indexingTx.findIndexerForCollection(uri.collection)
       if (!indexer) return
       if (action === WriteOpAction.Create) {
-        await indexer.insertRecord(uri, cid, obj, timestamp)
+        await indexer.insertRecord(uri, cid, obj, timestamp, opts)
       } else {
         await indexer.updateRecord(uri, cid, obj, timestamp)
       }
     })
-    if (!disableLabels) {
+    if (!opts?.disableLabels) {
       this.labeler.processRecord(uri, obj)
     }
   }
@@ -193,14 +193,10 @@ export class IndexingService {
         const { cid, collection, rkey, record } = item
         const uri = AtUri.make(did, collection, rkey)
         try {
-          await this.indexRecord(
-            uri,
-            cid,
-            record,
-            WriteOpAction.Create,
-            now,
+          await this.indexRecord(uri, cid, record, WriteOpAction.Create, now, {
             disableLabels,
-          )
+            disableNotifs: true,
+          })
         } catch (err) {
           if (err instanceof ValidationError) {
             subLogger.warn(

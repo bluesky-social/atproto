@@ -61,7 +61,13 @@ export class RecordProcessor<T, S> {
     lexicons.assertValidRecord(this.params.lexId, obj)
   }
 
-  async insertRecord(uri: AtUri, cid: CID, obj: unknown, timestamp: string) {
+  async insertRecord(
+    uri: AtUri,
+    cid: CID,
+    obj: unknown,
+    timestamp: string,
+    opts?: { disableNotifs?: boolean },
+  ) {
     this.assertValidRecord(obj)
     await this.db
       .insertInto('record')
@@ -83,7 +89,9 @@ export class RecordProcessor<T, S> {
     )
     if (inserted) {
       this.aggregateOnCommit(inserted)
-      await this.handleNotifs({ inserted })
+      if (!opts?.disableNotifs) {
+        await this.handleNotifs({ inserted })
+      }
       return
     }
     // if duplicate, insert into duplicates table with no events
