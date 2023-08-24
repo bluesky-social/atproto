@@ -6,8 +6,8 @@ describe('labeling', () => {
     const exampleRespBytes = await fs.readFile(
       'tests/labeler/fixtures/hiveai_resp_example.json',
     )
-    const exmapleResp = JSON.parse(exampleRespBytes.toString())
-    const classes = hive.respToClasses(exmapleResp)
+    const exampleResp = JSON.parse(exampleRespBytes.toString())
+    const classes = hive.respToClasses(exampleResp)
     expect(classes.length).toBeGreaterThan(10)
 
     const labels = hive.summarizeLabels(classes)

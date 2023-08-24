@@ -21,7 +21,7 @@ describe('server', () => {
     await basicSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
-    db = network.bsky.ctx.db
+    db = network.bsky.ctx.db.getPrimary()
   })
 
   afterAll(async () => {
@@ -111,7 +111,8 @@ describe('server', () => {
   })
 
   it('healthcheck fails when database is unavailable.', async () => {
-    await network.bsky.sub.destroy()
+    await network.bsky.ingester.sub.destroy()
+    await network.bsky.indexer.sub.destroy()
     await db.close()
     let error: AxiosError
     try {

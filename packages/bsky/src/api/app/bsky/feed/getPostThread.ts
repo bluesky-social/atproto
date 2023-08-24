@@ -2,12 +2,12 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
-  ActorViewMap,
-  FeedEmbeds,
   FeedRow,
-  PostInfoMap,
-} from '../../../../services/types'
-import { FeedService } from '../../../../services/feed'
+  ActorInfoMap,
+  PostEmbedViews,
+  PostBlocksMap,
+} from '../../../../services/feed/types'
+import { FeedService, PostInfoMap } from '../../../../services/feed'
 import { Labels } from '../../../../services/label'
 import {
   BlockedPost,
@@ -19,6 +19,8 @@ import {
   getAncestorsAndSelfQb,
   getDescendentsQb,
 } from '../../../../services/util/post'
+import { Database } from '../../../../db'
+import { setRepoRev } from '../../../util'
 
 export type PostThread = {
   post: FeedRow
@@ -29,26 +31,34 @@ export type PostThread = {
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.authOptionalVerifier,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, res }) => {
       const { uri, depth, parentHeight } = params
       const requester = auth.credentials.did
 
-      const feedService = ctx.services.feed(ctx.db)
-      const labelService = ctx.services.label(ctx.db)
+      const db = ctx.db.getReplica('thread')
+      const actorService = ctx.services.actor(db)
+      const feedService = ctx.services.feed(db)
+      const labelService = ctx.services.label(db)
 
-      const threadData = await getThreadData(ctx, uri, depth, parentHeight)
+      const [threadData, repoRev] = await Promise.all([
+        getThreadData(ctx, db, uri, depth, parentHeight),
+        actorService.getRepoRev(requester),
+      ])
+      setRepoRev(res, repoRev)
+
       if (!threadData) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
       const relevant = getRelevantIds(threadData)
-      const [actors, posts, embeds, labels] = await Promise.all([
-        feedService.getActorViews(Array.from(relevant.dids), requester, {
+      const [actors, posts, labels] = await Promise.all([
+        feedService.getActorInfos(Array.from(relevant.dids), requester, {
           skipLabels: true,
         }),
-        feedService.getPostViews(Array.from(relevant.uris), requester),
-        feedService.embedsForPosts(Array.from(relevant.uris), requester),
+        feedService.getPostInfos(Array.from(relevant.uris), requester),
         labelService.getLabelsForSubjects([...relevant.uris, ...relevant.dids]),
       ])
+      const blocks = await feedService.blocksForPosts(posts)
+      const embeds = await feedService.embedsForPosts(posts, blocks, requester)
 
       const thread = composeThread(
         threadData,
@@ -56,6 +66,7 @@ export default function (server: Server, ctx: AppContext) {
         posts,
         actors,
         embeds,
+        blocks,
         labels,
       )
 
@@ -76,8 +87,9 @@ const composeThread = (
   threadData: PostThread,
   feedService: FeedService,
   posts: PostInfoMap,
-  actors: ActorViewMap,
-  embeds: FeedEmbeds,
+  actors: ActorInfoMap,
+  embeds: PostEmbedViews,
+  blocks: PostBlocksMap,
   labels: Labels,
 ) => {
   const post = feedService.views.formatPostView(
@@ -88,7 +100,7 @@ const composeThread = (
     labels,
   )
 
-  if (!post) {
+  if (!post || blocks[post.uri]?.reply) {
     return {
       $type: 'app.bsky.feed.defs#notFoundPost',
       uri: threadData.post.postUri,
@@ -101,6 +113,15 @@ const composeThread = (
       $type: 'app.bsky.feed.defs#blockedPost',
       uri: threadData.post.postUri,
       blocked: true,
+      author: {
+        did: post.author.did,
+        viewer: post.author.viewer
+          ? {
+              blockedBy: post.author.viewer?.blockedBy,
+              blocking: post.author.viewer?.blocking,
+            }
+          : undefined,
+      },
     }
   }
 
@@ -119,6 +140,7 @@ const composeThread = (
         posts,
         actors,
         embeds,
+        blocks,
         labels,
       )
     }
@@ -133,6 +155,7 @@ const composeThread = (
         posts,
         actors,
         embeds,
+        blocks,
         labels,
       )
       // e.g. don't bother including #postNotFound reply placeholders for takedowns. either way matches api contract.
@@ -173,13 +196,14 @@ const getRelevantIds = (
 
 const getThreadData = async (
   ctx: AppContext,
+  db: Database,
   uri: string,
   depth: number,
   parentHeight: number,
 ): Promise<PostThread | null> => {
-  const feedService = ctx.services.feed(ctx.db)
+  const feedService = ctx.services.feed(db)
   const [parents, children] = await Promise.all([
-    getAncestorsAndSelfQb(ctx.db.db, { uri, parentHeight })
+    getAncestorsAndSelfQb(db.db, { uri, parentHeight })
       .selectFrom('ancestor')
       .innerJoin(
         feedService.selectPostQb().as('post'),
@@ -188,7 +212,7 @@ const getThreadData = async (
       )
       .selectAll('post')
       .execute(),
-    getDescendentsQb(ctx.db.db, { uri, depth })
+    getDescendentsQb(db.db, { uri, depth })
       .selectFrom('descendent')
       .innerJoin(
         feedService.selectPostQb().as('post'),

@@ -11,9 +11,9 @@ import {
 } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { IdResolver, getPds } from '@atproto/identity'
-import { DAY, chunkArray } from '@atproto/common'
+import { DAY, HOUR } from '@atproto/common'
 import { ValidationError } from '@atproto/lexicon'
-import Database from '../../db'
+import { PrimaryDatabase } from '../../db'
 import * as Post from './plugins/post'
 import * as Like from './plugins/like'
 import * as Repost from './plugins/repost'
@@ -28,6 +28,8 @@ import { subLogger } from '../../logger'
 import { retryHttp } from '../../util/retry'
 import { Labeler } from '../../labeler'
 import { BackgroundQueue } from '../../background'
+import { NotificationServer } from '../../notifications'
+import { Actor } from '../../db/tables/actor'
 
 export class IndexingService {
   records: {
@@ -43,31 +45,37 @@ export class IndexingService {
   }
 
   constructor(
-    public db: Database,
+    public db: PrimaryDatabase,
     public idResolver: IdResolver,
     public labeler: Labeler,
     public backgroundQueue: BackgroundQueue,
+    public notifServer?: NotificationServer,
   ) {
     this.records = {
-      post: Post.makePlugin(this.db, backgroundQueue),
-      like: Like.makePlugin(this.db, backgroundQueue),
-      repost: Repost.makePlugin(this.db, backgroundQueue),
-      follow: Follow.makePlugin(this.db, backgroundQueue),
-      profile: Profile.makePlugin(this.db, backgroundQueue),
-      list: List.makePlugin(this.db, backgroundQueue),
-      listItem: ListItem.makePlugin(this.db, backgroundQueue),
-      block: Block.makePlugin(this.db, backgroundQueue),
-      feedGenerator: FeedGenerator.makePlugin(this.db, backgroundQueue),
+      post: Post.makePlugin(this.db, backgroundQueue, notifServer),
+      like: Like.makePlugin(this.db, backgroundQueue, notifServer),
+      repost: Repost.makePlugin(this.db, backgroundQueue, notifServer),
+      follow: Follow.makePlugin(this.db, backgroundQueue, notifServer),
+      profile: Profile.makePlugin(this.db, backgroundQueue, notifServer),
+      list: List.makePlugin(this.db, backgroundQueue, notifServer),
+      listItem: ListItem.makePlugin(this.db, backgroundQueue, notifServer),
+      block: Block.makePlugin(this.db, backgroundQueue, notifServer),
+      feedGenerator: FeedGenerator.makePlugin(
+        this.db,
+        backgroundQueue,
+        notifServer,
+      ),
     }
   }
 
-  transact(txn: Database) {
+  transact(txn: PrimaryDatabase) {
     txn.assertTransaction()
     return new IndexingService(
       txn,
       this.idResolver,
       this.labeler,
       this.backgroundQueue,
+      this.notifServer,
     )
   }
 
@@ -75,9 +83,10 @@ export class IndexingService {
     idResolver: IdResolver,
     labeler: Labeler,
     backgroundQueue: BackgroundQueue,
+    notifServer?: NotificationServer,
   ) {
-    return (db: Database) =>
-      new IndexingService(db, idResolver, labeler, backgroundQueue)
+    return (db: PrimaryDatabase) =>
+      new IndexingService(db, idResolver, labeler, backgroundQueue, notifServer)
   }
 
   async indexRecord(
@@ -86,6 +95,7 @@ export class IndexingService {
     obj: unknown,
     action: WriteOpAction.Create | WriteOpAction.Update,
     timestamp: string,
+    opts?: { disableNotifs?: boolean; disableLabels?: boolean },
   ) {
     this.db.assertNotTransaction()
     await this.db.transaction(async (txn) => {
@@ -93,12 +103,14 @@ export class IndexingService {
       const indexer = indexingTx.findIndexerForCollection(uri.collection)
       if (!indexer) return
       if (action === WriteOpAction.Create) {
-        await indexer.insertRecord(uri, cid, obj, timestamp)
+        await indexer.insertRecord(uri, cid, obj, timestamp, opts)
       } else {
         await indexer.updateRecord(uri, cid, obj, timestamp)
       }
     })
-    this.labeler.processRecord(uri, obj)
+    if (!opts?.disableLabels) {
+      this.labeler.processRecord(uri, obj)
+    }
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {
@@ -118,13 +130,7 @@ export class IndexingService {
       .where('did', '=', did)
       .selectAll()
       .executeTakeFirst()
-    const timestampAt = new Date(timestamp)
-    const lastIndexedAt = actor && new Date(actor.indexedAt)
-    const needsReindex =
-      force ||
-      !lastIndexedAt ||
-      timestampAt.getTime() - lastIndexedAt.getTime() > DAY
-    if (!needsReindex) {
+    if (!force && !needsHandleReindex(actor, timestamp)) {
       return
     }
     const atpData = await this.idResolver.did.resolveAtprotoData(did, true)
@@ -162,7 +168,7 @@ export class IndexingService {
       .executeTakeFirst()
   }
 
-  async indexRepo(did: string, commit: string) {
+  async indexRepo(did: string, commit?: string) {
     this.db.assertNotTransaction()
     const now = new Date().toISOString()
     const { pds, signingKey } = await this.idResolver.did.resolveAtprotoData(
@@ -183,19 +189,25 @@ export class IndexingService {
       signingKey,
     )
 
-    // Wipe index for actor, prep for reindexing
-    await this.unindexActor(did)
+    const currRecords = await this.getCurrentRecords(did)
+    const checkoutRecords = formatCheckout(did, checkout.contents)
+    const diff = findDiffFromCheckout(currRecords, checkoutRecords)
 
-    // Iterate over all records and index them in batches
-    const contentList = [...walkContentsWithCids(checkout.contents)]
-    const chunks = chunkArray(contentList, 100)
-
-    for (const chunk of chunks) {
-      const processChunk = chunk.map(async (item) => {
-        const { cid, collection, rkey, record } = item
-        const uri = AtUri.make(did, collection, rkey)
+    await Promise.all(
+      diff.map(async (op) => {
+        const { uri, cid } = op
         try {
-          await this.indexRecord(uri, cid, record, WriteOpAction.Create, now)
+          if (op.op === 'delete') {
+            await this.deleteRecord(uri)
+          } else {
+            await this.indexRecord(
+              uri,
+              cid,
+              op.value,
+              op.op === 'create' ? WriteOpAction.Create : WriteOpAction.Update,
+              now,
+            )
+          }
         } catch (err) {
           if (err instanceof ValidationError) {
             subLogger.warn(
@@ -209,9 +221,23 @@ export class IndexingService {
             )
           }
         }
-      })
-      await Promise.all(processChunk)
-    }
+      }),
+    )
+  }
+
+  async getCurrentRecords(did: string) {
+    const res = await this.db.db
+      .selectFrom('record')
+      .where('did', '=', did)
+      .select(['uri', 'cid'])
+      .execute()
+    return res.reduce((acc, cur) => {
+      acc[cur.uri] = {
+        uri: new AtUri(cur.uri),
+        cid: CID.parse(cur.cid),
+      }
+      return acc
+    }, {} as Record<string, { uri: AtUri; cid: CID }>)
   }
 
   async setCommitLastSeen(
@@ -225,6 +251,7 @@ export class IndexingService {
         did: commit.did,
         commitCid: details.commit.toString(),
         commitDataCid: commit.data.toString(),
+        repoRev: commit.rev ?? null,
         rebaseCount: details.rebase ? 1 : 0,
         tooBigCount: details.tooBig ? 1 : 0,
       })
@@ -234,6 +261,7 @@ export class IndexingService {
         return oc.column('did').doUpdateSet({
           commitCid: sql`${excluded('commitCid')}`,
           commitDataCid: sql`${excluded('commitDataCid')}`,
+          repoRev: sql`${excluded('repoRev')}`,
           rebaseCount: sql`${sync('rebaseCount')} + ${excluded('rebaseCount')}`,
           tooBigCount: sql`${sync('tooBigCount')} + ${excluded('tooBigCount')}`,
         })
@@ -347,11 +375,73 @@ export class IndexingService {
   }
 }
 
-function* walkContentsWithCids(contents: RepoContentsWithCids) {
-  for (const collection of Object.keys(contents)) {
-    for (const rkey of Object.keys(contents[collection])) {
-      const { cid, value } = contents[collection][rkey]
-      yield { collection, rkey, cid, record: value }
+type UriAndCid = {
+  uri: AtUri
+  cid: CID
+}
+
+type RecordDescript = UriAndCid & {
+  value: unknown
+}
+
+type IndexOp =
+  | ({
+      op: 'create' | 'update'
+    } & RecordDescript)
+  | ({ op: 'delete' } & UriAndCid)
+
+const findDiffFromCheckout = (
+  curr: Record<string, UriAndCid>,
+  checkout: Record<string, RecordDescript>,
+): IndexOp[] => {
+  const ops: IndexOp[] = []
+  for (const uri of Object.keys(checkout)) {
+    const record = checkout[uri]
+    if (!curr[uri]) {
+      ops.push({ op: 'create', ...record })
+    } else {
+      if (curr[uri].cid.equals(record.cid)) {
+        // no-op
+        continue
+      }
+      ops.push({ op: 'update', ...record })
     }
   }
+  for (const uri of Object.keys(curr)) {
+    const record = curr[uri]
+    if (!checkout[uri]) {
+      ops.push({ op: 'delete', ...record })
+    }
+  }
+  return ops
+}
+
+const formatCheckout = (
+  did: string,
+  contents: RepoContentsWithCids,
+): Record<string, RecordDescript> => {
+  const records: Record<string, RecordDescript> = {}
+  for (const collection of Object.keys(contents)) {
+    for (const rkey of Object.keys(contents[collection])) {
+      const uri = AtUri.make(did, collection, rkey)
+      const { cid, value } = contents[collection][rkey]
+      records[uri.toString()] = {
+        uri,
+        cid,
+        value,
+      }
+    }
+  }
+  return records
+}
+
+const needsHandleReindex = (actor: Actor | undefined, timestamp: string) => {
+  if (!actor) return true
+  const timeDiff =
+    new Date(timestamp).getTime() - new Date(actor.indexedAt).getTime()
+  // revalidate daily
+  if (timeDiff > DAY) return true
+  // revalidate more aggressively for invalidated handles
+  if (actor.handle === null && timeDiff > HOUR) return true
+  return false
 }

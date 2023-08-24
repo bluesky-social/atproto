@@ -3,7 +3,7 @@ import { ArrayEl } from '@atproto/common'
 import { AtUri } from '@atproto/uri'
 import { INVALID_HANDLE } from '@atproto/identifier'
 import { BlobRef, jsonStringToLex } from '@atproto/lexicon'
-import Database from '../../db'
+import { Database } from '../../db'
 import { Actor } from '../../db/tables/actor'
 import { Record as RecordRow } from '../../db/tables/record'
 import { ModerationAction } from '../../db/tables/moderation'
@@ -21,6 +21,7 @@ import {
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import { ModerationReportRowWithHandle } from '.'
+import { getSelfLabels } from '../label'
 
 export class ModerationViews {
   constructor(private db: Database) {}
@@ -58,7 +59,7 @@ export class ModerationViews {
           'in',
           results.map((r) => r.did),
         )
-        .select(['id', 'action', 'subjectDid'])
+        .select(['id', 'action', 'durationInHours', 'subjectDid'])
         .execute(),
     ])
 
@@ -88,7 +89,11 @@ export class ModerationViews {
         indexedAt: r.indexedAt,
         moderation: {
           currentAction: action
-            ? { id: action.id, action: action.action }
+            ? {
+                id: action.id,
+                action: action.action,
+                durationInHours: action.durationInHours ?? undefined,
+              }
             : undefined,
         },
       }
@@ -158,7 +163,7 @@ export class ModerationViews {
           'in',
           results.map((r) => r.uri),
         )
-        .select(['id', 'action', 'subjectUri'])
+        .select(['id', 'action', 'durationInHours', 'subjectUri'])
         .execute(),
     ])
     const repos = await this.repo(repoResults)
@@ -186,7 +191,11 @@ export class ModerationViews {
         repo,
         moderation: {
           currentAction: action
-            ? { id: action.id, action: action.action }
+            ? {
+                id: action.id,
+                action: action.action,
+                durationInHours: action.durationInHours ?? undefined,
+              }
             : undefined,
         },
       }
@@ -219,6 +228,11 @@ export class ModerationViews {
       this.blob(findBlobRefs(record.value)),
       this.labels(record.uri),
     ])
+    const selfLabels = getSelfLabels({
+      uri: result.uri,
+      cid: result.cid,
+      record: jsonStringToLex(result.json) as Record<string, unknown>,
+    })
     return {
       ...record,
       blobs,
@@ -227,7 +241,7 @@ export class ModerationViews {
         reports,
         actions,
       },
-      labels,
+      labels: [...labels, ...selfLabels],
     }
   }
 
@@ -275,6 +289,7 @@ export class ModerationViews {
     const views = results.map((res) => ({
       id: res.id,
       action: res.action,
+      durationInHours: res.durationInHours ?? undefined,
       subject:
         res.subjectType === 'com.atproto.admin.defs#repoRef'
           ? {
@@ -337,6 +352,7 @@ export class ModerationViews {
     return {
       id: action.id,
       action: action.action,
+      durationInHours: action.durationInHours,
       subject,
       subjectBlobs,
       createLabelVals: action.createLabelVals,
@@ -507,7 +523,7 @@ export class ModerationViews {
         'in',
         blobs.map((blob) => blob.ref.toString()),
       )
-      .select(['id', 'action', 'cid'])
+      .select(['id', 'action', 'durationInHours', 'cid'])
       .execute()
     const actionByCid = actionResults.reduce(
       (acc, cur) => Object.assign(acc, { [cur.cid]: cur }),
@@ -526,7 +542,11 @@ export class ModerationViews {
         createdAt: unknownTime,
         moderation: {
           currentAction: action
-            ? { id: action.id, action: action.action }
+            ? {
+                id: action.id,
+                action: action.action,
+                durationInHours: action.durationInHours ?? undefined,
+              }
             : undefined,
         },
       }

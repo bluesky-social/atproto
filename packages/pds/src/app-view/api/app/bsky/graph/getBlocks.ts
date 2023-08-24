@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxyRead(req)) {
+      if (await ctx.canProxyRead(req, requester)) {
         const res = await ctx.appviewAgent.api.app.bsky.graph.getBlocks(
           params,
           await ctx.serviceAuthHeaders(requester),
@@ -56,7 +56,10 @@ export default function (server: Server, ctx: AppContext) {
       const blocksRes = await blocksReq.execute()
 
       const actorService = services.appView.actor(db)
-      const blocks = await actorService.views.profile(blocksRes, requester)
+      const blocks = await actorService.views.hydrateProfiles(
+        blocksRes,
+        requester,
+      )
 
       return {
         encoding: 'application/json',

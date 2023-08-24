@@ -27,7 +27,7 @@ describe('pds profile views', () => {
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
@@ -46,6 +46,20 @@ describe('pds profile views', () => {
     )
 
     expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
+  })
+
+  it('reflects self-labels', async () => {
+    const aliceForBob = await agent.api.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: await network.serviceHeaders(bob) },
+    )
+
+    const labels = aliceForBob.data.labels
+      ?.filter((label) => label.src === alice)
+      .map((label) => label.val)
+      .sort()
+
+    expect(labels).toEqual(['self-label-a', 'self-label-b'])
   })
 
   it("fetches other's profile, with a follow", async () => {

@@ -2,7 +2,6 @@ import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
 import { prepareUpdate, prepareCreate } from '../../../../repo'
 import AppContext from '../../../../context'
 import {
@@ -13,12 +12,6 @@ import {
   PreparedUpdate,
 } from '../../../../repo'
 import { ConcurrentWriteError } from '../../../../services/repo'
-
-const ALLOWED_PUTS = [
-  ids.AppBskyActorProfile,
-  ids.AppBskyGraphList,
-  ids.AppBskyFeedGenerator,
-]
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
@@ -40,14 +33,6 @@ export default function (server: Server, ctx: AppContext) {
       }
       if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
-      }
-      if (!ALLOWED_PUTS.includes(collection)) {
-        // @TODO temporary
-        throw new InvalidRequestError(
-          `Temporarily only accepting puts for collections: ${ALLOWED_PUTS.join(
-            ', ',
-          )}`,
-        )
       }
       if (validate === false) {
         throw new InvalidRequestError(

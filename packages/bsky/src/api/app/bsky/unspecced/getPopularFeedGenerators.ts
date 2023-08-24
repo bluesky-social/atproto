@@ -10,38 +10,46 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopularFeedGenerators({
     auth: ctx.authOptionalVerifier,
     handler: async ({ auth, params }) => {
-      const { limit, cursor } = params
+      const { limit, cursor, query } = params
       const requester = auth.credentials.did
-      const db = ctx.db.db
-      const { ref } = db.dynamic
-      const feedService = ctx.services.feed(ctx.db)
+      const db = ctx.db.getReplica()
+      const { ref } = db.db.dynamic
+      const feedService = ctx.services.feed(db)
 
-      const inner = ctx.db.db
+      let inner = db.db
         .selectFrom('feed_generator')
         .select([
           'uri',
           'cid',
-          ctx.db.db
+          db.db
             .selectFrom('like')
             .whereRef('like.subject', '=', ref('feed_generator.uri'))
             .select(countAll.as('count'))
             .as('likeCount'),
         ])
 
-      let builder = ctx.db.db.selectFrom(inner.as('feed_gens')).selectAll()
+      if (query) {
+        inner = inner.where((qb) =>
+          qb
+            .where('feed_generator.displayName', 'ilike', `%${query}%`)
+            .orWhere('feed_generator.description', 'ilike', `%${query}%`),
+        )
+      }
+
+      let builder = db.db.selectFrom(inner.as('feed_gens')).selectAll()
 
       const keyset = new LikeCountKeyset(ref('likeCount'), ref('cid'))
       builder = paginate(builder, { limit, cursor, keyset, direction: 'desc' })
 
       const res = await builder.execute()
 
-      const genInfos = await feedService.getFeedGeneratorViews(
+      const genInfos = await feedService.getFeedGeneratorInfos(
         res.map((feed) => feed.uri),
         requester,
       )
 
       const creators = Object.values(genInfos).map((gen) => gen.creator)
-      const profiles = await feedService.getActorViews(creators, requester)
+      const profiles = await feedService.getActorInfos(creators, requester)
 
       const genViews: GeneratorView[] = []
       for (const row of res) {

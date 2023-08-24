@@ -21,7 +21,7 @@ export class TID {
     this.str = noDashes
   }
 
-  static next(): TID {
+  static next(prev?: TID): TID {
     // javascript does not have microsecond precision
     // instead, we append a counter to the timestamp to indicate if multiple timestamps were created within the same millisecond
     // take max of current time & last timestamp to prevent tids moving backwards if system clock drifts backwards
@@ -36,11 +36,15 @@ export class TID {
     if (clockid === null) {
       clockid = Math.floor(Math.random() * 32)
     }
-    return TID.fromTime(timestamp, clockid)
+    const tid = TID.fromTime(timestamp, clockid)
+    if (!prev || tid.newerThan(prev)) {
+      return tid
+    }
+    return TID.fromTime(prev.timestamp() + 1, clockid)
   }
 
-  static nextStr(): string {
-    return TID.next().toString()
+  static nextStr(prev?: string): string {
+    return TID.next(prev ? new TID(prev) : undefined).toString()
   }
 
   static fromTime(timestamp: number, clockid: number): TID {

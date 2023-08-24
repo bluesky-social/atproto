@@ -17,6 +17,9 @@ export class BskyAgent extends AtpAgent {
   getAuthorFeed: typeof this.api.app.bsky.feed.getAuthorFeed = (params, opts) =>
     this.api.app.bsky.feed.getAuthorFeed(params, opts)
 
+  getActorLikes: typeof this.api.app.bsky.feed.getActorLikes = (params, opts) =>
+    this.api.app.bsky.feed.getActorLikes(params, opts)
+
   getPostThread: typeof this.api.app.bsky.feed.getPostThread = (params, opts) =>
     this.api.app.bsky.feed.getPostThread(params, opts)
 

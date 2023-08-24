@@ -28,6 +28,11 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionType',
           },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long this action was meant to be in effect before automatically expiring.',
+          },
           subject: {
             type: 'union',
             refs: [
@@ -96,6 +101,11 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionType',
           },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long this action was meant to be in effect before automatically expiring.',
+          },
           subject: {
             type: 'union',
             refs: [
@@ -158,6 +168,11 @@ export const schemaDict = {
           action: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionType',
+          },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long this action was meant to be in effect before automatically expiring.',
           },
         },
       },
@@ -343,6 +358,9 @@ export const schemaDict = {
           invitesDisabled: {
             type: 'boolean',
           },
+          inviteNote: {
+            type: 'string',
+          },
         },
       },
       repoViewDetail: {
@@ -400,6 +418,9 @@ export const schemaDict = {
           },
           invitesDisabled: {
             type: 'boolean',
+          },
+          inviteNote: {
+            type: 'string',
           },
         },
       },
@@ -530,7 +551,6 @@ export const schemaDict = {
       },
       moderation: {
         type: 'object',
-        required: [],
         properties: {
           currentAction: {
             type: 'ref',
@@ -640,6 +660,11 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+              note: {
+                type: 'string',
+                description:
+                  'Additionally add a note describing why the invites were disabled',
+              },
             },
           },
         },
@@ -693,6 +718,11 @@ export const schemaDict = {
               account: {
                 type: 'string',
                 format: 'did',
+              },
+              note: {
+                type: 'string',
+                description:
+                  'Additionally add a note describing why the invites were enabled',
               },
             },
           },
@@ -1249,6 +1279,11 @@ export const schemaDict = {
               reason: {
                 type: 'string',
               },
+              durationInHours: {
+                type: 'integer',
+                description:
+                  'Indicates how long this action was meant to be in effect before automatically expiring.',
+              },
               createdBy: {
                 type: 'string',
                 format: 'did',
@@ -1423,6 +1458,36 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
             description: 'timestamp when this label was created',
+          },
+        },
+      },
+      selfLabels: {
+        type: 'object',
+        description:
+          'Metadata tags on an atproto record, published by the author within the record.',
+        required: ['values'],
+        properties: {
+          values: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#selfLabel',
+            },
+            maxLength: 10,
+          },
+        },
+      },
+      selfLabel: {
+        type: 'object',
+        description:
+          'Metadata tag on an atproto record, published by the author within the record. Note -- schemas should use #selfLabels, not #selfLabel.',
+        required: ['val'],
+        properties: {
+          val: {
+            type: 'string',
+            maxLength: 128,
+            description:
+              'the short string name of the value or type of this label',
           },
         },
       },
@@ -1652,7 +1717,7 @@ export const schemaDict = {
       },
       reasonSexual: {
         type: 'token',
-        description: 'Unwanted or mis-labeled sexual content',
+        description: 'Unwanted or mislabeled sexual content',
       },
       reasonRude: {
         type: 'token',
@@ -3510,6 +3575,8 @@ export const schemaDict = {
       },
       repoOp: {
         type: 'object',
+        description:
+          "A repo operation, ie a write of a single record. For creates and updates, cid is the record's CID as of this operation. For deletes, it's null.",
         required: ['action', 'path', 'cid'],
         nullable: ['cid'],
         properties: {
@@ -3910,6 +3977,10 @@ export const schemaDict = {
               accept: ['image/png', 'image/jpeg'],
               maxSize: 1000000,
             },
+            labels: {
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
           },
         },
       },
@@ -4234,21 +4305,33 @@ export const schemaDict = {
       },
       viewNotFound: {
         type: 'object',
-        required: ['uri'],
+        required: ['uri', 'notFound'],
         properties: {
           uri: {
             type: 'string',
             format: 'at-uri',
           },
+          notFound: {
+            type: 'boolean',
+            const: true,
+          },
         },
       },
       viewBlocked: {
         type: 'object',
-        required: ['uri'],
+        required: ['uri', 'blocked', 'author'],
         properties: {
           uri: {
             type: 'string',
             format: 'at-uri',
+          },
+          blocked: {
+            type: 'boolean',
+            const: true,
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#blockedAuthor',
           },
         },
       },
@@ -4463,7 +4546,7 @@ export const schemaDict = {
       },
       blockedPost: {
         type: 'object',
-        required: ['uri', 'blocked'],
+        required: ['uri', 'blocked', 'author'],
         properties: {
           uri: {
             type: 'string',
@@ -4472,6 +4555,24 @@ export const schemaDict = {
           blocked: {
             type: 'boolean',
             const: true,
+          },
+          author: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#blockedAuthor',
+          },
+        },
+      },
+      blockedAuthor: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#viewerState',
           },
         },
       },
@@ -4656,6 +4757,10 @@ export const schemaDict = {
               accept: ['image/png', 'image/jpeg'],
               maxSize: 1000000,
             },
+            labels: {
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
             createdAt: {
               type: 'string',
               format: 'datetime',
@@ -4713,6 +4818,62 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetActorLikes: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getActorLikes',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'A view of the posts liked by an actor.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'BlockedActor',
+          },
+          {
+            name: 'BlockedByActor',
+          },
+        ],
+      },
+    },
+  },
   AppBskyFeedGetAuthorFeed: {
     lexicon: 1,
     id: 'app.bsky.feed.getAuthorFeed',
@@ -4736,6 +4897,15 @@ export const schemaDict = {
             },
             cursor: {
               type: 'string',
+            },
+            filter: {
+              type: 'string',
+              knownValues: [
+                'posts_with_replies',
+                'posts_no_replies',
+                'posts_with_media',
+              ],
+              default: 'posts_with_replies',
             },
           },
         },
@@ -5305,6 +5475,10 @@ export const schemaDict = {
                 type: 'string',
                 format: 'language',
               },
+            },
+            labels: {
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
             },
             createdAt: {
               type: 'string',
@@ -5925,6 +6099,10 @@ export const schemaDict = {
               accept: ['image/png', 'image/jpeg'],
               maxSize: 1000000,
             },
+            labels: {
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
             createdAt: {
               type: 'string',
               format: 'datetime',
@@ -6191,6 +6369,39 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyNotificationRegisterPush: {
+    lexicon: 1,
+    id: 'app.bsky.notification.registerPush',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Register for push notifications with a service',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['serviceDid', 'token', 'platform', 'appId'],
+            properties: {
+              serviceDid: {
+                type: 'string',
+                format: 'did',
+              },
+              token: {
+                type: 'string',
+              },
+              platform: {
+                type: 'string',
+                knownValues: ['ios', 'android', 'web'],
+              },
+              appId: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationUpdateSeen: {
     lexicon: 1,
     id: 'app.bsky.notification.updateSeen',
@@ -6278,6 +6489,32 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedApplyLabels: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.applyLabels',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Allow a labeler to apply labels directly.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['labels'],
+            properties: {
+              labels: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.label.defs#label',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetPopular: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getPopular',
@@ -6342,6 +6579,9 @@ export const schemaDict = {
               default: 50,
             },
             cursor: {
+              type: 'string',
+            },
+            query: {
               type: 'string',
             },
           },
@@ -6508,6 +6748,7 @@ export const ids = {
   AppBskyFeedDescribeFeedGenerator: 'app.bsky.feed.describeFeedGenerator',
   AppBskyFeedGenerator: 'app.bsky.feed.generator',
   AppBskyFeedGetActorFeeds: 'app.bsky.feed.getActorFeeds',
+  AppBskyFeedGetActorLikes: 'app.bsky.feed.getActorLikes',
   AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
   AppBskyFeedGetFeed: 'app.bsky.feed.getFeed',
   AppBskyFeedGetFeedGenerator: 'app.bsky.feed.getFeedGenerator',
@@ -6540,8 +6781,10 @@ export const ids = {
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',
+  AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
+  AppBskyUnspeccedApplyLabels: 'app.bsky.unspecced.applyLabels',
   AppBskyUnspeccedGetPopular: 'app.bsky.unspecced.getPopular',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',

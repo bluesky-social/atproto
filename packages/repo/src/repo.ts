@@ -1,4 +1,5 @@
 import { CID } from 'multiformats/cid'
+import { TID } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import {
   Commit,
@@ -147,12 +148,14 @@ export class Repo extends ReadableRepo {
       commitBlocks.addMap(fromStorage.blocks)
     }
 
+    const rev = TID.nextStr(this.commit.rev)
     const commit = await util.signCommit(
       {
         did: this.did,
         version: 2,
         prev: this.cid,
         data: unstoredData.root,
+        rev,
       },
       keypair,
     )
@@ -161,6 +164,7 @@ export class Repo extends ReadableRepo {
     return {
       commit: commitCid,
       prev: this.cid,
+      rev,
       blocks: commitBlocks,
     }
   }

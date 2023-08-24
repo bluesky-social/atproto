@@ -5,13 +5,14 @@ import { Server } from '../../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { notSoftDeletedClause, valuesList } from '../../../../../db/util'
+import { getSelfLabels } from '../../../../services/label'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.listNotifications({
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxyRead(req)) {
+      if (await ctx.canProxyRead(req, requester)) {
         const res =
           await ctx.appviewAgent.api.app.bsky.notification.listNotifications(
             params,
@@ -112,7 +113,7 @@ export default function (server: Server, ctx: AppContext) {
       const recordUris = notifs.map((notif) => notif.uri)
       const [blocks, authors, labels] = await Promise.all([
         blocksQb ? blocksQb.execute() : emptyBlocksResult,
-        actorService.views.profile(
+        actorService.views.profiles(
           notifs.map((notif) => ({
             did: notif.authorDid,
             handle: notif.authorHandle,
@@ -127,19 +128,27 @@ export default function (server: Server, ctx: AppContext) {
         return acc
       }, {} as Record<string, Uint8Array>)
 
-      const notifications = notifs.flatMap((notif, i) => {
+      const notifications = common.mapDefined(notifs, (notif) => {
         const bytes = bytesByCid[notif.cid]
-        if (!bytes) return [] // Filter out
+        const author = authors[notif.authorDid]
+        if (!bytes || !author) return undefined
+        const record = common.cborBytesToRecord(bytes)
+        const recordLabels = labels[notif.uri] ?? []
+        const recordSelfLabels = getSelfLabels({
+          uri: notif.uri,
+          cid: notif.cid,
+          record,
+        })
         return {
           uri: notif.uri,
           cid: notif.cid,
-          author: authors[i],
+          author: authors[notif.authorDid],
           reason: notif.reason,
           reasonSubject: notif.reasonSubject || undefined,
-          record: common.cborBytesToRecord(bytes),
+          record,
           isRead: notif.indexedAt <= userState.lastSeenNotifs,
           indexedAt: notif.indexedAt,
-          labels: labels[notif.uri] ?? [],
+          labels: [...recordLabels, ...recordSelfLabels],
         }
       })
 
