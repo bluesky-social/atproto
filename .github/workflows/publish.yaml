@@ -1,0 +1,35 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  build:
+    name: Build & Publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "pnpm"
+      - run: pnpm i --frozen-lockfile
+      - run: pnpm verify
+      - run: pnpm build
+      - name: Publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: pnpm release
+          version: pnpm version-packages
+          commit: "[CD] version packages"
+          title: "[CD] version packages"

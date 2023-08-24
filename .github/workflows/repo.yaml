@@ -1,14 +1,17 @@
-name: repo
+name: Test
+
 on:
   pull_request:
-  push:
     branches:
       - main
+
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
   cancel-in-progress: true
+
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -22,6 +25,7 @@ jobs:
       - run: pnpm i --frozen-lockfile
       - run: pnpm build
   test:
+    name: Test
     strategy:
       matrix:
         shard: [1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 8/8]
@@ -38,6 +42,7 @@ jobs:
       - run: pnpm i --frozen-lockfile
       - run: pnpm test:withFlags --maxWorkers=1 --shard=${{ matrix.shard }} --passWithNoTests
   verify:
+    name: Verify
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
