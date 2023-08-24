@@ -1,7 +1,6 @@
 import { Kysely, sql } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
-  /* @TODO these migrations will be run manually in prod
   await db.schema.dropTable('post_hierarchy').execute()
   // recreate index that calculates e.g. "replyCount", turning it into a covering index
   // for uri so that recursive query for post descendents can use an index-only scan.
@@ -9,11 +8,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     db,
   )
   await db.schema.dropIndex('post_replyparent_idx').execute()
-  */
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  /* @TODO these migrations will be run manually in prod
   await db.schema
     .createTable('post_hierarchy')
     .addColumn('uri', 'varchar', (col) => col.notNull())
@@ -32,5 +29,4 @@ export async function down(db: Kysely<unknown>): Promise<void> {
     .on('post')
     .column('replyParent')
     .execute()
-  */
 }
