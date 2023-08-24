@@ -22,18 +22,22 @@ type PushNotification = {
   data?: {
     [key: string]: string
   }
+  collapse_id?: string
+  collapse_key?: string
 }
 
 type InsertableNotif = Insertable<Notification>
 
 type NotifDisplay = {
+  key: string
+  rateLimit: boolean
   title: string
   body: string
   notif: InsertableNotif
 }
 
 export class NotificationServer {
-  private rateLimiter = new RateLimiter(20, 20 * MINUTE)
+  private rateLimiter = new RateLimiter(1, 30 * MINUTE)
 
   constructor(public db: Database, public pushEndpoint?: string) {}
 
@@ -52,6 +56,7 @@ export class NotificationServer {
   }
 
   async prepareNotifsToSend(notifications: InsertableNotif[]) {
+    const now = Date.now()
     const notifsToSend: PushNotification[] = []
     const tokensByDid = await this.getTokensByDid(
       unique(notifications.map((n) => n.did)),
@@ -69,6 +74,9 @@ export class NotificationServer {
       const userTokens = tokensByDid[userDid] ?? []
       for (const t of userTokens) {
         const { appId, platform, token } = t
+        if (notifView.rateLimit && !this.rateLimiter.check(token, now)) {
+          continue
+        }
         if (platform === 'ios' || platform === 'android') {
           notifsToSend.push({
             tokens: [token],
@@ -81,6 +89,8 @@ export class NotificationServer {
               recordUri: notifView.notif.recordUri,
               recordCid: notifView.notif.recordCid,
             },
+            collapse_id: notifView.key,
+            collapse_key: notifView.key,
           })
         } else {
           // @TODO: Handle web notifs
@@ -100,11 +110,7 @@ export class NotificationServer {
    * @returns void
    */
   async processNotifications(notifs: PushNotification[]) {
-    const now = Date.now()
-    const permittedNotifs = notifs.filter((n) =>
-      n.tokens.every((token) => this.rateLimiter.check(token, now)),
-    )
-    for (const batch of chunkArray(permittedNotifs, 20)) {
+    for (const batch of chunkArray(notifs, 20)) {
       try {
         await this.sendPushNotifications(batch)
       } catch (err) {
@@ -218,7 +224,7 @@ export class NotificationServer {
       const {
         author: authorDid,
         reason,
-        reasonSubject: subjectUri, // if like/reply/quote/emtion, the post which was liked/replied to/mention is in/or quoted. if custom feed liked, the feed which was liked
+        reasonSubject: subjectUri, // if like/reply/quote/mention, the post which was liked/replied to/mention is in/or quoted. if custom feed liked, the feed which was liked
         recordUri,
       } = notif
 
@@ -237,15 +243,18 @@ export class NotificationServer {
       // if follow, get the URI of the author's profile
       // if reply, or mention, get URI of the postRecord
       // if like, or custom feed like, or repost get the URI of the reasonSubject
+      const key = reason
       let title = ''
       let body = ''
+      let rateLimit = true
 
       // check follow first and mention first because they don't have subjectUri and return
       // reply has subjectUri but the recordUri is the replied post
       if (reason === 'follow') {
         title = 'New follower!'
         body = `${author} has followed you`
-        results.push({ title, body, notif })
+        results.push({ key, title, body, notif, rateLimit })
+        continue
       } else if (reason === 'mention' || reason === 'reply') {
         // use recordUri for mention and reply
         title =
@@ -253,7 +262,9 @@ export class NotificationServer {
             ? `${author} mentioned you`
             : `${author} replied to your post`
         body = postRecord?.text || ''
-        results.push({ title, body, notif })
+        rateLimit = false // always deliver
+        results.push({ key, title, body, notif, rateLimit })
+        continue
       }
 
       // if no subjectUri, don't send notification
@@ -274,6 +285,7 @@ export class NotificationServer {
       } else if (reason === 'quote') {
         title = `${author} quoted your post`
         body = postSubject?.text || ''
+        rateLimit = true // always deliver
       } else if (reason === 'repost') {
         title = `${author} reposted your post`
         body = postSubject?.text || ''
@@ -287,7 +299,7 @@ export class NotificationServer {
         continue
       }
 
-      results.push({ title, body, notif })
+      results.push({ key, title, body, notif, rateLimit })
     }
 
     return results
