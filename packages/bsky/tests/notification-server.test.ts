@@ -119,6 +119,7 @@ describe('notification server', () => {
       const prepared = await notifServer.prepareNotifsToSend(notifAsArray)
       expect(prepared).toEqual([
         {
+          key: 'like',
           data: {
             reason: notif.reason,
             recordCid: notif.recordCid,
