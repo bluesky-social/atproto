@@ -1017,6 +1017,7 @@ describe('moderation', () => {
               $type: 'com.atproto.admin.defs#repoRef',
               did: sc.dids.bob,
             },
+            createLabelVals: ['takendown'],
             // Use negative value to set the expiry time in the past so that the action is automatically reversed
             // right away without having to wait n number of hours for a successful assertion
             durationInHours: -1,
@@ -1026,6 +1027,9 @@ describe('moderation', () => {
             headers: { authorization: moderatorAuth() },
           },
         )
+
+      const labelsAfterTakedown = await getRepoLabels(sc.dids.bob)
+      expect(labelsAfterTakedown).toContain('takendown')
       // In the actual app, this will be instantiated and run on server startup
       const periodicReversal = new PeriodicModerationActionReversal(server.ctx)
       await periodicReversal.findAndRevertDueActions()
@@ -1042,6 +1046,10 @@ describe('moderation', () => {
         createdBy: action.createdBy,
         reason: '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
       })
+
+      // Verify that labels are also reversed when takedown action is reversed
+      const labelsAfterReversal = await getRepoLabels(sc.dids.bob)
+      expect(labelsAfterReversal).not.toContain('takendown')
     })
 
     it('does not allow non-full moderators to takedown.', async () => {
