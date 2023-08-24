@@ -11,6 +11,7 @@ export type PdsConfig = Partial<pds.ServerConfig> & {
   migration?: string
   enableInProcessAppView?: boolean
   algos?: pds.MountedAlgos
+  enableLabelsCache?: boolean
 }
 
 export type BskyConfig = Partial<bsky.ServerConfig> & {

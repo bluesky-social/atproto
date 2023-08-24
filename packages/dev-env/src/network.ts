@@ -48,6 +48,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       plcUrl: plc.url,
       bskyAppViewEndpoint: bsky.url,
       bskyAppViewDid: bsky.ctx.cfg.serverDid,
+      enableLabelsCache: true,
       ...params.pds,
     })
 
