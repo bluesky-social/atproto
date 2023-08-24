@@ -30,34 +30,6 @@ export const LABELS: LabelDefinitionMap = {
       },
     },
   },
-  '!filter': {
-    id: '!filter',
-    preferences: ['hide'],
-    flags: ['no-override'],
-    onwarn: 'blur',
-    groupId: 'system',
-    configurable: false,
-    strings: {
-      settings: {
-        en: {
-          name: 'Moderator Filter',
-          description: 'Moderator has chosen to hide the content.',
-        },
-      },
-      account: {
-        en: {
-          name: 'Content Blocked',
-          description: 'This account has been hidden by the moderators.',
-        },
-      },
-      content: {
-        en: {
-          name: 'Content Blocked',
-          description: 'This content has been hidden by the moderators.',
-        },
-      },
-    },
-  },
   '!no-promote': {
     id: '!no-promote',
     preferences: ['hide'],
@@ -147,8 +119,8 @@ export const LABELS: LabelDefinitionMap = {
       },
     },
   },
-  'nudity-nonconsensual': {
-    id: 'nudity-nonconsensual',
+  ncii: {
+    id: 'ncii',
     preferences: ['hide'],
     flags: ['no-override'],
     onwarn: 'blur',
@@ -157,21 +129,21 @@ export const LABELS: LabelDefinitionMap = {
     strings: {
       settings: {
         en: {
-          name: 'Non-Consensual Nudity',
+          name: 'Non-Consensual Intimate Image Abuse',
           description:
             'The content has been reported for sharing nudity or sexual imagery without the explicit consent of the individual(s) depicted.',
         },
       },
       account: {
         en: {
-          name: 'Non-Consensual Nudity',
+          name: 'Non-Consensual Intimate Image Abuse',
           description:
             'This account has been reported for sharing nudity or sexual imagery without the explicit consent of the individual(s) depicted. The report is currently under review.',
         },
       },
       content: {
         en: {
-          name: 'Non-Consensual Nudity',
+          name: 'Non-Consensual Intimate Image Abuse',
           description:
             'This content has been reported for displaying nudity or sexual imagery without the explicit consent of the individual(s) depicted. The report is currently under review.',
         },
