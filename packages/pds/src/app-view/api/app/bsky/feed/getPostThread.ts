@@ -12,6 +12,10 @@ import {
   PostInfoMap,
   PostBlocksMap,
 } from '../../../../services/feed'
+import {
+  getAncestorsAndSelfQb,
+  getDescendentsQb,
+} from '../../../../services/feed/util'
 import { Labels } from '../../../../services/label'
 import {
   BlockedPost,
@@ -91,12 +95,7 @@ export default function (server: Server, ctx: AppContext) {
       const feedService = ctx.services.appView.feed(ctx.db)
       const labelService = ctx.services.appView.label(ctx.db)
 
-      const threadData = await getThreadData(
-        feedService,
-        uri,
-        depth,
-        parentHeight,
-      )
+      const threadData = await getThreadData(ctx, uri, depth, parentHeight)
       if (!threadData) {
         throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
       }
@@ -246,24 +245,31 @@ const getRelevantIds = (
 }
 
 const getThreadData = async (
-  feedService: FeedService,
+  ctx: AppContext,
   uri: string,
   depth: number,
   parentHeight: number,
 ): Promise<PostThread | null> => {
+  const feedService = ctx.services.appView.feed(ctx.db)
   const [parents, children] = await Promise.all([
-    feedService
-      .selectPostQb()
-      .innerJoin('post_hierarchy', 'post_hierarchy.ancestorUri', 'post.uri')
-      .where('post_hierarchy.uri', '=', uri)
+    getAncestorsAndSelfQb(ctx.db.db, { uri, parentHeight })
+      .selectFrom('ancestor')
+      .innerJoin(
+        feedService.selectPostQb().as('post'),
+        'post.uri',
+        'ancestor.uri',
+      )
+      .selectAll('post')
       .execute(),
-    feedService
-      .selectPostQb()
-      .innerJoin('post_hierarchy', 'post_hierarchy.uri', 'post.uri')
-      .where('post_hierarchy.uri', '!=', uri)
-      .where('post_hierarchy.ancestorUri', '=', uri)
-      .where('depth', '<=', depth)
-      .orderBy('post.createdAt', 'desc')
+    getDescendentsQb(ctx.db.db, { uri, depth })
+      .selectFrom('descendent')
+      .innerJoin(
+        feedService.selectPostQb().as('post'),
+        'post.uri',
+        'descendent.uri',
+      )
+      .selectAll('post')
+      .orderBy('sortAt', 'desc')
       .execute(),
   ])
   const parentsByUri = parents.reduce((acc, parent) => {

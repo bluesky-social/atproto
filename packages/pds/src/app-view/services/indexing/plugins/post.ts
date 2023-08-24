@@ -18,23 +18,29 @@ import {
 } from '../../../../db/database-schema'
 import { BackgroundQueue } from '../../../../event-stream/background-queue'
 import RecordProcessor from '../processor'
-import { PostHierarchy } from '../../../db/tables/post-hierarchy'
 import { UserNotification } from '../../../../db/tables/user-notification'
 import { countAll, excluded } from '../../../../db/util'
 import { toSimplifiedISOSafe } from '../util'
+import { getAncestorsAndSelfQb } from '../../feed/util'
 
 type Post = DatabaseSchemaType['post']
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
 type PostEmbedExternal = DatabaseSchemaType['post_embed_external']
 type PostEmbedRecord = DatabaseSchemaType['post_embed_record']
+type PostAncestor = {
+  uri: string
+  height: number
+}
 type IndexedPost = {
   post: Post
   facets: { type: 'mention' | 'link'; value: string }[]
   embeds?: (PostEmbedImage[] | PostEmbedExternal | PostEmbedRecord)[]
-  ancestors: PostHierarchy[]
+  ancestors?: PostAncestor[]
 }
 
 const lexId = lex.ids.AppBskyFeedPost
+
+const REPLY_NOTIF_DEPTH = 5
 
 const insertFn = async (
   db: DatabaseSchema,
@@ -134,6 +140,7 @@ const insertFn = async (
     }
   }
   // Thread index
+  // @TODO remove thread hierarchy indexing
   await db
     .insertInto('post_hierarchy')
     .values({
@@ -143,9 +150,8 @@ const insertFn = async (
     })
     .onConflict((oc) => oc.doNothing()) // Supports post updates
     .execute()
-  let ancestors: PostHierarchy[] = []
   if (post.replyParent) {
-    ancestors = await db
+    await db
       .insertInto('post_hierarchy')
       .columns(['uri', 'ancestorUri', 'depth'])
       .expression(
@@ -162,6 +168,13 @@ const insertFn = async (
       .returningAll()
       .execute()
   }
+  const ancestors = await getAncestorsAndSelfQb(db, {
+    uri: post.uri,
+    parentHeight: REPLY_NOTIF_DEPTH,
+  })
+    .selectFrom('ancestor')
+    .selectAll()
+    .execute()
   return { post: insertedPost, facets, embeds, ancestors }
 }
 
@@ -207,10 +220,10 @@ const notifsForInsert = (obj: IndexedPost) => {
       }
     }
   }
-  const ancestors = [...obj.ancestors].sort((a, b) => a.depth - b.depth)
-  for (const relation of ancestors) {
-    if (relation.depth < 5) {
-      const ancestorUri = new AtUri(relation.ancestorUri)
+  for (const ancestor of obj.ancestors ?? []) {
+    if (ancestor.uri === obj.post.uri) continue // no need to notify for own post
+    if (ancestor.height < REPLY_NOTIF_DEPTH) {
+      const ancestorUri = new AtUri(ancestor.uri)
       maybeNotify({
         userDid: ancestorUri.host,
         reason: 'reply',
@@ -269,19 +282,11 @@ const deleteFn = async (
   if (deletedPosts) {
     deletedEmbeds.push(deletedPosts)
   }
-  // Do not delete, maintain thread hierarchy even if post no longer exists
-  const ancestors = await db
-    .selectFrom('post_hierarchy')
-    .where('uri', '=', uriStr)
-    .where('depth', '>', 0)
-    .selectAll()
-    .execute()
   return deleted
     ? {
         post: deleted,
         facets: [], // Not used
         embeds: deletedEmbeds,
-        ancestors,
       }
     : null
 }
