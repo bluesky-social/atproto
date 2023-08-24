@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
+    "@atproto/common-web": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",
     "@atproto/lexicon": "workspace:^",

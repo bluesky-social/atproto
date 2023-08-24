@@ -183,6 +183,9 @@ importers:
       '@did-plc/lib':
         specifier: ^0.0.1
         version: 0.0.1
+      '@isaacs/ttlcache':
+        specifier: ^1.4.1
+        version: 1.4.1
       compression:
         specifier: ^1.7.4
         version: 1.7.4
@@ -226,8 +229,8 @@ importers:
         specifier: ^8.10.0
         version: 8.10.0
       pino:
-        specifier: ^8.6.1
-        version: 8.6.1
+        specifier: ^8.15.0
+        version: 8.15.0
       pino-http:
         specifier: ^8.2.1
         version: 8.2.1
@@ -293,8 +296,8 @@ importers:
         specifier: ^9.9.0
         version: 9.9.0
       pino:
-        specifier: ^8.6.1
-        version: 8.6.1
+        specifier: ^8.15.0
+        version: 8.15.0
 
   packages/common-web:
     dependencies:
@@ -570,8 +573,8 @@ importers:
         specifier: ^8.10.0
         version: 8.10.0
       pino:
-        specifier: ^8.6.1
-        version: 8.6.1
+        specifier: ^8.15.0
+        version: 8.15.0
       pino-http:
         specifier: ^8.2.1
         version: 8.2.1
@@ -627,6 +630,9 @@ importers:
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
+      '@atproto/common-web':
+        specifier: workspace:^
+        version: link:../common-web
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
@@ -715,6 +721,9 @@ importers:
       '@types/express':
         specifier: ^4.17.13
         version: 4.17.13
+      '@types/express-serve-static-core':
+        specifier: ^4.17.36
+        version: 4.17.36
       '@types/http-errors':
         specifier: ^2.0.1
         version: 2.0.1
@@ -748,7 +757,7 @@ packages:
     dependencies:
       '@ipld/dag-cbor': 7.0.3
       multiformats: 9.9.0
-      pino: 8.6.1
+      pino: 8.15.0
       zod: 3.22.2
 
   /@atproto/crypto@0.1.0:
@@ -4380,6 +4389,11 @@ packages:
     dependencies:
       cborg: 1.10.2
       multiformats: 9.9.0
+
+  /@isaacs/ttlcache@1.4.1:
+    resolution: {integrity: sha512-RQgQ4uQ+pLbqXfOmieB91ejmLwvSgv9nLx6sT6sD83s7umBypgg+OIBOBbEUiJXrfpnp9j0mRhYYdzp9uqq3lA==}
+    engines: {node: '>=12'}
+    dev: false
 
   /@istanbuljs/load-nyc-config@1.1.0:
     resolution: {integrity: sha512-VjeHSlIzpv/NyD3N0YuHfXOPDIixcA1q2ZV98wsMqcYlPmv2n3Yb2lYP9XMElnaFVXg5A7YLTeLu6V84uQDjmQ==}
@@ -8948,7 +8962,7 @@ packages:
     dependencies:
       fast-url-parser: 1.1.3
       get-caller-file: 2.0.5
-      pino: 8.6.1
+      pino: 8.15.0
       pino-std-serializers: 6.2.2
       process-warning: 2.2.0
     dev: false
@@ -8957,7 +8971,7 @@ packages:
     resolution: {integrity: sha512-9I1eRLxsujQJwLQTrHBU0wDlwnry2HzV2TlDwAsmZ9nT3Y2NQBLrz+DYp73L4i11vl/eudnFT8Eg0Kp62tMwEw==}
     dependencies:
       get-caller-file: 2.0.5
-      pino: 8.6.1
+      pino: 8.15.0
       pino-std-serializers: 6.2.2
       process-warning: 2.2.0
 
@@ -8986,22 +9000,6 @@ packages:
 
   /pino@8.15.0:
     resolution: {integrity: sha512-olUADJByk4twxccmAxb1RiGKOSvddHugCV3wkqjyv+3Sooa2KLrmXrKEWOKi0XPCLasRR5jBXxioE1jxUa4KzQ==}
-    hasBin: true
-    dependencies:
-      atomic-sleep: 1.0.0
-      fast-redact: 3.3.0
-      on-exit-leak-free: 2.1.0
-      pino-abstract-transport: 1.0.0
-      pino-std-serializers: 6.2.2
-      process-warning: 2.2.0
-      quick-format-unescaped: 4.0.4
-      real-require: 0.2.0
-      safe-stable-stringify: 2.4.3
-      sonic-boom: 3.3.0
-      thread-stream: 2.4.0
-
-  /pino@8.6.1:
-    resolution: {integrity: sha512-fi+V2K98eMZjQ/uEHHSiMALNrz7HaFdKNYuyA3ZUrbH0f1e8sPFDmeRGzg7ZH2q4QDxGnJPOswmqlEaTAZeDPA==}
     hasBin: true
     dependencies:
       atomic-sleep: 1.0.0

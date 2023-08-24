@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { schema as common, def as commonDef } from '@atproto/common'
+import { def as commonDef } from '@atproto/common-web'
+import { schema as common } from '@atproto/common'
 import { CID } from 'multiformats'
 import BlockMap from './block-map'
 import { RepoRecord } from '@atproto/lexicon'
