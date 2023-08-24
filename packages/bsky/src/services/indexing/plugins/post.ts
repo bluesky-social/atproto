@@ -35,7 +35,7 @@ type PostDescendent = {
   depth: number
   cid: string
   creator: string
-  indexedAt: string
+  sortAt: string
 }
 type IndexedPost = {
   post: Post
@@ -164,7 +164,7 @@ const insertFn = async (
     .selectFrom('descendent')
     .innerJoin('post', 'post.uri', 'descendent.uri')
     .selectAll('descendent')
-    .select(['cid', 'creator', 'indexedAt'])
+    .select(['cid', 'creator', 'sortAt'])
     .execute()
   return {
     post: insertedPost,
@@ -196,7 +196,7 @@ const notifsForInsert = (obj: IndexedPost) => {
         author: obj.post.creator,
         recordUri: obj.post.uri,
         recordCid: obj.post.cid,
-        sortAt: obj.post.indexedAt,
+        sortAt: obj.post.sortAt,
       })
     }
   }
@@ -211,7 +211,7 @@ const notifsForInsert = (obj: IndexedPost) => {
           author: obj.post.creator,
           recordUri: obj.post.uri,
           recordCid: obj.post.cid,
-          sortAt: obj.post.indexedAt,
+          sortAt: obj.post.sortAt,
         })
       }
     }
@@ -228,7 +228,7 @@ const notifsForInsert = (obj: IndexedPost) => {
         author: obj.post.creator,
         recordUri: obj.post.uri,
         recordCid: obj.post.cid,
-        sortAt: obj.post.indexedAt,
+        sortAt: obj.post.sortAt,
       })
     }
   }
@@ -247,7 +247,7 @@ const notifsForInsert = (obj: IndexedPost) => {
           author: descendent.creator,
           recordUri: descendent.uri,
           recordCid: descendent.cid,
-          sortAt: descendent.indexedAt,
+          sortAt: descendent.sortAt,
         })
       }
     }

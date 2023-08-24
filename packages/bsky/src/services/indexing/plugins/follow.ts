@@ -60,7 +60,7 @@ const notifsForInsert = (obj: IndexedFollow) => {
       recordCid: obj.cid,
       reason: 'follow' as const,
       reasonSubject: null,
-      sortAt: obj.indexedAt,
+      sortAt: obj.sortAt,
     },
   ]
 }

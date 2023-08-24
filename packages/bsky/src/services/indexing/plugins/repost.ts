@@ -85,7 +85,7 @@ const notifsForInsert = (obj: IndexedRepost) => {
           recordCid: obj.cid,
           reason: 'repost' as const,
           reasonSubject: subjectUri.toString(),
-          sortAt: obj.indexedAt,
+          sortAt: obj.sortAt,
         },
       ]
 }

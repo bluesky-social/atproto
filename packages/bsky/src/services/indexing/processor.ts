@@ -64,7 +64,13 @@ export class RecordProcessor<T, S> {
     lexicons.assertValidRecord(this.params.lexId, obj)
   }
 
-  async insertRecord(uri: AtUri, cid: CID, obj: unknown, timestamp: string) {
+  async insertRecord(
+    uri: AtUri,
+    cid: CID,
+    obj: unknown,
+    timestamp: string,
+    opts?: { disableNotifs?: boolean },
+  ) {
     this.assertValidRecord(obj)
     await this.db
       .insertInto('record')
@@ -86,7 +92,9 @@ export class RecordProcessor<T, S> {
     )
     if (inserted) {
       this.aggregateOnCommit(inserted)
-      await this.handleNotifs({ inserted })
+      if (!opts?.disableNotifs) {
+        await this.handleNotifs({ inserted })
+      }
       return
     }
     // if duplicate, insert into duplicates table with no events
@@ -109,7 +117,13 @@ export class RecordProcessor<T, S> {
   // for the uri then replace it. The main upside is that this allows the indexer
   // for each collection to avoid bespoke logic for in-place updates, which isn't
   // straightforward in the general case. We still get nice control over notifications.
-  async updateRecord(uri: AtUri, cid: CID, obj: unknown, timestamp: string) {
+  async updateRecord(
+    uri: AtUri,
+    cid: CID,
+    obj: unknown,
+    timestamp: string,
+    opts?: { disableNotifs?: boolean },
+  ) {
     this.assertValidRecord(obj)
     await this.db
       .updateTable('record')
@@ -158,7 +172,9 @@ export class RecordProcessor<T, S> {
       )
     }
     this.aggregateOnCommit(inserted)
-    await this.handleNotifs({ inserted, deleted })
+    if (!opts?.disableNotifs) {
+      await this.handleNotifs({ inserted, deleted })
+    }
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {

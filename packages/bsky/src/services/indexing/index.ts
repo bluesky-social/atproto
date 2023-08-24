@@ -11,7 +11,7 @@ import {
 } from '@atproto/repo'
 import { AtUri } from '@atproto/uri'
 import { IdResolver, getPds } from '@atproto/identity'
-import { DAY, HOUR, chunkArray } from '@atproto/common'
+import { DAY, HOUR } from '@atproto/common'
 import { ValidationError } from '@atproto/lexicon'
 import { PrimaryDatabase } from '../../db'
 import * as Post from './plugins/post'
@@ -95,6 +95,7 @@ export class IndexingService {
     obj: unknown,
     action: WriteOpAction.Create | WriteOpAction.Update,
     timestamp: string,
+    opts?: { disableNotifs?: boolean; disableLabels?: boolean },
   ) {
     this.db.assertNotTransaction()
     await this.db.transaction(async (txn) => {
@@ -102,12 +103,14 @@ export class IndexingService {
       const indexer = indexingTx.findIndexerForCollection(uri.collection)
       if (!indexer) return
       if (action === WriteOpAction.Create) {
-        await indexer.insertRecord(uri, cid, obj, timestamp)
+        await indexer.insertRecord(uri, cid, obj, timestamp, opts)
       } else {
         await indexer.updateRecord(uri, cid, obj, timestamp)
       }
     })
-    this.labeler.processRecord(uri, obj)
+    if (!opts?.disableLabels) {
+      this.labeler.processRecord(uri, obj)
+    }
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {
@@ -186,19 +189,25 @@ export class IndexingService {
       signingKey,
     )
 
-    // Wipe index for actor, prep for reindexing
-    await this.unindexActor(did)
+    const currRecords = await this.getCurrentRecords(did)
+    const checkoutRecords = formatCheckout(did, checkout.contents)
+    const diff = findDiffFromCheckout(currRecords, checkoutRecords)
 
-    // Iterate over all records and index them in batches
-    const contentList = [...walkContentsWithCids(checkout.contents)]
-    const chunks = chunkArray(contentList, 100)
-
-    for (const chunk of chunks) {
-      const processChunk = chunk.map(async (item) => {
-        const { cid, collection, rkey, record } = item
-        const uri = AtUri.make(did, collection, rkey)
+    await Promise.all(
+      diff.map(async (op) => {
+        const { uri, cid } = op
         try {
-          await this.indexRecord(uri, cid, record, WriteOpAction.Create, now)
+          if (op.op === 'delete') {
+            await this.deleteRecord(uri)
+          } else {
+            await this.indexRecord(
+              uri,
+              cid,
+              op.value,
+              op.op === 'create' ? WriteOpAction.Create : WriteOpAction.Update,
+              now,
+            )
+          }
         } catch (err) {
           if (err instanceof ValidationError) {
             subLogger.warn(
@@ -212,9 +221,23 @@ export class IndexingService {
             )
           }
         }
-      })
-      await Promise.all(processChunk)
-    }
+      }),
+    )
+  }
+
+  async getCurrentRecords(did: string) {
+    const res = await this.db.db
+      .selectFrom('record')
+      .where('did', '=', did)
+      .select(['uri', 'cid'])
+      .execute()
+    return res.reduce((acc, cur) => {
+      acc[cur.uri] = {
+        uri: new AtUri(cur.uri),
+        cid: CID.parse(cur.cid),
+      }
+      return acc
+    }, {} as Record<string, { uri: AtUri; cid: CID }>)
   }
 
   async setCommitLastSeen(
@@ -352,13 +375,64 @@ export class IndexingService {
   }
 }
 
-function* walkContentsWithCids(contents: RepoContentsWithCids) {
-  for (const collection of Object.keys(contents)) {
-    for (const rkey of Object.keys(contents[collection])) {
-      const { cid, value } = contents[collection][rkey]
-      yield { collection, rkey, cid, record: value }
+type UriAndCid = {
+  uri: AtUri
+  cid: CID
+}
+
+type RecordDescript = UriAndCid & {
+  value: unknown
+}
+
+type IndexOp =
+  | ({
+      op: 'create' | 'update'
+    } & RecordDescript)
+  | ({ op: 'delete' } & UriAndCid)
+
+const findDiffFromCheckout = (
+  curr: Record<string, UriAndCid>,
+  checkout: Record<string, RecordDescript>,
+): IndexOp[] => {
+  const ops: IndexOp[] = []
+  for (const uri of Object.keys(checkout)) {
+    const record = checkout[uri]
+    if (!curr[uri]) {
+      ops.push({ op: 'create', ...record })
+    } else {
+      if (curr[uri].cid.equals(record.cid)) {
+        // no-op
+        continue
+      }
+      ops.push({ op: 'update', ...record })
     }
   }
+  for (const uri of Object.keys(curr)) {
+    const record = curr[uri]
+    if (!checkout[uri]) {
+      ops.push({ op: 'delete', ...record })
+    }
+  }
+  return ops
+}
+
+const formatCheckout = (
+  did: string,
+  contents: RepoContentsWithCids,
+): Record<string, RecordDescript> => {
+  const records: Record<string, RecordDescript> = {}
+  for (const collection of Object.keys(contents)) {
+    for (const rkey of Object.keys(contents[collection])) {
+      const uri = AtUri.make(did, collection, rkey)
+      const { cid, value } = contents[collection][rkey]
+      records[uri.toString()] = {
+        uri,
+        cid,
+        value,
+      }
+    }
+  }
+  return records
 }
 
 const needsHandleReindex = (actor: Actor | undefined, timestamp: string) => {
