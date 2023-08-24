@@ -239,21 +239,19 @@ export class NotificationServer {
       // if follow, get the URI of the author's profile
       // if reply, or mention, get URI of the postRecord
       // if like, or custom feed like, or repost get the URI of the reasonSubject
-      let key = ''
+      const key = reason
       let title = ''
       let body = ''
 
       // check follow first and mention first because they don't have subjectUri and return
       // reply has subjectUri but the recordUri is the replied post
       if (reason === 'follow') {
-        key = `follow:${authorDid}`
         title = 'New follower!'
         body = `${author} has followed you`
         results.push({ key, title, body, notif })
         continue
       } else if (reason === 'mention' || reason === 'reply') {
         // use recordUri for mention and reply
-        key = `${reason}:${recordUri}`
         title =
           reason === 'mention'
             ? `${author} mentioned you`
@@ -270,7 +268,6 @@ export class NotificationServer {
       }
 
       if (reason === 'like') {
-        key = `like:${subjectUri}`
         title = `${author} liked your post`
         body = postSubject?.text || ''
         // custom feed like
@@ -280,11 +277,9 @@ export class NotificationServer {
           body = uri?.rkey ?? ''
         }
       } else if (reason === 'quote') {
-        key = `quote:${recordUri}`
         title = `${author} quoted your post`
         body = postSubject?.text || ''
       } else if (reason === 'repost') {
-        key = `repost:${subjectUri}`
         title = `${author} reposted your post`
         body = postSubject?.text || ''
       }
