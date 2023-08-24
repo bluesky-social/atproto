@@ -1,4 +1,3 @@
-import { cborToLexRecord } from '@atproto/repo'
 import Database from '../../../db'
 import {
   FeedViewPost,
@@ -29,9 +28,11 @@ import {
   MaybePostView,
   PostInfoMap,
   RecordEmbedViewRecord,
+  PostBlocksMap,
+  FeedHydrationOptions,
+  kSelfLabels,
 } from './types'
-import { Labels } from '../label'
-import { ProfileView } from '../../../lexicon/types/app/bsky/actor/defs'
+import { Labels, getSelfLabels } from '../label'
 import { ImageUriBuilder } from '../../../image/uri'
 
 export * from './types'
@@ -45,14 +46,16 @@ export class FeedViews {
 
   formatFeedGeneratorView(
     info: FeedGenInfo,
-    profiles: Record<string, ProfileView>,
+    profiles: ActorInfoMap,
     labels?: Labels,
   ): GeneratorView {
     const profile = profiles[info.creator]
-    if (profile) {
+    if (profile && !profile.labels) {
       // If the creator labels are not hydrated yet, attempt to pull them
       // from labels: e.g. compatible with embedsForPosts() batching label hydration.
-      profile.labels ??= labels?.[info.creator] ?? []
+      const profileLabels = labels?.[info.creator] ?? []
+      const profileSelfLabels = profile[kSelfLabels] ?? []
+      profile.labels = [...profileLabels, ...profileSelfLabels]
     }
     return {
       uri: info.uri,
@@ -81,7 +84,8 @@ export class FeedViews {
     posts: PostInfoMap,
     embeds: PostEmbedViews,
     labels: Labels,
-    usePostViewUnion?: boolean,
+    blocks: PostBlocksMap,
+    opts?: FeedHydrationOptions,
   ): FeedViewPost[] {
     const feed: FeedViewPost[] = []
     for (const item of items) {
@@ -91,9 +95,10 @@ export class FeedViews {
         posts,
         embeds,
         labels,
+        opts,
       )
       // skip over not found & blocked posts
-      if (!post) {
+      if (!post || blocks[post.uri]?.reply) {
         continue
       }
       const feedPost = { post }
@@ -103,11 +108,13 @@ export class FeedViews {
         if (!originator) {
           continue
         } else {
+          const originatorLabels = labels[item.originatorDid] ?? []
+          const originatorSelfLabels = originator[kSelfLabels] ?? []
           feedPost['reason'] = {
             $type: 'app.bsky.feed.defs#reasonRepost',
             by: {
               ...originator,
-              labels: labels[item.originatorDid] ?? [],
+              labels: [...originatorLabels, ...originatorSelfLabels],
             },
             indexedAt: item.sortAt,
           }
@@ -120,7 +127,8 @@ export class FeedViews {
           posts,
           embeds,
           labels,
-          usePostViewUnion,
+          blocks,
+          opts,
         )
         const replyRoot = this.formatMaybePostView(
           item.replyRoot,
@@ -128,7 +136,8 @@ export class FeedViews {
           posts,
           embeds,
           labels,
-          usePostViewUnion,
+          blocks,
+          opts,
         )
         if (replyRoot && replyParent) {
           feedPost['reply'] = {
@@ -148,18 +157,30 @@ export class FeedViews {
     posts: PostInfoMap,
     embeds: PostEmbedViews,
     labels: Labels,
+    opts?: Pick<FeedHydrationOptions, 'includeSoftDeleted'>,
   ): PostView | undefined {
     const post = posts[uri]
     const author = actors[post?.creator]
     if (!post || !author) return undefined
     // If the author labels are not hydrated yet, attempt to pull them
     // from labels: e.g. compatible with hydrateFeed() batching label hydration.
-    author.labels ??= labels[author.did] ?? []
+    const authorLabels = labels[author.did] ?? []
+    const authorSelfLabels = author[kSelfLabels] ?? []
+    author.labels ??= [...authorLabels, ...authorSelfLabels]
+    const postLabels = labels[uri] ?? []
+    const postSelfLabels = getSelfLabels({
+      uri: post.uri,
+      cid: post.cid,
+      record: post.record,
+    })
     return {
       uri: post.uri,
       cid: post.cid,
       author: author,
-      record: cborToLexRecord(post.recordBytes),
+      takedownId: opts?.includeSoftDeleted
+        ? post.takedownId ?? null
+        : undefined,
+      record: post.record,
       embed: embeds[uri],
       replyCount: post.replyCount ?? 0,
       repostCount: post.repostCount ?? 0,
@@ -169,7 +190,7 @@ export class FeedViews {
         repost: post.requesterRepost ?? undefined,
         like: post.requesterLike ?? undefined,
       },
-      labels: labels[uri] ?? [],
+      labels: [...postLabels, ...postSelfLabels],
     }
   }
 
@@ -179,16 +200,21 @@ export class FeedViews {
     posts: PostInfoMap,
     embeds: PostEmbedViews,
     labels: Labels,
-    usePostViewUnion?: boolean,
+    blocks: PostBlocksMap,
+    opts?: FeedHydrationOptions,
   ): MaybePostView | undefined {
-    const post = this.formatPostView(uri, actors, posts, embeds, labels)
+    const post = this.formatPostView(uri, actors, posts, embeds, labels, opts)
     if (!post) {
-      if (!usePostViewUnion) return
+      if (!opts?.usePostViewUnion) return
       return this.notFoundPost(uri)
     }
-    if (post.author.viewer?.blockedBy || post.author.viewer?.blocking) {
-      if (!usePostViewUnion) return
-      return this.blockedPost(uri)
+    if (
+      post.author.viewer?.blockedBy ||
+      post.author.viewer?.blocking ||
+      blocks[uri]?.reply
+    ) {
+      if (!opts?.usePostViewUnion) return
+      return this.blockedPost(post)
     }
     return {
       $type: 'app.bsky.feed.defs#postView',
@@ -196,11 +222,20 @@ export class FeedViews {
     }
   }
 
-  blockedPost(uri: string) {
+  blockedPost(post: PostView) {
     return {
       $type: 'app.bsky.feed.defs#blockedPost',
-      uri: uri,
+      uri: post.uri,
       blocked: true as const,
+      author: {
+        did: post.author.did,
+        viewer: post.author.viewer
+          ? {
+              blockedBy: post.author.viewer?.blockedBy,
+              blocking: post.author.viewer?.blocking,
+            }
+          : undefined,
+      },
     }
   }
 
@@ -254,12 +289,23 @@ export class FeedViews {
       return {
         $type: 'app.bsky.embed.record#viewNotFound',
         uri,
+        notFound: true,
       }
     }
     if (post.author.viewer?.blocking || post.author.viewer?.blockedBy) {
       return {
         $type: 'app.bsky.embed.record#viewBlocked',
         uri,
+        blocked: true,
+        author: {
+          did: post.author.did,
+          viewer: post.author.viewer
+            ? {
+                blockedBy: post.author.viewer?.blockedBy,
+                blocking: post.author.viewer?.blocking,
+              }
+            : undefined,
+        },
       }
     }
     return {

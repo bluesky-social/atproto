@@ -7,7 +7,7 @@ import { isUserOrAdmin } from '../../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listBlobs({
-    auth: ctx.optionalAccessOrAdminVerifier,
+    auth: ctx.optionalAccessOrRoleVerifier,
     handler: async ({ params, auth }) => {
       const { did } = params
       // takedown check for anyone other than an admin or the user

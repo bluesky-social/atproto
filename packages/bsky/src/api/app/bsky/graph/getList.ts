@@ -2,7 +2,6 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
-import { ProfileView } from '../../../../lexicon/types/app/bsky/actor/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getList({
@@ -10,10 +9,10 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { list, limit, cursor } = params
       const requester = auth.credentials.did
-      const { services, db } = ctx
+      const db = ctx.db.getReplica()
       const { ref } = db.db.dynamic
 
-      const graphService = ctx.services.graph(ctx.db)
+      const graphService = ctx.services.graph(db)
 
       const listRes = await graphService
         .getListsQb(requester)
@@ -39,21 +38,18 @@ export default function (server: Server, ctx: AppContext) {
       })
       const itemsRes = await itemsReq.execute()
 
-      const actorService = services.actor(db)
-      const profiles = await actorService.views.profile(itemsRes, requester)
-      const profilesMap = profiles.reduce(
-        (acc, cur) => ({
-          ...acc,
-          [cur.did]: cur,
-        }),
-        {} as Record<string, ProfileView>,
+      const actorService = ctx.services.actor(db)
+      const profiles = await actorService.views.hydrateProfiles(
+        itemsRes,
+        requester,
       )
 
-      const items = itemsRes.map((item) => ({
-        subject: profilesMap[item.did],
-      }))
+      const items = profiles.map((subject) => ({ subject }))
 
       const creator = await actorService.views.profile(listRes, requester)
+      if (!creator) {
+        throw new InvalidRequestError(`Actor not found: ${listRes.handle}`)
+      }
 
       const subject = {
         uri: listRes.uri,
@@ -66,7 +62,7 @@ export default function (server: Server, ctx: AppContext) {
           ? JSON.parse(listRes.descriptionFacets)
           : undefined,
         avatar: listRes.avatarCid
-          ? ctx.imgUriBuilder.getCommonSignedUri(
+          ? ctx.imgUriBuilder.getPresetUri(
               'avatar',
               listRes.creator,
               listRes.avatarCid,

@@ -26,6 +26,7 @@ export class RecordService {
     cid: CID,
     obj: unknown,
     action: WriteOpAction.Create | WriteOpAction.Update = WriteOpAction.Create,
+    repoRev?: string,
     timestamp?: string,
   ) {
     this.db.assertTransaction()
@@ -36,6 +37,7 @@ export class RecordService {
       did: uri.host,
       collection: uri.collection,
       rkey: uri.rkey,
+      repoRev: repoRev ?? null,
       indexedAt: timestamp || new Date().toISOString(),
     }
     if (!record.did.startsWith('did:')) {
@@ -51,9 +53,11 @@ export class RecordService {
       .insertInto('record')
       .values(record)
       .onConflict((oc) =>
-        oc
-          .column('uri')
-          .doUpdateSet({ cid: record.cid, indexedAt: record.indexedAt }),
+        oc.column('uri').doUpdateSet({
+          cid: record.cid,
+          repoRev: repoRev ?? null,
+          indexedAt: record.indexedAt,
+        }),
       )
       .execute()
 

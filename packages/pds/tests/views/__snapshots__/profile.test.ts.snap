@@ -36,7 +36,24 @@ Array [
     "followsCount": 3,
     "handle": "alice.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": Array [
+      Object {
+        "cid": "cids(0)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "user(0)",
+        "uri": "record(2)",
+        "val": "self-label-a",
+      },
+      Object {
+        "cid": "cids(0)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "user(0)",
+        "uri": "record(2)",
+        "val": "self-label-b",
+      },
+    ],
     "postsCount": 4,
     "viewer": Object {
       "blockedBy": false,
@@ -54,7 +71,24 @@ Array [
     "followsCount": 2,
     "handle": "bob.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
-    "labels": Array [],
+    "labels": Array [
+      Object {
+        "cid": "cids(1)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "user(1)",
+        "uri": "record(3)",
+        "val": "self-label-a",
+      },
+      Object {
+        "cid": "cids(1)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "user(1)",
+        "uri": "record(3)",
+        "val": "self-label-b",
+      },
+    ],
     "postsCount": 3,
     "viewer": Object {
       "blockedBy": false,
@@ -70,7 +104,7 @@ Array [
     "postsCount": 2,
     "viewer": Object {
       "blockedBy": false,
-      "following": "record(2)",
+      "following": "record(4)",
       "muted": false,
     },
   },
@@ -91,7 +125,7 @@ Array [
     "postsCount": 2,
     "viewer": Object {
       "blockedBy": false,
-      "followedBy": "record(3)",
+      "followedBy": "record(5)",
       "muted": false,
     },
   },
@@ -108,7 +142,24 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
-  "labels": Array [],
+  "labels": Array [
+    Object {
+      "cid": "cids(0)",
+      "cts": "1970-01-01T00:00:00.000Z",
+      "neg": false,
+      "src": "user(0)",
+      "uri": "record(2)",
+      "val": "self-label-a",
+    },
+    Object {
+      "cid": "cids(0)",
+      "cts": "1970-01-01T00:00:00.000Z",
+      "neg": false,
+      "src": "user(0)",
+      "uri": "record(2)",
+      "val": "self-label-b",
+    },
+  ],
   "postsCount": 4,
   "viewer": Object {
     "blockedBy": false,
@@ -153,7 +204,24 @@ Object {
   "followsCount": 3,
   "handle": "alice.test",
   "indexedAt": "1970-01-01T00:00:00.000Z",
-  "labels": Array [],
+  "labels": Array [
+    Object {
+      "cid": "cids(0)",
+      "cts": "1970-01-01T00:00:00.000Z",
+      "neg": false,
+      "src": "user(0)",
+      "uri": "record(0)",
+      "val": "self-label-a",
+    },
+    Object {
+      "cid": "cids(0)",
+      "cts": "1970-01-01T00:00:00.000Z",
+      "neg": false,
+      "src": "user(0)",
+      "uri": "record(0)",
+      "val": "self-label-b",
+    },
+  ],
   "postsCount": 4,
   "viewer": Object {
     "blockedBy": false,

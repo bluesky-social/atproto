@@ -1,10 +1,10 @@
-import stream from 'stream'
 import Database from '../db'
 import { BlobStore, cidForRecord } from '@atproto/repo'
 import { dedupe, getFieldsFromRecord } from './util'
 import { AtUri } from '@atproto/uri'
 import { labelerLogger as log } from '../logger'
 import { BackgroundQueue } from '../event-stream/background-queue'
+import { CID } from 'multiformats/cid'
 
 export abstract class Labeler {
   public db: Database
@@ -58,16 +58,13 @@ export abstract class Labeler {
     const { text, imgs } = getFieldsFromRecord(obj)
     const txtLabels = await this.labelText(text.join(' '))
     const imgLabels = await Promise.all(
-      imgs.map(async (cid) => {
-        const stream = await this.blobstore.getStream(cid)
-        return this.labelImg(stream)
-      }),
+      imgs.map(async (cid) => this.labelImg(cid)),
     )
     return dedupe([...txtLabels, ...imgLabels.flat()])
   }
 
   abstract labelText(text: string): Promise<string[]>
-  abstract labelImg(img: stream.Readable): Promise<string[]>
+  abstract labelImg(cid: CID): Promise<string[]>
 
   async processAll() {
     await this.backgroundQueue.processAll()

@@ -84,6 +84,7 @@ export function validateViewRecord(v: unknown): ValidationResult {
 
 export interface ViewNotFound {
   uri: string
+  notFound: true
   [k: string]: unknown
 }
 
@@ -101,6 +102,8 @@ export function validateViewNotFound(v: unknown): ValidationResult {
 
 export interface ViewBlocked {
   uri: string
+  blocked: true
+  author: AppBskyFeedDefs.BlockedAuthor
   [k: string]: unknown
 }
 

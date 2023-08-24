@@ -1,10 +1,23 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.resolveModerationReports({
     auth: ctx.roleVerifier,
-    handler: async ({ input }) => {
+    handler: async ({ req, input }) => {
+      if (ctx.shouldProxyModeration()) {
+        const { data: result } =
+          await ctx.appviewAgent.com.atproto.admin.resolveModerationReports(
+            input.body,
+            authPassthru(req, true),
+          )
+        return {
+          encoding: 'application/json',
+          body: result,
+        }
+      }
+
       const { db, services } = ctx
       const moderationService = services.moderation(db)
       const { actionId, reportIds, createdBy } = input.body

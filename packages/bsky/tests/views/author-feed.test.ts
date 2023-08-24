@@ -4,6 +4,9 @@ import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
+import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
+import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
 
 describe('pds author feed views', () => {
   let network: TestNetwork
@@ -25,7 +28,6 @@ describe('pds author feed views', () => {
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
@@ -163,12 +165,11 @@ describe('pds author feed views', () => {
         },
       )
 
-    const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
+    const attempt = agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
       { headers: await network.serviceHeaders(carol) },
     )
-
-    expect(postBlock.feed.length).toEqual(0)
+    await expect(attempt).rejects.toThrow('Profile not found')
 
     // Cleanup
     await agent.api.com.atproto.admin.reverseModerationAction(
@@ -232,5 +233,72 @@ describe('pds author feed views', () => {
         headers: network.pds.adminAuthHeaders(),
       },
     )
+  })
+
+  it('can filter by posts_with_media', async () => {
+    const { data: carolFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: carol,
+      filter: 'posts_with_media',
+    })
+
+    expect(carolFeed.feed.length).toBeGreaterThan(0)
+    expect(
+      carolFeed.feed.every(({ post }) => {
+        const isRecordWithActorMedia =
+          isEmbedRecordWithMedia(post.embed) && isImageEmbed(post.embed?.media)
+        const isActorMedia = isImageEmbed(post.embed)
+        const isFromActor = post.author.did === carol
+
+        return (isRecordWithActorMedia || isActorMedia) && isFromActor
+      }),
+    ).toBeTruthy()
+
+    const { data: bobFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: bob,
+      filter: 'posts_with_media',
+    })
+
+    expect(
+      bobFeed.feed.every(({ post }) => {
+        return isImageEmbed(post.embed) && post.author.did === bob
+      }),
+    ).toBeTruthy()
+
+    const { data: danFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: dan,
+      filter: 'posts_with_media',
+    })
+
+    expect(danFeed.feed.length).toEqual(0)
+  })
+
+  it('filters by posts_no_replies', async () => {
+    const { data: carolFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: carol,
+      filter: 'posts_no_replies',
+    })
+
+    expect(
+      carolFeed.feed.every(({ post }) => {
+        return (
+          (isRecord(post.record) && !post.record.reply) ||
+          (isRecord(post.record) && post.record.reply)
+        )
+      }),
+    ).toBeTruthy()
+
+    const { data: danFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: dan,
+      filter: 'posts_no_replies',
+    })
+
+    expect(
+      danFeed.feed.every(({ post }) => {
+        return (
+          (isRecord(post.record) && !post.record.reply) ||
+          (isRecord(post.record) && post.record.reply)
+        )
+      }),
+    ).toBeTruthy()
   })
 })

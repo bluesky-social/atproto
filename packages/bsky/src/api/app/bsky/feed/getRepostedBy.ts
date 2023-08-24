@@ -9,7 +9,8 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { uri, limit, cursor, cid } = params
       const requester = auth.credentials.did
-      const { services, db } = ctx
+      const db = ctx.db.getReplica()
+      const graphService = ctx.services.graph(db)
       const { ref } = db.db.dynamic
 
       let builder = db.db
@@ -17,6 +18,9 @@ export default function (server: Server, ctx: AppContext) {
         .where('repost.subject', '=', uri)
         .innerJoin('actor as creator', 'creator.did', 'repost.creator')
         .where(notSoftDeletedClause(ref('creator')))
+        .whereNotExists(
+          graphService.blockQb(requester, [ref('repost.creator')]),
+        )
         .selectAll('creator')
         .select(['repost.cid as cid', 'repost.sortAt as sortAt'])
 
@@ -32,9 +36,9 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const repostedByRes = await builder.execute()
-      const repostedBy = await services
+      const repostedBy = await ctx.services
         .actor(db)
-        .views.profile(repostedByRes, requester)
+        .views.hydrateProfiles(repostedByRes, requester)
 
       return {
         encoding: 'application/json',

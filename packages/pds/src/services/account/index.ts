@@ -179,14 +179,14 @@ export class AccountService {
     await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
-  async isHandleAvailable(handle: string) {
+  async getHandleDid(handle: string): Promise<string | null> {
     // @NOTE see also condition in updateHandle()
     const found = await this.db.db
       .selectFrom('did_handle')
       .where('handle', '=', handle)
-      .select('handle')
+      .selectAll()
       .executeTakeFirst()
-    return !found
+    return found?.did ?? null
   }
 
   async updateEmail(did: string, email: string) {

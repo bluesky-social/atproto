@@ -7,8 +7,9 @@ export const createRouter = (ctx: AppContext): express.Router => {
 
   router.get('/xrpc/_health', async function (req, res) {
     const { version } = ctx.cfg
+    const db = ctx.db.getPrimary()
     try {
-      await sql`select 1`.execute(ctx.db.db)
+      await sql`select 1`.execute(db.db)
     } catch (err) {
       req.log.error(err, 'failed health check')
       return res.status(503).send({ version, error: 'Service Unavailable' })

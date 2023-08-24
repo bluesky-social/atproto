@@ -104,7 +104,19 @@ describe('pds user search views', () => {
       { headers },
     )
 
-    expect(limited.data.actors).toEqual(full.data.actors.slice(0, 5))
+    // @NOTE it's expected that searchActorsTypeahead doesn't have stable pagination
+
+    const limitedIndexInFull = limited.data.actors.map((needle) => {
+      return full.data.actors.findIndex(
+        (haystack) => needle.did === haystack.did,
+      )
+    })
+
+    // subset exists in full and is monotonic
+    expect(limitedIndexInFull.every((idx) => idx !== -1)).toEqual(true)
+    expect(limitedIndexInFull).toEqual(
+      [...limitedIndexInFull].sort((a, b) => a - b),
+    )
   })
 
   it('search gives relevant results', async () => {
@@ -118,7 +130,7 @@ describe('pds user search views', () => {
     const shouldContain = [
       'cara-wiegand69.test',
       'eudora-dietrich4.test', // Carol Littel
-      'shane-torphy52.test', //Sadie Carter
+      'shane-torphy52.test', // Sadie Carter
       'aliya-hodkiewicz.test', // Carlton Abernathy IV
       'carlos6.test',
       'carolina-mcdermott77.test',

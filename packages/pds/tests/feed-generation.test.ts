@@ -336,6 +336,15 @@ describe('feed generation', () => {
         resFull.data.feeds,
       )
     })
+
+    it('searches', async () => {
+      const res = await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+        { query: 'pagination' },
+        { headers: sc.getHeaders(sc.dids.bob) },
+      )
+
+      expect(res.data.feeds[0].displayName).toBe('Bad Pagination')
+    })
   })
 
   describe('getFeed', () => {

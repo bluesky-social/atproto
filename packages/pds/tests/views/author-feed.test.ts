@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import {
   runTestServer,
@@ -9,6 +9,9 @@ import {
 } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
+import { isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
+import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
+import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
 
 describe('pds author feed views', () => {
   let agent: AtpAgent
@@ -20,6 +23,35 @@ describe('pds author feed views', () => {
   let bob: string
   let carol: string
   let dan: string
+
+  const reverseModerationAction = async (id) =>
+    agent.api.com.atproto.admin.reverseModerationAction(
+      {
+        id,
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
+
+  const takedownSubject = async (
+    subject: ComAtprotoAdminTakeModerationAction.InputSchema['subject'],
+  ) =>
+    agent.api.com.atproto.admin.takeModerationAction(
+      {
+        action: TAKEDOWN,
+        subject,
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: adminAuth() },
+      },
+    )
 
   beforeAll(async () => {
     const server = await runTestServer({
@@ -159,42 +191,19 @@ describe('pds author feed views', () => {
 
     expect(preBlock.feed.length).toBeGreaterThan(0)
 
-    const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: alice,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
+    const { data: action } = await takedownSubject({
+      $type: 'com.atproto.admin.defs#repoRef',
+      did: alice,
+    })
 
-    const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
+    const attempt = agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
       { headers: sc.getHeaders(carol) },
     )
-
-    expect(postBlock.feed.length).toEqual(0)
+    await expect(attempt).rejects.toThrow('Profile not found')
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      {
-        id: action.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
-      },
-    )
+    await reverseModerationAction(action.id)
   })
 
   it('blocked by record takedown.', async () => {
@@ -207,23 +216,11 @@ describe('pds author feed views', () => {
 
     const post = preBlock.feed[0].post
 
-    const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: post.uri,
-            cid: post.cid,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
+    const { data: action } = await takedownSubject({
+      $type: 'com.atproto.repo.strongRef',
+      uri: post.uri,
+      cid: post.cid,
+    })
 
     const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
@@ -234,16 +231,133 @@ describe('pds author feed views', () => {
     expect(postBlock.feed.map((item) => item.post.uri)).not.toContain(post.uri)
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await reverseModerationAction(action.id)
+  })
+
+  it('includes takendown posts for admins', async () => {
+    const { data: preTakedown } = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: alice },
+      { headers: sc.getHeaders(carol) },
+    )
+
+    expect(preTakedown.feed.length).toBeGreaterThan(0)
+
+    const post = preTakedown.feed[0].post
+
+    const { data: takedownAction } = await takedownSubject({
+      $type: 'com.atproto.repo.strongRef',
+      uri: post.uri,
+      cid: post.cid,
+    })
+
+    const [{ data: postTakedownForCarol }, { data: postTakedownForAdmin }] =
+      await Promise.all([
+        agent.api.app.bsky.feed.getAuthorFeed(
+          { actor: alice },
+          { headers: sc.getHeaders(carol) },
+        ),
+        agent.api.app.bsky.feed.getAuthorFeed(
+          { actor: alice },
+          { headers: { authorization: adminAuth() } },
+        ),
+      ])
+
+    const takendownPostInCarolsFeed = postTakedownForCarol.feed.find(
+      (item) => item.post.uri === post.uri || !!post.takedownId,
+    )
+    const takendownPostInAdminsFeed = postTakedownForAdmin.feed.find(
+      (item) => item.post.uri === post.uri || !!post.takedownId,
+    )
+    expect(takendownPostInCarolsFeed).toBeFalsy()
+    expect(takendownPostInAdminsFeed).toBeTruthy()
+    expect(takendownPostInAdminsFeed?.post.takedownId).toEqual(
+      takedownAction.id,
+    )
+
+    // Cleanup
+    await reverseModerationAction(takedownAction.id)
+  })
+
+  it('can filter by posts_with_media', async () => {
+    const { data: carolFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
       {
-        id: action.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        actor: carol,
+        filter: 'posts_with_media',
       },
       {
-        encoding: 'application/json',
-        headers: { authorization: adminAuth() },
+        headers: sc.getHeaders(alice),
       },
     )
+
+    expect(carolFeed.feed.length).toBeGreaterThan(0)
+    expect(
+      carolFeed.feed.every(({ post }) => {
+        const isRecordWithActorMedia =
+          isEmbedRecordWithMedia(post.embed) && isImageEmbed(post.embed?.media)
+        const isActorMedia = isImageEmbed(post.embed)
+        const isFromActor = post.author.did === carol
+
+        return (isRecordWithActorMedia || isActorMedia) && isFromActor
+      }),
+    ).toBeTruthy()
+
+    const { data: bobFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
+      {
+        actor: bob,
+        filter: 'posts_with_media',
+      },
+      {
+        headers: sc.getHeaders(alice),
+      },
+    )
+
+    expect(bobFeed.feed.length).toBeGreaterThan(0)
+    expect(
+      bobFeed.feed.every(({ post }) => {
+        return isImageEmbed(post.embed) && post.author.did === bob
+      }),
+    ).toBeTruthy()
+
+    const { data: danFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
+      {
+        actor: dan,
+        filter: 'posts_with_media',
+      },
+      {
+        headers: sc.getHeaders(alice),
+      },
+    )
+
+    expect(danFeed.feed.length).toEqual(0)
+  })
+
+  it('filters by posts_no_replies', async () => {
+    const { data: carolFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: carol, filter: 'posts_no_replies' },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(
+      carolFeed.feed.every(({ post }) => {
+        return (
+          (isRecord(post.record) && !post.record.reply) ||
+          (isRecord(post.record) && post.record.reply)
+        )
+      }),
+    ).toBeTruthy()
+
+    const { data: danFeed } = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: dan, filter: 'posts_no_replies' },
+      { headers: sc.getHeaders(alice) },
+    )
+
+    expect(
+      danFeed.feed.every(({ post }) => {
+        return (
+          (isRecord(post.record) && !post.record.reply) ||
+          (isRecord(post.record) && post.record.reply)
+        )
+      }),
+    ).toBeTruthy()
   })
 })
