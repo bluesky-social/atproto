@@ -591,6 +591,9 @@ importers:
         specifier: ^3.21.4
         version: 3.21.4
     devDependencies:
+      '@atproto/bsky':
+        specifier: workspace:^
+        version: link:../bsky
       '@atproto/dev-env':
         specifier: workspace:^
         version: link:../dev-env

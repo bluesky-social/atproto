@@ -73,6 +73,7 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
+    "@atproto/bsky": "workspace:^",
     "@atproto/dev-env": "workspace:^",
     "@atproto/lex-cli": "workspace:^",
     "@did-plc/server": "^0.0.1",
