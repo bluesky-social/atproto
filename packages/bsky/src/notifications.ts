@@ -63,7 +63,7 @@ export class NotificationServer {
 
     for (const notifView of notificationViews) {
       if (!isRecent(notifView.notif.sortAt, 10 * MINUTE)) {
-        return // if the notif is from > 10 minutes ago, don't send push notif
+        continue // if the notif is from > 10 minutes ago, don't send push notif
       }
       const { did: userDid } = notifView.notif
       const userTokens = tokensByDid[userDid] ?? []
