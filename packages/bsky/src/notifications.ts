@@ -30,13 +30,14 @@ type InsertableNotif = Insertable<Notification>
 
 type NotifDisplay = {
   key: string
+  rateLimit: boolean
   title: string
   body: string
   notif: InsertableNotif
 }
 
 export class NotificationServer {
-  private rateLimiter = new RateLimiter(20, 20 * MINUTE)
+  private rateLimiter = new RateLimiter(1, 30 * MINUTE)
 
   constructor(public db: Database, public pushEndpoint?: string) {}
 
@@ -55,6 +56,7 @@ export class NotificationServer {
   }
 
   async prepareNotifsToSend(notifications: InsertableNotif[]) {
+    const now = Date.now()
     const notifsToSend: PushNotification[] = []
     const tokensByDid = await this.getTokensByDid(
       unique(notifications.map((n) => n.did)),
@@ -69,6 +71,9 @@ export class NotificationServer {
       const userTokens = tokensByDid[userDid] ?? []
       for (const t of userTokens) {
         const { appId, platform, token } = t
+        if (notifView.rateLimit && !this.rateLimiter.check(token, now)) {
+          continue
+        }
         if (platform === 'ios' || platform === 'android') {
           notifsToSend.push({
             tokens: [token],
@@ -102,11 +107,7 @@ export class NotificationServer {
    * @returns void
    */
   async processNotifications(notifs: PushNotification[]) {
-    const now = Date.now()
-    const permittedNotifs = notifs.filter((n) =>
-      n.tokens.every((token) => this.rateLimiter.check(token, now)),
-    )
-    for (const batch of chunkArray(permittedNotifs, 20)) {
+    for (const batch of chunkArray(notifs, 20)) {
       try {
         await this.sendPushNotifications(batch)
       } catch (err) {
@@ -242,13 +243,14 @@ export class NotificationServer {
       const key = reason
       let title = ''
       let body = ''
+      let rateLimit = true
 
       // check follow first and mention first because they don't have subjectUri and return
       // reply has subjectUri but the recordUri is the replied post
       if (reason === 'follow') {
         title = 'New follower!'
         body = `${author} has followed you`
-        results.push({ key, title, body, notif })
+        results.push({ key, title, body, notif, rateLimit })
         continue
       } else if (reason === 'mention' || reason === 'reply') {
         // use recordUri for mention and reply
@@ -257,7 +259,8 @@ export class NotificationServer {
             ? `${author} mentioned you`
             : `${author} replied to your post`
         body = postRecord?.text || ''
-        results.push({ key, title, body, notif })
+        rateLimit = false // always deliver
+        results.push({ key, title, body, notif, rateLimit })
         continue
       }
 
@@ -279,6 +282,7 @@ export class NotificationServer {
       } else if (reason === 'quote') {
         title = `${author} quoted your post`
         body = postSubject?.text || ''
+        rateLimit = true // always deliver
       } else if (reason === 'repost') {
         title = `${author} reposted your post`
         body = postSubject?.text || ''
@@ -292,7 +296,7 @@ export class NotificationServer {
         continue
       }
 
-      results.push({ key, title, body, notif })
+      results.push({ key, title, body, notif, rateLimit })
     }
 
     return results

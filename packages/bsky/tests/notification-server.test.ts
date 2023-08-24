@@ -115,7 +115,10 @@ describe('notification server', () => {
       const db = network.bsky.ctx.db.getPrimary()
       const notif = await getLikeNotification(db, alice)
       if (!notif) throw new Error('no notification found')
-      const notifAsArray = [notif]
+      const notifAsArray = [
+        notif,
+        notif /* second one will get dropped by rate limit */,
+      ]
       const prepared = await notifServer.prepareNotifsToSend(notifAsArray)
       expect(prepared).toEqual([
         {
