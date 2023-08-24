@@ -22,11 +22,14 @@ type PushNotification = {
   data?: {
     [key: string]: string
   }
+  collapse_id?: string
+  collapse_key?: string
 }
 
 type InsertableNotif = Insertable<Notification>
 
 type NotifDisplay = {
+  key: string
   title: string
   body: string
   notif: InsertableNotif
@@ -78,6 +81,8 @@ export class NotificationServer {
               recordUri: notifView.notif.recordUri,
               recordCid: notifView.notif.recordCid,
             },
+            collapse_id: notifView.key,
+            collapse_key: notifView.key,
           })
         } else {
           // @TODO: Handle web notifs
@@ -215,7 +220,7 @@ export class NotificationServer {
       const {
         author: authorDid,
         reason,
-        reasonSubject: subjectUri, // if like/reply/quote/emtion, the post which was liked/replied to/mention is in/or quoted. if custom feed liked, the feed which was liked
+        reasonSubject: subjectUri, // if like/reply/quote/mention, the post which was liked/replied to/mention is in/or quoted. if custom feed liked, the feed which was liked
         recordUri,
       } = notif
 
@@ -234,23 +239,26 @@ export class NotificationServer {
       // if follow, get the URI of the author's profile
       // if reply, or mention, get URI of the postRecord
       // if like, or custom feed like, or repost get the URI of the reasonSubject
+      let key = ''
       let title = ''
       let body = ''
 
       // check follow first and mention first because they don't have subjectUri and return
       // reply has subjectUri but the recordUri is the replied post
       if (reason === 'follow') {
+        key = `follow:${authorDid}`
         title = 'New follower!'
         body = `${author} has followed you`
-        results.push({ title, body, notif })
+        results.push({ key, title, body, notif })
       } else if (reason === 'mention' || reason === 'reply') {
         // use recordUri for mention and reply
+        key = `${reason}:${recordUri}`
         title =
           reason === 'mention'
             ? `${author} mentioned you`
             : `${author} replied to your post`
         body = postRecord?.text || ''
-        results.push({ title, body, notif })
+        results.push({ key, title, body, notif })
       }
 
       // if no subjectUri, don't send notification
@@ -260,6 +268,7 @@ export class NotificationServer {
       }
 
       if (reason === 'like') {
+        key = `like:${subjectUri}`
         title = `${author} liked your post`
         body = postSubject?.text || ''
         // custom feed like
@@ -269,9 +278,11 @@ export class NotificationServer {
           body = uri?.rkey ?? ''
         }
       } else if (reason === 'quote') {
+        key = `quote:${recordUri}`
         title = `${author} quoted your post`
         body = postSubject?.text || ''
       } else if (reason === 'repost') {
+        key = `repost:${subjectUri}`
         title = `${author} reposted your post`
         body = postSubject?.text || ''
       }
@@ -284,7 +295,7 @@ export class NotificationServer {
         continue
       }
 
-      results.push({ title, body, notif })
+      results.push({ key, title, body, notif })
     }
 
     return results
