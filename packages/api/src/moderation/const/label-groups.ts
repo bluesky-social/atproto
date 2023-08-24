@@ -28,7 +28,6 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
       LABELS['dmca-violation'],
       LABELS['doxxing'],
       LABELS['nudity-nonconsensual'],
-      LABELS['csam'],
     ],
     strings: {
       settings: {

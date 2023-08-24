@@ -178,36 +178,6 @@ export const LABELS: LabelDefinitionMap = {
       },
     },
   },
-  csam: {
-    id: 'csam',
-    preferences: ['hide'],
-    flags: ['no-override'],
-    onwarn: 'blur',
-    groupId: 'legal',
-    configurable: false,
-    strings: {
-      settings: {
-        en: {
-          name: 'Child Sexual Abuse Material',
-          description: 'The content has been reported for sharing CSAM.',
-        },
-      },
-      account: {
-        en: {
-          name: 'Child Sexual Abuse Material',
-          description:
-            'This account has been reported for sharing CSAM. The report is currently under review.',
-        },
-      },
-      content: {
-        en: {
-          name: 'Child Sexual Abuse Material',
-          description:
-            'This content has been reported for sharing CSAM. The report is currently under review.',
-        },
-      },
-    },
-  },
   doxxing: {
     id: 'doxxing',
     preferences: ['hide'],
