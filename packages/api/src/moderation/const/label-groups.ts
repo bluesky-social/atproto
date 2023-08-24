@@ -6,7 +6,12 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
   system: {
     id: 'system',
     configurable: false,
-    labels: [LABELS['!hide'], LABELS['!no-promote'], LABELS['!warn']],
+    labels: [
+      LABELS['!hide'],
+      LABELS['!no-promote'],
+      LABELS['!warn'],
+      LABELS['!filter'],
+    ],
     strings: {
       settings: {
         en: {
@@ -19,7 +24,12 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
   legal: {
     id: 'legal',
     configurable: false,
-    labels: [LABELS['dmca-violation'], LABELS['doxxing']],
+    labels: [
+      LABELS['dmca-violation'],
+      LABELS['doxxing'],
+      LABELS['nudity-nonconsensual'],
+      LABELS['csam'],
+    ],
     strings: {
       settings: {
         en: {
@@ -130,6 +140,7 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
       LABELS['net-abuse'],
       LABELS['impersonation'],
       LABELS['scam'],
+      LABELS['misleading'],
     ],
     strings: {
       settings: {

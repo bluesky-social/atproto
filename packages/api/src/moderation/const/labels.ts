@@ -30,6 +30,34 @@ export const LABELS: LabelDefinitionMap = {
       },
     },
   },
+  '!filter': {
+    id: '!filter',
+    preferences: ['hide'],
+    flags: ['no-override'],
+    onwarn: 'blur',
+    groupId: 'system',
+    configurable: false,
+    strings: {
+      settings: {
+        en: {
+          name: 'Moderator Filter',
+          description: 'Moderator has chosen to hide the content.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Content Blocked',
+          description: 'This account has been hidden by the moderators.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Content Blocked',
+          description: 'This content has been hidden by the moderators.',
+        },
+      },
+    },
+  },
   '!no-promote': {
     id: '!no-promote',
     preferences: ['hide'],
@@ -115,6 +143,67 @@ export const LABELS: LabelDefinitionMap = {
           name: 'Copyright Violation',
           description:
             'This content has received a DMCA takedown request. It will be restored if the concerns can be resolved.',
+        },
+      },
+    },
+  },
+  'nudity-nonconsensual': {
+    id: 'nudity-nonconsensual',
+    preferences: ['hide'],
+    flags: ['no-override'],
+    onwarn: 'blur',
+    groupId: 'legal',
+    configurable: false,
+    strings: {
+      settings: {
+        en: {
+          name: 'Non-Consensual Nudity',
+          description:
+            'The content has been reported for sharing nudity or sexual imagery without the explicit consent of the individual(s) depicted.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Non-Consensual Nudity',
+          description:
+            'This account has been reported for sharing nudity or sexual imagery without the explicit consent of the individual(s) depicted. The report is currently under review.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Non-Consensual Nudity',
+          description:
+            'This content has been reported for displaying nudity or sexual imagery without the explicit consent of the individual(s) depicted. The report is currently under review.',
+        },
+      },
+    },
+  },
+  csam: {
+    id: 'csam',
+    preferences: ['hide'],
+    flags: ['no-override'],
+    onwarn: 'blur',
+    groupId: 'legal',
+    configurable: false,
+    strings: {
+      settings: {
+        en: {
+          name: 'Child Sexual Abuse Material',
+          description: 'The content has been reported for sharing CSAM.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Child Sexual Abuse Material',
+          description:
+            'This account has been reported for sharing CSAM. The report is currently under review.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Child Sexual Abuse Material',
+          description:
+            'This content has been reported for sharing CSAM. The report is currently under review.',
         },
       },
     },
@@ -762,6 +851,36 @@ export const LABELS: LabelDefinitionMap = {
           name: 'Impersonation Warning',
           description:
             'The moderators believe this account is lying about their identity.',
+        },
+      },
+    },
+  },
+  misleading: {
+    id: 'misleading',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'alert',
+    groupId: 'misinfo',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Misleading',
+          description: 'Accounts which share misleading information.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Misleading',
+          description:
+            'The moderators believe this account is spreading misleading information.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Misleading',
+          description:
+            'The moderators believe this account is spreading misleading information.',
         },
       },
     },
