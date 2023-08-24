@@ -21,7 +21,6 @@ export class TestNetworkNoAppView {
       dbPostgresUrl,
       dbPostgresSchema,
       plcUrl: plc.url,
-      enableLabelsCache: true,
       ...params.pds,
     })
 
