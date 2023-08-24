@@ -15,6 +15,7 @@ import {
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { PeriodicModerationActionReversal } from '../src'
 
 describe('moderation', () => {
   let network: TestNetwork
@@ -1002,6 +1003,53 @@ describe('moderation', () => {
       await expect(attemptTakedownTriage).rejects.toThrow(
         'Must be a full moderator to perform an account takedown',
       )
+    })
+    it('automatically reverses actions marked with duration', async () => {
+      const { data: action } =
+        await agent.api.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            createdBy: 'did:example:moderator',
+            reason: 'Y',
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: sc.dids.bob,
+            },
+            createLabelVals: ['takendown'],
+            // Use negative value to set the expiry time in the past so that the action is automatically reversed
+            // right away without having to wait n number of hours for a successful assertion
+            durationInHours: -1,
+          },
+          {
+            encoding: 'application/json',
+            headers: network.bsky.adminAuthHeaders('moderator'),
+          },
+        )
+
+      const labelsAfterTakedown = await getRepoLabels(sc.dids.bob)
+      expect(labelsAfterTakedown).toContain('takendown')
+      // In the actual app, this will be instantiated and run on server startup
+      const periodicReversal = new PeriodicModerationActionReversal(
+        network.bsky.ctx,
+      )
+      await periodicReversal.findAndRevertDueActions()
+
+      const { data: reversedAction } =
+        await agent.api.com.atproto.admin.getModerationAction(
+          { id: action.id },
+          { headers: network.bsky.adminAuthHeaders('moderator') },
+        )
+
+      // Verify that the automatic reversal is attributed to the original moderator of the temporary action
+      // and that the reason is set to indicate that the action was automatically reversed.
+      expect(reversedAction.reversal).toMatchObject({
+        createdBy: action.createdBy,
+        reason: '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
+      })
+
+      // Verify that labels are also reversed when takedown action is reversed
+      const labelsAfterReversal = await getRepoLabels(sc.dids.bob)
+      expect(labelsAfterReversal).not.toContain('takendown')
     })
 
     async function actionWithLabels(

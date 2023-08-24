@@ -22,6 +22,8 @@ import { ModerationAction } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
 import { ModerationReportRowWithHandle } from '.'
+import { getSelfLabels } from '../../app-view/services/label'
+import { jsonStringToLex } from '@atproto/lexicon'
 
 export class ModerationViews {
   constructor(private db: Database, private messageDispatcher: MessageQueue) {}
@@ -275,6 +277,11 @@ export class ModerationViews {
       this.blob(record.blobCids),
       this.labels(record.uri),
     ])
+    const selfLabels = getSelfLabels({
+      uri: result.uri,
+      cid: result.cid,
+      record: result.value as Record<string, unknown>,
+    })
     return {
       ...record,
       blobs,
@@ -283,7 +290,7 @@ export class ModerationViews {
         reports,
         actions,
       },
-      labels,
+      labels: [...labels, ...selfLabels],
     }
   }
 

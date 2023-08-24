@@ -42,41 +42,24 @@ export const getHandle = (doc: DidDocument): string | undefined => {
 }
 
 export const getPds = (doc: DidDocument): string | undefined => {
-  let services = doc.service
-  if (!services) return undefined
-  if (typeof services !== 'object') return undefined
-  if (!Array.isArray(services)) {
-    services = [services]
-  }
-  const found = services.find((service) => service.id === '#atproto_pds')
-  if (!found) return undefined
-  if (found.type !== 'AtprotoPersonalDataServer') {
-    return undefined
-  }
-  if (typeof found.serviceEndpoint !== 'string') {
-    return undefined
-  }
-  validateUrl(found.serviceEndpoint)
-  return found.serviceEndpoint
+  return getServiceEndpoint(doc, {
+    id: '#atproto_pds',
+    type: 'AtprotoPersonalDataServer',
+  })
 }
 
 export const getFeedGen = (doc: DidDocument): string | undefined => {
-  let services = doc.service
-  if (!services) return undefined
-  if (typeof services !== 'object') return undefined
-  if (!Array.isArray(services)) {
-    services = [services]
-  }
-  const found = services.find((service) => service.id === '#bsky_fg')
-  if (!found) return undefined
-  if (found.type !== 'BskyFeedGenerator') {
-    return undefined
-  }
-  if (typeof found.serviceEndpoint !== 'string') {
-    return undefined
-  }
-  validateUrl(found.serviceEndpoint)
-  return found.serviceEndpoint
+  return getServiceEndpoint(doc, {
+    id: '#bsky_fg',
+    type: 'BskyFeedGenerator',
+  })
+}
+
+export const getNotif = (doc: DidDocument): string | undefined => {
+  return getServiceEndpoint(doc, {
+    id: '#bsky_notif',
+    type: 'BskyNotificationService',
+  })
 }
 
 export const parseToAtprotoDocument = (
@@ -117,4 +100,26 @@ const validateUrl = (url: string) => {
   if (!hostname) {
     throw new Error('Invalid pds hostname')
   }
+}
+
+const getServiceEndpoint = (
+  doc: DidDocument,
+  opts: { id: string; type: string },
+) => {
+  let services = doc.service
+  if (!services) return undefined
+  if (typeof services !== 'object') return undefined
+  if (!Array.isArray(services)) {
+    services = [services]
+  }
+  const found = services.find((service) => service.id === opts.id)
+  if (!found) return undefined
+  if (found.type !== opts.type) {
+    return undefined
+  }
+  if (typeof found.serviceEndpoint !== 'string') {
+    return undefined
+  }
+  validateUrl(found.serviceEndpoint)
+  return found.serviceEndpoint
 }

@@ -8,6 +8,7 @@ import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import { BackgroundQueue } from '../../../background'
 import RecordProcessor from '../processor'
 import { toSimplifiedISOSafe } from '../util'
+import { NotificationServer } from '../../../notifications'
 
 const lexId = lex.ids.AppBskyFeedGenerator
 type IndexedFeedGenerator = Selectable<DatabaseSchemaType['feed_generator']>
@@ -73,8 +74,9 @@ export type PluginType = RecordProcessor<
 export const makePlugin = (
   db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
+  notifServer?: NotificationServer,
 ): PluginType => {
-  return new RecordProcessor(db, backgroundQueue, {
+  return new RecordProcessor(db, backgroundQueue, notifServer, {
     lexId,
     insertFn,
     findDuplicate,

@@ -97,6 +97,7 @@ export class TestBsky {
       indexerSubLockId: uniqueLockId(),
       indexerPort: await getPort(),
       ingesterPartitionCount: 1,
+      pushNotificationEndpoint: 'https://push.bsky.app/api/push',
     })
     assert(indexerCfg.redisHost)
     const indexerRedis = new bsky.Redis({
