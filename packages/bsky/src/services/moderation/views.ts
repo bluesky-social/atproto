@@ -21,6 +21,7 @@ import {
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import { ModerationReportRowWithHandle } from '.'
+import { getSelfLabels } from '../label'
 
 export class ModerationViews {
   constructor(private db: Database) {}
@@ -227,6 +228,11 @@ export class ModerationViews {
       this.blob(findBlobRefs(record.value)),
       this.labels(record.uri),
     ])
+    const selfLabels = getSelfLabels({
+      uri: result.uri,
+      cid: result.cid,
+      record: jsonStringToLex(result.json) as Record<string, unknown>,
+    })
     return {
       ...record,
       blobs,
@@ -235,7 +241,7 @@ export class ModerationViews {
         reports,
         actions,
       },
-      labels,
+      labels: [...labels, ...selfLabels],
     }
   }
 
