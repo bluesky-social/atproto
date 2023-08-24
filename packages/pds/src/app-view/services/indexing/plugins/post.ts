@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/uri'
 import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
