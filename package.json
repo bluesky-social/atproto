@@ -12,7 +12,7 @@
     "verify": "pnpm -r --stream lint && pnpm -r --stream prettier",
     "format": "pnpm -r --stream prettier:fix",
     "build": "pnpm -r --stream build",
-    "test": "LOG_ENABLED=false NODE_ENV=development ./packages/dev-infra/with-test-redis-and-db.sh pnpm --stream test",
+    "test": "LOG_ENABLED=false NODE_ENV=development ./packages/dev-infra/with-test-redis-and-db.sh pnpm --stream -r test",
     "test:withFlags": "LOG_ENABLED=false NODE_ENV=development ./packages/dev-infra/with-test-redis-and-db.sh pnpm --stream -r test --"
   },
   "devDependencies": {
