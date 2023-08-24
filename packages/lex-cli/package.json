@@ -4,8 +4,11 @@
   "bin": {
     "lex": "dist/index.js"
   },
-  "main": "dist/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/src/index.d.ts"
+  },
   "scripts": {
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",

@@ -1,8 +1,11 @@
 {
   "name": "@atproto/xrpc-server",
   "version": "0.3.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts"
+  },
   "scripts": {
     "test": "jest",
     "prettier": "prettier --check src/ tests/",

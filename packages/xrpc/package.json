@@ -1,8 +1,11 @@
 {
   "name": "@atproto/xrpc",
   "version": "0.2.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts"
+  },
   "scripts": {
     "prettier": "prettier --check src/",
     "prettier:fix": "prettier --write src/",

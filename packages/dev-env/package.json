@@ -1,8 +1,11 @@
 {
   "name": "@atproto/dev-env",
   "version": "0.2.3",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts"
+  },
   "bin": "dist/bin.js",
   "license": "MIT",
   "repository": {

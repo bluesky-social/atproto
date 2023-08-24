@@ -1,8 +1,11 @@
 {
   "name": "@atproto/api",
   "version": "0.6.6",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts"
+  },
   "scripts": {
     "codegen": "pnpm docgen && node ./scripts/generate-code.mjs && lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
     "docgen": "node ./scripts/generate-docs.mjs",
