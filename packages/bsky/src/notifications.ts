@@ -250,6 +250,7 @@ export class NotificationServer {
         title = 'New follower!'
         body = `${author} has followed you`
         results.push({ key, title, body, notif })
+        continue
       } else if (reason === 'mention' || reason === 'reply') {
         // use recordUri for mention and reply
         key = `${reason}:${recordUri}`
@@ -259,6 +260,7 @@ export class NotificationServer {
             : `${author} replied to your post`
         body = postRecord?.text || ''
         results.push({ key, title, body, notif })
+        continue
       }
 
       // if no subjectUri, don't send notification
