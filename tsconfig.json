@@ -34,6 +34,7 @@
     { "path": "./packages/dev-env" },
     { "path": "./packages/identity/tsconfig.build.json" },
     { "path": "./packages/identifier/tsconfig.build.json" },
+    { "path": "./packages/syntax/tsconfig.build.json" },
     { "path": "./packages/lexicon/tsconfig.build.json" },
     { "path": "./packages/lex-cli/tsconfig.build.json" },
     { "path": "./packages/nsid/tsconfig.build.json" },

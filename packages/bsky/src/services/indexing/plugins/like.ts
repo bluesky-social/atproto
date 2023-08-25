@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
 import * as Like from '../../../lexicon/types/app/bsky/feed/like'
 import * as lex from '../../../lexicon/lexicons'

@@ -1,5 +1,6 @@
-import * as id from '@atproto/identifier'
-import * as nsid from '@atproto/nsid'
+import { ensureValidHandle, ensureValidHandleRegex } from './handle'
+import { ensureValidDid, ensureValidDidRegex } from './did'
+import { ensureValidNsid, ensureValidNsidRegex } from './nsid'
 
 // Human-readable constraints on ATURI:
 //   - following regular URLs, a 8KByte hard total length limit
@@ -37,10 +38,10 @@ export const ensureValidAtUri = (uri: string) => {
   }
 
   try {
-    id.ensureValidHandle(parts[2])
+    ensureValidHandle(parts[2])
   } catch {
     try {
-      id.ensureValidDid(parts[2])
+      ensureValidDid(parts[2])
     } catch {
       throw new Error('ATURI authority must be a valid handle or DID')
     }
@@ -53,7 +54,7 @@ export const ensureValidAtUri = (uri: string) => {
       )
     }
     try {
-      nsid.ensureValidNsid(parts[3])
+      ensureValidNsid(parts[3])
     } catch {
       throw new Error(
         'ATURI requires first path segment (if supplied) to be valid NSID',
@@ -107,10 +108,10 @@ export const ensureValidAtUriRegex = (uri: string): void => {
   const groups = rm.groups
 
   try {
-    id.ensureValidHandleRegex(groups.authority)
+    ensureValidHandleRegex(groups.authority)
   } catch {
     try {
-      id.ensureValidDidRegex(groups.authority)
+      ensureValidDidRegex(groups.authority)
     } catch {
       throw new Error('ATURI authority must be a valid handle or DID')
     }
@@ -118,7 +119,7 @@ export const ensureValidAtUriRegex = (uri: string): void => {
 
   if (groups.collection) {
     try {
-      nsid.ensureValidNsidRegex(groups.collection)
+      ensureValidNsidRegex(groups.collection)
     } catch {
       throw new Error('ATURI collection path segment must be a valid NSID')
     }

@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { WriteOpAction } from '@atproto/repo'
 import { RepoRecord } from '@atproto/lexicon'
 

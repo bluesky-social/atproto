@@ -1,6 +1,6 @@
 import { Insertable } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { jsonStringToLex, stringifyLex } from '@atproto/lexicon'
 import DatabaseSchema from '../../db/database-schema'
 import { lexicons } from '../../lexicon/lexicons'

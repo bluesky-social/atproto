@@ -9,7 +9,7 @@ import {
   RepoContentsWithCids,
   Commit,
 } from '@atproto/repo'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { IdResolver, getPds } from '@atproto/identity'
 import { DAY, HOUR } from '@atproto/common'
 import { ValidationError } from '@atproto/lexicon'

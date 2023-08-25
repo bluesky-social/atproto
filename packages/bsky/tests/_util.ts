@@ -1,4 +1,4 @@
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { lexToJson } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import {

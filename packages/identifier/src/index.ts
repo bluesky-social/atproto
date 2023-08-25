@@ -1,2 +1,25 @@
-export * from './handle'
-export * from './did'
+export {
+  ATP_URI_REGEX,
+  AtUri,
+  DISALLOWED_TLDS,
+  DisallowedDomainError,
+  INVALID_HANDLE,
+  InvalidDidError,
+  InvalidHandleError,
+  InvalidNsidError,
+  NSID,
+  ReservedHandleError,
+  UnsupportedDomainError,
+  ensureValidAtUri,
+  ensureValidAtUriRegex,
+  ensureValidDid,
+  ensureValidDidRegex,
+  ensureValidHandle,
+  ensureValidHandleRegex,
+  ensureValidNsid,
+  ensureValidNsidRegex,
+  isValidHandle,
+  isValidTld,
+  normalizeAndEnsureValidHandle,
+  normalizeHandle,
+} from '@atproto/syntax'

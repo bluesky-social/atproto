@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
 import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'

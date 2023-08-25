@@ -1,6 +1,6 @@
 import { Selectable } from 'kysely'
 import { ArrayEl, cborBytesToRecord } from '@atproto/common'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
 import { DidHandle } from '../../db/tables/did-handle'

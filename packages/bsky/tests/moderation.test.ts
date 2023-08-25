@@ -1,7 +1,7 @@
 import { TestNetwork } from '@atproto/dev-env'
 import { TID, cidForCbor } from '@atproto/common'
 import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { forSnapshot } from './_util'
 import { ImageRef, RecordRef, SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'

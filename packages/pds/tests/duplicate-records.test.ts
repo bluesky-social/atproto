@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { cidForCbor, TID, cborEncode } from '@atproto/common'
 import { CloseFn, runTestServer } from './_util'
 import { Database } from '../src'

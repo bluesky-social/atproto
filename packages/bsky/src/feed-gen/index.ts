@@ -1,4 +1,4 @@
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { ids } from '../lexicon/lexicons'
 import withFriends from './with-friends'
 import bskyTeam from './bsky-team'

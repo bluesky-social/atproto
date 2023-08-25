@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@atproto/common-web": "*",
-    "@atproto/uri": "*",
+    "@atproto/syntax": "*",
     "@atproto/xrpc": "*",
     "tlds": "^1.234.0",
     "typed-emitter": "^2.1.0"

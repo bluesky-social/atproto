@@ -12,7 +12,7 @@ import {
   LexRecord,
   LexXrpcSubscription,
 } from '@atproto/lexicon'
-import { NSID } from '@atproto/nsid'
+import { NSID } from '@atproto/syntax'
 import { gen, lexiconsTs, utilTs } from './common'
 import { GeneratedAPI } from '../types'
 import {

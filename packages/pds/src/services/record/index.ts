@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
-import { AtUri, ensureValidAtUri } from '@atproto/uri'
-import * as ident from '@atproto/identifier'
+import { AtUri, ensureValidAtUri } from '@atproto/syntax'
+import * as ident from '@atproto/syntax'
 import { cborToLexRecord, WriteOpAction } from '@atproto/repo'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'

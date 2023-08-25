@@ -1,6 +1,6 @@
 import { Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { PrimaryDatabase } from '../../db'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
