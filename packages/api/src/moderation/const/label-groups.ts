@@ -19,7 +19,7 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
   legal: {
     id: 'legal',
     configurable: false,
-    labels: [LABELS['dmca-violation'], LABELS['doxxing'], LABELS['ncii']],
+    labels: [LABELS['dmca-violation'], LABELS['doxxing']],
     strings: {
       settings: {
         en: {

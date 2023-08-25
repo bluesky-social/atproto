@@ -119,37 +119,6 @@ export const LABELS: LabelDefinitionMap = {
       },
     },
   },
-  ncii: {
-    id: 'ncii',
-    preferences: ['hide'],
-    flags: ['no-override'],
-    onwarn: 'blur',
-    groupId: 'legal',
-    configurable: false,
-    strings: {
-      settings: {
-        en: {
-          name: 'Non-Consensual Intimate Image Abuse',
-          description:
-            'The content has been reported for sharing nudity or sexual imagery without the explicit consent of the individual(s) depicted.',
-        },
-      },
-      account: {
-        en: {
-          name: 'Non-Consensual Intimate Image Abuse',
-          description:
-            'This account has been reported for sharing nudity or sexual imagery without the explicit consent of the individual(s) depicted. The report is currently under review.',
-        },
-      },
-      content: {
-        en: {
-          name: 'Non-Consensual Intimate Image Abuse',
-          description:
-            'This content has been reported for displaying nudity or sexual imagery without the explicit consent of the individual(s) depicted. The report is currently under review.',
-        },
-      },
-    },
-  },
   doxxing: {
     id: 'doxxing',
     preferences: ['hide'],
