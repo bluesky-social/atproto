@@ -1,11 +1,11 @@
 {
-  "name": "@atproto/identifier",
-  "version": "0.2.0",
+  "name": "@atproto/syntax",
+  "version": "0.1.0",
   "main": "src/index.ts",
   "scripts": {
-    "test": "true",
-    "prettier": "prettier --check src/",
-    "prettier:fix": "prettier --write src/",
+    "test": "jest",
+    "prettier": "prettier --check src/ tests/",
+    "prettier:fix": "prettier --write src/ tests/",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "yarn lint --fix",
     "verify": "run-p prettier lint",
@@ -21,9 +21,12 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/bluesky-social/atproto.git",
-    "directory": "packages/identifier"
+    "directory": "packages/syntax"
   },
   "dependencies": {
-    "@atproto/syntax": "*"
+    "@atproto/common-web": "*"
+  },
+  "browser": {
+    "dns/promises": false
   }
 }
