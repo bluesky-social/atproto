@@ -1,4 +1,4 @@
-import { AtUri } from '@atproto/identifier'
+import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
 import * as List from '../../../../lexicon/types/app/bsky/graph/list'
 import * as lex from '../../../../lexicon/lexicons'

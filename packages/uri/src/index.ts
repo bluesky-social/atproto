@@ -3,4 +3,4 @@ export {
   AtUri,
   ensureValidAtUri,
   ensureValidAtUriRegex,
-} from '@atproto/identifier'
+} from '@atproto/syntax'

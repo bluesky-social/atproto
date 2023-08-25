@@ -24,6 +24,6 @@
     "directory": "packages/uri"
   },
   "dependencies": {
-    "@atproto/identifier": "*"
+    "@atproto/syntax": "*"
   }
 }

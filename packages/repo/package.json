@@ -29,7 +29,7 @@
   "dependencies": {
     "@atproto/common": "*",
     "@atproto/crypto": "*",
-    "@atproto/identifier": "*",
+    "@atproto/syntax": "*",
     "@atproto/identity": "*",
     "@atproto/lexicon": "*",
     "@ipld/car": "^3.2.3",

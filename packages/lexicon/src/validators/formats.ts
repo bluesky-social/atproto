@@ -6,7 +6,7 @@ import {
   ensureValidHandle,
   ensureValidNsid,
   ensureValidAtUri,
-} from '@atproto/identifier'
+} from '@atproto/syntax'
 import { validateLanguage } from '@atproto/common-web'
 
 export function datetime(path: string, value: string): ValidationResult {

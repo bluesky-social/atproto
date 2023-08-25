@@ -1,4 +1,4 @@
-export { AtUri } from '@atproto/identifier'
+export { AtUri } from '@atproto/syntax'
 export {
   BlobRef,
   lexToJson,

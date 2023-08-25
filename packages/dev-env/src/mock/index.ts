@@ -1,4 +1,4 @@
-import { AtUri } from '@atproto/identifier'
+import { AtUri } from '@atproto/syntax'
 import AtpAgent from '@atproto/api'
 import {
   REASONSPAM,

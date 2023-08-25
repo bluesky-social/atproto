@@ -11,7 +11,7 @@ import {
   LexXrpcQuery,
   LexRecord,
 } from '@atproto/lexicon'
-import { NSID } from '@atproto/identifier'
+import { NSID } from '@atproto/syntax'
 import { gen, utilTs, lexiconsTs } from './common'
 import { GeneratedAPI } from '../types'
 import {

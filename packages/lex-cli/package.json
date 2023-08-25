@@ -22,7 +22,7 @@
     "directory": "packages/lex-cli"
   },
   "dependencies": {
-    "@atproto/identifier": "*",
+    "@atproto/syntax": "*",
     "@atproto/lexicon": "*",
     "chalk": "^5.1.1",
     "commander": "^9.4.0",

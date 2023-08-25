@@ -1,5 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { AtUri } from '@atproto/identifier'
+import { AtUri } from '@atproto/syntax'
 import {
   ACKNOWLEDGE,
   TAKEDOWN,

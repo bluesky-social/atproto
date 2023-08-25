@@ -33,7 +33,7 @@
     "@atproto/api": "*",
     "@atproto/common": "*",
     "@atproto/crypto": "*",
-    "@atproto/identifier": "*",
+    "@atproto/syntax": "*",
     "@atproto/identity": "*",
     "@atproto/lexicon": "*",
     "@atproto/repo": "*",

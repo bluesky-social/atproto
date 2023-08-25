@@ -3,4 +3,4 @@ export {
   ensureValidNsid,
   ensureValidNsidRegex,
   InvalidNsidError,
-} from '@atproto/identifier'
+} from '@atproto/syntax'

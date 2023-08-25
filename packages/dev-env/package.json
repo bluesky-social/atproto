@@ -29,7 +29,7 @@
     "@atproto/api": "*",
     "@atproto/bsky": "*",
     "@atproto/crypto": "*",
-    "@atproto/identifier": "*",
+    "@atproto/syntax": "*",
     "@atproto/identity": "*",
     "@atproto/pds": "*",
     "@atproto/xrpc-server": "*",

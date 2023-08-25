@@ -20,6 +20,6 @@
     "directory": "packages/nsid"
   },
   "dependencies": {
-    "@atproto/identifier": "*"
+    "@atproto/syntax": "*"
   }
 }

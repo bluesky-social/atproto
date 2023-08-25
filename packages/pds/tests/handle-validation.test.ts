@@ -1,4 +1,4 @@
-import { isValidTld } from '@atproto/identifier'
+import { isValidTld } from '@atproto/syntax'
 import { ensureHandleServiceConstraints } from '../src/handle'
 import { UnacceptableWordValidator } from '../src/content-reporter/validator'
 
