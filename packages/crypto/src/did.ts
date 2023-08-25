@@ -2,19 +2,24 @@ import * as uint8arrays from 'uint8arrays'
 import * as p256 from './p256/encoding'
 import * as secp from './secp256k1/encoding'
 import plugins from './plugins'
-import { P256_JWT_ALG, SECP256K1_JWT_ALG, BASE58_DID_PREFIX } from './const'
+import {
+  BASE58_MULTIBASE_PREFIX,
+  DID_KEY_PREFIX,
+  P256_JWT_ALG,
+  SECP256K1_JWT_ALG,
+} from './const'
 
-export type ParsedDidKey = {
+export type ParsedMultikey = {
   jwtAlg: string
   keyBytes: Uint8Array
 }
 
-export const parseDidKey = (did: string): ParsedDidKey => {
-  if (!did.startsWith(BASE58_DID_PREFIX)) {
-    throw new Error(`Incorrect prefix for did:key: ${did}`)
+export const parseMultikey = (multikey: string): ParsedMultikey => {
+  if (!multikey.startsWith(BASE58_MULTIBASE_PREFIX)) {
+    throw new Error(`Incorrect prefix for multikey: ${multikey}`)
   }
   const prefixedBytes = uint8arrays.fromString(
-    did.slice(BASE58_DID_PREFIX.length),
+    multikey.slice(BASE58_MULTIBASE_PREFIX.length),
     'base58btc',
   )
   const plugin = plugins.find((p) => hasPrefix(prefixedBytes, p.prefix))
@@ -33,7 +38,10 @@ export const parseDidKey = (did: string): ParsedDidKey => {
   }
 }
 
-export const formatDidKey = (jwtAlg: string, keyBytes: Uint8Array): string => {
+export const formatMultikey = (
+  jwtAlg: string,
+  keyBytes: Uint8Array,
+): string => {
   const plugin = plugins.find((p) => p.jwtAlg === jwtAlg)
   if (!plugin) {
     throw new Error('Unsupported key type')
@@ -44,7 +52,20 @@ export const formatDidKey = (jwtAlg: string, keyBytes: Uint8Array): string => {
     keyBytes = secp.compressPubkey(keyBytes)
   }
   const prefixedBytes = uint8arrays.concat([plugin.prefix, keyBytes])
-  return BASE58_DID_PREFIX + uint8arrays.toString(prefixedBytes, 'base58btc')
+  return (
+    BASE58_MULTIBASE_PREFIX + uint8arrays.toString(prefixedBytes, 'base58btc')
+  )
+}
+
+export const parseDidKey = (did: string): ParsedMultikey => {
+  if (!did.startsWith(DID_KEY_PREFIX)) {
+    throw new Error(`Incorrect prefix for did:key: ${did}`)
+  }
+  return parseMultikey(did.slice(DID_KEY_PREFIX.length))
+}
+
+export const formatDidKey = (jwtAlg: string, keyBytes: Uint8Array): string => {
+  return DID_KEY_PREFIX + formatMultikey(jwtAlg, keyBytes)
 }
 
 const hasPrefix = (bytes: Uint8Array, prefix: Uint8Array): boolean => {
