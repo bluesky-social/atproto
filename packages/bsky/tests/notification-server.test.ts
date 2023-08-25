@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import AtpAgent, { AtUri } from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
@@ -8,6 +8,7 @@ import { Database } from '../src'
 describe('notification server', () => {
   let network: TestNetwork
   let agent: AtpAgent
+  let pdsAgent: AtpAgent
   let sc: SeedClient
   let notifServer: NotificationServer
 
@@ -19,7 +20,7 @@ describe('notification server', () => {
       dbPostgresSchema: 'bsky_notification_server',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getClient()
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     await network.processAll()
@@ -109,6 +110,86 @@ describe('notification server', () => {
       if (!attrs.length)
         throw new Error('no notification display attributes found')
       expect(attrs[0].title).toEqual('bobby liked your post')
+    })
+
+    it('filters notifications that violate blocks', async () => {
+      const db = network.bsky.ctx.db.getPrimary()
+      const notif = await getLikeNotification(db, alice)
+      if (!notif) throw new Error('no notification found')
+      const blockRef = await pdsAgent.api.app.bsky.graph.block.create(
+        { repo: alice },
+        { subject: notif.author, createdAt: new Date().toISOString() },
+        sc.getHeaders(alice),
+      )
+      await network.processAll()
+      // verify inverse of block
+      const flippedNotif = {
+        ...notif,
+        did: notif.author,
+        author: notif.did,
+      }
+      const attrs = await notifServer.getNotificationDisplayAttributes([
+        notif,
+        flippedNotif,
+      ])
+      expect(attrs.length).toBe(0)
+      const uri = new AtUri(blockRef.uri)
+      await pdsAgent.api.app.bsky.graph.block.delete(
+        { repo: alice, rkey: uri.rkey },
+        sc.getHeaders(alice),
+      )
+      await network.processAll()
+    })
+
+    it('filters notifications that violate mutes', async () => {
+      const db = network.bsky.ctx.db.getPrimary()
+      const notif = await getLikeNotification(db, alice)
+      if (!notif) throw new Error('no notification found')
+      await pdsAgent.api.app.bsky.graph.muteActor(
+        { actor: notif.author },
+        { headers: sc.getHeaders(alice), encoding: 'application/json' },
+      )
+      const attrs = await notifServer.getNotificationDisplayAttributes([notif])
+      expect(attrs.length).toBe(0)
+      await pdsAgent.api.app.bsky.graph.unmuteActor(
+        { actor: notif.author },
+        { headers: sc.getHeaders(alice), encoding: 'application/json' },
+      )
+    })
+
+    it('filters notifications that violate mutelists', async () => {
+      const db = network.bsky.ctx.db.getPrimary()
+      const notif = await getLikeNotification(db, alice)
+      if (!notif) throw new Error('no notification found')
+      const listRef = await pdsAgent.api.app.bsky.graph.list.create(
+        { repo: alice },
+        {
+          name: 'mute',
+          purpose: 'app.bsky.graph.defs#modlist',
+          createdAt: new Date().toISOString(),
+        },
+        sc.getHeaders(alice),
+      )
+      await pdsAgent.api.app.bsky.graph.listitem.create(
+        { repo: alice },
+        {
+          subject: notif.author,
+          list: listRef.uri,
+          createdAt: new Date().toISOString(),
+        },
+        sc.getHeaders(alice),
+      )
+      await network.processAll()
+      await pdsAgent.api.app.bsky.graph.muteActorList(
+        { list: listRef.uri },
+        { headers: sc.getHeaders(alice), encoding: 'application/json' },
+      )
+      const attrs = await notifServer.getNotificationDisplayAttributes([notif])
+      expect(attrs.length).toBe(0)
+      await pdsAgent.api.app.bsky.graph.unmuteActorList(
+        { list: listRef.uri },
+        { headers: sc.getHeaders(alice), encoding: 'application/json' },
+      )
     })
 
     it('prepares notification to be sent', async () => {

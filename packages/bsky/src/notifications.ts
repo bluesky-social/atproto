@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { Insertable } from 'kysely'
+import { Insertable, sql } from 'kysely'
 import TTLCache from '@isaacs/ttlcache'
 import { AtUri } from '@atproto/api'
 import { MINUTE, chunkArray } from '@atproto/common'
@@ -7,7 +7,7 @@ import Database from './db/primary'
 import { Notification } from './db/tables/notification'
 import { NotificationPushToken as PushToken } from './db/tables/notification-push-token'
 import logger from './indexer/logger'
-import { notSoftDeletedClause } from './db/util'
+import { notSoftDeletedClause, valuesList } from './db/util'
 import { ids } from './lexicon/lexicons'
 import { retryHttp } from './util/retry'
 
@@ -188,7 +188,7 @@ export class NotificationServer {
     const allUris = [...subjectUris, ...recordUris]
 
     // gather potential display data for notifications in batch
-    const [authors, posts] = await Promise.all([
+    const [authors, posts, blocksAndMutes] = await Promise.all([
       this.db.db
         .selectFrom('actor')
         .leftJoin('profile', 'profile.creator', 'actor.did')
@@ -207,6 +207,7 @@ export class NotificationServer {
         .where('post.uri', 'in', allUris.length ? allUris : [''])
         .select(['post.uri as uri', 'text'])
         .execute(),
+      this.findBlocksAndMutes(notifs),
     ])
 
     const authorsByDid = authors.reduce((acc, author) => {
@@ -233,8 +234,12 @@ export class NotificationServer {
       const postRecord = postsByUri[recordUri]
       const postSubject = subjectUri ? postsByUri[subjectUri] : null
 
-      // if no display name, dont send notification
-      if (!author) {
+      // if blocked or muted, don't send notification
+      const shouldFilter = blocksAndMutes.some(
+        (pair) => pair.author === notif.author && pair.receiver === notif.did,
+      )
+      if (shouldFilter || !author) {
+        // if no display name, dont send notification
         continue
       }
       // const author = displayName.displayName
@@ -303,6 +308,48 @@ export class NotificationServer {
     }
 
     return results
+  }
+
+  async findBlocksAndMutes(notifs: InsertableNotif[]) {
+    const pairs = notifs.map((n) => ({ author: n.author, receiver: n.did }))
+    const { ref } = this.db.db.dynamic
+    const blockQb = this.db.db
+      .selectFrom('actor_block')
+      .where((outer) =>
+        outer
+          .where((qb) =>
+            qb
+              .whereRef('actor_block.creator', '=', ref('author'))
+              .whereRef('actor_block.subjectDid', '=', ref('receiver')),
+          )
+          .orWhere((qb) =>
+            qb
+              .whereRef('actor_block.creator', '=', ref('receiver'))
+              .whereRef('actor_block.subjectDid', '=', ref('author')),
+          ),
+      )
+      .select(['creator', 'subjectDid'])
+    const muteQb = this.db.db
+      .selectFrom('mute')
+      .whereRef('mute.subjectDid', '=', ref('author'))
+      .whereRef('mute.mutedByDid', '=', ref('receiver'))
+      .selectAll()
+    const muteListQb = this.db.db
+      .selectFrom('list_item')
+      .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
+      .whereRef('list_mute.mutedByDid', '=', ref('receiver'))
+      .whereRef('list_item.subjectDid', '=', ref('author'))
+      .select('list_item.subjectDid')
+
+    const values = valuesList(pairs.map((p) => sql`${p.author}, ${p.receiver}`))
+    const filterPairs = await this.db.db
+      .selectFrom(values.as(sql`pair (author, receiver)`))
+      .whereExists(muteQb)
+      .orWhereExists(muteListQb)
+      .orWhereExists(blockQb)
+      .selectAll()
+      .execute()
+    return filterPairs as { author: string; receiver: string }[]
   }
 }
 
