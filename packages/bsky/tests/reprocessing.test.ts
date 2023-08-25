@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { SeedClient } from './seeds/client'
