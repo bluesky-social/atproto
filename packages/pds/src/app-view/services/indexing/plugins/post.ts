@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
@@ -138,35 +137,6 @@ const insertFn = async (
       embeds.push(recordEmbed)
       await db.insertInto('post_embed_record').values(recordEmbed).execute()
     }
-  }
-  // Thread index
-  // @TODO remove thread hierarchy indexing
-  await db
-    .insertInto('post_hierarchy')
-    .values({
-      uri: post.uri,
-      ancestorUri: post.uri,
-      depth: 0,
-    })
-    .onConflict((oc) => oc.doNothing()) // Supports post updates
-    .execute()
-  if (post.replyParent) {
-    await db
-      .insertInto('post_hierarchy')
-      .columns(['uri', 'ancestorUri', 'depth'])
-      .expression(
-        db
-          .selectFrom('post_hierarchy as parent_hierarchy')
-          .where('parent_hierarchy.uri', '=', post.replyParent)
-          .select([
-            sql`${post.uri}`.as('uri'),
-            'ancestorUri',
-            sql`depth + 1`.as('depth'),
-          ]),
-      )
-      .onConflict((oc) => oc.doNothing()) // Supports post updates
-      .returningAll()
-      .execute()
   }
   const ancestors = await getAncestorsAndSelfQb(db, {
     uri: post.uri,
