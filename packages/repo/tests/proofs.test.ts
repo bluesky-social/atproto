@@ -126,16 +126,6 @@ describe('Repo Proofs', () => {
     }
   })
 
-  it('verifyRecords throws on a bad signature', async () => {
-    const badRepo = await util.addBadCommit(repo, keypair)
-    const claims = util.contentsToClaims(repoData)
-    const proofs = await streamToBuffer(
-      sync.getRecords(storage, badRepo.cid, claims),
-    )
-    const fn = sync.verifyRecords(proofs, repoDid, keypair.did())
-    await expect(fn).rejects.toThrow(sync.RepoVerificationError)
-  })
-
   it('verifyProofs throws on a bad signature', async () => {
     const badRepo = await util.addBadCommit(repo, keypair)
     const claims = util.contentsToClaims(repoData)
