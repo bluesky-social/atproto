@@ -145,21 +145,27 @@ describe('repo version upgrade', () => {
     const nonUpgradedRecords = await db.db
       .selectFrom('record')
       .where('did', '=', alice)
-      .where('repoRev', '!=', root.rev)
+      .where((qb) =>
+        qb.where('repoRev', '!=', root.rev).orWhere('repoRev', 'is', null),
+      )
       .selectAll()
       .execute()
     expect(nonUpgradedRecords.length).toBe(0)
     const nonUpgradedBlocks = await db.db
       .selectFrom('ipld_block')
       .where('creator', '=', alice)
-      .where('repoRev', '!=', root.rev)
+      .where((qb) =>
+        qb.where('repoRev', '!=', root.rev).orWhere('repoRev', 'is', null),
+      )
       .selectAll()
       .execute()
     expect(nonUpgradedBlocks.length).toBe(0)
     const nonUpgradedBlobs = await db.db
       .selectFrom('repo_blob')
       .where('did', '=', alice)
-      .where('repoRev', '!=', root.rev)
+      .where((qb) =>
+        qb.where('repoRev', '!=', root.rev).orWhere('repoRev', 'is', null),
+      )
       .selectAll()
       .execute()
     expect(nonUpgradedBlobs.length).toBe(0)

@@ -41,7 +41,7 @@ export interface Commit {
   prev?: CID | null
   /** The rev of the emitted commit */
   rev: string
-  /** The rev of the last emitted from this repo */
+  /** The rev of the last emitted commit from this repo */
   since: string | null
   /** CAR file containing relevant blocks */
   blocks: Uint8Array

@@ -13,6 +13,7 @@ const unsignedCommit = z.object({
   version: z.literal(3),
   data: common.cid,
   rev: z.string(),
+  // `prev` added for backwards compatibility with v2, no requirement of keeping around history
   prev: common.cid.nullable().optional(),
 })
 export type UnsignedCommit = z.infer<typeof unsignedCommit> & { sig?: never }
@@ -37,7 +38,10 @@ const legacyV2Commit = z.object({
 })
 export type LegacyV2Commit = z.infer<typeof legacyV2Commit>
 
-const versionedCommit = z.union([commit, legacyV2Commit])
+const versionedCommit = z.discriminatedUnion('version', [
+  commit,
+  legacyV2Commit,
+])
 export type VersionedCommit = z.infer<typeof versionedCommit>
 
 export const schema = {

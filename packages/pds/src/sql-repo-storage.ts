@@ -191,7 +191,10 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
           indexedAt: this.getTimestamp(),
         })
         .onConflict((oc) =>
-          oc.column('did').doUpdateSet({ root: cid.toString() }),
+          oc.column('did').doUpdateSet({
+            root: cid.toString(),
+            indexedAt: this.getTimestamp(),
+          }),
         )
         .execute()
     }
@@ -225,13 +228,18 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
     let builder = this.db.db
       .selectFrom('ipld_block')
       .where('creator', '=', this.did)
-      .orderBy('repoRev', 'asc')
-      .orderBy('cid', 'asc')
       .select(['cid', 'content'])
       .limit(limit)
 
+    // if rev, ORDER BY rev & cid
+    // if not, only ORDER BY cid
     if (rev) {
-      builder = builder.where('repoRev', '>=', rev)
+      builder = builder.orderBy('repoRev', 'asc')
+    }
+    builder = builder.orderBy('cid', 'asc')
+
+    if (rev) {
+      builder = builder.where('repoRev', '>', rev)
     }
     if (cidCursor) {
       builder = builder.where('cid', '>', cidCursor.toString())

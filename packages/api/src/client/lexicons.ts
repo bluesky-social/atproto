@@ -3387,7 +3387,7 @@ export const schemaDict = {
           },
           since: {
             type: 'string',
-            description: 'The rev of the last emitted from this repo',
+            description: 'The rev of the last emitted commit from this repo',
           },
           blocks: {
             type: 'bytes',

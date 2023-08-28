@@ -56,7 +56,7 @@ export class Repo extends ReadableRepo {
         did,
         version: 3,
         rev,
-        prev: null,
+        prev: null, // added for backwards compatibility with v2
         data: dataCid,
       },
       keypair,
@@ -141,7 +141,7 @@ export class Repo extends ReadableRepo {
 
     const addedLeaves = leaves.getMany(diff.newLeafCids.toList())
     if (addedLeaves.missing.length > 0) {
-      throw new Error(`Missing leaf blocks: :${addedLeaves.missing}`)
+      throw new Error(`Missing leaf blocks: ${addedLeaves.missing}`)
     }
     newBlocks.addMap(addedLeaves.blocks)
 
@@ -151,7 +151,7 @@ export class Repo extends ReadableRepo {
         did: this.did,
         version: 3,
         rev,
-        prev: this.cid,
+        prev: this.cid, // added for backwards compatibility with v2
         data: dataCid,
       },
       keypair,
