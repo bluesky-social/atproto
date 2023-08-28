@@ -200,55 +200,94 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
     }
   }
 
-  async getCarStream(rev?: string) {
+  async getCarStream(since?: string) {
     const root = await this.getRoot()
     if (!root) {
       throw new RepoRootNotFoundError()
     }
     return writeCarStream(root, async (car) => {
-      let blocks = await this.getBlockRange(500, rev)
-      do {
-        for (const block of blocks) {
-          await car.put(block)
-        }
-        const cidCursor = blocks.at(-1)?.cid
-        if (!cidCursor) {
-          break
-        }
-        blocks = await this.getBlockRange(500, rev, cidCursor)
-      } while (blocks.length > 0)
+      const blockStream = since
+        ? this.getBlockRangeSince(since)
+        : this.getBlockRange()
+      for await (const block of blockStream) {
+        await car.put(block)
+      }
     })
   }
 
-  async getBlockRange(
-    limit: number,
-    rev?: string,
-    cidCursor?: CID,
-  ): Promise<{ cid: CID; bytes: Uint8Array }[]> {
-    let builder = this.db.db
-      .selectFrom('ipld_block')
-      .where('creator', '=', this.did)
-      .select(['cid', 'content'])
-      .limit(limit)
+  async *getBlockRange(): AsyncIterable<CarBlock> {
+    const blockQuery = (cursor?: CID) => {
+      let builder = this.db.db
+        .selectFrom('ipld_block')
+        .where('creator', '=', this.did)
+        .select(['cid', 'content'])
+        .orderBy('cid', 'asc')
+        .limit(500)
+      if (cursor) {
+        builder = builder.where('cid', '>', cursor.toString())
+      }
+      return builder.execute()
+    }
 
-    // if rev, ORDER BY rev & cid
-    // if not, only ORDER BY cid
-    if (rev) {
-      builder = builder.orderBy('repoRev', 'asc')
-    }
-    builder = builder.orderBy('cid', 'asc')
+    let cursor: CID | undefined = undefined
+    do {
+      const res = await blockQuery(cursor)
+      for (const row of res) {
+        yield {
+          cid: CID.parse(row.cid),
+          bytes: row.content,
+        }
+      }
+      const lastRow = res.at(-1)
+      cursor = lastRow ? CID.parse(lastRow.cid) : undefined
+    } while (cursor)
+  }
 
-    if (rev) {
-      builder = builder.where('repoRev', '>', rev)
+  async *getBlockRangeSince(since: string): AsyncIterable<CarBlock> {
+    const blockQuery = (cursor?: RevCursor) => {
+      let builder = this.db.db
+        .selectFrom('ipld_block')
+        .where('creator', '=', this.did)
+        .select(['cid', 'repoRev', 'content'])
+        .orderBy('repoRev', 'asc')
+        .orderBy('cid', 'asc')
+        .limit(500)
+      if (cursor) {
+        builder
+          .where('repoRev', 'is not', null)
+          .where((qb) =>
+            qb
+              .where('repoRev', '>', cursor.rev)
+              .orWhere((inner) =>
+                inner
+                  .where('repoRev', '=', cursor.rev)
+                  .where('cid', '>', cursor.cid.toString()),
+              ),
+          )
+      } else {
+        builder = builder.where('repoRev', '>', since)
+      }
+      return builder.execute()
     }
-    if (cidCursor) {
-      builder = builder.where('cid', '>', cidCursor.toString())
-    }
-    const res = await builder.execute()
-    return res.map((row) => ({
-      cid: CID.parse(row.cid),
-      bytes: row.content,
-    }))
+    let cursor: RevCursor | undefined = undefined
+    do {
+      const res = await blockQuery(cursor)
+      for (const row of res) {
+        yield {
+          cid: CID.parse(row.cid),
+          bytes: row.content,
+        }
+      }
+      const lastRow = res.at(-1)
+      if (lastRow && lastRow.repoRev) {
+        cursor = {
+          cid: CID.parse(lastRow.cid),
+          rev: lastRow.repoRev,
+        }
+      } else {
+        cursor = undefined
+      }
+    } while (cursor)
   }
 
   getTimestamp(): string {
@@ -258,6 +297,16 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
   async destroy(): Promise<void> {
     throw new Error('Destruction of SQL repo storage not allowed at runtime')
   }
+}
+
+type RevCursor = {
+  cid: CID
+  rev: string
+}
+
+type CarBlock = {
+  cid: CID
+  bytes: Uint8Array
 }
 
 export default SqlRepoStorage
