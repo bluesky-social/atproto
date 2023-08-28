@@ -206,88 +206,50 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
       throw new RepoRootNotFoundError()
     }
     return writeCarStream(root, async (car) => {
-      const blockStream = since
-        ? this.getBlockRangeSince(since)
-        : this.getBlockRange()
-      for await (const block of blockStream) {
-        await car.put(block)
-      }
+      let cursor: RevCursor | undefined = undefined
+      do {
+        const res = await this.getBlockRange(since, cursor)
+        for (const row of res) {
+          await car.put({
+            cid: CID.parse(row.cid),
+            bytes: row.content,
+          })
+        }
+        const lastRow = res.at(-1)
+        if (lastRow && lastRow.repoRev) {
+          cursor = {
+            cid: CID.parse(lastRow.cid),
+            rev: lastRow.repoRev,
+          }
+        } else {
+          cursor = undefined
+        }
+      } while (cursor)
     })
   }
 
-  async *getBlockRange(): AsyncIterable<CarBlock> {
-    const blockQuery = (cursor?: CID) => {
-      let builder = this.db.db
-        .selectFrom('ipld_block')
-        .where('creator', '=', this.did)
-        .select(['cid', 'content'])
-        .orderBy('cid', 'asc')
-        .limit(500)
-      if (cursor) {
-        builder = builder.where('cid', '>', cursor.toString())
-      }
-      return builder.execute()
+  async getBlockRange(since?: string, cursor?: RevCursor) {
+    let builder = this.db.db
+      .selectFrom('ipld_block')
+      .where('creator', '=', this.did)
+      .select(['cid', 'repoRev', 'content'])
+      .orderBy('repoRev', 'asc')
+      .orderBy('cid', 'asc')
+      .limit(500)
+    if (cursor) {
+      builder = builder.where((qb) =>
+        qb
+          .where('repoRev', '>', cursor.rev)
+          .orWhere((inner) =>
+            inner
+              .where('repoRev', '=', cursor.rev)
+              .where('cid', '>', cursor.cid.toString()),
+          ),
+      )
+    } else if (since) {
+      builder = builder.where('repoRev', '>', since)
     }
-
-    let cursor: CID | undefined = undefined
-    do {
-      const res = await blockQuery(cursor)
-      for (const row of res) {
-        yield {
-          cid: CID.parse(row.cid),
-          bytes: row.content,
-        }
-      }
-      const lastRow = res.at(-1)
-      cursor = lastRow ? CID.parse(lastRow.cid) : undefined
-    } while (cursor)
-  }
-
-  async *getBlockRangeSince(since: string): AsyncIterable<CarBlock> {
-    const blockQuery = (cursor?: RevCursor) => {
-      let builder = this.db.db
-        .selectFrom('ipld_block')
-        .where('creator', '=', this.did)
-        .select(['cid', 'repoRev', 'content'])
-        .orderBy('repoRev', 'asc')
-        .orderBy('cid', 'asc')
-        .limit(500)
-      if (cursor) {
-        builder
-          .where('repoRev', 'is not', null)
-          .where((qb) =>
-            qb
-              .where('repoRev', '>', cursor.rev)
-              .orWhere((inner) =>
-                inner
-                  .where('repoRev', '=', cursor.rev)
-                  .where('cid', '>', cursor.cid.toString()),
-              ),
-          )
-      } else {
-        builder = builder.where('repoRev', '>', since)
-      }
-      return builder.execute()
-    }
-    let cursor: RevCursor | undefined = undefined
-    do {
-      const res = await blockQuery(cursor)
-      for (const row of res) {
-        yield {
-          cid: CID.parse(row.cid),
-          bytes: row.content,
-        }
-      }
-      const lastRow = res.at(-1)
-      if (lastRow && lastRow.repoRev) {
-        cursor = {
-          cid: CID.parse(lastRow.cid),
-          rev: lastRow.repoRev,
-        }
-      } else {
-        cursor = undefined
-      }
-    } while (cursor)
+    return builder.execute()
   }
 
   getTimestamp(): string {
@@ -302,11 +264,6 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
 type RevCursor = {
   cid: CID
   rev: string
-}
-
-type CarBlock = {
-  cid: CID
-  bytes: Uint8Array
 }
 
 export default SqlRepoStorage
