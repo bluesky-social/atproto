@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { Database } from '../../db'
 import { Label, isSelfLabels } from '../../lexicon/types/com/atproto/label/defs'
 import { ids } from '../../lexicon/lexicons'

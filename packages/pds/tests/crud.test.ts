@@ -1,5 +1,5 @@
 import fs from 'fs/promises'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import AtpAgent from '@atproto/api'
 import * as createRecord from '@atproto/api/src/client/types/com/atproto/repo/createRecord'
 import * as putRecord from '@atproto/api/src/client/types/com/atproto/repo/putRecord'

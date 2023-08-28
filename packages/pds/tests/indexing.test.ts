@@ -4,7 +4,7 @@ import AtpAgent, {
   AppBskyFeedLike,
   AppBskyFeedRepost,
 } from '@atproto/api'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { CloseFn, forSnapshot, runTestServer, TestServerInfo } from './_util'
 import { SeedClient } from './seeds/client'
 import usersSeed from './seeds/users'

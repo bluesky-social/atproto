@@ -7,7 +7,7 @@ import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/
 import { Record as PostRecord } from '@atproto/api/src/client/types/app/bsky/feed/post'
 import { Record as LikeRecord } from '@atproto/api/src/client/types/app/bsky/feed/like'
 import { Record as FollowRecord } from '@atproto/api/src/client/types/app/bsky/graph/follow'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { BlobRef } from '@atproto/lexicon'
 import { adminAuth } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'

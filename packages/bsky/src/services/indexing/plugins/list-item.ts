@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
 import * as ListItem from '../../../lexicon/types/app/bsky/graph/listitem'
 import * as lex from '../../../lexicon/lexicons'
@@ -9,6 +9,7 @@ import { toSimplifiedISOSafe } from '../util'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { PrimaryDatabase } from '../../../db'
 import { BackgroundQueue } from '../../../background'
+import { NotificationServer } from '../../../notifications'
 
 const lexId = lex.ids.AppBskyGraphListitem
 type IndexedListItem = Selectable<DatabaseSchemaType['list_item']>
@@ -82,8 +83,9 @@ export type PluginType = RecordProcessor<ListItem.Record, IndexedListItem>
 export const makePlugin = (
   db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
+  notifServer?: NotificationServer,
 ): PluginType => {
-  return new RecordProcessor(db, backgroundQueue, {
+  return new RecordProcessor(db, backgroundQueue, notifServer, {
     lexId,
     insertFn,
     findDuplicate,

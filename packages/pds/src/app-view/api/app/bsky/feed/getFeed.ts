@@ -6,11 +6,7 @@ import {
   serverTimingHeader,
 } from '@atproto/xrpc-server'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import {
-  DidDocument,
-  PoorlyFormattedDidDocumentError,
-  getFeedGen,
-} from '@atproto/identity'
+import { getFeedGen } from '@atproto/identity'
 import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
 import { SkeletonFeedPost } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { QueryParams as GetFeedParams } from '../../../../../lexicon/types/app/bsky/feed/getFeed'
@@ -19,6 +15,7 @@ import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
 import { AlgoResponse } from '../../../../../feed-gen/types'
+import { getDidDoc } from '../util/resolver'
 
 export default function (server: Server, ctx: AppContext) {
   const isProxyableFeed = (feed: string): boolean => {
@@ -104,20 +101,8 @@ async function skeletonFromFeedGen(
   }
   const feedDid = found.feedDid
 
-  let resolved: DidDocument | null
-  try {
-    resolved = await ctx.idResolver.did.resolve(feedDid)
-  } catch (err) {
-    if (err instanceof PoorlyFormattedDidDocumentError) {
-      throw new InvalidRequestError(`invalid did document: ${feedDid}`)
-    }
-    throw err
-  }
-  if (!resolved) {
-    throw new InvalidRequestError(`could not resolve did document: ${feedDid}`)
-  }
-
-  const fgEndpoint = getFeedGen(resolved)
+  const doc = await getDidDoc(ctx, feedDid)
+  const fgEndpoint = getFeedGen(doc)
   if (!fgEndpoint) {
     throw new InvalidRequestError(
       `invalid feed generator service details in did document: ${feedDid}`,

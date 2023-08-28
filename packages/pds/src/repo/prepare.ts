@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { TID, dataToCborBlock } from '@atproto/common'
 import {
   LexiconDefNotFoundError,

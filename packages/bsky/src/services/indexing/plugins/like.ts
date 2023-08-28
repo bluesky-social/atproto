@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
 import * as Like from '../../../lexicon/types/app/bsky/feed/like'
 import * as lex from '../../../lexicon/lexicons'
@@ -9,6 +9,7 @@ import { toSimplifiedISOSafe } from '../util'
 import { countAll, excluded } from '../../../db/util'
 import { PrimaryDatabase } from '../../../db'
 import { BackgroundQueue } from '../../../background'
+import { NotificationServer } from '../../../notifications'
 
 const lexId = lex.ids.AppBskyFeedLike
 type IndexedLike = Selectable<DatabaseSchemaType['like']>
@@ -65,7 +66,7 @@ const notifsForInsert = (obj: IndexedLike) => {
           recordCid: obj.cid,
           reason: 'like' as const,
           reasonSubject: subjectUri.toString(),
-          sortAt: obj.indexedAt,
+          sortAt: obj.sortAt,
         },
       ]
 }
@@ -111,8 +112,9 @@ export type PluginType = RecordProcessor<Like.Record, IndexedLike>
 export const makePlugin = (
   db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
+  notifServer?: NotificationServer,
 ): PluginType => {
-  return new RecordProcessor(db, backgroundQueue, {
+  return new RecordProcessor(db, backgroundQueue, notifServer, {
     lexId,
     insertFn,
     findDuplicate,

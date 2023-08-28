@@ -16,6 +16,7 @@ const run = async () => {
     pds: {
       port: 2583,
       publicUrl: 'http://localhost:2583',
+      enableLabelsCache: true,
       dbPostgresSchema: 'pds',
     },
     bsky: {

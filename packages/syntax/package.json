@@ -1,0 +1,32 @@
+{
+  "name": "@atproto/syntax",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "jest",
+    "prettier": "prettier --check src/ tests/",
+    "prettier:fix": "prettier --write src/ tests/",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "yarn lint --fix",
+    "verify": "run-p prettier lint",
+    "verify:fix": "yarn prettier:fix && yarn lint:fix",
+    "build": "node ./build.js",
+    "postbuild": "tsc --build tsconfig.build.json",
+    "update-main-to-dist": "node ./update-pkg.js --update-main-to-dist",
+    "update-main-to-src": "node ./update-pkg.js --update-main-to-src",
+    "prepublish": "npm run update-main-to-dist",
+    "postpublish": "npm run update-main-to-src"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto.git",
+    "directory": "packages/syntax"
+  },
+  "dependencies": {
+    "@atproto/common-web": "*"
+  },
+  "browser": {
+    "dns/promises": false
+  }
+}

@@ -2,7 +2,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import * as lex from '../../../../lexicon/lexicons'
 import AppContext from '../../../../context'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.muteActorList({
