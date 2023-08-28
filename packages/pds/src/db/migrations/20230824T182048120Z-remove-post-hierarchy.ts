@@ -1,12 +1,22 @@
 import { Kysely, sql } from 'kysely'
+import { Dialect } from '..'
 
-export async function up(db: Kysely<unknown>): Promise<void> {
+export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   await db.schema.dropTable('post_hierarchy').execute()
   // recreate index that calculates e.g. "replyCount", turning it into a covering index
   // for uri so that recursive query for post descendents can use an index-only scan.
-  await sql`create index "post_replyparent_uri_idx" on "post" ("replyParent") include ("uri")`.execute(
-    db,
-  )
+  if (dialect === 'pg') {
+    await sql`create index "post_replyparent_uri_idx" on "post" ("replyParent") include ("uri")`.execute(
+      db,
+    )
+  } else {
+    // in sqlite, just index on uri as well
+    await db.schema
+      .createIndex('post_replyparent_uri_idx')
+      .on('post')
+      .columns(['replyParent', 'uri'])
+      .execute()
+  }
   await db.schema.dropIndex('post_replyparent_idx').execute()
 }
 
