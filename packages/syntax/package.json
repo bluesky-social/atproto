@@ -2,6 +2,10 @@
   "name": "@atproto/syntax",
   "version": "0.1.0",
   "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts"
+  },
   "scripts": {
     "test": "jest",
     "prettier": "prettier --check src/ tests/",
