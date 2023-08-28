@@ -766,6 +766,35 @@ export const LABELS: LabelDefinitionMap = {
       },
     },
   },
+  scam: {
+    id: 'scam',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'alert',
+    groupId: 'misinfo',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Scam',
+          description: 'Fraudulent content.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Scam Warning',
+          description:
+            'The moderators believe this account publishes fraudulent content.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Scam Warning',
+          description: 'The moderators believe this is fraudulent content.',
+        },
+      },
+    },
+  },
   misleading: {
     id: 'misleading',
     preferences: ['ignore', 'warn', 'hide'],
@@ -792,35 +821,6 @@ export const LABELS: LabelDefinitionMap = {
           name: 'Misleading',
           description:
             'The moderators believe this account is spreading misleading information.',
-        },
-      },
-    },
-  },
-  scam: {
-    id: 'scam',
-    preferences: ['ignore', 'warn', 'hide'],
-    flags: [],
-    onwarn: 'alert',
-    groupId: 'misinfo',
-    configurable: true,
-    strings: {
-      settings: {
-        en: {
-          name: 'Scam',
-          description: 'Fraudulent content.',
-        },
-      },
-      account: {
-        en: {
-          name: 'Scam Warning',
-          description:
-            'The moderators believe this account publishes fraudulent content.',
-        },
-      },
-      content: {
-        en: {
-          name: 'Scam Warning',
-          description: 'The moderators believe this is fraudulent content.',
         },
       },
     },
