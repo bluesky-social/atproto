@@ -11,12 +11,15 @@ export interface QueryParams {
   /** The DID of the repo. */
   did: string
   /** Optional revision of the repo to list blobs since */
-  rev?: string
+  since?: string
+  limit?: number
+  cursor?: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
+  cursor?: string
   cids: string[]
   [k: string]: unknown
 }

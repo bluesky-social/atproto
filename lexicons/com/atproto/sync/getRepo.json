@@ -14,7 +14,7 @@
             "format": "did",
             "description": "The DID of the repo."
           },
-          "rev": {
+          "since": {
             "type": "string",
             "format": "cid",
             "description": "The revision of the repo to catch up from."

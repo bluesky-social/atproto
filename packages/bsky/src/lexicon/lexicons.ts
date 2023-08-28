@@ -3147,7 +3147,7 @@ export const schemaDict = {
               format: 'did',
               description: 'The DID of the repo.',
             },
-            rev: {
+            since: {
               type: 'string',
               format: 'cid',
               description: 'The revision of the repo to catch up from.',
@@ -3176,10 +3176,19 @@ export const schemaDict = {
               format: 'did',
               description: 'The DID of the repo.',
             },
-            rev: {
+            since: {
               type: 'string',
               format: 'cid',
               description: 'Optional revision of the repo to list blobs since',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 500,
+            },
+            cursor: {
+              type: 'string',
             },
           },
         },
@@ -3189,6 +3198,9 @@ export const schemaDict = {
             type: 'object',
             required: ['cids'],
             properties: {
+              cursor: {
+                type: 'string',
+              },
               cids: {
                 type: 'array',
                 items: {
