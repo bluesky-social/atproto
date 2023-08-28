@@ -27,7 +27,7 @@
         }
       },
       "errors": [
-        {"name": "RootNotFound"}
+        {"name": "HeadNotFound"}
       ]
     }
   }

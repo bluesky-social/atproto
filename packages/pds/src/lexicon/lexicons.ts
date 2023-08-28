@@ -3045,7 +3045,7 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'RootNotFound',
+            name: 'HeadNotFound',
           },
         ],
       },

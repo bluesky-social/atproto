@@ -31,7 +31,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'RootNotFound'
+  error?: 'HeadNotFound'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
