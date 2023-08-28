@@ -92,9 +92,9 @@ importers:
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
-      '@atproto/uri':
+      '@atproto/syntax':
         specifier: workspace:^
-        version: link:../uri
+        version: link:../syntax
       '@atproto/xrpc':
         specifier: workspace:^
         version: link:../xrpc
@@ -162,9 +162,6 @@ importers:
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
-      '@atproto/identifier':
-        specifier: workspace:^
-        version: link:../identifier
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
@@ -174,9 +171,9 @@ importers:
       '@atproto/repo':
         specifier: workspace:^
         version: link:../repo
-      '@atproto/uri':
+      '@atproto/syntax':
         specifier: workspace:^
-        version: link:../uri
+        version: link:../syntax
       '@atproto/xrpc-server':
         specifier: workspace:^
         version: link:../xrpc-server
@@ -346,9 +343,9 @@ importers:
       '@atproto/pds':
         specifier: workspace:^
         version: link:../pds
-      '@atproto/uri':
+      '@atproto/syntax':
         specifier: workspace:^
-        version: link:../uri
+        version: link:../syntax
       '@atproto/xrpc-server':
         specifier: workspace:^
         version: link:../xrpc-server
@@ -386,9 +383,9 @@ importers:
 
   packages/identifier:
     dependencies:
-      '@atproto/common-web':
+      '@atproto/syntax':
         specifier: workspace:^
-        version: link:../common-web
+        version: link:../syntax
 
   packages/identity:
     dependencies:
@@ -426,9 +423,9 @@ importers:
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
-      '@atproto/nsid':
+      '@atproto/syntax':
         specifier: workspace:^
-        version: link:../nsid
+        version: link:../syntax
       chalk:
         specifier: ^5.1.1
         version: 5.1.1
@@ -450,15 +447,9 @@ importers:
       '@atproto/common-web':
         specifier: workspace:^
         version: link:../common-web
-      '@atproto/identifier':
+      '@atproto/syntax':
         specifier: workspace:^
-        version: link:../identifier
-      '@atproto/nsid':
-        specifier: workspace:^
-        version: link:../nsid
-      '@atproto/uri':
-        specifier: workspace:^
-        version: link:../uri
+        version: link:../syntax
       iso-datestring-validator:
         specifier: ^2.2.2
         version: 2.2.2
@@ -469,7 +460,11 @@ importers:
         specifier: ^3.21.4
         version: 3.21.4
 
-  packages/nsid: {}
+  packages/nsid:
+    dependencies:
+      '@atproto/syntax':
+        specifier: workspace:^
+        version: link:../syntax
 
   packages/pds:
     dependencies:
@@ -482,9 +477,6 @@ importers:
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
-      '@atproto/identifier':
-        specifier: workspace:^
-        version: link:../identifier
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
@@ -494,9 +486,9 @@ importers:
       '@atproto/repo':
         specifier: workspace:^
         version: link:../repo
-      '@atproto/uri':
+      '@atproto/syntax':
         specifier: workspace:^
-        version: link:../uri
+        version: link:../syntax
       '@atproto/xrpc':
         specifier: workspace:^
         version: link:../xrpc
@@ -648,9 +640,9 @@ importers:
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
-      '@atproto/nsid':
+      '@atproto/syntax':
         specifier: workspace:^
-        version: link:../nsid
+        version: link:../syntax
       '@ipld/car':
         specifier: ^3.2.3
         version: 3.2.3
@@ -667,14 +659,17 @@ importers:
         specifier: ^3.21.4
         version: 3.21.4
 
+  packages/syntax:
+    dependencies:
+      '@atproto/common-web':
+        specifier: workspace:^
+        version: link:../common-web
+
   packages/uri:
     dependencies:
-      '@atproto/identifier':
+      '@atproto/syntax':
         specifier: workspace:^
-        version: link:../identifier
-      '@atproto/nsid':
-        specifier: workspace:^
-        version: link:../nsid
+        version: link:../syntax
 
   packages/xrpc:
     dependencies:

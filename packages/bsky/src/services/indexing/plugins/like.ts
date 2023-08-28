@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
 import * as Like from '../../../lexicon/types/app/bsky/feed/like'
 import * as lex from '../../../lexicon/lexicons'
@@ -66,7 +66,7 @@ const notifsForInsert = (obj: IndexedLike) => {
           recordCid: obj.cid,
           reason: 'like' as const,
           reasonSubject: subjectUri.toString(),
-          sortAt: obj.indexedAt,
+          sortAt: obj.sortAt,
         },
       ]
 }

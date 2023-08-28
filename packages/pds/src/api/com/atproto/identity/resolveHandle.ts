@@ -1,6 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as ident from '@atproto/identifier'
+import * as ident from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 

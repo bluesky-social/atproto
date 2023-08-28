@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { ModerationAction } from '../../../../db/tables/moderation'
 import { ModerationReport } from '../../../../db/tables/moderation'
 import { InputSchema as ReportInput } from '../../../../lexicon/types/com/atproto/moderation/createReport'

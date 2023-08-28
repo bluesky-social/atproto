@@ -7,9 +7,9 @@
     "types": "dist/index.d.ts"
   },
   "scripts": {
-    "test": "jest",
-    "prettier": "prettier --check src/ tests/",
-    "prettier:fix": "prettier --write src/ tests/",
+    "test": "true",
+    "prettier": "prettier --check src/",
+    "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "pnpm lint --fix",
     "verify": "run-p prettier lint",
@@ -24,7 +24,6 @@
     "directory": "packages/uri"
   },
   "dependencies": {
-    "@atproto/identifier": "workspace:^",
-    "@atproto/nsid": "workspace:^"
+    "@atproto/syntax": "workspace:^"
   }
 }

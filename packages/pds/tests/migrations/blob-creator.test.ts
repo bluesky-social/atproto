@@ -2,7 +2,7 @@ import { Database } from '../../src'
 import { randomStr } from '@atproto/crypto'
 import { cidForCbor, TID } from '@atproto/common'
 import { Kysely } from 'kysely'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 
 describe.skip('blob creator migration', () => {
   let db: Database

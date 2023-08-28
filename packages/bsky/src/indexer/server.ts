@@ -21,7 +21,7 @@ export const createServer = (
     } catch (err) {
       return res.status(500).send('could not calculate partition')
     }
-    sub.requestReprocess(req.params.did)
+    await sub.requestReprocess(req.params.did)
     res.sendStatus(200)
   })
   return app

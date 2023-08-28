@@ -32,7 +32,7 @@
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",
     "@atproto/pds": "workspace:^",
-    "@atproto/uri": "workspace:^",
+    "@atproto/syntax": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.1",
     "@did-plc/server": "^0.0.1",

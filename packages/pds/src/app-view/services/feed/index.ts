@@ -1,5 +1,5 @@
 import { sql } from 'kysely'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { dedupeStrs } from '@atproto/common'
 import { cborToLexRecord } from '@atproto/repo'
 import Database from '../../../db'

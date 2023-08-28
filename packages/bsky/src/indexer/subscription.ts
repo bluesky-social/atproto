@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { cborDecode, wait } from '@atproto/common'
 import { DisconnectError } from '@atproto/xrpc-server'
 import {
@@ -106,10 +106,10 @@ export class IndexerSubscription {
     }
   }
 
-  requestReprocess(did: string) {
-    this.repoQueue.add(did, async () => {
+  async requestReprocess(did: string) {
+    await this.repoQueue.add(did, async () => {
       try {
-        await this.indexingSvc.indexRepo(did)
+        await this.indexingSvc.indexRepo(did, undefined)
       } catch (err) {
         log.error({ did }, 'failed to reprocess repo')
       }

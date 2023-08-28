@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { Insertable } from 'kysely'
+import { Insertable, sql } from 'kysely'
 import TTLCache from '@isaacs/ttlcache'
 import { AtUri } from '@atproto/api'
 import { MINUTE, chunkArray } from '@atproto/common'
@@ -7,7 +7,7 @@ import Database from './db/primary'
 import { Notification } from './db/tables/notification'
 import { NotificationPushToken as PushToken } from './db/tables/notification-push-token'
 import logger from './indexer/logger'
-import { notSoftDeletedClause } from './db/util'
+import { notSoftDeletedClause, valuesList } from './db/util'
 import { ids } from './lexicon/lexicons'
 import { retryHttp } from './util/retry'
 
@@ -22,18 +22,22 @@ type PushNotification = {
   data?: {
     [key: string]: string
   }
+  collapse_id?: string
+  collapse_key?: string
 }
 
 type InsertableNotif = Insertable<Notification>
 
 type NotifDisplay = {
+  key: string
+  rateLimit: boolean
   title: string
   body: string
   notif: InsertableNotif
 }
 
 export class NotificationServer {
-  private rateLimiter = new RateLimiter(20, 20 * MINUTE)
+  private rateLimiter = new RateLimiter(1, 30 * MINUTE)
 
   constructor(public db: Database, public pushEndpoint?: string) {}
 
@@ -52,6 +56,7 @@ export class NotificationServer {
   }
 
   async prepareNotifsToSend(notifications: InsertableNotif[]) {
+    const now = Date.now()
     const notifsToSend: PushNotification[] = []
     const tokensByDid = await this.getTokensByDid(
       unique(notifications.map((n) => n.did)),
@@ -62,10 +67,16 @@ export class NotificationServer {
     )
 
     for (const notifView of notificationViews) {
+      if (!isRecent(notifView.notif.sortAt, 10 * MINUTE)) {
+        continue // if the notif is from > 10 minutes ago, don't send push notif
+      }
       const { did: userDid } = notifView.notif
       const userTokens = tokensByDid[userDid] ?? []
       for (const t of userTokens) {
         const { appId, platform, token } = t
+        if (notifView.rateLimit && !this.rateLimiter.check(token, now)) {
+          continue
+        }
         if (platform === 'ios' || platform === 'android') {
           notifsToSend.push({
             tokens: [token],
@@ -78,6 +89,8 @@ export class NotificationServer {
               recordUri: notifView.notif.recordUri,
               recordCid: notifView.notif.recordCid,
             },
+            collapse_id: notifView.key,
+            collapse_key: notifView.key,
           })
         } else {
           // @TODO: Handle web notifs
@@ -97,11 +110,7 @@ export class NotificationServer {
    * @returns void
    */
   async processNotifications(notifs: PushNotification[]) {
-    const now = Date.now()
-    const permittedNotifs = notifs.filter((n) =>
-      n.tokens.every((token) => this.rateLimiter.check(token, now)),
-    )
-    for (const batch of chunkArray(permittedNotifs, 20)) {
+    for (const batch of chunkArray(notifs, 20)) {
       try {
         await this.sendPushNotifications(batch)
       } catch (err) {
@@ -179,7 +188,7 @@ export class NotificationServer {
     const allUris = [...subjectUris, ...recordUris]
 
     // gather potential display data for notifications in batch
-    const [authors, posts] = await Promise.all([
+    const [authors, posts, blocksAndMutes] = await Promise.all([
       this.db.db
         .selectFrom('actor')
         .leftJoin('profile', 'profile.creator', 'actor.did')
@@ -198,6 +207,7 @@ export class NotificationServer {
         .where('post.uri', 'in', allUris.length ? allUris : [''])
         .select(['post.uri as uri', 'text'])
         .execute(),
+      this.findBlocksAndMutes(notifs),
     ])
 
     const authorsByDid = authors.reduce((acc, author) => {
@@ -215,7 +225,7 @@ export class NotificationServer {
       const {
         author: authorDid,
         reason,
-        reasonSubject: subjectUri, // if like/reply/quote/emtion, the post which was liked/replied to/mention is in/or quoted. if custom feed liked, the feed which was liked
+        reasonSubject: subjectUri, // if like/reply/quote/mention, the post which was liked/replied to/mention is in/or quoted. if custom feed liked, the feed which was liked
         recordUri,
       } = notif
 
@@ -224,8 +234,12 @@ export class NotificationServer {
       const postRecord = postsByUri[recordUri]
       const postSubject = subjectUri ? postsByUri[subjectUri] : null
 
-      // if no display name, dont send notification
-      if (!author) {
+      // if blocked or muted, don't send notification
+      const shouldFilter = blocksAndMutes.some(
+        (pair) => pair.author === notif.author && pair.receiver === notif.did,
+      )
+      if (shouldFilter || !author) {
+        // if no display name, dont send notification
         continue
       }
       // const author = displayName.displayName
@@ -234,15 +248,18 @@ export class NotificationServer {
       // if follow, get the URI of the author's profile
       // if reply, or mention, get URI of the postRecord
       // if like, or custom feed like, or repost get the URI of the reasonSubject
+      const key = reason
       let title = ''
       let body = ''
+      let rateLimit = true
 
       // check follow first and mention first because they don't have subjectUri and return
       // reply has subjectUri but the recordUri is the replied post
       if (reason === 'follow') {
         title = 'New follower!'
         body = `${author} has followed you`
-        results.push({ title, body, notif })
+        results.push({ key, title, body, notif, rateLimit })
+        continue
       } else if (reason === 'mention' || reason === 'reply') {
         // use recordUri for mention and reply
         title =
@@ -250,7 +267,9 @@ export class NotificationServer {
             ? `${author} mentioned you`
             : `${author} replied to your post`
         body = postRecord?.text || ''
-        results.push({ title, body, notif })
+        rateLimit = false // always deliver
+        results.push({ key, title, body, notif, rateLimit })
+        continue
       }
 
       // if no subjectUri, don't send notification
@@ -271,6 +290,7 @@ export class NotificationServer {
       } else if (reason === 'quote') {
         title = `${author} quoted your post`
         body = postSubject?.text || ''
+        rateLimit = true // always deliver
       } else if (reason === 'repost') {
         title = `${author} reposted your post`
         body = postSubject?.text || ''
@@ -284,11 +304,58 @@ export class NotificationServer {
         continue
       }
 
-      results.push({ title, body, notif })
+      results.push({ key, title, body, notif, rateLimit })
     }
 
     return results
   }
+
+  async findBlocksAndMutes(notifs: InsertableNotif[]) {
+    const pairs = notifs.map((n) => ({ author: n.author, receiver: n.did }))
+    const { ref } = this.db.db.dynamic
+    const blockQb = this.db.db
+      .selectFrom('actor_block')
+      .where((outer) =>
+        outer
+          .where((qb) =>
+            qb
+              .whereRef('actor_block.creator', '=', ref('author'))
+              .whereRef('actor_block.subjectDid', '=', ref('receiver')),
+          )
+          .orWhere((qb) =>
+            qb
+              .whereRef('actor_block.creator', '=', ref('receiver'))
+              .whereRef('actor_block.subjectDid', '=', ref('author')),
+          ),
+      )
+      .select(['creator', 'subjectDid'])
+    const muteQb = this.db.db
+      .selectFrom('mute')
+      .whereRef('mute.subjectDid', '=', ref('author'))
+      .whereRef('mute.mutedByDid', '=', ref('receiver'))
+      .selectAll()
+    const muteListQb = this.db.db
+      .selectFrom('list_item')
+      .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
+      .whereRef('list_mute.mutedByDid', '=', ref('receiver'))
+      .whereRef('list_item.subjectDid', '=', ref('author'))
+      .select('list_item.subjectDid')
+
+    const values = valuesList(pairs.map((p) => sql`${p.author}, ${p.receiver}`))
+    const filterPairs = await this.db.db
+      .selectFrom(values.as(sql`pair (author, receiver)`))
+      .whereExists(muteQb)
+      .orWhereExists(muteListQb)
+      .orWhereExists(blockQb)
+      .selectAll()
+      .execute()
+    return filterPairs as { author: string; receiver: string }[]
+  }
+}
+
+const isRecent = (isoTime: string, timeDiff: number): boolean => {
+  const diff = Date.now() - new Date(isoTime).getTime()
+  return diff < timeDiff
 }
 
 const unique = (items: string[]) => [...new Set(items)]

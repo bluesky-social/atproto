@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { WriteOpAction } from '@atproto/repo'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import Database from '../../../db'
 import * as Post from './plugins/post'
 import * as Like from './plugins/like'

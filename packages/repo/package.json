@@ -32,7 +32,7 @@
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",
     "@atproto/lexicon": "workspace:^",
-    "@atproto/nsid": "workspace:^",
+    "@atproto/syntax": "workspace:^",
     "@ipld/car": "^3.2.3",
     "@ipld/dag-cbor": "^7.0.0",
     "multiformats": "^9.9.0",

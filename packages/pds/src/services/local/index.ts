@@ -1,6 +1,6 @@
 import util from 'util'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { cborToLexRecord } from '@atproto/repo'
 import Database from '../../db'
 import { Record as PostRecord } from '../../lexicon/types/app/bsky/feed/post'

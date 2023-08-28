@@ -1,4 +1,4 @@
-import * as ident from '@atproto/identifier'
+import * as ident from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { reservedSubdomains } from './reserved'
 import { hasExplicitSlur } from '../content-reporter/explicit-slurs'

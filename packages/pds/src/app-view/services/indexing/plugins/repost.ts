@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import * as Repost from '../../../../lexicon/types/app/bsky/feed/repost'
 import * as lex from '../../../../lexicon/lexicons'
 import Database from '../../../../db'

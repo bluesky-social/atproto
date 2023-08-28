@@ -1,4 +1,4 @@
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { cidForCbor, TID } from '@atproto/common'
 import { WriteOpAction } from '@atproto/repo'
 import { TestNetwork } from '@atproto/dev-env'

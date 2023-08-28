@@ -24,7 +24,7 @@
   "dependencies": {
     "@atproto/common-web": "workspace:^",
     "@atproto/lexicon": "workspace:^",
-    "@atproto/uri": "workspace:^",
+    "@atproto/syntax": "workspace:^",
     "@atproto/xrpc": "workspace:^",
     "multiformats": "^9.9.0",
     "tlds": "^1.234.0",

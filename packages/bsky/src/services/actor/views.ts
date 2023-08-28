@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import { INVALID_HANDLE } from '@atproto/identifier'
+import { INVALID_HANDLE } from '@atproto/syntax'
 import { jsonStringToLex } from '@atproto/lexicon'
 import {
   ProfileViewDetailed,

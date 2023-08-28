@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { countAll, notSoftDeletedClause } from '../../../../db/util'
@@ -22,15 +23,12 @@ export default function (server: Server, ctx: AppContext) {
         .innerJoin('record', 'record.uri', 'notification.recordUri')
         .where(notSoftDeletedClause(ref('actor')))
         .where(notSoftDeletedClause(ref('record')))
+        // Ensure to hit notification_did_sortat_idx, handling case where lastSeenNotifs is null.
         .where('notification.did', '=', requester)
-        .where((inner) =>
-          inner
-            .where('actor_state.lastSeenNotifs', 'is', null)
-            .orWhereRef(
-              'notification.sortAt',
-              '>',
-              'actor_state.lastSeenNotifs',
-            ),
+        .where(
+          'notification.sortAt',
+          '>',
+          sql`coalesce(${ref('actor_state.lastSeenNotifs')}, ${''})`,
         )
         .executeTakeFirst()
 

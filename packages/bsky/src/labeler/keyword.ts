@@ -3,7 +3,7 @@ import { Labeler } from './base'
 import { getFieldsFromRecord, keywordLabeling } from './util'
 import { IdResolver } from '@atproto/identity'
 import { BackgroundQueue } from '../background'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { IndexerConfig } from '../indexer/config'
 
 export class KeywordLabeler extends Labeler {

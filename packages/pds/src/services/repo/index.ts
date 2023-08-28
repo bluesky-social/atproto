@@ -8,7 +8,7 @@ import {
   WriteOpAction,
 } from '@atproto/repo'
 import * as repo from '@atproto/repo'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'

@@ -1,7 +1,7 @@
 import { Server } from '../../../../../lexicon'
 import * as lex from '../../../../../lexicon/lexicons'
 import AppContext from '../../../../../context'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
