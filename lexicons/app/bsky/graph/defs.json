@@ -54,7 +54,8 @@
     "listViewerState": {
       "type": "object",
       "properties": {
-        "muted": {"type": "boolean"}
+        "muted": {"type": "boolean"},
+        "blocked": {"type": "string", "format": "at-uri"}
       }
     }
   }
