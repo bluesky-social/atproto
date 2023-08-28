@@ -48,11 +48,9 @@ export default function (server: Server, ctx: AppContext) {
         if (!dataCid.equals(prev.data)) {
           throw new InvalidRequestError('Data cid did not match')
         }
+        const recordCids = records.map((r) => r.cid)
         const diff = await DataDiff.of(data, null)
-        const cidsToKeep = [
-          ...diff.newLeafCids.toList(),
-          ...diff.newMstBlocks.cids(),
-        ]
+        const cidsToKeep = [...recordCids, ...diff.newMstBlocks.cids()]
         const rev = TID.nextStr(prev.rev)
         for (const chunk of chunkArray(cidsToKeep, 500)) {
           const cidStrs = chunk.map((c) => c.toString())
