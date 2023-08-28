@@ -3,7 +3,7 @@ import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { randomBytes } from 'crypto'
-import { cidForCbor } from '@atproto/common'
+import { TID, cidForCbor } from '@atproto/common'
 import { IpldBlock } from '../../src/db/tables/ipld-block'
 import { readCarWithRoot, verifyRepo } from '@atproto/repo'
 import { Database } from '../../src'
@@ -77,7 +77,7 @@ describe('repo version upgrade', () => {
       cruft.push({
         cid: cid.toString(),
         creator: did,
-        repoRev: null,
+        repoRev: Math.random() > 0.5 ? TID.nextStr() : null,
         size: 128,
         content: bytes,
       })
