@@ -11,6 +11,7 @@ import { CID } from 'multiformats/cid'
 import Database from './db'
 import { IpldBlock } from './db/tables/ipld-block'
 import { ConcurrentWriteError } from './services/repo'
+import { sql } from 'kysely'
 
 export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
   cache: BlockMap = new BlockMap()
@@ -229,6 +230,7 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
   }
 
   async getBlockRange(since?: string, cursor?: RevCursor) {
+    const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('ipld_block')
       .where('creator', '=', this.did)
@@ -237,14 +239,11 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
       .orderBy('cid', 'asc')
       .limit(500)
     if (cursor) {
-      builder = builder.where((qb) =>
-        qb
-          .where('repoRev', '>', cursor.rev)
-          .orWhere((inner) =>
-            inner
-              .where('repoRev', '=', cursor.rev)
-              .where('cid', '>', cursor.cid.toString()),
-          ),
+      // use this syntax to ensure we hit the index
+      builder = builder.where(
+        sql`((${ref('repoRev')}, ${ref('cid')}) > (${
+          cursor.rev
+        }, ${cursor.cid.toString()}))`,
       )
     } else if (since) {
       builder = builder.where('repoRev', '>', since)
