@@ -2,6 +2,7 @@ import { CID } from 'multiformats/cid'
 import * as crypto from '@atproto/crypto'
 import { BlobStore, CommitData, Repo, WriteOpAction } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AtUri } from '@atproto/syntax'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
 import SqlRepoStorage from '../../sql-repo-storage'
@@ -20,7 +21,6 @@ import { wait } from '@atproto/common'
 import { BackgroundQueue } from '../../event-stream/background-queue'
 import { Crawlers } from '../../crawlers'
 import { ContentReporter } from '../../content-reporter'
-import { AtUri } from '@atproto/syntax'
 
 export class RepoService {
   blobs: RepoBlobs
