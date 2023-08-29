@@ -1,5 +1,7 @@
 FROM node:18-alpine as build
 
+RUN npm install -g pnpm
+
 # Move files into the image and install
 WORKDIR /app
 COPY ./*.* ./
@@ -16,16 +18,15 @@ COPY ./packages/lexicon ./packages/lexicon
 COPY ./packages/repo ./packages/repo
 COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
+COPY ./services/bsky ./services/bsky
 
-RUN npm install -g pnpm
 RUN ATP_BUILD_SHALLOW=true pnpm install --frozen-lockfile > /dev/null
 RUN pnpm build > /dev/null
 # Remove non-prod deps
 RUN pnpm install --prod --ignore-scripts --prefer-offline > /dev/null
+RUN pnpm update-main-to-dist > /dev/null
 
-WORKDIR packages/bsky/service
-# Bsky service uses yarn
-RUN yarn install --frozen-lockfile > /dev/null
+WORKDIR services/bsky
 
 # Uses assets from build stage to reduce build size
 FROM node:18-alpine
@@ -35,7 +36,7 @@ RUN apk add --update dumb-init
 # Avoid zombie processes, handle signal forwarding
 ENTRYPOINT ["dumb-init", "--"]
 
-WORKDIR /app/packages/bsky/service
+WORKDIR /app/services/bsky
 COPY --from=build /app /app
 
 EXPOSE 3000

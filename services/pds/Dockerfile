@@ -1,5 +1,7 @@
 FROM node:18-alpine as build
 
+RUN npm install -g pnpm
+
 # Move files into the image and install
 WORKDIR /app
 COPY ./*.* ./
@@ -14,20 +16,18 @@ COPY ./packages/syntax ./packages/syntax
 COPY ./packages/identity ./packages/identity
 COPY ./packages/lex-cli ./packages/lex-cli
 COPY ./packages/lexicon ./packages/lexicon
-COPY ./packages/pds ./packages/pds
 COPY ./packages/repo ./packages/repo
 COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
+COPY ./services/pds ./services/pds
 
-RUN npm install -g pnpm
 RUN ATP_BUILD_SHALLOW=true pnpm install --frozen-lockfile > /dev/null
 RUN pnpm build > /dev/null
 # Remove non-prod deps
 RUN pnpm install --prod --ignore-scripts --prefer-offline > /dev/null
+RUN pnpm update-main-to-dist > /dev/null
 
-WORKDIR packages/pds/service
-# PDS service uses yarn
-RUN yarn install --frozen-lockfile > /dev/null
+WORKDIR services/pds
 
 # Uses assets from build stage to reduce build size
 FROM node:18-alpine
@@ -37,7 +37,7 @@ RUN apk add --update dumb-init
 # Avoid zombie processes, handle signal forwarding
 ENTRYPOINT ["dumb-init", "--"]
 
-WORKDIR /app/packages/pds/service
+WORKDIR /app/services/pds
 COPY --from=build /app /app
 
 EXPOSE 3000

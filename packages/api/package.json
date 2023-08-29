@@ -11,6 +11,7 @@
     "docgen": "node ./scripts/generate-docs.mjs",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
+    "update-main-to-dist": "node ../../update-main-to-dist.js packages/api",
     "test": "jest",
     "bench": "jest --config jest.bench.config.js",
     "bench:profile": "node --inspect-brk ../../node_modules/.bin/jest --config jest.bench.config.js"
