@@ -1,4 +1,4 @@
-[                                                                                                        
+[
   {
     "comment": "valid P-256 key and signature, with low-S signature",
     "messageBase64": "oWVoZWxsb2V3b3JsZA",

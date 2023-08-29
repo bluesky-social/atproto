@@ -69,7 +69,9 @@ describe('DID permissive validation', () => {
 
   it('conforms to interop valid DIDs', () => {
     const lineReader = readline.createInterface({
-      input: fs.createReadStream(`${__dirname}/interop-files/did_syntax_valid.txt`),
+      input: fs.createReadStream(
+        `${__dirname}/interop-files/did_syntax_valid.txt`,
+      ),
       terminal: false,
     })
     lineReader.on('line', (line) => {
@@ -82,7 +84,9 @@ describe('DID permissive validation', () => {
 
   it('conforms to interop invalid DIDs', () => {
     const lineReader = readline.createInterface({
-      input: fs.createReadStream(`${__dirname}/interop-files/did_syntax_invalid.txt`),
+      input: fs.createReadStream(
+        `${__dirname}/interop-files/did_syntax_invalid.txt`,
+      ),
       terminal: false,
     })
     lineReader.on('line', (line) => {

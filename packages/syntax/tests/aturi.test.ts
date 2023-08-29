@@ -508,7 +508,9 @@ describe('AtUri validation', () => {
 
   it('conforms to interop valid ATURIs', () => {
     const lineReader = readline.createInterface({
-      input: fs.createReadStream(`${__dirname}/interop-files/aturi_syntax_valid.txt`),
+      input: fs.createReadStream(
+        `${__dirname}/interop-files/aturi_syntax_valid.txt`,
+      ),
       terminal: false,
     })
     lineReader.on('line', (line) => {

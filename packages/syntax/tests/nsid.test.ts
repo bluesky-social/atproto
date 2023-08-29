@@ -128,7 +128,9 @@ describe('NSID validation', () => {
 
   it('conforms to interop valid NSIDs', () => {
     const lineReader = readline.createInterface({
-      input: fs.createReadStream(`${__dirname}/interop-files/nsid_syntax_valid.txt`),
+      input: fs.createReadStream(
+        `${__dirname}/interop-files/nsid_syntax_valid.txt`,
+      ),
       terminal: false,
     })
     lineReader.on('line', (line) => {
@@ -141,7 +143,9 @@ describe('NSID validation', () => {
 
   it('conforms to interop invalid NSIDs', () => {
     const lineReader = readline.createInterface({
-      input: fs.createReadStream(`${__dirname}/interop-files/nsid_syntax_invalid.txt`),
+      input: fs.createReadStream(
+        `${__dirname}/interop-files/nsid_syntax_invalid.txt`,
+      ),
       terminal: false,
     })
     lineReader.on('line', (line) => {
