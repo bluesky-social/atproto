@@ -377,6 +377,35 @@ describe('crud operations', () => {
       })
       await expect(attemptDelete).resolves.toBeDefined()
     })
+
+    it('does not delete the underlying block if it is referenced elsewhere', async () => {
+      const { repo } = aliceAgent.api.com.atproto
+      const record = { text: 'post', createdAt: new Date().toISOString() }
+      const { data: post1 } = await repo.createRecord({
+        repo: alice.did,
+        collection: ids.AppBskyFeedPost,
+        record,
+      })
+      const { data: post2 } = await repo.createRecord({
+        repo: alice.did,
+        collection: ids.AppBskyFeedPost,
+        record,
+      })
+      const uri1 = new AtUri(post1.uri)
+      await repo.deleteRecord({
+        repo: uri1.host,
+        collection: uri1.collection,
+        rkey: uri1.rkey,
+      })
+      const uri2 = new AtUri(post2.uri)
+      const checkPost2 = await repo.getRecord({
+        repo: uri2.host,
+        collection: uri2.collection,
+        rkey: uri2.rkey,
+      })
+      expect(checkPost2).toBeDefined()
+      expect(checkPost2.data.value).toMatchObject(record)
+    })
   })
 
   describe('putRecord', () => {

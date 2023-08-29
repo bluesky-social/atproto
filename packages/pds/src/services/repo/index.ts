@@ -20,6 +20,7 @@ import { wait } from '@atproto/common'
 import { BackgroundQueue } from '../../event-stream/background-queue'
 import { Crawlers } from '../../crawlers'
 import { ContentReporter } from '../../content-reporter'
+import { AtUri } from '@atproto/syntax'
 
 export class RepoService {
   blobs: RepoBlobs
@@ -170,8 +171,12 @@ export class RepoService {
     // cache last commit since there's likely overlap
     await storage.cacheRev(currRoot.rev)
     const recordTxn = this.services.record(this.db)
+    const delAndUpdateUris: AtUri[] = []
     for (const write of writes) {
       const { action, uri, swapCid } = write
+      if (action !== WriteOpAction.Create) {
+        delAndUpdateUris.push(uri)
+      }
       if (swapCid === undefined) {
         continue
       }
@@ -192,7 +197,17 @@ export class RepoService {
     }
     const writeOps = writes.map(writeToOp)
     const repo = await Repo.load(storage, currRoot.cid)
-    return repo.formatCommit(writeOps, this.repoSigningKey)
+    const commit = await repo.formatCommit(writeOps, this.repoSigningKey)
+    // find blocks that would be deleted but are referenced by another record
+    const dupeRecordCids = await this.getDuplicateRecordCids(
+      did,
+      commit.removedCids.toList(),
+      delAndUpdateUris,
+    )
+    for (const cid of dupeRecordCids) {
+      commit.removedCids.delete(cid)
+    }
+    return commit
   }
 
   async indexWrites(writes: PreparedWrite[], now: string, rev?: string) {
@@ -217,6 +232,26 @@ export class RepoService {
         }
       }),
     )
+  }
+
+  async getDuplicateRecordCids(
+    did: string,
+    cids: CID[],
+    touchedUris: AtUri[],
+  ): Promise<CID[]> {
+    if (touchedUris.length === 0 || cids.length === 0) {
+      return []
+    }
+    const cidStrs = cids.map((c) => c.toString())
+    const uriStrs = touchedUris.map((u) => u.toString())
+    const res = await this.db.db
+      .selectFrom('record')
+      .where('did', '=', did)
+      .where('cid', 'in', cidStrs)
+      .where('uri', 'not in', uriStrs)
+      .select('cid')
+      .execute()
+    return res.map((row) => CID.parse(row.cid))
   }
 
   async afterWriteProcessing(
