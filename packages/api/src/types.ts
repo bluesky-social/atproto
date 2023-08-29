@@ -1,3 +1,5 @@
+import { LabelPreference } from './moderation/types'
+
 /**
  * Used by the PersistSessionHandler to indicate what change occurred
  */
@@ -69,4 +71,22 @@ export type AtpAgentFetchHandler = (
  */
 export interface AtpAgentGlobalOpts {
   fetch: AtpAgentFetchHandler
+}
+
+/**
+ * Content-label preference
+ */
+export type BskyLabelPreference = LabelPreference | 'show'
+// TEMP we need to permanently convert 'show' to 'ignore', for now we manually convert -prf
+
+/**
+ * Bluesky preferences object
+ */
+export interface BskyPreferences {
+  feeds: {
+    saved?: string[]
+    pinned?: string[]
+  }
+  adultContentEnabled: boolean
+  contentLabels: Record<string, BskyLabelPreference>
 }
