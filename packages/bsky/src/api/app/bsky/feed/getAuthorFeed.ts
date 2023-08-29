@@ -67,19 +67,6 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      if (viewer !== null) {
-        feedItemsQb = feedItemsQb
-          .where((qb) =>
-            // Hide reposts of muted content
-            qb
-              .where('type', '=', 'post')
-              .orWhere((qb) =>
-                graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
-              ),
-          )
-          .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
-      }
-
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),
         ref('feed_item.cid'),
@@ -97,7 +84,21 @@ export default function (server: Server, ctx: AppContext) {
       ])
       setRepoRev(res, repoRev)
 
-      const feed = await feedService.hydrateFeed(feedItems, viewer)
+      const feedItemsSafe = await graphService.filterBlocksAndMutes(feedItems, {
+        getBlockPairs(item) {
+          if (viewer) {
+            return [[viewer, item.postAuthorDid]]
+          }
+        },
+        getMutePairs(item) {
+          // Hide reposts of muted content
+          if (viewer && item.type === 'repost') {
+            return [[viewer, item.postAuthorDid]]
+          }
+        },
+      })
+
+      const feed = await feedService.hydrateFeed(feedItemsSafe, viewer)
 
       return {
         encoding: 'application/json',

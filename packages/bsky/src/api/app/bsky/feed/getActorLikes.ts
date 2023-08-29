@@ -34,12 +34,6 @@ export default function (server: Server, ctx: AppContext) {
         .innerJoin('like', 'like.subject', 'feed_item.uri')
         .where('like.creator', '=', actorDid)
 
-      if (viewer !== null) {
-        feedItemsQb = feedItemsQb.whereNotExists(
-          graphService.blockQb(viewer, [ref('post.creator')]),
-        )
-      }
-
       const keyset = new FeedKeyset(
         ref('feed_item.sortAt'),
         ref('feed_item.cid'),
@@ -57,7 +51,15 @@ export default function (server: Server, ctx: AppContext) {
       ])
       setRepoRev(res, repoRev)
 
-      const feed = await feedService.hydrateFeed(feedItems, viewer)
+      const feedItemsSafe = await graphService.filterBlocksAndMutes(feedItems, {
+        getBlockPairs(item) {
+          if (viewer) {
+            return [[viewer, item.postAuthorDid]]
+          }
+        },
+      })
+
+      const feed = await feedService.hydrateFeed(feedItemsSafe, viewer)
 
       return {
         encoding: 'application/json',

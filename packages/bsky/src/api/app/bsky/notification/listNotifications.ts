@@ -28,10 +28,6 @@ export default function (server: Server, ctx: AppContext) {
         .where(notSoftDeletedClause(ref('record')))
         .where(notSoftDeletedClause(ref('author')))
         .where('notif.did', '=', requester)
-        .where((qb) =>
-          graphService.whereNotMuted(qb, requester, [ref('notif.author')]),
-        )
-        .whereNotExists(graphService.blockQb(requester, [ref('notif.author')]))
         .where((clause) =>
           clause
             .where('reasonSubject', 'is', null)
@@ -80,7 +76,15 @@ export default function (server: Server, ctx: AppContext) {
       const actorService = ctx.services.actor(db)
       const labelService = ctx.services.label(db)
       const recordUris = notifs.map((notif) => notif.uri)
-      const [authors, labels] = await Promise.all([
+      const [notifsSafe, authors, labels] = await Promise.all([
+        graphService.filterBlocksAndMutes(notifs, {
+          getBlockPairs(item) {
+            return [[requester, item.authorDid]]
+          },
+          getMutePairs(item) {
+            return [[requester, item.authorDid]]
+          },
+        }),
         actorService.views.profiles(
           notifs.map((notif) => ({
             did: notif.authorDid,
@@ -93,7 +97,7 @@ export default function (server: Server, ctx: AppContext) {
         labelService.getLabelsForUris(recordUris),
       ])
 
-      const notifications = mapDefined(notifs, (notif) => {
+      const notifications = mapDefined(notifsSafe, (notif) => {
         const author = authors[notif.authorDid]
         if (!author) return undefined
         const record = jsonStringToLex(notif.recordJson) as Record<

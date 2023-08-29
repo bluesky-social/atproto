@@ -21,7 +21,6 @@ export default function (server: Server, ctx: AppContext) {
         .where('like.subject', '=', uri)
         .innerJoin('actor as creator', 'creator.did', 'like.creator')
         .where(notSoftDeletedClause(ref('creator')))
-        .whereNotExists(graphService.blockQb(requester, [ref('like.creator')]))
         .selectAll('creator')
         .select([
           'like.cid as cid',
@@ -42,11 +41,20 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const likesRes = await builder.execute()
+
+      const likesSafe = await graphService.filterBlocksAndMutes(likesRes, {
+        getBlockPairs: (like) => {
+          if (requester) {
+            return [[requester, like.did]]
+          }
+        },
+      })
+
       const actors = await ctx.services
         .actor(db)
-        .views.profiles(likesRes, requester)
+        .views.profiles(likesSafe, requester)
 
-      const likes = mapDefined(likesRes, (row) =>
+      const likes = mapDefined(likesSafe, (row) =>
         actors[row.did]
           ? {
               createdAt: row.createdAt,

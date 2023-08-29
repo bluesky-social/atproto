@@ -342,27 +342,10 @@ export class FeedService {
     }, {} as PostViews)
   }
 
-  async filterAndGetFeedItems(
-    uris: string[],
-    requester: string,
-  ): Promise<Record<string, FeedRow>> {
+  async getFeedItems(uris: string[]): Promise<Record<string, FeedRow>> {
     if (uris.length < 1) return {}
-    const { ref } = this.db.db.dynamic
     const feedItems = await this.selectFeedItemQb()
       .where('feed_item.uri', 'in', uris)
-      .where((qb) =>
-        // Hide posts and reposts of or by muted actors
-        this.services.graph.whereNotMuted(qb, requester, [
-          ref('post.creator'),
-          ref('originatorDid'),
-        ]),
-      )
-      .whereNotExists(
-        this.services.graph.blockQb(requester, [
-          ref('post.creator'),
-          ref('originatorDid'),
-        ]),
-      )
       .execute()
     return feedItems.reduce((acc, item) => {
       return Object.assign(acc, { [item.uri]: item })
@@ -377,10 +360,20 @@ export class FeedService {
   ): Promise<FeedRow[]> {
     skeleton = skeleton.slice(0, limit)
     const feedItemUris = skeleton.map(getSkeleFeedItemUri)
-    const feedItems = await this.filterAndGetFeedItems(feedItemUris, requester)
-
+    const [feedItems, skeletonSafe] = await Promise.all([
+      this.getFeedItems(feedItemUris),
+      this.services.graph.filterBlocksAndMutes(skeleton, {
+        getBlockPairs(item) {
+          return getPostAndRepostPairs(item, requester)
+        },
+        getMutePairs(item) {
+          // Hide posts and reposts of or by muted actors
+          return getPostAndRepostPairs(item, requester)
+        },
+      }),
+    ])
     const cleaned: FeedRow[] = []
-    for (const skeleItem of skeleton) {
+    for (const skeleItem of skeletonSafe) {
       const feedItem = feedItems[getSkeleFeedItemUri(skeleItem)]
       if (feedItem && feedItem.postUri === skeleItem.post) {
         cleaned.push(feedItem)
@@ -665,4 +658,15 @@ function getSkeleFeedItemUri(item: SkeletonFeedPost) {
   return typeof item.reason?.repost === 'string'
     ? item.reason.repost
     : item.post
+}
+
+function getPostAndRepostPairs(
+  item: SkeletonFeedPost,
+  requester: string,
+): RelationshipPair[] {
+  const uriStrs =
+    typeof item.reason?.repost === 'string'
+      ? [item.post, item.reason.repost]
+      : [item.post]
+  return uriStrs.map((uriStr) => [requester, new AtUri(uriStr).host])
 }

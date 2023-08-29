@@ -18,9 +18,6 @@ export default function (server: Server, ctx: AppContext) {
         .where('repost.subject', '=', uri)
         .innerJoin('actor as creator', 'creator.did', 'repost.creator')
         .where(notSoftDeletedClause(ref('creator')))
-        .whereNotExists(
-          graphService.blockQb(requester, [ref('repost.creator')]),
-        )
         .selectAll('creator')
         .select(['repost.cid as cid', 'repost.sortAt as sortAt'])
 
@@ -36,9 +33,20 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const repostedByRes = await builder.execute()
+      const repostedBySafe = await graphService.filterBlocksAndMutes(
+        repostedByRes,
+        {
+          getBlockPairs(item) {
+            if (requester) {
+              return [[requester, item.did]]
+            }
+          },
+        },
+      )
+
       const repostedBy = await ctx.services
         .actor(db)
-        .views.hydrateProfiles(repostedByRes, requester)
+        .views.hydrateProfiles(repostedBySafe, requester)
 
       return {
         encoding: 'application/json',

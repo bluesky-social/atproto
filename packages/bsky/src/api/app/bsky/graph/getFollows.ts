@@ -33,15 +33,6 @@ export default function (server: Server, ctx: AppContext) {
         .if(!canViewTakendownProfile, (qb) =>
           qb.where(notSoftDeletedClause(ref('subject'))),
         )
-        .whereNotExists(
-          graphService.blockQb(requester, [ref('follow.subjectDid')]),
-        )
-        .whereNotExists(
-          graphService.blockRefQb(
-            ref('follow.subjectDid'),
-            ref('follow.creator'),
-          ),
-        )
         .selectAll('subject')
         .select(['follow.cid as cid', 'follow.sortAt as sortAt'])
 
@@ -53,14 +44,26 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const followsRes = await followsReq.execute()
+      const followsSafe = await graphService.filterBlocksAndMutes(followsRes, {
+        getBlockPairs(item) {
+          return requester
+            ? [
+                [requester, item.did],
+                [creatorRes.did, item.did],
+              ]
+            : [[creatorRes.did, item.did]]
+        },
+      })
+
       const [follows, subject] = await Promise.all([
-        actorService.views.hydrateProfiles(followsRes, requester, {
+        actorService.views.hydrateProfiles(followsSafe, requester, {
           includeSoftDeleted: canViewTakendownProfile,
         }),
         actorService.views.profile(creatorRes, requester, {
           includeSoftDeleted: canViewTakendownProfile,
         }),
       ])
+
       if (!subject) {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
       }
