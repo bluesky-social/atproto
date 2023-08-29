@@ -4,12 +4,7 @@ import { dedupeStrs } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/syntax'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { Database } from '../../db'
-import {
-  countAll,
-  noMatch,
-  notSoftDeletedClause,
-  valuesList,
-} from '../../db/util'
+import { countAll, noMatch, notSoftDeletedClause } from '../../db/util'
 import { ImageUriBuilder } from '../../image/uri'
 import { ids } from '../../lexicon/lexicons'
 import {
@@ -43,7 +38,7 @@ import {
 } from './types'
 import { LabelService, Labels, getSelfLabels } from '../label'
 import { ActorService } from '../actor'
-import { GraphService } from '../graph'
+import { GraphService, RelationshipPair } from '../graph'
 import { FeedViews } from './views'
 import { LabelCache } from '../../label-cache'
 
@@ -466,7 +461,7 @@ export class FeedService {
       }
     }
     // compute block state from all actor relationships among posts
-    const blockSet = await this.getBlockSet(relationships)
+    const blockSet = await this.services.graph.getBlockSet(relationships)
     if (blockSet.empty()) return {}
     const result: PostBlocksMap = {}
     Object.entries(byPost).forEach(([uri, block]) => {
@@ -480,28 +475,6 @@ export class FeedService {
       }
     })
     return result
-  }
-
-  private async getBlockSet(relationships: RelationshipPair[]) {
-    const { ref } = this.db.db.dynamic
-    const blockSet = new RelationshipSet()
-    if (!relationships.length) return blockSet
-    const relationshipSet = new RelationshipSet()
-    relationships.forEach((pair) => relationshipSet.add(pair))
-    // compute actual block set from all actor relationships
-    const blockRows = await this.db.db
-      .selectFrom('actor_block')
-      .select(['creator', 'subjectDid']) // index-only columns
-      .where(
-        sql`(${ref('creator')}, ${ref('subjectDid')})`,
-        'in',
-        valuesList(
-          relationshipSet.listAllPairs().map(([a, b]) => sql`${a}, ${b}`),
-        ),
-      )
-      .execute()
-    blockRows.forEach((r) => blockSet.add([r.creator, r.subjectDid]))
-    return blockSet
   }
 
   async embedsForPosts(
@@ -663,35 +636,6 @@ const nestedRecordUris = (posts: PostRecord[]): string[] => {
 }
 
 type PostRelationships = { reply?: RelationshipPair; embed?: RelationshipPair }
-
-type RelationshipPair = [didA: string, didB: string]
-
-class RelationshipSet {
-  index = new Map<string, Set<string>>()
-  add([didA, didB]: RelationshipPair) {
-    const didAIdx = this.index.get(didA) ?? new Set()
-    const didBIdx = this.index.get(didB) ?? new Set()
-    if (!this.index.has(didA)) this.index.set(didA, didAIdx)
-    if (!this.index.has(didB)) this.index.set(didB, didBIdx)
-    didAIdx.add(didB)
-    didBIdx.add(didA)
-  }
-  has([didA, didB]: RelationshipPair) {
-    return !!this.index.get(didA)?.has(didB)
-  }
-  listAllPairs() {
-    const pairs: RelationshipPair[] = []
-    for (const [didA, didBIdx] of this.index.entries()) {
-      for (const didB of didBIdx) {
-        pairs.push([didA, didB])
-      }
-    }
-    return pairs
-  }
-  empty() {
-    return this.index.size === 0
-  }
-}
 
 function applyEmbedBlock(
   uri: string,

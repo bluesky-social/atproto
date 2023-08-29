@@ -1,10 +1,10 @@
+import { Selectable, WhereInterface, sql } from 'kysely'
+import { NotEmptyArray } from '@atproto/common'
 import { Database } from '../../db'
 import { ImageUriBuilder } from '../../image/uri'
 import { ProfileView } from '../../lexicon/types/app/bsky/actor/defs'
 import { List } from '../../db/tables/list'
-import { Selectable, WhereInterface, sql } from 'kysely'
-import { NotEmptyArray } from '@atproto/common'
-import { DbRef, noMatch } from '../../db/util'
+import { DbRef, noMatch, valuesList } from '../../db/util'
 
 export class GraphService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
@@ -196,6 +196,92 @@ export class GraphService {
     }
   }
 
+  async getBlockSet(relationships: RelationshipPair[]) {
+    const { ref } = this.db.db.dynamic
+    const blockSet = new RelationshipSet()
+    if (!relationships.length) return blockSet
+    const relationshipSet = new RelationshipSet()
+    relationships.forEach((pair) => relationshipSet.add(pair, true))
+    // compute actual block set from all actor relationships
+    const blockRows = await this.db.db
+      .selectFrom('actor_block')
+      .select(['creator', 'subjectDid']) // index-only columns
+      .where(
+        sql`(${ref('creator')}, ${ref('subjectDid')})`,
+        'in',
+        valuesList(
+          relationshipSet.listAllPairs().map(([a, b]) => sql`${a}, ${b}`),
+        ),
+      )
+      .execute()
+    blockRows.forEach((r) => blockSet.add([r.creator, r.subjectDid], true))
+    return blockSet
+  }
+
+  async getMuteSet(relationships: RelationshipPair[]) {
+    const { ref } = this.db.db.dynamic
+    const muteSet = new RelationshipSet()
+    if (!relationships.length) return muteSet
+    const relationshipSet = new RelationshipSet()
+    relationships.forEach((pair) => relationshipSet.add(pair))
+    // compute actual mute set from all actor relationships
+    const muteRows = await this.db.db
+      .selectFrom('mute')
+      .select(['mutedByDid', 'subjectDid'])
+      .where(
+        sql`(${ref('mutedByDid')}, ${ref('subjectDid')})`,
+        'in',
+        valuesList(
+          relationshipSet.listAllPairs().map(([a, b]) => sql`${a}, ${b}`),
+        ),
+      )
+      .unionAll(
+        this.db.db
+          .selectFrom('list_item')
+          .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
+          .where(
+            sql`(${ref('list_mute.mutedByDid')}, ${ref(
+              'list_item.subjectDid',
+            )})`,
+            'in',
+            valuesList(
+              relationshipSet.listAllPairs().map(([a, b]) => sql`${a}, ${b}`),
+            ),
+          )
+          .select(['list_mute.mutedByDid', 'list_item.subjectDid']),
+      )
+      .execute()
+    muteRows.forEach((r) => muteSet.add([r.mutedByDid, r.subjectDid]))
+    return muteSet
+  }
+
+  async filterBlocksAndMutes<T>(
+    items: T[],
+    opts: {
+      getBlockPairs?: (item: T) => RelationshipPair[] | undefined
+      getMutePairs?: (item: T) => RelationshipPair[] | undefined
+    },
+  ) {
+    const blockPairsPerItem = items.map(
+      (item) => opts.getBlockPairs?.(item) ?? [],
+    )
+    const mutePairsPerItem = items.map(
+      (item) => opts.getMutePairs?.(item) ?? [],
+    )
+    const [blockSet, muteSet] = await Promise.all([
+      this.getBlockSet(blockPairsPerItem.flat()),
+      this.getMuteSet(mutePairsPerItem.flat()),
+    ])
+    return items.filter((_, i) => {
+      const blockPairs = blockPairsPerItem[i]
+      const mutePairs = mutePairsPerItem[i]
+      return (
+        blockPairs.every((pair) => !blockSet.has(pair)) &&
+        mutePairs.every((pair) => !muteSet.has(pair))
+      )
+    })
+  }
+
   async getListViews(listUris: string[], requester: string | null) {
     if (listUris.length < 1) return {}
     const lists = await this.getListsQb(requester)
@@ -258,4 +344,35 @@ export class GraphService {
 
 type ListInfo = Selectable<List> & {
   viewerMuted: string | null
+}
+
+export type RelationshipPair = [didA: string, didB: string]
+
+export class RelationshipSet {
+  index = new Map<string, Set<string>>()
+  add([didA, didB]: RelationshipPair, bididrectional = false) {
+    const didAIdx = this.index.get(didA) ?? new Set()
+    if (!this.index.has(didA)) this.index.set(didA, didAIdx)
+    didAIdx.add(didB)
+    if (bididrectional) {
+      const didBIdx = this.index.get(didB) ?? new Set()
+      if (!this.index.has(didB)) this.index.set(didB, didBIdx)
+      didBIdx.add(didA)
+    }
+  }
+  has([didA, didB]: RelationshipPair) {
+    return !!this.index.get(didA)?.has(didB)
+  }
+  listAllPairs() {
+    const pairs: RelationshipPair[] = []
+    for (const [didA, didBIdx] of this.index.entries()) {
+      for (const didB of didBIdx) {
+        pairs.push([didA, didB])
+      }
+    }
+    return pairs
+  }
+  empty() {
+    return this.index.size === 0
+  }
 }
