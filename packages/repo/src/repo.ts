@@ -151,7 +151,7 @@ export class Repo extends ReadableRepo {
         did: this.did,
         version: 3,
         rev,
-        prev: this.cid, // added for backwards compatibility with v2
+        prev: null, // added for backwards compatibility with v2
         data: dataCid,
       },
       keypair,
