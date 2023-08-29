@@ -1,0 +1,27 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.server.updateAccount",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Update an account information.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "birthDate": {"type": "string", "format": "date"}
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      "errors": []
+    }
+  }
+}
