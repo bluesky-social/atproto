@@ -1,5 +1,3 @@
 packages:
   - "services/*"
   - "packages/*"
-  - "!packages/pds/service"
-  - "!packages/bsky/service"
