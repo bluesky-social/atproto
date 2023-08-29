@@ -17,6 +17,7 @@
     "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
+    "update-main-to-dist": "node ../../update-main-to-dist.js packages/pds",
     "start": "node dist/bin.js",
     "test": "../dev-infra/with-test-redis-and-db.sh jest",
     "bench": "../dev-infra/with-test-redis-and-db.sh jest --config jest.bench.config.js",
