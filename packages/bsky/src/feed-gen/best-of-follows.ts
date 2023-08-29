@@ -1,6 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { AlgoHandler, AlgoResponse } from './types'
+import { AlgoHandler, AlgoResponse, toSkeletonItem } from './types'
 import { GenericKeyset, paginate } from '../db/pagination'
 import AppContext from '../context'
 
@@ -12,7 +12,6 @@ const handler: AlgoHandler = async (
   const { limit, cursor } = params
   const db = ctx.db.getReplica('feed')
   const feedService = ctx.services.feed(db)
-  const graphService = ctx.services.graph(db)
 
   const { ref } = db.db.dynamic
 
@@ -31,10 +30,6 @@ const handler: AlgoHandler = async (
             .whereRef('follow.subjectDid', '=', 'post.creator'),
         ),
     )
-    .where((qb) =>
-      graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
-    )
-    .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
     .select('candidate.score')
     .select('candidate.cid')
 
@@ -44,7 +39,7 @@ const handler: AlgoHandler = async (
   const feedItems = await builder.execute()
 
   return {
-    feedItems,
+    feed: feedItems.map(toSkeletonItem),
     cursor: keyset.packFromResult(feedItems),
   }
 }

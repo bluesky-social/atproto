@@ -352,13 +352,10 @@ export class FeedService {
     }, {} as Record<string, FeedRow>)
   }
 
-  // @TODO enforce limit elsewhere
   async cleanFeedSkeleton(
     skeleton: SkeletonFeedPost[],
-    limit: number,
     requester: string,
   ): Promise<FeedRow[]> {
-    skeleton = skeleton.slice(0, limit)
     const feedItemUris = skeleton.map(getSkeleFeedItemUri)
     const [feedItems, skeletonSafe] = await Promise.all([
       this.getFeedItems(feedItemUris),

@@ -2,7 +2,7 @@ import AppContext from '../context'
 import { NotEmptyArray } from '@atproto/common'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { paginate } from '../db/pagination'
-import { AlgoHandler, AlgoResponse } from './types'
+import { AlgoHandler, AlgoResponse, toSkeletonItem } from './types'
 import { FeedKeyset } from '../api/app/bsky/util/feed'
 import { valuesList } from '../db/util'
 
@@ -11,12 +11,11 @@ const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = ['!no-promote']
 const handler: AlgoHandler = async (
   ctx: AppContext,
   params: SkeletonParams,
-  viewer: string,
+  _viewer: string,
 ): Promise<AlgoResponse> => {
   const { limit = 50, cursor } = params
   const db = ctx.db.getReplica('feed')
   const feedService = ctx.services.feed(db)
-  const graphService = ctx.services.graph(db)
 
   const { ref } = db.db.dynamic
 
@@ -39,10 +38,6 @@ const handler: AlgoHandler = async (
             .orWhereRef('label.uri', '=', ref('post_embed_record.embedUri')),
         ),
     )
-    .where((qb) =>
-      graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
-    )
-    .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
 
   const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
 
@@ -50,8 +45,9 @@ const handler: AlgoHandler = async (
   feedQb = paginate(feedQb, { limit, cursor, keyset })
 
   const feedItems = await feedQb.execute()
+
   return {
-    feedItems,
+    feed: feedItems.map(toSkeletonItem),
     cursor: keyset.packFromResult(feedItems),
   }
 }

@@ -28,7 +28,6 @@ export default function (server: Server, ctx: AppContext) {
       const feedService = ctx.services.feed(db)
       const feedItems = await feedService.cleanFeedSkeleton(
         skeleton.feed,
-        limit,
         viewer,
       )
       const feed = await feedService.hydrateFeed(feedItems, viewer)

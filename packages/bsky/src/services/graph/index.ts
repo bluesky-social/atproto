@@ -1,10 +1,9 @@
-import { Selectable, WhereInterface, sql } from 'kysely'
-import { NotEmptyArray } from '@atproto/common'
+import { Selectable, sql } from 'kysely'
 import { Database } from '../../db'
 import { ImageUriBuilder } from '../../image/uri'
 import { ProfileView } from '../../lexicon/types/app/bsky/actor/defs'
 import { List } from '../../db/tables/list'
-import { DbRef, noMatch, valuesList } from '../../db/util'
+import { valuesList } from '../../db/util'
 
 export class GraphService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
@@ -69,27 +68,6 @@ export class GraphService {
       .execute()
   }
 
-  whereNotMuted<W extends WhereInterface<any, any>>(
-    qb: W,
-    requester: string,
-    refs: NotEmptyArray<DbRef>,
-  ) {
-    const subjectRefs = sql.join(refs)
-    const actorMute = this.db.db
-      .selectFrom('mute')
-      .where('mutedByDid', '=', requester)
-      .where('subjectDid', 'in', sql`(${subjectRefs})`)
-      .select('subjectDid as muted')
-    const listMute = this.db.db
-      .selectFrom('list_item')
-      .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
-      .where('list_mute.mutedByDid', '=', requester)
-      .whereRef('list_item.subjectDid', 'in', sql`(${subjectRefs})`)
-      .select('list_item.subjectDid as muted')
-    // Splitting the mute from list-mute checks seems to be more flexible for the query-planner and often quicker
-    return qb.whereNotExists(actorMute).whereNotExists(listMute)
-  }
-
   getListsQb(viewer: string | null) {
     const { ref } = this.db.db.dynamic
     return this.db.db
@@ -116,27 +94,6 @@ export class GraphService {
       .select(['list_item.cid as cid', 'list_item.sortAt as sortAt'])
   }
 
-  blockQb(viewer: string | null, refs: NotEmptyArray<DbRef>) {
-    const subjectRefs = sql.join(refs)
-    return this.db.db
-      .selectFrom('actor_block')
-      .if(!viewer, (q) => q.where(noMatch))
-      .where((outer) =>
-        outer
-          .where((qb) =>
-            qb
-              .where('actor_block.creator', '=', viewer ?? '')
-              .whereRef('actor_block.subjectDid', 'in', sql`(${subjectRefs})`),
-          )
-          .orWhere((qb) =>
-            qb
-              .where('actor_block.subjectDid', '=', viewer ?? '')
-              .whereRef('actor_block.creator', 'in', sql`(${subjectRefs})`),
-          ),
-      )
-      .select(['creator', 'subjectDid'])
-  }
-
   async getBlocks(
     requester: string,
     subjectHandleOrDid: string,
@@ -156,28 +113,15 @@ export class GraphService {
       subjectDid = res.did
     }
 
-    const accnts = [requester, subjectDid]
-    const blockRes = await this.db.db
-      .selectFrom('actor_block')
-      .where('creator', 'in', accnts)
-      .where('subjectDid', 'in', accnts)
-      .selectAll()
-      .execute()
-
-    const blocking = blockRes.some(
-      (row) => row.creator === requester && row.subjectDid === subjectDid,
-    )
-    const blockedBy = blockRes.some(
-      (row) => row.creator === subjectDid && row.subjectDid === requester,
-    )
+    const blockSet = await this.getBlockSet([[requester, subjectDid]], false)
 
     return {
-      blocking,
-      blockedBy,
+      blocking: blockSet.has([requester, subjectDid]),
+      blockedBy: blockSet.has([subjectDid, requester]),
     }
   }
 
-  async getBlockSet(relationships: RelationshipPair[]) {
+  async getBlockSet(relationships: RelationshipPair[], bidirectional = true) {
     const { ref } = this.db.db.dynamic
     const blockSet = new RelationshipSet()
     if (!relationships.length) return blockSet
@@ -195,7 +139,9 @@ export class GraphService {
         ),
       )
       .execute()
-    blockRows.forEach((r) => blockSet.add([r.creator, r.subjectDid], true))
+    blockRows.forEach((r) =>
+      blockSet.add([r.creator, r.subjectDid], bidirectional),
+    )
     return blockSet
   }
 

@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       const localAlgo = ctx.algos[feed]
 
       const timerSkele = new ServerTimer('skele').start()
-      const { feedItems, ...rest } =
+      const skeleton =
         localAlgo !== undefined
           ? await localAlgo(ctx, params, viewer)
           : await skeletonFromFeedGen(
@@ -43,13 +43,16 @@ export default function (server: Server, ctx: AppContext) {
       timerSkele.stop()
 
       const timerHydr = new ServerTimer('hydr').start()
-      const hydrated = await feedService.hydrateFeed(feedItems, viewer)
+      const cleanedFeed = await ctx.services
+        .feed(db)
+        .cleanFeedSkeleton(skeleton.feed, viewer)
+      const hydrated = await feedService.hydrateFeed(cleanedFeed, viewer)
       timerHydr.stop()
 
       return {
         encoding: 'application/json',
         body: {
-          ...rest,
+          ...skeleton,
           feed: hydrated,
         },
         headers: {
@@ -129,13 +132,8 @@ async function skeletonFromFeedGen(
     throw err
   }
 
-  const { feed: skeletonFeed, ...rest } = skeleton
-  const cleanedFeed = await ctx.services
-    .feed(db)
-    .cleanFeedSkeleton(skeletonFeed, params.limit, viewer)
-
   return {
-    ...rest,
-    feedItems: cleanedFeed,
+    ...skeleton,
+    feed: skeleton.feed.slice(0, params.limit), // enforce limit
   }
 }

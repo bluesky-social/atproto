@@ -1,7 +1,7 @@
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import AppContext from '../context'
 import { paginate } from '../db/pagination'
-import { AlgoHandler, AlgoResponse } from './types'
+import { AlgoHandler, AlgoResponse, toSkeletonItem } from './types'
 import { FeedKeyset, getFeedDateThreshold } from '../api/app/bsky/util/feed'
 
 const handler: AlgoHandler = async (
@@ -12,7 +12,6 @@ const handler: AlgoHandler = async (
   const { limit = 50, cursor } = params
   const db = ctx.db.getReplica('feed')
   const feedService = ctx.services.feed(db)
-  const graphService = ctx.services.graph(db)
 
   const { ref } = db.db.dynamic
 
@@ -40,16 +39,13 @@ const handler: AlgoHandler = async (
         .orWhere('originatorDid', 'in', mutualsSubquery),
     )
     .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
-    .where((qb) =>
-      graphService.whereNotMuted(qb, viewer, [ref('originatorDid')]),
-    )
-    .whereNotExists(graphService.blockQb(viewer, [ref('originatorDid')]))
 
   feedQb = paginate(feedQb, { limit, cursor, keyset })
 
   const feedItems = await feedQb.execute()
+
   return {
-    feedItems,
+    feed: feedItems.map(toSkeletonItem),
     cursor: keyset.packFromResult(feedItems),
   }
 }
