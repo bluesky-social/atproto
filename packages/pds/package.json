@@ -74,6 +74,7 @@
   "devDependencies": {
     "@atproto/bsky": "workspace:^",
     "@atproto/dev-env": "workspace:^",
+    "@atproto/api": "workspace:^",
     "@atproto/lex-cli": "workspace:^",
     "@did-plc/server": "^0.0.1",
     "@types/cors": "^2.8.12",

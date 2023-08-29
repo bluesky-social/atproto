@@ -61,6 +61,7 @@
     "uint8arrays": "3.0.0"
   },
   "devDependencies": {
+    "@atproto/api": "workspace:^",
     "@atproto/dev-env": "workspace:^",
     "@atproto/lex-cli": "workspace:^",
     "@atproto/pds": "workspace:^",

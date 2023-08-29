@@ -295,6 +295,9 @@ importers:
       pino:
         specifier: ^8.15.0
         version: 8.15.0
+      zod:
+        specifier: 3.21.4
+        version: 3.21.4
 
   packages/common-web:
     dependencies:
@@ -759,7 +762,7 @@ packages:
       '@ipld/dag-cbor': 7.0.3
       multiformats: 9.9.0
       pino: 8.15.0
-      zod: 3.22.2
+      zod: 3.21.4
 
   /@atproto/crypto@0.1.0:
     resolution: {integrity: sha512-9xgFEPtsCiJEPt9o3HtJT30IdFTGw5cQRSJVIy5CFhqBA4vDLcdXiRDLCjkzHEVbtNCsHUW6CrlfOgbeLPcmcg==}
@@ -4300,7 +4303,7 @@ packages:
       axios: 1.4.0
       multiformats: 9.9.0
       uint8arrays: 3.0.0
-      zod: 3.22.2
+      zod: 3.21.4
     transitivePeerDependencies:
       - debug
 
@@ -10330,7 +10333,3 @@ packages:
 
   /zod@3.21.4:
     resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
-    dev: false
-
-  /zod@3.22.2:
-    resolution: {integrity: sha512-wvWkphh5WQsJbVk1tbx1l1Ly4yg+XecD+Mq280uBGt9wa5BKSWf4Mhp6GmrkPixhMxmabYY7RbzlwVP32pbGCg==}
