@@ -31,6 +31,7 @@ describe('db', () => {
           .values({
             did: 'x',
             root: 'x',
+            rev: 'x',
             indexedAt: 'bad-date',
           })
           .returning('did')
@@ -52,6 +53,7 @@ describe('db', () => {
       expect(row).toEqual({
         did: 'x',
         root: 'x',
+        rev: 'x',
         indexedAt: 'bad-date',
         takedownId: null,
       })

@@ -1,8 +1,8 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import SqlRepoStorage from '../../../../sql-repo-storage'
-import AppContext from '../../../../context'
-import { isUserOrAdmin } from '../../../../auth'
+import { Server } from '../../../../../lexicon'
+import SqlRepoStorage from '../../../../../sql-repo-storage'
+import AppContext from '../../../../../context'
+import { isUserOrAdmin } from '../../../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getHead({
@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
       const storage = new SqlRepoStorage(ctx.db, did)
-      const root = await storage.getHead()
+      const root = await storage.getRoot()
       if (root === null) {
         throw new InvalidRequestError(
           `Could not find root for DID: ${did}`,

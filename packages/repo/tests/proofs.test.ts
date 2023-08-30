@@ -1,13 +1,12 @@
 import { TID, streamToBuffer } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
-import { RecordClaim, Repo, RepoContents } from '../../src'
-import { MemoryBlockstore } from '../../src/storage'
-import * as verify from '../../src/verify'
-import * as sync from '../../src/sync'
+import { RecordClaim, Repo, RepoContents } from '../src'
+import { MemoryBlockstore } from '../src/storage'
+import * as sync from '../src/sync'
 
-import * as util from '../_util'
+import * as util from './_util'
 
-describe('Narrow Sync', () => {
+describe('Repo Proofs', () => {
   let storage: MemoryBlockstore
   let repo: Repo
   let keypair: crypto.Keypair
@@ -29,7 +28,7 @@ describe('Narrow Sync', () => {
   }
 
   const doVerify = (proofs: Uint8Array, claims: RecordClaim[]) => {
-    return verify.verifyProofs(proofs, claims, repoDid, keypair.did())
+    return sync.verifyProofs(proofs, claims, repoDid, keypair.did())
   }
 
   it('verifies valid records', async () => {
@@ -112,7 +111,7 @@ describe('Narrow Sync', () => {
       possible[8],
     ]
     const proofs = await getProofs(claims)
-    const records = await verify.verifyRecords(proofs, repoDid, keypair.did())
+    const records = await sync.verifyRecords(proofs, repoDid, keypair.did())
     for (const record of records) {
       const foundClaim = claims.find(
         (claim) =>
@@ -127,23 +126,13 @@ describe('Narrow Sync', () => {
     }
   })
 
-  it('verifyRecords throws on a bad signature', async () => {
-    const badRepo = await util.addBadCommit(repo, keypair)
-    const claims = util.contentsToClaims(repoData)
-    const proofs = await streamToBuffer(
-      sync.getRecords(storage, badRepo.cid, claims),
-    )
-    const fn = verify.verifyRecords(proofs, repoDid, keypair.did())
-    await expect(fn).rejects.toThrow(verify.RepoVerificationError)
-  })
-
   it('verifyProofs throws on a bad signature', async () => {
     const badRepo = await util.addBadCommit(repo, keypair)
     const claims = util.contentsToClaims(repoData)
     const proofs = await streamToBuffer(
       sync.getRecords(storage, badRepo.cid, claims),
     )
-    const fn = verify.verifyProofs(proofs, claims, repoDid, keypair.did())
-    await expect(fn).rejects.toThrow(verify.RepoVerificationError)
+    const fn = sync.verifyProofs(proofs, claims, repoDid, keypair.did())
+    await expect(fn).rejects.toThrow(sync.RepoVerificationError)
   })
 })

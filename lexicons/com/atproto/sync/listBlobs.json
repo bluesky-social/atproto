@@ -4,14 +4,15 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List blob cids for some range of commits",
+      "description": "List blob cids since some revision",
       "parameters": {
         "type": "params",
         "required": ["did"],
         "properties": {
           "did": {"type": "string", "format": "did", "description": "The DID of the repo."},
-          "latest": { "type": "string", "format": "cid", "description": "The most recent commit"},
-          "earliest": { "type": "string", "format": "cid", "description": "The earliest commit to start from"}
+          "since": { "type": "string", "format": "cid", "description": "Optional revision of the repo to list blobs since"},
+          "limit": {"type": "integer", "minimum": 1, "maximum": 1000, "default": 500},
+          "cursor": {"type": "string"}
         }
       },
       "output": {
@@ -20,6 +21,7 @@
           "type": "object",
           "required": ["cids"],
           "properties": {
+            "cursor": {"type": "string"},
             "cids": {
               "type": "array",
               "items": { "type": "string", "format": "cid" }

@@ -10,10 +10,7 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** The handle or DID of the repo. */
-  repo: string
-  /** Compare and swap with the previous commit by cid. */
-  swapCommit?: string
+  did: string
   [k: string]: unknown
 }
 
@@ -28,22 +25,8 @@ export interface Response {
   headers: Headers
 }
 
-export class InvalidSwapError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers)
-  }
-}
-
-export class ConcurrentWritesError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers)
-  }
-}
-
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'InvalidSwap') return new InvalidSwapError(e)
-    if (e.error === 'ConcurrentWrites') return new ConcurrentWritesError(e)
   }
   return e
 }

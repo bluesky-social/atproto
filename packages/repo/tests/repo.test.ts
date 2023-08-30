@@ -22,7 +22,7 @@ describe('Repo', () => {
 
   it('has proper metadata', async () => {
     expect(repo.did).toEqual(keypair.did())
-    expect(repo.version).toBe(2)
+    expect(repo.version).toBe(3)
   })
 
   it('does basic operations', async () => {
@@ -75,12 +75,13 @@ describe('Repo', () => {
   })
 
   it('edits and deletes content', async () => {
-    const edited = await util.editRepo(repo, repoData, keypair, {
+    const edit = await util.formatEdit(repo, repoData, keypair, {
       adds: 20,
       updates: 20,
       deletes: 20,
     })
-    repo = edited.repo
+    repo = await repo.applyCommit(edit.commit)
+    repoData = edit.data
     const contents = await repo.getContents()
     expect(contents).toEqual(repoData)
   })
@@ -100,6 +101,6 @@ describe('Repo', () => {
     const contents = await reloadedRepo.getContents()
     expect(contents).toEqual(repoData)
     expect(repo.did).toEqual(keypair.did())
-    expect(repo.version).toBe(2)
+    expect(repo.version).toBe(3)
   })
 })

@@ -10,8 +10,6 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {
   /** The DID of the repo. */
   did: string
-  /** The commit to get the checkout from. Defaults to current HEAD. */
-  commit?: string
 }
 
 export type InputSchema = undefined
