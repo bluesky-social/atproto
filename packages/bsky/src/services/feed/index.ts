@@ -1,7 +1,6 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
 import { dedupeStrs } from '@atproto/common'
-import { INVALID_HANDLE } from '@atproto/syntax'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { Database } from '../../db'
 import { countAll, noMatch, notSoftDeletedClause } from '../../db/util'
@@ -23,7 +22,6 @@ import {
   SkeletonFeedPost,
 } from '../../lexicon/types/app/bsky/feed/defs'
 import {
-  ActorInfoMap,
   PostInfoMap,
   FeedItemType,
   FeedRow,
@@ -34,10 +32,9 @@ import {
   PostInfo,
   RecordEmbedViewRecord,
   PostBlocksMap,
-  kSelfLabels,
 } from './types'
-import { LabelService, Labels, getSelfLabels } from '../label'
-import { ActorService } from '../actor'
+import { LabelService, Labels } from '../label'
+import { ActorInfoMap, ActorService } from '../actor'
 import { GraphService, RelationshipPair } from '../graph'
 import { FeedViews } from './views'
 import { LabelCache } from '../../label-cache'
@@ -116,127 +113,6 @@ export class FeedService {
           .select('uri')
           .as('viewerLike'),
       )
-  }
-
-  // @TODO just use actor service??
-  // @NOTE keep in sync with actorService.views.profile()
-  async getActorInfos(
-    dids: string[],
-    viewer: string | null,
-    opts?: { skipLabels?: boolean }, // @NOTE used by hydrateFeed() to batch label hydration
-  ): Promise<ActorInfoMap> {
-    if (dids.length < 1) return {}
-    const { ref } = this.db.db.dynamic
-    const { skipLabels } = opts ?? {}
-    const [actors, labels] = await Promise.all([
-      this.db.db
-        .selectFrom('actor')
-        .leftJoin('profile', 'profile.creator', 'actor.did')
-        .leftJoin('record', 'record.uri', 'profile.uri')
-        .where('actor.did', 'in', dids)
-        .where(notSoftDeletedClause(ref('actor')))
-        .selectAll('actor')
-        .select([
-          'profile.uri as profileUri',
-          'profile.cid as profileCid',
-          'profile.displayName as displayName',
-          'profile.description as description',
-          'profile.avatarCid as avatarCid',
-          'profile.indexedAt as indexedAt',
-          'record.json as profileJson',
-          this.db.db
-            .selectFrom('follow')
-            .if(!viewer, (q) => q.where(noMatch))
-            .where('creator', '=', viewer ?? '')
-            .whereRef('subjectDid', '=', ref('actor.did'))
-            .select('uri')
-            .as('requesterFollowing'),
-          this.db.db
-            .selectFrom('follow')
-            .if(!viewer, (q) => q.where(noMatch))
-            .whereRef('creator', '=', ref('actor.did'))
-            .where('subjectDid', '=', viewer ?? '')
-            .select('uri')
-            .as('requesterFollowedBy'),
-          this.db.db
-            .selectFrom('actor_block')
-            .if(!viewer, (q) => q.where(noMatch))
-            .where('creator', '=', viewer ?? '')
-            .whereRef('subjectDid', '=', ref('actor.did'))
-            .select('uri')
-            .as('requesterBlocking'),
-          this.db.db
-            .selectFrom('actor_block')
-            .if(!viewer, (q) => q.where(noMatch))
-            .whereRef('creator', '=', ref('actor.did'))
-            .where('subjectDid', '=', viewer ?? '')
-            .select('uri')
-            .as('requesterBlockedBy'),
-          this.db.db
-            .selectFrom('mute')
-            .if(!viewer, (q) => q.where(noMatch))
-            .whereRef('subjectDid', '=', ref('actor.did'))
-            .where('mutedByDid', '=', viewer ?? '')
-            .select('subjectDid')
-            .as('requesterMuted'),
-          this.db.db
-            .selectFrom('list_item')
-            .if(!viewer, (q) => q.where(noMatch))
-            .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
-            .where('list_mute.mutedByDid', '=', viewer ?? '')
-            .whereRef('list_item.subjectDid', '=', ref('actor.did'))
-            .select('list_item.listUri')
-            .limit(1)
-            .as('requesterMutedByList'),
-        ])
-        .execute(),
-      this.services.label.getLabelsForSubjects(skipLabels ? [] : dids),
-    ])
-    const listUris: string[] = actors
-      .map((a) => a.requesterMutedByList)
-      .filter((list) => !!list)
-    const listViews = await this.services.graph.getListViews(listUris, viewer)
-    return actors.reduce((acc, cur) => {
-      const avatar = cur.avatarCid
-        ? this.imgUriBuilder.getPresetUri('avatar', cur.did, cur.avatarCid)
-        : undefined
-      const mutedByList =
-        cur.requesterMutedByList && listViews[cur.requesterMutedByList]
-          ? this.services.graph.formatListViewBasic(
-              listViews[cur.requesterMutedByList],
-            )
-          : undefined
-      const actorLabels = labels[cur.did] ?? []
-      const selfLabels = getSelfLabels({
-        uri: cur.profileUri,
-        cid: cur.profileCid,
-        record:
-          cur.profileJson !== null
-            ? (jsonStringToLex(cur.profileJson) as Record<string, unknown>)
-            : null,
-      })
-      return {
-        ...acc,
-        [cur.did]: {
-          did: cur.did,
-          handle: cur.handle ?? INVALID_HANDLE,
-          displayName: cur.displayName ?? undefined,
-          avatar,
-          viewer: viewer
-            ? {
-                muted: !!cur?.requesterMuted || !!cur?.requesterMutedByList,
-                mutedByList,
-                blockedBy: !!cur?.requesterBlockedBy,
-                blocking: cur?.requesterBlocking || undefined,
-                following: cur?.requesterFollowing || undefined,
-                followedBy: cur?.requesterFollowedBy || undefined,
-              }
-            : undefined,
-          labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
-          [kSelfLabels]: selfLabels,
-        },
-      }
-    }, {} as ActorInfoMap)
   }
 
   async getPostInfos(
@@ -323,7 +199,9 @@ export class FeedService {
 
     const [actors, posts, labels] = await Promise.all([
       precomputed?.actors ??
-        this.getActorInfos(dids, requester, { skipLabels: true }),
+        this.services.actor.views.profiles(dids, requester, {
+          skipLabels: true,
+        }),
       precomputed?.posts ?? this.getPostInfos(uris, requester),
       precomputed?.labels ??
         this.services.label.getLabelsForSubjects([...uris, ...dids]),
@@ -403,7 +281,7 @@ export class FeedService {
       }
     }
     const [actors, posts, labels] = await Promise.all([
-      this.getActorInfos(Array.from(actorDids), viewer, {
+      this.services.actor.views.profiles(Array.from(actorDids), viewer, {
         skipLabels: true,
       }),
       this.getPostInfos(Array.from(postUris), viewer),
@@ -541,7 +419,9 @@ export class FeedService {
     const [postInfos, actorInfos, labelViews, feedGenInfos, listViews] =
       await Promise.all([
         this.getPostInfos(nestedPostUris, viewer),
-        this.getActorInfos(nestedDids, viewer, { skipLabels: true }),
+        this.services.actor.views.profiles(nestedDids, viewer, {
+          skipLabels: true,
+        }),
         this.services.label.getLabelsForSubjects([
           ...nestedPostUris,
           ...nestedDids,

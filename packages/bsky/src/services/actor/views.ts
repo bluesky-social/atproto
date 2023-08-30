@@ -13,6 +13,7 @@ import { ImageUriBuilder } from '../../image/uri'
 import { LabelService, getSelfLabels } from '../label'
 import { GraphService } from '../graph'
 import { LabelCache } from '../../label-cache'
+import { ActorInfoMap, kSelfLabels } from './types'
 
 export class ActorViews {
   constructor(
@@ -185,15 +186,15 @@ export class ActorViews {
   }
 
   async profiles(
-    results: ActorResult[],
+    results: (ActorResult | string)[], // @TODO simplify down to just srring[]
     viewer: string | null,
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
-  ): Promise<Record<string, ProfileView>> {
+  ): Promise<ActorInfoMap> {
     if (results.length === 0) return {}
 
     const { ref } = this.db.db.dynamic
     const { skipLabels = false, includeSoftDeleted = false } = opts ?? {}
-    const dids = results.map((r) => r.did)
+    const dids = results.map((r) => (typeof r === 'string' ? r : r.did))
 
     const profileInfosQb = this.db.db
       .selectFrom('actor')
@@ -306,10 +307,11 @@ export class ActorViews {
             }
           : undefined,
         labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
+        [kSelfLabels]: selfLabels,
       }
       acc[cur.did] = profile
       return acc
-    }, {} as Record<string, ProfileView>)
+    }, {} as ActorInfoMap)
   }
 
   async hydrateProfiles(

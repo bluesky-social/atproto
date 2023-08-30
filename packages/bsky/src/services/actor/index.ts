@@ -7,6 +7,8 @@ import { Actor } from '../../db/tables/actor'
 import { TimeCidKeyset } from '../../db/pagination'
 import { LabelCache } from '../../label-cache'
 
+export * from './types'
+
 export class ActorService {
   constructor(
     public db: Database,

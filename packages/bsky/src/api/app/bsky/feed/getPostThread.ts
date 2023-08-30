@@ -51,7 +51,7 @@ export default function (server: Server, ctx: AppContext) {
       }
       const relevant = getRelevantIds(threadData)
       const [actors, posts, labels] = await Promise.all([
-        feedService.getActorInfos(Array.from(relevant.dids), requester, {
+        actorService.views.profiles(Array.from(relevant.dids), requester, {
           skipLabels: true,
         }),
         feedService.getPostInfos(Array.from(relevant.uris), requester),
