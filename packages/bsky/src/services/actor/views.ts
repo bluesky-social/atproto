@@ -186,7 +186,7 @@ export class ActorViews {
   }
 
   async profiles(
-    results: (ActorResult | string)[], // @TODO simplify down to just srring[]
+    results: (ActorResult | string)[], // @TODO simplify down to just string[]
     viewer: string | null,
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ActorInfoMap> {
