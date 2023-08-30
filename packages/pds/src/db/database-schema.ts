@@ -9,8 +9,6 @@ import * as refreshToken from './tables/refresh-token'
 import * as appPassword from './tables/app-password'
 import * as record from './tables/record'
 import * as backlink from './tables/backlink'
-import * as repoCommitBlock from './tables/repo-commit-block'
-import * as repoCommitHistory from './tables/repo-commit-history'
 import * as ipldBlock from './tables/ipld-block'
 import * as inviteCode from './tables/invite-code'
 import * as notification from './tables/user-notification'
@@ -39,11 +37,7 @@ export type DatabaseSchemaType = appView.DatabaseSchemaType &
   didCache.PartialDB &
   record.PartialDB &
   backlink.PartialDB &
-  repoCommitBlock.PartialDB &
-  repoCommitHistory.PartialDB &
   ipldBlock.PartialDB &
-  repoCommitBlock.PartialDB &
-  repoCommitHistory.PartialDB &
   inviteCode.PartialDB &
   notification.PartialDB &
   blob.PartialDB &

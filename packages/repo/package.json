@@ -1,6 +1,6 @@
 {
   "name": "@atproto/repo",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "main": "src/index.ts",
   "license": "MIT",
   "repository": {
@@ -29,9 +29,9 @@
   "dependencies": {
     "@atproto/common": "*",
     "@atproto/crypto": "*",
-    "@atproto/syntax": "*",
     "@atproto/identity": "*",
     "@atproto/lexicon": "*",
+    "@atproto/syntax": "*",
     "@ipld/car": "^3.2.3",
     "@ipld/dag-cbor": "^7.0.0",
     "multiformats": "^9.6.4",

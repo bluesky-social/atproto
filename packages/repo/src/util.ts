@@ -11,27 +11,24 @@ import {
   schema,
   cidForCbor,
   byteIterableToStream,
+  TID,
 } from '@atproto/common'
 import { ipldToLex, lexToIpld, LexValue, RepoRecord } from '@atproto/lexicon'
 
 import * as crypto from '@atproto/crypto'
-import Repo from './repo'
-import { MST } from './mst'
 import DataDiff from './data-diff'
-import { RepoStorage } from './storage'
 import {
   Commit,
+  LegacyV2Commit,
   RecordCreateDescript,
   RecordDeleteDescript,
   RecordPath,
   RecordUpdateDescript,
   RecordWriteDescript,
   UnsignedCommit,
-  WriteLog,
   WriteOpAction,
 } from './types'
 import BlockMap from './block-map'
-import { MissingBlocksError } from './error'
 import * as parse from './parse'
 import { Keypair } from '@atproto/crypto'
 import { Readable } from 'stream'
@@ -120,33 +117,6 @@ export const readCarWithRoot = async (
   }
 }
 
-export const getWriteLog = async (
-  storage: RepoStorage,
-  latest: CID,
-  earliest: CID | null,
-): Promise<WriteLog> => {
-  const commits = await storage.getCommitPath(latest, earliest)
-  if (!commits) throw new Error('Could not find shared history')
-  const heads = await Promise.all(commits.map((c) => Repo.load(storage, c)))
-  // Turn commit path into list of diffs
-  let prev = await MST.create(storage) // Empty
-  const msts = heads.map((h) => h.data)
-  const diffs: DataDiff[] = []
-  for (const mst of msts) {
-    diffs.push(await DataDiff.of(mst, prev))
-    prev = mst
-  }
-  const fullDiff = collapseDiffs(diffs)
-  const diffBlocks = await storage.getBlocks(fullDiff.newCidList())
-  if (diffBlocks.missing.length > 0) {
-    throw new MissingBlocksError('write op log', diffBlocks.missing)
-  }
-  // Map MST diffs to write ops
-  return Promise.all(
-    diffs.map((diff) => diffToWriteDescripts(diff, diffBlocks.blocks)),
-  )
-}
-
 export const diffToWriteDescripts = (
   diff: DataDiff,
   blocks: BlockMap,
@@ -187,55 +157,18 @@ export const diffToWriteDescripts = (
   ])
 }
 
-export const collapseWriteLog = (log: WriteLog): RecordWriteDescript[] => {
-  const creates: Record<string, RecordCreateDescript> = {}
-  const updates: Record<string, RecordUpdateDescript> = {}
-  const deletes: Record<string, RecordDeleteDescript> = {}
-  for (const commit of log) {
-    for (const op of commit) {
-      const key = op.collection + '/' + op.rkey
-      if (op.action === WriteOpAction.Create) {
-        const del = deletes[key]
-        if (del) {
-          if (del.cid !== op.cid) {
-            updates[key] = {
-              ...op,
-              action: WriteOpAction.Update,
-              prev: del.cid,
-            }
-          }
-          delete deletes[key]
-        } else {
-          creates[key] = op
-        }
-      } else if (op.action === WriteOpAction.Update) {
-        updates[key] = op
-        delete creates[key]
-        delete deletes[key]
-      } else if (op.action === WriteOpAction.Delete) {
-        if (creates[key]) {
-          delete creates[key]
-        } else {
-          delete updates[key]
-          deletes[key] = op
-        }
-      } else {
-        throw new Error(`unknown action: ${op}`)
-      }
+export const ensureCreates = (
+  descripts: RecordWriteDescript[],
+): RecordCreateDescript[] => {
+  const creates: RecordCreateDescript[] = []
+  for (const descript of descripts) {
+    if (descript.action !== WriteOpAction.Create) {
+      throw new Error(`Unexpected action: ${descript.action}`)
+    } else {
+      creates.push(descript)
     }
   }
-  return [
-    ...Object.values(creates),
-    ...Object.values(updates),
-    ...Object.values(deletes),
-  ]
-}
-
-export const collapseDiffs = (diffs: DataDiff[]): DataDiff => {
-  return diffs.reduce((acc, cur) => {
-    acc.addDiff(cur)
-    return acc
-  }, new DataDiff())
+  return creates
 }
 
 export const parseDataKey = (key: string): RecordPath => {
@@ -287,4 +220,16 @@ export const cborToLexRecord = (val: Uint8Array): RepoRecord => {
 
 export const cidForRecord = async (val: LexValue) => {
   return cidForCbor(lexToIpld(val))
+}
+
+export const ensureV3Commit = (commit: LegacyV2Commit | Commit): Commit => {
+  if (commit.version === 3) {
+    return commit
+  } else {
+    return {
+      ...commit,
+      version: 3,
+      rev: commit.rev ?? TID.nextStr(),
+    }
+  }
 }

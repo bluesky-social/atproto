@@ -4,7 +4,7 @@ import AppContext from '../src/context'
 import { PreparedWrite, prepareCreate } from '../src/repo'
 import { wait } from '@atproto/common'
 import SqlRepoStorage from '../src/sql-repo-storage'
-import { CommitData, MemoryBlockstore, loadFullRepo } from '@atproto/repo'
+import { CommitData, readCarWithRoot, verifyRepo } from '@atproto/repo'
 import { ConcurrentWriteError } from '../src/services/repo'
 
 describe('crud operations', () => {
@@ -89,19 +89,17 @@ describe('crud operations', () => {
     const listed = await agent.api.app.bsky.feed.post.list({ repo: did })
     expect(listed.records.length).toBe(2)
 
-    const repoCar = await agent.api.com.atproto.sync.getRepo({ did })
-    const storage = new MemoryBlockstore()
-    const verified = await loadFullRepo(
-      storage,
-      repoCar.data,
+    const carRes = await agent.api.com.atproto.sync.getRepo({ did })
+    const car = await readCarWithRoot(carRes.data)
+    const verified = await verifyRepo(
+      car.blocks,
+      car.root,
       did,
       ctx.repoSigningKey.did(),
     )
-    // it split writes over 2 commits
-    expect(verified.writeLog[1].length).toBe(1)
-    expect(verified.writeLog[2].length).toBe(1)
-    expect(verified.writeLog[1][0].cid.equals(write.cid)).toBeTruthy()
-    expect(verified.writeLog[2][0].cid.toString()).toEqual(
+    expect(verified.creates.length).toBe(2)
+    expect(verified.creates[0].cid.equals(write.cid)).toBeTruthy()
+    expect(verified.creates[1].cid.toString()).toEqual(
       createdPost.cid.toString(),
     )
   })

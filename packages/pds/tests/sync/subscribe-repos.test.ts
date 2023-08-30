@@ -8,12 +8,7 @@ import {
 } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import * as repo from '@atproto/repo'
-import {
-  getWriteLog,
-  MemoryBlockstore,
-  readCar,
-  WriteOpAction,
-} from '@atproto/repo'
+import { readCar } from '@atproto/repo'
 import { byFrame, ErrorFrame, Frame, MessageFrame } from '@atproto/xrpc-server'
 import { WebSocket } from 'ws'
 import {
@@ -63,16 +58,10 @@ describe('repo subscribe repos', () => {
     await close()
   })
 
-  const getRepo = async (did: string) => {
-    const car = await agent.api.com.atproto.sync.getRepo({ did })
-    const storage = new MemoryBlockstore()
-    const synced = await repo.loadFullRepo(
-      storage,
-      new Uint8Array(car.data),
-      did,
-      ctx.repoSigningKey.did(),
-    )
-    return repo.Repo.load(storage, synced.root)
+  const getRepo = async (did: string): Promise<repo.VerifiedRepo> => {
+    const carRes = await agent.api.com.atproto.sync.getRepo({ did })
+    const car = await repo.readCarWithRoot(carRes.data)
+    return repo.verifyRepo(car.blocks, car.root, did, ctx.repoSigningKey.did())
   }
 
   const getHandleEvts = (frames: Frame[]): HandleEvt[] => {
@@ -148,33 +137,46 @@ describe('repo subscribe repos', () => {
   }
 
   const verifyRepo = async (did: string, evts: CommitEvt[]) => {
-    const didRepo = await getRepo(did)
-    const writeLog = await getWriteLog(didRepo.storage, didRepo.cid, null)
-    const commits = await didRepo.storage.getCommits(didRepo.cid, null)
-    if (!commits) {
-      return expect(commits !== null)
+    const fromRpc = await getRepo(did)
+    const contents = {} as Record<string, Record<string, CID>>
+    const allBlocks = new repo.BlockMap()
+    for (const evt of evts) {
+      const car = await readCar(evt.blocks)
+      allBlocks.addMap(car.blocks)
+      for (const op of evt.ops) {
+        const { collection, rkey } = repo.parseDataKey(op.path)
+        if (op.action === 'delete') {
+          delete contents[collection][rkey]
+        } else {
+          if (op.cid) {
+            contents[collection] ??= {}
+            contents[collection][rkey] ??= op.cid
+          }
+        }
+      }
     }
-    expect(evts.length).toBe(commits.length)
-    expect(evts.length).toBe(writeLog.length)
-    for (let i = 0; i < commits.length; i++) {
-      const commit = commits[i]
-      const evt = evts[i]
-      expect(evt.repo).toEqual(did)
-      expect(evt.commit.toString()).toEqual(commit.commit.toString())
-      expect(evt.prev?.toString()).toEqual(commits[i - 1]?.commit?.toString())
-      const car = await repo.readCarWithRoot(evt.blocks as Uint8Array)
-      expect(car.root.equals(commit.commit))
-      expect(car.blocks.equals(commit.blocks))
-      const writes = writeLog[i].map((w) => ({
-        action: w.action,
-        path: w.collection + '/' + w.rkey,
-        cid: w.action === WriteOpAction.Delete ? null : w.cid.toString(),
-      }))
-      const sortedOps = evt.ops
-        .sort((a, b) => a.path.localeCompare(b.path))
-        .map((op) => ({ ...op, cid: op.cid?.toString() ?? null }))
-      const sortedWrites = writes.sort((a, b) => a.path.localeCompare(b.path))
-      expect(sortedOps).toEqual(sortedWrites)
+    for (const write of fromRpc.creates) {
+      expect(contents[write.collection][write.rkey].equals(write.cid)).toBe(
+        true,
+      )
+    }
+    const lastCommit = evts.at(-1)?.commit
+    if (!lastCommit) {
+      throw new Error('no last commit')
+    }
+    const fromStream = await repo.verifyRepo(
+      allBlocks,
+      lastCommit,
+      did,
+      ctx.repoSigningKey.did(),
+    )
+    const fromRpcOps = fromRpc.creates
+    const fromStreamOps = fromStream.creates
+    expect(fromStreamOps.length).toEqual(fromRpcOps.length)
+    for (let i = 0; i < fromRpcOps.length; i++) {
+      expect(fromStreamOps[i].collection).toEqual(fromRpcOps[i].collection)
+      expect(fromStreamOps[i].rkey).toEqual(fromRpcOps[i].rkey)
+      expect(fromStreamOps[i].cid).toEqual(fromRpcOps[i].cid)
     }
   }
 
@@ -197,7 +199,7 @@ describe('repo subscribe repos', () => {
     const isDone = async (evt: any) => {
       if (evt === undefined) return false
       if (evt instanceof ErrorFrame) return true
-      const caughtUp = await ctx.sequencerLeader.isCaughtUp()
+      const caughtUp = await ctx.sequencerLeader?.isCaughtUp()
       if (!caughtUp) return false
       const curr = await db.db
         .selectFrom('repo_seq')
@@ -413,43 +415,6 @@ describe('repo subscribe repos', () => {
     expect(handleEvts.length).toBe(2)
     verifyHandleEvent(handleEvts[0], alice, 'alice5.test')
     verifyHandleEvent(handleEvts[1], bob, 'bob5.test')
-  })
-
-  it('sync rebases', async () => {
-    const prevHead = await agent.api.com.atproto.sync.getHead({ did: alice })
-
-    await agent.api.com.atproto.repo.rebaseRepo(
-      { repo: alice },
-      { encoding: 'application/json', headers: sc.getHeaders(alice) },
-    )
-
-    const currHead = await agent.api.com.atproto.sync.getHead({ did: alice })
-
-    const ws = new WebSocket(
-      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
-    )
-
-    const gen = byFrame(ws)
-    const frames = await readTillCaughtUp(gen)
-    ws.terminate()
-
-    const aliceEvts = getCommitEvents(alice, frames)
-    expect(aliceEvts.length).toBe(1)
-    const evt = aliceEvts[0]
-    expect(evt.rebase).toBe(true)
-    expect(evt.tooBig).toBe(false)
-    expect(evt.commit.toString()).toEqual(currHead.data.root)
-    expect(evt.prev?.toString()).toEqual(prevHead.data.root)
-    expect(evt.ops).toEqual([])
-    expect(evt.blobs).toEqual([])
-    const car = await readCar(evt.blocks)
-    expect(car.blocks.size).toBe(1)
-    expect(car.roots.length).toBe(1)
-    expect(car.roots[0].toString()).toEqual(currHead.data.root)
-
-    // did not affect other users
-    const bobEvts = getCommitEvents(bob, frames)
-    expect(bobEvts.length).toBeGreaterThan(10)
   })
 
   it('sends info frame on out of date cursor', async () => {

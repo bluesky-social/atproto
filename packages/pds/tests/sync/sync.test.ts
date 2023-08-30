@@ -1,9 +1,8 @@
-import assert from 'assert'
 import AtpAgent from '@atproto/api'
-import { cidForCbor, TID } from '@atproto/common'
+import { TID } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import * as repo from '@atproto/repo'
-import { collapseWriteLog, MemoryBlockstore, readCar } from '@atproto/repo'
+import { MemoryBlockstore } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { CID } from 'multiformats/cid'
@@ -56,21 +55,21 @@ describe('repo sync', () => {
       uris.push(uri)
     }
 
-    const car = await agent.api.com.atproto.sync.getRepo({ did })
-    const synced = await repo.loadFullRepo(
-      storage,
-      new Uint8Array(car.data),
+    const carRes = await agent.api.com.atproto.sync.getRepo({ did })
+    const car = await repo.readCarWithRoot(carRes.data)
+    const synced = await repo.verifyRepo(
+      car.blocks,
+      car.root,
       did,
       ctx.repoSigningKey.did(),
     )
-    expect(synced.writeLog.length).toBe(ADD_COUNT + 1) // +1 because of repo
-    const ops = await collapseWriteLog(synced.writeLog)
-    expect(ops.length).toBe(ADD_COUNT) // Does not include empty initial commit
-    const loaded = await repo.Repo.load(storage, synced.root)
+    await storage.applyCommit(synced.commit)
+    expect(synced.creates.length).toBe(ADD_COUNT)
+    const loaded = await repo.Repo.load(storage, car.root)
     const contents = await loaded.getContents()
     expect(contents).toEqual(repoData)
 
-    currRoot = synced.root
+    currRoot = car.root
   })
 
   it('syncs creates and deletes', async () => {
@@ -95,102 +94,28 @@ describe('repo sync', () => {
       delete repoData[uri.collection][uri.rkey]
     }
 
-    const car = await agent.api.com.atproto.sync.getRepo({
-      did,
-      earliest: currRoot?.toString(),
-    })
+    const carRes = await agent.api.com.atproto.sync.getRepo({ did })
+    const car = await repo.readCarWithRoot(carRes.data)
     const currRepo = await repo.Repo.load(storage, currRoot)
-    const synced = await repo.loadDiff(
+    const synced = await repo.verifyDiff(
       currRepo,
-      new Uint8Array(car.data),
+      car.blocks,
+      car.root,
       did,
       ctx.repoSigningKey.did(),
     )
-    expect(synced.writeLog.length).toBe(ADD_COUNT + DEL_COUNT)
-    const ops = await collapseWriteLog(synced.writeLog)
-    expect(ops.length).toBe(ADD_COUNT) // -2 because of dels of new records, +2 because of dels of old records
-    const loaded = await repo.Repo.load(storage, synced.root)
+    expect(synced.writes.length).toBe(ADD_COUNT) // -2 because of dels of new records, +2 because of dels of old records
+    await storage.applyCommit(synced.commit)
+    const loaded = await repo.Repo.load(storage, car.root)
     const contents = await loaded.getContents()
     expect(contents).toEqual(repoData)
 
-    currRoot = synced.root
+    currRoot = car.root
   })
 
-  it('syncs current root', async () => {
-    const root = await agent.api.com.atproto.sync.getHead({ did })
-    expect(root.data.root).toEqual(currRoot?.toString())
-  })
-
-  it('syncs commit path', async () => {
-    const local = await storage.getCommitPath(currRoot as CID, null)
-    if (!local) {
-      throw new Error('Could not get local commit path')
-    }
-    const localStr = local.map((c) => c.toString())
-    const commitPath = await agent.api.com.atproto.sync.getCommitPath({ did })
-    expect(commitPath.data.commits).toEqual(localStr)
-
-    const partialCommitPath = await agent.api.com.atproto.sync.getCommitPath({
-      did,
-      earliest: localStr[2],
-      latest: localStr[15],
-    })
-    expect(partialCommitPath.data.commits).toEqual(localStr.slice(3, 16))
-  })
-
-  it('syncs commit range', async () => {
-    const local = await storage.getCommits(currRoot as CID, null)
-    if (!local) {
-      throw new Error('Could not get local commit path')
-    }
-    const memoryStore = new MemoryBlockstore()
-    // first we load some baseline data (needed for parsing range)
-    const first = await agent.api.com.atproto.sync.getRepo({
-      did,
-      latest: local[2].commit.toString(),
-    })
-    const firstParsed = await repo.readCar(new Uint8Array(first.data))
-    memoryStore.putMany(firstParsed.blocks)
-
-    // then we load some commit range
-    const second = await agent.api.com.atproto.sync.getRepo({
-      did,
-      earliest: local[2].commit.toString(),
-      latest: local[15].commit.toString(),
-    })
-    const secondParsed = await repo.readCar(new Uint8Array(second.data))
-    memoryStore.putMany(secondParsed.blocks)
-
-    // then we verify we have all the commits in the range
-    const commits = await memoryStore.getCommits(
-      local[15].commit,
-      local[2].commit,
-    )
-    if (!commits) {
-      throw new Error('expected commits to be defined')
-    }
-    const localSlice = local.slice(2, 15)
-    expect(commits.length).toBe(localSlice.length)
-    for (let i = 0; i < commits.length; i++) {
-      const fromRemote = commits[i]
-      const fromLocal = localSlice[i]
-      expect(fromRemote.commit.equals(fromLocal.commit))
-      expect(fromRemote.blocks.equals(fromLocal.blocks))
-    }
-  })
-
-  it('sync a repo checkout', async () => {
-    const car = await agent.api.com.atproto.sync.getCheckout({ did })
-    const checkoutStorage = new MemoryBlockstore()
-    const loaded = await repo.loadCheckout(
-      checkoutStorage,
-      new Uint8Array(car.data),
-      did,
-      ctx.repoSigningKey.did(),
-    )
-    expect(loaded.contents).toEqual(repoData)
-    const loadedRepo = await repo.Repo.load(checkoutStorage, loaded.root)
-    expect(await loadedRepo.getContents()).toEqual(repoData)
+  it('syncs latest repo commit', async () => {
+    const commit = await agent.api.com.atproto.sync.getLatestCommit({ did })
+    expect(commit.data.cid).toEqual(currRoot?.toString())
   })
 
   it('sync a record proof', async () => {
@@ -246,74 +171,6 @@ describe('repo sync', () => {
     expect(result.unverified.length).toBe(0)
   })
 
-  it('sync blocks', async () => {
-    // let's just get some cids to reference
-    const collection = Object.keys(repoData)[0]
-    const rkey = Object.keys(repoData[collection])[0]
-    const proofCar = await agent.api.com.atproto.sync.getRecord({
-      did,
-      collection,
-      rkey,
-    })
-    const proofBlocks = await readCar(new Uint8Array(proofCar.data))
-    const cids = proofBlocks.blocks.entries().map((e) => e.cid.toString())
-    const res = await agent.api.com.atproto.sync.getBlocks({
-      did,
-      cids,
-    })
-    const car = await readCar(new Uint8Array(res.data))
-    expect(car.roots.length).toBe(0)
-    expect(car.blocks.equals(proofBlocks.blocks))
-  })
-
-  it('syncs images', async () => {
-    const img1 = await sc.uploadFile(
-      did,
-      'tests/image/fixtures/key-landscape-small.jpg',
-      'image/jpeg',
-    )
-    const img2 = await sc.uploadFile(
-      did,
-      'tests/image/fixtures/key-portrait-small.jpg',
-      'image/jpeg',
-    )
-    await sc.post(did, 'blah', undefined, [img1])
-    await sc.post(did, 'blah', undefined, [img1, img2])
-    await sc.post(did, 'blah', undefined, [img2])
-    const res = await agent.api.com.atproto.sync.getCommitPath({ did })
-    const commits = res.data.commits
-    const blobsForFirst = await agent.api.com.atproto.sync.listBlobs({
-      did,
-      earliest: commits.at(-4),
-      latest: commits.at(-3),
-    })
-    const blobsForSecond = await agent.api.com.atproto.sync.listBlobs({
-      did,
-      earliest: commits.at(-3),
-      latest: commits.at(-2),
-    })
-    const blobsForThird = await agent.api.com.atproto.sync.listBlobs({
-      did,
-      earliest: commits.at(-2),
-      latest: commits.at(-1),
-    })
-    const blobsForRange = await agent.api.com.atproto.sync.listBlobs({
-      did,
-      earliest: commits.at(-4),
-    })
-    const blobsForRepo = await agent.api.com.atproto.sync.listBlobs({
-      did,
-    })
-    const cid1 = img1.image.ref.toString()
-    const cid2 = img2.image.ref.toString()
-
-    expect(blobsForFirst.data.cids).toEqual([cid1])
-    expect(blobsForSecond.data.cids.sort()).toEqual([cid1, cid2].sort())
-    expect(blobsForThird.data.cids).toEqual([cid2])
-    expect(blobsForRange.data.cids.sort()).toEqual([cid1, cid2].sort())
-    expect(blobsForRepo.data.cids.sort()).toEqual([cid1, cid2].sort())
-  })
-
   describe('repo takedown', () => {
     beforeAll(async () => {
       await sc.takeModerationAction({
@@ -344,23 +201,9 @@ describe('repo sync', () => {
       await expect(tryGetRepoAdmin).resolves.toBeDefined()
     })
 
-    it('does not sync current root unauthed', async () => {
-      const tryGetHead = agent.api.com.atproto.sync.getHead({ did })
-      await expect(tryGetHead).rejects.toThrow(/Could not find root for DID/)
-    })
-
-    it('does not sync commit path unauthed', async () => {
-      const tryGetCommitPath = agent.api.com.atproto.sync.getCommitPath({ did })
-      await expect(tryGetCommitPath).rejects.toThrow(
-        /Could not find root for DID/,
-      )
-    })
-
-    it('does not sync a repo checkout unauthed', async () => {
-      const tryGetCheckout = agent.api.com.atproto.sync.getCheckout({ did })
-      await expect(tryGetCheckout).rejects.toThrow(
-        /Could not find root for DID/,
-      )
+    it('does not sync latest commit unauthed', async () => {
+      const tryGetLatest = agent.api.com.atproto.sync.getLatestCommit({ did })
+      await expect(tryGetLatest).rejects.toThrow(/Could not find root for DID/)
     })
 
     it('does not sync a record proof unauthed', async () => {
@@ -372,29 +215,6 @@ describe('repo sync', () => {
         rkey,
       })
       await expect(tryGetRecord).rejects.toThrow(/Could not find repo for DID/)
-    })
-
-    it('does not sync blocks unauthed', async () => {
-      const cid = await cidForCbor({})
-      const tryGetBlocks = agent.api.com.atproto.sync.getBlocks({
-        did,
-        cids: [cid.toString()],
-      })
-      await expect(tryGetBlocks).rejects.toThrow(/Could not find repo for DID/)
-    })
-
-    it('does not sync images unauthed', async () => {
-      // list blobs
-      const tryListBlobs = agent.api.com.atproto.sync.listBlobs({ did })
-      await expect(tryListBlobs).rejects.toThrow(/Could not find root for DID/)
-      // get blob
-      const imageCid = sc.posts[did].at(-1)?.images[0].image.ref.toString()
-      assert(imageCid)
-      const tryGetBlob = agent.api.com.atproto.sync.getBlob({
-        did,
-        cid: imageCid,
-      })
-      await expect(tryGetBlob).rejects.toThrow(/blob not found/)
     })
   })
 })
