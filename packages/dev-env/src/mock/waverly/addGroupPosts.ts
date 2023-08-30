@@ -32,11 +32,12 @@ export default async (allUsers: User[], date: Generator<string>) => {
     // Create the miniblog
     const longText = longPost.text
 
-    let miniblog: { uri: string; cid: string } | undefined
-    miniblog = await user.agent.api.social.waverly.miniblog.create(
+    const miniblog = await user.agent.api.social.waverly.miniblog.create(
       { repo: user.did },
       { text: longText, createdAt },
     )
+    const title = truncateString(longText, 60)
+    const description = truncateString(longText, 160)
     const miniblogRkey = new AtUri(miniblog.uri).rkey
     const waverlyUri = getWaverlyUri(user.handle, miniblogRkey)
 
@@ -71,11 +72,7 @@ export default async (allUsers: User[], date: Generator<string>) => {
       miniblogLinkEmbedded = true
       embed = {
         $type: 'app.bsky.embed.external',
-        external: {
-          uri: waverlyUri,
-          title: truncateString(longText, 60),
-          description: truncateString(longText, 160),
-        },
+        external: { uri: waverlyUri, title, description },
       }
     }
 
@@ -92,15 +89,22 @@ export default async (allUsers: User[], date: Generator<string>) => {
 
     const bskyPost = await user.agent.api.app.bsky.feed.post.create(
       { repo: user.did },
+      { text: blueskyText, embed, createdAt },
+    )
+
+    const groupText = `Reshared in ${betterweb.handle} Waverly group.`
+
+    await betterweb.agent.api.app.bsky.feed.post.create(
+      { repo: betterweb.did },
       {
-        text: blueskyText,
-        embed,
+        text: groupText,
+        reply: { root: bskyPost, parent: bskyPost },
+        embed: {
+          $type: 'app.bsky.embed.external',
+          external: { uri: waverlyUri, title, description },
+        },
         createdAt,
       },
-    )
-    await betterweb.agent.api.app.bsky.feed.repost.create(
-      { repo: betterweb.did },
-      { subject: bskyPost, createdAt },
     )
 
     // Update the miniblog with a reference to the bluesky post
