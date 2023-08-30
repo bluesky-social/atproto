@@ -15,8 +15,6 @@ export default function (server: Server, ctx: AppContext) {
         .selectAll()
         .execute()
 
-      // TODO could I just call getFeedGenerators?
-
       const genInfos = await feedService.getFeedGeneratorInfos(feedsRes.map(r => r.uri), viewer)
       const genList = Object.values(genInfos)
 
