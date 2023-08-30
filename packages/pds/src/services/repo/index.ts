@@ -206,9 +206,22 @@ export class RepoService {
         throw new BadRecordSwapError(currRecord)
       }
     }
-    const writeOps = writes.map(writeToOp)
-    const repo = await Repo.load(storage, currRoot.cid)
-    const commit = await repo.formatCommit(writeOps, this.repoSigningKey)
+
+    let commit: CommitData
+    try {
+      const repo = await Repo.load(storage, currRoot.cid)
+      const writeOps = writes.map(writeToOp)
+      commit = await repo.formatCommit(writeOps, this.repoSigningKey)
+    } catch (err) {
+      // if an error occurs, check if it is attributable to a concurrent write
+      const curr = await storage.getRoot()
+      if (!currRoot.cid.equals(curr)) {
+        throw new ConcurrentWriteError()
+      } else {
+        throw err
+      }
+    }
+
     // find blocks that would be deleted but are referenced by another record
     const dupeRecordCids = await this.getDuplicateRecordCids(
       did,
