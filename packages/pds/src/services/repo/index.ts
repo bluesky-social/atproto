@@ -182,9 +182,13 @@ export class RepoService {
     // cache last commit since there's likely overlap
     await storage.cacheRev(currRoot.rev)
     const recordTxn = this.services.record(this.db)
+    const newRecordCids: CID[] = []
     const delAndUpdateUris: AtUri[] = []
     for (const write of writes) {
       const { action, uri, swapCid } = write
+      if (action !== WriteOpAction.Delete) {
+        newRecordCids.push(write.cid)
+      }
       if (action !== WriteOpAction.Create) {
         delAndUpdateUris.push(uri)
       }
@@ -230,6 +234,14 @@ export class RepoService {
     )
     for (const cid of dupeRecordCids) {
       commit.removedCids.delete(cid)
+    }
+
+    // find blocks that are relevant to ops but not included in diff
+    // (for instance a record that was moved but cid stayed the same)
+    const newRecordBlocks = commit.newBlocks.getMany(newRecordCids)
+    if (newRecordBlocks.missing.length > 0) {
+      const missingBlocks = await storage.getBlocks(newRecordBlocks.missing)
+      commit.newBlocks.addMap(missingBlocks.blocks)
     }
     return commit
   }
