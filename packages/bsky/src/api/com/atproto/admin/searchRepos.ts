@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const { results, cursor } = await ctx.services
         .actor(db)
-        .getSearchResults(params)
+        .getSearchResults({ ...params, includeSoftDeleted: true })
       return {
         encoding: 'application/json',
         body: {

@@ -6,12 +6,7 @@ import { ImageUriBuilder } from '../../image/uri'
 import { Actor } from '../../db/tables/actor'
 import { LabelCache } from '../../label-cache'
 import { TimeCidKeyset, paginate } from '../../db/pagination'
-import {
-  SearchKeyset,
-  combineAccountsAndProfilesQb,
-  getMatchingAccountsQb,
-  getMatchingProfilesQb,
-} from '../util/search'
+import { SearchKeyset, getUserSearchQuery } from '../util/search'
 
 export class ActorService {
   constructor(
@@ -87,13 +82,15 @@ export class ActorService {
     cursor,
     limit = 25,
     term = '',
+    includeSoftDeleted,
   }: {
     cursor?: string
     limit?: number
     term?: string
+    includeSoftDeleted?: boolean
   }) {
     const searchField = term.startsWith('did:') ? 'did' : 'handle'
-    let builder
+    let paginatedBuilder
     const { ref } = this.db.db.dynamic
     const paginationOptions = {
       limit,
@@ -103,23 +100,14 @@ export class ActorService {
     let keyset
 
     if (term && searchField === 'handle') {
-      keyset = new SearchKeyset(ref('distance'), ref('actor.did'))
-      // Matching user accounts based on handle
-      const accountsQb = getMatchingAccountsQb(this.db, { term })
-        .orderBy('distance', 'asc')
-        .limit(limit)
-      // Matching profiles based on display name
-      const profilesQb = getMatchingProfilesQb(this.db, { term })
-        .orderBy('distance', 'asc')
-        .limit(limit)
-      // Combine and paginate result set
-      builder = combineAccountsAndProfilesQb(
-        this.db,
-        accountsQb,
-        profilesQb,
-      ).select('distance')
+      keyset = new SearchKeyset(sql``, sql``)
+      paginatedBuilder = getUserSearchQuery(this.db, {
+        term,
+        includeSoftDeleted,
+        ...paginationOptions,
+      }).select('distance')
     } else {
-      builder = this.db.db
+      paginatedBuilder = this.db.db
         .selectFrom('actor')
         .select([sql<number>`0`.as('distance')])
       keyset = new ListKeyset(ref('indexedAt'), ref('did'))
@@ -127,11 +115,14 @@ export class ActorService {
       // When searchField === 'did', the term will always be a valid string because
       // searchField is set to 'did' after checking that the term is a valid did
       if (term && searchField === 'did') {
-        builder = builder.where('actor.did', '=', term)
+        paginatedBuilder = paginatedBuilder.where('actor.did', '=', term)
       }
+      paginatedBuilder = paginate(paginatedBuilder, {
+        keyset,
+        ...paginationOptions,
+      })
     }
 
-    const paginatedBuilder = paginate(builder, { keyset, ...paginationOptions })
     const results: Actor[] = await paginatedBuilder.selectAll('actor').execute()
     return { results, cursor: keyset.packFromResult(results) }
   }
