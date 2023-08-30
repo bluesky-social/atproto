@@ -1,6 +1,6 @@
 import util from 'util'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { cborToLexRecord } from '@atproto/repo'
 import Database from '../../db'
 import { Record as PostRecord } from '../../lexicon/types/app/bsky/feed/post'
@@ -93,8 +93,8 @@ export class LocalService {
         'record.indexedAt',
       ])
       .where('did', '=', did)
-      .where('repoRev', '>', rev)
-      .orderBy('repoRev', 'asc')
+      .where('record.repoRev', '>', rev)
+      .orderBy('record.repoRev', 'asc')
       .execute()
     return res.reduce(
       (acc, cur) => {

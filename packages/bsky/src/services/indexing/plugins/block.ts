@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
 import * as Block from '../../../lexicon/types/app/bsky/graph/block'
 import * as lex from '../../../lexicon/lexicons'
@@ -8,6 +8,7 @@ import RecordProcessor from '../processor'
 import { toSimplifiedISOSafe } from '../util'
 import { PrimaryDatabase } from '../../../db'
 import { BackgroundQueue } from '../../../background'
+import { NotificationServer } from '../../../notifications'
 
 const lexId = lex.ids.AppBskyGraphBlock
 type IndexedBlock = Selectable<DatabaseSchemaType['actor_block']>
@@ -74,8 +75,9 @@ export type PluginType = RecordProcessor<Block.Record, IndexedBlock>
 export const makePlugin = (
   db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
+  notifServer?: NotificationServer,
 ): PluginType => {
-  return new RecordProcessor(db, backgroundQueue, {
+  return new RecordProcessor(db, backgroundQueue, notifServer, {
     lexId,
     insertFn,
     findDuplicate,

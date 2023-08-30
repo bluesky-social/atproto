@@ -33,8 +33,8 @@
     },
     "commit": {
       "type": "object",
-      "required": ["seq", "rebase", "tooBig", "repo", "commit", "prev", "blocks", "ops", "blobs", "time"],
-      "nullable": ["prev"],
+      "required": ["seq", "rebase", "tooBig", "repo", "commit", "rev", "since", "blocks", "ops", "blobs", "time"],
+      "nullable": ["prev", "since"],
       "properties": {
         "seq": {"type": "integer"},
         "rebase": {"type": "boolean"},
@@ -42,6 +42,14 @@
         "repo": {"type": "string", "format": "did"},
         "commit": {"type": "cid-link"},
         "prev": {"type": "cid-link"},
+        "rev": {
+          "type": "string",
+          "description": "The rev of the emitted commit"
+        },
+        "since": {
+          "type": "string",
+          "description": "The rev of the last emitted commit from this repo"
+        },
         "blocks": {
           "type": "bytes",
           "description": "CAR file containing relevant blocks",
@@ -104,6 +112,7 @@
     },
     "repoOp": {
       "type": "object",
+      "description": "A repo operation, ie a write of a single record. For creates and updates, cid is the record's CID as of this operation. For deletes, it's null.",
       "required": ["action", "path", "cid"],
       "nullable": ["cid"],
       "properties": {

@@ -6,7 +6,7 @@ import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
 import compression from 'compression'
 import { IdResolver } from '@atproto/identity'
-import API, { health, blobResolver } from './api'
+import API, { health, wellKnown, blobResolver } from './api'
 import { DatabaseCoordinator } from './db'
 import * as error from './error'
 import { dbLogger, loggerMiddleware } from './logger'
@@ -24,6 +24,7 @@ import {
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
 import { LabelCache } from './label-cache'
+import { NotificationServer } from './notifications'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
@@ -98,6 +99,7 @@ export class BskyAppView {
 
     const backgroundQueue = new BackgroundQueue(db.getPrimary())
     const labelCache = new LabelCache(db.getPrimary())
+    const notifServer = new NotificationServer(db.getPrimary())
 
     const services = createServices({
       imgUriBuilder,
@@ -115,6 +117,7 @@ export class BskyAppView {
       labelCache,
       backgroundQueue,
       algos,
+      notifServer,
     })
 
     let server = createServer({
@@ -129,6 +132,7 @@ export class BskyAppView {
     server = API(server, ctx)
 
     app.use(health.createRouter(ctx))
+    app.use(wellKnown.createRouter(ctx))
     app.use(blobResolver.createRouter(ctx))
     if (imgProcessingServer) {
       app.use('/img', imgProcessingServer.app)

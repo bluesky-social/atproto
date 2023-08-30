@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "main": "src/index.ts",
   "scripts": {
-    "test": "jest",
-    "prettier": "prettier --check src/ tests/",
-    "prettier:fix": "prettier --write src/ tests/",
+    "test": "true",
+    "prettier": "prettier --check src/",
+    "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "yarn lint --fix",
     "verify": "run-p prettier lint",
@@ -24,7 +24,6 @@
     "directory": "packages/uri"
   },
   "dependencies": {
-    "@atproto/identifier": "*",
-    "@atproto/nsid": "*"
+    "@atproto/syntax": "*"
   }
 }

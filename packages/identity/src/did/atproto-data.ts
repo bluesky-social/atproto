@@ -10,13 +10,16 @@ export const getDid = (doc: DidDocument): string => {
 }
 
 export const getKey = (doc: DidDocument): string | undefined => {
+  const did = getDid(doc)
   let keys = doc.verificationMethod
   if (!keys) return undefined
   if (typeof keys !== 'object') return undefined
   if (!Array.isArray(keys)) {
     keys = [keys]
   }
-  const found = keys.find((key) => key.id === '#atproto')
+  const found = keys.find(
+    (key) => key.id === '#atproto' || key.id === `${did}#atproto`,
+  )
   if (!found) return undefined
 
   // @TODO support jwk
@@ -28,6 +31,9 @@ export const getKey = (doc: DidDocument): string | undefined => {
     didKey = crypto.formatDidKey(crypto.P256_JWT_ALG, keyBytes)
   } else if (found.type === 'EcdsaSecp256k1VerificationKey2019') {
     didKey = crypto.formatDidKey(crypto.SECP256K1_JWT_ALG, keyBytes)
+  } else if (found.type === 'Multikey') {
+    const parsed = crypto.parseMultikey(found.publicKeyMultibase)
+    didKey = crypto.formatDidKey(parsed.jwtAlg, parsed.keyBytes)
   }
   return didKey
 }
@@ -42,41 +48,24 @@ export const getHandle = (doc: DidDocument): string | undefined => {
 }
 
 export const getPds = (doc: DidDocument): string | undefined => {
-  let services = doc.service
-  if (!services) return undefined
-  if (typeof services !== 'object') return undefined
-  if (!Array.isArray(services)) {
-    services = [services]
-  }
-  const found = services.find((service) => service.id === '#atproto_pds')
-  if (!found) return undefined
-  if (found.type !== 'AtprotoPersonalDataServer') {
-    return undefined
-  }
-  if (typeof found.serviceEndpoint !== 'string') {
-    return undefined
-  }
-  validateUrl(found.serviceEndpoint)
-  return found.serviceEndpoint
+  return getServiceEndpoint(doc, {
+    id: '#atproto_pds',
+    type: 'AtprotoPersonalDataServer',
+  })
 }
 
 export const getFeedGen = (doc: DidDocument): string | undefined => {
-  let services = doc.service
-  if (!services) return undefined
-  if (typeof services !== 'object') return undefined
-  if (!Array.isArray(services)) {
-    services = [services]
-  }
-  const found = services.find((service) => service.id === '#bsky_fg')
-  if (!found) return undefined
-  if (found.type !== 'BskyFeedGenerator') {
-    return undefined
-  }
-  if (typeof found.serviceEndpoint !== 'string') {
-    return undefined
-  }
-  validateUrl(found.serviceEndpoint)
-  return found.serviceEndpoint
+  return getServiceEndpoint(doc, {
+    id: '#bsky_fg',
+    type: 'BskyFeedGenerator',
+  })
+}
+
+export const getNotif = (doc: DidDocument): string | undefined => {
+  return getServiceEndpoint(doc, {
+    id: '#bsky_notif',
+    type: 'BskyNotificationService',
+  })
 }
 
 export const parseToAtprotoDocument = (
@@ -117,4 +106,29 @@ const validateUrl = (url: string) => {
   if (!hostname) {
     throw new Error('Invalid pds hostname')
   }
+}
+
+const getServiceEndpoint = (
+  doc: DidDocument,
+  opts: { id: string; type: string },
+) => {
+  const did = getDid(doc)
+  let services = doc.service
+  if (!services) return undefined
+  if (typeof services !== 'object') return undefined
+  if (!Array.isArray(services)) {
+    services = [services]
+  }
+  const found = services.find(
+    (service) => service.id === opts.id || service.id === `${did}${opts.id}`,
+  )
+  if (!found) return undefined
+  if (found.type !== opts.type) {
+    return undefined
+  }
+  if (typeof found.serviceEndpoint !== 'string') {
+    return undefined
+  }
+  validateUrl(found.serviceEndpoint)
+  return found.serviceEndpoint
 }

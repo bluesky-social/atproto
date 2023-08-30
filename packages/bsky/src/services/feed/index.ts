@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { dedupeStrs } from '@atproto/common'
-import { INVALID_HANDLE } from '@atproto/identifier'
+import { INVALID_HANDLE } from '@atproto/syntax'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { Database } from '../../db'
 import {

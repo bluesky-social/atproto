@@ -200,4 +200,153 @@ describe('agent', () => {
       await expect(agent.deleteFollow('foo')).rejects.toThrow('Not logged in')
     })
   })
+
+  describe('preferences methods', () => {
+    it('gets and sets preferences correctly', async () => {
+      const agent = new BskyAgent({ service: server.url })
+
+      await agent.createAccount({
+        handle: 'user5.test',
+        email: 'user5@test.com',
+        password: 'password',
+      })
+
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: { pinned: undefined, saved: undefined },
+        adultContentEnabled: false,
+        contentLabels: {},
+      })
+
+      await agent.setAdultContentEnabled(true)
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: { pinned: undefined, saved: undefined },
+        adultContentEnabled: true,
+        contentLabels: {},
+      })
+
+      await agent.setAdultContentEnabled(false)
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: { pinned: undefined, saved: undefined },
+        adultContentEnabled: false,
+        contentLabels: {},
+      })
+
+      await agent.setContentLabelPref('impersonation', 'warn')
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: { pinned: undefined, saved: undefined },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'warn',
+        },
+      })
+
+      await agent.setContentLabelPref('spam', 'show') // will convert to 'ignore'
+      await agent.setContentLabelPref('impersonation', 'hide')
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: { pinned: undefined, saved: undefined },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'hide',
+          spam: 'ignore',
+        },
+      })
+
+      await agent.addSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: [],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'hide',
+          spam: 'ignore',
+        },
+      })
+
+      await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'hide',
+          spam: 'ignore',
+        },
+      })
+
+      await agent.removePinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: [],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'hide',
+          spam: 'ignore',
+        },
+      })
+
+      await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: [],
+          saved: [],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'hide',
+          spam: 'ignore',
+        },
+      })
+
+      await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'hide',
+          spam: 'ignore',
+        },
+      })
+
+      await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake2')
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: [
+            'at://bob.com/app.bsky.feed.generator/fake',
+            'at://bob.com/app.bsky.feed.generator/fake2',
+          ],
+          saved: [
+            'at://bob.com/app.bsky.feed.generator/fake',
+            'at://bob.com/app.bsky.feed.generator/fake2',
+          ],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'hide',
+          spam: 'ignore',
+        },
+      })
+
+      await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'hide',
+          spam: 'ignore',
+        },
+      })
+    })
+  })
 })

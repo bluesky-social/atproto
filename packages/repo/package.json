@@ -29,9 +29,9 @@
   "dependencies": {
     "@atproto/common": "*",
     "@atproto/crypto": "*",
+    "@atproto/syntax": "*",
     "@atproto/identity": "*",
     "@atproto/lexicon": "*",
-    "@atproto/nsid": "*",
     "@ipld/car": "^3.2.3",
     "@ipld/dag-cbor": "^7.0.0",
     "multiformats": "^9.6.4",

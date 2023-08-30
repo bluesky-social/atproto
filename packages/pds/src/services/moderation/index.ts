@@ -1,7 +1,7 @@
 import { Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { BlobStore } from '@atproto/repo'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
@@ -375,16 +375,14 @@ export class ModerationService {
     return actionResult
   }
 
-  async getActionsDueForReversal(): Promise<
-    Array<{ id: number; createdBy: string }>
-  > {
+  async getActionsDueForReversal(): Promise<Array<ModerationActionRow>> {
     const actionsDueForReversal = await this.db.db
       .selectFrom('moderation_action')
       // Get entries that have an durationInHours that has passed and have not been reversed
       .where('durationInHours', 'is not', null)
       .where('expiresAt', '<', new Date().toISOString())
       .where('reversedAt', 'is', null)
-      .select(['id', 'createdBy'])
+      .selectAll()
       .execute()
 
     return actionsDueForReversal
@@ -602,7 +600,7 @@ export class ModerationService {
     // Resolve subject info
     let subjectInfo: SubjectInfo
     if ('did' in subject) {
-      const repo = await new SqlRepoStorage(this.db, subject.did).getHead()
+      const repo = await new SqlRepoStorage(this.db, subject.did).getRoot()
       if (!repo) throw new InvalidRequestError('Repo not found')
       subjectInfo = {
         subjectType: 'com.atproto.admin.defs#repoRef',

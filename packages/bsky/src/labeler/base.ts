@@ -1,4 +1,4 @@
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { AtpAgent } from '@atproto/api'
 import { cidForRecord } from '@atproto/repo'
 import { dedupe, getFieldsFromRecord } from './util'

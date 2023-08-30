@@ -1,6 +1,6 @@
 import { Selectable } from 'kysely'
 import { ArrayEl, cborBytesToRecord } from '@atproto/common'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
 import { DidHandle } from '../../db/tables/did-handle'
@@ -22,6 +22,8 @@ import { ModerationAction } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
 import { ModerationReportRowWithHandle } from '.'
+import { getSelfLabels } from '../../app-view/services/label'
+import { jsonStringToLex } from '@atproto/lexicon'
 
 export class ModerationViews {
   constructor(private db: Database, private messageDispatcher: MessageQueue) {}
@@ -275,6 +277,11 @@ export class ModerationViews {
       this.blob(record.blobCids),
       this.labels(record.uri),
     ])
+    const selfLabels = getSelfLabels({
+      uri: result.uri,
+      cid: result.cid,
+      record: result.value as Record<string, unknown>,
+    })
     return {
       ...record,
       blobs,
@@ -283,7 +290,7 @@ export class ModerationViews {
         reports,
         actions,
       },
-      labels,
+      labels: [...labels, ...selfLabels],
     }
   }
 
