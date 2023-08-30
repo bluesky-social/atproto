@@ -18,11 +18,11 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["subject", "follows"],
+          "required": ["subject", "followsOfFollows"],
           "properties": {
             "subject": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
             "cursor": {"type": "string"},
-            "follows": {
+            "followsOfFollows": {
               "type": "array",
               "items": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"}
             }
