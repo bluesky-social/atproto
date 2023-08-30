@@ -56,6 +56,18 @@ describe('feed generation', () => {
       [feedUriBadPagination.toString()]: feedGenHandler('bad-pagination'),
       [primeUri.toString()]: feedGenHandler('prime'),
     })
+
+    const feedSuggestions = [
+      { uri: allUri.toString(), order: 1 },
+      { uri: evenUri.toString(), order: 2 },
+      { uri: feedUriBadPagination.toString(), order: 3 },
+      { uri: primeUri.toString(), order: 3 },
+    ]
+    await network.bsky.ctx.db
+      .getPrimary()
+      .db.insertInto('suggested_feed')
+      .values(feedSuggestions)
+      .execute()
   })
 
   afterAll(async () => {
@@ -309,6 +321,17 @@ describe('feed generation', () => {
     it('describes multiple feed gens', async () => {
       const resEven = await agent.api.app.bsky.feed.getFeedGenerators(
         { feeds: [feedUriEven, feedUriAll, feedUriPrime] },
+        { headers: await network.serviceHeaders(sc.dids.bob) },
+      )
+      expect(forSnapshot(resEven.data)).toMatchSnapshot()
+      expect(resEven.data.feeds.map((fg) => fg.uri)).not.toContain(feedUriPrime) // taken-down
+    })
+  })
+
+  describe('getFeedSuggestions', () => {
+    it('returns list of suggested feed generators', async () => {
+      const resEven = await agent.api.app.bsky.feed.getFeedSuggestions(
+        {},
         { headers: await network.serviceHeaders(sc.dids.bob) },
       )
       expect(forSnapshot(resEven.data)).toMatchSnapshot()
