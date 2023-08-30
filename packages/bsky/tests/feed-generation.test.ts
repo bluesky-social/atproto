@@ -61,7 +61,7 @@ describe('feed generation', () => {
       { uri: allUri.toString(), order: 1 },
       { uri: evenUri.toString(), order: 2 },
       { uri: feedUriBadPagination.toString(), order: 3 },
-      { uri: primeUri.toString(), order: 3 },
+      { uri: primeUri.toString(), order: 4 },
     ]
     await network.bsky.ctx.db
       .getPrimary()
