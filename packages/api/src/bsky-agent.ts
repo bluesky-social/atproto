@@ -3,8 +3,10 @@ import { AtpAgent } from './agent'
 import {
   AppBskyFeedPost,
   AppBskyActorProfile,
+  AppBskyActorDefs,
   ComAtprotoRepoPutRecord,
 } from './client'
+import { BskyPreferences, BskyLabelPreference } from './types'
 
 export class BskyAgent extends AtpAgent {
   get app() {
@@ -236,4 +238,182 @@ export class BskyAgent extends AtpAgent {
       seenAt,
     })
   }
+
+  async getPreferences(): Promise<BskyPreferences> {
+    const prefs: BskyPreferences = {
+      feeds: {
+        saved: undefined,
+        pinned: undefined,
+      },
+      adultContentEnabled: false,
+      contentLabels: {},
+    }
+    const res = await this.app.bsky.actor.getPreferences({})
+    for (const pref of res.data.preferences) {
+      if (
+        AppBskyActorDefs.isAdultContentPref(pref) &&
+        AppBskyActorDefs.validateAdultContentPref(pref).success
+      ) {
+        prefs.adultContentEnabled = pref.enabled
+      } else if (
+        AppBskyActorDefs.isContentLabelPref(pref) &&
+        AppBskyActorDefs.validateAdultContentPref(pref).success
+      ) {
+        let value = pref.visibility
+        if (value === 'show') {
+          value = 'ignore'
+        }
+        if (value === 'ignore' || value === 'warn' || value === 'hide') {
+          prefs.contentLabels[pref.label] = value as BskyLabelPreference
+        }
+      } else if (
+        AppBskyActorDefs.isSavedFeedsPref(pref) &&
+        AppBskyActorDefs.validateSavedFeedsPref(pref).success
+      ) {
+        prefs.feeds.saved = pref.saved
+        prefs.feeds.pinned = pref.pinned
+      }
+    }
+    return prefs
+  }
+
+  async setSavedFeeds(saved: string[], pinned: string[]) {
+    return updateFeedPreferences(this, () => ({
+      saved,
+      pinned,
+    }))
+  }
+
+  async addSavedFeed(v: string) {
+    return updateFeedPreferences(this, (saved: string[], pinned: string[]) => ({
+      saved: [...saved.filter((uri) => uri !== v), v],
+      pinned,
+    }))
+  }
+
+  async removeSavedFeed(v: string) {
+    return updateFeedPreferences(this, (saved: string[], pinned: string[]) => ({
+      saved: saved.filter((uri) => uri !== v),
+      pinned: pinned.filter((uri) => uri !== v),
+    }))
+  }
+
+  async addPinnedFeed(v: string) {
+    return updateFeedPreferences(this, (saved: string[], pinned: string[]) => ({
+      saved: [...saved.filter((uri) => uri !== v), v],
+      pinned: [...pinned.filter((uri) => uri !== v), v],
+    }))
+  }
+
+  async removePinnedFeed(v: string) {
+    return updateFeedPreferences(this, (saved: string[], pinned: string[]) => ({
+      saved,
+      pinned: pinned.filter((uri) => uri !== v),
+    }))
+  }
+
+  async setAdultContentEnabled(v: boolean) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      const existing = prefs.find(
+        (pref) =>
+          AppBskyActorDefs.isAdultContentPref(pref) &&
+          AppBskyActorDefs.validateAdultContentPref(pref).success,
+      )
+      if (existing) {
+        existing.enabled = v
+      } else {
+        prefs.push({
+          $type: 'app.bsky.actor.defs#adultContentPref',
+          enabled: v,
+        })
+      }
+      return prefs
+    })
+  }
+
+  async setContentLabelPref(key: string, value: BskyLabelPreference) {
+    // TEMP update old value
+    if (value === 'show') {
+      value = 'ignore'
+    }
+
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      const existing = prefs.find(
+        (pref) =>
+          AppBskyActorDefs.isContentLabelPref(pref) &&
+          AppBskyActorDefs.validateAdultContentPref(pref).success &&
+          pref.label === key,
+      )
+      if (existing) {
+        existing.visibility = value
+      } else {
+        prefs.push({
+          $type: 'app.bsky.actor.defs#contentLabelPref',
+          label: key,
+          visibility: value,
+        })
+      }
+      return prefs
+    })
+  }
+}
+
+/**
+ * This function updates the preferences of a user and allows for a callback function to be executed
+ * before the update.
+ * @param cb - cb is a callback function that takes in a single parameter of type
+ * AppBskyActorDefs.Preferences and returns either a boolean or void. This callback function is used to
+ * update the preferences of the user. The function is called with the current preferences as an
+ * argument and if the callback returns false, the preferences are not updated.
+ */
+async function updatePreferences(
+  agent: BskyAgent,
+  cb: (
+    prefs: AppBskyActorDefs.Preferences,
+  ) => AppBskyActorDefs.Preferences | false,
+) {
+  const res = await agent.app.bsky.actor.getPreferences({})
+  const newPrefs = cb(res.data.preferences)
+  if (newPrefs === false) {
+    return
+  }
+  await agent.app.bsky.actor.putPreferences({
+    preferences: newPrefs,
+  })
+}
+
+/**
+ * A helper specifically for updating feed preferences
+ */
+async function updateFeedPreferences(
+  agent: BskyAgent,
+  cb: (
+    saved: string[],
+    pinned: string[],
+  ) => { saved: string[]; pinned: string[] },
+): Promise<{ saved: string[]; pinned: string[] }> {
+  let res
+  await updatePreferences(agent, (prefs: AppBskyActorDefs.Preferences) => {
+    let feedsPref = prefs.find(
+      (pref) =>
+        AppBskyActorDefs.isSavedFeedsPref(pref) &&
+        AppBskyActorDefs.validateSavedFeedsPref(pref).success,
+    ) as AppBskyActorDefs.SavedFeedsPref | undefined
+    if (feedsPref) {
+      res = cb(feedsPref.saved, feedsPref.pinned)
+      feedsPref.saved = res.saved
+      feedsPref.pinned = res.pinned
+    } else {
+      res = cb([], [])
+      feedsPref = {
+        $type: 'app.bsky.actor.defs#savedFeedsPref',
+        saved: res.saved,
+        pinned: res.pinned,
+      }
+    }
+    return prefs
+      .filter((pref) => !AppBskyActorDefs.isSavedFeedsPref(pref))
+      .concat([feedsPref])
+  })
+  return res
 }

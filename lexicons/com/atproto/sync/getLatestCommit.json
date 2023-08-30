@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.sync.getHead",
+  "id": "com.atproto.sync.getLatestCommit",
   "defs": {
     "main": {
       "type": "query",
-      "description": "DEPRECATED - please use com.atproto.sync.getLatestCommit instead",
+      "description": "Gets the current commit CID & revision of the repo.",
       "parameters": {
         "type": "params",
         "required": ["did"],
@@ -20,14 +20,15 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["root"],
+          "required": ["cid", "rev"],
           "properties": {
-            "root": {"type": "string", "format": "cid"}
+            "cid": {"type": "string", "format": "cid"},
+            "rev": {"type": "string"}
           }
         }
       },
       "errors": [
-        {"name": "HeadNotFound"}
+        {"name": "RepoNotFound"}
       ]
     }
   }

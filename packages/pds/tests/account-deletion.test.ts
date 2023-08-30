@@ -22,8 +22,6 @@ import {
   PostEmbedExternal,
   PostEmbedRecord,
 } from '../src/app-view/db/tables/post-embed'
-import { RepoCommitHistory } from '../src/db/tables/repo-commit-history'
-import { RepoCommitBlock } from '../src/db/tables/repo-commit-block'
 import { Record } from '../src/db/tables/record'
 import { RepoSeq } from '../src/db/tables/repo-seq'
 import { ACKNOWLEDGE } from '../src/lexicon/types/com/atproto/admin/defs'
@@ -181,14 +179,6 @@ describe('account deletion', () => {
         (row) => row.did === carol.did && row.eventType === 'tombstone',
       ).length,
     ).toEqual(1)
-    expect(updatedDbContents.commitBlocks).toEqual(
-      initialDbContents.commitBlocks.filter((row) => row.creator !== carol.did),
-    )
-    expect(updatedDbContents.commitHistories).toEqual(
-      initialDbContents.commitHistories.filter(
-        (row) => row.creator !== carol.did,
-      ),
-    )
   })
 
   it('no longer stores indexed records from the user', async () => {
@@ -301,8 +291,6 @@ type DbContents = {
   userState: UserState[]
   blocks: IpldBlock[]
   seqs: Selectable<RepoSeq>[]
-  commitHistories: RepoCommitHistory[]
-  commitBlocks: RepoCommitBlock[]
   records: Record[]
   posts: Post[]
   postImages: PostEmbedImage[]
@@ -325,8 +313,6 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     userState,
     blocks,
     seqs,
-    commitHistories,
-    commitBlocks,
     records,
     posts,
     postImages,
@@ -351,19 +337,6 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
       .selectAll()
       .execute(),
     db.db.selectFrom('repo_seq').orderBy('id').selectAll().execute(),
-    db.db
-      .selectFrom('repo_commit_history')
-      .orderBy('creator')
-      .orderBy('commit')
-      .selectAll()
-      .execute(),
-    db.db
-      .selectFrom('repo_commit_block')
-      .orderBy('creator')
-      .orderBy('commit')
-      .orderBy('block')
-      .selectAll()
-      .execute(),
     db.db.selectFrom('record').orderBy('uri').selectAll().execute(),
     db.db.selectFrom('post').orderBy('uri').selectAll().execute(),
     db.db
@@ -402,8 +375,6 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
     userState,
     blocks,
     seqs,
-    commitHistories,
-    commitBlocks,
     records,
     posts,
     postImages,

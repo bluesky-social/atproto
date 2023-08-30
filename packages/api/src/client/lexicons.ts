@@ -1026,44 +1026,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminRebaseRepo: {
-    lexicon: 1,
-    id: 'com.atproto.admin.rebaseRepo',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: "Administrative action to rebase an account's repo",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['repo'],
-            properties: {
-              repo: {
-                type: 'string',
-                format: 'at-identifier',
-                description: 'The handle or DID of the repo.',
-              },
-              swapCommit: {
-                type: 'string',
-                format: 'cid',
-                description:
-                  'Compare and swap with the previous commit by cid.',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidSwap',
-          },
-          {
-            name: 'ConcurrentWrites',
-          },
-        ],
-      },
-    },
-  },
   ComAtprotoAdminResolveModerationReports: {
     lexicon: 1,
     id: 'com.atproto.admin.resolveModerationReports',
@@ -2229,44 +2191,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoRepoRebaseRepo: {
-    lexicon: 1,
-    id: 'com.atproto.repo.rebaseRepo',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Simple rebase of repo that deletes history',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['repo'],
-            properties: {
-              repo: {
-                type: 'string',
-                format: 'at-identifier',
-                description: 'The handle or DID of the repo.',
-              },
-              swapCommit: {
-                type: 'string',
-                format: 'cid',
-                description:
-                  'Compare and swap with the previous commit by cid.',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidSwap',
-          },
-          {
-            name: 'ConcurrentWrites',
-          },
-        ],
-      },
-    },
-  },
   ComAtprotoRepoStrongRef: {
     lexicon: 1,
     id: 'com.atproto.repo.strongRef',
@@ -3069,7 +2993,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Gets the repo state.',
+        description: 'DEPRECATED - please use com.atproto.sync.getRepo instead',
         parameters: {
           type: 'params',
           required: ['did'],
@@ -3078,64 +3002,11 @@ export const schemaDict = {
               type: 'string',
               format: 'did',
               description: 'The DID of the repo.',
-            },
-            commit: {
-              type: 'string',
-              format: 'cid',
-              description:
-                'The commit to get the checkout from. Defaults to current HEAD.',
             },
           },
         },
         output: {
           encoding: 'application/vnd.ipld.car',
-        },
-      },
-    },
-  },
-  ComAtprotoSyncGetCommitPath: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getCommitPath',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Gets the path of repo commits',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-            latest: {
-              type: 'string',
-              format: 'cid',
-              description: 'The most recent commit',
-            },
-            earliest: {
-              type: 'string',
-              format: 'cid',
-              description: 'The earliest commit to start from',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['commits'],
-            properties: {
-              commits: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                  format: 'cid',
-                },
-              },
-            },
-          },
         },
       },
     },
@@ -3146,7 +3017,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Gets the current HEAD CID of a repo.',
+        description:
+          'DEPRECATED - please use com.atproto.sync.getLatestCommit instead',
         parameters: {
           type: 'params',
           required: ['did'],
@@ -3174,6 +3046,48 @@ export const schemaDict = {
         errors: [
           {
             name: 'HeadNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncGetLatestCommit: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getLatestCommit',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Gets the current commit CID & revision of the repo.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['cid', 'rev'],
+            properties: {
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              rev: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'RepoNotFound',
           },
         ],
       },
@@ -3222,7 +3136,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Gets the repo state.',
+        description:
+          "Gets the did's repo, optionally catching up from a specific revision.",
         parameters: {
           type: 'params',
           required: ['did'],
@@ -3232,16 +3147,10 @@ export const schemaDict = {
               format: 'did',
               description: 'The DID of the repo.',
             },
-            earliest: {
+            since: {
               type: 'string',
               format: 'cid',
-              description:
-                'The earliest commit in the commit range (not inclusive)',
-            },
-            latest: {
-              type: 'string',
-              format: 'cid',
-              description: 'The latest commit in the commit range (inclusive)',
+              description: 'The revision of the repo to catch up from.',
             },
           },
         },
@@ -3257,7 +3166,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'List blob cids for some range of commits',
+        description: 'List blob cids since some revision',
         parameters: {
           type: 'params',
           required: ['did'],
@@ -3267,15 +3176,19 @@ export const schemaDict = {
               format: 'did',
               description: 'The DID of the repo.',
             },
-            latest: {
+            since: {
               type: 'string',
               format: 'cid',
-              description: 'The most recent commit',
+              description: 'Optional revision of the repo to list blobs since',
             },
-            earliest: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 500,
+            },
+            cursor: {
               type: 'string',
-              format: 'cid',
-              description: 'The earliest commit to start from',
             },
           },
         },
@@ -3285,6 +3198,9 @@ export const schemaDict = {
             type: 'object',
             required: ['cids'],
             properties: {
+              cursor: {
+                type: 'string',
+              },
               cids: {
                 type: 'array',
                 items: {
@@ -3449,13 +3365,14 @@ export const schemaDict = {
           'tooBig',
           'repo',
           'commit',
-          'prev',
+          'rev',
+          'since',
           'blocks',
           'ops',
           'blobs',
           'time',
         ],
-        nullable: ['prev'],
+        nullable: ['prev', 'since'],
         properties: {
           seq: {
             type: 'integer',
@@ -3475,6 +3392,14 @@ export const schemaDict = {
           },
           prev: {
             type: 'cid-link',
+          },
+          rev: {
+            type: 'string',
+            description: 'The rev of the emitted commit',
+          },
+          since: {
+            type: 'string',
+            description: 'The rev of the last emitted commit from this repo',
           },
           blocks: {
             type: 'bytes',
@@ -3589,6 +3514,29 @@ export const schemaDict = {
           },
           cid: {
             type: 'cid-link',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoTempUpgradeRepoVersion: {
+    lexicon: 1,
+    id: 'com.atproto.temp.upgradeRepoVersion',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Upgrade a repo to v3',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
           },
         },
       },
@@ -6672,7 +6620,6 @@ export const ids = {
   ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
-  ComAtprotoAdminRebaseRepo: 'com.atproto.admin.rebaseRepo',
   ComAtprotoAdminResolveModerationReports:
     'com.atproto.admin.resolveModerationReports',
   ComAtprotoAdminReverseModerationAction:
@@ -6696,7 +6643,6 @@ export const ids = {
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
-  ComAtprotoRepoRebaseRepo: 'com.atproto.repo.rebaseRepo',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
@@ -6722,8 +6668,8 @@ export const ids = {
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
   ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
-  ComAtprotoSyncGetCommitPath: 'com.atproto.sync.getCommitPath',
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
+  ComAtprotoSyncGetLatestCommit: 'com.atproto.sync.getLatestCommit',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
   ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
@@ -6731,6 +6677,7 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
+  ComAtprotoTempUpgradeRepoVersion: 'com.atproto.temp.upgradeRepoVersion',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',

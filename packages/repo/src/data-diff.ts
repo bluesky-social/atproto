@@ -1,75 +1,81 @@
 import { CID } from 'multiformats'
 import CidSet from './cid-set'
-import { MST, mstDiff } from './mst'
+import { MST, NodeEntry, mstDiff } from './mst'
+import BlockMap from './block-map'
 
 export class DataDiff {
   adds: Record<string, DataAdd> = {}
   updates: Record<string, DataUpdate> = {}
   deletes: Record<string, DataDelete> = {}
 
-  newCids: CidSet = new CidSet()
+  newMstBlocks: BlockMap = new BlockMap()
+  newLeafCids: CidSet = new CidSet()
   removedCids: CidSet = new CidSet()
 
   static async of(curr: MST, prev: MST | null): Promise<DataDiff> {
     return mstDiff(curr, prev)
   }
 
-  recordAdd(key: string, cid: CID): void {
-    this.adds[key] = { key, cid }
-    this.newCids.add(cid)
-  }
-
-  recordUpdate(key: string, prev: CID, cid: CID): void {
-    this.updates[key] = { key, prev, cid }
-    this.newCids.add(cid)
-  }
-
-  recordDelete(key: string, cid: CID): void {
-    this.deletes[key] = { key, cid }
-  }
-
-  recordNewCid(cid: CID): void {
-    if (this.removedCids.has(cid)) {
-      this.removedCids.delete(cid)
+  async nodeAdd(node: NodeEntry) {
+    if (node.isLeaf()) {
+      this.leafAdd(node.key, node.value)
     } else {
-      this.newCids.add(cid)
+      const data = await node.serialize()
+      this.treeAdd(data.cid, data.bytes)
     }
   }
 
-  recordRemovedCid(cid: CID): void {
-    if (this.newCids.has(cid)) {
-      this.newCids.delete(cid)
+  async nodeDelete(node: NodeEntry) {
+    if (node.isLeaf()) {
+      const key = node.key
+      const cid = node.value
+      this.deletes[key] = { key, cid }
+      this.removedCids.add(cid)
+    } else {
+      const cid = await node.getPointer()
+      this.treeDelete(cid)
+    }
+  }
+
+  leafAdd(key: string, cid: CID) {
+    this.adds[key] = { key, cid }
+    if (this.removedCids.has(cid)) {
+      this.removedCids.delete(cid)
+    } else {
+      this.newLeafCids.add(cid)
+    }
+  }
+
+  leafUpdate(key: string, prev: CID, cid: CID) {
+    if (prev.equals(cid)) return
+    this.updates[key] = { key, prev, cid }
+    this.removedCids.add(prev)
+    this.newLeafCids.add(cid)
+  }
+
+  leafDelete(key: string, cid: CID) {
+    this.deletes[key] = { key, cid }
+    if (this.newLeafCids.has(cid)) {
+      this.newLeafCids.delete(cid)
     } else {
       this.removedCids.add(cid)
     }
   }
 
-  addDiff(diff: DataDiff) {
-    for (const add of diff.addList()) {
-      if (this.deletes[add.key]) {
-        const del = this.deletes[add.key]
-        if (del.cid !== add.cid) {
-          this.recordUpdate(add.key, del.cid, add.cid)
-        }
-        delete this.deletes[add.key]
-      } else {
-        this.recordAdd(add.key, add.cid)
-      }
+  treeAdd(cid: CID, bytes: Uint8Array) {
+    if (this.removedCids.has(cid)) {
+      this.removedCids.delete(cid)
+    } else {
+      this.newMstBlocks.set(cid, bytes)
     }
-    for (const update of diff.updateList()) {
-      this.recordUpdate(update.key, update.prev, update.cid)
-      delete this.adds[update.key]
-      delete this.deletes[update.key]
+  }
+
+  treeDelete(cid: CID) {
+    if (this.newMstBlocks.has(cid)) {
+      this.newMstBlocks.delete(cid)
+    } else {
+      this.removedCids.add(cid)
     }
-    for (const del of diff.deleteList()) {
-      if (this.adds[del.key]) {
-        delete this.adds[del.key]
-      } else {
-        delete this.updates[del.key]
-        this.recordDelete(del.key, del.cid)
-      }
-    }
-    this.newCids.addSet(diff.newCids)
   }
 
   addList(): DataAdd[] {
@@ -82,10 +88,6 @@ export class DataDiff {
 
   deleteList(): DataDelete[] {
     return Object.values(this.deletes)
-  }
-
-  newCidList(): CID[] {
-    return this.newCids.toList()
   }
 
   updatedKeys(): string[] {

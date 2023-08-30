@@ -10,16 +10,13 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {
   /** The DID of the repo. */
   did: string
-  /** The most recent commit */
-  latest?: string
-  /** The earliest commit to start from */
-  earliest?: string
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  commits: string[]
+  cid: string
+  rev: string
   [k: string]: unknown
 }
 
@@ -33,8 +30,15 @@ export interface Response {
   data: OutputSchema
 }
 
+export class RepoNotFoundError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
+    if (e.error === 'RepoNotFound') return new RepoNotFoundError(e)
   }
   return e
 }

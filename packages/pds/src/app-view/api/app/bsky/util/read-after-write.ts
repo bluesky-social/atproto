@@ -1,4 +1,5 @@
 import { Headers } from '@atproto/xrpc'
+import { readStickyLogger as log } from '../../../../../logger'
 import { LocalRecords } from '../../../../../services/local'
 import AppContext from '../../../../../context'
 
@@ -49,6 +50,7 @@ export const handleReadAfterWrite = async <T>(
     lag = withLocal.lag
   } catch (err) {
     body = res.data
+    log.warn({ err, requester }, 'error in read after write munge')
   }
   return {
     encoding: 'application/json',

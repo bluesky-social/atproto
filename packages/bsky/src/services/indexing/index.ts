@@ -1,13 +1,12 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import AtpAgent, { ComAtprotoSyncGetHead } from '@atproto/api'
+import AtpAgent, { ComAtprotoSyncGetLatestCommit } from '@atproto/api'
 import {
-  MemoryBlockstore,
   readCarWithRoot,
   WriteOpAction,
-  verifyCheckoutWithCids,
-  RepoContentsWithCids,
+  verifyRepo,
   Commit,
+  VerifiedRepo,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { IdResolver, getPds } from '@atproto/identity'
@@ -178,20 +177,14 @@ export class IndexingService {
     const { api } = new AtpAgent({ service: pds })
 
     const { data: car } = await retryHttp(() =>
-      api.com.atproto.sync.getCheckout({ did, commit }),
+      api.com.atproto.sync.getRepo({ did }),
     )
     const { root, blocks } = await readCarWithRoot(car)
-    const storage = new MemoryBlockstore(blocks)
-    const checkout = await verifyCheckoutWithCids(
-      storage,
-      root,
-      did,
-      signingKey,
-    )
+    const verifiedRepo = await verifyRepo(blocks, root, did, signingKey)
 
     const currRecords = await this.getCurrentRecords(did)
-    const checkoutRecords = formatCheckout(did, checkout.contents)
-    const diff = findDiffFromCheckout(currRecords, checkoutRecords)
+    const repoRecords = formatCheckout(did, verifiedRepo)
+    const diff = findDiffFromCheckout(currRecords, repoRecords)
 
     await Promise.all(
       diff.map(async (op) => {
@@ -305,10 +298,10 @@ export class IndexingService {
     if (!pds) return false
     const { api } = new AtpAgent({ service: pds })
     try {
-      await retryHttp(() => api.com.atproto.sync.getHead({ did }))
+      await retryHttp(() => api.com.atproto.sync.getLatestCommit({ did }))
       return true
     } catch (err) {
-      if (err instanceof ComAtprotoSyncGetHead.HeadNotFoundError) {
+      if (err instanceof ComAtprotoSyncGetLatestCommit.RepoNotFoundError) {
         return false
       }
       return null
@@ -418,18 +411,15 @@ const findDiffFromCheckout = (
 
 const formatCheckout = (
   did: string,
-  contents: RepoContentsWithCids,
+  verifiedRepo: VerifiedRepo,
 ): Record<string, RecordDescript> => {
   const records: Record<string, RecordDescript> = {}
-  for (const collection of Object.keys(contents)) {
-    for (const rkey of Object.keys(contents[collection])) {
-      const uri = AtUri.make(did, collection, rkey)
-      const { cid, value } = contents[collection][rkey]
-      records[uri.toString()] = {
-        uri,
-        cid,
-        value,
-      }
+  for (const create of verifiedRepo.creates) {
+    const uri = AtUri.make(did, create.collection, create.rkey)
+    records[uri.toString()] = {
+      uri,
+      cid: create.cid,
+      value: create.record,
     }
   }
   return records
