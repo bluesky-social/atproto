@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
       if (!head) {
         throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
       }
-      const stream = getFullRepo(storage, head)
+      const carStream = getFullRepo(storage, head)
       // let carStream: AsyncIterable<Uint8Array>
       // try {
       //   carStream = await storage.getCarStream()
