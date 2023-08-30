@@ -109,8 +109,8 @@ export class RepoService {
   ) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
-    const locked = await storage.lockRepo()
-    if (!locked) {
+    const obtained = await storage.lockRepo()
+    if (!obtained) {
       throw new ConcurrentWriteError()
     }
     await Promise.all([
@@ -135,8 +135,13 @@ export class RepoService {
     const { did, writes, swapCommitCid } = toWrite
     // we may have some useful cached blocks in the storage, so re-use the previous instance
     const storage = prevStorage ?? new SqlRepoStorage(this.db, did)
-    const commit = await this.formatCommit(storage, did, writes, swapCommitCid)
     try {
+      const commit = await this.formatCommit(
+        storage,
+        did,
+        writes,
+        swapCommitCid,
+      )
       await this.serviceTx(async (srvcTx) =>
         srvcTx.processCommit(did, writes, commit, new Date().toISOString()),
       )
@@ -159,6 +164,12 @@ export class RepoService {
     writes: PreparedWrite[],
     swapCommit?: CID,
   ): Promise<CommitData> {
+    // this is not in a txn, so this won't actually hold the lock,
+    // we just check if it is currently held by another txn
+    const obtained = await storage.lockRepo()
+    if (!obtained) {
+      throw new ConcurrentWriteError()
+    }
     const currRoot = await storage.getRootDetailed()
     if (!currRoot) {
       throw new InvalidRequestError(
