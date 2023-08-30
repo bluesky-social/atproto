@@ -14,24 +14,13 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Unknown feed', 'UnknownFeed')
       }
 
-      const { cursor, feedItems } = await localAlgo(ctx, params, viewer)
-
-      const skeleton = feedItems.map((item) => ({
-        post: item.postUri,
-        reason:
-          item.uri === item.postUri
-            ? undefined
-            : {
-                $type: 'app.bsky.feed.defs#skeletonReasonRepost',
-                repost: item.uri,
-              },
-      }))
+      const result = await localAlgo(ctx, params, viewer)
 
       return {
         encoding: 'application/json',
         body: {
-          cursor,
-          feed: skeleton,
+          feed: result.feed, // @TODO should we proactively filter blocks/mutes from the skeleton, or treat this similar to other cusotm feeds?
+          cursor: result.cursor,
         },
       }
     },

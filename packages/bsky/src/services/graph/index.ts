@@ -182,6 +182,48 @@ export class GraphService {
     return muteSet
   }
 
+  async getBlockAndMuteState(pairs: RelationshipPair[]) {
+    const { ref } = this.db.db.dynamic
+    const sourceRef = ref('pair.source')
+    const targetRef = ref('pair.target')
+    const values = valuesList(pairs.map((p) => sql`${p[0]}, ${p[1]}`))
+    const items = await this.db.db
+      .selectFrom(values.as(sql`pair (source, target)`))
+      .select([
+        sql<string>`${sourceRef}`.as('source'),
+        sql<string>`${targetRef}`.as('target'),
+        this.db.db
+          .selectFrom('actor_block')
+          .whereRef('creator', '=', sourceRef)
+          .whereRef('subjectDid', '=', targetRef)
+          .select('uri')
+          .as('blocking'),
+        this.db.db
+          .selectFrom('actor_block')
+          .whereRef('creator', '=', targetRef)
+          .whereRef('subjectDid', '=', sourceRef)
+          .select('uri')
+          .as('blockedBy'),
+        this.db.db
+          .selectFrom('mute')
+          .whereRef('mutedByDid', '=', sourceRef)
+          .whereRef('subjectDid', '=', targetRef)
+          .select(sql<true>`${true}`.as('val'))
+          .as('muting'),
+        this.db.db
+          .selectFrom('list_item')
+          .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
+          .whereRef('list_mute.mutedByDid', '=', sourceRef)
+          .whereRef('list_item.subjectDid', '=', targetRef)
+          .select('list_item.listUri')
+          .limit(1)
+          .as('mutingViaList'),
+      ])
+      .selectAll()
+      .execute()
+    return new BlockAndMuteState(items)
+  }
+
   async filterBlocksAndMutes<T>(
     items: T[],
     opts: {
@@ -302,4 +344,67 @@ export class RelationshipSet {
   empty() {
     return this.index.size === 0
   }
+}
+
+export class BlockAndMuteState {
+  blockIdx = new Map<string, Map<string, string>>()
+  muteIdx = new Map<string, Set<string>>()
+  muteListIdx = new Map<string, Map<string, string>>()
+  constructor(items: BlockAndMuteInfo[] = []) {
+    items.forEach((item) => this.add(item))
+  }
+  add(item: BlockAndMuteInfo) {
+    if (item.blocking) {
+      const map = this.blockIdx.get(item.source) ?? new Map()
+      map.set(item.target, item.blocking)
+      if (!this.blockIdx.has(item.source)) {
+        this.blockIdx.set(item.source, map)
+      }
+    }
+    if (item.blockedBy) {
+      const map = this.blockIdx.get(item.target) ?? new Map()
+      map.set(item.source, item.blockedBy)
+      if (!this.blockIdx.has(item.target)) {
+        this.blockIdx.set(item.target, map)
+      }
+    }
+    if (item.muting) {
+      const set = this.muteIdx.get(item.source) ?? new Set()
+      set.add(item.target)
+      if (!this.muteIdx.has(item.source)) {
+        this.muteIdx.set(item.source, set)
+      }
+    }
+    if (item.mutingViaList) {
+      const map = this.muteListIdx.get(item.source) ?? new Map()
+      map.set(item.target, item.mutingViaList)
+      if (!this.muteListIdx.has(item.source)) {
+        this.muteListIdx.set(item.source, map)
+      }
+    }
+  }
+  block(pair: RelationshipPair): boolean {
+    return !!this.blocking(pair) || !!this.blockedBy(pair)
+  }
+  blocking(pair: RelationshipPair): string | null {
+    return this.blockIdx.get(pair[0])?.get(pair[1]) ?? null
+  }
+  blockedBy(pair: RelationshipPair): string | null {
+    return this.blocking([pair[1], pair[0]])
+  }
+  mute(pair: RelationshipPair): boolean {
+    return !!this.muteIdx.get(pair[0])?.has(pair[1]) || !!this.muteList(pair)
+  }
+  muteList(pair: RelationshipPair): string | null {
+    return this.muteListIdx.get(pair[0])?.get(pair[1]) ?? null
+  }
+}
+
+type BlockAndMuteInfo = {
+  source: string
+  target: string
+  blocking: string | null
+  blockedBy: string | null
+  muting: true | null
+  mutingViaList: string | null
 }
