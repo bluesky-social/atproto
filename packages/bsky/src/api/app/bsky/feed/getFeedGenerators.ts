@@ -7,14 +7,6 @@ import { Database } from '../../../../db'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeedGenerators = createPipeline(
-    () => {
-      const db = ctx.db.getReplica()
-      return {
-        db,
-        feedService: ctx.services.feed(db),
-        actorService: ctx.services.actor(db),
-      }
-    },
     skeleton,
     hydration,
     noRules,
@@ -25,18 +17,24 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { feeds } = params
       const viewer = auth.credentials.did
-      const feedViews = await getFeedGenerators({ feeds, viewer })
+      const db = ctx.db.getReplica()
+      const feedService = ctx.services.feed(db)
+      const actorService = ctx.services.actor(db)
+
+      const view = await getFeedGenerators(
+        { feeds, viewer },
+        { db, feedService, actorService },
+      )
+
       return {
         encoding: 'application/json',
-        body: {
-          feeds: feedViews,
-        },
+        body: view,
       }
     },
   })
 }
 
-async function skeleton(params: Params, ctx: Context) {
+const skeleton = async (params: Params, ctx: Context) => {
   const { feedService } = ctx
   const genInfos = await feedService.getFeedGeneratorInfos(
     params.feeds,
@@ -48,7 +46,7 @@ async function skeleton(params: Params, ctx: Context) {
   }
 }
 
-async function hydration(state: SkeletonState, ctx: Context) {
+const hydration = async (state: SkeletonState, ctx: Context) => {
   const { actorService } = ctx
   const profiles = await actorService.views.profiles(
     state.generators.map((gen) => gen.creator),
@@ -60,11 +58,12 @@ async function hydration(state: SkeletonState, ctx: Context) {
   }
 }
 
-function presentation(state: HydrationState, ctx: Context) {
+const presentation = (state: HydrationState, ctx: Context) => {
   const { feedService } = ctx
-  return state.generators.map((gen) =>
+  const feeds = state.generators.map((gen) =>
     feedService.views.formatFeedGeneratorView(gen, state.profiles),
   )
+  return { feeds }
 }
 
 type Context = {
