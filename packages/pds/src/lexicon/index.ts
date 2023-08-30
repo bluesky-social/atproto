@@ -83,6 +83,7 @@ import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
 import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
+import * as AppBskyFeedGetFeedSuggestions from './types/app/bsky/feed/getFeedSuggestions'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
@@ -1106,6 +1107,17 @@ export class FeedNS {
     >,
   ) {
     const nsid = 'app.bsky.feed.getFeedSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getFeedSuggestions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyFeedGetFeedSuggestions.Handler<ExtractAuth<AV>>,
+      AppBskyFeedGetFeedSuggestions.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getFeedSuggestions' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
