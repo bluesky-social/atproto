@@ -166,8 +166,8 @@ export class RepoService {
   ): Promise<CommitData> {
     // this is not in a txn, so this won't actually hold the lock,
     // we just check if it is currently held by another txn
-    const obtained = await storage.lockRepo()
-    if (!obtained) {
+    const available = await storage.lockAvailable()
+    if (!available) {
       throw new ConcurrentWriteError()
     }
     const currRoot = await storage.getRootDetailed()

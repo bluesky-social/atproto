@@ -24,10 +24,14 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
     super()
   }
 
-  // note this method will return null if the repo has a lock on it currently
   async lockRepo(): Promise<boolean> {
     if (this.db.dialect === 'sqlite') return true
-    return this.db.txAdvisoryLock(this.did)
+    return this.db.takeTxAdvisoryLock(this.did)
+  }
+
+  async lockAvailable(): Promise<boolean> {
+    if (this.db.dialect === 'sqlite') return true
+    return this.db.checkTxAdvisoryLock(this.did)
   }
 
   async getRoot(): Promise<CID | null> {
