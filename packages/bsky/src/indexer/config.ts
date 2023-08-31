@@ -15,6 +15,7 @@ export interface IndexerConfigValues {
   handleResolveNameservers?: string[]
   labelerDid: string
   hiveApiKey?: string
+  imgUriEndpoint: string
   labelerKeywords: Record<string, string>
   labelerPushUrl?: string
   indexerConcurrency?: number
@@ -65,6 +66,7 @@ export class IndexerConfig {
     const labelerPushUrl =
       overrides?.labelerPushUrl || process.env.LABELER_PUSH_URL || undefined
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
+    const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
     const indexerPartitionIds =
       overrides?.indexerPartitionIds ||
       (process.env.INDEXER_PARTITION_IDS
@@ -86,6 +88,7 @@ export class IndexerConfig {
     assert(dbPostgresUrl)
     assert(redisHost || (redisSentinelName && redisSentinelHosts?.length))
     assert(indexerPartitionIds.length > 0)
+    assert(imgUriEndpoint)
     return new IndexerConfig({
       version,
       dbPostgresUrl,
@@ -101,6 +104,7 @@ export class IndexerConfig {
       labelerDid,
       labelerPushUrl,
       hiveApiKey,
+      imgUriEndpoint,
       indexerPartitionIds,
       indexerConcurrency,
       indexerPartitionBatchSize,
@@ -168,6 +172,10 @@ export class IndexerConfig {
 
   get hiveApiKey() {
     return this.cfg.hiveApiKey
+  }
+
+  get imgUriEndpoint() {
+    return this.cfg.imgUriEndpoint
   }
 
   get indexerConcurrency() {

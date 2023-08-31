@@ -9,10 +9,12 @@ import { IndexerConfig } from './config'
 import { IndexerContext } from './context'
 import { createServices } from './services'
 import { IndexerSubscription } from './subscription'
-import { HiveLabeler, KeywordLabeler, Labeler } from '../labeler'
+import { AutoModerator } from '../auto-moderator'
 import { Redis } from '../redis'
 import { NotificationServer } from '../notifications'
 import { CloseFn, createServer, startServer } from './server'
+import { ImageUriBuilder } from '../image/uri'
+import { ImageInvalidator } from '../image/invalidator'
 
 export { IndexerConfig } from './config'
 export type { IndexerConfigValues } from './config'
@@ -38,6 +40,7 @@ export class BskyIndexer {
   static create(opts: {
     db: PrimaryDatabase
     redis: Redis
+    imgInvalidator: ImageInvalidator
     cfg: IndexerConfig
   }): BskyIndexer {
     const { db, redis, cfg } = opts
@@ -52,28 +55,24 @@ export class BskyIndexer {
       backupNameservers: cfg.handleResolveNameservers,
     })
     const backgroundQueue = new BackgroundQueue(db)
-    let labeler: Labeler
-    if (cfg.hiveApiKey) {
-      labeler = new HiveLabeler(cfg.hiveApiKey, {
-        db,
-        cfg,
-        idResolver,
-        backgroundQueue,
-      })
-    } else {
-      labeler = new KeywordLabeler({
-        db,
-        cfg,
-        idResolver,
-        backgroundQueue,
-      })
-    }
+
+    const imgUriBuilder = new ImageUriBuilder(cfg.imgUriEndpoint)
+    const imgInvalidator = opts.imgInvalidator
+    const autoMod = new AutoModerator({
+      db,
+      idResolver,
+      cfg,
+      backgroundQueue,
+      imgUriBuilder,
+      imgInvalidator,
+    })
+
     const notifServer = cfg.pushNotificationEndpoint
       ? new NotificationServer(db, cfg.pushNotificationEndpoint)
       : undefined
     const services = createServices({
       idResolver,
-      labeler,
+      autoMod,
       backgroundQueue,
       notifServer,
     })

@@ -1,13 +1,13 @@
 import axios from 'axios'
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
-import { resolveBlob } from './api/blob-resolver'
-import { retryHttp } from './util/retry'
-import { PrimaryDatabase } from './db'
+import { resolveBlob } from '../api/blob-resolver'
+import { retryHttp } from '../util/retry'
+import { PrimaryDatabase } from '../db'
 import { IdResolver } from '@atproto/identity'
-import { labelerLogger as log } from './logger'
+import { labelerLogger as log } from '../logger'
 
-export class BlobScanner {
+export class ImageTakedowner {
   protected auth: string
 
   constructor(
@@ -18,7 +18,7 @@ export class BlobScanner {
     this.auth = basicAuth(this.password)
   }
 
-  async scanImage(did: string, cid: CID): Promise<ScannerResult | null> {
+  async scanImage(did: string, cid: CID): Promise<string[]> {
     const res = await retryHttp(async () => {
       try {
         return await this.makeReq(did, cid)
@@ -49,22 +49,17 @@ export class BlobScanner {
     return data
   }
 
-  parseRes(res: ScannerResp): ScannerResult | null {
+  parseRes(res: ScannerResp): string[] {
     if (!res.match || res.match.status !== 'success') {
-      return null
+      return []
     }
     const labels: string[] = []
-    let shouldTakedown = false
     for (const hit of res.match.hits) {
-      labels.push(hit.label)
       if (TAKEDOWN_LABELS.includes(hit.label)) {
-        shouldTakedown = true
+        labels.push(hit.label)
       }
     }
-    return {
-      labels,
-      shouldTakedown,
-    }
+    return labels
   }
 
   getReqUrl(params: { did: string }) {
@@ -73,11 +68,6 @@ export class BlobScanner {
 }
 
 const TAKEDOWN_LABELS = ['csam', 'csem']
-
-type ScannerResult = {
-  labels: string[]
-  shouldTakedown: boolean
-}
 
 type ScannerResp = {
   blob: unknown
