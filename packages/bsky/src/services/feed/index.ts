@@ -309,15 +309,14 @@ export class FeedService {
       }
     }
     // compute block state from all actor relationships among posts
-    const blockSet = await this.services.graph.getBlockSet(relationships)
-    if (blockSet.empty()) return {}
+    const blockState = await this.services.graph.getBlockState(relationships)
     const result: PostBlocksMap = {}
     Object.entries(byPost).forEach(([uri, block]) => {
-      if (block.embed && blockSet.has(block.embed)) {
+      if (block.embed && blockState.block(block.embed)) {
         result[uri] ??= {}
         result[uri].embed = true
       }
-      if (block.reply && blockSet.has(block.reply)) {
+      if (block.reply && blockState.block(block.reply)) {
         result[uri] ??= {}
         result[uri].reply = true
       }
