@@ -2,10 +2,7 @@ import axios from 'axios'
 import FormData from 'form-data'
 import { CID } from 'multiformats/cid'
 import { IdResolver } from '@atproto/identity'
-import { Labeler } from './base'
-import { keywordLabeling } from './util'
 import { PrimaryDatabase } from '../db'
-import { BackgroundQueue } from '../background'
 import { IndexerConfig } from '../indexer/config'
 import { retryHttp } from '../util/retry'
 import { resolveBlob } from '../api/blob-resolver'
@@ -13,9 +10,8 @@ import { labelerLogger as log } from '../logger'
 
 const HIVE_ENDPOINT = 'https://api.thehive.ai/api/v2/task/sync'
 
-export class HiveLabeler extends Labeler {
+export class HiveLabeler {
   hiveApiKey: string
-  keywords: Record<string, string>
 
   constructor(
     hiveApiKey: string,
@@ -23,16 +19,9 @@ export class HiveLabeler extends Labeler {
       db: PrimaryDatabase
       idResolver: IdResolver
       cfg: IndexerConfig
-      backgroundQueue: BackgroundQueue
     },
   ) {
-    super(ctx)
     this.hiveApiKey = hiveApiKey
-    this.keywords = ctx.cfg.labelerKeywords
-  }
-
-  async labelText(text: string): Promise<string[]> {
-    return keywordLabeling(this.keywords, text)
   }
 
   async labelImg(did: string, cid: CID): Promise<string[]> {
