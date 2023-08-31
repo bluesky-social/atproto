@@ -20,10 +20,8 @@ COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
 COPY ./services/bsky ./services/bsky
 
-RUN ATP_BUILD_SHALLOW=true pnpm install --shamefully-hoist --frozen-lockfile > /dev/null
-RUN pnpm build > /dev/null
-# Remove non-prod deps
-RUN pnpm install --shamefully-hoist --prod --ignore-scripts --prefer-offline > /dev/null
+RUN pnpm install --shamefully-hoist --frozen-lockfile > /dev/null
+RUN ATP_BUILD_SHALLOW=true pnpm build > /dev/null
 RUN pnpm update-main-to-dist > /dev/null
 
 WORKDIR services/bsky
