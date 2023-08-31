@@ -2,7 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.feed.getFeedSuggestions({
+  server.app.bsky.feed.getSuggestedFeeds({
     auth: ctx.authOptionalVerifier,
     handler: async ({ auth }) => {
       const viewer = auth.credentials.did
@@ -15,7 +15,10 @@ export default function (server: Server, ctx: AppContext) {
         .selectAll()
         .execute()
 
-      const genInfos = await feedService.getFeedGeneratorInfos(feedsRes.map(r => r.uri), viewer)
+      const genInfos = await feedService.getFeedGeneratorInfos(
+        feedsRes.map((r) => r.uri),
+        viewer,
+      )
       const genList = Object.values(genInfos)
 
       const creators = genList.map((gen) => gen.creator)

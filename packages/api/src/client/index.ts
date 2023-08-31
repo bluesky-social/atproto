@@ -94,11 +94,11 @@ import * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
 import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
-import * as AppBskyFeedGetFeedSuggestions from './types/app/bsky/feed/getFeedSuggestions'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
+import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedLike from './types/app/bsky/feed/like'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
@@ -216,11 +216,11 @@ export * as AppBskyFeedGetFeed from './types/app/bsky/feed/getFeed'
 export * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGenerator'
 export * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
 export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
-export * as AppBskyFeedGetFeedSuggestions from './types/app/bsky/feed/getFeedSuggestions'
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
+export * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 export * as AppBskyFeedLike from './types/app/bsky/feed/like'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
@@ -1315,17 +1315,6 @@ export class FeedNS {
       })
   }
 
-  getFeedSuggestions(
-    params?: AppBskyFeedGetFeedSuggestions.QueryParams,
-    opts?: AppBskyFeedGetFeedSuggestions.CallOptions,
-  ): Promise<AppBskyFeedGetFeedSuggestions.Response> {
-    return this._service.xrpc
-      .call('app.bsky.feed.getFeedSuggestions', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyFeedGetFeedSuggestions.toKnownErr(e)
-      })
-  }
-
   getLikes(
     params?: AppBskyFeedGetLikes.QueryParams,
     opts?: AppBskyFeedGetLikes.CallOptions,
@@ -1367,6 +1356,17 @@ export class FeedNS {
       .call('app.bsky.feed.getRepostedBy', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetRepostedBy.toKnownErr(e)
+      })
+  }
+
+  getSuggestedFeeds(
+    params?: AppBskyFeedGetSuggestedFeeds.QueryParams,
+    opts?: AppBskyFeedGetSuggestedFeeds.CallOptions,
+  ): Promise<AppBskyFeedGetSuggestedFeeds.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getSuggestedFeeds', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetSuggestedFeeds.toKnownErr(e)
       })
   }
 

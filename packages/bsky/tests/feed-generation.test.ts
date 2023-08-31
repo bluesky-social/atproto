@@ -328,9 +328,9 @@ describe('feed generation', () => {
     })
   })
 
-  describe('getFeedSuggestions', () => {
+  describe('getSuggestedFeeds', () => {
     it('returns list of suggested feed generators', async () => {
-      const resEven = await agent.api.app.bsky.feed.getFeedSuggestions(
+      const resEven = await agent.api.app.bsky.feed.getSuggestedFeeds(
         {},
         { headers: await network.serviceHeaders(sc.dids.bob) },
       )

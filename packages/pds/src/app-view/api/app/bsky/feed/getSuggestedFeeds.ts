@@ -2,13 +2,13 @@ import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.feed.getFeedSuggestions({
+  server.app.bsky.feed.getSuggestedFeeds({
     auth: ctx.accessVerifier,
     handler: async ({ req, auth, params }) => {
       const requester = auth.credentials.did
 
       if (await ctx.canProxyRead(req, requester)) {
-        const res = await ctx.appviewAgent.api.app.bsky.feed.getFeedSuggestions(
+        const res = await ctx.appviewAgent.api.app.bsky.feed.getSuggestedFeeds(
           params,
           await ctx.serviceAuthHeaders(requester),
         )

@@ -1271,7 +1271,7 @@ Object {
 }
 `;
 
-exports[`feed generation getFeedSuggestions returns list of suggested feed generators 1`] = `
+exports[`feed generation getSuggestedFeeds returns list of suggested feed generators 1`] = `
 Object {
   "feeds": Array [
     Object {

@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.feed.getFeedSuggestions",
+  "id": "app.bsky.feed.getSuggestedFeeds",
   "defs": {
     "main": {
       "type": "query",
