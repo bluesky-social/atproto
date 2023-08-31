@@ -24,7 +24,7 @@ COPY ./services/pds ./services/pds
 RUN ATP_BUILD_SHALLOW=true pnpm install --frozen-lockfile > /dev/null
 RUN pnpm build > /dev/null
 # Remove non-prod deps
-RUN pnpm install --prod --ignore-scripts --prefer-offline > /dev/null
+RUN pnpm install --shamefully-hoist --prod --ignore-scripts --prefer-offline > /dev/null
 RUN pnpm update-main-to-dist > /dev/null
 
 WORKDIR services/pds
