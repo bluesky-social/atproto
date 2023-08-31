@@ -20,9 +20,16 @@ COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
 COPY ./services/bsky ./services/bsky
 
-RUN pnpm install --shamefully-hoist --frozen-lockfile > /dev/null
+# install all deps
+RUN pnpm install --frozen-lockfile > /dev/null
+# build all packages with external node_modules
 RUN ATP_BUILD_SHALLOW=true pnpm build > /dev/null
+# update main with publishConfig
 RUN pnpm update-main-to-dist > /dev/null
+# clean up
+RUN rm -rf node_modules
+# install only prod deps, hoisted to root node_modules dir
+RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline > /dev/null
 
 WORKDIR services/bsky
 
