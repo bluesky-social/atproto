@@ -167,24 +167,6 @@ export class ActorViews {
     }, {} as Record<string, ProfileViewDetailed>)
   }
 
-  async hydrateProfilesDetailed(
-    results: ActorResult[],
-    viewer: string | null,
-    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
-  ): Promise<ProfileViewDetailed[]> {
-    const profiles = await this.profilesDetailed(results, viewer, opts)
-    return mapDefined(results, (result) => profiles[result.did])
-  }
-
-  async profileDetailed(
-    result: ActorResult,
-    viewer: string | null,
-    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
-  ): Promise<ProfileViewDetailed | null> {
-    const profiles = await this.profilesDetailed([result], viewer, opts)
-    return profiles[result.did] ?? null
-  }
-
   async profiles(
     results: (ActorResult | string)[], // @TODO simplify down to just string[]
     viewer: string | null,
