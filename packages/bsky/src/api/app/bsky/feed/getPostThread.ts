@@ -1,13 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import {
-  FeedRow,
-  PostEmbedViews,
-  PostBlocksMap,
-} from '../../../../services/feed/types'
-import { FeedService, PostInfoMap } from '../../../../services/feed'
-import { LabelService, Labels } from '../../../../services/label'
 import {
   BlockedPost,
   NotFoundPost,
@@ -15,13 +7,18 @@ import {
   isNotFoundPost,
 } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
+import AppContext from '../../../../context'
+import {
+  FeedService,
+  FeedRow,
+  FeedHydrationState,
+} from '../../../../services/feed'
 import {
   getAncestorsAndSelfQb,
   getDescendentsQb,
 } from '../../../../services/util/post'
 import { Database } from '../../../../db'
 import { setRepoRev } from '../../../util'
-import { ActorInfoMap, ActorService } from '../../../../services/actor'
 import { createPipeline, noRules } from '../../../../pipeline'
 
 export default function (server: Server, ctx: AppContext) {
@@ -38,13 +35,9 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.getReplica('thread')
       const actorService = ctx.services.actor(db)
       const feedService = ctx.services.feed(db)
-      const labelService = ctx.services.label(db)
 
       const [result, repoRev] = await Promise.allSettled([
-        getPostThread(
-          { ...params, viewer },
-          { db, actorService, feedService, labelService },
-        ),
+        getPostThread({ ...params, viewer }, { db, feedService }),
         actorService.getRepoRev(viewer),
       ])
 
@@ -72,29 +65,14 @@ const skeleton = async (params: Params, ctx: Context) => {
 }
 
 const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { actorService, feedService, labelService } = ctx
+  const { feedService } = ctx
   const {
     threadData,
     params: { viewer },
   } = state
   const relevant = getRelevantIds(threadData)
-  const [actors, posts, labels] = await Promise.all([
-    actorService.views.profiles(Array.from(relevant.dids), viewer, {
-      skipLabels: true,
-    }),
-    feedService.getPostInfos(Array.from(relevant.uris), viewer),
-    labelService.getLabelsForSubjects([...relevant.uris, ...relevant.dids]),
-  ])
-  const blocks = await feedService.blocksForPosts(posts)
-  const embeds = await feedService.embedsForPosts(posts, blocks, viewer)
-  return {
-    ...state,
-    actors,
-    posts,
-    labels,
-    blocks,
-    embeds,
-  }
+  const hydrated = await feedService.feedHydration({ ...relevant, viewer })
+  return { ...state, ...hydrated }
 }
 
 const presentation = (state: HydrationState, ctx: Context) => {
@@ -293,9 +271,7 @@ type PostThread = {
 
 type Context = {
   db: Database
-  actorService: ActorService
   feedService: FeedService
-  labelService: LabelService
 }
 
 type Params = QueryParams & { viewer: string | null }
@@ -305,11 +281,4 @@ type SkeletonState = {
   threadData: PostThread
 }
 
-type HydrationState = SkeletonState & {
-  threadData: PostThread
-  posts: PostInfoMap
-  actors: ActorInfoMap
-  embeds: PostEmbedViews
-  blocks: PostBlocksMap
-  labels: Labels
-}
+type HydrationState = SkeletonState & FeedHydrationState

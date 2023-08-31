@@ -55,28 +55,29 @@ export const skeleton = async (params: Params, ctx: Context) => {
   const { db, actorService, feedService, graphService } = ctx
   const { ref } = db.db.dynamic
 
-  // first verify there is not a block between requester & subject
-  if (viewer !== null) {
-    const blocks = await graphService.getBlocks(viewer, actor)
-    if (blocks.blocking) {
-      throw new InvalidRequestError(
-        `Requester has blocked actor: ${actor}`,
-        'BlockedActor',
-      )
-    } else if (blocks.blockedBy) {
-      throw new InvalidRequestError(
-        `Requester is blocked by actor: $${actor}`,
-        'BlockedByActor',
-      )
-    }
-  }
-
   // maybe resolve did first
   const actorRes = await actorService.getActor(actor)
   if (!actorRes) {
     throw new InvalidRequestError('Profile not found')
   }
   const actorDid = actorRes.did
+
+  // verify there is not a block between requester & subject
+  if (viewer !== null) {
+    const bam = await graphService.getBlockAndMuteState([[viewer, actorDid]])
+    if (bam.blocking([viewer, actorDid])) {
+      throw new InvalidRequestError(
+        `Requester has blocked actor: ${actor}`,
+        'BlockedActor',
+      )
+    }
+    if (bam.blockedBy([viewer, actorDid])) {
+      throw new InvalidRequestError(
+        `Requester is blocked by actor: $${actor}`,
+        'BlockedByActor',
+      )
+    }
+  }
 
   // defaults to posts, reposts, and replies
   let feedItemsQb = feedService
