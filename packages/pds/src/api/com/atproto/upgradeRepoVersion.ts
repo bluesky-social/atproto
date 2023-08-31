@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { TID, chunkArray } from '@atproto/common'
+import { TID, chunkArray, wait } from '@atproto/common'
 import { Server } from '../../../lexicon'
 import SqlRepoStorage from '../../../sql-repo-storage'
 import AppContext from '../../../context'
@@ -14,6 +14,7 @@ import {
 } from '@atproto/repo'
 import { CID } from 'multiformats/cid'
 import { formatSeqCommit, sequenceEvt } from '../../../sequencer'
+import { httpLogger as log } from '../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.upgradeRepoVersion({
@@ -22,11 +23,11 @@ export default function (server: Server, ctx: AppContext) {
       if (!auth.credentials.admin) {
         throw new InvalidRequestError('must be admin')
       }
-      const { did } = input.body
+      const { did, force } = input.body
 
       await ctx.db.transaction(async (dbTxn) => {
         const storage = new SqlRepoStorage(dbTxn, did)
-        await storage.lockRepo()
+        await obtainLock(storage)
         const prevCid = await storage.getRoot()
         if (!prevCid) {
           throw new InvalidRequestError('Could not find repo')
@@ -45,13 +46,23 @@ export default function (server: Server, ctx: AppContext) {
           data = await data.add(dataKey, cid)
         }
         const dataCid = await data.getPointer()
-        if (!dataCid.equals(prev.data)) {
+        if (!force && !dataCid.equals(prev.data)) {
           throw new InvalidRequestError('Data cid did not match')
         }
         const recordCids = records.map((r) => r.cid)
         const diff = await DataDiff.of(data, null)
         const cidsToKeep = [...recordCids, ...diff.newMstBlocks.cids()]
         const rev = TID.nextStr(prev.rev)
+        if (force) {
+          const got = await storage.getBlocks(diff.newMstBlocks.cids())
+          const toAdd = diff.newMstBlocks.getMany(got.missing)
+          log.info(
+            { missing: got.missing.length },
+            'force added missing blocks',
+          )
+          // puts any new blocks & no-ops for already existing
+          await storage.putMany(toAdd.blocks, rev)
+        }
         for (const chunk of chunkArray(cidsToKeep, 500)) {
           const cidStrs = chunk.map((c) => c.toString())
           await dbTxn.db
@@ -114,4 +125,16 @@ export default function (server: Server, ctx: AppContext) {
       })
     },
   })
+}
+
+const obtainLock = async (storage: SqlRepoStorage, tries = 20) => {
+  const obtained = await storage.lockRepo()
+  if (obtained) {
+    return
+  }
+  if (tries < 1) {
+    throw new InvalidRequestError('could not obtain lock')
+  }
+  await wait(50)
+  return obtainLock(storage, tries - 1)
 }

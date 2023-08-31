@@ -24,10 +24,14 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
     super()
   }
 
-  // note this method will return null if the repo has a lock on it currently
   async lockRepo(): Promise<boolean> {
     if (this.db.dialect === 'sqlite') return true
-    return this.db.txAdvisoryLock(this.did)
+    return this.db.takeTxAdvisoryLock(this.did)
+  }
+
+  async lockAvailable(): Promise<boolean> {
+    if (this.db.dialect === 'sqlite') return true
+    return this.db.checkTxAdvisoryLock(this.did)
   }
 
   async getRoot(): Promise<CID | null> {
@@ -199,6 +203,44 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
         )
         .execute()
     }
+  }
+
+  async getCarStreamLegacy() {
+    const root = await this.getRoot()
+    if (!root) {
+      throw new RepoRootNotFoundError()
+    }
+    return writeCarStream(root, async (car) => {
+      let cursor: CID | undefined = undefined
+      do {
+        const res = await this.getBlockRangeLegacy(cursor)
+        for (const row of res) {
+          await car.put({
+            cid: CID.parse(row.cid),
+            bytes: row.content,
+          })
+        }
+        const lastRow = res.at(-1)
+        if (lastRow) {
+          cursor = CID.parse(lastRow.cid)
+        } else {
+          cursor = undefined
+        }
+      } while (cursor)
+    })
+  }
+
+  async getBlockRangeLegacy(cursor?: CID) {
+    let builder = this.db.db
+      .selectFrom('ipld_block')
+      .where('creator', '=', this.did)
+      .select(['cid', 'content'])
+      .orderBy('cid', 'asc')
+      .limit(500)
+    if (cursor) {
+      builder = builder.where('cid', '>', cursor.toString())
+    }
+    return builder.execute()
   }
 
   async getCarStream(since?: string) {

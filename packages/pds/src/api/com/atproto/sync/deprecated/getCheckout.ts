@@ -6,6 +6,7 @@ import SqlRepoStorage, {
 } from '../../../../../sql-repo-storage'
 import AppContext from '../../../../../context'
 import { isUserOrAdmin } from '../../../../../auth'
+import { getFullRepo } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getCheckout({
@@ -23,15 +24,20 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const storage = new SqlRepoStorage(ctx.db, did)
-      let carStream: AsyncIterable<Uint8Array>
-      try {
-        carStream = await storage.getCarStream()
-      } catch (err) {
-        if (err instanceof RepoRootNotFoundError) {
-          throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
-        }
-        throw err
+      const head = await storage.getRoot()
+      if (!head) {
+        throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
       }
+      const carStream = getFullRepo(storage, head)
+      // let carStream: AsyncIterable<Uint8Array>
+      // try {
+      //   carStream = await storage.getCarStream()
+      // } catch (err) {
+      //   if (err instanceof RepoRootNotFoundError) {
+      //     throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
+      //   }
+      //   throw err
+      // }
 
       return {
         encoding: 'application/vnd.ipld.car',

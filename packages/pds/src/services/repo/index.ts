@@ -109,8 +109,8 @@ export class RepoService {
   ) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
-    const locked = await storage.lockRepo()
-    if (!locked) {
+    const obtained = await storage.lockRepo()
+    if (!obtained) {
       throw new ConcurrentWriteError()
     }
     await Promise.all([
@@ -135,8 +135,13 @@ export class RepoService {
     const { did, writes, swapCommitCid } = toWrite
     // we may have some useful cached blocks in the storage, so re-use the previous instance
     const storage = prevStorage ?? new SqlRepoStorage(this.db, did)
-    const commit = await this.formatCommit(storage, did, writes, swapCommitCid)
     try {
+      const commit = await this.formatCommit(
+        storage,
+        did,
+        writes,
+        swapCommitCid,
+      )
       await this.serviceTx(async (srvcTx) =>
         srvcTx.processCommit(did, writes, commit, new Date().toISOString()),
       )
@@ -159,6 +164,12 @@ export class RepoService {
     writes: PreparedWrite[],
     swapCommit?: CID,
   ): Promise<CommitData> {
+    // this is not in a txn, so this won't actually hold the lock,
+    // we just check if it is currently held by another txn
+    const available = await storage.lockAvailable()
+    if (!available) {
+      throw new ConcurrentWriteError()
+    }
     const currRoot = await storage.getRootDetailed()
     if (!currRoot) {
       throw new InvalidRequestError(
@@ -171,9 +182,13 @@ export class RepoService {
     // cache last commit since there's likely overlap
     await storage.cacheRev(currRoot.rev)
     const recordTxn = this.services.record(this.db)
+    const newRecordCids: CID[] = []
     const delAndUpdateUris: AtUri[] = []
     for (const write of writes) {
       const { action, uri, swapCid } = write
+      if (action !== WriteOpAction.Delete) {
+        newRecordCids.push(write.cid)
+      }
       if (action !== WriteOpAction.Create) {
         delAndUpdateUris.push(uri)
       }
@@ -195,9 +210,22 @@ export class RepoService {
         throw new BadRecordSwapError(currRecord)
       }
     }
-    const writeOps = writes.map(writeToOp)
-    const repo = await Repo.load(storage, currRoot.cid)
-    const commit = await repo.formatCommit(writeOps, this.repoSigningKey)
+
+    let commit: CommitData
+    try {
+      const repo = await Repo.load(storage, currRoot.cid)
+      const writeOps = writes.map(writeToOp)
+      commit = await repo.formatCommit(writeOps, this.repoSigningKey)
+    } catch (err) {
+      // if an error occurs, check if it is attributable to a concurrent write
+      const curr = await storage.getRoot()
+      if (!currRoot.cid.equals(curr)) {
+        throw new ConcurrentWriteError()
+      } else {
+        throw err
+      }
+    }
+
     // find blocks that would be deleted but are referenced by another record
     const dupeRecordCids = await this.getDuplicateRecordCids(
       did,
@@ -206,6 +234,14 @@ export class RepoService {
     )
     for (const cid of dupeRecordCids) {
       commit.removedCids.delete(cid)
+    }
+
+    // find blocks that are relevant to ops but not included in diff
+    // (for instance a record that was moved but cid stayed the same)
+    const newRecordBlocks = commit.newBlocks.getMany(newRecordCids)
+    if (newRecordBlocks.missing.length > 0) {
+      const missingBlocks = await storage.getBlocks(newRecordBlocks.missing)
+      commit.newBlocks.addMap(missingBlocks.blocks)
     }
     return commit
   }
