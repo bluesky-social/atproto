@@ -64,14 +64,14 @@ export const skeleton = async (params: Params, ctx: Context) => {
 
   // verify there is not a block between requester & subject
   if (viewer !== null) {
-    const bam = await graphService.getBlockAndMuteState([[viewer, actorDid]])
-    if (bam.blocking([viewer, actorDid])) {
+    const blocks = await graphService.getBlockState([[viewer, actorDid]])
+    if (blocks.blocking([viewer, actorDid])) {
       throw new InvalidRequestError(
         `Requester has blocked actor: ${actor}`,
         'BlockedActor',
       )
     }
-    if (bam.blockedBy([viewer, actorDid])) {
+    if (blocks.blockedBy([viewer, actorDid])) {
       throw new InvalidRequestError(
         `Requester is blocked by actor: $${actor}`,
         'BlockedByActor',

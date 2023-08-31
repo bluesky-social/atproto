@@ -1,6 +1,5 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
-import { dedupeStrs } from '@atproto/common'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { Database } from '../../db'
 import { countAll, noMatch, notSoftDeletedClause } from '../../db/util'
@@ -17,13 +16,11 @@ import {
   isViewRecord,
 } from '../../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../../lexicon/types/app/bsky/embed/recordWithMedia'
-import { SkeletonFeedPost } from '../../lexicon/types/app/bsky/feed/defs'
 import {
   PostInfoMap,
   FeedItemType,
   FeedRow,
   FeedGenInfoMap,
-  PostViews,
   PostEmbedViews,
   RecordEmbedViewRecordMap,
   PostInfo,
@@ -31,8 +28,8 @@ import {
   PostBlocksMap,
   FeedHydrationState,
 } from './types'
-import { LabelService, Labels } from '../label'
-import { ActorInfoMap, ActorService } from '../actor'
+import { LabelService } from '../label'
+import { ActorService } from '../actor'
 import { GraphService, RelationshipPair } from '../graph'
 import { FeedViews } from './views'
 import { LabelCache } from '../../label-cache'
@@ -181,43 +178,6 @@ export class FeedService {
     )
   }
 
-  async getPostViews(
-    postUris: string[],
-    requester: string | null,
-    precomputed?: {
-      actors?: ActorInfoMap
-      posts?: PostInfoMap
-      embeds?: PostEmbedViews
-      blocks?: PostBlocksMap
-      labels?: Labels
-    },
-  ): Promise<PostViews> {
-    const uris = dedupeStrs(postUris)
-    const dids = dedupeStrs(postUris.map((uri) => new AtUri(uri).hostname))
-
-    const [actors, posts, labels] = await Promise.all([
-      precomputed?.actors ??
-        this.services.actor.views.profiles(dids, requester, {
-          skipLabels: true,
-        }),
-      precomputed?.posts ?? this.getPostInfos(uris, requester),
-      precomputed?.labels ??
-        this.services.label.getLabelsForSubjects([...uris, ...dids]),
-    ])
-    const blocks = precomputed?.blocks ?? (await this.blocksForPosts(posts))
-    const embeds =
-      precomputed?.embeds ??
-      (await this.embedsForPosts(posts, blocks, requester))
-
-    return uris.reduce((acc, cur) => {
-      const view = this.views.formatPostView(cur, actors, posts, embeds, labels)
-      if (view) {
-        acc[cur] = view
-      }
-      return acc
-    }, {} as PostViews)
-  }
-
   async getFeedItems(uris: string[]): Promise<Record<string, FeedRow>> {
     if (uris.length < 1) return {}
     const feedItems = await this.selectFeedItemQb()
@@ -226,19 +186,6 @@ export class FeedService {
     return feedItems.reduce((acc, item) => {
       return Object.assign(acc, { [item.uri]: item })
     }, {} as Record<string, FeedRow>)
-  }
-
-  async cleanFeedSkeleton(skeleton: SkeletonFeedPost[]): Promise<FeedRow[]> {
-    const feedItemUris = skeleton.map(getSkeleFeedItemUri)
-    const feedItems = await this.getFeedItems(feedItemUris)
-    const cleaned: FeedRow[] = []
-    for (const skeleItem of skeleton) {
-      const feedItem = feedItems[getSkeleFeedItemUri(skeleItem)]
-      if (feedItem && feedItem.postUri === skeleItem.post) {
-        cleaned.push(feedItem)
-      }
-    }
-    return cleaned
   }
 
   feedItemRefs(items: FeedRow[]) {
@@ -508,10 +455,4 @@ function applyEmbedBlock(
     }
   }
   return view
-}
-
-function getSkeleFeedItemUri(item: SkeletonFeedPost) {
-  return typeof item.reason?.repost === 'string'
-    ? item.reason.repost
-    : item.post
 }

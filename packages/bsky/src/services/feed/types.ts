@@ -30,8 +30,6 @@ export type PostEmbedView =
   | RecordEmbedView
   | RecordWithMediaEmbedView
 
-export type PostViews = { [uri: string]: PostView }
-
 export type PostInfo = {
   uri: string
   cid: string

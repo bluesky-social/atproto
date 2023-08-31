@@ -87,7 +87,7 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
   const timerHydr = new ServerTimer('hydr').start()
   const { feedService } = ctx
   const { params, feedSkele } = state
-  const feedItems = await feedService.cleanFeedSkeleton(feedSkele)
+  const feedItems = await cleanFeedSkeleton(feedSkele, ctx)
   const refs = feedService.feedItemRefs(feedItems)
   const hydrated = await feedService.feedHydration({
     ...refs,
@@ -219,4 +219,27 @@ const skeletonFromFeedGen = async (
     ...skeleton,
     feed: skeleton.feed.slice(0, params.limit), // enforce limit
   }
+}
+
+const cleanFeedSkeleton = async (
+  skeleton: SkeletonFeedPost[],
+  ctx: Context,
+): Promise<FeedRow[]> => {
+  const { feedService } = ctx
+  const feedItemUris = skeleton.map(getSkeleFeedItemUri)
+  const feedItems = await feedService.getFeedItems(feedItemUris)
+  const cleaned: FeedRow[] = []
+  for (const skeleItem of skeleton) {
+    const feedItem = feedItems[getSkeleFeedItemUri(skeleItem)]
+    if (feedItem && feedItem.postUri === skeleItem.post) {
+      cleaned.push(feedItem)
+    }
+  }
+  return cleaned
+}
+
+const getSkeleFeedItemUri = (item: SkeletonFeedPost) => {
+  return typeof item.reason?.repost === 'string'
+    ? item.reason.repost
+    : item.post
 }
