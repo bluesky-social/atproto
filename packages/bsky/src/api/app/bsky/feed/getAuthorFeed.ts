@@ -50,7 +50,10 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-export const skeleton = async (params: Params, ctx: Context) => {
+export const skeleton = async (
+  params: Params,
+  ctx: Context,
+): Promise<SkeletonState> => {
   const { cursor, limit, actor, filter, viewer } = params
   const { db, actorService, feedService, graphService } = ctx
   const { ref } = db.db.dynamic

@@ -343,15 +343,6 @@ export class ActorViews {
     const profiles = await this.profilesBasic(results, viewer, opts)
     return mapDefined(results, (result) => profiles[result.did])
   }
-
-  async profileBasic(
-    result: ActorResult,
-    viewer: string | null,
-    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
-  ): Promise<ProfileViewBasic | null> {
-    const profiles = await this.profilesBasic([result], viewer, opts)
-    return profiles[result.did] ?? null
-  }
 }
 
 type ActorResult = Actor

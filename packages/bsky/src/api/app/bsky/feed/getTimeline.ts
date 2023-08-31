@@ -43,7 +43,10 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-export const skeleton = async (params: Params, ctx: Context) => {
+export const skeleton = async (
+  params: Params,
+  ctx: Context,
+): Promise<SkeletonState> => {
   const { cursor, limit, algorithm, viewer } = params
   const { db } = ctx
   const { ref } = db.db.dynamic
@@ -114,7 +117,10 @@ export const skeleton = async (params: Params, ctx: Context) => {
   }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
+const hydration = async (
+  state: SkeletonState,
+  ctx: Context,
+): Promise<HydrationState> => {
   const { feedService } = ctx
   const { params, feedItems } = state
   const refs = feedService.feedItemRefs(feedItems)
@@ -125,7 +131,7 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
   return { ...state, ...hydrated }
 }
 
-const noBlocksOrMutes = (state: HydrationState) => {
+const noBlocksOrMutes = (state: HydrationState): HydrationState => {
   const { viewer } = state.params
   state.feedItems = state.feedItems.filter(
     (item) =>

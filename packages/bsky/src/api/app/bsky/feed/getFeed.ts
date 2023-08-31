@@ -60,7 +60,10 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (params: Params, ctx: Context) => {
+const skeleton = async (
+  params: Params,
+  ctx: Context,
+): Promise<SkeletonState> => {
   const timerSkele = new ServerTimer('skele').start()
   const { db } = ctx
   const { feed } = params
