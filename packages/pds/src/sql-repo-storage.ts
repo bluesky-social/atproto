@@ -64,6 +64,7 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
       .where('creator', '=', this.did)
       .where('repoRev', '=', rev)
       .select(['ipld_block.cid', 'ipld_block.content'])
+      .limit(15)
       .execute()
     for (const row of res) {
       this.cache.set(CID.parse(row.cid), row.content)

@@ -180,7 +180,7 @@ export class RepoService {
       throw new BadCommitSwapError(currRoot.cid)
     }
     // cache last commit since there's likely overlap
-    // await storage.cacheRev(currRoot.rev)
+    await storage.cacheRev(currRoot.rev)
     const recordTxn = this.services.record(this.db)
     const newRecordCids: CID[] = []
     const delAndUpdateUris: AtUri[] = []
