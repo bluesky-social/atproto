@@ -53,8 +53,10 @@ export default function (server: Server, ctx: AppContext) {
         const cidsToKeep = [...recordCids, ...diff.newMstBlocks.cids()]
         const rev = TID.nextStr(prev.rev)
         if (force) {
+          const got = await storage.getBlocks(diff.newMstBlocks.cids())
+          const toAdd = diff.newMstBlocks.getMany(got.missing)
           // puts any new blocks & no-ops for already existing
-          await storage.putMany(diff.newMstBlocks, rev)
+          await storage.putMany(toAdd, rev)
         }
         for (const chunk of chunkArray(cidsToKeep, 500)) {
           const cidStrs = chunk.map((c) => c.toString())
