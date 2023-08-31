@@ -14,6 +14,7 @@ import {
 } from '@atproto/repo'
 import { CID } from 'multiformats/cid'
 import { formatSeqCommit, sequenceEvt } from '../../../sequencer'
+import { httpLogger as log } from '../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.upgradeRepoVersion({
@@ -55,8 +56,12 @@ export default function (server: Server, ctx: AppContext) {
         if (force) {
           const got = await storage.getBlocks(diff.newMstBlocks.cids())
           const toAdd = diff.newMstBlocks.getMany(got.missing)
+          log.info(
+            { missing: got.missing.length },
+            'force added missing blocks',
+          )
           // puts any new blocks & no-ops for already existing
-          await storage.putMany(toAdd, rev)
+          await storage.putMany(toAdd.blocks, rev)
         }
         for (const chunk of chunkArray(cidsToKeep, 500)) {
           const cidStrs = chunk.map((c) => c.toString())
