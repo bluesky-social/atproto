@@ -4,6 +4,6 @@
   "dependencies": {
     "@atproto/aws": "workspace:^",
     "@atproto/bsky": "workspace:^",
-    "dd-trace": "^3.8.0"
+    "dd-trace": "3.13.2"
   }
 }

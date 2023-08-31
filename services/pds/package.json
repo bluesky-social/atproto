@@ -5,6 +5,6 @@
     "@atproto/aws": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/pds": "workspace:^",
-    "dd-trace": "^3.8.0"
+    "dd-trace": "3.13.2"
   }
 }
