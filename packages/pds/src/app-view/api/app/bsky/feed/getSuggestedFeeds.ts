@@ -6,23 +6,13 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ req, auth, params }) => {
       const requester = auth.credentials.did
-
-      if (await ctx.canProxyRead(req, requester)) {
-        const res = await ctx.appviewAgent.api.app.bsky.feed.getSuggestedFeeds(
-          params,
-          await ctx.serviceAuthHeaders(requester),
-        )
-        return {
-          encoding: 'application/json',
-          body: res.data,
-        }
-      }
-
+      const res = await ctx.appviewAgent.api.app.bsky.feed.getSuggestedFeeds(
+        params,
+        await ctx.serviceAuthHeaders(requester),
+      )
       return {
         encoding: 'application/json',
-        body: {
-          feeds: [],
-        },
+        body: res.data,
       }
     },
   })
