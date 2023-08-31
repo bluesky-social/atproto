@@ -21,7 +21,6 @@ import {
   ViewRecord,
 } from '../../lexicon/types/app/bsky/embed/record'
 import {
-  ActorInfoMap,
   PostEmbedViews,
   FeedGenInfo,
   FeedRow,
@@ -29,10 +28,10 @@ import {
   PostInfoMap,
   RecordEmbedViewRecord,
   PostBlocksMap,
-  kSelfLabels,
 } from './types'
 import { Labels, getSelfLabels } from '../label'
 import { ImageUriBuilder } from '../../image/uri'
+import { ActorInfoMap, kSelfLabels } from '../actor'
 
 export class FeedViews {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}

@@ -13,48 +13,45 @@ import {
 import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
 import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky/feed/getFeed'
 import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
+import { SkeletonFeedPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { AlgoResponse } from '../../../../feed-gen/types'
 import { Database } from '../../../../db'
+import {
+  FeedHydrationState,
+  FeedRow,
+  FeedService,
+} from '../../../../services/feed'
+import { createPipeline } from '../../../../pipeline'
 
 export default function (server: Server, ctx: AppContext) {
+  const getFeed = createPipeline(
+    skeleton,
+    hydration,
+    noBlocksOrMutes,
+    presentation,
+  )
   server.app.bsky.feed.getFeed({
     auth: ctx.authVerifierAnyAudience,
     handler: async ({ params, auth, req }) => {
-      const { feed } = params
-      const viewer = auth.credentials.did
-
       const db = ctx.db.getReplica()
       const feedService = ctx.services.feed(db)
-      const localAlgo = ctx.algos[feed]
+      const viewer = auth.credentials.did
 
-      const timerSkele = new ServerTimer('skele').start()
-      const skeleton =
-        localAlgo !== undefined
-          ? await localAlgo(ctx, params, viewer)
-          : await skeletonFromFeedGen(
-              ctx,
-              db,
-              params,
-              viewer,
-              req.headers['authorization'],
-            )
-      timerSkele.stop()
-
-      const timerHydr = new ServerTimer('hydr').start()
-      const cleanedFeed = await ctx.services
-        .feed(db)
-        .cleanFeedSkeleton(skeleton.feed, viewer)
-      const hydrated = await feedService.hydrateFeed(cleanedFeed, viewer)
-      timerHydr.stop()
+      const { timerSkele, timerHydr, ...result } = await getFeed(
+        { ...params, viewer },
+        {
+          db,
+          feedService,
+          appCtx: ctx,
+          authorization: req.headers['authorization'],
+        },
+      )
 
       return {
         encoding: 'application/json',
-        body: {
-          ...skeleton,
-          feed: hydrated,
-        },
+        body: result,
         headers: {
           'server-timing': serverTimingHeader([timerSkele, timerHydr]),
         },
@@ -63,13 +60,99 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-async function skeletonFromFeedGen(
+const skeleton = async (params: Params, ctx: Context) => {
+  const timerSkele = new ServerTimer('skele').start()
+  const { db } = ctx
+  const { feed } = params
+  const localAlgo = ctx.appCtx.algos[feed]
+  const skeleton =
+    localAlgo !== undefined
+      ? await localAlgo(ctx.appCtx, params, params.viewer)
+      : await skeletonFromFeedGen(
+          ctx.appCtx,
+          db,
+          params,
+          params.viewer,
+          ctx.authorization,
+        )
+  return {
+    params,
+    cursor: skeleton.cursor,
+    feedSkele: skeleton.feed,
+    timerSkele: timerSkele.stop(),
+  }
+}
+
+const hydration = async (state: SkeletonState, ctx: Context) => {
+  const timerHydr = new ServerTimer('hydr').start()
+  const { feedService } = ctx
+  const { params, feedSkele } = state
+  const feedItems = await feedService.cleanFeedSkeleton(feedSkele)
+  const refs = feedService.feedItemRefs(feedItems)
+  const hydrated = await feedService.feedHydration({
+    ...refs,
+    viewer: params.viewer,
+  })
+  return { ...state, ...hydrated, feedItems, timerHydr: timerHydr.stop() }
+}
+
+const noBlocksOrMutes = (state: HydrationState) => {
+  const { viewer } = state.params
+  state.feedItems = state.feedItems.filter(
+    (item) =>
+      !state.bam.block([viewer, item.postAuthorDid]) &&
+      !state.bam.block([viewer, item.originatorDid]) &&
+      !state.bam.mute([viewer, item.postAuthorDid]) &&
+      !state.bam.mute([viewer, item.originatorDid]),
+  )
+  return state
+}
+
+const presentation = (state: HydrationState, ctx: Context) => {
+  const { feedService } = ctx
+  const { feedItems, cursor } = state
+  const feed = feedService.views.formatFeed(
+    feedItems,
+    state.actors,
+    state.posts,
+    state.embeds,
+    state.labels,
+    state.blocks,
+  )
+  return {
+    feed,
+    cursor,
+    timerSkele: state.timerSkele,
+    timerHydr: state.timerHydr,
+  }
+}
+
+type Context = {
+  db: Database
+  feedService: FeedService
+  appCtx: AppContext
+  authorization?: string
+}
+
+type Params = GetFeedParams & { viewer: string }
+
+type SkeletonState = {
+  params: Params
+  feedSkele: SkeletonFeedPost[]
+  cursor?: string
+  timerSkele: ServerTimer
+}
+
+type HydrationState = SkeletonState &
+  FeedHydrationState & { feedItems: FeedRow[]; timerHydr: ServerTimer }
+
+const skeletonFromFeedGen = async (
   ctx: AppContext,
   db: Database,
   params: GetFeedParams,
   viewer: string,
   authorization?: string,
-): Promise<AlgoResponse> {
+): Promise<AlgoResponse> => {
   const { feed } = params
   // Resolve and fetch feed skeleton
   const found = await db.db

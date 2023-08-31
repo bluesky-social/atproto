@@ -16,6 +16,9 @@ import {
 } from '../../lexicon/types/app/bsky/feed/defs'
 import { FeedGenerator } from '../../db/tables/feed-generator'
 import { ListView } from '../../lexicon/types/app/bsky/graph/defs'
+import { ActorInfoMap } from '../actor'
+import { Labels } from '../label'
+import { BlockAndMuteState } from '../graph'
 
 export type PostEmbedViews = {
   [uri: string]: PostEmbedView
@@ -82,3 +85,12 @@ export type RecordEmbedViewRecord =
   | ListView
 
 export type RecordEmbedViewRecordMap = { [uri: string]: RecordEmbedViewRecord }
+
+export type FeedHydrationState = {
+  actors: ActorInfoMap
+  posts: PostInfoMap
+  embeds: PostEmbedViews
+  labels: Labels
+  blocks: PostBlocksMap
+  bam: BlockAndMuteState
+}

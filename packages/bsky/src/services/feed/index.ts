@@ -17,10 +17,7 @@ import {
   isViewRecord,
 } from '../../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../../lexicon/types/app/bsky/embed/recordWithMedia'
-import {
-  FeedViewPost,
-  SkeletonFeedPost,
-} from '../../lexicon/types/app/bsky/feed/defs'
+import { SkeletonFeedPost } from '../../lexicon/types/app/bsky/feed/defs'
 import {
   PostInfoMap,
   FeedItemType,
@@ -32,6 +29,7 @@ import {
   PostInfo,
   RecordEmbedViewRecord,
   PostBlocksMap,
+  FeedHydrationState,
 } from './types'
 import { LabelService, Labels } from '../label'
 import { ActorInfoMap, ActorService } from '../actor'
@@ -230,25 +228,11 @@ export class FeedService {
     }, {} as Record<string, FeedRow>)
   }
 
-  async cleanFeedSkeleton(
-    skeleton: SkeletonFeedPost[],
-    requester: string,
-  ): Promise<FeedRow[]> {
+  async cleanFeedSkeleton(skeleton: SkeletonFeedPost[]): Promise<FeedRow[]> {
     const feedItemUris = skeleton.map(getSkeleFeedItemUri)
-    const [feedItems, skeletonSafe] = await Promise.all([
-      this.getFeedItems(feedItemUris),
-      this.services.graph.filterBlocksAndMutes(skeleton, {
-        getBlockPairs(item) {
-          return getPostAndRepostPairs(item, requester)
-        },
-        getMutePairs(item) {
-          // Hide posts and reposts of or by muted actors
-          return getPostAndRepostPairs(item, requester)
-        },
-      }),
-    ])
+    const feedItems = await this.getFeedItems(feedItemUris)
     const cleaned: FeedRow[] = []
-    for (const skeleItem of skeletonSafe) {
+    for (const skeleItem of skeleton) {
       const feedItem = feedItems[getSkeleFeedItemUri(skeleItem)]
       if (feedItem && feedItem.postUri === skeleItem.post) {
         cleaned.push(feedItem)
@@ -257,20 +241,13 @@ export class FeedService {
     return cleaned
   }
 
-  async hydrateFeed(
-    items: FeedRow[],
-    viewer: string | null,
-    // @TODO (deprecated) remove this once all clients support the blocked/not-found union on post views
-    usePostViewUnion?: boolean,
-  ): Promise<FeedViewPost[]> {
+  feedItemRefs(items: FeedRow[]) {
     const actorDids = new Set<string>()
     const postUris = new Set<string>()
     for (const item of items) {
-      actorDids.add(item.postAuthorDid)
       postUris.add(item.postUri)
-      if (item.postAuthorDid !== item.originatorDid) {
-        actorDids.add(item.originatorDid)
-      }
+      actorDids.add(item.postAuthorDid)
+      actorDids.add(item.originatorDid)
       if (item.replyParent) {
         postUris.add(item.replyParent)
         actorDids.add(new AtUri(item.replyParent).hostname)
@@ -280,25 +257,28 @@ export class FeedService {
         actorDids.add(new AtUri(item.replyRoot).hostname)
       }
     }
-    const [actors, posts, labels] = await Promise.all([
-      this.services.actor.views.profiles(Array.from(actorDids), viewer, {
+    return { dids: actorDids, uris: postUris }
+  }
+
+  async feedHydration(refs: {
+    dids: Set<string>
+    uris: Set<string>
+    viewer: string | null
+  }): Promise<FeedHydrationState> {
+    const { viewer, dids, uris } = refs
+    const [posts, actors, labels, bam] = await Promise.all([
+      this.getPostInfos(Array.from(uris), viewer),
+      this.services.actor.views.profiles(Array.from(dids), viewer, {
         skipLabels: true,
       }),
-      this.getPostInfos(Array.from(postUris), viewer),
-      this.services.label.getLabelsForSubjects([...postUris, ...actorDids]),
+      this.services.label.getLabelsForSubjects([...uris, ...dids]),
+      this.services.graph.getBlockAndMuteState(
+        viewer ? [...dids].map((did) => [viewer, did]) : [],
+      ),
     ])
     const blocks = await this.blocksForPosts(posts)
     const embeds = await this.embedsForPosts(posts, blocks, viewer)
-
-    return this.views.formatFeed(
-      items,
-      actors,
-      posts,
-      embeds,
-      labels,
-      blocks,
-      usePostViewUnion,
-    )
+    return { posts, actors, labels, bam, blocks, embeds }
   }
 
   // applies blocks for visibility to third-parties (i.e. based on post content)
@@ -535,15 +515,4 @@ function getSkeleFeedItemUri(item: SkeletonFeedPost) {
   return typeof item.reason?.repost === 'string'
     ? item.reason.repost
     : item.post
-}
-
-function getPostAndRepostPairs(
-  item: SkeletonFeedPost,
-  requester: string,
-): RelationshipPair[] {
-  const uriStrs =
-    typeof item.reason?.repost === 'string'
-      ? [item.post, item.reason.repost]
-      : [item.post]
-  return uriStrs.map((uriStr) => [requester, new AtUri(uriStr).host])
 }
