@@ -7,7 +7,11 @@ import { PrimaryDatabase } from '../db'
 import { IdResolver } from '@atproto/identity'
 import { labelerLogger as log } from '../logger'
 
-export class ImageTakedowner {
+export interface ImageTakedownerI {
+  scanImage(did: string, cid: CID): Promise<string[]>
+}
+
+export class ImageTakedowner implements ImageTakedownerI {
   protected auth: string
 
   constructor(

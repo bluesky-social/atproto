@@ -1,4 +1,8 @@
-export class KeywordLabeler {
+export interface TextLabeler {
+  labelText(text: string): Promise<string[]>
+}
+
+export class KeywordLabeler implements TextLabeler {
   constructor(public keywords: Record<string, string>) {}
 
   async labelText(text: string): Promise<string[]> {

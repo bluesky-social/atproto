@@ -1,5 +1,5 @@
 import fs from 'fs/promises'
-import * as hive from '../../src/labeler/hive'
+import * as hive from '../../src/auto-moderator/hive'
 
 describe('labeling', () => {
   it('correctly parses hive responses', async () => {

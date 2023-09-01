@@ -10,7 +10,11 @@ import { labelerLogger as log } from '../logger'
 
 const HIVE_ENDPOINT = 'https://api.thehive.ai/api/v2/task/sync'
 
-export class HiveLabeler {
+export interface ImgLabeler {
+  labelImg(did: string, cid: CID): Promise<string[]>
+}
+
+export class HiveLabeler implements ImgLabeler {
   hiveApiKey: string
 
   constructor(

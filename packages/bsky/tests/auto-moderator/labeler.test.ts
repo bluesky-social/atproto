@@ -1,18 +1,15 @@
 import { AtUri, AtpAgent, BlobRef } from '@atproto/api'
 import { Readable } from 'stream'
-import { Labeler } from '../../src/labeler'
-import { Database, IndexerConfig } from '../../src'
+import { AutoModerator } from '../../src/auto-moderator'
 import IndexerContext from '../../src/indexer/context'
 import { cidForRecord } from '@atproto/repo'
-import { keywordLabeling } from '../../src/labeler/util'
 import { cidForCbor, TID } from '@atproto/common'
 import { LabelService } from '../../src/services/label'
 import { TestNetwork } from '@atproto/dev-env'
-import { IdResolver } from '@atproto/identity'
 import { SeedClient } from '../seeds/client'
 import usersSeed from '../seeds/users'
-import { BackgroundQueue } from '../../src/background'
 import { CID } from 'multiformats/cid'
+import { ImgLabeler } from '../../src/auto-moderator/hive'
 
 // outside of test suite so that TestLabeler can access them
 let badCid1: CID | undefined = undefined
@@ -20,7 +17,7 @@ let badCid2: CID | undefined = undefined
 
 describe('labeler', () => {
   let network: TestNetwork
-  let labeler: Labeler
+  let autoMod: AutoModerator
   let labelSrvc: LabelService
   let ctx: IndexerContext
   let labelerDid: string
@@ -37,7 +34,8 @@ describe('labeler', () => {
     ctx = network.bsky.indexer.ctx
     const pdsCtx = network.pds.ctx
     labelerDid = ctx.cfg.labelerDid
-    labeler = new TestLabeler(network.bsky.indexer.ctx)
+    autoMod = ctx.autoMod
+    autoMod.imgLabeler = new TestImgLabeler()
     labelSrvc = ctx.services.label(ctx.db)
     const pdsAgent = new AtpAgent({ service: network.pds.url })
     const sc = new SeedClient(pdsAgent)
@@ -87,8 +85,8 @@ describe('labeler', () => {
     }
     const cid = await cidForRecord(post)
     const uri = postUri()
-    labeler.processRecord(uri, post)
-    await labeler.processAll()
+    autoMod.processRecord(uri, cid, post)
+    await autoMod.processAll()
     const labels = await labelSrvc.getLabels(uri.toString())
     expect(labels.length).toBe(1)
     expect(labels[0]).toMatchObject({
@@ -124,8 +122,9 @@ describe('labeler', () => {
       createdAt: new Date().toISOString(),
     }
     const uri = postUri()
-    labeler.processRecord(uri, post)
-    await labeler.processAll()
+    const cid = await cidForRecord(post)
+    autoMod.processRecord(uri, cid, post)
+    await autoMod.processAll()
     const dbLabels = await labelSrvc.getLabels(uri.toString())
     const labels = dbLabels.map((row) => row.val).sort()
     expect(labels).toEqual(
@@ -158,25 +157,7 @@ describe('labeler', () => {
   })
 })
 
-class TestLabeler extends Labeler {
-  hiveApiKey: string
-  keywords: Record<string, string>
-
-  constructor(opts: {
-    db: Database
-    idResolver: IdResolver
-    cfg: IndexerConfig
-    backgroundQueue: BackgroundQueue
-  }) {
-    const { db, cfg, idResolver, backgroundQueue } = opts
-    super({ db, cfg, idResolver, backgroundQueue })
-    this.keywords = cfg.labelerKeywords
-  }
-
-  async labelText(text: string): Promise<string[]> {
-    return keywordLabeling(this.keywords, text)
-  }
-
+class TestImgLabeler implements ImgLabeler {
   async labelImg(_did: string, cid: CID): Promise<string[]> {
     if (cid.equals(badCid1)) {
       return ['img-label']

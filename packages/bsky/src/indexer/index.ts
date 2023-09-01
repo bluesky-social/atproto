@@ -84,6 +84,7 @@ export class BskyIndexer {
       idResolver,
       didCache,
       backgroundQueue,
+      autoMod,
     })
     const sub = new IndexerSubscription(ctx, {
       partitionIds: cfg.indexerPartitionIds,

@@ -11,8 +11,8 @@ import { CID } from 'multiformats/cid'
 import { LabelService } from '../services/label'
 import { ModerationService } from '../services/moderation'
 import { ImageTakedowner } from './image-takedowner'
-import { HiveLabeler } from './hive'
-import { KeywordLabeler } from './keyword'
+import { HiveLabeler, ImgLabeler } from './hive'
+import { KeywordLabeler, TextLabeler } from './keyword'
 import { ids } from '../lexicon/lexicons'
 import { ImageUriBuilder } from '../image/uri'
 import { ImageInvalidator } from '../image/invalidator'
@@ -21,8 +21,8 @@ export class AutoModerator {
   public pushAgent?: AtpAgent
 
   public imgTakedowner: ImageTakedowner
-  public hive?: HiveLabeler
-  public keyword?: KeywordLabeler
+  public imgLabeler?: ImgLabeler
+  public textLabeler?: TextLabeler
 
   services: {
     label: LabelService
@@ -47,10 +47,10 @@ export class AutoModerator {
         ctx.imgInvalidator,
       ),
     }
-    this.hive = ctx.cfg.hiveApiKey
+    this.imgLabeler = ctx.cfg.hiveApiKey
       ? new HiveLabeler(ctx.cfg.hiveApiKey, ctx)
       : undefined
-    this.keyword = new KeywordLabeler(ctx.cfg.labelerKeywords)
+    this.textLabeler = new KeywordLabeler(ctx.cfg.labelerKeywords)
 
     if (ctx.cfg.labelerPushUrl) {
       const url = new URL(ctx.cfg.labelerPushUrl)
@@ -88,8 +88,8 @@ export class AutoModerator {
       return
     }
     const allLabels = await Promise.all([
-      this.keyword?.labelText(text.join(' ')),
-      ...imgs.map((cid) => this.hive?.labelImg(uri.host, cid)),
+      this.textLabeler?.labelText(text.join(' ')),
+      ...imgs.map((cid) => this.imgLabeler?.labelImg(uri.host, cid)),
     ])
     const labels = dedupe(allLabels.flat())
     await this.storeLabels(uri, recordCid, labels)
