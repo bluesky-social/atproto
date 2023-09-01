@@ -23,6 +23,7 @@ export class Abyss implements TakedownFlagger {
   }
 
   async scanImage(did: string, cid: CID): Promise<string[]> {
+    const start = Date.now()
     const res = await retryHttp(async () => {
       try {
         return await this.makeReq(did, cid)
@@ -34,6 +35,10 @@ export class Abyss implements TakedownFlagger {
         throw err
       }
     })
+    log.info(
+      { res, did, cid: cid.toString(), duration: Date.now() - start },
+      'abyss response',
+    )
     return this.parseRes(res)
   }
 
@@ -49,6 +54,7 @@ export class Abyss implements TakedownFlagger {
         'Content-Type': contentType,
         authorization: this.auth,
       },
+      timeout: 10000,
     })
     return data
   }
