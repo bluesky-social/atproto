@@ -39,14 +39,18 @@ export default function (server: Server, ctx: AppContext) {
       const itemsRes = await itemsReq.execute()
 
       const actorService = ctx.services.actor(db)
-      const profiles = await actorService.views.hydrateProfiles(
+      const profiles = await actorService.views.profilesList(
         itemsRes,
         requester,
       )
 
       const items = profiles.map((subject) => ({ subject }))
 
-      const creator = await actorService.views.profile(listRes, requester)
+      const profilesCreator = await actorService.views.profiles(
+        [listRes],
+        requester,
+      )
+      const creator = profilesCreator[listRes.did]
       if (!creator) {
         throw new InvalidRequestError(`Actor not found: ${listRes.handle}`)
       }

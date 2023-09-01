@@ -1,9 +1,9 @@
-import { Selectable, sql } from 'kysely'
+import { sql } from 'kysely'
 import { Database } from '../../db'
 import { ImageUriBuilder } from '../../image/uri'
-import { ProfileView } from '../../lexicon/types/app/bsky/actor/defs'
-import { List } from '../../db/tables/list'
 import { valuesList } from '../../db/util'
+import { ListInfo } from './types'
+import { ActorInfoMap } from '../actor'
 
 export class GraphService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
@@ -94,8 +94,13 @@ export class GraphService {
       .select(['list_item.cid as cid', 'list_item.sortAt as sortAt'])
   }
 
-  async getBlockAndMuteState(pairs: RelationshipPair[]) {
-    if (!pairs.length) return new BlockAndMuteState()
+  async getBlockAndMuteState(
+    pairs: RelationshipPair[],
+    bam?: BlockAndMuteState,
+  ) {
+    pairs = bam ? pairs.filter((pair) => !bam.seen(pair)) : pairs
+    const result = bam ?? new BlockAndMuteState()
+    if (!pairs.length) result
     const { ref } = this.db.db.dynamic
     const sourceRef = ref('pair.source')
     const targetRef = ref('pair.target')
@@ -134,11 +139,14 @@ export class GraphService {
       ])
       .selectAll()
       .execute()
-    return new BlockAndMuteState(items)
+    items.forEach((item) => result.add(item))
+    return result
   }
 
-  async getBlockState(pairs: RelationshipPair[]) {
-    if (!pairs.length) return new BlockAndMuteState()
+  async getBlockState(pairs: RelationshipPair[], bam: BlockAndMuteState) {
+    pairs = bam ? pairs.filter((pair) => !bam.seen(pair)) : pairs
+    const result = bam ?? new BlockAndMuteState()
+    if (!pairs.length) result
     const { ref } = this.db.db.dynamic
     const sourceRef = ref('pair.source')
     const targetRef = ref('pair.target')
@@ -163,7 +171,8 @@ export class GraphService {
       ])
       .selectAll()
       .execute()
-    return new BlockAndMuteState(items)
+    items.forEach((item) => result.add(item))
+    return result
   }
 
   async getListViews(listUris: string[], requester: string | null) {
@@ -180,7 +189,7 @@ export class GraphService {
     )
   }
 
-  formatListView(list: ListInfo, profiles: Record<string, ProfileView>) {
+  formatListView(list: ListInfo, profiles: ActorInfoMap) {
     return {
       uri: list.uri,
       cid: list.cid,
@@ -226,13 +235,10 @@ export class GraphService {
   }
 }
 
-type ListInfo = Selectable<List> & {
-  viewerMuted: string | null
-}
-
 export type RelationshipPair = [didA: string, didB: string]
 
 export class BlockAndMuteState {
+  seenIdx = new Map<string, Set<string>>()
   blockIdx = new Map<string, Map<string, string>>()
   muteIdx = new Map<string, Set<string>>()
   muteListIdx = new Map<string, Map<string, string>>()
@@ -268,6 +274,11 @@ export class BlockAndMuteState {
         this.muteListIdx.set(item.source, map)
       }
     }
+    const set = this.seenIdx.get(item.source) ?? new Set()
+    set.add(item.target)
+    if (!this.seenIdx.has(item.source)) {
+      this.seenIdx.set(item.source, set)
+    }
   }
   block(pair: RelationshipPair): boolean {
     return !!this.blocking(pair) || !!this.blockedBy(pair)
@@ -283,6 +294,9 @@ export class BlockAndMuteState {
   }
   muteList(pair: RelationshipPair): string | null {
     return this.muteListIdx.get(pair[0])?.get(pair[1]) ?? null
+  }
+  seen(pair: RelationshipPair) {
+    return !!this.seenIdx.get(pair[0])?.has(pair[1])
   }
 }
 
