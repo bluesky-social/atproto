@@ -3536,6 +3536,9 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+              force: {
+                type: 'boolean',
+              },
             },
           },
         },
