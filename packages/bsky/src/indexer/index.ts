@@ -40,8 +40,8 @@ export class BskyIndexer {
   static create(opts: {
     db: PrimaryDatabase
     redis: Redis
-    imgInvalidator: ImageInvalidator
     cfg: IndexerConfig
+    imgInvalidator?: ImageInvalidator
   }): BskyIndexer {
     const { db, redis, cfg } = opts
     const didCache = new DidSqlCache(
@@ -56,7 +56,9 @@ export class BskyIndexer {
     })
     const backgroundQueue = new BackgroundQueue(db)
 
-    const imgUriBuilder = new ImageUriBuilder(cfg.imgUriEndpoint)
+    const imgUriBuilder = cfg.imgUriEndpoint
+      ? new ImageUriBuilder(cfg.imgUriEndpoint)
+      : undefined
     const imgInvalidator = opts.imgInvalidator
     const autoMod = new AutoModerator({
       db,

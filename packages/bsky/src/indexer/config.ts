@@ -15,9 +15,9 @@ export interface IndexerConfigValues {
   handleResolveNameservers?: string[]
   labelerDid: string
   hiveApiKey?: string
-  abyssEndpoint: string
-  abyssPassword: string
-  imgUriEndpoint: string
+  abyssEndpoint?: string
+  abyssPassword?: string
+  imgUriEndpoint?: string
   labelerKeywords: Record<string, string>
   labelerPushUrl?: string
   indexerConcurrency?: number
@@ -92,9 +92,6 @@ export class IndexerConfig {
     assert(dbPostgresUrl)
     assert(redisHost || (redisSentinelName && redisSentinelHosts?.length))
     assert(indexerPartitionIds.length > 0)
-    assert(imgUriEndpoint)
-    assert(abyssEndpoint)
-    assert(abyssPassword)
     return new IndexerConfig({
       version,
       dbPostgresUrl,

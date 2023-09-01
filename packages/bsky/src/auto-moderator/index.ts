@@ -21,13 +21,13 @@ import { Abyss } from './abyss'
 export class AutoModerator {
   public pushAgent?: AtpAgent
 
-  public takedownFlagger: TakedownFlagger
+  public takedownFlagger?: TakedownFlagger
   public imgLabeler?: ImgLabeler
   public textLabeler?: TextLabeler
 
   services: {
     label: (db: PrimaryDatabase) => LabelService
-    moderation: (db: PrimaryDatabase) => ModerationService
+    moderation?: (db: PrimaryDatabase) => ModerationService
   }
 
   constructor(
@@ -36,26 +36,37 @@ export class AutoModerator {
       idResolver: IdResolver
       cfg: IndexerConfig
       backgroundQueue: BackgroundQueue
-      imgUriBuilder: ImageUriBuilder
-      imgInvalidator: ImageInvalidator
+      imgUriBuilder?: ImageUriBuilder
+      imgInvalidator?: ImageInvalidator
     },
   ) {
+    const { imgUriBuilder, imgInvalidator } = ctx
+    const { hiveApiKey, abyssEndpoint, abyssPassword } = ctx.cfg
     this.services = {
       label: LabelService.creator(null),
-      moderation: ModerationService.creator(
-        ctx.imgUriBuilder,
-        ctx.imgInvalidator,
-      ),
     }
-    this.imgLabeler = ctx.cfg.hiveApiKey
-      ? new HiveLabeler(ctx.cfg.hiveApiKey, ctx)
-      : undefined
+    if (imgUriBuilder && imgInvalidator) {
+      this.services.moderation = ModerationService.creator(
+        imgUriBuilder,
+        imgInvalidator,
+      )
+    } else {
+      log.error(
+        { imgUriBuilder, imgInvalidator },
+        'moderation service not properly configured',
+      )
+    }
+
+    this.imgLabeler = hiveApiKey ? new HiveLabeler(hiveApiKey, ctx) : undefined
     this.textLabeler = new KeywordLabeler(ctx.cfg.labelerKeywords)
-    this.takedownFlagger = new Abyss(
-      ctx.cfg.abyssEndpoint,
-      ctx.cfg.abyssPassword,
-      ctx,
-    )
+    if (abyssEndpoint && abyssPassword) {
+      this.takedownFlagger = new Abyss(abyssEndpoint, abyssPassword, ctx)
+    } else {
+      log.error(
+        { abyssEndpoint, abyssPassword },
+        'abyss not properly configured',
+      )
+    }
 
     if (ctx.cfg.labelerPushUrl) {
       const url = new URL(ctx.cfg.labelerPushUrl)
@@ -103,16 +114,27 @@ export class AutoModerator {
   async checkImgForTakedown(uri: AtUri, recordCid: CID, imgCids: CID[]) {
     if (imgCids.length < 0) return
     const results = await Promise.all(
-      imgCids.map((cid) => this.takedownFlagger.scanImage(uri.host, cid)),
+      imgCids.map((cid) => this.takedownFlagger?.scanImage(uri.host, cid)),
     )
     const takedownCids: CID[] = []
     for (let i = 0; i < results.length; i++) {
-      if (results[i].length > 0) {
+      if (results.at(i)?.length) {
         takedownCids.push(imgCids[i])
       }
     }
     if (takedownCids.length === 0) return
     await this.ctx.db.transaction(async (dbTxn) => {
+      if (!this.services.moderation) {
+        log.error(
+          {
+            uri: uri.toString(),
+            cid: recordCid.toString(),
+            imgaes: takedownCids.map((c) => c.toString()),
+          },
+          'could not takedown flagged post',
+        )
+        return
+      }
       const modSrvc = this.services.moderation(dbTxn)
       const action = await modSrvc.logAction({
         action: 'com.atproto.admin.defs#takedown',

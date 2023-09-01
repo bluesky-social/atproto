@@ -94,7 +94,7 @@ export class TestBsky {
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
       abyssEndpoint: '',
       abyssPassword: '',
-      imgUriEndpoint: '',
+      imgUriEndpoint: 'https://img.example.com',
       indexerPartitionIds: [0],
       indexerNamespace: `ns${ns}`,
       indexerSubLockId: uniqueLockId(),
@@ -111,7 +111,7 @@ export class TestBsky {
       cfg: indexerCfg,
       db: db.getPrimary(),
       redis: indexerRedis,
-      imgInvalidator: cfg.imgInvalidator ?? new NoOpInvalidator(),
+      imgInvalidator: cfg.imgInvalidator,
     })
     // ingester
     const ingesterCfg = new bsky.IngesterConfig({
@@ -258,7 +258,6 @@ export async function getIndexers(
     host: baseCfg.redisHost,
     namespace: baseCfg.indexerNamespace,
   })
-  const imgInvalidator = new NoOpInvalidator()
   const indexers = await Promise.all(
     opts.partitionIdsByIndexer.map(async (indexerPartitionIds) => {
       const cfg = new bsky.IndexerConfig({
@@ -267,7 +266,7 @@ export async function getIndexers(
         indexerSubLockId: uniqueLockId(),
         indexerPort: await getPort(),
       })
-      return bsky.BskyIndexer.create({ cfg, db, redis, imgInvalidator })
+      return bsky.BskyIndexer.create({ cfg, db, redis })
     }),
   )
   await db.migrateToLatestOrThrow()
@@ -342,8 +341,4 @@ export async function ingestAll(
     const ingesterCaughtUp = ingesterCursor === lastSeq
     if (ingesterCaughtUp) return
   }
-}
-
-class NoOpInvalidator {
-  async invalidate() {}
 }
