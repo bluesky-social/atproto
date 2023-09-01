@@ -1,3 +1,4 @@
+import { dedupeStrs } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPosts'
@@ -26,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const skeleton = async (params: Params) => {
-  return { params, postUris: params.uris }
+  return { params, postUris: dedupeStrs(params.uris) }
 }
 
 const hydration = async (state: SkeletonState, ctx: Context) => {

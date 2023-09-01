@@ -48,7 +48,7 @@ const skeleton = async (params: Params, ctx: Context) => {
 
 const hydration = async (state: SkeletonState, ctx: Context) => {
   const { actorService } = ctx
-  const profiles = await actorService.views.profiles(
+  const profiles = await actorService.views.profilesBasic(
     state.generators.map((gen) => gen.creator),
     state.params.viewer,
   )

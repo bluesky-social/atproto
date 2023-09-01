@@ -4,7 +4,6 @@ import { jsonStringToLex } from '@atproto/lexicon'
 import {
   ProfileViewDetailed,
   ProfileView,
-  ProfileViewBasic,
 } from '../../lexicon/types/app/bsky/actor/defs'
 import { Database } from '../../db'
 import { noMatch, notSoftDeletedClause } from '../../db/util'
@@ -318,7 +317,7 @@ export class ActorViews {
     results: (ActorResult | string)[],
     viewer: string | null,
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
-  ): Promise<Record<string, ProfileViewBasic>> {
+  ): Promise<ActorInfoMap> {
     if (results.length === 0) return {}
     const profiles = await this.profiles(results, viewer, opts)
     return Object.values(profiles).reduce((acc, cur) => {
@@ -328,10 +327,12 @@ export class ActorViews {
         displayName: cur.displayName,
         avatar: cur.avatar,
         viewer: cur.viewer,
+        labels: cur.labels,
+        [kSelfLabels]: cur[kSelfLabels],
       }
       acc[cur.did] = profile
       return acc
-    }, {} as Record<string, ProfileViewBasic>)
+    }, {} as ActorInfoMap)
   }
 }
 

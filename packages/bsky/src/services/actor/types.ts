@@ -6,7 +6,9 @@ export type ActorInfo = {
   did: string
   handle: string
   displayName?: string
+  description?: string // omitted from basic profile view
   avatar?: string
+  indexedAt?: string // omitted from basic profile view
   viewer?: {
     muted?: boolean
     blockedBy?: boolean

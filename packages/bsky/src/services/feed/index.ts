@@ -215,7 +215,7 @@ export class FeedService {
     const { viewer, dids, uris } = refs
     const [posts, actors, labels, bam] = await Promise.all([
       this.getPostInfos(Array.from(uris), viewer),
-      this.services.actor.views.profiles(Array.from(dids), viewer, {
+      this.services.actor.views.profilesBasic(Array.from(dids), viewer, {
         skipLabels: true,
       }),
       this.services.label.getLabelsForSubjects([...uris, ...dids]),
@@ -345,7 +345,7 @@ export class FeedService {
     const [postInfos, actorInfos, labelViews, feedGenInfos, listViews] =
       await Promise.all([
         this.getPostInfos(nestedPostUris, viewer),
-        this.services.actor.views.profiles(nestedDids, viewer, {
+        this.services.actor.views.profilesBasic(nestedDids, viewer, {
           skipLabels: true,
         }),
         this.services.label.getLabelsForSubjects([

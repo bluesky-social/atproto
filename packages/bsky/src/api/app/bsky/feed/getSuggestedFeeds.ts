@@ -9,6 +9,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const db = ctx.db.getReplica()
       const feedService = ctx.services.feed(db)
+      const actorService = ctx.services.actor(db)
       const feedsRes = await db.db
         .selectFrom('suggested_feed')
         .orderBy('suggested_feed.order', 'asc')
@@ -22,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
       const genList = Object.values(genInfos)
 
       const creators = genList.map((gen) => gen.creator)
-      const profiles = await feedService.getActorInfos(creators, viewer)
+      const profiles = await actorService.views.profilesBasic(creators, viewer)
 
       const feedViews = genList.map((gen) =>
         feedService.views.formatFeedGeneratorView(gen, profiles),

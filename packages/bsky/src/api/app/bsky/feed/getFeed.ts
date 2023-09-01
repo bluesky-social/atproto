@@ -66,23 +66,23 @@ const skeleton = async (
 ): Promise<SkeletonState> => {
   const timerSkele = new ServerTimer('skele').start()
   const { db } = ctx
-  const { feed } = params
-  const localAlgo = ctx.appCtx.algos[feed]
+  const localAlgo = ctx.appCtx.algos[params.feed]
+  const feedParams: GetFeedParams = {
+    feed: params.feed,
+    limit: params.limit,
+    cursor: params.cursor,
+  }
   const skeleton =
     localAlgo !== undefined
       ? await localAlgo(ctx.appCtx, params, params.viewer)
-      : await skeletonFromFeedGen(
-          ctx.appCtx,
-          db,
-          params,
-          params.viewer,
-          ctx.authorization,
-        )
+      : await skeletonFromFeedGen(ctx.appCtx, db, feedParams, ctx.authorization)
+  const { feed, cursor, ...passthrough } = skeleton
   return {
     params,
-    cursor: skeleton.cursor,
-    feedSkele: skeleton.feed,
+    cursor,
+    feedSkele: feed,
     timerSkele: timerSkele.stop(),
+    passthrough,
   }
 }
 
@@ -113,7 +113,7 @@ const noBlocksOrMutes = (state: HydrationState) => {
 
 const presentation = (state: HydrationState, ctx: Context) => {
   const { feedService } = ctx
-  const { feedItems, cursor } = state
+  const { feedItems, cursor, passthrough } = state
   const feed = feedService.views.formatFeed(
     feedItems,
     state.actors,
@@ -127,6 +127,7 @@ const presentation = (state: HydrationState, ctx: Context) => {
     cursor,
     timerSkele: state.timerSkele,
     timerHydr: state.timerHydr,
+    ...passthrough,
   }
 }
 
@@ -142,6 +143,7 @@ type Params = GetFeedParams & { viewer: string }
 type SkeletonState = {
   params: Params
   feedSkele: SkeletonFeedPost[]
+  passthrough: Record<string, unknown> // pass through additional items in feedgen response
   cursor?: string
   timerSkele: ServerTimer
 }
@@ -153,7 +155,6 @@ const skeletonFromFeedGen = async (
   ctx: AppContext,
   db: Database,
   params: GetFeedParams,
-  viewer: string,
   authorization?: string,
 ): Promise<AlgoResponse> => {
   const { feed } = params
