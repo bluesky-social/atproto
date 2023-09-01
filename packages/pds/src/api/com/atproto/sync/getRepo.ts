@@ -25,7 +25,9 @@ export default function (server: Server, ctx: AppContext) {
       const storage = new SqlRepoStorage(ctx.db, did)
       let carStream: AsyncIterable<Uint8Array>
       try {
-        carStream = await storage.getCarStream(since)
+        carStream = since
+          ? await storage.getCarStream(since)
+          : await storage.getCarStreamLegacy()
       } catch (err) {
         if (err instanceof RepoRootNotFoundError) {
           throw new InvalidRequestError(`Could not find repo for DID: ${did}`)

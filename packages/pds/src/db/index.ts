@@ -193,8 +193,17 @@ export class Database {
     return txRes
   }
 
-  async txAdvisoryLock(name: string): Promise<boolean> {
+  async takeTxAdvisoryLock(name: string): Promise<boolean> {
     this.assertTransaction()
+    return this.txAdvisoryLock(name)
+  }
+
+  async checkTxAdvisoryLock(name: string): Promise<boolean> {
+    this.assertNotTransaction()
+    return this.txAdvisoryLock(name)
+  }
+
+  private async txAdvisoryLock(name: string): Promise<boolean> {
     assert(this.dialect === 'pg', 'Postgres required')
     // any lock id < 10k is reserved for session locks
     const id = await randomIntFromSeed(name, Number.MAX_SAFE_INTEGER, 10000)
