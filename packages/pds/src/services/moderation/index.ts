@@ -1,7 +1,7 @@
 import { Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { BlobStore } from '@atproto/repo'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
@@ -11,6 +11,8 @@ import { ModerationViews } from './views'
 import SqlRepoStorage from '../../sql-repo-storage'
 import { ImageInvalidator } from '../../image/invalidator'
 import { ImageUriBuilder } from '../../image/uri'
+import { TAKEDOWN } from '../../lexicon/types/com/atproto/admin/defs'
+import { addHoursToDate } from '../../util/date'
 
 export class ModerationService {
   constructor(
@@ -102,6 +104,7 @@ export class ModerationService {
     ignoreSubjects?: string[]
     reverse?: boolean
     reporters?: string[]
+    actionedBy?: string
   }): Promise<ModerationReportRowWithHandle[]> {
     const {
       subject,
@@ -112,6 +115,7 @@ export class ModerationService {
       ignoreSubjects,
       reverse = false,
       reporters,
+      actionedBy,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_report')
@@ -166,8 +170,8 @@ export class ModerationService {
         ? builder.whereExists(resolutionsQuery)
         : builder.whereNotExists(resolutionsQuery)
     }
-    if (actionType !== undefined) {
-      const resolutionActionsQuery = this.db.db
+    if (actionType !== undefined || actionedBy !== undefined) {
+      let resolutionActionsQuery = this.db.db
         .selectFrom('moderation_report_resolution')
         .innerJoin(
           'moderation_action',
@@ -179,10 +183,22 @@ export class ModerationService {
           '=',
           ref('moderation_report.id'),
         )
-        .where('moderation_action.action', '=', sql`${actionType}`)
-        .where('moderation_action.reversedAt', 'is', null)
-        .selectAll()
-      builder = builder.whereExists(resolutionActionsQuery)
+
+      if (actionType) {
+        resolutionActionsQuery = resolutionActionsQuery
+          .where('moderation_action.action', '=', sql`${actionType}`)
+          .where('moderation_action.reversedAt', 'is', null)
+      }
+
+      if (actionedBy) {
+        resolutionActionsQuery = resolutionActionsQuery.where(
+          'moderation_action.createdBy',
+          '=',
+          actionedBy,
+        )
+      }
+
+      builder = builder.whereExists(resolutionActionsQuery.selectAll())
     }
 
     if (cursor) {
@@ -247,6 +263,7 @@ export class ModerationService {
     negateLabelVals?: string[]
     createdBy: string
     createdAt?: Date
+    durationInHours?: number
   }): Promise<ModerationActionRow> {
     this.db.assertTransaction()
     const {
@@ -255,6 +272,7 @@ export class ModerationService {
       reason,
       subject,
       subjectBlobCids,
+      durationInHours,
       createdAt = new Date(),
     } = info
     const createLabelVals =
@@ -321,6 +339,11 @@ export class ModerationService {
         createdBy,
         createLabelVals,
         negateLabelVals,
+        durationInHours,
+        expiresAt:
+          durationInHours !== undefined
+            ? addHoursToDate(durationInHours, createdAt).toISOString()
+            : undefined,
         ...subjectInfo,
       })
       .returningAll()
@@ -350,6 +373,60 @@ export class ModerationService {
     }
 
     return actionResult
+  }
+
+  async getActionsDueForReversal(): Promise<Array<ModerationActionRow>> {
+    const actionsDueForReversal = await this.db.db
+      .selectFrom('moderation_action')
+      // Get entries that have an durationInHours that has passed and have not been reversed
+      .where('durationInHours', 'is not', null)
+      .where('expiresAt', '<', new Date().toISOString())
+      .where('reversedAt', 'is', null)
+      .selectAll()
+      .execute()
+
+    return actionsDueForReversal
+  }
+
+  async revertAction({
+    id,
+    createdAt,
+    createdBy,
+    reason,
+  }: {
+    id: number
+    createdAt: Date
+    createdBy: string
+    reason: string
+  }) {
+    const result = await this.logReverseAction({
+      id,
+      createdAt,
+      createdBy,
+      reason,
+    })
+
+    if (
+      result.action === TAKEDOWN &&
+      result.subjectType === 'com.atproto.admin.defs#repoRef' &&
+      result.subjectDid
+    ) {
+      await this.reverseTakedownRepo({
+        did: result.subjectDid,
+      })
+    }
+
+    if (
+      result.action === TAKEDOWN &&
+      result.subjectType === 'com.atproto.repo.strongRef' &&
+      result.subjectUri
+    ) {
+      await this.reverseTakedownRecord({
+        uri: new AtUri(result.subjectUri),
+      })
+    }
+
+    return result
   }
 
   async logReverseAction(info: {
@@ -523,7 +600,7 @@ export class ModerationService {
     // Resolve subject info
     let subjectInfo: SubjectInfo
     if ('did' in subject) {
-      const repo = await new SqlRepoStorage(this.db, subject.did).getHead()
+      const repo = await new SqlRepoStorage(this.db, subject.did).getRoot()
       if (!repo) throw new InvalidRequestError('Repo not found')
       subjectInfo = {
         subjectType: 'com.atproto.admin.defs#repoRef',

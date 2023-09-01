@@ -26,6 +26,12 @@ describe('TIDs', () => {
       expect(typeof str).toEqual('string')
       expect(str.length).toEqual(13)
     })
+
+    it('returns a next tid larger than a provided prev', () => {
+      const prev = TID.fromTime((Date.now() + 5000) * 1000, 0).toString()
+      const str = TID.nextStr(prev)
+      expect(str > prev).toBe(true)
+    })
   })
 
   describe('newestFirst', () => {

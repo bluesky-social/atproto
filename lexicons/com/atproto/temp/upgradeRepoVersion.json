@@ -1,0 +1,21 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.temp.upgradeRepoVersion",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Upgrade a repo to v3",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did"],
+          "properties": {
+            "did": { "type": "string", "format": "did" },
+            "force": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
+}

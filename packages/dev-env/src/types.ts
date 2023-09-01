@@ -10,12 +10,15 @@ export type PdsConfig = Partial<pds.ServerConfig> & {
   plcUrl: string
   migration?: string
   enableInProcessAppView?: boolean
+  algos?: pds.MountedAlgos
+  enableLabelsCache?: boolean
 }
 
 export type BskyConfig = Partial<bsky.ServerConfig> & {
   plcUrl: string
   repoProvider: string
-  dbPostgresUrl: string
+  dbPrimaryPostgresUrl: string
+  redisHost: string
   migration?: string
   algos?: bsky.MountedAlgos
 }

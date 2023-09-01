@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
 import * as Like from '../../../lexicon/types/app/bsky/feed/like'
 import * as lex from '../../../lexicon/lexicons'
@@ -7,8 +7,9 @@ import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { toSimplifiedISOSafe } from '../util'
 import { countAll, excluded } from '../../../db/util'
-import Database from '../../../db'
+import { PrimaryDatabase } from '../../../db'
 import { BackgroundQueue } from '../../../background'
+import { NotificationServer } from '../../../notifications'
 
 const lexId = lex.ids.AppBskyFeedLike
 type IndexedLike = Selectable<DatabaseSchemaType['like']>
@@ -53,17 +54,21 @@ const findDuplicate = async (
 
 const notifsForInsert = (obj: IndexedLike) => {
   const subjectUri = new AtUri(obj.subject)
-  return [
-    {
-      did: subjectUri.host,
-      author: obj.creator,
-      recordUri: obj.uri,
-      recordCid: obj.cid,
-      reason: 'like' as const,
-      reasonSubject: subjectUri.toString(),
-      sortAt: obj.indexedAt,
-    },
-  ]
+  // prevent self-notifications
+  const isSelf = subjectUri.host === obj.creator
+  return isSelf
+    ? []
+    : [
+        {
+          did: subjectUri.host,
+          author: obj.creator,
+          recordUri: obj.uri,
+          recordCid: obj.cid,
+          reason: 'like' as const,
+          reasonSubject: subjectUri.toString(),
+          sortAt: obj.sortAt,
+        },
+      ]
 }
 
 const deleteFn = async (
@@ -105,10 +110,11 @@ const updateAggregates = async (db: DatabaseSchema, like: IndexedLike) => {
 export type PluginType = RecordProcessor<Like.Record, IndexedLike>
 
 export const makePlugin = (
-  db: Database,
+  db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
+  notifServer?: NotificationServer,
 ): PluginType => {
-  return new RecordProcessor(db, backgroundQueue, {
+  return new RecordProcessor(db, backgroundQueue, notifServer, {
     lexId,
     insertFn,
     findDuplicate,

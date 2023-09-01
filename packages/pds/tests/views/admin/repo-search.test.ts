@@ -55,7 +55,7 @@ describe('pds admin repo search view', () => {
     const shouldContain = [
       'cara-wiegand69.test', // Present despite repo takedown
       'eudora-dietrich4.test', // Carol Littel
-      'shane-torphy52.test', //Sadie Carter
+      'shane-torphy52.test', // Sadie Carter
       'aliya-hodkiewicz.test', // Carlton Abernathy IV
       'carlos6.test',
       'carolina-mcdermott77.test',
@@ -156,66 +156,6 @@ const snapPg = `
 Array [
   Object {
     "did": "user(0)",
-    "email": "cara-wiegand69.test@bsky.app",
-    "handle": "cara-wiegand69.test",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "invitesDisabled": false,
-    "moderation": Object {
-      "currentAction": Object {
-        "action": "com.atproto.admin.defs#takedown",
-        "id": 1,
-      },
-    },
-    "relatedRecords": Array [],
-  },
-  Object {
-    "did": "user(1)",
-    "email": "eudora-dietrich4.test@bsky.app",
-    "handle": "eudora-dietrich4.test",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "invitesDisabled": false,
-    "moderation": Object {},
-    "relatedRecords": Array [
-      Object {
-        "$type": "app.bsky.actor.profile",
-        "avatar": Object {
-          "$type": "blob",
-          "mimeType": "image/jpeg",
-          "ref": Object {
-            "$link": "cids(0)",
-          },
-          "size": 3976,
-        },
-        "description": "",
-        "displayName": "Carol Littel",
-      },
-    ],
-  },
-  Object {
-    "did": "user(2)",
-    "email": "shane-torphy52.test@bsky.app",
-    "handle": "shane-torphy52.test",
-    "indexedAt": "1970-01-01T00:00:00.000Z",
-    "invitesDisabled": false,
-    "moderation": Object {},
-    "relatedRecords": Array [
-      Object {
-        "$type": "app.bsky.actor.profile",
-        "avatar": Object {
-          "$type": "blob",
-          "mimeType": "image/jpeg",
-          "ref": Object {
-            "$link": "cids(0)",
-          },
-          "size": 3976,
-        },
-        "description": "",
-        "displayName": "Sadie Carter",
-      },
-    ],
-  },
-  Object {
-    "did": "user(3)",
     "email": "aliya-hodkiewicz.test@bsky.app",
     "handle": "aliya-hodkiewicz.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -238,7 +178,21 @@ Array [
     ],
   },
   Object {
-    "did": "user(4)",
+    "did": "user(1)",
+    "email": "cara-wiegand69.test@bsky.app",
+    "handle": "cara-wiegand69.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
+    "moderation": Object {
+      "currentAction": Object {
+        "action": "com.atproto.admin.defs#takedown",
+        "id": 1,
+      },
+    },
+    "relatedRecords": Array [],
+  },
+  Object {
+    "did": "user(2)",
     "email": "carlos6.test@bsky.app",
     "handle": "carlos6.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -247,7 +201,7 @@ Array [
     "relatedRecords": Array [],
   },
   Object {
-    "did": "user(5)",
+    "did": "user(3)",
     "email": "carolina-mcdermott77.test@bsky.app",
     "handle": "carolina-mcdermott77.test",
     "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -266,6 +220,52 @@ Array [
         },
         "description": "",
         "displayName": "Latoya Windler",
+      },
+    ],
+  },
+  Object {
+    "did": "user(4)",
+    "email": "eudora-dietrich4.test@bsky.app",
+    "handle": "eudora-dietrich4.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
+    "moderation": Object {},
+    "relatedRecords": Array [
+      Object {
+        "$type": "app.bsky.actor.profile",
+        "avatar": Object {
+          "$type": "blob",
+          "mimeType": "image/jpeg",
+          "ref": Object {
+            "$link": "cids(0)",
+          },
+          "size": 3976,
+        },
+        "description": "",
+        "displayName": "Carol Littel",
+      },
+    ],
+  },
+  Object {
+    "did": "user(5)",
+    "email": "shane-torphy52.test@bsky.app",
+    "handle": "shane-torphy52.test",
+    "indexedAt": "1970-01-01T00:00:00.000Z",
+    "invitesDisabled": false,
+    "moderation": Object {},
+    "relatedRecords": Array [
+      Object {
+        "$type": "app.bsky.actor.profile",
+        "avatar": Object {
+          "$type": "blob",
+          "mimeType": "image/jpeg",
+          "ref": Object {
+            "$link": "cids(0)",
+          },
+          "size": 3976,
+        },
+        "description": "",
+        "displayName": "Sadie Carter",
       },
     ],
   },

@@ -4,7 +4,7 @@ import path from 'path'
 import * as crypto from '@atproto/crypto'
 import * as plc from '@did-plc/lib'
 import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { randomStr } from '@atproto/crypto'
 import { uniqueLockId } from '@atproto/dev-env'
 import { CID } from 'multiformats/cid'
@@ -93,6 +93,7 @@ export const runTestServer = async (
     didCacheStaleTTL: HOUR,
     jwtSecret: 'jwt-secret',
     availableUserDomains: ['.test'],
+    rateLimitsEnabled: false,
     appUrlPasswordReset: 'app://forgot-password',
     emailNoReplyAddress: 'noreply@blueskyweb.xyz',
     publicUrl: 'https://pds.public.url',
@@ -244,7 +245,7 @@ export const forSnapshot = (obj: unknown) => {
       return constantDidCursor
     }
     if (str.match(/\/image\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
-      // Match image urls
+      // Match image urls (pds)
       const match = str.match(
         /\/image\/([^/]+)\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
       )
@@ -254,6 +255,15 @@ export const forSnapshot = (obj: unknown) => {
         .replace(sig, 'sig()')
         .replace(did, take(users, did))
         .replace(cid, take(cids, cid))
+    }
+    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
+      // Match image urls (bsky w/ presets)
+      const match = str.match(
+        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
+      )
+      if (!match) return str
+      const [, did, cid] = match
+      return str.replace(did, take(users, did)).replace(cid, take(cids, cid))
     }
     if (str.startsWith('pds-public-url-')) {
       return 'invite-code'

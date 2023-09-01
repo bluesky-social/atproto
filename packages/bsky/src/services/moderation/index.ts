@@ -1,16 +1,18 @@
 import { Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import Database from '../../db'
+import { PrimaryDatabase } from '../../db'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { ModerationViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
 import { ImageInvalidator } from '../../image/invalidator'
+import { TAKEDOWN } from '../../lexicon/types/com/atproto/admin/defs'
+import { addHoursToDate } from '../../util/date'
 
 export class ModerationService {
   constructor(
-    public db: Database,
+    public db: PrimaryDatabase,
     public imgUriBuilder: ImageUriBuilder,
     public imgInvalidator: ImageInvalidator,
   ) {}
@@ -19,7 +21,7 @@ export class ModerationService {
     imgUriBuilder: ImageUriBuilder,
     imgInvalidator: ImageInvalidator,
   ) {
-    return (db: Database) =>
+    return (db: PrimaryDatabase) =>
       new ModerationService(db, imgUriBuilder, imgInvalidator)
   }
 
@@ -84,6 +86,7 @@ export class ModerationService {
     ignoreSubjects?: string[]
     reverse?: boolean
     reporters?: string[]
+    actionedBy?: string
   }): Promise<ModerationReportRowWithHandle[]> {
     const {
       subject,
@@ -94,6 +97,7 @@ export class ModerationService {
       ignoreSubjects,
       reverse = false,
       reporters,
+      actionedBy,
     } = opts
     const { ref } = this.db.db.dynamic
     let builder = this.db.db.selectFrom('moderation_report')
@@ -148,8 +152,8 @@ export class ModerationService {
         ? builder.whereExists(resolutionsQuery)
         : builder.whereNotExists(resolutionsQuery)
     }
-    if (actionType !== undefined) {
-      const resolutionActionsQuery = this.db.db
+    if (actionType !== undefined || actionedBy !== undefined) {
+      let resolutionActionsQuery = this.db.db
         .selectFrom('moderation_report_resolution')
         .innerJoin(
           'moderation_action',
@@ -161,10 +165,22 @@ export class ModerationService {
           '=',
           ref('moderation_report.id'),
         )
-        .where('moderation_action.action', '=', sql`${actionType}`)
-        .where('moderation_action.reversedAt', 'is', null)
-        .selectAll()
-      builder = builder.whereExists(resolutionActionsQuery)
+
+      if (actionType) {
+        resolutionActionsQuery = resolutionActionsQuery
+          .where('moderation_action.action', '=', sql`${actionType}`)
+          .where('moderation_action.reversedAt', 'is', null)
+      }
+
+      if (actionedBy) {
+        resolutionActionsQuery = resolutionActionsQuery.where(
+          'moderation_action.createdBy',
+          '=',
+          actionedBy,
+        )
+      }
+
+      builder = builder.whereExists(resolutionActionsQuery.selectAll())
     }
     if (cursor) {
       const cursorNumeric = parseInt(cursor, 10)
@@ -227,6 +243,7 @@ export class ModerationService {
     negateLabelVals?: string[]
     createdBy: string
     createdAt?: Date
+    durationInHours?: number
   }): Promise<ModerationActionRow> {
     this.db.assertTransaction()
     const {
@@ -235,6 +252,7 @@ export class ModerationService {
       reason,
       subject,
       subjectBlobCids,
+      durationInHours,
       createdAt = new Date(),
     } = info
     const createLabelVals =
@@ -276,7 +294,6 @@ export class ModerationService {
         'SubjectHasAction',
       )
     }
-
     const actionResult = await this.db.db
       .insertInto('moderation_action')
       .values({
@@ -286,6 +303,11 @@ export class ModerationService {
         createdBy,
         createLabelVals,
         negateLabelVals,
+        durationInHours,
+        expiresAt:
+          durationInHours !== undefined
+            ? addHoursToDate(durationInHours, createdAt).toISOString()
+            : undefined,
         ...subjectInfo,
       })
       .returningAll()
@@ -316,12 +338,58 @@ export class ModerationService {
     return actionResult
   }
 
-  async logReverseAction(info: {
-    id: number
-    reason: string
-    createdBy: string
-    createdAt?: Date
-  }): Promise<ModerationActionRow> {
+  async getActionsDueForReversal(): Promise<ModerationActionRow[]> {
+    const actionsDueForReversal = await this.db.db
+      .selectFrom('moderation_action')
+      .where('durationInHours', 'is not', null)
+      .where('expiresAt', '<', new Date().toISOString())
+      .where('reversedAt', 'is', null)
+      .selectAll()
+      .execute()
+
+    return actionsDueForReversal
+  }
+
+  async revertAction({
+    id,
+    createdBy,
+    createdAt,
+    reason,
+  }: ReversibleModerationAction) {
+    this.db.assertTransaction()
+    const result = await this.logReverseAction({
+      id,
+      createdAt,
+      createdBy,
+      reason,
+    })
+
+    if (
+      result.action === TAKEDOWN &&
+      result.subjectType === 'com.atproto.admin.defs#repoRef' &&
+      result.subjectDid
+    ) {
+      await this.reverseTakedownRepo({
+        did: result.subjectDid,
+      })
+    }
+
+    if (
+      result.action === TAKEDOWN &&
+      result.subjectType === 'com.atproto.repo.strongRef' &&
+      result.subjectUri
+    ) {
+      await this.reverseTakedownRecord({
+        uri: new AtUri(result.subjectUri),
+      })
+    }
+
+    return result
+  }
+
+  async logReverseAction(
+    info: ReversibleModerationAction,
+  ): Promise<ModerationActionRow> {
     const { id, createdBy, reason, createdAt = new Date() } = info
 
     const result = await this.db.db
@@ -374,12 +442,8 @@ export class ModerationService {
     if (info.blobCids) {
       await Promise.all(
         info.blobCids.map(async (cid) => {
-          const paths = ImageUriBuilder.commonSignedUris.map((id) => {
-            const uri = this.imgUriBuilder.getCommonSignedUri(
-              id,
-              info.uri.host,
-              cid,
-            )
+          const paths = ImageUriBuilder.presets.map((id) => {
+            const uri = this.imgUriBuilder.getPresetUri(id, info.uri.host, cid)
             return uri.replace(this.imgUriBuilder.endpoint, '')
           })
           await this.imgInvalidator.invalidate(cid.toString(), paths)
@@ -500,6 +564,12 @@ export class ModerationService {
 }
 
 export type ModerationActionRow = Selectable<ModerationAction>
+export type ReversibleModerationAction = Pick<
+  ModerationActionRow,
+  'id' | 'createdBy' | 'reason'
+> & {
+  createdAt?: Date
+}
 
 export type ModerationReportRow = Selectable<ModerationReport>
 export type ModerationReportRowWithHandle = ModerationReportRow & {

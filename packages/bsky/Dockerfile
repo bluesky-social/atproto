@@ -11,11 +11,9 @@ COPY ./packages/common ./packages/common
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/crypto ./packages/crypto
 COPY ./packages/identity ./packages/identity
-COPY ./packages/identifier ./packages/identifier
+COPY ./packages/syntax ./packages/syntax
 COPY ./packages/lexicon ./packages/lexicon
-COPY ./packages/nsid ./packages/nsid
 COPY ./packages/repo ./packages/repo
-COPY ./packages/uri ./packages/uri
 COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
 RUN ATP_BUILD_SHALLOW=true yarn install --frozen-lockfile > /dev/null
@@ -44,7 +42,7 @@ ENV NODE_ENV=production
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
-CMD ["node", "--enable-source-maps", "index.js"]
+CMD ["node", "--enable-source-maps", "api.js"]
 
 LABEL org.opencontainers.image.source=https://github.com/bluesky-social/atproto
 LABEL org.opencontainers.image.description="Bsky App View"

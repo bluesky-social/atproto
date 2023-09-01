@@ -8,13 +8,14 @@ export default function (server: Server, ctx: AppContext) {
       const { feeds } = params
       const requester = auth.credentials.did
 
-      const feedService = ctx.services.feed(ctx.db)
+      const db = ctx.db.getReplica()
+      const feedService = ctx.services.feed(db)
 
-      const genViews = await feedService.getFeedGeneratorViews(feeds, requester)
-      const genList = Object.values(genViews)
+      const genInfos = await feedService.getFeedGeneratorInfos(feeds, requester)
+      const genList = Object.values(genInfos)
 
       const creators = genList.map((gen) => gen.creator)
-      const profiles = await feedService.getActorViews(creators, requester)
+      const profiles = await feedService.getActorInfos(creators, requester)
 
       const feedViews = genList.map((gen) =>
         feedService.views.formatFeedGeneratorView(gen, profiles),

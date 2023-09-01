@@ -52,6 +52,7 @@ export class TestPds {
       didCacheStaleTTL: HOUR,
       jwtSecret: 'jwt-secret',
       availableUserDomains: ['.test'],
+      rateLimitsEnabled: false,
       appUrlPasswordReset: 'app://forgot-password',
       emailNoReplyAddress: 'noreply@blueskyweb.xyz',
       publicUrl: 'https://pds.public.url',
@@ -67,6 +68,7 @@ export class TestPds {
       feedGenDid: 'did:example:feedGen',
       dbTxLockNonce: await randomStr(32, 'base32'),
       bskyAppViewProxy: !!cfg.bskyAppViewEndpoint,
+      bskyAppViewCdnUrlPattern: 'http://cdn.appview.com/%s/%s/%s',
       ...cfg,
     })
 
@@ -95,12 +97,13 @@ export class TestPds {
       repoSigningKey,
       plcRotationKey,
       config,
+      algos: cfg.algos,
     })
 
     await server.start()
 
     // we refresh label cache by hand in `processAll` instead of on a timer
-    server.ctx.labelCache.stop()
+    if (!cfg.enableLabelsCache) server.ctx.labelCache.stop()
     return new TestPds(url, port, server)
   }
 

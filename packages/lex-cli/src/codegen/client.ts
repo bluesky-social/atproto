@@ -11,7 +11,7 @@ import {
   LexXrpcQuery,
   LexRecord,
 } from '@atproto/lexicon'
-import { NSID } from '@atproto/nsid'
+import { NSID } from '@atproto/syntax'
 import { gen, utilTs, lexiconsTs } from './common'
 import { GeneratedAPI } from '../types'
 import {
@@ -607,7 +607,7 @@ function genClientXrpcCommon(
       .addConstructor({
         parameters: [{ name: 'src', type: 'XRPCError' }],
       })
-      .setBodyText(`super(src.status, src.error, src.message)`)
+      .setBodyText(`super(src.status, src.error, src.message, src.headers)`)
     customErrors.push({ name: error.name, cls: name })
   }
 

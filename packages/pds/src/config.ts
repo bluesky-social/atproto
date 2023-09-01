@@ -43,26 +43,38 @@ export interface ServerConfigValues {
   imgUriEndpoint?: string
   blobCacheLocation?: string
 
+  rateLimitsEnabled: boolean
+  rateLimitBypassKey?: string
+  redisScratchAddress?: string
+  redisScratchPassword?: string
+
   appUrlPasswordReset: string
   emailSmtpUrl?: string
   emailNoReplyAddress: string
+  moderationEmailAddress?: string
+  moderationEmailSmtpUrl?: string
 
   hiveApiKey?: string
   labelerDid: string
   labelerKeywords: Record<string, string>
+  unacceptableWordsB64?: string
+  falsePositiveWordsB64?: string
 
   feedGenDid?: string
 
   maxSubscriptionBuffer: number
   repoBackfillLimitMs: number
   sequencerLeaderLockId?: number
+  sequencerLeaderEnabled?: boolean
 
   // this is really only used in test environments
   dbTxLockNonce?: string
 
   bskyAppViewEndpoint?: string
+  bskyAppViewModeration?: boolean
   bskyAppViewDid?: string
   bskyAppViewProxy: boolean
+  bskyAppViewCdnUrlPattern?: string
 
   crawlersToNotify?: string[]
 }
@@ -151,6 +163,15 @@ export class ServerConfig {
     const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
     const blobCacheLocation = process.env.BLOB_CACHE_LOC
 
+    const rateLimitsEnabled = process.env.RATE_LIMITS_ENABLED === 'true'
+    const rateLimitBypassKey = nonemptyString(process.env.RATE_LIMIT_BYPASS_KEY)
+    const redisScratchAddress = nonemptyString(
+      process.env.REDIS_SCRATCH_ADDRESS,
+    )
+    const redisScratchPassword = nonemptyString(
+      process.env.REDIS_SCRATCH_PASSWORD,
+    )
+
     const appUrlPasswordReset =
       process.env.APP_URL_PASSWORD_RESET || 'app://password-reset'
 
@@ -159,9 +180,21 @@ export class ServerConfig {
     const emailNoReplyAddress =
       process.env.EMAIL_NO_REPLY_ADDRESS || 'noreply@blueskyweb.xyz'
 
+    const moderationEmailAddress =
+      process.env.MODERATION_EMAIL_ADDRESS || undefined
+    const moderationEmailSmtpUrl =
+      process.env.MODERATION_EMAIL_SMTP_URL || undefined
+
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const labelerKeywords = {}
+
+    const unacceptableWordsB64 = nonemptyString(
+      process.env.UNACCEPTABLE_WORDS_B64,
+    )
+    const falsePositiveWordsB64 = nonemptyString(
+      process.env.FALSE_POSITIVE_WORDS_B64,
+    )
 
     const feedGenDid = process.env.FEED_GEN_DID
 
@@ -183,14 +216,26 @@ export class ServerConfig {
       undefined,
     )
 
+    // by default each instance is a potential sequencer leader, but may be configured off
+    const sequencerLeaderEnabled = process.env.SEQUENCER_LEADER_ENABLED
+      ? process.env.SEQUENCER_LEADER_ENABLED !== '0' &&
+        process.env.SEQUENCER_LEADER_ENABLED !== 'false'
+      : undefined
+
     const dbTxLockNonce = nonemptyString(process.env.DB_TX_LOCK_NONCE)
 
     const bskyAppViewEndpoint = nonemptyString(
       process.env.BSKY_APP_VIEW_ENDPOINT,
     )
+    const bskyAppViewModeration =
+      process.env.BSKY_APP_VIEW_MODERATION === 'true' ? true : false
     const bskyAppViewDid = nonemptyString(process.env.BSKY_APP_VIEW_DID)
     const bskyAppViewProxy =
       process.env.BSKY_APP_VIEW_PROXY === 'true' ? true : false
+
+    const bskyAppViewCdnUrlPattern = nonemptyString(
+      process.env.BSKY_APP_VIEW_CDN_URL_PATTERN,
+    )
 
     const crawlersEnv = process.env.CRAWLERS_TO_NOTIFY
     const crawlersToNotify =
@@ -228,20 +273,31 @@ export class ServerConfig {
       imgUriKey,
       imgUriEndpoint,
       blobCacheLocation,
+      rateLimitsEnabled,
+      rateLimitBypassKey,
+      redisScratchAddress,
+      redisScratchPassword,
       appUrlPasswordReset,
       emailSmtpUrl,
       emailNoReplyAddress,
+      moderationEmailAddress,
+      moderationEmailSmtpUrl,
       hiveApiKey,
       labelerDid,
       labelerKeywords,
+      unacceptableWordsB64,
+      falsePositiveWordsB64,
       feedGenDid,
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
       sequencerLeaderLockId,
+      sequencerLeaderEnabled,
       dbTxLockNonce,
       bskyAppViewEndpoint,
+      bskyAppViewModeration,
       bskyAppViewDid,
       bskyAppViewProxy,
+      bskyAppViewCdnUrlPattern,
       crawlersToNotify,
       ...overrides,
     })
@@ -401,6 +457,22 @@ export class ServerConfig {
     return this.cfg.blobCacheLocation
   }
 
+  get rateLimitsEnabled() {
+    return this.cfg.rateLimitsEnabled
+  }
+
+  get rateLimitBypassKey() {
+    return this.cfg.rateLimitBypassKey
+  }
+
+  get redisScratchAddress() {
+    return this.cfg.redisScratchAddress
+  }
+
+  get redisScratchPassword() {
+    return this.cfg.redisScratchPassword
+  }
+
   get appUrlPasswordReset() {
     return this.cfg.appUrlPasswordReset
   }
@@ -413,6 +485,14 @@ export class ServerConfig {
     return this.cfg.emailNoReplyAddress
   }
 
+  get moderationEmailAddress() {
+    return this.cfg.moderationEmailAddress
+  }
+
+  get moderationEmailSmtpUrl() {
+    return this.cfg.moderationEmailSmtpUrl
+  }
+
   get hiveApiKey() {
     return this.cfg.hiveApiKey
   }
@@ -423,6 +503,14 @@ export class ServerConfig {
 
   get labelerKeywords() {
     return this.cfg.labelerKeywords
+  }
+
+  get unacceptableWordsB64() {
+    return this.cfg.unacceptableWordsB64
+  }
+
+  get falsePositiveWordsB64() {
+    return this.cfg.falsePositiveWordsB64
   }
 
   get feedGenDid() {
@@ -441,6 +529,10 @@ export class ServerConfig {
     return this.cfg.sequencerLeaderLockId
   }
 
+  get sequencerLeaderEnabled() {
+    return this.cfg.sequencerLeaderEnabled !== false
+  }
+
   get dbTxLockNonce() {
     return this.cfg.dbTxLockNonce
   }
@@ -449,12 +541,20 @@ export class ServerConfig {
     return this.cfg.bskyAppViewEndpoint
   }
 
+  get bskyAppViewModeration() {
+    return this.cfg.bskyAppViewModeration
+  }
+
   get bskyAppViewDid() {
     return this.cfg.bskyAppViewDid
   }
 
   get bskyAppViewProxy() {
     return this.cfg.bskyAppViewProxy
+  }
+
+  get bskyAppViewCdnUrlPattern() {
+    return this.cfg.bskyAppViewCdnUrlPattern
   }
 
   get crawlersToNotify() {

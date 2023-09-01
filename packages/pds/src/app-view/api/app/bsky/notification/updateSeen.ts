@@ -21,12 +21,6 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Could not find user: ${requester}`)
       }
 
-      await ctx.db.db
-        .updateTable('user_state')
-        .set({ lastSeenNotifs: parsed })
-        .where('did', '=', user.did)
-        .executeTakeFirst()
-
       if (ctx.canProxyWrite()) {
         await ctx.appviewAgent.api.app.bsky.notification.updateSeen(
           input.body,
@@ -36,6 +30,12 @@ export default function (server: Server, ctx: AppContext) {
           },
         )
       }
+
+      await ctx.db.db
+        .updateTable('user_state')
+        .set({ lastSeenNotifs: parsed })
+        .where('did', '=', user.did)
+        .executeTakeFirst()
     },
   })
 }

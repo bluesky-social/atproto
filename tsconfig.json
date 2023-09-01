@@ -19,8 +19,7 @@
     "lib": ["dom", "dom.iterable", "esnext", "webworker"],
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "composite": true
+    "isolatedModules": true
   },
   "exclude": ["node_modules", "**/*/dist"],
   "references": [
@@ -34,6 +33,7 @@
     { "path": "./packages/dev-env" },
     { "path": "./packages/identity/tsconfig.build.json" },
     { "path": "./packages/identifier/tsconfig.build.json" },
+    { "path": "./packages/syntax/tsconfig.build.json" },
     { "path": "./packages/lexicon/tsconfig.build.json" },
     { "path": "./packages/lex-cli/tsconfig.build.json" },
     { "path": "./packages/nsid/tsconfig.build.json" },

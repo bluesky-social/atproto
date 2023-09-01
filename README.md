@@ -1,6 +1,6 @@
 # AT Protocol (Authenticated Transfer Protocol)
 
-This is a working repository for the "AT Protocol," aka the Authenticated Transfer Protocol.
+This is a working repository for the AT Protocol, aka the Authenticated Transfer Protocol.
 
 ---
 
@@ -10,7 +10,7 @@ This is a working repository for the "AT Protocol," aka the Authenticated Transf
 
 ## ℹ️ About this project
 
-To learn more about ATP, see:
+To learn more about atproto, see:
 
 - [Protocol Documentation](https://atproto.com/docs)
   - [Overview Guide](https://atproto.com/guides/overview) 👈 Good place to start
@@ -31,7 +31,7 @@ While we do accept contributions, we prioritize high-quality issues and pull req
 - Check for existing issues before filing a new one, please.
 - Open an issue and give some time for discussion before submitting a PR.
 - If submitting a PR that includes a lexicon change, please get sign off on the lexicon change _before_ doing the implementation.
-- Issues are for bugs & feature requests related to the Typescript implementation of atproto and related services. For high-level discussions, please you the [Discussion Forum](https://github.com/bluesky-social/atproto/discussions). For client issues, please use the relevant [social-app](https://github.com/bluesky-social/social-app) repo
+- Issues are for bugs & feature requests related to the TypeScript implementation of atproto and related services. For high-level discussions, please you the [Discussion Forum](https://github.com/bluesky-social/atproto/discussions). For client issues, please use the relevant [social-app](https://github.com/bluesky-social/social-app) repo
 - Stay away from PRs that:
   - Refactor large parts of the codebase
   - Add entirely new features without prior discussion
@@ -39,6 +39,12 @@ While we do accept contributions, we prioritize high-quality issues and pull req
   - Introduce new unnecessary dependencies
 
 Remember, we serve a wide community of users. Our day-to-day involves us constantly asking "which top priority is our top priority." If you submit well-written PRs that solve problems concisely, that's an awesome contribution. Otherwise, as much as we'd love to accept your ideas and contributions, we really don't have the bandwidth.
+
+## Are you a developer interested in building on atproto?
+
+Bluesky is an open social network built on the AT Protocol, a flexible technology that will never lock developers out of the ecosystems that they help build. With atproto, third-party can be as seamless as first-party through custom feeds, federated services, clients, and more.
+
+If you're a developer interested in building on atproto, we'd love to email you a Bluesky invite code. Simply share your GitHub (or similar) profile with us via [this form](https://forms.gle/BF21oxVNZiDjDhXF9).
 
 ## Security disclosures
 

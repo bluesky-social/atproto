@@ -21,12 +21,14 @@ import * as actorState from './tables/actor-state'
 import * as actorSync from './tables/actor-sync'
 import * as record from './tables/record'
 import * as notification from './tables/notification'
+import * as notificationPushToken from './tables/notification-push-token'
 import * as didCache from './tables/did-cache'
 import * as moderation from './tables/moderation'
 import * as label from './tables/label'
 import * as algo from './tables/algo'
 import * as viewParam from './tables/view-param'
 import * as suggestedFollow from './tables/suggested-follow'
+import * as suggestedFeed from './tables/suggested-feed'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -50,12 +52,14 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   actorSync.PartialDB &
   record.PartialDB &
   notification.PartialDB &
+  notificationPushToken.PartialDB &
   didCache.PartialDB &
   moderation.PartialDB &
   label.PartialDB &
   algo.PartialDB &
   viewParam.PartialDB &
-  suggestedFollow.PartialDB
+  suggestedFollow.PartialDB &
+  suggestedFeed.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

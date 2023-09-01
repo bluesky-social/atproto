@@ -1,140 +1,194 @@
 import { CID } from 'multiformats/cid'
-import { MemoryBlockstore, RepoStorage } from '../storage'
-import Repo from '../repo'
-import * as verify from '../verify'
+import { MemoryBlockstore, ReadableBlockstore, SyncStorage } from '../storage'
+import DataDiff from '../data-diff'
+import ReadableRepo from '../readable-repo'
 import * as util from '../util'
-import { CommitData, RepoContents, WriteLog } from '../types'
-import CidSet from '../cid-set'
-import { MissingBlocksError } from '../error'
+import { RecordClaim, VerifiedDiff, VerifiedRepo } from '../types'
+import { def } from '../types'
+import { MST } from '../mst'
+import { cidForCbor } from '@atproto/common'
+import BlockMap from '../block-map'
 
-// Checkouts
-// -------------
+export const verifyRepoCar = async (
+  carBytes: Uint8Array,
+  did?: string,
+  signingKey?: string,
+): Promise<VerifiedRepo> => {
+  const car = await util.readCarWithRoot(carBytes)
+  return verifyRepo(car.blocks, car.root, did, signingKey)
+}
 
-export const loadCheckout = async (
-  storage: RepoStorage,
-  repoCar: Uint8Array,
-  did: string,
-  signingKey: string,
-): Promise<{ root: CID; contents: RepoContents }> => {
-  const { root, blocks } = await util.readCarWithRoot(repoCar)
-  const updateStorage = new MemoryBlockstore(blocks)
-  const checkout = await verify.verifyCheckout(
-    updateStorage,
-    root,
-    did,
-    signingKey,
-  )
-
-  const checkoutBlocks = await updateStorage.getBlocks(
-    checkout.newCids.toList(),
-  )
-  if (checkoutBlocks.missing.length > 0) {
-    throw new MissingBlocksError('sync', checkoutBlocks.missing)
-  }
-  await Promise.all([
-    storage.putMany(checkoutBlocks.blocks),
-    storage.updateHead(root, null),
-  ])
-
+export const verifyRepo = async (
+  blocks: BlockMap,
+  head: CID,
+  did?: string,
+  signingKey?: string,
+): Promise<VerifiedRepo> => {
+  const diff = await verifyDiff(null, blocks, head, did, signingKey)
+  const creates = util.ensureCreates(diff.writes)
   return {
-    root,
-    contents: checkout.contents,
+    creates,
+    commit: diff.commit,
   }
 }
 
-// Diffs
-// -------------
+export const verifyDiffCar = async (
+  repo: ReadableRepo | null,
+  carBytes: Uint8Array,
+  did?: string,
+  signingKey?: string,
+): Promise<VerifiedDiff> => {
+  const car = await util.readCarWithRoot(carBytes)
+  return verifyDiff(repo, car.blocks, car.root, did, signingKey)
+}
 
-export const loadFullRepo = async (
-  storage: RepoStorage,
-  repoCar: Uint8Array,
-  did: string,
-  signingKey: string,
-): Promise<{ root: CID; writeLog: WriteLog; repo: Repo }> => {
-  const { root, blocks } = await util.readCarWithRoot(repoCar)
-  const updateStorage = new MemoryBlockstore(blocks)
-  const updates = await verify.verifyFullHistory(
+export const verifyDiff = async (
+  repo: ReadableRepo | null,
+  updateBlocks: BlockMap,
+  updateRoot: CID,
+  did?: string,
+  signingKey?: string,
+): Promise<VerifiedDiff> => {
+  const stagedStorage = new MemoryBlockstore(updateBlocks)
+  const updateStorage = repo
+    ? new SyncStorage(stagedStorage, repo.storage)
+    : stagedStorage
+  const updated = await verifyRepoRoot(
     updateStorage,
-    root,
+    updateRoot,
     did,
     signingKey,
   )
-
-  const [writeLog] = await Promise.all([
-    persistUpdates(storage, updateStorage, updates),
-    storage.updateHead(root, null),
-  ])
-
-  const repo = await Repo.load(storage, root)
-
-  return {
-    root,
-    writeLog,
-    repo,
+  const diff = await DataDiff.of(updated.data, repo?.data ?? null)
+  const writes = await util.diffToWriteDescripts(diff, updateBlocks)
+  const newBlocks = diff.newMstBlocks
+  const leaves = updateBlocks.getMany(diff.newLeafCids.toList())
+  if (leaves.missing.length > 0) {
+    throw new Error(`missing leaf blocks: ${leaves.missing}`)
   }
-}
-
-export const loadDiff = async (
-  repo: Repo,
-  diffCar: Uint8Array,
-  did: string,
-  signingKey: string,
-): Promise<{ root: CID; writeLog: WriteLog }> => {
-  const { root, blocks } = await util.readCarWithRoot(diffCar)
-  const updateStorage = new MemoryBlockstore(blocks)
-  const updates = await verify.verifyUpdates(
-    repo,
-    updateStorage,
-    root,
-    did,
-    signingKey,
-  )
-
-  const [writeLog] = await Promise.all([
-    persistUpdates(repo.storage, updateStorage, updates),
-    repo.storage.updateHead(root, repo.cid),
-  ])
-
-  return {
-    root,
-    writeLog,
-  }
-}
-
-// Helpers
-// -------------
-
-export const persistUpdates = async (
-  storage: RepoStorage,
-  updateStorage: RepoStorage,
-  updates: verify.VerifiedUpdate[],
-): Promise<WriteLog> => {
-  const newCids = new CidSet()
-  for (const update of updates) {
-    newCids.addSet(update.newCids)
-  }
-
-  const diffBlocks = await updateStorage.getBlocks(newCids.toList())
-  if (diffBlocks.missing.length > 0) {
-    throw new MissingBlocksError('sync', diffBlocks.missing)
-  }
-  const commits: CommitData[] = updates.map((update) => {
-    const forCommit = diffBlocks.blocks.getMany(update.newCids.toList())
-    if (forCommit.missing.length > 0) {
-      throw new MissingBlocksError('sync', forCommit.missing)
+  newBlocks.addMap(leaves.blocks)
+  const removedCids = diff.removedCids
+  const commitCid = await newBlocks.add(updated.commit)
+  // ensure the commit cid actually changed
+  if (repo) {
+    if (commitCid.equals(repo.cid)) {
+      newBlocks.delete(commitCid)
+    } else {
+      removedCids.add(repo.cid)
     }
-    return {
-      commit: update.commit,
-      prev: update.prev,
-      blocks: forCommit.blocks,
-    }
-  })
-
-  await storage.indexCommits(commits)
-
-  return Promise.all(
-    updates.map((upd) =>
-      util.diffToWriteDescripts(upd.diff, diffBlocks.blocks),
-    ),
-  )
+  }
+  return {
+    writes,
+    commit: {
+      cid: updated.cid,
+      rev: updated.commit.rev,
+      prev: repo?.cid ?? null,
+      since: repo?.commit.rev ?? null,
+      newBlocks,
+      removedCids,
+    },
+  }
 }
+
+// @NOTE only verifies the root, not the repo contents
+const verifyRepoRoot = async (
+  storage: ReadableBlockstore,
+  head: CID,
+  did?: string,
+  signingKey?: string,
+): Promise<ReadableRepo> => {
+  const repo = await ReadableRepo.load(storage, head)
+  if (did !== undefined && repo.did !== did) {
+    throw new RepoVerificationError(`Invalid repo did: ${repo.did}`)
+  }
+  if (signingKey !== undefined) {
+    const validSig = await util.verifyCommitSig(repo.commit, signingKey)
+    if (!validSig) {
+      throw new RepoVerificationError(
+        `Invalid signature on commit: ${repo.cid.toString()}`,
+      )
+    }
+  }
+  return repo
+}
+
+export const verifyProofs = async (
+  proofs: Uint8Array,
+  claims: RecordClaim[],
+  did: string,
+  didKey: string,
+): Promise<{ verified: RecordClaim[]; unverified: RecordClaim[] }> => {
+  const car = await util.readCarWithRoot(proofs)
+  const blockstore = new MemoryBlockstore(car.blocks)
+  const commit = await blockstore.readObj(car.root, def.commit)
+  if (commit.did !== did) {
+    throw new RepoVerificationError(`Invalid repo did: ${commit.did}`)
+  }
+  const validSig = await util.verifyCommitSig(commit, didKey)
+  if (!validSig) {
+    throw new RepoVerificationError(
+      `Invalid signature on commit: ${car.root.toString()}`,
+    )
+  }
+  const mst = MST.load(blockstore, commit.data)
+  const verified: RecordClaim[] = []
+  const unverified: RecordClaim[] = []
+  for (const claim of claims) {
+    const found = await mst.get(
+      util.formatDataKey(claim.collection, claim.rkey),
+    )
+    const record = found ? await blockstore.readObj(found, def.map) : null
+    if (claim.record === null) {
+      if (record === null) {
+        verified.push(claim)
+      } else {
+        unverified.push(claim)
+      }
+    } else {
+      const expected = await cidForCbor(claim.record)
+      if (expected.equals(found)) {
+        verified.push(claim)
+      } else {
+        unverified.push(claim)
+      }
+    }
+  }
+  return { verified, unverified }
+}
+
+export const verifyRecords = async (
+  proofs: Uint8Array,
+  did: string,
+  signingKey: string,
+): Promise<RecordClaim[]> => {
+  const car = await util.readCarWithRoot(proofs)
+  const blockstore = new MemoryBlockstore(car.blocks)
+  const commit = await blockstore.readObj(car.root, def.commit)
+  if (commit.did !== did) {
+    throw new RepoVerificationError(`Invalid repo did: ${commit.did}`)
+  }
+  const validSig = await util.verifyCommitSig(commit, signingKey)
+  if (!validSig) {
+    throw new RepoVerificationError(
+      `Invalid signature on commit: ${car.root.toString()}`,
+    )
+  }
+  const mst = MST.load(blockstore, commit.data)
+
+  const records: RecordClaim[] = []
+  const leaves = await mst.reachableLeaves()
+  for (const leaf of leaves) {
+    const { collection, rkey } = util.parseDataKey(leaf.key)
+    const record = await blockstore.attemptReadRecord(leaf.value)
+    if (record) {
+      records.push({
+        collection,
+        rkey,
+        record,
+      })
+    }
+  }
+  return records
+}
+
+export class RepoVerificationError extends Error {}

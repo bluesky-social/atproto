@@ -1,3 +1,4 @@
+import assert from 'assert'
 import AtpAgent from '@atproto/api'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
@@ -184,6 +185,32 @@ describe('timeline views', () => {
 
     expect(full.data.feed.length).toEqual(7)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
+  it('reflects self-labels', async () => {
+    const carolTL = await agent.api.app.bsky.feed.getTimeline(
+      {},
+      { headers: sc.getHeaders(carol) },
+    )
+
+    const alicePost = carolTL.data.feed.find(
+      ({ post }) => post.uri === sc.posts[alice][0].ref.uriStr,
+    )?.post
+
+    assert(alicePost, 'post does not exist')
+
+    const postSelfLabels = alicePost.labels
+      ?.filter((label) => label.src === alice)
+      .map((label) => label.val)
+
+    expect(postSelfLabels).toEqual(['self-label'])
+
+    const authorSelfLabels = alicePost.author.labels
+      ?.filter((label) => label.src === alice)
+      .map((label) => label.val)
+      .sort()
+
+    expect(authorSelfLabels).toEqual(['self-label-a', 'self-label-b'])
   })
 
   it('blocks posts, reposts, replies by actor takedown', async () => {

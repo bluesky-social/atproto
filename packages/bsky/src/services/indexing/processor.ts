@@ -1,13 +1,15 @@
 import { Insertable } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { jsonStringToLex, stringifyLex } from '@atproto/lexicon'
 import DatabaseSchema from '../../db/database-schema'
 import { lexicons } from '../../lexicon/lexicons'
 import { Notification } from '../../db/tables/notification'
 import { chunkArray } from '@atproto/common'
-import Database from '../../db'
+import { PrimaryDatabase } from '../../db'
 import { BackgroundQueue } from '../../background'
+import { NotificationServer } from '../../notifications'
+import { dbLogger } from '../../logger'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).
@@ -40,8 +42,9 @@ export class RecordProcessor<T, S> {
   collection: string
   db: DatabaseSchema
   constructor(
-    private appDb: Database,
+    private appDb: PrimaryDatabase,
     private backgroundQueue: BackgroundQueue,
+    private notifServer: NotificationServer | undefined,
     private params: RecordProcessorParams<T, S>,
   ) {
     this.db = appDb.db
@@ -61,7 +64,13 @@ export class RecordProcessor<T, S> {
     lexicons.assertValidRecord(this.params.lexId, obj)
   }
 
-  async insertRecord(uri: AtUri, cid: CID, obj: unknown, timestamp: string) {
+  async insertRecord(
+    uri: AtUri,
+    cid: CID,
+    obj: unknown,
+    timestamp: string,
+    opts?: { disableNotifs?: boolean },
+  ) {
     this.assertValidRecord(obj)
     await this.db
       .insertInto('record')
@@ -83,7 +92,9 @@ export class RecordProcessor<T, S> {
     )
     if (inserted) {
       this.aggregateOnCommit(inserted)
-      await this.handleNotifs({ inserted })
+      if (!opts?.disableNotifs) {
+        await this.handleNotifs({ inserted })
+      }
       return
     }
     // if duplicate, insert into duplicates table with no events
@@ -106,7 +117,13 @@ export class RecordProcessor<T, S> {
   // for the uri then replace it. The main upside is that this allows the indexer
   // for each collection to avoid bespoke logic for in-place updates, which isn't
   // straightforward in the general case. We still get nice control over notifications.
-  async updateRecord(uri: AtUri, cid: CID, obj: unknown, timestamp: string) {
+  async updateRecord(
+    uri: AtUri,
+    cid: CID,
+    obj: unknown,
+    timestamp: string,
+    opts?: { disableNotifs?: boolean },
+  ) {
     this.assertValidRecord(obj)
     await this.db
       .updateTable('record')
@@ -155,7 +172,9 @@ export class RecordProcessor<T, S> {
       )
     }
     this.aggregateOnCommit(inserted)
-    await this.handleNotifs({ inserted, deleted })
+    if (!opts?.disableNotifs) {
+      await this.handleNotifs({ inserted, deleted })
+    }
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {
@@ -209,7 +228,8 @@ export class RecordProcessor<T, S> {
 
   async handleNotifs(op: { deleted?: S; inserted?: S }) {
     let notifs: Notif[] = []
-    const runOnCommit: ((db: Database) => Promise<void>)[] = []
+    const runOnCommit: ((db: PrimaryDatabase) => Promise<void>)[] = []
+    const sendOnCommit: (() => Promise<void>)[] = []
     if (op.deleted) {
       const forDelete = this.params.notifsForDelete(
         op.deleted,
@@ -233,6 +253,17 @@ export class RecordProcessor<T, S> {
       runOnCommit.push(async (db) => {
         await db.db.insertInto('notification').values(chunk).execute()
       })
+      if (this.notifServer) {
+        const notifServer = this.notifServer
+        sendOnCommit.push(async () => {
+          try {
+            const preparedNotifs = await notifServer.prepareNotifsToSend(chunk)
+            await notifServer.processNotifications(preparedNotifs)
+          } catch (error) {
+            dbLogger.error({ error }, 'error sending push notifications')
+          }
+        })
+      }
     }
     if (runOnCommit.length) {
       // Need to ensure notif deletion always happens before creation, otherwise delete may clobber in a race.
@@ -240,6 +271,16 @@ export class RecordProcessor<T, S> {
         this.backgroundQueue.add(async (db) => {
           for (const fn of runOnCommit) {
             await fn(db)
+          }
+        })
+      })
+    }
+    if (sendOnCommit.length) {
+      // Need to ensure notif deletion always happens before creation, otherwise delete may clobber in a race.
+      this.appDb.onCommit(() => {
+        this.backgroundQueue.add(async () => {
+          for (const fn of sendOnCommit) {
+            await fn()
           }
         })
       })

@@ -9,19 +9,20 @@ export default function (server: Server, ctx: AppContext) {
     // @TODO anonymous reports w/ optional auth are a temporary measure
     auth: ctx.authOptionalVerifier,
     handler: async ({ input, auth }) => {
-      const { db, services } = ctx
       const { reasonType, reason, subject } = input.body
       const requester = auth.credentials.did
 
+      const db = ctx.db.getPrimary()
+
       if (requester) {
         // Don't accept reports from users that are fully taken-down
-        const actor = await services.actor(db).getActor(requester, true)
+        const actor = await ctx.services.actor(db).getActor(requester, true)
         if (actor && softDeleted(actor)) {
           throw new AuthRequiredError()
         }
       }
 
-      const moderationService = services.moderation(db)
+      const moderationService = ctx.services.moderation(db)
 
       const report = await moderationService.report({
         reasonType: getReasonType(reasonType),

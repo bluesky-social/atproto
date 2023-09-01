@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
@@ -15,8 +15,8 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.roleVerifier,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
-      const { db, services } = ctx
-      const moderationService = services.moderation(db)
+      const db = ctx.db.getPrimary()
+      const moderationService = ctx.services.moderation(db)
       const {
         action,
         subject,
@@ -25,14 +25,15 @@ export default function (server: Server, ctx: AppContext) {
         createLabelVals,
         negateLabelVals,
         subjectBlobCids,
+        durationInHours,
       } = input.body
 
       // apply access rules
 
       // if less than admin access then can not takedown an account
-      if (!access.admin && action === TAKEDOWN && 'did' in subject) {
+      if (!access.moderator && action === TAKEDOWN && 'did' in subject) {
         throw new AuthRequiredError(
-          'Must be an admin to perform an account takedown',
+          'Must be a full moderator to perform an account takedown',
         )
       }
       // if less than moderator access then can only take ack and escalation actions
@@ -52,8 +53,8 @@ export default function (server: Server, ctx: AppContext) {
       validateLabels([...(createLabelVals ?? []), ...(negateLabelVals ?? [])])
 
       const moderationAction = await db.transaction(async (dbTxn) => {
-        const moderationTxn = services.moderation(dbTxn)
-        const labelTxn = services.label(dbTxn)
+        const moderationTxn = ctx.services.moderation(dbTxn)
+        const labelTxn = ctx.services.label(dbTxn)
 
         const result = await moderationTxn.logAction({
           action: getAction(action),
@@ -63,6 +64,7 @@ export default function (server: Server, ctx: AppContext) {
           negateLabelVals,
           createdBy,
           reason,
+          durationInHours,
         })
 
         if (

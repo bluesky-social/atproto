@@ -1,4 +1,4 @@
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import {
   ACKNOWLEDGE,
@@ -13,13 +13,13 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.roleVerifier,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
-      const { db, services } = ctx
-      const moderationService = services.moderation(db)
+      const db = ctx.db.getPrimary()
+      const moderationService = ctx.services.moderation(db)
       const { id, createdBy, reason } = input.body
 
       const moderationAction = await db.transaction(async (dbTxn) => {
-        const moderationTxn = services.moderation(dbTxn)
-        const labelTxn = services.label(dbTxn)
+        const moderationTxn = ctx.services.moderation(dbTxn)
+        const labelTxn = ctx.services.label(dbTxn)
         const now = new Date()
 
         const existing = await moderationTxn.getAction(id)
@@ -43,43 +43,23 @@ export default function (server: Server, ctx: AppContext) {
             'Must be a full moderator to reverse this type of action',
           )
         }
-        // if less than admin access then can reverse takedown on an account
+        // if less than moderator access then cannot reverse takedown on an account
         if (
-          !access.admin &&
+          !access.moderator &&
           existing.action === TAKEDOWN &&
           existing.subjectType === 'com.atproto.admin.defs#repoRef'
         ) {
           throw new AuthRequiredError(
-            'Must be an admin to reverse an account takedown',
+            'Must be a full moderator to reverse an account takedown',
           )
         }
 
-        const result = await moderationTxn.logReverseAction({
+        const result = await moderationTxn.revertAction({
           id,
           createdAt: now,
           createdBy,
           reason,
         })
-
-        if (
-          result.action === TAKEDOWN &&
-          result.subjectType === 'com.atproto.admin.defs#repoRef' &&
-          result.subjectDid
-        ) {
-          await moderationTxn.reverseTakedownRepo({
-            did: result.subjectDid,
-          })
-        }
-
-        if (
-          result.action === TAKEDOWN &&
-          result.subjectType === 'com.atproto.repo.strongRef' &&
-          result.subjectUri
-        ) {
-          await moderationTxn.reverseTakedownRecord({
-            uri: new AtUri(result.subjectUri),
-          })
-        }
 
         // invert creates & negates
         const { createLabelVals, negateLabelVals } = result

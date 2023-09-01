@@ -5,11 +5,7 @@ import MstWalker from './walker'
 export const nullDiff = async (tree: MST): Promise<DataDiff> => {
   const diff = new DataDiff()
   for await (const entry of tree.walk()) {
-    if (entry.isLeaf()) {
-      diff.recordAdd(entry.key, entry.value)
-    } else {
-      diff.recordNewCid(entry.pointer)
-    }
+    await diff.nodeAdd(entry)
   }
   return diff
 }
@@ -31,21 +27,11 @@ export const mstDiff = async (
   while (!leftWalker.status.done || !rightWalker.status.done) {
     // if one walker is finished, continue walking the other & logging all nodes
     if (leftWalker.status.done && !rightWalker.status.done) {
-      const node = rightWalker.status.curr
-      if (node.isLeaf()) {
-        diff.recordAdd(node.key, node.value)
-      } else {
-        diff.recordNewCid(node.pointer)
-      }
+      await diff.nodeAdd(rightWalker.status.curr)
       await rightWalker.advance()
       continue
     } else if (!leftWalker.status.done && rightWalker.status.done) {
-      const node = leftWalker.status.curr
-      if (node.isLeaf()) {
-        diff.recordDelete(node.key, node.value)
-      } else {
-        diff.recordRemovedCid(node.pointer)
-      }
+      await diff.nodeDelete(leftWalker.status.curr)
       await leftWalker.advance()
       continue
     }
@@ -58,15 +44,15 @@ export const mstDiff = async (
     if (left.isLeaf() && right.isLeaf()) {
       if (left.key === right.key) {
         if (!left.value.equals(right.value)) {
-          diff.recordUpdate(left.key, left.value, right.value)
+          diff.leafUpdate(left.key, left.value, right.value)
         }
         await leftWalker.advance()
         await rightWalker.advance()
       } else if (left.key < right.key) {
-        diff.recordDelete(left.key, left.value)
+        diff.leafDelete(left.key, left.value)
         await leftWalker.advance()
       } else {
-        diff.recordAdd(right.key, right.value)
+        diff.leafAdd(right.key, right.value)
         await rightWalker.advance()
       }
       continue
@@ -78,27 +64,19 @@ export const mstDiff = async (
     // if the higher walker is pointed at a leaf, then advance the lower walker to try to catch up the higher
     if (leftWalker.layer() > rightWalker.layer()) {
       if (left.isLeaf()) {
-        if (right.isLeaf()) {
-          diff.recordAdd(right.key, right.value)
-        } else {
-          diff.recordNewCid(right.pointer)
-        }
+        await diff.nodeAdd(right)
         await rightWalker.advance()
       } else {
-        diff.recordRemovedCid(left.pointer)
+        await diff.nodeDelete(left)
         await leftWalker.stepInto()
       }
       continue
     } else if (leftWalker.layer() < rightWalker.layer()) {
       if (right.isLeaf()) {
-        if (left.isLeaf()) {
-          diff.recordDelete(left.key, left.value)
-        } else {
-          diff.recordRemovedCid(left.pointer)
-        }
+        await diff.nodeDelete(left)
         await leftWalker.advance()
       } else {
-        diff.recordNewCid(right.pointer)
+        await diff.nodeAdd(right)
         await rightWalker.stepInto()
       }
       continue
@@ -111,8 +89,8 @@ export const mstDiff = async (
         await leftWalker.stepOver()
         await rightWalker.stepOver()
       } else {
-        diff.recordNewCid(right.pointer)
-        diff.recordRemovedCid(left.pointer)
+        await diff.nodeAdd(right)
+        await diff.nodeDelete(left)
         await leftWalker.stepInto()
         await rightWalker.stepInto()
       }
@@ -121,11 +99,11 @@ export const mstDiff = async (
 
     // finally, if one pointer is a tree and the other is a leaf, simply step into the tree
     if (left.isLeaf() && right.isTree()) {
-      diff.recordNewCid(right.pointer)
+      await diff.nodeAdd(right)
       await rightWalker.stepInto()
       continue
     } else if (left.isTree() && right.isLeaf()) {
-      diff.recordRemovedCid(left.pointer)
+      await diff.nodeDelete(left)
       await leftWalker.stepInto()
       continue
     }

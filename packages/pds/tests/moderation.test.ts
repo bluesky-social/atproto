@@ -1,5 +1,5 @@
 import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { BlobNotFoundError } from '@atproto/repo'
 import {
   adminAuth,
@@ -22,6 +22,7 @@ import {
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { PeriodicModerationActionReversal } from '../src'
 
 describe('moderation', () => {
   let server: TestServerInfo
@@ -984,9 +985,9 @@ describe('moderation', () => {
       )
     })
 
-    it('does not allow non-admin moderators to takedown.', async () => {
-      const attemptTakedownMod =
-        agent.api.com.atproto.admin.takeModerationAction(
+    it('allows full moderators to takedown.', async () => {
+      const { data: action } =
+        await agent.api.com.atproto.admin.takeModerationAction(
           {
             action: TAKEDOWN,
             createdBy: 'did:example:moderator',
@@ -1001,9 +1002,57 @@ describe('moderation', () => {
             headers: { authorization: moderatorAuth() },
           },
         )
-      await expect(attemptTakedownMod).rejects.toThrow(
-        'Must be an admin to perform an account takedown',
-      )
+      // cleanup
+      await reverse(action.id)
+    })
+
+    it('automatically reverses actions marked with duration', async () => {
+      const { data: action } =
+        await agent.api.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            createdBy: 'did:example:moderator',
+            reason: 'Y',
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: sc.dids.bob,
+            },
+            createLabelVals: ['takendown'],
+            // Use negative value to set the expiry time in the past so that the action is automatically reversed
+            // right away without having to wait n number of hours for a successful assertion
+            durationInHours: -1,
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: moderatorAuth() },
+          },
+        )
+
+      const labelsAfterTakedown = await getRepoLabels(sc.dids.bob)
+      expect(labelsAfterTakedown).toContain('takendown')
+      // In the actual app, this will be instantiated and run on server startup
+      const periodicReversal = new PeriodicModerationActionReversal(server.ctx)
+      await periodicReversal.findAndRevertDueActions()
+
+      const { data: reversedAction } =
+        await agent.api.com.atproto.admin.getModerationAction(
+          { id: action.id },
+          { headers: { authorization: adminAuth() } },
+        )
+
+      // Verify that the automatic reversal is attributed to the original moderator of the temporary action
+      // and that the reason is set to indicate that the action was automatically reversed.
+      expect(reversedAction.reversal).toMatchObject({
+        createdBy: action.createdBy,
+        reason: '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
+      })
+
+      // Verify that labels are also reversed when takedown action is reversed
+      const labelsAfterReversal = await getRepoLabels(sc.dids.bob)
+      expect(labelsAfterReversal).not.toContain('takendown')
+    })
+
+    it('does not allow non-full moderators to takedown.', async () => {
       const attemptTakedownTriage =
         agent.api.com.atproto.admin.takeModerationAction(
           {
@@ -1021,7 +1070,7 @@ describe('moderation', () => {
           },
         )
       await expect(attemptTakedownTriage).rejects.toThrow(
-        'Must be an admin to perform an account takedown',
+        'Must be a full moderator to perform an account takedown',
       )
     })
 

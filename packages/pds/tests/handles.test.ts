@@ -130,6 +130,13 @@ describe('handles', () => {
     await expect(attempt).rejects.toThrow('Handle already taken: bob.test')
   })
 
+  it('handle updates are idempotent', async () => {
+    await agent.api.com.atproto.identity.updateHandle(
+      { handle: 'Bob.test' },
+      { headers: sc.getHeaders(bob), encoding: 'application/json' },
+    )
+  })
+
   it('if handle update fails, it does not update their did document', async () => {
     const data = await idResolver.did.resolveAtprotoData(alice)
     expect(data.handle).toBe(newHandle)
@@ -261,20 +268,6 @@ describe('handles', () => {
       { headers: sc.getHeaders(bob) },
     )
     expect(profile.data.handle).toBe('dril.test')
-  })
-
-  it('disallows setting handle to an off-service domain', async () => {
-    const attempt = agent.api.com.atproto.admin.updateAccountHandle(
-      {
-        did: bob,
-        handle: 'bob.external',
-      },
-      {
-        headers: { authorization: util.adminAuth() },
-        encoding: 'application/json',
-      },
-    )
-    await expect(attempt).rejects.toThrow('Unsupported domain')
   })
 
   it('requires admin auth', async () => {

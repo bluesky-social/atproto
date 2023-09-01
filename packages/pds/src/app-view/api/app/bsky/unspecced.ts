@@ -1,14 +1,16 @@
+import { NotEmptyArray } from '@atproto/common'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { FeedKeyset } from './util/feed'
 import { GenericKeyset, paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { FeedRow } from '../../../services/feed'
-import { isPostView } from '../../../../lexicon/types/app/bsky/feed/defs'
-import { NotEmptyArray } from '@atproto/common'
+import {
+  isPostView,
+  GeneratorView,
+} from '../../../../lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../../../../lexicon/types/app/bsky/embed/record'
 import { countAll, valuesList } from '../../../../db/util'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { GeneratorView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
+import { FeedKeyset } from './util/feed'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',
@@ -25,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxyRead(req)) {
+      if (await ctx.canProxyRead(req, requester)) {
         const hotClassicUri = Object.keys(ctx.algos).find((uri) =>
           uri.endsWith('/hot-classic'),
         )
@@ -131,11 +133,11 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
       const db = ctx.db.db
-      const { limit, cursor } = params
+      const { limit, cursor, query } = params
       const { ref } = db.dynamic
       const feedService = ctx.services.appView.feed(ctx.db)
 
-      const inner = ctx.db.db
+      let inner = ctx.db.db
         .selectFrom('feed_generator')
         .select([
           'uri',
@@ -146,6 +148,16 @@ export default function (server: Server, ctx: AppContext) {
             .select(countAll.as('count'))
             .as('likeCount'),
         ])
+
+      if (query) {
+        // like is case-insensitive is sqlite, and ilike is not supported
+        const operator = ctx.db.dialect === 'pg' ? 'ilike' : 'like'
+        inner = inner.where((qb) =>
+          qb
+            .where('feed_generator.displayName', operator, `%${query}%`)
+            .orWhere('feed_generator.description', operator, `%${query}%`),
+        )
+      }
 
       let builder = ctx.db.db.selectFrom(inner.as('feed_gens')).selectAll()
 
@@ -177,6 +189,18 @@ export default function (server: Server, ctx: AppContext) {
           feeds: genViews,
         },
       }
+    },
+  })
+
+  server.app.bsky.unspecced.applyLabels({
+    auth: ctx.roleVerifier,
+    handler: async ({ auth, input }) => {
+      if (!auth.credentials.admin) {
+        throw new AuthRequiredError('Insufficient privileges')
+      }
+      const { services, db } = ctx
+      const { labels } = input.body
+      await services.appView.label(db).createLabels(labels)
     },
   })
 }

@@ -1,6 +1,6 @@
 import { Selectable } from 'kysely'
 import { ArrayEl, cborBytesToRecord } from '@atproto/common'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
 import { DidHandle } from '../../db/tables/did-handle'
@@ -22,6 +22,8 @@ import { ModerationAction } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
 import { ModerationReportRowWithHandle } from '.'
+import { getSelfLabels } from '../../app-view/services/label'
+import { jsonStringToLex } from '@atproto/lexicon'
 
 export class ModerationViews {
   constructor(private db: Database, private messageDispatcher: MessageQueue) {}
@@ -59,6 +61,7 @@ export class ModerationViews {
           'did_handle.did as did',
           'user_account.email as email',
           'user_account.invitesDisabled as invitesDisabled',
+          'user_account.inviteNote as inviteNote',
           'profile_block.content as profileBytes',
         ])
         .execute(),
@@ -71,7 +74,7 @@ export class ModerationViews {
           'in',
           results.map((r) => r.did),
         )
-        .select(['id', 'action', 'subjectDid'])
+        .select(['id', 'action', 'durationInHours', 'subjectDid'])
         .execute(),
       this.services
         .account(this.db)
@@ -88,7 +91,8 @@ export class ModerationViews {
     )
 
     const views = results.map((r) => {
-      const { email, invitesDisabled, profileBytes } = infoByDid[r.did] ?? {}
+      const { email, invitesDisabled, profileBytes, inviteNote } =
+        infoByDid[r.did] ?? {}
       const action = actionByDid[r.did]
       const relatedRecords: object[] = []
       if (profileBytes) {
@@ -102,11 +106,16 @@ export class ModerationViews {
         indexedAt: r.indexedAt,
         moderation: {
           currentAction: action
-            ? { id: action.id, action: action.action }
+            ? {
+                id: action.id,
+                action: action.action,
+                durationInHours: action.durationInHours ?? undefined,
+              }
             : undefined,
         },
         invitedBy: invitedBy[r.did],
         invitesDisabled: invitesDisabled === 1,
+        inviteNote: inviteNote ?? undefined,
       }
     })
 
@@ -191,7 +200,7 @@ export class ModerationViews {
           'in',
           results.map((r) => r.uri),
         )
-        .select(['id', 'action', 'subjectUri'])
+        .select(['id', 'action', 'durationInHours', 'subjectUri'])
         .execute(),
     ])
     const repos = await this.repo(repoResults, opts)
@@ -223,7 +232,11 @@ export class ModerationViews {
         repo,
         moderation: {
           currentAction: action
-            ? { id: action.id, action: action.action }
+            ? {
+                id: action.id,
+                action: action.action,
+                durationInHours: action.durationInHours ?? undefined,
+              }
             : undefined,
         },
       }
@@ -264,6 +277,11 @@ export class ModerationViews {
       this.blob(record.blobCids),
       this.labels(record.uri),
     ])
+    const selfLabels = getSelfLabels({
+      uri: result.uri,
+      cid: result.cid,
+      record: result.value as Record<string, unknown>,
+    })
     return {
       ...record,
       blobs,
@@ -272,7 +290,7 @@ export class ModerationViews {
         reports,
         actions,
       },
-      labels,
+      labels: [...labels, ...selfLabels],
     }
   }
 
@@ -320,6 +338,7 @@ export class ModerationViews {
     const views = results.map((res) => ({
       id: res.id,
       action: res.action,
+      durationInHours: res.durationInHours ?? undefined,
       subject:
         res.subjectType === 'com.atproto.admin.defs#repoRef'
           ? {
@@ -380,6 +399,7 @@ export class ModerationViews {
     return {
       id: action.id,
       action: action.action,
+      durationInHours: action.durationInHours,
       subject,
       subjectBlobs,
       createLabelVals: action.createLabelVals,
@@ -553,7 +573,7 @@ export class ModerationViews {
           'subject_blob.actionId',
           'moderation_action.id',
         )
-        .select(['id', 'action', 'cid'])
+        .select(['id', 'action', 'durationInHours', 'cid'])
         .execute(),
     ])
     const actionByCid = actionResults.reduce(
@@ -580,7 +600,11 @@ export class ModerationViews {
             : undefined,
         moderation: {
           currentAction: action
-            ? { id: action.id, action: action.action }
+            ? {
+                id: action.id,
+                action: action.action,
+                durationInHours: action.durationInHours ?? undefined,
+              }
             : undefined,
         },
       }

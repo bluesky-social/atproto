@@ -1,3 +1,4 @@
+import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
@@ -9,7 +10,10 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { uri, limit, cursor, cid } = params
       const requester = auth.credentials.did
-      const { services, db } = ctx
+
+      const db = ctx.db.getReplica()
+      const graphService = ctx.services.graph(db)
+
       const { ref } = db.db.dynamic
 
       let builder = db.db
@@ -17,6 +21,7 @@ export default function (server: Server, ctx: AppContext) {
         .where('like.subject', '=', uri)
         .innerJoin('actor as creator', 'creator.did', 'like.creator')
         .where(notSoftDeletedClause(ref('creator')))
+        .whereNotExists(graphService.blockQb(requester, [ref('like.creator')]))
         .selectAll('creator')
         .select([
           'like.cid as cid',
@@ -37,7 +42,19 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const likesRes = await builder.execute()
-      const actors = await services.actor(db).views.profile(likesRes, requester)
+      const actors = await ctx.services
+        .actor(db)
+        .views.profiles(likesRes, requester)
+
+      const likes = mapDefined(likesRes, (row) =>
+        actors[row.did]
+          ? {
+              createdAt: row.createdAt,
+              indexedAt: row.indexedAt,
+              actor: actors[row.did],
+            }
+          : undefined,
+      )
 
       return {
         encoding: 'application/json',
@@ -45,11 +62,7 @@ export default function (server: Server, ctx: AppContext) {
           uri,
           cid,
           cursor: keyset.packFromResult(likesRes),
-          likes: likesRes.map((row, i) => ({
-            createdAt: row.createdAt,
-            indexedAt: row.indexedAt,
-            actor: actors[i],
-          })),
+          likes,
         },
       }
     },

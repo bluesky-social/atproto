@@ -1,7 +1,7 @@
 import { Database } from '../../src'
 import { randomStr } from '@atproto/crypto'
 import { dataToCborBlock, TID } from '@atproto/common'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { Kysely } from 'kysely'
 
 describe.skip('indexedAt on record migration', () => {

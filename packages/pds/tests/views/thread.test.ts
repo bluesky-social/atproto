@@ -1,6 +1,7 @@
+import assert from 'assert'
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { Database } from '../../src'
+import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 import {
   runTestServer,
   forSnapshot,
@@ -8,14 +9,12 @@ import {
   adminAuth,
   TestServerInfo,
 } from '../_util'
-import { RecordRef, SeedClient } from '../seeds/client'
+import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import threadSeed, { walk, item, Item } from '../seeds/thread'
 
 describe('pds thread views', () => {
   let server: TestServerInfo
   let agent: AtpAgent
-  let db: Database
   let close: CloseFn
   let sc: SeedClient
 
@@ -28,7 +27,6 @@ describe('pds thread views', () => {
     server = await runTestServer({
       dbPostgresSchema: 'views_thread',
     })
-    db = server.ctx.db
     close = server.close
     agent = new AtpAgent({ service: server.url })
     sc = new SeedClient(agent)
@@ -163,6 +161,29 @@ describe('pds thread views', () => {
       { headers: sc.getHeaders(bob) },
     )
     expect(forSnapshot(thread3.data.thread)).toMatchSnapshot()
+  })
+
+  it('reflects self-labels', async () => {
+    const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: sc.posts[alice][0].ref.uriStr },
+      { headers: sc.getHeaders(bob) },
+    )
+
+    assert(isThreadViewPost(thread.thread), 'post does not exist')
+    const post = thread.thread.post
+
+    const postSelfLabels = post.labels
+      ?.filter((label) => label.src === alice)
+      .map((label) => label.val)
+
+    expect(postSelfLabels).toEqual(['self-label'])
+
+    const authorSelfLabels = post.author.labels
+      ?.filter((label) => label.src === alice)
+      .map((label) => label.val)
+      .sort()
+
+    expect(authorSelfLabels).toEqual(['self-label-a', 'self-label-b'])
   })
 
   it('blocks post by actor takedown', async () => {
@@ -431,60 +452,5 @@ describe('pds thread views', () => {
         ),
       ),
     )
-  })
-
-  it('builds post hierarchy index.', async () => {
-    const threads: Item[] = [
-      item(1, [item(2, [item(3), item(4)])]),
-      item(5, [item(6), item(7, [item(9, [item(11)]), item(10)]), item(8)]),
-      item(12),
-    ]
-    await threadSeed(sc, sc.dids.alice, threads)
-    let closureSize = 0
-    const itemByUri: Record<string, Item> = {}
-
-    const postsAndReplies = ([] as { text: string; ref: RecordRef }[])
-      .concat(Object.values(sc.posts[sc.dids.alice]))
-      .concat(Object.values(sc.replies[sc.dids.alice]))
-      .filter((p) => {
-        const id = parseInt(p.text, 10)
-        return 0 < id && id <= 12
-      })
-
-    await walk(threads, async (item, depth) => {
-      const post = postsAndReplies.find((p) => p.text === String(item.id))
-      if (!post) throw new Error('Post not found')
-      itemByUri[post.ref.uriStr] = item
-      closureSize += depth + 1
-    })
-
-    const hierarchy = await db.db
-      .selectFrom('post_hierarchy')
-      .where(
-        'uri',
-        'in',
-        postsAndReplies.map((p) => p.ref.uriStr),
-      )
-      .orWhere(
-        'ancestorUri',
-        'in',
-        postsAndReplies.map((p) => p.ref.uriStr),
-      )
-      .selectAll()
-      .execute()
-
-    expect(hierarchy.length).toEqual(closureSize)
-
-    for (const relation of hierarchy) {
-      const item = itemByUri[relation.uri]
-      const ancestor = itemByUri[relation.ancestorUri]
-      let depth = -1
-      await walk([ancestor], async (candidate, candidateDepth) => {
-        if (candidate === item) {
-          depth = candidateDepth
-        }
-      })
-      expect(depth).toEqual(relation.depth)
-    }
   })
 })

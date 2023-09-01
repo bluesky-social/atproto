@@ -2,6 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import getTimeline from './feed/getTimeline'
 import getActorFeeds from './feed/getActorFeeds'
+import getSuggestedFeeds from './feed/getSuggestedFeeds'
 import getAuthorFeed from './feed/getAuthorFeed'
 import getFeedGenerator from './feed/getFeedGenerator'
 import getFeedGenerators from './feed/getFeedGenerators'
@@ -10,6 +11,7 @@ import getFeed from './feed/getFeed'
 import getLikes from './feed/getLikes'
 import getPostThread from './feed/getPostThread'
 import getPosts from './feed/getPosts'
+import getActorLikes from './feed/getActorLikes'
 import getProfile from './actor/getProfile'
 import getProfiles from './actor/getProfiles'
 import getRepostedBy from './feed/getRepostedBy'
@@ -30,11 +32,13 @@ import getSuggestions from './actor/getSuggestions'
 import listNotifications from './notification/listNotifications'
 import getUnreadCount from './notification/getUnreadCount'
 import updateSeen from './notification/updateSeen'
+import registerPush from './notification/registerPush'
 import unspecced from './unspecced'
 
 export default function (server: Server, ctx: AppContext) {
   getTimeline(server, ctx)
   getActorFeeds(server, ctx)
+  getSuggestedFeeds(server, ctx)
   getAuthorFeed(server, ctx)
   getFeedGenerator(server, ctx)
   getFeedGenerators(server, ctx)
@@ -43,6 +47,7 @@ export default function (server: Server, ctx: AppContext) {
   getLikes(server, ctx)
   getPostThread(server, ctx)
   getPosts(server, ctx)
+  getActorLikes(server, ctx)
   getProfile(server, ctx)
   getProfiles(server, ctx)
   getRepostedBy(server, ctx)
@@ -63,5 +68,6 @@ export default function (server: Server, ctx: AppContext) {
   listNotifications(server, ctx)
   getUnreadCount(server, ctx)
   updateSeen(server, ctx)
+  registerPush(server, ctx)
   unspecced(server, ctx)
 }

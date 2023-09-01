@@ -1,7 +1,7 @@
 import { Server } from '../../../../../lexicon'
 import * as lex from '../../../../../lexicon/lexicons'
 import AppContext from '../../../../../context'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
@@ -17,17 +17,17 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Invalid collection: expected: ${collId}`)
       }
 
-      await ctx.services.account(ctx.db).muteActorList({
-        list,
-        mutedByDid: requester,
-      })
-
       if (ctx.canProxyWrite()) {
         await ctx.appviewAgent.api.app.bsky.graph.muteActorList(input.body, {
           ...(await ctx.serviceAuthHeaders(requester)),
           encoding: 'application/json',
         })
       }
+
+      await ctx.services.account(ctx.db).muteActorList({
+        list,
+        mutedByDid: requester,
+      })
     },
   })
 }

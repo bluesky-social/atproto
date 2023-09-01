@@ -1,9 +1,12 @@
-import { ensureValidAtUri } from '@atproto/uri'
 import { isValidISODateString } from 'iso-datestring-validator'
 import { CID } from 'multiformats/cid'
 import { ValidationResult, ValidationError } from '../types'
-import { ensureValidDid, ensureValidHandle } from '@atproto/identifier'
-import { ensureValidNsid } from '@atproto/nsid'
+import {
+  ensureValidDid,
+  ensureValidHandle,
+  ensureValidNsid,
+  ensureValidAtUri,
+} from '@atproto/syntax'
 import { validateLanguage } from '@atproto/common-web'
 
 export function datetime(path: string, value: string): ValidationResult {

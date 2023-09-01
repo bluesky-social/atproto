@@ -1,4 +1,4 @@
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
 import * as Like from '../../../../lexicon/types/app/bsky/feed/like'
 import * as lex from '../../../../lexicon/lexicons'
@@ -55,17 +55,21 @@ const findDuplicate = async (
 
 const notifsForInsert = (obj: IndexedLike) => {
   const subjectUri = new AtUri(obj.subject)
-  return [
-    {
-      userDid: subjectUri.host,
-      author: obj.creator,
-      recordUri: obj.uri,
-      recordCid: obj.cid,
-      reason: 'like' as const,
-      reasonSubject: subjectUri.toString(),
-      indexedAt: obj.indexedAt,
-    },
-  ]
+  // prevent self-notifications
+  const isSelf = subjectUri.host === obj.creator
+  return isSelf
+    ? []
+    : [
+        {
+          userDid: subjectUri.host,
+          author: obj.creator,
+          recordUri: obj.uri,
+          recordCid: obj.cid,
+          reason: 'like' as const,
+          reasonSubject: subjectUri.toString(),
+          indexedAt: obj.indexedAt,
+        },
+      ]
 }
 
 const deleteFn = async (

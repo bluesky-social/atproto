@@ -85,6 +85,7 @@ describe('pds admin get moderation reports view', () => {
           uri: report.subject.uri,
           cid: report.subject.cid,
         },
+        createdBy: `did:example:admin${i}`,
       })
       if (ab) {
         await sc.resolveReports({
@@ -239,6 +240,40 @@ describe('pds admin get moderation reports view', () => {
         { headers: { authorization: adminAuth() } },
       )
     expect(forSnapshot(reportsWithTakedown.data.reports)).toMatchSnapshot()
+  })
+
+  it('gets all moderation reports actioned by a certain moderator.', async () => {
+    const adminDidOne = 'did:example:admin0'
+    const adminDidTwo = 'did:example:admin2'
+    const [actionedByAdminOne, actionedByAdminTwo] = await Promise.all([
+      agent.api.com.atproto.admin.getModerationReports(
+        { actionedBy: adminDidOne },
+        { headers: { authorization: adminAuth() } },
+      ),
+      agent.api.com.atproto.admin.getModerationReports(
+        { actionedBy: adminDidTwo },
+        { headers: { authorization: adminAuth() } },
+      ),
+    ])
+    const [fullReportOne, fullReportTwo] = await Promise.all([
+      agent.api.com.atproto.admin.getModerationReport(
+        { id: actionedByAdminOne.data.reports[0].id },
+        { headers: { authorization: adminAuth() } },
+      ),
+      agent.api.com.atproto.admin.getModerationReport(
+        { id: actionedByAdminTwo.data.reports[0].id },
+        { headers: { authorization: adminAuth() } },
+      ),
+    ])
+
+    expect(forSnapshot(actionedByAdminOne.data.reports)).toMatchSnapshot()
+    expect(fullReportOne.data.resolvedByActions[0].createdBy).toEqual(
+      adminDidOne,
+    )
+    expect(forSnapshot(actionedByAdminTwo.data.reports)).toMatchSnapshot()
+    expect(fullReportTwo.data.resolvedByActions[0].createdBy).toEqual(
+      adminDidTwo,
+    )
   })
 
   it('paginates.', async () => {

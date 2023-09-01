@@ -18,15 +18,16 @@ describe('pds user search views', () => {
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
 
     const suggestions = [
       { did: sc.dids.bob, order: 1 },
       { did: sc.dids.carol, order: 2 },
       { did: sc.dids.dan, order: 3 },
     ]
-    await network.bsky.ctx.db.db
-      .insertInto('suggested_follow')
+    await network.bsky.ctx.db
+      .getPrimary()
+      .db.insertInto('suggested_follow')
       .values(suggestions)
       .execute()
   })

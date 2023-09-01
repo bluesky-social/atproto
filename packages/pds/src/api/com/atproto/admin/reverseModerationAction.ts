@@ -1,19 +1,72 @@
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
+  isRepoRef,
   ACKNOWLEDGE,
   ESCALATE,
   TAKEDOWN,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
+import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
+import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.reverseModerationAction({
     auth: ctx.roleVerifier,
-    handler: async ({ input, auth }) => {
+    handler: async ({ req, input, auth }) => {
       const access = auth.credentials
       const { db, services } = ctx
+      if (ctx.shouldProxyModeration()) {
+        const { data: result } =
+          await ctx.appviewAgent.com.atproto.admin.reverseModerationAction(
+            input.body,
+            authPassthru(req, true),
+          )
+
+        const transact = db.transaction(async (dbTxn) => {
+          const moderationTxn = services.moderation(dbTxn)
+          const labelTxn = services.appView.label(dbTxn)
+          // reverse takedowns
+          if (result.action === TAKEDOWN && isRepoRef(result.subject)) {
+            await moderationTxn.reverseTakedownRepo({
+              did: result.subject.did,
+            })
+          }
+          if (result.action === TAKEDOWN && isStrongRef(result.subject)) {
+            await moderationTxn.reverseTakedownRecord({
+              uri: new AtUri(result.subject.uri),
+            })
+          }
+          // invert label creation & negations
+          const reverseLabels = (uri: string, cid: string | null) =>
+            labelTxn.formatAndCreate(ctx.cfg.labelerDid, uri, cid, {
+              create: result.negateLabelVals,
+              negate: result.createLabelVals,
+            })
+          if (isRepoRef(result.subject)) {
+            await reverseLabels(result.subject.did, null)
+          }
+          if (isStrongRef(result.subject)) {
+            await reverseLabels(result.subject.uri, result.subject.cid)
+          }
+        })
+
+        try {
+          await transact
+        } catch (err) {
+          req.log.error(
+            { err, actionId: input.body.id },
+            'proxied moderation action reversal failed',
+          )
+        }
+
+        return {
+          encoding: 'application/json',
+          body: result,
+        }
+      }
+
       const moderationService = services.moderation(db)
       const { id, createdBy, reason } = input.body
 
@@ -43,9 +96,9 @@ export default function (server: Server, ctx: AppContext) {
             'Must be a full moderator to reverse this type of action',
           )
         }
-        // if less than admin access then can reverse takedown on an account
+        // if less than moderator access then cannot reverse takedown on an account
         if (
-          !access.admin &&
+          !access.moderator &&
           existing.action === TAKEDOWN &&
           existing.subjectType === 'com.atproto.admin.defs#repoRef'
         ) {
@@ -54,32 +107,12 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        const result = await moderationTxn.logReverseAction({
+        const result = await moderationTxn.revertAction({
           id,
           createdAt: now,
           createdBy,
           reason,
         })
-
-        if (
-          result.action === TAKEDOWN &&
-          result.subjectType === 'com.atproto.admin.defs#repoRef' &&
-          result.subjectDid
-        ) {
-          await moderationTxn.reverseTakedownRepo({
-            did: result.subjectDid,
-          })
-        }
-
-        if (
-          result.action === TAKEDOWN &&
-          result.subjectType === 'com.atproto.repo.strongRef' &&
-          result.subjectUri
-        ) {
-          await moderationTxn.reverseTakedownRecord({
-            uri: new AtUri(result.subjectUri),
-          })
-        }
 
         // invert creates & negates
         const { createLabelVals, negateLabelVals } = result

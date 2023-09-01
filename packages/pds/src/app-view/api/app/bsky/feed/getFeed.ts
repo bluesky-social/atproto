@@ -6,11 +6,7 @@ import {
   serverTimingHeader,
 } from '@atproto/xrpc-server'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import {
-  DidDocument,
-  PoorlyFormattedDidDocumentError,
-  getFeedGen,
-} from '@atproto/identity'
+import { getFeedGen } from '@atproto/identity'
 import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
 import { SkeletonFeedPost } from '../../../../../lexicon/types/app/bsky/feed/defs'
 import { QueryParams as GetFeedParams } from '../../../../../lexicon/types/app/bsky/feed/getFeed'
@@ -19,13 +15,19 @@ import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
 import { AlgoResponse } from '../../../../../feed-gen/types'
+import { getDidDoc } from '../util/resolver'
 
 export default function (server: Server, ctx: AppContext) {
+  const isProxyableFeed = (feed: string): boolean => {
+    return feed in ctx.algos
+  }
+
   server.app.bsky.feed.getFeed({
     auth: ctx.accessVerifier,
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxyRead(req)) {
+
+      if (await ctx.canProxyRead(req, requester)) {
         const { data: feed } =
           await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
             { feed: params.feed },
@@ -40,17 +42,29 @@ export default function (server: Server, ctx: AppContext) {
           body: res.data,
         }
       }
-
-      const { feed } = params
-      const feedService = ctx.services.appView.feed(ctx.db)
-      const localAlgo = ctx.algos[feed]
-
+      let algoRes: AlgoResponse
       const timerSkele = new ServerTimer('skele').start()
-      const { feedItems, ...rest } =
-        localAlgo !== undefined
-          ? await localAlgo(ctx, params, requester)
-          : await skeletonFromFeedGen(ctx, params, requester)
+
+      if (ctx.cfg.bskyAppViewEndpoint && isProxyableFeed(params.feed)) {
+        // this is a temporary solution to smart proxy bsky feeds to the appview
+        const res = await ctx.appviewAgent.api.app.bsky.feed.getFeedSkeleton(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        )
+        algoRes = await filterMutesAndBlocks(
+          ctx,
+          res.data,
+          params.limit,
+          requester,
+        )
+      } else {
+        algoRes = await skeletonFromFeedGen(ctx, params, requester)
+      }
+
       timerSkele.stop()
+
+      const feedService = ctx.services.appView.feed(ctx.db)
+      const { feedItems, ...rest } = algoRes
 
       const timerHydr = new ServerTimer('hydr').start()
       const hydrated = await feedService.hydrateFeed(feedItems, requester)
@@ -87,20 +101,8 @@ async function skeletonFromFeedGen(
   }
   const feedDid = found.feedDid
 
-  let resolved: DidDocument | null
-  try {
-    resolved = await ctx.idResolver.did.resolve(feedDid)
-  } catch (err) {
-    if (err instanceof PoorlyFormattedDidDocumentError) {
-      throw new InvalidRequestError(`invalid did document: ${feedDid}`)
-    }
-    throw err
-  }
-  if (!resolved) {
-    throw new InvalidRequestError(`could not resolve did document: ${feedDid}`)
-  }
-
-  const fgEndpoint = getFeedGen(resolved)
+  const doc = await getDidDoc(ctx, feedDid)
+  const fgEndpoint = getFeedGen(doc)
   if (!fgEndpoint) {
     throw new InvalidRequestError(
       `invalid feed generator service details in did document: ${feedDid}`,

@@ -37,7 +37,13 @@ export class AccountService {
         if (handleOrDid.startsWith('did:')) {
           return qb.where('did_handle.did', '=', handleOrDid)
         } else {
-          return qb.where('did_handle.handle', '=', handleOrDid)
+          // lower() is a little hack to avoid using the handle trgm index here, which is slow. not sure why it was preferring
+          // the handle trgm index over the handle unique index. in any case, we end-up using did_handle_handle_lower_idx instead, which is fast.
+          return qb.where(
+            sql`lower(${ref('did_handle.handle')})`,
+            '=',
+            handleOrDid,
+          )
         }
       })
       .selectAll('user_account')
@@ -179,14 +185,14 @@ export class AccountService {
     await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
-  async isHandleAvailable(handle: string) {
+  async getHandleDid(handle: string): Promise<string | null> {
     // @NOTE see also condition in updateHandle()
     const found = await this.db.db
       .selectFrom('did_handle')
       .where('handle', '=', handle)
-      .select('handle')
+      .selectAll()
       .executeTakeFirst()
-    return !found
+    return found?.did ?? null
   }
 
   async updateEmail(did: string, email: string) {

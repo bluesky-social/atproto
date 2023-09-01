@@ -6,7 +6,7 @@ import { GenericKeyset, paginate } from '../db/pagination'
 import AppContext from '../context'
 import { valuesList } from '../db/util'
 import { sql } from 'kysely'
-import { FeedItemType } from '../services/types'
+import { FeedItemType } from '../services/feed/types'
 
 const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
   '!no-promote',
@@ -24,13 +24,14 @@ const handler: AlgoHandler = async (
   viewer: string,
 ): Promise<AlgoResponse> => {
   const { limit, cursor } = params
-  const graphService = ctx.services.graph(ctx.db)
+  const db = ctx.db.getReplica('feed')
+  const graphService = ctx.services.graph(db)
 
-  const { ref } = ctx.db.db.dynamic
+  const { ref } = db.db.dynamic
 
   // candidates are ranked within a materialized view by like count, depreciated over time.
 
-  let builder = ctx.db.db
+  let builder = db.db
     .selectFrom('algo_whats_hot_view as candidate')
     .innerJoin('post', 'post.uri', 'candidate.uri')
     .leftJoin('post_embed_record', 'post_embed_record.postUri', 'candidate.uri')

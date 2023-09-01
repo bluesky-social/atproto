@@ -1,6 +1,7 @@
 'use strict' /* eslint-disable */
 
-require('dd-trace/init') // Only works with commonjs
+require('dd-trace') // Only works with commonjs
+  .init({ logInjection: true })
   .tracer.use('express', {
     hooks: {
       request: (span, req) => {
@@ -22,6 +23,7 @@ const {
   PDS,
   ViewMaintainer,
   makeAlgos,
+  PeriodicModerationActionReversal,
 } = require('@atproto/pds')
 const { Secp256k1Keypair } = require('@atproto/crypto')
 
@@ -35,7 +37,6 @@ const main = async () => {
     // view-maintainer lock then one for anything else.
     poolSize: 2,
   })
-  await migrateDb.migrateToLatestOrThrow()
   // Use lower-credentialed user to run the app
   const db = Database.postgres({
     url: pgUrl(env.dbCreds),
@@ -83,12 +84,30 @@ const main = async () => {
   })
   const viewMaintainer = new ViewMaintainer(migrateDb)
   const viewMaintainerRunning = viewMaintainer.run()
+
+  // If the PDS is configured to proxy moderation, this will be running on appview instead of pds.
+  // Also don't run this on the sequencer leader, which may not be configured regarding moderation proxying at all.
+  const periodicModerationActionReversal =
+    pds.ctx.shouldProxyModeration() || pds.ctx.cfg.sequencerLeaderEnabled
+      ? null
+      : new PeriodicModerationActionReversal(pds.ctx)
+  const periodicModerationActionReversalRunning =
+    periodicModerationActionReversal?.run()
+
   await pds.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
+    // Gracefully shutdown periodic-moderation-action-reversal before destroying pds instance
+    periodicModerationActionReversal?.destroy()
+    await periodicModerationActionReversalRunning
+
     await pds.destroy()
+
+    // Gracefully shutdown view-maintainer
     viewMaintainer.destroy()
     await viewMaintainerRunning
+
+    // Gracefully shutdown db
     await migrateDb.close()
   })
 }
@@ -96,7 +115,7 @@ const main = async () => {
 const pgUrl = ({
   username = 'postgres',
   password = 'postgres',
-  host = '0.0.0.0',
+  host = 'localhost',
   port = '5432',
   database = 'postgres',
   sslmode,

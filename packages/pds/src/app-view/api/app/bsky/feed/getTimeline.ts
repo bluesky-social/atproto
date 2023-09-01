@@ -5,6 +5,9 @@ import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
 import { FeedRow } from '../../../../services/feed'
 import { filterMutesAndBlocks } from './getFeed'
+import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getTimeline'
+import { handleReadAfterWrite } from '../util/read-after-write'
+import { LocalRecords } from '../../../../../services/local'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
@@ -16,15 +19,12 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
       }
 
-      if (ctx.canProxyRead(req)) {
+      if (await ctx.canProxyRead(req, requester)) {
         const res = await ctx.appviewAgent.api.app.bsky.feed.getTimeline(
           params,
           await ctx.serviceAuthHeaders(requester),
         )
-        return {
-          encoding: 'application/json',
-          body: res.data,
-        }
+        return await handleReadAfterWrite(ctx, requester, res, getTimelineMunge)
       }
 
       if (ctx.cfg.bskyAppViewEndpoint) {
@@ -110,4 +110,18 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+const getTimelineMunge = async (
+  ctx: AppContext,
+  original: OutputSchema,
+  local: LocalRecords,
+): Promise<OutputSchema> => {
+  const feed = await ctx.services
+    .local(ctx.db)
+    .formatAndInsertPostsInFeed([...original.feed], local.posts)
+  return {
+    ...original,
+    feed,
+  }
 }

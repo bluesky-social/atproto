@@ -1,6 +1,6 @@
 import { Insertable, Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { Record as PostRecord } from '../../../lexicon/types/app/bsky/feed/post'
 import { isMain as isEmbedImage } from '../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../lexicon/types/app/bsky/embed/external'
@@ -15,10 +15,11 @@ import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { Notification } from '../../../db/tables/notification'
 import { toSimplifiedISOSafe } from '../util'
-import Database from '../../../db'
+import { PrimaryDatabase } from '../../../db'
 import { countAll, excluded } from '../../../db/util'
 import { BackgroundQueue } from '../../../background'
 import { getAncestorsAndSelfQb, getDescendentsQb } from '../../util/post'
+import { NotificationServer } from '../../../notifications'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -34,7 +35,7 @@ type PostDescendent = {
   depth: number
   cid: string
   creator: string
-  indexedAt: string
+  sortAt: string
 }
 type IndexedPost = {
   post: Post
@@ -163,7 +164,7 @@ const insertFn = async (
     .selectFrom('descendent')
     .innerJoin('post', 'post.uri', 'descendent.uri')
     .selectAll('descendent')
-    .select(['cid', 'creator', 'indexedAt'])
+    .select(['cid', 'creator', 'sortAt'])
     .execute()
   return {
     post: insertedPost,
@@ -195,7 +196,7 @@ const notifsForInsert = (obj: IndexedPost) => {
         author: obj.post.creator,
         recordUri: obj.post.uri,
         recordCid: obj.post.cid,
-        sortAt: obj.post.indexedAt,
+        sortAt: obj.post.sortAt,
       })
     }
   }
@@ -210,7 +211,7 @@ const notifsForInsert = (obj: IndexedPost) => {
           author: obj.post.creator,
           recordUri: obj.post.uri,
           recordCid: obj.post.cid,
-          sortAt: obj.post.indexedAt,
+          sortAt: obj.post.sortAt,
         })
       }
     }
@@ -227,7 +228,7 @@ const notifsForInsert = (obj: IndexedPost) => {
         author: obj.post.creator,
         recordUri: obj.post.uri,
         recordCid: obj.post.cid,
-        sortAt: obj.post.indexedAt,
+        sortAt: obj.post.sortAt,
       })
     }
   }
@@ -246,7 +247,7 @@ const notifsForInsert = (obj: IndexedPost) => {
           author: descendent.creator,
           recordUri: descendent.uri,
           recordCid: descendent.cid,
-          sortAt: descendent.indexedAt,
+          sortAt: descendent.sortAt,
         })
       }
     }
@@ -354,10 +355,11 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
 
 export const makePlugin = (
-  db: Database,
+  db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
+  notifServer?: NotificationServer,
 ): PluginType => {
-  return new RecordProcessor(db, backgroundQueue, {
+  return new RecordProcessor(db, backgroundQueue, notifServer, {
     lexId,
     insertFn,
     findDuplicate,

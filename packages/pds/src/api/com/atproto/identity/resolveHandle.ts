@@ -1,6 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as ident from '@atproto/identifier'
+import * as ident from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
@@ -34,7 +34,7 @@ export default function (server: Server, ctx: AppContext) {
 
     // this is not someone on our server, but we help with resolving anyway
 
-    if (!did && ctx.canProxyRead(req)) {
+    if (!did && (await ctx.canProxyRead(req))) {
       did = await tryResolveFromAppview(ctx.appviewAgent, handle)
     }
 

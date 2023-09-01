@@ -1,3 +1,4 @@
+import { AtpAgent } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import Database from '../db'
@@ -18,6 +19,8 @@ import { LabelService } from '../app-view/services/label'
 import { BackgroundQueue } from '../event-stream/background-queue'
 import { Crawlers } from '../crawlers'
 import { LabelCache } from '../label-cache'
+import { ContentReporter } from '../content-reporter'
+import { LocalService } from './local'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
@@ -27,6 +30,10 @@ export function createServices(resources: {
   imgInvalidator: ImageInvalidator
   labeler: Labeler
   labelCache: LabelCache
+  contentReporter?: ContentReporter
+  appviewAgent?: AtpAgent
+  appviewDid?: string
+  appviewCdnUrlPattern?: string
   backgroundQueue: BackgroundQueue
   crawlers: Crawlers
 }): Services {
@@ -38,6 +45,10 @@ export function createServices(resources: {
     imgInvalidator,
     labeler,
     labelCache,
+    contentReporter,
+    appviewAgent,
+    appviewDid,
+    appviewCdnUrlPattern,
     backgroundQueue,
     crawlers,
   } = resources
@@ -52,6 +63,13 @@ export function createServices(resources: {
       backgroundQueue,
       crawlers,
       labeler,
+      contentReporter,
+    ),
+    local: LocalService.creator(
+      repoSigningKey,
+      appviewAgent,
+      appviewDid,
+      appviewCdnUrlPattern,
     ),
     moderation: ModerationService.creator(
       messageDispatcher,
@@ -74,6 +92,7 @@ export type Services = {
   auth: FromDb<AuthService>
   record: FromDb<RecordService>
   repo: FromDb<RepoService>
+  local: FromDb<LocalService>
   moderation: FromDb<ModerationService>
   appView: {
     feed: FromDb<FeedService>

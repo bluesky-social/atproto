@@ -11,11 +11,9 @@
 - [API](./api): A library for communicating with atproto servers.
 - [Common](./common): A library containing code which is shared between atproto packages.
 - [Crypto](./crypto): Atproto's common cryptographic operations.
-- [Identity](./identity): A library for resolving atproto DIDs and handles.
+- [Syntax](./syntax): A library for identifier syntax: NSID, AT URI, handles, etc.
 - [Lexicon](./lexicon): A library for validating data using atproto's schema system.
-- [NSID](./nsid): A parser and generator of NSIDs.
 - [Repo](./repo): The "atproto repository" core implementation (a Merkle Search Tree).
-- [URI](./uri): A parser and generator of `at://` uris.
 - [XRPC](./xrpc): An XRPC client implementation.
 - [XRPC Server](./xrpc-server): An XRPC server implementation.
 

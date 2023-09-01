@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import * as Repost from '../../../../lexicon/types/app/bsky/feed/repost'
 import * as lex from '../../../../lexicon/lexicons'
 import Database from '../../../../db'
@@ -74,17 +74,21 @@ const findDuplicate = async (
 
 const notifsForInsert = (obj: IndexedRepost) => {
   const subjectUri = new AtUri(obj.subject)
-  return [
-    {
-      userDid: subjectUri.host,
-      author: obj.creator,
-      recordUri: obj.uri,
-      recordCid: obj.cid,
-      reason: 'repost' as const,
-      reasonSubject: subjectUri.toString(),
-      indexedAt: obj.indexedAt,
-    },
-  ]
+  // prevent self-notifications
+  const isSelf = subjectUri.host === obj.creator
+  return isSelf
+    ? []
+    : [
+        {
+          userDid: subjectUri.host,
+          author: obj.creator,
+          recordUri: obj.uri,
+          recordCid: obj.cid,
+          reason: 'repost' as const,
+          reasonSubject: subjectUri.toString(),
+          indexedAt: obj.indexedAt,
+        },
+      ]
 }
 
 const deleteFn = async (

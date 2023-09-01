@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "main": "src/index.ts",
   "scripts": {
-    "test": "jest",
-    "prettier": "prettier --check src/ tests/",
-    "prettier:fix": "prettier --write src/ tests/",
+    "test": "true",
+    "prettier": "prettier --check src/",
+    "prettier:fix": "prettier --write src/",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "yarn lint --fix",
     "verify": "run-p prettier lint",
@@ -19,5 +19,7 @@
     "url": "https://github.com/bluesky-social/atproto.git",
     "directory": "packages/nsid"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@atproto/syntax": "*"
+  }
 }

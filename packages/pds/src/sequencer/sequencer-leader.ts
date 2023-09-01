@@ -1,8 +1,11 @@
+import { sql } from 'kysely'
 import { DisconnectError } from '@atproto/xrpc-server'
-import { chunkArray, jitter, wait } from '@atproto/common'
+import { jitter, wait } from '@atproto/common'
 import { Leader } from '../db/leader'
 import { seqLogger as log } from '../logger'
 import Database from '../db'
+import { REPO_SEQ_SEQUENCE } from '../db/tables/repo-seq'
+import { countAll } from '../db/util'
 
 export const SEQUENCER_LEADER_ID = 1100
 
@@ -12,19 +15,9 @@ export class SequencerLeader {
   destroyed = false
   polling = false
   queued = false
-  private lastSeq: number
 
   constructor(public db: Database, lockId = SEQUENCER_LEADER_ID) {
     this.leader = new Leader(lockId, this.db)
-  }
-
-  nextSeqVal(): number {
-    this.lastSeq++
-    return this.lastSeq
-  }
-
-  peekSeqVal(): number | undefined {
-    return this.lastSeq
   }
 
   get isLeader() {
@@ -37,15 +30,6 @@ export class SequencerLeader {
     while (!this.destroyed) {
       try {
         const { ran } = await this.leader.run(async ({ signal }) => {
-          const res = await this.db.db
-            .selectFrom('repo_seq')
-            .select('seq')
-            .where('seq', 'is not', null)
-            .orderBy('seq', 'desc')
-            .limit(1)
-            .executeTakeFirst()
-          this.lastSeq = res?.seq ?? 0
-
           const seqListener = () => {
             if (this.polling) {
               this.queued = true
@@ -111,37 +95,52 @@ export class SequencerLeader {
   }
 
   async sequenceOutgoing() {
-    const unsequenced = await this.getUnsequenced()
-    const chunks = chunkArray(unsequenced, 2000)
-    for (const chunk of chunks) {
-      await this.db.transaction(async (dbTxn) => {
-        await Promise.all(
-          chunk.map(async (row) => {
-            await dbTxn.db
-              .updateTable('repo_seq')
-              .set({ seq: this.nextSeqVal() })
-              .where('id', '=', row.id)
-              .execute()
-            await this.db.notify('outgoing_repo_seq')
-          }),
-        )
-      })
-      await this.db.notify('outgoing_repo_seq')
-    }
+    await this.db.db
+      .updateTable('repo_seq')
+      .from((qb) =>
+        qb
+          .selectFrom('repo_seq')
+          .select([
+            'id as update_id',
+            sql<number>`nextval(${sql.literal(REPO_SEQ_SEQUENCE)})`.as(
+              'update_seq',
+            ),
+          ])
+          .where('seq', 'is', null)
+          .orderBy('id', 'asc')
+          .as('update'),
+      )
+      .set({ seq: sql`update_seq::bigint` })
+      .whereRef('id', '=', 'update_id')
+      .execute()
+
+    await this.db.notify('outgoing_repo_seq')
   }
 
-  async getUnsequenced() {
-    return this.db.db
+  async getUnsequencedCount() {
+    const res = await this.db.db
       .selectFrom('repo_seq')
       .where('seq', 'is', null)
-      .select('id')
-      .orderBy('id', 'asc')
-      .execute()
+      .select(countAll.as('count'))
+      .executeTakeFirst()
+    return res?.count ?? 0
   }
 
   async isCaughtUp(): Promise<boolean> {
-    const unsequenced = await this.getUnsequenced()
-    return unsequenced.length === 0
+    if (this.db.dialect === 'sqlite') return true
+    const count = await this.getUnsequencedCount()
+    return count === 0
+  }
+
+  async lastSeq(): Promise<number> {
+    const res = await this.db.db
+      .selectFrom('repo_seq')
+      .select('seq')
+      .where('seq', 'is not', null)
+      .orderBy('seq', 'desc')
+      .limit(1)
+      .executeTakeFirst()
+    return res?.seq ?? 0
   }
 
   destroy() {
