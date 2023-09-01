@@ -11,7 +11,8 @@
           "type": "object",
           "required": ["did"],
           "properties": {
-            "did": { "type": "string", "format": "did" }
+            "did": { "type": "string", "format": "did" },
+            "force": { "type": "boolean" }
           }
         }
       }

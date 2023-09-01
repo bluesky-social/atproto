@@ -2,6 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import getTimeline from './feed/getTimeline'
 import getActorFeeds from './feed/getActorFeeds'
+import getSuggestedFeeds from './feed/getSuggestedFeeds'
 import getAuthorFeed from './feed/getAuthorFeed'
 import getFeedGenerator from './feed/getFeedGenerator'
 import getFeedGenerators from './feed/getFeedGenerators'
@@ -37,6 +38,7 @@ import unspecced from './unspecced'
 export default function (server: Server, ctx: AppContext) {
   getTimeline(server, ctx)
   getActorFeeds(server, ctx)
+  getSuggestedFeeds(server, ctx)
   getAuthorFeed(server, ctx)
   getFeedGenerator(server, ctx)
   getFeedGenerators(server, ctx)
