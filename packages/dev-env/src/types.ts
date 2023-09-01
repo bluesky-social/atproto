@@ -20,6 +20,7 @@ export type BskyConfig = Partial<bsky.ServerConfig> & {
   repoProvider: string
   dbPrimaryPostgresUrl: string
   redisHost: string
+  pdsPort: number
   imgInvalidator?: ImageInvalidator
   migration?: string
   algos?: bsky.MountedAlgos

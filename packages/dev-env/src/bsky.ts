@@ -77,6 +77,7 @@ export class TestBsky {
       db,
       config,
       algos: cfg.algos,
+      imgInvalidator: cfg.imgInvalidator,
     })
     // indexer
     const ns = cfg.dbPostgresSchema
@@ -94,7 +95,7 @@ export class TestBsky {
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
       abyssEndpoint: '',
       abyssPassword: '',
-      imgUriEndpoint: 'https://img.example.com',
+      moderationPushUrl: `http://admin:${config.adminPassword}@localhost:${cfg.pdsPort}`,
       indexerPartitionIds: [0],
       indexerNamespace: `ns${ns}`,
       indexerSubLockId: uniqueLockId(),

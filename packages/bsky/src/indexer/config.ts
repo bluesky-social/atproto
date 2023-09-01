@@ -19,7 +19,7 @@ export interface IndexerConfigValues {
   abyssPassword?: string
   imgUriEndpoint?: string
   labelerKeywords: Record<string, string>
-  labelerPushUrl?: string
+  moderationPushUrl?: string
   indexerConcurrency?: number
   indexerPartitionIds: number[]
   indexerPartitionBatchSize?: number
@@ -65,8 +65,10 @@ export class IndexerConfig {
       ? process.env.HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
-    const labelerPushUrl =
-      overrides?.labelerPushUrl || process.env.LABELER_PUSH_URL || undefined
+    const moderationPushUrl =
+      overrides?.moderationPushUrl ||
+      process.env.MODERATION_PUSH_URL ||
+      undefined
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
     const abyssEndpoint = process.env.ABYSS_ENDPOINT
     const abyssPassword = process.env.ABYSS_PASSWORD
@@ -105,7 +107,7 @@ export class IndexerConfig {
       didCacheMaxTTL,
       handleResolveNameservers,
       labelerDid,
-      labelerPushUrl,
+      moderationPushUrl,
       hiveApiKey,
       abyssEndpoint,
       abyssPassword,
@@ -171,8 +173,8 @@ export class IndexerConfig {
     return this.cfg.labelerDid
   }
 
-  get labelerPushUrl() {
-    return this.cfg.labelerPushUrl
+  get moderationPushUrl() {
+    return this.cfg.moderationPushUrl
   }
 
   get hiveApiKey() {

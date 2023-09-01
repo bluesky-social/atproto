@@ -91,8 +91,15 @@ describe('takedowner', () => {
       .where('uri', '=', post.ref.uriStr)
       .select('takedownId')
       .executeTakeFirst()
-
     expect(record?.takedownId).toEqual(modAction.id)
+
+    const recordPds = await network.pds.ctx.db.db
+      .selectFrom('record')
+      .where('uri', '=', post.ref.uriStr)
+      .select('takedownId')
+      .executeTakeFirst()
+    expect(recordPds?.takedownId).toEqual(modAction.id)
+
     expect(testInvalidator.invalidated.length).toBe(1)
     expect(testInvalidator.invalidated[0].subject).toBe(
       badBlob1.image.ref.toString(),
@@ -127,6 +134,14 @@ describe('takedowner', () => {
       .select('takedownId')
       .executeTakeFirst()
     expect(record?.takedownId).toEqual(modAction.id)
+
+    const recordPds = await network.pds.ctx.db.db
+      .selectFrom('record')
+      .where('uri', '=', res.data.uri)
+      .select('takedownId')
+      .executeTakeFirst()
+    expect(recordPds?.takedownId).toEqual(modAction.id)
+
     expect(testInvalidator.invalidated.length).toBe(2)
     expect(testInvalidator.invalidated[1].subject).toBe(
       badBlob2.image.ref.toString(),

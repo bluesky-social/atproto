@@ -20,7 +20,6 @@ import { Abyss } from './abyss'
 
 export class AutoModerator {
   public pushAgent?: AtpAgent
-
   public takedownFlagger?: TakedownFlagger
   public imgLabeler?: ImgLabeler
   public textLabeler?: TextLabeler
@@ -68,8 +67,8 @@ export class AutoModerator {
       )
     }
 
-    if (ctx.cfg.labelerPushUrl) {
-      const url = new URL(ctx.cfg.labelerPushUrl)
+    if (ctx.cfg.moderationPushUrl) {
+      const url = new URL(ctx.cfg.moderationPushUrl)
       this.pushAgent = new AtpAgent({ service: url.origin })
       this.pushAgent.api.setHeader(
         'authorization',
@@ -123,32 +122,65 @@ export class AutoModerator {
       }
     }
     if (takedownCids.length === 0) return
-    await this.ctx.db.transaction(async (dbTxn) => {
-      if (!this.services.moderation) {
-        log.error(
-          {
-            uri: uri.toString(),
-            cid: recordCid.toString(),
-            imgaes: takedownCids.map((c) => c.toString()),
-          },
-          'could not takedown flagged post',
-        )
-        return
-      }
-      const modSrvc = this.services.moderation(dbTxn)
-      const action = await modSrvc.logAction({
+    try {
+      await this.persistTakedown(
+        uri,
+        recordCid,
+        takedownCids,
+        dedupe(results.flat()),
+      )
+    } catch (err) {
+      log.error(
+        {
+          err,
+          uri: uri.toString(),
+          imgCids: imgCids.map((c) => c.toString()),
+          results,
+        },
+        'failed to persist takedown',
+      )
+    }
+  }
+
+  async persistTakedown(
+    uri: AtUri,
+    recordCid: CID,
+    takedownCids: CID[],
+    labels: string[],
+  ) {
+    const reason = `automated takedown for labels: ${labels.join(', ')}`
+    if (this.pushAgent) {
+      await this.pushAgent.com.atproto.admin.takeModerationAction({
         action: 'com.atproto.admin.defs#takedown',
-        subject: { uri, cid: recordCid },
-        subjectBlobCids: takedownCids,
-        reason: `automated takedown for labels: ${results.flat().join(', ')}`,
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: uri.toString(),
+          cid: recordCid.toString(),
+        },
+        subjectBlobCids: takedownCids.map((c) => c.toString()),
+        reason,
         createdBy: this.ctx.cfg.labelerDid,
       })
-      await modSrvc.takedownRecord({
-        takedownId: action.id,
-        uri: uri,
-        blobCids: takedownCids,
+    } else {
+      await this.ctx.db.transaction(async (dbTxn) => {
+        if (!this.services.moderation) {
+          throw new Error('no mod push agent or uri invalidator setup')
+        }
+        const modSrvc = this.services.moderation(dbTxn)
+        const action = await modSrvc.logAction({
+          action: 'com.atproto.admin.defs#takedown',
+          subject: { uri, cid: recordCid },
+          subjectBlobCids: takedownCids,
+          reason,
+          createdBy: this.ctx.cfg.labelerDid,
+        })
+        await modSrvc.takedownRecord({
+          takedownId: action.id,
+          uri: uri,
+          blobCids: takedownCids,
+        })
       })
-    })
+    }
   }
 
   async storeLabels(uri: AtUri, cid: CID, labels: string[]): Promise<void> {
