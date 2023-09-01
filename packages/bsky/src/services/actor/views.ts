@@ -314,9 +314,8 @@ export class ActorViews {
     return profiles[result.did] ?? null
   }
 
-  // @NOTE keep in sync with feedService.getActorViews()
   async profilesBasic(
-    results: ActorResult[],
+    results: (ActorResult | string)[],
     viewer: string | null,
     opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<Record<string, ProfileViewBasic>> {
@@ -333,15 +332,6 @@ export class ActorViews {
       acc[cur.did] = profile
       return acc
     }, {} as Record<string, ProfileViewBasic>)
-  }
-
-  async hydrateProfilesBasic(
-    results: ActorResult[],
-    viewer: string | null,
-    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
-  ): Promise<ProfileViewBasic[]> {
-    const profiles = await this.profilesBasic(results, viewer, opts)
-    return mapDefined(results, (result) => profiles[result.did])
   }
 }
 

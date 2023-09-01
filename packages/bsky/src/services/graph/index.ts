@@ -95,6 +95,7 @@ export class GraphService {
   }
 
   async getBlockAndMuteState(pairs: RelationshipPair[]) {
+    if (!pairs.length) return new BlockAndMuteState()
     const { ref } = this.db.db.dynamic
     const sourceRef = ref('pair.source')
     const targetRef = ref('pair.target')
@@ -137,6 +138,7 @@ export class GraphService {
   }
 
   async getBlockState(pairs: RelationshipPair[]) {
+    if (!pairs.length) return new BlockAndMuteState()
     const { ref } = this.db.db.dynamic
     const sourceRef = ref('pair.source')
     const targetRef = ref('pair.target')
