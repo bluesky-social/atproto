@@ -258,7 +258,7 @@ export class FeedViews {
         img.image.ref,
       ),
       alt: img.alt,
-      ...(img.aspectRatio && { aspectRatio: img.aspectRatio }),
+      aspectRatio: img.aspectRatio,
     }))
     return {
       $type: 'app.bsky.embed.images#view',
