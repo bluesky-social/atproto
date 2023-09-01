@@ -92,6 +92,9 @@ export class TestBsky {
       dbPostgresSchema: cfg.dbPostgresSchema,
       didPlcUrl: cfg.plcUrl,
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
+      abyssEndpoint: '',
+      abyssPassword: '',
+      imgUriEndpoint: '',
       indexerPartitionIds: [0],
       indexerNamespace: `ns${ns}`,
       indexerSubLockId: uniqueLockId(),
@@ -108,6 +111,7 @@ export class TestBsky {
       cfg: indexerCfg,
       db: db.getPrimary(),
       redis: indexerRedis,
+      imgInvalidator: cfg.imgInvalidator ?? new NoOpInvalidator(),
     })
     // ingester
     const ingesterCfg = new bsky.IngesterConfig({
@@ -237,6 +241,9 @@ export async function getIndexers(
     dbPostgresUrl: process.env.DB_POSTGRES_URL || '',
     dbPostgresSchema: `appview_${name}`,
     didPlcUrl: network.plc.url,
+    imgUriEndpoint: '',
+    abyssEndpoint: '',
+    abyssPassword: '',
     indexerPartitionIds: [0],
     indexerNamespace: `ns${ns}`,
     ingesterPartitionCount: config.ingesterPartitionCount ?? 1,
@@ -251,6 +258,7 @@ export async function getIndexers(
     host: baseCfg.redisHost,
     namespace: baseCfg.indexerNamespace,
   })
+  const imgInvalidator = new NoOpInvalidator()
   const indexers = await Promise.all(
     opts.partitionIdsByIndexer.map(async (indexerPartitionIds) => {
       const cfg = new bsky.IndexerConfig({
@@ -259,7 +267,7 @@ export async function getIndexers(
         indexerSubLockId: uniqueLockId(),
         indexerPort: await getPort(),
       })
-      return bsky.BskyIndexer.create({ cfg, db, redis })
+      return bsky.BskyIndexer.create({ cfg, db, redis, imgInvalidator })
     }),
   )
   await db.migrateToLatestOrThrow()
@@ -334,4 +342,8 @@ export async function ingestAll(
     const ingesterCaughtUp = ingesterCursor === lastSeq
     if (ingesterCaughtUp) return
   }
+}
+
+class NoOpInvalidator {
+  async invalidate() {}
 }

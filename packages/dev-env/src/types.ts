@@ -1,5 +1,6 @@
 import * as pds from '@atproto/pds'
 import * as bsky from '@atproto/bsky'
+import { ImageInvalidator } from '@atproto/bsky/src/image/invalidator'
 
 export type PlcConfig = {
   port?: number
@@ -19,6 +20,7 @@ export type BskyConfig = Partial<bsky.ServerConfig> & {
   repoProvider: string
   dbPrimaryPostgresUrl: string
   redisHost: string
+  imgInvalidator?: ImageInvalidator
   migration?: string
   algos?: bsky.MountedAlgos
 }

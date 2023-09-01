@@ -7,17 +7,17 @@ import { PrimaryDatabase } from '../db'
 import { IdResolver } from '@atproto/identity'
 import { labelerLogger as log } from '../logger'
 
-export interface ImageTakedownerI {
+export interface TakedownFlagger {
   scanImage(did: string, cid: CID): Promise<string[]>
 }
 
-export class ImageTakedowner implements ImageTakedownerI {
+export class Abyss implements TakedownFlagger {
   protected auth: string
 
   constructor(
-    public ctx: { db: PrimaryDatabase; idResolver: IdResolver },
     public endpoint: string,
     protected password: string,
+    public ctx: { db: PrimaryDatabase; idResolver: IdResolver },
   ) {
     this.auth = basicAuth(this.password)
   }

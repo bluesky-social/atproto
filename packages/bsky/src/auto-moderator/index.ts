@@ -10,27 +10,28 @@ import { buildBasicAuth } from '../auth'
 import { CID } from 'multiformats/cid'
 import { LabelService } from '../services/label'
 import { ModerationService } from '../services/moderation'
-import { ImageTakedowner } from './image-takedowner'
+import { TakedownFlagger } from './abyss'
 import { HiveLabeler, ImgLabeler } from './hive'
 import { KeywordLabeler, TextLabeler } from './keyword'
 import { ids } from '../lexicon/lexicons'
 import { ImageUriBuilder } from '../image/uri'
 import { ImageInvalidator } from '../image/invalidator'
+import { Abyss } from './abyss'
 
 export class AutoModerator {
   public pushAgent?: AtpAgent
 
-  public imgTakedowner: ImageTakedowner
+  public takedownFlagger: TakedownFlagger
   public imgLabeler?: ImgLabeler
   public textLabeler?: TextLabeler
 
   services: {
-    label: LabelService
-    moderation: ModerationService
+    label: (db: PrimaryDatabase) => LabelService
+    moderation: (db: PrimaryDatabase) => ModerationService
   }
 
   constructor(
-    protected ctx: {
+    public ctx: {
       db: PrimaryDatabase
       idResolver: IdResolver
       cfg: IndexerConfig
@@ -40,9 +41,8 @@ export class AutoModerator {
     },
   ) {
     this.services = {
-      label: new LabelService(ctx.db, null),
-      moderation: new ModerationService(
-        ctx.db,
+      label: LabelService.creator(null),
+      moderation: ModerationService.creator(
         ctx.imgUriBuilder,
         ctx.imgInvalidator,
       ),
@@ -51,6 +51,11 @@ export class AutoModerator {
       ? new HiveLabeler(ctx.cfg.hiveApiKey, ctx)
       : undefined
     this.textLabeler = new KeywordLabeler(ctx.cfg.labelerKeywords)
+    this.takedownFlagger = new Abyss(
+      ctx.cfg.abyssEndpoint,
+      ctx.cfg.abyssPassword,
+      ctx,
+    )
 
     if (ctx.cfg.labelerPushUrl) {
       const url = new URL(ctx.cfg.labelerPushUrl)
@@ -98,27 +103,36 @@ export class AutoModerator {
   async checkImgForTakedown(uri: AtUri, recordCid: CID, imgCids: CID[]) {
     if (imgCids.length < 0) return
     const results = await Promise.all(
-      imgCids.map((cid) => this.imgTakedowner.scanImage(uri.host, cid)),
+      imgCids.map((cid) => this.takedownFlagger.scanImage(uri.host, cid)),
     )
-    const result = results.flat()
-    if (result.length === 0) return
-    const action = await this.services.moderation.logAction({
-      action: 'com.atproto.admin.defs#takedown',
-      subject: { uri, cid: recordCid },
-      subjectBlobCids: imgCids,
-      reason: `automated takedown for labels: ${result.join(', ')}`,
-      createdBy: this.ctx.cfg.labelerDid,
-    })
-    await this.services.moderation.takedownRecord({
-      takedownId: action.id,
-      uri: uri,
-      blobCids: imgCids,
+    const takedownCids: CID[] = []
+    for (let i = 0; i < results.length; i++) {
+      if (results[i].length > 0) {
+        takedownCids.push(imgCids[i])
+      }
+    }
+    if (takedownCids.length === 0) return
+    await this.ctx.db.transaction(async (dbTxn) => {
+      const modSrvc = this.services.moderation(dbTxn)
+      const action = await modSrvc.logAction({
+        action: 'com.atproto.admin.defs#takedown',
+        subject: { uri, cid: recordCid },
+        subjectBlobCids: takedownCids,
+        reason: `automated takedown for labels: ${results.flat().join(', ')}`,
+        createdBy: this.ctx.cfg.labelerDid,
+      })
+      await modSrvc.takedownRecord({
+        takedownId: action.id,
+        uri: uri,
+        blobCids: takedownCids,
+      })
     })
   }
 
   async storeLabels(uri: AtUri, cid: CID, labels: string[]): Promise<void> {
     if (labels.length < 1) return
-    const formatted = await this.services.label.formatAndCreate(
+    const labelSrvc = this.services.label(this.ctx.db)
+    const formatted = await labelSrvc.formatAndCreate(
       this.ctx.cfg.labelerDid,
       uri.toString(),
       cid.toString(),

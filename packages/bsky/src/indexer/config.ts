@@ -15,6 +15,8 @@ export interface IndexerConfigValues {
   handleResolveNameservers?: string[]
   labelerDid: string
   hiveApiKey?: string
+  abyssEndpoint: string
+  abyssPassword: string
   imgUriEndpoint: string
   labelerKeywords: Record<string, string>
   labelerPushUrl?: string
@@ -66,6 +68,8 @@ export class IndexerConfig {
     const labelerPushUrl =
       overrides?.labelerPushUrl || process.env.LABELER_PUSH_URL || undefined
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
+    const abyssEndpoint = process.env.ABYSS_ENDPOINT
+    const abyssPassword = process.env.ABYSS_PASSWORD
     const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
     const indexerPartitionIds =
       overrides?.indexerPartitionIds ||
@@ -89,6 +93,8 @@ export class IndexerConfig {
     assert(redisHost || (redisSentinelName && redisSentinelHosts?.length))
     assert(indexerPartitionIds.length > 0)
     assert(imgUriEndpoint)
+    assert(abyssEndpoint)
+    assert(abyssPassword)
     return new IndexerConfig({
       version,
       dbPostgresUrl,
@@ -104,6 +110,8 @@ export class IndexerConfig {
       labelerDid,
       labelerPushUrl,
       hiveApiKey,
+      abyssEndpoint,
+      abyssPassword,
       imgUriEndpoint,
       indexerPartitionIds,
       indexerConcurrency,
@@ -172,6 +180,14 @@ export class IndexerConfig {
 
   get hiveApiKey() {
     return this.cfg.hiveApiKey
+  }
+
+  get abyssEndpoint() {
+    return this.cfg.abyssEndpoint
+  }
+
+  get abyssPassword() {
+    return this.cfg.abyssPassword
   }
 
   get imgUriEndpoint() {

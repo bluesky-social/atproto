@@ -3,7 +3,6 @@ import FormData from 'form-data'
 import { CID } from 'multiformats/cid'
 import { IdResolver } from '@atproto/identity'
 import { PrimaryDatabase } from '../db'
-import { IndexerConfig } from '../indexer/config'
 import { retryHttp } from '../util/retry'
 import { resolveBlob } from '../api/blob-resolver'
 import { labelerLogger as log } from '../logger'
@@ -15,18 +14,13 @@ export interface ImgLabeler {
 }
 
 export class HiveLabeler implements ImgLabeler {
-  hiveApiKey: string
-
   constructor(
-    hiveApiKey: string,
+    public hiveApiKey: string,
     protected ctx: {
       db: PrimaryDatabase
       idResolver: IdResolver
-      cfg: IndexerConfig
     },
-  ) {
-    this.hiveApiKey = hiveApiKey
-  }
+  ) {}
 
   async labelImg(did: string, cid: CID): Promise<string[]> {
     const hiveRes = await retryHttp(async () => {
