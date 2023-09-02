@@ -1,12 +1,14 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { ProfileViewDetailed } from '../../../../lexicon/types/app/bsky/actor/defs'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfile'
 import { softDeleted } from '../../../../db/util'
 import AppContext from '../../../../context'
 import { Database } from '../../../../db'
 import { Actor } from '../../../../db/tables/actor'
-import { ActorService } from '../../../../services/actor'
+import {
+  ActorService,
+  ProfileDetailHydrationState,
+} from '../../../../services/actor'
 import { setRepoRev } from '../../../util'
 import { createPipeline, noRules } from '../../../../pipeline'
 
@@ -67,17 +69,23 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
   const { actorService } = ctx
   const { params, actor } = state
   const { viewer, canViewTakendownProfile } = params
-  const profilesDetailed = await actorService.views.profilesDetailed(
-    [actor],
-    viewer,
-    { includeSoftDeleted: canViewTakendownProfile },
+  const hydration = await actorService.views.profileDetailHydration(
+    [actor.did],
+    { viewer, includeSoftDeleted: canViewTakendownProfile },
   )
-  return { ...state, profilesDetailed }
+  return { ...state, ...hydration }
 }
 
-const presentation = (state: HydrationState) => {
-  const { actor, profilesDetailed } = state
-  const profile = profilesDetailed[actor.did]
+const presentation = (state: HydrationState, ctx: Context) => {
+  const { actorService } = ctx
+  const { params, actor } = state
+  const { viewer } = params
+  const profiles = actorService.views.profileDetailPresentation(
+    [actor.did],
+    state,
+    { viewer },
+  )
+  const profile = profiles[actor.did]
   if (!profile) {
     throw new InvalidRequestError('Profile not found')
   }
@@ -96,6 +104,4 @@ type Params = QueryParams & {
 
 type SkeletonState = { params: Params; actor: Actor }
 
-type HydrationState = SkeletonState & {
-  profilesDetailed: Record<string, ProfileViewDetailed>
-}
+type HydrationState = SkeletonState & ProfileDetailHydrationState

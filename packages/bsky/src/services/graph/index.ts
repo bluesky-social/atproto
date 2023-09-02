@@ -100,7 +100,7 @@ export class GraphService {
   ) {
     pairs = bam ? pairs.filter((pair) => !bam.seen(pair)) : pairs
     const result = bam ?? new BlockAndMuteState()
-    if (!pairs.length) result
+    if (!pairs.length) return result
     const { ref } = this.db.db.dynamic
     const sourceRef = ref('pair.source')
     const targetRef = ref('pair.target')
@@ -143,10 +143,10 @@ export class GraphService {
     return result
   }
 
-  async getBlockState(pairs: RelationshipPair[], bam: BlockAndMuteState) {
+  async getBlockState(pairs: RelationshipPair[], bam?: BlockAndMuteState) {
     pairs = bam ? pairs.filter((pair) => !bam.seen(pair)) : pairs
     const result = bam ?? new BlockAndMuteState()
-    if (!pairs.length) result
+    if (!pairs.length) return result
     const { ref } = this.db.db.dynamic
     const sourceRef = ref('pair.source')
     const targetRef = ref('pair.target')

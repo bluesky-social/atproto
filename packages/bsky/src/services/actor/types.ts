@@ -1,5 +1,8 @@
 import { ListViewBasic } from '../../lexicon/types/app/bsky/graph/defs'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
+import { BlockAndMuteState } from '../graph'
+import { ListInfoMap } from '../graph/types'
+import { Labels } from '../label'
 
 export const kSelfLabels = Symbol('selfLabels')
 
@@ -41,6 +44,29 @@ export type ProfileInfo = {
 }
 
 export type ProfileInfoMap = { [did: string]: ProfileInfo }
+
+export type ProfileHydrationState = {
+  profiles: ProfileInfoMap
+  labels: Labels
+  lists: ListInfoMap
+  bam: BlockAndMuteState
+}
+
+export type ProfileDetailInfo = ProfileInfo & {
+  bannerCid: string | null
+  followsCount: number | null
+  followersCount: number | null
+  postsCount: number | null
+}
+
+export type ProfileDetailInfoMap = { [did: string]: ProfileDetailInfo }
+
+export type ProfileDetailHydrationState = {
+  profilesDetailed: ProfileDetailInfoMap
+  labels: Labels
+  lists: ListInfoMap
+  bam: BlockAndMuteState
+}
 
 export const toMapByDid = <T extends { did: string }>(
   items: T[],

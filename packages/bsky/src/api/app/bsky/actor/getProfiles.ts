@@ -1,11 +1,12 @@
 import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
-import { ProfileViewDetailed } from '../../../../lexicon/types/app/bsky/actor/defs'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfiles'
 import AppContext from '../../../../context'
 import { Database } from '../../../../db'
-import { Actor } from '../../../../db/tables/actor'
-import { ActorService } from '../../../../services/actor'
+import {
+  ActorService,
+  ProfileDetailHydrationState,
+} from '../../../../services/actor'
 import { setRepoRev } from '../../../util'
 import { createPipeline, noRules } from '../../../../pipeline'
 
@@ -39,24 +40,28 @@ const skeleton = async (
 ): Promise<SkeletonState> => {
   const { actorService } = ctx
   const actors = await actorService.getActors(params.actors)
-  return { params, actors }
+  return { params, dids: actors.map((a) => a.did) }
 }
 
 const hydration = async (state: SkeletonState, ctx: Context) => {
   const { actorService } = ctx
-  const { params, actors } = state
+  const { params, dids } = state
   const { viewer } = params
-  const profilesDetailed = await actorService.views.profilesDetailed(
-    actors,
+  const hydration = await actorService.views.profileDetailHydration(dids, {
     viewer,
-  )
-  return { ...state, profilesDetailed }
+  })
+  return { ...state, ...hydration }
 }
 
-const presentation = (state: HydrationState) => {
-  const { actors, profilesDetailed } = state
-  const profiles = mapDefined(actors, (actor) => profilesDetailed[actor.did])
-  return { profiles }
+const presentation = (state: HydrationState, ctx: Context) => {
+  const { actorService } = ctx
+  const { params, dids } = state
+  const { viewer } = params
+  const profiles = actorService.views.profileDetailPresentation(dids, state, {
+    viewer,
+  })
+  const profileViews = mapDefined(dids, (did) => profiles[did])
+  return { profiles: profileViews }
 }
 
 type Context = {
@@ -68,8 +73,6 @@ type Params = QueryParams & {
   viewer: string | null
 }
 
-type SkeletonState = { params: Params; actors: Actor[] }
+type SkeletonState = { params: Params; dids: string[] }
 
-type HydrationState = SkeletonState & {
-  profilesDetailed: Record<string, ProfileViewDetailed>
-}
+type HydrationState = SkeletonState & ProfileDetailHydrationState
