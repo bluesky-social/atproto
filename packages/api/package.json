@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@atproto/common-web": "*",
+    "@atproto/lexicon": "*",
     "@atproto/syntax": "*",
     "@atproto/xrpc": "*",
     "multiformats": "^9.9.0",

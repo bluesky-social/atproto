@@ -39,6 +39,7 @@
     "@atproto/identity": "*",
     "@atproto/lexicon": "*",
     "@atproto/repo": "*",
+    "@atproto/xrpc": "*",
     "@atproto/xrpc-server": "*",
     "@did-plc/lib": "^0.0.1",
     "better-sqlite3": "^7.6.2",
@@ -67,7 +68,8 @@
     "pino-http": "^8.2.1",
     "sharp": "^0.31.2",
     "typed-emitter": "^2.1.0",
-    "uint8arrays": "3.0.0"
+    "uint8arrays": "3.0.0",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@atproto/api": "*",
