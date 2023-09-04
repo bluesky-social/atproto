@@ -33,7 +33,7 @@ import {
 import { Labels, getSelfLabels } from '../label'
 import { ImageUriBuilder } from '../../image/uri'
 import { LabelCache } from '../../label-cache'
-import { ActorInfoMap, ActorService, kSelfLabels } from '../actor'
+import { ActorInfoMap, ActorService } from '../actor'
 
 export class FeedViews {
   constructor(
@@ -53,16 +53,8 @@ export class FeedViews {
   formatFeedGeneratorView(
     info: FeedGenInfo,
     profiles: ActorInfoMap,
-    labels?: Labels,
   ): GeneratorView {
     const profile = profiles[info.creator]
-    if (profile && !profile.labels) {
-      // If the creator labels are not hydrated yet, attempt to pull them
-      // from labels: e.g. compatible with embedsForPosts() batching label hydration.
-      const profileLabels = labels?.[info.creator] ?? []
-      const profileSelfLabels = profile[kSelfLabels] ?? []
-      profile.labels = [...profileLabels, ...profileSelfLabels]
-    }
     return {
       uri: info.uri,
       cid: info.cid,
@@ -124,14 +116,9 @@ export class FeedViews {
         if (!originator) {
           continue
         } else {
-          const originatorLabels = labels[item.originatorDid] ?? []
-          const originatorSelfLabels = originator[kSelfLabels] ?? []
           feedPost['reason'] = {
             $type: 'app.bsky.feed.defs#reasonRepost',
-            by: {
-              ...originator,
-              labels: [...originatorLabels, ...originatorSelfLabels],
-            },
+            by: originator,
             indexedAt: item.sortAt,
           }
         }
@@ -177,11 +164,6 @@ export class FeedViews {
     const post = posts[uri]
     const author = actors[post?.creator]
     if (!post || !author) return undefined
-    // If the author labels are not hydrated yet, attempt to pull them
-    // from labels: e.g. compatible with hydrateFeed() batching label hydration.
-    const authorLabels = labels[author.did] ?? []
-    const authorSelfLabels = author[kSelfLabels] ?? []
-    author.labels ??= [...authorLabels, ...authorSelfLabels]
     const postLabels = labels[uri] ?? []
     const postSelfLabels = getSelfLabels({
       uri: post.uri,

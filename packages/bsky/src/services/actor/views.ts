@@ -18,7 +18,6 @@ import {
   ProfileHydrationState,
   ProfileInfoMap,
   ProfileViewMap,
-  kSelfLabels,
   toMapByDid,
 } from './types'
 import { ListInfoMap } from '../graph/types'
@@ -38,7 +37,7 @@ export class ActorViews {
   async profiles(
     results: (ActorResult | string)[], // @TODO simplify down to just string[]
     viewer: string | null,
-    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
+    opts?: { includeSoftDeleted?: boolean },
   ): Promise<ActorInfoMap> {
     if (results.length === 0) return {}
     const dids = results.map((res) => (typeof res === 'string' ? res : res.did))
@@ -55,24 +54,24 @@ export class ActorViews {
   async profilesBasic(
     results: (ActorResult | string)[],
     viewer: string | null,
-    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
+    opts?: { omitLabels?: boolean; includeSoftDeleted?: boolean },
   ): Promise<ActorInfoMap> {
     if (results.length === 0) return {}
     const dids = results.map((res) => (typeof res === 'string' ? res : res.did))
     const hydrated = await this.profileHydration(dids, {
       viewer,
-      ...opts,
+      includeSoftDeleted: opts?.includeSoftDeleted,
     })
     return this.profileBasicPresentation(dids, hydrated, {
       viewer,
-      ...opts,
+      omitLabels: opts?.omitLabels,
     })
   }
 
   async profilesList(
     results: ActorResult[],
     viewer: string | null,
-    opts?: { skipLabels?: boolean; includeSoftDeleted?: boolean },
+    opts?: { includeSoftDeleted?: boolean },
   ): Promise<ProfileView[]> {
     const profiles = await this.profiles(results, viewer, opts)
     return mapDefined(results, (result) => profiles[result.did])
@@ -83,13 +82,13 @@ export class ActorViews {
     opts: {
       viewer?: string | null
       includeSoftDeleted?: boolean
-      skipLabels?: boolean
     },
     state?: {
       bam: BlockAndMuteState
+      labels: Labels
     },
   ): Promise<ProfileDetailHydrationState> {
-    const { viewer = null, includeSoftDeleted, skipLabels } = opts
+    const { viewer = null, includeSoftDeleted } = opts
     const { ref } = this.db.db.dynamic
     const profileInfosQb = this.db.db
       .selectFrom('actor')
@@ -131,7 +130,7 @@ export class ActorViews {
       ])
     const [profiles, labels, bam] = await Promise.all([
       profileInfosQb.execute(),
-      this.services.label.getLabelsForSubjects(!skipLabels ? dids : []),
+      this.services.label.getLabelsForSubjects(dids, state?.labels),
       this.services.graph.getBlockAndMuteState(
         viewer ? dids.map((did) => [viewer, did]) : [],
         state?.bam,
@@ -151,10 +150,9 @@ export class ActorViews {
     state: ProfileDetailHydrationState,
     opts: {
       viewer?: string | null
-      skipLabels?: boolean
     },
   ): Record<string, ProfileViewDetailed> {
-    const { viewer, skipLabels } = opts
+    const { viewer } = opts
     const { profilesDetailed, lists, labels, bam } = state
     return dids.reduce((acc, did) => {
       const prof = profilesDetailed[did]
@@ -200,8 +198,7 @@ export class ActorViews {
               followedBy: prof?.viewerFollowedBy || undefined,
             }
           : undefined,
-        labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
-        [kSelfLabels]: selfLabels,
+        labels: [...actorLabels, ...selfLabels],
       }
       return acc
     }, {} as Record<string, ProfileViewDetailed>)
@@ -280,10 +277,9 @@ export class ActorViews {
     },
     opts?: {
       viewer?: string | null
-      skipLabels?: boolean
     },
   ): ProfileViewMap {
-    const { viewer, skipLabels } = opts ?? {}
+    const { viewer } = opts ?? {}
     const { profiles, lists, labels, bam } = state
     return dids.reduce((acc, did) => {
       const prof = profiles[did]
@@ -322,8 +318,7 @@ export class ActorViews {
               followedBy: prof?.viewerFollowedBy || undefined,
             }
           : undefined,
-        labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
-        [kSelfLabels]: selfLabels,
+        labels: [...actorLabels, ...selfLabels],
       }
       return acc
     }, {} as ProfileViewMap)
@@ -334,7 +329,7 @@ export class ActorViews {
     state: ProfileHydrationState,
     opts?: {
       viewer?: string | null
-      skipLabels?: boolean
+      omitLabels?: boolean
     },
   ): ProfileViewMap {
     const result = this.profilePresentation(dids, state, opts)
@@ -345,8 +340,7 @@ export class ActorViews {
         displayName: prof.displayName,
         avatar: prof.avatar,
         viewer: prof.viewer,
-        labels: prof.labels,
-        [kSelfLabels]: prof[kSelfLabels],
+        labels: opts?.omitLabels ? undefined : prof.labels,
       }
       acc[prof.did] = profileBasic
       return acc

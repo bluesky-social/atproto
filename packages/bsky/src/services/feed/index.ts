@@ -207,11 +207,14 @@ export class FeedService {
     return { dids: actorDids, uris: postUris }
   }
 
-  async feedHydration(refs: {
-    dids: Set<string>
-    uris: Set<string>
-    viewer: string | null
-  }): Promise<FeedHydrationState> {
+  async feedHydration(
+    refs: {
+      dids: Set<string>
+      uris: Set<string>
+      viewer: string | null
+    },
+    depth = 0,
+  ): Promise<FeedHydrationState> {
     const { viewer, dids, uris } = refs
     const [posts, labels, bam] = await Promise.all([
       this.getPostInfos(Array.from(uris), viewer),
@@ -229,7 +232,7 @@ export class FeedService {
       ),
       this.blocksForPosts(posts, bam),
     ])
-    const embeds = await this.embedsForPosts(posts, blocks, viewer)
+    const embeds = await this.embedsForPosts(posts, blocks, viewer, depth)
     return {
       posts,
       blocks,
@@ -294,7 +297,7 @@ export class FeedService {
     postInfos: PostInfoMap,
     blocks: PostBlocksMap,
     viewer: string | null,
-    depth = 0,
+    depth: number,
   ) {
     const postMap = postRecordsFromInfos(postInfos)
     const posts = Object.values(postMap)
@@ -345,42 +348,37 @@ export class FeedService {
   ): Promise<RecordEmbedViewRecordMap> {
     const nestedUris = nestedRecordUris(posts)
     if (nestedUris.length < 1) return {}
-    const nestedPostUris: string[] = []
-    const nestedFeedGenUris: string[] = []
-    const nestedListUris: string[] = []
-    const nestedDidsSet = new Set<string>()
+    const nestedDids = new Set<string>()
+    const nestedPostUris = new Set<string>()
+    const nestedFeedGenUris = new Set<string>()
+    const nestedListUris = new Set<string>()
     for (const uri of nestedUris) {
       const parsed = new AtUri(uri)
-      nestedDidsSet.add(parsed.hostname)
+      nestedDids.add(parsed.hostname)
       if (parsed.collection === ids.AppBskyFeedPost) {
-        nestedPostUris.push(uri)
+        nestedPostUris.add(uri)
       } else if (parsed.collection === ids.AppBskyFeedGenerator) {
-        nestedFeedGenUris.push(uri)
+        nestedFeedGenUris.add(uri)
       } else if (parsed.collection === ids.AppBskyGraphList) {
-        nestedListUris.push(uri)
+        nestedListUris.add(uri)
       }
     }
-    const nestedDids = [...nestedDidsSet]
-    // @TODO utilize feedHydration()
-    const [postInfos, actorInfos, labelViews, feedGenInfos, listViews] =
-      await Promise.all([
-        this.getPostInfos(nestedPostUris, viewer),
-        this.services.actor.views.profilesBasic(nestedDids, viewer, {
-          skipLabels: true,
-        }),
-        this.services.label.getLabelsForSubjects([
-          ...nestedPostUris,
-          ...nestedDids,
-        ]),
-        this.getFeedGeneratorInfos(nestedFeedGenUris, viewer),
-        this.services.graph.getListViews(nestedListUris, viewer),
-      ])
-    const deepBlocks = await this.blocksForPosts(postInfos)
-    const deepEmbedViews = await this.embedsForPosts(
-      postInfos,
-      deepBlocks,
-      viewer,
-      depth + 1,
+    const [feedState, feedGenInfos, listViews] = await Promise.all([
+      this.feedHydration(
+        {
+          dids: nestedDids,
+          uris: nestedPostUris,
+          viewer,
+        },
+        depth + 1,
+      ),
+      this.getFeedGeneratorInfos([...nestedFeedGenUris], viewer),
+      this.services.graph.getListViews([...nestedListUris], viewer),
+    ])
+    const actorInfos = this.services.actor.views.profileBasicPresentation(
+      [...nestedDids],
+      feedState,
+      { viewer },
     )
     const recordEmbedViews: RecordEmbedViewRecordMap = {}
     for (const uri of nestedUris) {
@@ -388,24 +386,20 @@ export class FeedService {
       if (collection === ids.AppBskyFeedGenerator && feedGenInfos[uri]) {
         recordEmbedViews[uri] = {
           $type: 'app.bsky.feed.defs#generatorView',
-          ...this.views.formatFeedGeneratorView(
-            feedGenInfos[uri],
-            actorInfos,
-            labelViews,
-          ),
+          ...this.views.formatFeedGeneratorView(feedGenInfos[uri], actorInfos),
         }
       } else if (collection === ids.AppBskyGraphList && listViews[uri]) {
         recordEmbedViews[uri] = {
           $type: 'app.bsky.graph.defs#listView',
           ...this.services.graph.formatListView(listViews[uri], actorInfos),
         }
-      } else if (collection === ids.AppBskyFeedPost && postInfos[uri]) {
+      } else if (collection === ids.AppBskyFeedPost && feedState.posts[uri]) {
         const formatted = this.views.formatPostView(
           uri,
           actorInfos,
-          postInfos,
-          deepEmbedViews,
-          labelViews,
+          feedState.posts,
+          feedState.embeds,
+          feedState.labels,
         )
         recordEmbedViews[uri] = this.views.getRecordEmbedView(
           uri,
