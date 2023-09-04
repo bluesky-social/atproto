@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: {
-          feed: result.feed, // @TODO should we proactively filter blocks/mutes from the skeleton, or treat this similar to other cusotm feeds?
+          feed: result.feed, // @TODO should we proactively filter blocks/mutes from the skeleton, or treat this similar to other custom feeds?
           cursor: result.cursor,
         },
       }
