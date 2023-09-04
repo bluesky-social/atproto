@@ -6,6 +6,7 @@ import AppContext from '../../../../context'
 import { Database } from '../../../../db'
 import { FeedHydrationState, FeedService } from '../../../../services/feed'
 import { createPipeline } from '../../../../pipeline'
+import { ActorService } from '../../../../services/actor'
 
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -14,9 +15,13 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const db = ctx.db.getReplica()
       const feedService = ctx.services.feed(db)
+      const actorService = ctx.services.actor(db)
       const viewer = auth.credentials.did
 
-      const results = await getPosts({ ...params, viewer }, { db, feedService })
+      const results = await getPosts(
+        { ...params, viewer },
+        { db, feedService, actorService },
+      )
 
       return {
         encoding: 'application/json',
@@ -54,13 +59,18 @@ const noBlocks = (state: HydrationState) => {
 }
 
 const presentation = (state: HydrationState, ctx: Context) => {
-  const { feedService } = ctx
-  const { postUris } = state
+  const { feedService, actorService } = ctx
+  const { postUris, profiles, params } = state
   const SKIP = []
+  const actors = actorService.views.profileBasicPresentation(
+    Object.keys(profiles),
+    state,
+    { viewer: params.viewer },
+  )
   const postViews = postUris.flatMap((uri) => {
     const postView = feedService.views.formatPostView(
       uri,
-      state.actors,
+      actors,
       state.posts,
       state.embeds,
       state.labels,
@@ -73,6 +83,7 @@ const presentation = (state: HydrationState, ctx: Context) => {
 type Context = {
   db: Database
   feedService: FeedService
+  actorService: ActorService
 }
 
 type Params = QueryParams & { viewer: string | null }

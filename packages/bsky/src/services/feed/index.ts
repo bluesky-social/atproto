@@ -30,7 +30,7 @@ import {
 } from './types'
 import { LabelService } from '../label'
 import { ActorService } from '../actor'
-import { GraphService, RelationshipPair } from '../graph'
+import { BlockAndMuteState, GraphService, RelationshipPair } from '../graph'
 import { FeedViews } from './views'
 import { LabelCache } from '../../label-cache'
 
@@ -43,7 +43,7 @@ export class FeedService {
     public labelCache: LabelCache,
   ) {}
 
-  views = new FeedViews(this.db, this.imgUriBuilder)
+  views = new FeedViews(this.db, this.imgUriBuilder, this.labelCache)
 
   services = {
     label: LabelService.creator(this.labelCache)(this.db),
@@ -213,23 +213,39 @@ export class FeedService {
     viewer: string | null
   }): Promise<FeedHydrationState> {
     const { viewer, dids, uris } = refs
-    const [posts, actors, labels, bam] = await Promise.all([
+    const [posts, labels, bam] = await Promise.all([
       this.getPostInfos(Array.from(uris), viewer),
-      this.services.actor.views.profilesBasic(Array.from(dids), viewer, {
-        skipLabels: true,
-      }),
       this.services.label.getLabelsForSubjects([...uris, ...dids]),
       this.services.graph.getBlockAndMuteState(
         viewer ? [...dids].map((did) => [viewer, did]) : [],
       ),
     ])
-    const blocks = await this.blocksForPosts(posts)
+    // profileState for labels and bam handled above, profileHydration() shouldn't fetch additional
+    const [profileState, blocks] = await Promise.all([
+      this.services.actor.views.profileHydration(
+        Array.from(dids),
+        { viewer },
+        { bam, labels },
+      ),
+      this.blocksForPosts(posts, bam),
+    ])
     const embeds = await this.embedsForPosts(posts, blocks, viewer)
-    return { posts, actors, labels, bam, blocks, embeds }
+    return {
+      posts,
+      blocks,
+      embeds,
+      labels, // includes info for profiles
+      bam, // includes info for profiles
+      profiles: profileState.profiles,
+      lists: profileState.lists,
+    }
   }
 
   // applies blocks for visibility to third-parties (i.e. based on post content)
-  async blocksForPosts(posts: PostInfoMap): Promise<PostBlocksMap> {
+  async blocksForPosts(
+    posts: PostInfoMap,
+    bam?: BlockAndMuteState,
+  ): Promise<PostBlocksMap> {
     const relationships: RelationshipPair[] = []
     const byPost: Record<string, PostRelationships> = {}
     const didFromUri = (uri) => new AtUri(uri).host
@@ -256,7 +272,10 @@ export class FeedService {
       }
     }
     // compute block state from all actor relationships among posts
-    const blockState = await this.services.graph.getBlockState(relationships)
+    const blockState = await this.services.graph.getBlockState(
+      relationships,
+      bam,
+    )
     const result: PostBlocksMap = {}
     Object.entries(byPost).forEach(([uri, block]) => {
       if (block.embed && blockState.block(block.embed)) {
@@ -342,6 +361,7 @@ export class FeedService {
       }
     }
     const nestedDids = [...nestedDidsSet]
+    // @TODO utilize feedHydration()
     const [postInfos, actorInfos, labelViews, feedGenInfos, listViews] =
       await Promise.all([
         this.getPostInfos(nestedPostUris, viewer),

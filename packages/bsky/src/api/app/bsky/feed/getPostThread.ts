@@ -20,6 +20,7 @@ import {
 import { Database } from '../../../../db'
 import { setRepoRev } from '../../../util'
 import { createPipeline, noRules } from '../../../../pipeline'
+import { ActorService } from '../../../../services/actor'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(
@@ -33,11 +34,11 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, res }) => {
       const viewer = auth.credentials.did
       const db = ctx.db.getReplica('thread')
-      const actorService = ctx.services.actor(db)
       const feedService = ctx.services.feed(db)
+      const actorService = ctx.services.actor(db)
 
       const [result, repoRev] = await Promise.allSettled([
-        getPostThread({ ...params, viewer }, { db, feedService }),
+        getPostThread({ ...params, viewer }, { db, feedService, actorService }),
         actorService.getRepoRev(viewer),
       ])
 
@@ -90,9 +91,14 @@ const composeThread = (
   state: HydrationState,
   ctx: Context,
 ) => {
-  const { feedService } = ctx
-  const { actors, posts, embeds, blocks, labels } = state
+  const { feedService, actorService } = ctx
+  const { profiles, posts, embeds, blocks, labels, params } = state
 
+  const actors = actorService.views.profileBasicPresentation(
+    Object.keys(profiles),
+    state,
+    { viewer: params.viewer },
+  )
   const post = feedService.views.formatPostView(
     threadData.post.postUri,
     actors,
@@ -272,6 +278,7 @@ type PostThread = {
 type Context = {
   db: Database
   feedService: FeedService
+  actorService: ActorService
 }
 
 type Params = QueryParams & { viewer: string | null }

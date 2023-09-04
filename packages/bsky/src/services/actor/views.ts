@@ -15,6 +15,7 @@ import { LabelCache } from '../../label-cache'
 import {
   ActorInfoMap,
   ProfileDetailHydrationState,
+  ProfileHydrationState,
   ProfileInfoMap,
   ProfileViewMap,
   kSelfLabels,
@@ -211,18 +212,13 @@ export class ActorViews {
     opts: {
       viewer?: string | null
       includeSoftDeleted?: boolean
-      skipLabels?: boolean
     },
     state?: {
       bam: BlockAndMuteState
+      labels: Labels
     },
-  ): Promise<{
-    profiles: ProfileInfoMap
-    labels: Labels
-    lists: ListInfoMap
-    bam: BlockAndMuteState
-  }> {
-    const { viewer = null, includeSoftDeleted, skipLabels } = opts
+  ): Promise<ProfileHydrationState> {
+    const { viewer = null, includeSoftDeleted } = opts
     const { ref } = this.db.db.dynamic
     const profileInfosQb = this.db.db
       .selectFrom('actor')
@@ -259,7 +255,7 @@ export class ActorViews {
       ])
     const [profiles, labels, bam] = await Promise.all([
       profileInfosQb.execute(),
-      this.services.label.getLabelsForSubjects(!skipLabels ? dids : []),
+      this.services.label.getLabelsForSubjects(dids, state?.labels),
       this.services.graph.getBlockAndMuteState(
         viewer ? dids.map((did) => [viewer, did]) : [],
         state?.bam,
@@ -282,12 +278,12 @@ export class ActorViews {
       labels: Labels
       bam: BlockAndMuteState
     },
-    opts: {
+    opts?: {
       viewer?: string | null
       skipLabels?: boolean
     },
   ): ProfileViewMap {
-    const { viewer, skipLabels } = opts
+    const { viewer, skipLabels } = opts ?? {}
     const { profiles, lists, labels, bam } = state
     return dids.reduce((acc, did) => {
       const prof = profiles[did]
@@ -335,13 +331,8 @@ export class ActorViews {
 
   profileBasicPresentation(
     dids: string[],
-    state: {
-      profiles: ProfileInfoMap
-      lists: ListInfoMap
-      labels: Labels
-      bam: BlockAndMuteState
-    },
-    opts: {
+    state: ProfileHydrationState,
+    opts?: {
       viewer?: string | null
       skipLabels?: boolean
     },

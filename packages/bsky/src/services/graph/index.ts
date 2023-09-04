@@ -98,7 +98,7 @@ export class GraphService {
     pairs: RelationshipPair[],
     bam?: BlockAndMuteState,
   ) {
-    pairs = bam ? pairs.filter((pair) => !bam.seen(pair)) : pairs
+    pairs = bam ? pairs.filter((pair) => !bam.has(pair)) : pairs
     const result = bam ?? new BlockAndMuteState()
     if (!pairs.length) return result
     const { ref } = this.db.db.dynamic
@@ -144,7 +144,7 @@ export class GraphService {
   }
 
   async getBlockState(pairs: RelationshipPair[], bam?: BlockAndMuteState) {
-    pairs = bam ? pairs.filter((pair) => !bam.seen(pair)) : pairs
+    pairs = bam ? pairs.filter((pair) => !bam.has(pair)) : pairs
     const result = bam ?? new BlockAndMuteState()
     if (!pairs.length) return result
     const { ref } = this.db.db.dynamic
@@ -238,10 +238,10 @@ export class GraphService {
 export type RelationshipPair = [didA: string, didB: string]
 
 export class BlockAndMuteState {
-  seenIdx = new Map<string, Set<string>>()
-  blockIdx = new Map<string, Map<string, string>>()
-  muteIdx = new Map<string, Set<string>>()
-  muteListIdx = new Map<string, Map<string, string>>()
+  hasIdx = new Map<string, Set<string>>() // did -> did
+  blockIdx = new Map<string, Map<string, string>>() // did -> did -> block uri
+  muteIdx = new Map<string, Set<string>>() // did -> did
+  muteListIdx = new Map<string, Map<string, string>>() // did -> did -> list uri
   constructor(items: BlockAndMuteInfo[] = []) {
     items.forEach((item) => this.add(item))
   }
@@ -274,10 +274,10 @@ export class BlockAndMuteState {
         this.muteListIdx.set(item.source, map)
       }
     }
-    const set = this.seenIdx.get(item.source) ?? new Set()
+    const set = this.hasIdx.get(item.source) ?? new Set()
     set.add(item.target)
-    if (!this.seenIdx.has(item.source)) {
-      this.seenIdx.set(item.source, set)
+    if (!this.hasIdx.has(item.source)) {
+      this.hasIdx.set(item.source, set)
     }
   }
   block(pair: RelationshipPair): boolean {
@@ -295,8 +295,8 @@ export class BlockAndMuteState {
   muteList(pair: RelationshipPair): string | null {
     return this.muteListIdx.get(pair[0])?.get(pair[1]) ?? null
   }
-  seen(pair: RelationshipPair) {
-    return !!this.seenIdx.get(pair[0])?.has(pair[1])
+  has(pair: RelationshipPair) {
+    return !!this.hasIdx.get(pair[0])?.has(pair[1])
   }
 }
 

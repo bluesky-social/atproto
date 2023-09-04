@@ -28,16 +28,26 @@ import {
   PostInfoMap,
   RecordEmbedViewRecord,
   PostBlocksMap,
+  FeedHydrationState,
 } from './types'
 import { Labels, getSelfLabels } from '../label'
 import { ImageUriBuilder } from '../../image/uri'
-import { ActorInfoMap, kSelfLabels } from '../actor'
+import { LabelCache } from '../../label-cache'
+import { ActorInfoMap, ActorService, kSelfLabels } from '../actor'
 
 export class FeedViews {
-  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    public db: Database,
+    public imgUriBuilder: ImageUriBuilder,
+    public labelCache: LabelCache,
+  ) {}
 
-  static creator(imgUriBuilder: ImageUriBuilder) {
-    return (db: Database) => new FeedViews(db, imgUriBuilder)
+  static creator(imgUriBuilder: ImageUriBuilder, labelCache: LabelCache) {
+    return (db: Database) => new FeedViews(db, imgUriBuilder, labelCache)
+  }
+
+  services = {
+    actor: ActorService.creator(this.imgUriBuilder, this.labelCache)(this.db),
   }
 
   formatFeedGeneratorView(
@@ -82,13 +92,18 @@ export class FeedViews {
 
   formatFeed(
     items: FeedRow[],
-    actors: ActorInfoMap,
-    posts: PostInfoMap,
-    embeds: PostEmbedViews,
-    labels: Labels,
-    blocks: PostBlocksMap,
-    usePostViewUnion?: boolean,
+    state: FeedHydrationState,
+    opts?: {
+      viewer?: string | null
+      usePostViewUnion?: boolean
+    },
   ): FeedViewPost[] {
+    const { posts, profiles, blocks, embeds, labels } = state
+    const actors = this.services.actor.views.profileBasicPresentation(
+      Object.keys(profiles),
+      state,
+      opts,
+    )
     const feed: FeedViewPost[] = []
     for (const item of items) {
       const post = this.formatPostView(
@@ -129,7 +144,7 @@ export class FeedViews {
           embeds,
           labels,
           blocks,
-          usePostViewUnion,
+          opts,
         )
         const replyRoot = this.formatMaybePostView(
           item.replyRoot,
@@ -138,7 +153,7 @@ export class FeedViews {
           embeds,
           labels,
           blocks,
-          usePostViewUnion,
+          opts,
         )
         if (replyRoot && replyParent) {
           feedPost['reply'] = {
@@ -200,11 +215,13 @@ export class FeedViews {
     embeds: PostEmbedViews,
     labels: Labels,
     blocks: PostBlocksMap,
-    usePostViewUnion?: boolean,
+    opts?: {
+      usePostViewUnion?: boolean
+    },
   ): MaybePostView | undefined {
     const post = this.formatPostView(uri, actors, posts, embeds, labels)
     if (!post) {
-      if (!usePostViewUnion) return
+      if (!opts?.usePostViewUnion) return
       return this.notFoundPost(uri)
     }
     if (
@@ -212,7 +229,7 @@ export class FeedViews {
       post.author.viewer?.blocking ||
       blocks[uri]?.reply
     ) {
-      if (!usePostViewUnion) return
+      if (!opts?.usePostViewUnion) return
       return this.blockedPost(post)
     }
     return {

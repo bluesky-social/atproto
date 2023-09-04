@@ -113,15 +113,10 @@ const noBlocksOrMutes = (state: HydrationState) => {
 
 const presentation = (state: HydrationState, ctx: Context) => {
   const { feedService } = ctx
-  const { feedItems, cursor, passthrough } = state
-  const feed = feedService.views.formatFeed(
-    feedItems,
-    state.actors,
-    state.posts,
-    state.embeds,
-    state.labels,
-    state.blocks,
-  )
+  const { feedItems, cursor, passthrough, params } = state
+  const feed = feedService.views.formatFeed(feedItems, state, {
+    viewer: params.viewer,
+  })
   return {
     feed,
     cursor,
