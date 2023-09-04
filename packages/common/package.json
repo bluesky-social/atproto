@@ -27,7 +27,7 @@
     "@atproto/common-web": "*",
     "@ipld/dag-cbor": "^7.0.3",
     "cbor-x": "^1.5.1",
-    "multiformats": "^9.6.4",
+    "multiformats": "^9.9.0",
     "pino": "^8.6.1"
   }
 }

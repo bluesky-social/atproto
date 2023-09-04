@@ -27,7 +27,7 @@
     "@atproto/common-web": "*",
     "@atproto/syntax": "*",
     "iso-datestring-validator": "^2.2.2",
-    "multiformats": "^9.6.4",
+    "multiformats": "^9.9.0",
     "zod": "^3.21.4"
   }
 }

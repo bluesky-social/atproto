@@ -25,6 +25,7 @@
     "@atproto/common-web": "*",
     "@atproto/syntax": "*",
     "@atproto/xrpc": "*",
+    "multiformats": "^9.9.0",
     "tlds": "^1.234.0",
     "typed-emitter": "^2.1.0"
   },

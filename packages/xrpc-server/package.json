@@ -43,6 +43,6 @@
     "@types/http-errors": "^2.0.1",
     "@types/ws": "^8.5.4",
     "get-port": "^6.1.2",
-    "multiformats": "^9.6.4"
+    "multiformats": "^9.9.0"
   }
 }

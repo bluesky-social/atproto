@@ -34,7 +34,7 @@
     "@atproto/syntax": "*",
     "@ipld/car": "^3.2.3",
     "@ipld/dag-cbor": "^7.0.0",
-    "multiformats": "^9.6.4",
+    "multiformats": "^9.9.0",
     "uint8arrays": "3.0.0",
     "zod": "^3.21.4"
   }

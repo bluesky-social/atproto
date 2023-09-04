@@ -50,7 +50,7 @@
     "ioredis": "^5.3.2",
     "iso-datestring-validator": "^2.2.2",
     "kysely": "^0.22.0",
-    "multiformats": "^9.6.4",
+    "multiformats": "^9.9.0",
     "p-queue": "^6.6.2",
     "pg": "^8.10.0",
     "pino": "^8.6.1",

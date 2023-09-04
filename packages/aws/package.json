@@ -26,7 +26,7 @@
     "@aws-sdk/lib-storage": "^3.226.0",
     "@noble/curves": "^1.1.0",
     "key-encoder": "^2.0.3",
-    "multiformats": "^9.6.4",
+    "multiformats": "^9.9.0",
     "uint8arrays": "3.0.0"
   }
 }
