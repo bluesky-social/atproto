@@ -8,7 +8,7 @@
     "directory": "packages/pds"
   },
   "main": "src/index.ts",
-  "bin": "dist/bin.ts",
+  "bin": "dist/bin.js",
   "scripts": {
     "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
     "build": "node ./build.js",
