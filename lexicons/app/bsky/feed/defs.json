@@ -71,7 +71,8 @@
         "replies": {
           "type": "array",
           "items": {"type": "union", "refs": ["#threadViewPost", "#notFoundPost", "#blockedPost"]}
-        }
+        },
+        "viewer": {"type": "ref", "ref": "#viewerThreadState"}
       }
     },
     "notFoundPost": {
@@ -97,6 +98,12 @@
       "properties": {
         "did": {"type": "string", "format": "did"},
         "viewer": { "type": "ref", "ref": "app.bsky.actor.defs#viewerState" }
+      }
+    },
+    "viewerThreadState": {
+      "type": "object",
+      "properties": {
+        "canReply": {"type": "boolean"}
       }
     },
     "generatorView": {
