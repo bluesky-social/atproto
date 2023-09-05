@@ -333,6 +333,10 @@ export class IndexingService {
       .deleteFrom('actor_block')
       .where('creator', '=', did)
       .execute()
+    await this.db.db
+      .deleteFrom('list_block')
+      .where('creator', '=', did)
+      .execute()
     // posts
     const postByUser = (qb) =>
       qb
