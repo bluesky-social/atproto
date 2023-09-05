@@ -362,5 +362,19 @@
       "name": "Scam Warning",
       "description": "The moderators believe this is fraudulent content."
     }
+  },
+  "misleading": {
+    "settings": {
+      "name": "Misleading",
+      "description": "Accounts which share misleading information."
+    },
+    "account": {
+      "name": "Misleading",
+      "description": "The moderators believe this account is spreading misleading information."
+    },
+    "content": {
+      "name": "Misleading",
+      "description": "The moderators believe this account is spreading misleading information."
+    }
   }
 }

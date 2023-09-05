@@ -206,6 +206,12 @@
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "alert"
+      },
+      {
+        "id": "misleading",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
       }
     ]
   }
