@@ -84,7 +84,7 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
 const presentation = (state: HydrationState, ctx: Context) => {
   const { actorService, graphService } = ctx
   const { params, listInfos, cursor, ...profileState } = state
-  const actors = actorService.views.profileBasicPresentation(
+  const actors = actorService.views.profilePresentation(
     Object.keys(profileState.profiles),
     profileState,
     { viewer: params.viewer },
