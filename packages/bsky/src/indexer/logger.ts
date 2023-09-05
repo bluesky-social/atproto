@@ -1,3 +1,6 @@
 import { subsystemLogger } from '@atproto/common'
 
-export default subsystemLogger('bsky:indexer')
+const logger: ReturnType<typeof subsystemLogger> =
+  subsystemLogger('bsky:indexer')
+
+export default logger

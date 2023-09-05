@@ -1,0 +1,10 @@
+{
+  "name": "plc-service",
+  "private": true,
+  "dependencies": {
+    "@atproto/aws": "workspace:^",
+    "@atproto/crypto": "workspace:^",
+    "@atproto/pds": "workspace:^",
+    "dd-trace": "3.13.2"
+  }
+}
