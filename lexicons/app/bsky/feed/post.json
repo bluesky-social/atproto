@@ -38,6 +38,18 @@
             "type": "union",
             "refs": ["com.atproto.label.defs#selfLabels"]
           },
+          "interactions": {
+            "type": "array",
+            "maxLength": 5,
+            "items": {
+              "type": "union",
+              "refs": [
+                "#mentionInteraction",
+                "#followingInteraction",
+                "#listInteraction"
+              ]
+            }
+          },
           "createdAt": {"type": "string", "format": "datetime"}
         }
       }
@@ -70,6 +82,22 @@
       "properties": {
         "start": {"type": "integer", "minimum": 0},
         "end": {"type": "integer", "minimum": 0}
+      }
+    },
+    "mentionInteraction": {
+      "type": "object",
+      "description": "Allow replies from actors mentioned in your post."
+    },
+    "followingInteraction": {
+      "type": "object",
+      "description": "Allow replies from actors you follow."
+    },
+    "listInteraction": {
+      "type": "object",
+      "description": "Allow replies from actors on a list.",
+      "required": ["list"],
+      "properties": {
+        "list": {"type": "ref", "ref": "com.atproto.repo.strongRef"}
       }
     }
   }
