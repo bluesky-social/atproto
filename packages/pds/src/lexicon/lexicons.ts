@@ -4407,6 +4407,17 @@ export const schemaDict = {
               ref: 'lex:com.atproto.label.defs#label',
             },
           },
+          interactions: {
+            type: 'array',
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.feed.defs#mentionInteractionView',
+                'lex:app.bsky.feed.defs#followingInteractionView',
+                'lex:app.bsky.feed.defs#listInteractionView',
+              ],
+            },
+          },
         },
       },
       viewerState: {
@@ -4503,6 +4514,10 @@ export const schemaDict = {
               ],
             },
           },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#viewerThreadState',
+          },
         },
       },
       notFoundPost: {
@@ -4548,6 +4563,14 @@ export const schemaDict = {
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#viewerState',
+          },
+        },
+      },
+      viewerThreadState: {
+        type: 'object',
+        properties: {
+          canReply: {
+            type: 'boolean',
           },
         },
       },
@@ -4633,6 +4656,28 @@ export const schemaDict = {
           repost: {
             type: 'string',
             format: 'at-uri',
+          },
+        },
+      },
+      mentionInteractionView: {
+        type: 'object',
+        description:
+          'The view counterpart to app.bsky.feed.post#mentionInteraction',
+      },
+      followingInteractionView: {
+        type: 'object',
+        description:
+          'The view counterpart to app.bsky.feed.post#followingInteraction',
+      },
+      listInteractionView: {
+        type: 'object',
+        description:
+          'The view counterpart to app.bsky.feed.post#listInteraction',
+        required: ['list'],
+        properties: {
+          list: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listViewBasic',
           },
         },
       },
@@ -5498,6 +5543,18 @@ export const schemaDict = {
               type: 'union',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
             },
+            interactions: {
+              type: 'array',
+              maxLength: 5,
+              items: {
+                type: 'union',
+                refs: [
+                  'lex:app.bsky.feed.post#mentionInteraction',
+                  'lex:app.bsky.feed.post#followingInteraction',
+                  'lex:app.bsky.feed.post#listInteraction',
+                ],
+              },
+            },
             createdAt: {
               type: 'string',
               format: 'datetime',
@@ -5550,6 +5607,25 @@ export const schemaDict = {
           end: {
             type: 'integer',
             minimum: 0,
+          },
+        },
+      },
+      mentionInteraction: {
+        type: 'object',
+        description: 'Allow replies from actors mentioned in your post.',
+      },
+      followingInteraction: {
+        type: 'object',
+        description: 'Allow replies from actors you follow.',
+      },
+      listInteraction: {
+        type: 'object',
+        description: 'Allow replies from actors on a list.',
+        required: ['list'],
+        properties: {
+          list: {
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
           },
         },
       },

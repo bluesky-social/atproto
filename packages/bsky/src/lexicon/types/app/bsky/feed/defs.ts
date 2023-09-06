@@ -12,6 +12,7 @@ import * as AppBskyEmbedRecord from '../embed/record'
 import * as AppBskyEmbedRecordWithMedia from '../embed/recordWithMedia'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 import * as AppBskyRichtextFacet from '../richtext/facet'
+import * as AppBskyGraphDefs from '../graph/defs'
 
 export interface PostView {
   uri: string
@@ -30,6 +31,12 @@ export interface PostView {
   indexedAt: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
+  interactions?: (
+    | MentionInteractionView
+    | FollowingInteractionView
+    | ListInteractionView
+    | { $type: string; [k: string]: unknown }
+  )[]
   [k: string]: unknown
 }
 
@@ -135,6 +142,7 @@ export interface ThreadViewPost {
     | BlockedPost
     | { $type: string; [k: string]: unknown }
   )[]
+  viewer?: ViewerThreadState
   [k: string]: unknown
 }
 
@@ -203,6 +211,23 @@ export function isBlockedAuthor(v: unknown): v is BlockedAuthor {
 
 export function validateBlockedAuthor(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#blockedAuthor', v)
+}
+
+export interface ViewerThreadState {
+  canReply?: boolean
+  [k: string]: unknown
+}
+
+export function isViewerThreadState(v: unknown): v is ViewerThreadState {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#viewerThreadState'
+  )
+}
+
+export function validateViewerThreadState(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#viewerThreadState', v)
 }
 
 export interface GeneratorView {
@@ -282,4 +307,56 @@ export function isSkeletonReasonRepost(v: unknown): v is SkeletonReasonRepost {
 
 export function validateSkeletonReasonRepost(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#skeletonReasonRepost', v)
+}
+
+/** The view counterpart to app.bsky.feed.post#mentionInteraction */
+export interface MentionInteractionView {}
+
+export function isMentionInteractionView(
+  v: unknown,
+): v is MentionInteractionView {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#mentionInteractionView'
+  )
+}
+
+export function validateMentionInteractionView(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#mentionInteractionView', v)
+}
+
+/** The view counterpart to app.bsky.feed.post#followingInteraction */
+export interface FollowingInteractionView {}
+
+export function isFollowingInteractionView(
+  v: unknown,
+): v is FollowingInteractionView {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#followingInteractionView'
+  )
+}
+
+export function validateFollowingInteractionView(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#followingInteractionView', v)
+}
+
+/** The view counterpart to app.bsky.feed.post#listInteraction */
+export interface ListInteractionView {
+  list: AppBskyGraphDefs.ListViewBasic
+  [k: string]: unknown
+}
+
+export function isListInteractionView(v: unknown): v is ListInteractionView {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#listInteractionView'
+  )
+}
+
+export function validateListInteractionView(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#listInteractionView', v)
 }

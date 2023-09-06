@@ -29,6 +29,12 @@ export interface Record {
   labels?:
     | ComAtprotoLabelDefs.SelfLabels
     | { $type: string; [k: string]: unknown }
+  interactions?: (
+    | MentionInteraction
+    | FollowingInteraction
+    | ListInteraction
+    | { $type: string; [k: string]: unknown }
+  )[]
   createdAt: string
   [k: string]: unknown
 }
@@ -97,4 +103,52 @@ export function isTextSlice(v: unknown): v is TextSlice {
 
 export function validateTextSlice(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.post#textSlice', v)
+}
+
+/** Allow replies from actors mentioned in your post. */
+export interface MentionInteraction {}
+
+export function isMentionInteraction(v: unknown): v is MentionInteraction {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.post#mentionInteraction'
+  )
+}
+
+export function validateMentionInteraction(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.post#mentionInteraction', v)
+}
+
+/** Allow replies from actors you follow. */
+export interface FollowingInteraction {}
+
+export function isFollowingInteraction(v: unknown): v is FollowingInteraction {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.post#followingInteraction'
+  )
+}
+
+export function validateFollowingInteraction(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.post#followingInteraction', v)
+}
+
+/** Allow replies from actors on a list. */
+export interface ListInteraction {
+  list: ComAtprotoRepoStrongRef.Main
+  [k: string]: unknown
+}
+
+export function isListInteraction(v: unknown): v is ListInteraction {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.post#listInteraction'
+  )
+}
+
+export function validateListInteraction(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.post#listInteraction', v)
 }
