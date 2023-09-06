@@ -3,6 +3,7 @@
 require('dd-trace/init') // Only works with commonjs
 
 // Tracer code above must come before anything else
+const { CloudfrontInvalidator } = require('@atproto/aws')
 const {
   IndexerConfig,
   BskyIndexer,
@@ -24,6 +25,12 @@ const main = async () => {
     dbPostgresUrl: env.dbPostgresUrl,
     dbPostgresSchema: env.dbPostgresSchema,
   })
+  const cfInvalidator = env.cfDistributionId
+    ? new CloudfrontInvalidator({
+        distributionId: env.cfDistributionId,
+        pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
+      })
+    : undefined
   const redis = new Redis(
     cfg.redisSentinelName
       ? {
@@ -36,7 +43,7 @@ const main = async () => {
           password: cfg.redisPassword,
         },
   )
-  const indexer = BskyIndexer.create({ db, redis, cfg })
+  const indexer = BskyIndexer.create({ db, redis, cfg, imgInvalidator: cfInvalidator })
   await indexer.start()
   process.on('SIGTERM', async () => {
     await indexer.destroy()
@@ -65,6 +72,8 @@ const getEnv = () => ({
   dbPoolSize: maybeParseInt(process.env.DB_POOL_SIZE),
   dbPoolMaxUses: maybeParseInt(process.env.DB_POOL_MAX_USES),
   dbPoolIdleTimeoutMs: maybeParseInt(process.env.DB_POOL_IDLE_TIMEOUT_MS),
+  cfDistributionId: process.env.CF_DISTRIBUTION_ID,
+  imgUriEndpoint: process.env.IMG_URI_ENDPOINT,
 })
 
 const maybeParseInt = (str) => {
