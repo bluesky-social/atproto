@@ -1,7 +1,7 @@
 import AppContext from '../context'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { paginate } from '../db/pagination'
-import { AlgoHandler, AlgoResponse, toSkeletonItem } from './types'
+import { AlgoHandler, AlgoResponse } from './types'
 import { FeedKeyset, getFeedDateThreshold } from '../api/app/bsky/util/feed'
 
 const handler: AlgoHandler = async (
@@ -31,7 +31,7 @@ const handler: AlgoHandler = async (
   const feedItems = await postsQb.execute()
 
   return {
-    feed: feedItems.map(toSkeletonItem),
+    feedItems,
     cursor: keyset.packFromResult(feedItems),
   }
 }

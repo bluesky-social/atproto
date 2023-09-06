@@ -2,7 +2,7 @@ import AppContext from '../context'
 import { NotEmptyArray } from '@atproto/common'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { paginate } from '../db/pagination'
-import { AlgoHandler, AlgoResponse, toSkeletonItem } from './types'
+import { AlgoHandler, AlgoResponse } from './types'
 import { FeedKeyset } from '../api/app/bsky/util/feed'
 import { valuesList } from '../db/util'
 
@@ -47,7 +47,7 @@ const handler: AlgoHandler = async (
   const feedItems = await feedQb.execute()
 
   return {
-    feed: feedItems.map(toSkeletonItem),
+    feedItems,
     cursor: keyset.packFromResult(feedItems),
   }
 }
