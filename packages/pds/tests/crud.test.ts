@@ -377,6 +377,35 @@ describe('crud operations', () => {
       })
       await expect(attemptDelete).resolves.toBeDefined()
     })
+
+    it('does not delete the underlying block if it is referenced elsewhere', async () => {
+      const { repo } = aliceAgent.api.com.atproto
+      const record = { text: 'post', createdAt: new Date().toISOString() }
+      const { data: post1 } = await repo.createRecord({
+        repo: alice.did,
+        collection: ids.AppBskyFeedPost,
+        record,
+      })
+      const { data: post2 } = await repo.createRecord({
+        repo: alice.did,
+        collection: ids.AppBskyFeedPost,
+        record,
+      })
+      const uri1 = new AtUri(post1.uri)
+      await repo.deleteRecord({
+        repo: uri1.host,
+        collection: uri1.collection,
+        rkey: uri1.rkey,
+      })
+      const uri2 = new AtUri(post2.uri)
+      const checkPost2 = await repo.getRecord({
+        repo: uri2.host,
+        collection: uri2.collection,
+        rkey: uri2.rkey,
+      })
+      expect(checkPost2).toBeDefined()
+      expect(checkPost2.data.value).toMatchObject(record)
+    })
   })
 
   describe('putRecord', () => {
@@ -565,11 +594,11 @@ describe('crud operations', () => {
 
     it('createRecord succeeds on proper commit cas', async () => {
       const { repo, sync } = aliceAgent.api.com.atproto
-      const { data: head } = await sync.getHead({ did: alice.did })
+      const { data: commit } = await sync.getLatestCommit({ did: alice.did })
       const { data: post } = await repo.createRecord({
         repo: alice.did,
         collection: ids.AppBskyFeedPost,
-        swapCommit: head.root,
+        swapCommit: commit.cid,
         record: postRecord(),
       })
       const uri = new AtUri(post.uri)
@@ -583,7 +612,9 @@ describe('crud operations', () => {
 
     it('createRecord fails on bad commit cas', async () => {
       const { repo, sync } = aliceAgent.api.com.atproto
-      const { data: staleHead } = await sync.getHead({ did: alice.did })
+      const { data: staleCommit } = await sync.getLatestCommit({
+        did: alice.did,
+      })
       // Update repo, change head
       await repo.createRecord({
         repo: alice.did,
@@ -593,7 +624,7 @@ describe('crud operations', () => {
       const attemptCreate = repo.createRecord({
         repo: alice.did,
         collection: ids.AppBskyFeedPost,
-        swapCommit: staleHead.root,
+        swapCommit: staleCommit.cid,
         record: postRecord(),
       })
       await expect(attemptCreate).rejects.toThrow(createRecord.InvalidSwapError)
@@ -606,13 +637,13 @@ describe('crud operations', () => {
         collection: ids.AppBskyFeedPost,
         record: postRecord(),
       })
-      const { data: head } = await sync.getHead({ did: alice.did })
+      const { data: commit } = await sync.getLatestCommit({ did: alice.did })
       const uri = new AtUri(post.uri)
       await repo.deleteRecord({
         repo: uri.host,
         collection: uri.collection,
         rkey: uri.rkey,
-        swapCommit: head.root,
+        swapCommit: commit.cid,
       })
       const checkPost = repo.getRecord({
         repo: uri.host,
@@ -624,7 +655,9 @@ describe('crud operations', () => {
 
     it('deleteRecord fails on bad commit cas', async () => {
       const { repo, sync } = aliceAgent.api.com.atproto
-      const { data: staleHead } = await sync.getHead({ did: alice.did })
+      const { data: staleCommit } = await sync.getLatestCommit({
+        did: alice.did,
+      })
       const { data: post } = await repo.createRecord({
         repo: alice.did,
         collection: ids.AppBskyFeedPost,
@@ -635,7 +668,7 @@ describe('crud operations', () => {
         repo: uri.host,
         collection: uri.collection,
         rkey: uri.rkey,
-        swapCommit: staleHead.root,
+        swapCommit: staleCommit.cid,
       })
       await expect(attemptDelete).rejects.toThrow(deleteRecord.InvalidSwapError)
       const checkPost = repo.getRecord({
@@ -693,12 +726,12 @@ describe('crud operations', () => {
 
     it('putRecord succeeds on proper commit cas', async () => {
       const { repo, sync } = aliceAgent.api.com.atproto
-      const { data: head } = await sync.getHead({ did: alice.did })
+      const { data: commit } = await sync.getLatestCommit({ did: alice.did })
       const { data: profile } = await repo.putRecord({
         repo: alice.did,
         collection: ids.AppBskyActorProfile,
         rkey: 'self',
-        swapCommit: head.root,
+        swapCommit: commit.cid,
         record: profileRecord(),
       })
       const { data: checkProfile } = await repo.getRecord({
@@ -711,7 +744,9 @@ describe('crud operations', () => {
 
     it('putRecord fails on bad commit cas', async () => {
       const { repo, sync } = aliceAgent.api.com.atproto
-      const { data: staleHead } = await sync.getHead({ did: alice.did })
+      const { data: staleCommit } = await sync.getLatestCommit({
+        did: alice.did,
+      })
       // Update repo, change head
       await repo.createRecord({
         repo: alice.did,
@@ -722,7 +757,7 @@ describe('crud operations', () => {
         repo: alice.did,
         collection: ids.AppBskyActorProfile,
         rkey: 'self',
-        swapCommit: staleHead.root,
+        swapCommit: staleCommit.cid,
         record: profileRecord(),
       })
       await expect(attemptPut).rejects.toThrow(putRecord.InvalidSwapError)
@@ -790,10 +825,10 @@ describe('crud operations', () => {
 
     it('applyWrites succeeds on proper commit cas', async () => {
       const { repo, sync } = aliceAgent.api.com.atproto
-      const { data: head } = await sync.getHead({ did: alice.did })
+      const { data: commit } = await sync.getLatestCommit({ did: alice.did })
       await repo.applyWrites({
         repo: alice.did,
-        swapCommit: head.root,
+        swapCommit: commit.cid,
         writes: [
           {
             $type: `${ids.ComAtprotoRepoApplyWrites}#create`,
@@ -807,7 +842,9 @@ describe('crud operations', () => {
 
     it('applyWrites fails on bad commit cas', async () => {
       const { repo, sync } = aliceAgent.api.com.atproto
-      const { data: staleHead } = await sync.getHead({ did: alice.did })
+      const { data: staleCommit } = await sync.getLatestCommit({
+        did: alice.did,
+      })
       // Update repo, change head
       await repo.createRecord({
         repo: alice.did,
@@ -816,7 +853,7 @@ describe('crud operations', () => {
       })
       const attemptApplyWrite = repo.applyWrites({
         repo: alice.did,
-        swapCommit: staleHead.root,
+        swapCommit: staleCommit.cid,
         writes: [
           {
             $type: `${ids.ComAtprotoRepoApplyWrites}#create`,

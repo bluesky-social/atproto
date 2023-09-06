@@ -1,15 +1,8 @@
 import { CID } from 'multiformats/cid'
 import * as crypto from '@atproto/crypto'
-import {
-  BlobStore,
-  CommitData,
-  RebaseData,
-  Repo,
-  WriteOpAction,
-} from '@atproto/repo'
-import * as repo from '@atproto/repo'
-import { AtUri } from '@atproto/syntax'
+import { BlobStore, CommitData, Repo, WriteOpAction } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AtUri } from '@atproto/syntax'
 import Database from '../../db'
 import { MessageQueue } from '../../event-stream/types'
 import SqlRepoStorage from '../../sql-repo-storage'
@@ -26,7 +19,6 @@ import * as sequencer from '../../sequencer'
 import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
 import { BackgroundQueue } from '../../event-stream/background-queue'
-import { countAll } from '../../db/util'
 import { Crawlers } from '../../crawlers'
 import { ContentReporter } from '../../content-reporter'
 
@@ -104,7 +96,7 @@ export class RepoService {
     await Promise.all([
       storage.applyCommit(commit),
       this.indexWrites(writes, now),
-      this.blobs.processWriteBlobs(did, commit.commit, writes),
+      this.blobs.processWriteBlobs(did, commit.rev, writes),
     ])
     await this.afterWriteProcessing(did, commit, writes)
   }
@@ -117,8 +109,8 @@ export class RepoService {
   ) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
-    const locked = await storage.lockRepo()
-    if (!locked) {
+    const obtained = await storage.lockRepo()
+    if (!obtained) {
       throw new ConcurrentWriteError()
     }
     await Promise.all([
@@ -127,7 +119,7 @@ export class RepoService {
       // & send to indexing
       this.indexWrites(writes, now, commitData.rev),
       // process blobs
-      this.blobs.processWriteBlobs(did, commitData.commit, writes),
+      this.blobs.processWriteBlobs(did, commitData.rev, writes),
       // do any other processing needed after write
     ])
     await this.afterWriteProcessing(did, commitData, writes)
@@ -143,8 +135,13 @@ export class RepoService {
     const { did, writes, swapCommitCid } = toWrite
     // we may have some useful cached blocks in the storage, so re-use the previous instance
     const storage = prevStorage ?? new SqlRepoStorage(this.db, did)
-    const commit = await this.formatCommit(storage, did, writes, swapCommitCid)
     try {
+      const commit = await this.formatCommit(
+        storage,
+        did,
+        writes,
+        swapCommitCid,
+      )
       await this.serviceTx(async (srvcTx) =>
         srvcTx.processCommit(did, writes, commit, new Date().toISOString()),
       )
@@ -167,20 +164,34 @@ export class RepoService {
     writes: PreparedWrite[],
     swapCommit?: CID,
   ): Promise<CommitData> {
-    const currRoot = await storage.getHead()
+    // this is not in a txn, so this won't actually hold the lock,
+    // we just check if it is currently held by another txn
+    const available = await storage.lockAvailable()
+    if (!available) {
+      throw new ConcurrentWriteError()
+    }
+    const currRoot = await storage.getRootDetailed()
     if (!currRoot) {
       throw new InvalidRequestError(
         `${did} is not a registered repo on this server`,
       )
     }
-    if (swapCommit && !currRoot.equals(swapCommit)) {
-      throw new BadCommitSwapError(currRoot)
+    if (swapCommit && !currRoot.cid.equals(swapCommit)) {
+      throw new BadCommitSwapError(currRoot.cid)
     }
     // cache last commit since there's likely overlap
-    await storage.cacheCommit(currRoot)
+    await storage.cacheRev(currRoot.rev)
     const recordTxn = this.services.record(this.db)
+    const newRecordCids: CID[] = []
+    const delAndUpdateUris: AtUri[] = []
     for (const write of writes) {
       const { action, uri, swapCid } = write
+      if (action !== WriteOpAction.Delete) {
+        newRecordCids.push(write.cid)
+      }
+      if (action !== WriteOpAction.Create) {
+        delAndUpdateUris.push(uri)
+      }
       if (swapCid === undefined) {
         continue
       }
@@ -199,9 +210,40 @@ export class RepoService {
         throw new BadRecordSwapError(currRecord)
       }
     }
-    const writeOps = writes.map(writeToOp)
-    const repo = await Repo.load(storage, currRoot)
-    return repo.formatCommit(writeOps, this.repoSigningKey)
+
+    let commit: CommitData
+    try {
+      const repo = await Repo.load(storage, currRoot.cid)
+      const writeOps = writes.map(writeToOp)
+      commit = await repo.formatCommit(writeOps, this.repoSigningKey)
+    } catch (err) {
+      // if an error occurs, check if it is attributable to a concurrent write
+      const curr = await storage.getRoot()
+      if (!currRoot.cid.equals(curr)) {
+        throw new ConcurrentWriteError()
+      } else {
+        throw err
+      }
+    }
+
+    // find blocks that would be deleted but are referenced by another record
+    const dupeRecordCids = await this.getDuplicateRecordCids(
+      did,
+      commit.removedCids.toList(),
+      delAndUpdateUris,
+    )
+    for (const cid of dupeRecordCids) {
+      commit.removedCids.delete(cid)
+    }
+
+    // find blocks that are relevant to ops but not included in diff
+    // (for instance a record that was moved but cid stayed the same)
+    const newRecordBlocks = commit.newBlocks.getMany(newRecordCids)
+    if (newRecordBlocks.missing.length > 0) {
+      const missingBlocks = await storage.getBlocks(newRecordBlocks.missing)
+      commit.newBlocks.addMap(missingBlocks.blocks)
+    }
+    return commit
   }
 
   async indexWrites(writes: PreparedWrite[], now: string, rev?: string) {
@@ -226,6 +268,26 @@ export class RepoService {
         }
       }),
     )
+  }
+
+  async getDuplicateRecordCids(
+    did: string,
+    cids: CID[],
+    touchedUris: AtUri[],
+  ): Promise<CID[]> {
+    if (touchedUris.length === 0 || cids.length === 0) {
+      return []
+    }
+    const cidStrs = cids.map((c) => c.toString())
+    const uriStrs = touchedUris.map((u) => u.toString())
+    const res = await this.db.db
+      .selectFrom('record')
+      .where('did', '=', did)
+      .where('cid', 'in', cidStrs)
+      .where('uri', 'not in', uriStrs)
+      .select('cid')
+      .execute()
+    return res.map((row) => CID.parse(row.cid))
   }
 
   async afterWriteProcessing(
@@ -253,123 +315,12 @@ export class RepoService {
     await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
-  async rebaseRepo(did: string, swapCommit?: CID) {
-    this.db.assertNotTransaction()
-
-    // rebases are expensive & should be done rarely, we don't try to re-process on concurrent writes
-    await this.serviceTx(async (srvcTx) => {
-      const rebaseData = await srvcTx.formatRebase(did, swapCommit)
-      await srvcTx.processRebase(did, rebaseData)
-    })
-  }
-
-  async formatRebase(did: string, swapCommit?: CID): Promise<RebaseData> {
-    const storage = new SqlRepoStorage(this.db, did, new Date().toISOString())
-    const locked = await storage.lockRepo()
-    if (!locked) {
-      throw new ConcurrentWriteError()
-    }
-
-    const currRoot = await storage.getHead()
-    if (!currRoot) {
-      throw new InvalidRequestError(
-        `${did} is not a registered repo on this server`,
-      )
-    } else if (swapCommit && !currRoot.equals(swapCommit)) {
-      throw new BadCommitSwapError(currRoot)
-    }
-
-    const records = await this.db.db
-      .selectFrom('record')
-      .where('did', '=', did)
-      .select(['uri', 'cid'])
-      .execute()
-    // this will do everything in memory & shouldn't touch storage until we do .getUnstoredBlocks
-    let data = await repo.MST.create(storage)
-    for (const record of records) {
-      const uri = new AtUri(record.uri)
-      const cid = CID.parse(record.cid)
-      const dataKey = repo.formatDataKey(uri.collection, uri.rkey)
-      data = await data.add(dataKey, cid)
-    }
-    // this looks for unstored blocks recursively & bails when it encounters a block it has
-    // in most cases, there should be no unstored blocks, but this allows for recovery of repos in a broken state
-    const unstoredData = await data.getUnstoredBlocks()
-    const commit = await repo.signCommit(
-      {
-        did,
-        version: 2,
-        prev: null,
-        data: unstoredData.root,
-      },
-      this.repoSigningKey,
-    )
-    const newBlocks = unstoredData.blocks
-    const currCids = await data.allCids()
-    const commitCid = await newBlocks.add(commit)
-    return {
-      commit: commitCid,
-      rebased: currRoot,
-      blocks: newBlocks,
-      preservedCids: currCids.toList(),
-    }
-  }
-
-  async processRebase(did: string, rebaseData: RebaseData) {
-    this.db.assertTransaction()
-
-    const storage = new SqlRepoStorage(this.db, did)
-
-    const recordCountBefore = await this.countRecordBlocks(did)
-    await Promise.all([
-      storage.applyRebase(rebaseData),
-      this.blobs.processRebaseBlobs(did, rebaseData.commit),
-    ])
-    const recordCountAfter = await this.countRecordBlocks(did)
-    // This is purely a dummy check on a very sensitive operation
-    if (recordCountBefore !== recordCountAfter) {
-      throw new Error(
-        `Record blocks deleted during rebase. Rolling back: ${did}`,
-      )
-    }
-
-    await this.afterRebaseProcessing(did, rebaseData)
-  }
-
-  async afterRebaseProcessing(did: string, rebaseData: RebaseData) {
-    const seqEvt = await sequencer.formatSeqRebase(did, rebaseData)
-    await sequencer.sequenceEvt(this.db, seqEvt)
-  }
-
-  // used for integrity check
-  private async countRecordBlocks(did: string): Promise<number> {
-    const res = await this.db.db
-      .selectFrom('record')
-      .where('record.did', '=', did)
-      .innerJoin('ipld_block', (join) =>
-        join
-          .onRef('ipld_block.creator', '=', 'record.did')
-          .onRef('ipld_block.cid', '=', 'record.cid'),
-      )
-      .select(countAll.as('count'))
-      .executeTakeFirst()
-    return res?.count ?? 0
-  }
-
   async deleteRepo(did: string) {
     // Not done in transaction because it would be too long, prone to contention.
     // Also, this can safely be run multiple times if it fails.
     // delete all blocks from this did & no other did
     await this.db.db.deleteFrom('repo_root').where('did', '=', did).execute()
     await this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute()
-    await this.db.db
-      .deleteFrom('repo_commit_block')
-      .where('creator', '=', did)
-      .execute()
-    await this.db.db
-      .deleteFrom('repo_commit_history')
-      .where('creator', '=', did)
-      .execute()
     await this.db.db
       .deleteFrom('ipld_block')
       .where('creator', '=', did)

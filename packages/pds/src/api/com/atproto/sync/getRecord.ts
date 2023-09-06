@@ -24,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       const storage = new SqlRepoStorage(ctx.db, did)
       const commit = params.commit
         ? CID.parse(params.commit)
-        : await storage.getHead()
+        : await storage.getRoot()
       if (!commit) {
         throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
       }

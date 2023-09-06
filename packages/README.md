@@ -21,11 +21,11 @@
 
 Only applicable to packages which contain benchmarks(`jest.bench.config.js`).
 
-You can run benchmarks with `yarn bench`.
+You can run benchmarks with `pnpm bench`.
 
 ### Attaching a profiler
 
-Running `yarn bench:profile` will launch `bench` with `--inspect-brk` flag.
+Running `pnpm bench:profile` will launch `bench` with `--inspect-brk` flag.
 Execution will be paused until a debugger is attached, you can read more 
 about node debuggers [here](https://nodejs.org/en/docs/guides/debugging-getting-started#inspector-clients)
 

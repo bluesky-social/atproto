@@ -18,7 +18,6 @@ import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/g
 import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
-import * as ComAtprotoAdminRebaseRepo from './types/com/atproto/admin/rebaseRepo'
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -40,7 +39,6 @@ import * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRe
 import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
-import * as ComAtprotoRepoRebaseRepo from './types/com/atproto/repo/rebaseRepo'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
@@ -63,8 +61,8 @@ import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/r
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
-import * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
+import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
@@ -72,6 +70,7 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoTempUpgradeRepoVersion from './types/com/atproto/temp/upgradeRepoVersion'
 import * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -99,6 +98,7 @@ import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
+import * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedLike from './types/app/bsky/feed/like'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
@@ -140,7 +140,6 @@ export * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/g
 export * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
-export * as ComAtprotoAdminRebaseRepo from './types/com/atproto/admin/rebaseRepo'
 export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -162,7 +161,6 @@ export * as ComAtprotoRepoDescribeRepo from './types/com/atproto/repo/describeRe
 export * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
-export * as ComAtprotoRepoRebaseRepo from './types/com/atproto/repo/rebaseRepo'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
 export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
@@ -185,8 +183,8 @@ export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/r
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
-export * as ComAtprotoSyncGetCommitPath from './types/com/atproto/sync/getCommitPath'
 export * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
+export * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
 export * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 export * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
 export * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
@@ -194,6 +192,7 @@ export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+export * as ComAtprotoTempUpgradeRepoVersion from './types/com/atproto/temp/upgradeRepoVersion'
 export * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -221,6 +220,7 @@ export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
+export * as AppBskyFeedGetSuggestedFeeds from './types/app/bsky/feed/getSuggestedFeeds'
 export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 export * as AppBskyFeedLike from './types/app/bsky/feed/like'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
@@ -318,6 +318,7 @@ export class AtprotoNS {
   repo: RepoNS
   server: ServerNS
   sync: SyncNS
+  temp: TempNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -328,6 +329,7 @@ export class AtprotoNS {
     this.repo = new RepoNS(service)
     this.server = new ServerNS(service)
     this.sync = new SyncNS(service)
+    this.temp = new TempNS(service)
   }
 }
 
@@ -445,17 +447,6 @@ export class AdminNS {
       .call('com.atproto.admin.getRepo', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoAdminGetRepo.toKnownErr(e)
-      })
-  }
-
-  rebaseRepo(
-    data?: ComAtprotoAdminRebaseRepo.InputSchema,
-    opts?: ComAtprotoAdminRebaseRepo.CallOptions,
-  ): Promise<ComAtprotoAdminRebaseRepo.Response> {
-    return this._service.xrpc
-      .call('com.atproto.admin.rebaseRepo', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoAdminRebaseRepo.toKnownErr(e)
       })
   }
 
@@ -686,17 +677,6 @@ export class RepoNS {
       .call('com.atproto.repo.putRecord', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoRepoPutRecord.toKnownErr(e)
-      })
-  }
-
-  rebaseRepo(
-    data?: ComAtprotoRepoRebaseRepo.InputSchema,
-    opts?: ComAtprotoRepoRebaseRepo.CallOptions,
-  ): Promise<ComAtprotoRepoRebaseRepo.Response> {
-    return this._service.xrpc
-      .call('com.atproto.repo.rebaseRepo', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoRepoRebaseRepo.toKnownErr(e)
       })
   }
 
@@ -936,17 +916,6 @@ export class SyncNS {
       })
   }
 
-  getCommitPath(
-    params?: ComAtprotoSyncGetCommitPath.QueryParams,
-    opts?: ComAtprotoSyncGetCommitPath.CallOptions,
-  ): Promise<ComAtprotoSyncGetCommitPath.Response> {
-    return this._service.xrpc
-      .call('com.atproto.sync.getCommitPath', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoSyncGetCommitPath.toKnownErr(e)
-      })
-  }
-
   getHead(
     params?: ComAtprotoSyncGetHead.QueryParams,
     opts?: ComAtprotoSyncGetHead.CallOptions,
@@ -955,6 +924,17 @@ export class SyncNS {
       .call('com.atproto.sync.getHead', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoSyncGetHead.toKnownErr(e)
+      })
+  }
+
+  getLatestCommit(
+    params?: ComAtprotoSyncGetLatestCommit.QueryParams,
+    opts?: ComAtprotoSyncGetLatestCommit.CallOptions,
+  ): Promise<ComAtprotoSyncGetLatestCommit.Response> {
+    return this._service.xrpc
+      .call('com.atproto.sync.getLatestCommit', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSyncGetLatestCommit.toKnownErr(e)
       })
   }
 
@@ -1021,6 +1001,25 @@ export class SyncNS {
       .call('com.atproto.sync.requestCrawl', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoSyncRequestCrawl.toKnownErr(e)
+      })
+  }
+}
+
+export class TempNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  upgradeRepoVersion(
+    data?: ComAtprotoTempUpgradeRepoVersion.InputSchema,
+    opts?: ComAtprotoTempUpgradeRepoVersion.CallOptions,
+  ): Promise<ComAtprotoTempUpgradeRepoVersion.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.upgradeRepoVersion', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoTempUpgradeRepoVersion.toKnownErr(e)
       })
   }
 }
@@ -1357,6 +1356,17 @@ export class FeedNS {
       .call('app.bsky.feed.getRepostedBy', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetRepostedBy.toKnownErr(e)
+      })
+  }
+
+  getSuggestedFeeds(
+    params?: AppBskyFeedGetSuggestedFeeds.QueryParams,
+    opts?: AppBskyFeedGetSuggestedFeeds.CallOptions,
+  ): Promise<AppBskyFeedGetSuggestedFeeds.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getSuggestedFeeds', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetSuggestedFeeds.toKnownErr(e)
       })
   }
 

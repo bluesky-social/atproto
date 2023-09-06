@@ -795,4 +795,34 @@ export const LABELS: LabelDefinitionMap = {
       },
     },
   },
+  misleading: {
+    id: 'misleading',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'alert',
+    groupId: 'misinfo',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Misleading',
+          description: 'Accounts which share misleading information.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Misleading',
+          description:
+            'The moderators believe this account is spreading misleading information.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Misleading',
+          description:
+            'The moderators believe this account is spreading misleading information.',
+        },
+      },
+    },
+  },
 }

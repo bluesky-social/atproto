@@ -2,20 +2,21 @@
   "name": "@atproto/xrpc-server",
   "version": "0.3.0",
   "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts"
+  },
   "scripts": {
     "test": "jest",
     "prettier": "prettier --check src/ tests/",
     "prettier:fix": "prettier --write src/ tests/",
     "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "yarn lint --fix",
+    "lint:fix": "pnpm lint --fix",
     "verify": "run-p prettier lint",
-    "verify:fix": "yarn prettier:fix && yarn lint:fix",
+    "verify:fix": "pnpm prettier:fix && pnpm lint:fix",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ./update-pkg.js --update-main-to-dist",
-    "update-main-to-src": "node ./update-pkg.js --update-main-to-src",
-    "prepublish": "npm run update-main-to-dist",
-    "postpublish": "npm run update-main-to-src"
+    "update-main-to-dist": "node ../../update-main-to-dist.js packages/xrpc-server"
   },
   "license": "MIT",
   "repository": {
@@ -24,9 +25,9 @@
     "directory": "packages/xrpc-server"
   },
   "dependencies": {
-    "@atproto/common": "*",
-    "@atproto/crypto": "*",
-    "@atproto/lexicon": "*",
+    "@atproto/common": "workspace:^",
+    "@atproto/crypto": "workspace:^",
+    "@atproto/lexicon": "workspace:^",
     "cbor-x": "^1.5.1",
     "express": "^4.17.2",
     "http-errors": "^2.0.0",
@@ -37,12 +38,13 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "@atproto/crypto": "*",
-    "@atproto/xrpc": "*",
+    "@atproto/crypto": "workspace:^",
+    "@atproto/xrpc": "workspace:^",
     "@types/express": "^4.17.13",
+    "@types/express-serve-static-core": "^4.17.36",
     "@types/http-errors": "^2.0.1",
     "@types/ws": "^8.5.4",
     "get-port": "^6.1.2",
-    "multiformats": "^9.6.4"
+    "multiformats": "^9.9.0"
   }
 }

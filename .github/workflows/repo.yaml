@@ -12,12 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: "yarn"
-      - run: yarn install --frozen-lockfile
-      - run: yarn build
+          cache: "pnpm"
+      - run: pnpm i --frozen-lockfile
+      - run: pnpm build
   test:
     strategy:
       matrix:
@@ -25,19 +28,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: "yarn"
-      - run: yarn install --frozen-lockfile
-      - run: yarn test:withFlags --maxWorkers=1 --shard=${{ matrix.shard }} --passWithNoTests
+          cache: "pnpm"
+      - run: pnpm i --frozen-lockfile
+      - run: pnpm test:withFlags --maxWorkers=1 --shard=${{ matrix.shard }} --passWithNoTests
   verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: "yarn"
-      - run: yarn install --frozen-lockfile
-      - run: yarn verify
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm verify

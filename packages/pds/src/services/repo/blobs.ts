@@ -60,7 +60,7 @@ export class RepoBlobs {
     return new BlobRef(cid, mimeType, size)
   }
 
-  async processWriteBlobs(did: string, commit: CID, writes: PreparedWrite[]) {
+  async processWriteBlobs(did: string, rev: string, writes: PreparedWrite[]) {
     await this.deleteDereferencedBlobs(did, writes)
 
     const blobPromises: Promise<void>[] = []
@@ -71,7 +71,7 @@ export class RepoBlobs {
       ) {
         for (const blob of write.blobs) {
           blobPromises.push(this.verifyBlobAndMakePermanent(did, blob))
-          blobPromises.push(this.associateBlob(blob, write.uri, commit, did))
+          blobPromises.push(this.associateBlob(blob, write.uri, rev, did))
         }
       }
     }
@@ -186,7 +186,7 @@ export class RepoBlobs {
   async associateBlob(
     blob: PreparedBlobRef,
     recordUri: AtUri,
-    commit: CID,
+    repoRev: string,
     did: string,
   ): Promise<void> {
     await this.db.db
@@ -194,30 +194,22 @@ export class RepoBlobs {
       .values({
         cid: blob.cid.toString(),
         recordUri: recordUri.toString(),
-        commit: commit.toString(),
+        repoRev,
         did,
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
   }
 
-  async processRebaseBlobs(did: string, newRoot: CID) {
-    await this.db.db
-      .updateTable('repo_blob')
-      .set({ commit: newRoot.toString() })
-      .where('did', '=', did)
-      .execute()
-  }
-
-  async listForCommits(did: string, commits: CID[]): Promise<CID[]> {
-    if (commits.length < 1) return []
-    const commitStrs = commits.map((c) => c.toString())
-    const res = await this.db.db
+  async listSinceRev(did: string, rev?: string): Promise<CID[]> {
+    let builder = this.db.db
       .selectFrom('repo_blob')
       .where('did', '=', did)
-      .where('commit', 'in', commitStrs)
       .select('cid')
-      .execute()
+    if (rev) {
+      builder = builder.where('repoRev', '>', rev)
+    }
+    const res = await builder.execute()
     const cids = res.map((row) => CID.parse(row.cid))
     return new CidSet(cids).toList()
   }
