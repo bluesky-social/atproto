@@ -10,7 +10,7 @@
   },
   "scripts": {
     "verify": "pnpm -r --stream lint && pnpm -r --stream prettier",
-    "format": "pnpm -r --stream prettier:fix",
+    "format": "prettier --write .",
     "build": "pnpm -r --stream build",
     "update-main-to-dist": "pnpm -r --stream update-main-to-dist",
     "test": "LOG_ENABLED=false NODE_ENV=development ./packages/dev-infra/with-test-redis-and-db.sh pnpm --stream -r test",
