@@ -26,6 +26,7 @@ import muteActor from './graph/muteActor'
 import muteActorList from './graph/muteActorList'
 import unmuteActor from './graph/unmuteActor'
 import unmuteActorList from './graph/unmuteActorList'
+import getSuggestedFollowsByActor from './graph/getSuggestedFollowsByActor'
 import getUsersSearch from './actor/searchActors'
 import getUsersTypeahead from './actor/searchActorsTypeahead'
 import getSuggestions from './actor/getSuggestions'
@@ -62,6 +63,7 @@ export default function (server: Server, ctx: AppContext) {
   muteActorList(server, ctx)
   unmuteActor(server, ctx)
   unmuteActorList(server, ctx)
+  getSuggestedFollowsByActor(server, ctx)
   getUsersSearch(server, ctx)
   getUsersTypeahead(server, ctx)
   getSuggestions(server, ctx)
