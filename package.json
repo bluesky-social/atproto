@@ -9,6 +9,7 @@
     "node": ">=18"
   },
   "scripts": {
+    "lint:fix": "pnpm -r --stream lint --fix",
     "verify": "prettier --check . && pnpm -r --stream lint",
     "format": "prettier --write .",
     "build": "pnpm -r --stream build",
