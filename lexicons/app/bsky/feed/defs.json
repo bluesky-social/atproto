@@ -27,6 +27,17 @@
         "labels": {
           "type": "array",
           "items": {"type": "ref", "ref": "com.atproto.label.defs#label"}
+        },
+        "interactions": {
+          "type": "array",
+          "items": {
+            "type": "union",
+            "refs": [
+              "#mentionInteractionView",
+              "#followingInteractionView",
+              "#listInteractionView"
+            ]
+          }
         }
       }
     },
@@ -145,6 +156,22 @@
       "required": ["repost"],
       "properties": {
         "repost": {"type": "string", "format": "at-uri"}
+      }
+    },
+    "mentionInteractionView": {
+      "type": "object",
+      "description": "The view counterpart to app.bsky.feed.post#mentionInteraction"
+    },
+    "followingInteractionView": {
+      "type": "object",
+      "description": "The view counterpart to app.bsky.feed.post#followingInteraction"
+    },
+    "listInteractionView": {
+      "type": "object",
+      "description": "The view counterpart to app.bsky.feed.post#listInteraction",
+      "required": ["list"],
+      "properties": {
+        "list": {"type": "ref", "ref": "app.bsky.graph.defs#listViewBasic"}
       }
     }
   }
