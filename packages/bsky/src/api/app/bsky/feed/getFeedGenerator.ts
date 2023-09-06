@@ -47,7 +47,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const profiles = await actorService.views.profiles(
+      const profiles = await actorService.views.profilesBasic(
         [feedInfo.creator],
         viewer,
       )

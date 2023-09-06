@@ -1,6 +1,5 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
-import { dedupeStrs } from '@atproto/common'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { Database } from '../../db'
 import { countAll, noMatch, notSoftDeletedClause } from '../../db/util'
@@ -18,24 +17,20 @@ import {
 } from '../../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../../lexicon/types/app/bsky/embed/recordWithMedia'
 import {
-  FeedViewPost,
-  SkeletonFeedPost,
-} from '../../lexicon/types/app/bsky/feed/defs'
-import {
   PostInfoMap,
   FeedItemType,
   FeedRow,
   FeedGenInfoMap,
-  PostViews,
   PostEmbedViews,
   RecordEmbedViewRecordMap,
   PostInfo,
   RecordEmbedViewRecord,
   PostBlocksMap,
+  FeedHydrationState,
 } from './types'
-import { LabelService, Labels } from '../label'
-import { ActorInfoMap, ActorService } from '../actor'
-import { GraphService, RelationshipPair } from '../graph'
+import { LabelService } from '../label'
+import { ActorService } from '../actor'
+import { BlockAndMuteState, GraphService, RelationshipPair } from '../graph'
 import { FeedViews } from './views'
 import { LabelCache } from '../../label-cache'
 
@@ -48,7 +43,7 @@ export class FeedService {
     public labelCache: LabelCache,
   ) {}
 
-  views = new FeedViews(this.db, this.imgUriBuilder)
+  views = new FeedViews(this.db, this.imgUriBuilder, this.labelCache)
 
   services = {
     label: LabelService.creator(this.labelCache)(this.db),
@@ -183,43 +178,6 @@ export class FeedService {
     )
   }
 
-  async getPostViews(
-    postUris: string[],
-    requester: string | null,
-    precomputed?: {
-      actors?: ActorInfoMap
-      posts?: PostInfoMap
-      embeds?: PostEmbedViews
-      blocks?: PostBlocksMap
-      labels?: Labels
-    },
-  ): Promise<PostViews> {
-    const uris = dedupeStrs(postUris)
-    const dids = dedupeStrs(postUris.map((uri) => new AtUri(uri).hostname))
-
-    const [actors, posts, labels] = await Promise.all([
-      precomputed?.actors ??
-        this.services.actor.views.profiles(dids, requester, {
-          skipLabels: true,
-        }),
-      precomputed?.posts ?? this.getPostInfos(uris, requester),
-      precomputed?.labels ??
-        this.services.label.getLabelsForSubjects([...uris, ...dids]),
-    ])
-    const blocks = precomputed?.blocks ?? (await this.blocksForPosts(posts))
-    const embeds =
-      precomputed?.embeds ??
-      (await this.embedsForPosts(posts, blocks, requester))
-
-    return uris.reduce((acc, cur) => {
-      const view = this.views.formatPostView(cur, actors, posts, embeds, labels)
-      if (view) {
-        acc[cur] = view
-      }
-      return acc
-    }, {} as PostViews)
-  }
-
   async getFeedItems(uris: string[]): Promise<Record<string, FeedRow>> {
     if (uris.length < 1) return {}
     const feedItems = await this.selectFeedItemQb()
@@ -230,47 +188,13 @@ export class FeedService {
     }, {} as Record<string, FeedRow>)
   }
 
-  async cleanFeedSkeleton(
-    skeleton: SkeletonFeedPost[],
-    requester: string,
-  ): Promise<FeedRow[]> {
-    const feedItemUris = skeleton.map(getSkeleFeedItemUri)
-    const [feedItems, skeletonSafe] = await Promise.all([
-      this.getFeedItems(feedItemUris),
-      this.services.graph.filterBlocksAndMutes(skeleton, {
-        getBlockPairs(item) {
-          return getPostAndRepostPairs(item, requester)
-        },
-        getMutePairs(item) {
-          // Hide posts and reposts of or by muted actors
-          return getPostAndRepostPairs(item, requester)
-        },
-      }),
-    ])
-    const cleaned: FeedRow[] = []
-    for (const skeleItem of skeletonSafe) {
-      const feedItem = feedItems[getSkeleFeedItemUri(skeleItem)]
-      if (feedItem && feedItem.postUri === skeleItem.post) {
-        cleaned.push(feedItem)
-      }
-    }
-    return cleaned
-  }
-
-  async hydrateFeed(
-    items: FeedRow[],
-    viewer: string | null,
-    // @TODO (deprecated) remove this once all clients support the blocked/not-found union on post views
-    usePostViewUnion?: boolean,
-  ): Promise<FeedViewPost[]> {
+  feedItemRefs(items: FeedRow[]) {
     const actorDids = new Set<string>()
     const postUris = new Set<string>()
     for (const item of items) {
-      actorDids.add(item.postAuthorDid)
       postUris.add(item.postUri)
-      if (item.postAuthorDid !== item.originatorDid) {
-        actorDids.add(item.originatorDid)
-      }
+      actorDids.add(item.postAuthorDid)
+      actorDids.add(item.originatorDid)
       if (item.replyParent) {
         postUris.add(item.replyParent)
         actorDids.add(new AtUri(item.replyParent).hostname)
@@ -280,29 +204,51 @@ export class FeedService {
         actorDids.add(new AtUri(item.replyRoot).hostname)
       }
     }
-    const [actors, posts, labels] = await Promise.all([
-      this.services.actor.views.profiles(Array.from(actorDids), viewer, {
-        skipLabels: true,
-      }),
-      this.getPostInfos(Array.from(postUris), viewer),
-      this.services.label.getLabelsForSubjects([...postUris, ...actorDids]),
-    ])
-    const blocks = await this.blocksForPosts(posts)
-    const embeds = await this.embedsForPosts(posts, blocks, viewer)
+    return { dids: actorDids, uris: postUris }
+  }
 
-    return this.views.formatFeed(
-      items,
-      actors,
+  async feedHydration(
+    refs: {
+      dids: Set<string>
+      uris: Set<string>
+      viewer: string | null
+    },
+    depth = 0,
+  ): Promise<FeedHydrationState> {
+    const { viewer, dids, uris } = refs
+    const [posts, labels, bam] = await Promise.all([
+      this.getPostInfos(Array.from(uris), viewer),
+      this.services.label.getLabelsForSubjects([...uris, ...dids]),
+      this.services.graph.getBlockAndMuteState(
+        viewer ? [...dids].map((did) => [viewer, did]) : [],
+      ),
+    ])
+    // profileState for labels and bam handled above, profileHydration() shouldn't fetch additional
+    const [profileState, blocks] = await Promise.all([
+      this.services.actor.views.profileHydration(
+        Array.from(dids),
+        { viewer },
+        { bam, labels },
+      ),
+      this.blocksForPosts(posts, bam),
+    ])
+    const embeds = await this.embedsForPosts(posts, blocks, viewer, depth)
+    return {
       posts,
-      embeds,
-      labels,
       blocks,
-      usePostViewUnion,
-    )
+      embeds,
+      labels, // includes info for profiles
+      bam, // includes info for profiles
+      profiles: profileState.profiles,
+      lists: profileState.lists,
+    }
   }
 
   // applies blocks for visibility to third-parties (i.e. based on post content)
-  async blocksForPosts(posts: PostInfoMap): Promise<PostBlocksMap> {
+  async blocksForPosts(
+    posts: PostInfoMap,
+    bam?: BlockAndMuteState,
+  ): Promise<PostBlocksMap> {
     const relationships: RelationshipPair[] = []
     const byPost: Record<string, PostRelationships> = {}
     const didFromUri = (uri) => new AtUri(uri).host
@@ -329,15 +275,17 @@ export class FeedService {
       }
     }
     // compute block state from all actor relationships among posts
-    const blockSet = await this.services.graph.getBlockSet(relationships)
-    if (blockSet.empty()) return {}
+    const blockState = await this.services.graph.getBlockState(
+      relationships,
+      bam,
+    )
     const result: PostBlocksMap = {}
     Object.entries(byPost).forEach(([uri, block]) => {
-      if (block.embed && blockSet.has(block.embed)) {
+      if (block.embed && blockState.block(block.embed)) {
         result[uri] ??= {}
         result[uri].embed = true
       }
-      if (block.reply && blockSet.has(block.reply)) {
+      if (block.reply && blockState.block(block.reply)) {
         result[uri] ??= {}
         result[uri].reply = true
       }
@@ -349,7 +297,7 @@ export class FeedService {
     postInfos: PostInfoMap,
     blocks: PostBlocksMap,
     viewer: string | null,
-    depth = 0,
+    depth: number,
   ) {
     const postMap = postRecordsFromInfos(postInfos)
     const posts = Object.values(postMap)
@@ -400,41 +348,37 @@ export class FeedService {
   ): Promise<RecordEmbedViewRecordMap> {
     const nestedUris = nestedRecordUris(posts)
     if (nestedUris.length < 1) return {}
-    const nestedPostUris: string[] = []
-    const nestedFeedGenUris: string[] = []
-    const nestedListUris: string[] = []
-    const nestedDidsSet = new Set<string>()
+    const nestedDids = new Set<string>()
+    const nestedPostUris = new Set<string>()
+    const nestedFeedGenUris = new Set<string>()
+    const nestedListUris = new Set<string>()
     for (const uri of nestedUris) {
       const parsed = new AtUri(uri)
-      nestedDidsSet.add(parsed.hostname)
+      nestedDids.add(parsed.hostname)
       if (parsed.collection === ids.AppBskyFeedPost) {
-        nestedPostUris.push(uri)
+        nestedPostUris.add(uri)
       } else if (parsed.collection === ids.AppBskyFeedGenerator) {
-        nestedFeedGenUris.push(uri)
+        nestedFeedGenUris.add(uri)
       } else if (parsed.collection === ids.AppBskyGraphList) {
-        nestedListUris.push(uri)
+        nestedListUris.add(uri)
       }
     }
-    const nestedDids = [...nestedDidsSet]
-    const [postInfos, actorInfos, labelViews, feedGenInfos, listViews] =
-      await Promise.all([
-        this.getPostInfos(nestedPostUris, viewer),
-        this.services.actor.views.profiles(nestedDids, viewer, {
-          skipLabels: true,
-        }),
-        this.services.label.getLabelsForSubjects([
-          ...nestedPostUris,
-          ...nestedDids,
-        ]),
-        this.getFeedGeneratorInfos(nestedFeedGenUris, viewer),
-        this.services.graph.getListViews(nestedListUris, viewer),
-      ])
-    const deepBlocks = await this.blocksForPosts(postInfos)
-    const deepEmbedViews = await this.embedsForPosts(
-      postInfos,
-      deepBlocks,
-      viewer,
-      depth + 1,
+    const [feedState, feedGenInfos, listViews] = await Promise.all([
+      this.feedHydration(
+        {
+          dids: nestedDids,
+          uris: nestedPostUris,
+          viewer,
+        },
+        depth + 1,
+      ),
+      this.getFeedGeneratorInfos([...nestedFeedGenUris], viewer),
+      this.services.graph.getListViews([...nestedListUris], viewer),
+    ])
+    const actorInfos = this.services.actor.views.profileBasicPresentation(
+      [...nestedDids],
+      feedState,
+      { viewer },
     )
     const recordEmbedViews: RecordEmbedViewRecordMap = {}
     for (const uri of nestedUris) {
@@ -442,24 +386,20 @@ export class FeedService {
       if (collection === ids.AppBskyFeedGenerator && feedGenInfos[uri]) {
         recordEmbedViews[uri] = {
           $type: 'app.bsky.feed.defs#generatorView',
-          ...this.views.formatFeedGeneratorView(
-            feedGenInfos[uri],
-            actorInfos,
-            labelViews,
-          ),
+          ...this.views.formatFeedGeneratorView(feedGenInfos[uri], actorInfos),
         }
       } else if (collection === ids.AppBskyGraphList && listViews[uri]) {
         recordEmbedViews[uri] = {
           $type: 'app.bsky.graph.defs#listView',
           ...this.services.graph.formatListView(listViews[uri], actorInfos),
         }
-      } else if (collection === ids.AppBskyFeedPost && postInfos[uri]) {
+      } else if (collection === ids.AppBskyFeedPost && feedState.posts[uri]) {
         const formatted = this.views.formatPostView(
           uri,
           actorInfos,
-          postInfos,
-          deepEmbedViews,
-          labelViews,
+          feedState.posts,
+          feedState.embeds,
+          feedState.labels,
         )
         recordEmbedViews[uri] = this.views.getRecordEmbedView(
           uri,
@@ -529,21 +469,4 @@ function applyEmbedBlock(
     }
   }
   return view
-}
-
-function getSkeleFeedItemUri(item: SkeletonFeedPost) {
-  return typeof item.reason?.repost === 'string'
-    ? item.reason.repost
-    : item.post
-}
-
-function getPostAndRepostPairs(
-  item: SkeletonFeedPost,
-  requester: string,
-): RelationshipPair[] {
-  const uriStrs =
-    typeof item.reason?.repost === 'string'
-      ? [item.post, item.reason.repost]
-      : [item.post]
-  return uriStrs.map((uriStr) => [requester, new AtUri(uriStr).host])
 }

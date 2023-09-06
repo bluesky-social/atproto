@@ -1,9 +1,10 @@
 import AppContext from '../context'
 import { SkeletonFeedPost } from '../lexicon/types/app/bsky/feed/defs'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
+import { FeedRow } from '../services/feed'
 
 export type AlgoResponse = {
-  feed: SkeletonFeedPost[]
+  feedItems: FeedRow[]
   cursor?: string
 }
 

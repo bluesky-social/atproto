@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           cursor: keyset.packFromResult(mutesRes),
-          mutes: await actorService.views.hydrateProfiles(mutesRes, requester),
+          mutes: await actorService.views.profilesList(mutesRes, requester),
         },
       }
     },

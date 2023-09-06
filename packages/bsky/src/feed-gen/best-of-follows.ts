@@ -1,6 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { AlgoHandler, AlgoResponse, toSkeletonItem } from './types'
+import { AlgoHandler, AlgoResponse } from './types'
 import { GenericKeyset, paginate } from '../db/pagination'
 import AppContext from '../context'
 
@@ -39,7 +39,7 @@ const handler: AlgoHandler = async (
   const feedItems = await builder.execute()
 
   return {
-    feed: feedItems.map(toSkeletonItem),
+    feedItems,
     cursor: keyset.packFromResult(feedItems),
   }
 }
