@@ -1,7 +1,7 @@
 import { NotEmptyArray } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { AlgoHandler, AlgoResponse, toSkeletonItem } from './types'
+import { AlgoHandler, AlgoResponse } from './types'
 import { GenericKeyset, paginate } from '../db/pagination'
 import AppContext from '../context'
 import { valuesList } from '../db/util'
@@ -51,6 +51,11 @@ const handler: AlgoHandler = async (
       sql<FeedItemType>`${'post'}`.as('type'),
       'post.uri as uri',
       'post.uri as postUri',
+      'post.creator as originatorDid',
+      'post.creator as postAuthorDid',
+      'post.replyParent as replyParent',
+      'post.replyRoot as replyRoot',
+      'post.indexedAt as sortAt',
       'candidate.score',
       'candidate.cid',
     ])
@@ -61,7 +66,7 @@ const handler: AlgoHandler = async (
   const feedItems = await builder.execute()
 
   return {
-    feed: feedItems.map(toSkeletonItem),
+    feedItems,
     cursor: keyset.packFromResult(feedItems),
   }
 }
