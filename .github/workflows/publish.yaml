@@ -1,3 +1,6 @@
+# Runs on merge to main, but publishing only
+# happens if changesets are present
+
 name: Publish
 
 on:
@@ -24,12 +27,11 @@ jobs:
           cache: "pnpm"
       - run: pnpm i --frozen-lockfile
       - run: pnpm verify
-      - run: pnpm build
       - name: Publish
         id: changesets
         uses: changesets/action@v1
         with:
           publish: pnpm release
           version: pnpm version-packages
-          commit: "[CD] version packages"
-          title: "[CD] version packages"
+          commit: "Version packages"
+          title: "Version packages"

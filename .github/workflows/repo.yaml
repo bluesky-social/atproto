@@ -1,9 +1,15 @@
+# Runs on PR to main, OR when pushing to the versioning branch
+# (Changesets does this automatically)
+
 name: Test
 
 on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - changeset-release/main
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'

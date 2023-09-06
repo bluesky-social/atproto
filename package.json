@@ -17,7 +17,7 @@
     "test:withFlags": "LOG_ENABLED=false NODE_ENV=development ./packages/dev-infra/with-test-redis-and-db.sh pnpm --stream -r test --",
     "changeset": "changeset",
     "release": "pnpm build && changeset publish",
-    "version-packages": "changeset version && pnpm format && pnpm install --no-frozen-lockfile && git add ."
+    "version-packages": "changeset version && git add ."
   },
   "devDependencies": {
     "@babel/core": "^7.18.6",
