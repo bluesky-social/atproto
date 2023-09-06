@@ -257,6 +257,14 @@
   <td></td>
   <td>alert</td>
 </tr>
+<tr>
+  <td>misleading</td>
+  <td>misinfo</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>alert</td>
+</tr>
   </table>
 
   ## Label Group Descriptions
@@ -517,6 +525,14 @@
     <code>general</code><br><strong>Scam</strong><br>Fraudulent content.<br><br>
     <code>on an account</code><br><strong>Scam Warning</strong><br>The moderators believe this account publishes fraudulent content.<br><br>
     <code>on content</code><br><strong>Scam Warning</strong><br>The moderators believe this is fraudulent content.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>misleading</td>
+  <td>
+    <code>general</code><br><strong>Misleading</strong><br>Accounts which share misleading information.<br><br>
+    <code>on an account</code><br><strong>Misleading</strong><br>The moderators believe this account is spreading misleading information.<br><br>
+    <code>on content</code><br><strong>Misleading</strong><br>The moderators believe this account is spreading misleading information.<br><br>
   </td>
 </tr>
   </table>

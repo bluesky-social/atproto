@@ -8,6 +8,7 @@ import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getAuth
 import { handleReadAfterWrite } from '../util/read-after-write'
 import { authPassthru } from '../../../../../api/com/atproto/admin/util'
 import { LocalRecords } from '../../../../../services/local'
+import { isReasonRepost } from '../../../../../lexicon/types/app/bsky/feed/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
@@ -147,6 +148,10 @@ const getAuthorMunge = async (
 ): Promise<OutputSchema> => {
   const localSrvc = ctx.services.local(ctx.db)
   const localProf = local.profile
+  // only munge on own feed
+  if (!isUsersFeed(original, requester)) {
+    return original
+  }
   let feed = original.feed
   // first update any out of date profile pictures in feed
   if (localProf) {
@@ -172,4 +177,13 @@ const getAuthorMunge = async (
     ...original,
     feed,
   }
+}
+
+const isUsersFeed = (feed: OutputSchema, requester: string) => {
+  const first = feed.feed.at(0)
+  if (!first) return false
+  if (!first.reason && first.post.author.did === requester) return true
+  if (isReasonRepost(first.reason) && first.reason.by.did === requester)
+    return true
+  return false
 }

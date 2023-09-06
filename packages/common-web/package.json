@@ -2,6 +2,10 @@
   "name": "@atproto/common-web",
   "version": "0.2.0",
   "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -13,19 +17,16 @@
     "prettier": "prettier --check src/ tests/",
     "prettier:fix": "prettier --write src/ tests/",
     "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "yarn lint --fix",
+    "lint:fix": "pnpm lint --fix",
     "verify": "run-p prettier lint",
-    "verify:fix": "yarn prettier:fix && yarn lint:fix",
+    "verify:fix": "pnpm prettier:fix && pnpm lint:fix",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ./update-pkg.js --update-main-to-dist",
-    "update-main-to-src": "node ./update-pkg.js --update-main-to-src",
-    "prepublish": "npm run update-main-to-dist",
-    "postpublish": "npm run update-main-to-src"
+    "update-main-to-dist": "node ../../update-main-to-dist.js packages/common-web"
   },
   "dependencies": {
     "graphemer": "^1.4.0",
-    "multiformats": "^9.6.4",
+    "multiformats": "^9.9.0",
     "uint8arrays": "3.0.0",
     "zod": "^3.21.4"
   }

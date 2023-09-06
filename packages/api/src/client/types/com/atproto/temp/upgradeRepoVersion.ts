@@ -11,6 +11,7 @@ export interface QueryParams {}
 
 export interface InputSchema {
   did: string
+  force?: boolean
   [k: string]: unknown
 }
 
