@@ -12,7 +12,10 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   polling = false
   queued = false
 
-  constructor(public db: Database, public lastSeen = 0) {
+  constructor(
+    public db: Database,
+    public lastSeen = 0,
+  ) {
     super()
     // note: this does not err when surpassed, just prints a warning to stderr
     this.setMaxListeners(100)

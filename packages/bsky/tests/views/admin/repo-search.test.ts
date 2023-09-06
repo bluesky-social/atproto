@@ -13,8 +13,8 @@ describe('pds admin repo search views', () => {
   // And names are usually capitalized on each word so the comparison is done on lowercase version
   const handleOrNameStartsWith =
     (term: string) => (handleOrName: (string | undefined)[]) =>
-      !!handleOrName.find((str) =>
-        str?.toLowerCase().includes(term.toLowerCase()),
+      !!handleOrName.find(
+        (str) => str?.toLowerCase().includes(term.toLowerCase()),
       )
   const resultToHandlesAndNames = (
     result: ComAtprotoAdminSearchRepos.Response,

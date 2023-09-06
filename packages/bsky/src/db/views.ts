@@ -11,7 +11,10 @@ export class ViewMaintainer {
   destroyed = false
 
   // @NOTE the db must be authed as the owner of the materialized view, per postgres.
-  constructor(public db: PrimaryDatabase, public intervalSec = 60) {}
+  constructor(
+    public db: PrimaryDatabase,
+    public intervalSec = 60,
+  ) {}
 
   async run() {
     while (!this.destroyed) {

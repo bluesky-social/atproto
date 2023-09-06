@@ -13,7 +13,10 @@ import { toSimplifiedISOSafe } from '../indexing/util'
 export type Labels = Record<string, Label[]>
 
 export class LabelService {
-  constructor(public db: Database, public cache: LabelCache) {}
+  constructor(
+    public db: Database,
+    public cache: LabelCache,
+  ) {}
 
   static creator(cache: LabelCache) {
     return (db: Database) => new LabelService(db, cache)

@@ -39,7 +39,10 @@ type NotifDisplay = {
 export class NotificationServer {
   private rateLimiter = new RateLimiter(1, 30 * MINUTE)
 
-  constructor(public db: Database, public pushEndpoint?: string) {}
+  constructor(
+    public db: Database,
+    public pushEndpoint?: string,
+  ) {}
 
   async getTokensByDid(dids: string[]) {
     if (!dids.length) return {}
@@ -48,11 +51,14 @@ export class NotificationServer {
       .where('did', 'in', dids)
       .selectAll()
       .execute()
-    return tokens.reduce((acc, token) => {
-      acc[token.did] ??= []
-      acc[token.did].push(token)
-      return acc
-    }, {} as Record<string, PushToken[]>)
+    return tokens.reduce(
+      (acc, token) => {
+        acc[token.did] ??= []
+        acc[token.did].push(token)
+        return acc
+      },
+      {} as Record<string, PushToken[]>,
+    )
   }
 
   async prepareNotifsToSend(notifications: InsertableNotif[]) {
@@ -210,14 +216,23 @@ export class NotificationServer {
       this.findBlocksAndMutes(notifs),
     ])
 
-    const authorsByDid = authors.reduce((acc, author) => {
-      acc[author.did] = author
-      return acc
-    }, {} as Record<string, { displayName: string | null; handle: string | null }>)
-    const postsByUri = posts.reduce((acc, post) => {
-      acc[post.uri] = post
-      return acc
-    }, {} as Record<string, { text: string }>)
+    const authorsByDid = authors.reduce(
+      (acc, author) => {
+        acc[author.did] = author
+        return acc
+      },
+      {} as Record<
+        string,
+        { displayName: string | null; handle: string | null }
+      >,
+    )
+    const postsByUri = posts.reduce(
+      (acc, post) => {
+        acc[post.uri] = post
+        return acc
+      },
+      {} as Record<string, { text: string }>,
+    )
 
     const results: NotifDisplay[] = []
 
@@ -366,7 +381,10 @@ class RateLimiter {
     ttl: this.windowMs,
     noUpdateTTL: true,
   })
-  constructor(private limit: number, private windowMs: number) {}
+  constructor(
+    private limit: number,
+    private windowMs: number,
+  ) {}
   check(token: string, now = Date.now()) {
     const key = getRateLimitKey(token, now)
     const last = this.rateLimitCache.get(key) ?? 0

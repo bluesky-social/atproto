@@ -76,7 +76,10 @@ export class SeedClient {
   reposts: Record<string, RecordRef[]>
   dids: Record<string, string>
 
-  constructor(public agent: AtpAgent, public adminAuth?: string) {
+  constructor(
+    public agent: AtpAgent,
+    public adminAuth?: string,
+  ) {
     this.accounts = {}
     this.profiles = {}
     this.follows = {}

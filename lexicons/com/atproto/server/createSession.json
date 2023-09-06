@@ -15,7 +15,7 @@
               "type": "string",
               "description": "Handle or other identifier supported by the server for the authenticating user."
             },
-            "password": {"type": "string"}
+            "password": { "type": "string" }
           }
         }
       },
@@ -25,17 +25,15 @@
           "type": "object",
           "required": ["accessJwt", "refreshJwt", "handle", "did"],
           "properties": {
-            "accessJwt": {"type": "string"},
-            "refreshJwt": {"type": "string"},
-            "handle": {"type": "string", "format": "handle"},
-            "did": {"type": "string", "format": "did"},
-            "email": {"type": "string"}
+            "accessJwt": { "type": "string" },
+            "refreshJwt": { "type": "string" },
+            "handle": { "type": "string", "format": "handle" },
+            "did": { "type": "string", "format": "did" },
+            "email": { "type": "string" }
           }
         }
       },
-      "errors": [
-        {"name": "AccountTakedown"}
-      ]
+      "errors": [{ "name": "AccountTakedown" }]
     }
   }
 }

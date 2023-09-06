@@ -9,9 +9,14 @@
         "type": "params",
         "required": ["feed"],
         "properties": {
-          "feed": {"type": "string", "format": "at-uri"},
-          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "cursor": {"type": "string"}
+          "feed": { "type": "string", "format": "at-uri" },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
         }
       },
       "output": {
@@ -20,17 +25,18 @@
           "type": "object",
           "required": ["feed"],
           "properties": {
-            "cursor": {"type": "string"},
+            "cursor": { "type": "string" },
             "feed": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.feed.defs#feedViewPost"}
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.feed.defs#feedViewPost"
+              }
             }
           }
         }
       },
-      "errors": [
-        {"name": "UnknownFeed"}
-      ]
+      "errors": [{ "name": "UnknownFeed" }]
     }
   }
 }

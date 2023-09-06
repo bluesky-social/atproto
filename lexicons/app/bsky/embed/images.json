@@ -9,7 +9,7 @@
       "properties": {
         "images": {
           "type": "array",
-          "items": {"type": "ref", "ref": "#image"},
+          "items": { "type": "ref", "ref": "#image" },
           "maxLength": 4
         }
       }
@@ -23,7 +23,7 @@
           "accept": ["image/*"],
           "maxSize": 1000000
         },
-        "alt": {"type": "string"}
+        "alt": { "type": "string" }
       }
     },
     "view": {
@@ -32,7 +32,7 @@
       "properties": {
         "images": {
           "type": "array",
-          "items": {"type": "ref", "ref": "#viewImage"},
+          "items": { "type": "ref", "ref": "#viewImage" },
           "maxLength": 4
         }
       }
@@ -41,9 +41,9 @@
       "type": "object",
       "required": ["thumb", "fullsize", "alt"],
       "properties": {
-        "thumb": {"type": "string"},
-        "fullsize": {"type": "string"},
-        "alt": {"type": "string"}
+        "thumb": { "type": "string" },
+        "fullsize": { "type": "string" },
+        "alt": { "type": "string" }
       }
     }
   }

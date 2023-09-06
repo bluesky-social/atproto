@@ -7,7 +7,10 @@ import { TestFeedGen } from './feed-gen'
 
 export class TestNetworkNoAppView {
   feedGens: TestFeedGen[] = []
-  constructor(public plc: TestPlc, public pds: TestPds) {}
+  constructor(
+    public plc: TestPlc,
+    public pds: TestPds,
+  ) {}
 
   static async create(
     params: Partial<TestServerParams> = {},

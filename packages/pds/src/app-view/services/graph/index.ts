@@ -7,7 +7,10 @@ import { ProfileView } from '../../../lexicon/types/app/bsky/actor/defs'
 import { List } from '../../db/tables/list'
 
 export class GraphService {
-  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    public db: Database,
+    public imgUriBuilder: ImageUriBuilder,
+  ) {}
 
   static creator(imgUriBuilder: ImageUriBuilder) {
     return (db: Database) => new GraphService(db, imgUriBuilder)

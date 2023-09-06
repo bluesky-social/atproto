@@ -149,10 +149,8 @@ describe('pds admin get moderation reports view', () => {
     )
 
     const ignoredAtUriSubjects: string[] = [
-      `${
-        allReports.data.reports.find(({ subject }) => !!subject.uri)?.subject
-          ?.uri
-      }`,
+      `${allReports.data.reports.find(({ subject }) => !!subject.uri)?.subject
+        ?.uri}`,
     ]
     const filteredReportsByAtUri =
       await agent.api.com.atproto.admin.getModerationReports(

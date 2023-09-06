@@ -92,7 +92,10 @@ export class VerifyCidTransform extends Transform {
 }
 
 export class VerifyCidError extends Error {
-  constructor(public expected: CID, public actual: CID) {
+  constructor(
+    public expected: CID,
+    public actual: CID,
+  ) {
     super('Bad cid check')
   }
 }

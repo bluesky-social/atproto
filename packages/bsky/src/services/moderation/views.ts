@@ -275,16 +275,22 @@ export class ModerationViews {
         .execute(),
     ])
 
-    const reportIdsByActionId = resolutions.reduce((acc, cur) => {
-      acc[cur.actionId] ??= []
-      acc[cur.actionId].push(cur.id)
-      return acc
-    }, {} as Record<string, number[]>)
-    const subjectBlobCidsByActionId = subjectBlobResults.reduce((acc, cur) => {
-      acc[cur.actionId] ??= []
-      acc[cur.actionId].push(cur.cid)
-      return acc
-    }, {} as Record<string, string[]>)
+    const reportIdsByActionId = resolutions.reduce(
+      (acc, cur) => {
+        acc[cur.actionId] ??= []
+        acc[cur.actionId].push(cur.id)
+        return acc
+      },
+      {} as Record<string, number[]>,
+    )
+    const subjectBlobCidsByActionId = subjectBlobResults.reduce(
+      (acc, cur) => {
+        acc[cur.actionId] ??= []
+        acc[cur.actionId].push(cur.cid)
+        return acc
+      },
+      {} as Record<string, string[]>,
+    )
 
     const views = results.map((res) => ({
       id: res.id,
@@ -384,11 +390,14 @@ export class ModerationViews {
       .orderBy('id', 'desc')
       .execute()
 
-    const actionIdsByReportId = resolutions.reduce((acc, cur) => {
-      acc[cur.reportId] ??= []
-      acc[cur.reportId].push(cur.id)
-      return acc
-    }, {} as Record<string, number[]>)
+    const actionIdsByReportId = resolutions.reduce(
+      (acc, cur) => {
+        acc[cur.reportId] ??= []
+        acc[cur.reportId].push(cur.id)
+        return acc
+      },
+      {} as Record<string, number[]>,
+    )
 
     const views: ReportView[] = results.map((res) => {
       const decoratedView: ReportView = {

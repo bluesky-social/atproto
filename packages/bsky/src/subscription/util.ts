@@ -88,7 +88,10 @@ export class ConsecutiveList<T> {
 
 export class ConsecutiveItem<T> {
   isComplete = false
-  constructor(private consecutive: ConsecutiveList<T>, public value: T) {}
+  constructor(
+    private consecutive: ConsecutiveList<T>,
+    public value: T,
+  ) {}
 
   complete() {
     this.isComplete = true

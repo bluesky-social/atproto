@@ -11,12 +11,12 @@
           "type": "object",
           "properties": {
             "codes": {
-              "type": "array", 
-              "items": {"type": "string"}
+              "type": "array",
+              "items": { "type": "string" }
             },
             "accounts": {
-              "type": "array", 
-              "items": {"type": "string"}
+              "type": "array",
+              "items": { "type": "string" }
             }
           }
         }

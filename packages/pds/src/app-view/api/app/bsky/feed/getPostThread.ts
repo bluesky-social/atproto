@@ -272,15 +272,21 @@ const getThreadData = async (
       .orderBy('sortAt', 'desc')
       .execute(),
   ])
-  const parentsByUri = parents.reduce((acc, parent) => {
-    return Object.assign(acc, { [parent.postUri]: parent })
-  }, {} as Record<string, FeedRow>)
-  const childrenByParentUri = children.reduce((acc, child) => {
-    if (!child.replyParent) return acc
-    acc[child.replyParent] ??= []
-    acc[child.replyParent].push(child)
-    return acc
-  }, {} as Record<string, FeedRow[]>)
+  const parentsByUri = parents.reduce(
+    (acc, parent) => {
+      return Object.assign(acc, { [parent.postUri]: parent })
+    },
+    {} as Record<string, FeedRow>,
+  )
+  const childrenByParentUri = children.reduce(
+    (acc, child) => {
+      if (!child.replyParent) return acc
+      acc[child.replyParent] ??= []
+      acc[child.replyParent].push(child)
+      return acc
+    },
+    {} as Record<string, FeedRow[]>,
+  )
   const post = parentsByUri[uri]
   if (!post) return null
   return {

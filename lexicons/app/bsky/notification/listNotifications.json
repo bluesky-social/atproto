@@ -7,9 +7,14 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "cursor": {"type": "string"},
-          "seenAt": { "type": "string", "format": "datetime"}
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" },
+          "seenAt": { "type": "string", "format": "datetime" }
         }
       },
       "output": {
@@ -18,10 +23,10 @@
           "type": "object",
           "required": ["notifications"],
           "properties": {
-            "cursor": {"type": "string"},
+            "cursor": { "type": "string" },
             "notifications": {
               "type": "array",
-              "items": {"type": "ref", "ref": "#notification"}
+              "items": { "type": "ref", "ref": "#notification" }
             }
           }
         }
@@ -29,23 +34,38 @@
     },
     "notification": {
       "type": "object",
-      "required": ["uri", "cid", "author", "reason", "record", "isRead", "indexedAt"],
+      "required": [
+        "uri",
+        "cid",
+        "author",
+        "reason",
+        "record",
+        "isRead",
+        "indexedAt"
+      ],
       "properties": {
-        "uri": {"type": "string", "format": "at-uri"},
-        "cid": {"type": "string", "format": "cid" },
-        "author": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"},
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "author": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
         "reason": {
           "type": "string",
           "description": "Expected values are 'like', 'repost', 'follow', 'mention', 'reply', and 'quote'.",
-          "knownValues": ["like", "repost", "follow", "mention", "reply", "quote"]
+          "knownValues": [
+            "like",
+            "repost",
+            "follow",
+            "mention",
+            "reply",
+            "quote"
+          ]
         },
-        "reasonSubject": {"type": "string", "format": "at-uri"},
-        "record": {"type": "unknown"},
-        "isRead": {"type": "boolean"},
-        "indexedAt": {"type": "string", "format": "datetime"},
+        "reasonSubject": { "type": "string", "format": "at-uri" },
+        "record": { "type": "unknown" },
+        "isRead": { "type": "boolean" },
+        "indexedAt": { "type": "string", "format": "datetime" },
         "labels": {
           "type": "array",
-          "items": {"type": "ref", "ref": "com.atproto.label.defs#label"}
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         }
       }
     }

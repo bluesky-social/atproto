@@ -198,9 +198,12 @@ function getOrderedFeedItems(
   limit: number,
 ) {
   const SKIP = []
-  const feedItemsByUri = feedItems.reduce((acc, item) => {
-    return Object.assign(acc, { [item.uri]: item })
-  }, {} as Record<string, FeedRow>)
+  const feedItemsByUri = feedItems.reduce(
+    (acc, item) => {
+      return Object.assign(acc, { [item.uri]: item })
+    },
+    {} as Record<string, FeedRow>,
+  )
   // enforce limit param in the case that the feedgen does not
   if (skeletonItems.length > limit) {
     skeletonItems = skeletonItems.slice(0, limit)

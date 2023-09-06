@@ -776,7 +776,10 @@ export class MST {
 }
 
 export class Leaf {
-  constructor(public key: string, public value: CID) {}
+  constructor(
+    public key: string,
+    public value: CID,
+  ) {}
 
   isTree(): this is MST {
     return false

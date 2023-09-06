@@ -11,12 +11,12 @@
           "type": "object",
           "required": ["did", "feeds"],
           "properties": {
-            "did": {"type": "string", "format": "did"},
+            "did": { "type": "string", "format": "did" },
             "feeds": {
               "type": "array",
-              "items": {"type": "ref", "ref": "#feed"}
+              "items": { "type": "ref", "ref": "#feed" }
             },
-            "links": {"type": "ref", "ref": "#links"}
+            "links": { "type": "ref", "ref": "#links" }
           }
         }
       }
@@ -25,14 +25,14 @@
       "type": "object",
       "required": ["uri"],
       "properties": {
-        "uri": {"type": "string", "format": "at-uri"}
+        "uri": { "type": "string", "format": "at-uri" }
       }
     },
     "links": {
       "type": "object",
       "properties": {
-        "privacyPolicy": {"type": "string"},
-        "termsOfService": {"type": "string"}
+        "privacyPolicy": { "type": "string" },
+        "termsOfService": { "type": "string" }
       }
     }
   }

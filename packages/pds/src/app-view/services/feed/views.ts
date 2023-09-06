@@ -38,7 +38,10 @@ import { ImageUriBuilder } from '../../../image/uri'
 export * from './types'
 
 export class FeedViews {
-  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    public db: Database,
+    public imgUriBuilder: ImageUriBuilder,
+  ) {}
 
   static creator(imgUriBuilder: ImageUriBuilder) {
     return (db: Database) => new FeedViews(db, imgUriBuilder)
