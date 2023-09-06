@@ -9,9 +9,7 @@
         "type": "params",
         "required": ["actor"],
         "properties": {
-          "actor": {"type": "string", "format": "at-identifier"},
-          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "cursor": {"type": "string"}
+          "actor": {"type": "string", "format": "at-identifier"}
         }
       },
       "output": {
@@ -20,7 +18,6 @@
           "type": "object",
           "required": ["suggestions"],
           "properties": {
-            "cursor": {"type": "string"},
             "suggestions": {
               "type": "array",
               "items": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"}
