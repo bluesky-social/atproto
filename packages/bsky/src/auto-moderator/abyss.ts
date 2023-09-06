@@ -28,10 +28,7 @@ export class Abyss implements TakedownFlagger {
       try {
         return await this.makeReq(did, cid)
       } catch (err) {
-        log.warn(
-          { err, did, cid: cid.toString() },
-          'blob scanner request failed',
-        )
+        log.warn({ err, did, cid: cid.toString() }, 'abyss request failed')
         throw err
       }
     })
