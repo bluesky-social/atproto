@@ -14,9 +14,8 @@ type RecordFields = {
 export const getFieldsFromRecord = (record: unknown): RecordFields => {
   if (isPost(record)) {
     return getFieldsFromPost(record)
-    // @TODO add back in profile labeling
-    // } else if (isProfile(record)) {
-    // return getFieldsFromProfile(record)
+  } else if (isProfile(record)) {
+    return getFieldsFromProfile(record)
   } else {
     return { text: [], imgs: [] }
   }
@@ -62,8 +61,13 @@ export const getFieldsFromProfile = (record: ProfileRecord): RecordFields => {
   return { text, imgs }
 }
 
-export const dedupe = (str: string[]): string[] => {
-  const set = new Set(str)
+export const dedupe = (strs: (string | undefined)[]): string[] => {
+  const set = new Set<string>()
+  for (const str of strs) {
+    if (str !== undefined) {
+      set.add(str)
+    }
+  }
   return [...set]
 }
 
@@ -82,20 +86,6 @@ export const isRecordType = (obj: unknown, lexId: string): boolean => {
   } catch {
     return false
   }
-}
-
-export const keywordLabeling = (
-  keywords: Record<string, string>,
-  text: string,
-): string[] => {
-  const lowerText = text.toLowerCase()
-  const labels: string[] = []
-  for (const word of Object.keys(keywords)) {
-    if (lowerText.includes(word)) {
-      labels.push(keywords[word])
-    }
-  }
-  return labels
 }
 
 const separateEmbeds = (embed: PostRecord['embed']) => {

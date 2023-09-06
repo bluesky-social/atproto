@@ -77,6 +77,7 @@ export class TestBsky {
       db,
       config,
       algos: cfg.algos,
+      imgInvalidator: cfg.imgInvalidator,
     })
     // indexer
     const ns = cfg.dbPostgresSchema
@@ -92,6 +93,9 @@ export class TestBsky {
       dbPostgresSchema: cfg.dbPostgresSchema,
       didPlcUrl: cfg.plcUrl,
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
+      abyssEndpoint: '',
+      abyssPassword: '',
+      moderationPushUrl: `http://admin:${config.adminPassword}@localhost:${cfg.pdsPort}`,
       indexerPartitionIds: [0],
       indexerNamespace: `ns${ns}`,
       indexerSubLockId: uniqueLockId(),
@@ -108,6 +112,7 @@ export class TestBsky {
       cfg: indexerCfg,
       db: db.getPrimary(),
       redis: indexerRedis,
+      imgInvalidator: cfg.imgInvalidator,
     })
     // ingester
     const ingesterCfg = new bsky.IngesterConfig({
@@ -237,6 +242,9 @@ export async function getIndexers(
     dbPostgresUrl: process.env.DB_POSTGRES_URL || '',
     dbPostgresSchema: `appview_${name}`,
     didPlcUrl: network.plc.url,
+    imgUriEndpoint: '',
+    abyssEndpoint: '',
+    abyssPassword: '',
     indexerPartitionIds: [0],
     indexerNamespace: `ns${ns}`,
     ingesterPartitionCount: config.ingesterPartitionCount ?? 1,

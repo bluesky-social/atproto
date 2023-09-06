@@ -35,6 +35,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     const bsky = await TestBsky.create({
       port: bskyPort,
       plcUrl: plc.url,
+      pdsPort,
       repoProvider: `ws://localhost:${pdsPort}`,
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
       dbPrimaryPostgresUrl: dbPostgresUrl,
@@ -48,6 +49,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       plcUrl: plc.url,
       bskyAppViewEndpoint: bsky.url,
       bskyAppViewDid: bsky.ctx.cfg.serverDid,
+      bskyAppViewModeration: true,
       ...params.pds,
     })
 

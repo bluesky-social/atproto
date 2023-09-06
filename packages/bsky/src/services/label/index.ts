@@ -20,7 +20,7 @@ export class LabelService {
     uri: string,
     cid: string | null,
     labels: { create?: string[]; negate?: string[] },
-  ) {
+  ): Promise<Label[]> {
     const { create = [], negate = [] } = labels
     const toCreate = create.map((val) => ({
       src,
@@ -38,7 +38,9 @@ export class LabelService {
       neg: true,
       cts: new Date().toISOString(),
     }))
-    await this.createLabels([...toCreate, ...toNegate])
+    const formatted = [...toCreate, ...toNegate]
+    await this.createLabels(formatted)
+    return formatted
   }
 
   async createLabels(labels: Label[]) {
