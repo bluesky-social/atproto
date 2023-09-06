@@ -19,7 +19,11 @@ export default function (server: Server, ctx: AppContext) {
         feedsRes.map((r) => r.uri),
         viewer,
       )
-      const genList = Object.values(genInfos)
+      const genList = Object.values(genInfos).sort((a, b) => {
+        const aOrder = feedsRes.find((r) => r.uri === a.uri)?.order || 1
+        const bOrder = feedsRes.find((r) => r.uri === b.uri)?.order || 1
+        return aOrder - bOrder
+      })
 
       const creators = genList.map((gen) => gen.creator)
       const profiles = await feedService.getActorInfos(creators, viewer)
