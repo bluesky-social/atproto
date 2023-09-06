@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
   const getSuggestions = createPipeline(
     skeleton,
     hydration,
-    noBlocks,
+    noBlocksOrMutes,
     presentation,
   )
   server.app.bsky.actor.getSuggestions({
@@ -93,11 +93,13 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
   return { ...state, bam, actors }
 }
 
-const noBlocks = (state: HydrationState) => {
+const noBlocksOrMutes = (state: HydrationState) => {
   const { viewer } = state.params
   if (!viewer) return state
   state.suggestions = state.suggestions.filter(
-    (item) => !state.bam.block([viewer, item.did]),
+    (item) =>
+      !state.bam.block([viewer, item.did]) &&
+      !state.bam.mute([viewer, item.did]),
   )
   return state
 }

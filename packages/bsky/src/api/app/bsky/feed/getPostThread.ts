@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(
     skeleton,
     hydration,
-    noRules,
+    noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
     presentation,
   )
   server.app.bsky.feed.getPostThread({
