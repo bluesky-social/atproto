@@ -196,7 +196,10 @@ const getThreadData = async (
     getAncestorsAndSelfQb(db.db, { uri, parentHeight })
       .selectFrom('ancestor')
       .innerJoin(
-        feedService.selectPostQb().as('post'),
+        feedService
+          .selectPostQb()
+          .select(['isInvalidReply', 'isInvalidInteraction'])
+          .as('post'),
         'post.uri',
         'ancestor.uri',
       )
@@ -205,7 +208,10 @@ const getThreadData = async (
     getDescendentsQb(db.db, { uri, depth })
       .selectFrom('descendent')
       .innerJoin(
-        feedService.selectPostQb().as('post'),
+        feedService
+          .selectPostQb()
+          .select(['isInvalidReply', 'isInvalidInteraction'])
+          .as('post'),
         'post.uri',
         'descendent.uri',
       )
@@ -214,10 +220,11 @@ const getThreadData = async (
       .execute(),
   ])
   const parentsByUri = parents.reduce((acc, parent) => {
+    if (parent.isInvalidInteraction) return acc
     return Object.assign(acc, { [parent.postUri]: parent })
   }, {} as Record<string, FeedRow>)
   const childrenByParentUri = children.reduce((acc, child) => {
-    if (!child.replyParent) return acc
+    if (!child.replyParent || child.isInvalidInteraction) return acc
     acc[child.replyParent] ??= []
     acc[child.replyParent].push(child)
     return acc

@@ -425,6 +425,7 @@ const checkInvalidReply = (reply: ReplyRef, parent: Post) => {
   const replyParent = reply.parent.uri
   const isReplyToRoot = replyParent === replyRoot
   return (
+    parent.isInvalidReply ||
     (isReplyToRoot && // parent should be root post, but doesn't look like a root post
       (parent.replyParent !== null || parent.replyRoot !== null)) ||
     (!isReplyToRoot && // parent isn't a reply for the same root post
