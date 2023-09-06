@@ -26,6 +26,7 @@
   "rules": {
     "no-var": "error",
     "prefer-const": "warn",
+    "no-misleading-character-class": "warn",
     "@typescript-eslint/no-unused-vars": [
       "warn",
       { "argsIgnorePattern": "^_" }
