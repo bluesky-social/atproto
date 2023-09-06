@@ -3655,12 +3655,15 @@ export const schemaDict = {
           },
           followersCount: {
             type: 'integer',
+            minimum: 0,
           },
           followsCount: {
             type: 'integer',
+            minimum: 0,
           },
           postsCount: {
             type: 'integer',
+            minimum: 0,
           },
           indexedAt: {
             type: 'string',
@@ -4385,12 +4388,15 @@ export const schemaDict = {
           },
           replyCount: {
             type: 'integer',
+            minimum: 0,
           },
           repostCount: {
             type: 'integer',
+            minimum: 0,
           },
           likeCount: {
             type: 'integer',
+            minimum: 0,
           },
           indexedAt: {
             type: 'string',

@@ -19,9 +19,9 @@
             "app.bsky.embed.recordWithMedia#view"
           ]
         },
-        "replyCount": {"type": "integer"},
-        "repostCount": {"type": "integer"},
-        "likeCount": {"type": "integer"},
+        "replyCount": {"type": "integer", "minimum": 0},
+        "repostCount": {"type": "integer", "minimum": 0},
+        "likeCount": {"type": "integer", "minimum": 0},
         "indexedAt": {"type": "string", "format": "datetime"},
         "viewer": {"type": "ref", "ref": "#viewerState"},
         "labels": {
