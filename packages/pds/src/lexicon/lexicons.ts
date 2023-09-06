@@ -5159,7 +5159,7 @@ export const schemaDict = {
       },
       like: {
         type: 'object',
-        required: ['indexedAt', 'createdAt', 'actor'],
+        required: ['indexedAt', 'createdAt', 'uri', 'actor'],
         properties: {
           indexedAt: {
             type: 'string',
@@ -5168,6 +5168,10 @@ export const schemaDict = {
           createdAt: {
             type: 'string',
             format: 'datetime',
+          },
+          uri: {
+            type: 'string',
+            format: 'at-uri',
           },
           actor: {
             type: 'ref',

@@ -25,6 +25,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectAll('creator')
         .select([
           'like.cid as cid',
+          'like.uri as like_uri',
           'like.createdAt as createdAt',
           'like.indexedAt as indexedAt',
           'like.sortAt as sortAt',
@@ -51,6 +52,7 @@ export default function (server: Server, ctx: AppContext) {
           ? {
               createdAt: row.createdAt,
               indexedAt: row.indexedAt,
+              uri: row.like_uri,
               actor: actors[row.did],
             }
           : undefined,

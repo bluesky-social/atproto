@@ -33,10 +33,11 @@
     },
     "like": {
       "type": "object",
-      "required": ["indexedAt", "createdAt", "actor"],
+      "required": ["indexedAt", "createdAt", "uri", "actor"],
       "properties": {
         "indexedAt": {"type": "string", "format": "datetime"},
         "createdAt": {"type": "string", "format": "datetime"},
+        "uri": {"type": "string", "format": "at-uri"},
         "actor": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"}
       }
     }
