@@ -14,11 +14,7 @@ const ADMIN_USERNAME = 'admin'
 const ADMIN_PASSWORD = 'admin-pass'
 
 export class TestNetwork extends TestNetworkNoAppView {
-  constructor(
-    public plc: TestPlc,
-    public pds: TestPds,
-    public bsky: TestBsky,
-  ) {
+  constructor(public plc: TestPlc, public pds: TestPds, public bsky: TestBsky) {
     super(plc, pds)
   }
 

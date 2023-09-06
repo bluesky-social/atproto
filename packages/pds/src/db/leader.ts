@@ -5,10 +5,7 @@ export class Leader {
   session: Session | null = null
   static inProcessLocks = new Map<number, WeakSet<Database>>() // Only for sqlite in-process locking mechanism
 
-  constructor(
-    public id: number,
-    public db: Database,
-  ) {}
+  constructor(public id: number, public db: Database) {}
 
   async run<T>(
     task: (ctx: { signal: AbortSignal }) => Promise<T>,

@@ -3,10 +3,7 @@ import PrimaryDatabase from './primary'
 
 export class Leader {
   session: Session | null = null
-  constructor(
-    public id: number,
-    public db: PrimaryDatabase,
-  ) {}
+  constructor(public id: number, public db: PrimaryDatabase) {}
 
   async run<T>(
     task: (ctx: { signal: AbortSignal }) => Promise<T>,

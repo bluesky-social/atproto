@@ -7,10 +7,7 @@ import { NotEmptyArray } from '@atproto/common'
 import { DbRef, noMatch } from '../../db/util'
 
 export class GraphService {
-  constructor(
-    public db: Database,
-    public imgUriBuilder: ImageUriBuilder,
-  ) {}
+  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
 
   static creator(imgUriBuilder: ImageUriBuilder) {
     return (db: Database) => new GraphService(db, imgUriBuilder)

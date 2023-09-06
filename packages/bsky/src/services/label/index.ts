@@ -9,10 +9,7 @@ import { LabelCache } from '../../label-cache'
 export type Labels = Record<string, Label[]>
 
 export class LabelService {
-  constructor(
-    public db: Database,
-    public cache: LabelCache | null,
-  ) {}
+  constructor(public db: Database, public cache: LabelCache | null) {}
 
   static creator(cache: LabelCache | null) {
     return (db: Database) => new LabelService(db, cache)

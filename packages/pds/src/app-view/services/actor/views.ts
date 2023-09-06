@@ -115,52 +115,49 @@ export class ActorViews {
       .filter((list) => !!list)
     const listViews = await this.services.graph.getListViews(listUris, viewer)
 
-    return profileInfos.reduce(
-      (acc, cur) => {
-        const avatar = cur?.avatarCid
-          ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
+    return profileInfos.reduce((acc, cur) => {
+      const avatar = cur?.avatarCid
+        ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
+        : undefined
+      const banner = cur?.bannerCid
+        ? this.imgUriBuilder.getCommonSignedUri('banner', cur.bannerCid)
+        : undefined
+      const mutedByList =
+        cur.requesterMutedByList && listViews[cur.requesterMutedByList]
+          ? this.services.graph.formatListViewBasic(
+              listViews[cur.requesterMutedByList],
+            )
           : undefined
-        const banner = cur?.bannerCid
-          ? this.imgUriBuilder.getCommonSignedUri('banner', cur.bannerCid)
-          : undefined
-        const mutedByList =
-          cur.requesterMutedByList && listViews[cur.requesterMutedByList]
-            ? this.services.graph.formatListViewBasic(
-                listViews[cur.requesterMutedByList],
-              )
-            : undefined
-        const actorLabels = labels[cur.did] ?? []
-        const selfLabels = getSelfLabels({
-          uri: cur.profileUri,
-          cid: cur.profileCid,
-          record: cur.profileBytes && cborToLexRecord(cur.profileBytes),
-        })
-        const profile = {
-          did: cur.did,
-          handle: cur.handle,
-          displayName: truncateUtf8(cur?.displayName, 64) || undefined,
-          description: truncateUtf8(cur?.description, 256) || undefined,
-          avatar,
-          banner,
-          followsCount: cur?.followsCount || 0,
-          followersCount: cur?.followersCount || 0,
-          postsCount: cur?.postsCount || 0,
-          indexedAt: cur?.indexedAt || undefined,
-          viewer: {
-            muted: !!cur?.requesterMuted || !!cur?.requesterMutedByList,
-            mutedByList,
-            blockedBy: !!cur.requesterBlockedBy,
-            blocking: cur.requesterBlocking || undefined,
-            following: cur?.requesterFollowing || undefined,
-            followedBy: cur?.requesterFollowedBy || undefined,
-          },
-          labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
-        }
-        acc[cur.did] = profile
-        return acc
-      },
-      {} as Record<string, ProfileViewDetailed>,
-    )
+      const actorLabels = labels[cur.did] ?? []
+      const selfLabels = getSelfLabels({
+        uri: cur.profileUri,
+        cid: cur.profileCid,
+        record: cur.profileBytes && cborToLexRecord(cur.profileBytes),
+      })
+      const profile = {
+        did: cur.did,
+        handle: cur.handle,
+        displayName: truncateUtf8(cur?.displayName, 64) || undefined,
+        description: truncateUtf8(cur?.description, 256) || undefined,
+        avatar,
+        banner,
+        followsCount: cur?.followsCount || 0,
+        followersCount: cur?.followersCount || 0,
+        postsCount: cur?.postsCount || 0,
+        indexedAt: cur?.indexedAt || undefined,
+        viewer: {
+          muted: !!cur?.requesterMuted || !!cur?.requesterMutedByList,
+          mutedByList,
+          blockedBy: !!cur.requesterBlockedBy,
+          blocking: cur.requesterBlocking || undefined,
+          following: cur?.requesterFollowing || undefined,
+          followedBy: cur?.requesterFollowedBy || undefined,
+        },
+        labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
+      }
+      acc[cur.did] = profile
+      return acc
+    }, {} as Record<string, ProfileViewDetailed>)
   }
 
   async hydrateProfilesDetailed(
@@ -265,45 +262,42 @@ export class ActorViews {
       .filter((list) => !!list)
     const listViews = await this.services.graph.getListViews(listUris, viewer)
 
-    return profileInfos.reduce(
-      (acc, cur) => {
-        const avatar = cur.avatarCid
-          ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
+    return profileInfos.reduce((acc, cur) => {
+      const avatar = cur.avatarCid
+        ? this.imgUriBuilder.getCommonSignedUri('avatar', cur.avatarCid)
+        : undefined
+      const mutedByList =
+        cur.requesterMutedByList && listViews[cur.requesterMutedByList]
+          ? this.services.graph.formatListViewBasic(
+              listViews[cur.requesterMutedByList],
+            )
           : undefined
-        const mutedByList =
-          cur.requesterMutedByList && listViews[cur.requesterMutedByList]
-            ? this.services.graph.formatListViewBasic(
-                listViews[cur.requesterMutedByList],
-              )
-            : undefined
-        const actorLabels = labels[cur.did] ?? []
-        const selfLabels = getSelfLabels({
-          uri: cur.profileUri,
-          cid: cur.profileCid,
-          record: cur.profileBytes && cborToLexRecord(cur.profileBytes),
-        })
-        const profile = {
-          did: cur.did,
-          handle: cur.handle,
-          displayName: truncateUtf8(cur?.displayName, 64) || undefined,
-          description: truncateUtf8(cur?.description, 256) || undefined,
-          avatar,
-          indexedAt: cur?.indexedAt || undefined,
-          viewer: {
-            muted: !!cur?.requesterMuted || !!cur?.requesterMutedByList,
-            mutedByList,
-            blockedBy: !!cur.requesterBlockedBy,
-            blocking: cur.requesterBlocking || undefined,
-            following: cur?.requesterFollowing || undefined,
-            followedBy: cur?.requesterFollowedBy || undefined,
-          },
-          labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
-        }
-        acc[cur.did] = profile
-        return acc
-      },
-      {} as Record<string, ProfileView>,
-    )
+      const actorLabels = labels[cur.did] ?? []
+      const selfLabels = getSelfLabels({
+        uri: cur.profileUri,
+        cid: cur.profileCid,
+        record: cur.profileBytes && cborToLexRecord(cur.profileBytes),
+      })
+      const profile = {
+        did: cur.did,
+        handle: cur.handle,
+        displayName: truncateUtf8(cur?.displayName, 64) || undefined,
+        description: truncateUtf8(cur?.description, 256) || undefined,
+        avatar,
+        indexedAt: cur?.indexedAt || undefined,
+        viewer: {
+          muted: !!cur?.requesterMuted || !!cur?.requesterMutedByList,
+          mutedByList,
+          blockedBy: !!cur.requesterBlockedBy,
+          blocking: cur.requesterBlocking || undefined,
+          following: cur?.requesterFollowing || undefined,
+          followedBy: cur?.requesterFollowedBy || undefined,
+        },
+        labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
+      }
+      acc[cur.did] = profile
+      return acc
+    }, {} as Record<string, ProfileView>)
   }
 
   async hydrateProfiles(
@@ -332,21 +326,18 @@ export class ActorViews {
   ): Promise<Record<string, ProfileViewBasic>> {
     if (results.length === 0) return {}
     const profiles = await this.profiles(results, viewer, opts)
-    return Object.values(profiles).reduce(
-      (acc, cur) => {
-        const profile = {
-          did: cur.did,
-          handle: cur.handle,
-          displayName: truncateUtf8(cur.displayName, 64) || undefined,
-          avatar: cur.avatar,
-          viewer: cur.viewer,
-          labels: cur.labels,
-        }
-        acc[cur.did] = profile
-        return acc
-      },
-      {} as Record<string, ProfileViewBasic>,
-    )
+    return Object.values(profiles).reduce((acc, cur) => {
+      const profile = {
+        did: cur.did,
+        handle: cur.handle,
+        displayName: truncateUtf8(cur.displayName, 64) || undefined,
+        avatar: cur.avatar,
+        viewer: cur.viewer,
+        labels: cur.labels,
+      }
+      acc[cur.did] = profile
+      return acc
+    }, {} as Record<string, ProfileViewBasic>)
   }
 
   async hydrateProfilesBasic(

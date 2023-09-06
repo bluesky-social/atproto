@@ -6,10 +6,7 @@ import { PoorlyFormattedDidError, UnsupportedDidWebPathError } from '../errors'
 export const DOC_PATH = '/.well-known/did.json'
 
 export class DidWebResolver extends BaseResolver {
-  constructor(
-    public timeout: number,
-    public cache?: DidCache,
-  ) {
+  constructor(public timeout: number, public cache?: DidCache) {
     super(cache)
   }
 

@@ -26,10 +26,7 @@ export class IndexingService {
     feedGenerator: FeedGenerator.PluginType
   }
 
-  constructor(
-    public db: Database,
-    public backgroundQueue: BackgroundQueue,
-  ) {
+  constructor(public db: Database, public backgroundQueue: BackgroundQueue) {
     this.records = {
       post: Post.makePlugin(this.db, backgroundQueue),
       like: Like.makePlugin(this.db, backgroundQueue),

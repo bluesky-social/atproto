@@ -369,12 +369,9 @@ export class FeedService {
         ]),
       )
       .execute()
-    return feedItems.reduce(
-      (acc, item) => {
-        return Object.assign(acc, { [item.uri]: item })
-      },
-      {} as Record<string, FeedRow>,
-    )
+    return feedItems.reduce((acc, item) => {
+      return Object.assign(acc, { [item.uri]: item })
+    }, {} as Record<string, FeedRow>)
   }
 
   // @TODO enforce limit elsewhere

@@ -53,10 +53,7 @@ export const bytesToStream = (bytes: Uint8Array): Readable => {
 
 export class MaxSizeChecker extends Transform {
   totalSize = 0
-  constructor(
-    public maxSize: number,
-    public createError: () => Error,
-  ) {
+  constructor(public maxSize: number, public createError: () => Error) {
     super()
   }
   _transform(chunk: Uint8Array, _enc: BufferEncoding, cb: TransformCallback) {

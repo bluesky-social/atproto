@@ -123,13 +123,10 @@ export default function (server: Server, ctx: AppContext) {
         labelService.getLabelsForUris(recordUris),
       ])
 
-      const bytesByCid = blocks.reduce(
-        (acc, block) => {
-          acc[block.cid] = block.bytes
-          return acc
-        },
-        {} as Record<string, Uint8Array>,
-      )
+      const bytesByCid = blocks.reduce((acc, block) => {
+        acc[block.cid] = block.bytes
+        return acc
+      }, {} as Record<string, Uint8Array>)
 
       const notifications = common.mapDefined(notifs, (notif) => {
         const bytes = bytesByCid[notif.cid]

@@ -15,10 +15,7 @@ import {
 import { ids } from '../../lexicon/lexicons'
 
 export class RecordService {
-  constructor(
-    public db: Database,
-    public messageDispatcher: MessageQueue,
-  ) {}
+  constructor(public db: Database, public messageDispatcher: MessageQueue) {}
 
   static creator(messageDispatcher: MessageQueue) {
     return (db: Database) => new RecordService(db, messageDispatcher)

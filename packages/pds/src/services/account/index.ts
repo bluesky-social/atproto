@@ -323,13 +323,10 @@ export class AccountService {
       .where('did', 'in', dids)
       .selectAll()
       .execute()
-    return res.reduce(
-      (acc, cur) => {
-        acc[cur.did] = true
-        return acc
-      },
-      {} as Record<string, boolean>,
-    )
+    return res.reduce((acc, cur) => {
+      acc[cur.did] = true
+      return acc
+    }, {} as Record<string, boolean>)
   }
 
   async muteActorList(info: {
@@ -550,15 +547,12 @@ export class AccountService {
       uses: uses[row.code] ?? [],
       disabled: row.disabled === 1,
     }))
-    return codeDetails.reduce(
-      (acc, cur) => {
-        for (const use of cur.uses) {
-          acc[use.usedBy] = cur
-        }
-        return acc
-      },
-      {} as Record<string, CodeDetail>,
-    )
+    return codeDetails.reduce((acc, cur) => {
+      for (const use of cur.uses) {
+        acc[use.usedBy] = cur
+      }
+      return acc
+    }, {} as Record<string, CodeDetail>)
   }
 
   async getLastSeenNotifs(did: string): Promise<string | undefined> {

@@ -8,10 +8,7 @@ export class Crawlers {
   public agents: AtpAgent[]
   public lastNotified = 0
 
-  constructor(
-    public hostname: string,
-    public crawlers: string[],
-  ) {
+  constructor(public hostname: string, public crawlers: string[]) {
     this.agents = crawlers.map((service) => new AtpAgent({ service }))
   }
 

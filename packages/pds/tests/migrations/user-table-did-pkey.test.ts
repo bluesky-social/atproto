@@ -105,8 +105,9 @@ describe.skip('user table did pkey migration', () => {
       const expectedDid = didHandleSnap.find((row) => row.handle === handle).did
       const expected = { did: expectedDid, passwordScrypt: password, ...rest }
       expect(updatedUser[i]).toEqual(expected)
-      const lastSeen = updatedUserState.find((row) => row.did === expectedDid)
-        ?.lastSeenNotifs
+      const lastSeen = updatedUserState.find(
+        (row) => row.did === expectedDid,
+      )?.lastSeenNotifs
       expect(lastSeen).toEqual(lastSeenNotifs)
     }
   })

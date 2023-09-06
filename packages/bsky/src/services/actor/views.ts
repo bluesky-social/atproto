@@ -116,57 +116,54 @@ export class ActorViews {
       .filter((list) => !!list)
     const listViews = await this.services.graph.getListViews(listUris, viewer)
 
-    return profileInfos.reduce(
-      (acc, cur) => {
-        const avatar = cur?.avatarCid
-          ? this.imgUriBuilder.getPresetUri('avatar', cur.did, cur.avatarCid)
+    return profileInfos.reduce((acc, cur) => {
+      const avatar = cur?.avatarCid
+        ? this.imgUriBuilder.getPresetUri('avatar', cur.did, cur.avatarCid)
+        : undefined
+      const banner = cur?.bannerCid
+        ? this.imgUriBuilder.getPresetUri('banner', cur.did, cur.bannerCid)
+        : undefined
+      const mutedByList =
+        cur.requesterMutedByList && listViews[cur.requesterMutedByList]
+          ? this.services.graph.formatListViewBasic(
+              listViews[cur.requesterMutedByList],
+            )
           : undefined
-        const banner = cur?.bannerCid
-          ? this.imgUriBuilder.getPresetUri('banner', cur.did, cur.bannerCid)
-          : undefined
-        const mutedByList =
-          cur.requesterMutedByList && listViews[cur.requesterMutedByList]
-            ? this.services.graph.formatListViewBasic(
-                listViews[cur.requesterMutedByList],
-              )
-            : undefined
-        const actorLabels = labels[cur.did] ?? []
-        const selfLabels = getSelfLabels({
-          uri: cur.profileUri,
-          cid: cur.profileCid,
-          record:
-            cur.profileJson !== null
-              ? (jsonStringToLex(cur.profileJson) as Record<string, unknown>)
-              : null,
-        })
-        const profile = {
-          did: cur.did,
-          handle: cur.handle ?? INVALID_HANDLE,
-          displayName: cur?.displayName || undefined,
-          description: cur?.description || undefined,
-          avatar,
-          banner,
-          followsCount: cur?.followsCount ?? 0,
-          followersCount: cur?.followersCount ?? 0,
-          postsCount: cur?.postsCount ?? 0,
-          indexedAt: cur?.indexedAt || undefined,
-          viewer: viewer
-            ? {
-                following: cur?.requesterFollowing || undefined,
-                followedBy: cur?.requesterFollowedBy || undefined,
-                muted: !!cur?.requesterMuted || !!cur.requesterMutedByList,
-                mutedByList,
-                blockedBy: !!cur.requesterBlockedBy,
-                blocking: cur.requesterBlocking || undefined,
-              }
-            : undefined,
-          labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
-        }
-        acc[cur.did] = profile
-        return acc
-      },
-      {} as Record<string, ProfileViewDetailed>,
-    )
+      const actorLabels = labels[cur.did] ?? []
+      const selfLabels = getSelfLabels({
+        uri: cur.profileUri,
+        cid: cur.profileCid,
+        record:
+          cur.profileJson !== null
+            ? (jsonStringToLex(cur.profileJson) as Record<string, unknown>)
+            : null,
+      })
+      const profile = {
+        did: cur.did,
+        handle: cur.handle ?? INVALID_HANDLE,
+        displayName: cur?.displayName || undefined,
+        description: cur?.description || undefined,
+        avatar,
+        banner,
+        followsCount: cur?.followsCount ?? 0,
+        followersCount: cur?.followersCount ?? 0,
+        postsCount: cur?.postsCount ?? 0,
+        indexedAt: cur?.indexedAt || undefined,
+        viewer: viewer
+          ? {
+              following: cur?.requesterFollowing || undefined,
+              followedBy: cur?.requesterFollowedBy || undefined,
+              muted: !!cur?.requesterMuted || !!cur.requesterMutedByList,
+              mutedByList,
+              blockedBy: !!cur.requesterBlockedBy,
+              blocking: cur.requesterBlocking || undefined,
+            }
+          : undefined,
+        labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
+      }
+      acc[cur.did] = profile
+      return acc
+    }, {} as Record<string, ProfileViewDetailed>)
   }
 
   async hydrateProfilesDetailed(
@@ -272,50 +269,47 @@ export class ActorViews {
       .filter((list) => !!list)
     const listViews = await this.services.graph.getListViews(listUris, viewer)
 
-    return profileInfos.reduce(
-      (acc, cur) => {
-        const avatar = cur?.avatarCid
-          ? this.imgUriBuilder.getPresetUri('avatar', cur.did, cur.avatarCid)
+    return profileInfos.reduce((acc, cur) => {
+      const avatar = cur?.avatarCid
+        ? this.imgUriBuilder.getPresetUri('avatar', cur.did, cur.avatarCid)
+        : undefined
+      const mutedByList =
+        cur.requesterMutedByList && listViews[cur.requesterMutedByList]
+          ? this.services.graph.formatListViewBasic(
+              listViews[cur.requesterMutedByList],
+            )
           : undefined
-        const mutedByList =
-          cur.requesterMutedByList && listViews[cur.requesterMutedByList]
-            ? this.services.graph.formatListViewBasic(
-                listViews[cur.requesterMutedByList],
-              )
-            : undefined
-        const actorLabels = labels[cur.did] ?? []
-        const selfLabels = getSelfLabels({
-          uri: cur.profileUri,
-          cid: cur.profileCid,
-          record:
-            cur.profileJson !== null
-              ? (jsonStringToLex(cur.profileJson) as Record<string, unknown>)
-              : null,
-        })
-        const profile = {
-          did: cur.did,
-          handle: cur.handle ?? INVALID_HANDLE,
-          displayName: cur?.displayName || undefined,
-          description: cur?.description || undefined,
-          avatar,
-          indexedAt: cur?.indexedAt || undefined,
-          viewer: viewer
-            ? {
-                muted: !!cur?.requesterMuted || !!cur.requesterMutedByList,
-                mutedByList,
-                blockedBy: !!cur.requesterBlockedBy,
-                blocking: cur.requesterBlocking || undefined,
-                following: cur?.requesterFollowing || undefined,
-                followedBy: cur?.requesterFollowedBy || undefined,
-              }
-            : undefined,
-          labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
-        }
-        acc[cur.did] = profile
-        return acc
-      },
-      {} as Record<string, ProfileView>,
-    )
+      const actorLabels = labels[cur.did] ?? []
+      const selfLabels = getSelfLabels({
+        uri: cur.profileUri,
+        cid: cur.profileCid,
+        record:
+          cur.profileJson !== null
+            ? (jsonStringToLex(cur.profileJson) as Record<string, unknown>)
+            : null,
+      })
+      const profile = {
+        did: cur.did,
+        handle: cur.handle ?? INVALID_HANDLE,
+        displayName: cur?.displayName || undefined,
+        description: cur?.description || undefined,
+        avatar,
+        indexedAt: cur?.indexedAt || undefined,
+        viewer: viewer
+          ? {
+              muted: !!cur?.requesterMuted || !!cur.requesterMutedByList,
+              mutedByList,
+              blockedBy: !!cur.requesterBlockedBy,
+              blocking: cur.requesterBlocking || undefined,
+              following: cur?.requesterFollowing || undefined,
+              followedBy: cur?.requesterFollowedBy || undefined,
+            }
+          : undefined,
+        labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
+      }
+      acc[cur.did] = profile
+      return acc
+    }, {} as Record<string, ProfileView>)
   }
 
   async hydrateProfiles(
@@ -344,20 +338,17 @@ export class ActorViews {
   ): Promise<Record<string, ProfileViewBasic>> {
     if (results.length === 0) return {}
     const profiles = await this.profiles(results, viewer, opts)
-    return Object.values(profiles).reduce(
-      (acc, cur) => {
-        const profile = {
-          did: cur.did,
-          handle: cur.handle,
-          displayName: cur.displayName,
-          avatar: cur.avatar,
-          viewer: cur.viewer,
-        }
-        acc[cur.did] = profile
-        return acc
-      },
-      {} as Record<string, ProfileViewBasic>,
-    )
+    return Object.values(profiles).reduce((acc, cur) => {
+      const profile = {
+        did: cur.did,
+        handle: cur.handle,
+        displayName: cur.displayName,
+        avatar: cur.avatar,
+        viewer: cur.viewer,
+      }
+      acc[cur.did] = profile
+      return acc
+    }, {} as Record<string, ProfileViewBasic>)
   }
 
   async hydrateProfilesBasic(

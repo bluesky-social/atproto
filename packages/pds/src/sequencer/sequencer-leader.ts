@@ -16,10 +16,7 @@ export class SequencerLeader {
   polling = false
   queued = false
 
-  constructor(
-    public db: Database,
-    lockId = SEQUENCER_LEADER_ID,
-  ) {
+  constructor(public db: Database, lockId = SEQUENCER_LEADER_ID) {
     this.leader = new Leader(lockId, this.db)
   }
 

@@ -184,8 +184,9 @@ export class IndexerSubscription {
         return
       }
       if (msg.rebase) {
-        const needsReindex =
-          await this.indexingSvc.checkCommitNeedsIndexing(root)
+        const needsReindex = await this.indexingSvc.checkCommitNeedsIndexing(
+          root,
+        )
         if (needsReindex) {
           await this.indexingSvc.indexRepo(msg.repo, rootCid.toString())
         }
@@ -305,10 +306,7 @@ type Envelope = {
 class Partition {
   consecutive = new ConsecutiveList<number>()
   cursorQueue = new LatestQueue()
-  constructor(
-    public id: number,
-    public cursor: number,
-  ) {}
+  constructor(public id: number, public cursor: number) {}
   get key() {
     return partitionKey(this.id)
   }

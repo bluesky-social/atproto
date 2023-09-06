@@ -80,10 +80,7 @@ export const ResponseTypeStrings = {
 export class XRPCResponse {
   success = true
 
-  constructor(
-    public data: any,
-    public headers: Headers,
-  ) {}
+  constructor(public data: any, public headers: Headers) {}
 }
 
 export class XRPCError extends Error {
