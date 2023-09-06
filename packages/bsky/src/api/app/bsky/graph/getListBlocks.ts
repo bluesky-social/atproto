@@ -1,28 +1,31 @@
-import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getList'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getListBlocks'
+import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { Database } from '../../../../db'
-import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import { Actor } from '../../../../db/tables/actor'
 import { GraphService, ListInfo } from '../../../../services/graph'
 import { ActorService, ProfileHydrationState } from '../../../../services/actor'
 import { createPipeline, noRules } from '../../../../pipeline'
 
 export default function (server: Server, ctx: AppContext) {
-  const getList = createPipeline(skeleton, hydration, noRules, presentation)
-  server.app.bsky.graph.getList({
-    auth: ctx.authOptionalVerifier,
+  const getListBlocks = createPipeline(
+    skeleton,
+    hydration,
+    noRules,
+    presentation,
+  )
+  server.app.bsky.graph.getListBlocks({
+    auth: ctx.authVerifier,
     handler: async ({ params, auth }) => {
       const db = ctx.db.getReplica()
       const graphService = ctx.services.graph(db)
       const actorService = ctx.services.actor(db)
       const viewer = auth.credentials.did
 
-      const result = await getList(
+      const result = await getListBlocks(
         { ...params, viewer },
-        { db, graphService, actorService },
+        { db, actorService, graphService },
       )
 
       return {
@@ -38,48 +41,41 @@ const skeleton = async (
   ctx: Context,
 ): Promise<SkeletonState> => {
   const { db, graphService } = ctx
-  const { list, limit, cursor, viewer } = params
+  const { limit, cursor, viewer } = params
   const { ref } = db.db.dynamic
 
-  const listRes = await graphService
+  let listsReq = graphService
     .getListsQb(viewer)
-    .where('list.uri', '=', list)
-    .executeTakeFirst()
-  if (!listRes) {
-    throw new InvalidRequestError(`List not found: ${list}`)
-  }
+    .whereExists(
+      db.db
+        .selectFrom('list_block')
+        .where('list_block.creator', '=', viewer)
+        .whereRef('list_block.subjectUri', '=', ref('list.uri'))
+        .selectAll(),
+    )
 
-  let itemsReq = graphService
-    .getListItemsQb()
-    .where('list_item.listUri', '=', list)
-    .where('list_item.creator', '=', listRes.creator)
+  const keyset = new TimeCidKeyset(ref('list.createdAt'), ref('list.cid'))
 
-  const keyset = new TimeCidKeyset(
-    ref('list_item.sortAt'),
-    ref('list_item.cid'),
-  )
-
-  itemsReq = paginate(itemsReq, {
+  listsReq = paginate(listsReq, {
     limit,
     cursor,
     keyset,
   })
 
-  const listItems = await itemsReq.execute()
+  const listInfos = await listsReq.execute()
 
   return {
     params,
-    list: listRes,
-    listItems,
-    cursor: keyset.packFromResult(listItems),
+    listInfos,
+    cursor: keyset.packFromResult(listInfos),
   }
 }
 
 const hydration = async (state: SkeletonState, ctx: Context) => {
   const { actorService } = ctx
-  const { params, list, listItems } = state
+  const { params, listInfos } = state
   const profileState = await actorService.views.profileHydration(
-    [list, ...listItems].map((x) => x.did),
+    listInfos.map((list) => list.creator),
     { viewer: params.viewer },
   )
   return { ...state, ...profileState }
@@ -87,23 +83,16 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
 
 const presentation = (state: HydrationState, ctx: Context) => {
   const { actorService, graphService } = ctx
-  const { params, list, listItems, cursor, ...profileState } = state
+  const { params, listInfos, cursor, ...profileState } = state
   const actors = actorService.views.profilePresentation(
     Object.keys(profileState.profiles),
     profileState,
     { viewer: params.viewer },
   )
-  const creator = actors[list.creator]
-  if (!creator) {
-    throw new InvalidRequestError(`Actor not found: ${list.handle}`)
-  }
-  const listView = graphService.formatListView(list, actors)
-  const items = mapDefined(listItems, (item) => {
-    const subject = actors[item.did]
-    if (!subject) return
-    return { subject }
-  })
-  return { list: listView, items, cursor }
+  const lists = listInfos.map((list) =>
+    graphService.formatListView(list, actors),
+  )
+  return { lists, cursor }
 }
 
 type Context = {
@@ -113,13 +102,12 @@ type Context = {
 }
 
 type Params = QueryParams & {
-  viewer: string | null
+  viewer: string
 }
 
 type SkeletonState = {
   params: Params
-  list: Actor & ListInfo
-  listItems: (Actor & { cid: string; sortAt: string })[]
+  listInfos: (Actor & ListInfo)[]
   cursor?: string
 }
 

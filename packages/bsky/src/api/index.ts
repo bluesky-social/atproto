@@ -17,6 +17,7 @@ import getProfile from './app/bsky/actor/getProfile'
 import getProfiles from './app/bsky/actor/getProfiles'
 import getRepostedBy from './app/bsky/feed/getRepostedBy'
 import getBlocks from './app/bsky/graph/getBlocks'
+import getListBlocks from './app/bsky/graph/getListBlocks'
 import getFollowers from './app/bsky/graph/getFollowers'
 import getFollows from './app/bsky/graph/getFollows'
 import getList from './app/bsky/graph/getList'
@@ -75,6 +76,7 @@ export default function (server: Server, ctx: AppContext) {
   getProfiles(server, ctx)
   getRepostedBy(server, ctx)
   getBlocks(server, ctx)
+  getListBlocks(server, ctx)
   getFollowers(server, ctx)
   getFollows(server, ctx)
   getList(server, ctx)

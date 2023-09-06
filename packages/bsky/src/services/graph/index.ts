@@ -5,6 +5,8 @@ import { valuesList } from '../../db/util'
 import { ListInfo } from './types'
 import { ActorInfoMap } from '../actor'
 
+export * from './types'
+
 export class GraphService {
   constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
 
@@ -76,14 +78,20 @@ export class GraphService {
       .selectAll('list')
       .selectAll('actor')
       .select('list.sortAt as sortAt')
-      .select(
+      .select([
         this.db.db
           .selectFrom('list_mute')
           .where('list_mute.mutedByDid', '=', viewer ?? '')
           .whereRef('list_mute.listUri', '=', ref('list.uri'))
           .select('list_mute.listUri')
           .as('viewerMuted'),
-      )
+        this.db.db
+          .selectFrom('list_block')
+          .where('list_block.creator', '=', viewer ?? '')
+          .whereRef('list_block.subjectUri', '=', ref('list.uri'))
+          .select('list_block.uri')
+          .as('viewerListBlockUri'),
+      ])
   }
 
   getListItemsQb() {
@@ -117,11 +125,27 @@ export class GraphService {
           .select('uri')
           .as('blocking'),
         this.db.db
+          .selectFrom('list_item')
+          .innerJoin('list_block', 'list_block.subjectUri', 'list_item.listUri')
+          .whereRef('list_block.creator', '=', sourceRef)
+          .whereRef('list_item.subjectDid', '=', targetRef)
+          .select('list_item.listUri')
+          .limit(1)
+          .as('blockingViaList'),
+        this.db.db
           .selectFrom('actor_block')
           .whereRef('creator', '=', targetRef)
           .whereRef('subjectDid', '=', sourceRef)
           .select('uri')
           .as('blockedBy'),
+        this.db.db
+          .selectFrom('list_item')
+          .innerJoin('list_block', 'list_block.subjectUri', 'list_item.listUri')
+          .whereRef('list_block.creator', '=', targetRef)
+          .whereRef('list_item.subjectDid', '=', sourceRef)
+          .select('list_item.listUri')
+          .limit(1)
+          .as('blockedByViaList'),
         this.db.db
           .selectFrom('mute')
           .whereRef('mutedByDid', '=', sourceRef)
@@ -163,11 +187,27 @@ export class GraphService {
           .select('uri')
           .as('blocking'),
         this.db.db
+          .selectFrom('list_item')
+          .innerJoin('list_block', 'list_block.subjectUri', 'list_item.listUri')
+          .whereRef('list_block.creator', '=', sourceRef)
+          .whereRef('list_item.subjectDid', '=', targetRef)
+          .select('list_item.listUri')
+          .limit(1)
+          .as('blockingViaList'),
+        this.db.db
           .selectFrom('actor_block')
           .whereRef('creator', '=', targetRef)
           .whereRef('subjectDid', '=', sourceRef)
           .select('uri')
           .as('blockedBy'),
+        this.db.db
+          .selectFrom('list_item')
+          .innerJoin('list_block', 'list_block.subjectUri', 'list_item.listUri')
+          .whereRef('list_block.creator', '=', targetRef)
+          .whereRef('list_item.subjectDid', '=', sourceRef)
+          .select('list_item.listUri')
+          .limit(1)
+          .as('blockedByViaList'),
       ])
       .selectAll()
       .execute()
@@ -191,26 +231,12 @@ export class GraphService {
 
   formatListView(list: ListInfo, profiles: ActorInfoMap) {
     return {
-      uri: list.uri,
-      cid: list.cid,
+      ...this.formatListViewBasic(list),
       creator: profiles[list.creator],
-      name: list.name,
-      purpose: list.purpose,
       description: list.description ?? undefined,
       descriptionFacets: list.descriptionFacets
         ? JSON.parse(list.descriptionFacets)
         : undefined,
-      avatar: list.avatarCid
-        ? this.imgUriBuilder.getPresetUri(
-            'avatar',
-            list.creator,
-            list.avatarCid,
-          )
-        : undefined,
-      indexedAt: list.sortAt,
-      viewer: {
-        muted: !!list.viewerMuted,
-      },
     }
   }
 
@@ -227,9 +253,10 @@ export class GraphService {
             list.avatarCid,
           )
         : undefined,
-      indexedAt: list.indexedAt,
+      indexedAt: list.sortAt,
       viewer: {
         muted: !!list.viewerMuted,
+        blocked: list.viewerListBlockUri ?? undefined,
       },
     }
   }
@@ -246,16 +273,18 @@ export class BlockAndMuteState {
     items.forEach((item) => this.add(item))
   }
   add(item: BlockAndMuteInfo) {
-    if (item.blocking) {
+    const blocking = item.blocking || item.blockingViaList // block or list uri
+    if (blocking) {
       const map = this.blockIdx.get(item.source) ?? new Map()
-      map.set(item.target, item.blocking)
+      map.set(item.target, blocking)
       if (!this.blockIdx.has(item.source)) {
         this.blockIdx.set(item.source, map)
       }
     }
-    if (item.blockedBy) {
+    const blockedBy = item.blockedBy || item.blockedByViaList // block or list uri
+    if (blockedBy) {
       const map = this.blockIdx.get(item.target) ?? new Map()
-      map.set(item.source, item.blockedBy)
+      map.set(item.source, blockedBy)
       if (!this.blockIdx.has(item.target)) {
         this.blockIdx.set(item.target, map)
       }
@@ -283,15 +312,18 @@ export class BlockAndMuteState {
   block(pair: RelationshipPair): boolean {
     return !!this.blocking(pair) || !!this.blockedBy(pair)
   }
+  // block or list uri
   blocking(pair: RelationshipPair): string | null {
     return this.blockIdx.get(pair[0])?.get(pair[1]) ?? null
   }
+  // block or list uri
   blockedBy(pair: RelationshipPair): string | null {
     return this.blocking([pair[1], pair[0]])
   }
   mute(pair: RelationshipPair): boolean {
     return !!this.muteIdx.get(pair[0])?.has(pair[1]) || !!this.muteList(pair)
   }
+  // list uri
   muteList(pair: RelationshipPair): string | null {
     return this.muteListIdx.get(pair[0])?.get(pair[1]) ?? null
   }
@@ -304,7 +336,9 @@ type BlockAndMuteInfo = {
   source: string
   target: string
   blocking?: string | null
+  blockingViaList?: string | null
   blockedBy?: string | null
+  blockedByViaList?: string | null
   muting?: true | null
   mutingViaList?: string | null
 }
