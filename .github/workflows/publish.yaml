@@ -1,6 +1,3 @@
-# Runs on merge to main, but publishing only
-# happens if changesets are present
-
 name: Publish
 
 on:

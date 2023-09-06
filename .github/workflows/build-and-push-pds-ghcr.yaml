@@ -2,7 +2,7 @@ name: build-and-push-pds-ghcr
 on:
   push:
     branches:
-      - main
+      - production
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
