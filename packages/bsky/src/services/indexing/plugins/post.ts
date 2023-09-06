@@ -1,7 +1,14 @@
 import { Insertable, Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
-import { Record as PostRecord } from '../../../lexicon/types/app/bsky/feed/post'
+import { jsonStringToLex } from '@atproto/lexicon'
+import {
+  Record as PostRecord,
+  ReplyRef,
+  isFollowingInteraction,
+  isListInteraction,
+  isMentionInteraction,
+} from '../../../lexicon/types/app/bsky/feed/post'
 import { isMain as isEmbedImage } from '../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../lexicon/types/app/bsky/embed/record'
@@ -94,6 +101,37 @@ const insertFn = async (
   ])
   if (!insertedPost) {
     return null // Post already indexed
+  }
+
+  if (obj.reply) {
+    const replyRoot = obj.reply.root.uri
+    const replyParent = obj.reply.parent.uri
+    const replyRefs = await db
+      .selectFrom('post')
+      .innerJoin('record', 'record.uri', 'post.uri')
+      .where('uri', 'in', [replyRoot, replyParent])
+      .selectAll('post')
+      .select('record.json')
+      .execute()
+    const root = replyRefs.find((ref) => ref.uri === replyRoot)
+    const parent = replyRefs.find((ref) => ref.uri === replyParent)
+    const isInvalidReply = !parent || checkInvalidReply(obj.reply, parent)
+    const isInvalidInteraction =
+      !root ||
+      isInvalidReply ||
+      (await checkInvalidInteractions(
+        db,
+        uri.host,
+        new AtUri(root.uri),
+        jsonStringToLex(root.json) as PostRecord,
+      ))
+    if (isInvalidReply || isInvalidInteraction) {
+      await db
+        .updateTable('post')
+        .where('uri', '=', post.uri)
+        .set({ isInvalidReply, isInvalidInteraction })
+        .executeTakeFirst()
+    }
   }
 
   const facets = (obj.facets || [])
@@ -380,4 +418,56 @@ function separateEmbeds(embed: PostRecord['embed']) {
     return [{ $type: lex.ids.AppBskyEmbedRecord, ...embed.record }, embed.media]
   }
   return [embed]
+}
+
+const checkInvalidReply = (reply: ReplyRef, parent: Post) => {
+  const replyRoot = reply.root.uri
+  const replyParent = reply.parent.uri
+  const isReplyToRoot = replyParent === replyRoot
+  return (
+    (isReplyToRoot && // parent should be root post, but doesn't look like a root post
+      (parent.replyParent !== null || parent.replyRoot !== null)) ||
+    (!isReplyToRoot && // parent isn't a reply for the same root post
+      parent.replyRoot !== replyRoot)
+  )
+}
+
+const checkInvalidInteractions = async (
+  db: DatabaseSchema,
+  did: string,
+  rootUri: AtUri,
+  root: PostRecord,
+) => {
+  if (!root.interactions) return false
+  const checkMentions = root.interactions.find(isMentionInteraction)
+  const checkFollowing = root.interactions.find(isFollowingInteraction)
+  const checkListUris = root.interactions
+    .filter(isListInteraction)
+    .map((item) => item.list.uri)
+  // check mentions first since it's quick and synchronous
+  if (checkMentions) {
+    const isMentioned = root.facets?.find(
+      (item) => isMention(item) && item.did === did,
+    )
+    if (isMentioned) return false
+  }
+  // check follows and list containment
+  const [isFollowed, isInList] = await Promise.all([
+    !checkFollowing ||
+      db
+        .selectFrom('follow')
+        .where('creator', '=', rootUri.hostname)
+        .where('subjectDid', '=', did)
+        .select(['creator', 'subjectDid'])
+        .executeTakeFirst(),
+    !checkListUris.length ||
+      db
+        .selectFrom('list_item')
+        .where('list_item.listUri', 'in', checkListUris)
+        .where('list_item.subjectDid', '=', did)
+        .limit(1)
+        .select(['listUri', 'subjectDid'])
+        .executeTakeFirst(),
+  ])
+  return !isFollowed && !isInList
 }
