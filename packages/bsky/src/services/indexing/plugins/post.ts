@@ -2,13 +2,7 @@ import { Insertable, Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { jsonStringToLex } from '@atproto/lexicon'
-import {
-  Record as PostRecord,
-  ReplyRef,
-  isFollowingInteraction,
-  isListInteraction,
-  isMentionInteraction,
-} from '../../../lexicon/types/app/bsky/feed/post'
+import { Record as PostRecord } from '../../../lexicon/types/app/bsky/feed/post'
 import { isMain as isEmbedImage } from '../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../lexicon/types/app/bsky/embed/record'
@@ -27,6 +21,7 @@ import { countAll, excluded } from '../../../db/util'
 import { BackgroundQueue } from '../../../background'
 import { getAncestorsAndSelfQb, getDescendentsQb } from '../../util/post'
 import { NotificationServer } from '../../../notifications'
+import { checkInvalidInteractions, checkInvalidReply } from '../../feed/util'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -418,58 +413,4 @@ function separateEmbeds(embed: PostRecord['embed']) {
     return [{ $type: lex.ids.AppBskyEmbedRecord, ...embed.record }, embed.media]
   }
   return [embed]
-}
-
-const checkInvalidReply = (reply: ReplyRef, parent: Post) => {
-  const replyRoot = reply.root.uri
-  const replyParent = reply.parent.uri
-  const isReplyToRoot = replyParent === replyRoot
-  return (
-    parent.isInvalidReply ||
-    (isReplyToRoot && // parent should be root post, but doesn't look like a root post
-      (parent.replyParent !== null || parent.replyRoot !== null)) ||
-    (!isReplyToRoot && // parent isn't a reply for the same root post
-      parent.replyRoot !== replyRoot)
-  )
-}
-
-// @TODO share from elsewhere rather than exporting from here
-export const checkInvalidInteractions = async (
-  db: DatabaseSchema,
-  did: string,
-  rootUri: AtUri,
-  root: PostRecord,
-) => {
-  if (!root.interactions) return false
-  const checkMentions = root.interactions.find(isMentionInteraction)
-  const checkFollowing = root.interactions.find(isFollowingInteraction)
-  const checkListUris = root.interactions
-    .filter(isListInteraction)
-    .map((item) => item.list.uri)
-  // check mentions first since it's quick and synchronous
-  if (checkMentions) {
-    const isMentioned = root.facets?.find(
-      (item) => isMention(item) && item.did === did,
-    )
-    if (isMentioned) return false
-  }
-  // check follows and list containment
-  const [isFollowed, isInList] = await Promise.all([
-    !checkFollowing ||
-      db
-        .selectFrom('follow')
-        .where('creator', '=', rootUri.hostname)
-        .where('subjectDid', '=', did)
-        .select(['creator', 'subjectDid'])
-        .executeTakeFirst(),
-    !checkListUris.length ||
-      db
-        .selectFrom('list_item')
-        .where('list_item.listUri', 'in', checkListUris)
-        .where('list_item.subjectDid', '=', did)
-        .limit(1)
-        .select(['listUri', 'subjectDid'])
-        .executeTakeFirst(),
-  ])
-  return !isFollowed && !isInList
 }

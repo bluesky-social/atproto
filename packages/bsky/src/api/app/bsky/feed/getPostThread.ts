@@ -21,10 +21,11 @@ import {
   getDescendentsQb,
 } from '../../../../services/util/post'
 import { Database } from '../../../../db'
+import DatabaseSchema from '../../../../db/database-schema'
 import { setRepoRev } from '../../../util'
 import { createPipeline, noRules } from '../../../../pipeline'
 import { ActorService } from '../../../../services/actor'
-import { checkInvalidInteractions } from '../../../../services/indexing/plugins/post'
+import { checkInvalidInteractions } from '../../../../services/feed/util'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(
@@ -77,17 +78,15 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
   } = state
   const relevant = getRelevantIds(threadData)
   const hydrated = await feedService.feedHydration({ ...relevant, viewer })
+  // check root reply interaction rules
   const rootUri = threadData.post.replyRoot || threadData.post.postUri
   const root = hydrated.posts[rootUri]?.record as PostRecord | undefined
-  const viewerCanReply =
-    viewer && root
-      ? !(await checkInvalidInteractions(
-          ctx.db.db,
-          viewer,
-          new AtUri(rootUri),
-          root,
-        ))
-      : null
+  const viewerCanReply = await checkViewerCanReply(
+    ctx.db.db,
+    viewer,
+    new AtUri(rootUri),
+    root,
+  )
   return { ...state, ...hydrated, viewerCanReply }
 }
 
@@ -291,6 +290,24 @@ const getChildrenData = (
     post: row,
     replies: getChildrenData(childrenByParentUri, row.postUri, depth - 1),
   }))
+}
+
+const checkViewerCanReply = async (
+  db: DatabaseSchema,
+  viewer: string | null,
+  rootUri: AtUri,
+  root?: PostRecord,
+) => {
+  if (viewer && root) {
+    const isInvalidInteraction = await checkInvalidInteractions(
+      db,
+      viewer,
+      rootUri,
+      root,
+    )
+    return !isInvalidInteraction
+  }
+  return null // cannot be determined
 }
 
 class ParentNotFoundError extends Error {
