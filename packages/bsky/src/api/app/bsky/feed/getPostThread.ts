@@ -1,11 +1,14 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import {
   BlockedPost,
   NotFoundPost,
   ThreadViewPost,
   isNotFoundPost,
+  isThreadViewPost,
 } from '../../../../lexicon/types/app/bsky/feed/defs'
+import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import AppContext from '../../../../context'
 import {
@@ -21,6 +24,7 @@ import { Database } from '../../../../db'
 import { setRepoRev } from '../../../util'
 import { createPipeline, noRules } from '../../../../pipeline'
 import { ActorService } from '../../../../services/actor'
+import { checkInvalidInteractions } from '../../../../services/indexing/plugins/post'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(
@@ -73,7 +77,18 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
   } = state
   const relevant = getRelevantIds(threadData)
   const hydrated = await feedService.feedHydration({ ...relevant, viewer })
-  return { ...state, ...hydrated }
+  const rootUri = threadData.post.replyRoot || threadData.post.postUri
+  const root = hydrated.posts[rootUri]?.record as PostRecord | undefined
+  const viewerCanReply =
+    viewer && root
+      ? await checkInvalidInteractions(
+          ctx.db.db,
+          viewer,
+          new AtUri(rootUri),
+          root,
+        )
+      : null
+  return { ...state, ...hydrated, viewerCanReply }
 }
 
 const presentation = (state: HydrationState, ctx: Context) => {
@@ -83,6 +98,9 @@ const presentation = (state: HydrationState, ctx: Context) => {
     // @TODO technically this could be returned as a NotFoundPost based on lexicon
     throw new InvalidRequestError(`Post not found: ${params.uri}`, 'NotFound')
   }
+  if (isThreadViewPost(thread) && state.viewerCanReply !== null) {
+    thread.viewer = { canReply: state.viewerCanReply }
+  }
   return { thread }
 }
 
@@ -90,7 +108,7 @@ const composeThread = (
   threadData: PostThread,
   state: HydrationState,
   ctx: Context,
-) => {
+): ThreadViewPost | NotFoundPost | BlockedPost => {
   const { feedService, actorService } = ctx
   const { profiles, posts, embeds, blocks, labels, params } = state
 
@@ -182,6 +200,10 @@ const getRelevantIds = (
   }
   dids.add(thread.post.postAuthorDid)
   uris.add(thread.post.postUri)
+  if (thread.post.replyRoot) {
+    // ensure root is included for checking interactions
+    uris.add(thread.post.replyRoot)
+  }
   return { dids, uris }
 }
 
@@ -295,4 +317,7 @@ type SkeletonState = {
   threadData: PostThread
 }
 
-type HydrationState = SkeletonState & FeedHydrationState
+type HydrationState = SkeletonState &
+  FeedHydrationState & {
+    viewerCanReply: null | boolean
+  }

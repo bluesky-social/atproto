@@ -433,7 +433,8 @@ const checkInvalidReply = (reply: ReplyRef, parent: Post) => {
   )
 }
 
-const checkInvalidInteractions = async (
+// @TODO share from elsewhere rather than exporting from here
+export const checkInvalidInteractions = async (
   db: DatabaseSchema,
   did: string,
   rootUri: AtUri,
