@@ -4676,8 +4676,25 @@ export const schemaDict = {
         required: ['list'],
         properties: {
           list: {
-            type: 'ref',
-            ref: 'lex:app.bsky.graph.defs#listViewBasic',
+            type: 'union',
+            refs: [
+              'lex:app.bsky.graph.defs#listViewBasic',
+              'lex:app.bsky.feed.defs#viewNotFound',
+            ],
+          },
+        },
+      },
+      viewNotFound: {
+        type: 'object',
+        required: ['uri', 'notFound'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          notFound: {
+            type: 'boolean',
+            const: true,
           },
         },
       },

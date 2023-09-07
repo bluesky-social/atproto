@@ -345,7 +345,10 @@ export function validateFollowingInteractionView(v: unknown): ValidationResult {
 
 /** The view counterpart to app.bsky.feed.post#listInteraction */
 export interface ListInteractionView {
-  list: AppBskyGraphDefs.ListViewBasic
+  list:
+    | AppBskyGraphDefs.ListViewBasic
+    | ViewNotFound
+    | { $type: string; [k: string]: unknown }
   [k: string]: unknown
 }
 
@@ -359,4 +362,22 @@ export function isListInteractionView(v: unknown): v is ListInteractionView {
 
 export function validateListInteractionView(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#listInteractionView', v)
+}
+
+export interface ViewNotFound {
+  uri: string
+  notFound: true
+  [k: string]: unknown
+}
+
+export function isViewNotFound(v: unknown): v is ViewNotFound {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#viewNotFound'
+  )
+}
+
+export function validateViewNotFound(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#viewNotFound', v)
 }

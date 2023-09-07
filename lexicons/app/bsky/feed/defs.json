@@ -171,7 +171,21 @@
       "description": "The view counterpart to app.bsky.feed.post#listInteraction",
       "required": ["list"],
       "properties": {
-        "list": {"type": "ref", "ref": "app.bsky.graph.defs#listViewBasic"}
+        "list": {
+          "type": "union",
+          "refs": [
+            "app.bsky.graph.defs#listViewBasic",
+            "#viewNotFound"
+          ]
+        }
+      }
+    },
+    "viewNotFound": {
+      "type": "object",
+      "required":  ["uri", "notFound"],
+      "properties": {
+        "uri": {"type": "string", "format": "at-uri"},
+        "notFound": {"type": "boolean", "const": true}
       }
     }
   }
