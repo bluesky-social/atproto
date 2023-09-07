@@ -518,6 +518,9 @@ Object {
       "viewer": Object {},
     },
     "replies": Array [],
+    "viewer": Object {
+      "canReply": true,
+    },
   },
 }
 `;
@@ -584,6 +587,9 @@ Object {
       "viewer": Object {},
     },
     "replies": Array [],
+    "viewer": Object {
+      "canReply": true,
+    },
   },
 }
 `;

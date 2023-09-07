@@ -109,7 +109,7 @@ const insertFn = async (
     const replyRefs = await db
       .selectFrom('post')
       .innerJoin('record', 'record.uri', 'post.uri')
-      .where('uri', 'in', [replyRoot, replyParent])
+      .where('post.uri', 'in', [replyRoot, replyParent])
       .selectAll('post')
       .select('record.json')
       .execute()

@@ -9,7 +9,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
   await db.schema
     .alterTable('post')
-    .addColumn('isInvalidInteraction', 'varchar', (col) =>
+    .addColumn('isInvalidInteraction', 'boolean', (col) =>
       col.notNull().defaultTo(false),
     )
     .execute()

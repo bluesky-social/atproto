@@ -81,12 +81,12 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
   const root = hydrated.posts[rootUri]?.record as PostRecord | undefined
   const viewerCanReply =
     viewer && root
-      ? await checkInvalidInteractions(
+      ? !(await checkInvalidInteractions(
           ctx.db.db,
           viewer,
           new AtUri(rootUri),
           root,
-        )
+        ))
       : null
   return { ...state, ...hydrated, viewerCanReply }
 }
