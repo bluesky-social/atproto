@@ -110,7 +110,7 @@ const composeThread = (
   ctx: Context,
 ): ThreadViewPost | NotFoundPost | BlockedPost => {
   const { feedService, actorService } = ctx
-  const { profiles, posts, embeds, blocks, labels, params } = state
+  const { profiles, posts, embeds, blocks, labels, lists, params } = state
 
   const actors = actorService.views.profileBasicPresentation(
     Object.keys(profiles),
@@ -123,6 +123,7 @@ const composeThread = (
     posts,
     embeds,
     labels,
+    lists,
   )
 
   if (!post || blocks[post.uri]?.reply) {

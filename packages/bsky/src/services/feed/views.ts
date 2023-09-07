@@ -1,3 +1,4 @@
+import { mapDefined } from '@atproto/common'
 import { Database } from '../../db'
 import {
   FeedViewPost,
@@ -21,6 +22,11 @@ import {
   ViewRecord,
 } from '../../lexicon/types/app/bsky/embed/record'
 import {
+  isFollowingInteraction,
+  isListInteraction,
+  isMentionInteraction,
+} from '../../lexicon/types/app/bsky/feed/post'
+import {
   PostEmbedViews,
   FeedGenInfo,
   FeedRow,
@@ -34,6 +40,7 @@ import { Labels, getSelfLabels } from '../label'
 import { ImageUriBuilder } from '../../image/uri'
 import { LabelCache } from '../../label-cache'
 import { ActorInfoMap, ActorService } from '../actor'
+import { ListInfoMap, GraphService } from '../graph'
 
 export class FeedViews {
   constructor(
@@ -48,6 +55,7 @@ export class FeedViews {
 
   services = {
     actor: ActorService.creator(this.imgUriBuilder, this.labelCache)(this.db),
+    graph: GraphService.creator(this.imgUriBuilder)(this.db),
   }
 
   formatFeedGeneratorView(
@@ -90,7 +98,7 @@ export class FeedViews {
       usePostViewUnion?: boolean
     },
   ): FeedViewPost[] {
-    const { posts, profiles, blocks, embeds, labels } = state
+    const { posts, profiles, blocks, embeds, labels, lists } = state
     const actors = this.services.actor.views.profileBasicPresentation(
       Object.keys(profiles),
       state,
@@ -104,6 +112,7 @@ export class FeedViews {
         posts,
         embeds,
         labels,
+        lists,
       )
       // skip over not found & blocked posts
       if (!post || blocks[post.uri]?.reply) {
@@ -130,6 +139,7 @@ export class FeedViews {
           posts,
           embeds,
           labels,
+          lists,
           blocks,
           opts,
         )
@@ -139,6 +149,7 @@ export class FeedViews {
           posts,
           embeds,
           labels,
+          lists,
           blocks,
           opts,
         )
@@ -160,6 +171,7 @@ export class FeedViews {
     posts: PostInfoMap,
     embeds: PostEmbedViews,
     labels: Labels,
+    lists: ListInfoMap,
   ): PostView | undefined {
     const post = posts[uri]
     const author = actors[post?.creator]
@@ -187,6 +199,33 @@ export class FeedViews {
           }
         : undefined,
       labels: [...postLabels, ...postSelfLabels],
+      interactions:
+        post.record.reply && Array.isArray(post.record.interactions)
+          ? mapDefined(post.record.interactions, (interaction) => {
+              if (isMentionInteraction(interaction)) {
+                return { $type: 'app.bsky.feed.defs#mentionInteractionView' }
+              }
+              if (isFollowingInteraction(interaction)) {
+                return { $type: 'app.bsky.feed.defs#followingInteractionView' }
+              }
+              if (isListInteraction(interaction)) {
+                const list = lists[interaction.list.uri]
+                return {
+                  $type: 'app.bsky.feed.defs#listInteractionView',
+                  list: list
+                    ? {
+                        $type: 'app.bsky.graph.defs#listViewBasic',
+                        ...this.services.graph.formatListViewBasic(list),
+                      }
+                    : {
+                        $type: 'app.bsky.feed.defs#viewNotFound',
+                        notFound: true,
+                        uri: interaction.list.uri,
+                      },
+                }
+              }
+            })
+          : undefined,
     }
   }
 
@@ -196,12 +235,13 @@ export class FeedViews {
     posts: PostInfoMap,
     embeds: PostEmbedViews,
     labels: Labels,
+    lists: ListInfoMap,
     blocks: PostBlocksMap,
     opts?: {
       usePostViewUnion?: boolean
     },
   ): MaybePostView | undefined {
-    const post = this.formatPostView(uri, actors, posts, embeds, labels)
+    const post = this.formatPostView(uri, actors, posts, embeds, labels, lists)
     if (!post) {
       if (!opts?.usePostViewUnion) return
       return this.notFoundPost(uri)

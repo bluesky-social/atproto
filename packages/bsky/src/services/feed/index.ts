@@ -7,6 +7,7 @@ import { ImageUriBuilder } from '../../image/uri'
 import { ids } from '../../lexicon/lexicons'
 import {
   Record as PostRecord,
+  isListInteraction,
   isRecord as isPostRecord,
 } from '../../lexicon/types/app/bsky/feed/post'
 import { isMain as isEmbedImages } from '../../lexicon/types/app/bsky/embed/images'
@@ -30,7 +31,12 @@ import {
 } from './types'
 import { LabelService } from '../label'
 import { ActorService } from '../actor'
-import { BlockAndMuteState, GraphService, RelationshipPair } from '../graph'
+import {
+  BlockAndMuteState,
+  GraphService,
+  ListInfoMap,
+  RelationshipPair,
+} from '../graph'
 import { FeedViews } from './views'
 import { LabelCache } from '../../label-cache'
 
@@ -223,14 +229,16 @@ export class FeedService {
         viewer ? [...dids].map((did) => [viewer, did]) : [],
       ),
     ])
+
     // profileState for labels and bam handled above, profileHydration() shouldn't fetch additional
-    const [profileState, blocks] = await Promise.all([
+    const [profileState, blocks, lists] = await Promise.all([
       this.services.actor.views.profileHydration(
         Array.from(dids),
         { viewer },
         { bam, labels },
       ),
       this.blocksForPosts(posts, bam),
+      this.listsForPosts(posts, viewer),
     ])
     const embeds = await this.embedsForPosts(posts, blocks, viewer, depth)
     return {
@@ -240,7 +248,7 @@ export class FeedService {
       labels, // includes info for profiles
       bam, // includes info for profiles
       profiles: profileState.profiles,
-      lists: profileState.lists,
+      lists: Object.assign(lists, profileState.lists),
     }
   }
 
@@ -400,6 +408,7 @@ export class FeedService {
           feedState.posts,
           feedState.embeds,
           feedState.labels,
+          feedState.lists,
         )
         recordEmbedViews[uri] = this.views.getRecordEmbedView(
           uri,
@@ -415,6 +424,22 @@ export class FeedService {
       }
     }
     return recordEmbedViews
+  }
+
+  listsForPosts(
+    posts: PostInfoMap,
+    viewer: string | null,
+  ): Promise<ListInfoMap> {
+    const listsUris = new Set<string>()
+    Object.values(posts).forEach((post) => {
+      const record = post.record as PostRecord
+      record.interactions?.forEach((interaction) => {
+        if (isListInteraction(interaction)) {
+          listsUris.add(interaction.list.uri)
+        }
+      })
+    })
+    return this.services.graph.getListViews([...listsUris], viewer)
   }
 }
 
