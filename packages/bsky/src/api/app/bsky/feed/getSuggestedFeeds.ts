@@ -14,16 +14,13 @@ export default function (server: Server, ctx: AppContext) {
         .orderBy('suggested_feed.order', 'asc')
         .selectAll()
         .execute()
-
       const genInfos = await feedService.getFeedGeneratorInfos(
         feedsRes.map((r) => r.uri),
         viewer,
       )
-      const genList = Object.values(genInfos)
-
+      const genList = feedsRes.map((r) => genInfos[r.uri]).filter(Boolean)
       const creators = genList.map((gen) => gen.creator)
       const profiles = await feedService.getActorInfos(creators, viewer)
-
       const feedViews = genList.map((gen) =>
         feedService.views.formatFeedGeneratorView(gen, profiles),
       )
