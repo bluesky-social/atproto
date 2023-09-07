@@ -74,10 +74,15 @@ export function validateListItemView(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.graph.defs#listItemView', v)
 }
 
-export type ListPurpose = 'app.bsky.graph.defs#modlist' | (string & {})
+export type ListPurpose =
+  | 'app.bsky.graph.defs#modlist'
+  | 'app.bsky.graph.defs#curatelist'
+  | (string & {})
 
 /** A list of actors to apply an aggregate moderation action (mute/block) on */
 export const MODLIST = 'app.bsky.graph.defs#modlist'
+/** A list of actors used for curation purposes such as list feeds or interaction gating */
+export const CURATELIST = 'app.bsky.graph.defs#curatelist'
 
 export interface ListViewerState {
   muted?: boolean
