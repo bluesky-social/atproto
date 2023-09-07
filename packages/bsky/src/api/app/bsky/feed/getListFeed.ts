@@ -56,21 +56,14 @@ export const skeleton = async (
   const { db } = ctx
   const { ref } = db.db.dynamic
 
-  const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
+  const keyset = new FeedKeyset(ref('post.sortAt'), ref('post.cid'))
   const sortFrom = keyset.unpack(cursor)?.primary
 
-  let builder = db.db
-    .selectFrom('feed_item')
-    .innerJoin('list_item', 'list_item.subjectDid', 'feed_item.originatorDid')
+  let builder = ctx.feedService
+    .selectPostQb()
+    .innerJoin('list_item', 'list_item.subjectDid', 'post.creator')
     .where('list_item.listUri', '=', list)
-    .innerJoin('post', 'post.uri', 'feed_item.postUri')
-    .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom, 3))
-    .selectAll('feed_item')
-    .select([
-      'post.replyRoot',
-      'post.replyParent',
-      'post.creator as postAuthorDid',
-    ])
+    .where('post.sortAt', '>', getFeedDateThreshold(sortFrom, 3))
 
   builder = paginate(builder, {
     limit,
