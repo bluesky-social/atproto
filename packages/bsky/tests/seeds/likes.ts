@@ -10,5 +10,22 @@ export default async (sc: SeedClient) => {
   })
   await sc.like(sc.dids.eve, sc.posts[sc.dids.alice][1].ref)
   await sc.like(sc.dids.carol, sc.replies[sc.dids.bob][0].ref)
+
+  // give alice > 100 likes
+  for (let i = 0; i < 50; i++) {
+    const [b, c, d] = await Promise.all([
+      sc.post(sc.dids.bob, `bob post ${i}`),
+      sc.post(sc.dids.carol, `carol post ${i}`),
+      sc.post(sc.dids.dan, `dan post ${i}`),
+    ])
+    await Promise.all(
+      [
+        sc.like(sc.dids.alice, b.ref), // likes 50 of bobs posts
+        i < 45 && sc.like(sc.dids.alice, c.ref), // likes 45 of carols posts
+        i < 40 && sc.like(sc.dids.alice, d.ref), // likes 40 of dans posts
+      ].filter(Boolean),
+    )
+  }
+
   return sc
 }
