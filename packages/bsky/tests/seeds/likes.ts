@@ -27,5 +27,17 @@ export default async (sc: SeedClient) => {
     )
   }
 
+  // couple more NPCs for suggested follows
+  await sc.createAccount('fred', {
+    email: 'fred@test.com',
+    handle: 'fred.test',
+    password: 'fred-pass',
+  })
+  await sc.createAccount('gina', {
+    email: 'gina@test.com',
+    handle: 'gina.test',
+    password: 'gina-pass',
+  })
+
   return sc
 }

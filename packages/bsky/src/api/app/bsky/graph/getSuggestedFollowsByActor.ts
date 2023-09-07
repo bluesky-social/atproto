@@ -2,15 +2,16 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
+const MAX_RESULTS_LENGTH = 10
+
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getSuggestedFollowsByActor({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier,
     handler: async ({ auth, params }) => {
       const { actor } = params
       const viewer = auth.credentials.did
 
       const db = ctx.db.getReplica()
-      const feed = ctx.services.feed(db)
       const actorService = ctx.services.actor(db)
       const actorDid = await actorService.getActorDid(actor)
 
@@ -30,23 +31,34 @@ export default function (server: Server, ctx: AppContext) {
       > = []
 
       if (likes.length >= 100) {
-        // this could pull less data
-        const posts = await feed.getPostInfos(
-          likes.map((l) => l.subject),
-          viewer,
+        // get posts to get their authors
+        const posts = await db.db
+          .selectFrom('post')
+          .where(
+            'post.uri',
+            'in',
+            likes.map((l) => l.subject),
+          )
+          .select(['creator', 'uri'])
+          .execute()
+
+        const authorDIDs = Object.values(posts).map((p) => p.creator)
+        const authorDIDsExcludingActorAndViewer = authorDIDs.filter(
+          (did) => did !== actorDid && did !== viewer,
         )
-        const authorDIDs = Object.values(posts)
-          .map((p) => p.creator)
-          .filter((did) => did !== actorDid && did !== viewer)
-        const authorsMappedByMostCommon = authorDIDs.reduce((acc, did) => {
-          acc[did] = (acc[did] || 0) + 1
-          return acc
-        }, {} as Record<string, number>)
+
+        const authorsMappedByMostCommon =
+          authorDIDsExcludingActorAndViewer.reduce((acc, did) => {
+            acc[did] = (acc[did] || 0) + 1
+            return acc
+          }, {} as Record<string, number>)
         const authorsSortedByMostCommon = Object.entries(
           authorsMappedByMostCommon,
         )
           .sort((a, b) => b[1] - a[1])
           .slice(0, 20) // take top 20 most common
+
+        // get the profiles of the authors
         const authors = await db.db
           .selectFrom('actor')
           .where(
@@ -60,8 +72,36 @@ export default function (server: Server, ctx: AppContext) {
           .map(([did]) => authors.find((a) => a.did === did))
           .filter(Boolean) as typeof authors
 
+        const actors = sortedAuthors
+
+        if (suggestions.length < MAX_RESULTS_LENGTH) {
+          // backfill with suggested_follow table
+          const additional = await db.db
+            .selectFrom('suggested_follow')
+            .select('did')
+            .where(
+              'suggested_follow.did',
+              'not in',
+              // exclude any we already have
+              authorDIDsExcludingActorAndViewer.concat([actorDid, viewer]),
+            )
+            .execute()
+          const additionalActors = await db.db
+            .selectFrom('actor')
+            .where(
+              'actor.did',
+              'in',
+              additional.map((a) => a.did),
+            )
+            .selectAll()
+            .execute()
+
+          actors.push(...additionalActors)
+        }
+
+        // this handles blocks/mutes etc
         suggestions = (
-          await actorService.views.hydrateProfiles(sortedAuthors, viewer)
+          await actorService.views.hydrateProfiles(actors, viewer)
         ).filter((account) => {
           return (
             !account.viewer?.muted &&
@@ -74,7 +114,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: {
-          suggestions,
+          suggestions: suggestions.slice(0, MAX_RESULTS_LENGTH),
         },
       }
     },

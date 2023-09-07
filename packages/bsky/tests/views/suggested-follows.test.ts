@@ -25,6 +25,8 @@ describe('suggested follows', () => {
       { did: sc.dids.bob, order: 2 },
       { did: sc.dids.carol, order: 3 },
       { did: sc.dids.dan, order: 4 },
+      { did: sc.dids.fred, order: 5 },
+      { did: sc.dids.gina, order: 6 },
     ]
     await network.bsky.ctx.db
       .getPrimary()
@@ -45,6 +47,7 @@ describe('suggested follows', () => {
       { headers: await network.serviceHeaders(sc.dids.carol) },
     )
 
+    expect(result.data.suggestions.length).toBe(4) // backfilled with 2 NPCs
     expect(
       result.data.suggestions.find((sug) => {
         return [sc.dids.alice, sc.dids.carol].includes(sug.did)
