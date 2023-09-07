@@ -77,26 +77,18 @@ export default function (server: Server, ctx: AppContext) {
         if (suggestions.length < MAX_RESULTS_LENGTH) {
           // backfill with suggested_follow table
           const additional = await db.db
-            .selectFrom('suggested_follow')
-            .select('did')
+            .selectFrom('actor')
+            .innerJoin('suggested_follow', 'actor.did', 'suggested_follow.did')
             .where(
-              'suggested_follow.did',
+              'actor.did',
               'not in',
               // exclude any we already have
               authorDIDsExcludingActorAndViewer.concat([actorDid, viewer]),
             )
-            .execute()
-          const additionalActors = await db.db
-            .selectFrom('actor')
-            .where(
-              'actor.did',
-              'in',
-              additional.map((a) => a.did),
-            )
             .selectAll()
             .execute()
 
-          actors.push(...additionalActors)
+          actors.push(...additional)
         }
 
         // this handles blocks/mutes etc
