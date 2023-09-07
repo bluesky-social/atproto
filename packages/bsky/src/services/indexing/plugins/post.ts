@@ -2,7 +2,10 @@ import { Insertable, Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { jsonStringToLex } from '@atproto/lexicon'
-import { Record as PostRecord } from '../../../lexicon/types/app/bsky/feed/post'
+import {
+  Record as PostRecord,
+  ReplyRef,
+} from '../../../lexicon/types/app/bsky/feed/post'
 import { isMain as isEmbedImage } from '../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../lexicon/types/app/bsky/embed/record'
@@ -21,7 +24,10 @@ import { countAll, excluded } from '../../../db/util'
 import { BackgroundQueue } from '../../../background'
 import { getAncestorsAndSelfQb, getDescendentsQb } from '../../util/post'
 import { NotificationServer } from '../../../notifications'
-import { checkInvalidInteractions, checkInvalidReply } from '../../feed/util'
+import {
+  checkInvalidInteractions,
+  checkInvalidReplyParent,
+} from '../../feed/util'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -99,27 +105,8 @@ const insertFn = async (
   }
 
   if (obj.reply) {
-    const replyRoot = obj.reply.root.uri
-    const replyParent = obj.reply.parent.uri
-    const replyRefs = await db
-      .selectFrom('post')
-      .innerJoin('record', 'record.uri', 'post.uri')
-      .where('post.uri', 'in', [replyRoot, replyParent])
-      .selectAll('post')
-      .select('record.json')
-      .execute()
-    const root = replyRefs.find((ref) => ref.uri === replyRoot)
-    const parent = replyRefs.find((ref) => ref.uri === replyParent)
-    const isInvalidReply = !parent || checkInvalidReply(obj.reply, parent)
-    const isInvalidInteraction =
-      !root ||
-      isInvalidReply ||
-      (await checkInvalidInteractions(
-        db,
-        uri.host,
-        new AtUri(root.uri),
-        jsonStringToLex(root.json) as PostRecord,
-      ))
+    const { isInvalidReply, isInvalidInteraction } =
+      await checkReplyInteractions(db, uri.host, obj.reply)
     if (isInvalidReply || isInvalidInteraction) {
       await db
         .updateTable('post')
@@ -413,4 +400,51 @@ function separateEmbeds(embed: PostRecord['embed']) {
     return [{ $type: lex.ids.AppBskyEmbedRecord, ...embed.record }, embed.media]
   }
   return [embed]
+}
+
+async function checkReplyInteractions(
+  db: DatabaseSchema,
+  creator: string,
+  reply: ReplyRef,
+) {
+  const replyRefs = await getReplyRefs(db, reply)
+  // check reply
+  let isInvalidReply = false
+  if (replyRefs.parent) {
+    isInvalidReply = checkInvalidReplyParent(reply, replyRefs.parent)
+  } else {
+    isInvalidReply = true
+  }
+  // check interaction
+  let isInvalidInteraction = false
+  if (isInvalidReply) {
+    isInvalidInteraction = true
+  } else if (replyRefs.root) {
+    isInvalidInteraction = await checkInvalidInteractions(
+      db,
+      creator,
+      new AtUri(replyRefs.root.uri),
+      jsonStringToLex(replyRefs.root.json) as PostRecord,
+    )
+  }
+  return {
+    isInvalidReply,
+    isInvalidInteraction,
+  }
+}
+
+async function getReplyRefs(db: DatabaseSchema, reply: ReplyRef) {
+  const replyRoot = reply.root.uri
+  const replyParent = reply.parent.uri
+  const replyRefs = await db
+    .selectFrom('post')
+    .innerJoin('record', 'record.uri', 'post.uri')
+    .where('post.uri', 'in', [replyRoot, replyParent])
+    .selectAll('post')
+    .select('record.json')
+    .execute()
+  return {
+    root: replyRefs.find((ref) => ref.uri === replyRoot),
+    parent: replyRefs.find((ref) => ref.uri === replyParent),
+  }
 }

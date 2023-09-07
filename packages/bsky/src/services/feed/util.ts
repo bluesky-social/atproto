@@ -13,7 +13,7 @@ import DatabaseSchema, { DatabaseSchemaType } from '../../db/database-schema'
 
 type Post = Selectable<DatabaseSchemaType['post']>
 
-export const checkInvalidReply = (reply: ReplyRef, parent: Post) => {
+export const checkInvalidReplyParent = (reply: ReplyRef, parent: Post) => {
   const replyRoot = reply.root.uri
   const replyParent = reply.parent.uri
   // if parent is not a valid reply, transitively this is not a valid one either
