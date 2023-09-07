@@ -7,8 +7,7 @@
       "description": "Get private preferences attached to the account.",
       "parameters": {
         "type": "params",
-        "properties": {
-        }
+        "properties": {}
       },
       "output": {
         "encoding": "application/json",

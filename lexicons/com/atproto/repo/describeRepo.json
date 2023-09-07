@@ -20,13 +20,22 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["handle", "did", "didDoc", "collections", "handleIsCorrect"],
+          "required": [
+            "handle",
+            "did",
+            "didDoc",
+            "collections",
+            "handleIsCorrect"
+          ],
           "properties": {
-            "handle": {"type": "string", "format": "handle"},
-            "did": {"type": "string", "format": "did"},
-            "didDoc": {"type": "unknown"},
-            "collections": {"type": "array", "items": {"type": "string", "format": "nsid"}},
-            "handleIsCorrect": {"type": "boolean"}
+            "handle": { "type": "string", "format": "handle" },
+            "did": { "type": "string", "format": "did" },
+            "didDoc": { "type": "unknown" },
+            "collections": {
+              "type": "array",
+              "items": { "type": "string", "format": "nsid" }
+            },
+            "handleIsCorrect": { "type": "boolean" }
           }
         }
       }

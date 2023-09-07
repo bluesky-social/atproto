@@ -11,9 +11,9 @@
           "type": "object",
           "required": ["actionId", "reportIds", "createdBy"],
           "properties": {
-            "actionId": {"type": "integer"},
-            "reportIds": {"type": "array", "items": {"type": "integer"}},
-            "createdBy": {"type": "string", "format": "did"}
+            "actionId": { "type": "integer" },
+            "reportIds": { "type": "array", "items": { "type": "integer" } },
+            "createdBy": { "type": "string", "format": "did" }
           }
         }
       },

@@ -9,9 +9,14 @@
         "type": "params",
         "required": ["actor"],
         "properties": {
-          "actor": {"type": "string", "format": "at-identifier"},
-          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "cursor": {"type": "string"}
+          "actor": { "type": "string", "format": "at-identifier" },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
         }
       },
       "output": {
@@ -20,10 +25,10 @@
           "type": "object",
           "required": ["lists"],
           "properties": {
-            "cursor": {"type": "string"},
+            "cursor": { "type": "string" },
             "lists": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.graph.defs#listView"}
+              "items": { "type": "ref", "ref": "app.bsky.graph.defs#listView" }
             }
           }
         }

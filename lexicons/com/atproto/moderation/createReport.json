@@ -11,8 +11,11 @@
           "type": "object",
           "required": ["reasonType", "subject"],
           "properties": {
-            "reasonType": {"type": "ref", "ref": "com.atproto.moderation.defs#reasonType"},
-            "reason": {"type": "string"},
+            "reasonType": {
+              "type": "ref",
+              "ref": "com.atproto.moderation.defs#reasonType"
+            },
+            "reason": { "type": "string" },
             "subject": {
               "type": "union",
               "refs": [
@@ -27,11 +30,20 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["id", "reasonType", "subject", "reportedBy", "createdAt"],
+          "required": [
+            "id",
+            "reasonType",
+            "subject",
+            "reportedBy",
+            "createdAt"
+          ],
           "properties": {
-            "id": {"type": "integer"},
-            "reasonType": {"type": "ref", "ref": "com.atproto.moderation.defs#reasonType"},
-            "reason": {"type": "string"},
+            "id": { "type": "integer" },
+            "reasonType": {
+              "type": "ref",
+              "ref": "com.atproto.moderation.defs#reasonType"
+            },
+            "reason": { "type": "string" },
             "subject": {
               "type": "union",
               "refs": [
@@ -39,8 +51,8 @@
                 "com.atproto.repo.strongRef"
               ]
             },
-            "reportedBy": {"type": "string", "format": "did"},
-            "createdAt": {"type": "string", "format": "datetime"}
+            "reportedBy": { "type": "string", "format": "did" },
+            "createdAt": { "type": "string", "format": "datetime" }
           }
         }
       }

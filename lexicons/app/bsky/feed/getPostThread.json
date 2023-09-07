@@ -8,7 +8,7 @@
         "type": "params",
         "required": ["uri"],
         "properties": {
-          "uri": {"type": "string", "format": "at-uri"},
+          "uri": { "type": "string", "format": "at-uri" },
           "depth": {
             "type": "integer",
             "default": 6,
@@ -40,9 +40,7 @@
           }
         }
       },
-      "errors": [
-        {"name": "NotFound"}
-      ]
+      "errors": [{ "name": "NotFound" }]
     }
   }
 }

@@ -8,9 +8,14 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "cursor": {"type": "string"},
-          "query": {"type": "string"}
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" },
+          "query": { "type": "string" }
         }
       },
       "output": {
@@ -19,10 +24,13 @@
           "type": "object",
           "required": ["feeds"],
           "properties": {
-            "cursor": {"type": "string"},
+            "cursor": { "type": "string" },
             "feeds": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.feed.defs#generatorView"}
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.feed.defs#generatorView"
+              }
             }
           }
         }

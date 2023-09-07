@@ -17,12 +17,6 @@
     "test:profile": "node --inspect ../../node_modules/.bin/jest",
     "bench": "jest --config jest.bench.config.js",
     "bench:profile": "node --inspect-brk ../../node_modules/.bin/jest --config jest.bench.config.js",
-    "prettier": "prettier --check src/ tests/",
-    "prettier:fix": "prettier --write src/ tests/",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "pnpm lint --fix",
-    "verify": "run-p prettier lint",
-    "verify:fix": "pnpm prettier:fix && pnpm lint:fix",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "update-main-to-dist": "node ../../update-main-to-dist.js packages/repo"

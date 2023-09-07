@@ -9,8 +9,10 @@
     "node": ">=18"
   },
   "scripts": {
-    "verify": "pnpm -r --stream lint && pnpm -r --stream prettier",
-    "format": "pnpm -r --stream prettier:fix",
+    "lint:fix": "pnpm lint --fix",
+    "lint": "eslint . --ext .ts,.tsx",
+    "verify": "prettier --check . && pnpm lint",
+    "format": "prettier --write .",
     "build": "pnpm -r --stream build",
     "update-main-to-dist": "pnpm -r --stream update-main-to-dist",
     "test": "LOG_ENABLED=false NODE_ENV=development ./packages/dev-infra/with-test-redis-and-db.sh pnpm --stream -r test",
@@ -41,7 +43,6 @@
     "eslint-plugin-prettier": "^4.2.1",
     "jest": "^28.1.2",
     "node-gyp": "^9.3.1",
-    "npm-run-all": "^4.1.5",
     "pino-pretty": "^9.1.0",
     "prettier": "^2.7.1",
     "prettier-config-standard": "^5.0.0",

@@ -44,7 +44,7 @@ lint: ## Run style checks and verify syntax
 
 .PHONY: fmt
 fmt: ## Run syntax re-formatting
-	pnpm prettier
+	pnpm format
 
 .PHONY: deps
 deps: ## Installs dependent libs using 'pnpm install'

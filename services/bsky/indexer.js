@@ -43,7 +43,12 @@ const main = async () => {
           password: cfg.redisPassword,
         },
   )
-  const indexer = BskyIndexer.create({ db, redis, cfg, imgInvalidator: cfInvalidator })
+  const indexer = BskyIndexer.create({
+    db,
+    redis,
+    cfg,
+    imgInvalidator: cfInvalidator,
+  })
   await indexer.start()
   process.on('SIGTERM', async () => {
     await indexer.destroy()

@@ -24,12 +24,6 @@
     "test:sqlite": "jest --testPathIgnorePatterns /tests/proxied/*",
     "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "jest --updateSnapshot",
-    "prettier": "prettier --check src/ tests/",
-    "prettier:fix": "prettier --write src/ tests/",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "pnpm lint --fix",
-    "verify": "run-p prettier lint",
-    "verify:fix": "pnpm prettier:fix && pnpm lint:fix",
     "migration:create": "ts-node ./bin/migration-create.ts"
   },
   "dependencies": {
