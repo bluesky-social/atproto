@@ -3,6 +3,7 @@ import { TestNetwork } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
 import { RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
+import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
 describe('pds author feed views', () => {
   let network: TestNetwork
@@ -111,5 +112,83 @@ describe('pds author feed views', () => {
     })
 
     expect(res.data.feed.length).toEqual(0)
+  })
+
+  it('blocks posts by actor takedown', async () => {
+    const actionRes = await agent.api.com.atproto.admin.takeModerationAction(
+      {
+        action: TAKEDOWN,
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: bob,
+        },
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
+
+    const res = await agent.api.app.bsky.feed.getListFeed({
+      list: listRef.uriStr,
+    })
+    const hasBob = res.data.feed.some((item) => item.post.author.did === bob)
+    expect(hasBob).toBe(false)
+
+    // Cleanup
+    await agent.api.com.atproto.admin.reverseModerationAction(
+      {
+        id: actionRes.data.id,
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
+  })
+
+  it('blocks posts by record takedown.', async () => {
+    const postRef = sc.replies[bob][0].ref // Post and reply parent
+    const actionRes = await agent.api.com.atproto.admin.takeModerationAction(
+      {
+        action: TAKEDOWN,
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: postRef.uriStr,
+          cid: postRef.cidStr,
+        },
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
+
+    const res = await agent.api.app.bsky.feed.getListFeed({
+      list: listRef.uriStr,
+    })
+    const hasPost = res.data.feed.some(
+      (item) => item.post.uri === postRef.uriStr,
+    )
+    expect(hasPost).toBe(false)
+
+    // Cleanup
+    await agent.api.com.atproto.admin.reverseModerationAction(
+      {
+        id: actionRes.data.id,
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
   })
 })
