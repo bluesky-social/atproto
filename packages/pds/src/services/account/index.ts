@@ -12,7 +12,9 @@ import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { NotEmptyArray } from '@atproto/common'
+import { MINUTE, NotEmptyArray, lessThanAgoMs } from '@atproto/common'
+import { EmailTokenPurpose } from '../../db/tables/email-token'
+import { getRandomToken } from '../../api/com/atproto/server/util'
 
 export class AccountService {
   constructor(public db: Database) {}
@@ -553,6 +555,49 @@ export class AccountService {
       }
       return acc
     }, {} as Record<string, CodeDetail>)
+  }
+
+  async createEmailToken(
+    did: string,
+    purpose: EmailTokenPurpose,
+  ): Promise<string> {
+    const token = getRandomToken().toUpperCase()
+    await this.db.db
+      .insertInto('email_token')
+      .values({ purpose, did, token })
+      .onConflict((oc) => oc.columns(['purpose', 'did']).doUpdateSet({ token }))
+      .execute()
+    return token
+  }
+
+  async deleteEmailToken(did: string, purpose: EmailTokenPurpose) {
+    await this.db.db
+      .deleteFrom('email_token')
+      .where('did', '=', did)
+      .where('purpose', '=', purpose)
+      .executeTakeFirst()
+  }
+
+  async assertValidToken(
+    did: string,
+    purpose: EmailTokenPurpose,
+    token: string,
+    expirationLen = 15 * MINUTE,
+  ) {
+    const res = await this.db.db
+      .selectFrom('email_token')
+      .selectAll()
+      .where('purpose', '=', purpose)
+      .where('did', '=', did)
+      .where('token', '=', token)
+      .executeTakeFirst()
+    if (!res) {
+      throw new InvalidRequestError('Token is invalid', 'InvalidToken')
+    }
+    const expired = !lessThanAgoMs(res.requestedAt, expirationLen)
+    if (expired) {
+      throw new InvalidRequestError('Token is expired', 'ExpiredToken')
+    }
   }
 
   async getLastSeenNotifs(did: string): Promise<string | undefined> {

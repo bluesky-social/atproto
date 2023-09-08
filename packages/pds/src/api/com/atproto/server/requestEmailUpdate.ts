@@ -1,7 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { getRandomToken } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.requestEmailUpdate({
@@ -15,15 +14,9 @@ export default function (server: Server, ctx: AppContext) {
 
       const tokenRequired = user.emailConfirmedAt !== null
       if (tokenRequired) {
-        const token = getRandomToken().toUpperCase()
-        const requestedAt = new Date().toISOString()
-        await ctx.db.db
-          .insertInto('email_token')
-          .values({ purpose: 'update_email', did, token, requestedAt })
-          .onConflict((oc) =>
-            oc.columns(['purpose', 'did']).doUpdateSet({ token, requestedAt }),
-          )
-          .execute()
+        const token = await ctx.services
+          .account(ctx.db)
+          .createEmailToken(did, 'update_email')
         await ctx.mailer.sendUpdateEmail({ token }, { to: user.email })
       }
 

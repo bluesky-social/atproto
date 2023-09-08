@@ -1,12 +1,16 @@
+import { Generated } from 'kysely'
+
+export type EmailTokenPurpose =
+  | 'confirm_email'
+  | 'update_email'
+  | 'reset_password'
+  | 'delete_account'
+
 export interface EmailToken {
-  purpose:
-    | 'confirm_email'
-    | 'update_email'
-    | 'reset_password'
-    | 'delete_account'
+  purpose: EmailTokenPurpose
   did: string
   token: string
-  requestedAt: string
+  requestedAt: Generated<Date>
 }
 
 export const tableName = 'email_token'

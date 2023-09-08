@@ -1,0 +1,42 @@
+import { Server } from '../../../../lexicon'
+import AppContext from '../../../../context'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+
+export default function (server: Server, ctx: AppContext) {
+  server.com.atproto.server.updateEmail({
+    auth: ctx.accessVerifierCheckTakedown,
+    handler: async ({ auth, input }) => {
+      const did = auth.credentials.did
+      const { token, email } = input.body
+      const user = await ctx.services.account(ctx.db).getAccount(did)
+      if (!user) {
+        throw new InvalidRequestError('user not found')
+      }
+      // require valid token
+      if (user.emailConfirmedAt !== null) {
+        if (!token) {
+          throw new InvalidRequestError(
+            'confirmation token required',
+            'TokenRequired',
+          )
+        }
+        await ctx.services
+          .account(ctx.db)
+          .assertValidToken(did, 'confirm_email', token)
+      }
+
+      await ctx.db.transaction(async (dbTxn) => {
+        if (token) {
+          await ctx.services
+            .account(dbTxn)
+            .deleteEmailToken(did, 'update_email')
+        }
+        await dbTxn.db
+          .updateTable('user_account')
+          .set({ email, emailConfirmedAt: null })
+          .where('did', '=', did)
+          .execute()
+      })
+    },
+  })
+}

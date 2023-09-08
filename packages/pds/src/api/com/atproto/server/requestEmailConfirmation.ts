@@ -1,7 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { getRandomToken } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.requestEmailConfirmation({
@@ -12,15 +11,9 @@ export default function (server: Server, ctx: AppContext) {
       if (!user) {
         throw new InvalidRequestError('user not found')
       }
-      const token = getRandomToken().toUpperCase()
-      const requestedAt = new Date().toISOString()
-      await ctx.db.db
-        .insertInto('email_token')
-        .values({ purpose: 'confirm_email', did, token, requestedAt })
-        .onConflict((oc) =>
-          oc.columns(['purpose', 'did']).doUpdateSet({ token, requestedAt }),
-        )
-        .execute()
+      const token = await ctx.services
+        .account(ctx.db)
+        .createEmailToken(did, 'confirm_email')
       await ctx.mailer.sendConfirmEmail({ token }, { to: user.email })
     },
   })
