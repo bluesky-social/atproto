@@ -117,11 +117,10 @@ export class FuzzyMatcher implements TextFlagger {
   }
 }
 
-const decode = (encoded: string): string[] => {
+export const decode = (encoded: string): string[] => {
   return ui8.toString(ui8.fromString(encoded, 'base64'), 'utf8').split(',')
 }
 
-// just for documentaiton purposes
-// const encode = (words: string[]): string => {
-//   return ui8.toString(ui8.fromString(words.join(','), 'utf8'), 'base64')
-// }
+export const encode = (words: string[]): string => {
+  return ui8.toString(ui8.fromString(words.join(','), 'utf8'), 'base64')
+}

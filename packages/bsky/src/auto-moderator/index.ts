@@ -113,6 +113,14 @@ export class AutoModerator {
     })
   }
 
+  processHandle(handle: string, did: string) {
+    this.ctx.backgroundQueue.add(async () => {
+      await this.flagSubjectText(handle, { did }).catch((err) => {
+        log.error({ err, handle, did }, 'failed to label handle')
+      })
+    })
+  }
+
   async labelRecord(uri: AtUri, recordCid: CID, text: string[], imgs: CID[]) {
     if (uri.collection !== ids.AppBskyFeedPost) {
       // @TODO label profiles
@@ -126,8 +134,7 @@ export class AutoModerator {
     await this.storeLabels(uri, recordCid, labels)
   }
 
-  async flagRecordText(uri: AtUri, recordCid: CID, text: string[]) {
-    if (!this.textFlagger) return
+  async flagRecordText(uri: AtUri, cid: CID, text: string[]) {
     if (
       ![
         ids.AppBskyActorProfile,
@@ -137,11 +144,19 @@ export class AutoModerator {
     ) {
       return
     }
-    const matches = this.textFlagger.getMatches(text.join(' '))
+    return this.flagSubjectText(text.join(' '), { uri, cid })
+  }
+
+  async flagSubjectText(
+    text: string,
+    subject: { did: string } | { uri: AtUri; cid: CID },
+  ) {
+    if (!this.textFlagger) return
+    const matches = this.textFlagger.getMatches(text)
     if (matches.length < 1) return
     if (!this.services.moderation) {
       log.error(
-        { uri: uri.toString(), cid: recordCid.toString(), text, matches },
+        { subject, text, matches },
         'no moderation service setup to flag record text',
       )
       return
@@ -149,10 +164,7 @@ export class AutoModerator {
     await this.services.moderation(this.ctx.db).report({
       reasonType: REASONOTHER,
       reason: `Automatically flagged for possible slurs: ${matches.join(', ')}`,
-      subject: {
-        uri,
-        cid: recordCid,
-      },
+      subject,
       reportedBy: this.ctx.cfg.labelerDid,
     })
   }

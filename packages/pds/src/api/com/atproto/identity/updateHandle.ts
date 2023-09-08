@@ -73,8 +73,6 @@ export default function (server: Server, ctx: AppContext) {
           'failed to sequence handle update',
         )
       }
-
-      ctx.contentReporter?.checkHandle({ handle, did: requester })
     },
   })
 }

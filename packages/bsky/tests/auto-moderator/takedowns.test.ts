@@ -7,7 +7,7 @@ import { TestNetwork } from '@atproto/dev-env'
 import { ImageRef, SeedClient } from '../seeds/client'
 import usersSeed from '../seeds/users'
 import { CID } from 'multiformats/cid'
-import { TakedownFlagger } from '../../src/auto-moderator/abyss'
+import { ImageFlagger } from '../../src/auto-moderator/abyss'
 import { ImageInvalidator } from '../../src/image/invalidator'
 import { sha256 } from '@atproto/crypto'
 import { ids } from '../../src/lexicon/lexicons'
@@ -38,7 +38,7 @@ describe('takedowner', () => {
     })
     ctx = network.bsky.indexer.ctx
     autoMod = ctx.autoMod
-    autoMod.takedownFlagger = new TestFlagger()
+    autoMod.imageFlagger = new TestFlagger()
     pdsAgent = new AtpAgent({ service: network.pds.url })
     sc = new SeedClient(pdsAgent)
     await usersSeed(sc)
@@ -156,7 +156,7 @@ class TestInvalidator implements ImageInvalidator {
   }
 }
 
-class TestFlagger implements TakedownFlagger {
+class TestFlagger implements ImageFlagger {
   async scanImage(_did: string, cid: CID): Promise<string[]> {
     if (cid.equals(badCid1)) {
       return ['kill-it']
