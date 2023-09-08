@@ -31,12 +31,7 @@ export interface PostView {
   indexedAt: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
-  interactions?: (
-    | MentionInteractionView
-    | FollowingInteractionView
-    | ListInteractionView
-    | { $type: string; [k: string]: unknown }
-  )[]
+  gate?: GateView
   [k: string]: unknown
 }
 
@@ -309,42 +304,58 @@ export function validateSkeletonReasonRepost(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#skeletonReasonRepost', v)
 }
 
-/** The view counterpart to app.bsky.feed.post#mentionInteraction */
-export interface MentionInteractionView {}
+export interface GateView {
+  allow?: (
+    | MentionRuleView
+    | FollowingRuleView
+    | ListRuleView
+    | { $type: string; [k: string]: unknown }
+  )[]
+  [k: string]: unknown
+}
 
-export function isMentionInteractionView(
-  v: unknown,
-): v is MentionInteractionView {
+export function isGateView(v: unknown): v is GateView {
   return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#mentionInteractionView'
+    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.feed.defs#gateView'
   )
 }
 
-export function validateMentionInteractionView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#mentionInteractionView', v)
+export function validateGateView(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#gateView', v)
 }
 
-/** The view counterpart to app.bsky.feed.post#followingInteraction */
-export interface FollowingInteractionView {}
+/** The view counterpart to app.bsky.feed.gate#mentionRule */
+export interface MentionRuleView {}
 
-export function isFollowingInteractionView(
-  v: unknown,
-): v is FollowingInteractionView {
+export function isMentionRuleView(v: unknown): v is MentionRuleView {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#followingInteractionView'
+    v.$type === 'app.bsky.feed.defs#mentionRuleView'
   )
 }
 
-export function validateFollowingInteractionView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#followingInteractionView', v)
+export function validateMentionRuleView(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#mentionRuleView', v)
 }
 
-/** The view counterpart to app.bsky.feed.post#listInteraction */
-export interface ListInteractionView {
+/** The view counterpart to app.bsky.feed.gate#followingRule */
+export interface FollowingRuleView {}
+
+export function isFollowingRuleView(v: unknown): v is FollowingRuleView {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.feed.defs#followingRuleView'
+  )
+}
+
+export function validateFollowingRuleView(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#followingRuleView', v)
+}
+
+/** The view counterpart to app.bsky.feed.gate#listRule */
+export interface ListRuleView {
   list:
     | AppBskyGraphDefs.ListViewBasic
     | ViewNotFound
@@ -352,16 +363,16 @@ export interface ListInteractionView {
   [k: string]: unknown
 }
 
-export function isListInteractionView(v: unknown): v is ListInteractionView {
+export function isListRuleView(v: unknown): v is ListRuleView {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#listInteractionView'
+    v.$type === 'app.bsky.feed.defs#listRuleView'
   )
 }
 
-export function validateListInteractionView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#listInteractionView', v)
+export function validateListRuleView(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.feed.defs#listRuleView', v)
 }
 
 export interface ViewNotFound {

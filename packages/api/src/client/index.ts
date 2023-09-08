@@ -86,6 +86,7 @@ import * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 import * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
 import * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
 import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator'
+import * as AppBskyFeedGate from './types/app/bsky/feed/gate'
 import * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
 import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes'
@@ -210,6 +211,7 @@ export * as AppBskyEmbedRecord from './types/app/bsky/embed/record'
 export * as AppBskyEmbedRecordWithMedia from './types/app/bsky/embed/recordWithMedia'
 export * as AppBskyFeedDefs from './types/app/bsky/feed/defs'
 export * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator'
+export * as AppBskyFeedGate from './types/app/bsky/feed/gate'
 export * as AppBskyFeedGenerator from './types/app/bsky/feed/generator'
 export * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds'
 export * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes'
@@ -1218,6 +1220,7 @@ export class EmbedNS {
 
 export class FeedNS {
   _service: AtpServiceClient
+  gate: GateRecord
   generator: GeneratorRecord
   like: LikeRecord
   post: PostRecord
@@ -1225,6 +1228,7 @@ export class FeedNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
+    this.gate = new GateRecord(service)
     this.generator = new GeneratorRecord(service)
     this.like = new LikeRecord(service)
     this.post = new PostRecord(service)
@@ -1383,6 +1387,67 @@ export class FeedNS {
       .catch((e) => {
         throw AppBskyFeedGetTimeline.toKnownErr(e)
       })
+  }
+}
+
+export class GateRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedGate.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.gate',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{ uri: string; cid: string; value: AppBskyFeedGate.Record }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.gate',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyFeedGate.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.feed.gate'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.feed.gate', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.gate', ...params },
+      { headers },
+    )
   }
 }
 

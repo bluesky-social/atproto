@@ -4407,16 +4407,9 @@ export const schemaDict = {
               ref: 'lex:com.atproto.label.defs#label',
             },
           },
-          interactions: {
-            type: 'array',
-            items: {
-              type: 'union',
-              refs: [
-                'lex:app.bsky.feed.defs#mentionInteractionView',
-                'lex:app.bsky.feed.defs#followingInteractionView',
-                'lex:app.bsky.feed.defs#listInteractionView',
-              ],
-            },
+          gate: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#gateView',
           },
         },
       },
@@ -4659,20 +4652,33 @@ export const schemaDict = {
           },
         },
       },
-      mentionInteractionView: {
+      gateView: {
         type: 'object',
-        description:
-          'The view counterpart to app.bsky.feed.post#mentionInteraction',
+        properties: {
+          allow: {
+            type: 'array',
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.feed.defs#mentionRuleView',
+                'lex:app.bsky.feed.defs#followingRuleView',
+                'lex:app.bsky.feed.defs#listRuleView',
+              ],
+            },
+          },
+        },
       },
-      followingInteractionView: {
+      mentionRuleView: {
         type: 'object',
-        description:
-          'The view counterpart to app.bsky.feed.post#followingInteraction',
+        description: 'The view counterpart to app.bsky.feed.gate#mentionRule',
       },
-      listInteractionView: {
+      followingRuleView: {
         type: 'object',
-        description:
-          'The view counterpart to app.bsky.feed.post#listInteraction',
+        description: 'The view counterpart to app.bsky.feed.gate#followingRule',
+      },
+      listRuleView: {
+        type: 'object',
+        description: 'The view counterpart to app.bsky.feed.gate#listRule',
         required: ['list'],
         properties: {
           list: {
@@ -4751,6 +4757,61 @@ export const schemaDict = {
           },
           termsOfService: {
             type: 'string',
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedGate: {
+    lexicon: 1,
+    id: 'app.bsky.feed.gate',
+    defs: {
+      main: {
+        type: 'record',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['post', 'createdAt'],
+          properties: {
+            post: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            allow: {
+              type: 'array',
+              maxLength: 5,
+              items: {
+                type: 'union',
+                refs: [
+                  'lex:app.bsky.feed.gate#mentionRule',
+                  'lex:app.bsky.feed.gate#followingRule',
+                  'lex:app.bsky.feed.gate#listRule',
+                ],
+              },
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+      mentionRule: {
+        type: 'object',
+        description: 'Allow replies from actors mentioned in your post.',
+      },
+      followingRule: {
+        type: 'object',
+        description: 'Allow replies from actors you follow.',
+      },
+      listRule: {
+        type: 'object',
+        description: 'Allow replies from actors on a list.',
+        required: ['list'],
+        properties: {
+          list: {
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
           },
         },
       },
@@ -5560,18 +5621,6 @@ export const schemaDict = {
               type: 'union',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
             },
-            interactions: {
-              type: 'array',
-              maxLength: 5,
-              items: {
-                type: 'union',
-                refs: [
-                  'lex:app.bsky.feed.post#mentionInteraction',
-                  'lex:app.bsky.feed.post#followingInteraction',
-                  'lex:app.bsky.feed.post#listInteraction',
-                ],
-              },
-            },
             createdAt: {
               type: 'string',
               format: 'datetime',
@@ -5624,25 +5673,6 @@ export const schemaDict = {
           end: {
             type: 'integer',
             minimum: 0,
-          },
-        },
-      },
-      mentionInteraction: {
-        type: 'object',
-        description: 'Allow replies from actors mentioned in your post.',
-      },
-      followingInteraction: {
-        type: 'object',
-        description: 'Allow replies from actors you follow.',
-      },
-      listInteraction: {
-        type: 'object',
-        description: 'Allow replies from actors on a list.',
-        required: ['list'],
-        properties: {
-          list: {
-            type: 'ref',
-            ref: 'lex:com.atproto.repo.strongRef',
           },
         },
       },
@@ -6928,6 +6958,7 @@ export const ids = {
   AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
   AppBskyFeedDefs: 'app.bsky.feed.defs',
   AppBskyFeedDescribeFeedGenerator: 'app.bsky.feed.describeFeedGenerator',
+  AppBskyFeedGate: 'app.bsky.feed.gate',
   AppBskyFeedGenerator: 'app.bsky.feed.generator',
   AppBskyFeedGetActorFeeds: 'app.bsky.feed.getActorFeeds',
   AppBskyFeedGetActorLikes: 'app.bsky.feed.getActorLikes',

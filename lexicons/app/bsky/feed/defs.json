@@ -28,17 +28,7 @@
           "type": "array",
           "items": {"type": "ref", "ref": "com.atproto.label.defs#label"}
         },
-        "interactions": {
-          "type": "array",
-          "items": {
-            "type": "union",
-            "refs": [
-              "#mentionInteractionView",
-              "#followingInteractionView",
-              "#listInteractionView"
-            ]
-          }
-        }
+        "gate": {"type": "ref", "ref": "#gateView"}
       }
     },
     "viewerState": {
@@ -158,17 +148,33 @@
         "repost": {"type": "string", "format": "at-uri"}
       }
     },
-    "mentionInteractionView": {
+    "gateView": {
       "type": "object",
-      "description": "The view counterpart to app.bsky.feed.post#mentionInteraction"
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": {
+            "type": "union",
+            "refs": [
+              "#mentionRuleView",
+              "#followingRuleView",
+              "#listRuleView"
+            ]
+          }
+        }
+      }
     },
-    "followingInteractionView": {
+    "mentionRuleView": {
       "type": "object",
-      "description": "The view counterpart to app.bsky.feed.post#followingInteraction"
+      "description": "The view counterpart to app.bsky.feed.gate#mentionRule"
     },
-    "listInteractionView": {
+    "followingRuleView": {
       "type": "object",
-      "description": "The view counterpart to app.bsky.feed.post#listInteraction",
+      "description": "The view counterpart to app.bsky.feed.gate#followingRule"
+    },
+    "listRuleView": {
+      "type": "object",
+      "description": "The view counterpart to app.bsky.feed.gate#listRule",
       "required": ["list"],
       "properties": {
         "list": {
