@@ -23,14 +23,7 @@ export const demoPosts: DemoPost[] = [
   {
     group: 'aimagiceveryday.group',
     user: 'dave.test',
-    text: `Just read an eye-opening article about the link between artificial neural networks (ANNs) and our own brains.
-
-    ANNs aren't carbon copies of our brains, but they're unveiling incredible insights into brain functions. For instance, ANNs designed for image recognition share uncanny similarities with how our brains operate. And in the realms of speech and language, ANNs mimic our brain's sound processing.
-    
-    The mind-blowing part? An ANN "seeing" through human eyes using MRI data, grasping visuals much like our brains do. This could be a game-changer for brain-computer interfaces, especially aiding visually impaired individuals.
-    
-    I'm curious to know how you think these connections between AI and the brain will impact other areas like education, language learning, and even art and creativity. Any exciting ideas?
-    ""When Dr Yamins and his colleagues compared what was going on inside the macaque brains to the silicon ones, they found arresting parallels between how the monkeys represented images and how the computers did.`,
+    text: `Just read an eye-opening article about the link between artificial neural networks (ANNs) and our own brains.\nANNs aren't carbon copies of our brains, but they're unveiling incredible insights into brain functions. For instance, ANNs designed for image recognition share uncanny similarities with how our brains operate. And in the realms of speech and language, ANNs mimic our brain's sound processing.\nThe mind-blowing part? An ANN "seeing" through human eyes using MRI data, grasping visuals much like our brains do. This could be a game-changer for brain-computer interfaces, especially aiding visually impaired individuals.\nI'm curious to know how you think these connections between AI and the brain will impact other areas like education, language learning, and even art and creativity. Any exciting ideas?\n""When Dr Yamins and his colleagues compared what was going on inside the macaque brains to the silicon ones, they found arresting parallels between how the monkeys represented images and how the computers did.`,
     external: {
       uri: 'https://www.economist.com/science-and-technology/2023/05/24/artificial-brains-are-helping-scientists-study-the-real-thing',
       title: 'Artificial brains are helping scientists study the real thing',
@@ -79,11 +72,7 @@ export const demoPosts: DemoPost[] = [
   {
     group: 'smarthomegadgets.group',
     user: 'aman.test',
-    text: `Just installed the Ezviz Wi-Fi video doorbell at my place, and it's a game-changer!
-
-    No more guessing who's at the door - now I can see and chat with visitors from the comfort of my couch. It also records footage of anyone approaching my door when I'm away. 
-    
-    It's affordable, records in HD, and works with Alexa and Google Assistant`,
+    text: `Just installed the Ezviz Wi-Fi video doorbell at my place, and it's a game-changer!\nNo more guessing who's at the door - now I can see and chat with visitors from the comfort of my couch. It also records footage of anyone approaching my door when I'm away. It's affordable, records in HD, and works with Alexa and Google Assistant`,
     replies: [
       {
         text: `I've been thinking about getting a video doorbell for a while now, and your experience with the Ezviz is really convincing. Thanks for sharing your recommendation!`,
