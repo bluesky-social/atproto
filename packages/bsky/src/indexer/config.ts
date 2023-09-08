@@ -92,9 +92,9 @@ export class IndexerConfig {
     const ingesterPartitionCount =
       maybeParseInt(process.env.INGESTER_PARTITION_COUNT) ?? 64
     const labelerKeywords = {}
-    const fuzzyMatchB64 = process.env.UNACCEPTABLE_WORDS_B64 || undefined
+    const fuzzyMatchB64 = process.env.FUZZY_MATCH_B64 || undefined
     const fuzzyFalsePositiveB64 =
-      process.env.FALSE_POSITIVE_WORDS_B64 || undefined
+      process.env.FUZZY_FALSE_POSITIVE_B64 || undefined
     const pushNotificationEndpoint = process.env.PUSH_NOTIFICATION_ENDPOINT
     assert(dbPostgresUrl)
     assert(redisHost || (redisSentinelName && redisSentinelHosts?.length))
