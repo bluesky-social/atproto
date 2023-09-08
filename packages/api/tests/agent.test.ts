@@ -56,6 +56,7 @@ describe('agent', () => {
       did: res.data.did,
       handle: res.data.handle,
       email: 'user1@test.com',
+      emailConfirmed: false,
     })
 
     expect(events.length).toEqual(1)
@@ -100,6 +101,7 @@ describe('agent', () => {
       did: res1.data.did,
       handle: res1.data.handle,
       email,
+      emailConfirmed: false,
     })
 
     expect(events.length).toEqual(2)
@@ -142,6 +144,7 @@ describe('agent', () => {
       did: res1.data.did,
       handle: res1.data.handle,
       email: res1.data.email,
+      emailConfirmed: false,
     })
 
     expect(events.length).toEqual(2)
