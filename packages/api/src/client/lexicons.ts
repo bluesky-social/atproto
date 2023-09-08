@@ -3760,6 +3760,16 @@ export const schemaDict = {
           },
         },
       },
+      personalDetailsPref: {
+        type: 'object',
+        properties: {
+          birthDate: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The birth date of the owner of the account.',
+          },
+        },
+      },
     },
   },
   AppBskyActorGetPreferences: {
