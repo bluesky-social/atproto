@@ -9,12 +9,15 @@
         "type": "params",
         "required": ["id"],
         "properties": {
-          "id": {"type": "integer"}
+          "id": { "type": "integer" }
         }
       },
       "output": {
         "encoding": "application/json",
-        "schema": {"type": "ref", "ref": "com.atproto.admin.defs#actionViewDetail"}
+        "schema": {
+          "type": "ref",
+          "ref": "com.atproto.admin.defs#actionViewDetail"
+        }
       }
     }
   }

@@ -8,9 +8,14 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "subject": {"type": "string"},
-          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "cursor": {"type": "string"}
+          "subject": { "type": "string" },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
         }
       },
       "output": {
@@ -19,8 +24,14 @@
           "type": "object",
           "required": ["actions"],
           "properties": {
-            "cursor": {"type": "string"},
-            "actions": {"type": "array", "items": {"type": "ref", "ref": "com.atproto.admin.defs#actionView"}}
+            "cursor": { "type": "string" },
+            "actions": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "com.atproto.admin.defs#actionView"
+              }
+            }
           }
         }
       }

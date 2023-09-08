@@ -55,14 +55,12 @@
           "type": "object",
           "required": ["uri", "cid"],
           "properties": {
-            "uri": {"type": "string", "format": "at-uri"},
-            "cid": {"type": "string", "format": "cid"}
+            "uri": { "type": "string", "format": "at-uri" },
+            "cid": { "type": "string", "format": "cid" }
           }
         }
       },
-      "errors": [
-        {"name": "InvalidSwap"}
-      ]
+      "errors": [{ "name": "InvalidSwap" }]
     }
   }
 }

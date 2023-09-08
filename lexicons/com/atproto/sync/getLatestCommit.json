@@ -22,14 +22,12 @@
           "type": "object",
           "required": ["cid", "rev"],
           "properties": {
-            "cid": {"type": "string", "format": "cid"},
-            "rev": {"type": "string"}
+            "cid": { "type": "string", "format": "cid" },
+            "rev": { "type": "string" }
           }
         }
       },
-      "errors": [
-        {"name": "RepoNotFound"}
-      ]
+      "errors": [{ "name": "RepoNotFound" }]
     }
   }
 }

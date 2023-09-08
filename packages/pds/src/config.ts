@@ -57,8 +57,6 @@ export interface ServerConfigValues {
   hiveApiKey?: string
   labelerDid: string
   labelerKeywords: Record<string, string>
-  unacceptableWordsB64?: string
-  falsePositiveWordsB64?: string
 
   feedGenDid?: string
 
@@ -189,13 +187,6 @@ export class ServerConfig {
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const labelerKeywords = {}
 
-    const unacceptableWordsB64 = nonemptyString(
-      process.env.UNACCEPTABLE_WORDS_B64,
-    )
-    const falsePositiveWordsB64 = nonemptyString(
-      process.env.FALSE_POSITIVE_WORDS_B64,
-    )
-
     const feedGenDid = process.env.FEED_GEN_DID
 
     const dbPostgresUrl = process.env.DB_POSTGRES_URL
@@ -285,8 +276,6 @@ export class ServerConfig {
       hiveApiKey,
       labelerDid,
       labelerKeywords,
-      unacceptableWordsB64,
-      falsePositiveWordsB64,
       feedGenDid,
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
@@ -503,14 +492,6 @@ export class ServerConfig {
 
   get labelerKeywords() {
     return this.cfg.labelerKeywords
-  }
-
-  get unacceptableWordsB64() {
-    return this.cfg.unacceptableWordsB64
-  }
-
-  get falsePositiveWordsB64() {
-    return this.cfg.falsePositiveWordsB64
   }
 
   get feedGenDid() {

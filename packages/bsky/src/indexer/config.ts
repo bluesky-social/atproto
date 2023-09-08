@@ -15,8 +15,13 @@ export interface IndexerConfigValues {
   handleResolveNameservers?: string[]
   labelerDid: string
   hiveApiKey?: string
+  abyssEndpoint?: string
+  abyssPassword?: string
+  imgUriEndpoint?: string
+  fuzzyMatchB64?: string
+  fuzzyFalsePositiveB64?: string
   labelerKeywords: Record<string, string>
-  labelerPushUrl?: string
+  moderationPushUrl?: string
   indexerConcurrency?: number
   indexerPartitionIds: number[]
   indexerPartitionBatchSize?: number
@@ -62,9 +67,14 @@ export class IndexerConfig {
       ? process.env.HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
-    const labelerPushUrl =
-      overrides?.labelerPushUrl || process.env.LABELER_PUSH_URL || undefined
+    const moderationPushUrl =
+      overrides?.moderationPushUrl ||
+      process.env.MODERATION_PUSH_URL ||
+      undefined
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
+    const abyssEndpoint = process.env.ABYSS_ENDPOINT
+    const abyssPassword = process.env.ABYSS_PASSWORD
+    const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
     const indexerPartitionIds =
       overrides?.indexerPartitionIds ||
       (process.env.INDEXER_PARTITION_IDS
@@ -82,6 +92,9 @@ export class IndexerConfig {
     const ingesterPartitionCount =
       maybeParseInt(process.env.INGESTER_PARTITION_COUNT) ?? 64
     const labelerKeywords = {}
+    const fuzzyMatchB64 = process.env.FUZZY_MATCH_B64 || undefined
+    const fuzzyFalsePositiveB64 =
+      process.env.FUZZY_FALSE_POSITIVE_B64 || undefined
     const pushNotificationEndpoint = process.env.PUSH_NOTIFICATION_ENDPOINT
     assert(dbPostgresUrl)
     assert(redisHost || (redisSentinelName && redisSentinelHosts?.length))
@@ -99,8 +112,11 @@ export class IndexerConfig {
       didCacheMaxTTL,
       handleResolveNameservers,
       labelerDid,
-      labelerPushUrl,
+      moderationPushUrl,
       hiveApiKey,
+      abyssEndpoint,
+      abyssPassword,
+      imgUriEndpoint,
       indexerPartitionIds,
       indexerConcurrency,
       indexerPartitionBatchSize,
@@ -109,6 +125,8 @@ export class IndexerConfig {
       indexerPort,
       ingesterPartitionCount,
       labelerKeywords,
+      fuzzyMatchB64,
+      fuzzyFalsePositiveB64,
       pushNotificationEndpoint,
       ...stripUndefineds(overrides ?? {}),
     })
@@ -162,12 +180,24 @@ export class IndexerConfig {
     return this.cfg.labelerDid
   }
 
-  get labelerPushUrl() {
-    return this.cfg.labelerPushUrl
+  get moderationPushUrl() {
+    return this.cfg.moderationPushUrl
   }
 
   get hiveApiKey() {
     return this.cfg.hiveApiKey
+  }
+
+  get abyssEndpoint() {
+    return this.cfg.abyssEndpoint
+  }
+
+  get abyssPassword() {
+    return this.cfg.abyssPassword
+  }
+
+  get imgUriEndpoint() {
+    return this.cfg.imgUriEndpoint
   }
 
   get indexerConcurrency() {
@@ -200,6 +230,14 @@ export class IndexerConfig {
 
   get labelerKeywords() {
     return this.cfg.labelerKeywords
+  }
+
+  get fuzzyMatchB64() {
+    return this.cfg.fuzzyMatchB64
+  }
+
+  get fuzzyFalsePositiveB64() {
+    return this.cfg.fuzzyFalsePositiveB64
   }
 
   get pushNotificationEndpoint() {

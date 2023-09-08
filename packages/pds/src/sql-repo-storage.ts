@@ -206,44 +206,6 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
     }
   }
 
-  async getCarStreamLegacy() {
-    const root = await this.getRoot()
-    if (!root) {
-      throw new RepoRootNotFoundError()
-    }
-    return writeCarStream(root, async (car) => {
-      let cursor: CID | undefined = undefined
-      do {
-        const res = await this.getBlockRangeLegacy(cursor)
-        for (const row of res) {
-          await car.put({
-            cid: CID.parse(row.cid),
-            bytes: row.content,
-          })
-        }
-        const lastRow = res.at(-1)
-        if (lastRow) {
-          cursor = CID.parse(lastRow.cid)
-        } else {
-          cursor = undefined
-        }
-      } while (cursor)
-    })
-  }
-
-  async getBlockRangeLegacy(cursor?: CID) {
-    let builder = this.db.db
-      .selectFrom('ipld_block')
-      .where('creator', '=', this.did)
-      .select(['cid', 'content'])
-      .orderBy('cid', 'asc')
-      .limit(500)
-    if (cursor) {
-      builder = builder.where('cid', '>', cursor.toString())
-    }
-    return builder.execute()
-  }
-
   async getCarStream(since?: string) {
     const root = await this.getRoot()
     if (!root) {

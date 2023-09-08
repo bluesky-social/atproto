@@ -1,6 +1,11 @@
 import { dedupeStrs } from '@atproto/common'
+import * as ui8 from 'uint8arrays'
 
-export class UnacceptableWordValidator {
+export interface TextFlagger {
+  getMatches(string: string): string[]
+}
+
+export class FuzzyMatcher implements TextFlagger {
   private bannedWords: Set<string>
   private falsePositives: Set<string>
 
@@ -8,6 +13,13 @@ export class UnacceptableWordValidator {
     this.bannedWords = new Set(bannedWords.map((word) => word.toLowerCase()))
     this.falsePositives = new Set(
       falsePositives.map((word) => word.toLowerCase()),
+    )
+  }
+
+  static fromB64(bannedB64: string, falsePositivesB64?: string) {
+    return new FuzzyMatcher(
+      decode(bannedB64),
+      falsePositivesB64 ? decode(falsePositivesB64) : undefined,
     )
   }
 
@@ -103,4 +115,12 @@ export class UnacceptableWordValidator {
 
     return []
   }
+}
+
+export const decode = (encoded: string): string[] => {
+  return ui8.toString(ui8.fromString(encoded, 'base64'), 'utf8').split(',')
+}
+
+export const encode = (words: string[]): string => {
+  return ui8.toString(ui8.fromString(words.join(','), 'utf8'), 'base64')
 }

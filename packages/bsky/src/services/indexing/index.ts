@@ -26,9 +26,9 @@ import * as FeedGenerator from './plugins/feed-generator'
 import RecordProcessor from './processor'
 import { subLogger } from '../../logger'
 import { retryHttp } from '../../util/retry'
-import { Labeler } from '../../labeler'
 import { BackgroundQueue } from '../../background'
 import { NotificationServer } from '../../notifications'
+import { AutoModerator } from '../../auto-moderator'
 import { Actor } from '../../db/tables/actor'
 
 export class IndexingService {
@@ -48,7 +48,7 @@ export class IndexingService {
   constructor(
     public db: PrimaryDatabase,
     public idResolver: IdResolver,
-    public labeler: Labeler,
+    public autoMod: AutoModerator,
     public backgroundQueue: BackgroundQueue,
     public notifServer?: NotificationServer,
   ) {
@@ -75,7 +75,7 @@ export class IndexingService {
     return new IndexingService(
       txn,
       this.idResolver,
-      this.labeler,
+      this.autoMod,
       this.backgroundQueue,
       this.notifServer,
     )
@@ -83,12 +83,12 @@ export class IndexingService {
 
   static creator(
     idResolver: IdResolver,
-    labeler: Labeler,
+    autoMod: AutoModerator,
     backgroundQueue: BackgroundQueue,
     notifServer?: NotificationServer,
   ) {
     return (db: PrimaryDatabase) =>
-      new IndexingService(db, idResolver, labeler, backgroundQueue, notifServer)
+      new IndexingService(db, idResolver, autoMod, backgroundQueue, notifServer)
   }
 
   async indexRecord(
@@ -111,7 +111,7 @@ export class IndexingService {
       }
     })
     if (!opts?.disableLabels) {
-      this.labeler.processRecord(uri, obj)
+      this.autoMod.processRecord(uri, cid, obj)
     }
   }
 
@@ -168,6 +168,10 @@ export class IndexingService {
       .onConflict((oc) => oc.column('did').doUpdateSet(actorInfo))
       .returning('did')
       .executeTakeFirst()
+
+    if (handle) {
+      this.autoMod.processHandle(handle, did)
+    }
   }
 
   async indexRepo(did: string, commit?: string) {

@@ -7,18 +7,18 @@
       "type": "object",
       "required": ["did", "handle"],
       "properties": {
-        "did": {"type": "string", "format": "did"},
-        "handle": {"type": "string", "format": "handle"},
+        "did": { "type": "string", "format": "did" },
+        "handle": { "type": "string", "format": "handle" },
         "displayName": {
           "type": "string",
           "maxGraphemes": 64,
           "maxLength": 640
         },
         "avatar": { "type": "string" },
-        "viewer": {"type": "ref", "ref": "#viewerState"},
+        "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",
-          "items": {"type": "ref", "ref": "com.atproto.label.defs#label"}
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         }
       }
     },
@@ -26,8 +26,8 @@
       "type": "object",
       "required": ["did", "handle"],
       "properties": {
-        "did": {"type": "string", "format":"did"},
-        "handle": {"type": "string", "format":"handle"},
+        "did": { "type": "string", "format": "did" },
+        "handle": { "type": "string", "format": "handle" },
         "displayName": {
           "type": "string",
           "maxGraphemes": 64,
@@ -39,11 +39,11 @@
           "maxLength": 2560
         },
         "avatar": { "type": "string" },
-        "indexedAt": {"type": "string", "format": "datetime"},
-        "viewer": {"type": "ref", "ref": "#viewerState"},
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",
-          "items": {"type": "ref", "ref": "com.atproto.label.defs#label"}
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         }
       }
     },
@@ -51,8 +51,8 @@
       "type": "object",
       "required": ["did", "handle"],
       "properties": {
-        "did": {"type": "string", "format": "did"},
-        "handle": {"type": "string", "format": "handle"},
+        "did": { "type": "string", "format": "did" },
+        "handle": { "type": "string", "format": "handle" },
         "displayName": {
           "type": "string",
           "maxGraphemes": 64,
@@ -65,26 +65,29 @@
         },
         "avatar": { "type": "string" },
         "banner": { "type": "string" },
-        "followersCount": {"type": "integer"},
-        "followsCount": {"type": "integer"},
-        "postsCount": {"type": "integer"},
-        "indexedAt": {"type": "string", "format": "datetime"},
-        "viewer": {"type": "ref", "ref": "#viewerState"},
+        "followersCount": { "type": "integer" },
+        "followsCount": { "type": "integer" },
+        "postsCount": { "type": "integer" },
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",
-          "items": {"type": "ref", "ref": "com.atproto.label.defs#label"}
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         }
       }
     },
     "viewerState": {
       "type": "object",
       "properties": {
-        "muted": {"type": "boolean"},
-        "mutedByList": {"type": "ref", "ref": "app.bsky.graph.defs#listViewBasic"},
-        "blockedBy": {"type": "boolean"},
-        "blocking": {"type": "string", "format": "at-uri"},
-        "following": {"type": "string", "format": "at-uri"},
-        "followedBy": {"type": "string", "format": "at-uri"}
+        "muted": { "type": "boolean" },
+        "mutedByList": {
+          "type": "ref",
+          "ref": "app.bsky.graph.defs#listViewBasic"
+        },
+        "blockedBy": { "type": "boolean" },
+        "blocking": { "type": "string", "format": "at-uri" },
+        "following": { "type": "string", "format": "at-uri" },
+        "followedBy": { "type": "string", "format": "at-uri" }
       }
     },
     "preferences": {
@@ -94,7 +97,8 @@
         "refs": [
           "#adultContentPref",
           "#contentLabelPref",
-          "#savedFeedsPref"
+          "#savedFeedsPref",
+          "#personalDetailsPref"
         ]
       }
     },
@@ -102,15 +106,18 @@
       "type": "object",
       "required": ["enabled"],
       "properties": {
-        "enabled": {"type": "boolean", "default": false}
+        "enabled": { "type": "boolean", "default": false }
       }
     },
     "contentLabelPref": {
       "type": "object",
       "required": ["label", "visibility"],
       "properties": {
-        "label": {"type": "string"},
-        "visibility": {"type": "string", "knownValues": ["show", "warn", "hide"]}
+        "label": { "type": "string" },
+        "visibility": {
+          "type": "string",
+          "knownValues": ["show", "warn", "hide"]
+        }
       }
     },
     "savedFeedsPref": {
@@ -130,6 +137,16 @@
             "type": "string",
             "format": "at-uri"
           }
+        }
+      }
+    },
+    "personalDetailsPref": {
+      "type": "object",
+      "properties": {
+        "birthDate": {
+          "type": "string",
+          "format": "datetime",
+          "description": "The birth date of the owner of the account."
         }
       }
     }

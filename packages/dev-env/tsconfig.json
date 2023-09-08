@@ -6,13 +6,13 @@
     "emitDeclarationOnly": true
   },
   "module": "esnext",
-  "include": ["./src","__tests__/**/**.ts"],
+  "include": ["./src", "__tests__/**/**.ts"],
   "references": [
     { "path": "../api/tsconfig.build.json" },
     { "path": "../bsky/tsconfig.build.json" },
     { "path": "../crypto/tsconfig.build.json" },
     { "path": "../identity/tsconfig.build.json" },
     { "path": "../pds/tsconfig.json" },
-    { "path": "../uri/tsconfig.build.json" },
+    { "path": "../uri/tsconfig.build.json" }
   ]
 }

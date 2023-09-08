@@ -10,17 +10,22 @@
         "required": ["uriPatterns"],
         "properties": {
           "uriPatterns": {
-              "type": "array",
-              "items": {"type": "string"},
-              "description": "List of AT URI patterns to match (boolean 'OR'). Each may be a prefix (ending with '*'; will match inclusive of the string leading to '*'), or a full URI"
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of AT URI patterns to match (boolean 'OR'). Each may be a prefix (ending with '*'; will match inclusive of the string leading to '*'), or a full URI"
           },
           "sources": {
-              "type": "array",
-              "items": {"type": "string", "format": "did"},
-              "description": "Optional list of label sources (DIDs) to filter on"
+            "type": "array",
+            "items": { "type": "string", "format": "did" },
+            "description": "Optional list of label sources (DIDs) to filter on"
           },
-          "limit": {"type": "integer", "minimum": 1, "maximum": 250, "default": 50},
-          "cursor": {"type": "string"}
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 250,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
         }
       },
       "output": {
@@ -29,10 +34,10 @@
           "type": "object",
           "required": ["labels"],
           "properties": {
-            "cursor": {"type": "string"},
+            "cursor": { "type": "string" },
             "labels": {
               "type": "array",
-              "items": {"type": "ref", "ref": "com.atproto.label.defs#label"}
+              "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
             }
           }
         }
