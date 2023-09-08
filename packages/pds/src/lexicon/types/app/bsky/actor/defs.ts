@@ -108,6 +108,7 @@ export type Preferences = (
   | AdultContentPref
   | ContentLabelPref
   | SavedFeedsPref
+  | PersonalDetailsPref
   | { $type: string; [k: string]: unknown }
 )[]
 
@@ -162,4 +163,22 @@ export function isSavedFeedsPref(v: unknown): v is SavedFeedsPref {
 
 export function validateSavedFeedsPref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#savedFeedsPref', v)
+}
+
+export interface PersonalDetailsPref {
+  /** The birth date of the owner of the account. */
+  birthDate?: string
+  [k: string]: unknown
+}
+
+export function isPersonalDetailsPref(v: unknown): v is PersonalDetailsPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#personalDetailsPref'
+  )
+}
+
+export function validatePersonalDetailsPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#personalDetailsPref', v)
 }

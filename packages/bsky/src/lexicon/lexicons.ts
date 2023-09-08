@@ -3714,6 +3714,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#adultContentPref',
             'lex:app.bsky.actor.defs#contentLabelPref',
             'lex:app.bsky.actor.defs#savedFeedsPref',
+            'lex:app.bsky.actor.defs#personalDetailsPref',
           ],
         },
       },
@@ -3757,6 +3758,16 @@ export const schemaDict = {
               type: 'string',
               format: 'at-uri',
             },
+          },
+        },
+      },
+      personalDetailsPref: {
+        type: 'object',
+        properties: {
+          birthDate: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The birth date of the owner of the account.',
           },
         },
       },
