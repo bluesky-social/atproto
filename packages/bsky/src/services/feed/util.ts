@@ -50,9 +50,9 @@ export const checkInvalidInteractions = async (
 
   // check mentions first since it's quick and synchronous
   if (allowMentions) {
-    const isMentioned = root?.facets?.some(
-      (item) => isMention(item) && item.did === did,
-    )
+    const isMentioned = root?.facets?.some((facet) => {
+      return facet.features.some((item) => isMention(item) && item.did === did)
+    })
     if (isMentioned) {
       return false
     }

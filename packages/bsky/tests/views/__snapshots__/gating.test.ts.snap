@@ -1,0 +1,44 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`views with interaction gating applies gate after root post is deleted. 1`] = `undefined`;
+
+exports[`views with interaction gating applies gate for empty rules. 1`] = `
+Object {
+  "allow": Array [],
+}
+`;
+
+exports[`views with interaction gating applies gate for following rule. 1`] = `
+Object {
+  "allow": Array [
+    Object {
+      "$type": "app.bsky.feed.defs#followingRuleView",
+    },
+  ],
+}
+`;
+
+exports[`views with interaction gating applies gate for mention rule. 1`] = `
+Object {
+  "allow": Array [
+    Object {
+      "$type": "app.bsky.feed.defs#mentionRuleView",
+    },
+  ],
+}
+`;
+
+exports[`views with interaction gating applies gate for missing rules, takes no action. 1`] = `Object {}`;
+
+exports[`views with interaction gating applies gate for multiple rules. 1`] = `
+Object {
+  "allow": Array [
+    Object {
+      "$type": "app.bsky.feed.defs#mentionRuleView",
+    },
+    Object {
+      "$type": "app.bsky.feed.defs#followingRuleView",
+    },
+  ],
+}
+`;
