@@ -11,8 +11,17 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('requestedAt', timestamp, (col) => col.notNull())
     .addPrimaryKeyConstraint('email_token_pkey', ['purpose', 'did'])
     .execute()
+
+  await db.schema
+    .alterTable('user_account')
+    .addColumn('emailConfirmedAt', 'varchar')
+    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('email_token').execute()
+  await db.schema
+    .alterTable('user_account')
+    .dropColumn('emailConfirmedAt')
+    .execute()
 }

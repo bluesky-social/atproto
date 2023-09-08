@@ -12,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('user not found')
       }
 
-      const tokenRequired = user.emailConfirmedAt !== null
+      const tokenRequired = !!user.emailConfirmedAt
       if (tokenRequired) {
         const token = await ctx.services
           .account(ctx.db)

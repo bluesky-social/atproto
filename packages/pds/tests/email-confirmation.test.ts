@@ -53,6 +53,14 @@ describe('email confirmation', () => {
   const getTokenFromMail = (mail: Mail.Options) =>
     mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1]
 
+  it('starts a user out unverified', async () => {
+    const session = await agent.api.com.atproto.server.getSession(
+      {},
+      { headers: sc.getHeaders(alice.did) },
+    )
+    expect(session.data.emailConfirmed).toEqual(false)
+  })
+
   it('allows email update without token when unverified', async () => {
     const res = await agent.api.com.atproto.server.requestEmailUpdate(
       undefined,
@@ -84,36 +92,45 @@ describe('email confirmation', () => {
       }),
     )
     expect(mail.to).toEqual(alice.email)
-    expect(mail.html).toEqual('Confirm your Bluesky email')
+    expect(mail.html).toContain('Confirm your Bluesky email')
     confirmToken = getTokenFromMail(mail)
     expect(confirmToken).toBeDefined()
   })
 
   it('fails email confirmation with a bad token', async () => {
-    const attempt = agent.api.com.atproto.server.confirmEmail({
-      email: 'new-alice@example.com',
-      token: '123456',
-    })
+    const attempt = agent.api.com.atproto.server.confirmEmail(
+      {
+        email: 'new-alice@example.com',
+        token: '123456',
+      },
+      { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
+    )
     await expect(attempt).rejects.toThrow(
       ComAtprotoServerConfirmEmail.InvalidTokenError,
     )
   })
 
   it('fails email confirmation with a bad token', async () => {
-    const attempt = agent.api.com.atproto.server.confirmEmail({
-      email: 'fake-alice@example.com',
-      token: confirmToken,
-    })
+    const attempt = agent.api.com.atproto.server.confirmEmail(
+      {
+        email: 'fake-alice@example.com',
+        token: confirmToken,
+      },
+      { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
+    )
     await expect(attempt).rejects.toThrow(
       ComAtprotoServerConfirmEmail.InvalidEmailError,
     )
   })
 
   it('confirms email', async () => {
-    await agent.api.com.atproto.server.confirmEmail({
-      email: 'new-alice@example.com',
-      token: confirmToken,
-    })
+    await agent.api.com.atproto.server.confirmEmail(
+      {
+        email: 'new-alice@example.com',
+        token: confirmToken,
+      },
+      { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
+    )
     const session = await agent.api.com.atproto.server.getSession(
       {},
       { headers: sc.getHeaders(alice.did) },
@@ -136,7 +153,7 @@ describe('email confirmation', () => {
   let updateToken
 
   it('requests email update', async () => {
-    const mail = await getMailFrom(async () => {
+    const reqUpdate = async () => {
       const res = await agent.api.com.atproto.server.requestEmailUpdate(
         undefined,
         {
@@ -144,28 +161,35 @@ describe('email confirmation', () => {
         },
       )
       expect(res.data.tokenRequired).toBe(true)
-    })
+    }
+    const mail = await getMailFrom(reqUpdate())
     expect(mail.to).toEqual(alice.email)
-    expect(mail.html).toEqual('Update your Bluesky email')
+    expect(mail.html).toContain('Update your Bluesky email')
     updateToken = getTokenFromMail(mail)
     expect(updateToken).toBeDefined()
   })
 
   it('fails email update with a bad token', async () => {
-    const attempt = agent.api.com.atproto.server.updateEmail({
-      email: 'new-alice-2@example.com',
-      token: '123456',
-    })
+    const attempt = agent.api.com.atproto.server.updateEmail(
+      {
+        email: 'new-alice-2@example.com',
+        token: '123456',
+      },
+      { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
+    )
     await expect(attempt).rejects.toThrow(
       ComAtprotoServerUpdateEmail.InvalidTokenError,
     )
   })
 
   it('updates email', async () => {
-    await agent.api.com.atproto.server.updateEmail({
-      email: 'new-alice-2@example.com',
-      token: updateToken,
-    })
+    await agent.api.com.atproto.server.updateEmail(
+      {
+        email: 'new-alice-2@example.com',
+        token: updateToken,
+      },
+      { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
+    )
 
     const session = await agent.api.com.atproto.server.getSession(
       {},
