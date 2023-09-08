@@ -19,7 +19,6 @@ import { LabelService } from '../app-view/services/label'
 import { BackgroundQueue } from '../event-stream/background-queue'
 import { Crawlers } from '../crawlers'
 import { LabelCache } from '../label-cache'
-import { ContentReporter } from '../content-reporter'
 import { LocalService } from './local'
 
 export function createServices(resources: {
@@ -30,7 +29,6 @@ export function createServices(resources: {
   imgInvalidator: ImageInvalidator
   labeler: Labeler
   labelCache: LabelCache
-  contentReporter?: ContentReporter
   appviewAgent?: AtpAgent
   appviewDid?: string
   appviewCdnUrlPattern?: string
@@ -45,7 +43,6 @@ export function createServices(resources: {
     imgInvalidator,
     labeler,
     labelCache,
-    contentReporter,
     appviewAgent,
     appviewDid,
     appviewCdnUrlPattern,
@@ -63,7 +60,6 @@ export function createServices(resources: {
       backgroundQueue,
       crawlers,
       labeler,
-      contentReporter,
     ),
     local: LocalService.creator(
       repoSigningKey,

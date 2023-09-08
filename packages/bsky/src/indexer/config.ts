@@ -18,6 +18,8 @@ export interface IndexerConfigValues {
   abyssEndpoint?: string
   abyssPassword?: string
   imgUriEndpoint?: string
+  fuzzyMatchB64?: string
+  fuzzyFalsePositiveB64?: string
   labelerKeywords: Record<string, string>
   moderationPushUrl?: string
   indexerConcurrency?: number
@@ -90,6 +92,9 @@ export class IndexerConfig {
     const ingesterPartitionCount =
       maybeParseInt(process.env.INGESTER_PARTITION_COUNT) ?? 64
     const labelerKeywords = {}
+    const fuzzyMatchB64 = process.env.FUZZY_MATCH_B64 || undefined
+    const fuzzyFalsePositiveB64 =
+      process.env.FUZZY_FALSE_POSITIVE_B64 || undefined
     const pushNotificationEndpoint = process.env.PUSH_NOTIFICATION_ENDPOINT
     assert(dbPostgresUrl)
     assert(redisHost || (redisSentinelName && redisSentinelHosts?.length))
@@ -120,6 +125,8 @@ export class IndexerConfig {
       indexerPort,
       ingesterPartitionCount,
       labelerKeywords,
+      fuzzyMatchB64,
+      fuzzyFalsePositiveB64,
       pushNotificationEndpoint,
       ...stripUndefineds(overrides ?? {}),
     })
@@ -223,6 +230,14 @@ export class IndexerConfig {
 
   get labelerKeywords() {
     return this.cfg.labelerKeywords
+  }
+
+  get fuzzyMatchB64() {
+    return this.cfg.fuzzyMatchB64
+  }
+
+  get fuzzyFalsePositiveB64() {
+    return this.cfg.fuzzyFalsePositiveB64
   }
 
   get pushNotificationEndpoint() {

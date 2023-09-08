@@ -7,11 +7,11 @@ import { PrimaryDatabase } from '../db'
 import { IdResolver } from '@atproto/identity'
 import { labelerLogger as log } from '../logger'
 
-export interface TakedownFlagger {
+export interface ImageFlagger {
   scanImage(did: string, cid: CID): Promise<string[]>
 }
 
-export class Abyss implements TakedownFlagger {
+export class Abyss implements ImageFlagger {
   protected auth: string
 
   constructor(

@@ -165,6 +165,10 @@ export class IndexingService {
       .onConflict((oc) => oc.column('did').doUpdateSet(actorInfo))
       .returning('did')
       .executeTakeFirst()
+
+    if (handle) {
+      this.autoMod.processHandle(handle, did)
+    }
   }
 
   async indexRepo(did: string, commit?: string) {

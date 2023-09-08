@@ -94,7 +94,12 @@
       "type": "array",
       "items": {
         "type": "union",
-        "refs": ["#adultContentPref", "#contentLabelPref", "#savedFeedsPref"]
+        "refs": [
+          "#adultContentPref",
+          "#contentLabelPref",
+          "#savedFeedsPref",
+          "#personalDetailsPref"
+        ]
       }
     },
     "adultContentPref": {
@@ -132,6 +137,16 @@
             "type": "string",
             "format": "at-uri"
           }
+        }
+      }
+    },
+    "personalDetailsPref": {
+      "type": "object",
+      "properties": {
+        "birthDate": {
+          "type": "string",
+          "format": "datetime",
+          "description": "The birth date of the owner of the account."
         }
       }
     }
