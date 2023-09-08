@@ -1,13 +1,22 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.confirmEmail({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth, input }) => {
       const did = auth.credentials.did
-      const { token } = input.body
+      const { token, email } = input.body
 
+      const user = await ctx.services.account(ctx.db).getAccount(did)
+      if (!user) {
+        throw new InvalidRequestError('user not found')
+      }
+
+      if (user.email !== email.toLowerCase()) {
+        throw new InvalidRequestError('invalid email', 'InvalidEmail')
+      }
       await ctx.services
         .account(ctx.db)
         .assertValidToken(did, 'confirm_email', token)

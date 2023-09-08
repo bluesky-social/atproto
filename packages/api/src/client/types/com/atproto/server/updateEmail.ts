@@ -39,10 +39,17 @@ export class InvalidTokenError extends XRPCError {
   }
 }
 
+export class TokenRequiredError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'ExpiredToken') return new ExpiredTokenError(e)
     if (e.error === 'InvalidToken') return new InvalidTokenError(e)
+    if (e.error === 'TokenRequired') return new TokenRequiredError(e)
   }
   return e
 }

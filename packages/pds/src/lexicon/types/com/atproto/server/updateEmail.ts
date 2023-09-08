@@ -25,7 +25,7 @@ export interface HandlerInput {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'ExpiredToken' | 'InvalidToken'
+  error?: 'ExpiredToken' | 'InvalidToken' | 'TokenRequired'
 }
 
 export type HandlerOutput = HandlerError | void

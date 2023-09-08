@@ -2263,10 +2263,16 @@ export const schemaDict = {
         },
         errors: [
           {
+            name: 'UserNotFound',
+          },
+          {
             name: 'ExpiredToken',
           },
           {
             name: 'InvalidToken',
+          },
+          {
+            name: 'InvalidEmail',
           },
         ],
       },
@@ -2556,6 +2562,9 @@ export const schemaDict = {
               email: {
                 type: 'string',
               },
+              emailConfirmed: {
+                type: 'boolean',
+              },
             },
           },
         },
@@ -2785,6 +2794,9 @@ export const schemaDict = {
               },
               email: {
                 type: 'string',
+              },
+              emailConfirmed: {
+                type: 'boolean',
               },
             },
           },
@@ -3024,6 +3036,9 @@ export const schemaDict = {
           },
           {
             name: 'InvalidToken',
+          },
+          {
+            name: 'TokenRequired',
           },
         ],
       },

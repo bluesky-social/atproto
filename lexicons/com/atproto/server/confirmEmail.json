@@ -16,7 +16,12 @@
           }
         }
       },
-      "errors": [{ "name": "ExpiredToken" }, { "name": "InvalidToken" }]
+      "errors": [
+        { "name": "UserNotFound" },
+        { "name": "ExpiredToken" },
+        { "name": "InvalidToken" },
+        { "name": "InvalidEmail" }
+      ]
     }
   }
 }
