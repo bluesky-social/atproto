@@ -72,6 +72,7 @@ const presentation = (state: HydrationState, ctx: Context) => {
       uri,
       actors,
       state.posts,
+      state.gates,
       state.embeds,
       state.labels,
       state.lists,
