@@ -95,6 +95,7 @@ export class TestBsky {
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
       abyssEndpoint: '',
       abyssPassword: '',
+      imgUriEndpoint: 'img.example.com',
       moderationPushUrl: `http://admin:${config.adminPassword}@localhost:${cfg.pdsPort}`,
       indexerPartitionIds: [0],
       indexerNamespace: `ns${ns}`,
@@ -102,6 +103,7 @@ export class TestBsky {
       indexerPort: await getPort(),
       ingesterPartitionCount: 1,
       pushNotificationEndpoint: 'https://push.bsky.app/api/push',
+      ...(cfg.indexer ?? {}),
     })
     assert(indexerCfg.redisHost)
     const indexerRedis = new bsky.Redis({
@@ -124,6 +126,7 @@ export class TestBsky {
       ingesterNamespace: `ns${ns}`,
       ingesterSubLockId: uniqueLockId(),
       ingesterPartitionCount: 1,
+      ...(cfg.ingester ?? {}),
     })
     assert(ingesterCfg.redisHost)
     const ingesterRedis = new bsky.Redis({

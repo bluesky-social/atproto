@@ -24,6 +24,8 @@ export type BskyConfig = Partial<bsky.ServerConfig> & {
   imgInvalidator?: ImageInvalidator
   migration?: string
   algos?: bsky.MountedAlgos
+  indexer?: Partial<bsky.IndexerConfig>
+  ingester?: Partial<bsky.IngesterConfig>
 }
 
 export type TestServerParams = {
