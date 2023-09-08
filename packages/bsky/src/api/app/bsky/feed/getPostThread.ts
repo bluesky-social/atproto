@@ -9,6 +9,7 @@ import {
   isThreadViewPost,
 } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
+import { Record as GateRecord } from '../../../../lexicon/types/app/bsky/feed/gate'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import AppContext from '../../../../context'
 import {
@@ -80,12 +81,13 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
   const hydrated = await feedService.feedHydration({ ...relevant, viewer })
   // check root reply interaction rules
   const rootUri = threadData.post.replyRoot || threadData.post.postUri
-  const root = hydrated.posts[rootUri]?.record as PostRecord | undefined
+  const root = hydrated.posts[rootUri]
   const viewerCanReply = await checkViewerCanReply(
     ctx.db.db,
     viewer,
     new AtUri(rootUri),
-    root,
+    (root?.record ?? null) as PostRecord | null,
+    root?.gate ?? null,
   )
   return { ...state, ...hydrated, viewerCanReply }
 }
@@ -296,7 +298,8 @@ const checkViewerCanReply = async (
   db: DatabaseSchema,
   viewer: string | null,
   rootUri: AtUri,
-  root?: PostRecord,
+  root: PostRecord | null,
+  gate: GateRecord | null,
 ) => {
   if (viewer && root) {
     const isInvalidInteraction = await checkInvalidInteractions(
@@ -304,6 +307,7 @@ const checkViewerCanReply = async (
       viewer,
       rootUri,
       root,
+      gate,
     )
     return !isInvalidInteraction
   }

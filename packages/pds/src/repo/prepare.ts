@@ -156,7 +156,7 @@ export const prepareCreate = async (opts: {
     assertValidRecord(record)
   }
   if (collection === lex.ids.AppBskyFeedPost && opts.rkey) {
-    // @TODO temporary
+    // @TODO temporary, may be needed for app.bsky.feed.gate
     throw new InvalidRequestError(
       'Custom rkeys for post records are not currently supported.',
     )

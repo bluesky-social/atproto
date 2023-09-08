@@ -1,19 +1,24 @@
-import { Selectable, sql } from 'kysely'
+import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
 import {
   Record as PostRecord,
   ReplyRef,
-  isFollowingInteraction,
-  isListInteraction,
-  isMentionInteraction,
 } from '../../lexicon/types/app/bsky/feed/post'
+import {
+  Record as GateRecord,
+  isFollowingRule,
+  isListRule,
+  isMentionRule,
+} from '../../lexicon/types/app/bsky/feed/gate'
 import { isMention } from '../../lexicon/types/app/bsky/richtext/facet'
 import { valuesList } from '../../db/util'
-import DatabaseSchema, { DatabaseSchemaType } from '../../db/database-schema'
+import DatabaseSchema from '../../db/database-schema'
+import { ids } from '../../lexicon/lexicons'
 
-type Post = Selectable<DatabaseSchemaType['post']>
-
-export const checkInvalidReplyParent = (reply: ReplyRef, parent: Post) => {
+export const checkInvalidReplyParent = (
+  reply: ReplyRef,
+  parent: { isInvalidReply: boolean | null; record: PostRecord },
+) => {
   const replyRoot = reply.root.uri
   const replyParent = reply.parent.uri
   // if parent is not a valid reply, transitively this is not a valid one either
@@ -22,10 +27,10 @@ export const checkInvalidReplyParent = (reply: ReplyRef, parent: Post) => {
   }
   // replying to root post: ensure the root looks correct
   if (replyParent === replyRoot) {
-    return parent.replyParent !== null || parent.replyRoot !== null
+    return !!parent.record.reply
   }
   // replying to a reply: ensure the parent is a reply for the same root post
-  return parent.replyRoot !== replyRoot
+  return parent.record.reply?.root.uri !== replyRoot
 }
 
 export const checkInvalidInteractions = async (
@@ -33,13 +38,14 @@ export const checkInvalidInteractions = async (
   did: string,
   rootUri: AtUri,
   root: PostRecord,
+  gate: GateRecord | null,
 ) => {
-  if (!root.interactions) return false
+  if (!gate?.allow) return false
 
-  const allowMentions = root.interactions.find(isMentionInteraction)
-  const allowFollowing = root.interactions.find(isFollowingInteraction)
-  const allowListUris = root.interactions
-    .filter(isListInteraction)
+  const allowMentions = gate.allow.find(isMentionRule)
+  const allowFollowing = gate.allow.find(isFollowingRule)
+  const allowListUris = gate.allow
+    ?.filter(isListRule)
     .map((item) => item.list.uri)
 
   // check mentions first since it's quick and synchronous
@@ -89,4 +95,10 @@ export const checkInvalidInteractions = async (
   }
 
   return true
+}
+
+export const postToGateUri = (postUri: string) => {
+  const gateUri = new AtUri(postUri)
+  gateUri.collection = ids.AppBskyFeedGate
+  return gateUri.toString()
 }

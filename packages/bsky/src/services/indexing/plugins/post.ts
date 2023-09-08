@@ -6,6 +6,7 @@ import {
   Record as PostRecord,
   ReplyRef,
 } from '../../../lexicon/types/app/bsky/feed/post'
+import { Record as GateRecord } from '../../../lexicon/types/app/bsky/feed/gate'
 import { isMain as isEmbedImage } from '../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../lexicon/types/app/bsky/embed/record'
@@ -27,6 +28,7 @@ import { NotificationServer } from '../../../notifications'
 import {
   checkInvalidInteractions,
   checkInvalidReplyParent,
+  postToGateUri,
 } from '../../feed/util'
 
 type Notif = Insertable<Notification>
@@ -424,7 +426,8 @@ async function checkReplyInteractions(
       db,
       creator,
       new AtUri(replyRefs.root.uri),
-      jsonStringToLex(replyRefs.root.json) as PostRecord,
+      replyRefs.root.record,
+      replyRefs.gate?.record ?? null,
     )
   }
   return {
@@ -436,15 +439,31 @@ async function checkReplyInteractions(
 async function getReplyRefs(db: DatabaseSchema, reply: ReplyRef) {
   const replyRoot = reply.root.uri
   const replyParent = reply.parent.uri
-  const replyRefs = await db
-    .selectFrom('post')
-    .innerJoin('record', 'record.uri', 'post.uri')
-    .where('post.uri', 'in', [replyRoot, replyParent])
+  const replyGate = postToGateUri(replyRoot)
+  const results = await db
+    .selectFrom('record')
+    .where('record.uri', 'in', [replyRoot, replyGate, replyParent])
+    .leftJoin('post', 'post.uri', 'record.uri')
     .selectAll('post')
-    .select('record.json')
+    .select(['record.uri', 'json'])
     .execute()
+  const root = results.find((ref) => ref.uri === replyRoot)
+  const parent = results.find((ref) => ref.uri === replyParent)
+  const gate = results.find((ref) => ref.uri === replyGate)
   return {
-    root: replyRefs.find((ref) => ref.uri === replyRoot),
-    parent: replyRefs.find((ref) => ref.uri === replyParent),
+    root: root && {
+      uri: root.uri,
+      isInvalidReply: root.isInvalidReply,
+      record: jsonStringToLex(root.json) as PostRecord,
+    },
+    parent: parent && {
+      uri: parent.uri,
+      isInvalidReply: parent.isInvalidReply,
+      record: jsonStringToLex(parent.json) as PostRecord,
+    },
+    gate: gate && {
+      uri: gate.uri,
+      record: jsonStringToLex(gate.json) as GateRecord,
+    },
   }
 }

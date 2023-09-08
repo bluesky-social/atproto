@@ -1,4 +1,5 @@
 import { Selectable } from 'kysely'
+import { Record as GateRecord } from '../../lexicon/types/app/bsky/feed/gate'
 import { View as ImagesEmbedView } from '../../lexicon/types/app/bsky/embed/images'
 import { View as ExternalEmbedView } from '../../lexicon/types/app/bsky/embed/external'
 import {
@@ -35,6 +36,7 @@ export type PostInfo = {
   cid: string
   creator: string
   record: Record<string, unknown>
+  gate: GateRecord | null
   indexedAt: string
   likeCount: number | null
   repostCount: number | null

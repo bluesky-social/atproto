@@ -7,9 +7,12 @@ import { ImageUriBuilder } from '../../image/uri'
 import { ids } from '../../lexicon/lexicons'
 import {
   Record as PostRecord,
-  isListInteraction,
   isRecord as isPostRecord,
 } from '../../lexicon/types/app/bsky/feed/post'
+import {
+  Record as GateRecord,
+  isListRule,
+} from '../../lexicon/types/app/bsky/feed/gate'
 import { isMain as isEmbedImages } from '../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../lexicon/types/app/bsky/embed/external'
 import {
@@ -39,6 +42,7 @@ import {
 } from '../graph'
 import { FeedViews } from './views'
 import { LabelCache } from '../../label-cache'
+import { postToGateUri } from './util'
 
 export * from './types'
 
@@ -116,6 +120,7 @@ export class FeedService {
       )
   }
 
+  // @TODO separate gates so that they can be applied when root no longer exists
   async getPostInfos(
     postUris: string[],
     viewer: string | null,
@@ -123,44 +128,58 @@ export class FeedService {
     if (postUris.length < 1) return {}
     const db = this.db.db
     const { ref } = db.dynamic
-    const posts = await db
-      .selectFrom('post')
-      .where('post.uri', 'in', postUris)
-      .innerJoin('actor', 'actor.did', 'post.creator')
-      .innerJoin('record', 'record.uri', 'post.uri')
-      .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
-      .where(notSoftDeletedClause(ref('actor'))) // Ensures post reply parent/roots get omitted from views when taken down
-      .where(notSoftDeletedClause(ref('record')))
-      .select([
-        'post.uri as uri',
-        'post.cid as cid',
-        'post.creator as creator',
-        'post.sortAt as indexedAt',
-        'record.json as recordJson',
-        'post_agg.likeCount as likeCount',
-        'post_agg.repostCount as repostCount',
-        'post_agg.replyCount as replyCount',
-        db
-          .selectFrom('repost')
-          .if(!viewer, (q) => q.where(noMatch))
-          .where('creator', '=', viewer ?? '')
-          .whereRef('subject', '=', ref('post.uri'))
-          .select('uri')
-          .as('requesterRepost'),
-        db
-          .selectFrom('like')
-          .if(!viewer, (q) => q.where(noMatch))
-          .where('creator', '=', viewer ?? '')
-          .whereRef('subject', '=', ref('post.uri'))
-          .select('uri')
-          .as('requesterLike'),
-      ])
-      .execute()
+    const [posts, gates] = await Promise.all([
+      db
+        .selectFrom('post')
+        .where('post.uri', 'in', postUris)
+        .innerJoin('actor', 'actor.did', 'post.creator')
+        .innerJoin('record', 'record.uri', 'post.uri')
+        .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
+        .where(notSoftDeletedClause(ref('actor'))) // Ensures post reply parent/roots get omitted from views when taken down
+        .where(notSoftDeletedClause(ref('record')))
+        .select([
+          'post.uri as uri',
+          'post.cid as cid',
+          'post.creator as creator',
+          'post.sortAt as indexedAt',
+          'record.json as recordJson',
+          'post_agg.likeCount as likeCount',
+          'post_agg.repostCount as repostCount',
+          'post_agg.replyCount as replyCount',
+          db
+            .selectFrom('repost')
+            .if(!viewer, (q) => q.where(noMatch))
+            .where('creator', '=', viewer ?? '')
+            .whereRef('subject', '=', ref('post.uri'))
+            .select('uri')
+            .as('requesterRepost'),
+          db
+            .selectFrom('like')
+            .if(!viewer, (q) => q.where(noMatch))
+            .where('creator', '=', viewer ?? '')
+            .whereRef('subject', '=', ref('post.uri'))
+            .select('uri')
+            .as('requesterLike'),
+        ])
+        .execute(),
+      this.db.db
+        .selectFrom('record')
+        .where('uri', 'in', postUris.map(postToGateUri))
+        .select(['uri', 'json'])
+        .execute(),
+    ])
+    const gatesByUri = gates.reduce((acc, gate) => {
+      acc[gate.uri] = jsonStringToLex(gate.json) as GateRecord
+      return acc
+    }, {} as { [uri: string]: GateRecord })
     return posts.reduce((acc, cur) => {
       const { recordJson, ...post } = cur
+      const record = jsonStringToLex(recordJson) as PostRecord
       const info: PostInfo = {
         ...post,
-        record: jsonStringToLex(recordJson) as Record<string, unknown>,
+        record,
+        // only include gates for root posts
+        gate: (!record.reply && gatesByUri[postToGateUri(post.uri)]) || null,
         viewer,
       }
       return Object.assign(acc, { [post.uri]: info })
@@ -432,10 +451,9 @@ export class FeedService {
   ): Promise<ListInfoMap> {
     const listsUris = new Set<string>()
     Object.values(posts).forEach((post) => {
-      const record = post.record as PostRecord
-      record.interactions?.forEach((interaction) => {
-        if (isListInteraction(interaction)) {
-          listsUris.add(interaction.list.uri)
+      post.gate?.allow?.forEach((rule) => {
+        if (isListRule(rule)) {
+          listsUris.add(rule.list.uri)
         }
       })
     })
