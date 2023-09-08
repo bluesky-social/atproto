@@ -564,7 +564,7 @@ export class AccountService {
     const token = getRandomToken().toUpperCase()
     await this.db.db
       .insertInto('email_token')
-      .values({ purpose, did, token })
+      .values({ purpose, did, token, requestedAt: new Date() })
       .onConflict((oc) => oc.columns(['purpose', 'did']).doUpdateSet({ token }))
       .execute()
     return token

@@ -1,5 +1,3 @@
-import { Generated } from 'kysely'
-
 export type EmailTokenPurpose =
   | 'confirm_email'
   | 'update_email'
@@ -10,7 +8,7 @@ export interface EmailToken {
   purpose: EmailTokenPurpose
   did: string
   token: string
-  requestedAt: Generated<Date>
+  requestedAt: Date
 }
 
 export const tableName = 'email_token'
