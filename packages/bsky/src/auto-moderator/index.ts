@@ -10,17 +10,20 @@ import { buildBasicAuth } from '../auth'
 import { CID } from 'multiformats/cid'
 import { LabelService } from '../services/label'
 import { ModerationService } from '../services/moderation'
-import { TakedownFlagger } from './abyss'
+import { ImageFlagger } from './abyss'
 import { HiveLabeler, ImgLabeler } from './hive'
 import { KeywordLabeler, TextLabeler } from './keyword'
 import { ids } from '../lexicon/lexicons'
 import { ImageUriBuilder } from '../image/uri'
 import { ImageInvalidator } from '../image/invalidator'
 import { Abyss } from './abyss'
+import { FuzzyMatcher, TextFlagger } from './fuzzy-matcher'
+import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
 
 export class AutoModerator {
   public pushAgent?: AtpAgent
-  public takedownFlagger?: TakedownFlagger
+  public imageFlagger?: ImageFlagger
+  public textFlagger?: TextFlagger
   public imgLabeler?: ImgLabeler
   public textLabeler?: TextLabeler
 
@@ -59,11 +62,18 @@ export class AutoModerator {
     this.imgLabeler = hiveApiKey ? new HiveLabeler(hiveApiKey, ctx) : undefined
     this.textLabeler = new KeywordLabeler(ctx.cfg.labelerKeywords)
     if (abyssEndpoint && abyssPassword) {
-      this.takedownFlagger = new Abyss(abyssEndpoint, abyssPassword, ctx)
+      this.imageFlagger = new Abyss(abyssEndpoint, abyssPassword, ctx)
     } else {
       log.error(
         { abyssEndpoint, abyssPassword },
         'abyss not properly configured',
+      )
+    }
+
+    if (ctx.cfg.fuzzyMatchB64) {
+      this.textFlagger = FuzzyMatcher.fromB64(
+        ctx.cfg.fuzzyMatchB64,
+        ctx.cfg.fuzzyFalsePositiveB64,
       )
     }
 
@@ -79,12 +89,18 @@ export class AutoModerator {
 
   processRecord(uri: AtUri, cid: CID, obj: unknown) {
     this.ctx.backgroundQueue.add(async () => {
-      const { text, imgs } = getFieldsFromRecord(obj)
+      const { text, imgs } = getFieldsFromRecord(obj, uri)
       await Promise.all([
         this.labelRecord(uri, cid, text, imgs).catch((err) => {
           log.error(
             { err, uri: uri.toString(), record: obj },
             'failed to label record',
+          )
+        }),
+        this.flagRecordText(uri, cid, text).catch((err) => {
+          log.error(
+            { err, uri: uri.toString(), record: obj },
+            'failed to check record for text flagging',
           )
         }),
         this.checkImgForTakedown(uri, cid, imgs).catch((err) => {
@@ -98,7 +114,7 @@ export class AutoModerator {
   }
 
   async labelRecord(uri: AtUri, recordCid: CID, text: string[], imgs: CID[]) {
-    if (uri.collection === ids.AppBskyActorProfile) {
+    if (uri.collection !== ids.AppBskyFeedPost) {
       // @TODO label profiles
       return
     }
@@ -110,10 +126,41 @@ export class AutoModerator {
     await this.storeLabels(uri, recordCid, labels)
   }
 
+  async flagRecordText(uri: AtUri, recordCid: CID, text: string[]) {
+    if (!this.textFlagger) return
+    if (
+      ![
+        ids.AppBskyActorProfile,
+        ids.AppBskyGraphList,
+        ids.AppBskyFeedGenerator,
+      ].includes(uri.collection)
+    ) {
+      return
+    }
+    const matches = this.textFlagger.getMatches(text.join(' '))
+    if (matches.length < 1) return
+    if (!this.services.moderation) {
+      log.error(
+        { uri: uri.toString(), cid: recordCid.toString(), text, matches },
+        'no moderation service setup to flag record text',
+      )
+      return
+    }
+    await this.services.moderation(this.ctx.db).report({
+      reasonType: REASONOTHER,
+      reason: `Automatically flagged for possible slurs: ${matches.join(', ')}`,
+      subject: {
+        uri,
+        cid: recordCid,
+      },
+      reportedBy: this.ctx.cfg.labelerDid,
+    })
+  }
+
   async checkImgForTakedown(uri: AtUri, recordCid: CID, imgCids: CID[]) {
     if (imgCids.length < 0) return
     const results = await Promise.all(
-      imgCids.map((cid) => this.takedownFlagger?.scanImage(uri.host, cid)),
+      imgCids.map((cid) => this.imageFlagger?.scanImage(uri.host, cid)),
     )
     const takedownCids: CID[] = []
     for (let i = 0; i < results.length; i++) {
