@@ -108,6 +108,7 @@ export type Preferences = (
   | AdultContentPref
   | ContentLabelPref
   | SavedFeedsPref
+  | PersonalDetailsPref
   | { $type: string; [k: string]: unknown }
 )[]
 

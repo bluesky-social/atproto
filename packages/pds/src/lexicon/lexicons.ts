@@ -3714,6 +3714,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#adultContentPref',
             'lex:app.bsky.actor.defs#contentLabelPref',
             'lex:app.bsky.actor.defs#savedFeedsPref',
+            'lex:app.bsky.actor.defs#personalDetailsPref',
           ],
         },
       },
