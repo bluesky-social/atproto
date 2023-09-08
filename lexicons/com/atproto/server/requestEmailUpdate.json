@@ -1,0 +1,10 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.server.requestEmailUpdate",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Request a token in order to update email."
+    }
+  }
+}
