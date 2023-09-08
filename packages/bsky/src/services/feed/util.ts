@@ -36,8 +36,8 @@ export const checkInvalidReplyParent = (
 export const checkInvalidInteractions = async (
   db: DatabaseSchema,
   did: string,
-  rootUri: AtUri,
-  root: PostRecord,
+  owner: string,
+  root: PostRecord | null,
   gate: GateRecord | null,
 ) => {
   if (!gate?.allow) return false
@@ -50,7 +50,7 @@ export const checkInvalidInteractions = async (
 
   // check mentions first since it's quick and synchronous
   if (allowMentions) {
-    const isMentioned = root.facets?.some(
+    const isMentioned = root?.facets?.some(
       (item) => isMention(item) && item.did === did,
     )
     if (isMentioned) {
@@ -70,7 +70,7 @@ export const checkInvalidInteractions = async (
       allowFollowing
         ? db
             .selectFrom('follow')
-            .where('creator', '=', rootUri.hostname)
+            .where('creator', '=', owner)
             .whereRef('subjectDid', '=', ref('subject.did'))
             .select('creator')
             .as('isFollowed')
@@ -101,4 +101,10 @@ export const postToGateUri = (postUri: string) => {
   const gateUri = new AtUri(postUri)
   gateUri.collection = ids.AppBskyFeedGate
   return gateUri.toString()
+}
+
+export const gateToPostUri = (gateUri: string) => {
+  const postUri = new AtUri(gateUri)
+  postUri.collection = ids.AppBskyFeedPost
+  return postUri.toString()
 }

@@ -31,6 +31,7 @@ import {
   RecordEmbedViewRecord,
   PostBlocksMap,
   FeedHydrationState,
+  PostGateMap,
 } from './types'
 import { LabelService } from '../label'
 import { ActorService } from '../actor'
@@ -42,7 +43,7 @@ import {
 } from '../graph'
 import { FeedViews } from './views'
 import { LabelCache } from '../../label-cache'
-import { postToGateUri } from './util'
+import { gateToPostUri, postToGateUri } from './util'
 
 export * from './types'
 
@@ -120,7 +121,6 @@ export class FeedService {
       )
   }
 
-  // @TODO separate gates so that they can be applied when root no longer exists
   async getPostInfos(
     postUris: string[],
     viewer: string | null,
@@ -128,60 +128,43 @@ export class FeedService {
     if (postUris.length < 1) return {}
     const db = this.db.db
     const { ref } = db.dynamic
-    const [posts, gates] = await Promise.all([
-      db
-        .selectFrom('post')
-        .where('post.uri', 'in', postUris)
-        .innerJoin('actor', 'actor.did', 'post.creator')
-        .innerJoin('record', 'record.uri', 'post.uri')
-        .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
-        .where(notSoftDeletedClause(ref('actor'))) // Ensures post reply parent/roots get omitted from views when taken down
-        .where(notSoftDeletedClause(ref('record')))
-        .select([
-          'post.uri as uri',
-          'post.cid as cid',
-          'post.creator as creator',
-          'post.sortAt as indexedAt',
-          'record.json as recordJson',
-          'post_agg.likeCount as likeCount',
-          'post_agg.repostCount as repostCount',
-          'post_agg.replyCount as replyCount',
-          db
-            .selectFrom('repost')
-            .if(!viewer, (q) => q.where(noMatch))
-            .where('creator', '=', viewer ?? '')
-            .whereRef('subject', '=', ref('post.uri'))
-            .select('uri')
-            .as('requesterRepost'),
-          db
-            .selectFrom('like')
-            .if(!viewer, (q) => q.where(noMatch))
-            .where('creator', '=', viewer ?? '')
-            .whereRef('subject', '=', ref('post.uri'))
-            .select('uri')
-            .as('requesterLike'),
-        ])
-        .execute(),
-      this.db.db
-        .selectFrom('record')
-        .where('uri', 'in', postUris.map(postToGateUri))
-        .select(['uri', 'json'])
-        .execute(),
-    ])
-    const gatesByUri = gates.reduce((acc, gate) => {
-      acc[gate.uri] = jsonStringToLex(gate.json) as GateRecord
-      return acc
-    }, {} as { [uri: string]: GateRecord })
+    const posts = await db
+      .selectFrom('post')
+      .where('post.uri', 'in', postUris)
+      .innerJoin('actor', 'actor.did', 'post.creator')
+      .innerJoin('record', 'record.uri', 'post.uri')
+      .leftJoin('post_agg', 'post_agg.uri', 'post.uri')
+      .where(notSoftDeletedClause(ref('actor'))) // Ensures post reply parent/roots get omitted from views when taken down
+      .where(notSoftDeletedClause(ref('record')))
+      .select([
+        'post.uri as uri',
+        'post.cid as cid',
+        'post.creator as creator',
+        'post.sortAt as indexedAt',
+        'record.json as recordJson',
+        'post_agg.likeCount as likeCount',
+        'post_agg.repostCount as repostCount',
+        'post_agg.replyCount as replyCount',
+        db
+          .selectFrom('repost')
+          .if(!viewer, (q) => q.where(noMatch))
+          .where('creator', '=', viewer ?? '')
+          .whereRef('subject', '=', ref('post.uri'))
+          .select('uri')
+          .as('requesterRepost'),
+        db
+          .selectFrom('like')
+          .if(!viewer, (q) => q.where(noMatch))
+          .where('creator', '=', viewer ?? '')
+          .whereRef('subject', '=', ref('post.uri'))
+          .select('uri')
+          .as('requesterLike'),
+      ])
+      .execute()
     return posts.reduce((acc, cur) => {
       const { recordJson, ...post } = cur
       const record = jsonStringToLex(recordJson) as PostRecord
-      const info: PostInfo = {
-        ...post,
-        record,
-        // only include gates for root posts
-        gate: (!record.reply && gatesByUri[postToGateUri(post.uri)]) || null,
-        viewer,
-      }
+      const info: PostInfo = { ...post, record, viewer }
       return Object.assign(acc, { [post.uri]: info })
     }, {} as PostInfoMap)
   }
@@ -241,8 +224,9 @@ export class FeedService {
     depth = 0,
   ): Promise<FeedHydrationState> {
     const { viewer, dids, uris } = refs
-    const [posts, labels, bam] = await Promise.all([
+    const [posts, gates, labels, bam] = await Promise.all([
       this.getPostInfos(Array.from(uris), viewer),
+      this.gatesByPostUri(Array.from(uris)),
       this.services.label.getLabelsForSubjects([...uris, ...dids]),
       this.services.graph.getBlockAndMuteState(
         viewer ? [...dids].map((did) => [viewer, did]) : [],
@@ -257,11 +241,12 @@ export class FeedService {
         { bam, labels },
       ),
       this.blocksForPosts(posts, bam),
-      this.listsForPosts(posts, viewer),
+      this.listsForPostGates(gates, viewer),
     ])
     const embeds = await this.embedsForPosts(posts, blocks, viewer, depth)
     return {
       posts,
+      gates,
       blocks,
       embeds,
       labels, // includes info for profiles
@@ -425,6 +410,7 @@ export class FeedService {
           uri,
           actorInfos,
           feedState.posts,
+          feedState.gates,
           feedState.embeds,
           feedState.labels,
           feedState.lists,
@@ -445,13 +431,28 @@ export class FeedService {
     return recordEmbedViews
   }
 
-  listsForPosts(
-    posts: PostInfoMap,
+  async gatesByPostUri(postUris: string[]): Promise<PostGateMap> {
+    const gates = postUris.length
+      ? await this.db.db
+          .selectFrom('record')
+          .where('uri', 'in', postUris.map(postToGateUri))
+          .select(['uri', 'json'])
+          .execute()
+      : []
+    const gatesByPostUri = gates.reduce((acc, gate) => {
+      acc[gateToPostUri(gate.uri)] = jsonStringToLex(gate.json) as GateRecord
+      return acc
+    }, {} as PostGateMap)
+    return gatesByPostUri
+  }
+
+  listsForPostGates(
+    gates: PostGateMap,
     viewer: string | null,
   ): Promise<ListInfoMap> {
     const listsUris = new Set<string>()
-    Object.values(posts).forEach((post) => {
-      post.gate?.allow?.forEach((rule) => {
+    Object.values(gates).forEach((gate) => {
+      gate?.allow?.forEach((rule) => {
         if (isListRule(rule)) {
           listsUris.add(rule.list.uri)
         }

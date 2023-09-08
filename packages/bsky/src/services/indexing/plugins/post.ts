@@ -411,25 +411,18 @@ async function checkReplyInteractions(
 ) {
   const replyRefs = await getReplyRefs(db, reply)
   // check reply
-  let isInvalidReply = false
-  if (replyRefs.parent) {
-    isInvalidReply = checkInvalidReplyParent(reply, replyRefs.parent)
-  } else {
-    isInvalidReply = true
-  }
+  const isInvalidReply =
+    !replyRefs.parent || checkInvalidReplyParent(reply, replyRefs.parent)
   // check interaction
-  let isInvalidInteraction = false
-  if (isInvalidReply) {
-    isInvalidInteraction = true
-  } else if (replyRefs.root) {
-    isInvalidInteraction = await checkInvalidInteractions(
+  const isInvalidInteraction =
+    isInvalidReply ||
+    (await checkInvalidInteractions(
       db,
       creator,
-      new AtUri(replyRefs.root.uri),
-      replyRefs.root.record,
+      new AtUri(reply.root.uri).host,
+      replyRefs.root?.record ?? null,
       replyRefs.gate?.record ?? null,
-    )
-  }
+    ))
   return {
     isInvalidReply,
     isInvalidInteraction,

@@ -6,6 +6,12 @@ import {
   PostView,
 } from '../../lexicon/types/app/bsky/feed/defs'
 import {
+  Record as GateRecord,
+  isFollowingRule,
+  isListRule,
+  isMentionRule,
+} from '../../lexicon/types/app/bsky/feed/gate'
+import {
   Main as EmbedImages,
   isMain as isEmbedImages,
   View as EmbedImagesView,
@@ -22,11 +28,6 @@ import {
   ViewRecord,
 } from '../../lexicon/types/app/bsky/embed/record'
 import {
-  isFollowingInteraction,
-  isListInteraction,
-  isMentionInteraction,
-} from '../../lexicon/types/app/bsky/feed/post'
-import {
   PostEmbedViews,
   FeedGenInfo,
   FeedRow,
@@ -35,6 +36,7 @@ import {
   RecordEmbedViewRecord,
   PostBlocksMap,
   FeedHydrationState,
+  PostGateMap,
 } from './types'
 import { Labels, getSelfLabels } from '../label'
 import { ImageUriBuilder } from '../../image/uri'
@@ -98,7 +100,7 @@ export class FeedViews {
       usePostViewUnion?: boolean
     },
   ): FeedViewPost[] {
-    const { posts, profiles, blocks, embeds, labels, lists } = state
+    const { posts, gates, profiles, blocks, embeds, labels, lists } = state
     const actors = this.services.actor.views.profileBasicPresentation(
       Object.keys(profiles),
       state,
@@ -110,6 +112,7 @@ export class FeedViews {
         item.postUri,
         actors,
         posts,
+        gates,
         embeds,
         labels,
         lists,
@@ -137,6 +140,7 @@ export class FeedViews {
           item.replyParent,
           actors,
           posts,
+          gates,
           embeds,
           labels,
           lists,
@@ -147,6 +151,7 @@ export class FeedViews {
           item.replyRoot,
           actors,
           posts,
+          gates,
           embeds,
           labels,
           lists,
@@ -169,11 +174,13 @@ export class FeedViews {
     uri: string,
     actors: ActorInfoMap,
     posts: PostInfoMap,
+    gates: PostGateMap,
     embeds: PostEmbedViews,
     labels: Labels,
     lists: ListInfoMap,
   ): PostView | undefined {
     const post = posts[uri]
+    const gate = gates[uri]
     const author = actors[post?.creator]
     if (!post || !author) return undefined
     const postLabels = labels[uri] ?? []
@@ -199,33 +206,8 @@ export class FeedViews {
           }
         : undefined,
       labels: [...postLabels, ...postSelfLabels],
-      interactions:
-        post.record.reply && Array.isArray(post.record.interactions)
-          ? mapDefined(post.record.interactions, (interaction) => {
-              if (isMentionInteraction(interaction)) {
-                return { $type: 'app.bsky.feed.defs#mentionInteractionView' }
-              }
-              if (isFollowingInteraction(interaction)) {
-                return { $type: 'app.bsky.feed.defs#followingInteractionView' }
-              }
-              if (isListInteraction(interaction)) {
-                const list = lists[interaction.list.uri]
-                return {
-                  $type: 'app.bsky.feed.defs#listInteractionView',
-                  list: list
-                    ? {
-                        $type: 'app.bsky.graph.defs#listViewBasic',
-                        ...this.services.graph.formatListViewBasic(list),
-                      }
-                    : {
-                        $type: 'app.bsky.feed.defs#viewNotFound',
-                        notFound: true,
-                        uri: interaction.list.uri,
-                      },
-                }
-              }
-            })
-          : undefined,
+      gate:
+        !post.record.reply && gate ? this.formatGate(gate, lists) : undefined,
     }
   }
 
@@ -233,6 +215,7 @@ export class FeedViews {
     uri: string,
     actors: ActorInfoMap,
     posts: PostInfoMap,
+    gates: PostGateMap,
     embeds: PostEmbedViews,
     labels: Labels,
     lists: ListInfoMap,
@@ -241,7 +224,15 @@ export class FeedViews {
       usePostViewUnion?: boolean
     },
   ): MaybePostView | undefined {
-    const post = this.formatPostView(uri, actors, posts, embeds, labels, lists)
+    const post = this.formatPostView(
+      uri,
+      actors,
+      posts,
+      gates,
+      embeds,
+      labels,
+      lists,
+    )
     if (!post) {
       if (!opts?.usePostViewUnion) return
       return this.notFoundPost(uri)
@@ -380,6 +371,41 @@ export class FeedViews {
         record: embedRecordView,
       },
       media: mediaEmbed,
+    }
+  }
+
+  formatGate(gate: GateRecord, lists: ListInfoMap) {
+    return {
+      allow:
+        gate.allow &&
+        mapDefined(gate.allow, (rule) => {
+          if (isListRule(rule)) {
+            const list = lists[rule.list.uri]
+            return {
+              $type: 'app.bsky.feed.defs#listRuleView',
+              list: list
+                ? {
+                    $type: 'app.bsky.graph.defs#listViewBasic',
+                    ...this.services.graph.formatListViewBasic(list),
+                  }
+                : {
+                    $type: 'app.bsky.feed.defs#viewNotFound',
+                    notFound: true,
+                    uri: rule.list.uri,
+                  },
+            }
+          }
+          if (isFollowingRule(rule)) {
+            return {
+              $type: 'app.bsky.feed.defs#followingRuleView',
+            }
+          }
+          if (isMentionRule(rule)) {
+            return {
+              $type: 'app.bsky.feed.defs#mentionRuleView',
+            }
+          }
+        }),
     }
   }
 }

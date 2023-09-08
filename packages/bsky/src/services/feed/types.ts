@@ -36,7 +36,6 @@ export type PostInfo = {
   cid: string
   creator: string
   record: Record<string, unknown>
-  gate: GateRecord | null
   indexedAt: string
   likeCount: number | null
   repostCount: number | null
@@ -51,6 +50,8 @@ export type PostInfoMap = { [uri: string]: PostInfo }
 export type PostBlocksMap = {
   [uri: string]: { reply?: boolean; embed?: boolean }
 }
+
+export type PostGateMap = { [postUri: string]: GateRecord }
 
 export type FeedGenInfo = Selectable<FeedGenerator> & {
   likeCount: number
@@ -88,6 +89,7 @@ export type RecordEmbedViewRecordMap = { [uri: string]: RecordEmbedViewRecord }
 
 export type FeedHydrationState = ProfileHydrationState & {
   posts: PostInfoMap
+  gates: PostGateMap
   embeds: PostEmbedViews
   labels: Labels
   blocks: PostBlocksMap

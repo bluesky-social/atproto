@@ -82,12 +82,13 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
   // check root reply interaction rules
   const rootUri = threadData.post.replyRoot || threadData.post.postUri
   const root = hydrated.posts[rootUri]
+  const gate = hydrated.gates[rootUri]
   const viewerCanReply = await checkViewerCanReply(
     ctx.db.db,
     viewer,
-    new AtUri(rootUri),
+    new AtUri(rootUri).host,
     (root?.record ?? null) as PostRecord | null,
-    root?.gate ?? null,
+    gate ?? null,
   )
   return { ...state, ...hydrated, viewerCanReply }
 }
@@ -111,7 +112,8 @@ const composeThread = (
   ctx: Context,
 ): ThreadViewPost | NotFoundPost | BlockedPost => {
   const { feedService, actorService } = ctx
-  const { profiles, posts, embeds, blocks, labels, lists, params } = state
+  const { profiles, posts, gates, embeds, blocks, labels, lists, params } =
+    state
 
   const actors = actorService.views.profileBasicPresentation(
     Object.keys(profiles),
@@ -122,6 +124,7 @@ const composeThread = (
     threadData.post.postUri,
     actors,
     posts,
+    gates,
     embeds,
     labels,
     lists,
@@ -297,21 +300,19 @@ const getChildrenData = (
 const checkViewerCanReply = async (
   db: DatabaseSchema,
   viewer: string | null,
-  rootUri: AtUri,
+  owner: string,
   root: PostRecord | null,
   gate: GateRecord | null,
 ) => {
-  if (viewer && root) {
-    const isInvalidInteraction = await checkInvalidInteractions(
-      db,
-      viewer,
-      rootUri,
-      root,
-      gate,
-    )
-    return !isInvalidInteraction
-  }
-  return null // cannot be determined
+  if (!viewer) return null
+  const isInvalidInteraction = await checkInvalidInteractions(
+    db,
+    viewer,
+    owner,
+    root,
+    gate,
+  )
+  return !isInvalidInteraction
 }
 
 class ParentNotFoundError extends Error {
