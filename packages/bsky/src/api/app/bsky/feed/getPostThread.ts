@@ -16,6 +16,7 @@ import {
   FeedService,
   FeedRow,
   FeedHydrationState,
+  PostInfo,
 } from '../../../../services/feed'
 import {
   getAncestorsAndSelfQb,
@@ -24,9 +25,9 @@ import {
 import { Database } from '../../../../db'
 import DatabaseSchema from '../../../../db/database-schema'
 import { setRepoRev } from '../../../util'
-import { createPipeline, noRules } from '../../../../pipeline'
 import { ActorService } from '../../../../services/actor'
 import { checkInvalidInteractions } from '../../../../services/feed/util'
+import { createPipeline, noRules } from '../../../../pipeline'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(
@@ -80,11 +81,14 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
   const relevant = getRelevantIds(threadData)
   const hydrated = await feedService.feedHydration({ ...relevant, viewer })
   // check root reply interaction rules
-  const rootUri = threadData.post.replyRoot || threadData.post.postUri
+  const anchorPostUri = threadData.post.postUri
+  const rootUri = threadData.post.replyRoot || anchorPostUri
+  const anchor = hydrated.posts[anchorPostUri]
   const root = hydrated.posts[rootUri]
   const gate = hydrated.gates[rootUri]
   const viewerCanReply = await checkViewerCanReply(
     ctx.db.db,
+    anchor ?? null,
     viewer,
     new AtUri(rootUri).host,
     (root?.record ?? null) as PostRecord | null,
@@ -100,7 +104,7 @@ const presentation = (state: HydrationState, ctx: Context) => {
     // @TODO technically this could be returned as a NotFoundPost based on lexicon
     throw new InvalidRequestError(`Post not found: ${params.uri}`, 'NotFound')
   }
-  if (isThreadViewPost(thread) && state.viewerCanReply !== null) {
+  if (isThreadViewPost(thread) && params.viewer) {
     thread.viewer = { canReply: state.viewerCanReply }
   }
   return { thread }
@@ -120,6 +124,7 @@ const composeThread = (
     state,
     { viewer: params.viewer },
   )
+
   const post = feedService.views.formatPostView(
     threadData.post.postUri,
     actors,
@@ -130,7 +135,15 @@ const composeThread = (
     lists,
   )
 
-  if (!post || blocks[post.uri]?.reply) {
+  // replies that are invalid due to reply-gating:
+  // a. may appear as the anchor post, but without any parent or replies.
+  // b. may not appear anywhere else in the thread.
+  const isAnchorPost = state.threadData.post.uri === threadData.post.postUri
+  const info = posts[threadData.post.postUri]
+  const isInvalidInteraction = !!info?.isInvalidInteraction
+  const omitPerInvalidInteration = !isAnchorPost && isInvalidInteraction
+
+  if (!post || blocks[post.uri]?.reply || omitPerInvalidInteration) {
     return {
       $type: 'app.bsky.feed.defs#notFoundPost',
       uri: threadData.post.postUri,
@@ -156,7 +169,7 @@ const composeThread = (
   }
 
   let parent
-  if (threadData.parent) {
+  if (threadData.parent && !info?.isInvalidInteraction) {
     if (threadData.parent instanceof ParentNotFoundError) {
       parent = {
         $type: 'app.bsky.feed.defs#notFoundPost',
@@ -169,7 +182,7 @@ const composeThread = (
   }
 
   let replies: (ThreadViewPost | NotFoundPost | BlockedPost)[] | undefined
-  if (threadData.replies) {
+  if (threadData.replies && !info?.isInvalidInteraction) {
     replies = threadData.replies.flatMap((reply) => {
       const thread = composeThread(reply, state, ctx)
       // e.g. don't bother including #postNotFound reply placeholders for takedowns. either way matches api contract.
@@ -223,10 +236,7 @@ const getThreadData = async (
     getAncestorsAndSelfQb(db.db, { uri, parentHeight })
       .selectFrom('ancestor')
       .innerJoin(
-        feedService
-          .selectPostQb()
-          .select(['isInvalidReply', 'isInvalidInteraction'])
-          .as('post'),
+        feedService.selectPostQb().as('post'),
         'post.uri',
         'ancestor.uri',
       )
@@ -235,10 +245,7 @@ const getThreadData = async (
     getDescendentsQb(db.db, { uri, depth })
       .selectFrom('descendent')
       .innerJoin(
-        feedService
-          .selectPostQb()
-          .select(['isInvalidReply', 'isInvalidInteraction'])
-          .as('post'),
+        feedService.selectPostQb().as('post'),
         'post.uri',
         'descendent.uri',
       )
@@ -247,11 +254,10 @@ const getThreadData = async (
       .execute(),
   ])
   const parentsByUri = parents.reduce((acc, parent) => {
-    if (parent.isInvalidInteraction) return acc
     return Object.assign(acc, { [parent.postUri]: parent })
   }, {} as Record<string, FeedRow>)
   const childrenByParentUri = children.reduce((acc, child) => {
-    if (!child.replyParent || child.isInvalidInteraction) return acc
+    if (!child.replyParent) return acc
     acc[child.replyParent] ??= []
     acc[child.replyParent].push(child)
     return acc
@@ -299,12 +305,14 @@ const getChildrenData = (
 
 const checkViewerCanReply = async (
   db: DatabaseSchema,
+  anchor: PostInfo | null,
   viewer: string | null,
   owner: string,
   root: PostRecord | null,
   gate: GateRecord | null,
 ) => {
-  if (!viewer) return null
+  if (!viewer) return false
+  if (anchor?.isInvalidInteraction) return false
   const isInvalidInteraction = await checkInvalidInteractions(
     db,
     viewer,
@@ -342,5 +350,5 @@ type SkeletonState = {
 
 type HydrationState = SkeletonState &
   FeedHydrationState & {
-    viewerCanReply: null | boolean
+    viewerCanReply: boolean
   }

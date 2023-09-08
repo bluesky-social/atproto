@@ -141,6 +141,7 @@ export class FeedService {
         'post.cid as cid',
         'post.creator as creator',
         'post.sortAt as indexedAt',
+        'post.isInvalidInteraction as isInvalidInteraction',
         'record.json as recordJson',
         'post_agg.likeCount as likeCount',
         'post_agg.repostCount as repostCount',
@@ -440,7 +441,10 @@ export class FeedService {
           .execute()
       : []
     const gatesByPostUri = gates.reduce((acc, gate) => {
-      acc[gateToPostUri(gate.uri)] = jsonStringToLex(gate.json) as GateRecord
+      const record = jsonStringToLex(gate.json) as GateRecord
+      const postUri = gateToPostUri(gate.uri)
+      if (record.post !== postUri) return acc // invalid, skip
+      acc[postUri] = record
       return acc
     }, {} as PostGateMap)
     return gatesByPostUri

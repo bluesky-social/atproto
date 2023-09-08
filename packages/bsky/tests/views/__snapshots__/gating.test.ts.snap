@@ -42,3 +42,9 @@ Object {
   ],
 }
 `;
+
+exports[`views with interaction gating does not apply gate to original poster. 1`] = `
+Object {
+  "allow": Array [],
+}
+`;

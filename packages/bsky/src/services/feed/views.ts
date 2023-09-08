@@ -108,6 +108,7 @@ export class FeedViews {
     )
     const feed: FeedViewPost[] = []
     for (const item of items) {
+      const info = posts[item.postUri]
       const post = this.formatPostView(
         item.postUri,
         actors,
@@ -135,7 +136,8 @@ export class FeedViews {
           }
         }
       }
-      if (item.replyParent && item.replyRoot) {
+      // posts that violate reply-gating may appear in feeds, but without any thread context
+      if (item.replyParent && item.replyRoot && !info?.isInvalidInteraction) {
         const replyParent = this.formatMaybePostView(
           item.replyParent,
           actors,

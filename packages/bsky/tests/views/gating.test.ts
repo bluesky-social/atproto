@@ -326,15 +326,113 @@ describe('views with interaction gating', () => {
     expect(reply.post.uri).toEqual(aliceReply.ref.uriStr)
   })
 
-  it('does not apply gate to original poster.', async () => {})
-
-  it('displays gated posts not in the context of a reply.', async () => {
-    // in author feed
-    // in post thread at depth 0
+  it('does not apply gate to original poster.', async () => {
+    const post = await sc.post(sc.dids.carol, 'empty rules')
+    await pdsAgent.api.app.bsky.feed.gate.create(
+      { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
+      { post: post.ref.uriStr, createdAt: iso(), allow: [] },
+      sc.getHeaders(sc.dids.carol),
+    )
+    const selfReply = await sc.reply(
+      sc.dids.carol,
+      post.ref,
+      post.ref,
+      'empty rules reply allow',
+    )
+    await network.processAll()
+    const {
+      data: { thread },
+    } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: post.ref.uriStr },
+      { headers: await network.serviceHeaders(sc.dids.carol) },
+    )
+    assert(isThreadViewPost(thread))
+    expect(thread.post.gate).toMatchSnapshot()
+    expect(thread.viewer).toEqual({ canReply: true })
+    const [reply, ...otherReplies] = thread.replies ?? []
+    assert(isThreadViewPost(reply))
+    expect(otherReplies.length).toEqual(0)
+    expect(reply.post.uri).toEqual(selfReply.ref.uriStr)
   })
 
-  // @TODO check inner post uri value
-  it('does not apply gate unless it matches post rkey.', async () => {})
+  it('displays gated posts in feed and thread anchor without reply context.', async () => {
+    const post = await sc.post(sc.dids.carol, 'following rule')
+    await pdsAgent.api.app.bsky.feed.gate.create(
+      { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
+      {
+        post: post.ref.uriStr,
+        createdAt: iso(),
+        allow: [{ $type: 'app.bsky.feed.gate#followingRule' }],
+      },
+      sc.getHeaders(sc.dids.carol),
+    )
+    // carol only follows alice
+    const badReply = await sc.reply(
+      sc.dids.dan,
+      post.ref,
+      post.ref,
+      'following rule reply disallow',
+    )
+    // going to ensure this one doesn't appear in badReply's thread
+    await sc.reply(sc.dids.alice, post.ref, badReply.ref, 'reply to disallowed')
+    await network.processAll()
+    // check thread view
+    const {
+      data: { thread },
+    } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: badReply.ref.uriStr },
+      { headers: await network.serviceHeaders(sc.dids.alice) },
+    )
+    assert(isThreadViewPost(thread))
+    expect(thread.viewer).toEqual({ canReply: false }) // nobody can reply to this, not even alice.
+    expect(thread.replies).toBeUndefined()
+    expect(thread.parent).toBeUndefined()
+    expect(thread.post.gate).toBeUndefined()
+    // check feed view
+    const {
+      data: { feed },
+    } = await agent.api.app.bsky.feed.getAuthorFeed(
+      { actor: sc.dids.dan },
+      { headers: await network.serviceHeaders(sc.dids.alice) },
+    )
+    const [feedItem] = feed
+    expect(feedItem.post.uri).toEqual(badReply.ref.uriStr)
+    expect(feedItem.post.gate).toBeUndefined()
+    expect(feedItem.reply).toBeUndefined()
+  })
+
+  it('does not apply gate unless it matches post rkey.', async () => {
+    const postA = await sc.post(sc.dids.carol, 'ungated a')
+    const postB = await sc.post(sc.dids.carol, 'ungated b')
+    await pdsAgent.api.app.bsky.feed.gate.create(
+      { repo: sc.dids.carol, rkey: postA.ref.uri.rkey },
+      { post: postB.ref.uriStr, createdAt: iso(), allow: [] },
+      sc.getHeaders(sc.dids.carol),
+    )
+    await sc.reply(sc.dids.alice, postA.ref, postA.ref, 'ungated reply')
+    await sc.reply(sc.dids.alice, postB.ref, postB.ref, 'ungated reply')
+    await network.processAll()
+    const {
+      data: { thread: threadA },
+    } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: postA.ref.uriStr },
+      { headers: await network.serviceHeaders(sc.dids.alice) },
+    )
+    assert(isThreadViewPost(threadA))
+    expect(threadA.post.gate).toBeUndefined()
+    expect(threadA.viewer).toEqual({ canReply: true })
+    expect(threadA.replies?.length).toEqual(1)
+    const {
+      data: { thread: threadB },
+    } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: postB.ref.uriStr },
+      { headers: await network.serviceHeaders(sc.dids.alice) },
+    )
+    assert(isThreadViewPost(threadB))
+    expect(threadB.post.gate).toBeUndefined()
+    expect(threadB.viewer).toEqual({ canReply: true })
+    expect(threadB.replies?.length).toEqual(1)
+  })
 })
 
 const iso = (date = new Date()) => date.toISOString()

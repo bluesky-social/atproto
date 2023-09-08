@@ -40,6 +40,7 @@ export const checkInvalidInteractions = async (
   root: PostRecord | null,
   gate: GateRecord | null,
 ) => {
+  if (did === owner) return false
   if (!gate?.allow) return false
 
   const allowMentions = gate.allow.find(isMentionRule)

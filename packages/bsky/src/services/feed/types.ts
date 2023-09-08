@@ -42,6 +42,7 @@ export type PostInfo = {
   replyCount: number | null
   requesterRepost: string | null
   requesterLike: string | null
+  isInvalidInteraction: boolean
   viewer: string | null
 }
 
