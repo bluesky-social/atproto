@@ -10,5 +10,26 @@ export default (env: TestNetworkNoAppView): User[] => {
       password: 'hunter2',
       agent: env.pds.getClient(),
     },
+    {
+      email: 'aimagiceveryday@group.social',
+      did: '',
+      handle: 'aimagiceveryday.group',
+      password: 'hunter2',
+      agent: env.pds.getClient(),
+    },
+    {
+      email: 'thephototriothatrules@group.social',
+      did: '',
+      handle: 'thephototriothatrules.group',
+      password: 'hunter2',
+      agent: env.pds.getClient(),
+    },
+    {
+      email: 'smarthomegadgets@group.social',
+      did: '',
+      handle: 'smarthomegadgets.group',
+      password: 'hunter2',
+      agent: env.pds.getClient(),
+    },
   ]
 }

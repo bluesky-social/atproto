@@ -40,6 +40,10 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
     alice: env.pds.getClient(),
     bob: env.pds.getClient(),
     carla: env.pds.getClient(),
+    phil: env.pds.getClient(),
+    dave: env.pds.getClient(),
+    kira: env.pds.getClient(),
+    aman: env.pds.getClient(),
   }
   interface User {
     email: string
@@ -75,8 +79,46 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
   const bob = users[1]
   const carla = users[2]
 
+  const dUsers: User[] = [
+    {
+      email: 'dave@test.com',
+      did: '',
+      handle: `dave.test`,
+      password: 'hunter2',
+      agent: clients.dave,
+    },
+    {
+      email: 'kira@test.com',
+      did: '',
+      handle: `kira.test`,
+      password: 'hunter2',
+      agent: clients.kira,
+    },
+    {
+      email: 'phil@test.com',
+      did: '',
+      handle: `phil.test`,
+      password: 'hunter2',
+      agent: clients.phil,
+    },
+    {
+      email: 'aman@test.com',
+      did: '',
+      handle: `aman.test`,
+      password: 'hunter2',
+      agent: clients.aman,
+    },
+  ]
+
+  const dave = dUsers[0]
+  const kira = dUsers[1]
+  const phil = dUsers[2]
+  const aman = dUsers[3]
   let _i = 1
-  const allUsers = [...users, ...waverly.genGroupUsers(env)]
+  const groupUsers = waverly.genGroupUsers(env)
+  const testUsers = [...users, ...groupUsers]
+  const demoUsers = [...dUsers, ...groupUsers]
+  const allUsers = Array.from(new Set([...testUsers, ...demoUsers]))
   for (const user of allUsers) {
     const res = await clients.loggedout.api.com.atproto.server.createAccount({
       email: user.email,
@@ -123,6 +165,30 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
   await follow(bob, carla)
   await follow(carla, alice)
   await follow(carla, bob)
+
+  await follow(phil, dave)
+  await follow(phil, kira)
+  await follow(phil, aman)
+
+  await follow(dave, phil)
+  await follow(dave, kira)
+  await follow(dave, aman)
+
+  await follow(kira, phil)
+  await follow(kira, dave)
+  await follow(kira, aman)
+
+  await follow(aman, phil)
+  await follow(aman, dave)
+  await follow(aman, kira)
+
+  for (const g of groupUsers) {
+    if (g.handle === 'betterweb.group') continue
+    await follow(phil, g)
+    await follow(dave, g)
+    await follow(kira, g)
+    await follow(aman, g)
+  }
 
   // a set of posts and reposts
   const posts: { uri: string; cid: string }[] = []
@@ -215,7 +281,8 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
       .execute()
   }
 
-  await waverly.addGroupPosts(allUsers, date)
+  await waverly.addGroupPosts(testUsers, date)
+  await waverly.addDemoPosts(demoUsers, date)
 
   // a set of replies
   for (let i = 0; i < 100; i++) {

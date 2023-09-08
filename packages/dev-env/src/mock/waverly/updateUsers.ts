@@ -2,6 +2,13 @@ import User from './User'
 import aliceAvatarB64 from './img/alice-avatar-b64'
 import carlaAvatarB64 from './img/carla-avatar-b64'
 import betterWebAvatarB64 from './img/better-web-avatar-b64'
+import philAvatarB64 from './img/phil-avatar-b64'
+import kiraAvatarB64 from './img/kira-avatar-b64'
+import daveAvatarB64 from './img/dave-avatar-b64'
+import amanAvatarB64 from './img/aman-avatar-b64'
+import aiEverydayAvatarB64 from './img/ai-everyday-avatar-b64'
+import photoTrioAvatarB64 from './img/photo-trio-avatar-b64'
+import smartGadgetsAvatarB64 from './img/smart-gadgets-avatar-b64'
 import { BlobRef } from '@atproto/api'
 import { Record as Profile } from '@atproto/api/src/client/types/app/bsky/actor/profile'
 
@@ -13,7 +20,23 @@ interface UserUpdate {
 const userUpdates: { [handle: string]: UserUpdate } = {
   'alice.test': { avatar: aliceAvatarB64 },
   'carla.test': { avatar: carlaAvatarB64 },
+  'phil.test': { avatar: philAvatarB64, displayName: 'Philippe Beuadoin' },
+  'dave.test': { avatar: daveAvatarB64, displayName: 'Dave Burke' },
+  'kira.test': { avatar: kiraAvatarB64, displayName: 'Kira Cheung' },
+  'aman.test': { avatar: amanAvatarB64, displayName: 'Aman Patel' },
   'betterweb.group': { avatar: betterWebAvatarB64, displayName: 'Better Web' },
+  'aimagiceveryday.group': {
+    avatar: aiEverydayAvatarB64,
+    displayName: 'AI Magic Everyday',
+  },
+  'thephototriothatrules.group': {
+    avatar: photoTrioAvatarB64,
+    displayName: 'The Photo Trio That Rules',
+  },
+  'smarthomegadgets.group': {
+    avatar: smartGadgetsAvatarB64,
+    displayName: 'Smart Home Gadgets',
+  },
 }
 
 export default async (users: User[]) => {
