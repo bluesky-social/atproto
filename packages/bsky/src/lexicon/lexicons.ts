@@ -2902,6 +2902,18 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description: 'Request a token in order to update email.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['tokenRequired'],
+            properties: {
+              tokenRequired: {
+                type: 'boolean',
+              },
+            },
+          },
+        },
       },
     },
   },

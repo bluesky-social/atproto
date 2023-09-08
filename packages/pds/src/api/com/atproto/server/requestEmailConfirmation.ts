@@ -4,7 +4,7 @@ import AppContext from '../../../../context'
 import { getRandomToken } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.requestAccountDelete({
+  server.com.atproto.server.requestEmailConfirmation({
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth }) => {
       const did = auth.credentials.did
@@ -15,13 +15,13 @@ export default function (server: Server, ctx: AppContext) {
       const token = getRandomToken().toUpperCase()
       const requestedAt = new Date().toISOString()
       await ctx.db.db
-        .insertInto('delete_account_token')
-        .values({ did, token, requestedAt })
+        .insertInto('email_token')
+        .values({ purpose: 'confirm_email', did, token, requestedAt })
         .onConflict((oc) =>
-          oc.column('did').doUpdateSet({ token, requestedAt }),
+          oc.columns(['purpose', 'did']).doUpdateSet({ token, requestedAt }),
         )
         .execute()
-      await ctx.mailer.sendAccountDelete({ token }, { to: user.email })
+      await ctx.mailer.sendConfirmEmail({ token }, { to: user.email })
     },
   })
 }

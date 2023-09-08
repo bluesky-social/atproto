@@ -11,6 +11,11 @@ export interface QueryParams {}
 
 export type InputSchema = undefined
 
+export interface OutputSchema {
+  tokenRequired: boolean
+  [k: string]: unknown
+}
+
 export interface CallOptions {
   headers?: Headers
   qp?: QueryParams
@@ -19,6 +24,7 @@ export interface CallOptions {
 export interface Response {
   success: boolean
   headers: Headers
+  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {
