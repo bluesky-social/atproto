@@ -10,6 +10,7 @@ import AppContext from '../../../../context'
 import Database from '../../../../db'
 import { AtprotoData } from '@atproto/identity'
 import { MINUTE } from '@atproto/common'
+import {DISALLOWED_EMAIL_REGEX} from '../../../../content-reporter/emails'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -24,6 +25,12 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(
           'No invite code provided',
           'InvalidInviteCode',
+        )
+      }
+
+      if (DISALLOWED_EMAIL_REGEX.test(email)) {
+        throw new InvalidRequestError(
+          'This email address is not supported, please use a different email.',
         )
       }
 
