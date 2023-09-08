@@ -200,7 +200,7 @@ export class AccountService {
   async updateEmail(did: string, email: string) {
     await this.db.db
       .updateTable('user_account')
-      .set({ email: email.toLowerCase() })
+      .set({ email: email.toLowerCase(), emailConfirmedAt: null })
       .where('did', '=', did)
       .executeTakeFirst()
   }

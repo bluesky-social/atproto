@@ -26,16 +26,14 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       await ctx.db.transaction(async (dbTxn) => {
+        const accntSrvce = ctx.services.account(dbTxn)
+
         if (token) {
-          await ctx.services
-            .account(dbTxn)
-            .deleteEmailToken(did, 'update_email')
+          await accntSrvce.deleteEmailToken(did, 'update_email')
         }
-        await dbTxn.db
-          .updateTable('user_account')
-          .set({ email, emailConfirmedAt: null })
-          .where('did', '=', did)
-          .execute()
+        if (user.email !== email) {
+          await accntSrvce.updateEmail(did, email)
+        }
       })
     },
   })
