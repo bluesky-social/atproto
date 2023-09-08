@@ -18,6 +18,41 @@ Object {
 }
 `;
 
+exports[`views with interaction gating applies gate for list rule. 1`] = `
+Object {
+  "allow": Array [
+    Object {
+      "$type": "app.bsky.feed.defs#listRuleView",
+      "list": Object {
+        "$type": "app.bsky.graph.defs#listViewBasic",
+        "cid": "cids(0)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "name": "list a",
+        "purpose": "app.bsky.graph.defs#modlist",
+        "uri": "record(0)",
+        "viewer": Object {
+          "muted": false,
+        },
+      },
+    },
+    Object {
+      "$type": "app.bsky.feed.defs#listRuleView",
+      "list": Object {
+        "$type": "app.bsky.graph.defs#listViewBasic",
+        "cid": "cids(1)",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "name": "list b",
+        "purpose": "app.bsky.graph.defs#modlist",
+        "uri": "record(1)",
+        "viewer": Object {
+          "muted": false,
+        },
+      },
+    },
+  ],
+}
+`;
+
 exports[`views with interaction gating applies gate for mention rule. 1`] = `
 Object {
   "allow": Array [
@@ -38,6 +73,21 @@ Object {
     },
     Object {
       "$type": "app.bsky.feed.defs#followingRuleView",
+    },
+  ],
+}
+`;
+
+exports[`views with interaction gating applies gate for unknown list rule. 1`] = `
+Object {
+  "allow": Array [
+    Object {
+      "$type": "app.bsky.feed.defs#listRuleView",
+      "list": Object {
+        "$type": "app.bsky.feed.defs#viewNotFound",
+        "notFound": true,
+        "uri": "record(0)",
+      },
     },
   ],
 }

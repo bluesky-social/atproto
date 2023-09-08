@@ -7,6 +7,7 @@ import {
 } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
+import { forSnapshot } from '../_util'
 
 describe('views with interaction gating', () => {
   let network: TestNetwork
@@ -162,7 +163,143 @@ describe('views with interaction gating', () => {
     expect(reply.post.uri).toEqual(aliceReply.ref.uriStr)
   })
 
-  it('applies gate for list rule.', async () => {})
+  it('applies gate for list rule.', async () => {
+    const post = await sc.post(sc.dids.carol, 'following rule')
+    // setup lists to allow alice and dan
+    const listA = await pdsAgent.api.app.bsky.graph.list.create(
+      { repo: sc.dids.carol },
+      {
+        name: 'list a',
+        purpose: 'app.bsky.graph.defs#modlist',
+        createdAt: iso(),
+      },
+      sc.getHeaders(sc.dids.carol),
+    )
+    await pdsAgent.api.app.bsky.graph.listitem.create(
+      { repo: sc.dids.carol },
+      {
+        list: listA.uri,
+        subject: sc.dids.alice,
+        createdAt: iso(),
+      },
+      sc.getHeaders(sc.dids.carol),
+    )
+    const listB = await pdsAgent.api.app.bsky.graph.list.create(
+      { repo: sc.dids.carol },
+      {
+        name: 'list b',
+        purpose: 'app.bsky.graph.defs#modlist',
+        createdAt: iso(),
+      },
+      sc.getHeaders(sc.dids.carol),
+    )
+    await pdsAgent.api.app.bsky.graph.listitem.create(
+      { repo: sc.dids.carol },
+      {
+        list: listB.uri,
+        subject: sc.dids.dan,
+        createdAt: iso(),
+      },
+      sc.getHeaders(sc.dids.carol),
+    )
+    await pdsAgent.api.app.bsky.feed.gate.create(
+      { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
+      {
+        post: post.ref.uriStr,
+        createdAt: iso(),
+        allow: [
+          { $type: 'app.bsky.feed.gate#listRule', list: listA },
+          { $type: 'app.bsky.feed.gate#listRule', list: listB },
+        ],
+      },
+      sc.getHeaders(sc.dids.carol),
+    )
+    //
+    await sc.reply(sc.dids.bob, post.ref, post.ref, 'list rule reply disallow')
+    const aliceReply = await sc.reply(
+      sc.dids.alice,
+      post.ref,
+      post.ref,
+      'list rule reply allow (list a)',
+    )
+    const danReply = await sc.reply(
+      sc.dids.dan,
+      post.ref,
+      post.ref,
+      'list rule reply allow (list b)',
+    )
+    await network.processAll()
+    const {
+      data: { thread: bobThread },
+    } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: post.ref.uriStr },
+      { headers: await network.serviceHeaders(sc.dids.bob) },
+    )
+    assert(isThreadViewPost(bobThread))
+    expect(bobThread.viewer).toEqual({ canReply: false })
+    const {
+      data: { thread: aliceThread },
+    } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: post.ref.uriStr },
+      { headers: await network.serviceHeaders(sc.dids.alice) },
+    )
+    assert(isThreadViewPost(aliceThread))
+    expect(aliceThread.viewer).toEqual({ canReply: true })
+    const {
+      data: { thread: danThread },
+    } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: post.ref.uriStr },
+      { headers: await network.serviceHeaders(sc.dids.dan) },
+    )
+    assert(isThreadViewPost(danThread))
+    expect(forSnapshot(danThread.post.gate)).toMatchSnapshot()
+    expect(danThread.viewer).toEqual({ canReply: true })
+    const [reply1, reply2, ...otherReplies] = aliceThread.replies ?? []
+    assert(isThreadViewPost(reply1))
+    assert(isThreadViewPost(reply2))
+    expect(otherReplies.length).toEqual(0)
+    expect(reply1.post.uri).toEqual(danReply.ref.uriStr)
+    expect(reply2.post.uri).toEqual(aliceReply.ref.uriStr)
+  })
+
+  it('applies gate for unknown list rule.', async () => {
+    const post = await sc.post(sc.dids.carol, 'unknown list rules')
+    await pdsAgent.api.app.bsky.feed.gate.create(
+      { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
+      {
+        post: post.ref.uriStr,
+        createdAt: iso(),
+        allow: [
+          {
+            $type: 'app.bsky.feed.gate#listRule',
+            list: {
+              // bad list link, references a post
+              uri: post.ref.uriStr,
+              cid: post.ref.cidStr,
+            },
+          },
+        ],
+      },
+      sc.getHeaders(sc.dids.carol),
+    )
+    await sc.reply(
+      sc.dids.alice,
+      post.ref,
+      post.ref,
+      'unknown list rules reply',
+    )
+    await network.processAll()
+    const {
+      data: { thread },
+    } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: post.ref.uriStr },
+      { headers: await network.serviceHeaders(sc.dids.alice) },
+    )
+    assert(isThreadViewPost(thread))
+    expect(forSnapshot(thread.post.gate)).toMatchSnapshot()
+    expect(thread.viewer).toEqual({ canReply: false })
+    expect(thread.replies?.length).toEqual(0)
+  })
 
   it('applies gate for multiple rules.', async () => {
     const post = await sc.post(sc.dids.carol, 'multi rules @dan.test', [
