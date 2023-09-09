@@ -14,7 +14,6 @@ import * as inviteCode from './tables/invite-code'
 import * as notification from './tables/user-notification'
 import * as blob from './tables/blob'
 import * as repoBlob from './tables/repo-blob'
-import * as deleteAccountToken from './tables/delete-account-token'
 import * as emailToken from './tables/email-token'
 import * as moderation from './tables/moderation'
 import * as mute from './tables/mute'
@@ -43,7 +42,6 @@ export type DatabaseSchemaType = appView.DatabaseSchemaType &
   notification.PartialDB &
   blob.PartialDB &
   repoBlob.PartialDB &
-  deleteAccountToken.PartialDB &
   emailToken.PartialDB &
   moderation.PartialDB &
   mute.PartialDB &
