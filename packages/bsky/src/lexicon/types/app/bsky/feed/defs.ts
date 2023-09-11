@@ -323,21 +323,3 @@ export function isThreadgateView(v: unknown): v is ThreadgateView {
 export function validateThreadgateView(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#threadgateView', v)
 }
-
-export interface ViewNotFound {
-  uri: string
-  notFound: true
-  [k: string]: unknown
-}
-
-export function isViewNotFound(v: unknown): v is ViewNotFound {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#viewNotFound'
-  )
-}
-
-export function validateViewNotFound(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#viewNotFound', v)
-}

@@ -4686,20 +4686,6 @@ export const schemaDict = {
           },
         },
       },
-      viewNotFound: {
-        type: 'object',
-        required: ['uri', 'notFound'],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          notFound: {
-            type: 'boolean',
-            const: true,
-          },
-        },
-      },
     },
   },
   AppBskyFeedDescribeFeedGenerator: {
