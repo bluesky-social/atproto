@@ -31,7 +31,7 @@
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         },
-        "gate": { "type": "ref", "ref": "#threadgateView" }
+        "threadgate": { "type": "ref", "ref": "#threadgateView" }
       }
     },
     "viewerState": {

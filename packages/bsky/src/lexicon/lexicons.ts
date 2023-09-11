@@ -4418,7 +4418,7 @@ export const schemaDict = {
               ref: 'lex:com.atproto.label.defs#label',
             },
           },
-          gate: {
+          threadgate: {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#threadgateView',
           },

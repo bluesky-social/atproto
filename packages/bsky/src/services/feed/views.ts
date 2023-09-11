@@ -205,8 +205,10 @@ export class FeedViews {
           }
         : undefined,
       labels: [...postLabels, ...postSelfLabels],
-      gate:
-        !post.record.reply && gate ? this.formatGate(gate, lists) : undefined,
+      threadgate:
+        !post.record.reply && gate
+          ? this.formatThreadgate(gate, lists)
+          : undefined,
     }
   }
 
@@ -373,7 +375,7 @@ export class FeedViews {
     }
   }
 
-  formatGate(gate: ThreadgateInfo, lists: ListInfoMap) {
+  formatThreadgate(gate: ThreadgateInfo, lists: ListInfoMap) {
     return {
       uri: gate.uri,
       cid: gate.cid,

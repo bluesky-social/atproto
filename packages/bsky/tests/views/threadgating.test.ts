@@ -46,7 +46,7 @@ describe('views with thread gating', () => {
       { headers: await network.serviceHeaders(sc.dids.alice) },
     )
     assert(isThreadViewPost(thread))
-    expect(forSnapshot(thread.post.gate)).toMatchSnapshot()
+    expect(forSnapshot(thread.post.threadgate)).toMatchSnapshot()
     expect(thread.viewer).toEqual({ canReply: false })
     expect(thread.replies?.length).toEqual(0)
   })
@@ -107,7 +107,7 @@ describe('views with thread gating', () => {
       { headers: await network.serviceHeaders(sc.dids.dan) },
     )
     assert(isThreadViewPost(danThread))
-    expect(forSnapshot(danThread.post.gate)).toMatchSnapshot()
+    expect(forSnapshot(danThread.post.threadgate)).toMatchSnapshot()
     expect(danThread.viewer).toEqual({ canReply: true })
     const [reply, ...otherReplies] = danThread.replies ?? []
     assert(isThreadViewPost(reply))
@@ -155,7 +155,7 @@ describe('views with thread gating', () => {
       { headers: await network.serviceHeaders(sc.dids.alice) },
     )
     assert(isThreadViewPost(aliceThread))
-    expect(forSnapshot(aliceThread.post.gate)).toMatchSnapshot()
+    expect(forSnapshot(aliceThread.post.threadgate)).toMatchSnapshot()
     expect(aliceThread.viewer).toEqual({ canReply: true })
     const [reply, ...otherReplies] = aliceThread.replies ?? []
     assert(isThreadViewPost(reply))
@@ -252,7 +252,7 @@ describe('views with thread gating', () => {
       { headers: await network.serviceHeaders(sc.dids.dan) },
     )
     assert(isThreadViewPost(danThread))
-    expect(forSnapshot(danThread.post.gate)).toMatchSnapshot()
+    expect(forSnapshot(danThread.post.threadgate)).toMatchSnapshot()
     expect(danThread.viewer).toEqual({ canReply: true })
     const [reply1, reply2, ...otherReplies] = aliceThread.replies ?? []
     assert(isThreadViewPost(reply1))
@@ -292,7 +292,7 @@ describe('views with thread gating', () => {
       { headers: await network.serviceHeaders(sc.dids.alice) },
     )
     assert(isThreadViewPost(thread))
-    expect(forSnapshot(thread.post.gate)).toMatchSnapshot()
+    expect(forSnapshot(thread.post.threadgate)).toMatchSnapshot()
     expect(thread.viewer).toEqual({ canReply: false })
     expect(thread.replies?.length).toEqual(0)
   })
@@ -356,7 +356,7 @@ describe('views with thread gating', () => {
       { headers: await network.serviceHeaders(sc.dids.dan) },
     )
     assert(isThreadViewPost(danThread))
-    expect(forSnapshot(danThread.post.gate)).toMatchSnapshot()
+    expect(forSnapshot(danThread.post.threadgate)).toMatchSnapshot()
     expect(danThread.viewer).toEqual({ canReply: true })
     const [reply1, reply2, ...otherReplies] = aliceThread.replies ?? []
     assert(isThreadViewPost(reply1))
@@ -387,7 +387,7 @@ describe('views with thread gating', () => {
       { headers: await network.serviceHeaders(sc.dids.alice) },
     )
     assert(isThreadViewPost(thread))
-    expect(forSnapshot(thread.post.gate)).toMatchSnapshot()
+    expect(forSnapshot(thread.post.threadgate)).toMatchSnapshot()
     expect(thread.viewer).toEqual({ canReply: true })
     const [reply, ...otherReplies] = thread.replies ?? []
     assert(isThreadViewPost(reply))
@@ -451,7 +451,7 @@ describe('views with thread gating', () => {
       isNotFoundPost(aliceThread.parent) &&
         aliceThread.parent.uri === post.ref.uriStr,
     )
-    expect(aliceThread.post.gate).toMatchSnapshot()
+    expect(aliceThread.post.threadgate).toMatchSnapshot()
     expect(aliceThread.viewer).toEqual({ canReply: true })
     const [reply, ...otherReplies] = aliceThread.replies ?? []
     assert(isThreadViewPost(reply))
@@ -480,7 +480,7 @@ describe('views with thread gating', () => {
       { headers: await network.serviceHeaders(sc.dids.carol) },
     )
     assert(isThreadViewPost(thread))
-    expect(forSnapshot(thread.post.gate)).toMatchSnapshot()
+    expect(forSnapshot(thread.post.threadgate)).toMatchSnapshot()
     expect(thread.viewer).toEqual({ canReply: true })
     const [reply, ...otherReplies] = thread.replies ?? []
     assert(isThreadViewPost(reply))
@@ -520,7 +520,7 @@ describe('views with thread gating', () => {
     expect(thread.viewer).toEqual({ canReply: false }) // nobody can reply to this, not even alice.
     expect(thread.replies).toBeUndefined()
     expect(thread.parent).toBeUndefined()
-    expect(thread.post.gate).toBeUndefined()
+    expect(thread.post.threadgate).toBeUndefined()
     // check feed view
     const {
       data: { feed },
@@ -530,7 +530,7 @@ describe('views with thread gating', () => {
     )
     const [feedItem] = feed
     expect(feedItem.post.uri).toEqual(badReply.ref.uriStr)
-    expect(feedItem.post.gate).toBeUndefined()
+    expect(feedItem.post.threadgate).toBeUndefined()
     expect(feedItem.reply).toBeUndefined()
   })
 
@@ -552,7 +552,7 @@ describe('views with thread gating', () => {
       { headers: await network.serviceHeaders(sc.dids.alice) },
     )
     assert(isThreadViewPost(threadA))
-    expect(threadA.post.gate).toBeUndefined()
+    expect(threadA.post.threadgate).toBeUndefined()
     expect(threadA.viewer).toEqual({ canReply: true })
     expect(threadA.replies?.length).toEqual(1)
     const {
@@ -562,7 +562,7 @@ describe('views with thread gating', () => {
       { headers: await network.serviceHeaders(sc.dids.alice) },
     )
     assert(isThreadViewPost(threadB))
-    expect(threadB.post.gate).toBeUndefined()
+    expect(threadB.post.threadgate).toBeUndefined()
     expect(threadB.viewer).toEqual({ canReply: true })
     expect(threadB.replies?.length).toEqual(1)
   })
