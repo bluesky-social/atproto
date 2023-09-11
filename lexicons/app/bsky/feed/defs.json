@@ -167,34 +167,15 @@
         "repost": { "type": "string", "format": "at-uri" }
       }
     },
-    "gateView": {
+    "threadgateView": {
       "type": "object",
       "properties": {
-        "allow": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "record": { "type": "unknown" },
+        "lists": {
           "type": "array",
-          "items": {
-            "type": "union",
-            "refs": ["#mentionRuleView", "#followingRuleView", "#listRuleView"]
-          }
-        }
-      }
-    },
-    "mentionRuleView": {
-      "type": "object",
-      "description": "The view counterpart to app.bsky.feed.gate#mentionRule"
-    },
-    "followingRuleView": {
-      "type": "object",
-      "description": "The view counterpart to app.bsky.feed.gate#followingRule"
-    },
-    "listRuleView": {
-      "type": "object",
-      "description": "The view counterpart to app.bsky.feed.gate#listRule",
-      "required": ["list"],
-      "properties": {
-        "list": {
-          "type": "union",
-          "refs": ["app.bsky.graph.defs#listViewBasic", "#viewNotFound"]
+          "items": { "type": "ref", "ref": "app.bsky.graph.defs#listViewBasic" }
         }
       }
     },

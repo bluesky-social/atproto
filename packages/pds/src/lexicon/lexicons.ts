@@ -4663,41 +4663,26 @@ export const schemaDict = {
           },
         },
       },
-      gateView: {
+      threadgateView: {
         type: 'object',
         properties: {
-          allow: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          record: {
+            type: 'unknown',
+          },
+          lists: {
             type: 'array',
             items: {
-              type: 'union',
-              refs: [
-                'lex:app.bsky.feed.defs#mentionRuleView',
-                'lex:app.bsky.feed.defs#followingRuleView',
-                'lex:app.bsky.feed.defs#listRuleView',
-              ],
+              type: 'ref',
+              ref: 'lex:app.bsky.graph.defs#listViewBasic',
             },
-          },
-        },
-      },
-      mentionRuleView: {
-        type: 'object',
-        description: 'The view counterpart to app.bsky.feed.gate#mentionRule',
-      },
-      followingRuleView: {
-        type: 'object',
-        description: 'The view counterpart to app.bsky.feed.gate#followingRule',
-      },
-      listRuleView: {
-        type: 'object',
-        description: 'The view counterpart to app.bsky.feed.gate#listRule',
-        required: ['list'],
-        properties: {
-          list: {
-            type: 'union',
-            refs: [
-              'lex:app.bsky.graph.defs#listViewBasic',
-              'lex:app.bsky.feed.defs#viewNotFound',
-            ],
           },
         },
       },
@@ -4768,61 +4753,6 @@ export const schemaDict = {
           },
           termsOfService: {
             type: 'string',
-          },
-        },
-      },
-    },
-  },
-  AppBskyFeedGate: {
-    lexicon: 1,
-    id: 'app.bsky.feed.gate',
-    defs: {
-      main: {
-        type: 'record',
-        key: 'tid',
-        record: {
-          type: 'object',
-          required: ['post', 'createdAt'],
-          properties: {
-            post: {
-              type: 'string',
-              format: 'at-uri',
-            },
-            allow: {
-              type: 'array',
-              maxLength: 5,
-              items: {
-                type: 'union',
-                refs: [
-                  'lex:app.bsky.feed.gate#mentionRule',
-                  'lex:app.bsky.feed.gate#followingRule',
-                  'lex:app.bsky.feed.gate#listRule',
-                ],
-              },
-            },
-            createdAt: {
-              type: 'string',
-              format: 'datetime',
-            },
-          },
-        },
-      },
-      mentionRule: {
-        type: 'object',
-        description: 'Allow replies from actors mentioned in your post.',
-      },
-      followingRule: {
-        type: 'object',
-        description: 'Allow replies from actors you follow.',
-      },
-      listRule: {
-        type: 'object',
-        description: 'Allow replies from actors on a list.',
-        required: ['list'],
-        properties: {
-          list: {
-            type: 'ref',
-            ref: 'lex:com.atproto.repo.strongRef',
           },
         },
       },
@@ -5708,6 +5638,63 @@ export const schemaDict = {
               type: 'string',
               format: 'datetime',
             },
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedThreadgate: {
+    lexicon: 1,
+    id: 'app.bsky.feed.threadgate',
+    defs: {
+      main: {
+        type: 'record',
+        key: 'tid',
+        description:
+          "Defines interaction gating rules for a thread. The rkey of the threadgate record should match the rkey of the thread's root post.",
+        record: {
+          type: 'object',
+          required: ['post', 'createdAt'],
+          properties: {
+            post: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            allow: {
+              type: 'array',
+              maxLength: 5,
+              items: {
+                type: 'union',
+                refs: [
+                  'lex:app.bsky.feed.threadgate#mentionRule',
+                  'lex:app.bsky.feed.threadgate#followingRule',
+                  'lex:app.bsky.feed.threadgate#listRule',
+                ],
+              },
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+      mentionRule: {
+        type: 'object',
+        description: 'Allow replies from actors mentioned in your post.',
+      },
+      followingRule: {
+        type: 'object',
+        description: 'Allow replies from actors you follow.',
+      },
+      listRule: {
+        type: 'object',
+        description: 'Allow replies from actors on a list.',
+        required: ['list'],
+        properties: {
+          list: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -6969,7 +6956,6 @@ export const ids = {
   AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
   AppBskyFeedDefs: 'app.bsky.feed.defs',
   AppBskyFeedDescribeFeedGenerator: 'app.bsky.feed.describeFeedGenerator',
-  AppBskyFeedGate: 'app.bsky.feed.gate',
   AppBskyFeedGenerator: 'app.bsky.feed.generator',
   AppBskyFeedGetActorFeeds: 'app.bsky.feed.getActorFeeds',
   AppBskyFeedGetActorLikes: 'app.bsky.feed.getActorLikes',
@@ -6987,6 +6973,7 @@ export const ids = {
   AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
+  AppBskyFeedThreadgate: 'app.bsky.feed.threadgate',
   AppBskyGraphBlock: 'app.bsky.graph.block',
   AppBskyGraphDefs: 'app.bsky.graph.defs',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
