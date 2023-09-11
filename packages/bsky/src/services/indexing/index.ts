@@ -167,7 +167,7 @@ export class IndexingService {
     const { api } = new AtpAgent({ service: pds })
 
     const { data: car } = await retryHttp(() =>
-      api.com.atproto.sync.getCheckout({ did, commit }),
+      api.com.atproto.sync.getCheckout({ did }),
     )
     const { root, blocks } = await readCarWithRoot(car)
     const storage = new MemoryBlockstore(blocks)
