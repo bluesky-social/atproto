@@ -3,6 +3,7 @@ import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 const MAX_RESULTS_LENGTH = 10
+const LIKES_THRESHOLD = 50
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getSuggestedFollowsByActor({
@@ -36,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
         .where('creator', '=', viewer)
         .select('subjectDid')
 
-      if (likes.length >= 100) {
+      if (likes.length >= LIKES_THRESHOLD) {
         // get posts to get their authors
         const posts = await db.db
           .selectFrom('post')
