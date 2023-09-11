@@ -137,6 +137,7 @@ export class PDS {
     )
 
     const app = express()
+    app.set('trust proxy', true)
     app.use(cors())
     app.use(loggerMiddleware)
     app.use(compression())
