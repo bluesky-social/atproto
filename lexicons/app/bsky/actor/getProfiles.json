@@ -10,7 +10,7 @@
         "properties": {
           "actors": {
             "type": "array",
-            "items": {"type": "string", "format": "at-identifier"},
+            "items": { "type": "string", "format": "at-identifier" },
             "maxLength": 25
           }
         }
@@ -23,7 +23,10 @@
           "properties": {
             "profiles": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.actor.defs#profileViewDetailed"}
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.actor.defs#profileViewDetailed"
+              }
             }
           }
         }

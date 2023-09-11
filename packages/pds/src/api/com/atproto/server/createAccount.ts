@@ -111,8 +111,6 @@ export default function (server: Server, ctx: AppContext) {
         }
       })
 
-      ctx.contentReporter?.checkHandle({ handle, did: result.did })
-
       return {
         encoding: 'application/json',
         body: {

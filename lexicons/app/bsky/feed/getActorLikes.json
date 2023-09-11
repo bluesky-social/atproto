@@ -9,9 +9,14 @@
         "type": "params",
         "required": ["actor"],
         "properties": {
-          "actor": {"type": "string", "format": "at-identifier"},
-          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "cursor": {"type": "string"}
+          "actor": { "type": "string", "format": "at-identifier" },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
         }
       },
       "output": {
@@ -20,18 +25,18 @@
           "type": "object",
           "required": ["feed"],
           "properties": {
-            "cursor": {"type": "string"},
+            "cursor": { "type": "string" },
             "feed": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.feed.defs#feedViewPost"}
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.feed.defs#feedViewPost"
+              }
             }
           }
         }
       },
-      "errors": [
-        {"name": "BlockedActor"},
-        {"name": "BlockedByActor"}
-      ]
+      "errors": [{ "name": "BlockedActor" }, { "name": "BlockedByActor" }]
     }
   }
 }

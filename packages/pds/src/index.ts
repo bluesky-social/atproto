@@ -52,8 +52,6 @@ import DidSqlCache from './did-cache'
 import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
-import { ContentReporter } from './content-reporter'
-import { ModerationService } from './services/moderation'
 import { getRedisClient } from './redis'
 import { RuntimeFlags } from './runtime-flags'
 
@@ -200,23 +198,6 @@ export class PDS {
 
     const labelCache = new LabelCache(db)
 
-    let contentReporter: ContentReporter | undefined = undefined
-    if (config.unacceptableWordsB64) {
-      contentReporter = new ContentReporter({
-        backgroundQueue,
-        moderationService: new ModerationService(
-          db,
-          messageDispatcher,
-          blobstore,
-          imgUriBuilder,
-          imgInvalidator,
-        ),
-        reporterDid: config.labelerDid,
-        unacceptableB64: config.unacceptableWordsB64,
-        falsePositivesB64: config.falsePositiveWordsB64,
-      })
-    }
-
     const appviewAgent = config.bskyAppViewEndpoint
       ? new AtpAgent({ service: config.bskyAppViewEndpoint })
       : undefined
@@ -229,7 +210,6 @@ export class PDS {
       imgInvalidator,
       labeler,
       labelCache,
-      contentReporter,
       appviewAgent,
       appviewDid: config.bskyAppViewDid,
       appviewCdnUrlPattern: config.bskyAppViewCdnUrlPattern,
@@ -263,7 +243,6 @@ export class PDS {
       labeler,
       labelCache,
       runtimeFlags,
-      contentReporter,
       services,
       mailer,
       moderationMailer,

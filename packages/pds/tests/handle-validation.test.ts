@@ -1,6 +1,5 @@
 import { isValidTld } from '@atproto/syntax'
 import { ensureHandleServiceConstraints } from '../src/handle'
-import { UnacceptableWordValidator } from '../src/content-reporter/validator'
 
 describe('handle validation', () => {
   it('validates service constraints', () => {
@@ -25,26 +24,5 @@ describe('handle validation', () => {
     expect(isValidTld('atproto.localhost')).toBe(false)
     expect(isValidTld('atproto.onion')).toBe(false)
     expect(isValidTld('atproto.internal')).toBe(false)
-  })
-
-  const validator = new UnacceptableWordValidator(
-    ['evil', 'mean', 'bad'],
-    ['baddie'],
-  )
-
-  it('identifies offensive handles', () => {
-    expect(validator.getMatches('evil.john.test')).toMatchObject(['evil'])
-    expect(validator.getMatches('john.evil.test')).toMatchObject(['evil'])
-    expect(validator.getMatches('john.test.evil')).toMatchObject(['evil'])
-    expect(validator.getMatches('ev1l.test.john')).toMatchObject(['evil'])
-    expect(validator.getMatches('ev-1l.test.john')).toMatchObject(['evil'])
-    expect(validator.getMatches('ev-11.test.john')).toMatchObject(['evil'])
-    expect(validator.getMatches('ev.-1.l-test.john')).toMatchObject(['evil'])
-  })
-
-  it('identifies non-offensive handles', () => {
-    expect(validator.getMatches('john.test')).toHaveLength(0)
-    expect(validator.getMatches('good.john.test')).toHaveLength(0)
-    expect(validator.getMatches('john.baddie.test')).toHaveLength(0)
   })
 })

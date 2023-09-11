@@ -8,9 +8,14 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "includeNsfw": {"type": "boolean", "default": false},
-          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "cursor": {"type": "string"}
+          "includeNsfw": { "type": "boolean", "default": false },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
         }
       },
       "output": {
@@ -19,10 +24,13 @@
           "type": "object",
           "required": ["feed"],
           "properties": {
-            "cursor": {"type": "string"},
+            "cursor": { "type": "string" },
             "feed": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.feed.defs#feedViewPost"}
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.feed.defs#feedViewPost"
+              }
             }
           }
         }

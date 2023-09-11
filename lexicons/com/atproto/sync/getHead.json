@@ -22,13 +22,11 @@
           "type": "object",
           "required": ["root"],
           "properties": {
-            "root": {"type": "string", "format": "cid"}
+            "root": { "type": "string", "format": "cid" }
           }
         }
       },
-      "errors": [
-        {"name": "HeadNotFound"}
-      ]
+      "errors": [{ "name": "HeadNotFound" }]
     }
   }
 }

@@ -21,7 +21,6 @@ import DidSqlCache from './did-cache'
 import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
-import { ContentReporter } from './content-reporter'
 import { RuntimeFlags } from './runtime-flags'
 
 export class AppContext {
@@ -46,7 +45,6 @@ export class AppContext {
       labeler: Labeler
       labelCache: LabelCache
       runtimeFlags: RuntimeFlags
-      contentReporter?: ContentReporter
       backgroundQueue: BackgroundQueue
       appviewAgent?: AtpAgent
       crawlers: Crawlers
@@ -148,10 +146,6 @@ export class AppContext {
 
   get runtimeFlags(): RuntimeFlags {
     return this.opts.runtimeFlags
-  }
-
-  get contentReporter(): ContentReporter | undefined {
-    return this.opts.contentReporter
   }
 
   get backgroundQueue(): BackgroundQueue {
