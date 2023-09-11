@@ -135,9 +135,9 @@ describe('suggested follows', () => {
         actor: sc.dids.bob,
       },
       { headers: await network.serviceHeaders(sc.dids.carol) },
-    )
+    ) // should be 0
 
-    expect(result.data.suggestions.length).toBe(3) // backfilled with 2 NPCs
+    expect(result.data.suggestions.length).toBe(2) // backfilled with 2 NPCs
     expect(
       result.data.suggestions.find((sug) => {
         return [sc.dids.alice, sc.dids.carol, sc.dids.bob].includes(sug.did)

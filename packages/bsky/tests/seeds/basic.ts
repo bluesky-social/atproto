@@ -23,7 +23,6 @@ export default async (sc: SeedClient, users = true) => {
   await sc.follow(bob, alice)
   await sc.follow(bob, carol, createdAtMicroseconds())
   await sc.follow(dan, bob, createdAtTimezone())
-  await sc.follow(bob, dan)
   await sc.post(alice, posts.alice[0], undefined, undefined, undefined, {
     labels: {
       $type: 'com.atproto.label.defs#selfLabels',
