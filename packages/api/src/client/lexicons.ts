@@ -3149,7 +3149,6 @@ export const schemaDict = {
             },
             since: {
               type: 'string',
-              format: 'cid',
               description: 'The revision of the repo to catch up from.',
             },
           },
@@ -3178,7 +3177,6 @@ export const schemaDict = {
             },
             since: {
               type: 'string',
-              format: 'cid',
               description: 'Optional revision of the repo to list blobs since',
             },
             limit: {
