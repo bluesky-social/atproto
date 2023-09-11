@@ -31,7 +31,7 @@ export interface PostView {
   indexedAt: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
-  gate?: GateView
+  gate?: ThreadgateView
   [k: string]: unknown
 }
 

@@ -4420,7 +4420,7 @@ export const schemaDict = {
           },
           gate: {
             type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#gateView',
+            ref: 'lex:app.bsky.feed.defs#threadgateView',
           },
         },
       },
