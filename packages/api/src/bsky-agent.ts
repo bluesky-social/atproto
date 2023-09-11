@@ -8,6 +8,15 @@ import {
 } from './client'
 import { BskyPreferences, BskyLabelPreference } from './types'
 
+declare global {
+  interface Array<T> {
+    findLast(
+      predicate: (value: T, index: number, obj: T[]) => unknown,
+      thisArg?: any,
+    ): T
+  }
+}
+
 export class BskyAgent extends AtpAgent {
   get app() {
     return this.api.app
