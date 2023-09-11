@@ -97,9 +97,7 @@ const noBlocksOrMutes = (state: HydrationState) => {
   state.feedItems = state.feedItems.filter(
     (item) =>
       !state.bam.block([viewer, item.postAuthorDid]) &&
-      !state.bam.block([viewer, item.originatorDid]) &&
-      !state.bam.mute([viewer, item.postAuthorDid]) &&
-      !state.bam.mute([viewer, item.originatorDid]),
+      !state.bam.mute([viewer, item.postAuthorDid]),
   )
   return state
 }

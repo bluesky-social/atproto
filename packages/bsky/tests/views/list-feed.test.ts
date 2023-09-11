@@ -5,7 +5,7 @@ import { RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
-describe('pds author feed views', () => {
+describe('list feed views', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
@@ -19,7 +19,7 @@ describe('pds author feed views', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_views_author_feed',
+      dbPostgresSchema: 'bsky_views_list_feed',
     })
     agent = network.bsky.getClient()
     const pdsAgent = network.pds.getClient()
