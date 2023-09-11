@@ -1,4 +1,4 @@
-import { sql } from 'kysely';
+import { sql } from 'kysely'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -35,10 +35,10 @@ export default function (server: Server, ctx: AppContext) {
             .selectFrom('like')
             .where('creator', '=', actorDid)
             .select(sql`split_part(subject, '/', 3)`.as('subjectDid'))
-            .as('likes')
+            .as('likes'),
         )
         .select('likes.subjectDid as did')
-        .select(qb => qb.fn.count('likes.subjectDid').as('count'))
+        .select((qb) => qb.fn.count('likes.subjectDid').as('count'))
         .where('likes.subjectDid', 'not in', actorsViewerFollows)
         .where('likes.subjectDid', 'not in', [actorDid, viewer])
         .groupBy('likes.subjectDid')
@@ -63,9 +63,12 @@ export default function (server: Server, ctx: AppContext) {
           .where('creator', '=', actorDid)
           .where('subjectDid', '!=', viewer)
           .where('subjectDid', 'not in', actorsViewerFollows)
-          .if(
-            actors.length > 0,
-            qb => qb.where('subjectDid', 'not in', actors.map((a) => a.did))
+          .if(actors.length > 0, (qb) =>
+            qb.where(
+              'subjectDid',
+              'not in',
+              actors.map((a) => a.did),
+            ),
           )
         const mostPopularAccountsActorFollows = db.db
           .selectFrom('profile_agg')
