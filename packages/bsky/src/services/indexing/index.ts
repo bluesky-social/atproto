@@ -363,6 +363,10 @@ export class IndexingService {
       .where('post_embed_record.postUri', 'in', postByUser)
       .execute()
     await this.db.db.deleteFrom('post').where('creator', '=', did).execute()
+    await this.db.db
+      .deleteFrom('thread_gate')
+      .where('creator', '=', did)
+      .execute()
     // notifications
     await this.db.db
       .deleteFrom('notification')
