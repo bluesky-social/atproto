@@ -15,11 +15,11 @@
     },
     "external": {
       "type": "object",
-      "required":  ["uri", "title", "description"],
+      "required": ["uri", "title", "description"],
       "properties": {
-        "uri": {"type": "string", "format": "uri"},
-        "title": {"type": "string"},
-        "description": {"type": "string"},
+        "uri": { "type": "string", "format": "uri" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
         "thumb": {
           "type": "blob",
           "accept": ["image/*"],
@@ -39,12 +39,12 @@
     },
     "viewExternal": {
       "type": "object",
-      "required":  ["uri", "title", "description"],
+      "required": ["uri", "title", "description"],
       "properties": {
-        "uri": {"type": "string", "format": "uri"},
-        "title": {"type": "string"},
-        "description": {"type": "string"},
-        "thumb": {"type": "string"}
+        "uri": { "type": "string", "format": "uri" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "thumb": { "type": "string" }
       }
     }
   }

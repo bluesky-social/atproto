@@ -8,12 +8,6 @@
   },
   "scripts": {
     "test": "true",
-    "prettier": "prettier --check src/",
-    "prettier:fix": "prettier --write src/",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "pnpm lint --fix",
-    "verify": "run-p prettier lint",
-    "verify:fix": "pnpm prettier:fix && pnpm lint:fix",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "update-main-to-dist": "node ../../update-main-to-dist.js packages/nsid"

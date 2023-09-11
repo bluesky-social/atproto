@@ -5,6 +5,7 @@ import { Services } from './services'
 import { BackgroundQueue } from '../background'
 import DidSqlCache from '../did-cache'
 import { Redis } from '../redis'
+import { AutoModerator } from '../auto-moderator'
 
 export class IndexerContext {
   constructor(
@@ -16,6 +17,7 @@ export class IndexerContext {
       idResolver: IdResolver
       didCache: DidSqlCache
       backgroundQueue: BackgroundQueue
+      autoMod: AutoModerator
     },
   ) {}
 
@@ -45,6 +47,10 @@ export class IndexerContext {
 
   get backgroundQueue(): BackgroundQueue {
     return this.opts.backgroundQueue
+  }
+
+  get autoMod(): AutoModerator {
+    return this.opts.autoMod
   }
 }
 

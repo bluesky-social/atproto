@@ -19,7 +19,7 @@
             "format": "nsid",
             "description": "The NSID of the record collection."
           },
-          "rkey": {"type": "string", "description": "The key of the record."},
+          "rkey": { "type": "string", "description": "The key of the record." },
           "cid": {
             "type": "string",
             "format": "cid",
@@ -33,9 +33,9 @@
           "type": "object",
           "required": ["uri", "value"],
           "properties": {
-            "uri": {"type": "string", "format": "at-uri"},
-            "cid": {"type": "string", "format": "cid"},
-            "value": {"type": "unknown"}
+            "uri": { "type": "string", "format": "at-uri" },
+            "cid": { "type": "string", "format": "cid" },
+            "value": { "type": "unknown" }
           }
         }
       }

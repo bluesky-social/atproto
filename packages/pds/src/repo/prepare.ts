@@ -33,7 +33,7 @@ import {
 } from '../lexicon/types/app/bsky/feed/post'
 import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
 import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
-import { hasExplicitSlur } from '../content-reporter/explicit-slurs'
+import { hasExplicitSlur } from '../handle/explicit-slurs'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 // @TODO do this dynamically off of schemas

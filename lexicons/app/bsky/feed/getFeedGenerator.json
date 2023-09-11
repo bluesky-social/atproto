@@ -9,7 +9,7 @@
         "type": "params",
         "required": ["feed"],
         "properties": {
-          "feed": {"type": "string", "format": "at-uri"}
+          "feed": { "type": "string", "format": "at-uri" }
         }
       },
       "output": {
@@ -18,9 +18,12 @@
           "type": "object",
           "required": ["view", "isOnline", "isValid"],
           "properties": {
-            "view": {"type": "ref", "ref": "app.bsky.feed.defs#generatorView"},
-            "isOnline": {"type": "boolean"},
-            "isValid": {"type": "boolean"}
+            "view": {
+              "type": "ref",
+              "ref": "app.bsky.feed.defs#generatorView"
+            },
+            "isOnline": { "type": "boolean" },
+            "isValid": { "type": "boolean" }
           }
         }
       }

@@ -9,7 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["did", "password",  "token"],
+          "required": ["did", "password", "token"],
           "properties": {
             "did": { "type": "string", "format": "did" },
             "password": { "type": "string" },

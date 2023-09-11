@@ -7,12 +7,12 @@
       "type": "object",
       "required": ["record"],
       "properties": {
-        "record": {"type": "ref", "ref": "com.atproto.repo.strongRef"}
+        "record": { "type": "ref", "ref": "com.atproto.repo.strongRef" }
       }
     },
     "view": {
       "type": "object",
-      "required":  ["record"],
+      "required": ["record"],
       "properties": {
         "record": {
           "type": "union",
@@ -28,15 +28,18 @@
     },
     "viewRecord": {
       "type": "object",
-      "required":  ["uri", "cid", "author", "value", "indexedAt"],
+      "required": ["uri", "cid", "author", "value", "indexedAt"],
       "properties": {
-        "uri": {"type": "string", "format": "at-uri"},
-        "cid": {"type": "string", "format": "cid"},
-        "author": {"type": "ref", "ref": "app.bsky.actor.defs#profileViewBasic"},
-        "value": {"type": "unknown"},
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "author": {
+          "type": "ref",
+          "ref": "app.bsky.actor.defs#profileViewBasic"
+        },
+        "value": { "type": "unknown" },
         "labels": {
           "type": "array",
-          "items": {"type": "ref", "ref": "com.atproto.label.defs#label"}
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         },
         "embeds": {
           "type": "array",
@@ -50,24 +53,24 @@
             ]
           }
         },
-        "indexedAt": {"type": "string", "format": "datetime"}
+        "indexedAt": { "type": "string", "format": "datetime" }
       }
     },
     "viewNotFound": {
       "type": "object",
-      "required":  ["uri", "notFound"],
+      "required": ["uri", "notFound"],
       "properties": {
-        "uri": {"type": "string", "format": "at-uri"},
-        "notFound": {"type": "boolean", "const": true}
+        "uri": { "type": "string", "format": "at-uri" },
+        "notFound": { "type": "boolean", "const": true }
       }
     },
     "viewBlocked": {
       "type": "object",
-      "required":  ["uri", "blocked", "author"],
+      "required": ["uri", "blocked", "author"],
       "properties": {
-        "uri": {"type": "string", "format": "at-uri"},
-        "blocked": {"type": "boolean", "const": true},
-        "author": {"type": "ref", "ref": "app.bsky.feed.defs#blockedAuthor"}
+        "uri": { "type": "string", "format": "at-uri" },
+        "blocked": { "type": "boolean", "const": true },
+        "author": { "type": "ref", "ref": "app.bsky.feed.defs#blockedAuthor" }
       }
     }
   }

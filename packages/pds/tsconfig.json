@@ -3,10 +3,10 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist", // Your outDir,
-    "emitDeclarationOnly": true,
+    "emitDeclarationOnly": true
   },
   "module": "nodenext",
-  "include": ["./src","__tests__/**/**.ts"],
+  "include": ["./src", "__tests__/**/**.ts"],
   "references": [
     { "path": "../api/tsconfig.build.json" },
     { "path": "../common/tsconfig.build.json" },

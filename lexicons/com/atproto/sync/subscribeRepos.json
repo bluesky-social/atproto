@@ -17,31 +17,34 @@
       "message": {
         "schema": {
           "type": "union",
-          "refs": [
-            "#commit",
-            "#handle",
-            "#migrate",
-            "#tombstone",
-            "#info"
-          ]
+          "refs": ["#commit", "#handle", "#migrate", "#tombstone", "#info"]
         }
       },
-      "errors": [
-        {"name": "FutureCursor"},
-        {"name": "ConsumerTooSlow"}
-      ]
+      "errors": [{ "name": "FutureCursor" }, { "name": "ConsumerTooSlow" }]
     },
     "commit": {
       "type": "object",
-      "required": ["seq", "rebase", "tooBig", "repo", "commit", "rev", "since", "blocks", "ops", "blobs", "time"],
+      "required": [
+        "seq",
+        "rebase",
+        "tooBig",
+        "repo",
+        "commit",
+        "rev",
+        "since",
+        "blocks",
+        "ops",
+        "blobs",
+        "time"
+      ],
       "nullable": ["prev", "since"],
       "properties": {
-        "seq": {"type": "integer"},
-        "rebase": {"type": "boolean"},
-        "tooBig": {"type": "boolean"},
-        "repo": {"type": "string", "format": "did"},
-        "commit": {"type": "cid-link"},
-        "prev": {"type": "cid-link"},
+        "seq": { "type": "integer" },
+        "rebase": { "type": "boolean" },
+        "tooBig": { "type": "boolean" },
+        "repo": { "type": "string", "format": "did" },
+        "commit": { "type": "cid-link" },
+        "prev": { "type": "cid-link" },
         "rev": {
           "type": "string",
           "description": "The rev of the emitted commit"
@@ -56,25 +59,25 @@
           "maxLength": 1000000
         },
         "ops": {
-          "type": "array", 
-          "items": { "type": "ref", "ref": "#repoOp"},
+          "type": "array",
+          "items": { "type": "ref", "ref": "#repoOp" },
           "maxLength": 200
         },
         "blobs": {
           "type": "array",
-          "items": {"type": "cid-link"}
+          "items": { "type": "cid-link" }
         },
-        "time": {"type": "string", "format": "datetime"}
+        "time": { "type": "string", "format": "datetime" }
       }
     },
     "handle": {
       "type": "object",
       "required": ["seq", "did", "handle", "time"],
       "properties": {
-        "seq": {"type": "integer"},
-        "did": {"type": "string", "format": "did"},
-        "handle": {"type": "string", "format": "handle"},
-        "time": {"type": "string", "format": "datetime"}
+        "seq": { "type": "integer" },
+        "did": { "type": "string", "format": "did" },
+        "handle": { "type": "string", "format": "handle" },
+        "time": { "type": "string", "format": "datetime" }
       }
     },
     "migrate": {
@@ -82,19 +85,19 @@
       "required": ["seq", "did", "migrateTo", "time"],
       "nullable": ["migrateTo"],
       "properties": {
-        "seq": {"type": "integer"},
-        "did": {"type": "string", "format": "did"},
-        "migrateTo": {"type": "string"},
-        "time": {"type": "string", "format": "datetime"}
+        "seq": { "type": "integer" },
+        "did": { "type": "string", "format": "did" },
+        "migrateTo": { "type": "string" },
+        "time": { "type": "string", "format": "datetime" }
       }
     },
     "tombstone": {
       "type": "object",
       "required": ["seq", "did", "time"],
       "properties": {
-        "seq": {"type": "integer"},
-        "did": {"type": "string", "format": "did"},
-        "time": {"type": "string", "format": "datetime"}
+        "seq": { "type": "integer" },
+        "did": { "type": "string", "format": "did" },
+        "time": { "type": "string", "format": "datetime" }
       }
     },
     "info": {
@@ -118,14 +121,10 @@
       "properties": {
         "action": {
           "type": "string",
-          "knownValues": [
-            "create",
-            "update",
-            "delete"
-          ]
+          "knownValues": ["create", "update", "delete"]
         },
-        "path": {"type": "string"},
-        "cid": {"type": "cid-link"}
+        "path": { "type": "string" },
+        "cid": { "type": "cid-link" }
       }
     }
   }

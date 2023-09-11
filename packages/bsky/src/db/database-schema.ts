@@ -12,6 +12,7 @@ import * as like from './tables/like'
 import * as list from './tables/list'
 import * as listItem from './tables/list-item'
 import * as listMute from './tables/list-mute'
+import * as listBlock from './tables/list-block'
 import * as mute from './tables/mute'
 import * as actorBlock from './tables/actor-block'
 import * as feedGenerator from './tables/feed-generator'
@@ -43,6 +44,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   list.PartialDB &
   listItem.PartialDB &
   listMute.PartialDB &
+  listBlock.PartialDB &
   mute.PartialDB &
   actorBlock.PartialDB &
   feedGenerator.PartialDB &

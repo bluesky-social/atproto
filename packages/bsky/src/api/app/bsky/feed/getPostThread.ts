@@ -20,7 +20,7 @@ import {
 import { Database } from '../../../../db'
 import { setRepoRev } from '../../../util'
 import { createPipeline, noRules } from '../../../../pipeline'
-import { ActorService } from '../../../../services/actor'
+import { ActorInfoMap, ActorService } from '../../../../services/actor'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(
@@ -77,8 +77,14 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
 }
 
 const presentation = (state: HydrationState, ctx: Context) => {
-  const { params } = state
-  const thread = composeThread(state.threadData, state, ctx)
+  const { params, profiles } = state
+  const { actorService } = ctx
+  const actors = actorService.views.profileBasicPresentation(
+    Object.keys(profiles),
+    state,
+    { viewer: params.viewer },
+  )
+  const thread = composeThread(state.threadData, actors, state, ctx)
   if (isNotFoundPost(thread)) {
     // @TODO technically this could be returned as a NotFoundPost based on lexicon
     throw new InvalidRequestError(`Post not found: ${params.uri}`, 'NotFound')
@@ -88,17 +94,13 @@ const presentation = (state: HydrationState, ctx: Context) => {
 
 const composeThread = (
   threadData: PostThread,
+  actors: ActorInfoMap,
   state: HydrationState,
   ctx: Context,
 ) => {
-  const { feedService, actorService } = ctx
-  const { profiles, posts, embeds, blocks, labels, params } = state
+  const { feedService } = ctx
+  const { posts, embeds, blocks, labels } = state
 
-  const actors = actorService.views.profileBasicPresentation(
-    Object.keys(profiles),
-    state,
-    { viewer: params.viewer },
-  )
   const post = feedService.views.formatPostView(
     threadData.post.postUri,
     actors,
@@ -141,14 +143,14 @@ const composeThread = (
         notFound: true,
       }
     } else {
-      parent = composeThread(threadData.parent, state, ctx)
+      parent = composeThread(threadData.parent, actors, state, ctx)
     }
   }
 
   let replies: (ThreadViewPost | NotFoundPost | BlockedPost)[] | undefined
   if (threadData.replies) {
     replies = threadData.replies.flatMap((reply) => {
-      const thread = composeThread(reply, state, ctx)
+      const thread = composeThread(reply, actors, state, ctx)
       // e.g. don't bother including #postNotFound reply placeholders for takedowns. either way matches api contract.
       const skip = []
       return isNotFoundPost(thread) ? skip : thread
