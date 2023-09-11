@@ -247,6 +247,7 @@ export class BskyAgent extends AtpAgent {
       },
       adultContentEnabled: false,
       contentLabels: {},
+      birthDate: undefined,
     }
     const res = await this.app.bsky.actor.getPreferences({})
     for (const pref of res.data.preferences) {
@@ -272,6 +273,13 @@ export class BskyAgent extends AtpAgent {
       ) {
         prefs.feeds.saved = pref.saved
         prefs.feeds.pinned = pref.pinned
+      } else if (
+        AppBskyActorDefs.isPersonalDetailsPref(pref) &&
+        AppBskyActorDefs.validatePersonalDetailsPref(pref).success
+      ) {
+        if (pref.birthDate) {
+          prefs.birthDate = new Date(pref.birthDate)
+        }
       }
     }
     return prefs
@@ -361,6 +369,32 @@ export class BskyAgent extends AtpAgent {
             !AppBskyActorDefs.isContentLabelPref(pref) || pref.label !== key,
         )
         .concat([labelPref])
+    })
+  }
+
+  async setPersonalDetails({
+    birthDate,
+  }: {
+    birthDate: string | Date | undefined
+  }) {
+    birthDate = birthDate instanceof Date ? birthDate.toISOString() : birthDate
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      let personalDetailsPref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isPersonalDetailsPref(pref) &&
+          AppBskyActorDefs.validatePersonalDetailsPref(pref).success,
+      )
+      if (personalDetailsPref) {
+        personalDetailsPref.birthDate = birthDate
+      } else {
+        personalDetailsPref = {
+          $type: 'app.bsky.actor.defs#personalDetailsPref',
+          birthDate,
+        }
+      }
+      return prefs
+        .filter((pref) => !AppBskyActorDefs.isPersonalDetailsPref(pref))
+        .concat([personalDetailsPref])
     })
   }
 }

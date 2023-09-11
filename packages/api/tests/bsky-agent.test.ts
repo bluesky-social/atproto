@@ -215,6 +215,7 @@ describe('agent', () => {
         feeds: { pinned: undefined, saved: undefined },
         adultContentEnabled: false,
         contentLabels: {},
+        birthDate: undefined,
       })
 
       await agent.setAdultContentEnabled(true)
@@ -222,6 +223,7 @@ describe('agent', () => {
         feeds: { pinned: undefined, saved: undefined },
         adultContentEnabled: true,
         contentLabels: {},
+        birthDate: undefined,
       })
 
       await agent.setAdultContentEnabled(false)
@@ -229,6 +231,7 @@ describe('agent', () => {
         feeds: { pinned: undefined, saved: undefined },
         adultContentEnabled: false,
         contentLabels: {},
+        birthDate: undefined,
       })
 
       await agent.setContentLabelPref('impersonation', 'warn')
@@ -238,6 +241,7 @@ describe('agent', () => {
         contentLabels: {
           impersonation: 'warn',
         },
+        birthDate: undefined,
       })
 
       await agent.setContentLabelPref('spam', 'show') // will convert to 'ignore'
@@ -249,6 +253,7 @@ describe('agent', () => {
           impersonation: 'hide',
           spam: 'ignore',
         },
+        birthDate: undefined,
       })
 
       await agent.addSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -262,6 +267,7 @@ describe('agent', () => {
           impersonation: 'hide',
           spam: 'ignore',
         },
+        birthDate: undefined,
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -275,6 +281,7 @@ describe('agent', () => {
           impersonation: 'hide',
           spam: 'ignore',
         },
+        birthDate: undefined,
       })
 
       await agent.removePinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -288,6 +295,7 @@ describe('agent', () => {
           impersonation: 'hide',
           spam: 'ignore',
         },
+        birthDate: undefined,
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -301,6 +309,7 @@ describe('agent', () => {
           impersonation: 'hide',
           spam: 'ignore',
         },
+        birthDate: undefined,
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -314,6 +323,7 @@ describe('agent', () => {
           impersonation: 'hide',
           spam: 'ignore',
         },
+        birthDate: undefined,
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake2')
@@ -333,6 +343,7 @@ describe('agent', () => {
           impersonation: 'hide',
           spam: 'ignore',
         },
+        birthDate: undefined,
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -346,6 +357,21 @@ describe('agent', () => {
           impersonation: 'hide',
           spam: 'ignore',
         },
+        birthDate: undefined,
+      })
+
+      await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'hide',
+          spam: 'ignore',
+        },
+        birthDate: new Date('2023-09-11T18:05:42.556Z'),
       })
     })
 
@@ -408,6 +434,14 @@ describe('agent', () => {
             pinned: [],
             saved: [],
           },
+          {
+            $type: 'app.bsky.actor.defs#personalDetailsPref',
+            birthDate: '2023-09-11T18:05:42.556Z',
+          },
+          {
+            $type: 'app.bsky.actor.defs#personalDetailsPref',
+            birthDate: '2021-09-11T18:05:42.556Z',
+          },
         ],
       })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
@@ -419,6 +453,7 @@ describe('agent', () => {
         contentLabels: {
           nsfw: 'warn',
         },
+        birthDate: new Date('2021-09-11T18:05:42.556Z'),
       })
 
       await agent.setAdultContentEnabled(false)
@@ -431,6 +466,7 @@ describe('agent', () => {
         contentLabels: {
           nsfw: 'warn',
         },
+        birthDate: new Date('2021-09-11T18:05:42.556Z'),
       })
 
       await agent.setContentLabelPref('nsfw', 'hide')
@@ -443,6 +479,7 @@ describe('agent', () => {
         contentLabels: {
           nsfw: 'hide',
         },
+        birthDate: new Date('2021-09-11T18:05:42.556Z'),
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -455,6 +492,20 @@ describe('agent', () => {
         contentLabels: {
           nsfw: 'hide',
         },
+        birthDate: new Date('2021-09-11T18:05:42.556Z'),
+      })
+
+      await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          nsfw: 'hide',
+        },
+        birthDate: new Date('2023-09-11T18:05:42.556Z'),
       })
 
       const res = await agent.app.bsky.actor.getPreferences()
@@ -472,6 +523,10 @@ describe('agent', () => {
           $type: 'app.bsky.actor.defs#savedFeedsPref',
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
+        },
+        {
+          $type: 'app.bsky.actor.defs#personalDetailsPref',
+          birthDate: '2023-09-11T18:05:42.556Z',
         },
       ])
     })
