@@ -8,6 +8,15 @@ import {
 } from './client'
 import { BskyPreferences, BskyLabelPreference } from './types'
 
+declare global {
+  interface Array<T> {
+    findLast(
+      predicate: (value: T, index: number, obj: T[]) => unknown,
+      thisArg?: any,
+    ): T
+  }
+}
+
 export class BskyAgent extends AtpAgent {
   get app() {
     return this.api.app
@@ -247,6 +256,7 @@ export class BskyAgent extends AtpAgent {
       },
       adultContentEnabled: false,
       contentLabels: {},
+      birthDate: undefined,
     }
     const res = await this.app.bsky.actor.getPreferences({})
     for (const pref of res.data.preferences) {
@@ -272,6 +282,13 @@ export class BskyAgent extends AtpAgent {
       ) {
         prefs.feeds.saved = pref.saved
         prefs.feeds.pinned = pref.pinned
+      } else if (
+        AppBskyActorDefs.isPersonalDetailsPref(pref) &&
+        AppBskyActorDefs.validatePersonalDetailsPref(pref).success
+      ) {
+        if (pref.birthDate) {
+          prefs.birthDate = new Date(pref.birthDate)
+        }
       }
     }
     return prefs
@@ -314,20 +331,22 @@ export class BskyAgent extends AtpAgent {
 
   async setAdultContentEnabled(v: boolean) {
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
-      const existing = prefs.find(
+      let adultContentPref = prefs.findLast(
         (pref) =>
           AppBskyActorDefs.isAdultContentPref(pref) &&
           AppBskyActorDefs.validateAdultContentPref(pref).success,
       )
-      if (existing) {
-        existing.enabled = v
+      if (adultContentPref) {
+        adultContentPref.enabled = v
       } else {
-        prefs.push({
+        adultContentPref = {
           $type: 'app.bsky.actor.defs#adultContentPref',
           enabled: v,
-        })
+        }
       }
       return prefs
+        .filter((pref) => !AppBskyActorDefs.isAdultContentPref(pref))
+        .concat([adultContentPref])
     })
   }
 
@@ -338,22 +357,53 @@ export class BskyAgent extends AtpAgent {
     }
 
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
-      const existing = prefs.find(
+      let labelPref = prefs.findLast(
         (pref) =>
           AppBskyActorDefs.isContentLabelPref(pref) &&
           AppBskyActorDefs.validateAdultContentPref(pref).success &&
           pref.label === key,
       )
-      if (existing) {
-        existing.visibility = value
+      if (labelPref) {
+        labelPref.visibility = value
       } else {
-        prefs.push({
+        labelPref = {
           $type: 'app.bsky.actor.defs#contentLabelPref',
           label: key,
           visibility: value,
-        })
+        }
       }
       return prefs
+        .filter(
+          (pref) =>
+            !AppBskyActorDefs.isContentLabelPref(pref) || pref.label !== key,
+        )
+        .concat([labelPref])
+    })
+  }
+
+  async setPersonalDetails({
+    birthDate,
+  }: {
+    birthDate: string | Date | undefined
+  }) {
+    birthDate = birthDate instanceof Date ? birthDate.toISOString() : birthDate
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      let personalDetailsPref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isPersonalDetailsPref(pref) &&
+          AppBskyActorDefs.validatePersonalDetailsPref(pref).success,
+      )
+      if (personalDetailsPref) {
+        personalDetailsPref.birthDate = birthDate
+      } else {
+        personalDetailsPref = {
+          $type: 'app.bsky.actor.defs#personalDetailsPref',
+          birthDate,
+        }
+      }
+      return prefs
+        .filter((pref) => !AppBskyActorDefs.isPersonalDetailsPref(pref))
+        .concat([personalDetailsPref])
     })
   }
 }
@@ -394,7 +444,7 @@ async function updateFeedPreferences(
 ): Promise<{ saved: string[]; pinned: string[] }> {
   let res
   await updatePreferences(agent, (prefs: AppBskyActorDefs.Preferences) => {
-    let feedsPref = prefs.find(
+    let feedsPref = prefs.findLast(
       (pref) =>
         AppBskyActorDefs.isSavedFeedsPref(pref) &&
         AppBskyActorDefs.validateSavedFeedsPref(pref).success,
