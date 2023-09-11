@@ -314,20 +314,22 @@ export class BskyAgent extends AtpAgent {
 
   async setAdultContentEnabled(v: boolean) {
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
-      const existing = prefs.find(
+      let adultContentPref = prefs.findLast(
         (pref) =>
           AppBskyActorDefs.isAdultContentPref(pref) &&
           AppBskyActorDefs.validateAdultContentPref(pref).success,
       )
-      if (existing) {
-        existing.enabled = v
+      if (adultContentPref) {
+        adultContentPref.enabled = v
       } else {
-        prefs.push({
+        adultContentPref = {
           $type: 'app.bsky.actor.defs#adultContentPref',
           enabled: v,
-        })
+        }
       }
       return prefs
+        .filter((pref) => !AppBskyActorDefs.isAdultContentPref(pref))
+        .concat([adultContentPref])
     })
   }
 
@@ -338,22 +340,27 @@ export class BskyAgent extends AtpAgent {
     }
 
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
-      const existing = prefs.find(
+      let labelPref = prefs.findLast(
         (pref) =>
           AppBskyActorDefs.isContentLabelPref(pref) &&
           AppBskyActorDefs.validateAdultContentPref(pref).success &&
           pref.label === key,
       )
-      if (existing) {
-        existing.visibility = value
+      if (labelPref) {
+        labelPref.visibility = value
       } else {
-        prefs.push({
+        labelPref = {
           $type: 'app.bsky.actor.defs#contentLabelPref',
           label: key,
           visibility: value,
-        })
+        }
       }
       return prefs
+        .filter(
+          (pref) =>
+            !AppBskyActorDefs.isContentLabelPref(pref) || pref.label !== key,
+        )
+        .concat([labelPref])
     })
   }
 }
@@ -394,7 +401,7 @@ async function updateFeedPreferences(
 ): Promise<{ saved: string[]; pinned: string[] }> {
   let res
   await updatePreferences(agent, (prefs: AppBskyActorDefs.Preferences) => {
-    let feedsPref = prefs.find(
+    let feedsPref = prefs.findLast(
       (pref) =>
         AppBskyActorDefs.isSavedFeedsPref(pref) &&
         AppBskyActorDefs.validateSavedFeedsPref(pref).success,

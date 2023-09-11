@@ -348,5 +348,132 @@ describe('agent', () => {
         },
       })
     })
+
+    it('resolves duplicates correctly', async () => {
+      const agent = new BskyAgent({ service: server.url })
+
+      await agent.createAccount({
+        handle: 'user6.test',
+        email: 'user6@test.com',
+        password: 'password',
+      })
+
+      await agent.app.bsky.actor.putPreferences({
+        preferences: [
+          {
+            $type: 'app.bsky.actor.defs#contentLabelPref',
+            label: 'nsfw',
+            visibility: 'show',
+          },
+          {
+            $type: 'app.bsky.actor.defs#contentLabelPref',
+            label: 'nsfw',
+            visibility: 'hide',
+          },
+          {
+            $type: 'app.bsky.actor.defs#contentLabelPref',
+            label: 'nsfw',
+            visibility: 'show',
+          },
+          {
+            $type: 'app.bsky.actor.defs#contentLabelPref',
+            label: 'nsfw',
+            visibility: 'warn',
+          },
+          {
+            $type: 'app.bsky.actor.defs#adultContentPref',
+            enabled: true,
+          },
+          {
+            $type: 'app.bsky.actor.defs#adultContentPref',
+            enabled: false,
+          },
+          {
+            $type: 'app.bsky.actor.defs#adultContentPref',
+            enabled: true,
+          },
+          {
+            $type: 'app.bsky.actor.defs#savedFeedsPref',
+            pinned: [
+              'at://bob.com/app.bsky.feed.generator/fake',
+              'at://bob.com/app.bsky.feed.generator/fake2',
+            ],
+            saved: [
+              'at://bob.com/app.bsky.feed.generator/fake',
+              'at://bob.com/app.bsky.feed.generator/fake2',
+            ],
+          },
+          {
+            $type: 'app.bsky.actor.defs#savedFeedsPref',
+            pinned: [],
+            saved: [],
+          },
+        ],
+      })
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: [],
+          saved: [],
+        },
+        adultContentEnabled: true,
+        contentLabels: {
+          nsfw: 'warn',
+        },
+      })
+
+      await agent.setAdultContentEnabled(false)
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: [],
+          saved: [],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          nsfw: 'warn',
+        },
+      })
+
+      await agent.setContentLabelPref('nsfw', 'hide')
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: [],
+          saved: [],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          nsfw: 'hide',
+        },
+      })
+
+      await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          nsfw: 'hide',
+        },
+      })
+
+      const res = await agent.app.bsky.actor.getPreferences()
+      await expect(res.data.preferences).toStrictEqual([
+        {
+          $type: 'app.bsky.actor.defs#adultContentPref',
+          enabled: false,
+        },
+        {
+          $type: 'app.bsky.actor.defs#contentLabelPref',
+          label: 'nsfw',
+          visibility: 'hide',
+        },
+        {
+          $type: 'app.bsky.actor.defs#savedFeedsPref',
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake'],
+        },
+      ])
+    })
   })
 })
