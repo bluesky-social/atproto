@@ -154,5 +154,7 @@ export const getTightestLimit = (
   return lowest
 }
 
+// when using a proxy, ensure headers are getting forwarded correctly: `app.set('trust proxy', true)`
+// https://expressjs.com/en/guide/behind-proxies.html
 const defaultKey: CalcKeyFn = (ctx: XRPCReqContext) => ctx.req.ip
 const defaultPoints: CalcPointsFn = () => 1
