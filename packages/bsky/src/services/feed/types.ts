@@ -42,7 +42,8 @@ export type PostInfo = {
   replyCount: number | null
   requesterRepost: string | null
   requesterLike: string | null
-  isInvalidInteraction: boolean
+  invalidReplyRoot: boolean
+  violatesThreadGate: boolean
   viewer: string | null
 }
 

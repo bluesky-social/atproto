@@ -134,7 +134,12 @@ export class FeedViews {
         }
       }
       // posts that violate reply-gating may appear in feeds, but without any thread context
-      if (item.replyParent && item.replyRoot && !info?.isInvalidInteraction) {
+      if (
+        item.replyParent &&
+        item.replyRoot &&
+        !info?.invalidReplyRoot &&
+        !info?.violatesThreadGate
+      ) {
         const replyParent = this.formatMaybePostView(
           item.replyParent,
           actors,

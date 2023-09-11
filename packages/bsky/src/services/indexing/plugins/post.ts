@@ -25,11 +25,8 @@ import { countAll, excluded } from '../../../db/util'
 import { BackgroundQueue } from '../../../background'
 import { getAncestorsAndSelfQb, getDescendentsQb } from '../../util/post'
 import { NotificationServer } from '../../../notifications'
-import {
-  checkInvalidInteractions,
-  checkInvalidReplyParent,
-  postToThreadgateUri,
-} from '../../feed/util'
+import * as feedutil from '../../feed/util'
+import { postToThreadgateUri } from '../../feed/util'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -107,13 +104,16 @@ const insertFn = async (
   }
 
   if (obj.reply) {
-    const { isInvalidReply, isInvalidInteraction } =
-      await checkReplyInteractions(db, uri.host, obj.reply)
-    if (isInvalidReply || isInvalidInteraction) {
+    const { invalidReplyRoot, violatesThreadGate } = await validateReply(
+      db,
+      uri.host,
+      obj.reply,
+    )
+    if (invalidReplyRoot || violatesThreadGate) {
       await db
         .updateTable('post')
         .where('uri', '=', post.uri)
-        .set({ isInvalidReply, isInvalidInteraction })
+        .set({ invalidReplyRoot, violatesThreadGate })
         .executeTakeFirst()
     }
   }
@@ -404,28 +404,26 @@ function separateEmbeds(embed: PostRecord['embed']) {
   return [embed]
 }
 
-async function checkReplyInteractions(
+async function validateReply(
   db: DatabaseSchema,
   creator: string,
   reply: ReplyRef,
 ) {
   const replyRefs = await getReplyRefs(db, reply)
   // check reply
-  const isInvalidReply =
-    !replyRefs.parent || checkInvalidReplyParent(reply, replyRefs.parent)
+  const invalidReplyRoot =
+    !replyRefs.parent || feedutil.invalidReplyRoot(reply, replyRefs.parent)
   // check interaction
-  const isInvalidInteraction =
-    isInvalidReply ||
-    (await checkInvalidInteractions(
-      db,
-      creator,
-      new AtUri(reply.root.uri).host,
-      replyRefs.root?.record ?? null,
-      replyRefs.gate?.record ?? null,
-    ))
+  const violatesThreadGate = await feedutil.violatesThreadGate(
+    db,
+    creator,
+    new AtUri(reply.root.uri).host,
+    replyRefs.root?.record ?? null,
+    replyRefs.gate?.record ?? null,
+  )
   return {
-    isInvalidReply,
-    isInvalidInteraction,
+    invalidReplyRoot,
+    violatesThreadGate,
   }
 }
 
@@ -446,12 +444,12 @@ async function getReplyRefs(db: DatabaseSchema, reply: ReplyRef) {
   return {
     root: root && {
       uri: root.uri,
-      isInvalidReply: root.isInvalidReply,
+      invalidReplyRoot: root.invalidReplyRoot,
       record: jsonStringToLex(root.json) as PostRecord,
     },
     parent: parent && {
       uri: parent.uri,
-      isInvalidReply: parent.isInvalidReply,
+      invalidReplyRoot: parent.invalidReplyRoot,
       record: jsonStringToLex(parent.json) as PostRecord,
     },
     gate: gate && {

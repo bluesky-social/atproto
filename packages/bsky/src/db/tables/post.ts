@@ -12,8 +12,8 @@ export interface Post {
   replyParent: string | null
   replyParentCid: string | null
   langs: string[] | null
-  isInvalidReply: Generated<boolean>
-  isInvalidInteraction: Generated<boolean>
+  invalidReplyRoot: Generated<boolean>
+  violatesThreadGate: Generated<boolean>
   createdAt: string
   indexedAt: string
   sortAt: GeneratedAlways<string>

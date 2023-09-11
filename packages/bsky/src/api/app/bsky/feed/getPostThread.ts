@@ -26,7 +26,7 @@ import { Database } from '../../../../db'
 import DatabaseSchema from '../../../../db/database-schema'
 import { setRepoRev } from '../../../util'
 import { ActorInfoMap, ActorService } from '../../../../services/actor'
-import { checkInvalidInteractions } from '../../../../services/feed/util'
+import { violatesThreadGate } from '../../../../services/feed/util'
 import { createPipeline, noRules } from '../../../../pipeline'
 
 export default function (server: Server, ctx: AppContext) {
@@ -140,10 +140,10 @@ const composeThread = (
   // b. may not appear anywhere else in the thread.
   const isAnchorPost = state.threadData.post.uri === threadData.post.postUri
   const info = posts[threadData.post.postUri]
-  const isInvalidInteraction = !!info?.isInvalidInteraction
-  const omitPerInvalidInteration = !isAnchorPost && isInvalidInteraction
+  const badReply = !!info?.invalidReplyRoot || !!info?.violatesThreadGate
+  const omitBadReply = !isAnchorPost && badReply
 
-  if (!post || blocks[post.uri]?.reply || omitPerInvalidInteration) {
+  if (!post || blocks[post.uri]?.reply || omitBadReply) {
     return {
       $type: 'app.bsky.feed.defs#notFoundPost',
       uri: threadData.post.postUri,
@@ -169,7 +169,7 @@ const composeThread = (
   }
 
   let parent
-  if (threadData.parent && !info?.isInvalidInteraction) {
+  if (threadData.parent && !badReply) {
     if (threadData.parent instanceof ParentNotFoundError) {
       parent = {
         $type: 'app.bsky.feed.defs#notFoundPost',
@@ -182,7 +182,7 @@ const composeThread = (
   }
 
   let replies: (ThreadViewPost | NotFoundPost | BlockedPost)[] | undefined
-  if (threadData.replies && !info?.isInvalidInteraction) {
+  if (threadData.replies && !badReply) {
     replies = threadData.replies.flatMap((reply) => {
       const thread = composeThread(reply, actors, state, ctx)
       // e.g. don't bother including #postNotFound reply placeholders for takedowns. either way matches api contract.
@@ -312,15 +312,15 @@ const checkViewerCanReply = async (
   threadgate: ThreadgateRecord | null,
 ) => {
   if (!viewer) return false
-  if (anchor?.isInvalidInteraction) return false
-  const isInvalidInteraction = await checkInvalidInteractions(
+  if (anchor?.invalidReplyRoot || anchor?.violatesThreadGate) return false
+  const viewerViolatesThreadGate = await violatesThreadGate(
     db,
     viewer,
     owner,
     root,
     threadgate,
   )
-  return !isInvalidInteraction
+  return !viewerViolatesThreadGate
 }
 
 class ParentNotFoundError extends Error {

@@ -12,13 +12,13 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
   await db.schema
     .alterTable('post')
-    .addColumn('isInvalidReply', 'boolean', (col) =>
+    .addColumn('invalidReplyRoot', 'boolean', (col) =>
       col.notNull().defaultTo(false),
     )
     .execute()
   await db.schema
     .alterTable('post')
-    .addColumn('isInvalidInteraction', 'boolean', (col) =>
+    .addColumn('violatesThreadGate', 'boolean', (col) =>
       col.notNull().defaultTo(false),
     )
     .execute()

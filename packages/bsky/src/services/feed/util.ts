@@ -15,14 +15,17 @@ import { valuesList } from '../../db/util'
 import DatabaseSchema from '../../db/database-schema'
 import { ids } from '../../lexicon/lexicons'
 
-export const checkInvalidReplyParent = (
+export const invalidReplyRoot = (
   reply: ReplyRef,
-  parent: { isInvalidReply: boolean | null; record: PostRecord },
+  parent: {
+    record: PostRecord
+    invalidReplyRoot: boolean | null
+  },
 ) => {
   const replyRoot = reply.root.uri
   const replyParent = reply.parent.uri
   // if parent is not a valid reply, transitively this is not a valid one either
-  if (parent.isInvalidReply) {
+  if (parent.invalidReplyRoot) {
     return true
   }
   // replying to root post: ensure the root looks correct
@@ -33,7 +36,7 @@ export const checkInvalidReplyParent = (
   return parent.record.reply?.root.uri !== replyRoot
 }
 
-export const checkInvalidInteractions = async (
+export const violatesThreadGate = async (
   db: DatabaseSchema,
   did: string,
   owner: string,
