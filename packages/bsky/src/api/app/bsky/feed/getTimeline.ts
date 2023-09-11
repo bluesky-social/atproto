@@ -60,7 +60,7 @@ export const getTimelineSkeleton = async (
     .innerJoin('follow', 'follow.subjectDid', 'feed_item.originatorDid')
     .where('follow.creator', '=', viewer)
     .innerJoin('post', 'post.uri', 'feed_item.postUri')
-    .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom, 1))
+    .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom, 2))
     .selectAll('feed_item')
     .select([
       'post.replyRoot',
@@ -79,7 +79,7 @@ export const getTimelineSkeleton = async (
     .selectFrom('feed_item')
     .innerJoin('post', 'post.uri', 'feed_item.postUri')
     .where('feed_item.originatorDid', '=', viewer)
-    .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom, 1))
+    .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom, 2))
     .selectAll('feed_item')
     .select([
       'post.replyRoot',
