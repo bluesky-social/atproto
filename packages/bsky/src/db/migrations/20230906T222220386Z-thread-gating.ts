@@ -25,9 +25,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.alterTable('post').dropColumn('isInvalidReply').execute()
-  await db.schema
-    .alterTable('post')
-    .dropColumn('isInvalidInteraction')
-    .execute()
+  await db.schema.dropTable('thread_gate').execute()
+  await db.schema.alterTable('post').dropColumn('invalidReplyRoot').execute()
+  await db.schema.alterTable('post').dropColumn('violatesThreadGate').execute()
 }
