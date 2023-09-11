@@ -53,7 +53,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectAll()
         .innerJoin(mostLikedAccounts.as('liked'), 'actor.did', 'liked.did')
         .orderBy('liked.count', 'desc')
-        .execute() // TODO should return max 20 right?
+        .execute()
 
       if (actors.length < MAX_RESULTS_LENGTH) {
         // backfill with popular accounts followed by actor
