@@ -39,7 +39,7 @@ describe('suggested follows', () => {
     await network.close()
   })
 
-  it('returns sorted suggested follows based on like count', async () => {
+  it('returns sorted suggested follows for carol', async () => {
     const result = await agent.api.app.bsky.graph.getSuggestedFollowsByActor(
       {
         actor: sc.dids.alice,
@@ -53,6 +53,22 @@ describe('suggested follows', () => {
         return [sc.dids.alice, sc.dids.carol].includes(sug.did)
       }),
     ).toBeFalsy() // not actor or viewer
+  })
+
+  it('returns sorted suggested follows for fred', async () => {
+    const result = await agent.api.app.bsky.graph.getSuggestedFollowsByActor(
+      {
+        actor: sc.dids.alice,
+      },
+      { headers: await network.serviceHeaders(sc.dids.fred) },
+    )
+
+    expect(result.data.suggestions.length).toBe(4) // backfilled with 2 NPCs
+    expect(
+      result.data.suggestions.find((sug) => {
+        return [sc.dids.fred, sc.dids.alice].includes(sug.did)
+      }),
+    ).toBeFalsy() // not actor or viewer or followed
   })
 
   it('exludes users muted by viewer', async () => {
@@ -127,21 +143,5 @@ describe('suggested follows', () => {
       { repo: sc.dids.bob, rkey: new AtUri(bobBlocksCarol.uri).rkey },
       sc.getHeaders(sc.dids.bob),
     )
-  })
-
-  it('returns sorted suggested follows based on foafs', async () => {
-    const result = await agent.api.app.bsky.graph.getSuggestedFollowsByActor(
-      {
-        actor: sc.dids.bob,
-      },
-      { headers: await network.serviceHeaders(sc.dids.carol) },
-    ) // should be 0
-
-    expect(result.data.suggestions.length).toBe(2) // backfilled with 2 NPCs
-    expect(
-      result.data.suggestions.find((sug) => {
-        return [sc.dids.alice, sc.dids.carol, sc.dids.bob].includes(sug.did)
-      }),
-    ).toBeFalsy() // not actor or viewer or followed
   })
 })
