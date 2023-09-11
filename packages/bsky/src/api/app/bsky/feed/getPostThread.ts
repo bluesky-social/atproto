@@ -9,7 +9,7 @@ import {
   isThreadViewPost,
 } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
-import { Record as GateRecord } from '../../../../lexicon/types/app/bsky/feed/gate'
+import { Record as ThreadgateRecord } from '../../../../lexicon/types/app/bsky/feed/threadgate'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import AppContext from '../../../../context'
 import {
@@ -85,7 +85,7 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
   const rootUri = threadData.post.replyRoot || anchorPostUri
   const anchor = hydrated.posts[anchorPostUri]
   const root = hydrated.posts[rootUri]
-  const gate = hydrated.gates[rootUri]
+  const gate = hydrated.threadgates[rootUri]?.record
   const viewerCanReply = await checkViewerCanReply(
     ctx.db.db,
     anchor ?? null,
@@ -123,13 +123,13 @@ const composeThread = (
   ctx: Context,
 ) => {
   const { feedService } = ctx
-  const { posts, gates, embeds, blocks, labels, lists } = state
+  const { posts, threadgates, embeds, blocks, labels, lists } = state
 
   const post = feedService.views.formatPostView(
     threadData.post.postUri,
     actors,
     posts,
-    gates,
+    threadgates,
     embeds,
     labels,
     lists,
@@ -309,7 +309,7 @@ const checkViewerCanReply = async (
   viewer: string | null,
   owner: string,
   root: PostRecord | null,
-  gate: GateRecord | null,
+  threadgate: ThreadgateRecord | null,
 ) => {
   if (!viewer) return false
   if (anchor?.isInvalidInteraction) return false
@@ -318,7 +318,7 @@ const checkViewerCanReply = async (
     viewer,
     owner,
     root,
-    gate,
+    threadgate,
   )
   return !isInvalidInteraction
 }

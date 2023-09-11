@@ -6,7 +6,7 @@ import * as post from './tables/post'
 import * as postEmbed from './tables/post-embed'
 import * as postAgg from './tables/post-agg'
 import * as repost from './tables/repost'
-import * as gate from './tables/gate'
+import * as threadGate from './tables/thread-gate'
 import * as feedItem from './tables/feed-item'
 import * as follow from './tables/follow'
 import * as like from './tables/like'
@@ -39,7 +39,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   postEmbed.PartialDB &
   postAgg.PartialDB &
   repost.PartialDB &
-  gate.PartialDB &
+  threadGate.PartialDB &
   feedItem.PartialDB &
   follow.PartialDB &
   like.PartialDB &

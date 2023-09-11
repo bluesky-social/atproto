@@ -1,7 +1,7 @@
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { CID } from 'multiformats/cid'
-import * as Gate from '../../../lexicon/types/app/bsky/feed/gate'
+import * as Threadgate from '../../../lexicon/types/app/bsky/feed/threadgate'
 import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
@@ -10,24 +10,24 @@ import { PrimaryDatabase } from '../../../db'
 import { BackgroundQueue } from '../../../background'
 import { NotificationServer } from '../../../notifications'
 
-const lexId = lex.ids.AppBskyFeedGate
-type IndexedGate = DatabaseSchemaType['gate']
+const lexId = lex.ids.AppBskyFeedThreadgate
+type IndexedGate = DatabaseSchemaType['thread_gate']
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
-  obj: Gate.Record,
+  obj: Threadgate.Record,
   timestamp: string,
 ): Promise<IndexedGate | null> => {
   const postUri = new AtUri(obj.post)
   if (postUri.host !== uri.host || postUri.rkey !== uri.rkey) {
     throw new InvalidRequestError(
-      'Creator and rkey of gate does not match its post',
+      'Creator and rkey of thread gate does not match its post',
     )
   }
   const inserted = await db
-    .insertInto('gate')
+    .insertInto('thread_gate')
     .values({
       uri: uri.toString(),
       cid: cid.toString(),
@@ -45,10 +45,10 @@ const insertFn = async (
 const findDuplicate = async (
   db: DatabaseSchema,
   _uri: AtUri,
-  obj: Gate.Record,
+  obj: Threadgate.Record,
 ): Promise<AtUri | null> => {
   const found = await db
-    .selectFrom('gate')
+    .selectFrom('thread_gate')
     .where('postUri', '=', obj.post)
     .selectAll()
     .executeTakeFirst()
@@ -64,7 +64,7 @@ const deleteFn = async (
   uri: AtUri,
 ): Promise<IndexedGate | null> => {
   const deleted = await db
-    .deleteFrom('gate')
+    .deleteFrom('thread_gate')
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
@@ -75,7 +75,7 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<Gate.Record, IndexedGate>
+export type PluginType = RecordProcessor<Threadgate.Record, IndexedGate>
 
 export const makePlugin = (
   db: PrimaryDatabase,

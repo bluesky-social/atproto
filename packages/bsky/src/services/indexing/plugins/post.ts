@@ -6,7 +6,7 @@ import {
   Record as PostRecord,
   ReplyRef,
 } from '../../../lexicon/types/app/bsky/feed/post'
-import { Record as GateRecord } from '../../../lexicon/types/app/bsky/feed/gate'
+import { Record as GateRecord } from '../../../lexicon/types/app/bsky/feed/threadgate'
 import { isMain as isEmbedImage } from '../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../lexicon/types/app/bsky/embed/record'
@@ -28,7 +28,7 @@ import { NotificationServer } from '../../../notifications'
 import {
   checkInvalidInteractions,
   checkInvalidReplyParent,
-  postToGateUri,
+  postToThreadgateUri,
 } from '../../feed/util'
 
 type Notif = Insertable<Notification>
@@ -432,7 +432,7 @@ async function checkReplyInteractions(
 async function getReplyRefs(db: DatabaseSchema, reply: ReplyRef) {
   const replyRoot = reply.root.uri
   const replyParent = reply.parent.uri
-  const replyGate = postToGateUri(replyRoot)
+  const replyGate = postToThreadgateUri(replyRoot)
   const results = await db
     .selectFrom('record')
     .where('record.uri', 'in', [replyRoot, replyGate, replyParent])

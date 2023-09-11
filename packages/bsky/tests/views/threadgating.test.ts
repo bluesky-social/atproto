@@ -9,7 +9,7 @@ import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { forSnapshot } from '../_util'
 
-describe('views with interaction gating', () => {
+describe('views with thread gating', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let pdsAgent: AtpAgent
@@ -17,7 +17,7 @@ describe('views with interaction gating', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_views_gating',
+      dbPostgresSchema: 'bsky_views_thread_gating',
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
@@ -32,7 +32,7 @@ describe('views with interaction gating', () => {
 
   it('applies gate for empty rules.', async () => {
     const post = await sc.post(sc.dids.carol, 'empty rules')
-    await pdsAgent.api.app.bsky.feed.gate.create(
+    await pdsAgent.api.app.bsky.feed.threadgate.create(
       { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
       { post: post.ref.uriStr, createdAt: iso(), allow: [] },
       sc.getHeaders(sc.dids.carol),
@@ -46,7 +46,7 @@ describe('views with interaction gating', () => {
       { headers: await network.serviceHeaders(sc.dids.alice) },
     )
     assert(isThreadViewPost(thread))
-    expect(thread.post.gate).toMatchSnapshot()
+    expect(forSnapshot(thread.post.gate)).toMatchSnapshot()
     expect(thread.viewer).toEqual({ canReply: false })
     expect(thread.replies?.length).toEqual(0)
   })
@@ -70,12 +70,12 @@ describe('views with interaction gating', () => {
         },
       ],
     )
-    await pdsAgent.api.app.bsky.feed.gate.create(
+    await pdsAgent.api.app.bsky.feed.threadgate.create(
       { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
       {
         post: post.ref.uriStr,
         createdAt: iso(),
-        allow: [{ $type: 'app.bsky.feed.gate#mentionRule' }],
+        allow: [{ $type: 'app.bsky.feed.threadgate#mentionRule' }],
       },
       sc.getHeaders(sc.dids.carol),
     )
@@ -107,7 +107,7 @@ describe('views with interaction gating', () => {
       { headers: await network.serviceHeaders(sc.dids.dan) },
     )
     assert(isThreadViewPost(danThread))
-    expect(danThread.post.gate).toMatchSnapshot()
+    expect(forSnapshot(danThread.post.gate)).toMatchSnapshot()
     expect(danThread.viewer).toEqual({ canReply: true })
     const [reply, ...otherReplies] = danThread.replies ?? []
     assert(isThreadViewPost(reply))
@@ -117,12 +117,12 @@ describe('views with interaction gating', () => {
 
   it('applies gate for following rule.', async () => {
     const post = await sc.post(sc.dids.carol, 'following rule')
-    await pdsAgent.api.app.bsky.feed.gate.create(
+    await pdsAgent.api.app.bsky.feed.threadgate.create(
       { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
       {
         post: post.ref.uriStr,
         createdAt: iso(),
-        allow: [{ $type: 'app.bsky.feed.gate#followingRule' }],
+        allow: [{ $type: 'app.bsky.feed.threadgate#followingRule' }],
       },
       sc.getHeaders(sc.dids.carol),
     )
@@ -155,7 +155,7 @@ describe('views with interaction gating', () => {
       { headers: await network.serviceHeaders(sc.dids.alice) },
     )
     assert(isThreadViewPost(aliceThread))
-    expect(aliceThread.post.gate).toMatchSnapshot()
+    expect(forSnapshot(aliceThread.post.gate)).toMatchSnapshot()
     expect(aliceThread.viewer).toEqual({ canReply: true })
     const [reply, ...otherReplies] = aliceThread.replies ?? []
     assert(isThreadViewPost(reply))
@@ -202,14 +202,14 @@ describe('views with interaction gating', () => {
       },
       sc.getHeaders(sc.dids.carol),
     )
-    await pdsAgent.api.app.bsky.feed.gate.create(
+    await pdsAgent.api.app.bsky.feed.threadgate.create(
       { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
       {
         post: post.ref.uriStr,
         createdAt: iso(),
         allow: [
-          { $type: 'app.bsky.feed.gate#listRule', list: listA },
-          { $type: 'app.bsky.feed.gate#listRule', list: listB },
+          { $type: 'app.bsky.feed.threadgate#listRule', list: listA.uri },
+          { $type: 'app.bsky.feed.threadgate#listRule', list: listB.uri },
         ],
       },
       sc.getHeaders(sc.dids.carol),
@@ -264,19 +264,15 @@ describe('views with interaction gating', () => {
 
   it('applies gate for unknown list rule.', async () => {
     const post = await sc.post(sc.dids.carol, 'unknown list rules')
-    await pdsAgent.api.app.bsky.feed.gate.create(
+    await pdsAgent.api.app.bsky.feed.threadgate.create(
       { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
       {
         post: post.ref.uriStr,
         createdAt: iso(),
         allow: [
           {
-            $type: 'app.bsky.feed.gate#listRule',
-            list: {
-              // bad list link, references a post
-              uri: post.ref.uriStr,
-              cid: post.ref.cidStr,
-            },
+            $type: 'app.bsky.feed.threadgate#listRule',
+            list: post.ref.uriStr, // bad list link, references a post
           },
         ],
       },
@@ -310,14 +306,14 @@ describe('views with interaction gating', () => {
         ],
       },
     ])
-    await pdsAgent.api.app.bsky.feed.gate.create(
+    await pdsAgent.api.app.bsky.feed.threadgate.create(
       { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
       {
         post: post.ref.uriStr,
         createdAt: iso(),
         allow: [
-          { $type: 'app.bsky.feed.gate#mentionRule' },
-          { $type: 'app.bsky.feed.gate#followingRule' },
+          { $type: 'app.bsky.feed.threadgate#mentionRule' },
+          { $type: 'app.bsky.feed.threadgate#followingRule' },
         ],
       },
       sc.getHeaders(sc.dids.carol),
@@ -360,7 +356,7 @@ describe('views with interaction gating', () => {
       { headers: await network.serviceHeaders(sc.dids.dan) },
     )
     assert(isThreadViewPost(danThread))
-    expect(danThread.post.gate).toMatchSnapshot()
+    expect(forSnapshot(danThread.post.gate)).toMatchSnapshot()
     expect(danThread.viewer).toEqual({ canReply: true })
     const [reply1, reply2, ...otherReplies] = aliceThread.replies ?? []
     assert(isThreadViewPost(reply1))
@@ -372,7 +368,7 @@ describe('views with interaction gating', () => {
 
   it('applies gate for missing rules, takes no action.', async () => {
     const post = await sc.post(sc.dids.carol, 'missing rules')
-    await pdsAgent.api.app.bsky.feed.gate.create(
+    await pdsAgent.api.app.bsky.feed.threadgate.create(
       { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
       { post: post.ref.uriStr, createdAt: iso() },
       sc.getHeaders(sc.dids.carol),
@@ -391,7 +387,7 @@ describe('views with interaction gating', () => {
       { headers: await network.serviceHeaders(sc.dids.alice) },
     )
     assert(isThreadViewPost(thread))
-    expect(thread.post.gate).toMatchSnapshot()
+    expect(forSnapshot(thread.post.gate)).toMatchSnapshot()
     expect(thread.viewer).toEqual({ canReply: true })
     const [reply, ...otherReplies] = thread.replies ?? []
     assert(isThreadViewPost(reply))
@@ -402,12 +398,12 @@ describe('views with interaction gating', () => {
   it('applies gate after root post is deleted.', async () => {
     // @NOTE also covers rule application more than one level deep
     const post = await sc.post(sc.dids.carol, 'following rule w/ post deletion')
-    await pdsAgent.api.app.bsky.feed.gate.create(
+    await pdsAgent.api.app.bsky.feed.threadgate.create(
       { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
       {
         post: post.ref.uriStr,
         createdAt: iso(),
-        allow: [{ $type: 'app.bsky.feed.gate#followingRule' }],
+        allow: [{ $type: 'app.bsky.feed.threadgate#followingRule' }],
       },
       sc.getHeaders(sc.dids.carol),
     )
@@ -465,7 +461,7 @@ describe('views with interaction gating', () => {
 
   it('does not apply gate to original poster.', async () => {
     const post = await sc.post(sc.dids.carol, 'empty rules')
-    await pdsAgent.api.app.bsky.feed.gate.create(
+    await pdsAgent.api.app.bsky.feed.threadgate.create(
       { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
       { post: post.ref.uriStr, createdAt: iso(), allow: [] },
       sc.getHeaders(sc.dids.carol),
@@ -484,7 +480,7 @@ describe('views with interaction gating', () => {
       { headers: await network.serviceHeaders(sc.dids.carol) },
     )
     assert(isThreadViewPost(thread))
-    expect(thread.post.gate).toMatchSnapshot()
+    expect(forSnapshot(thread.post.gate)).toMatchSnapshot()
     expect(thread.viewer).toEqual({ canReply: true })
     const [reply, ...otherReplies] = thread.replies ?? []
     assert(isThreadViewPost(reply))
@@ -494,12 +490,12 @@ describe('views with interaction gating', () => {
 
   it('displays gated posts in feed and thread anchor without reply context.', async () => {
     const post = await sc.post(sc.dids.carol, 'following rule')
-    await pdsAgent.api.app.bsky.feed.gate.create(
+    await pdsAgent.api.app.bsky.feed.threadgate.create(
       { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
       {
         post: post.ref.uriStr,
         createdAt: iso(),
-        allow: [{ $type: 'app.bsky.feed.gate#followingRule' }],
+        allow: [{ $type: 'app.bsky.feed.threadgate#followingRule' }],
       },
       sc.getHeaders(sc.dids.carol),
     )
@@ -541,7 +537,7 @@ describe('views with interaction gating', () => {
   it('does not apply gate unless it matches post rkey.', async () => {
     const postA = await sc.post(sc.dids.carol, 'ungated a')
     const postB = await sc.post(sc.dids.carol, 'ungated b')
-    await pdsAgent.api.app.bsky.feed.gate.create(
+    await pdsAgent.api.app.bsky.feed.threadgate.create(
       { repo: sc.dids.carol, rkey: postA.ref.uri.rkey },
       { post: postB.ref.uriStr, createdAt: iso(), allow: [] },
       sc.getHeaders(sc.dids.carol),

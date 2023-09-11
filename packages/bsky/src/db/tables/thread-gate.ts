@@ -1,6 +1,6 @@
-const tableName = 'gate'
+const tableName = 'thread_gate'
 
-export interface Gate {
+export interface ThreadGate {
   uri: string
   cid: string
   creator: string
@@ -9,4 +9,4 @@ export interface Gate {
   indexedAt: string
 }
 
-export type PartialDB = { [tableName]: Gate }
+export type PartialDB = { [tableName]: ThreadGate }

@@ -9,7 +9,7 @@ import {
   isFollowingRule,
   isListRule,
   isMentionRule,
-} from '../../lexicon/types/app/bsky/feed/gate'
+} from '../../lexicon/types/app/bsky/feed/threadgate'
 import { isMention } from '../../lexicon/types/app/bsky/richtext/facet'
 import { valuesList } from '../../db/util'
 import DatabaseSchema from '../../db/database-schema'
@@ -45,9 +45,7 @@ export const checkInvalidInteractions = async (
 
   const allowMentions = gate.allow.find(isMentionRule)
   const allowFollowing = gate.allow.find(isFollowingRule)
-  const allowListUris = gate.allow
-    ?.filter(isListRule)
-    .map((item) => item.list.uri)
+  const allowListUris = gate.allow?.filter(isListRule).map((item) => item.list)
 
   // check mentions first since it's quick and synchronous
   if (allowMentions) {
@@ -98,13 +96,13 @@ export const checkInvalidInteractions = async (
   return true
 }
 
-export const postToGateUri = (postUri: string) => {
+export const postToThreadgateUri = (postUri: string) => {
   const gateUri = new AtUri(postUri)
-  gateUri.collection = ids.AppBskyFeedGate
+  gateUri.collection = ids.AppBskyFeedThreadgate
   return gateUri.toString()
 }
 
-export const gateToPostUri = (gateUri: string) => {
+export const threadgateToPostUri = (gateUri: string) => {
   const postUri = new AtUri(gateUri)
   postUri.collection = ids.AppBskyFeedPost
   return postUri.toString()

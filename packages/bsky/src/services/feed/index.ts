@@ -10,9 +10,9 @@ import {
   isRecord as isPostRecord,
 } from '../../lexicon/types/app/bsky/feed/post'
 import {
-  Record as GateRecord,
+  Record as ThreadgateRecord,
   isListRule,
-} from '../../lexicon/types/app/bsky/feed/gate'
+} from '../../lexicon/types/app/bsky/feed/threadgate'
 import { isMain as isEmbedImages } from '../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../lexicon/types/app/bsky/embed/external'
 import {
@@ -31,7 +31,7 @@ import {
   RecordEmbedViewRecord,
   PostBlocksMap,
   FeedHydrationState,
-  PostGateMap,
+  ThreadgateInfoMap,
 } from './types'
 import { LabelService } from '../label'
 import { ActorService } from '../actor'
@@ -43,7 +43,7 @@ import {
 } from '../graph'
 import { FeedViews } from './views'
 import { LabelCache } from '../../label-cache'
-import { gateToPostUri, postToGateUri } from './util'
+import { threadgateToPostUri, postToThreadgateUri } from './util'
 
 export * from './types'
 
@@ -225,9 +225,9 @@ export class FeedService {
     depth = 0,
   ): Promise<FeedHydrationState> {
     const { viewer, dids, uris } = refs
-    const [posts, gates, labels, bam] = await Promise.all([
+    const [posts, threadgates, labels, bam] = await Promise.all([
       this.getPostInfos(Array.from(uris), viewer),
-      this.gatesByPostUri(Array.from(uris)),
+      this.threadgatesByPostUri(Array.from(uris)),
       this.services.label.getLabelsForSubjects([...uris, ...dids]),
       this.services.graph.getBlockAndMuteState(
         viewer ? [...dids].map((did) => [viewer, did]) : [],
@@ -242,12 +242,12 @@ export class FeedService {
         { bam, labels },
       ),
       this.blocksForPosts(posts, bam),
-      this.listsForPostGates(gates, viewer),
+      this.listsForThreadgates(threadgates, viewer),
     ])
     const embeds = await this.embedsForPosts(posts, blocks, viewer, depth)
     return {
       posts,
-      gates,
+      threadgates,
       blocks,
       embeds,
       labels, // includes info for profiles
@@ -411,7 +411,7 @@ export class FeedService {
           uri,
           actorInfos,
           feedState.posts,
-          feedState.gates,
+          feedState.threadgates,
           feedState.embeds,
           feedState.labels,
           feedState.lists,
@@ -432,33 +432,33 @@ export class FeedService {
     return recordEmbedViews
   }
 
-  async gatesByPostUri(postUris: string[]): Promise<PostGateMap> {
+  async threadgatesByPostUri(postUris: string[]): Promise<ThreadgateInfoMap> {
     const gates = postUris.length
       ? await this.db.db
           .selectFrom('record')
-          .where('uri', 'in', postUris.map(postToGateUri))
-          .select(['uri', 'json'])
+          .where('uri', 'in', postUris.map(postToThreadgateUri))
+          .select(['uri', 'cid', 'json'])
           .execute()
       : []
     const gatesByPostUri = gates.reduce((acc, gate) => {
-      const record = jsonStringToLex(gate.json) as GateRecord
-      const postUri = gateToPostUri(gate.uri)
+      const record = jsonStringToLex(gate.json) as ThreadgateRecord
+      const postUri = threadgateToPostUri(gate.uri)
       if (record.post !== postUri) return acc // invalid, skip
-      acc[postUri] = record
+      acc[postUri] = { uri: gate.uri, cid: gate.cid, record }
       return acc
-    }, {} as PostGateMap)
+    }, {} as ThreadgateInfoMap)
     return gatesByPostUri
   }
 
-  listsForPostGates(
-    gates: PostGateMap,
+  listsForThreadgates(
+    threadgates: ThreadgateInfoMap,
     viewer: string | null,
   ): Promise<ListInfoMap> {
     const listsUris = new Set<string>()
-    Object.values(gates).forEach((gate) => {
-      gate?.allow?.forEach((rule) => {
+    Object.values(threadgates).forEach((gate) => {
+      gate?.record.allow?.forEach((rule) => {
         if (isListRule(rule)) {
-          listsUris.add(rule.list.uri)
+          listsUris.add(rule.list)
         }
       })
     })

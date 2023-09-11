@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { Record as GateRecord } from '../../lexicon/types/app/bsky/feed/gate'
+import { Record as ThreadgateRecord } from '../../lexicon/types/app/bsky/feed/threadgate'
 import { View as ImagesEmbedView } from '../../lexicon/types/app/bsky/embed/images'
 import { View as ExternalEmbedView } from '../../lexicon/types/app/bsky/embed/external'
 import {
@@ -52,7 +52,15 @@ export type PostBlocksMap = {
   [uri: string]: { reply?: boolean; embed?: boolean }
 }
 
-export type PostGateMap = { [postUri: string]: GateRecord }
+export type ThreadgateInfo = {
+  uri: string
+  cid: string
+  record: ThreadgateRecord
+}
+
+export type ThreadgateInfoMap = {
+  [postUri: string]: ThreadgateInfo
+}
 
 export type FeedGenInfo = Selectable<FeedGenerator> & {
   likeCount: number
@@ -90,7 +98,7 @@ export type RecordEmbedViewRecordMap = { [uri: string]: RecordEmbedViewRecord }
 
 export type FeedHydrationState = ProfileHydrationState & {
   posts: PostInfoMap
-  gates: PostGateMap
+  threadgates: ThreadgateInfoMap
   embeds: PostEmbedViews
   labels: Labels
   blocks: PostBlocksMap
