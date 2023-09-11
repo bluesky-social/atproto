@@ -29,6 +29,12 @@ export default function (server: Server, ctx: AppContext) {
       let suggestions: Awaited<
         ReturnType<typeof actorService.views.hydrateProfiles>
       > = []
+      let allActors: any[] = []
+
+      const viewerFollows = db.db
+        .selectFrom('follow')
+        .where('creator', '=', viewer)
+        .select('subjectDid')
 
       if (likes.length >= 100) {
         // get posts to get their authors
@@ -72,36 +78,67 @@ export default function (server: Server, ctx: AppContext) {
           .map(([did]) => authors.find((a) => a.did === did))
           .filter(Boolean) as typeof authors
 
-        const actors = sortedAuthors
-
-        if (suggestions.length < MAX_RESULTS_LENGTH) {
-          // backfill with suggested_follow table
-          const additional = await db.db
-            .selectFrom('actor')
-            .innerJoin('suggested_follow', 'actor.did', 'suggested_follow.did')
-            .where(
-              'actor.did',
-              'not in',
-              // exclude any we already have
-              authorDIDsExcludingActorAndViewer.concat([actorDid, viewer]),
-            )
-            .selectAll()
-            .execute()
-
-          actors.push(...additional)
-        }
-
-        // this handles blocks/mutes etc
-        suggestions = (
-          await actorService.views.hydrateProfiles(actors, viewer)
-        ).filter((account) => {
-          return (
-            !account.viewer?.muted &&
-            !account.viewer?.blocking &&
-            !account.viewer?.blockedBy
+        allActors = sortedAuthors
+      } else {
+        const popularFollows = await db.db
+          .selectFrom('actor')
+          .selectAll()
+          .innerJoin(
+            db.db
+              .selectFrom('profile_agg')
+              .select(['did', 'followersCount'])
+              .innerJoin(
+                db.db
+                  .selectFrom('follow')
+                  .selectAll()
+                  .where('creator', '=', actorDid)
+                  .where('subjectDid', '!=', viewer)
+                  .where('subjectDid', 'not in', viewerFollows)
+                  .as('follows'),
+                'follows.subjectDid',
+                'profile_agg.did',
+              )
+              .orderBy('followersCount', 'desc')
+              .limit(20)
+              .as('popularFollows'),
+            'actor.did',
+            'popularFollows.did',
           )
-        })
+          .orderBy('popularFollows.followersCount', 'desc')
+          .execute()
+
+        allActors = popularFollows
       }
+
+      if (allActors.length < MAX_RESULTS_LENGTH) {
+        // backfill with suggested_follow table
+        const additional = await db.db
+          .selectFrom('actor')
+          .innerJoin('suggested_follow', 'actor.did', 'suggested_follow.did')
+          .where(
+            'actor.did',
+            'not in',
+            // exclude any we already have
+            allActors.map((a) => a.did).concat([actorDid, viewer]),
+          )
+          // and aren't already followed by viewer
+          .where('actor.did', 'not in', viewerFollows)
+          .selectAll()
+          .execute()
+
+        allActors.push(...additional)
+      }
+
+      // this handles blocks/mutes etc
+      suggestions = (
+        await actorService.views.hydrateProfiles(allActors, viewer)
+      ).filter((account) => {
+        return (
+          !account.viewer?.muted &&
+          !account.viewer?.blocking &&
+          !account.viewer?.blockedBy
+        )
+      })
 
       return {
         encoding: 'application/json',

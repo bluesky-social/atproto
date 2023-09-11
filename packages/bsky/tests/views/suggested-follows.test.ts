@@ -128,4 +128,20 @@ describe('suggested follows', () => {
       sc.getHeaders(sc.dids.bob),
     )
   })
+
+  it('returns sorted suggested follows based on foafs', async () => {
+    const result = await agent.api.app.bsky.graph.getSuggestedFollowsByActor(
+      {
+        actor: sc.dids.bob,
+      },
+      { headers: await network.serviceHeaders(sc.dids.carol) },
+    )
+
+    expect(result.data.suggestions.length).toBe(3) // backfilled with 2 NPCs
+    expect(
+      result.data.suggestions.find((sug) => {
+        return [sc.dids.alice, sc.dids.carol, sc.dids.bob].includes(sug.did)
+      }),
+    ).toBeFalsy() // not actor or viewer or followed
+  })
 })
