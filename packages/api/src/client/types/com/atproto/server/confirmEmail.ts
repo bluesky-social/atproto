@@ -26,7 +26,7 @@ export interface Response {
   headers: Headers
 }
 
-export class UserNotFoundError extends XRPCError {
+export class AccountNotFoundError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers)
   }
@@ -52,7 +52,7 @@ export class InvalidEmailError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'UserNotFound') return new UserNotFoundError(e)
+    if (e.error === 'AccountNotFound') return new AccountNotFoundError(e)
     if (e.error === 'ExpiredToken') return new ExpiredTokenError(e)
     if (e.error === 'InvalidToken') return new InvalidTokenError(e)
     if (e.error === 'InvalidEmail') return new InvalidEmailError(e)
