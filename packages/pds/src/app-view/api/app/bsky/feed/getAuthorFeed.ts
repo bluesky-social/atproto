@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ req, params, auth }) => {
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null
-      if (await ctx.canProxyRead(req, requester)) {
+      if (ctx.canProxyRead()) {
         const res = await ctx.appviewAgent.api.app.bsky.feed.getAuthorFeed(
           params,
           requester
