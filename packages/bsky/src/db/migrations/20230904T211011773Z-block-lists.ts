@@ -17,12 +17,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     )
     .addUniqueConstraint('list_block_unique_subject', ['creator', 'subjectUri'])
     .execute()
-
-  await db.schema
-    .createIndex('list_block_subject_idx')
-    .on('list_block')
-    .column('subjectUri')
-    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
