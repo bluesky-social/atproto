@@ -10,6 +10,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('token', 'varchar', (col) => col.notNull())
     .addColumn('requestedAt', timestamp, (col) => col.notNull())
     .addPrimaryKeyConstraint('email_token_pkey', ['purpose', 'did'])
+    .addUniqueConstraint('email_token_token_unique', ['purpose', 'token'])
     .execute()
 
   await db.schema
