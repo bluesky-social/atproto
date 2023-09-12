@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds author feed views fetches list feed 1`] = `
+exports[`list feed views fetches list feed 1`] = `
 Array [
   Object {
     "post": Object {
