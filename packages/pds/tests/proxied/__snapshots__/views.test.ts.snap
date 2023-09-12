@@ -1206,7 +1206,15 @@ Object {
             "author": Object {
               "did": "user(4)",
               "handle": "dan.test",
-              "labels": Array [],
+              "labels": Array [
+                Object {
+                  "cts": "1970-01-01T00:00:00.000Z",
+                  "neg": false,
+                  "src": "did:example:labeler",
+                  "uri": "user(4)",
+                  "val": "repo-action-label",
+                },
+              ],
               "viewer": Object {
                 "blockedBy": false,
                 "following": "record(9)",
@@ -1432,36 +1440,36 @@ Object {
       },
     },
     Object {
-      "actor": Object {
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
-        "description": "hi im bob label_me",
-        "did": "user(0)",
-        "displayName": "bobby",
-        "handle": "bob.test",
-        "indexedAt": "1970-01-01T00:00:00.000Z",
-        "labels": Array [
-          Object {
-            "cid": "cids(1)",
-            "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
-            "src": "user(0)",
-            "uri": "record(2)",
-            "val": "self-label-a",
+      "post": Object {
+        "author": Object {
+          "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+          "did": "user(2)",
+          "displayName": "bobby",
+          "handle": "bob.test",
+          "labels": Array [
+            Object {
+              "cid": "cids(5)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "neg": false,
+              "src": "user(2)",
+              "uri": "record(6)",
+              "val": "self-label-a",
+            },
+            Object {
+              "cid": "cids(5)",
+              "cts": "1970-01-01T00:00:00.000Z",
+              "neg": false,
+              "src": "user(2)",
+              "uri": "record(6)",
+              "val": "self-label-b",
+            },
+          ],
+          "viewer": Object {
+            "blockedBy": false,
+            "followedBy": "record(5)",
+            "following": "record(4)",
+            "muted": false,
           },
-          Object {
-            "cid": "cids(1)",
-            "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
-            "src": "user(0)",
-            "uri": "record(2)",
-            "val": "self-label-b",
-          },
-        ],
-        "viewer": Object {
-          "blockedBy": false,
-          "followedBy": "record(1)",
-          "following": "record(0)",
-          "muted": false,
         },
         "cid": "cids(11)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1516,20 +1524,12 @@ Object {
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [
           Object {
-            "cid": "cids(2)",
+            "cid": "cids(13)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "user(2)",
-            "uri": "record(3)",
-            "val": "self-label-a",
-          },
-          Object {
-            "cid": "cids(2)",
-            "cts": "1970-01-01T00:00:00.000Z",
-            "neg": false,
-            "src": "user(2)",
-            "uri": "record(3)",
-            "val": "self-label-b",
+            "src": "user(0)",
+            "uri": "record(15)",
+            "val": "self-label",
           },
         ],
         "likeCount": 0,
@@ -1553,7 +1553,6 @@ Object {
       },
     },
   ],
-  "uri": "record(4)",
 }
 `;
 
