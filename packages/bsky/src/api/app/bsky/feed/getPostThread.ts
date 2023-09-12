@@ -1,97 +1,106 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import {
-  FeedRow,
-  ActorInfoMap,
-  PostEmbedViews,
-  PostBlocksMap,
-} from '../../../../services/feed/types'
-import { FeedService, PostInfoMap } from '../../../../services/feed'
-import { Labels } from '../../../../services/label'
 import {
   BlockedPost,
   NotFoundPost,
   ThreadViewPost,
   isNotFoundPost,
 } from '../../../../lexicon/types/app/bsky/feed/defs'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
+import AppContext from '../../../../context'
+import {
+  FeedService,
+  FeedRow,
+  FeedHydrationState,
+} from '../../../../services/feed'
 import {
   getAncestorsAndSelfQb,
   getDescendentsQb,
 } from '../../../../services/util/post'
 import { Database } from '../../../../db'
 import { setRepoRev } from '../../../util'
-
-export type PostThread = {
-  post: FeedRow
-  parent?: PostThread | ParentNotFoundError
-  replies?: PostThread[]
-}
+import { createPipeline, noRules } from '../../../../pipeline'
+import { ActorInfoMap, ActorService } from '../../../../services/actor'
 
 export default function (server: Server, ctx: AppContext) {
+  const getPostThread = createPipeline(
+    skeleton,
+    hydration,
+    noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
+    presentation,
+  )
   server.app.bsky.feed.getPostThread({
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth, res }) => {
-      const { uri, depth, parentHeight } = params
-      const requester = auth.credentials.did
-
+      const viewer = auth.credentials.did
       const db = ctx.db.getReplica('thread')
-      const actorService = ctx.services.actor(db)
       const feedService = ctx.services.feed(db)
-      const labelService = ctx.services.label(db)
+      const actorService = ctx.services.actor(db)
 
-      const [threadData, repoRev] = await Promise.all([
-        getThreadData(ctx, db, uri, depth, parentHeight),
-        actorService.getRepoRev(requester),
+      const [result, repoRev] = await Promise.allSettled([
+        getPostThread({ ...params, viewer }, { db, feedService, actorService }),
+        actorService.getRepoRev(viewer),
       ])
-      setRepoRev(res, repoRev)
 
-      if (!threadData) {
-        throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
+      if (repoRev.status === 'fulfilled') {
+        setRepoRev(res, repoRev.value)
       }
-      const relevant = getRelevantIds(threadData)
-      const [actors, posts, labels] = await Promise.all([
-        feedService.getActorInfos(Array.from(relevant.dids), requester, {
-          skipLabels: true,
-        }),
-        feedService.getPostInfos(Array.from(relevant.uris), requester),
-        labelService.getLabelsForSubjects([...relevant.uris, ...relevant.dids]),
-      ])
-      const blocks = await feedService.blocksForPosts(posts)
-      const embeds = await feedService.embedsForPosts(posts, blocks, requester)
-
-      const thread = composeThread(
-        threadData,
-        feedService,
-        posts,
-        actors,
-        embeds,
-        blocks,
-        labels,
-      )
-
-      if (isNotFoundPost(thread)) {
-        // @TODO technically this could be returned as a NotFoundPost based on lexicon
-        throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
+      if (result.status === 'rejected') {
+        throw result.reason
       }
 
       return {
         encoding: 'application/json',
-        body: { thread },
+        body: result.value,
       }
     },
   })
 }
 
+const skeleton = async (params: Params, ctx: Context) => {
+  const threadData = await getThreadData(params, ctx)
+  if (!threadData) {
+    throw new InvalidRequestError(`Post not found: ${params.uri}`, 'NotFound')
+  }
+  return { params, threadData }
+}
+
+const hydration = async (state: SkeletonState, ctx: Context) => {
+  const { feedService } = ctx
+  const {
+    threadData,
+    params: { viewer },
+  } = state
+  const relevant = getRelevantIds(threadData)
+  const hydrated = await feedService.feedHydration({ ...relevant, viewer })
+  return { ...state, ...hydrated }
+}
+
+const presentation = (state: HydrationState, ctx: Context) => {
+  const { params, profiles } = state
+  const { actorService } = ctx
+  const actors = actorService.views.profileBasicPresentation(
+    Object.keys(profiles),
+    state,
+    { viewer: params.viewer },
+  )
+  const thread = composeThread(state.threadData, actors, state, ctx)
+  if (isNotFoundPost(thread)) {
+    // @TODO technically this could be returned as a NotFoundPost based on lexicon
+    throw new InvalidRequestError(`Post not found: ${params.uri}`, 'NotFound')
+  }
+  return { thread }
+}
+
 const composeThread = (
   threadData: PostThread,
-  feedService: FeedService,
-  posts: PostInfoMap,
   actors: ActorInfoMap,
-  embeds: PostEmbedViews,
-  blocks: PostBlocksMap,
-  labels: Labels,
+  state: HydrationState,
+  ctx: Context,
 ) => {
+  const { feedService } = ctx
+  const { posts, embeds, blocks, labels } = state
+
   const post = feedService.views.formatPostView(
     threadData.post.postUri,
     actors,
@@ -134,30 +143,14 @@ const composeThread = (
         notFound: true,
       }
     } else {
-      parent = composeThread(
-        threadData.parent,
-        feedService,
-        posts,
-        actors,
-        embeds,
-        blocks,
-        labels,
-      )
+      parent = composeThread(threadData.parent, actors, state, ctx)
     }
   }
 
   let replies: (ThreadViewPost | NotFoundPost | BlockedPost)[] | undefined
   if (threadData.replies) {
     replies = threadData.replies.flatMap((reply) => {
-      const thread = composeThread(
-        reply,
-        feedService,
-        posts,
-        actors,
-        embeds,
-        blocks,
-        labels,
-      )
+      const thread = composeThread(reply, actors, state, ctx)
       // e.g. don't bother including #postNotFound reply placeholders for takedowns. either way matches api contract.
       const skip = []
       return isNotFoundPost(thread) ? skip : thread
@@ -195,13 +188,12 @@ const getRelevantIds = (
 }
 
 const getThreadData = async (
-  ctx: AppContext,
-  db: Database,
-  uri: string,
-  depth: number,
-  parentHeight: number,
+  params: Params,
+  ctx: Context,
 ): Promise<PostThread | null> => {
-  const feedService = ctx.services.feed(db)
+  const { db, feedService } = ctx
+  const { uri, depth, parentHeight } = params
+
   const [parents, children] = await Promise.all([
     getAncestorsAndSelfQb(db.db, { uri, parentHeight })
       .selectFrom('ancestor')
@@ -278,3 +270,24 @@ class ParentNotFoundError extends Error {
     super(`Parent not found: ${uri}`)
   }
 }
+
+type PostThread = {
+  post: FeedRow
+  parent?: PostThread | ParentNotFoundError
+  replies?: PostThread[]
+}
+
+type Context = {
+  db: Database
+  feedService: FeedService
+  actorService: ActorService
+}
+
+type Params = QueryParams & { viewer: string | null }
+
+type SkeletonState = {
+  params: Params
+  threadData: PostThread
+}
+
+type HydrationState = SkeletonState & FeedHydrationState

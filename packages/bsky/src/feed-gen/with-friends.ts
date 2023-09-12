@@ -29,6 +29,7 @@ const handler: AlgoHandler = async (
   postsQb = paginate(postsQb, { limit, cursor, keyset, tryIndex: true })
 
   const feedItems = await postsQb.execute()
+
   return {
     feedItems,
     cursor: keyset.packFromResult(feedItems),

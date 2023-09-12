@@ -1,23 +1,29 @@
-import { encode } from '../src/content-reporter'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { SeedClient } from './seeds/client'
-import basicSeed from './seeds/basic'
+import { FuzzyMatcher, encode } from '../../src/auto-moderator/fuzzy-matcher'
+import { TestNetwork } from '@atproto/dev-env'
+import { SeedClient } from '../seeds/client'
+import basicSeed from '../seeds/basic'
 import { AtpAgent } from '@atproto/api'
+import { ImageInvalidator } from '../../src/image/invalidator'
 
-describe('content reporter', () => {
-  let network: TestNetworkNoAppView
+describe('fuzzy matcher', () => {
+  let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
+  let fuzzyMatcher: FuzzyMatcher
 
   let alice: string
 
   beforeAll(async () => {
-    network = await TestNetworkNoAppView.create({
-      dbPostgresSchema: 'content_reporter',
-      pds: {
-        unacceptableWordsB64: encode(['evil']),
+    network = await TestNetwork.create({
+      dbPostgresSchema: 'fuzzy_matcher',
+      bsky: {
+        imgInvalidator: new NoopInvalidator(),
+        indexer: {
+          fuzzyMatchB64: encode(['evil']),
+        },
       },
     })
+    fuzzyMatcher = new FuzzyMatcher(['evil', 'mean', 'bad'], ['baddie'])
     agent = network.pds.getClient()
     sc = new SeedClient(agent)
     await basicSeed(sc)
@@ -30,12 +36,29 @@ describe('content reporter', () => {
   })
 
   const getAllReports = () => {
-    return network.pds.ctx.db.db
-      .selectFrom('moderation_report')
+    return network.bsky.ctx.db
+      .getPrimary()
+      .db.selectFrom('moderation_report')
       .selectAll()
       .orderBy('id', 'asc')
       .execute()
   }
+
+  it('identifies fuzzy matches', () => {
+    expect(fuzzyMatcher.getMatches('evil.john.test')).toMatchObject(['evil'])
+    expect(fuzzyMatcher.getMatches('john.evil.test')).toMatchObject(['evil'])
+    expect(fuzzyMatcher.getMatches('john.test.evil')).toMatchObject(['evil'])
+    expect(fuzzyMatcher.getMatches('ev1l.test.john')).toMatchObject(['evil'])
+    expect(fuzzyMatcher.getMatches('ev-1l.test.john')).toMatchObject(['evil'])
+    expect(fuzzyMatcher.getMatches('ev-11.test.john')).toMatchObject(['evil'])
+    expect(fuzzyMatcher.getMatches('ev.-1.l-test.john')).toMatchObject(['evil'])
+  })
+
+  it('identifies fuzzy false positivies', () => {
+    expect(fuzzyMatcher.getMatches('john.test')).toHaveLength(0)
+    expect(fuzzyMatcher.getMatches('good.john.test')).toHaveLength(0)
+    expect(fuzzyMatcher.getMatches('john.baddie.test')).toHaveLength(0)
+  })
 
   it('doesnt label any of the content in the seed', async () => {
     const reports = await getAllReports()
@@ -62,7 +85,7 @@ describe('content reporter', () => {
       },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
-    await network.pds.ctx.backgroundQueue.processAll()
+    await network.processAll()
 
     const reports = await getAllReports()
     expect(reports.length).toBe(2)
@@ -136,3 +159,7 @@ describe('content reporter', () => {
     expect(reports.at(-1)?.subjectCid).toEqual(res.data.cid)
   })
 })
+
+class NoopInvalidator implements ImageInvalidator {
+  async invalidate() {}
+}

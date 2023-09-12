@@ -81,6 +81,7 @@ export const MODLIST = 'app.bsky.graph.defs#modlist'
 
 export interface ListViewerState {
   muted?: boolean
+  blocked?: string
   [k: string]: unknown
 }
 

@@ -14,7 +14,6 @@ import {
   RateLimiterStatus,
   XRPCReqContext,
 } from './types'
-import { getReqIp } from './util'
 
 export type RateLimiterOpts = {
   keyPrefix: string
@@ -155,5 +154,7 @@ export const getTightestLimit = (
   return lowest
 }
 
-const defaultKey: CalcKeyFn = (ctx: XRPCReqContext) => getReqIp(ctx.req)
+// when using a proxy, ensure headers are getting forwarded correctly: `app.set('trust proxy', true)`
+// https://expressjs.com/en/guide/behind-proxies.html
+const defaultKey: CalcKeyFn = (ctx: XRPCReqContext) => ctx.req.ip
 const defaultPoints: CalcPointsFn = () => 1
