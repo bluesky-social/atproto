@@ -4,6 +4,7 @@ import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 const MAX_RESULTS_LENGTH = 10
+const RESULT_OVERFETCH = 20
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getSuggestedFollowsByActor({
@@ -24,17 +25,13 @@ export default function (server: Server, ctx: AppContext) {
         .selectFrom('follow')
         .where('creator', '=', viewer)
         .select('subjectDid')
-
-      /**
-       * 20 most liked accounts that aren't already followed by the viewer, ARE
-       * the viewer, or are the actor
-       */
-      const mostLikedAccounts = db.db
+      const mostLikedAccounts = await db.db
         .selectFrom(
           db.db
             .selectFrom('like')
             .where('creator', '=', actorDid)
             .select(sql`split_part(subject, '/', 3)`.as('subjectDid'))
+            .limit(1000) // limit to 1000
             .as('likes'),
         )
         .select('likes.subjectDid as did')
@@ -43,75 +40,63 @@ export default function (server: Server, ctx: AppContext) {
         .where('likes.subjectDid', 'not in', [actorDid, viewer])
         .groupBy('likes.subjectDid')
         .orderBy('count', 'desc')
-        .limit(20)
-
-      /**
-       * 20 most liked accounts as actor results
-       */
-      const actors = await db.db
-        .selectFrom('actor')
-        .selectAll()
-        .innerJoin(mostLikedAccounts.as('liked'), 'actor.did', 'liked.did')
-        .orderBy('liked.count', 'desc')
+        .limit(RESULT_OVERFETCH)
         .execute()
+      const resultDids = mostLikedAccounts.map((a) => ({ did: a.did })) as {
+        did: string
+      }[]
 
-      if (actors.length < MAX_RESULTS_LENGTH) {
+      if (resultDids.length < MAX_RESULTS_LENGTH) {
         // backfill with popular accounts followed by actor
-        const actorsActorFollows = db.db
+        const mostPopularAccountsActorFollows = await db.db
           .selectFrom('follow')
-          .selectAll()
-          .where('creator', '=', actorDid)
-          .where('subjectDid', '!=', viewer)
-          .where('subjectDid', 'not in', actorsViewerFollows)
-          .if(actors.length > 0, (qb) =>
+          .innerJoin('profile_agg', 'follow.subjectDid', 'profile_agg.did')
+          .select('follow.subjectDid as did')
+          .where('follow.creator', '=', actorDid)
+          .where('follow.subjectDid', '!=', viewer)
+          .where('follow.subjectDid', 'not in', actorsViewerFollows)
+          .if(resultDids.length > 0, (qb) =>
             qb.where(
               'subjectDid',
               'not in',
-              actors.map((a) => a.did),
+              resultDids.map((a) => a.did),
             ),
           )
-        const mostPopularAccountsActorFollows = db.db
-          .selectFrom('profile_agg')
-          .select(['did', 'followersCount'])
-          .innerJoin(
-            actorsActorFollows.as('follows'),
-            'follows.subjectDid',
-            'profile_agg.did',
-          )
-          .orderBy('followersCount', 'desc')
-          .limit(20)
-        const mostPopularActors = await db.db
-          .selectFrom('actor')
-          .selectAll()
-          .innerJoin(
-            mostPopularAccountsActorFollows.as('popularFollows'),
-            'actor.did',
-            'popularFollows.did',
-          )
-          .orderBy('popularFollows.followersCount', 'desc')
+          .orderBy('profile_agg.followersCount', 'desc')
+          .limit(RESULT_OVERFETCH)
           .execute()
 
-        actors.push(...mostPopularActors)
+        resultDids.push(...mostPopularAccountsActorFollows)
       }
 
-      if (actors.length < MAX_RESULTS_LENGTH) {
+      if (resultDids.length < MAX_RESULTS_LENGTH) {
         // backfill with suggested_follow table
         const additional = await db.db
-          .selectFrom('actor')
-          .innerJoin('suggested_follow', 'actor.did', 'suggested_follow.did')
+          .selectFrom('suggested_follow')
           .where(
-            'actor.did',
+            'did',
             'not in',
             // exclude any we already have
-            actors.map((a) => a.did).concat([actorDid, viewer]),
+            resultDids.map((a) => a.did).concat([actorDid, viewer]),
           )
           // and aren't already followed by viewer
-          .where('actor.did', 'not in', actorsViewerFollows)
+          .where('did', 'not in', actorsViewerFollows)
           .selectAll()
           .execute()
 
-        actors.push(...additional)
+        resultDids.push(...additional)
       }
+
+      const actors = await db.db
+        .selectFrom('actor')
+        .selectAll()
+        .where(
+          'did',
+          'in',
+          resultDids.map((a) => a.did),
+        )
+        .limit(RESULT_OVERFETCH)
+        .execute()
 
       // resolve all profiles, this handles blocks/mutes etc
       const suggestions = (
