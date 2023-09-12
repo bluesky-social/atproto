@@ -1,7 +1,10 @@
 import { CID } from 'multiformats/cid'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
+import { ids } from '../../../lexicon/lexicons'
 import Database from '../../../db'
+import { BackgroundQueue } from '../../../event-stream/background-queue'
+import { NoopProcessor } from './processor'
 import * as Post from './plugins/post'
 import * as Like from './plugins/like'
 import * as Repost from './plugins/repost'
@@ -11,7 +14,6 @@ import * as List from './plugins/list'
 import * as ListItem from './plugins/list-item'
 import * as Profile from './plugins/profile'
 import * as FeedGenerator from './plugins/feed-generator'
-import { BackgroundQueue } from '../../../event-stream/background-queue'
 
 export class IndexingService {
   records: {
@@ -22,6 +24,7 @@ export class IndexingService {
     block: Block.PluginType
     list: List.PluginType
     listItem: ListItem.PluginType
+    listBlock: NoopProcessor
     profile: Profile.PluginType
     feedGenerator: FeedGenerator.PluginType
   }
@@ -35,6 +38,11 @@ export class IndexingService {
       block: Block.makePlugin(this.db, backgroundQueue),
       list: List.makePlugin(this.db, backgroundQueue),
       listItem: ListItem.makePlugin(this.db, backgroundQueue),
+      listBlock: new NoopProcessor(
+        ids.AppBskyGraphListblock,
+        this.db,
+        backgroundQueue,
+      ),
       profile: Profile.makePlugin(this.db, backgroundQueue),
       feedGenerator: FeedGenerator.makePlugin(this.db, backgroundQueue),
     }
