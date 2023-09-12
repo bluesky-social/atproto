@@ -3266,7 +3266,6 @@ export const schemaDict = {
             },
             since: {
               type: 'string',
-              format: 'cid',
               description: 'The revision of the repo to catch up from.',
             },
           },
@@ -3295,7 +3294,6 @@ export const schemaDict = {
             },
             since: {
               type: 'string',
-              format: 'cid',
               description: 'Optional revision of the repo to list blobs since',
             },
             limit: {
@@ -3631,32 +3629,6 @@ export const schemaDict = {
           },
           cid: {
             type: 'cid-link',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoTempUpgradeRepoVersion: {
-    lexicon: 1,
-    id: 'com.atproto.temp.upgradeRepoVersion',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Upgrade a repo to v3',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['did'],
-            properties: {
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-              force: {
-                type: 'boolean',
-              },
-            },
           },
         },
       },
@@ -5845,6 +5817,10 @@ export const schemaDict = {
           muted: {
             type: 'boolean',
           },
+          blocked: {
+            type: 'string',
+            format: 'at-uri',
+          },
         },
       },
     },
@@ -6073,6 +6049,49 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetListBlocks: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getListBlocks',
+    defs: {
+      main: {
+        type: 'query',
+        description: "Which lists is the requester's account blocking?",
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['lists'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              lists: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#listView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphGetListMutes: {
     lexicon: 1,
     id: 'app.bsky.graph.getListMutes',
@@ -6248,6 +6267,31 @@ export const schemaDict = {
             labels: {
               type: 'union',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphListblock: {
+    lexicon: 1,
+    id: 'app.bsky.graph.listblock',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A block of an entire list of actors.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['subject', 'createdAt'],
+          properties: {
+            subject: {
+              type: 'string',
+              format: 'at-uri',
             },
             createdAt: {
               type: 'string',
@@ -6880,7 +6924,6 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
-  ComAtprotoTempUpgradeRepoVersion: 'com.atproto.temp.upgradeRepoVersion',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
@@ -6920,10 +6963,12 @@ export const ids = {
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
   AppBskyGraphGetList: 'app.bsky.graph.getList',
+  AppBskyGraphGetListBlocks: 'app.bsky.graph.getListBlocks',
   AppBskyGraphGetListMutes: 'app.bsky.graph.getListMutes',
   AppBskyGraphGetLists: 'app.bsky.graph.getLists',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
   AppBskyGraphList: 'app.bsky.graph.list',
+  AppBskyGraphListblock: 'app.bsky.graph.listblock',
   AppBskyGraphListitem: 'app.bsky.graph.listitem',
   AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',

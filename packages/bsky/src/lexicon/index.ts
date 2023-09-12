@@ -71,7 +71,6 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
-import * as ComAtprotoTempUpgradeRepoVersion from './types/com/atproto/temp/upgradeRepoVersion'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
@@ -97,6 +96,7 @@ import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
+import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
@@ -166,7 +166,6 @@ export class AtprotoNS {
   repo: RepoNS
   server: ServerNS
   sync: SyncNS
-  temp: TempNS
 
   constructor(server: Server) {
     this._server = server
@@ -177,7 +176,6 @@ export class AtprotoNS {
     this.repo = new RepoNS(server)
     this.server = new ServerNS(server)
     this.sync = new SyncNS(server)
-    this.temp = new TempNS(server)
   }
 }
 
@@ -919,25 +917,6 @@ export class SyncNS {
   }
 }
 
-export class TempNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-
-  upgradeRepoVersion<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoTempUpgradeRepoVersion.Handler<ExtractAuth<AV>>,
-      ComAtprotoTempUpgradeRepoVersion.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.temp.upgradeRepoVersion' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
 export class AppNS {
   _server: Server
   bsky: BskyNS
@@ -1273,6 +1252,17 @@ export class GraphNS {
     >,
   ) {
     const nsid = 'app.bsky.graph.getList' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getListBlocks<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetListBlocks.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetListBlocks.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getListBlocks' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

@@ -8,6 +8,8 @@ import { LabelCache } from '../../label-cache'
 import { TimeCidKeyset, paginate } from '../../db/pagination'
 import { SearchKeyset, getUserSearchQuery } from '../util/search'
 
+export * from './types'
+
 export class ActorService {
   constructor(
     public db: Database,
