@@ -2485,6 +2485,56 @@ Object {
 }
 `;
 
+exports[`proxies view requests graph.getListBlocks 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "lists": Array [
+    Object {
+      "cid": "cids(0)",
+      "creator": Object {
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "description": "hi im bob label_me",
+        "did": "user(0)",
+        "displayName": "bobby",
+        "handle": "bob.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(0)",
+            "uri": "record(2)",
+            "val": "self-label-a",
+          },
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(0)",
+            "uri": "record(2)",
+            "val": "self-label-b",
+          },
+        ],
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
+      },
+      "description": "bob's list of mutes",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "bob mutes",
+      "purpose": "app.bsky.graph.defs#modlist",
+      "uri": "record(0)",
+      "viewer": Object {
+        "blocked": "record(1)",
+        "muted": false,
+      },
+    },
+  ],
+}
+`;
+
 exports[`proxies view requests graph.getLists 1`] = `
 Object {
   "cursor": "0000000000000::bafycid",
