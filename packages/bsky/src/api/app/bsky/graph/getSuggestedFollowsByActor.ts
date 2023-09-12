@@ -104,6 +104,7 @@ export default function (server: Server, ctx: AppContext) {
       ).filter((account) => {
         return (
           !account.viewer?.muted &&
+          !account.viewer?.mutedByList &&
           !account.viewer?.blocking &&
           !account.viewer?.blockedBy
         )
