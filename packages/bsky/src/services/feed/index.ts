@@ -1,15 +1,8 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
-import { dedupeStrs } from '@atproto/common'
-import { INVALID_HANDLE } from '@atproto/syntax'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { Database } from '../../db'
-import {
-  countAll,
-  noMatch,
-  notSoftDeletedClause,
-  valuesList,
-} from '../../db/util'
+import { countAll, noMatch, notSoftDeletedClause } from '../../db/util'
 import { ImageUriBuilder } from '../../image/uri'
 import { ids } from '../../lexicon/lexicons'
 import {
@@ -24,26 +17,20 @@ import {
 } from '../../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../../lexicon/types/app/bsky/embed/recordWithMedia'
 import {
-  FeedViewPost,
-  SkeletonFeedPost,
-} from '../../lexicon/types/app/bsky/feed/defs'
-import {
-  ActorInfoMap,
   PostInfoMap,
   FeedItemType,
   FeedRow,
   FeedGenInfoMap,
-  PostViews,
   PostEmbedViews,
   RecordEmbedViewRecordMap,
   PostInfo,
   RecordEmbedViewRecord,
   PostBlocksMap,
-  kSelfLabels,
+  FeedHydrationState,
 } from './types'
-import { LabelService, Labels, getSelfLabels } from '../label'
+import { LabelService } from '../label'
 import { ActorService } from '../actor'
-import { GraphService } from '../graph'
+import { BlockAndMuteState, GraphService, RelationshipPair } from '../graph'
 import { FeedViews } from './views'
 import { LabelCache } from '../../label-cache'
 
@@ -56,7 +43,7 @@ export class FeedService {
     public labelCache: LabelCache,
   ) {}
 
-  views = new FeedViews(this.db, this.imgUriBuilder)
+  views = new FeedViews(this.db, this.imgUriBuilder, this.labelCache)
 
   services = {
     label: LabelService.creator(this.labelCache)(this.db),
@@ -121,127 +108,6 @@ export class FeedService {
           .select('uri')
           .as('viewerLike'),
       )
-  }
-
-  // @TODO just use actor service??
-  // @NOTE keep in sync with actorService.views.profile()
-  async getActorInfos(
-    dids: string[],
-    viewer: string | null,
-    opts?: { skipLabels?: boolean }, // @NOTE used by hydrateFeed() to batch label hydration
-  ): Promise<ActorInfoMap> {
-    if (dids.length < 1) return {}
-    const { ref } = this.db.db.dynamic
-    const { skipLabels } = opts ?? {}
-    const [actors, labels] = await Promise.all([
-      this.db.db
-        .selectFrom('actor')
-        .leftJoin('profile', 'profile.creator', 'actor.did')
-        .leftJoin('record', 'record.uri', 'profile.uri')
-        .where('actor.did', 'in', dids)
-        .where(notSoftDeletedClause(ref('actor')))
-        .selectAll('actor')
-        .select([
-          'profile.uri as profileUri',
-          'profile.cid as profileCid',
-          'profile.displayName as displayName',
-          'profile.description as description',
-          'profile.avatarCid as avatarCid',
-          'profile.indexedAt as indexedAt',
-          'record.json as profileJson',
-          this.db.db
-            .selectFrom('follow')
-            .if(!viewer, (q) => q.where(noMatch))
-            .where('creator', '=', viewer ?? '')
-            .whereRef('subjectDid', '=', ref('actor.did'))
-            .select('uri')
-            .as('requesterFollowing'),
-          this.db.db
-            .selectFrom('follow')
-            .if(!viewer, (q) => q.where(noMatch))
-            .whereRef('creator', '=', ref('actor.did'))
-            .where('subjectDid', '=', viewer ?? '')
-            .select('uri')
-            .as('requesterFollowedBy'),
-          this.db.db
-            .selectFrom('actor_block')
-            .if(!viewer, (q) => q.where(noMatch))
-            .where('creator', '=', viewer ?? '')
-            .whereRef('subjectDid', '=', ref('actor.did'))
-            .select('uri')
-            .as('requesterBlocking'),
-          this.db.db
-            .selectFrom('actor_block')
-            .if(!viewer, (q) => q.where(noMatch))
-            .whereRef('creator', '=', ref('actor.did'))
-            .where('subjectDid', '=', viewer ?? '')
-            .select('uri')
-            .as('requesterBlockedBy'),
-          this.db.db
-            .selectFrom('mute')
-            .if(!viewer, (q) => q.where(noMatch))
-            .whereRef('subjectDid', '=', ref('actor.did'))
-            .where('mutedByDid', '=', viewer ?? '')
-            .select('subjectDid')
-            .as('requesterMuted'),
-          this.db.db
-            .selectFrom('list_item')
-            .if(!viewer, (q) => q.where(noMatch))
-            .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
-            .where('list_mute.mutedByDid', '=', viewer ?? '')
-            .whereRef('list_item.subjectDid', '=', ref('actor.did'))
-            .select('list_item.listUri')
-            .limit(1)
-            .as('requesterMutedByList'),
-        ])
-        .execute(),
-      this.services.label.getLabelsForSubjects(skipLabels ? [] : dids),
-    ])
-    const listUris: string[] = actors
-      .map((a) => a.requesterMutedByList)
-      .filter((list) => !!list)
-    const listViews = await this.services.graph.getListViews(listUris, viewer)
-    return actors.reduce((acc, cur) => {
-      const avatar = cur.avatarCid
-        ? this.imgUriBuilder.getPresetUri('avatar', cur.did, cur.avatarCid)
-        : undefined
-      const mutedByList =
-        cur.requesterMutedByList && listViews[cur.requesterMutedByList]
-          ? this.services.graph.formatListViewBasic(
-              listViews[cur.requesterMutedByList],
-            )
-          : undefined
-      const actorLabels = labels[cur.did] ?? []
-      const selfLabels = getSelfLabels({
-        uri: cur.profileUri,
-        cid: cur.profileCid,
-        record:
-          cur.profileJson !== null
-            ? (jsonStringToLex(cur.profileJson) as Record<string, unknown>)
-            : null,
-      })
-      return {
-        ...acc,
-        [cur.did]: {
-          did: cur.did,
-          handle: cur.handle ?? INVALID_HANDLE,
-          displayName: cur.displayName ?? undefined,
-          avatar,
-          viewer: viewer
-            ? {
-                muted: !!cur?.requesterMuted || !!cur?.requesterMutedByList,
-                mutedByList,
-                blockedBy: !!cur?.requesterBlockedBy,
-                blocking: cur?.requesterBlocking || undefined,
-                following: cur?.requesterFollowing || undefined,
-                followedBy: cur?.requesterFollowedBy || undefined,
-              }
-            : undefined,
-          labels: skipLabels ? undefined : [...actorLabels, ...selfLabels],
-          [kSelfLabels]: selfLabels,
-        },
-      }
-    }, {} as ActorInfoMap)
   }
 
   async getPostInfos(
@@ -312,102 +178,23 @@ export class FeedService {
     )
   }
 
-  async getPostViews(
-    postUris: string[],
-    requester: string | null,
-    precomputed?: {
-      actors?: ActorInfoMap
-      posts?: PostInfoMap
-      embeds?: PostEmbedViews
-      blocks?: PostBlocksMap
-      labels?: Labels
-    },
-  ): Promise<PostViews> {
-    const uris = dedupeStrs(postUris)
-    const dids = dedupeStrs(postUris.map((uri) => new AtUri(uri).hostname))
-
-    const [actors, posts, labels] = await Promise.all([
-      precomputed?.actors ??
-        this.getActorInfos(dids, requester, { skipLabels: true }),
-      precomputed?.posts ?? this.getPostInfos(uris, requester),
-      precomputed?.labels ??
-        this.services.label.getLabelsForSubjects([...uris, ...dids]),
-    ])
-    const blocks = precomputed?.blocks ?? (await this.blocksForPosts(posts))
-    const embeds =
-      precomputed?.embeds ??
-      (await this.embedsForPosts(posts, blocks, requester))
-
-    return uris.reduce((acc, cur) => {
-      const view = this.views.formatPostView(cur, actors, posts, embeds, labels)
-      if (view) {
-        acc[cur] = view
-      }
-      return acc
-    }, {} as PostViews)
-  }
-
-  async filterAndGetFeedItems(
-    uris: string[],
-    requester: string,
-  ): Promise<Record<string, FeedRow>> {
+  async getFeedItems(uris: string[]): Promise<Record<string, FeedRow>> {
     if (uris.length < 1) return {}
-    const { ref } = this.db.db.dynamic
     const feedItems = await this.selectFeedItemQb()
       .where('feed_item.uri', 'in', uris)
-      .where((qb) =>
-        // Hide posts and reposts of or by muted actors
-        this.services.graph.whereNotMuted(qb, requester, [
-          ref('post.creator'),
-          ref('originatorDid'),
-        ]),
-      )
-      .whereNotExists(
-        this.services.graph.blockQb(requester, [
-          ref('post.creator'),
-          ref('originatorDid'),
-        ]),
-      )
       .execute()
     return feedItems.reduce((acc, item) => {
       return Object.assign(acc, { [item.uri]: item })
     }, {} as Record<string, FeedRow>)
   }
 
-  // @TODO enforce limit elsewhere
-  async cleanFeedSkeleton(
-    skeleton: SkeletonFeedPost[],
-    limit: number,
-    requester: string,
-  ): Promise<FeedRow[]> {
-    skeleton = skeleton.slice(0, limit)
-    const feedItemUris = skeleton.map(getSkeleFeedItemUri)
-    const feedItems = await this.filterAndGetFeedItems(feedItemUris, requester)
-
-    const cleaned: FeedRow[] = []
-    for (const skeleItem of skeleton) {
-      const feedItem = feedItems[getSkeleFeedItemUri(skeleItem)]
-      if (feedItem && feedItem.postUri === skeleItem.post) {
-        cleaned.push(feedItem)
-      }
-    }
-    return cleaned
-  }
-
-  async hydrateFeed(
-    items: FeedRow[],
-    viewer: string | null,
-    // @TODO (deprecated) remove this once all clients support the blocked/not-found union on post views
-    usePostViewUnion?: boolean,
-  ): Promise<FeedViewPost[]> {
+  feedItemRefs(items: FeedRow[]) {
     const actorDids = new Set<string>()
     const postUris = new Set<string>()
     for (const item of items) {
-      actorDids.add(item.postAuthorDid)
       postUris.add(item.postUri)
-      if (item.postAuthorDid !== item.originatorDid) {
-        actorDids.add(item.originatorDid)
-      }
+      actorDids.add(item.postAuthorDid)
+      actorDids.add(item.originatorDid)
       if (item.replyParent) {
         postUris.add(item.replyParent)
         actorDids.add(new AtUri(item.replyParent).hostname)
@@ -417,29 +204,51 @@ export class FeedService {
         actorDids.add(new AtUri(item.replyRoot).hostname)
       }
     }
-    const [actors, posts, labels] = await Promise.all([
-      this.getActorInfos(Array.from(actorDids), viewer, {
-        skipLabels: true,
-      }),
-      this.getPostInfos(Array.from(postUris), viewer),
-      this.services.label.getLabelsForSubjects([...postUris, ...actorDids]),
-    ])
-    const blocks = await this.blocksForPosts(posts)
-    const embeds = await this.embedsForPosts(posts, blocks, viewer)
+    return { dids: actorDids, uris: postUris }
+  }
 
-    return this.views.formatFeed(
-      items,
-      actors,
+  async feedHydration(
+    refs: {
+      dids: Set<string>
+      uris: Set<string>
+      viewer: string | null
+    },
+    depth = 0,
+  ): Promise<FeedHydrationState> {
+    const { viewer, dids, uris } = refs
+    const [posts, labels, bam] = await Promise.all([
+      this.getPostInfos(Array.from(uris), viewer),
+      this.services.label.getLabelsForSubjects([...uris, ...dids]),
+      this.services.graph.getBlockAndMuteState(
+        viewer ? [...dids].map((did) => [viewer, did]) : [],
+      ),
+    ])
+    // profileState for labels and bam handled above, profileHydration() shouldn't fetch additional
+    const [profileState, blocks] = await Promise.all([
+      this.services.actor.views.profileHydration(
+        Array.from(dids),
+        { viewer },
+        { bam, labels },
+      ),
+      this.blocksForPosts(posts, bam),
+    ])
+    const embeds = await this.embedsForPosts(posts, blocks, viewer, depth)
+    return {
       posts,
-      embeds,
-      labels,
       blocks,
-      usePostViewUnion,
-    )
+      embeds,
+      labels, // includes info for profiles
+      bam, // includes info for profiles
+      profiles: profileState.profiles,
+      lists: profileState.lists,
+    }
   }
 
   // applies blocks for visibility to third-parties (i.e. based on post content)
-  async blocksForPosts(posts: PostInfoMap): Promise<PostBlocksMap> {
+  async blocksForPosts(
+    posts: PostInfoMap,
+    bam?: BlockAndMuteState,
+  ): Promise<PostBlocksMap> {
     const relationships: RelationshipPair[] = []
     const byPost: Record<string, PostRelationships> = {}
     const didFromUri = (uri) => new AtUri(uri).host
@@ -466,15 +275,17 @@ export class FeedService {
       }
     }
     // compute block state from all actor relationships among posts
-    const blockSet = await this.getBlockSet(relationships)
-    if (blockSet.empty()) return {}
+    const blockState = await this.services.graph.getBlockState(
+      relationships,
+      bam,
+    )
     const result: PostBlocksMap = {}
     Object.entries(byPost).forEach(([uri, block]) => {
-      if (block.embed && blockSet.has(block.embed)) {
+      if (block.embed && blockState.block(block.embed)) {
         result[uri] ??= {}
         result[uri].embed = true
       }
-      if (block.reply && blockSet.has(block.reply)) {
+      if (block.reply && blockState.block(block.reply)) {
         result[uri] ??= {}
         result[uri].reply = true
       }
@@ -482,33 +293,11 @@ export class FeedService {
     return result
   }
 
-  private async getBlockSet(relationships: RelationshipPair[]) {
-    const { ref } = this.db.db.dynamic
-    const blockSet = new RelationshipSet()
-    if (!relationships.length) return blockSet
-    const relationshipSet = new RelationshipSet()
-    relationships.forEach((pair) => relationshipSet.add(pair))
-    // compute actual block set from all actor relationships
-    const blockRows = await this.db.db
-      .selectFrom('actor_block')
-      .select(['creator', 'subjectDid']) // index-only columns
-      .where(
-        sql`(${ref('creator')}, ${ref('subjectDid')})`,
-        'in',
-        valuesList(
-          relationshipSet.listAllPairs().map(([a, b]) => sql`${a}, ${b}`),
-        ),
-      )
-      .execute()
-    blockRows.forEach((r) => blockSet.add([r.creator, r.subjectDid]))
-    return blockSet
-  }
-
   async embedsForPosts(
     postInfos: PostInfoMap,
     blocks: PostBlocksMap,
     viewer: string | null,
-    depth = 0,
+    depth: number,
   ) {
     const postMap = postRecordsFromInfos(postInfos)
     const posts = Object.values(postMap)
@@ -559,39 +348,37 @@ export class FeedService {
   ): Promise<RecordEmbedViewRecordMap> {
     const nestedUris = nestedRecordUris(posts)
     if (nestedUris.length < 1) return {}
-    const nestedPostUris: string[] = []
-    const nestedFeedGenUris: string[] = []
-    const nestedListUris: string[] = []
-    const nestedDidsSet = new Set<string>()
+    const nestedDids = new Set<string>()
+    const nestedPostUris = new Set<string>()
+    const nestedFeedGenUris = new Set<string>()
+    const nestedListUris = new Set<string>()
     for (const uri of nestedUris) {
       const parsed = new AtUri(uri)
-      nestedDidsSet.add(parsed.hostname)
+      nestedDids.add(parsed.hostname)
       if (parsed.collection === ids.AppBskyFeedPost) {
-        nestedPostUris.push(uri)
+        nestedPostUris.add(uri)
       } else if (parsed.collection === ids.AppBskyFeedGenerator) {
-        nestedFeedGenUris.push(uri)
+        nestedFeedGenUris.add(uri)
       } else if (parsed.collection === ids.AppBskyGraphList) {
-        nestedListUris.push(uri)
+        nestedListUris.add(uri)
       }
     }
-    const nestedDids = [...nestedDidsSet]
-    const [postInfos, actorInfos, labelViews, feedGenInfos, listViews] =
-      await Promise.all([
-        this.getPostInfos(nestedPostUris, viewer),
-        this.getActorInfos(nestedDids, viewer, { skipLabels: true }),
-        this.services.label.getLabelsForSubjects([
-          ...nestedPostUris,
-          ...nestedDids,
-        ]),
-        this.getFeedGeneratorInfos(nestedFeedGenUris, viewer),
-        this.services.graph.getListViews(nestedListUris, viewer),
-      ])
-    const deepBlocks = await this.blocksForPosts(postInfos)
-    const deepEmbedViews = await this.embedsForPosts(
-      postInfos,
-      deepBlocks,
-      viewer,
-      depth + 1,
+    const [feedState, feedGenInfos, listViews] = await Promise.all([
+      this.feedHydration(
+        {
+          dids: nestedDids,
+          uris: nestedPostUris,
+          viewer,
+        },
+        depth + 1,
+      ),
+      this.getFeedGeneratorInfos([...nestedFeedGenUris], viewer),
+      this.services.graph.getListViews([...nestedListUris], viewer),
+    ])
+    const actorInfos = this.services.actor.views.profileBasicPresentation(
+      [...nestedDids],
+      feedState,
+      { viewer },
     )
     const recordEmbedViews: RecordEmbedViewRecordMap = {}
     for (const uri of nestedUris) {
@@ -599,24 +386,20 @@ export class FeedService {
       if (collection === ids.AppBskyFeedGenerator && feedGenInfos[uri]) {
         recordEmbedViews[uri] = {
           $type: 'app.bsky.feed.defs#generatorView',
-          ...this.views.formatFeedGeneratorView(
-            feedGenInfos[uri],
-            actorInfos,
-            labelViews,
-          ),
+          ...this.views.formatFeedGeneratorView(feedGenInfos[uri], actorInfos),
         }
       } else if (collection === ids.AppBskyGraphList && listViews[uri]) {
         recordEmbedViews[uri] = {
           $type: 'app.bsky.graph.defs#listView',
           ...this.services.graph.formatListView(listViews[uri], actorInfos),
         }
-      } else if (collection === ids.AppBskyFeedPost && postInfos[uri]) {
+      } else if (collection === ids.AppBskyFeedPost && feedState.posts[uri]) {
         const formatted = this.views.formatPostView(
           uri,
           actorInfos,
-          postInfos,
-          deepEmbedViews,
-          labelViews,
+          feedState.posts,
+          feedState.embeds,
+          feedState.labels,
         )
         recordEmbedViews[uri] = this.views.getRecordEmbedView(
           uri,
@@ -664,35 +447,6 @@ const nestedRecordUris = (posts: PostRecord[]): string[] => {
 
 type PostRelationships = { reply?: RelationshipPair; embed?: RelationshipPair }
 
-type RelationshipPair = [didA: string, didB: string]
-
-class RelationshipSet {
-  index = new Map<string, Set<string>>()
-  add([didA, didB]: RelationshipPair) {
-    const didAIdx = this.index.get(didA) ?? new Set()
-    const didBIdx = this.index.get(didB) ?? new Set()
-    if (!this.index.has(didA)) this.index.set(didA, didAIdx)
-    if (!this.index.has(didB)) this.index.set(didB, didBIdx)
-    didAIdx.add(didB)
-    didBIdx.add(didA)
-  }
-  has([didA, didB]: RelationshipPair) {
-    return !!this.index.get(didA)?.has(didB)
-  }
-  listAllPairs() {
-    const pairs: RelationshipPair[] = []
-    for (const [didA, didBIdx] of this.index.entries()) {
-      for (const didB of didBIdx) {
-        pairs.push([didA, didB])
-      }
-    }
-    return pairs
-  }
-  empty() {
-    return this.index.size === 0
-  }
-}
-
 function applyEmbedBlock(
   uri: string,
   blocks: PostBlocksMap,
@@ -715,10 +469,4 @@ function applyEmbedBlock(
     }
   }
   return view
-}
-
-function getSkeleFeedItemUri(item: SkeletonFeedPost) {
-  return typeof item.reason?.repost === 'string'
-    ? item.reason.repost
-    : item.post
 }

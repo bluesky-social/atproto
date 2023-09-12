@@ -31,19 +31,16 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
 
-      const [listsRes, creator] = await Promise.all([
+      const [listsRes, profiles] = await Promise.all([
         listsReq.execute(),
-        actorService.views.profile(creatorRes, requester),
+        actorService.views.profiles([creatorRes], requester),
       ])
-      if (!creator) {
+      if (!profiles[creatorRes.did]) {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
-      }
-      const profileMap = {
-        [creator.did]: creator,
       }
 
       const lists = listsRes.map((row) =>
-        graphService.formatListView(row, profileMap),
+        graphService.formatListView(row, profiles),
       )
 
       return {

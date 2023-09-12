@@ -19,6 +19,7 @@ import getBlocks from './graph/getBlocks'
 import getFollowers from './graph/getFollowers'
 import getFollows from './graph/getFollows'
 import getList from './graph/getList'
+import getListBlocks from './graph/getListBlocks'
 import getListMutes from './graph/getListMutes'
 import getLists from './graph/getLists'
 import getMutes from './graph/getMutes'
@@ -55,6 +56,7 @@ export default function (server: Server, ctx: AppContext) {
   getFollowers(server, ctx)
   getFollows(server, ctx)
   getList(server, ctx)
+  getListBlocks(server, ctx)
   getListMutes(server, ctx)
   getLists(server, ctx)
   getMutes(server, ctx)
