@@ -240,3 +240,20 @@ export class RecordProcessor<T, S> {
 }
 
 export default RecordProcessor
+
+export class NoopProcessor extends RecordProcessor<unknown, unknown> {
+  constructor(
+    lexId: string,
+    appDb: Database,
+    backgroundQueue: BackgroundQueue,
+  ) {
+    super(appDb, backgroundQueue, {
+      lexId,
+      insertFn: async () => null,
+      deleteFn: async () => null,
+      findDuplicate: async () => null,
+      notifsForInsert: () => [],
+      notifsForDelete: () => ({ notifs: [], toDelete: [] }),
+    })
+  }
+}

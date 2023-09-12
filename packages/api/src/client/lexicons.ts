@@ -3149,7 +3149,6 @@ export const schemaDict = {
             },
             since: {
               type: 'string',
-              format: 'cid',
               description: 'The revision of the repo to catch up from.',
             },
           },
@@ -3178,7 +3177,6 @@ export const schemaDict = {
             },
             since: {
               type: 'string',
-              format: 'cid',
               description: 'Optional revision of the repo to list blobs since',
             },
             limit: {
@@ -3514,32 +3512,6 @@ export const schemaDict = {
           },
           cid: {
             type: 'cid-link',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoTempUpgradeRepoVersion: {
-    lexicon: 1,
-    id: 'com.atproto.temp.upgradeRepoVersion',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Upgrade a repo to v3',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['did'],
-            properties: {
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-              force: {
-                type: 'boolean',
-              },
-            },
           },
         },
       },
@@ -6891,7 +6863,6 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
-  ComAtprotoTempUpgradeRepoVersion: 'com.atproto.temp.upgradeRepoVersion',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',

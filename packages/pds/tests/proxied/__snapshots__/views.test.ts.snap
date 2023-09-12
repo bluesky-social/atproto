@@ -1432,36 +1432,36 @@ Object {
       },
     },
     Object {
-      "post": Object {
-        "author": Object {
-          "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
-          "did": "user(2)",
-          "displayName": "bobby",
-          "handle": "bob.test",
-          "labels": Array [
-            Object {
-              "cid": "cids(5)",
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "user(2)",
-              "uri": "record(6)",
-              "val": "self-label-a",
-            },
-            Object {
-              "cid": "cids(5)",
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "user(2)",
-              "uri": "record(6)",
-              "val": "self-label-b",
-            },
-          ],
-          "viewer": Object {
-            "blockedBy": false,
-            "followedBy": "record(5)",
-            "following": "record(4)",
-            "muted": false,
+      "actor": Object {
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+        "description": "hi im bob label_me",
+        "did": "user(0)",
+        "displayName": "bobby",
+        "handle": "bob.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [
+          Object {
+            "cid": "cids(1)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(0)",
+            "uri": "record(2)",
+            "val": "self-label-a",
           },
+          Object {
+            "cid": "cids(1)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(0)",
+            "uri": "record(2)",
+            "val": "self-label-b",
+          },
+        ],
+        "viewer": Object {
+          "blockedBy": false,
+          "followedBy": "record(1)",
+          "following": "record(0)",
+          "muted": false,
         },
         "cid": "cids(11)",
         "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -1516,12 +1516,20 @@ Object {
         "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [
           Object {
-            "cid": "cids(13)",
+            "cid": "cids(2)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "user(0)",
-            "uri": "record(15)",
-            "val": "self-label",
+            "src": "user(2)",
+            "uri": "record(3)",
+            "val": "self-label-a",
+          },
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(2)",
+            "uri": "record(3)",
+            "val": "self-label-b",
           },
         ],
         "likeCount": 0,
@@ -1545,6 +1553,7 @@ Object {
       },
     },
   ],
+  "uri": "record(4)",
 }
 `;
 
@@ -3256,6 +3265,56 @@ Object {
       "muted": false,
     },
   },
+}
+`;
+
+exports[`proxies view requests graph.getListBlocks 1`] = `
+Object {
+  "cursor": "0000000000000::bafycid",
+  "lists": Array [
+    Object {
+      "cid": "cids(0)",
+      "creator": Object {
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "description": "hi im bob label_me",
+        "did": "user(0)",
+        "displayName": "bobby",
+        "handle": "bob.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
+        "labels": Array [
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(0)",
+            "uri": "record(2)",
+            "val": "self-label-a",
+          },
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(0)",
+            "uri": "record(2)",
+            "val": "self-label-b",
+          },
+        ],
+        "viewer": Object {
+          "blockedBy": false,
+          "muted": false,
+        },
+      },
+      "description": "bob's list of mutes",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "name": "bob mutes",
+      "purpose": "app.bsky.graph.defs#modlist",
+      "uri": "record(0)",
+      "viewer": Object {
+        "blocked": "record(1)",
+        "muted": false,
+      },
+    },
+  ],
 }
 `;
 
