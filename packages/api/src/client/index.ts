@@ -70,7 +70,6 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
-import * as ComAtprotoTempUpgradeRepoVersion from './types/com/atproto/temp/upgradeRepoVersion'
 import * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -194,7 +193,6 @@ export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
-export * as ComAtprotoTempUpgradeRepoVersion from './types/com/atproto/temp/upgradeRepoVersion'
 export * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -322,7 +320,6 @@ export class AtprotoNS {
   repo: RepoNS
   server: ServerNS
   sync: SyncNS
-  temp: TempNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -333,7 +330,6 @@ export class AtprotoNS {
     this.repo = new RepoNS(service)
     this.server = new ServerNS(service)
     this.sync = new SyncNS(service)
-    this.temp = new TempNS(service)
   }
 }
 
@@ -1005,25 +1001,6 @@ export class SyncNS {
       .call('com.atproto.sync.requestCrawl', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoSyncRequestCrawl.toKnownErr(e)
-      })
-  }
-}
-
-export class TempNS {
-  _service: AtpServiceClient
-
-  constructor(service: AtpServiceClient) {
-    this._service = service
-  }
-
-  upgradeRepoVersion(
-    data?: ComAtprotoTempUpgradeRepoVersion.InputSchema,
-    opts?: ComAtprotoTempUpgradeRepoVersion.CallOptions,
-  ): Promise<ComAtprotoTempUpgradeRepoVersion.Response> {
-    return this._service.xrpc
-      .call('com.atproto.temp.upgradeRepoVersion', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoTempUpgradeRepoVersion.toKnownErr(e)
       })
   }
 }
