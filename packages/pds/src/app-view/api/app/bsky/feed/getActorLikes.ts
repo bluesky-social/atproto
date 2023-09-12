@@ -55,6 +55,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectFeedItemQb()
         .innerJoin('like', 'like.subject', 'feed_item.uri')
         .where('like.creator', '=', actorDid)
+        .orderBy('like.indexedAt', 'desc')
 
       // for access-based auth, enforce blocks
       if (requester) {

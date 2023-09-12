@@ -71,6 +71,7 @@ const skeleton = async (
     .selectFeedItemQb()
     .innerJoin('like', 'like.subject', 'feed_item.uri')
     .where('like.creator', '=', actorDid)
+    .orderBy('like.indexedAt', 'desc')
 
   const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
 
