@@ -6,7 +6,6 @@ import moderation from './moderation'
 import repo from './repo'
 import serverMethods from './server'
 import sync from './sync'
-import upgradeRepoVersion from './upgradeRepoVersion'
 
 export default function (server: Server, ctx: AppContext) {
   admin(server, ctx)
@@ -15,5 +14,4 @@ export default function (server: Server, ctx: AppContext) {
   repo(server, ctx)
   serverMethods(server, ctx)
   sync(server, ctx)
-  upgradeRepoVersion(server, ctx)
 }
