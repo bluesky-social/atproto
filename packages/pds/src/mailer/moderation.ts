@@ -16,12 +16,23 @@ export class ModerationMailer {
     this.transporter = transporter
   }
 
+  isContentHtml(content: string): boolean {
+    return /<\/?[a-z][\s\S]*>/i.test(content)
+  }
+
   async send({ content }: { content: string }, mailOpts: Mail.Options) {
-    const res = await this.transporter.sendMail({
+    const mail = {
       ...mailOpts,
-      text: content,
       from: this.config.moderationEmailAddress,
-    })
+    }
+
+    if (this.isContentHtml(content)) {
+      mail.html = content
+    } else {
+      mail.text = content
+    }
+
+    const res = await this.transporter.sendMail(mail)
 
     if (!this.config.moderationEmailSmtpUrl) {
       mailerLogger.debug(
