@@ -40,7 +40,7 @@
               "type": "integer",
               "description": "count of search hits. optional, may be rounded/truncated, and may not be possible to paginate through all hits"
             },
-            "posts": {
+            "actors": {
               "type": "array",
               "items": {
                 "type": "string",
