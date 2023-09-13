@@ -71,9 +71,7 @@ const skeleton = async (
   let feedItemsQb = feedService
     .selectFeedItemQb()
     .innerJoin('like', 'like.subject', 'feed_item.uri')
-    .select(
-      sql`coalesce("like"."indexedAt", "feed_item"."sortAt")`.as('sortAt'),
-    )
+    .select('like.indexedAt as sortAt')
     .where('like.creator', '=', actorDid)
 
   const keyset = new FeedKeyset(ref('like.sortAt'), ref('feed_item.cid'))
