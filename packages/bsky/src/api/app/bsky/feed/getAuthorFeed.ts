@@ -99,9 +99,13 @@ export const skeleton = async (
           .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
       )
   } else if (filter === 'posts_no_replies') {
-    feedItemsQb = feedItemsQb.where((qb) =>
-      qb.where('post.replyParent', 'is', null).orWhere('type', '=', 'repost'),
-    )
+    feedItemsQb = feedItemsQb
+      .where('post.replyParent', 'is', null)
+      .orWhere((qb) =>
+        qb
+          .where('originatorDid', '=', actorDid)
+          .where('type', '=', 'repost')
+      )
   }
 
   const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
