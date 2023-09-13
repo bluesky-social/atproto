@@ -28,6 +28,7 @@ import muteActor from './app/bsky/graph/muteActor'
 import unmuteActor from './app/bsky/graph/unmuteActor'
 import muteActorList from './app/bsky/graph/muteActorList'
 import unmuteActorList from './app/bsky/graph/unmuteActorList'
+import getSuggestedFollowsByActor from './app/bsky/graph/getSuggestedFollowsByActor'
 import searchActors from './app/bsky/actor/searchActors'
 import searchActorsTypeahead from './app/bsky/actor/searchActorsTypeahead'
 import getSuggestions from './app/bsky/actor/getSuggestions'
@@ -87,6 +88,7 @@ export default function (server: Server, ctx: AppContext) {
   unmuteActor(server, ctx)
   muteActorList(server, ctx)
   unmuteActorList(server, ctx)
+  getSuggestedFollowsByActor(server, ctx)
   searchActors(server, ctx)
   searchActorsTypeahead(server, ctx)
   getSuggestions(server, ctx)
