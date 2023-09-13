@@ -6109,6 +6109,42 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetSuggestedFollowsByActor: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getSuggestedFollowsByActor',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get suggested follows related to a given actor.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['suggestions'],
+            properties: {
+              suggestions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphList: {
     lexicon: 1,
     id: 'app.bsky.graph.list',
@@ -6845,6 +6881,8 @@ export const ids = {
   AppBskyGraphGetListMutes: 'app.bsky.graph.getListMutes',
   AppBskyGraphGetLists: 'app.bsky.graph.getLists',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
+  AppBskyGraphGetSuggestedFollowsByActor:
+    'app.bsky.graph.getSuggestedFollowsByActor',
   AppBskyGraphList: 'app.bsky.graph.list',
   AppBskyGraphListblock: 'app.bsky.graph.listblock',
   AppBskyGraphListitem: 'app.bsky.graph.listitem',

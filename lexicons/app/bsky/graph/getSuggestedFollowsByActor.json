@@ -1,0 +1,33 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.graph.getSuggestedFollowsByActor",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get suggested follows related to a given actor.",
+      "parameters": {
+        "type": "params",
+        "required": ["actor"],
+        "properties": {
+          "actor": { "type": "string", "format": "at-identifier" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["suggestions"],
+          "properties": {
+            "suggestions": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.actor.defs#profileView"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
