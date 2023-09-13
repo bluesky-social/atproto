@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
 import { FeedKeyset } from '../util/feed'
@@ -54,8 +55,10 @@ export default function (server: Server, ctx: AppContext) {
       let feedItemsQb = feedService
         .selectFeedItemQb()
         .innerJoin('like', 'like.subject', 'feed_item.uri')
+        .select(
+          sql`coalesce("like"."indexedAt", "feed_item"."sortAt")`.as('sortAt'),
+        )
         .where('like.creator', '=', actorDid)
-        .orderBy('like.indexedAt', 'desc')
 
       // for access-based auth, enforce blocks
       if (requester) {
@@ -64,10 +67,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const keyset = new FeedKeyset(
-        ref('feed_item.sortAt'),
-        ref('feed_item.cid'),
-      )
+      const keyset = new FeedKeyset(ref('like.sortAt'), ref('feed_item.cid'))
 
       feedItemsQb = paginate(feedItemsQb, {
         limit,
