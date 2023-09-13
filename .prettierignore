@@ -1,4 +1,5 @@
 node_modules
+interop-test-files
 dist
 build
 .nyc_output
