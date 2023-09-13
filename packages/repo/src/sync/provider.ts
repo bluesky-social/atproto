@@ -7,10 +7,10 @@ import { RepoStorage } from '../storage'
 import * as util from '../util'
 import { MST } from '../mst'
 
-// Checkouts
+// Full Repo
 // -------------
 
-export const getCheckout = (
+export const getFullRepo = (
   storage: RepoStorage,
   commitCid: CID,
 ): AsyncIterable<Uint8Array> => {
@@ -20,44 +20,6 @@ export const getCheckout = (
     const mst = MST.load(storage, commit.obj.data)
     await mst.writeToCarStream(car)
   })
-}
-
-// Commits
-// -------------
-
-export const getCommits = (
-  storage: RepoStorage,
-  latest: CID,
-  earliest: CID | null,
-): AsyncIterable<Uint8Array> => {
-  return util.writeCar(latest, (car: BlockWriter) => {
-    return writeCommitsToCarStream(storage, car, latest, earliest)
-  })
-}
-
-export const getFullRepo = (
-  storage: RepoStorage,
-  cid: CID,
-): AsyncIterable<Uint8Array> => {
-  return getCommits(storage, cid, null)
-}
-
-export const writeCommitsToCarStream = async (
-  storage: RepoStorage,
-  car: BlockWriter,
-  latest: CID,
-  earliest: CID | null,
-): Promise<void> => {
-  const commits = await storage.getCommits(latest, earliest)
-  if (commits === null) {
-    throw new Error('Could not find shared history')
-  }
-  if (commits.length === 0) return
-  for (const commit of commits) {
-    for (const entry of commit.blocks.entries()) {
-      await car.put(entry)
-    }
-  }
 }
 
 // Narrow slices

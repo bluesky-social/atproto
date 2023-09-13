@@ -15,8 +15,8 @@
             "description": "The DID of the repo."
           },
           "cids": {
-            "type": "array", 
-            "items": {"type": "string", "format": "cid"}
+            "type": "array",
+            "items": { "type": "string", "format": "cid" }
           }
         }
       },

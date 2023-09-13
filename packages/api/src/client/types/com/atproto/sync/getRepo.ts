@@ -10,10 +10,8 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {
   /** The DID of the repo. */
   did: string
-  /** The earliest commit in the commit range (not inclusive) */
-  earliest?: string
-  /** The latest commit in the commit range (inclusive) */
-  latest?: string
+  /** The revision of the repo to catch up from. */
+  since?: string
 }
 
 export type InputSchema = undefined

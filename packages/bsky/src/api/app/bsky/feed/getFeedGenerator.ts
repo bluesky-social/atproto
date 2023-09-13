@@ -16,6 +16,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const db = ctx.db.getReplica()
       const feedService = ctx.services.feed(db)
+      const actorService = ctx.services.actor(db)
 
       const got = await feedService.getFeedGeneratorInfos([feed], viewer)
       const feedInfo = got[feed]
@@ -46,7 +47,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const profiles = await feedService.getActorInfos(
+      const profiles = await actorService.views.profilesBasic(
         [feedInfo.creator],
         viewer,
       )

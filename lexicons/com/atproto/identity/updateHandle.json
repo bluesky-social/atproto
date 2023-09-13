@@ -11,7 +11,7 @@
           "type": "object",
           "required": ["handle"],
           "properties": {
-            "handle": {"type": "string", "format": "handle"}
+            "handle": { "type": "string", "format": "handle" }
           }
         }
       }

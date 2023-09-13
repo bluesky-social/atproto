@@ -4,9 +4,9 @@
     "outDir": "./dist", // Your outDir,
     "emitDeclarationOnly": true
   },
-  "include": ["./src","__tests__/**/**.ts"],
+  "include": ["./src", "__tests__/**/**.ts"],
   "references": [
     { "path": "../nsid/tsconfig.build.json" },
-    { "path": "../lexicon/tsconfig.build.json" },
+    { "path": "../lexicon/tsconfig.build.json" }
   ]
 }

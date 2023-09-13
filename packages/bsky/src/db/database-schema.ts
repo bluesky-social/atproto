@@ -12,6 +12,7 @@ import * as like from './tables/like'
 import * as list from './tables/list'
 import * as listItem from './tables/list-item'
 import * as listMute from './tables/list-mute'
+import * as listBlock from './tables/list-block'
 import * as mute from './tables/mute'
 import * as actorBlock from './tables/actor-block'
 import * as feedGenerator from './tables/feed-generator'
@@ -28,6 +29,7 @@ import * as label from './tables/label'
 import * as algo from './tables/algo'
 import * as viewParam from './tables/view-param'
 import * as suggestedFollow from './tables/suggested-follow'
+import * as suggestedFeed from './tables/suggested-feed'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -42,6 +44,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   list.PartialDB &
   listItem.PartialDB &
   listMute.PartialDB &
+  listBlock.PartialDB &
   mute.PartialDB &
   actorBlock.PartialDB &
   feedGenerator.PartialDB &
@@ -57,7 +60,8 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   label.PartialDB &
   algo.PartialDB &
   viewParam.PartialDB &
-  suggestedFollow.PartialDB
+  suggestedFollow.PartialDB &
+  suggestedFeed.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

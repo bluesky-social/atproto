@@ -524,4 +524,27 @@ describe('proxies view requests', () => {
     )
     expect([...pt1.data.lists, ...pt2.data.lists]).toEqual(res.data.lists)
   })
+
+  it('graph.getListBlocks', async () => {
+    await agent.api.app.bsky.graph.listblock.create(
+      { repo: bob },
+      {
+        subject: listUri,
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(bob),
+    )
+    await network.processAll()
+    const pt1 = await agent.api.app.bsky.graph.getListBlocks(
+      {},
+      { headers: sc.getHeaders(bob) },
+    )
+    expect(forSnapshot(pt1.data)).toMatchSnapshot()
+    const pt2 = await agent.api.app.bsky.graph.getListBlocks(
+      { cursor: pt1.data.cursor },
+      { headers: sc.getHeaders(bob) },
+    )
+    expect(pt2.data.lists).toEqual([])
+    expect(pt2.data.cursor).not.toBeDefined()
+  })
 })

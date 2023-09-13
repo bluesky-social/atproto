@@ -9,17 +9,18 @@
         "type": "params",
         "required": ["uri"],
         "properties": {
-          "uri": {"type": "string", "format": "at-uri"},
-          "cid": {"type": "string", "format": "cid"}
+          "uri": { "type": "string", "format": "at-uri" },
+          "cid": { "type": "string", "format": "cid" }
         }
       },
       "output": {
         "encoding": "application/json",
-        "schema": {"type": "ref", "ref": "com.atproto.admin.defs#recordViewDetail"}
+        "schema": {
+          "type": "ref",
+          "ref": "com.atproto.admin.defs#recordViewDetail"
+        }
       },
-      "errors": [
-        {"name": "RecordNotFound"}
-      ]
+      "errors": [{ "name": "RecordNotFound" }]
     }
   }
 }

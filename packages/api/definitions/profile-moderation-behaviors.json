@@ -1,13 +1,47 @@
-
 {
   "users": {
-    "self":  {"blocking": false, "blockedBy": false, "muted": false, "mutedByList": false},
-    "alice": {"blocking": false, "blockedBy": false, "muted": false, "mutedByList": false},
-    "bob":   {"blocking": true,  "blockedBy": false, "muted": false, "mutedByList": false},
-    "carla": {"blocking": false, "blockedBy": true,  "muted": false, "mutedByList": false},
-    "dan":   {"blocking": false, "blockedBy": false, "muted": true,  "mutedByList": false},
-    "elise": {"blocking": false, "blockedBy": false, "muted": false, "mutedByList": true},
-    "fern":  {"blocking": true,  "blockedBy": true,  "muted": false, "mutedByList": false}
+    "self": {
+      "blocking": false,
+      "blockedBy": false,
+      "muted": false,
+      "mutedByList": false
+    },
+    "alice": {
+      "blocking": false,
+      "blockedBy": false,
+      "muted": false,
+      "mutedByList": false
+    },
+    "bob": {
+      "blocking": true,
+      "blockedBy": false,
+      "muted": false,
+      "mutedByList": false
+    },
+    "carla": {
+      "blocking": false,
+      "blockedBy": true,
+      "muted": false,
+      "mutedByList": false
+    },
+    "dan": {
+      "blocking": false,
+      "blockedBy": false,
+      "muted": true,
+      "mutedByList": false
+    },
+    "elise": {
+      "blocking": false,
+      "blockedBy": false,
+      "muted": false,
+      "mutedByList": true
+    },
+    "fern": {
+      "blocking": true,
+      "blockedBy": true,
+      "muted": false,
+      "mutedByList": false
+    }
   },
   "configurations": {
     "none": {},
@@ -15,37 +49,37 @@
       "adultContentEnabled": false
     },
     "intolerant-hide": {
-      "settings": {"intolerant": "hide"}
+      "settings": { "intolerant": "hide" }
     },
     "intolerant-warn": {
-      "settings": {"intolerant": "warn"}
+      "settings": { "intolerant": "warn" }
     },
     "intolerant-ignore": {
-      "settings": {"intolerant": "ignore"}
+      "settings": { "intolerant": "ignore" }
     },
     "porn-hide": {
       "adultContentEnabled": true,
-      "settings": {"porn": "hide"}
+      "settings": { "porn": "hide" }
     },
     "porn-warn": {
       "adultContentEnabled": true,
-      "settings": {"porn": "warn"}
+      "settings": { "porn": "warn" }
     },
     "porn-ignore": {
       "adultContentEnabled": true,
-      "settings": {"porn": "ignore"}
+      "settings": { "porn": "ignore" }
     },
     "scam-hide": {
-      "settings": {"scam": "hide"}
+      "settings": { "scam": "hide" }
     },
     "scam-warn": {
-      "settings": {"scam": "warn"}
+      "settings": { "scam": "warn" }
     },
     "scam-ignore": {
-      "settings": {"scam": "ignore"}
+      "settings": { "scam": "ignore" }
     },
     "intolerant-hide-scam-warn": {
-      "settings": {"intolerant": "hide", "scam": "hide"}
+      "settings": { "intolerant": "hide", "scam": "hide" }
     }
   },
   "scenarios": {
@@ -53,20 +87,25 @@
       "cfg": "none",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["!hide"]},
+      "labels": { "account": ["!hide"] },
       "behaviors": {
-        "account": {"cause": "label:!hide", "filter": true, "blur": true, "noOverride": true},
-        "avatar": {"blur": true, "noOverride": true}
+        "account": {
+          "cause": "label:!hide",
+          "filter": true,
+          "blur": true,
+          "noOverride": true
+        },
+        "avatar": { "blur": true, "noOverride": true }
       }
     },
     "Imperative label ('!hide') on profile": {
       "cfg": "none",
       "subject": "profile",
       "author": "alice",
-      "labels": {"profile": ["!hide"]},
+      "labels": { "profile": ["!hide"] },
       "behaviors": {
-        "profile": {"cause": "label:!hide", "blur": true, "noOverride": true},
-        "avatar": {"blur": true, "noOverride": true}
+        "profile": { "cause": "label:!hide", "blur": true, "noOverride": true },
+        "avatar": { "blur": true, "noOverride": true }
       }
     },
 
@@ -74,16 +113,16 @@
       "cfg": "none",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["!no-promote"]},
+      "labels": { "account": ["!no-promote"] },
       "behaviors": {
-        "account": {"cause": "label:!no-promote", "filter": true}
+        "account": { "cause": "label:!no-promote", "filter": true }
       }
     },
     "Imperative label ('!no-promote') on profile": {
       "cfg": "none",
       "subject": "profile",
       "author": "alice",
-      "labels": {"profile": ["!no-promote"]},
+      "labels": { "profile": ["!no-promote"] },
       "behaviors": {}
     },
 
@@ -91,20 +130,20 @@
       "cfg": "none",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["!warn"]},
+      "labels": { "account": ["!warn"] },
       "behaviors": {
-        "account": {"cause": "label:!warn", "blur": true},
-        "avatar": {"blur": true}
+        "account": { "cause": "label:!warn", "blur": true },
+        "avatar": { "blur": true }
       }
     },
     "Imperative label ('!warn') on profile": {
       "cfg": "none",
       "subject": "profile",
       "author": "alice",
-      "labels": {"profile": ["!warn"]},
+      "labels": { "profile": ["!warn"] },
       "behaviors": {
-        "profile": {"cause": "label:!warn", "blur": true},
-        "avatar": {"blur": true}
+        "profile": { "cause": "label:!warn", "blur": true },
+        "avatar": { "blur": true }
       }
     },
 
@@ -112,20 +151,24 @@
       "cfg": "intolerant-hide",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["intolerant"]},
+      "labels": { "account": ["intolerant"] },
       "behaviors": {
-        "account": {"cause": "label:intolerant", "filter": true, "blur": true},
-        "avatar": {"blur": true}
+        "account": {
+          "cause": "label:intolerant",
+          "filter": true,
+          "blur": true
+        },
+        "avatar": { "blur": true }
       }
     },
     "Blur label ('intolerant') on profile (hide)": {
       "cfg": "intolerant-hide",
       "subject": "profile",
       "author": "alice",
-      "labels": {"profile": ["intolerant"]},
+      "labels": { "profile": ["intolerant"] },
       "behaviors": {
-        "profile": {"cause": "label:intolerant", "blur": true},
-        "avatar": {"blur": true}
+        "profile": { "cause": "label:intolerant", "blur": true },
+        "avatar": { "blur": true }
       }
     },
 
@@ -133,20 +176,20 @@
       "cfg": "intolerant-warn",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["intolerant"]},
+      "labels": { "account": ["intolerant"] },
       "behaviors": {
-        "account": {"cause": "label:intolerant", "blur": true},
-        "avatar": {"blur": true}
+        "account": { "cause": "label:intolerant", "blur": true },
+        "avatar": { "blur": true }
       }
     },
     "Blur label ('intolerant') on profile (warn)": {
       "cfg": "intolerant-warn",
       "subject": "profile",
       "author": "alice",
-      "labels": {"profile": ["intolerant"]},
+      "labels": { "profile": ["intolerant"] },
       "behaviors": {
-        "profile": {"cause": "label:intolerant", "blur": true},
-        "avatar": {"blur": true}
+        "profile": { "cause": "label:intolerant", "blur": true },
+        "avatar": { "blur": true }
       }
     },
 
@@ -154,14 +197,14 @@
       "cfg": "intolerant-ignore",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["intolerant"]},
+      "labels": { "account": ["intolerant"] },
       "behaviors": {}
     },
     "Blur label ('intolerant') on profile (ignore)": {
       "cfg": "intolerant-ignore",
       "subject": "profile",
       "author": "alice",
-      "labels": {"profile": ["intolerant"]},
+      "labels": { "profile": ["intolerant"] },
       "behaviors": {}
     },
 
@@ -169,19 +212,19 @@
       "cfg": "porn-hide",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["porn"]},
+      "labels": { "account": ["porn"] },
       "behaviors": {
-        "account": {"cause": "label:porn", "filter": true, "blur": true},
-        "avatar": {"blur": true}
+        "account": { "cause": "label:porn", "filter": true, "blur": true },
+        "avatar": { "blur": true }
       }
     },
     "Blur-media label ('porn') on profile (hide)": {
       "cfg": "porn-hide",
       "subject": "profile",
       "author": "alice",
-      "labels": {"profile": ["porn"]},
+      "labels": { "profile": ["porn"] },
       "behaviors": {
-        "avatar": {"blur": true}
+        "avatar": { "blur": true }
       }
     },
 
@@ -189,19 +232,19 @@
       "cfg": "porn-warn",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["porn"]},
+      "labels": { "account": ["porn"] },
       "behaviors": {
-        "account": {"cause": "label:porn", "blur": true},
-        "avatar": {"blur": true}
+        "account": { "cause": "label:porn", "blur": true },
+        "avatar": { "blur": true }
       }
     },
     "Blur-media label ('porn') on profile (warn)": {
       "cfg": "porn-warn",
       "subject": "profile",
       "author": "alice",
-      "labels": {"profile": ["porn"]},
+      "labels": { "profile": ["porn"] },
       "behaviors": {
-        "avatar": {"blur": true}
+        "avatar": { "blur": true }
       }
     },
 
@@ -209,14 +252,14 @@
       "cfg": "porn-ignore",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["porn"]},
+      "labels": { "account": ["porn"] },
       "behaviors": {}
     },
     "Blur-media label ('porn') on profile (ignore)": {
       "cfg": "porn-ignore",
       "subject": "profile",
       "author": "alice",
-      "labels": {"profile": ["porn"]},
+      "labels": { "profile": ["porn"] },
       "behaviors": {}
     },
 
@@ -224,20 +267,20 @@
       "cfg": "scam-hide",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["scam"]},
+      "labels": { "account": ["scam"] },
       "behaviors": {
-        "account": {"cause": "label:scam", "filter": true, "alert": true},
-        "avatar": {"alert": true}
+        "account": { "cause": "label:scam", "filter": true, "alert": true },
+        "avatar": { "alert": true }
       }
     },
     "Notice label ('scam') on profile (hide)": {
       "cfg": "scam-hide",
       "subject": "profile",
       "author": "alice",
-      "labels": {"profile": ["scam"]},
+      "labels": { "profile": ["scam"] },
       "behaviors": {
-        "profile": {"cause": "label:scam", "alert": true},
-        "avatar": {"alert": true}
+        "profile": { "cause": "label:scam", "alert": true },
+        "avatar": { "alert": true }
       }
     },
 
@@ -245,20 +288,20 @@
       "cfg": "scam-warn",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["scam"]},
+      "labels": { "account": ["scam"] },
       "behaviors": {
-        "account": {"cause": "label:scam", "alert": true},
-        "avatar": {"alert": true}
+        "account": { "cause": "label:scam", "alert": true },
+        "avatar": { "alert": true }
       }
     },
     "Notice label ('scam') on profile (warn)": {
       "cfg": "scam-warn",
       "subject": "profile",
       "author": "alice",
-      "labels": {"profile": ["scam"]},
+      "labels": { "profile": ["scam"] },
       "behaviors": {
-        "profile": {"cause": "label:scam", "alert": true},
-        "avatar": {"alert": true}
+        "profile": { "cause": "label:scam", "alert": true },
+        "avatar": { "alert": true }
       }
     },
 
@@ -266,14 +309,14 @@
       "cfg": "scam-ignore",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["scam"]},
+      "labels": { "account": ["scam"] },
       "behaviors": {}
     },
     "Notice label ('scam') on profile (ignore)": {
       "cfg": "scam-ignore",
       "subject": "profile",
       "author": "alice",
-      "labels": {"profile": ["scam"]},
+      "labels": { "profile": ["scam"] },
       "behaviors": {}
     },
 
@@ -281,19 +324,24 @@
       "cfg": "adult-disabled",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["porn"]},
+      "labels": { "account": ["porn"] },
       "behaviors": {
-        "account": {"cause": "label:porn", "filter": true, "blur": true, "noOverride": true},
-        "avatar": {"blur": true, "noOverride": true}
+        "account": {
+          "cause": "label:porn",
+          "filter": true,
+          "blur": true,
+          "noOverride": true
+        },
+        "avatar": { "blur": true, "noOverride": true }
       }
     },
     "Adult-only label on profile when adult content is disabled": {
       "cfg": "adult-disabled",
       "subject": "profile",
       "author": "alice",
-      "labels": {"profile": ["porn"]},
+      "labels": { "profile": ["porn"] },
       "behaviors": {
-        "avatar": {"blur": true, "noOverride": true}
+        "avatar": { "blur": true, "noOverride": true }
       }
     },
 
@@ -301,20 +349,20 @@
       "cfg": "none",
       "subject": "profile",
       "author": "self",
-      "labels": {"account": ["!hide"]},
+      "labels": { "account": ["!hide"] },
       "behaviors": {
-        "account": {"cause": "label:!hide", "alert": true},
-        "avatar": {"alert": true}
+        "account": { "cause": "label:!hide", "alert": true },
+        "avatar": { "alert": true }
       }
     },
     "Self-profile: !hide on profile": {
       "cfg": "none",
       "subject": "profile",
       "author": "self",
-      "labels": {"profile": ["!hide"]},
+      "labels": { "profile": ["!hide"] },
       "behaviors": {
-        "profile": {"cause": "label:!hide", "alert": true},
-        "avatar": {"alert": true}
+        "profile": { "cause": "label:!hide", "alert": true },
+        "avatar": { "alert": true }
       }
     },
 
@@ -324,8 +372,8 @@
       "author": "bob",
       "labels": {},
       "behaviors": {
-        "account": {"cause": "blocking", "filter": true},
-        "avatar": {"blur": true, "noOverride": true}
+        "account": { "cause": "blocking", "filter": true },
+        "avatar": { "blur": true, "noOverride": true }
       }
     },
 
@@ -335,8 +383,8 @@
       "author": "carla",
       "labels": {},
       "behaviors": {
-        "account": {"cause": "blocked-by", "filter": true},
-        "avatar": {"blur": true, "noOverride": true}
+        "account": { "cause": "blocked-by", "filter": true },
+        "avatar": { "blur": true, "noOverride": true }
       }
     },
 
@@ -346,7 +394,7 @@
       "author": "dan",
       "labels": {},
       "behaviors": {
-        "account": {"cause": "muted", "filter": true}
+        "account": { "cause": "muted", "filter": true }
       }
     },
 
@@ -356,7 +404,7 @@
       "author": "elise",
       "labels": {},
       "behaviors": {
-        "account": {"cause": "muted-by-list", "filter": true}
+        "account": { "cause": "muted-by-list", "filter": true }
       }
     },
 
@@ -366,81 +414,104 @@
       "author": "fern",
       "labels": {},
       "behaviors": {
-        "account": {"cause": "blocking", "filter": true, "blur": false},
-        "avatar": {"blur": true, "noOverride": true}
+        "account": { "cause": "blocking", "filter": true, "blur": false },
+        "avatar": { "blur": true, "noOverride": true }
       }
     },
     "Prioritization: '!hide' label on account of blocked user": {
       "cfg": "none",
       "subject": "profile",
       "author": "bob",
-      "labels": {"account": ["!hide"]},
+      "labels": { "account": ["!hide"] },
       "behaviors": {
-        "account": {"cause": "label:!hide", "filter": true, "blur": true, "noOverride": true},
-        "avatar": {"blur": true, "noOverride": true}
+        "account": {
+          "cause": "label:!hide",
+          "filter": true,
+          "blur": true,
+          "noOverride": true
+        },
+        "avatar": { "blur": true, "noOverride": true }
       }
     },
     "Prioritization: '!hide' and 'intolerant' labels on account (hide)": {
       "cfg": "intolerant-hide",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["!hide", "intolerant"]},
+      "labels": { "account": ["!hide", "intolerant"] },
       "behaviors": {
-        "account": {"cause": "label:!hide", "filter": true, "blur": true, "noOverride": true},
-        "avatar": {"blur": true, "noOverride": true}
+        "account": {
+          "cause": "label:!hide",
+          "filter": true,
+          "blur": true,
+          "noOverride": true
+        },
+        "avatar": { "blur": true, "noOverride": true }
       }
     },
     "Prioritization: '!warn' and 'intolerant' labels on account (hide)": {
       "cfg": "intolerant-hide",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["!warn", "intolerant"]},
+      "labels": { "account": ["!warn", "intolerant"] },
       "behaviors": {
-        "account": {"cause": "label:intolerant", "filter": true, "blur": true},
-        "avatar": {"blur": true}
+        "account": {
+          "cause": "label:intolerant",
+          "filter": true,
+          "blur": true
+        },
+        "avatar": { "blur": true }
       }
     },
     "Prioritization: '!warn' and 'porn' labels on account (hide)": {
       "cfg": "porn-hide",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["!warn", "porn"]},
+      "labels": { "account": ["!warn", "porn"] },
       "behaviors": {
-        "account": {"cause": "label:porn", "filter": true, "blur": true},
-        "avatar": {"blur": true}
+        "account": { "cause": "label:porn", "filter": true, "blur": true },
+        "avatar": { "blur": true }
       }
     },
     "Prioritization: intolerant label on account (hide) and scam label on profile (warn)": {
       "cfg": "intolerant-hide-scam-warn",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["intolerant"], "profile": ["scam"]},
+      "labels": { "account": ["intolerant"], "profile": ["scam"] },
       "behaviors": {
-        "account": {"cause": "label:intolerant", "filter": true, "blur": true},
-        "profile": {"cause": "label:scam", "alert": true},
-        "avatar": {"blur": true, "alert": true}
+        "account": {
+          "cause": "label:intolerant",
+          "filter": true,
+          "blur": true
+        },
+        "profile": { "cause": "label:scam", "alert": true },
+        "avatar": { "blur": true, "alert": true }
       }
     },
     "Prioritization: !hide on account, !warn on profile": {
       "cfg": "none",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["!hide"], "profile": ["!warn"]},
+      "labels": { "account": ["!hide"], "profile": ["!warn"] },
       "behaviors": {
-        "account": {"cause": "label:!hide", "filter": true, "blur": true, "noOverride": true},
-        "profile": {"cause": "label:!warn", "blur": true},
-        "avatar": {"blur": true, "noOverride": true}
+        "account": {
+          "cause": "label:!hide",
+          "filter": true,
+          "blur": true,
+          "noOverride": true
+        },
+        "profile": { "cause": "label:!warn", "blur": true },
+        "avatar": { "blur": true, "noOverride": true }
       }
     },
     "Prioritization: !warn on account, !hide on profile": {
       "cfg": "none",
       "subject": "profile",
       "author": "alice",
-      "labels": {"account": ["!warn"], "profile": ["!hide"]},
+      "labels": { "account": ["!warn"], "profile": ["!hide"] },
       "behaviors": {
-        "account": {"cause": "label:!warn", "blur": true},
-        "profile": {"cause": "label:!hide", "blur": true, "noOverride": true},
-        "avatar": {"blur": true, "noOverride": true}
+        "account": { "cause": "label:!warn", "blur": true },
+        "profile": { "cause": "label:!hide", "blur": true, "noOverride": true },
+        "avatar": { "blur": true, "noOverride": true }
       }
     }
   }

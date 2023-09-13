@@ -1,13 +1,12 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import AtpAgent, { ComAtprotoSyncGetHead } from '@atproto/api'
+import AtpAgent, { ComAtprotoSyncGetLatestCommit } from '@atproto/api'
 import {
-  MemoryBlockstore,
   readCarWithRoot,
   WriteOpAction,
-  verifyCheckoutWithCids,
-  RepoContentsWithCids,
+  verifyRepo,
   Commit,
+  VerifiedRepo,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { IdResolver, getPds } from '@atproto/identity'
@@ -21,14 +20,15 @@ import * as Follow from './plugins/follow'
 import * as Profile from './plugins/profile'
 import * as List from './plugins/list'
 import * as ListItem from './plugins/list-item'
+import * as ListBlock from './plugins/list-block'
 import * as Block from './plugins/block'
 import * as FeedGenerator from './plugins/feed-generator'
 import RecordProcessor from './processor'
 import { subLogger } from '../../logger'
 import { retryHttp } from '../../util/retry'
-import { Labeler } from '../../labeler'
 import { BackgroundQueue } from '../../background'
 import { NotificationServer } from '../../notifications'
+import { AutoModerator } from '../../auto-moderator'
 import { Actor } from '../../db/tables/actor'
 
 export class IndexingService {
@@ -40,6 +40,7 @@ export class IndexingService {
     profile: Profile.PluginType
     list: List.PluginType
     listItem: ListItem.PluginType
+    listBlock: ListBlock.PluginType
     block: Block.PluginType
     feedGenerator: FeedGenerator.PluginType
   }
@@ -47,7 +48,7 @@ export class IndexingService {
   constructor(
     public db: PrimaryDatabase,
     public idResolver: IdResolver,
-    public labeler: Labeler,
+    public autoMod: AutoModerator,
     public backgroundQueue: BackgroundQueue,
     public notifServer?: NotificationServer,
   ) {
@@ -59,6 +60,7 @@ export class IndexingService {
       profile: Profile.makePlugin(this.db, backgroundQueue, notifServer),
       list: List.makePlugin(this.db, backgroundQueue, notifServer),
       listItem: ListItem.makePlugin(this.db, backgroundQueue, notifServer),
+      listBlock: ListBlock.makePlugin(this.db, backgroundQueue, notifServer),
       block: Block.makePlugin(this.db, backgroundQueue, notifServer),
       feedGenerator: FeedGenerator.makePlugin(
         this.db,
@@ -73,7 +75,7 @@ export class IndexingService {
     return new IndexingService(
       txn,
       this.idResolver,
-      this.labeler,
+      this.autoMod,
       this.backgroundQueue,
       this.notifServer,
     )
@@ -81,12 +83,12 @@ export class IndexingService {
 
   static creator(
     idResolver: IdResolver,
-    labeler: Labeler,
+    autoMod: AutoModerator,
     backgroundQueue: BackgroundQueue,
     notifServer?: NotificationServer,
   ) {
     return (db: PrimaryDatabase) =>
-      new IndexingService(db, idResolver, labeler, backgroundQueue, notifServer)
+      new IndexingService(db, idResolver, autoMod, backgroundQueue, notifServer)
   }
 
   async indexRecord(
@@ -109,7 +111,7 @@ export class IndexingService {
       }
     })
     if (!opts?.disableLabels) {
-      this.labeler.processRecord(uri, obj)
+      this.autoMod.processRecord(uri, cid, obj)
     }
   }
 
@@ -166,6 +168,10 @@ export class IndexingService {
       .onConflict((oc) => oc.column('did').doUpdateSet(actorInfo))
       .returning('did')
       .executeTakeFirst()
+
+    if (handle) {
+      this.autoMod.processHandle(handle, did)
+    }
   }
 
   async indexRepo(did: string, commit?: string) {
@@ -178,20 +184,14 @@ export class IndexingService {
     const { api } = new AtpAgent({ service: pds })
 
     const { data: car } = await retryHttp(() =>
-      api.com.atproto.sync.getCheckout({ did, commit }),
+      api.com.atproto.sync.getRepo({ did }),
     )
     const { root, blocks } = await readCarWithRoot(car)
-    const storage = new MemoryBlockstore(blocks)
-    const checkout = await verifyCheckoutWithCids(
-      storage,
-      root,
-      did,
-      signingKey,
-    )
+    const verifiedRepo = await verifyRepo(blocks, root, did, signingKey)
 
     const currRecords = await this.getCurrentRecords(did)
-    const checkoutRecords = formatCheckout(did, checkout.contents)
-    const diff = findDiffFromCheckout(currRecords, checkoutRecords)
+    const repoRecords = formatCheckout(did, verifiedRepo)
+    const diff = findDiffFromCheckout(currRecords, repoRecords)
 
     await Promise.all(
       diff.map(async (op) => {
@@ -305,10 +305,10 @@ export class IndexingService {
     if (!pds) return false
     const { api } = new AtpAgent({ service: pds })
     try {
-      await retryHttp(() => api.com.atproto.sync.getHead({ did }))
+      await retryHttp(() => api.com.atproto.sync.getLatestCommit({ did }))
       return true
     } catch (err) {
-      if (err instanceof ComAtprotoSyncGetHead.HeadNotFoundError) {
+      if (err instanceof ComAtprotoSyncGetLatestCommit.RepoNotFoundError) {
         return false
       }
       return null
@@ -335,6 +335,10 @@ export class IndexingService {
     // blocks
     await this.db.db
       .deleteFrom('actor_block')
+      .where('creator', '=', did)
+      .execute()
+    await this.db.db
+      .deleteFrom('list_block')
       .where('creator', '=', did)
       .execute()
     // posts
@@ -418,18 +422,15 @@ const findDiffFromCheckout = (
 
 const formatCheckout = (
   did: string,
-  contents: RepoContentsWithCids,
+  verifiedRepo: VerifiedRepo,
 ): Record<string, RecordDescript> => {
   const records: Record<string, RecordDescript> = {}
-  for (const collection of Object.keys(contents)) {
-    for (const rkey of Object.keys(contents[collection])) {
-      const uri = AtUri.make(did, collection, rkey)
-      const { cid, value } = contents[collection][rkey]
-      records[uri.toString()] = {
-        uri,
-        cid,
-        value,
-      }
+  for (const create of verifiedRepo.creates) {
+    const uri = AtUri.make(did, create.collection, create.rkey)
+    records[uri.toString()] = {
+      uri,
+      cid: create.cid,
+      value: create.record,
     }
   }
   return records

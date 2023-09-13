@@ -14,22 +14,17 @@ const BSKY_TEAM: NotEmptyArray<string> = [
 const handler: AlgoHandler = async (
   ctx: AppContext,
   params: SkeletonParams,
-  viewer: string,
+  _viewer: string,
 ): Promise<AlgoResponse> => {
   const { limit = 50, cursor } = params
   const db = ctx.db.getReplica('feed')
   const feedService = ctx.services.feed(db)
-  const graphService = ctx.services.graph(db)
 
   const { ref } = db.db.dynamic
 
   const postsQb = feedService
     .selectPostQb()
     .where('post.creator', 'in', BSKY_TEAM)
-    .where((qb) =>
-      graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
-    )
-    .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
 
   const keyset = new FeedKeyset(ref('sortAt'), ref('cid'))
 
@@ -37,6 +32,7 @@ const handler: AlgoHandler = async (
   feedQb = paginate(feedQb, { limit, cursor, keyset })
 
   const feedItems = await feedQb.execute()
+
   return {
     feedItems,
     cursor: keyset.packFromResult(feedItems),

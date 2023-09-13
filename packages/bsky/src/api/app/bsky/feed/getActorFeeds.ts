@@ -34,14 +34,13 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
 
-      const [feedsRes, creatorProfile] = await Promise.all([
+      const [feedsRes, profiles] = await Promise.all([
         feedsQb.execute(),
-        actorService.views.profile(creatorRes, viewer),
+        actorService.views.profiles([creatorRes], viewer),
       ])
-      if (!creatorProfile) {
+      if (!profiles[creatorRes.did]) {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
       }
-      const profiles = { [creatorProfile.did]: creatorProfile }
 
       const feeds = feedsRes.map((row) => {
         const feed = {

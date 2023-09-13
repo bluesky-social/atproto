@@ -27,6 +27,7 @@ export function validateMain(v: unknown): ValidationResult {
 export interface Image {
   image: BlobRef
   alt: string
+  aspectRatio?: AspectRatio
   [k: string]: unknown
 }
 
@@ -38,6 +39,25 @@ export function isImage(v: unknown): v is Image {
 
 export function validateImage(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.embed.images#image', v)
+}
+
+/** width:height represents an aspect ratio. It may be approximate, and may not correspond to absolute dimensions in any given unit. */
+export interface AspectRatio {
+  width: number
+  height: number
+  [k: string]: unknown
+}
+
+export function isAspectRatio(v: unknown): v is AspectRatio {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.embed.images#aspectRatio'
+  )
+}
+
+export function validateAspectRatio(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.embed.images#aspectRatio', v)
 }
 
 export interface View {
@@ -59,6 +79,7 @@ export interface ViewImage {
   thumb: string
   fullsize: string
   alt: string
+  aspectRatio?: AspectRatio
   [k: string]: unknown
 }
 

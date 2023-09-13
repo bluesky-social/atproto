@@ -10,12 +10,19 @@
         "type": "object",
         "required": ["name", "purpose", "createdAt"],
         "properties": {
-          "purpose": {"type": "ref", "ref": "app.bsky.graph.defs#listPurpose"},
-          "name": {"type": "string", "maxLength": 64, "minLength": 1},
-          "description": {"type": "string", "maxGraphemes": 300, "maxLength": 3000},
+          "purpose": {
+            "type": "ref",
+            "ref": "app.bsky.graph.defs#listPurpose"
+          },
+          "name": { "type": "string", "maxLength": 64, "minLength": 1 },
+          "description": {
+            "type": "string",
+            "maxGraphemes": 300,
+            "maxLength": 3000
+          },
           "descriptionFacets": {
             "type": "array",
-            "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
+            "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
           },
           "avatar": {
             "type": "blob",
@@ -26,7 +33,7 @@
             "type": "union",
             "refs": ["com.atproto.label.defs#selfLabels"]
           },
-          "createdAt": {"type": "string", "format": "datetime"}
+          "createdAt": { "type": "string", "format": "datetime" }
         }
       }
     }

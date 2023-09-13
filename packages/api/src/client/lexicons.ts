@@ -1026,44 +1026,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminRebaseRepo: {
-    lexicon: 1,
-    id: 'com.atproto.admin.rebaseRepo',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: "Administrative action to rebase an account's repo",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['repo'],
-            properties: {
-              repo: {
-                type: 'string',
-                format: 'at-identifier',
-                description: 'The handle or DID of the repo.',
-              },
-              swapCommit: {
-                type: 'string',
-                format: 'cid',
-                description:
-                  'Compare and swap with the previous commit by cid.',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidSwap',
-          },
-          {
-            name: 'ConcurrentWrites',
-          },
-        ],
-      },
-    },
-  },
   ComAtprotoAdminResolveModerationReports: {
     lexicon: 1,
     id: 'com.atproto.admin.resolveModerationReports',
@@ -2229,44 +2191,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoRepoRebaseRepo: {
-    lexicon: 1,
-    id: 'com.atproto.repo.rebaseRepo',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Simple rebase of repo that deletes history',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['repo'],
-            properties: {
-              repo: {
-                type: 'string',
-                format: 'at-identifier',
-                description: 'The handle or DID of the repo.',
-              },
-              swapCommit: {
-                type: 'string',
-                format: 'cid',
-                description:
-                  'Compare and swap with the previous commit by cid.',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidSwap',
-          },
-          {
-            name: 'ConcurrentWrites',
-          },
-        ],
-      },
-    },
-  },
   ComAtprotoRepoStrongRef: {
     lexicon: 1,
     id: 'com.atproto.repo.strongRef',
@@ -3069,7 +2993,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Gets the repo state.',
+        description: 'DEPRECATED - please use com.atproto.sync.getRepo instead',
         parameters: {
           type: 'params',
           required: ['did'],
@@ -3078,64 +3002,11 @@ export const schemaDict = {
               type: 'string',
               format: 'did',
               description: 'The DID of the repo.',
-            },
-            commit: {
-              type: 'string',
-              format: 'cid',
-              description:
-                'The commit to get the checkout from. Defaults to current HEAD.',
             },
           },
         },
         output: {
           encoding: 'application/vnd.ipld.car',
-        },
-      },
-    },
-  },
-  ComAtprotoSyncGetCommitPath: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getCommitPath',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Gets the path of repo commits',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-            latest: {
-              type: 'string',
-              format: 'cid',
-              description: 'The most recent commit',
-            },
-            earliest: {
-              type: 'string',
-              format: 'cid',
-              description: 'The earliest commit to start from',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['commits'],
-            properties: {
-              commits: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                  format: 'cid',
-                },
-              },
-            },
-          },
         },
       },
     },
@@ -3146,7 +3017,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Gets the current HEAD CID of a repo.',
+        description:
+          'DEPRECATED - please use com.atproto.sync.getLatestCommit instead',
         parameters: {
           type: 'params',
           required: ['did'],
@@ -3174,6 +3046,48 @@ export const schemaDict = {
         errors: [
           {
             name: 'HeadNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncGetLatestCommit: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getLatestCommit',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Gets the current commit CID & revision of the repo.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['cid', 'rev'],
+            properties: {
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              rev: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'RepoNotFound',
           },
         ],
       },
@@ -3222,7 +3136,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Gets the repo state.',
+        description:
+          "Gets the did's repo, optionally catching up from a specific revision.",
         parameters: {
           type: 'params',
           required: ['did'],
@@ -3232,16 +3147,9 @@ export const schemaDict = {
               format: 'did',
               description: 'The DID of the repo.',
             },
-            earliest: {
+            since: {
               type: 'string',
-              format: 'cid',
-              description:
-                'The earliest commit in the commit range (not inclusive)',
-            },
-            latest: {
-              type: 'string',
-              format: 'cid',
-              description: 'The latest commit in the commit range (inclusive)',
+              description: 'The revision of the repo to catch up from.',
             },
           },
         },
@@ -3257,7 +3165,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'List blob cids for some range of commits',
+        description: 'List blob cids since some revision',
         parameters: {
           type: 'params',
           required: ['did'],
@@ -3267,15 +3175,18 @@ export const schemaDict = {
               format: 'did',
               description: 'The DID of the repo.',
             },
-            latest: {
+            since: {
               type: 'string',
-              format: 'cid',
-              description: 'The most recent commit',
+              description: 'Optional revision of the repo to list blobs since',
             },
-            earliest: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 500,
+            },
+            cursor: {
               type: 'string',
-              format: 'cid',
-              description: 'The earliest commit to start from',
             },
           },
         },
@@ -3285,6 +3196,9 @@ export const schemaDict = {
             type: 'object',
             required: ['cids'],
             properties: {
+              cursor: {
+                type: 'string',
+              },
               cids: {
                 type: 'array',
                 items: {
@@ -3449,13 +3363,14 @@ export const schemaDict = {
           'tooBig',
           'repo',
           'commit',
-          'prev',
+          'rev',
+          'since',
           'blocks',
           'ops',
           'blobs',
           'time',
         ],
-        nullable: ['prev'],
+        nullable: ['prev', 'since'],
         properties: {
           seq: {
             type: 'integer',
@@ -3475,6 +3390,14 @@ export const schemaDict = {
           },
           prev: {
             type: 'cid-link',
+          },
+          rev: {
+            type: 'string',
+            description: 'The rev of the emitted commit',
+          },
+          since: {
+            type: 'string',
+            description: 'The rev of the last emitted commit from this repo',
           },
           blocks: {
             type: 'bytes',
@@ -3763,6 +3686,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#adultContentPref',
             'lex:app.bsky.actor.defs#contentLabelPref',
             'lex:app.bsky.actor.defs#savedFeedsPref',
+            'lex:app.bsky.actor.defs#personalDetailsPref',
           ],
         },
       },
@@ -3806,6 +3730,16 @@ export const schemaDict = {
               type: 'string',
               format: 'at-uri',
             },
+          },
+        },
+      },
+      personalDetailsPref: {
+        type: 'object',
+        properties: {
+          birthDate: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The birth date of the owner of the account.',
           },
         },
       },
@@ -4194,6 +4128,26 @@ export const schemaDict = {
           alt: {
             type: 'string',
           },
+          aspectRatio: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.images#aspectRatio',
+          },
+        },
+      },
+      aspectRatio: {
+        type: 'object',
+        description:
+          'width:height represents an aspect ratio. It may be approximate, and may not correspond to absolute dimensions in any given unit.',
+        required: ['width', 'height'],
+        properties: {
+          width: {
+            type: 'integer',
+            minimum: 1,
+          },
+          height: {
+            type: 'integer',
+            minimum: 1,
+          },
         },
       },
       view: {
@@ -4222,6 +4176,10 @@ export const schemaDict = {
           },
           alt: {
             type: 'string',
+          },
+          aspectRatio: {
+            type: 'ref',
+            ref: 'lex:app.bsky.embed.images#aspectRatio',
           },
         },
       },
@@ -5354,6 +5312,49 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetSuggestedFeeds: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getSuggestedFeeds',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of suggested feeds for the viewer.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feeds'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feeds: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#generatorView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyFeedGetTimeline: {
     lexicon: 1,
     id: 'app.bsky.feed.getTimeline',
@@ -5699,6 +5700,10 @@ export const schemaDict = {
           muted: {
             type: 'boolean',
           },
+          blocked: {
+            type: 'string',
+            format: 'at-uri',
+          },
         },
       },
     },
@@ -5927,6 +5932,49 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetListBlocks: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getListBlocks',
+    defs: {
+      main: {
+        type: 'query',
+        description: "Which lists is the requester's account blocking?",
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['lists'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              lists: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#listView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphGetListMutes: {
     lexicon: 1,
     id: 'app.bsky.graph.getListMutes',
@@ -6102,6 +6150,31 @@ export const schemaDict = {
             labels: {
               type: 'union',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphListblock: {
+    lexicon: 1,
+    id: 'app.bsky.graph.listblock',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A block of an entire list of actors.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['subject', 'createdAt'],
+          properties: {
+            subject: {
+              type: 'string',
+              format: 'at-uri',
             },
             createdAt: {
               type: 'string',
@@ -6672,7 +6745,6 @@ export const ids = {
   ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
-  ComAtprotoAdminRebaseRepo: 'com.atproto.admin.rebaseRepo',
   ComAtprotoAdminResolveModerationReports:
     'com.atproto.admin.resolveModerationReports',
   ComAtprotoAdminReverseModerationAction:
@@ -6696,7 +6768,6 @@ export const ids = {
   ComAtprotoRepoGetRecord: 'com.atproto.repo.getRecord',
   ComAtprotoRepoListRecords: 'com.atproto.repo.listRecords',
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
-  ComAtprotoRepoRebaseRepo: 'com.atproto.repo.rebaseRepo',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
@@ -6722,8 +6793,8 @@ export const ids = {
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
   ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',
-  ComAtprotoSyncGetCommitPath: 'com.atproto.sync.getCommitPath',
   ComAtprotoSyncGetHead: 'com.atproto.sync.getHead',
+  ComAtprotoSyncGetLatestCommit: 'com.atproto.sync.getLatestCommit',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
   ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
@@ -6758,6 +6829,7 @@ export const ids = {
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
+  AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',
   AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
   AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedPost: 'app.bsky.feed.post',
@@ -6769,10 +6841,12 @@ export const ids = {
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
   AppBskyGraphGetList: 'app.bsky.graph.getList',
+  AppBskyGraphGetListBlocks: 'app.bsky.graph.getListBlocks',
   AppBskyGraphGetListMutes: 'app.bsky.graph.getListMutes',
   AppBskyGraphGetLists: 'app.bsky.graph.getLists',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
   AppBskyGraphList: 'app.bsky.graph.list',
+  AppBskyGraphListblock: 'app.bsky.graph.listblock',
   AppBskyGraphListitem: 'app.bsky.graph.listitem',
   AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',

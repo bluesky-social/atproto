@@ -9,16 +9,17 @@
         "type": "params",
         "required": ["did"],
         "properties": {
-          "did": {"type": "string", "format":"did"}
+          "did": { "type": "string", "format": "did" }
         }
       },
       "output": {
         "encoding": "application/json",
-        "schema": {"type": "ref", "ref": "com.atproto.admin.defs#repoViewDetail"}
+        "schema": {
+          "type": "ref",
+          "ref": "com.atproto.admin.defs#repoViewDetail"
+        }
       },
-      "errors": [
-        {"name": "RepoNotFound"}
-      ]
+      "errors": [{ "name": "RepoNotFound" }]
     }
   }
 }

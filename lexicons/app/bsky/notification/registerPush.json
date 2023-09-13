@@ -11,10 +11,13 @@
           "type": "object",
           "required": ["serviceDid", "token", "platform", "appId"],
           "properties": {
-            "serviceDid": {"type": "string", "format": "did"},
-            "token": {"type": "string"},
-            "platform": {"type": "string", "knownValues": ["ios", "android", "web"]},
-            "appId": {"type": "string"}
+            "serviceDid": { "type": "string", "format": "did" },
+            "token": { "type": "string" },
+            "platform": {
+              "type": "string",
+              "knownValues": ["ios", "android", "web"]
+            },
+            "appId": { "type": "string" }
           }
         }
       }

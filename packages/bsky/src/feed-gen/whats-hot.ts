@@ -21,11 +21,10 @@ const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
 const handler: AlgoHandler = async (
   ctx: AppContext,
   params: SkeletonParams,
-  viewer: string,
+  _viewer: string,
 ): Promise<AlgoResponse> => {
   const { limit, cursor } = params
   const db = ctx.db.getReplica('feed')
-  const graphService = ctx.services.graph(db)
 
   const { ref } = db.db.dynamic
 
@@ -48,14 +47,9 @@ const handler: AlgoHandler = async (
             .orWhereRef('label.uri', '=', ref('post_embed_record.embedUri')),
         ),
     )
-    .where((qb) =>
-      graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
-    )
-    .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
     .select([
       sql<FeedItemType>`${'post'}`.as('type'),
       'post.uri as uri',
-      'post.cid as cid',
       'post.uri as postUri',
       'post.creator as originatorDid',
       'post.creator as postAuthorDid',

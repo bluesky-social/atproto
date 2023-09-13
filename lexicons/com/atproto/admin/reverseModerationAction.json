@@ -11,9 +11,9 @@
           "type": "object",
           "required": ["id", "reason", "createdBy"],
           "properties": {
-            "id": {"type": "integer"},
-            "reason": {"type": "string"},
-            "createdBy": {"type": "string", "format": "did"}
+            "id": { "type": "integer" },
+            "reason": { "type": "string" },
+            "createdBy": { "type": "string", "format": "did" }
           }
         }
       },

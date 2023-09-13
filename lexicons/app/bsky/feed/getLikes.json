@@ -8,10 +8,15 @@
         "type": "params",
         "required": ["uri"],
         "properties": {
-          "uri": {"type": "string", "format": "at-uri"},
-          "cid": {"type": "string", "format": "cid"},
-          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50},
-          "cursor": {"type": "string"}
+          "uri": { "type": "string", "format": "at-uri" },
+          "cid": { "type": "string", "format": "cid" },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
         }
       },
       "output": {
@@ -20,12 +25,12 @@
           "type": "object",
           "required": ["uri", "likes"],
           "properties": {
-            "uri": {"type": "string", "format": "at-uri"},
-            "cid": {"type": "string", "format": "cid"},
-            "cursor": {"type": "string"},
+            "uri": { "type": "string", "format": "at-uri" },
+            "cid": { "type": "string", "format": "cid" },
+            "cursor": { "type": "string" },
             "likes": {
               "type": "array",
-              "items": {"type": "ref", "ref": "#like"}
+              "items": { "type": "ref", "ref": "#like" }
             }
           }
         }
@@ -35,9 +40,9 @@
       "type": "object",
       "required": ["indexedAt", "createdAt", "actor"],
       "properties": {
-        "indexedAt": {"type": "string", "format": "datetime"},
-        "createdAt": {"type": "string", "format": "datetime"},
-        "actor": {"type": "ref", "ref": "app.bsky.actor.defs#profileView"}
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "actor": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" }
       }
     }
   }

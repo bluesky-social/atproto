@@ -9,17 +9,17 @@
         "type": "object",
         "required": ["text", "createdAt"],
         "properties": {
-          "text": {"type": "string", "maxLength": 3000, "maxGraphemes": 300},
+          "text": { "type": "string", "maxLength": 3000, "maxGraphemes": 300 },
           "entities": {
             "type": "array",
             "description": "Deprecated: replaced by app.bsky.richtext.facet.",
-            "items": {"type": "ref", "ref": "#entity"}
+            "items": { "type": "ref", "ref": "#entity" }
           },
           "facets": {
             "type": "array",
-            "items": {"type": "ref", "ref": "app.bsky.richtext.facet"}
+            "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
           },
-          "reply": {"type": "ref", "ref": "#replyRef"},
+          "reply": { "type": "ref", "ref": "#replyRef" },
           "embed": {
             "type": "union",
             "refs": [
@@ -32,22 +32,22 @@
           "langs": {
             "type": "array",
             "maxLength": 3,
-            "items": {"type": "string", "format": "language"}
+            "items": { "type": "string", "format": "language" }
           },
           "labels": {
             "type": "union",
             "refs": ["com.atproto.label.defs#selfLabels"]
           },
-          "createdAt": {"type": "string", "format": "datetime"}
+          "createdAt": { "type": "string", "format": "datetime" }
         }
       }
     },
-    "replyRef":{
+    "replyRef": {
       "type": "object",
       "required": ["root", "parent"],
       "properties": {
-        "root": {"type": "ref", "ref": "com.atproto.repo.strongRef"},
-        "parent": {"type": "ref", "ref": "com.atproto.repo.strongRef"}
+        "root": { "type": "ref", "ref": "com.atproto.repo.strongRef" },
+        "parent": { "type": "ref", "ref": "com.atproto.repo.strongRef" }
       }
     },
     "entity": {
@@ -55,12 +55,12 @@
       "description": "Deprecated: use facets instead.",
       "required": ["index", "type", "value"],
       "properties": {
-        "index": {"type": "ref", "ref": "#textSlice"},
+        "index": { "type": "ref", "ref": "#textSlice" },
         "type": {
           "type": "string",
           "description": "Expected values are 'mention' and 'link'."
         },
-        "value": {"type": "string"}
+        "value": { "type": "string" }
       }
     },
     "textSlice": {
@@ -68,8 +68,8 @@
       "description": "Deprecated. Use app.bsky.richtext instead -- A text segment. Start is inclusive, end is exclusive. Indices are for utf16-encoded strings.",
       "required": ["start", "end"],
       "properties": {
-        "start": {"type": "integer", "minimum": 0},
-        "end": {"type": "integer", "minimum": 0}
+        "start": { "type": "integer", "minimum": 0 },
+        "end": { "type": "integer", "minimum": 0 }
       }
     }
   }
