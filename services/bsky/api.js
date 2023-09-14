@@ -27,6 +27,15 @@ const {
 const main = async () => {
   const env = getEnv()
   assert(env.dbPrimaryPostgresUrl, 'missing configuration for db')
+  // separate db needed for more permissions
+  const migrateDb = new PrimaryDatabase({
+    url: env.dbMigratePostgresUrl,
+    schema: env.dbPostgresSchema,
+    poolSize: 2,
+  })
+  await migrateDb.migrateToLatestOrThrow()
+  await migrateDb.close()
+
   const db = new DatabaseCoordinator({
     schema: env.dbPostgresSchema,
     primary: {
@@ -73,12 +82,12 @@ const main = async () => {
     algos,
   })
   // separate db needed for more permissions
-  const migrateDb = new PrimaryDatabase({
+  const viewMaintainerDb = new PrimaryDatabase({
     url: env.dbMigratePostgresUrl,
     schema: env.dbPostgresSchema,
     poolSize: 2,
   })
-  const viewMaintainer = new ViewMaintainer(migrateDb)
+  const viewMaintainer = new ViewMaintainer(viewMaintainerDb)
   const viewMaintainerRunning = viewMaintainer.run()
 
   const periodicModerationActionReversal = new PeriodicModerationActionReversal(
@@ -96,7 +105,7 @@ const main = async () => {
     await bsky.destroy()
     viewMaintainer.destroy()
     await viewMaintainerRunning
-    await migrateDb.close()
+    await viewMaintainerDb.close()
   })
 }
 
