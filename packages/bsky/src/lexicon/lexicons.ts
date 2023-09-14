@@ -5160,6 +5160,59 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetListFeed: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getListFeed',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'A view of a recent posts from actors in a list',
+        parameters: {
+          type: 'params',
+          required: ['list'],
+          properties: {
+            list: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'UnknownList',
+          },
+        ],
+      },
+    },
+  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -5687,12 +5740,20 @@ export const schemaDict = {
       },
       listPurpose: {
         type: 'string',
-        knownValues: ['app.bsky.graph.defs#modlist'],
+        knownValues: [
+          'app.bsky.graph.defs#modlist',
+          'app.bsky.graph.defs#curatelist',
+        ],
       },
       modlist: {
         type: 'token',
         description:
           'A list of actors to apply an aggregate moderation action (mute/block) on',
+      },
+      curatelist: {
+        type: 'token',
+        description:
+          'A list of actors used for curation purposes such as list feeds or interaction gating',
       },
       listViewerState: {
         type: 'object',
@@ -6862,6 +6923,7 @@ export const ids = {
   AppBskyFeedGetFeedGenerators: 'app.bsky.feed.getFeedGenerators',
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
+  AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',

@@ -77,6 +77,10 @@ export class SeedClient {
   likes: Record<string, Record<string, AtUri>>
   replies: Record<string, { text: string; ref: RecordRef }[]>
   reposts: Record<string, RecordRef[]>
+  lists: Record<
+    string,
+    Record<string, { ref: RecordRef; items: Record<string, RecordRef> }>
+  >
   dids: Record<string, string>
 
   constructor(public agent: AtpAgent) {
@@ -88,6 +92,7 @@ export class SeedClient {
     this.likes = {}
     this.replies = {}
     this.reposts = {}
+    this.lists = {}
     this.dids = {}
   }
 
@@ -367,6 +372,54 @@ export class SeedClient {
     const repost = new RecordRef(res.uri, res.cid)
     this.reposts[by].push(repost)
     return repost
+  }
+
+  async createList(by: string, name: string, purpose: 'mod' | 'curate') {
+    const res = await this.agent.api.app.bsky.graph.list.create(
+      { repo: by },
+      {
+        name,
+        purpose:
+          purpose === 'mod'
+            ? 'app.bsky.graph.defs#modlist'
+            : 'app.bsky.graph.defs#curatelist',
+        createdAt: new Date().toISOString(),
+      },
+      this.getHeaders(by),
+    )
+    this.lists[by] ??= {}
+    const ref = new RecordRef(res.uri, res.cid)
+    this.lists[by][ref.uriStr] = {
+      ref: ref,
+      items: {},
+    }
+    return ref
+  }
+
+  async addToList(by: string, subject: string, list: RecordRef) {
+    const res = await this.agent.api.app.bsky.graph.listitem.create(
+      { repo: by },
+      { subject, list: list.uriStr, createdAt: new Date().toISOString() },
+      this.getHeaders(by),
+    )
+    const ref = new RecordRef(res.uri, res.cid)
+    const found = (this.lists[by] ?? {})[list.uriStr]
+    if (found) {
+      found.items[subject] = ref
+    }
+    return ref
+  }
+
+  async rmFromList(by: string, subject: string, list: RecordRef) {
+    const foundList = (this.lists[by] ?? {})[list.uriStr] ?? {}
+    if (!foundList) return
+    const foundItem = foundList.items[subject]
+    if (!foundItem) return
+    await this.agent.api.app.bsky.graph.listitem.delete(
+      { repo: by, rkey: foundItem.uri.rkey },
+      this.getHeaders(by),
+    )
+    delete foundList.items[subject]
   }
 
   async takeModerationAction(opts: {

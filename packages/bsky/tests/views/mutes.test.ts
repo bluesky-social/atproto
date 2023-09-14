@@ -88,6 +88,20 @@ describe('mute views', () => {
     ).toBe(false)
   })
 
+  it('removes content from muted users on getListFeed', async () => {
+    const listRef = await sc.createList(bob, 'test list', 'curate')
+    await sc.addToList(alice, bob, listRef)
+    await sc.addToList(alice, carol, listRef)
+    await sc.addToList(alice, dan, listRef)
+    const res = await agent.api.app.bsky.feed.getListFeed(
+      { list: listRef.uriStr },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(
+      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+    ).toBe(false)
+  })
+
   it('returns mute status on getProfile', async () => {
     const res = await agent.api.app.bsky.actor.getProfile(
       { actor: bob },
