@@ -72,7 +72,7 @@ const skeleton = async (
     .innerJoin('like', 'like.subject', 'feed_item.uri')
     .where('like.creator', '=', actorDid)
 
-  const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
+  const keyset = new FeedKeyset(ref('like.sortAt'), ref('like.cid'))
 
   feedItemsQb = paginate(feedItemsQb, {
     limit,
