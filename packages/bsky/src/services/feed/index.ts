@@ -166,7 +166,13 @@ export class FeedService {
     return posts.reduce((acc, cur) => {
       const { recordJson, ...post } = cur
       const record = jsonStringToLex(recordJson) as PostRecord
-      const info: PostInfo = { ...post, record, viewer }
+      const info: PostInfo = {
+        ...post,
+        invalidReplyRoot: post.invalidReplyRoot ?? false,
+        violatesThreadGate: post.violatesThreadGate ?? false,
+        record,
+        viewer,
+      }
       return Object.assign(acc, { [post.uri]: info })
     }, {} as PostInfoMap)
   }
