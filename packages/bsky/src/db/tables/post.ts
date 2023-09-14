@@ -1,4 +1,4 @@
-import { Generated, GeneratedAlways } from 'kysely'
+import { GeneratedAlways } from 'kysely'
 
 export const tableName = 'post'
 
@@ -12,8 +12,8 @@ export interface Post {
   replyParent: string | null
   replyParentCid: string | null
   langs: string[] | null
-  invalidReplyRoot: Generated<boolean>
-  violatesThreadGate: Generated<boolean>
+  invalidReplyRoot: boolean | null
+  violatesThreadGate: boolean | null
   createdAt: string
   indexedAt: string
   sortAt: GeneratedAlways<string>
