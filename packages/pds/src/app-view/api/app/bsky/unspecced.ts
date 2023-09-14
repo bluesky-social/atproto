@@ -43,7 +43,7 @@ export default function (server: Server, ctx: AppContext) {
             await ctx.serviceAuthHeaders(requester),
           )
         const res = await ctx.appviewAgent.api.app.bsky.feed.getFeed(
-          { ...params, feed: hotClassicUri },
+          { feed: hotClassicUri, limit: params.limit, cursor: params.cursor },
           await ctx.serviceAuthHeaders(requester, feed.view.did),
         )
         return {
