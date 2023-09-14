@@ -54,4 +54,4 @@ If you discover any security issues, please send an email to security@bsky.app. 
 
 MIT License
 
-Copyright (c) 2023 Bluesky PBLLC
+Copyright (c) 2023 Bluesky PBC
