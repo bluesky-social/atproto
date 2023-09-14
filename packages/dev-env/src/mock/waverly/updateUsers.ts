@@ -37,6 +37,9 @@ const userUpdates: { [handle: string]: UserUpdate } = {
     avatar: smartGadgetsAvatarB64,
     displayName: 'Smart Home Gadgets',
   },
+  'testgroup.group': {
+    displayName: 'Test Group',
+  },
 }
 
 export default async (users: User[]) => {

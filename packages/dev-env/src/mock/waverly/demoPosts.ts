@@ -1,6 +1,8 @@
 import ogArtificialBrainsB64 from './img/og-artificial-brains-b64'
 import embedSunsetB64 from './img/embed-sunset-b64'
 import embedAbandonFactoryB64 from './img/embed-abandon-factory-b64'
+import ogFavSmartB64 from './img/og-fav-smart-b64'
+import ogSmartHomeYoutubeB64 from './img/og-smart-home-youtube-b64'
 
 interface DefaultPost {
   text: string
@@ -63,6 +65,18 @@ export const demoPosts: DemoPost[] = [
     ],
   },
   {
+    group: 'smarthomegadgets.group',
+    user: 'kira.test',
+    text: `I got so many ideas from watching this smart home tour. The foot-level lighting seems like a simple solution, but it's so effective at reducing the risk of falls and giving peace of mind to both my dad and me.\nI would highly recommend this video to anyone looking for smart home solutions! `,
+    external: {
+      uri: 'https://www.youtube.com/watch?v=yDNWVRmRHlY',
+      title: 'Smart Home Tour 2023: Fully Automated! 👀 - YouTube',
+      description: `Welcome to my smart home tour 2023! Here are all of the updates to my smart home, with LOTS of home automation along the way.Want me to tour part of YOUR sma...`,
+      thumb: ogSmartHomeYoutubeB64,
+    },
+    replies: [],
+  },
+  {
     group: 'thephototriothatrules.group',
     user: 'kira.test',
     text: `I had the chance to explore an abandoned factory, and the experience was like stepping back in time. I photographed the rusted machinery, peeling paint, and shadowy corners, taking care to highlight the intricate details and moody atmosphere. Low-light photography can be a challenge, but it's also incredibly rewarding. Have you had any similar experiences photographing unique or historic locations?`,
@@ -79,6 +93,18 @@ export const demoPosts: DemoPost[] = [
         replies: [],
       },
     ],
+  },
+  {
+    group: 'smarthomegadgets.group',
+    user: 'aman.test',
+    text: `Imagine how cool it would be to have a skylight in your apartment… I can't wait to have it in my place and see how this will create a more immersive and comfortable environment!\n""Smart lighting company Yeelight showed off the Yeelight Pro P20 Rooflight. This very realistic-looking roof light mimics the effect of a skylight using nanotechnology-enabled “Rayleigh Scattering.`,
+    external: {
+      uri: 'https://www.theverge.com/23863589/favorite-smart-home-gadgets-ifa-2023-tech-show',
+      title: `IFA 2023: the coolest smart home tech I saw in Berlin - The Verge`,
+      description: `Smart lamps, smart windows, smart heat pumps, and so many ceiling lights.`,
+      thumb: ogFavSmartB64,
+    },
+    replies: [],
   },
   // {
   //   group: 'aimagiceveryday.group',
