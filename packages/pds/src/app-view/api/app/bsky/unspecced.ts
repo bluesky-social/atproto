@@ -25,9 +25,9 @@ const NSFW_LABELS = ['porn', 'sexual', 'nudity', 'underwear']
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopular({
     auth: ctx.accessVerifier,
-    handler: async ({ req, params, auth }) => {
+    handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      if (await ctx.canProxyRead(req, requester)) {
+      if (ctx.canProxyRead()) {
         const hotClassicUri = Object.keys(ctx.algos).find((uri) =>
           uri.endsWith('/hot-classic'),
         )
