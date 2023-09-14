@@ -72,8 +72,10 @@ const presentation = (state: HydrationState, ctx: Context) => {
       uri,
       actors,
       state.posts,
+      state.threadgates,
       state.embeds,
       state.labels,
+      state.lists,
     )
     return postView ?? SKIP
   })
