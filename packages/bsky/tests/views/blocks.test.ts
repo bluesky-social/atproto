@@ -163,6 +163,29 @@ describe('pds views with blocking', () => {
     ).toBeFalsy()
   })
 
+  it('strips blocked users out of getListFeed', async () => {
+    const listRef = await sc.createList(alice, 'test list', 'curate')
+    await sc.addToList(alice, alice, listRef)
+    await sc.addToList(alice, carol, listRef)
+    await sc.addToList(alice, dan, listRef)
+
+    const resCarol = await agent.api.app.bsky.feed.getListFeed(
+      { list: listRef.uriStr, limit: 100 },
+      { headers: await network.serviceHeaders(carol) },
+    )
+    expect(
+      resCarol.data.feed.some((post) => post.post.author.did === dan),
+    ).toBeFalsy()
+
+    const resDan = await agent.api.app.bsky.feed.getListFeed(
+      { list: listRef.uriStr, limit: 100 },
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(
+      resDan.data.feed.some((post) => post.post.author.did === carol),
+    ).toBeFalsy()
+  })
+
   it('returns block status on getProfile', async () => {
     const resCarol = await agent.api.app.bsky.actor.getProfile(
       { actor: dan },

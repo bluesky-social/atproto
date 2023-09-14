@@ -21,11 +21,14 @@ describe('proxies view requests', () => {
     agent = network.pds.getClient()
     sc = new SeedClient(agent)
     await basicSeed(sc)
-    await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
+    const listRef = await sc.createList(alice, 'test list', 'curate')
+    await sc.addToList(alice, alice, listRef)
+    await sc.addToList(alice, bob, listRef)
+    await network.processAll()
   })
 
   afterAll(async () => {
@@ -170,6 +173,38 @@ describe('proxies view requests', () => {
     const pt2 = await agent.api.app.bsky.feed.getAuthorFeed(
       {
         actor: bob,
+        cursor: pt1.data.cursor,
+      },
+      {
+        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+      },
+    )
+    expect([...pt1.data.feed, ...pt2.data.feed]).toEqual(res.data.feed)
+  })
+
+  it('feed.getListFeed', async () => {
+    const list = Object.values(sc.lists[alice])[0].ref.uriStr
+    const res = await agent.api.app.bsky.feed.getListFeed(
+      {
+        list,
+      },
+      {
+        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+      },
+    )
+    expect(forSnapshot(res.data)).toMatchSnapshot()
+    const pt1 = await agent.api.app.bsky.feed.getListFeed(
+      {
+        list,
+        limit: 1,
+      },
+      {
+        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+      },
+    )
+    const pt2 = await agent.api.app.bsky.feed.getListFeed(
+      {
+        list,
         cursor: pt1.data.cursor,
       },
       {
