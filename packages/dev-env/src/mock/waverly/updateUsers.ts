@@ -20,7 +20,7 @@ interface UserUpdate {
 const userUpdates: { [handle: string]: UserUpdate } = {
   'alice.test': { avatar: aliceAvatarB64 },
   'carla.test': { avatar: carlaAvatarB64 },
-  'phil.test': { avatar: philAvatarB64, displayName: 'Philippe Beuadoin' },
+  'phil.test': { avatar: philAvatarB64, displayName: 'Philippe Beaudoin' },
   'dave.test': { avatar: daveAvatarB64, displayName: 'Dave Burke' },
   'kira.test': { avatar: kiraAvatarB64, displayName: 'Kira Cheung' },
   'aman.test': { avatar: amanAvatarB64, displayName: 'Aman Patel' },
