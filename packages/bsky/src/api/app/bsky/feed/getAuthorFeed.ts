@@ -102,9 +102,7 @@ export const skeleton = async (
     feedItemsQb = feedItemsQb
       .where('post.replyParent', 'is', null)
       .orWhere((qb) =>
-        qb
-          .where('originatorDid', '=', actorDid)
-          .where('type', '=', 'repost')
+        qb.where('originatorDid', '=', actorDid).where('type', '=', 'repost'),
       )
   }
 
