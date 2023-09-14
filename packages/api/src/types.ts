@@ -89,4 +89,5 @@ export interface BskyPreferences {
   }
   adultContentEnabled: boolean
   contentLabels: Record<string, BskyLabelPreference>
+  birthDate: Date | undefined
 }

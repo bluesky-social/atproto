@@ -7,18 +7,25 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
+import * as AppBskyActorDefs from '../actor/defs'
 
-export interface QueryParams {}
+export interface QueryParams {
+  actor: string
+}
 
-export interface InputSchema {
-  did: string
-  force?: boolean
+export type InputSchema = undefined
+
+export interface OutputSchema {
+  suggestions: AppBskyActorDefs.ProfileView[]
   [k: string]: unknown
 }
 
-export interface HandlerInput {
+export type HandlerInput = undefined
+
+export interface HandlerSuccess {
   encoding: 'application/json'
-  body: InputSchema
+  body: OutputSchema
+  headers?: { [key: string]: string }
 }
 
 export interface HandlerError {
@@ -26,7 +33,7 @@ export interface HandlerError {
   message?: string
 }
 
-export type HandlerOutput = HandlerError | void
+export type HandlerOutput = HandlerError | HandlerSuccess
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

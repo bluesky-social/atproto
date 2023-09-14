@@ -118,6 +118,39 @@ describe('repo sync', () => {
     expect(commit.data.cid).toEqual(currRoot?.toString())
   })
 
+  it('syncs `since` a given rev', async () => {
+    const repoBefore = await repo.Repo.load(storage, currRoot)
+
+    // add a post
+    const { obj, uri } = await makePost(sc, did)
+    if (!repoData[uri.collection]) {
+      repoData[uri.collection] = {}
+    }
+    repoData[uri.collection][uri.rkey] = obj
+    uris.push(uri)
+
+    const carRes = await agent.api.com.atproto.sync.getRepo({
+      did,
+      since: repoBefore.commit.rev,
+    })
+    const car = await repo.readCarWithRoot(carRes.data)
+    expect(car.blocks.size).toBeLessThan(10) // should only contain new blocks
+    const synced = await repo.verifyDiff(
+      repoBefore,
+      car.blocks,
+      car.root,
+      did,
+      ctx.repoSigningKey.did(),
+    )
+    expect(synced.writes.length).toBe(1)
+    await storage.applyCommit(synced.commit)
+    const loaded = await repo.Repo.load(storage, car.root)
+    const contents = await loaded.getContents()
+    expect(contents).toEqual(repoData)
+
+    currRoot = car.root
+  })
+
   it('sync a record proof', async () => {
     const collection = Object.keys(repoData)[0]
     const rkey = Object.keys(repoData[collection])[0]

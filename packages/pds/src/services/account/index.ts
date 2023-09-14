@@ -590,6 +590,15 @@ export class AccountService {
         `Some preferences are not in the ${namespace} namespace`,
       )
     }
+    // short-held row lock to prevent races
+    if (this.db.dialect === 'pg') {
+      await this.db.db
+        .selectFrom('user_account')
+        .selectAll()
+        .forUpdate()
+        .where('did', '=', did)
+        .executeTakeFirst()
+    }
     // get all current prefs for user and prep new pref rows
     const allPrefs = await this.db.db
       .selectFrom('user_pref')
