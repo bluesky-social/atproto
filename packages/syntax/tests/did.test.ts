@@ -1,4 +1,6 @@
 import { ensureValidDid, ensureValidDidRegex, InvalidDidError } from '../src'
+import * as readline from 'readline'
+import * as fs from 'fs'
 
 describe('DID permissive validation', () => {
   const expectValid = (h: string) => {
@@ -63,5 +65,35 @@ describe('DID permissive validation', () => {
     expectValid('did:web:localhost%3A1234')
     expectValid('did:key:zQ3shZc2QzApp2oymGvQbzP8eKheVshBHbU4ZYjeXqwSKEn6N')
     expectValid('did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a')
+  })
+
+  it('conforms to interop valid DIDs', () => {
+    const lineReader = readline.createInterface({
+      input: fs.createReadStream(
+        `${__dirname}/interop-files/did_syntax_valid.txt`,
+      ),
+      terminal: false,
+    })
+    lineReader.on('line', (line) => {
+      if (line.startsWith('#') || line.length == 0) {
+        return
+      }
+      expectValid(line)
+    })
+  })
+
+  it('conforms to interop invalid DIDs', () => {
+    const lineReader = readline.createInterface({
+      input: fs.createReadStream(
+        `${__dirname}/interop-files/did_syntax_invalid.txt`,
+      ),
+      terminal: false,
+    })
+    lineReader.on('line', (line) => {
+      if (line.startsWith('#') || line.length == 0) {
+        return
+      }
+      expectInvalid(line)
+    })
   })
 })

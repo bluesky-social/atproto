@@ -16,7 +16,6 @@
           },
           "since": {
             "type": "string",
-            "format": "cid",
             "description": "The revision of the repo to catch up from."
           }
         }

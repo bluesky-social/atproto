@@ -14,9 +14,9 @@ import {
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActors({
     auth: ctx.accessVerifier,
-    handler: async ({ req, auth, params }) => {
+    handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
-      if (await ctx.canProxyRead(req, requester)) {
+      if (ctx.canProxyRead()) {
         const res = await ctx.appviewAgent.api.app.bsky.actor.searchActors(
           params,
           await ctx.serviceAuthHeaders(requester),

@@ -1,4 +1,5 @@
 import { Selectable } from 'kysely'
+import { Record as ThreadgateRecord } from '../../lexicon/types/app/bsky/feed/threadgate'
 import { View as ImagesEmbedView } from '../../lexicon/types/app/bsky/embed/images'
 import { View as ExternalEmbedView } from '../../lexicon/types/app/bsky/embed/external'
 import {
@@ -14,9 +15,11 @@ import {
   NotFoundPost,
   PostView,
 } from '../../lexicon/types/app/bsky/feed/defs'
-import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import { FeedGenerator } from '../../db/tables/feed-generator'
 import { ListView } from '../../lexicon/types/app/bsky/graph/defs'
+import { ProfileHydrationState } from '../actor'
+import { Labels } from '../label'
+import { BlockAndMuteState } from '../graph'
 
 export type PostEmbedViews = {
   [uri: string]: PostEmbedView
@@ -27,8 +30,6 @@ export type PostEmbedView =
   | ExternalEmbedView
   | RecordEmbedView
   | RecordWithMediaEmbedView
-
-export type PostViews = { [uri: string]: PostView }
 
 export type PostInfo = {
   uri: string
@@ -41,6 +42,8 @@ export type PostInfo = {
   replyCount: number | null
   requesterRepost: string | null
   requesterLike: string | null
+  invalidReplyRoot: boolean
+  violatesThreadGate: boolean
   viewer: string | null
 }
 
@@ -50,25 +53,15 @@ export type PostBlocksMap = {
   [uri: string]: { reply?: boolean; embed?: boolean }
 }
 
-export const kSelfLabels = Symbol('selfLabels')
-
-export type ActorInfo = {
-  did: string
-  handle: string
-  displayName?: string
-  avatar?: string
-  viewer?: {
-    muted?: boolean
-    blockedBy?: boolean
-    blocking?: string
-    following?: string
-    followedBy?: string
-  }
-  labels?: Label[]
-  // allows threading self-labels through if they are going to be applied later, i.e. when using skipLabels option.
-  [kSelfLabels]?: Label[]
+export type ThreadgateInfo = {
+  uri: string
+  cid: string
+  record: ThreadgateRecord
 }
-export type ActorInfoMap = { [did: string]: ActorInfo }
+
+export type ThreadgateInfoMap = {
+  [postUri: string]: ThreadgateInfo
+}
 
 export type FeedGenInfo = Selectable<FeedGenerator> & {
   likeCount: number
@@ -103,3 +96,12 @@ export type RecordEmbedViewRecord =
   | ListView
 
 export type RecordEmbedViewRecordMap = { [uri: string]: RecordEmbedViewRecord }
+
+export type FeedHydrationState = ProfileHydrationState & {
+  posts: PostInfoMap
+  threadgates: ThreadgateInfoMap
+  embeds: PostEmbedViews
+  labels: Labels
+  blocks: PostBlocksMap
+  bam: BlockAndMuteState
+}

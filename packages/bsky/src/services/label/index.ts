@@ -100,9 +100,11 @@ export class LabelService {
       includeNeg?: boolean
       skipCache?: boolean
     },
+    labels: Labels = {},
   ): Promise<Labels> {
-    if (subjects.length < 1) return {}
+    if (subjects.length < 1) return labels
     const expandedSubjects = subjects.flatMap((subject) => {
+      if (labels[subject]) return [] // skip over labels we already have fetched
       if (subject.startsWith('did:')) {
         return [
           subject,
@@ -111,8 +113,8 @@ export class LabelService {
       }
       return subject
     })
-    const labels = await this.getLabelsForUris(expandedSubjects, opts)
-    return Object.keys(labels).reduce((acc, cur) => {
+    const labelsByUri = await this.getLabelsForUris(expandedSubjects, opts)
+    return Object.keys(labelsByUri).reduce((acc, cur) => {
       const uri = cur.startsWith('at://') ? new AtUri(cur) : null
       if (
         uri &&
@@ -122,12 +124,12 @@ export class LabelService {
         // combine labels for profile + did
         const did = uri.hostname
         acc[did] ??= []
-        acc[did].push(...labels[cur])
+        acc[did].push(...labelsByUri[cur])
       }
       acc[cur] ??= []
-      acc[cur].push(...labels[cur])
+      acc[cur].push(...labelsByUri[cur])
       return acc
-    }, {} as Labels)
+    }, labels)
   }
 
   async getLabels(

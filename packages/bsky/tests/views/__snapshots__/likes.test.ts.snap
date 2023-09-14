@@ -24,7 +24,7 @@ Object {
         "labels": Array [],
         "viewer": Object {
           "blockedBy": false,
-          "following": "record(1)",
+          "following": "record(0)",
           "muted": false,
         },
       },
@@ -38,8 +38,8 @@ Object {
         "labels": Array [],
         "viewer": Object {
           "blockedBy": false,
-          "followedBy": "record(3)",
-          "following": "record(2)",
+          "followedBy": "record(2)",
+          "following": "record(1)",
           "muted": false,
         },
       },
@@ -57,8 +57,8 @@ Object {
         "labels": Array [],
         "viewer": Object {
           "blockedBy": false,
-          "followedBy": "record(5)",
-          "following": "record(4)",
+          "followedBy": "record(4)",
+          "following": "record(3)",
           "muted": false,
         },
       },
@@ -66,7 +66,7 @@ Object {
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
   ],
-  "uri": "record(0)",
+  "uri": "record(5)",
 }
 `;
 
@@ -81,8 +81,8 @@ Object {
         "labels": Array [],
         "viewer": Object {
           "blockedBy": false,
-          "followedBy": "record(2)",
-          "following": "record(1)",
+          "followedBy": "record(1)",
+          "following": "record(0)",
           "muted": false,
         },
       },
@@ -90,6 +90,6 @@ Object {
       "indexedAt": "1970-01-01T00:00:00.000Z",
     },
   ],
-  "uri": "record(0)",
+  "uri": "record(2)",
 }
 `;

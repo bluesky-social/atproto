@@ -6,24 +6,29 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import * as AppBskyGraphDefs from './defs'
 
-export interface QueryParams {}
+export interface QueryParams {
+  limit?: number
+  cursor?: string
+}
 
-export interface InputSchema {
-  did: string
-  force?: boolean
+export type InputSchema = undefined
+
+export interface OutputSchema {
+  cursor?: string
+  lists: AppBskyGraphDefs.ListView[]
   [k: string]: unknown
 }
 
 export interface CallOptions {
   headers?: Headers
-  qp?: QueryParams
-  encoding: 'application/json'
 }
 
 export interface Response {
   success: boolean
   headers: Headers
+  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {

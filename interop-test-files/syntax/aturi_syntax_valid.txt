@@ -1,0 +1,26 @@
+
+# enforces spec basics
+at://did:plc:asdf123
+at://user.bsky.social
+at://did:plc:asdf123/com.atproto.feed.post
+at://did:plc:asdf123/com.atproto.feed.post/record
+
+# very long: 'at://did:plc:asdf123/com.atproto.feed.post/' + 'o'.repeat(512)
+at://did:plc:asdf123/com.atproto.feed.post/oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+
+# enforces no trailing slashes
+at://did:plc:asdf123
+at://user.bsky.social
+at://did:plc:asdf123/com.atproto.feed.post
+at://did:plc:asdf123/com.atproto.feed.post/record
+
+# enforces strict paths
+at://did:plc:asdf123/com.atproto.feed.post/asdf123
+
+# is very permissive about record keys
+at://did:plc:asdf123/com.atproto.feed.post/asdf123
+at://did:plc:asdf123/com.atproto.feed.post/a
+
+at://did:plc:asdf123/com.atproto.feed.post/asdf-123
+at://did:abc:123
+at://did:abc:123/io.nsid.someFunc/record-key

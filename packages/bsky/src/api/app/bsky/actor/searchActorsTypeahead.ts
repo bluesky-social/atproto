@@ -23,11 +23,14 @@ export default function (server: Server, ctx: AppContext) {
 
       const actors = await ctx.services
         .actor(db)
-        .views.hydrateProfilesBasic(results, requester)
+        .views.profilesBasic(results, requester, { omitLabels: true })
 
-      const filtered = actors.filter(
-        (actor) => !actor.viewer?.blocking && !actor.viewer?.blockedBy,
-      )
+      const SKIP = []
+      const filtered = results.flatMap((res) => {
+        const actor = actors[res.did]
+        if (actor.viewer?.blocking || actor.viewer?.blockedBy) return SKIP
+        return actor
+      })
 
       return {
         encoding: 'application/json',

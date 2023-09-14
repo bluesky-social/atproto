@@ -14,12 +14,14 @@ import { DAY, HOUR } from '@atproto/common'
 import { ValidationError } from '@atproto/lexicon'
 import { PrimaryDatabase } from '../../db'
 import * as Post from './plugins/post'
+import * as Threadgate from './plugins/thread-gate'
 import * as Like from './plugins/like'
 import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
 import * as Profile from './plugins/profile'
 import * as List from './plugins/list'
 import * as ListItem from './plugins/list-item'
+import * as ListBlock from './plugins/list-block'
 import * as Block from './plugins/block'
 import * as FeedGenerator from './plugins/feed-generator'
 import RecordProcessor from './processor'
@@ -33,12 +35,14 @@ import { Actor } from '../../db/tables/actor'
 export class IndexingService {
   records: {
     post: Post.PluginType
+    threadGate: Threadgate.PluginType
     like: Like.PluginType
     repost: Repost.PluginType
     follow: Follow.PluginType
     profile: Profile.PluginType
     list: List.PluginType
     listItem: ListItem.PluginType
+    listBlock: ListBlock.PluginType
     block: Block.PluginType
     feedGenerator: FeedGenerator.PluginType
   }
@@ -52,12 +56,14 @@ export class IndexingService {
   ) {
     this.records = {
       post: Post.makePlugin(this.db, backgroundQueue, notifServer),
+      threadGate: Threadgate.makePlugin(this.db, backgroundQueue, notifServer),
       like: Like.makePlugin(this.db, backgroundQueue, notifServer),
       repost: Repost.makePlugin(this.db, backgroundQueue, notifServer),
       follow: Follow.makePlugin(this.db, backgroundQueue, notifServer),
       profile: Profile.makePlugin(this.db, backgroundQueue, notifServer),
       list: List.makePlugin(this.db, backgroundQueue, notifServer),
       listItem: ListItem.makePlugin(this.db, backgroundQueue, notifServer),
+      listBlock: ListBlock.makePlugin(this.db, backgroundQueue, notifServer),
       block: Block.makePlugin(this.db, backgroundQueue, notifServer),
       feedGenerator: FeedGenerator.makePlugin(
         this.db,
@@ -334,6 +340,10 @@ export class IndexingService {
       .deleteFrom('actor_block')
       .where('creator', '=', did)
       .execute()
+    await this.db.db
+      .deleteFrom('list_block')
+      .where('creator', '=', did)
+      .execute()
     // posts
     const postByUser = (qb) =>
       qb
@@ -353,6 +363,10 @@ export class IndexingService {
       .where('post_embed_record.postUri', 'in', postByUser)
       .execute()
     await this.db.db.deleteFrom('post').where('creator', '=', did).execute()
+    await this.db.db
+      .deleteFrom('thread_gate')
+      .where('creator', '=', did)
+      .execute()
     // notifications
     await this.db.db
       .deleteFrom('notification')

@@ -3149,7 +3149,6 @@ export const schemaDict = {
             },
             since: {
               type: 'string',
-              format: 'cid',
               description: 'The revision of the repo to catch up from.',
             },
           },
@@ -3178,7 +3177,6 @@ export const schemaDict = {
             },
             since: {
               type: 'string',
-              format: 'cid',
               description: 'Optional revision of the repo to list blobs since',
             },
             limit: {
@@ -3514,32 +3512,6 @@ export const schemaDict = {
           },
           cid: {
             type: 'cid-link',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoTempUpgradeRepoVersion: {
-    lexicon: 1,
-    id: 'com.atproto.temp.upgradeRepoVersion',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Upgrade a repo to v3',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['did'],
-            properties: {
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-              force: {
-                type: 'boolean',
-              },
-            },
           },
         },
       },
@@ -4418,6 +4390,10 @@ export const schemaDict = {
               ref: 'lex:com.atproto.label.defs#label',
             },
           },
+          threadgate: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#threadgateView',
+          },
         },
       },
       viewerState: {
@@ -4514,6 +4490,10 @@ export const schemaDict = {
               ],
             },
           },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#viewerThreadState',
+          },
         },
       },
       notFoundPost: {
@@ -4559,6 +4539,14 @@ export const schemaDict = {
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#viewerState',
+          },
+        },
+      },
+      viewerThreadState: {
+        type: 'object',
+        properties: {
+          canReply: {
+            type: 'boolean',
           },
         },
       },
@@ -4644,6 +4632,29 @@ export const schemaDict = {
           repost: {
             type: 'string',
             format: 'at-uri',
+          },
+        },
+      },
+      threadgateView: {
+        type: 'object',
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          record: {
+            type: 'unknown',
+          },
+          lists: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.graph.defs#listViewBasic',
+            },
           },
         },
       },
@@ -5188,6 +5199,59 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetListFeed: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getListFeed',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'A view of a recent posts from actors in a list',
+        parameters: {
+          type: 'params',
+          required: ['list'],
+          properties: {
+            list: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'UnknownList',
+          },
+        ],
+      },
+    },
+  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -5590,6 +5654,63 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedThreadgate: {
+    lexicon: 1,
+    id: 'app.bsky.feed.threadgate',
+    defs: {
+      main: {
+        type: 'record',
+        key: 'tid',
+        description:
+          "Defines interaction gating rules for a thread. The rkey of the threadgate record should match the rkey of the thread's root post.",
+        record: {
+          type: 'object',
+          required: ['post', 'createdAt'],
+          properties: {
+            post: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            allow: {
+              type: 'array',
+              maxLength: 5,
+              items: {
+                type: 'union',
+                refs: [
+                  'lex:app.bsky.feed.threadgate#mentionRule',
+                  'lex:app.bsky.feed.threadgate#followingRule',
+                  'lex:app.bsky.feed.threadgate#listRule',
+                ],
+              },
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+      mentionRule: {
+        type: 'object',
+        description: 'Allow replies from actors mentioned in your post.',
+      },
+      followingRule: {
+        type: 'object',
+        description: 'Allow replies from actors you follow.',
+      },
+      listRule: {
+        type: 'object',
+        description: 'Allow replies from actors on a list.',
+        required: ['list'],
+        properties: {
+          list: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphBlock: {
     lexicon: 1,
     id: 'app.bsky.graph.block',
@@ -5715,18 +5836,30 @@ export const schemaDict = {
       },
       listPurpose: {
         type: 'string',
-        knownValues: ['app.bsky.graph.defs#modlist'],
+        knownValues: [
+          'app.bsky.graph.defs#modlist',
+          'app.bsky.graph.defs#curatelist',
+        ],
       },
       modlist: {
         type: 'token',
         description:
           'A list of actors to apply an aggregate moderation action (mute/block) on',
       },
+      curatelist: {
+        type: 'token',
+        description:
+          'A list of actors used for curation purposes such as list feeds or interaction gating',
+      },
       listViewerState: {
         type: 'object',
         properties: {
           muted: {
             type: 'boolean',
+          },
+          blocked: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -5956,6 +6089,49 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetListBlocks: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getListBlocks',
+    defs: {
+      main: {
+        type: 'query',
+        description: "Which lists is the requester's account blocking?",
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['lists'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              lists: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#listView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphGetListMutes: {
     lexicon: 1,
     id: 'app.bsky.graph.getListMutes',
@@ -6090,6 +6266,42 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetSuggestedFollowsByActor: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getSuggestedFollowsByActor',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get suggested follows related to a given actor.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['suggestions'],
+            properties: {
+              suggestions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphList: {
     lexicon: 1,
     id: 'app.bsky.graph.list',
@@ -6131,6 +6343,31 @@ export const schemaDict = {
             labels: {
               type: 'union',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphListblock: {
+    lexicon: 1,
+    id: 'app.bsky.graph.listblock',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A block of an entire list of actors.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['subject', 'createdAt'],
+          properties: {
+            subject: {
+              type: 'string',
+              format: 'at-uri',
             },
             createdAt: {
               type: 'string',
@@ -6758,7 +6995,6 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
-  ComAtprotoTempUpgradeRepoVersion: 'com.atproto.temp.upgradeRepoVersion',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
@@ -6783,6 +7019,7 @@ export const ids = {
   AppBskyFeedGetFeedGenerators: 'app.bsky.feed.getFeedGenerators',
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
+  AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
@@ -6791,6 +7028,7 @@ export const ids = {
   AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
+  AppBskyFeedThreadgate: 'app.bsky.feed.threadgate',
   AppBskyGraphBlock: 'app.bsky.graph.block',
   AppBskyGraphDefs: 'app.bsky.graph.defs',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
@@ -6798,10 +7036,14 @@ export const ids = {
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
   AppBskyGraphGetList: 'app.bsky.graph.getList',
+  AppBskyGraphGetListBlocks: 'app.bsky.graph.getListBlocks',
   AppBskyGraphGetListMutes: 'app.bsky.graph.getListMutes',
   AppBskyGraphGetLists: 'app.bsky.graph.getLists',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
+  AppBskyGraphGetSuggestedFollowsByActor:
+    'app.bsky.graph.getSuggestedFollowsByActor',
   AppBskyGraphList: 'app.bsky.graph.list',
+  AppBskyGraphListblock: 'app.bsky.graph.listblock',
   AppBskyGraphListitem: 'app.bsky.graph.listitem',
   AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',

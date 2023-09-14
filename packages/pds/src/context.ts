@@ -191,24 +191,11 @@ export class AppContext {
     return this.opts.appviewAgent
   }
 
-  async canProxyRead(
-    req: express.Request,
-    did?: string | null,
-  ): Promise<boolean> {
+  canProxyRead(): boolean {
     if (!this.cfg.bskyAppViewProxy || !this.cfg.bskyAppViewEndpoint) {
       return false
     }
-    if (req.get('x-appview-proxy') !== undefined) {
-      return true
-    }
-    // e.g. /xrpc/a.b.c.d/ -> a.b.c.d/ -> a.b.c.d
-    const endpoint = req.path.replace('/xrpc/', '').replaceAll('/', '')
-    if (!did) {
-      // when no did assigned, only proxy reads if threshold is at max of 10
-      const threshold = this.runtimeFlags.appviewProxy.getThreshold(endpoint)
-      return threshold === 10
-    }
-    return await this.runtimeFlags.appviewProxy.shouldProxy(endpoint, did)
+    return true
   }
 
   canProxyFeedConstruction(req: express.Request): boolean {

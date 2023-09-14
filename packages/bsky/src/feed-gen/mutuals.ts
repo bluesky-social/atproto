@@ -12,7 +12,6 @@ const handler: AlgoHandler = async (
   const { limit = 50, cursor } = params
   const db = ctx.db.getReplica('feed')
   const feedService = ctx.services.feed(db)
-  const graphService = ctx.services.graph(db)
 
   const { ref } = db.db.dynamic
 
@@ -40,14 +39,11 @@ const handler: AlgoHandler = async (
         .orWhere('originatorDid', 'in', mutualsSubquery),
     )
     .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom))
-    .where((qb) =>
-      graphService.whereNotMuted(qb, viewer, [ref('originatorDid')]),
-    )
-    .whereNotExists(graphService.blockQb(viewer, [ref('originatorDid')]))
 
   feedQb = paginate(feedQb, { limit, cursor, keyset })
 
   const feedItems = await feedQb.execute()
+
   return {
     feedItems,
     cursor: keyset.packFromResult(feedItems),

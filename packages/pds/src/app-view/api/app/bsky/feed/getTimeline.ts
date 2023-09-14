@@ -12,14 +12,14 @@ import { LocalRecords } from '../../../../../services/local'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
     auth: ctx.accessVerifier,
-    handler: async ({ req, params, auth }) => {
+    handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
       const { algorithm, limit, cursor } = params
       if (algorithm && algorithm !== FeedAlgorithm.ReverseChronological) {
         throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
       }
 
-      if (await ctx.canProxyRead(req, requester)) {
+      if (ctx.canProxyRead()) {
         const res = await ctx.appviewAgent.api.app.bsky.feed.getTimeline(
           params,
           await ctx.serviceAuthHeaders(requester),
