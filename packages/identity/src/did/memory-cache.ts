@@ -6,6 +6,11 @@ type CacheVal = {
   updatedAt: number
 }
 
+/**
+ * Tiered in-memory cache.
+ *
+ * Entries older than maxTTL are considered invalid and not returned. Entries older than staleTTL are returned, marked as stale.
+ */
 export class MemoryCache implements DidCache {
   public staleTTL: number
   public maxTTL: number

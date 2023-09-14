@@ -3,8 +3,14 @@ import BaseResolver from './base-resolver'
 import { DidCache } from '../types'
 import { PoorlyFormattedDidError, UnsupportedDidWebPathError } from '../errors'
 
+// TODO: does not need to be exported?
 export const DOC_PATH = '/.well-known/did.json'
 
+/**
+ * Resolves did:web DIDs.
+ *
+ * Supports only top-level (domain) DIDs, not paths (with additional ":" segments in the DID). UnsupportedDidWebPathError will be thrown if path segments are detected.
+ */
 export class DidWebResolver extends BaseResolver {
   constructor(public timeout: number, public cache?: DidCache) {
     super(cache)

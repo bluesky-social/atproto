@@ -2,6 +2,11 @@ import { HandleResolver } from './handle'
 import DidResolver from './did/did-resolver'
 import { IdentityResolverOpts } from './types'
 
+/**
+ * Wrapper of a DID resolver and handle resolver.
+ *
+ * Calling code is responsible for cross-validate handle/DID pairing.
+ */
 export class IdResolver {
   public handle: HandleResolver
   public did: DidResolver
