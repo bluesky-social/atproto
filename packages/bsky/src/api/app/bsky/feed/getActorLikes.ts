@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
@@ -71,7 +70,6 @@ const skeleton = async (
   let feedItemsQb = feedService
     .selectFeedItemQb()
     .innerJoin('like', 'like.subject', 'feed_item.uri')
-    .select('like.indexedAt as sortAt')
     .where('like.creator', '=', actorDid)
 
   const keyset = new FeedKeyset(ref('like.sortAt'), ref('feed_item.cid'))
