@@ -95,7 +95,7 @@ export interface RateLimiterI {
 export type RateLimiterConsume = (
   ctx: XRPCReqContext,
   opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
-) => Promise<RateLimiterStatus | null>
+) => Promise<RateLimiterStatus | RateLimitExceededError | null>
 
 export type RateLimiterCreator = (opts: {
   keyPrefix: string
@@ -224,7 +224,7 @@ export class ForbiddenError extends XRPCError {
 
 export class RateLimitExceededError extends XRPCError {
   constructor(
-    status: RateLimiterStatus,
+    public status: RateLimiterStatus,
     errorMessage?: string,
     customErrorName?: string,
   ) {

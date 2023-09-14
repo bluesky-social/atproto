@@ -61,7 +61,7 @@ export class RateLimiter implements RateLimiterI {
   async consume(
     ctx: XRPCReqContext,
     opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
-  ): Promise<RateLimiterStatus | null> {
+  ): Promise<RateLimiterStatus | RateLimitExceededError | null> {
     if (
       this.byPassSecret &&
       ctx.req.header('x-ratelimit-bypass') === this.byPassSecret
@@ -82,7 +82,7 @@ export class RateLimiter implements RateLimiterI {
       // yes this library rejects with a res not an error
       if (err instanceof RateLimiterRes) {
         const status = formatLimiterStatus(this.limiter, err)
-        throw new RateLimitExceededError(status)
+        return new RateLimitExceededError(status)
       } else {
         if (this.failClosed) {
           throw err
@@ -119,12 +119,18 @@ export const formatLimiterStatus = (
 export const consumeMany = async (
   ctx: XRPCReqContext,
   fns: RateLimiterConsume[],
-): Promise<void> => {
-  if (fns.length === 0) return
+): Promise<RateLimiterStatus | RateLimitExceededError | null> => {
+  if (fns.length === 0) return null
   const results = await Promise.all(fns.map((fn) => fn(ctx)))
   const tightestLimit = getTightestLimit(results)
-  if (tightestLimit !== null) {
+  if (tightestLimit === null) {
+    return null
+  } else if (tightestLimit instanceof RateLimitExceededError) {
+    setResHeaders(ctx, tightestLimit.status)
+    return tightestLimit
+  } else {
     setResHeaders(ctx, tightestLimit)
+    return tightestLimit
   }
 }
 
@@ -142,11 +148,12 @@ export const setResHeaders = (
 }
 
 export const getTightestLimit = (
-  resps: (RateLimiterStatus | null)[],
-): RateLimiterStatus | null => {
+  resps: (RateLimiterStatus | RateLimitExceededError | null)[],
+): RateLimiterStatus | RateLimitExceededError | null => {
   let lowest: RateLimiterStatus | null = null
   for (const resp of resps) {
     if (resp === null) continue
+    if (resp instanceof RateLimitExceededError) return resp
     if (lowest === null || resp.remainingPoints < lowest.remainingPoints) {
       lowest = resp
     }
