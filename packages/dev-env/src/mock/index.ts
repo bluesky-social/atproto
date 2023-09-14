@@ -183,7 +183,8 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
   await follow(aman, kira)
 
   for (const g of groupUsers) {
-    if (g.handle === 'betterweb.group') continue
+    if (g.handle === 'betterweb.group' || g.handle === 'testgroup.group')
+      continue
     await follow(phil, g)
     await follow(dave, g)
     await follow(kira, g)
