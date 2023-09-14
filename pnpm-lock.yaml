@@ -423,6 +423,9 @@ importers:
       get-port:
         specifier: ^6.1.2
         version: 6.1.2
+      tsdoc-markdown:
+        specifier: ^0.0.4
+        version: 0.0.4(typescript@4.9.5)
 
   packages/lex-cli:
     dependencies:
@@ -10814,6 +10817,15 @@ packages:
       typescript: 4.9.5
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
+    dev: true
+
+  /tsdoc-markdown@0.0.4(typescript@4.9.5):
+    resolution: {integrity: sha512-/z9E0gniO2KzM5vLh2Wq7wc2RYkWxeBzlCfuISoJTRYkZgyWKhI299AiXkNy7TgvFnMxx7522wuTyHO1tS5vIg==}
+    hasBin: true
+    peerDependencies:
+      typescript: 4.X
+    dependencies:
+      typescript: 4.9.5
     dev: true
 
   /tslib@1.14.1:
