@@ -1,18 +1,13 @@
 import { BailableWait, bailableWait } from '@atproto/common'
-import { randomIntFromSeed } from '@atproto/crypto'
-import { LRUCache } from 'lru-cache'
 import Database from './db'
 import { dbLogger as log } from './logger'
 
-type AppviewProxyFlagName = `appview-proxy:${string}`
-
-export type FlagName = AppviewProxyFlagName
+export type FlagName = ''
 
 export class RuntimeFlags {
   destroyed = false
   private flags = new Map<string, string>()
   private pollWait: BailableWait | undefined = undefined
-  public appviewProxy = new AppviewProxyFlags(this)
 
   constructor(public db: Database) {}
 
@@ -53,38 +48,4 @@ export class RuntimeFlags {
     await this.pollWait.wait()
     this.poll()
   }
-}
-
-class AppviewProxyFlags {
-  private partitionCache = new LRUCache({
-    max: 50000,
-    fetchMethod(did: string) {
-      return randomIntFromSeed(did, 10)
-    },
-  })
-
-  constructor(private runtimeFlags: RuntimeFlags) {}
-
-  getThreshold(endpoint: string) {
-    const val = this.runtimeFlags.get(`appview-proxy:${endpoint}`) || '0'
-    const threshold = parseInt(val, 10)
-    return appviewFlagIsValid(threshold) ? threshold : 0
-  }
-
-  async shouldProxy(endpoint: string, did: string) {
-    const threshold = this.getThreshold(endpoint)
-    if (threshold === 0) {
-      return false
-    }
-    if (threshold === 10) {
-      return true
-    }
-    // threshold is 0 to 10 inclusive, partitions are 0 to 9 inclusive.
-    const partition = await this.partitionCache.fetch(did)
-    return partition !== undefined && partition < threshold
-  }
-}
-
-const appviewFlagIsValid = (val: number) => {
-  return 0 <= val && val <= 10
 }

@@ -12,9 +12,9 @@ import { DidHandle } from '../../../../../db/tables/did-handle'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActorsTypeahead({
     auth: ctx.accessVerifier,
-    handler: async ({ req, params, auth }) => {
+    handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      if (await ctx.canProxyRead(req, requester)) {
+      if (ctx.canProxyRead()) {
         const res =
           await ctx.appviewAgent.api.app.bsky.actor.searchActorsTypeahead(
             params,

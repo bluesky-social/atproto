@@ -267,18 +267,11 @@ describe('proxies admin requests', () => {
         },
       )
     // check profile and labels
-    const tryGetProfilePds = agent.api.app.bsky.actor.getProfile(
-      { actor: sc.dids.alice },
-      { headers: sc.getHeaders(sc.dids.carol) },
-    )
     const tryGetProfileAppview = agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.alice },
       {
         headers: { ...sc.getHeaders(sc.dids.carol), 'x-appview-proxy': 'true' },
       },
-    )
-    await expect(tryGetProfilePds).rejects.toThrow(
-      'Account has been taken down',
     )
     await expect(tryGetProfileAppview).rejects.toThrow(
       'Account has been taken down',
@@ -296,18 +289,11 @@ describe('proxies admin requests', () => {
       },
     )
     // check profile and labels
-    const { data: profilePds } = await agent.api.app.bsky.actor.getProfile(
-      { actor: sc.dids.alice },
-      { headers: sc.getHeaders(sc.dids.carol) },
-    )
     const { data: profileAppview } = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.alice },
       {
         headers: { ...sc.getHeaders(sc.dids.carol), 'x-appview-proxy': 'true' },
       },
-    )
-    expect(profilePds).toEqual(
-      expect.objectContaining({ did: sc.dids.alice, handle: 'alice.test' }),
     )
     expect(profileAppview).toEqual(
       expect.objectContaining({ did: sc.dids.alice, handle: 'alice.test' }),
@@ -342,17 +328,12 @@ describe('proxies admin requests', () => {
         },
       )
     // check thread and labels
-    const tryGetPostPds = agent.api.app.bsky.feed.getPostThread(
-      { uri: post.ref.uriStr, depth: 0 },
-      { headers: sc.getHeaders(sc.dids.carol) },
-    )
     const tryGetPostAppview = agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr, depth: 0 },
       {
         headers: { ...sc.getHeaders(sc.dids.carol), 'x-appview-proxy': 'true' },
       },
     )
-    await expect(tryGetPostPds).rejects.toThrow(NotFoundError)
     await expect(tryGetPostAppview).rejects.toThrow(NotFoundError)
     const labelsA = await services.appView
       .label(db)
@@ -367,18 +348,11 @@ describe('proxies admin requests', () => {
       },
     )
     // check thread and labels
-    const { data: threadPds } = await agent.api.app.bsky.feed.getPostThread(
-      { uri: post.ref.uriStr, depth: 0 },
-      { headers: sc.getHeaders(sc.dids.carol) },
-    )
     const { data: threadAppview } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr, depth: 0 },
       {
         headers: { ...sc.getHeaders(sc.dids.carol), 'x-appview-proxy': 'true' },
       },
-    )
-    expect(threadPds.thread.post).toEqual(
-      expect.objectContaining({ uri: post.ref.uriStr, cid: post.ref.cidStr }),
     )
     expect(threadAppview.thread.post).toEqual(
       expect.objectContaining({ uri: post.ref.uriStr, cid: post.ref.cidStr }),
