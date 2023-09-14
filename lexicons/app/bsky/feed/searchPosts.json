@@ -32,7 +32,7 @@
           "required": ["posts"],
           "properties": {
             "cursor": { "type": "string" },
-            "hits_total": {
+            "hitsTotal": {
               "type": "integer",
               "description": "count of search hits. optional, may be rounded/truncated, and may not be possible to paginate through all hits"
             },
