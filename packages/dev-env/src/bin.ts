@@ -13,7 +13,10 @@ const run = async () => {
 [ created by Bluesky ]`)
 
   const network = await TestNetworkNoAppView.create({
-    pds: { port: 2583, hostname: 'localhost' },
+    pds: {
+      port: 2583,
+      hostname: 'localhost',
+    },
     plc: { port: 2582 },
   })
   await generateMockSetup(network)

@@ -1,19 +1,18 @@
 {
   "name": "@atproto/lex-cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "bin": {
     "lex": "dist/index.js"
   },
   "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/src/index.d.ts"
+  },
   "scripts": {
-    "prettier": "prettier --check src/",
-    "prettier:fix": "prettier --write src/",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "yarn lint --fix",
-    "verify": "run-p prettier lint",
-    "verify:fix": "yarn prettier:fix && yarn lint:fix",
     "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json"
+    "postbuild": "tsc --build tsconfig.build.json",
+    "update-main-to-dist": "node ../../update-main-to-dist.js packages/lex-cli"
   },
   "license": "MIT",
   "repository": {
@@ -22,11 +21,12 @@
     "directory": "packages/lex-cli"
   },
   "dependencies": {
-    "@atproto/lexicon": "*",
-    "@atproto/nsid": "*",
+    "@atproto/lexicon": "workspace:^",
+    "@atproto/syntax": "workspace:^",
     "chalk": "^5.1.1",
     "commander": "^9.4.0",
     "ts-morph": "^16.0.0",
-    "yesno": "^0.4.0"
+    "yesno": "^0.4.0",
+    "zod": "^3.21.4"
   }
 }

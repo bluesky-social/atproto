@@ -9,10 +9,10 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { limit, cursor } = params
       const requester = auth.credentials.did
-      const { services, db } = ctx
+      const db = ctx.db.getReplica()
       const { ref } = db.db.dynamic
 
-      let blocksReq = ctx.db.db
+      let blocksReq = db.db
         .selectFrom('actor_block')
         .where('actor_block.creator', '=', requester)
         .innerJoin('actor as subject', 'subject.did', 'actor_block.subjectDid')
@@ -32,8 +32,8 @@ export default function (server: Server, ctx: AppContext) {
 
       const blocksRes = await blocksReq.execute()
 
-      const actorService = services.actor(db)
-      const blocks = await actorService.views.profile(blocksRes, requester)
+      const actorService = ctx.services.actor(db)
+      const blocks = await actorService.views.profilesList(blocksRes, requester)
 
       return {
         encoding: 'application/json',

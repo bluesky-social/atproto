@@ -1,0 +1,40 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.unspecced.getTimelineSkeleton",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "A skeleton of a timeline - UNSPECCED & WILL GO AWAY SOON",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["feed"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "feed": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.feed.defs#skeletonFeedPost"
+              }
+            }
+          }
+        }
+      },
+      "errors": [{ "name": "UnknownFeed" }]
+    }
+  }
+}

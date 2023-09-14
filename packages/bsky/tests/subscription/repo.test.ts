@@ -34,7 +34,7 @@ describe('sync', () => {
   })
 
   it('indexes permit history being replayed.', async () => {
-    const { db } = ctx
+    const db = ctx.db.getPrimary()
 
     // Generate some modifications and dupes
     const { alice, bob, carol, dan } = sc.dids
@@ -66,9 +66,16 @@ describe('sync', () => {
     const originalTableDump = await getTableDump()
 
     // Reprocess repos via sync subscription, on top of existing indices
-    await network.bsky.sub?.destroy()
-    await network.bsky.sub?.resetState()
-    network.bsky.sub?.resume()
+    await network.bsky.ingester.sub.destroy()
+    await network.bsky.indexer.sub.destroy()
+    // Hard reset of state in redis
+    await network.bsky.ingester.sub.resetCursor()
+    const indexerSub = network.bsky.indexer.sub
+    const partition = indexerSub.partitions.get(0)
+    await network.bsky.indexer.ctx.redis.del(partition.key)
+    // Boot streams back up
+    network.bsky.indexer.sub.resume()
+    network.bsky.ingester.sub.resume()
     await network.processAll()
 
     // Permissive of indexedAt times changing
@@ -98,9 +105,10 @@ describe('sync', () => {
       email: 'jack@test.com',
       password: 'password',
     })
+    await network.pds.ctx.sequencerLeader?.isCaughtUp()
     await network.processAll()
     // confirm jack was indexed as an actor despite the bad event
-    const actors = await dumpTable(ctx.db, 'actor', ['did'])
+    const actors = await dumpTable(ctx.db.getPrimary(), 'actor', ['did'])
     expect(actors.map((a) => a.handle)).toContain('jack.test')
     RepoService.prototype.afterWriteProcessing = afterWriteProcessingOriginal
   })

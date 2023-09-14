@@ -36,7 +36,6 @@ describe('feedgen proxy view', () => {
       sc.getHeaders(sc.dids.alice),
     )
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
     // mock getFeedGenerator() for use by pds's getFeed since we don't have a proper feedGenDid or feed publisher
     FeedNS.prototype.getFeedGenerator = async function (params, opts) {
       if (params?.feed === feedUri.toString()) {
@@ -70,7 +69,7 @@ describe('feedgen proxy view', () => {
     const { data: feed } = await agent.api.app.bsky.feed.getFeed(
       { feed: feedUri.toString() },
       {
-        headers: { ...sc.getHeaders(sc.dids.alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(sc.dids.alice) },
       },
     )
     expect(forSnapshot(feed)).toMatchSnapshot()

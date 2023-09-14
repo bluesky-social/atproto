@@ -1,11 +1,13 @@
 import { TestNetwork } from '@atproto/dev-env'
+import { TID, cidForCbor } from '@atproto/common'
 import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { forSnapshot } from './_util'
 import { ImageRef, RecordRef, SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import {
   ACKNOWLEDGE,
+  ESCALATE,
   FLAG,
   TAKEDOWN,
 } from '../src/lexicon/types/com/atproto/admin/defs'
@@ -13,7 +15,7 @@ import {
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
-import { TID, cidForCbor } from '@atproto/common'
+import { PeriodicModerationActionReversal } from '../src'
 
 describe('moderation', () => {
   let network: TestNetwork
@@ -210,7 +212,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
       const { data: actionResolvedReports } =
@@ -222,7 +224,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
 
@@ -237,7 +239,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
@@ -292,7 +294,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
       await agent.api.com.atproto.admin.resolveModerationReports(
@@ -303,24 +305,24 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       // Check report and action details
       const { data: recordActionDetail } =
         await agent.api.com.atproto.admin.getModerationAction(
           { id: action.id },
-          { headers: network.pds.adminAuthHeaders() },
+          { headers: network.bsky.adminAuthHeaders() },
         )
       const { data: reportADetail } =
         await agent.api.com.atproto.admin.getModerationReport(
           { id: reportA.id },
-          { headers: network.pds.adminAuthHeaders() },
+          { headers: network.bsky.adminAuthHeaders() },
         )
       const { data: reportBDetail } =
         await agent.api.com.atproto.admin.getModerationReport(
           { id: reportB.id },
-          { headers: network.pds.adminAuthHeaders() },
+          { headers: network.bsky.adminAuthHeaders() },
         )
       expect(
         forSnapshot({
@@ -338,7 +340,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
@@ -371,7 +373,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
 
@@ -383,7 +385,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
 
@@ -400,7 +402,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
@@ -437,7 +439,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
 
@@ -449,7 +451,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
 
@@ -466,18 +468,18 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
 
-    it('supports flagging and acknowledging.', async () => {
+    it('supports escalating and acknowledging for triage.', async () => {
       const postRef1 = sc.posts[sc.dids.alice][0].ref
       const postRef2 = sc.posts[sc.dids.bob][0].ref
       const { data: action1 } =
         await agent.api.com.atproto.admin.takeModerationAction(
           {
-            action: FLAG,
+            action: ESCALATE,
             subject: {
               $type: 'com.atproto.repo.strongRef',
               uri: postRef1.uri.toString(),
@@ -488,12 +490,12 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders('triage'),
           },
         )
       expect(action1).toEqual(
         expect.objectContaining({
-          action: FLAG,
+          action: ESCALATE,
           subject: {
             $type: 'com.atproto.repo.strongRef',
             uri: postRef1.uriStr,
@@ -515,7 +517,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders('triage'),
           },
         )
       expect(action2).toEqual(
@@ -537,7 +539,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders('triage'),
         },
       )
       await agent.api.com.atproto.admin.reverseModerationAction(
@@ -548,7 +550,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders('triage'),
         },
       )
     })
@@ -569,7 +571,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
       const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
@@ -585,7 +587,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       await expect(flagPromise).rejects.toThrow(
@@ -601,7 +603,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       const { data: flag } =
@@ -618,7 +620,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
 
@@ -631,7 +633,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
@@ -650,7 +652,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
       const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
@@ -665,7 +667,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       await expect(flagPromise).rejects.toThrow(
@@ -681,7 +683,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       const { data: flag } =
@@ -697,7 +699,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
 
@@ -710,7 +712,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
@@ -734,7 +736,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
       const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
@@ -751,7 +753,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       await expect(flagPromise).rejects.toThrow(
@@ -766,7 +768,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       const { data: flag } =
@@ -784,7 +786,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
+            headers: network.bsky.adminAuthHeaders(),
           },
         )
 
@@ -797,7 +799,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
@@ -805,7 +807,7 @@ describe('moderation', () => {
     it('negates an existing label and reverses.', async () => {
       const { ctx } = network.bsky
       const post = sc.posts[sc.dids.bob][0].ref
-      const labelingService = ctx.services.label(ctx.db)
+      const labelingService = ctx.services.label(ctx.db.getPrimary())
       await labelingService.formatAndCreate(
         ctx.cfg.labelerDid,
         post.uriStr,
@@ -835,7 +837,7 @@ describe('moderation', () => {
     it('no-ops when negating an already-negated label and reverses.', async () => {
       const { ctx } = network.bsky
       const post = sc.posts[sc.dids.bob][0].ref
-      const labelingService = ctx.services.label(ctx.db)
+      const labelingService = ctx.services.label(ctx.db.getPrimary())
       const action = await actionWithLabels({
         negateLabelVals: ['bears'],
         subject: {
@@ -878,7 +880,7 @@ describe('moderation', () => {
     it('no-ops when creating an existing label and reverses.', async () => {
       const { ctx } = network.bsky
       const post = sc.posts[sc.dids.bob][0].ref
-      const labelingService = ctx.services.label(ctx.db)
+      const labelingService = ctx.services.label(ctx.db.getPrimary())
       await labelingService.formatAndCreate(
         ctx.cfg.labelerDid,
         post.uriStr,
@@ -917,7 +919,7 @@ describe('moderation', () => {
 
     it('creates and negates labels on a repo and reverses.', async () => {
       const { ctx } = network.bsky
-      const labelingService = ctx.services.label(ctx.db)
+      const labelingService = ctx.services.label(ctx.db.getPrimary())
       await labelingService.formatAndCreate(
         ctx.cfg.labelerDid,
         sc.dids.bob,
@@ -937,6 +939,119 @@ describe('moderation', () => {
       await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual(['kittens'])
     })
 
+    it('does not allow triage moderators to label.', async () => {
+      const attemptLabel = agent.api.com.atproto.admin.takeModerationAction(
+        {
+          action: ACKNOWLEDGE,
+          createdBy: 'did:example:moderator',
+          reason: 'Y',
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.bob,
+          },
+          negateLabelVals: ['a'],
+          createLabelVals: ['b', 'c'],
+        },
+        {
+          encoding: 'application/json',
+          headers: network.bsky.adminAuthHeaders('triage'),
+        },
+      )
+      await expect(attemptLabel).rejects.toThrow(
+        'Must be a full moderator to label content',
+      )
+    })
+
+    it('allows full moderators to takedown.', async () => {
+      const { data: action } =
+        await agent.api.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            createdBy: 'did:example:moderator',
+            reason: 'Y',
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: sc.dids.bob,
+            },
+          },
+          {
+            encoding: 'application/json',
+            headers: network.bsky.adminAuthHeaders('moderator'),
+          },
+        )
+      // cleanup
+      await reverse(action.id)
+    })
+
+    it('does not allow non-full moderators to takedown.', async () => {
+      const attemptTakedownTriage =
+        agent.api.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            createdBy: 'did:example:moderator',
+            reason: 'Y',
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: sc.dids.bob,
+            },
+          },
+          {
+            encoding: 'application/json',
+            headers: network.bsky.adminAuthHeaders('triage'),
+          },
+        )
+      await expect(attemptTakedownTriage).rejects.toThrow(
+        'Must be a full moderator to perform an account takedown',
+      )
+    })
+    it('automatically reverses actions marked with duration', async () => {
+      const { data: action } =
+        await agent.api.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            createdBy: 'did:example:moderator',
+            reason: 'Y',
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: sc.dids.bob,
+            },
+            createLabelVals: ['takendown'],
+            // Use negative value to set the expiry time in the past so that the action is automatically reversed
+            // right away without having to wait n number of hours for a successful assertion
+            durationInHours: -1,
+          },
+          {
+            encoding: 'application/json',
+            headers: network.bsky.adminAuthHeaders('moderator'),
+          },
+        )
+
+      const labelsAfterTakedown = await getRepoLabels(sc.dids.bob)
+      expect(labelsAfterTakedown).toContain('takendown')
+      // In the actual app, this will be instantiated and run on server startup
+      const periodicReversal = new PeriodicModerationActionReversal(
+        network.bsky.ctx,
+      )
+      await periodicReversal.findAndRevertDueActions()
+
+      const { data: reversedAction } =
+        await agent.api.com.atproto.admin.getModerationAction(
+          { id: action.id },
+          { headers: network.bsky.adminAuthHeaders('moderator') },
+        )
+
+      // Verify that the automatic reversal is attributed to the original moderator of the temporary action
+      // and that the reason is set to indicate that the action was automatically reversed.
+      expect(reversedAction.reversal).toMatchObject({
+        createdBy: action.createdBy,
+        reason: '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
+      })
+
+      // Verify that labels are also reversed when takedown action is reversed
+      const labelsAfterReversal = await getRepoLabels(sc.dids.bob)
+      expect(labelsAfterReversal).not.toContain('takendown')
+    })
+
     async function actionWithLabels(
       opts: Partial<ComAtprotoAdminTakeModerationAction.InputSchema> & {
         subject: ComAtprotoAdminTakeModerationAction.InputSchema['subject']
@@ -951,7 +1066,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       return result.data
@@ -966,7 +1081,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     }
@@ -974,7 +1089,7 @@ describe('moderation', () => {
     async function getRecordLabels(uri: string) {
       const result = await agent.api.com.atproto.admin.getRecord(
         { uri },
-        { headers: network.pds.adminAuthHeaders() },
+        { headers: network.bsky.adminAuthHeaders() },
       )
       const labels = result.data.labels ?? []
       return labels.map((l) => l.val)
@@ -983,7 +1098,7 @@ describe('moderation', () => {
     async function getRepoLabels(did: string) {
       const result = await agent.api.com.atproto.admin.getRepo(
         { did },
-        { headers: network.pds.adminAuthHeaders() },
+        { headers: network.bsky.adminAuthHeaders() },
       )
       const labels = result.data.labels ?? []
       return labels.map((l) => l.val)
@@ -1000,7 +1115,7 @@ describe('moderation', () => {
       post = sc.posts[sc.dids.carol][0]
       blob = post.images[1]
       imageUri = ctx.imgUriBuilder
-        .getCommonSignedUri(
+        .getPresetUri(
           'feed_thumbnail',
           sc.dids.carol,
           blob.image.ref.toString(),
@@ -1024,7 +1139,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
       actionId = takeAction.data.id
@@ -1055,7 +1170,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
 

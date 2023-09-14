@@ -81,7 +81,7 @@ describe('sequencer', () => {
 
   const caughtUp = (outbox: Outbox): (() => Promise<boolean>) => {
     return async () => {
-      const leaderCaughtUp = await server.ctx.sequencerLeader.isCaughtUp()
+      const leaderCaughtUp = await server.ctx.sequencerLeader?.isCaughtUp()
       if (!leaderCaughtUp) return false
       const lastEvt = await outbox.sequencer.curr()
       if (!lastEvt) return true

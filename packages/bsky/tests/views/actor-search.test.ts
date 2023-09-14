@@ -21,11 +21,11 @@ describe('pds actor search views', () => {
     sc = new SeedClient(pdsAgent)
 
     await wait(50) // allow pending sub to be established
-    await network.bsky.sub?.destroy()
+    await network.bsky.ingester.sub.destroy()
     await usersBulkSeed(sc)
 
     // Skip did/handle resolution for expediency
-    const { db } = network.bsky.ctx
+    const db = network.bsky.ctx.db.getPrimary()
     const now = new Date().toISOString()
     await db.db
       .insertInto('actor')
@@ -40,9 +40,9 @@ describe('pds actor search views', () => {
       .execute()
 
     // Process remaining profiles
-    network.bsky.sub?.resume()
+    network.bsky.ingester.sub.resume()
     await network.processAll(50000)
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
     headers = await network.serviceHeaders(Object.values(sc.dids)[0])
   })
 
@@ -68,8 +68,7 @@ describe('pds actor search views', () => {
     ]
 
     shouldContain.forEach((handle) => expect(handles).toContain(handle))
-
-    expect(handles).toContain('cayla-marquardt39.test') // Fuzzy match supported by postgres
+    expect(handles).toContain('cayla-marquardt39.test') // Fuzzy match
 
     const shouldNotContain = [
       'sven70.test',
@@ -83,7 +82,10 @@ describe('pds actor search views', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
-    expect(forSnapshot(result.data.actors)).toMatchSnapshot()
+    const sorted = result.data.actors.sort((a, b) =>
+      a.handle > b.handle ? 1 : -1,
+    )
+    expect(forSnapshot(sorted)).toMatchSnapshot()
   })
 
   it('typeahead gives empty result set when provided empty term', async () => {
@@ -108,7 +110,19 @@ describe('pds actor search views', () => {
       { headers },
     )
 
-    expect(limited.data.actors).toEqual(full.data.actors.slice(0, 5))
+    // @NOTE it's expected that searchActorsTypeahead doesn't have stable pagination
+
+    const limitedIndexInFull = limited.data.actors.map((needle) => {
+      return full.data.actors.findIndex(
+        (haystack) => needle.did === haystack.did,
+      )
+    })
+
+    // subset exists in full and is monotonic
+    expect(limitedIndexInFull.every((idx) => idx !== -1)).toEqual(true)
+    expect(limitedIndexInFull).toEqual(
+      [...limitedIndexInFull].sort((a, b) => a - b),
+    )
   })
 
   it('typeahead gives results unauthed', async () => {
@@ -143,8 +157,7 @@ describe('pds actor search views', () => {
     ]
 
     shouldContain.forEach((handle) => expect(handles).toContain(handle))
-
-    expect(handles).toContain('cayla-marquardt39.test') // Fuzzy match supported by postgres
+    expect(handles).toContain('cayla-marquardt39.test') // Fuzzy match
 
     const shouldNotContain = [
       'sven70.test',
@@ -158,7 +171,10 @@ describe('pds actor search views', () => {
 
     shouldNotContain.forEach((handle) => expect(handles).not.toContain(handle))
 
-    expect(forSnapshot(result.data.actors)).toMatchSnapshot()
+    const sorted = result.data.actors.sort((a, b) =>
+      a.handle > b.handle ? 1 : -1,
+    )
+    expect(forSnapshot(sorted)).toMatchSnapshot()
   })
 
   it('search gives empty result set when provided empty term', async () => {
@@ -191,7 +207,13 @@ describe('pds actor search views', () => {
     )
 
     expect(full.data.actors.length).toBeGreaterThan(5)
-    expect(results(paginatedAll)).toEqual(results([full.data]))
+    const sortedFull = results([full.data]).sort((a, b) =>
+      a.handle > b.handle ? 1 : -1,
+    )
+    const sortedPaginated = results(paginatedAll).sort((a, b) =>
+      a.handle > b.handle ? 1 : -1,
+    )
+    expect(sortedPaginated).toEqual(sortedFull)
   })
 
   it('search handles bad input', async () => {

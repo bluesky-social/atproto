@@ -11,11 +11,9 @@
 - [API](./api): A library for communicating with atproto servers.
 - [Common](./common): A library containing code which is shared between atproto packages.
 - [Crypto](./crypto): Atproto's common cryptographic operations.
-- [Identity](./identity): A library for resolving atproto DIDs and handles.
+- [Syntax](./syntax): A library for identifier syntax: NSID, AT URI, handles, etc.
 - [Lexicon](./lexicon): A library for validating data using atproto's schema system.
-- [NSID](./nsid): A parser and generator of NSIDs.
 - [Repo](./repo): The "atproto repository" core implementation (a Merkle Search Tree).
-- [URI](./uri): A parser and generator of `at://` uris.
 - [XRPC](./xrpc): An XRPC client implementation.
 - [XRPC Server](./xrpc-server): An XRPC server implementation.
 
@@ -23,12 +21,12 @@
 
 Only applicable to packages which contain benchmarks(`jest.bench.config.js`).
 
-You can run benchmarks with `yarn bench`.
+You can run benchmarks with `pnpm bench`.
 
 ### Attaching a profiler
 
-Running `yarn bench:profile` will launch `bench` with `--inspect-brk` flag.
-Execution will be paused until a debugger is attached, you can read more 
+Running `pnpm bench:profile` will launch `bench` with `--inspect-brk` flag.
+Execution will be paused until a debugger is attached, you can read more
 about node debuggers [here](https://nodejs.org/en/docs/guides/debugging-getting-started#inspector-clients)
 
 An easy way to profile is:

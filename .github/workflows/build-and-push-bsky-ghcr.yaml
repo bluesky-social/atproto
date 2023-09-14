@@ -14,6 +14,7 @@ env:
 
 jobs:
   bsky-container-ghcr:
+    if: github.repository == 'bluesky-social/atproto'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -49,7 +50,7 @@ jobs:
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
-          file: ./packages/bsky/Dockerfile
+          file: ./services/bsky/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha

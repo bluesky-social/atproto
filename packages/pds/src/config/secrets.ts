@@ -46,7 +46,9 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
   return {
     jwtSecret: env.jwtSecret,
     adminPassword: env.adminPassword,
-    moderatorPassword: env.moderatorPassword || env.adminPassword,
+    moderatorPassword: env.moderatorPassword ?? env.adminPassword,
+    triagePassword:
+      env.triagePassword ?? env.moderatorPassword ?? env.adminPassword,
     repoSigningKey,
     plcRotationKey,
   }
@@ -56,6 +58,7 @@ export type ServerSecrets = {
   jwtSecret: string
   adminPassword: string
   moderatorPassword: string
+  triagePassword: string
   repoSigningKey: SigningKeyKms | SigningKeyMemory
   plcRotationKey: SigningKeyKms | SigningKeyMemory
 }

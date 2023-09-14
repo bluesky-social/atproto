@@ -41,7 +41,6 @@ describe('feed generation', () => {
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
     alice = sc.dids.alice
     const allUri = AtUri.make(alice, 'app.bsky.feed.generator', 'all')
     const feedUriBadPagination = AtUri.make(
@@ -57,6 +56,18 @@ describe('feed generation', () => {
       [feedUriBadPagination.toString()]: feedGenHandler('bad-pagination'),
       [primeUri.toString()]: feedGenHandler('prime'),
     })
+
+    const feedSuggestions = [
+      { uri: allUri.toString(), order: 1 },
+      { uri: evenUri.toString(), order: 2 },
+      { uri: feedUriBadPagination.toString(), order: 3 },
+      { uri: primeUri.toString(), order: 4 },
+    ]
+    await network.bsky.ctx.db
+      .getPrimary()
+      .db.insertInto('suggested_feed')
+      .values(feedSuggestions)
+      .execute()
   })
 
   afterAll(async () => {
@@ -166,7 +177,6 @@ describe('feed generation', () => {
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
   })
 
   it('getActorFeeds fetches feed generators by actor.', async () => {
@@ -174,7 +184,6 @@ describe('feed generation', () => {
     await sc.like(sc.dids.bob, feedUriAllRef)
     await sc.like(sc.dids.carol, feedUriAllRef)
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
 
     const results = (results) => results.flatMap((res) => res.feeds)
     const paginator = async (cursor?: string) => {
@@ -210,7 +219,6 @@ describe('feed generation', () => {
       sc.getHeaders(sc.dids.bob),
     )
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
     const view = await agent.api.app.bsky.feed.getPosts(
       { uris: [res.uri] },
       { headers: await network.serviceHeaders(sc.dids.bob) },
@@ -293,7 +301,7 @@ describe('feed generation', () => {
         sc.getHeaders(sc.dids.bob),
       )
       await network.processAll()
-      await network.bsky.ctx.backgroundQueue.processAll()
+      await network.bsky.processAll()
 
       // now take it offline
       await bobFg.close()
@@ -320,6 +328,17 @@ describe('feed generation', () => {
     })
   })
 
+  describe('getSuggestedFeeds', () => {
+    it('returns list of suggested feed generators', async () => {
+      const resEven = await agent.api.app.bsky.feed.getSuggestedFeeds(
+        {},
+        { headers: await network.serviceHeaders(sc.dids.bob) },
+      )
+      expect(forSnapshot(resEven.data)).toMatchSnapshot()
+      expect(resEven.data.feeds.map((fg) => fg.uri)).not.toContain(feedUriPrime) // taken-down
+    })
+  })
+
   describe('getPopularFeedGenerators', () => {
     it('gets popular feed generators', async () => {
       const resEven =
@@ -329,6 +348,28 @@ describe('feed generation', () => {
         )
       expect(resEven.data.feeds.map((f) => f.likeCount)).toEqual([2, 0, 0, 0])
       expect(resEven.data.feeds.map((f) => f.uri)).not.toContain(feedUriPrime) // taken-down
+    })
+
+    it('paginates', async () => {
+      const resFull =
+        await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+          {},
+          { headers: await network.serviceHeaders(sc.dids.bob) },
+        )
+
+      const resOne =
+        await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+          { limit: 2 },
+          { headers: await network.serviceHeaders(sc.dids.bob) },
+        )
+      const resTwo =
+        await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+          { cursor: resOne.data.cursor },
+          { headers: await network.serviceHeaders(sc.dids.bob) },
+        )
+      expect([...resOne.data.feeds, ...resTwo.data.feeds]).toEqual(
+        resFull.data.feeds,
+      )
     })
   })
 

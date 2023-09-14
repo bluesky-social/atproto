@@ -1,10 +1,23 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getModerationReports({
-    auth: ctx.moderatorVerifier,
-    handler: async ({ params }) => {
+    auth: ctx.roleVerifier,
+    handler: async ({ req, params }) => {
+      if (ctx.cfg.bskyAppView.proxyModeration) {
+        const { data: result } =
+          await ctx.appViewAgent.com.atproto.admin.getModerationReports(
+            params,
+            authPassthru(req),
+          )
+        return {
+          encoding: 'application/json',
+          body: result,
+        }
+      }
+
       const { db, services } = ctx
       const {
         subject,
@@ -15,6 +28,7 @@ export default function (server: Server, ctx: AppContext) {
         ignoreSubjects = [],
         reverse = false,
         reporters = [],
+        actionedBy,
       } = params
       const moderationService = services.moderation(db)
       const results = await moderationService.getReports({
@@ -26,6 +40,7 @@ export default function (server: Server, ctx: AppContext) {
         ignoreSubjects,
         reverse,
         reporters,
+        actionedBy,
       })
       return {
         encoding: 'application/json',

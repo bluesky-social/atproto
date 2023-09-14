@@ -8,7 +8,7 @@ import { BlobNotFoundError } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlob({
-    auth: ctx.optionalAccessOrAdminVerifier,
+    auth: ctx.optionalAccessOrRoleVerifier,
     handler: async ({ params, res, auth }) => {
       const { ref } = ctx.db.db.dynamic
       const found = await ctx.db.db

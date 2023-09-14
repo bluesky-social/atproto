@@ -8,8 +8,6 @@ import * as refreshToken from './tables/refresh-token'
 import * as appPassword from './tables/app-password'
 import * as record from './tables/record'
 import * as backlink from './tables/backlink'
-import * as repoCommitBlock from './tables/repo-commit-block'
-import * as repoCommitHistory from './tables/repo-commit-history'
 import * as ipldBlock from './tables/ipld-block'
 import * as inviteCode from './tables/invite-code'
 import * as blob from './tables/blob'
@@ -18,8 +16,10 @@ import * as deleteAccountToken from './tables/delete-account-token'
 import * as moderation from './tables/moderation'
 import * as repoSeq from './tables/repo-seq'
 import * as appMigration from './tables/app-migration'
+import * as runtimeFlag from './tables/runtime-flag'
 
 export type DatabaseSchemaType = appMigration.PartialDB &
+  runtimeFlag.PartialDB &
   userAccount.PartialDB &
   userPref.PartialDB &
   didHandle.PartialDB &
@@ -29,8 +29,6 @@ export type DatabaseSchemaType = appMigration.PartialDB &
   didCache.PartialDB &
   record.PartialDB &
   backlink.PartialDB &
-  repoCommitBlock.PartialDB &
-  repoCommitHistory.PartialDB &
   ipldBlock.PartialDB &
   inviteCode.PartialDB &
   blob.PartialDB &

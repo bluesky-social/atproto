@@ -117,16 +117,47 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     }
   }
 
+  let moderationEmailCfg: ServerConfig['moderationEmail']
+  if (!env.moderationEmailAddress && !env.moderationEmailSmtpUrl) {
+    moderationEmailCfg = null
+  } else {
+    if (!env.moderationEmailAddress || !env.moderationEmailSmtpUrl) {
+      throw new Error('Partial email config')
+    }
+    moderationEmailCfg = {
+      smtpUrl: env.moderationEmailSmtpUrl,
+      fromAddress: env.moderationEmailAddress,
+    }
+  }
+
   const subscriptionCfg: ServerConfig['subscription'] = {
     maxBuffer: env.maxSubscriptionBuffer ?? 500,
     repoBackfillLimitMs: env.repoBackfillLimitMs ?? DAY,
+    sequencerLeaderEnabled: env.sequencerLeaderEnabled ?? true,
     sequencerLeaderLockId: env.sequencerLeaderLockId ?? 1100,
   }
 
   const bskyAppViewCfg: ServerConfig['bskyAppView'] = {
     url: env.bskyAppViewUrl ?? 'https://api.bsky-sandbox.dev',
     did: env.bskyAppViewDid ?? 'did:plc:abc', // get real did
+    proxyModeration: env.bskyAppViewModeration ?? false,
+    cdnUrlPattern: env.bskyAppViewCdnUrlPattern,
   }
+
+  const redisCfg: ServerConfig['redis'] = env.redisScratchAddress
+    ? {
+        address: env.redisScratchAddress,
+        password: env.redisScratchPassword,
+      }
+    : null
+
+  const rateLimitsCfg: ServerConfig['rateLimits'] = env.rateLimitsEnabled
+    ? {
+        enabled: true,
+        mode: redisCfg !== null ? 'redis' : 'memory',
+        bypassKey: env.rateLimitBypassKey,
+      }
+    : { enabled: false }
 
   const crawlersCfg: ServerConfig['crawlers'] = env.crawlers ?? []
 
@@ -137,8 +168,11 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     identity: identityCfg,
     invites: invitesCfg,
     email: emailCfg,
+    moderationEmail: moderationEmailCfg,
     subscription: subscriptionCfg,
     bskyAppView: bskyAppViewCfg,
+    redis: redisCfg,
+    rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
   }
 }
@@ -150,8 +184,11 @@ export type ServerConfig = {
   identity: IdentityConfig
   invites: InvitesConfig
   email: EmailConfig | null
+  moderationEmail: EmailConfig | null
   subscription: SubscriptionConfig
   bskyAppView: BksyAppViewConfig
+  redis: RedisScratchConfig | null
+  rateLimits: RateLimitsConfig
   crawlers: string[]
 }
 
@@ -222,10 +259,26 @@ export type EmailConfig = {
 export type SubscriptionConfig = {
   maxBuffer: number
   repoBackfillLimitMs: number
+  sequencerLeaderEnabled: boolean
   sequencerLeaderLockId: number
 }
+
+export type RedisScratchConfig = {
+  address: string
+  password?: string
+}
+
+export type RateLimitsConfig =
+  | {
+      enabled: true
+      mode: 'memory' | 'redis'
+      bypassKey?: string
+    }
+  | { enabled: false }
 
 export type BksyAppViewConfig = {
   url: string
   did: string
+  proxyModeration: boolean
+  cdnUrlPattern?: string
 }

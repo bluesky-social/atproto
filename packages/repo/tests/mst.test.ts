@@ -150,7 +150,10 @@ describe('Merkle Search Tree', () => {
       } else {
         cid = entry.value
       }
-      const found = (await blockstore.has(cid)) || diff.newCids.has(cid)
+      const found =
+        (await blockstore.has(cid)) ||
+        diff.newMstBlocks.has(cid) ||
+        diff.newLeafCids.has(cid)
       expect(found).toBeTruthy()
     }
   })

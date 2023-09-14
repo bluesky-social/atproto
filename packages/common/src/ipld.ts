@@ -24,6 +24,15 @@ export const cidForCbor = async (data: unknown): Promise<CID> => {
   return block.cid
 }
 
+export const isValidCid = async (cidStr: string): Promise<boolean> => {
+  try {
+    const parsed = CID.parse(cidStr)
+    return parsed.toString() === cidStr
+  } catch (err) {
+    return false
+  }
+}
+
 export const cborBytesToRecord = (
   bytes: Uint8Array,
 ): Record<string, unknown> => {

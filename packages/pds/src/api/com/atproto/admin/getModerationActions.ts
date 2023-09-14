@@ -1,10 +1,23 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getModerationActions({
-    auth: ctx.moderatorVerifier,
-    handler: async ({ params }) => {
+    auth: ctx.roleVerifier,
+    handler: async ({ req, params }) => {
+      if (ctx.cfg.bskyAppView.proxyModeration) {
+        const { data: result } =
+          await ctx.appViewAgent.com.atproto.admin.getModerationActions(
+            params,
+            authPassthru(req),
+          )
+        return {
+          encoding: 'application/json',
+          body: result,
+        }
+      }
+
       const { db, services } = ctx
       const { subject, limit = 50, cursor } = params
       const moderationService = services.moderation(db)

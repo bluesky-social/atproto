@@ -1,13 +1,13 @@
 import PQueue from 'p-queue'
-import Database from './db'
+import { PrimaryDatabase } from './db'
 import { dbLogger } from './logger'
 
 // A simple queue for in-process, out-of-band/backgrounded work
 
 export class BackgroundQueue {
-  queue = new PQueue({ concurrency: 10 })
+  queue = new PQueue({ concurrency: 20 })
   destroyed = false
-  constructor(public db: Database) {}
+  constructor(public db: PrimaryDatabase) {}
 
   add(task: Task) {
     if (this.destroyed) {
@@ -32,4 +32,4 @@ export class BackgroundQueue {
   }
 }
 
-type Task = (db: Database) => Promise<void>
+type Task = (db: PrimaryDatabase) => Promise<void>

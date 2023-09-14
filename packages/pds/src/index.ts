@@ -8,15 +8,23 @@ import express from 'express'
 import cors from 'cors'
 import http from 'http'
 import events from 'events'
+import { MINUTE } from '@atproto/common'
+import {
+  RateLimiter,
+  RateLimiterCreator,
+  RateLimiterOpts,
+  Options as XrpcServerOptions,
+} from '@atproto/xrpc-server'
 import API from './api'
 import * as basicRoutes from './basic-routes'
 import * as wellKnown from './well-known'
 import * as error from './error'
-import { dbLogger, loggerMiddleware } from './logger'
+import { dbLogger, loggerMiddleware, seqLogger } from './logger'
 import { ServerConfig, ServerSecrets } from './config'
 import { createServer } from './lexicon'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import AppContext, { AppContextOptions } from './context'
+import compression from './util/compression'
 
 export * from './config'
 export { Database } from './db'
@@ -30,6 +38,7 @@ export class PDS {
   public server?: http.Server
   private terminator?: HttpTerminator
   private dbStatsInterval?: NodeJS.Timer
+  private sequencerStatsInterval?: NodeJS.Timer
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
@@ -42,19 +51,52 @@ export class PDS {
     overrides?: Partial<AppContextOptions>,
   ): Promise<PDS> {
     const app = express()
+    app.set('trust proxy', true)
     app.use(cors())
     app.use(loggerMiddleware)
+    app.use(compression())
 
     const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
 
-    let server = createServer({
+    const xrpcOpts: XrpcServerOptions = {
       validateResponse: false,
       payload: {
         jsonLimit: 100 * 1024, // 100kb
         textLimit: 100 * 1024, // 100kb
         blobLimit: 5 * 1024 * 1024, // 5mb
       },
-    })
+    }
+    if (cfg.rateLimits.enabled) {
+      let rlCreator: RateLimiterCreator
+      if (cfg.rateLimits.mode === 'redis') {
+        if (!ctx.redisScratch) {
+          throw new Error('Redis not set up for ratelimiting mode: `redis`')
+        }
+        rlCreator = (opts: RateLimiterOpts) =>
+          RateLimiter.redis(ctx.redisScratch, {
+            // bypassSecret: cfg.rateLimits.,
+            ...opts,
+          })
+      } else {
+        rlCreator = (opts: RateLimiterOpts) =>
+          RateLimiter.memory({
+            // bypassSecret: config.rateLimitBypassKey,
+            ...opts,
+          })
+      }
+      xrpcOpts['rateLimits'] = {
+        creator: rlCreator,
+        global: [
+          {
+            name: 'global-ip',
+            durationMs: 5 * MINUTE,
+            points: 3000,
+          },
+        ],
+      }
+    }
+
+    let server = createServer(xrpcOpts)
 
     server = API(server, ctx)
 
@@ -91,9 +133,20 @@ export class PDS {
         )
       }, 10000)
     }
-    this.ctx.sequencerLeader.run()
+    this.sequencerStatsInterval = setInterval(async () => {
+      if (this.ctx.sequencerLeader?.isLeader) {
+        try {
+          const seq = await this.ctx.sequencerLeader.lastSeq()
+          seqLogger.info({ seq }, 'sequencer leader stats')
+        } catch (err) {
+          seqLogger.error({ err }, 'error getting last seq')
+        }
+      }
+    }, 500)
+    this.ctx.sequencerLeader?.run()
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
+    await this.ctx.runtimeFlags.start()
     const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
     this.server.keepAliveTimeout = 90000
@@ -103,11 +156,14 @@ export class PDS {
   }
 
   async destroy(): Promise<void> {
-    await this.ctx.sequencerLeader.destroy()
+    await this.ctx.runtimeFlags.destroy()
+    await this.ctx.sequencerLeader?.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.db.close()
+    await this.ctx.redisScratch?.quit()
     clearInterval(this.dbStatsInterval)
+    clearInterval(this.sequencerStatsInterval)
   }
 }
 

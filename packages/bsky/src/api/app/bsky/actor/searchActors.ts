@@ -11,10 +11,11 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActors({
     auth: ctx.authOptionalVerifier,
     handler: async ({ auth, params }) => {
-      const { services, db } = ctx
       const { cursor, limit, term: rawTerm } = params
       const requester = auth.credentials.did
       const term = cleanTerm(rawTerm || '')
+
+      const db = ctx.db.getReplica('search')
 
       const results = term
         ? await getUserSearchQuery(db, { term, limit, cursor })
@@ -24,7 +25,9 @@ export default function (server: Server, ctx: AppContext) {
         : []
       const keyset = new SearchKeyset(sql``, sql``)
 
-      const actors = await services.actor(db).views.profile(results, requester)
+      const actors = await ctx.services
+        .actor(db)
+        .views.profilesList(results, requester)
       const filtered = actors.filter(
         (actor) => !actor.viewer?.blocking && !actor.viewer?.blockedBy,
       )

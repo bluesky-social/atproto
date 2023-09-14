@@ -1,3 +1,4 @@
+import assert from 'assert'
 import AtpAgent from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
@@ -35,7 +36,7 @@ describe('timeline views', () => {
     const labelPostA = sc.posts[bob][0].ref
     const labelPostB = sc.posts[carol][0].ref
     await network.bsky.ctx.services
-      .label(network.bsky.ctx.db)
+      .label(network.bsky.ctx.db.getPrimary())
       .formatAndCreate(
         network.bsky.ctx.cfg.labelerDid,
         labelPostA.uriStr,
@@ -43,14 +44,14 @@ describe('timeline views', () => {
         { create: ['kind'] },
       )
     await network.bsky.ctx.services
-      .label(network.bsky.ctx.db)
+      .label(network.bsky.ctx.db.getPrimary())
       .formatAndCreate(
         network.bsky.ctx.cfg.labelerDid,
         labelPostB.uriStr,
         labelPostB.cidStr,
         { create: ['kind'] },
       )
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
   })
 
   afterAll(async () => {
@@ -154,6 +155,32 @@ describe('timeline views', () => {
 
     expect(full.data.feed.length).toEqual(7)
     expect(results(paginatedAll)).toEqual(results([full.data]))
+  })
+
+  it('reflects self-labels', async () => {
+    const carolTL = await agent.api.app.bsky.feed.getTimeline(
+      {},
+      { headers: await network.serviceHeaders(carol) },
+    )
+
+    const alicePost = carolTL.data.feed.find(
+      ({ post }) => post.uri === sc.posts[alice][0].ref.uriStr,
+    )?.post
+
+    assert(alicePost, 'post does not exist')
+
+    const postSelfLabels = alicePost.labels
+      ?.filter((label) => label.src === alice)
+      .map((label) => label.val)
+
+    expect(postSelfLabels).toEqual(['self-label'])
+
+    const authorSelfLabels = alicePost.author.labels
+      ?.filter((label) => label.src === alice)
+      .map((label) => label.val)
+      .sort()
+
+    expect(authorSelfLabels).toEqual(['self-label-a', 'self-label-b'])
   })
 
   it('blocks posts, reposts, replies by actor takedown', async () => {

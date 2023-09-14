@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { once } from 'events'
-import { wait } from '@atproto/common'
+import { createDeferrable, wait } from '@atproto/common'
 import { Database } from '../src'
 import { Leader, appMigration } from '../src/db/leader'
 import { runTestServer, CloseFn } from './_util'
@@ -31,6 +31,7 @@ describe('db', () => {
           .values({
             did: 'x',
             root: 'x',
+            rev: 'x',
             indexedAt: 'bad-date',
           })
           .returning('did')
@@ -52,6 +53,7 @@ describe('db', () => {
       expect(row).toEqual({
         did: 'x',
         root: 'x',
+        rev: 'x',
         indexedAt: 'bad-date',
         takedownId: null,
       })
@@ -130,7 +132,7 @@ describe('db', () => {
       expect(res.length).toBe(0)
     })
 
-    it('ensures all inflight querys are rolled back', async () => {
+    it('ensures all inflight queries are rolled back', async () => {
       let promise: Promise<unknown> | undefined = undefined
       const names: string[] = []
       try {
@@ -168,6 +170,39 @@ describe('db', () => {
     })
   })
 
+  describe('transaction advisory locks', () => {
+    it('allows locks in txs to run sequentially', async () => {
+      if (db.dialect !== 'pg') return
+      for (let i = 0; i < 100; i++) {
+        await db.transaction(async (dbTxn) => {
+          const locked = await dbTxn.takeTxAdvisoryLock('asfd')
+          expect(locked).toBe(true)
+        })
+      }
+    })
+
+    it('locks block between txns', async () => {
+      if (db.dialect !== 'pg') return
+      const deferable = createDeferrable()
+      const tx1 = db.transaction(async (dbTxn) => {
+        const locked = await dbTxn.takeTxAdvisoryLock('asdf')
+        expect(locked).toBe(true)
+        await deferable.complete
+      })
+      // give it just a second to ensure it gets the lock
+      await wait(10)
+      const tx2 = db.transaction(async (dbTxn) => {
+        const locked = await dbTxn.takeTxAdvisoryLock('asdf')
+        expect(locked).toBe(false)
+        deferable.resolve()
+        await tx1
+        const locked2 = await dbTxn.takeTxAdvisoryLock('asdf')
+        expect(locked2).toBe(true)
+      })
+      await tx2
+    })
+  })
+
   describe('Leader', () => {
     it('allows leaders to run sequentially.', async () => {
       const task = async () => {
@@ -178,11 +213,11 @@ describe('db', () => {
       const leader2 = new Leader(777, db)
       const leader3 = new Leader(777, db)
       const result1 = await leader1.run(task)
-      await wait(1) // Short grace period for pg to close session
+      await wait(5) // Short grace period for pg to close session
       const result2 = await leader2.run(task)
-      await wait(1)
+      await wait(5)
       const result3 = await leader3.run(task)
-      await wait(1)
+      await wait(5)
       const result4 = await leader3.run(task)
       expect([result1, result2, result3, result4]).toEqual([
         { ran: true, result: 'complete' },
@@ -193,7 +228,7 @@ describe('db', () => {
     })
 
     it('only allows one leader at a time.', async () => {
-      await wait(1)
+      await wait(5)
       const task = async () => {
         await wait(25)
         return 'complete'
@@ -212,7 +247,7 @@ describe('db', () => {
     })
 
     it('leaders with different ids do not conflict.', async () => {
-      await wait(1)
+      await wait(5)
       const task = async () => {
         await wait(25)
         return 'complete'

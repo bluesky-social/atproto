@@ -4,7 +4,7 @@ import path from 'path'
 import getPort from 'get-port'
 import * as crypto from '@atproto/crypto'
 import { PlcServer, Database as PlcDatabase } from '@did-plc/server'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { randomStr } from '@atproto/crypto'
 import { uniqueLockId } from '@atproto/dev-env'
 import { CID } from 'multiformats/cid'
@@ -17,12 +17,14 @@ import { ServerEnvironment, envToCfg, envToSecrets } from '../src/config'
 
 const ADMIN_PASSWORD = 'admin-pass'
 const MODERATOR_PASSWORD = 'moderator-pass'
+const TRIAGE_PASSWORD = 'triage-pass'
 
 export type CloseFn = () => Promise<void>
 export type TestServerInfo = {
   url: string
   ctx: AppContext
   close: CloseFn
+  processAll: () => Promise<void>
 }
 
 export type TestServerOpts = {
@@ -81,6 +83,7 @@ export const runTestServer = async (
     jwtSecret: 'jwt-secret',
     inviteRequired: false,
     inviteEpoch: Date.now(),
+    triagePassword: TRIAGE_PASSWORD,
     ...params,
   }
 
@@ -117,6 +120,9 @@ export const runTestServer = async (
       await pds.destroy()
       await plcServer.destroy()
     },
+    processAll: async () => {
+      await pds.ctx.backgroundQueue.processAll()
+    },
   }
 }
 
@@ -126,6 +132,10 @@ export const adminAuth = () => {
 
 export const moderatorAuth = () => {
   return basicAuth('admin', MODERATOR_PASSWORD)
+}
+
+export const triageAuth = () => {
+  return basicAuth('admin', TRIAGE_PASSWORD)
 }
 
 const basicAuth = (username: string, password: string) => {
@@ -178,8 +188,12 @@ export const forSnapshot = (obj: unknown) => {
     if (str.match(/^\d+::bafy/)) {
       return constantKeysetCursor
     }
+
+    if (str.match(/^\d+::did:plc/)) {
+      return constantDidCursor
+    }
     if (str.match(/\/image\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
-      // Match image urls
+      // Match image urls (pds)
       const match = str.match(
         /\/image\/([^/]+)\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
       )
@@ -190,7 +204,16 @@ export const forSnapshot = (obj: unknown) => {
         .replace(did, take(users, did))
         .replace(cid, take(cids, cid))
     }
-    if (str.startsWith('pds-public-url-')) {
+    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
+      // Match image urls (bsky w/ presets)
+      const match = str.match(
+        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
+      )
+      if (!match) return str
+      const [, did, cid] = match
+      return str.replace(did, take(users, did)).replace(cid, take(cids, cid))
+    }
+    if (str.startsWith('localhost-')) {
       return 'invite-code'
     }
     if (str.match(/^\d+::pds-public-url-/)) {
@@ -246,6 +269,7 @@ export function take(
 
 export const constantDate = new Date(0).toISOString()
 export const constantKeysetCursor = '0000000000000::bafycid'
+export const constantDidCursor = '0000000000000::did'
 
 const mapLeafValues = (obj: unknown, fn: (val: unknown) => unknown) => {
   if (Array.isArray(obj)) {

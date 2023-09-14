@@ -43,12 +43,45 @@ Object {
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "invitesDisabled": false,
       "moderation": Object {},
-      "relatedRecords": Array [],
+      "relatedRecords": Array [
+        Object {
+          "$type": "app.bsky.actor.profile",
+          "avatar": Object {
+            "$type": "blob",
+            "mimeType": "image/jpeg",
+            "ref": Object {
+              "$link": "cids(1)",
+            },
+            "size": 3976,
+          },
+          "description": "its me!",
+          "displayName": "ali",
+          "labels": Object {
+            "$type": "com.atproto.label.defs#selfLabels",
+            "values": Array [
+              Object {
+                "val": "self-label-a",
+              },
+              Object {
+                "val": "self-label-b",
+              },
+            ],
+          },
+        },
+      ],
     },
     "uri": "record(0)",
     "value": Object {
       "$type": "app.bsky.feed.post",
       "createdAt": "1970-01-01T00:00:00.000Z",
+      "labels": Object {
+        "$type": "com.atproto.label.defs#selfLabels",
+        "values": Array [
+          Object {
+            "val": "self-label",
+          },
+        ],
+      },
       "text": "hey there",
     },
   },
@@ -76,7 +109,7 @@ Object {
       ],
       "subject": Object {
         "$type": "com.atproto.repo.strongRef",
-        "cid": "cids(0)",
+        "cid": "cids(1)",
         "uri": "record(0)",
       },
     },
@@ -107,7 +140,32 @@ Object {
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "invitesDisabled": false,
     "moderation": Object {},
-    "relatedRecords": Array [],
+    "relatedRecords": Array [
+      Object {
+        "$type": "app.bsky.actor.profile",
+        "avatar": Object {
+          "$type": "blob",
+          "mimeType": "image/jpeg",
+          "ref": Object {
+            "$link": "cids(0)",
+          },
+          "size": 3976,
+        },
+        "description": "its me!",
+        "displayName": "ali",
+        "labels": Object {
+          "$type": "com.atproto.label.defs#selfLabels",
+          "values": Array [
+            Object {
+              "val": "self-label-a",
+            },
+            Object {
+              "val": "self-label-b",
+            },
+          ],
+        },
+      },
+    ],
   },
   "subjectBlobs": Array [],
 }

@@ -1,16 +1,18 @@
-import { AtUri } from '@atproto/uri'
-import Database from '../../db'
-import { Label } from '../../lexicon/types/com/atproto/label/defs'
-import { ids } from '../../lexicon/lexicons'
 import { sql } from 'kysely'
+import { AtUri } from '@atproto/syntax'
+import { Database } from '../../db'
+import { Label, isSelfLabels } from '../../lexicon/types/com/atproto/label/defs'
+import { ids } from '../../lexicon/lexicons'
+import { toSimplifiedISOSafe } from '../indexing/util'
+import { LabelCache } from '../../label-cache'
 
 export type Labels = Record<string, Label[]>
 
 export class LabelService {
-  constructor(public db: Database) {}
+  constructor(public db: Database, public cache: LabelCache | null) {}
 
-  static creator() {
-    return (db: Database) => new LabelService(db)
+  static creator(cache: LabelCache | null) {
+    return (db: Database) => new LabelService(db, cache)
   }
 
   async formatAndCreate(
@@ -18,7 +20,7 @@ export class LabelService {
     uri: string,
     cid: string | null,
     labels: { create?: string[]; negate?: string[] },
-  ) {
+  ): Promise<Label[]> {
     const { create = [], negate = [] } = labels
     const toCreate = create.map((val) => ({
       src,
@@ -36,7 +38,9 @@ export class LabelService {
       neg: true,
       cts: new Date().toISOString(),
     }))
-    await this.createLabels([...toCreate, ...toNegate])
+    const formatted = [...toCreate, ...toNegate]
+    await this.createLabels(formatted)
+    return formatted
   }
 
   async createLabels(labels: Label[]) {
@@ -48,8 +52,9 @@ export class LabelService {
     }))
     const { ref } = this.db.db.dynamic
     const excluded = (col: string) => ref(`excluded.${col}`)
-    await this.db.db
-      .insertInto('label')
+    await this.db
+      .asPrimary()
+      .db.insertInto('label')
       .values(dbVals)
       .onConflict((oc) =>
         oc.columns(['src', 'uri', 'cid', 'val']).doUpdateSet({
@@ -62,15 +67,21 @@ export class LabelService {
 
   async getLabelsForUris(
     subjects: string[],
-    includeNeg?: boolean,
+    opts?: {
+      includeNeg?: boolean
+      skipCache?: boolean
+    },
   ): Promise<Labels> {
     if (subjects.length < 1) return {}
-    const res = await this.db.db
-      .selectFrom('label')
-      .where('label.uri', 'in', subjects)
-      .if(!includeNeg, (qb) => qb.where('neg', '=', false))
-      .selectAll()
-      .execute()
+    const res =
+      this.cache === null || opts?.skipCache
+        ? await this.db.db
+            .selectFrom('label')
+            .where('label.uri', 'in', subjects)
+            .if(!opts?.includeNeg, (qb) => qb.where('neg', '=', false))
+            .selectAll()
+            .execute()
+        : this.cache.forSubjects(subjects, opts?.includeNeg)
     return res.reduce((acc, cur) => {
       acc[cur.uri] ??= []
       acc[cur.uri].push({
@@ -85,10 +96,15 @@ export class LabelService {
   // gets labels for any record. when did is present, combine labels for both did & profile record.
   async getLabelsForSubjects(
     subjects: string[],
-    includeNeg?: boolean,
+    opts?: {
+      includeNeg?: boolean
+      skipCache?: boolean
+    },
+    labels: Labels = {},
   ): Promise<Labels> {
-    if (subjects.length < 1) return {}
+    if (subjects.length < 1) return labels
     const expandedSubjects = subjects.flatMap((subject) => {
+      if (labels[subject]) return [] // skip over labels we already have fetched
       if (subject.startsWith('did:')) {
         return [
           subject,
@@ -97,8 +113,8 @@ export class LabelService {
       }
       return subject
     })
-    const labels = await this.getLabelsForUris(expandedSubjects, includeNeg)
-    return Object.keys(labels).reduce((acc, cur) => {
+    const labelsByUri = await this.getLabelsForUris(expandedSubjects, opts)
+    return Object.keys(labelsByUri).reduce((acc, cur) => {
       const uri = cur.startsWith('at://') ? new AtUri(cur) : null
       if (
         uri &&
@@ -108,24 +124,51 @@ export class LabelService {
         // combine labels for profile + did
         const did = uri.hostname
         acc[did] ??= []
-        acc[did].push(...labels[cur])
+        acc[did].push(...labelsByUri[cur])
       }
       acc[cur] ??= []
-      acc[cur].push(...labels[cur])
+      acc[cur].push(...labelsByUri[cur])
       return acc
-    }, {} as Labels)
+    }, labels)
   }
 
-  async getLabels(subject: string, includeNeg?: boolean): Promise<Label[]> {
-    const labels = await this.getLabelsForUris([subject], includeNeg)
+  async getLabels(
+    subject: string,
+    opts?: {
+      includeNeg?: boolean
+      skipCache?: boolean
+    },
+  ): Promise<Label[]> {
+    const labels = await this.getLabelsForUris([subject], opts)
     return labels[subject] ?? []
   }
 
   async getLabelsForProfile(
     did: string,
-    includeNeg?: boolean,
+    opts?: {
+      includeNeg?: boolean
+      skipCache?: boolean
+    },
   ): Promise<Label[]> {
-    const labels = await this.getLabelsForSubjects([did], includeNeg)
+    const labels = await this.getLabelsForSubjects([did], opts)
     return labels[did] ?? []
   }
+}
+
+export function getSelfLabels(details: {
+  uri: string | null
+  cid: string | null
+  record: Record<string, unknown> | null
+}): Label[] {
+  const { uri, cid, record } = details
+  if (!uri || !cid || !record) return []
+  if (!isSelfLabels(record.labels)) return []
+  const src = new AtUri(uri).host // record creator
+  const cts =
+    typeof record.createdAt === 'string'
+      ? toSimplifiedISOSafe(record.createdAt)
+      : new Date(0).toISOString()
+  return record.labels.values.map(({ val }) => {
+    return { src, uri, cid, val, cts, neg: false }
+  })
 }

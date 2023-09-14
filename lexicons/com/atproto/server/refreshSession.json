@@ -11,16 +11,14 @@
           "type": "object",
           "required": ["accessJwt", "refreshJwt", "handle", "did"],
           "properties": {
-            "accessJwt": {"type": "string"},
-            "refreshJwt": {"type": "string"},
-            "handle": {"type": "string", "format": "handle"},
-            "did": {"type": "string", "format": "did"}
+            "accessJwt": { "type": "string" },
+            "refreshJwt": { "type": "string" },
+            "handle": { "type": "string", "format": "handle" },
+            "did": { "type": "string", "format": "did" }
           }
         }
       },
-      "errors": [
-        {"name": "AccountTakedown"}
-      ]
+      "errors": [{ "name": "AccountTakedown" }]
     }
   }
 }

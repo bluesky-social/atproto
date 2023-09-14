@@ -85,6 +85,7 @@ describe('pds admin get moderation reports view', () => {
           uri: report.subject.uri,
           cid: report.subject.cid,
         },
+        createdBy: `did:example:admin${i}`,
       })
       if (ab) {
         await sc.resolveReports({
@@ -136,15 +137,40 @@ describe('pds admin get moderation reports view', () => {
 
     const ignoreSubjects = getDids(allReports).slice(0, 2)
 
-    const filteredReports =
+    const filteredReportsByDid =
       await agent.api.com.atproto.admin.getModerationReports(
         { ignoreSubjects },
         { headers: { authorization: adminAuth() } },
       )
 
-    getDids(filteredReports).forEach((resultDid) =>
+    // Validate that when ignored by DID, all reports for that DID is ignored
+    getDids(filteredReportsByDid).forEach((resultDid) =>
       expect(ignoreSubjects).not.toContain(resultDid),
     )
+
+    const ignoredAtUriSubjects: string[] = [
+      `${
+        allReports.data.reports.find(({ subject }) => !!subject.uri)?.subject
+          ?.uri
+      }`,
+    ]
+    const filteredReportsByAtUri =
+      await agent.api.com.atproto.admin.getModerationReports(
+        {
+          ignoreSubjects: ignoredAtUriSubjects,
+        },
+        { headers: { authorization: adminAuth() } },
+      )
+
+    // Validate that when ignored by at uri, only the reports for that at uri is ignored
+    expect(filteredReportsByAtUri.data.reports.length).toEqual(
+      allReports.data.reports.length - 1,
+    )
+    expect(
+      filteredReportsByAtUri.data.reports
+        .map(({ subject }) => subject.uri)
+        .filter(Boolean),
+    ).not.toContain(ignoredAtUriSubjects[0])
   })
 
   it('gets all moderation reports.', async () => {
@@ -214,6 +240,40 @@ describe('pds admin get moderation reports view', () => {
         { headers: { authorization: adminAuth() } },
       )
     expect(forSnapshot(reportsWithTakedown.data.reports)).toMatchSnapshot()
+  })
+
+  it('gets all moderation reports actioned by a certain moderator.', async () => {
+    const adminDidOne = 'did:example:admin0'
+    const adminDidTwo = 'did:example:admin2'
+    const [actionedByAdminOne, actionedByAdminTwo] = await Promise.all([
+      agent.api.com.atproto.admin.getModerationReports(
+        { actionedBy: adminDidOne },
+        { headers: { authorization: adminAuth() } },
+      ),
+      agent.api.com.atproto.admin.getModerationReports(
+        { actionedBy: adminDidTwo },
+        { headers: { authorization: adminAuth() } },
+      ),
+    ])
+    const [fullReportOne, fullReportTwo] = await Promise.all([
+      agent.api.com.atproto.admin.getModerationReport(
+        { id: actionedByAdminOne.data.reports[0].id },
+        { headers: { authorization: adminAuth() } },
+      ),
+      agent.api.com.atproto.admin.getModerationReport(
+        { id: actionedByAdminTwo.data.reports[0].id },
+        { headers: { authorization: adminAuth() } },
+      ),
+    ])
+
+    expect(forSnapshot(actionedByAdminOne.data.reports)).toMatchSnapshot()
+    expect(fullReportOne.data.resolvedByActions[0].createdBy).toEqual(
+      adminDidOne,
+    )
+    expect(forSnapshot(actionedByAdminTwo.data.reports)).toMatchSnapshot()
+    expect(fullReportTwo.data.resolvedByActions[0].createdBy).toEqual(
+      adminDidTwo,
+    )
   })
 
   it('paginates.', async () => {

@@ -5,6 +5,7 @@ export interface Record {
   did: string
   collection: string
   rkey: string
+  repoRev: string | null
   indexedAt: string
   // opaque identifier, though currently tends to reference a moderation_action
   takedownId: string | null

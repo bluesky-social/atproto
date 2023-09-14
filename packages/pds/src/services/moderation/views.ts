@@ -1,6 +1,6 @@
 import { Selectable } from 'kysely'
-import { ArrayEl } from '@atproto/common'
-import { AtUri } from '@atproto/uri'
+import { ArrayEl, cborBytesToRecord } from '@atproto/common'
+import { AtUri } from '@atproto/syntax'
 import Database from '../../db'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
@@ -20,6 +20,7 @@ import { ModerationAction } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
 import { ModerationReportRowWithHandle } from '.'
+import { ids } from '../../lexicon/lexicons'
 
 export class ModerationViews {
   constructor(private db: Database) {}
@@ -29,10 +30,11 @@ export class ModerationViews {
     record: RecordService.creator(),
   }
 
-  repo(result: RepoResult): Promise<RepoView>
-  repo(result: RepoResult[]): Promise<RepoView[]>
+  repo(result: RepoResult, opts: ModViewOptions): Promise<RepoView>
+  repo(result: RepoResult[], opts: ModViewOptions): Promise<RepoView[]>
   async repo(
     result: RepoResult | RepoResult[],
+    opts: ModViewOptions,
   ): Promise<RepoView | RepoView[]> {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
@@ -41,6 +43,17 @@ export class ModerationViews {
       await this.db.db
         .selectFrom('did_handle')
         .leftJoin('user_account', 'user_account.did', 'did_handle.did')
+        .leftJoin('record as profile_record', (join) =>
+          join
+            .onRef('profile_record.did', '=', 'did_handle.did')
+            .on('profile_record.collection', '=', ids.AppBskyActorProfile)
+            .on('profile_record.rkey', '=', 'self'),
+        )
+        .leftJoin('ipld_block as profile_block', (join) =>
+          join
+            .onRef('profile_block.cid', '=', 'profile_record.cid')
+            .onRef('profile_block.creator', '=', 'did_handle.did'),
+        )
         .where(
           'did_handle.did',
           'in',
@@ -50,6 +63,8 @@ export class ModerationViews {
           'did_handle.did as did',
           'user_account.email as email',
           'user_account.invitesDisabled as invitesDisabled',
+          'user_account.inviteNote as inviteNote',
+          'profile_block.content as profileBytes',
         ])
         .execute(),
       this.db.db
@@ -61,7 +76,7 @@ export class ModerationViews {
           'in',
           results.map((r) => r.did),
         )
-        .select(['id', 'action', 'subjectDid'])
+        .select(['id', 'action', 'durationInHours', 'subjectDid'])
         .execute(),
       this.services
         .account(this.db)
@@ -78,29 +93,42 @@ export class ModerationViews {
     )
 
     const views = results.map((r) => {
-      const { email, invitesDisabled } = infoByDid[r.did] ?? {}
+      const { email, invitesDisabled, profileBytes, inviteNote } =
+        infoByDid[r.did] ?? {}
       const action = actionByDid[r.did]
+      const relatedRecords: object[] = []
+      if (profileBytes) {
+        relatedRecords.push(cborBytesToRecord(profileBytes))
+      }
       return {
         did: r.did,
         handle: r.handle,
-        email: email ?? undefined,
-        relatedRecords: [],
+        email: opts.includeEmails && email ? email : undefined,
+        relatedRecords,
         indexedAt: r.indexedAt,
         moderation: {
           currentAction: action
-            ? { id: action.id, action: action.action }
+            ? {
+                id: action.id,
+                action: action.action,
+                durationInHours: action.durationInHours ?? undefined,
+              }
             : undefined,
         },
         invitedBy: invitedBy[r.did],
         invitesDisabled: invitesDisabled === 1,
+        inviteNote: inviteNote ?? undefined,
       }
     })
 
     return Array.isArray(result) ? views : views[0]
   }
 
-  async repoDetail(result: RepoResult): Promise<RepoViewDetail> {
-    const repo = await this.repo(result)
+  async repoDetail(
+    result: RepoResult,
+    opts: ModViewOptions,
+  ): Promise<RepoViewDetail> {
+    const repo = await this.repo(result, opts)
     const [reportResults, actionResults, inviteCodes] = await Promise.all([
       this.db.db
         .selectFrom('moderation_report')
@@ -133,10 +161,11 @@ export class ModerationViews {
     }
   }
 
-  record(result: RecordResult): Promise<RecordView>
-  record(result: RecordResult[]): Promise<RecordView[]>
+  record(result: RecordResult, opts: ModViewOptions): Promise<RecordView>
+  record(result: RecordResult[], opts: ModViewOptions): Promise<RecordView[]>
   async record(
     result: RecordResult | RecordResult[],
+    opts: ModViewOptions,
   ): Promise<RecordView | RecordView[]> {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
@@ -171,10 +200,10 @@ export class ModerationViews {
           'in',
           results.map((r) => r.uri),
         )
-        .select(['id', 'action', 'subjectUri'])
+        .select(['id', 'action', 'durationInHours', 'subjectUri'])
         .execute(),
     ])
-    const repos = await this.repo(repoResults)
+    const repos = await this.repo(repoResults, opts)
 
     const reposByDid = repos.reduce(
       (acc, cur) => Object.assign(acc, { [cur.did]: cur }),
@@ -203,7 +232,11 @@ export class ModerationViews {
         repo,
         moderation: {
           currentAction: action
-            ? { id: action.id, action: action.action }
+            ? {
+                id: action.id,
+                action: action.action,
+                durationInHours: action.durationInHours ?? undefined,
+              }
             : undefined,
         },
       }
@@ -212,9 +245,12 @@ export class ModerationViews {
     return Array.isArray(result) ? views : views[0]
   }
 
-  async recordDetail(result: RecordResult): Promise<RecordViewDetail> {
+  async recordDetail(
+    result: RecordResult,
+    opts: ModViewOptions,
+  ): Promise<RecordViewDetail> {
     const [record, reportResults, actionResults] = await Promise.all([
-      this.record(result),
+      this.record(result, opts),
       this.db.db
         .selectFrom('moderation_report')
         .where('subjectType', '=', 'com.atproto.repo.strongRef')
@@ -295,6 +331,7 @@ export class ModerationViews {
     const views = results.map((res) => ({
       id: res.id,
       action: res.action,
+      durationInHours: res.durationInHours ?? undefined,
       subject:
         res.subjectType === 'com.atproto.admin.defs#repoRef'
           ? {
@@ -334,7 +371,10 @@ export class ModerationViews {
     return Array.isArray(result) ? views : views[0]
   }
 
-  async actionDetail(result: ActionResult): Promise<ActionViewDetail> {
+  async actionDetail(
+    result: ActionResult,
+    opts: ModViewOptions,
+  ): Promise<ActionViewDetail> {
     const action = await this.action(result)
     const reportResults = action.resolvedReportIds.length
       ? await this.db.db
@@ -345,13 +385,14 @@ export class ModerationViews {
           .execute()
       : []
     const [subject, resolvedReports, subjectBlobs] = await Promise.all([
-      this.subject(result),
+      this.subject(result, opts),
       this.report(reportResults),
       this.blob(action.subjectBlobCids),
     ])
     return {
       id: action.id,
       action: action.action,
+      durationInHours: action.durationInHours,
       subject,
       subjectBlobs,
       createLabelVals: action.createLabelVals,
@@ -441,7 +482,10 @@ export class ModerationViews {
     }
   }
 
-  async reportDetail(result: ReportResult): Promise<ReportViewDetail> {
+  async reportDetail(
+    result: ReportResult,
+    opts: ModViewOptions,
+  ): Promise<ReportViewDetail> {
     const report = await this.report(result)
     const actionResults = report.resolvedByActionIds.length
       ? await this.db.db
@@ -452,7 +496,7 @@ export class ModerationViews {
           .execute()
       : []
     const [subject, resolvedByActions] = await Promise.all([
-      this.subject(result),
+      this.subject(result, opts),
       this.action(actionResults),
     ])
     return {
@@ -468,14 +512,17 @@ export class ModerationViews {
 
   // Partial view for subjects
 
-  async subject(result: SubjectResult): Promise<SubjectView> {
+  async subject(
+    result: SubjectResult,
+    opts: ModViewOptions,
+  ): Promise<SubjectView> {
     let subject: SubjectView
     if (result.subjectType === 'com.atproto.admin.defs#repoRef') {
       const repoResult = await this.services
         .account(this.db)
         .getAccount(result.subjectDid, true)
       if (repoResult) {
-        subject = await this.repo(repoResult)
+        subject = await this.repo(repoResult, opts)
         subject.$type = 'com.atproto.admin.defs#repoView'
       } else {
         subject = { did: result.subjectDid }
@@ -489,7 +536,7 @@ export class ModerationViews {
         .record(this.db)
         .getRecord(new AtUri(result.subjectUri), null, true)
       if (recordResult) {
-        subject = await this.record(recordResult)
+        subject = await this.record(recordResult, opts)
         subject.$type = 'com.atproto.admin.defs#recordView'
       } else {
         subject = { uri: result.subjectUri }
@@ -519,7 +566,7 @@ export class ModerationViews {
           'subject_blob.actionId',
           'moderation_action.id',
         )
-        .select(['id', 'action', 'cid'])
+        .select(['id', 'action', 'durationInHours', 'cid'])
         .execute(),
     ])
     const actionByCid = actionResults.reduce(
@@ -546,7 +593,11 @@ export class ModerationViews {
             : undefined,
         moderation: {
           currentAction: action
-            ? { id: action.id, action: action.action }
+            ? {
+                id: action.id,
+                action: action.action,
+                durationInHours: action.durationInHours ?? undefined,
+              }
             : undefined,
         },
       }
@@ -578,3 +629,5 @@ type SubjectView = ActionViewDetail['subject'] & ReportViewDetail['subject']
 function didFromUri(uri: string) {
   return new AtUri(uri).host
 }
+
+export type ModViewOptions = { includeEmails: boolean }

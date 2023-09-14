@@ -34,16 +34,16 @@ import { BskyAgent, AtpSessionEvent, AtpSessionData } from '@atproto/api'
 const agent = new BskyAgent({
   service: 'https://example.com',
   persistSession: (evt: AtpSessionEvent, sess?: AtpSessionData) => {
-    // store the session-data for reuse 
-  }
+    // store the session-data for reuse
+  },
 })
 
-await agent.login({identifier: 'alice@mail.com', password: 'hunter2'})
+await agent.login({ identifier: 'alice@mail.com', password: 'hunter2' })
 await agent.resumeSession(savedSessionData)
 await agent.createAccount({
   email: 'alice@mail.com',
   password: 'hunter2',
-  handle: 'alice.example.com'
+  handle: 'alice.example.com',
 })
 ```
 
@@ -127,16 +127,18 @@ Some records (ie posts) use the `app.bsky.richtext` lexicon. At the moment richt
 ℹ️ It is **strongly** recommended to use this package's `RichText` library. Javascript encodes strings in utf16 while the protocol (and most other programming environments) use utf8. Converting between the two is challenging, but `RichText` handles that for you.
 
 ```typescript
-import {RichText} from '@atproto/api'
+import { RichText } from '@atproto/api'
 
 // creating richtext
-const rt = new RichText({text: 'Hello @alice.com, check out this link: https://example.com'})
+const rt = new RichText({
+  text: 'Hello @alice.com, check out this link: https://example.com',
+})
 await rt.detectFacets(agent) // automatically detects mentions and links
 const postRecord = {
   $type: 'app.bsky.feed.post',
   text: rt.text,
   facets: rt.facets,
-  createdAt: new Date().toISOString()
+  createdAt: new Date().toISOString(),
 }
 
 // rendering as markdown
@@ -152,12 +154,101 @@ for (const segment of rt.segments()) {
 }
 
 // calculating string lengths
-const rt2 = new RichText({text: 'Hello'})
+const rt2 = new RichText({ text: 'Hello' })
 console.log(rt2.length) // => 5
 console.log(rt2.graphemeLength) // => 5
-const rt3 = new RichText({text: '👨‍👩‍👧‍👧'})
+const rt3 = new RichText({ text: '👨‍👩‍👧‍👧' })
 console.log(rt3.length) // => 25
 console.log(rt3.graphemeLength) // => 1
+```
+
+### Moderation
+
+Applying the moderation system is a challenging task, but we've done our best to simplify it for you. The Moderation API helps handle a wide range of tasks, including:
+
+- User muting (including mutelists)
+- User blocking
+- Moderator labeling
+
+For more information, see the [Moderation Documentation](./docs/moderation.md) or the associated [Labels Reference](./docs/labels.md).
+
+```typescript
+import { moderatePost, moderateProfile } from '@atproto/api'
+
+// We call the appropriate moderation function for the content
+// =
+
+const postMod = moderatePost(postView, getOpts())
+const profileMod = moderateProfile(profileView, getOpts())
+
+// We then use the output to decide how to affect rendering
+// =
+
+if (postMod.content.filter) {
+  // dont render in feeds or similar
+  // in contexts where this is disruptive (eg threads) you should ignore this and instead check blur
+}
+if (postMod.content.blur) {
+  // render the whole object behind a cover (use postMod.content.cause to explain)
+  if (postMod.content.noOverride) {
+    // do not allow the cover the be removed
+  }
+}
+if (postMod.content.alert) {
+  // render a warning on the content (use postMod.content.cause to explain)
+}
+if (postMod.embed.blur) {
+  // render the embedded media behind a cover (use postMod.embed.cause to explain)
+  if (postMod.embed.noOverride) {
+    // do not allow the cover the be removed
+  }
+}
+if (postMod.embed.alert) {
+  // render a warning on the embedded media (use postMod.embed.cause to explain)
+}
+if (postMod.avatar.blur) {
+  // render the avatar behind a cover
+}
+if (postMod.avatar.alert) {
+  // render an alert on the avatar
+}
+
+// The options passed into `apply()` supply the user's preferences
+// =
+
+function getOpts() {
+  return {
+    // the logged-in user's DID
+    userDid: 'did:plc:1234...',
+
+    // is adult content allowed?
+    adultContentEnabled: true,
+
+    // the global label settings (used on self-labels)
+    labels: {
+      porn: 'hide',
+      sexual: 'warn',
+      nudity: 'ignore',
+      // ...
+    },
+
+    // the per-labeler settings
+    labelers: [
+      {
+        labeler: {
+          did: '...',
+          displayName: 'My mod service',
+        },
+        labels: {
+          porn: 'hide',
+          sexual: 'warn',
+          nudity: 'ignore',
+          // ...
+        },
+      },
+    ],
+  }
+}
 ```
 
 ## Advanced
@@ -169,24 +260,28 @@ The methods above are convenience wrappers. It covers most but not all available
 The AT Protocol identifies methods and records with reverse-DNS names. You can use them on the agent as well:
 
 ```typescript
-const res1 = await agent.com.atproto.repo.createRecord(
-  {
-    did: alice.did,
-    collection: 'app.bsky.feed.post',
-    record: {
-      $type: 'app.bsky.feed.post',
-      text: 'Hello, world!',
-      createdAt: new Date().toISOString()
-    }
-  }
-)
-const res2 = await agent.com.atproto.repo.listRecords({repo: alice.did, collection: 'app.bsky.feed.post'})
-
-const res3 = await agent.app.bsky.feed.post.create({repo: alice.did}, {
-  text: 'Hello, world!',
-  createdAt: new Date().toISOString()
+const res1 = await agent.com.atproto.repo.createRecord({
+  did: alice.did,
+  collection: 'app.bsky.feed.post',
+  record: {
+    $type: 'app.bsky.feed.post',
+    text: 'Hello, world!',
+    createdAt: new Date().toISOString(),
+  },
 })
-const res4 = await agent.app.bsky.feed.post.list({repo: alice.did})
+const res2 = await agent.com.atproto.repo.listRecords({
+  repo: alice.did,
+  collection: 'app.bsky.feed.post',
+})
+
+const res3 = await agent.app.bsky.feed.post.create(
+  { repo: alice.did },
+  {
+    text: 'Hello, world!',
+    createdAt: new Date().toISOString(),
+  },
+)
+const res4 = await agent.app.bsky.feed.post.list({ repo: alice.did })
 ```
 
 ### Generic agent
@@ -196,7 +291,7 @@ If you want a generic AT Protocol agent without methods related to the Bluesky s
 ```typescript
 import { AtpAgent } from '@atproto/api'
 
-const agent = new AtpAgent({service: 'https://example.com'})
+const agent = new AtpAgent({ service: 'https://example.com' })
 ```
 
 ### Non-browser configuration
@@ -206,10 +301,13 @@ In non-browser environments you'll need to specify a fetch polyfill. [See the ex
 ```typescript
 import { BskyAgent } from '@atproto/api'
 
-const agent = new BskyAgent({service: 'https://example.com'})
+const agent = new BskyAgent({ service: 'https://example.com' })
 
 // provide a custom fetch implementation (shouldnt be needed in node or the browser)
-import {AtpAgentFetchHeaders, AtpAgentFetchHandlerResponse} from '@atproto/api'
+import {
+  AtpAgentFetchHeaders,
+  AtpAgentFetchHandlerResponse,
+} from '@atproto/api'
 BskyAgent.configure({
   async fetch(
     httpUri: string,
@@ -218,8 +316,8 @@ BskyAgent.configure({
     httpReqBody: any,
   ): Promise<AtpAgentFetchHandlerResponse> {
     // insert definition here...
-    return {status: 200, /*...*/}
-  }
+    return { status: 200 /*...*/ }
+  },
 })
 ```
 

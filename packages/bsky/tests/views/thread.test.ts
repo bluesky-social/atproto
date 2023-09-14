@@ -1,16 +1,15 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { Database } from '../../src'
 import { forSnapshot, stripViewerFromThread } from '../_util'
-import { RecordRef, SeedClient } from '../seeds/client'
+import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import threadSeed, { walk, item, Item } from '../seeds/thread'
+import assert from 'assert'
+import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 
 describe('pds thread views', () => {
   let network: TestNetwork
   let agent: AtpAgent
-  let db: Database
   let sc: SeedClient
 
   // account dids, for convenience
@@ -22,7 +21,6 @@ describe('pds thread views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_thread',
     })
-    db = network.bsky.ctx.db
     agent = network.bsky.getClient()
     const pdsAgent = network.pds.getClient()
     sc = new SeedClient(pdsAgent)
@@ -36,7 +34,7 @@ describe('pds thread views', () => {
     // Add a repost of a reply so that we can confirm myState in the thread
     await sc.repost(bob, sc.replies[alice][0].ref)
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
   })
 
   afterAll(async () => {
@@ -120,7 +118,7 @@ describe('pds thread views', () => {
     )
     indexes.aliceReplyReply = sc.replies[alice].length - 1
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
 
     const thread1 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
@@ -130,7 +128,7 @@ describe('pds thread views', () => {
 
     await sc.deletePost(bob, sc.replies[bob][indexes.bobReply].ref.uri)
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
 
     const thread2 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
@@ -145,63 +143,27 @@ describe('pds thread views', () => {
     expect(forSnapshot(thread3.data.thread)).toMatchSnapshot()
   })
 
-  it('builds post hierarchy index.', async () => {
-    const threads: Item[] = [
-      item(1, [item(2, [item(3), item(4)])]),
-      item(5, [item(6), item(7, [item(9, [item(11)]), item(10)]), item(8)]),
-      item(12),
-    ]
+  it('reflects self-labels', async () => {
+    const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
+      { uri: sc.posts[alice][0].ref.uriStr },
+      { headers: await network.serviceHeaders(bob) },
+    )
 
-    await threadSeed(sc, sc.dids.alice, threads)
-    await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    assert(isThreadViewPost(thread.thread), 'post does not exist')
+    const post = thread.thread.post
 
-    let closureSize = 0
-    const itemByUri: Record<string, Item> = {}
+    const postSelfLabels = post.labels
+      ?.filter((label) => label.src === alice)
+      .map((label) => label.val)
 
-    const postsAndReplies = ([] as { text: string; ref: RecordRef }[])
-      .concat(Object.values(sc.posts[sc.dids.alice]))
-      .concat(Object.values(sc.replies[sc.dids.alice]))
-      .filter((p) => {
-        const id = parseInt(p.text, 10)
-        return 0 < id && id <= 12
-      })
+    expect(postSelfLabels).toEqual(['self-label'])
 
-    await walk(threads, async (item, depth) => {
-      const post = postsAndReplies.find((p) => p.text === String(item.id))
-      if (!post) throw new Error('Post not found')
-      itemByUri[post.ref.uriStr] = item
-      closureSize += depth + 1
-    })
+    const authorSelfLabels = post.author.labels
+      ?.filter((label) => label.src === alice)
+      .map((label) => label.val)
+      .sort()
 
-    const hierarchy = await db.db
-      .selectFrom('post_hierarchy')
-      .where(
-        'uri',
-        'in',
-        postsAndReplies.map((p) => p.ref.uriStr),
-      )
-      .orWhere(
-        'ancestorUri',
-        'in',
-        postsAndReplies.map((p) => p.ref.uriStr),
-      )
-      .selectAll()
-      .execute()
-
-    expect(hierarchy.length).toEqual(closureSize)
-
-    for (const relation of hierarchy) {
-      const item = itemByUri[relation.uri]
-      const ancestor = itemByUri[relation.ancestorUri]
-      let depth = -1
-      await walk([ancestor], async (candidate, candidateDepth) => {
-        if (candidate === item) {
-          depth = candidateDepth
-        }
-      })
-      expect(depth).toEqual(relation.depth)
-    }
+    expect(authorSelfLabels).toEqual(['self-label-a', 'self-label-b'])
   })
 
   describe('takedown', () => {

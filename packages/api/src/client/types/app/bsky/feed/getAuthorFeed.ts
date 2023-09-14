@@ -12,6 +12,11 @@ export interface QueryParams {
   actor: string
   limit?: number
   cursor?: string
+  filter?:
+    | 'posts_with_replies'
+    | 'posts_no_replies'
+    | 'posts_with_media'
+    | (string & {})
 }
 
 export type InputSchema = undefined
@@ -34,13 +39,13 @@ export interface Response {
 
 export class BlockedActorError extends XRPCError {
   constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
+    super(src.status, src.error, src.message, src.headers)
   }
 }
 
 export class BlockedByActorError extends XRPCError {
   constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
+    super(src.status, src.error, src.message, src.headers)
   }
 }
 

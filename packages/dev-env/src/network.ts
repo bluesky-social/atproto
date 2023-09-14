@@ -21,8 +21,10 @@ export class TestNetwork extends TestNetworkNoAppView {
   static async create(
     params: Partial<TestServerParams> = {},
   ): Promise<TestNetwork> {
+    const redisHost = process.env.REDIS_HOST
     const dbPostgresUrl = params.dbPostgresUrl || process.env.DB_POSTGRES_URL
     assert(dbPostgresUrl, 'Missing postgres url for tests')
+    assert(redisHost, 'Missing redis host for tests')
     const dbPostgresSchema =
       params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
 
@@ -33,9 +35,11 @@ export class TestNetwork extends TestNetworkNoAppView {
     const bsky = await TestBsky.create({
       port: bskyPort,
       plcUrl: plc.url,
+      pdsPort,
       repoProvider: `ws://localhost:${pdsPort}`,
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
-      dbPostgresUrl,
+      dbPrimaryPostgresUrl: dbPostgresUrl,
+      redisHost,
       ...params.bsky,
     })
     const pds = await TestPds.create({
@@ -46,24 +50,24 @@ export class TestNetwork extends TestNetworkNoAppView {
       didPlcUrl: plc.url,
       bskyAppViewUrl: bsky.url,
       bskyAppViewDid: bsky.ctx.cfg.serverDid,
+      bskyAppViewModeration: true,
       ...params.pds,
     })
 
-    mockNetworkUtilities(pds)
+    mockNetworkUtilities(pds, bsky)
 
     return new TestNetwork(plc, pds, bsky)
   }
 
   async processFullSubscription(timeout = 5000) {
-    if (!this.bsky) return
-    const sub = this.bsky.sub
-    if (!sub) return
+    const sub = this.bsky.indexer.sub
     const { db } = this.pds.ctx.db
     const start = Date.now()
     while (Date.now() - start < timeout) {
       await wait(50)
-      if (!sub) return
-      const state = await sub.getState()
+      if (!this.pds.ctx.sequencerLeader) {
+        throw new Error('Sequencer leader not configured on the pds')
+      }
       const caughtUp = await this.pds.ctx.sequencerLeader.isCaughtUp()
       if (!caughtUp) continue
       const { lastSeq } = await db
@@ -71,16 +75,20 @@ export class TestNetwork extends TestNetworkNoAppView {
         .where('seq', 'is not', null)
         .select(db.fn.max('repo_seq.seq').as('lastSeq'))
         .executeTakeFirstOrThrow()
-      if (state.cursor === lastSeq) return
+      const { cursor } = sub.partitions.get(0)
+      if (cursor === lastSeq) {
+        // has seen last seq, just need to wait for it to finish processing
+        await sub.repoQueue.main.onIdle()
+        return
+      }
     }
     throw new Error(`Sequence was not processed within ${timeout}ms`)
   }
 
   async processAll(timeout?: number) {
-    await this.pds.ctx.backgroundQueue.processAll()
-    if (!this.bsky) return
+    await this.pds.processAll()
     await this.processFullSubscription(timeout)
-    await this.bsky.ctx.backgroundQueue.processAll()
+    await this.bsky.processAll()
   }
 
   async serviceHeaders(did: string, aud?: string) {

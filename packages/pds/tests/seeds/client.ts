@@ -7,9 +7,10 @@ import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/
 import { Record as PostRecord } from '@atproto/api/src/client/types/app/bsky/feed/post'
 import { Record as LikeRecord } from '@atproto/api/src/client/types/app/bsky/feed/like'
 import { Record as FollowRecord } from '@atproto/api/src/client/types/app/bsky/graph/follow'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { BlobRef } from '@atproto/lexicon'
 import { adminAuth } from '../_util'
+import { ids } from '../../src/lexicon/lexicons'
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
@@ -121,7 +122,7 @@ export class SeedClient {
     by: string,
     displayName: string,
     description: string,
-    fromUser?: string,
+    selfLabels?: string[],
   ) {
     AVATAR_IMG ??= await fs.readFile('tests/sample-img/key-portrait-small.jpg')
 
@@ -129,7 +130,7 @@ export class SeedClient {
     {
       const res = await this.agent.api.com.atproto.repo.uploadBlob(AVATAR_IMG, {
         encoding: 'image/jpeg',
-        headers: this.getHeaders(fromUser || by),
+        headers: this.getHeaders(by),
       } as any)
       avatarBlob = res.data.blob
     }
@@ -141,8 +142,14 @@ export class SeedClient {
           displayName,
           description,
           avatar: avatarBlob,
+          labels: selfLabels
+            ? {
+                $type: 'com.atproto.label.defs#selfLabels',
+                values: selfLabels.map((val) => ({ val })),
+              }
+            : undefined,
         },
-        this.getHeaders(fromUser || by),
+        this.getHeaders(by),
       )
       this.profiles[by] = {
         displayName,
@@ -150,6 +157,24 @@ export class SeedClient {
         avatar: avatarBlob,
         ref: new RecordRef(res.uri, res.cid),
       }
+    }
+    return this.profiles[by]
+  }
+
+  async updateProfile(by: string, record: Record<string, unknown>) {
+    const res = await this.agent.api.com.atproto.repo.putRecord(
+      {
+        repo: by,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+        record,
+      },
+      { headers: this.getHeaders(by), encoding: 'application/json' },
+    )
+    this.profiles[by] = {
+      ...(this.profiles[by] ?? {}),
+      ...record,
+      ref: new RecordRef(res.data.uri, res.data.cid),
     }
     return this.profiles[by]
   }

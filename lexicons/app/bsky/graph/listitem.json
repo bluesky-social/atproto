@@ -10,9 +10,9 @@
         "type": "object",
         "required": ["subject", "list", "createdAt"],
         "properties": {
-          "subject": {"type": "string", "format": "did"},
-          "list": {"type": "string", "format": "at-uri"},
-          "createdAt": {"type": "string", "format": "datetime"}
+          "subject": { "type": "string", "format": "did" },
+          "list": { "type": "string", "format": "at-uri" },
+          "createdAt": { "type": "string", "format": "datetime" }
         }
       }
     }

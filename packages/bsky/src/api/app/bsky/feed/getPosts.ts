@@ -1,50 +1,96 @@
-import * as common from '@atproto/common'
+import { dedupeStrs } from '@atproto/common'
+import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPosts'
 import AppContext from '../../../../context'
-import { AtUri } from '@atproto/uri'
-import { PostView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
+import { Database } from '../../../../db'
+import { FeedHydrationState, FeedService } from '../../../../services/feed'
+import { createPipeline } from '../../../../pipeline'
+import { ActorService } from '../../../../services/actor'
 
 export default function (server: Server, ctx: AppContext) {
+  const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.feed.getPosts({
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {
-      const requester = auth.credentials.did
+      const db = ctx.db.getReplica()
+      const feedService = ctx.services.feed(db)
+      const actorService = ctx.services.actor(db)
+      const viewer = auth.credentials.did
 
-      const feedService = ctx.services.feed(ctx.db)
-      const labelService = ctx.services.label(ctx.db)
-
-      const uris = common.dedupeStrs(params.uris)
-      const dids = common.dedupeStrs(
-        params.uris.map((uri) => new AtUri(uri).hostname),
+      const results = await getPosts(
+        { ...params, viewer },
+        { db, feedService, actorService },
       )
-
-      const [actors, postViews, embeds, labels] = await Promise.all([
-        feedService.getActorViews(Array.from(dids), requester, {
-          skipLabels: true,
-        }),
-        feedService.getPostViews(Array.from(uris), requester),
-        feedService.embedsForPosts(Array.from(uris), requester),
-        labelService.getLabelsForSubjects([...uris, ...dids]),
-      ])
-
-      const posts: PostView[] = []
-      for (const uri of uris) {
-        const post = feedService.views.formatPostView(
-          uri,
-          actors,
-          postViews,
-          embeds,
-          labels,
-        )
-        if (post) {
-          posts.push(post)
-        }
-      }
 
       return {
         encoding: 'application/json',
-        body: { posts },
+        body: results,
       }
     },
   })
 }
+
+const skeleton = async (params: Params) => {
+  return { params, postUris: dedupeStrs(params.uris) }
+}
+
+const hydration = async (state: SkeletonState, ctx: Context) => {
+  const { feedService } = ctx
+  const { params, postUris } = state
+  const uris = new Set<string>(postUris)
+  const dids = new Set<string>(postUris.map((uri) => new AtUri(uri).hostname))
+  const hydrated = await feedService.feedHydration({
+    uris,
+    dids,
+    viewer: params.viewer,
+  })
+  return { ...state, ...hydrated }
+}
+
+const noBlocks = (state: HydrationState) => {
+  const { viewer } = state.params
+  state.postUris = state.postUris.filter((uri) => {
+    const post = state.posts[uri]
+    if (!viewer || !post) return true
+    return !state.bam.block([viewer, post.creator])
+  })
+  return state
+}
+
+const presentation = (state: HydrationState, ctx: Context) => {
+  const { feedService, actorService } = ctx
+  const { postUris, profiles, params } = state
+  const SKIP = []
+  const actors = actorService.views.profileBasicPresentation(
+    Object.keys(profiles),
+    state,
+    { viewer: params.viewer },
+  )
+  const postViews = postUris.flatMap((uri) => {
+    const postView = feedService.views.formatPostView(
+      uri,
+      actors,
+      state.posts,
+      state.embeds,
+      state.labels,
+    )
+    return postView ?? SKIP
+  })
+  return { posts: postViews }
+}
+
+type Context = {
+  db: Database
+  feedService: FeedService
+  actorService: ActorService
+}
+
+type Params = QueryParams & { viewer: string | null }
+
+type SkeletonState = {
+  params: Params
+  postUris: string[]
+}
+
+type HydrationState = SkeletonState & FeedHydrationState

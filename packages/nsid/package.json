@@ -1,17 +1,16 @@
 {
   "name": "@atproto/nsid",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/src/index.d.ts"
+  },
   "scripts": {
-    "test": "jest",
-    "prettier": "prettier --check src/ tests/",
-    "prettier:fix": "prettier --write src/ tests/",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "yarn lint --fix",
-    "verify": "run-p prettier lint",
-    "verify:fix": "yarn prettier:fix && yarn lint:fix",
+    "test": "true",
     "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json"
+    "postbuild": "tsc --build tsconfig.build.json",
+    "update-main-to-dist": "node ../../update-main-to-dist.js packages/nsid"
   },
   "license": "MIT",
   "repository": {
@@ -19,5 +18,7 @@
     "url": "https://github.com/bluesky-social/atproto.git",
     "directory": "packages/nsid"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@atproto/syntax": "workspace:^"
+  }
 }

@@ -10,14 +10,16 @@
         "properties": {
           "sort": {
             "type": "string",
-            "knownValues": [
-              "recent",
-              "usage"
-            ],
+            "knownValues": ["recent", "usage"],
             "default": "recent"
           },
-          "limit": {"type": "integer", "minimum": 1, "maximum": 500, "default": 100},
-          "cursor": {"type": "string"}
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500,
+            "default": 100
+          },
+          "cursor": { "type": "string" }
         }
       },
       "output": {
@@ -26,10 +28,13 @@
           "type": "object",
           "required": ["codes"],
           "properties": {
-            "cursor": {"type": "string"},
+            "cursor": { "type": "string" },
             "codes": {
               "type": "array",
-              "items": {"type": "ref", "ref": "com.atproto.server.defs#inviteCode"}
+              "items": {
+                "type": "ref",
+                "ref": "com.atproto.server.defs#inviteCode"
+              }
             }
           }
         }

@@ -11,9 +11,12 @@
           "type": "object",
           "required": ["availableUserDomains"],
           "properties": {
-            "inviteCodeRequired": {"type": "boolean"},
-            "availableUserDomains": {"type": "array", "items": {"type": "string"}},
-            "links": {"type": "ref", "ref": "#links"}
+            "inviteCodeRequired": { "type": "boolean" },
+            "availableUserDomains": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "links": { "type": "ref", "ref": "#links" }
           }
         }
       }
@@ -21,8 +24,8 @@
     "links": {
       "type": "object",
       "properties": {
-        "privacyPolicy": {"type": "string"},
-        "termsOfService": {"type": "string"}
+        "privacyPolicy": { "type": "string" },
+        "termsOfService": { "type": "string" }
       }
     }
   }

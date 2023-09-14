@@ -1,4 +1,4 @@
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { lexToJson } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import {
@@ -52,17 +52,14 @@ export const forSnapshot = (obj: unknown) => {
     if (str.match(/^\d+::bafy/)) {
       return constantKeysetCursor
     }
-    if (str.match(/\/image\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
+    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
       // Match image urls
       const match = str.match(
-        /\/image\/([^/]+)\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
+        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
       )
       if (!match) return str
-      const [, sig, did, cid] = match
-      return str
-        .replace(sig, 'sig()')
-        .replace(did, take(users, did))
-        .replace(cid, take(cids, cid))
+      const [, did, cid] = match
+      return str.replace(did, take(users, did)).replace(cid, take(cids, cid))
     }
     let isCid: boolean
     try {

@@ -2,6 +2,7 @@
 export interface RepoRoot {
   did: string
   root: string
+  rev: string | null
   indexedAt: string
   // opaque identifier, though currently tends to reference a moderation_action
   takedownId: string | null

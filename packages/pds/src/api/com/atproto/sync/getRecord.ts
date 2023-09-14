@@ -9,7 +9,7 @@ import { isUserOrAdmin } from '../../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRecord({
-    auth: ctx.optionalAccessOrAdminVerifier,
+    auth: ctx.optionalAccessOrRoleVerifier,
     handler: async ({ params, auth }) => {
       const { did, collection, rkey } = params
       // takedown check for anyone other than an admin or the user
@@ -24,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       const storage = new SqlRepoStorage(ctx.db, did)
       const commit = params.commit
         ? CID.parse(params.commit)
-        : await storage.getHead()
+        : await storage.getRoot()
       if (!commit) {
         throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
       }

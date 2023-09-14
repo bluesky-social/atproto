@@ -1,17 +1,16 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { adminVerifier } from '../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.resolveModerationReports({
-    auth: adminVerifier(ctx.cfg.adminPassword),
+    auth: ctx.roleVerifier,
     handler: async ({ input }) => {
-      const { db, services } = ctx
-      const moderationService = services.moderation(db)
+      const db = ctx.db.getPrimary()
+      const moderationService = ctx.services.moderation(db)
       const { actionId, reportIds, createdBy } = input.body
 
       const moderationAction = await db.transaction(async (dbTxn) => {
-        const moderationTxn = services.moderation(dbTxn)
+        const moderationTxn = ctx.services.moderation(dbTxn)
         await moderationTxn.resolveReports({ reportIds, actionId, createdBy })
         return await moderationTxn.getActionOrThrow(actionId)
       })

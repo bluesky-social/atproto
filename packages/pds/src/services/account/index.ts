@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { dbLogger as log } from '../../logger'
@@ -34,7 +35,13 @@ export class AccountService {
         if (handleOrDid.startsWith('did:')) {
           return qb.where('did_handle.did', '=', handleOrDid)
         } else {
-          return qb.where('did_handle.handle', '=', handleOrDid)
+          // lower() is a little hack to avoid using the handle trgm index here, which is slow. not sure why it was preferring
+          // the handle trgm index over the handle unique index. in any case, we end-up using did_handle_handle_lower_idx instead, which is fast.
+          return qb.where(
+            sql`lower(${ref('did_handle.handle')})`,
+            '=',
+            handleOrDid,
+          )
         }
       })
       .selectAll('user_account')
@@ -79,7 +86,13 @@ export class AccountService {
     handleOrDid: string,
     includeSoftDeleted = false,
   ): Promise<string | null> {
-    if (handleOrDid.startsWith('did:')) return handleOrDid
+    if (handleOrDid.startsWith('did:')) {
+      if (includeSoftDeleted) {
+        return handleOrDid
+      }
+      const available = await this.isRepoAvailable(handleOrDid)
+      return available ? handleOrDid : null
+    }
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('did_handle')
@@ -130,12 +143,18 @@ export class AccountService {
     log.info({ handle, email, did }, 'registered user')
   }
 
-  async updateHandle(did: string, handle: string) {
+  // @NOTE should always be paired with a sequenceHandle().
+  // the token output from this method should be passed to sequenceHandle().
+  async updateHandle(
+    did: string,
+    handle: string,
+  ): Promise<HandleSequenceToken> {
     const res = await this.db.db
       .updateTable('did_handle')
       .set({ handle })
       .where('did', '=', did)
       .whereNotExists(
+        // @NOTE see also condition in isHandleAvailable()
         this.db.db
           .selectFrom('did_handle')
           .where('handle', '=', handle)
@@ -145,8 +164,23 @@ export class AccountService {
     if (res.numUpdatedRows < 1) {
       throw new UserAlreadyExistsError()
     }
-    const seqEvt = await sequencer.formatSeqHandleUpdate(did, handle)
+    return { did, handle }
+  }
+
+  async sequenceHandle(tok: HandleSequenceToken) {
+    this.db.assertTransaction()
+    const seqEvt = await sequencer.formatSeqHandleUpdate(tok.did, tok.handle)
     await sequencer.sequenceEvt(this.db, seqEvt)
+  }
+
+  async getHandleDid(handle: string): Promise<string | null> {
+    // @NOTE see also condition in updateHandle()
+    const found = await this.db.db
+      .selectFrom('did_handle')
+      .where('handle', '=', handle)
+      .selectAll()
+      .executeTakeFirst()
+    return found?.did ?? null
   }
 
   async updateEmail(did: string, email: string) {
@@ -446,6 +480,15 @@ export class AccountService {
         `Some preferences are not in the ${namespace} namespace`,
       )
     }
+    // short-held row lock to prevent races
+    if (this.db.dialect === 'pg') {
+      await this.db.db
+        .selectFrom('user_account')
+        .selectAll()
+        .forUpdate()
+        .where('did', '=', did)
+        .executeTakeFirst()
+    }
     // get all current prefs for user and prep new pref rows
     const allPrefs = await this.db.db
       .selectFrom('user_pref')
@@ -507,3 +550,5 @@ export class ListKeyset extends TimeCidKeyset<{
 const matchNamespace = (namespace: string, fullname: string) => {
   return fullname === namespace || fullname.startsWith(`${namespace}.`)
 }
+
+export type HandleSequenceToken = { did: string; handle: string }

@@ -10,33 +10,26 @@ const handler: AlgoHandler = async (
   requester: string,
 ): Promise<AlgoResponse> => {
   const { cursor, limit = 50 } = params
-  const feedService = ctx.services.feed(ctx.db)
-  const graphService = ctx.services.graph(ctx.db)
+  const db = ctx.db.getReplica('feed')
+  const feedService = ctx.services.feed(db)
 
-  const { ref } = ctx.db.db.dynamic
+  const { ref } = db.db.dynamic
 
   const keyset = new FeedKeyset(ref('post.indexedAt'), ref('post.cid'))
   const sortFrom = keyset.unpack(cursor)?.primary
 
   let postsQb = feedService
     .selectPostQb()
+    .innerJoin('follow', 'follow.subjectDid', 'post.creator')
     .innerJoin('post_agg', 'post_agg.uri', 'post.uri')
     .where('post_agg.likeCount', '>=', 5)
-    .whereExists((qb) =>
-      qb
-        .selectFrom('follow')
-        .where('follow.creator', '=', requester)
-        .whereRef('follow.subjectDid', '=', 'post.creator'),
-    )
-    .where((qb) =>
-      graphService.whereNotMuted(qb, requester, [ref('post.creator')]),
-    )
-    .whereNotExists(graphService.blockQb(requester, [ref('post.creator')]))
+    .where('follow.creator', '=', requester)
     .where('post.indexedAt', '>', getFeedDateThreshold(sortFrom))
 
   postsQb = paginate(postsQb, { limit, cursor, keyset, tryIndex: true })
 
   const feedItems = await postsQb.execute()
+
   return {
     feedItems,
     cursor: keyset.packFromResult(feedItems),

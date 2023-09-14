@@ -9,6 +9,8 @@ import { PdsConfig } from './types'
 import { uniqueLockId } from './util'
 
 const ADMIN_PASSWORD = 'admin-pass'
+const MOD_PASSWORD = 'mod-pass'
+const TRIAGE_PASSWORD = 'triage-pass'
 
 export class TestPds {
   constructor(
@@ -34,9 +36,12 @@ export class TestPds {
       blobstoreDiskLocation: blobstoreLoc,
       recoveryDidKey: recoveryKey,
       adminPassword: ADMIN_PASSWORD,
+      moderatorPassword: MOD_PASSWORD,
+      triagePassword: TRIAGE_PASSWORD,
       jwtSecret: 'jwt-secret',
       serviceHandleDomains: ['.test'],
       sequencerLeaderLockId: uniqueLockId(),
+      bskyAppViewCdnUrlPattern: 'http://cdn.appview.com/%s/%s/%s',
       repoSigningKeyK256PrivateKeyHex: repoSigningPriv,
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
       inviteRequired: false,
@@ -62,6 +67,7 @@ export class TestPds {
     }
 
     await server.start()
+
     return new TestPds(url, port, server)
   }
 
@@ -73,20 +79,27 @@ export class TestPds {
     return new AtpAgent({ service: `http://localhost:${this.port}` })
   }
 
-  adminAuth(): string {
+  adminAuth(role: 'admin' | 'moderator' | 'triage' = 'admin'): string {
+    const password =
+      role === 'triage'
+        ? TRIAGE_PASSWORD
+        : role === 'moderator'
+        ? MOD_PASSWORD
+        : ADMIN_PASSWORD
     return (
       'Basic ' +
-      ui8.toString(
-        ui8.fromString(`admin:${ADMIN_PASSWORD}`, 'utf8'),
-        'base64pad',
-      )
+      ui8.toString(ui8.fromString(`admin:${password}`, 'utf8'), 'base64pad')
     )
   }
 
-  adminAuthHeaders() {
+  adminAuthHeaders(role?: 'admin' | 'moderator' | 'triage') {
     return {
-      authorization: this.adminAuth(),
+      authorization: this.adminAuth(role),
     }
+  }
+
+  async processAll() {
+    await this.ctx.backgroundQueue.processAll()
   }
 
   async close() {

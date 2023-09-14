@@ -13,8 +13,6 @@ import { UserAccount } from '../src/db/tables/user-account'
 import { IpldBlock } from '../src/db/tables/ipld-block'
 import { RepoBlob } from '../src/db/tables/repo-blob'
 import { Blob } from '../src/db/tables/blob'
-import { RepoCommitHistory } from '../src/db/tables/repo-commit-history'
-import { RepoCommitBlock } from '../src/db/tables/repo-commit-block'
 import { Record } from '../src/db/tables/record'
 import { RepoSeq } from '../src/db/tables/repo-seq'
 import { ACKNOWLEDGE } from '../src/lexicon/types/com/atproto/admin/defs'
@@ -133,7 +131,7 @@ describe('account deletion', () => {
       did: carol.did,
       password: carol.password,
     })
-    await server.ctx.backgroundQueue.processAll() // Finish background hard-deletions
+    await server.processAll() // Finish background hard-deletions
   })
 
   it('no longer lets the user log in', async () => {
@@ -165,14 +163,9 @@ describe('account deletion', () => {
         (row) => row.did === carol.did && row.eventType === 'tombstone',
       ).length,
     ).toEqual(1)
-    expect(updatedDbContents.commitBlocks).toEqual(
-      initialDbContents.commitBlocks.filter((row) => row.creator !== carol.did),
-    )
-    expect(updatedDbContents.commitHistories).toEqual(
-      initialDbContents.commitHistories.filter(
-        (row) => row.creator !== carol.did,
-      ),
-    )
+  })
+
+  it('no longer stores indexed records from the user', async () => {
     expect(updatedDbContents.records).toEqual(
       initialDbContents.records.filter((row) => row.did !== carol.did),
     )
@@ -227,64 +220,38 @@ type DbContents = {
   users: Selectable<UserAccount>[]
   blocks: IpldBlock[]
   seqs: Selectable<RepoSeq>[]
-  commitHistories: RepoCommitHistory[]
-  commitBlocks: RepoCommitBlock[]
   records: Record[]
   repoBlobs: RepoBlob[]
   blobs: Blob[]
 }
 
 const getDbContents = async (db: Database): Promise<DbContents> => {
-  const [
-    roots,
-    users,
-    blocks,
-    seqs,
-    commitHistories,
-    commitBlocks,
-    records,
-    repoBlobs,
-    blobs,
-  ] = await Promise.all([
-    db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
-    db.db.selectFrom('user_account').orderBy('did').selectAll().execute(),
-    db.db
-      .selectFrom('ipld_block')
-      .orderBy('creator')
-      .orderBy('cid')
-      .selectAll()
-      .execute(),
-    db.db.selectFrom('repo_seq').orderBy('id').selectAll().execute(),
-    db.db
-      .selectFrom('repo_commit_history')
-      .orderBy('creator')
-      .orderBy('commit')
-      .selectAll()
-      .execute(),
-    db.db
-      .selectFrom('repo_commit_block')
-      .orderBy('creator')
-      .orderBy('commit')
-      .orderBy('block')
-      .selectAll()
-      .execute(),
-    db.db.selectFrom('record').orderBy('uri').selectAll().execute(),
-    db.db
-      .selectFrom('repo_blob')
-      .orderBy('did')
-      .orderBy('cid')
-      .selectAll()
-      .execute(),
-    db.db.selectFrom('blob').orderBy('cid').selectAll().execute(),
-  ])
+  const [roots, users, blocks, seqs, records, repoBlobs, blobs] =
+    await Promise.all([
+      db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
+      db.db.selectFrom('user_account').orderBy('did').selectAll().execute(),
+      db.db
+        .selectFrom('ipld_block')
+        .orderBy('creator')
+        .orderBy('cid')
+        .selectAll()
+        .execute(),
+      db.db.selectFrom('repo_seq').orderBy('id').selectAll().execute(),
+      db.db.selectFrom('record').orderBy('uri').selectAll().execute(),
+      db.db
+        .selectFrom('repo_blob')
+        .orderBy('did')
+        .orderBy('cid')
+        .selectAll()
+        .execute(),
+      db.db.selectFrom('blob').orderBy('cid').selectAll().execute(),
+    ])
 
   return {
     roots,
     users,
     blocks,
     seqs,
-    commitHistories,
-    commitBlocks,
     records,
     repoBlobs,
     blobs,

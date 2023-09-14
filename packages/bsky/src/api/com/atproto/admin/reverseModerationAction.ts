@@ -1,21 +1,25 @@
-import { AtUri } from '@atproto/uri'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AtUri } from '@atproto/syntax'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  ACKNOWLEDGE,
+  ESCALATE,
+  TAKEDOWN,
+} from '../../../../lexicon/types/com/atproto/admin/defs'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { TAKEDOWN } from '../../../../lexicon/types/com/atproto/admin/defs'
-import { adminVerifier } from '../../../auth'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.reverseModerationAction({
-    auth: adminVerifier(ctx.cfg.adminPassword),
-    handler: async ({ input }) => {
-      const { db, services } = ctx
-      const moderationService = services.moderation(db)
+    auth: ctx.roleVerifier,
+    handler: async ({ input, auth }) => {
+      const access = auth.credentials
+      const db = ctx.db.getPrimary()
+      const moderationService = ctx.services.moderation(db)
       const { id, createdBy, reason } = input.body
 
       const moderationAction = await db.transaction(async (dbTxn) => {
-        const moderationTxn = services.moderation(dbTxn)
-        const labelTxn = services.label(dbTxn)
+        const moderationTxn = ctx.services.moderation(dbTxn)
+        const labelTxn = ctx.services.label(dbTxn)
         const now = new Date()
 
         const existing = await moderationTxn.getAction(id)
@@ -28,32 +32,34 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        const result = await moderationTxn.logReverseAction({
+        // apply access rules
+
+        // if less than moderator access then can only reverse ack and escalation actions
+        if (
+          !access.moderator &&
+          ![ACKNOWLEDGE, ESCALATE].includes(existing.action)
+        ) {
+          throw new AuthRequiredError(
+            'Must be a full moderator to reverse this type of action',
+          )
+        }
+        // if less than moderator access then cannot reverse takedown on an account
+        if (
+          !access.moderator &&
+          existing.action === TAKEDOWN &&
+          existing.subjectType === 'com.atproto.admin.defs#repoRef'
+        ) {
+          throw new AuthRequiredError(
+            'Must be a full moderator to reverse an account takedown',
+          )
+        }
+
+        const result = await moderationTxn.revertAction({
           id,
           createdAt: now,
           createdBy,
           reason,
         })
-
-        if (
-          result.action === TAKEDOWN &&
-          result.subjectType === 'com.atproto.admin.defs#repoRef' &&
-          result.subjectDid
-        ) {
-          await moderationTxn.reverseTakedownRepo({
-            did: result.subjectDid,
-          })
-        }
-
-        if (
-          result.action === TAKEDOWN &&
-          result.subjectType === 'com.atproto.repo.strongRef' &&
-          result.subjectUri
-        ) {
-          await moderationTxn.reverseTakedownRecord({
-            uri: new AtUri(result.subjectUri),
-          })
-        }
 
         // invert creates & negates
         const { createLabelVals, negateLabelVals } = result

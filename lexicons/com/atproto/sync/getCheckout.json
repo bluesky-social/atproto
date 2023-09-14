@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Gets the repo state.",
+      "description": "DEPRECATED - please use com.atproto.sync.getRepo instead",
       "parameters": {
         "type": "params",
         "required": ["did"],
@@ -13,11 +13,6 @@
             "type": "string",
             "format": "did",
             "description": "The DID of the repo."
-          },
-          "commit": {
-            "type": "string",
-            "format": "cid",
-            "description": "The commit to get the checkout from. Defaults to current HEAD."
           }
         }
       },

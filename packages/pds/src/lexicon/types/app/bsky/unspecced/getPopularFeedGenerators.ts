@@ -9,11 +9,16 @@ import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyFeedDefs from '../feed/defs'
 
-export interface QueryParams {}
+export interface QueryParams {
+  limit: number
+  cursor?: string
+  query?: string
+}
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
+  cursor?: string
   feeds: AppBskyFeedDefs.GeneratorView[]
   [k: string]: unknown
 }
@@ -32,10 +37,13 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
-export type Handler<HA extends HandlerAuth = never> = (ctx: {
+export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams
   input: HandlerInput
   req: express.Request
   res: express.Response
-}) => Promise<HandlerOutput> | HandlerOutput
+}
+export type Handler<HA extends HandlerAuth = never> = (
+  ctx: HandlerReqCtx<HA>,
+) => Promise<HandlerOutput> | HandlerOutput

@@ -1,31 +1,33 @@
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
-import { Database } from './db'
+import { DatabaseCoordinator } from './db'
 import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import * as auth from './auth'
 import DidSqlCache from './did-cache'
-import { Labeler } from './labeler'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
+import { LabelCache } from './label-cache'
+import { NotificationServer } from './notifications'
 
 export class AppContext {
   constructor(
     private opts: {
-      db: Database
+      db: DatabaseCoordinator
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       services: Services
       idResolver: IdResolver
       didCache: DidSqlCache
-      labeler: Labeler
+      labelCache: LabelCache
       backgroundQueue: BackgroundQueue
       algos: MountedAlgos
+      notifServer: NotificationServer
     },
   ) {}
 
-  get db(): Database {
+  get db(): DatabaseCoordinator {
     return this.opts.db
   }
 
@@ -53,6 +55,14 @@ export class AppContext {
     return this.opts.didCache
   }
 
+  get labelCache(): LabelCache {
+    return this.opts.labelCache
+  }
+
+  get notifServer(): NotificationServer {
+    return this.opts.notifServer
+  }
+
   get authVerifier() {
     return auth.authVerifier(this.idResolver, { aud: this.cfg.serverDid })
   }
@@ -67,8 +77,12 @@ export class AppContext {
     })
   }
 
-  get labeler(): Labeler {
-    return this.opts.labeler
+  get authOptionalAccessOrRoleVerifier() {
+    return auth.authOptionalAccessOrRoleVerifier(this.idResolver, this.cfg)
+  }
+
+  get roleVerifier() {
+    return auth.roleVerifier(this.cfg)
   }
 
   get backgroundQueue(): BackgroundQueue {

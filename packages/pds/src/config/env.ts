@@ -48,15 +48,30 @@ export const readEnv = (): ServerEnvironment => {
     // email
     emailSmtpUrl: envStr(process.env.PDS_EMAIL_SMTP_URL),
     emailFromAddress: envStr(process.env.PDS_EMAIL_FROM_ADDRESS),
+    moderationEmailSmtpUrl: envStr(process.env.PDS_MODERATION_EMAIL_SMTP_URL),
+    moderationEmailAddress: envStr(process.env.PDS_MODERATION_EMAIL_ADDRESS),
 
     // subscription
     maxSubscriptionBuffer: envInt(process.env.PDS_MAX_SUBSCRIPTION_BUFFER),
     repoBackfillLimitMs: envInt(process.env.PDS_REPO_BACKFILL_LIMIT_MS),
+    sequencerLeaderEnabled: envBool(process.env.PDS_SEQUENCER_LEADER_ENABLED),
     sequencerLeaderLockId: envInt(process.env.PDS_SEQUENCER_LEADER_LOCK_ID),
 
     // appview
     bskyAppViewUrl: envStr(process.env.PDS_BSKY_APP_VIEW_URL),
     bskyAppViewDid: envStr(process.env.PDS_BSKY_APP_VIEW_DID),
+    bskyAppViewModeration: envBool(process.env.PDS_BSKY_APP_VIEW_MODERATION),
+    bskyAppViewCdnUrlPattern: envStr(
+      process.env.PDS_BSKY_APP_VIEW_CDN_URL_PATTERN,
+    ),
+
+    // rate limits
+    rateLimitsEnabled: envBool(process.env.PDS_RATE_LIMITS_ENABLED),
+    rateLimitBypassKey: envStr(process.env.PDS_RATE_LIMIT_BYPASS_KEY),
+
+    // redis
+    redisScratchAddress: envStr(process.env.PDS_REDIS_SCRATCH_ADDRESS),
+    redisScratchPassword: envStr(process.env.PDS_REDIS_SCRATCH_PASSWORD),
 
     // crawlers
     crawlers: envList(process.env.PDS_CRAWLERS),
@@ -65,6 +80,7 @@ export const readEnv = (): ServerEnvironment => {
     jwtSecret: envStr(process.env.PDS_JWT_SECRET),
     adminPassword: envStr(process.env.PDS_ADMIN_PASSWORD),
     moderatorPassword: envStr(process.env.PDS_MODERATOR_PASSWORD),
+    triagePassword: envStr(process.env.PDS_TRIAGE_PASSWORD),
 
     // keys: only one of each required
     // kms
@@ -121,15 +137,28 @@ export type ServerEnvironment = {
   // email
   emailSmtpUrl?: string
   emailFromAddress?: string
+  moderationEmailSmtpUrl?: string
+  moderationEmailAddress?: string
 
   // subscription
   maxSubscriptionBuffer?: number
   repoBackfillLimitMs?: number
+  sequencerLeaderEnabled?: boolean
   sequencerLeaderLockId?: number
 
   // appview
   bskyAppViewUrl?: string
   bskyAppViewDid?: string
+  bskyAppViewModeration?: boolean
+  bskyAppViewCdnUrlPattern?: string
+
+  // rate limits
+  rateLimitsEnabled?: boolean
+  rateLimitBypassKey?: string
+
+  // redis
+  redisScratchAddress?: string
+  redisScratchPassword?: string
 
   // crawler
   crawlers?: string[]
@@ -138,6 +167,7 @@ export type ServerEnvironment = {
   jwtSecret?: string
   adminPassword?: string
   moderatorPassword?: string
+  triagePassword?: string
 
   // keys
   repoSigningKeyKmsKeyId?: string

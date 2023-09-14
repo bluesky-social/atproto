@@ -1,0 +1,27 @@
+{
+  "name": "@atproto/syntax",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts"
+  },
+  "scripts": {
+    "test": "jest",
+    "build": "node ./build.js",
+    "postbuild": "tsc --build tsconfig.build.json",
+    "update-main-to-dist": "node ../../update-main-to-dist.js packages/syntax"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto.git",
+    "directory": "packages/syntax"
+  },
+  "dependencies": {
+    "@atproto/common-web": "workspace:^"
+  },
+  "browser": {
+    "dns/promises": false
+  }
+}

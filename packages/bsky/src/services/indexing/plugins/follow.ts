@@ -1,14 +1,15 @@
 import { Selectable } from 'kysely'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
 import * as Follow from '../../../lexicon/types/app/bsky/graph/follow'
 import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { toSimplifiedISOSafe } from '../util'
-import Database from '../../../db'
+import { PrimaryDatabase } from '../../../db'
 import { countAll, excluded } from '../../../db/util'
 import { BackgroundQueue } from '../../../background'
+import { NotificationServer } from '../../../notifications'
 
 const lexId = lex.ids.AppBskyGraphFollow
 type IndexedFollow = Selectable<DatabaseSchemaType['follow']>
@@ -59,7 +60,7 @@ const notifsForInsert = (obj: IndexedFollow) => {
       recordCid: obj.cid,
       reason: 'follow' as const,
       reasonSubject: null,
-      sortAt: obj.indexedAt,
+      sortAt: obj.sortAt,
     },
   ]
 }
@@ -119,10 +120,11 @@ const updateAggregates = async (db: DatabaseSchema, follow: IndexedFollow) => {
 export type PluginType = RecordProcessor<Follow.Record, IndexedFollow>
 
 export const makePlugin = (
-  db: Database,
+  db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
+  notifServer?: NotificationServer,
 ): PluginType => {
-  return new RecordProcessor(db, backgroundQueue, {
+  return new RecordProcessor(db, backgroundQueue, notifServer, {
     lexId,
     insertFn,
     findDuplicate,

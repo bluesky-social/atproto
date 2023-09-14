@@ -1,49 +1,109 @@
-import { ArrayEl } from '@atproto/common'
+import { mapDefined } from '@atproto/common'
+import { INVALID_HANDLE } from '@atproto/syntax'
+import { jsonStringToLex } from '@atproto/lexicon'
 import {
   ProfileViewDetailed,
   ProfileView,
-  ProfileViewBasic,
 } from '../../lexicon/types/app/bsky/actor/defs'
-import Database from '../../db'
-import { noMatch } from '../../db/util'
+import { Database } from '../../db'
+import { noMatch, notSoftDeletedClause } from '../../db/util'
 import { Actor } from '../../db/tables/actor'
 import { ImageUriBuilder } from '../../image/uri'
-import { LabelService } from '../label'
-import { ListViewBasic } from '../../lexicon/types/app/bsky/graph/defs'
+import { LabelService, Labels, getSelfLabels } from '../label'
+import { BlockAndMuteState, GraphService } from '../graph'
+import { LabelCache } from '../../label-cache'
+import {
+  ActorInfoMap,
+  ProfileDetailHydrationState,
+  ProfileHydrationState,
+  ProfileInfoMap,
+  ProfileViewMap,
+  toMapByDid,
+} from './types'
+import { ListInfoMap } from '../graph/types'
 
 export class ActorViews {
-  constructor(private db: Database, private imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    private db: Database,
+    private imgUriBuilder: ImageUriBuilder,
+    private labelCache: LabelCache,
+  ) {}
 
   services = {
-    label: LabelService.creator(),
+    label: LabelService.creator(this.labelCache)(this.db),
+    graph: GraphService.creator(this.imgUriBuilder)(this.db),
   }
 
-  profileDetailed(
-    result: ActorResult,
+  async profiles(
+    results: (ActorResult | string)[], // @TODO simplify down to just string[]
     viewer: string | null,
-  ): Promise<ProfileViewDetailed>
-  profileDetailed(
-    result: ActorResult[],
-    viewer: string | null,
-  ): Promise<ProfileViewDetailed[]>
-  async profileDetailed(
-    result: ActorResult | ActorResult[],
-    viewer: string | null,
-  ): Promise<ProfileViewDetailed | ProfileViewDetailed[]> {
-    const results = Array.isArray(result) ? result : [result]
-    if (results.length === 0) return []
+    opts?: { includeSoftDeleted?: boolean },
+  ): Promise<ActorInfoMap> {
+    if (results.length === 0) return {}
+    const dids = results.map((res) => (typeof res === 'string' ? res : res.did))
+    const hydrated = await this.profileHydration(dids, {
+      viewer,
+      ...opts,
+    })
+    return this.profilePresentation(dids, hydrated, {
+      viewer,
+      ...opts,
+    })
+  }
 
+  async profilesBasic(
+    results: (ActorResult | string)[],
+    viewer: string | null,
+    opts?: { omitLabels?: boolean; includeSoftDeleted?: boolean },
+  ): Promise<ActorInfoMap> {
+    if (results.length === 0) return {}
+    const dids = results.map((res) => (typeof res === 'string' ? res : res.did))
+    const hydrated = await this.profileHydration(dids, {
+      viewer,
+      includeSoftDeleted: opts?.includeSoftDeleted,
+    })
+    return this.profileBasicPresentation(dids, hydrated, {
+      viewer,
+      omitLabels: opts?.omitLabels,
+    })
+  }
+
+  async profilesList(
+    results: ActorResult[],
+    viewer: string | null,
+    opts?: { includeSoftDeleted?: boolean },
+  ): Promise<ProfileView[]> {
+    const profiles = await this.profiles(results, viewer, opts)
+    return mapDefined(results, (result) => profiles[result.did])
+  }
+
+  async profileDetailHydration(
+    dids: string[],
+    opts: {
+      viewer?: string | null
+      includeSoftDeleted?: boolean
+    },
+    state?: {
+      bam: BlockAndMuteState
+      labels: Labels
+    },
+  ): Promise<ProfileDetailHydrationState> {
+    const { viewer = null, includeSoftDeleted } = opts
     const { ref } = this.db.db.dynamic
-    const dids = results.map((r) => r.did)
-
     const profileInfosQb = this.db.db
       .selectFrom('actor')
-      .where('actor.did', 'in', dids)
+      .where('actor.did', 'in', dids.length ? dids : [''])
       .leftJoin('profile', 'profile.creator', 'actor.did')
       .leftJoin('profile_agg', 'profile_agg.did', 'actor.did')
+      .leftJoin('record', 'record.uri', 'profile.uri')
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('actor'))),
+      )
       .select([
         'actor.did as did',
+        'actor.handle as handle',
         'profile.uri as profileUri',
+        'profile.cid as profileCid',
         'profile.displayName as displayName',
         'profile.description as description',
         'profile.avatarCid as avatarCid',
@@ -52,266 +112,239 @@ export class ActorViews {
         'profile_agg.followsCount as followsCount',
         'profile_agg.followersCount as followersCount',
         'profile_agg.postsCount as postsCount',
+        'record.json as profileJson',
         this.db.db
           .selectFrom('follow')
           .if(!viewer, (q) => q.where(noMatch))
           .where('creator', '=', viewer ?? '')
           .whereRef('subjectDid', '=', ref('actor.did'))
           .select('uri')
-          .as('requesterFollowing'),
+          .as('viewerFollowing'),
         this.db.db
           .selectFrom('follow')
           .if(!viewer, (q) => q.where(noMatch))
           .whereRef('creator', '=', ref('actor.did'))
           .where('subjectDid', '=', viewer ?? '')
           .select('uri')
-          .as('requesterFollowedBy'),
-        this.db.db
-          .selectFrom('actor_block')
-          .if(!viewer, (q) => q.where(noMatch))
-          .where('creator', '=', viewer ?? '')
-          .whereRef('subjectDid', '=', ref('actor.did'))
-          .select('uri')
-          .as('requesterBlocking'),
-        this.db.db
-          .selectFrom('actor_block')
-          .if(!viewer, (q) => q.where(noMatch))
-          .whereRef('creator', '=', ref('actor.did'))
-          .where('subjectDid', '=', viewer ?? '')
-          .select('uri')
-          .as('requesterBlockedBy'),
-        this.db.db
-          .selectFrom('mute')
-          .if(!viewer, (q) => q.where(noMatch))
-          .whereRef('subjectDid', '=', ref('actor.did'))
-          .where('mutedByDid', '=', viewer ?? '')
-          .select('subjectDid')
-          .as('requesterMuted'),
+          .as('viewerFollowedBy'),
       ])
-
-    const [profileInfos, labels, listMutes] = await Promise.all([
+    const [profiles, labels, bam] = await Promise.all([
       profileInfosQb.execute(),
-      this.services.label(this.db).getLabelsForSubjects(dids),
-      this.getListMutes(dids, viewer),
+      this.services.label.getLabelsForSubjects(dids, state?.labels),
+      this.services.graph.getBlockAndMuteState(
+        viewer ? dids.map((did) => [viewer, did]) : [],
+        state?.bam,
+      ),
     ])
-
-    const profileInfoByDid = profileInfos.reduce((acc, info) => {
-      return Object.assign(acc, { [info.did]: info })
-    }, {} as Record<string, ArrayEl<typeof profileInfos>>)
-
-    const views = results.map((result) => {
-      const profileInfo = profileInfoByDid[result.did]
-      const avatar = profileInfo?.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
-            'avatar',
-            profileInfo.did,
-            profileInfo.avatarCid,
-          )
-        : undefined
-      const banner = profileInfo?.bannerCid
-        ? this.imgUriBuilder.getCommonSignedUri(
-            'banner',
-            profileInfo.did,
-            profileInfo.bannerCid,
-          )
-        : undefined
-      return {
-        did: result.did,
-        handle: result.handle,
-        displayName: profileInfo?.displayName || undefined,
-        description: profileInfo?.description || undefined,
-        avatar,
-        banner,
-        followsCount: profileInfo?.followsCount ?? 0,
-        followersCount: profileInfo?.followersCount ?? 0,
-        postsCount: profileInfo?.postsCount ?? 0,
-        indexedAt: profileInfo?.indexedAt || undefined,
-        viewer: viewer
-          ? {
-              following: profileInfo?.requesterFollowing || undefined,
-              followedBy: profileInfo?.requesterFollowedBy || undefined,
-              muted: !!profileInfo?.requesterMuted || !!listMutes[result.did],
-              mutedByList: listMutes[result.did],
-              blockedBy: !!profileInfo.requesterBlockedBy,
-              blocking: profileInfo.requesterBlocking || undefined,
-            }
-          : undefined,
-        labels: labels[result.did] ?? [],
-      }
+    const listUris = mapDefined(profiles, ({ did }) => {
+      const list = viewer && bam.muteList([viewer, did])
+      if (!list) return
+      return list
     })
-
-    return Array.isArray(result) ? views : views[0]
+    const lists = await this.services.graph.getListViews(listUris, viewer)
+    return { profilesDetailed: toMapByDid(profiles), labels, bam, lists }
   }
 
-  profile(result: ActorResult, viewer: string | null): Promise<ProfileView>
-  profile(result: ActorResult[], viewer: string | null): Promise<ProfileView[]>
-  async profile(
-    result: ActorResult | ActorResult[],
-    viewer: string | null,
-  ): Promise<ProfileView | ProfileView[]> {
-    const results = Array.isArray(result) ? result : [result]
-    if (results.length === 0) return []
+  profileDetailPresentation(
+    dids: string[],
+    state: ProfileDetailHydrationState,
+    opts: {
+      viewer?: string | null
+    },
+  ): Record<string, ProfileViewDetailed> {
+    const { viewer } = opts
+    const { profilesDetailed, lists, labels, bam } = state
+    return dids.reduce((acc, did) => {
+      const prof = profilesDetailed[did]
+      if (!prof) return acc
+      const avatar = prof?.avatarCid
+        ? this.imgUriBuilder.getPresetUri('avatar', prof.did, prof.avatarCid)
+        : undefined
+      const banner = prof?.bannerCid
+        ? this.imgUriBuilder.getPresetUri('banner', prof.did, prof.bannerCid)
+        : undefined
+      const mutedByListUri = viewer && bam.muteList([viewer, did])
+      const mutedByList =
+        mutedByListUri && lists[mutedByListUri]
+          ? this.services.graph.formatListViewBasic(lists[mutedByListUri])
+          : undefined
+      const actorLabels = labels[did] ?? []
+      const selfLabels = getSelfLabels({
+        uri: prof.profileUri,
+        cid: prof.profileCid,
+        record:
+          prof.profileJson !== null
+            ? (jsonStringToLex(prof.profileJson) as Record<string, unknown>)
+            : null,
+      })
+      acc[did] = {
+        did: prof.did,
+        handle: prof.handle ?? INVALID_HANDLE,
+        displayName: prof?.displayName || undefined,
+        description: prof?.description || undefined,
+        avatar,
+        banner,
+        followsCount: prof?.followsCount ?? 0,
+        followersCount: prof?.followersCount ?? 0,
+        postsCount: prof?.postsCount ?? 0,
+        indexedAt: prof?.indexedAt || undefined,
+        viewer: viewer
+          ? {
+              muted: bam.mute([viewer, did]),
+              mutedByList,
+              blockedBy: !!bam.blockedBy([viewer, did]),
+              blocking: bam.blocking([viewer, did]) ?? undefined,
+              following: prof?.viewerFollowing || undefined,
+              followedBy: prof?.viewerFollowedBy || undefined,
+            }
+          : undefined,
+        labels: [...actorLabels, ...selfLabels],
+      }
+      return acc
+    }, {} as Record<string, ProfileViewDetailed>)
+  }
 
+  async profileHydration(
+    dids: string[],
+    opts: {
+      viewer?: string | null
+      includeSoftDeleted?: boolean
+    },
+    state?: {
+      bam: BlockAndMuteState
+      labels: Labels
+    },
+  ): Promise<ProfileHydrationState> {
+    const { viewer = null, includeSoftDeleted } = opts
     const { ref } = this.db.db.dynamic
-    const dids = results.map((r) => r.did)
-
     const profileInfosQb = this.db.db
       .selectFrom('actor')
-      .where('actor.did', 'in', dids)
+      .where('actor.did', 'in', dids.length ? dids : [''])
       .leftJoin('profile', 'profile.creator', 'actor.did')
+      .leftJoin('record', 'record.uri', 'profile.uri')
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('actor'))),
+      )
       .select([
         'actor.did as did',
+        'actor.handle as handle',
         'profile.uri as profileUri',
+        'profile.cid as profileCid',
         'profile.displayName as displayName',
         'profile.description as description',
         'profile.avatarCid as avatarCid',
         'profile.indexedAt as indexedAt',
+        'record.json as profileJson',
         this.db.db
           .selectFrom('follow')
           .if(!viewer, (q) => q.where(noMatch))
           .where('creator', '=', viewer ?? '')
           .whereRef('subjectDid', '=', ref('actor.did'))
           .select('uri')
-          .as('requesterFollowing'),
+          .as('viewerFollowing'),
         this.db.db
           .selectFrom('follow')
           .if(!viewer, (q) => q.where(noMatch))
           .whereRef('creator', '=', ref('actor.did'))
           .where('subjectDid', '=', viewer ?? '')
           .select('uri')
-          .as('requesterFollowedBy'),
-        this.db.db
-          .selectFrom('actor_block')
-          .if(!viewer, (q) => q.where(noMatch))
-          .where('creator', '=', viewer ?? '')
-          .whereRef('subjectDid', '=', ref('actor.did'))
-          .select('uri')
-          .as('requesterBlocking'),
-        this.db.db
-          .selectFrom('actor_block')
-          .if(!viewer, (q) => q.where(noMatch))
-          .whereRef('creator', '=', ref('actor.did'))
-          .where('subjectDid', '=', viewer ?? '')
-          .select('uri')
-          .as('requesterBlockedBy'),
-        this.db.db
-          .selectFrom('mute')
-          .if(!viewer, (q) => q.where(noMatch))
-          .whereRef('subjectDid', '=', ref('actor.did'))
-          .where('mutedByDid', '=', viewer ?? '')
-          .select('subjectDid')
-          .as('requesterMuted'),
+          .as('viewerFollowedBy'),
       ])
-
-    const [profileInfos, labels, listMutes] = await Promise.all([
+    const [profiles, labels, bam] = await Promise.all([
       profileInfosQb.execute(),
-      this.services.label(this.db).getLabelsForSubjects(dids),
-      this.getListMutes(dids, viewer),
+      this.services.label.getLabelsForSubjects(dids, state?.labels),
+      this.services.graph.getBlockAndMuteState(
+        viewer ? dids.map((did) => [viewer, did]) : [],
+        state?.bam,
+      ),
     ])
+    const listUris = mapDefined(profiles, ({ did }) => {
+      const list = viewer && bam.muteList([viewer, did])
+      if (!list) return
+      return list
+    })
+    const lists = await this.services.graph.getListViews(listUris, viewer)
+    return { profiles: toMapByDid(profiles), labels, bam, lists }
+  }
 
-    const profileInfoByDid = profileInfos.reduce((acc, info) => {
-      return Object.assign(acc, { [info.did]: info })
-    }, {} as Record<string, ArrayEl<typeof profileInfos>>)
-
-    const views = results.map((result) => {
-      const profileInfo = profileInfoByDid[result.did]
-      const avatar = profileInfo?.avatarCid
-        ? this.imgUriBuilder.getCommonSignedUri(
-            'avatar',
-            profileInfo.did,
-            profileInfo.avatarCid,
-          )
+  profilePresentation(
+    dids: string[],
+    state: {
+      profiles: ProfileInfoMap
+      lists: ListInfoMap
+      labels: Labels
+      bam: BlockAndMuteState
+    },
+    opts?: {
+      viewer?: string | null
+    },
+  ): ProfileViewMap {
+    const { viewer } = opts ?? {}
+    const { profiles, lists, labels, bam } = state
+    return dids.reduce((acc, did) => {
+      const prof = profiles[did]
+      if (!prof) return acc
+      const avatar = prof?.avatarCid
+        ? this.imgUriBuilder.getPresetUri('avatar', prof.did, prof.avatarCid)
         : undefined
-      return {
-        did: result.did,
-        handle: result.handle,
-        displayName: profileInfo?.displayName || undefined,
-        description: profileInfo?.description || undefined,
+      const mutedByListUri = viewer && bam.muteList([viewer, did])
+      const mutedByList =
+        mutedByListUri && lists[mutedByListUri]
+          ? this.services.graph.formatListViewBasic(lists[mutedByListUri])
+          : undefined
+      const actorLabels = labels[did] ?? []
+      const selfLabels = getSelfLabels({
+        uri: prof.profileUri,
+        cid: prof.profileCid,
+        record:
+          prof.profileJson !== null
+            ? (jsonStringToLex(prof.profileJson) as Record<string, unknown>)
+            : null,
+      })
+      acc[did] = {
+        did: prof.did,
+        handle: prof.handle ?? INVALID_HANDLE,
+        displayName: prof?.displayName || undefined,
+        description: prof?.description || undefined,
         avatar,
-        indexedAt: profileInfo?.indexedAt || undefined,
+        indexedAt: prof?.indexedAt || undefined,
         viewer: viewer
           ? {
-              muted: !!profileInfo?.requesterMuted || !!listMutes[result.did],
-              mutedByList: listMutes[result.did],
-              blockedBy: !!profileInfo.requesterBlockedBy,
-              blocking: profileInfo.requesterBlocking || undefined,
-              following: profileInfo?.requesterFollowing || undefined,
-              followedBy: profileInfo?.requesterFollowedBy || undefined,
+              muted: bam.mute([viewer, did]),
+              mutedByList,
+              blockedBy: !!bam.blockedBy([viewer, did]),
+              blocking: bam.blocking([viewer, did]) ?? undefined,
+              following: prof?.viewerFollowing || undefined,
+              followedBy: prof?.viewerFollowedBy || undefined,
             }
           : undefined,
-        labels: labels[result.did] ?? [],
+        labels: [...actorLabels, ...selfLabels],
       }
-    })
-
-    return Array.isArray(result) ? views : views[0]
+      return acc
+    }, {} as ProfileViewMap)
   }
 
-  // @NOTE keep in sync with feedService.getActorViews()
-  profileBasic(
-    result: ActorResult,
-    viewer: string | null,
-  ): Promise<ProfileViewBasic>
-  profileBasic(
-    result: ActorResult[],
-    viewer: string | null,
-  ): Promise<ProfileViewBasic[]>
-  async profileBasic(
-    result: ActorResult | ActorResult[],
-    viewer: string | null,
-  ): Promise<ProfileViewBasic | ProfileViewBasic[]> {
-    const results = Array.isArray(result) ? result : [result]
-    if (results.length === 0) return []
-
-    const profiles = await this.profile(results, viewer)
-    const views = profiles.map((view) => ({
-      did: view.did,
-      handle: view.handle,
-      displayName: view.displayName,
-      avatar: view.avatar,
-      viewer: view.viewer,
-    }))
-
-    return Array.isArray(result) ? views : views[0]
-  }
-
-  async getListMutes(
-    subjects: string[],
-    mutedBy: string | null,
-  ): Promise<Record<string, ListViewBasic>> {
-    if (mutedBy === null) return {}
-    if (subjects.length < 1) return {}
-    const res = await this.db.db
-      .selectFrom('list_item')
-      .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
-      .innerJoin('list', 'list.uri', 'list_item.listUri')
-      .where('list_mute.mutedByDid', '=', mutedBy)
-      .where('list_item.subjectDid', 'in', subjects)
-      .selectAll('list')
-      .select('list_item.subjectDid as subjectDid')
-      .execute()
-    return res.reduce(
-      (acc, cur) => ({
-        ...acc,
-        [cur.subjectDid]: {
-          uri: cur.uri,
-          cid: cur.cid,
-          name: cur.name,
-          purpose: cur.purpose,
-          avatar: cur.avatarCid
-            ? this.imgUriBuilder.getCommonSignedUri(
-                'avatar',
-                cur.creator,
-                cur.avatarCid,
-              )
-            : undefined,
-          viewer: {
-            muted: true,
-          },
-          indexedAt: cur.indexedAt,
-        },
-      }),
-      {} as Record<string, ListViewBasic>,
-    )
+  profileBasicPresentation(
+    dids: string[],
+    state: ProfileHydrationState,
+    opts?: {
+      viewer?: string | null
+      omitLabels?: boolean
+    },
+  ): ProfileViewMap {
+    const result = this.profilePresentation(dids, state, opts)
+    return Object.values(result).reduce((acc, prof) => {
+      const profileBasic = {
+        did: prof.did,
+        handle: prof.handle,
+        displayName: prof.displayName,
+        avatar: prof.avatar,
+        viewer: prof.viewer,
+        labels: opts?.omitLabels ? undefined : prof.labels,
+      }
+      acc[prof.did] = profileBasic
+      return acc
+    }, {} as ProfileViewMap)
   }
 }
 

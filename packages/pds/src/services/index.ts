@@ -1,3 +1,4 @@
+import { AtpAgent } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import Database from '../db'
@@ -8,14 +9,26 @@ import { RepoService } from './repo'
 import { ModerationService } from './moderation'
 import { BackgroundQueue } from '../background'
 import { Crawlers } from '../crawlers'
+import { LocalService } from './local'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
   blobstore: BlobStore
+  appViewAgent?: AtpAgent
+  appViewDid?: string
+  appViewCdnUrlPattern?: string
   backgroundQueue: BackgroundQueue
   crawlers: Crawlers
 }): Services {
-  const { repoSigningKey, blobstore, backgroundQueue, crawlers } = resources
+  const {
+    repoSigningKey,
+    blobstore,
+    appViewAgent,
+    appViewDid,
+    appViewCdnUrlPattern,
+    backgroundQueue,
+    crawlers,
+  } = resources
   return {
     account: AccountService.creator(),
     auth: AuthService.creator(),
@@ -26,6 +39,12 @@ export function createServices(resources: {
       backgroundQueue,
       crawlers,
     ),
+    local: LocalService.creator(
+      repoSigningKey,
+      appViewAgent,
+      appViewDid,
+      appViewCdnUrlPattern,
+    ),
     moderation: ModerationService.creator(blobstore),
   }
 }
@@ -35,6 +54,7 @@ export type Services = {
   auth: FromDb<AuthService>
   record: FromDb<RecordService>
   repo: FromDb<RepoService>
+  local: FromDb<LocalService>
   moderation: FromDb<ModerationService>
 }
 

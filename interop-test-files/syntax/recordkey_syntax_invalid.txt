@@ -1,0 +1,14 @@
+# specs
+literal:self
+alpha/beta
+.
+..
+#extra
+@handle
+any space
+any+space
+number[3]
+number(3)
+"quote"
+pre:fix
+dHJ1ZQ==

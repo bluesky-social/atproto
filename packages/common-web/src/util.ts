@@ -17,9 +17,12 @@ export const wait = (ms: number) => {
   return new Promise((res) => setTimeout(res, ms))
 }
 
-export const bailableWait = (
-  ms: number,
-): { bail: () => void; wait: () => Promise<void> } => {
+export type BailableWait = {
+  bail: () => void
+  wait: () => Promise<void>
+}
+
+export const bailableWait = (ms: number): BailableWait => {
   let bail
   const waitPromise = new Promise<void>((res) => {
     const timeout = setTimeout(res, ms)

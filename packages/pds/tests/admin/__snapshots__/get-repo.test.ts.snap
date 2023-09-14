@@ -72,6 +72,31 @@ Object {
       },
     ],
   },
-  "relatedRecords": Array [],
+  "relatedRecords": Array [
+    Object {
+      "$type": "app.bsky.actor.profile",
+      "avatar": Object {
+        "$type": "blob",
+        "mimeType": "image/jpeg",
+        "ref": Object {
+          "$link": "cids(0)",
+        },
+        "size": 3976,
+      },
+      "description": "its me!",
+      "displayName": "ali",
+      "labels": Object {
+        "$type": "com.atproto.label.defs#selfLabels",
+        "values": Array [
+          Object {
+            "val": "self-label-a",
+          },
+          Object {
+            "val": "self-label-b",
+          },
+        ],
+      },
+    },
+  ],
 }
 `;

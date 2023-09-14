@@ -11,12 +11,12 @@
           "type": "object",
           "required": ["handle", "email", "password"],
           "properties": {
-            "email": {"type": "string"},
-            "handle": {"type": "string", "format": "handle"},
-            "did": {"type": "string", "format": "did"},
-            "inviteCode": {"type": "string"},
-            "password": {"type": "string"},
-            "recoveryKey": {"type": "string"}
+            "email": { "type": "string" },
+            "handle": { "type": "string", "format": "handle" },
+            "did": { "type": "string", "format": "did" },
+            "inviteCode": { "type": "string" },
+            "password": { "type": "string" },
+            "recoveryKey": { "type": "string" }
           }
         }
       },
@@ -34,13 +34,13 @@
         }
       },
       "errors": [
-        {"name": "InvalidHandle"},
-        {"name": "InvalidPassword"},
-        {"name": "InvalidInviteCode"},
-        {"name": "HandleNotAvailable"},
-        {"name": "UnsupportedDomain"},
-        {"name": "UnresolvableDid"},
-        {"name": "IncompatibleDidDoc"}
+        { "name": "InvalidHandle" },
+        { "name": "InvalidPassword" },
+        { "name": "InvalidInviteCode" },
+        { "name": "HandleNotAvailable" },
+        { "name": "UnsupportedDomain" },
+        { "name": "UnresolvableDid" },
+        { "name": "IncompatibleDidDoc" }
       ]
     }
   }

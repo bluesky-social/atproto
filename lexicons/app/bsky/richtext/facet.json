@@ -6,10 +6,10 @@
       "type": "object",
       "required": ["index", "features"],
       "properties": {
-        "index": {"type": "ref", "ref": "#byteSlice"},
+        "index": { "type": "ref", "ref": "#byteSlice" },
         "features": {
           "type": "array",
-          "items": {"type": "union", "refs": ["#mention", "#link"]}
+          "items": { "type": "union", "refs": ["#mention", "#link"] }
         }
       }
     },
@@ -18,7 +18,7 @@
       "description": "A facet feature for actor mentions.",
       "required": ["did"],
       "properties": {
-        "did": {"type": "string", "format": "did"}
+        "did": { "type": "string", "format": "did" }
       }
     },
     "link": {
@@ -26,7 +26,7 @@
       "description": "A facet feature for links.",
       "required": ["uri"],
       "properties": {
-        "uri": {"type": "string", "format": "uri"}
+        "uri": { "type": "string", "format": "uri" }
       }
     },
     "byteSlice": {
@@ -34,8 +34,8 @@
       "description": "A text segment. Start is inclusive, end is exclusive. Indices are for utf8-encoded strings.",
       "required": ["byteStart", "byteEnd"],
       "properties": {
-        "byteStart": {"type": "integer", "minimum": 0},
-        "byteEnd": {"type": "integer", "minimum": 0}
+        "byteStart": { "type": "integer", "minimum": 0 },
+        "byteEnd": { "type": "integer", "minimum": 0 }
       }
     }
   }

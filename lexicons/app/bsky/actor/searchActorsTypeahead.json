@@ -8,8 +8,13 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "term": {"type": "string"},
-          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50}
+          "term": { "type": "string" },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          }
         }
       },
       "output": {
@@ -20,7 +25,10 @@
           "properties": {
             "actors": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.actor.defs#profileViewBasic"}
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.actor.defs#profileViewBasic"
+              }
             }
           }
         }
