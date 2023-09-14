@@ -4390,6 +4390,10 @@ export const schemaDict = {
               ref: 'lex:com.atproto.label.defs#label',
             },
           },
+          threadgate: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#threadgateView',
+          },
         },
       },
       viewerState: {
@@ -4486,6 +4490,10 @@ export const schemaDict = {
               ],
             },
           },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#viewerThreadState',
+          },
         },
       },
       notFoundPost: {
@@ -4531,6 +4539,14 @@ export const schemaDict = {
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#viewerState',
+          },
+        },
+      },
+      viewerThreadState: {
+        type: 'object',
+        properties: {
+          canReply: {
+            type: 'boolean',
           },
         },
       },
@@ -4616,6 +4632,29 @@ export const schemaDict = {
           repost: {
             type: 'string',
             format: 'at-uri',
+          },
+        },
+      },
+      threadgateView: {
+        type: 'object',
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          record: {
+            type: 'unknown',
+          },
+          lists: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.graph.defs#listViewBasic',
+            },
           },
         },
       },
@@ -5610,6 +5649,63 @@ export const schemaDict = {
               type: 'string',
               format: 'datetime',
             },
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedThreadgate: {
+    lexicon: 1,
+    id: 'app.bsky.feed.threadgate',
+    defs: {
+      main: {
+        type: 'record',
+        key: 'tid',
+        description:
+          "Defines interaction gating rules for a thread. The rkey of the threadgate record should match the rkey of the thread's root post.",
+        record: {
+          type: 'object',
+          required: ['post', 'createdAt'],
+          properties: {
+            post: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            allow: {
+              type: 'array',
+              maxLength: 5,
+              items: {
+                type: 'union',
+                refs: [
+                  'lex:app.bsky.feed.threadgate#mentionRule',
+                  'lex:app.bsky.feed.threadgate#followingRule',
+                  'lex:app.bsky.feed.threadgate#listRule',
+                ],
+              },
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+      mentionRule: {
+        type: 'object',
+        description: 'Allow replies from actors mentioned in your post.',
+      },
+      followingRule: {
+        type: 'object',
+        description: 'Allow replies from actors you follow.',
+      },
+      listRule: {
+        type: 'object',
+        description: 'Allow replies from actors on a list.',
+        required: ['list'],
+        properties: {
+          list: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -6932,6 +7028,7 @@ export const ids = {
   AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
+  AppBskyFeedThreadgate: 'app.bsky.feed.threadgate',
   AppBskyGraphBlock: 'app.bsky.graph.block',
   AppBskyGraphDefs: 'app.bsky.graph.defs',
   AppBskyGraphFollow: 'app.bsky.graph.follow',

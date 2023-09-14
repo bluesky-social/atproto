@@ -9,6 +9,10 @@ import {
   Record as PostRecord,
   isRecord as isPostRecord,
 } from '../../lexicon/types/app/bsky/feed/post'
+import {
+  Record as ThreadgateRecord,
+  isListRule,
+} from '../../lexicon/types/app/bsky/feed/threadgate'
 import { isMain as isEmbedImages } from '../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../lexicon/types/app/bsky/embed/external'
 import {
@@ -27,12 +31,19 @@ import {
   RecordEmbedViewRecord,
   PostBlocksMap,
   FeedHydrationState,
+  ThreadgateInfoMap,
 } from './types'
 import { LabelService } from '../label'
 import { ActorService } from '../actor'
-import { BlockAndMuteState, GraphService, RelationshipPair } from '../graph'
+import {
+  BlockAndMuteState,
+  GraphService,
+  ListInfoMap,
+  RelationshipPair,
+} from '../graph'
 import { FeedViews } from './views'
 import { LabelCache } from '../../label-cache'
+import { threadgateToPostUri, postToThreadgateUri } from './util'
 
 export * from './types'
 
@@ -130,6 +141,8 @@ export class FeedService {
         'post.cid as cid',
         'post.creator as creator',
         'post.sortAt as indexedAt',
+        'post.invalidReplyRoot as invalidReplyRoot',
+        'post.violatesThreadGate as violatesThreadGate',
         'record.json as recordJson',
         'post_agg.likeCount as likeCount',
         'post_agg.repostCount as repostCount',
@@ -152,11 +165,8 @@ export class FeedService {
       .execute()
     return posts.reduce((acc, cur) => {
       const { recordJson, ...post } = cur
-      const info: PostInfo = {
-        ...post,
-        record: jsonStringToLex(recordJson) as Record<string, unknown>,
-        viewer,
-      }
+      const record = jsonStringToLex(recordJson) as PostRecord
+      const info: PostInfo = { ...post, record, viewer }
       return Object.assign(acc, { [post.uri]: info })
     }, {} as PostInfoMap)
   }
@@ -216,31 +226,35 @@ export class FeedService {
     depth = 0,
   ): Promise<FeedHydrationState> {
     const { viewer, dids, uris } = refs
-    const [posts, labels, bam] = await Promise.all([
+    const [posts, threadgates, labels, bam] = await Promise.all([
       this.getPostInfos(Array.from(uris), viewer),
+      this.threadgatesByPostUri(Array.from(uris)),
       this.services.label.getLabelsForSubjects([...uris, ...dids]),
       this.services.graph.getBlockAndMuteState(
         viewer ? [...dids].map((did) => [viewer, did]) : [],
       ),
     ])
+
     // profileState for labels and bam handled above, profileHydration() shouldn't fetch additional
-    const [profileState, blocks] = await Promise.all([
+    const [profileState, blocks, lists] = await Promise.all([
       this.services.actor.views.profileHydration(
         Array.from(dids),
         { viewer },
         { bam, labels },
       ),
       this.blocksForPosts(posts, bam),
+      this.listsForThreadgates(threadgates, viewer),
     ])
     const embeds = await this.embedsForPosts(posts, blocks, viewer, depth)
     return {
       posts,
+      threadgates,
       blocks,
       embeds,
       labels, // includes info for profiles
       bam, // includes info for profiles
       profiles: profileState.profiles,
-      lists: profileState.lists,
+      lists: Object.assign(lists, profileState.lists),
     }
   }
 
@@ -398,8 +412,10 @@ export class FeedService {
           uri,
           actorInfos,
           feedState.posts,
+          feedState.threadgates,
           feedState.embeds,
           feedState.labels,
+          feedState.lists,
         )
         recordEmbedViews[uri] = this.views.getRecordEmbedView(
           uri,
@@ -415,6 +431,39 @@ export class FeedService {
       }
     }
     return recordEmbedViews
+  }
+
+  async threadgatesByPostUri(postUris: string[]): Promise<ThreadgateInfoMap> {
+    const gates = postUris.length
+      ? await this.db.db
+          .selectFrom('record')
+          .where('uri', 'in', postUris.map(postToThreadgateUri))
+          .select(['uri', 'cid', 'json'])
+          .execute()
+      : []
+    const gatesByPostUri = gates.reduce((acc, gate) => {
+      const record = jsonStringToLex(gate.json) as ThreadgateRecord
+      const postUri = threadgateToPostUri(gate.uri)
+      if (record.post !== postUri) return acc // invalid, skip
+      acc[postUri] = { uri: gate.uri, cid: gate.cid, record }
+      return acc
+    }, {} as ThreadgateInfoMap)
+    return gatesByPostUri
+  }
+
+  listsForThreadgates(
+    threadgates: ThreadgateInfoMap,
+    viewer: string | null,
+  ): Promise<ListInfoMap> {
+    const listsUris = new Set<string>()
+    Object.values(threadgates).forEach((gate) => {
+      gate?.record.allow?.forEach((rule) => {
+        if (isListRule(rule)) {
+          listsUris.add(rule.list)
+        }
+      })
+    })
+    return this.services.graph.getListViews([...listsUris], viewer)
   }
 }
 

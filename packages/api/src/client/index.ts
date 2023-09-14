@@ -103,6 +103,7 @@ import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedLike from './types/app/bsky/feed/like'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
+import * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate'
 import * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 import * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
 import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
@@ -228,6 +229,7 @@ export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 export * as AppBskyFeedLike from './types/app/bsky/feed/like'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
+export * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate'
 export * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 export * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
 export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
@@ -1204,6 +1206,7 @@ export class FeedNS {
   like: LikeRecord
   post: PostRecord
   repost: RepostRecord
+  threadgate: ThreadgateRecord
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -1211,6 +1214,7 @@ export class FeedNS {
     this.like = new LikeRecord(service)
     this.post = new PostRecord(service)
     this.repost = new RepostRecord(service)
+    this.threadgate = new ThreadgateRecord(service)
   }
 
   describeFeedGenerator(
@@ -1618,6 +1622,71 @@ export class RepostRecord {
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.feed.repost', ...params },
+      { headers },
+    )
+  }
+}
+
+export class ThreadgateRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedThreadgate.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.threadgate',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyFeedThreadgate.Record
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.threadgate',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyFeedThreadgate.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.feed.threadgate'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.feed.threadgate', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.threadgate', ...params },
       { headers },
     )
   }

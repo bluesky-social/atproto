@@ -195,6 +195,9 @@ Object {
     },
   },
   "replies": Array [],
+  "viewer": Object {
+    "canReply": true,
+  },
 }
 `;
 
@@ -434,6 +437,9 @@ Object {
       ],
     },
   ],
+  "viewer": Object {
+    "canReply": true,
+  },
 }
 `;
 
@@ -609,6 +615,9 @@ Object {
       },
     },
   ],
+  "viewer": Object {
+    "canReply": true,
+  },
 }
 `;
 
@@ -762,6 +771,9 @@ Object {
       ],
     },
   ],
+  "viewer": Object {
+    "canReply": true,
+  },
 }
 `;
 
@@ -814,6 +826,9 @@ Object {
     "viewer": Object {},
   },
   "replies": Array [],
+  "viewer": Object {
+    "canReply": true,
+  },
 }
 `;
 
@@ -881,6 +896,9 @@ Object {
     "viewer": Object {},
   },
   "replies": Array [],
+  "viewer": Object {
+    "canReply": true,
+  },
 }
 `;
 
@@ -950,6 +968,9 @@ Object {
     },
   },
   "replies": Array [],
+  "viewer": Object {
+    "canReply": true,
+  },
 }
 `;
 
@@ -1019,6 +1040,9 @@ Object {
     },
   },
   "replies": Array [],
+  "viewer": Object {
+    "canReply": true,
+  },
 }
 `;
 
@@ -1219,6 +1243,9 @@ Object {
       ],
     },
   ],
+  "viewer": Object {
+    "canReply": true,
+  },
 }
 `;
 
@@ -1357,5 +1384,8 @@ Object {
       "replies": Array [],
     },
   ],
+  "viewer": Object {
+    "canReply": true,
+  },
 }
 `;

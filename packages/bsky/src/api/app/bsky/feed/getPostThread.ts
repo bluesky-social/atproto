@@ -1,26 +1,33 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import {
   BlockedPost,
   NotFoundPost,
   ThreadViewPost,
   isNotFoundPost,
+  isThreadViewPost,
 } from '../../../../lexicon/types/app/bsky/feed/defs'
+import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
+import { Record as ThreadgateRecord } from '../../../../lexicon/types/app/bsky/feed/threadgate'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import AppContext from '../../../../context'
 import {
   FeedService,
   FeedRow,
   FeedHydrationState,
+  PostInfo,
 } from '../../../../services/feed'
 import {
   getAncestorsAndSelfQb,
   getDescendentsQb,
 } from '../../../../services/util/post'
 import { Database } from '../../../../db'
+import DatabaseSchema from '../../../../db/database-schema'
 import { setRepoRev } from '../../../util'
-import { createPipeline, noRules } from '../../../../pipeline'
 import { ActorInfoMap, ActorService } from '../../../../services/actor'
+import { violatesThreadGate } from '../../../../services/feed/util'
+import { createPipeline, noRules } from '../../../../pipeline'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(
@@ -73,7 +80,21 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
   } = state
   const relevant = getRelevantIds(threadData)
   const hydrated = await feedService.feedHydration({ ...relevant, viewer })
-  return { ...state, ...hydrated }
+  // check root reply interaction rules
+  const anchorPostUri = threadData.post.postUri
+  const rootUri = threadData.post.replyRoot || anchorPostUri
+  const anchor = hydrated.posts[anchorPostUri]
+  const root = hydrated.posts[rootUri]
+  const gate = hydrated.threadgates[rootUri]?.record
+  const viewerCanReply = await checkViewerCanReply(
+    ctx.db.db,
+    anchor ?? null,
+    viewer,
+    new AtUri(rootUri).host,
+    (root?.record ?? null) as PostRecord | null,
+    gate ?? null,
+  )
+  return { ...state, ...hydrated, viewerCanReply }
 }
 
 const presentation = (state: HydrationState, ctx: Context) => {
@@ -89,6 +110,9 @@ const presentation = (state: HydrationState, ctx: Context) => {
     // @TODO technically this could be returned as a NotFoundPost based on lexicon
     throw new InvalidRequestError(`Post not found: ${params.uri}`, 'NotFound')
   }
+  if (isThreadViewPost(thread) && params.viewer) {
+    thread.viewer = { canReply: state.viewerCanReply }
+  }
   return { thread }
 }
 
@@ -99,17 +123,27 @@ const composeThread = (
   ctx: Context,
 ) => {
   const { feedService } = ctx
-  const { posts, embeds, blocks, labels } = state
+  const { posts, threadgates, embeds, blocks, labels, lists } = state
 
   const post = feedService.views.formatPostView(
     threadData.post.postUri,
     actors,
     posts,
+    threadgates,
     embeds,
     labels,
+    lists,
   )
 
-  if (!post || blocks[post.uri]?.reply) {
+  // replies that are invalid due to reply-gating:
+  // a. may appear as the anchor post, but without any parent or replies.
+  // b. may not appear anywhere else in the thread.
+  const isAnchorPost = state.threadData.post.uri === threadData.post.postUri
+  const info = posts[threadData.post.postUri]
+  const badReply = !!info?.invalidReplyRoot || !!info?.violatesThreadGate
+  const omitBadReply = !isAnchorPost && badReply
+
+  if (!post || blocks[post.uri]?.reply || omitBadReply) {
     return {
       $type: 'app.bsky.feed.defs#notFoundPost',
       uri: threadData.post.postUri,
@@ -135,7 +169,7 @@ const composeThread = (
   }
 
   let parent
-  if (threadData.parent) {
+  if (threadData.parent && !badReply) {
     if (threadData.parent instanceof ParentNotFoundError) {
       parent = {
         $type: 'app.bsky.feed.defs#notFoundPost',
@@ -148,7 +182,7 @@ const composeThread = (
   }
 
   let replies: (ThreadViewPost | NotFoundPost | BlockedPost)[] | undefined
-  if (threadData.replies) {
+  if (threadData.replies && !badReply) {
     replies = threadData.replies.flatMap((reply) => {
       const thread = composeThread(reply, actors, state, ctx)
       // e.g. don't bother including #postNotFound reply placeholders for takedowns. either way matches api contract.
@@ -184,6 +218,10 @@ const getRelevantIds = (
   }
   dids.add(thread.post.postAuthorDid)
   uris.add(thread.post.postUri)
+  if (thread.post.replyRoot) {
+    // ensure root is included for checking interactions
+    uris.add(thread.post.replyRoot)
+  }
   return { dids, uris }
 }
 
@@ -265,6 +303,26 @@ const getChildrenData = (
   }))
 }
 
+const checkViewerCanReply = async (
+  db: DatabaseSchema,
+  anchor: PostInfo | null,
+  viewer: string | null,
+  owner: string,
+  root: PostRecord | null,
+  threadgate: ThreadgateRecord | null,
+) => {
+  if (!viewer) return false
+  if (anchor?.invalidReplyRoot || anchor?.violatesThreadGate) return false
+  const viewerViolatesThreadGate = await violatesThreadGate(
+    db,
+    viewer,
+    owner,
+    root,
+    threadgate,
+  )
+  return !viewerViolatesThreadGate
+}
+
 class ParentNotFoundError extends Error {
   constructor(public uri: string) {
     super(`Parent not found: ${uri}`)
@@ -290,4 +348,7 @@ type SkeletonState = {
   threadData: PostThread
 }
 
-type HydrationState = SkeletonState & FeedHydrationState
+type HydrationState = SkeletonState &
+  FeedHydrationState & {
+    viewerCanReply: boolean
+  }

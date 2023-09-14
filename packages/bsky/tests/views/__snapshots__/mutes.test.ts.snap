@@ -269,5 +269,8 @@ Object {
       },
     },
   ],
+  "viewer": Object {
+    "canReply": true,
+  },
 }
 `;
