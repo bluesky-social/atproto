@@ -5,11 +5,7 @@ Validation logic for AT identifiers - DIDs, Handles, NSIDs, and AT URIs.
 ## Usage
 
 ```typescript
-import {
-  isValidHandle,
-  ensureValidHandle,
-  isValidDid,
-} from '@atproto/syntax'
+import { isValidHandle, ensureValidHandle, isValidDid } from '@atproto/syntax'
 
 isValidHandle('alice.test') // returns true
 ensureValidHandle('alice.test') // returns void
