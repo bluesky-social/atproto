@@ -268,12 +268,14 @@ export class PDS {
         rlCreator = (opts: RateLimiterOpts) =>
           RateLimiter.redis(redisScratch, {
             bypassSecret: config.rateLimitBypassKey,
+            bypassIps: config.rateLimitBypassIps,
             ...opts,
           })
       } else {
         rlCreator = (opts: RateLimiterOpts) =>
           RateLimiter.memory({
             bypassSecret: config.rateLimitBypassKey,
+            bypassIps: config.rateLimitBypassIps,
             ...opts,
           })
       }
