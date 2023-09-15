@@ -180,6 +180,7 @@ export class AppContext {
       repoSigningKey,
       blobstore,
       appViewAgent,
+      pdsHostname: cfg.service.hostname,
       appViewDid: cfg.bskyAppView.did,
       appViewCdnUrlPattern: cfg.bskyAppView.cdnUrlPattern,
       backgroundQueue,

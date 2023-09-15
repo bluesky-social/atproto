@@ -39,6 +39,7 @@ export class LocalService {
   constructor(
     public db: Database,
     public signingKey: Keypair,
+    public pdsHostname: string,
     public appviewAgent?: AtpAgent,
     public appviewDid?: string,
     public appviewCdnUrlPattern?: string,
@@ -46,6 +47,7 @@ export class LocalService {
 
   static creator(
     signingKey: Keypair,
+    pdsHostname: string,
     appviewAgent?: AtpAgent,
     appviewDid?: string,
     appviewCdnUrlPattern?: string,
@@ -54,6 +56,7 @@ export class LocalService {
       new LocalService(
         db,
         signingKey,
+        pdsHostname,
         appviewAgent,
         appviewDid,
         appviewCdnUrlPattern,
@@ -62,7 +65,7 @@ export class LocalService {
 
   getImageUrl(pattern: CommonSignedUris, did: string, cid: string) {
     if (!this.appviewCdnUrlPattern) {
-      return ''
+      return `https://${this.pdsHostname}/xrpc/${ids.ComAtprotoSyncGetBlob}?did=${did}&cid=${cid}`
     }
     return util.format(this.appviewCdnUrlPattern, pattern, did, cid)
   }

@@ -14,6 +14,7 @@ import { LocalService } from './local'
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
   blobstore: BlobStore
+  pdsHostname: string
   appViewAgent?: AtpAgent
   appViewDid?: string
   appViewCdnUrlPattern?: string
@@ -23,6 +24,7 @@ export function createServices(resources: {
   const {
     repoSigningKey,
     blobstore,
+    pdsHostname,
     appViewAgent,
     appViewDid,
     appViewCdnUrlPattern,
@@ -41,6 +43,7 @@ export function createServices(resources: {
     ),
     local: LocalService.creator(
       repoSigningKey,
+      pdsHostname,
       appViewAgent,
       appViewDid,
       appViewCdnUrlPattern,
