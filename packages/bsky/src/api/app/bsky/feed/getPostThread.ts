@@ -140,7 +140,9 @@ const composeThread = (
   // b. may not appear anywhere else in the thread.
   const isAnchorPost = state.threadData.post.uri === threadData.post.postUri
   const info = posts[threadData.post.postUri]
-  const badReply = !!info?.invalidReplyRoot || !!info?.violatesThreadGate
+  // @TODO re-enable invalidReplyRoot check
+  // const badReply = !!info?.invalidReplyRoot || !!info?.violatesThreadGate
+  const badReply = !!info?.violatesThreadGate
   const omitBadReply = !isAnchorPost && badReply
 
   if (!post || blocks[post.uri]?.reply || omitBadReply) {
@@ -312,7 +314,9 @@ const checkViewerCanReply = async (
   threadgate: ThreadgateRecord | null,
 ) => {
   if (!viewer) return false
-  if (anchor?.invalidReplyRoot || anchor?.violatesThreadGate) return false
+  // @TODO re-enable invalidReplyRoot check
+  // if (anchor?.invalidReplyRoot || anchor?.violatesThreadGate) return false
+  if (anchor?.violatesThreadGate) return false
   const viewerViolatesThreadGate = await violatesThreadGate(
     db,
     viewer,
