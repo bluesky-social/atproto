@@ -7,6 +7,7 @@ import kiraAvatarB64 from './img/kira-avatar-b64'
 import daveAvatarB64 from './img/dave-avatar-b64'
 import amanAvatarB64 from './img/aman-avatar-b64'
 import aiEverydayAvatarB64 from './img/ai-everyday-avatar-b64'
+import aiGlamAvatarB64 from './img/ai-glam-avatar-b64'
 import photoTrioAvatarB64 from './img/photo-trio-avatar-b64'
 import smartGadgetsAvatarB64 from './img/smart-gadgets-avatar-b64'
 import { BlobRef } from '@atproto/api'
@@ -28,6 +29,10 @@ const userUpdates: { [handle: string]: UserUpdate } = {
   'aimagiceveryday.group': {
     avatar: aiEverydayAvatarB64,
     displayName: 'AI Magic Everyday',
+  },
+  'aiglamsquad.group': {
+    avatar: aiGlamAvatarB64,
+    displayName: 'AI Glam Squad, like totally💅',
   },
   'thephototriothatrules.group': {
     avatar: photoTrioAvatarB64,

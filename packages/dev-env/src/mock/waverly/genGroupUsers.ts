@@ -18,6 +18,13 @@ export default (env: TestNetworkNoAppView): User[] => {
       agent: env.pds.getClient(),
     },
     {
+      email: 'aiglamsquad@group.social',
+      did: '',
+      handle: 'aiglamsquad.group',
+      password: 'hunter2',
+      agent: env.pds.getClient(),
+    },
+    {
       email: 'thephototriothatrules@group.social',
       did: '',
       handle: 'thephototriothatrules.group',
