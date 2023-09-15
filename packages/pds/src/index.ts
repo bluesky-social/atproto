@@ -20,7 +20,7 @@ import {
   RateLimiterOpts,
   Options as XrpcServerOptions,
 } from '@atproto/xrpc-server'
-import { MINUTE } from '@atproto/common'
+import { DAY, HOUR, MINUTE } from '@atproto/common'
 import * as appviewConsumers from './app-view/event-stream/consumers'
 import inProcessAppView from './app-view/api'
 import API from './api'
@@ -286,6 +286,18 @@ export class PDS {
             name: 'global-ip',
             durationMs: 5 * MINUTE,
             points: 3000,
+          },
+        ],
+        shared: [
+          {
+            name: 'repo-write-hour',
+            durationMs: HOUR,
+            points: 5000, // creates=3, puts=2, deletes=1
+          },
+          {
+            name: 'repo-write-day',
+            durationMs: DAY,
+            points: 35000, // creates=3, puts=2, deletes=1
           },
         ],
       }
