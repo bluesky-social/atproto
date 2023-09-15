@@ -56,6 +56,12 @@ uri.collection // => 'com.example.post'
 uri.rkey // => '1234'
 ```
 
+## Prior Work
+
+This package is a combination of three previous packaged published under the
+`@atproto` namespace: `nsid`, `uri`, and `identifier`. Those packages are
+deprecated and this package is their successor.
+
 ## License
 
 MIT

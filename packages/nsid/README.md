@@ -1,5 +1,8 @@
 # NameSpaced IDs (NSID) API
 
+> This package is now deprecated. Please use `@atproto/syntax`, which is the
+> successor to this package and provides the same interfaces.
+
 ## Usage
 
 ```typescript
