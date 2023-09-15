@@ -1,6 +1,6 @@
 {
   "name": "@atproto/identifier",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "main": "src/index.ts",
   "publishConfig": {
     "main": "dist/index.js",
