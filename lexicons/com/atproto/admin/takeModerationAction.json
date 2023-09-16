@@ -9,14 +9,20 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["action", "subject", "reason", "createdBy"],
+          "required": ["action", "subject", "createdBy"],
           "properties": {
             "action": {
               "type": "string",
               "knownValues": [
                 "com.atproto.admin.defs#takedown",
                 "com.atproto.admin.defs#flag",
-                "com.atproto.admin.defs#acknowledge"
+                "com.atproto.admin.defs#acknowledge",
+                "com.atproto.admin.defs#escalate",
+                "com.atproto.admin.defs#comment",
+                "com.atproto.admin.defs#label",
+                "com.atproto.admin.defs#revert",
+                "com.atproto.admin.defs#report",
+                "com.atproto.admin.defs#mute"
               ]
             },
             "subject": {
@@ -38,12 +44,17 @@
               "type": "array",
               "items": { "type": "string" }
             },
-            "reason": { "type": "string" },
+            "comment": { "type": "string" },
             "durationInHours": {
               "type": "integer",
               "description": "Indicates how long this action was meant to be in effect before automatically expiring."
             },
-            "createdBy": { "type": "string", "format": "did" }
+            "createdBy": { "type": "string", "format": "did" },
+            "meta": { "type": "object" },
+            "refEventId": {
+              "type": "integer",
+              "description": "If the event needs a reference to previous event, for instance, when reverting a previous action, the reference event id should be passed"
+            }
           }
         }
       },

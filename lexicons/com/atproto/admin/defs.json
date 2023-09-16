@@ -9,10 +9,9 @@
         "action",
         "subject",
         "subjectBlobCids",
-        "reason",
+        "comment",
         "createdBy",
-        "createdAt",
-        "resolvedReportIds"
+        "createdAt"
       ],
       "properties": {
         "id": { "type": "integer" },
@@ -28,10 +27,11 @@
         "subjectBlobCids": { "type": "array", "items": { "type": "string" } },
         "createLabelVals": { "type": "array", "items": { "type": "string" } },
         "negateLabelVals": { "type": "array", "items": { "type": "string" } },
-        "reason": { "type": "string" },
+        "comment": { "type": "string" },
         "createdBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" },
         "reversal": { "type": "ref", "ref": "#actionReversal" },
+        "meta": { "type": "object" },
         "resolvedReportIds": { "type": "array", "items": { "type": "integer" } }
       }
     },
@@ -42,7 +42,7 @@
         "action",
         "subject",
         "subjectBlobs",
-        "reason",
+        "comment",
         "createdBy",
         "createdAt",
         "resolvedReports"
@@ -69,7 +69,7 @@
         },
         "createLabelVals": { "type": "array", "items": { "type": "string" } },
         "negateLabelVals": { "type": "array", "items": { "type": "string" } },
-        "reason": { "type": "string" },
+        "comment": { "type": "string" },
         "createdBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" },
         "reversal": { "type": "ref", "ref": "#actionReversal" },
@@ -93,16 +93,25 @@
     },
     "actionReversal": {
       "type": "object",
-      "required": ["reason", "createdBy", "createdAt"],
+      "required": ["comment", "createdBy", "createdAt"],
       "properties": {
-        "reason": { "type": "string" },
+        "comment": { "type": "string" },
         "createdBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" }
       }
     },
     "actionType": {
       "type": "string",
-      "knownValues": ["#takedown", "#flag", "#acknowledge", "#escalate"]
+      "knownValues": [
+        "#takedown",
+        "#flag",
+        "#acknowledge",
+        "#escalate",
+        "#comment",
+        "#label",
+        "#revert",
+        "#mute"
+      ]
     },
     "takedown": {
       "type": "token",
@@ -120,27 +129,52 @@
       "type": "token",
       "description": "Moderation action type: Escalate. Indicates that the content has been flagged for additional review."
     },
+    "comment": {
+      "type": "token",
+      "description": "Moderation action type: Comment. Indicates that no change is being made to the subject or associated reports, just a comment is being added by a human or automated moderator"
+    },
+    "label": {
+      "type": "token",
+      "description": "Moderation action type: Label. Indicates that labels associated with the subject are being changed."
+    },
+    "revert": {
+      "type": "token",
+      "description": "Moderation action type: Revert. Indicates that a previously taken action is being reversed."
+    },
+    "mute": {
+      "type": "token",
+      "description": "Moderation action type: Mute. Indicates that reports/other events on a subject can be muted for a period of time."
+    },
+    "report": {
+      "type": "token",
+      "description": "Moderation action type: Report. Indicates that a new report was received for the subject."
+    },
     "reportView": {
       "type": "object",
       "required": [
         "id",
-        "reasonType",
+        "commentType",
         "subject",
         "reportedBy",
         "createdAt",
-        "resolvedByActionIds"
+        "resolvedByActionIds",
+        "subjectView"
       ],
       "properties": {
         "id": { "type": "integer" },
-        "reasonType": {
+        "commentType": {
           "type": "ref",
-          "ref": "com.atproto.moderation.defs#reasonType"
+          "ref": "com.atproto.moderation.defs#commentType"
         },
-        "reason": { "type": "string" },
+        "comment": { "type": "string" },
         "subjectRepoHandle": { "type": "string" },
         "subject": {
           "type": "union",
           "refs": ["#repoRef", "com.atproto.repo.strongRef"]
+        },
+        "subjectView": {
+          "type": "ref",
+          "ref": "com.atproto.admin.defs#subjectView"
         },
         "reportedBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" },
@@ -150,23 +184,46 @@
         }
       }
     },
+    "subjectView": {
+      "type": "object",
+      "required": ["id", "subject", "updatedAt", "status"],
+      "properties": {
+        "id": { "type": "integer" },
+        "subject": {
+          "type": "union",
+          "refs": ["#repoRef", "com.atproto.repo.strongRef"]
+        },
+        "updatedAt": { "type": "string", "format": "datetime" },
+        "status": {
+          "type": "string",
+          "knownValues": [
+            "#resolved",
+            "#escalated",
+            "#takendown",
+            "#muted",
+            "#needsReview"
+          ]
+        }
+      }
+    },
     "reportViewDetail": {
       "type": "object",
       "required": [
         "id",
-        "reasonType",
+        "commentType",
         "subject",
+        "subjectView",
         "reportedBy",
         "createdAt",
         "resolvedByActions"
       ],
       "properties": {
         "id": { "type": "integer" },
-        "reasonType": {
+        "commentType": {
           "type": "ref",
-          "ref": "com.atproto.moderation.defs#reasonType"
+          "ref": "com.atproto.moderation.defs#commentType"
         },
-        "reason": { "type": "string" },
+        "comment": { "type": "string" },
         "subject": {
           "type": "union",
           "refs": [
@@ -175,6 +232,10 @@
             "#recordView",
             "#recordViewNotFound"
           ]
+        },
+        "subjectView": {
+          "type": "ref",
+          "ref": "com.atproto.admin.defs#subjectView"
         },
         "reportedBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" },
