@@ -38,8 +38,12 @@ const agent = new BskyAgent({
   },
 })
 
-await agent.login({ identifier: 'alice@mail.com', password: 'hunter2' })
-await agent.resumeSession(savedSessionData)
+if(!savedSessionData) {
+  await agent.login({ identifier: 'alice@mail.com', password: 'hunter2' })
+} else {
+  await agent.resumeSession(savedSessionData)
+}
+
 await agent.createAccount({
   email: 'alice@mail.com',
   password: 'hunter2',
