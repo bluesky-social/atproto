@@ -5810,10 +5810,12 @@ export const schemaDict = {
       mentionRule: {
         type: 'object',
         description: 'Allow replies from actors mentioned in your post.',
+        properties: {},
       },
       followingRule: {
         type: 'object',
         description: 'Allow replies from actors you follow.',
+        properties: {},
       },
       listRule: {
         type: 'object',
