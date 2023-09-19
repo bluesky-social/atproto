@@ -40,7 +40,7 @@
           },
           "tags": {
             "type": "array",
-            "items": { "type": "ref", "ref": "app.bsky.feed.defs#tag" }
+            "items": { "type": "string" }
           },
           "createdAt": { "type": "string", "format": "datetime" }
         }
