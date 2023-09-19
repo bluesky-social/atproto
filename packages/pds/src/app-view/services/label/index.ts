@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
-import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
+import { toSimplifiedISOSafe } from '@atproto/common'
 import Database from '../../../db'
 import {
   Label,
@@ -8,7 +8,6 @@ import {
 } from '../../../lexicon/types/com/atproto/label/defs'
 import { ids } from '../../../lexicon/lexicons'
 import { LabelCache } from '../../../label-cache'
-import { toSimplifiedISOSafe } from '../indexing/util'
 
 export type Labels = Record<string, Label[]>
 

@@ -1,5 +1,6 @@
 import { Selectable } from 'kysely'
 import { AtUri } from '@atproto/syntax'
+import { toSimplifiedISOSafe } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import * as FeedGenerator from '../../../lexicon/types/app/bsky/feed/generator'
 import * as lex from '../../../lexicon/lexicons'
@@ -7,7 +8,6 @@ import { PrimaryDatabase } from '../../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import { BackgroundQueue } from '../../../background'
 import RecordProcessor from '../processor'
-import { toSimplifiedISOSafe } from '../util'
 import { NotificationServer } from '../../../notifications'
 
 const lexId = lex.ids.AppBskyFeedGenerator

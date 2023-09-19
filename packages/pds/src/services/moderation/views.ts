@@ -2,7 +2,6 @@ import { Selectable } from 'kysely'
 import { ArrayEl, cborBytesToRecord } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import Database from '../../db'
-import { MessageQueue } from '../../event-stream/types'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
 import {
@@ -23,14 +22,13 @@ import { AccountService } from '../account'
 import { RecordService } from '../record'
 import { ModerationReportRowWithHandle } from '.'
 import { getSelfLabels } from '../../app-view/services/label'
-import { jsonStringToLex } from '@atproto/lexicon'
 
 export class ModerationViews {
-  constructor(private db: Database, private messageDispatcher: MessageQueue) {}
+  constructor(private db: Database) {}
 
   services = {
     account: AccountService.creator(),
-    record: RecordService.creator(this.messageDispatcher),
+    record: RecordService.creator(),
   }
 
   repo(result: RepoResult, opts: ModViewOptions): Promise<RepoView>

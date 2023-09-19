@@ -21,7 +21,6 @@ import {
   Options as XrpcServerOptions,
 } from '@atproto/xrpc-server'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
-import * as appviewConsumers from './app-view/event-stream/consumers'
 import inProcessAppView from './app-view/api'
 import API from './api'
 import * as basicRoutes from './basic-routes'
@@ -35,7 +34,6 @@ import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { createServer } from './lexicon'
-import { MessageDispatcher } from './event-stream/message-queue'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
@@ -47,7 +45,7 @@ import {
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
 import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
-import { BackgroundQueue } from './event-stream/background-queue'
+import { BackgroundQueue } from './background'
 import DidSqlCache from './did-cache'
 import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
@@ -114,7 +112,6 @@ export class PDS {
       backupNameservers: config.handleResolveNameservers,
     })
 
-    const messageDispatcher = new MessageDispatcher()
     const sequencer = new Sequencer(db)
     const sequencerLeader = config.sequencerLeaderEnabled
       ? new SequencerLeader(db, config.sequencerLeaderLockId)
@@ -205,7 +202,6 @@ export class PDS {
 
     const services = createServices({
       repoSigningKey,
-      messageDispatcher,
       blobstore,
       imgUriBuilder,
       imgInvalidator,
@@ -238,7 +234,6 @@ export class PDS {
       didCache,
       cfg: config,
       auth,
-      messageDispatcher,
       sequencer,
       sequencerLeader,
       labeler,
@@ -348,7 +343,6 @@ export class PDS {
         }
       }
     }, 500)
-    appviewConsumers.listen(this.ctx)
     this.ctx.sequencerLeader?.run()
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()

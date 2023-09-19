@@ -3,7 +3,7 @@ import { BlobStore, cidForRecord } from '@atproto/repo'
 import { dedupe, getFieldsFromRecord } from './util'
 import { AtUri } from '@atproto/syntax'
 import { labelerLogger as log } from '../logger'
-import { BackgroundQueue } from '../event-stream/background-queue'
+import { BackgroundQueue } from '../background'
 import { CID } from 'multiformats/cid'
 
 export abstract class Labeler {

@@ -13,7 +13,7 @@ import { Blob as BlobTable } from '../../db/tables/blob'
 import * as img from '../../image'
 import { BlobRef } from '@atproto/lexicon'
 import { PreparedDelete, PreparedUpdate } from '../../repo'
-import { BackgroundQueue } from '../../event-stream/background-queue'
+import { BackgroundQueue } from '../../background'
 
 export class RepoBlobs {
   constructor(
