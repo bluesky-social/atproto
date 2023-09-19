@@ -178,6 +178,13 @@
           "items": { "type": "ref", "ref": "app.bsky.graph.defs#listViewBasic" }
         }
       }
+    },
+    "tag": {
+      "type": "object",
+      "required": ["value"],
+      "properties": {
+        "value": { "type": "string" }
+      }
     }
   }
 }

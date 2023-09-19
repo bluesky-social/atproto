@@ -38,6 +38,10 @@
             "type": "union",
             "refs": ["com.atproto.label.defs#selfLabels"]
           },
+          "tags": {
+            "type": "array",
+            "items": { "type": "ref", "ref": "app.bsky.feed.defs#tag" }
+          },
           "createdAt": { "type": "string", "format": "datetime" }
         }
       }
