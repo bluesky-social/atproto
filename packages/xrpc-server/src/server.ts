@@ -58,7 +58,9 @@ export class Server {
   middleware: Record<'json' | 'text', RequestHandler>
   globalRateLimiters: RateLimiterI[]
   sharedRateLimiters: Record<string, RateLimiterI>
-  routeRateLimiterFns: Record<string, RateLimiterConsume[]>
+  // these two are treated separately because we do expensive schema validation after req ratelimits
+  basicRouteRateLimiterFns: Record<string, RateLimiterConsume[]> // limits based on IP
+  paramRouteRateLimiterFns: Record<string, RateLimiterConsume[]> // limits based on req context
 
   constructor(lexicons?: unknown[], opts?: Options) {
     if (lexicons) {
@@ -77,7 +79,8 @@ export class Server {
     }
     this.globalRateLimiters = []
     this.sharedRateLimiters = {}
-    this.routeRateLimiterFns = {}
+    this.basicRouteRateLimiterFns = {}
+    this.paramRouteRateLimiterFns = {}
     if (opts?.rateLimits?.global) {
       for (const limit of opts.rateLimits.global) {
         const rateLimiter = opts.rateLimits.creator({
@@ -216,12 +219,31 @@ export class Server {
             validateOutput(nsid, def, output, this.lex)
     const assertValidXrpcParams = (params: unknown) =>
       this.lex.assertValidXrpcParams(nsid, params)
-    const rlFns = this.routeRateLimiterFns[nsid] ?? []
-    const consumeRateLimit = (reqCtx: XRPCReqContext) =>
-      consumeMany(reqCtx, rlFns)
+    const basicRlFns = this.basicRouteRateLimiterFns[nsid] ?? []
+    const consumeBasicRateLimit = (
+      req: express.Request,
+      res: express.Response,
+    ) =>
+      consumeMany(
+        { req, res, auth: undefined, input: undefined, params: {} },
+        basicRlFns,
+      )
+    const paramRlFns = this.paramRouteRateLimiterFns[nsid] ?? []
+    const consumeParamRateLimit = (reqCtx: XRPCReqContext) =>
+      consumeMany(reqCtx, paramRlFns)
 
     return async function (req, res, next) {
       try {
+        const locals: RequestLocals = req[kRequestLocals]
+
+        // handle req rate limits that don't use validated params
+        if (consumeBasicRateLimit) {
+          const result = await consumeBasicRateLimit(req, res)
+          if (result instanceof RateLimitExceededError) {
+            return next(result)
+          }
+        }
+
         // validate request
         let params = decodeQueryParams(def, req.query)
         try {
@@ -236,8 +258,6 @@ export class Server {
           input.body.once('error', next)
         }
 
-        const locals: RequestLocals = req[kRequestLocals]
-
         const reqCtx: XRPCReqContext = {
           params,
           input,
@@ -247,8 +267,8 @@ export class Server {
         }
 
         // handle rate limits
-        if (consumeRateLimit) {
-          const result = await consumeRateLimit(reqCtx)
+        if (consumeParamRateLimit) {
+          const result = await consumeParamRateLimit(reqCtx)
           if (result instanceof RateLimitExceededError) {
             return next(result)
           }
@@ -392,19 +412,21 @@ export class Server {
   }
 
   private setupRouteRateLimits(nsid: string, config: XRPCHandlerConfig) {
-    this.routeRateLimiterFns[nsid] = []
+    this.basicRouteRateLimiterFns[nsid] = []
+    this.paramRouteRateLimiterFns[nsid] = []
     for (const limit of this.globalRateLimiters) {
       const consumeFn = async (ctx: XRPCReqContext) => {
         return limit.consume(ctx)
       }
-      this.routeRateLimiterFns[nsid].push(consumeFn)
+      this.basicRouteRateLimiterFns[nsid].push(consumeFn)
     }
 
     if (config.rateLimit) {
       const limits = Array.isArray(config.rateLimit)
         ? config.rateLimit
         : [config.rateLimit]
-      this.routeRateLimiterFns[nsid] = []
+      this.basicRouteRateLimiterFns[nsid] ??= []
+      this.paramRouteRateLimiterFns[nsid] ??= []
       for (let i = 0; i < limits.length; i++) {
         const limit = limits[i]
         const { calcKey, calcPoints } = limit
@@ -416,7 +438,11 @@ export class Server {
                 calcKey,
                 calcPoints,
               })
-            this.routeRateLimiterFns[nsid].push(consumeFn)
+            if (calcKey === undefined) {
+              this.basicRouteRateLimiterFns[nsid].push(consumeFn)
+            } else {
+              this.paramRouteRateLimiterFns[nsid].push(consumeFn)
+            }
           }
         } else {
           const { durationMs, points } = limit
@@ -434,7 +460,11 @@ export class Server {
                 calcKey,
                 calcPoints,
               })
-            this.routeRateLimiterFns[nsid].push(consumeFn)
+            if (calcKey === undefined) {
+              this.basicRouteRateLimiterFns[nsid].push(consumeFn)
+            } else {
+              this.paramRouteRateLimiterFns[nsid].push(consumeFn)
+            }
           }
         }
       }
