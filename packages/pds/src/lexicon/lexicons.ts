@@ -3687,6 +3687,8 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#contentLabelPref',
             'lex:app.bsky.actor.defs#savedFeedsPref',
             'lex:app.bsky.actor.defs#personalDetailsPref',
+            'lex:app.bsky.actor.defs#feedViewPref',
+            'lex:app.bsky.actor.defs#threadViewPref',
           ],
         },
       },
@@ -3740,6 +3742,53 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
             description: 'The birth date of the owner of the account.',
+          },
+        },
+      },
+      feedViewPref: {
+        type: 'object',
+        required: ['feed'],
+        properties: {
+          feed: {
+            type: 'string',
+            description:
+              'The URI of the feed, or an identifier which describes the feed.',
+          },
+          hideReplies: {
+            type: 'boolean',
+            description: 'Hide replies in the feed.',
+          },
+          hideRepliesByUnfollowed: {
+            type: 'boolean',
+            description:
+              'Hide replies in the feed if they are not by followed users.',
+          },
+          hideRepliesByLikeCount: {
+            type: 'integer',
+            description:
+              'Hide replies in the feed if they do not have this number of likes.',
+          },
+          hideReposts: {
+            type: 'boolean',
+            description: 'Hide reposts in the feed.',
+          },
+          hideQuotePosts: {
+            type: 'boolean',
+            description: 'Hide quote posts in the feed.',
+          },
+        },
+      },
+      threadViewPref: {
+        type: 'object',
+        properties: {
+          sort: {
+            type: 'string',
+            description: 'Sorting mode.',
+            knownValues: ['oldest', 'newest', 'most-likes', 'random'],
+          },
+          prioritizeFollowedUsers: {
+            type: 'boolean',
+            description: 'Show followed users at the top of all replies.',
           },
         },
       },
