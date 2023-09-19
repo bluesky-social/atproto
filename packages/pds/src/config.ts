@@ -69,10 +69,9 @@ export interface ServerConfigValues {
   // this is really only used in test environments
   dbTxLockNonce?: string
 
-  bskyAppViewEndpoint?: string
+  bskyAppViewEndpoint: string
+  bskyAppViewDid: string
   bskyAppViewModeration?: boolean
-  bskyAppViewDid?: string
-  bskyAppViewProxy: boolean
   bskyAppViewCdnUrlPattern?: string
 
   crawlersToNotify?: string[]
@@ -228,12 +227,17 @@ export class ServerConfig {
     const bskyAppViewEndpoint = nonemptyString(
       process.env.BSKY_APP_VIEW_ENDPOINT,
     )
+    if (typeof bskyAppViewEndpoint !== 'string') {
+      throw new Error(
+        'No value provided for process.env.BSKY_APP_VIEW_ENDPOINT',
+      )
+    }
+    const bskyAppViewDid = nonemptyString(process.env.BSKY_APP_VIEW_DID)
+    if (typeof bskyAppViewDid !== 'string') {
+      throw new Error('No value provided for process.env.BSKY_APP_VIEW_DID')
+    }
     const bskyAppViewModeration =
       process.env.BSKY_APP_VIEW_MODERATION === 'true' ? true : false
-    const bskyAppViewDid = nonemptyString(process.env.BSKY_APP_VIEW_DID)
-    const bskyAppViewProxy =
-      process.env.BSKY_APP_VIEW_PROXY === 'true' ? true : false
-
     const bskyAppViewCdnUrlPattern = nonemptyString(
       process.env.BSKY_APP_VIEW_CDN_URL_PATTERN,
     )
@@ -294,9 +298,8 @@ export class ServerConfig {
       sequencerLeaderEnabled,
       dbTxLockNonce,
       bskyAppViewEndpoint,
-      bskyAppViewModeration,
       bskyAppViewDid,
-      bskyAppViewProxy,
+      bskyAppViewModeration,
       bskyAppViewCdnUrlPattern,
       crawlersToNotify,
       ...overrides,
@@ -537,16 +540,12 @@ export class ServerConfig {
     return this.cfg.bskyAppViewEndpoint
   }
 
-  get bskyAppViewModeration() {
-    return this.cfg.bskyAppViewModeration
-  }
-
   get bskyAppViewDid() {
     return this.cfg.bskyAppViewDid
   }
 
-  get bskyAppViewProxy() {
-    return this.cfg.bskyAppViewProxy
+  get bskyAppViewModeration() {
+    return this.cfg.bskyAppViewModeration
   }
 
   get bskyAppViewCdnUrlPattern() {

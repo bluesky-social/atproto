@@ -198,10 +198,7 @@ export class PDS {
     }
 
     const labelCache = new LabelCache(db)
-
-    const appviewAgent = config.bskyAppViewEndpoint
-      ? new AtpAgent({ service: config.bskyAppViewEndpoint })
-      : undefined
+    const appviewAgent = new AtpAgent({ service: config.bskyAppViewEndpoint })
 
     const services = createServices({
       repoSigningKey,
