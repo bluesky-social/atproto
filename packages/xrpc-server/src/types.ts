@@ -201,7 +201,13 @@ export class XRPCError extends Error {
 }
 
 export function isHandlerError(v: unknown): v is HandlerError {
-  return handlerError.safeParse(v).success
+  return (
+    !!v &&
+    typeof v === 'object' &&
+    typeof v['status'] === 'number' &&
+    (v['error'] === undefined || typeof v['error'] === 'string') &&
+    (v['message'] === undefined || typeof v['message'] === 'string')
+  )
 }
 
 export class InvalidRequestError extends XRPCError {
