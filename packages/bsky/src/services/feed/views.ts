@@ -214,6 +214,7 @@ export class FeedViews {
         !post.record.reply && gate
           ? this.formatThreadgate(gate, lists)
           : undefined,
+      tags: post.tags ?? undefined,
     }
   }
 
