@@ -1,5 +1,5 @@
-import { hasExplicitSlur } from "./explicit-slurs";
+import { hasExplicitSlur } from './explicit-slurs'
 
 export function isValidHashtag(tag: string) {
-  return hasExplicitSlur(tag);
+  return !hasExplicitSlur(tag)
 }

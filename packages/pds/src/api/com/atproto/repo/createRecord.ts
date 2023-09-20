@@ -50,9 +50,7 @@ export default function (server: Server, ctx: AppContext) {
         if (record.tags) {
           for (const tag of record.tags) {
             if (!isValidHashtag(tag)) {
-              throw new InvalidRequestError(
-                `Invalid hashtag: ${tag}`,
-              )
+              throw new InvalidRequestError(`Invalid hashtag: ${tag}`)
             }
           }
         }

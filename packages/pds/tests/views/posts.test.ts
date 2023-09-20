@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import AtpAgent, { AppBskyFeedPost } from '@atproto/api'
 import { runTestServer, forSnapshot, TestServerInfo } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
@@ -61,5 +61,25 @@ describe('pds posts views', () => {
       sc.posts[sc.dids.bob][0].ref.uriStr,
     ].sort()
     expect(receivedUris).toEqual(expected)
+  })
+
+  it('allows for creating posts with tags', async () => {
+    const post: AppBskyFeedPost.Record = {
+      text: 'hello world',
+      tags: ['javascript', 'hehe'],
+      createdAt: new Date().toISOString(),
+    }
+
+    const { uri } = await agent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.alice },
+      post,
+      sc.getHeaders(sc.dids.alice),
+    )
+    const { data } = await agent.api.app.bsky.feed.getPosts(
+      { uris: [uri] },
+      { headers: sc.getHeaders(sc.dids.alice) },
+    )
+
+    expect(data.posts.length).toBe(1)
   })
 })
