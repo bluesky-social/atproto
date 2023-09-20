@@ -3,7 +3,6 @@ import { AppBskyFeedGetPostThread } from '@atproto/api'
 import { Headers } from '@atproto/xrpc'
 import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
-import { FeedRow } from '../../../../services/feed'
 import {
   ThreadViewPost,
   isThreadViewPost,
@@ -23,12 +22,6 @@ import {
   getRepoRev,
   handleReadAfterWrite,
 } from '../util/read-after-write'
-
-export type PostThread = {
-  post: FeedRow
-  parent?: PostThread | ParentNotFoundError
-  replies?: PostThread[]
-}
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
@@ -73,12 +66,6 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
-}
-
-class ParentNotFoundError extends Error {
-  constructor(public uri: string) {
-    super(`Parent not found: ${uri}`)
-  }
 }
 
 // READ AFTER WRITE

@@ -3,34 +3,14 @@ import { Server } from '../../../../lexicon'
 import { GenericKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 
-// @NOTE currently relies on the hot-classic feed being configured on the pds
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopular({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
-      const requester = auth.credentials.did
-      const hotClassicUri = Object.keys(ctx.algos).find((uri) =>
-        uri.endsWith('/hot-classic'),
-      )
-      if (!hotClassicUri) {
-        return {
-          encoding: 'application/json',
-          body: { feed: [] },
-        }
-      }
-      const { data: feed } =
-        await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
-          { feed: hotClassicUri },
-          await ctx.serviceAuthHeaders(requester),
-        )
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getFeed(
-        { feed: hotClassicUri, limit: params.limit, cursor: params.cursor },
-        await ctx.serviceAuthHeaders(requester, feed.view.did),
-      )
+    handler: async () => {
       return {
         encoding: 'application/json',
-        body: res.data,
+        body: { feed: [] },
       }
     },
   })

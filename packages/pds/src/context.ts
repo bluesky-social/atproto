@@ -17,7 +17,6 @@ import { Sequencer, SequencerLeader } from './sequencer'
 import { Labeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
 import DidSqlCache from './did-cache'
-import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
 import { RuntimeFlags } from './runtime-flags'
@@ -47,7 +46,6 @@ export class AppContext {
       backgroundQueue: BackgroundQueue
       appviewAgent: AtpAgent
       crawlers: Crawlers
-      algos: MountedAlgos
     },
   ) {}
 
@@ -169,10 +167,6 @@ export class AppContext {
 
   get appviewAgent(): AtpAgent {
     return this.opts.appviewAgent
-  }
-
-  get algos(): MountedAlgos {
-    return this.opts.algos
   }
 
   async serviceAuthHeaders(did: string, audience?: string) {

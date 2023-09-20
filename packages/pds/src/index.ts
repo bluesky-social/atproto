@@ -49,13 +49,11 @@ import {
 import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
 import { BackgroundQueue } from './event-stream/background-queue'
 import DidSqlCache from './did-cache'
-import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
 import { getRedisClient } from './redis'
 import { RuntimeFlags } from './runtime-flags'
 
-export type { MountedAlgos } from './feed-gen/types'
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'
@@ -63,7 +61,6 @@ export { ViewMaintainer } from './db/views'
 export { PeriodicModerationActionReversal } from './db/periodic-moderation-action-reversal'
 export { DiskBlobStore, MemoryBlobStore } from './storage'
 export { AppContext } from './context'
-export { makeAlgos } from './feed-gen'
 
 export class PDS {
   public ctx: AppContext
@@ -84,17 +81,9 @@ export class PDS {
     imgInvalidator?: ImageInvalidator
     repoSigningKey: crypto.Keypair
     plcRotationKey: crypto.Keypair
-    algos?: MountedAlgos
     config: ServerConfig
   }): PDS {
-    const {
-      db,
-      blobstore,
-      repoSigningKey,
-      plcRotationKey,
-      algos = {},
-      config,
-    } = opts
+    const { db, blobstore, repoSigningKey, plcRotationKey, config } = opts
     let maybeImgInvalidator = opts.imgInvalidator
     const auth = new ServerAuth({
       jwtSecret: config.jwtSecret,
@@ -248,7 +237,6 @@ export class PDS {
       backgroundQueue,
       appviewAgent,
       crawlers,
-      algos,
     })
 
     const xrpcOpts: XrpcServerOptions = {
