@@ -1,5 +1,4 @@
 import { AtUri } from '@atproto/syntax'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
@@ -26,17 +25,10 @@ export default function (server: Server, ctx: AppContext) {
       }
     }
 
-    if (ctx.canProxyRead()) {
-      const res = await ctx.appviewAgent.api.com.atproto.repo.getRecord(params)
-      return {
-        encoding: 'application/json',
-        body: res.data,
-      }
-    } else {
-      const uri = AtUri.make(did || repo, collection, rkey)
-      throw new InvalidRequestError(
-        `Could not locate record: ${uri.toString()}`,
-      )
+    const res = await ctx.appviewAgent.api.com.atproto.repo.getRecord(params)
+    return {
+      encoding: 'application/json',
+      body: res.data,
     }
   })
 }

@@ -33,10 +33,7 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     // this is not someone on our server, but we help with resolving anyway
-
-    if (!did && ctx.canProxyRead()) {
-      did = await tryResolveFromAppview(ctx.appviewAgent, handle)
-    }
+    did = await tryResolveFromAppview(ctx.appviewAgent, handle)
 
     if (!did) {
       did = await ctx.idResolver.handle.resolve(handle)
