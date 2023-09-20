@@ -76,6 +76,9 @@ const insertFn = async (
     langs: obj.langs?.length
       ? sql<string[]>`${JSON.stringify(obj.langs)}` // sidesteps kysely's array serialization, which is non-jsonb
       : null,
+    tags: obj.tags?.length
+      ? sql<string[]>`${JSON.stringify(obj.tags)}` // sidesteps kysely's array serialization, which is non-jsonb
+      : null,
     indexedAt: timestamp,
   }
   const [insertedPost] = await Promise.all([
