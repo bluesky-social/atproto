@@ -29,6 +29,7 @@ export interface Record {
   labels?:
     | ComAtprotoLabelDefs.SelfLabels
     | { $type: string; [k: string]: unknown }
+  tags?: string[]
   createdAt: string
   [k: string]: unknown
 }
