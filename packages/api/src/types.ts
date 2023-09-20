@@ -1,4 +1,5 @@
 import { LabelPreference } from './moderation/types'
+import { AppBskyActorDefs } from './client'
 
 /**
  * Used by the PersistSessionHandler to indicate what change occurred
@@ -87,6 +88,8 @@ export interface BskyPreferences {
     saved?: string[]
     pinned?: string[]
   }
+  feedViewPrefs: Record<string, Omit<AppBskyActorDefs.FeedViewPref, '$type'>>
+  threadViewPrefs: Omit<AppBskyActorDefs.ThreadViewPref, '$type'>
   adultContentEnabled: boolean
   contentLabels: Record<string, BskyLabelPreference>
   birthDate: Date | undefined
