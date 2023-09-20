@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.6.15
+
+### Patch Changes
+
+- [#1639](https://github.com/bluesky-social/atproto/pull/1639) [`2cc329f2`](https://github.com/bluesky-social/atproto/commit/2cc329f26547217dd94b6bb11ee590d707cbd14f) Thanks [@pfrazee](https://github.com/pfrazee)! - Added new preferences for feed and thread view behaviors.
+
 ## 0.6.14
 
 ### Patch Changes
