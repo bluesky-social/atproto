@@ -40,7 +40,7 @@
           },
           "tags": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": { "type": "string", "maxLength": 640, "maxGraphemes": 64 }
           },
           "createdAt": { "type": "string", "format": "datetime" }
         }
