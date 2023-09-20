@@ -1,9 +1,11 @@
+import { mapDefined } from '@atproto/common'
 import { Database } from '../../db'
 import {
   FeedViewPost,
   GeneratorView,
   PostView,
 } from '../../lexicon/types/app/bsky/feed/defs'
+import { isListRule } from '../../lexicon/types/app/bsky/feed/threadgate'
 import {
   Main as EmbedImages,
   isMain as isEmbedImages,
@@ -29,11 +31,14 @@ import {
   RecordEmbedViewRecord,
   PostBlocksMap,
   FeedHydrationState,
+  ThreadgateInfoMap,
+  ThreadgateInfo,
 } from './types'
 import { Labels, getSelfLabels } from '../label'
 import { ImageUriBuilder } from '../../image/uri'
 import { LabelCache } from '../../label-cache'
 import { ActorInfoMap, ActorService } from '../actor'
+import { ListInfoMap, GraphService } from '../graph'
 
 export class FeedViews {
   constructor(
@@ -48,6 +53,7 @@ export class FeedViews {
 
   services = {
     actor: ActorService.creator(this.imgUriBuilder, this.labelCache)(this.db),
+    graph: GraphService.creator(this.imgUriBuilder)(this.db),
   }
 
   formatFeedGeneratorView(
@@ -90,7 +96,8 @@ export class FeedViews {
       usePostViewUnion?: boolean
     },
   ): FeedViewPost[] {
-    const { posts, profiles, blocks, embeds, labels } = state
+    const { posts, threadgates, profiles, blocks, embeds, labels, lists } =
+      state
     const actors = this.services.actor.views.profileBasicPresentation(
       Object.keys(profiles),
       state,
@@ -98,12 +105,15 @@ export class FeedViews {
     )
     const feed: FeedViewPost[] = []
     for (const item of items) {
+      const info = posts[item.postUri]
       const post = this.formatPostView(
         item.postUri,
         actors,
         posts,
+        threadgates,
         embeds,
         labels,
+        lists,
       )
       // skip over not found & blocked posts
       if (!post || blocks[post.uri]?.reply) {
@@ -123,13 +133,21 @@ export class FeedViews {
           }
         }
       }
-      if (item.replyParent && item.replyRoot) {
+      // posts that violate reply-gating may appear in feeds, but without any thread context
+      if (
+        item.replyParent &&
+        item.replyRoot &&
+        !info?.invalidReplyRoot &&
+        !info?.violatesThreadGate
+      ) {
         const replyParent = this.formatMaybePostView(
           item.replyParent,
           actors,
           posts,
+          threadgates,
           embeds,
           labels,
+          lists,
           blocks,
           opts,
         )
@@ -137,8 +155,10 @@ export class FeedViews {
           item.replyRoot,
           actors,
           posts,
+          threadgates,
           embeds,
           labels,
+          lists,
           blocks,
           opts,
         )
@@ -158,10 +178,13 @@ export class FeedViews {
     uri: string,
     actors: ActorInfoMap,
     posts: PostInfoMap,
+    threadgates: ThreadgateInfoMap,
     embeds: PostEmbedViews,
     labels: Labels,
+    lists: ListInfoMap,
   ): PostView | undefined {
     const post = posts[uri]
+    const gate = threadgates[uri]
     const author = actors[post?.creator]
     if (!post || !author) return undefined
     const postLabels = labels[uri] ?? []
@@ -187,6 +210,10 @@ export class FeedViews {
           }
         : undefined,
       labels: [...postLabels, ...postSelfLabels],
+      threadgate:
+        !post.record.reply && gate
+          ? this.formatThreadgate(gate, lists)
+          : undefined,
     }
   }
 
@@ -194,14 +221,24 @@ export class FeedViews {
     uri: string,
     actors: ActorInfoMap,
     posts: PostInfoMap,
+    threadgates: ThreadgateInfoMap,
     embeds: PostEmbedViews,
     labels: Labels,
+    lists: ListInfoMap,
     blocks: PostBlocksMap,
     opts?: {
       usePostViewUnion?: boolean
     },
   ): MaybePostView | undefined {
-    const post = this.formatPostView(uri, actors, posts, embeds, labels)
+    const post = this.formatPostView(
+      uri,
+      actors,
+      posts,
+      threadgates,
+      embeds,
+      labels,
+      lists,
+    )
     if (!post) {
       if (!opts?.usePostViewUnion) return
       return this.notFoundPost(uri)
@@ -340,6 +377,20 @@ export class FeedViews {
         record: embedRecordView,
       },
       media: mediaEmbed,
+    }
+  }
+
+  formatThreadgate(gate: ThreadgateInfo, lists: ListInfoMap) {
+    return {
+      uri: gate.uri,
+      cid: gate.cid,
+      record: gate.record,
+      lists: mapDefined(gate.record.allow ?? [], (rule) => {
+        if (!isListRule(rule)) return
+        const list = lists[rule.list]
+        if (!list) return
+        return this.services.graph.formatListViewBasic(list)
+      }),
     }
   }
 }

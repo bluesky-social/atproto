@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
-import { TID, dataToCborBlock } from '@atproto/common'
+import { MINUTE, TID, dataToCborBlock } from '@atproto/common'
 import {
   LexiconDefNotFoundError,
   RepoRecord,
@@ -155,14 +155,20 @@ export const prepareCreate = async (opts: {
   if (validate) {
     assertValidRecord(record)
   }
-  if (collection === lex.ids.AppBskyFeedPost && opts.rkey) {
-    // @TODO temporary
+
+  const nextRkey = TID.next()
+  if (
+    collection === lex.ids.AppBskyFeedPost &&
+    opts.rkey &&
+    !rkeyIsInWindow(nextRkey, new TID(opts.rkey))
+  ) {
+    // @TODO temporary. allowing a window supports creation of post and gate records at the same time.
     throw new InvalidRequestError(
-      'Custom rkeys for post records are not currently supported.',
+      'Custom rkeys for post records should be near the present.',
     )
   }
 
-  const rkey = opts.rkey || TID.nextStr()
+  const rkey = opts.rkey || nextRkey.toString()
   assertNoExplicitSlurs(rkey, record)
   return {
     action: WriteOpAction.Create,
@@ -297,4 +303,10 @@ function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
   if (hasExplicitSlur(toCheck)) {
     throw new InvalidRecordError('Unacceptable slur in record')
   }
+}
+
+// ensures two rkeys are not far apart
+function rkeyIsInWindow(rkey1: TID, rkey2: TID) {
+  const ms = Math.abs(rkey1.timestamp() - rkey2.timestamp()) / 1000
+  return ms < 10 * MINUTE
 }

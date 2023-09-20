@@ -20,6 +20,7 @@ export type RateLimiterOpts = {
   durationMs: number
   points: number
   bypassSecret?: string
+  bypassIps?: string[]
   calcKey?: CalcKeyFn
   calcPoints?: CalcPointsFn
   failClosed?: boolean
@@ -27,14 +28,16 @@ export type RateLimiterOpts = {
 
 export class RateLimiter implements RateLimiterI {
   public limiter: RateLimiterAbstract
-  private byPassSecret?: string
+  private bypassSecret?: string
+  private bypassIps?: string[]
   private failClosed?: boolean
   public calcKey: CalcKeyFn
   public calcPoints: CalcPointsFn
 
   constructor(limiter: RateLimiterAbstract, opts: RateLimiterOpts) {
     this.limiter = limiter
-    this.byPassSecret = opts.bypassSecret
+    this.bypassSecret = opts.bypassSecret
+    this.bypassIps = opts.bypassIps
     this.calcKey = opts.calcKey ?? defaultKey
     this.calcPoints = opts.calcPoints ?? defaultPoints
   }
@@ -63,9 +66,12 @@ export class RateLimiter implements RateLimiterI {
     opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
   ): Promise<RateLimiterStatus | RateLimitExceededError | null> {
     if (
-      this.byPassSecret &&
-      ctx.req.header('x-ratelimit-bypass') === this.byPassSecret
+      this.bypassSecret &&
+      ctx.req.header('x-ratelimit-bypass') === this.bypassSecret
     ) {
+      return null
+    }
+    if (this.bypassIps && this.bypassIps.includes(ctx.req.ip)) {
       return null
     }
     const key = opts?.calcKey ? opts.calcKey(ctx) : this.calcKey(ctx)

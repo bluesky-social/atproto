@@ -405,7 +405,8 @@ export class Server {
         ? config.rateLimit
         : [config.rateLimit]
       this.routeRateLimiterFns[nsid] = []
-      for (const limit of limits) {
+      for (let i = 0; i < limits.length; i++) {
+        const limit = limits[i]
         const { calcKey, calcPoints } = limit
         if (isShared(limit)) {
           const rateLimiter = this.sharedRateLimiters[limit.name]
@@ -420,7 +421,7 @@ export class Server {
         } else {
           const { durationMs, points } = limit
           const rateLimiter = this.options.rateLimits?.creator({
-            keyPrefix: nsid,
+            keyPrefix: `nsid-${i}`,
             durationMs,
             points,
             calcKey,

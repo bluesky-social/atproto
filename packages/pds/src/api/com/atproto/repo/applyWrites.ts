@@ -3,6 +3,7 @@ import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import { prepareCreate, prepareDelete, prepareUpdate } from '../../../../repo'
 import { Server } from '../../../../lexicon'
 import {
+  HandlerInput,
   isCreate,
   isUpdate,
   isDelete,
@@ -15,9 +16,36 @@ import {
 import AppContext from '../../../../context'
 import { ConcurrentWriteError } from '../../../../services/repo'
 
+const ratelimitPoints = ({ input }: { input: HandlerInput }) => {
+  let points = 0
+  for (const op of input.body.writes) {
+    if (isCreate(op)) {
+      points += 3
+    } else if (isUpdate(op)) {
+      points += 2
+    } else {
+      points += 1
+    }
+  }
+  return points
+}
+
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.applyWrites({
     auth: ctx.accessVerifierCheckTakedown,
+    rateLimit: [
+      {
+        name: 'repo-write-hour',
+        calcKey: ({ auth }) => auth.credentials.did,
+        calcPoints: ratelimitPoints,
+      },
+      {
+        name: 'repo-write-day',
+        calcKey: ({ auth }) => auth.credentials.did,
+        calcPoints: ratelimitPoints,
+      },
+    ],
+
     handler: async ({ input, auth }) => {
       const tx = input.body
       const { repo, validate, swapCommit } = tx
