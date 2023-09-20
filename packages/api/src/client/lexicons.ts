@@ -5575,11 +5575,13 @@ export const schemaDict = {
             },
             tags: {
               type: 'array',
+              maxLength: 8,
               items: {
                 type: 'string',
                 maxLength: 640,
                 maxGraphemes: 64,
               },
+              description: 'Additional non-inline tags describing this post.',
             },
             createdAt: {
               type: 'string',

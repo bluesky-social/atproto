@@ -40,7 +40,9 @@
           },
           "tags": {
             "type": "array",
-            "items": { "type": "string", "maxLength": 640, "maxGraphemes": 64 }
+            "maxLength": 8,
+            "items": { "type": "string", "maxLength": 640, "maxGraphemes": 64 },
+            "description": "Additional non-inline tags describing this post."
           },
           "createdAt": { "type": "string", "format": "datetime" }
         }
