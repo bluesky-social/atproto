@@ -1,4 +1,8 @@
-import AtpAgent, { AppBskyFeedGetPostThread, AppBskyFeedPost, AppBskyFeedDefs } from '@atproto/api'
+import AtpAgent, {
+  AppBskyFeedGetPostThread,
+  AppBskyFeedPost,
+  AppBskyFeedDefs,
+} from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { forSnapshot, stripViewerFromThread } from '../_util'
