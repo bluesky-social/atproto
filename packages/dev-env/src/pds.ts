@@ -67,7 +67,8 @@ export class TestPds {
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
       feedGenDid: 'did:example:feedGen',
       dbTxLockNonce: await randomStr(32, 'base32'),
-      bskyAppViewProxy: !!cfg.bskyAppViewEndpoint,
+      bskyAppViewEndpoint: cfg.bskyAppViewEndpoint ?? 'http://fake_address',
+      bskyAppViewDid: cfg.bskyAppViewDid ?? 'did:example:fake',
       bskyAppViewCdnUrlPattern: 'http://cdn.appview.com/%s/%s/%s',
       ...cfg,
     })
@@ -82,11 +83,7 @@ export class TestPds {
       : pds.Database.memory()
     await db.migrateToLatestOrThrow()
 
-    if (
-      config.bskyAppViewEndpoint &&
-      config.bskyAppViewProxy &&
-      !cfg.enableInProcessAppView
-    ) {
+    if (cfg.bskyAppViewEndpoint && !cfg.enableInProcessAppView) {
       // Disable communication to app view within pds
       MessageDispatcher.prototype.send = async () => {}
     }
@@ -97,7 +94,6 @@ export class TestPds {
       repoSigningKey,
       plcRotationKey,
       config,
-      algos: cfg.algos,
     })
 
     await server.start()

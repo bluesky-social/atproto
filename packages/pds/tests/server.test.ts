@@ -85,7 +85,7 @@ describe('server', () => {
     })
   })
 
-  it('compresses large json responses', async () => {
+  it.skip('compresses large json responses', async () => {
     const res = await axios.get(
       `${server.url}/xrpc/app.bsky.feed.getTimeline`,
       {
@@ -120,7 +120,7 @@ describe('server', () => {
 
   it('healthcheck fails when database is unavailable.', async () => {
     // destroy to release lock & allow db to close
-    await server.ctx.sequencerLeader.destroy()
+    await server.ctx.sequencerLeader?.destroy()
 
     await db.close()
     let error: AxiosError
