@@ -172,7 +172,7 @@ export class AutoModerator {
   async checkImgForTakedown(uri: AtUri, recordCid: CID, imgCids: CID[]) {
     if (imgCids.length < 0) return
     const results = await Promise.all(
-      imgCids.map((cid) => this.imageFlagger?.scanImage(uri.host, cid)),
+      imgCids.map((cid) => this.imageFlagger?.scanImage(uri.host, cid, uri)),
     )
     const takedownCids: CID[] = []
     for (let i = 0; i < results.length; i++) {
