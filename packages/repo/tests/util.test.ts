@@ -11,7 +11,7 @@ describe('Utils', () => {
           await car.put(block)
           throw new Error('Oops!')
         })
-        for await (const bytes of iter) {
+        for await (const _bytes of iter) {
           // no-op
         }
       }

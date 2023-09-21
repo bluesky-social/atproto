@@ -67,7 +67,7 @@ describe('agent', () => {
 
     let hasConflicted = false
     let ranTwice = false
-    await agent.upsertProfile(async (existing) => {
+    await agent.upsertProfile(async (_existing) => {
       if (!hasConflicted) {
         await agent.com.atproto.repo.putRecord({
           repo: agent.session?.did || '',
@@ -104,7 +104,7 @@ describe('agent', () => {
     const profile1 = await agent.getProfile({ actor: agent.session?.did || '' })
     expect(profile1.data.displayName).toBeFalsy()
 
-    const p = agent.upsertProfile(async (existing) => {
+    const p = agent.upsertProfile(async (_existing) => {
       await agent.com.atproto.repo.putRecord({
         repo: agent.session?.did || '',
         collection: 'app.bsky.actor.profile',
@@ -130,7 +130,7 @@ describe('agent', () => {
       password: 'password',
     })
 
-    const p = agent.upsertProfile((existing) => {
+    const p = agent.upsertProfile((_existing) => {
       return {
         displayName: { string: 'Bob' },
       } as unknown as AppBskyActorProfile.Record

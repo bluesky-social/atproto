@@ -7,7 +7,6 @@ import {
   ComAtprotoServerCreateSession,
   ComAtprotoServerGetSession,
   ComAtprotoServerRefreshSession,
-  ComAtprotoRepoUploadBlob,
 } from './client'
 import {
   AtpSessionData,

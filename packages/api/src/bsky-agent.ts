@@ -311,12 +311,14 @@ export class BskyAgent extends AtpAgent {
         AppBskyActorDefs.isFeedViewPref(pref) &&
         AppBskyActorDefs.validateFeedViewPref(pref).success
       ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, feed, ...v } = pref
         prefs.feedViewPrefs[pref.feed] = { ...FEED_VIEW_PREF_DEFAULTS, ...v }
       } else if (
         AppBskyActorDefs.isThreadViewPref(pref) &&
         AppBskyActorDefs.validateThreadViewPref(pref).success
       ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, ...v } = pref
         prefs.threadViewPrefs = { ...prefs.threadViewPrefs, ...v }
       }

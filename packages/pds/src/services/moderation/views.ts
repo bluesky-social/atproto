@@ -23,7 +23,6 @@ import { AccountService } from '../account'
 import { RecordService } from '../record'
 import { ModerationReportRowWithHandle } from '.'
 import { getSelfLabels } from '../../app-view/services/label'
-import { jsonStringToLex } from '@atproto/lexicon'
 
 export class ModerationViews {
   constructor(private db: Database, private messageDispatcher: MessageQueue) {}
