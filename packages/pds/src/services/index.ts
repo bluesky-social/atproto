@@ -3,8 +3,6 @@ import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import Database from '../db'
 import { MessageDispatcher } from '../event-stream/message-queue'
-import { ImageUriBuilder } from '../image/uri'
-import { ImageInvalidator } from '../image/invalidator'
 import { AccountService } from './account'
 import { AuthService } from './auth'
 import { RecordService } from './record'
@@ -22,8 +20,6 @@ export function createServices(resources: {
   repoSigningKey: crypto.Keypair
   messageDispatcher: MessageDispatcher
   blobstore: BlobStore
-  imgUriBuilder: ImageUriBuilder
-  imgInvalidator: ImageInvalidator
   labeler: Labeler
   labelCache: LabelCache
   appviewAgent?: AtpAgent
@@ -36,8 +32,6 @@ export function createServices(resources: {
     repoSigningKey,
     messageDispatcher,
     blobstore,
-    imgUriBuilder,
-    imgInvalidator,
     labeler,
     labelCache,
     appviewAgent,
@@ -64,12 +58,7 @@ export function createServices(resources: {
       appviewDid,
       appviewCdnUrlPattern,
     ),
-    moderation: ModerationService.creator(
-      messageDispatcher,
-      blobstore,
-      imgUriBuilder,
-      imgInvalidator,
-    ),
+    moderation: ModerationService.creator(messageDispatcher, blobstore),
     appView: {
       indexing: IndexingService.creator(backgroundQueue),
       label: LabelService.creator(labelCache),

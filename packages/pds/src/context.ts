@@ -10,7 +10,6 @@ import * as auth from './auth'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
-import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import { MessageDispatcher } from './event-stream/message-queue'
 import { Sequencer, SequencerLeader } from './sequencer'
@@ -32,7 +31,6 @@ export class AppContext {
       idResolver: IdResolver
       didCache: DidSqlCache
       auth: auth.ServerAuth
-      imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       mailer: ServerMailer
       moderationMailer: ModerationMailer
@@ -99,10 +97,6 @@ export class AppContext {
 
   get optionalAccessOrRoleVerifier() {
     return auth.optionalAccessOrRoleVerifier(this.auth)
-  }
-
-  get imgUriBuilder(): ImageUriBuilder {
-    return this.opts.imgUriBuilder
   }
 
   get cfg(): ServerConfig {

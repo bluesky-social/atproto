@@ -38,11 +38,6 @@ export interface ServerConfigValues {
   availableUserDomains: string[]
   handleResolveNameservers?: string[]
 
-  imgUriSalt: string
-  imgUriKey: string
-  imgUriEndpoint?: string
-  blobCacheLocation?: string
-
   rateLimitsEnabled: boolean
   rateLimitBypassKey?: string
   rateLimitBypassIps?: string[]
@@ -152,14 +147,6 @@ export class ServerConfig {
     const handleResolveNameservers = process.env.HANDLE_RESOLVE_NAMESERVERS
       ? process.env.HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
-
-    const imgUriSalt =
-      process.env.IMG_URI_SALT || '9dd04221f5755bce5f55f47464c27e1e'
-    const imgUriKey =
-      process.env.IMG_URI_KEY ||
-      'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8'
-    const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
-    const blobCacheLocation = process.env.BLOB_CACHE_LOC
 
     const rateLimitsEnabled = process.env.RATE_LIMITS_ENABLED === 'true'
     const rateLimitBypassKey = nonemptyString(process.env.RATE_LIMIT_BYPASS_KEY)
@@ -274,10 +261,6 @@ export class ServerConfig {
       databaseLocation,
       availableUserDomains,
       handleResolveNameservers,
-      imgUriSalt,
-      imgUriKey,
-      imgUriEndpoint,
-      blobCacheLocation,
       rateLimitsEnabled,
       rateLimitBypassKey,
       rateLimitBypassIps,
@@ -442,22 +425,6 @@ export class ServerConfig {
 
   get handleResolveNameservers() {
     return this.cfg.handleResolveNameservers
-  }
-
-  get imgUriSalt() {
-    return this.cfg.imgUriSalt
-  }
-
-  get imgUriKey() {
-    return this.cfg.imgUriKey
-  }
-
-  get imgUriEndpoint() {
-    return this.cfg.imgUriEndpoint
-  }
-
-  get blobCacheLocation() {
-    return this.cfg.blobCacheLocation
   }
 
   get rateLimitsEnabled() {
