@@ -12,6 +12,7 @@ export interface Post {
   replyParent: string | null
   replyParentCid: string | null
   langs: string[] | null
+  tags: string[] | null
   invalidReplyRoot: boolean | null
   violatesThreadGate: boolean | null
   createdAt: string

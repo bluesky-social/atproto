@@ -45,6 +45,7 @@ export type PostInfo = {
   invalidReplyRoot: boolean
   violatesThreadGate: boolean
   viewer: string | null
+  tags: string[] | null
 }
 
 export type PostInfoMap = { [uri: string]: PostInfo }

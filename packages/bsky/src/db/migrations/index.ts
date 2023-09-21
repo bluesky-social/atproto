@@ -28,3 +28,4 @@ export * as _20230817T195936007Z from './20230817T195936007Z-native-notification
 export * as _20230830T205507322Z from './20230830T205507322Z-suggested-feeds'
 export * as _20230904T211011773Z from './20230904T211011773Z-block-lists'
 export * as _20230906T222220386Z from './20230906T222220386Z-thread-gating'
+export * as _20230920T213858047Z from './20230920T213858047Z-add-tags-to-post'

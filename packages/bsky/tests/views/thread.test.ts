@@ -1,4 +1,8 @@
-import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
+import AtpAgent, {
+  AppBskyFeedGetPostThread,
+  AppBskyFeedPost,
+  AppBskyFeedDefs,
+} from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { forSnapshot, stripViewerFromThread } from '../_util'
@@ -10,6 +14,7 @@ import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/de
 describe('pds thread views', () => {
   let network: TestNetwork
   let agent: AtpAgent
+  let pdsAgent: AtpAgent
   let sc: SeedClient
 
   // account dids, for convenience
@@ -22,7 +27,7 @@ describe('pds thread views', () => {
       dbPostgresSchema: 'bsky_views_thread',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getClient()
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -164,6 +169,32 @@ describe('pds thread views', () => {
       .sort()
 
     expect(authorSelfLabels).toEqual(['self-label-a', 'self-label-b'])
+  })
+
+  it('returns tags on the thread view', async () => {
+    const post: AppBskyFeedPost.Record = {
+      text: 'hello world',
+      tags: ['javascript', 'hehe'],
+      createdAt: new Date().toISOString(),
+    }
+
+    const { uri } = await pdsAgent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.alice },
+      post,
+      sc.getHeaders(sc.dids.alice),
+    )
+
+    await network.processAll()
+    await network.bsky.processAll()
+
+    const { data } = await agent.api.app.bsky.feed.getPostThread(
+      { uri },
+      { headers: await network.serviceHeaders(bob) },
+    )
+
+    const thread = data.thread as AppBskyFeedDefs.ThreadViewPost
+
+    expect(thread.post.tags).toEqual(post.tags)
   })
 
   describe('takedown', () => {
