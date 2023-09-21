@@ -1,6 +1,5 @@
 import { CID } from 'multiformats/cid'
 import { lexiconDoc, Lexicons } from '../src/index'
-import { object } from '../src/validators/complex'
 import LexiconDocs from './_scaffolds/lexicons'
 
 describe('Lexicons collection', () => {

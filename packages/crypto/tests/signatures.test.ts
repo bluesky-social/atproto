@@ -59,6 +59,7 @@ describe('signatures', () => {
   })
 })
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function generateTestVectors(): Promise<TestVector[]> {
   const p256Key = await EcdsaKeypair.create({ exportable: true })
   const secpKey = await Secp256k1Keypair.create({ exportable: true })

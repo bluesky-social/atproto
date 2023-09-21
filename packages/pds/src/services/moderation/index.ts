@@ -8,26 +8,14 @@ import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { RecordService } from '../record'
 import { ModerationViews } from './views'
 import SqlRepoStorage from '../../sql-repo-storage'
-import { ImageInvalidator } from '../../image/invalidator'
-import { ImageUriBuilder } from '../../image/uri'
 import { TAKEDOWN } from '../../lexicon/types/com/atproto/admin/defs'
 import { addHoursToDate } from '../../util/date'
 
 export class ModerationService {
-  constructor(
-    public db: Database,
-    public blobstore: BlobStore,
-    public imgUriBuilder: ImageUriBuilder,
-    public imgInvalidator: ImageInvalidator,
-  ) {}
+  constructor(public db: Database, public blobstore: BlobStore) {}
 
-  static creator(
-    blobstore: BlobStore,
-    imgUriBuilder: ImageUriBuilder,
-    imgInvalidator: ImageInvalidator,
-  ) {
-    return (db: Database) =>
-      new ModerationService(db, blobstore, imgUriBuilder, imgInvalidator)
+  static creator(blobstore: BlobStore) {
+    return (db: Database) => new ModerationService(db, blobstore)
   }
 
   views = new ModerationViews(this.db)
@@ -488,14 +476,7 @@ export class ModerationService {
         .where('takedownId', 'is', null)
         .executeTakeFirst()
       await Promise.all(
-        info.blobCids.map(async (cid) => {
-          await this.blobstore.quarantine(cid)
-          const paths = ImageUriBuilder.commonSignedUris.map((id) => {
-            const uri = this.imgUriBuilder.getCommonSignedUri(id, cid)
-            return uri.replace(this.imgUriBuilder.endpoint, '')
-          })
-          await this.imgInvalidator.invalidate(cid.toString(), paths)
-        }),
+        info.blobCids.map((cid) => this.blobstore.quarantine(cid)),
       )
     }
   }

@@ -32,7 +32,9 @@ export function validateRecord(v: unknown): ValidationResult {
 }
 
 /** Allow replies from actors mentioned in your post. */
-export interface MentionRule {}
+export interface MentionRule {
+  [k: string]: unknown
+}
 
 export function isMentionRule(v: unknown): v is MentionRule {
   return (
@@ -47,7 +49,9 @@ export function validateMentionRule(v: unknown): ValidationResult {
 }
 
 /** Allow replies from actors you follow. */
-export interface FollowingRule {}
+export interface FollowingRule {
+  [k: string]: unknown
+}
 
 export function isFollowingRule(v: unknown): v is FollowingRule {
   return (
