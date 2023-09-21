@@ -1,6 +1,6 @@
 {
   "name": "@atproto/dev-env",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "main": "src/index.ts",
   "publishConfig": {
     "main": "dist/index.js",
