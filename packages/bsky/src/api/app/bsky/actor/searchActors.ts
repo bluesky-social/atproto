@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActors({
     auth: ctx.authOptionalVerifier,
     handler: async ({ auth, params }) => {
-      const { cursor, limit, term: rawTerm, q: rawQ } = params
+      let { cursor, limit, term: rawTerm, q: rawQ } = params
       const requester = auth.credentials.did
 
       // prefer new 'q' query param over deprecated 'term'

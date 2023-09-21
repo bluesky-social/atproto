@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActorsTypeahead({
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {
-      const { limit, term: rawTerm, q: rawQ } = params
+      let { limit, term: rawTerm, q: rawQ } = params
       const requester = auth.credentials.did
 
       // prefer new 'q' query param over deprecated 'term'
