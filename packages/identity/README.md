@@ -1,5 +1,4 @@
-@atproto/identity
-=================
+# @atproto/identity
 
 Typescript library for decentralized identities in [atproto](https://atproto.com) using DIDs and handles
 
