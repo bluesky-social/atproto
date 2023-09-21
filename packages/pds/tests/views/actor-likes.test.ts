@@ -12,7 +12,6 @@ describe('pds actor likes feed views', () => {
   let alice: string
   let bob: string
   let carol: string
-  let dan: string
 
   beforeAll(async () => {
     const server = await runTestServer({
@@ -25,7 +24,6 @@ describe('pds actor likes feed views', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
-    dan = sc.dids.dan
     await server.processAll()
   })
 

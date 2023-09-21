@@ -1,16 +1,11 @@
 import AppContext from '../context'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { paginate } from '../db/pagination'
 import { AlgoHandler, AlgoResponse } from './types'
-import {
-  FeedKeyset,
-  getFeedDateThreshold,
-} from '../app-view/api/app/bsky/util/feed'
 
 const handler: AlgoHandler = async (
-  ctx: AppContext,
-  params: SkeletonParams,
-  requester: string,
+  _ctx: AppContext,
+  _params: SkeletonParams,
+  _requester: string,
 ): Promise<AlgoResponse> => {
   // Temporary change to only return a post notifying users that the feed is down
   return {

@@ -1,6 +1,8 @@
 import { RichText } from './rich-text'
 import { UnicodeString } from './unicode'
 
+// this regex is intentionally matching on the zero-with-separator codepoint
+// eslint-disable-next-line no-misleading-character-class
 const EXCESS_SPACE_RE = /[\r\n]([\u00AD\u2060\u200D\u200C\u200B\s]*[\r\n]){2,}/
 const REPLACEMENT_STR = '\n\n'
 
