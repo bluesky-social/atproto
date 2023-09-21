@@ -3,9 +3,9 @@ import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/ge
 import { AlgoHandler, AlgoResponse } from './types'
 
 const handler: AlgoHandler = async (
-  ctx: AppContext,
-  params: SkeletonParams,
-  requester: string,
+  _ctx: AppContext,
+  _params: SkeletonParams,
+  _requester: string,
 ): Promise<AlgoResponse> => {
   // Temporary change to only return a post notifying users that the feed is down
   return {
