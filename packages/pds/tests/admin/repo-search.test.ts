@@ -6,10 +6,10 @@ import {
   CloseFn,
   paginateAll,
   adminAuth,
-} from '../../_util'
-import { SeedClient } from '../../seeds/client'
-import usersBulkSeed from '../../seeds/users-bulk'
-import { Database } from '../../../src'
+} from '../_util'
+import { SeedClient } from '../seeds/client'
+import usersBulkSeed from '../seeds/users-bulk'
+import { Database } from '../../src'
 
 describe('pds admin repo search view', () => {
   let agent: AtpAgent

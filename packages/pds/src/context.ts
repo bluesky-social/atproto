@@ -1,4 +1,3 @@
-import express from 'express'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
@@ -17,7 +16,6 @@ import { Sequencer, SequencerLeader } from './sequencer'
 import { Labeler } from './labeler'
 import { BackgroundQueue } from './background'
 import DidSqlCache from './did-cache'
-import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
 import { LabelCache } from './label-cache'
 import { RuntimeFlags } from './runtime-flags'
@@ -44,9 +42,8 @@ export class AppContext {
       labelCache: LabelCache
       runtimeFlags: RuntimeFlags
       backgroundQueue: BackgroundQueue
-      appviewAgent?: AtpAgent
+      appviewAgent: AtpAgent
       crawlers: Crawlers
-      algos: MountedAlgos
     },
   ) {}
 
@@ -162,8 +159,8 @@ export class AppContext {
     return this.opts.didCache
   }
 
-  get algos(): MountedAlgos {
-    return this.opts.algos
+  get appviewAgent(): AtpAgent {
+    return this.opts.appviewAgent
   }
 
   async serviceAuthHeaders(did: string, audience?: string) {
@@ -176,27 +173,6 @@ export class AppContext {
       aud,
       keypair: this.repoSigningKey,
     })
-  }
-
-  get appviewAgent(): AtpAgent {
-    if (!this.opts.appviewAgent) {
-      throw new Error('Could not find bsky appview endpoint')
-    }
-    return this.opts.appviewAgent
-  }
-
-  canProxyRead(): boolean {
-    if (!this.cfg.bskyAppViewProxy || !this.cfg.bskyAppViewEndpoint) {
-      return false
-    }
-    return true
-  }
-
-  canProxyFeedConstruction(req: express.Request): boolean {
-    return (
-      this.cfg.bskyAppViewEndpoint !== undefined &&
-      req.get('x-appview-proxy') !== undefined
-    )
   }
 
   shouldProxyModeration(): boolean {

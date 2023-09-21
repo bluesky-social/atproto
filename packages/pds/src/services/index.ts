@@ -9,9 +9,6 @@ import { AuthService } from './auth'
 import { RecordService } from './record'
 import { RepoService } from './repo'
 import { ModerationService } from './moderation'
-import { ActorService } from '../app-view/services/actor'
-import { GraphService } from '../app-view/services/graph'
-import { FeedService } from '../app-view/services/feed'
 import { Labeler } from '../labeler'
 import { LabelService } from '../app-view/services/label'
 import { BackgroundQueue } from '../background'
@@ -68,9 +65,6 @@ export function createServices(resources: {
       imgInvalidator,
     ),
     appView: {
-      actor: ActorService.creator(imgUriBuilder, labelCache),
-      graph: GraphService.creator(imgUriBuilder),
-      feed: FeedService.creator(imgUriBuilder, labelCache),
       label: LabelService.creator(labelCache),
     },
   }
@@ -84,9 +78,6 @@ export type Services = {
   local: FromDb<LocalService>
   moderation: FromDb<ModerationService>
   appView: {
-    feed: FromDb<FeedService>
-    actor: FromDb<ActorService>
-    graph: FromDb<GraphService>
     label: FromDb<LabelService>
   }
 }

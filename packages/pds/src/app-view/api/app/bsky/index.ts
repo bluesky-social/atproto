@@ -6,7 +6,6 @@ import getSuggestedFeeds from './feed/getSuggestedFeeds'
 import getAuthorFeed from './feed/getAuthorFeed'
 import getFeedGenerator from './feed/getFeedGenerator'
 import getFeedGenerators from './feed/getFeedGenerators'
-import describeFeedGenerator from './feed/describeFeedGenerator'
 import getFeed from './feed/getFeed'
 import getLikes from './feed/getLikes'
 import getListFeed from './feed/getListFeed'
@@ -45,7 +44,6 @@ export default function (server: Server, ctx: AppContext) {
   getAuthorFeed(server, ctx)
   getFeedGenerator(server, ctx)
   getFeedGenerators(server, ctx)
-  describeFeedGenerator(server, ctx)
   getFeed(server, ctx)
   getLikes(server, ctx)
   getListFeed(server, ctx)

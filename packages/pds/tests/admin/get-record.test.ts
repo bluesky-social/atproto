@@ -7,16 +7,16 @@ import {
 import {
   REASONOTHER,
   REASONSPAM,
-} from '../../../src/lexicon/types/com/atproto/moderation/defs'
+} from '../../src/lexicon/types/com/atproto/moderation/defs'
 import {
   runTestServer,
   forSnapshot,
   CloseFn,
   adminAuth,
   TestServerInfo,
-} from '../../_util'
-import { SeedClient } from '../../seeds/client'
-import basicSeed from '../../seeds/basic'
+} from '../_util'
+import { SeedClient } from '../seeds/client'
+import basicSeed from '../seeds/basic'
 
 describe('pds admin get record view', () => {
   let server: TestServerInfo
