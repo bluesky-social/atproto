@@ -1,4 +1,5 @@
 import { AtpAgent, RichText, RichTextSegment } from '../src'
+import { isTag } from '../src/client/types/app/bsky/richtext/facet'
 
 describe('detectFacets', () => {
   const agent = new AtpAgent({ service: 'http://localhost' })
@@ -206,6 +207,57 @@ describe('detectFacets', () => {
       const rt = new RichText({ text: input })
       await rt.detectFacets(agent)
       expect(Array.from(rt.segments(), segmentToOutput)).toEqual(outputs[i])
+    }
+  })
+
+  it('correctly detects tags inline', async () => {
+    const inputs: [string, string[]][] = [
+      ['#a', ['#a']],
+      ['#1', []],
+      ['#tag', ['#tag']],
+      ['body #tag', ['#tag']],
+      ['#tag body', ['#tag']],
+      ['body #tag body', ['#tag']],
+      ['body #1', []],
+      ['body #a1', ['#a1']],
+      ['#', []],
+      ['text #', []],
+      ['text # text', []],
+      [
+        'body #thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        ['#thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'],
+      ],
+      [
+        'body #thisisa65characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab',
+        [],
+      ],
+      ['its a #double#rainbow', ['#double#rainbow']],
+      ['some #n0n3s@n5e!', ['#n0n3s@n5e']],
+      ['works #with,punctuation', ['#with,punctuation']],
+      [
+        'strips trailing #punctuation, #like, #this.',
+        ['#punctuation', '#like', '#this'],
+      ],
+      ['strips #multi_trailing___...', ['#multi_trailing']],
+      ['works with #🦋 emoji, and #butter🦋fly', ['#🦋', '#butter🦋fly']],
+    ]
+
+    for (const [input, tags] of inputs) {
+      const rt = new RichText({ text: input })
+      await rt.detectFacets(agent)
+
+      let detectedTags: string[] = []
+
+      for (const { facet } of rt.segments()) {
+        if (!facet) continue
+        for (const feature of facet.features) {
+          if (isTag(feature)) {
+            detectedTags.push(feature.tag)
+          }
+        }
+      }
+
+      expect(detectedTags).toEqual(tags)
     }
   })
 })

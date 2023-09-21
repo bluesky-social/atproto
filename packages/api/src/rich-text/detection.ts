@@ -69,6 +69,32 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
       })
     }
   }
+  {
+    const re = /(?:^|\s)(#[^\d\s]\S*)(?=\s)?/g
+    while ((match = re.exec(text.utf16))) {
+      let [, tag] = match
+
+      tag = tag.replace(/\p{P}+$/gu, '') // strip ending punctuation
+
+      // inclusive of #, max of 64 chars
+      if (tag.length > 66) continue
+
+      const index = text.utf16.indexOf(tag)
+
+      facets.push({
+        index: {
+          byteStart: text.utf16IndexToUtf8Index(index),
+          byteEnd: text.utf16IndexToUtf8Index(index + tag.length),
+        },
+        features: [
+          {
+            $type: 'app.bsky.richtext.facet#tag',
+            tag,
+          },
+        ],
+      })
+    }
+  }
   return facets.length > 0 ? facets : undefined
 }
 
