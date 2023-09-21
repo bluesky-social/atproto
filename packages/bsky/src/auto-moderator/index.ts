@@ -248,7 +248,7 @@ export class AutoModerator {
           throw new Error('no mod push agent or uri invalidator setup')
         }
         const modSrvc = this.services.moderation(dbTxn)
-        const action = await modSrvc.report({
+        await modSrvc.report({
           // NOTE: empty reportedBy
           reasonType: REASONVIOLATION,
           subject: {
