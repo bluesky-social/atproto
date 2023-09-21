@@ -33,7 +33,7 @@ import {
 } from '../lexicon/types/app/bsky/feed/post'
 import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
 import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
-import { hasExplicitSlur } from '../util/explicit-slurs'
+import { hasExplicitSlur } from '../handle/explicit-slurs'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 // @TODO do this dynamically off of schemas
@@ -299,6 +299,8 @@ function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
   } else if (isFeedGenerator(record)) {
     toCheck += ' ' + rkey
     toCheck += ' ' + record.displayName
+  } else if (isPost(record)) {
+    toCheck += record.tags?.join(' ')
   }
   if (hasExplicitSlur(toCheck)) {
     throw new InvalidRecordError('Unacceptable slur in record')

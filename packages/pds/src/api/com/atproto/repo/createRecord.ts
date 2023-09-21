@@ -1,6 +1,5 @@
 import { CID } from 'multiformats/cid'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
-import { AppBskyFeedPost } from '@atproto/api'
 import { prepareCreate } from '../../../../repo'
 import { Server } from '../../../../lexicon'
 import {
@@ -13,7 +12,6 @@ import AppContext from '../../../../context'
 import { ids } from '../../../../lexicon/lexicons'
 import Database from '../../../../db'
 import { ConcurrentWriteError } from '../../../../services/repo'
-import { isValidHashtag } from '../../../../util/validation'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.createRecord({
@@ -46,16 +44,6 @@ export default function (server: Server, ctx: AppContext) {
           'Unvalidated writes are not yet supported.',
         )
       }
-      if (AppBskyFeedPost.isRecord(record)) {
-        if (record.tags) {
-          for (const tag of record.tags) {
-            if (!isValidHashtag(tag)) {
-              throw new InvalidRequestError(`Invalid hashtag: ${tag}`)
-            }
-          }
-        }
-      }
-
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
       let write: PreparedCreate
