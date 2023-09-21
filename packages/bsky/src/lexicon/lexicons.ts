@@ -6955,7 +6955,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'An unspecced view of globally popular items',
+        description:
+          'DEPRECATED: will be removed soon, please find a feed generator alternative',
         parameters: {
           type: 'params',
           properties: {
