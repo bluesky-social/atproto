@@ -20,6 +20,20 @@ describe('agent', () => {
     await close()
   })
 
+  const getProfileDisplayName = async (
+    agent: BskyAgent,
+  ): Promise<string | undefined> => {
+    try {
+      const res = await agent.api.app.bsky.actor.profile.get({
+        repo: agent.session?.did || '',
+        rkey: 'self',
+      })
+      return res.value.displayName ?? ''
+    } catch (err) {
+      return undefined
+    }
+  }
+
   it('upsertProfile correctly creates and updates profiles.', async () => {
     const agent = new BskyAgent({ service: server.url })
 
@@ -28,9 +42,8 @@ describe('agent', () => {
       email: 'user1@test.com',
       password: 'password',
     })
-
-    const profile1 = await agent.getProfile({ actor: agent.session?.did || '' })
-    expect(profile1.data.displayName).toBeFalsy()
+    const displayName1 = await getProfileDisplayName(agent)
+    expect(displayName1).toBeFalsy()
 
     await agent.upsertProfile((existing) => {
       expect(existing).toBeFalsy()
@@ -39,8 +52,8 @@ describe('agent', () => {
       }
     })
 
-    const profile2 = await agent.getProfile({ actor: agent.session?.did || '' })
-    expect(profile2.data.displayName).toBe('Bob')
+    const displayName2 = await getProfileDisplayName(agent)
+    expect(displayName2).toBe('Bob')
 
     await agent.upsertProfile((existing) => {
       expect(existing).toBeTruthy()
@@ -49,8 +62,8 @@ describe('agent', () => {
       }
     })
 
-    const profile3 = await agent.getProfile({ actor: agent.session?.did || '' })
-    expect(profile3.data.displayName).toBe('BOB')
+    const displayName3 = await getProfileDisplayName(agent)
+    expect(displayName3).toBe('BOB')
   })
 
   it('upsertProfile correctly handles CAS failures.', async () => {
@@ -62,12 +75,12 @@ describe('agent', () => {
       password: 'password',
     })
 
-    const profile1 = await agent.getProfile({ actor: agent.session?.did || '' })
-    expect(profile1.data.displayName).toBeFalsy()
+    const displayName1 = await getProfileDisplayName(agent)
+    expect(displayName1).toBeFalsy()
 
     let hasConflicted = false
     let ranTwice = false
-    await agent.upsertProfile(async (existing) => {
+    await agent.upsertProfile(async (_existing) => {
       if (!hasConflicted) {
         await agent.com.atproto.repo.putRecord({
           repo: agent.session?.did || '',
@@ -88,8 +101,8 @@ describe('agent', () => {
     })
     expect(ranTwice).toBe(true)
 
-    const profile2 = await agent.getProfile({ actor: agent.session?.did || '' })
-    expect(profile2.data.displayName).toBe('Bob')
+    const displayName2 = await getProfileDisplayName(agent)
+    expect(displayName2).toBe('Bob')
   })
 
   it('upsertProfile wont endlessly retry CAS failures.', async () => {
@@ -101,10 +114,10 @@ describe('agent', () => {
       password: 'password',
     })
 
-    const profile1 = await agent.getProfile({ actor: agent.session?.did || '' })
-    expect(profile1.data.displayName).toBeFalsy()
+    const displayName1 = await getProfileDisplayName(agent)
+    expect(displayName1).toBeFalsy()
 
-    const p = agent.upsertProfile(async (existing) => {
+    const p = agent.upsertProfile(async (_existing) => {
       await agent.com.atproto.repo.putRecord({
         repo: agent.session?.did || '',
         collection: 'app.bsky.actor.profile',
@@ -130,7 +143,7 @@ describe('agent', () => {
       password: 'password',
     })
 
-    const p = agent.upsertProfile((existing) => {
+    const p = agent.upsertProfile((_existing) => {
       return {
         displayName: { string: 'Bob' },
       } as unknown as AppBskyActorProfile.Record
