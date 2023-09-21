@@ -14,6 +14,7 @@ import { DAY, HOUR } from '@atproto/common'
 import { ValidationError } from '@atproto/lexicon'
 import { PrimaryDatabase } from '../../db'
 import * as Post from './plugins/post'
+import * as Threadgate from './plugins/thread-gate'
 import * as Like from './plugins/like'
 import * as Repost from './plugins/repost'
 import * as Follow from './plugins/follow'
@@ -34,6 +35,7 @@ import { Actor } from '../../db/tables/actor'
 export class IndexingService {
   records: {
     post: Post.PluginType
+    threadGate: Threadgate.PluginType
     like: Like.PluginType
     repost: Repost.PluginType
     follow: Follow.PluginType
@@ -54,6 +56,7 @@ export class IndexingService {
   ) {
     this.records = {
       post: Post.makePlugin(this.db, backgroundQueue, notifServer),
+      threadGate: Threadgate.makePlugin(this.db, backgroundQueue, notifServer),
       like: Like.makePlugin(this.db, backgroundQueue, notifServer),
       repost: Repost.makePlugin(this.db, backgroundQueue, notifServer),
       follow: Follow.makePlugin(this.db, backgroundQueue, notifServer),
@@ -360,6 +363,10 @@ export class IndexingService {
       .where('post_embed_record.postUri', 'in', postByUser)
       .execute()
     await this.db.db.deleteFrom('post').where('creator', '=', did).execute()
+    await this.db.db
+      .deleteFrom('thread_gate')
+      .where('creator', '=', did)
+      .execute()
     // notifications
     await this.db.db
       .deleteFrom('notification')

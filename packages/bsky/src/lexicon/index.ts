@@ -83,6 +83,7 @@ import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGener
 import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
+import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
@@ -126,6 +127,7 @@ export const COM_ATPROTO_MODERATION = {
 }
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
+  DefsCuratelist: 'app.bsky.graph.defs#curatelist',
 }
 
 export function createServer(options?: XrpcOptions): Server {
@@ -1098,6 +1100,17 @@ export class FeedNS {
     >,
   ) {
     const nsid = 'app.bsky.feed.getLikes' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getListFeed<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyFeedGetListFeed.Handler<ExtractAuth<AV>>,
+      AppBskyFeedGetListFeed.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.feed.getListFeed' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

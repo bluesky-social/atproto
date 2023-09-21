@@ -4,7 +4,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.getRecord(async ({ req, params }) => {
+  server.com.atproto.repo.getRecord(async ({ params }) => {
     const { repo, collection, rkey, cid } = params
     const did = await ctx.services.account(ctx.db).getDidForActor(repo)
 
@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
       }
     }
 
-    if (await ctx.canProxyRead(req)) {
+    if (ctx.canProxyRead()) {
       const res = await ctx.appviewAgent.api.com.atproto.repo.getRecord(params)
       return {
         encoding: 'application/json',

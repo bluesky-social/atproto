@@ -6,9 +6,9 @@ import AppContext from '../../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getList({
     auth: ctx.accessVerifier,
-    handler: async ({ req, params, auth }) => {
+    handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      if (await ctx.canProxyRead(req, requester)) {
+      if (ctx.canProxyRead()) {
         const res = await ctx.appviewAgent.api.app.bsky.graph.getList(
           params,
           await ctx.serviceAuthHeaders(requester),

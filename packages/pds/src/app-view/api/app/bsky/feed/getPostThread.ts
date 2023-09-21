@@ -49,9 +49,9 @@ export type PostThread = {
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.accessVerifier,
-    handler: async ({ req, params, auth }) => {
+    handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      if (await ctx.canProxyRead(req, requester)) {
+      if (ctx.canProxyRead()) {
         try {
           const res = await ctx.appviewAgent.api.app.bsky.feed.getPostThread(
             params,

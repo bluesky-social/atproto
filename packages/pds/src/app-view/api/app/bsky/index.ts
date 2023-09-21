@@ -9,6 +9,7 @@ import getFeedGenerators from './feed/getFeedGenerators'
 import describeFeedGenerator from './feed/describeFeedGenerator'
 import getFeed from './feed/getFeed'
 import getLikes from './feed/getLikes'
+import getListFeed from './feed/getListFeed'
 import getPostThread from './feed/getPostThread'
 import getPosts from './feed/getPosts'
 import getActorLikes from './feed/getActorLikes'
@@ -47,6 +48,7 @@ export default function (server: Server, ctx: AppContext) {
   describeFeedGenerator(server, ctx)
   getFeed(server, ctx)
   getLikes(server, ctx)
+  getListFeed(server, ctx)
   getPostThread(server, ctx)
   getPosts(server, ctx)
   getActorLikes(server, ctx)

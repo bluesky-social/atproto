@@ -109,6 +109,8 @@ export type Preferences = (
   | ContentLabelPref
   | SavedFeedsPref
   | PersonalDetailsPref
+  | FeedViewPref
+  | ThreadViewPref
   | { $type: string; [k: string]: unknown }
 )[]
 
@@ -181,4 +183,52 @@ export function isPersonalDetailsPref(v: unknown): v is PersonalDetailsPref {
 
 export function validatePersonalDetailsPref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#personalDetailsPref', v)
+}
+
+export interface FeedViewPref {
+  /** The URI of the feed, or an identifier which describes the feed. */
+  feed: string
+  /** Hide replies in the feed. */
+  hideReplies?: boolean
+  /** Hide replies in the feed if they are not by followed users. */
+  hideRepliesByUnfollowed?: boolean
+  /** Hide replies in the feed if they do not have this number of likes. */
+  hideRepliesByLikeCount?: number
+  /** Hide reposts in the feed. */
+  hideReposts?: boolean
+  /** Hide quote posts in the feed. */
+  hideQuotePosts?: boolean
+  [k: string]: unknown
+}
+
+export function isFeedViewPref(v: unknown): v is FeedViewPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#feedViewPref'
+  )
+}
+
+export function validateFeedViewPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#feedViewPref', v)
+}
+
+export interface ThreadViewPref {
+  /** Sorting mode. */
+  sort?: 'oldest' | 'newest' | 'most-likes' | 'random' | (string & {})
+  /** Show followed users at the top of all replies. */
+  prioritizeFollowedUsers?: boolean
+  [k: string]: unknown
+}
+
+export function isThreadViewPref(v: unknown): v is ThreadViewPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#threadViewPref'
+  )
+}
+
+export function validateThreadViewPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#threadViewPref', v)
 }

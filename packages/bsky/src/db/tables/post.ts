@@ -12,6 +12,8 @@ export interface Post {
   replyParent: string | null
   replyParentCid: string | null
   langs: string[] | null
+  invalidReplyRoot: boolean | null
+  violatesThreadGate: boolean | null
   createdAt: string
   indexedAt: string
   sortAt: GeneratedAlways<string>

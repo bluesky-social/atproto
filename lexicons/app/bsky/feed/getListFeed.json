@@ -1,0 +1,42 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.getListFeed",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "A view of a recent posts from actors in a list",
+      "parameters": {
+        "type": "params",
+        "required": ["list"],
+        "properties": {
+          "list": { "type": "string", "format": "at-uri" },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["feed"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "feed": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.feed.defs#feedViewPost"
+              }
+            }
+          }
+        }
+      },
+      "errors": [{ "name": "UnknownList" }]
+    }
+  }
+}

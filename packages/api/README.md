@@ -31,6 +31,8 @@ Log into a server or create accounts using these APIs. You'll need an active ses
 
 ```typescript
 import { BskyAgent, AtpSessionEvent, AtpSessionData } from '@atproto/api'
+
+// configure connection to the server, without account authentication
 const agent = new BskyAgent({
   service: 'https://example.com',
   persistSession: (evt: AtpSessionEvent, sess?: AtpSessionData) => {
@@ -38,13 +40,19 @@ const agent = new BskyAgent({
   },
 })
 
-await agent.login({ identifier: 'alice@mail.com', password: 'hunter2' })
-await agent.resumeSession(savedSessionData)
+// create a new account on the server
 await agent.createAccount({
   email: 'alice@mail.com',
   password: 'hunter2',
   handle: 'alice.example.com',
+  inviteCode: 'some-code-12345-abcde',
 })
+
+// if an existing session (accessed with 'agent.session') was securely stored previously, then reuse that
+await agent.resumeSession(savedSessionData)
+
+// if no old session was available, create a new one by logging in with password (App Password)
+await agent.login({ identifier: 'alice@mail.com', password: 'hunter2' })
 ```
 
 ### API calls
