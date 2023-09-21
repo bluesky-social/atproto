@@ -18,7 +18,10 @@ import { ImageUriBuilder } from '../image/uri'
 import { ImageInvalidator } from '../image/invalidator'
 import { Abyss } from './abyss'
 import { FuzzyMatcher, TextFlagger } from './fuzzy-matcher'
-import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
+import {
+  REASONOTHER,
+  REASONVIOLATION,
+} from '../lexicon/types/com/atproto/moderation/defs'
 
 export class AutoModerator {
   public pushAgent?: AtpAgent
@@ -216,13 +219,12 @@ export class AutoModerator {
         uri: uri.toString(),
         blobCids: takedownCids,
         labels,
-        receiver: agent.service.toString(),
       },
       'hard takedown of record (and blobs) based on auto-matching',
     )
     if (this.pushAgent) {
       await this.pushAgent.com.atproto.moderation.createReport({
-        // NOTE: empty reportedBy
+        reportedBy: this.ctx.cfg.labelerDid,
         reasonType: REASONVIOLATION,
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -249,12 +251,11 @@ export class AutoModerator {
         }
         const modSrvc = this.services.moderation(dbTxn)
         await modSrvc.report({
-          // NOTE: empty reportedBy
+          reportedBy: this.ctx.cfg.labelerDid,
           reasonType: REASONVIOLATION,
           subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: uri.toString(),
-            cid: recordCid.toString(),
+            uri: uri,
+            cid: recordCid,
           },
           reason: reportReason,
         })
