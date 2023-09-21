@@ -2,9 +2,15 @@
   "name": "@atproto/bsky",
   "version": "0.0.6",
   "license": "MIT",
+  "description": "Reference implementation of app.bsky App View (Bluesky API)",
+  "keywords": [
+    "atproto",
+    "bluesky"
+  ],
+  "homepage": "https://atproto.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bluesky-social/atproto.git",
+    "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/bsky"
   },
   "main": "src/index.ts",
