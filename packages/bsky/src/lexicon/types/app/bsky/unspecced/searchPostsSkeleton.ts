@@ -7,14 +7,12 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyActorDefs from './defs'
 
 export interface QueryParams {
-  /** DEPRECATED: use 'q' instead */
-  term?: string
   /** search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended */
-  q?: string
+  q: string
   limit: number
+  /** optional pagination mechanism; may not necessarily allow scrolling through entire result set */
   cursor?: string
 }
 
@@ -22,7 +20,9 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  actors: AppBskyActorDefs.ProfileView[]
+  /** count of search hits. optional, may be rounded/truncated, and may not be possible to paginate through all hits */
+  hitsTotal?: number
+  posts: string[]
   [k: string]: unknown
 }
 
@@ -37,6 +37,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'BadQueryString'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
