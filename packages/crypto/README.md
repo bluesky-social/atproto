@@ -1,6 +1,6 @@
 # @atproto/crypto
 
-Typescript library providing basic cryptographic helpers as needed in [atproto](https://atproto.com).
+TypeScript library providing basic cryptographic helpers as needed in [atproto](https://atproto.com).
 
 [![NPM](https://img.shields.io/npm/v/@atproto/crypto)](https://www.npmjs.com/package/@atproto/crypto)
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)

@@ -2,7 +2,7 @@
   "name": "@atproto/common",
   "version": "0.3.0",
   "license": "MIT",
-  "description": "shared web-platform-friendly code for atproto libraries",
+  "description": "Shared web-platform-friendly code for atproto libraries",
   "keywords": [
     "atproto"
   ],

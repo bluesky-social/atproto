@@ -1,6 +1,6 @@
 # @atproto/lexicon: schema validation library
 
-Typescript implementation of the Lexicon data and API schema description language, which is part of [atproto](https://atproto.com).
+TypeScript implementation of the Lexicon data and API schema description language, which is part of [atproto](https://atproto.com).
 
 [![NPM](https://img.shields.io/npm/v/@atproto/lexicon)](https://www.npmjs.com/package/@atproto/lexicon)
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)

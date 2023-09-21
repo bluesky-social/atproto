@@ -1,6 +1,6 @@
 # @atproto/pds: Personal Data Server (PDS)
 
-Typescript reference implementation of an atproto PDS.
+TypeScript reference implementation of an atproto PDS.
 
 [![NPM](https://img.shields.io/npm/v/@atproto/pds)](https://www.npmjs.com/package/@atproto/pds)
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)

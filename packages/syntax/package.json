@@ -2,7 +2,7 @@
   "name": "@atproto/syntax",
   "version": "0.1.1",
   "license": "MIT",
-  "description": "validation for atproto identifiers and formats: DID, handle, NSID, AT URI, etc",
+  "description": "Validation for atproto identifiers and formats: DID, handle, NSID, AT URI, etc",
   "keywords": [
     "atproto",
     "did",

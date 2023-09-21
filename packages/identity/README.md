@@ -1,6 +1,6 @@
 # @atproto/identity
 
-Typescript library for decentralized identities in [atproto](https://atproto.com) using DIDs and handles
+TypeScript library for decentralized identities in [atproto](https://atproto.com) using DIDs and handles
 
 [![NPM](https://img.shields.io/npm/v/@atproto/identity)](https://www.npmjs.com/package/@atproto/identity)
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
