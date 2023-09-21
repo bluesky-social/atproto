@@ -207,8 +207,30 @@ export class AutoModerator {
     takedownCids: CID[],
     labels: string[],
   ) {
-    const reason = `automated takedown for labels: ${labels.join(', ')}`
+    const reportReason = `automated takedown (${labels.join(
+      ', ',
+    )}). account needs review and possibly additional action`
+    const takedownReason = `automated takedown for labels: ${labels.join(', ')}`
+    log.warn(
+      {
+        uri: uri.toString(),
+        blobCids: takedownCids,
+        labels,
+        receiver: agent.service.toString(),
+      },
+      'hard takedown of record (and blobs) based on auto-matching',
+    )
     if (this.pushAgent) {
+      await this.pushAgent.com.atproto.moderation.createReport({
+        // NOTE: empty reportedBy
+        reasonType: REASONVIOLATION,
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: uri.toString(),
+          cid: recordCid.toString(),
+        },
+        reason: reportReason,
+      })
       await this.pushAgent.com.atproto.admin.takeModerationAction({
         action: 'com.atproto.admin.defs#takedown',
         subject: {
@@ -217,7 +239,7 @@ export class AutoModerator {
           cid: recordCid.toString(),
         },
         subjectBlobCids: takedownCids.map((c) => c.toString()),
-        reason,
+        reason: takedownReason,
         createdBy: this.ctx.cfg.labelerDid,
       })
     } else {
@@ -226,11 +248,21 @@ export class AutoModerator {
           throw new Error('no mod push agent or uri invalidator setup')
         }
         const modSrvc = this.services.moderation(dbTxn)
+        const action = await modSrvc.report({
+          // NOTE: empty reportedBy
+          reasonType: REASONVIOLATION,
+          subject: {
+            $type: 'com.atproto.repo.strongRef',
+            uri: uri.toString(),
+            cid: recordCid.toString(),
+          },
+          reason: reportReason,
+        })
         const action = await modSrvc.logAction({
           action: 'com.atproto.admin.defs#takedown',
           subject: { uri, cid: recordCid },
           subjectBlobCids: takedownCids,
-          reason,
+          reason: takedownReason,
           createdBy: this.ctx.cfg.labelerDid,
         })
         await modSrvc.takedownRecord({
