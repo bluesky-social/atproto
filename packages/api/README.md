@@ -45,7 +45,7 @@ await agent.createAccount({
   email: 'alice@mail.com',
   password: 'hunter2',
   handle: 'alice.example.com',
-  inviteCode: 'someCode',
+  inviteCode: 'some-code-12345-abcde',
 })
 
 // if an existing session (accessed with 'agent.session') was securely stored previously, then reuse that
