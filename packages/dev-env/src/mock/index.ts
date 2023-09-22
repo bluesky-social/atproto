@@ -186,30 +186,30 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
     },
   )
 
-  const ctx = env.pds.ctx
-  if (ctx) {
-    await ctx.db.db
-      .insertInto('label')
-      .values([
-        {
-          src: ctx.cfg.labelerDid,
-          uri: labeledPost.uri,
-          cid: labeledPost.cid,
-          val: 'nudity',
-          neg: 0,
-          cts: new Date().toISOString(),
-        },
-        {
-          src: ctx.cfg.labelerDid,
-          uri: filteredPost.uri,
-          cid: filteredPost.cid,
-          val: 'dmca-violation',
-          neg: 0,
-          cts: new Date().toISOString(),
-        },
-      ])
-      .execute()
-  }
+  // const ctx = env.pds.ctx
+  // if (ctx) {
+  //   await ctx.db.db
+  //     .insertInto('label')
+  //     .values([
+  //       {
+  //         src: ctx.cfg.labelerDid,
+  //         uri: labeledPost.uri,
+  //         cid: labeledPost.cid,
+  //         val: 'nudity',
+  //         neg: 0,
+  //         cts: new Date().toISOString(),
+  //       },
+  //       {
+  //         src: ctx.cfg.labelerDid,
+  //         uri: filteredPost.uri,
+  //         cid: filteredPost.cid,
+  //         val: 'dmca-violation',
+  //         neg: 0,
+  //         cts: new Date().toISOString(),
+  //       },
+  //     ])
+  //     .execute()
+  // }
 
   // a set of replies
   for (let i = 0; i < 100; i++) {
