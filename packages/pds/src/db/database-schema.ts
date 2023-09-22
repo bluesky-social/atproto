@@ -22,10 +22,8 @@ import * as label from './tables/label'
 import * as repoSeq from './tables/repo-seq'
 import * as appMigration from './tables/app-migration'
 import * as runtimeFlag from './tables/runtime-flag'
-import * as appView from '../app-view/db'
 
-export type DatabaseSchemaType = appView.DatabaseSchemaType &
-  runtimeFlag.PartialDB &
+export type DatabaseSchemaType = runtimeFlag.PartialDB &
   appMigration.PartialDB &
   userAccount.PartialDB &
   userState.PartialDB &
