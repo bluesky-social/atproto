@@ -222,17 +222,24 @@ export class AutoModerator {
       },
       'hard takedown of record (and blobs) based on auto-matching',
     )
-    if (this.pushAgent) {
-      await this.pushAgent.com.atproto.moderation.createReport({
-        reportedBy: this.ctx.cfg.labelerDid,
-        reasonType: REASONVIOLATION,
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: uri.toString(),
-          cid: recordCid.toString(),
-        },
-        reason: reportReason,
+
+    if (this.services.moderation) {
+      // directly/locally create report, even if we use pushAgent for the takedown. don't have acctual account credentials for pushAgent, only admin auth
+      await this.ctx.db.transaction(async (dbTxn) => {
+        const modSrvc = this.services.moderation(dbTxn)
+        await modSrvc.report({
+          reportedBy: this.ctx.cfg.labelerDid,
+          reasonType: REASONVIOLATION,
+          subject: {
+            uri: uri,
+            cid: recordCid,
+          },
+          reason: reportReason,
+        })
       })
+    }
+
+    if (this.pushAgent) {
       await this.pushAgent.com.atproto.admin.takeModerationAction({
         action: 'com.atproto.admin.defs#takedown',
         subject: {
@@ -249,16 +256,6 @@ export class AutoModerator {
         if (!this.services.moderation) {
           throw new Error('no mod push agent or uri invalidator setup')
         }
-        const modSrvc = this.services.moderation(dbTxn)
-        await modSrvc.report({
-          reportedBy: this.ctx.cfg.labelerDid,
-          reasonType: REASONVIOLATION,
-          subject: {
-            uri: uri,
-            cid: recordCid,
-          },
-          reason: reportReason,
-        })
         const action = await modSrvc.logAction({
           action: 'com.atproto.admin.defs#takedown',
           subject: { uri, cid: recordCid },
