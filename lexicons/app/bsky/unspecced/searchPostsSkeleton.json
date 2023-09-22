@@ -39,8 +39,8 @@
             "posts": {
               "type": "array",
               "items": {
-                "type": "string",
-                "format": "at-uri"
+                "type": "ref",
+                "ref": "app.bsky.unspecced.defs#skeletonSearchPost"
               }
             }
           }

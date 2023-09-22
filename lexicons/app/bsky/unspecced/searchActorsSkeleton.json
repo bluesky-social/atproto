@@ -43,8 +43,8 @@
             "actors": {
               "type": "array",
               "items": {
-                "type": "string",
-                "format": "did"
+                "type": "ref",
+                "ref": "app.bsky.unspecced.defs#skeletonSearchActor"
               }
             }
           }
