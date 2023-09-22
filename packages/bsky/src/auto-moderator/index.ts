@@ -224,8 +224,12 @@ export class AutoModerator {
     )
 
     if (this.services.moderation) {
-      // directly/locally create report, even if we use pushAgent for the takedown. don't have acctual account credentials for pushAgent, only admin auth
       await this.ctx.db.transaction(async (dbTxn) => {
+        // directly/locally create report, even if we use pushAgent for the takedown. don't have acctual account credentials for pushAgent, only admin auth
+        if (!this.services.moderation) {
+          // checked above, outside the transaction
+          return
+        }
         const modSrvc = this.services.moderation(dbTxn)
         await modSrvc.report({
           reportedBy: this.ctx.cfg.labelerDid,
@@ -256,6 +260,7 @@ export class AutoModerator {
         if (!this.services.moderation) {
           throw new Error('no mod push agent or uri invalidator setup')
         }
+        const modSrvc = this.services.moderation(dbTxn)
         const action = await modSrvc.logAction({
           action: 'com.atproto.admin.defs#takedown',
           subject: { uri, cid: recordCid },
