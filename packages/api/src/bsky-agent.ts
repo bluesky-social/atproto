@@ -6,7 +6,12 @@ import {
   AppBskyActorDefs,
   ComAtprotoRepoPutRecord,
 } from './client'
-import { BskyPreferences, BskyLabelPreference } from './types'
+import {
+  BskyPreferences,
+  BskyLabelPreference,
+  BskyFeedViewPreference,
+  BskyThreadViewPreference,
+} from './types'
 
 const FEED_VIEW_PREF_DEFAULTS = {
   hideReplies: false,
@@ -439,10 +444,7 @@ export class BskyAgent extends AtpAgent {
     })
   }
 
-  async setFeedViewPrefs(
-    feed: string,
-    pref: Omit<AppBskyActorDefs.FeedViewPref, '$type' | 'feed'>,
-  ) {
+  async setFeedViewPrefs(feed: string, pref: Partial<BskyFeedViewPreference>) {
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
       const existing = prefs.findLast(
         (pref) =>
@@ -461,9 +463,7 @@ export class BskyAgent extends AtpAgent {
     })
   }
 
-  async setThreadViewPrefs(
-    pref: Omit<AppBskyActorDefs.ThreadViewPref, '$type'>,
-  ) {
+  async setThreadViewPrefs(pref: Partial<BskyThreadViewPreference>) {
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
       const existing = prefs.findLast(
         (pref) =>
