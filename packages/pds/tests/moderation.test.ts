@@ -1130,18 +1130,11 @@ describe('moderation', () => {
   describe('blob takedown', () => {
     let post: { ref: RecordRef; images: ImageRef[] }
     let blob: ImageRef
-    let imageUri: string
     let actionId: number
+
     beforeAll(async () => {
       post = sc.posts[sc.dids.carol][0]
       blob = post.images[1]
-      imageUri = server.ctx.imgUriBuilder
-        .getCommonSignedUri('feed_thumbnail', blob.image.ref.toString())
-        .replace(server.ctx.cfg.publicUrl, server.url)
-      // Warm image server cache
-      await fetch(imageUri)
-      const cached = await fetch(imageUri)
-      expect(cached.headers.get('x-cache')).toEqual('hit')
       const takeAction = await agent.api.com.atproto.admin.takeModerationAction(
         {
           action: TAKEDOWN,
@@ -1178,12 +1171,6 @@ describe('moderation', () => {
       await expect(referenceBlob).rejects.toThrow('Could not find blob:')
     })
 
-    it('prevents image blob from being served, even when cached.', async () => {
-      const fetchImage = await fetch(imageUri)
-      expect(fetchImage.status).toEqual(404)
-      expect(await fetchImage.json()).toEqual({ message: 'Image not found' })
-    })
-
     it('restores blob when action is reversed.', async () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
@@ -1200,12 +1187,6 @@ describe('moderation', () => {
       // Can post and reference blob
       const post = await sc.post(sc.dids.alice, 'pic', [], [blob])
       expect(post.images[0].image.ref.equals(blob.image.ref)).toBeTruthy()
-
-      // Can fetch through image server
-      const fetchImage = await fetch(imageUri)
-      expect(fetchImage.status).toEqual(200)
-      const size = Number(fetchImage.headers.get('content-length'))
-      expect(size).toBeGreaterThan(9000)
     })
   })
 })

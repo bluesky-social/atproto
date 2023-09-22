@@ -5,8 +5,6 @@ import { CloseFn, runTestServer, TestServerInfo } from './_util'
 import { Database, ServerConfig } from '../src'
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import * as uint8arrays from 'uint8arrays'
-import * as image from '../src/image'
-import axios from 'axios'
 import { randomBytes } from '@atproto/crypto'
 import { BlobRef } from '@atproto/lexicon'
 import { ids } from '../src/lexicon/lexicons'
@@ -145,24 +143,6 @@ describe('file uploads', () => {
     )
     expect(headers['x-content-type-options']).toEqual('nosniff')
     expect(uint8arrays.equals(smallFile, new Uint8Array(data))).toBeTruthy()
-  })
-
-  it('serves the referenced blob', async () => {
-    const profile = await aliceAgent.api.app.bsky.actor.getProfile({
-      actor: 'alice.test',
-    })
-    const avatar = profile.data.avatar as string
-    expect(typeof avatar).toBe('string')
-    const url = avatar.replace(cfg.publicUrl, serverUrl)
-    const res = await axios.get(url, { responseType: 'stream' })
-    expect(res.headers['content-type']).toBe('image/jpeg')
-    const info = await image.getInfo(res.data)
-    expect(info).toEqual(
-      expect.objectContaining({
-        height: 1000,
-        width: 1000,
-      }),
-    )
   })
 
   let largeBlob: BlobRef

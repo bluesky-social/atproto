@@ -50,6 +50,15 @@ describe('handles', () => {
     await close()
   })
 
+  const getHandleFromDb = async (did: string): Promise<string | undefined> => {
+    const res = await ctx.db.db
+      .selectFrom('did_handle')
+      .selectAll()
+      .where('did', '=', did)
+      .executeTakeFirst()
+    return res?.handle
+  }
+
   it('resolves handles', async () => {
     const res = await agent.api.com.atproto.identity.resolveHandle({
       handle: 'alice.test',
@@ -91,35 +100,6 @@ describe('handles', () => {
     })
     sc.accounts[alice].accessJwt = res.data.accessJwt
     sc.accounts[alice].refreshJwt = res.data.refreshJwt
-  })
-
-  it('returns the correct handle in views', async () => {
-    const profile = await agent.api.app.bsky.actor.getProfile(
-      { actor: alice },
-      { headers: sc.getHeaders(bob) },
-    )
-    expect(profile.data.handle).toBe(newHandle)
-
-    const timeline = await agent.api.app.bsky.feed.getTimeline(
-      {},
-      { headers: sc.getHeaders(bob) },
-    )
-
-    const alicePosts = timeline.data.feed.filter(
-      (post) => post.post.author.did === alice,
-    )
-    for (const post of alicePosts) {
-      expect(post.post.author.handle).toBe(newHandle)
-    }
-
-    const followers = await agent.api.app.bsky.graph.getFollowers(
-      { actor: bob },
-      { headers: sc.getHeaders(bob) },
-    )
-
-    const aliceFollows = followers.data.followers.filter((f) => f.did === alice)
-    expect(aliceFollows.length).toBe(1)
-    expect(aliceFollows[0].handle).toBe(newHandle)
   })
 
   it('does not allow taking a handle that already exists', async () => {
@@ -194,11 +174,8 @@ describe('handles', () => {
       },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
-    const profile = await agent.api.app.bsky.actor.getProfile(
-      { actor: alice },
-      { headers: sc.getHeaders(bob) },
-    )
-    expect(profile.data.handle).toBe('alice.external')
+    const dbHandle = await getHandleFromDb(alice)
+    expect(dbHandle).toBe('alice.external')
 
     const data = await idResolver.did.resolveAtprotoData(alice)
     expect(data.handle).toBe('alice.external')
@@ -225,11 +202,8 @@ describe('handles', () => {
       'External handle did not resolve to DID',
     )
 
-    const profile = await agent.api.app.bsky.actor.getProfile(
-      { actor: alice },
-      { headers: sc.getHeaders(bob) },
-    )
-    expect(profile.data.handle).toBe('alice.external')
+    const dbHandle = await getHandleFromDb(alice)
+    expect(dbHandle).toBe('alice.external')
   })
 
   it('allows admin overrules of service domains', async () => {
@@ -244,11 +218,8 @@ describe('handles', () => {
       },
     )
 
-    const profile = await agent.api.app.bsky.actor.getProfile(
-      { actor: bob },
-      { headers: sc.getHeaders(bob) },
-    )
-    expect(profile.data.handle).toBe('bob-alt.test')
+    const dbHandle = await getHandleFromDb(bob)
+    expect(dbHandle).toBe('bob-alt.test')
   })
 
   it('allows admin override of reserved domains', async () => {
@@ -263,11 +234,8 @@ describe('handles', () => {
       },
     )
 
-    const profile = await agent.api.app.bsky.actor.getProfile(
-      { actor: bob },
-      { headers: sc.getHeaders(bob) },
-    )
-    expect(profile.data.handle).toBe('dril.test')
+    const dbHandle = await getHandleFromDb(bob)
+    expect(dbHandle).toBe('dril.test')
   })
 
   it('requires admin auth', async () => {

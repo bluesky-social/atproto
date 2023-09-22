@@ -237,29 +237,6 @@ describe('account deletion', () => {
     )
   })
 
-  it('no longer displays the users posts in feeds', async () => {
-    const feed = await agent.api.app.bsky.feed.getTimeline(undefined, {
-      headers: sc.getHeaders(sc.dids.alice),
-    })
-    const found = feed.data.feed.filter(
-      (item) => item.post.author.did === carol.did,
-    )
-    expect(found.length).toBe(0)
-  })
-
-  it('removes notifications from the user', async () => {
-    const notifs = await agent.api.app.bsky.notification.listNotifications(
-      undefined,
-      {
-        headers: sc.getHeaders(sc.dids.alice),
-      },
-    )
-    const found = notifs.data.notifications.filter(
-      (item) => item.author.did === sc.dids.carol,
-    )
-    expect(found.length).toBe(0)
-  })
-
   it('can delete an empty user', async () => {
     const eve = await sc.createAccount('eve', {
       handle: 'eve.test',
