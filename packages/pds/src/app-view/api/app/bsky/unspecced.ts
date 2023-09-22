@@ -20,11 +20,6 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: res.data,
       }
-
-      return {
-        encoding: 'application/json',
-        body: { feed: [] },
-      }
     },
   })
 

@@ -1,6 +1,9 @@
-# ATP Developer Environment
+# @atproto/dev-env: Local Developer Environment
 
 A command-line application for developers to construct and manage development environments.
+
+[![NPM](https://img.shields.io/npm/v/@atproto/dev-env)](https://www.npmjs.com/package/@atproto/dev-env)
+[![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
 
 ## REPL API
 
@@ -25,3 +28,7 @@ Create a new user.
 ### `user(handle: string): ServiceClient`
 
 Get the `ServiceClient` for the given user.
+
+## License
+
+MIT License
