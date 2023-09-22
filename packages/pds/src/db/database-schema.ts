@@ -18,7 +18,6 @@ import * as deleteAccountToken from './tables/delete-account-token'
 import * as moderation from './tables/moderation'
 import * as mute from './tables/mute'
 import * as listMute from './tables/list-mute'
-import * as label from './tables/label'
 import * as repoSeq from './tables/repo-seq'
 import * as appMigration from './tables/app-migration'
 import * as runtimeFlag from './tables/runtime-flag'
@@ -44,7 +43,6 @@ export type DatabaseSchemaType = runtimeFlag.PartialDB &
   moderation.PartialDB &
   mute.PartialDB &
   listMute.PartialDB &
-  label.PartialDB &
   repoSeq.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>

@@ -1,12 +1,13 @@
 import { Kysely } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropView('algo_whats_hot_view')
+  await db.schema.dropView('algo_whats_hot_view').materialized().execute()
   await db.schema.dropTable('actor_block').execute()
   await db.schema.dropTable('duplicate_record').execute()
   await db.schema.dropTable('feed_generator').execute()
   await db.schema.dropTable('feed_item').execute()
   await db.schema.dropTable('follow').execute()
+  await db.schema.dropTable('label').execute()
   await db.schema.dropTable('like').execute()
   await db.schema.dropTable('list_item').execute()
   await db.schema.dropTable('list').execute()
