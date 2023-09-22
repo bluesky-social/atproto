@@ -512,7 +512,6 @@ Object {
         "viewer": Object {
           "blockedBy": false,
           "blocking": "record(0)",
-          "following": "record(4)",
           "muted": false,
         },
       },
