@@ -70,7 +70,10 @@ export const getUserSearchQuerySqlite = (
 
   if (!safeWords.length) {
     // Return no results. This could happen with weird input like ' % _ '.
-    return db.db.selectFrom('did_handle').where(sql`1 = 0`)
+    return db.db
+      .selectFrom('did_handle')
+      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .where(sql`1 = 0`)
   }
 
   // We'll ensure there's a space before each word in both textForMatch and in safeWords,
@@ -84,9 +87,9 @@ export const getUserSearchQuerySqlite = (
 
   return db.db
     .selectFrom('did_handle')
-    .innerJoin('repo_root as _repo_root', '_repo_root.did', 'did_handle.did')
+    .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
     .if(!includeSoftDeleted, (qb) =>
-      qb.where(notSoftDeletedClause(ref('_repo_root'))),
+      qb.where(notSoftDeletedClause(ref('repo_root'))),
     )
     .where((q) => {
       safeWords.forEach((word) => {

@@ -375,11 +375,9 @@ export class AccountService {
     const builder =
       this.db.dialect === 'pg'
         ? getUserSearchQueryPg(this.db, opts)
-            .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
             .selectAll('did_handle')
             .selectAll('repo_root')
         : getUserSearchQuerySqlite(this.db, opts)
-            .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
             .selectAll('did_handle')
             .selectAll('repo_root')
             .select(sql<number>`0`.as('distance'))

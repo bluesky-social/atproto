@@ -24,7 +24,6 @@ describe('proxies admin requests', () => {
       dbPostgresSchema: 'proxy_admin',
       pds: {
         // @NOTE requires admin pass be the same on pds and appview, which TestNetwork is handling for us.
-        enableInProcessAppView: true,
         bskyAppViewModeration: true,
         inviteRequired: true,
       },
@@ -246,7 +245,7 @@ describe('proxies admin requests', () => {
   })
 
   it('takesdown and labels repos, and reverts.', async () => {
-    const { db, services } = network.pds.ctx
+    const { db, services } = network.bsky.ctx
     // takedown repo
     const { data: action } =
       await agent.api.com.atproto.admin.takeModerationAction(
@@ -276,8 +275,8 @@ describe('proxies admin requests', () => {
     await expect(tryGetProfileAppview).rejects.toThrow(
       'Account has been taken down',
     )
-    const labelsA = await services.appView
-      .label(db)
+    const labelsA = await services
+      .label(db.getPrimary())
       .getLabels(sc.dids.alice, { includeNeg: false, skipCache: true })
     expect(labelsA.map((l) => l.val)).toEqual(['dogs'])
     // reverse action
@@ -298,14 +297,14 @@ describe('proxies admin requests', () => {
     expect(profileAppview).toEqual(
       expect.objectContaining({ did: sc.dids.alice, handle: 'alice.test' }),
     )
-    const labelsB = await services.appView
-      .label(db)
+    const labelsB = await services
+      .label(db.getPrimary())
       .getLabels(sc.dids.alice, { includeNeg: false, skipCache: true })
     expect(labelsB.map((l) => l.val)).toEqual(['cats'])
   })
 
   it('takesdown and labels records, and reverts.', async () => {
-    const { db, services } = network.pds.ctx
+    const { db, services } = network.bsky.ctx
     const post = sc.posts[sc.dids.alice][0]
     // takedown post
     const { data: action } =
@@ -335,8 +334,8 @@ describe('proxies admin requests', () => {
       },
     )
     await expect(tryGetPostAppview).rejects.toThrow(NotFoundError)
-    const labelsA = await services.appView
-      .label(db)
+    const labelsA = await services
+      .label(db.getPrimary())
       .getLabels(post.ref.uriStr, { includeNeg: false, skipCache: true })
     expect(labelsA.map((l) => l.val)).toEqual(['dogs'])
     // reverse action
@@ -357,8 +356,8 @@ describe('proxies admin requests', () => {
     expect(threadAppview.thread.post).toEqual(
       expect.objectContaining({ uri: post.ref.uriStr, cid: post.ref.cidStr }),
     )
-    const labelsB = await services.appView
-      .label(db)
+    const labelsB = await services
+      .label(db.getPrimary())
       .getLabels(post.ref.uriStr, { includeNeg: false, skipCache: true })
     expect(labelsB.map((l) => l.val)).toEqual(['cats'])
   })
