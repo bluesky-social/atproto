@@ -20,7 +20,6 @@ import RecordProcessor from '../processor'
 import { UserNotification } from '../../../../db/tables/user-notification'
 import { countAll, excluded } from '../../../../db/util'
 import { toSimplifiedISOSafe } from '../util'
-import { getAncestorsAndSelfQb } from '../../feed/util'
 
 type Post = DatabaseSchemaType['post']
 type PostEmbedImage = DatabaseSchemaType['post_embed_image']
@@ -138,14 +137,7 @@ const insertFn = async (
       await db.insertInto('post_embed_record').values(recordEmbed).execute()
     }
   }
-  const ancestors = await getAncestorsAndSelfQb(db, {
-    uri: post.uri,
-    parentHeight: REPLY_NOTIF_DEPTH,
-  })
-    .selectFrom('ancestor')
-    .selectAll()
-    .execute()
-  return { post: insertedPost, facets, embeds, ancestors }
+  return { post: insertedPost, facets, embeds }
 }
 
 const findDuplicate = async (): Promise<AtUri | null> => {

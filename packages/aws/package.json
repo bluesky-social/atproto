@@ -1,16 +1,22 @@
 {
   "name": "@atproto/aws",
   "version": "0.1.1",
+  "license": "MIT",
+  "description": "Shared AWS cloud API helpers for atproto services",
+  "keywords": [
+    "atproto",
+    "aws"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/aws"
+  },
   "main": "src/index.ts",
   "publishConfig": {
     "main": "dist/index.js",
     "types": "dist/src/index.d.ts"
-  },
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/bluesky-social/atproto.git",
-    "directory": "packages/aws"
   },
   "scripts": {
     "build": "node ./build.js",

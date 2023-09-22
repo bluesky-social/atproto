@@ -1,12 +1,13 @@
 import { AddressInfo } from 'net'
 import express from 'express'
 import axios, { AxiosError } from 'axios'
-import AtpAgent from '@atproto/api'
+import AtpAgent, { AtUri } from '@atproto/api'
 import { CloseFn, runTestServer, TestServerInfo } from './_util'
 import { handler as errorHandler } from '../src/error'
 import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import { Database } from '../src'
+import { randomStr } from '@atproto/crypto'
 
 describe('server', () => {
   let server: TestServerInfo
@@ -86,8 +87,26 @@ describe('server', () => {
   })
 
   it('compresses large json responses', async () => {
+    // first create a large record
+    const record = {
+      text: 'blahblabh',
+      createdAt: new Date().toISOString(),
+    }
+    for (let i = 0; i < 100; i++) {
+      record[randomStr(8, 'base32')] = randomStr(32, 'base32')
+    }
+    const createRes = await agent.com.atproto.repo.createRecord(
+      {
+        repo: alice,
+        collection: 'app.bsky.feed.post',
+        record,
+      },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+    const uri = new AtUri(createRes.data.uri)
+
     const res = await axios.get(
-      `${server.url}/xrpc/app.bsky.feed.getTimeline`,
+      `${server.url}/xrpc/com.atproto.repo.getRecord?repo=${uri.host}&collection=${uri.collection}&rkey=${uri.rkey}`,
       {
         decompress: false,
         headers: { ...sc.getHeaders(alice), 'accept-encoding': 'gzip' },
@@ -120,7 +139,7 @@ describe('server', () => {
 
   it('healthcheck fails when database is unavailable.', async () => {
     // destroy to release lock & allow db to close
-    await server.ctx.sequencerLeader.destroy()
+    await server.ctx.sequencerLeader?.destroy()
 
     await db.close()
     let error: AxiosError

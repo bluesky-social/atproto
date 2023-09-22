@@ -1,9 +1,5 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
-import { FeedKeyset } from '../util/feed'
-import { paginate } from '../../../../../db/pagination'
 import AppContext from '../../../../../context'
-import { FeedRow } from '../../../../services/feed'
 import { OutputSchema } from '../../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import { handleReadAfterWrite } from '../util/read-after-write'
 import { authPassthru } from '../../../../../api/com/atproto/admin/util'
@@ -16,75 +12,16 @@ export default function (server: Server, ctx: AppContext) {
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null
 
-      if (ctx.canProxyRead()) {
-        const res = await ctx.appviewAgent.api.app.bsky.feed.getActorLikes(
-          params,
-          requester
-            ? await ctx.serviceAuthHeaders(requester)
-            : authPassthru(req),
-        )
-        if (requester) {
-          return await handleReadAfterWrite(ctx, requester, res, getAuthorMunge)
-        }
-        return {
-          encoding: 'application/json',
-          body: res.data,
-        }
-      }
-
-      const { actor, limit, cursor } = params
-
-      const { ref } = ctx.db.db.dynamic
-      const actorService = ctx.services.appView.actor(ctx.db)
-      const feedService = ctx.services.appView.feed(ctx.db)
-      const graphService = ctx.services.appView.graph(ctx.db)
-
-      // maybe resolve did first
-      const actorRes = await actorService.getActor(actor)
-      if (!actorRes) {
-        throw new InvalidRequestError('Profile not found')
-      }
-      const actorDid = actorRes.did
-
-      if (!requester || requester !== actorDid) {
-        throw new InvalidRequestError('Profile not found')
-      }
-
-      // defaults to posts, reposts, and replies
-      let feedItemsQb = feedService
-        .selectFeedItemQb()
-        .innerJoin('like', 'like.subject', 'feed_item.uri')
-        .where('like.creator', '=', actorDid)
-
-      // for access-based auth, enforce blocks
-      if (requester) {
-        feedItemsQb = feedItemsQb.whereNotExists(
-          graphService.blockQb(requester, [ref('post.creator')]),
-        )
-      }
-
-      const keyset = new FeedKeyset(
-        ref('feed_item.sortAt'),
-        ref('feed_item.cid'),
+      const res = await ctx.appviewAgent.api.app.bsky.feed.getActorLikes(
+        params,
+        requester ? await ctx.serviceAuthHeaders(requester) : authPassthru(req),
       )
-
-      feedItemsQb = paginate(feedItemsQb, {
-        limit,
-        cursor,
-        keyset,
-      })
-
-      const feedItems: FeedRow[] = await feedItemsQb.execute()
-      const feed = await feedService.hydrateFeed(feedItems, requester, {
-        includeSoftDeleted: auth.credentials.type === 'role', // show takendown content to mods
-      })
-
+      if (requester) {
+        return await handleReadAfterWrite(ctx, requester, res, getAuthorMunge)
+      }
       return {
         encoding: 'application/json',
-        body: {
-          feed,
-          cursor: keyset.packFromResult(feedItems),
-        },
+        body: res.data,
       }
     },
   })

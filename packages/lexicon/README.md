@@ -1,10 +1,9 @@
-# Lexicon
+# @atproto/lexicon: schema validation library
 
-Lexicon is the semantic schemas & contracts system for ATP. This library provides definitions and APIs for ATP software.
+TypeScript implementation of the Lexicon data and API schema description language, which is part of [atproto](https://atproto.com).
 
-```
-npm install @atproto/lexicon
-```
+[![NPM](https://img.shields.io/npm/v/@atproto/lexicon)](https://www.npmjs.com/package/@atproto/lexicon)
+[![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
 
 ## Usage
 
@@ -29,3 +28,7 @@ lex.assertValidXrpcParams('com.example.query', {...})
 lex.assertValidXrpcInput('com.example.procedure', {...})
 lex.assertValidXrpcOutput('com.example.query', {...})
 ```
+
+## License
+
+MIT
