@@ -7,18 +7,13 @@ import { AuthService } from './auth'
 import { RecordService } from './record'
 import { RepoService } from './repo'
 import { ModerationService } from './moderation'
-import { Labeler } from '../labeler'
-import { LabelService } from '../app-view/services/label'
 import { BackgroundQueue } from '../background'
 import { Crawlers } from '../crawlers'
-import { LabelCache } from '../label-cache'
 import { LocalService } from './local'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
   blobstore: BlobStore
-  labeler: Labeler
-  labelCache: LabelCache
   appviewAgent?: AtpAgent
   appviewDid?: string
   appviewCdnUrlPattern?: string
@@ -28,8 +23,6 @@ export function createServices(resources: {
   const {
     repoSigningKey,
     blobstore,
-    labeler,
-    labelCache,
     appviewAgent,
     appviewDid,
     appviewCdnUrlPattern,
@@ -45,7 +38,6 @@ export function createServices(resources: {
       blobstore,
       backgroundQueue,
       crawlers,
-      labeler,
     ),
     local: LocalService.creator(
       repoSigningKey,
@@ -54,9 +46,6 @@ export function createServices(resources: {
       appviewCdnUrlPattern,
     ),
     moderation: ModerationService.creator(blobstore),
-    appView: {
-      label: LabelService.creator(labelCache),
-    },
   }
 }
 
@@ -67,9 +56,6 @@ export type Services = {
   repo: FromDb<RepoService>
   local: FromDb<LocalService>
   moderation: FromDb<ModerationService>
-  appView: {
-    label: FromDb<LabelService>
-  }
 }
 
 type FromDb<T> = (db: Database) => T

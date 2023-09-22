@@ -21,7 +21,6 @@ import { ModerationAction } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
 import { ModerationReportRowWithHandle } from '.'
-import { getSelfLabels } from '../../app-view/services/label'
 
 export class ModerationViews {
   constructor(private db: Database) {}

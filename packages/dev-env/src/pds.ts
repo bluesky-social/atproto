@@ -59,9 +59,6 @@ export class TestPds {
       maxSubscriptionBuffer: 200,
       repoBackfillLimitMs: 1000 * 60 * 60, // 1hr
       sequencerLeaderLockId: uniqueLockId(),
-      labelerDid: 'did:example:labeler',
-      labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
-      feedGenDid: 'did:example:feedGen',
       dbTxLockNonce: await randomStr(32, 'base32'),
       bskyAppViewEndpoint: cfg.bskyAppViewEndpoint ?? 'http://fake_address',
       bskyAppViewDid: cfg.bskyAppViewDid ?? 'did:example:fake',
@@ -89,8 +86,6 @@ export class TestPds {
 
     await server.start()
 
-    // we refresh label cache by hand in `processAll` instead of on a timer
-    if (!cfg.enableLabelsCache) server.ctx.labelCache.stop()
     return new TestPds(url, port, server)
   }
 
@@ -123,7 +118,6 @@ export class TestPds {
 
   async processAll() {
     await this.ctx.backgroundQueue.processAll()
-    await this.ctx.labelCache.fullRefresh()
   }
 
   async close() {

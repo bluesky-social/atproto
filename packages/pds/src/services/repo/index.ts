@@ -15,7 +15,6 @@ import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { RecordService } from '../record'
 import * as sequencer from '../../sequencer'
-import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
 import { BackgroundQueue } from '../../background'
 import { Crawlers } from '../../crawlers'
@@ -29,7 +28,6 @@ export class RepoService {
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
     public crawlers: Crawlers,
-    public labeler: Labeler,
   ) {
     this.blobs = new RepoBlobs(db, blobstore, backgroundQueue)
   }
@@ -39,17 +37,9 @@ export class RepoService {
     blobstore: BlobStore,
     backgroundQueue: BackgroundQueue,
     crawlers: Crawlers,
-    labeler: Labeler,
   ) {
     return (db: Database) =>
-      new RepoService(
-        db,
-        keypair,
-        blobstore,
-        backgroundQueue,
-        crawlers,
-        labeler,
-      )
+      new RepoService(db, keypair, blobstore, backgroundQueue, crawlers)
   }
 
   services = {
@@ -67,7 +57,6 @@ export class RepoService {
         this.blobstore,
         this.backgroundQueue,
         this.crawlers,
-        this.labeler,
       )
       return fn(srvc)
     })
@@ -288,15 +277,6 @@ export class RepoService {
     this.db.onCommit(() => {
       this.backgroundQueue.add(async () => {
         await this.crawlers.notifyOfUpdate()
-      })
-      writes.forEach((write) => {
-        if (
-          write.action === WriteOpAction.Create ||
-          write.action === WriteOpAction.Update
-        ) {
-          // @TODO move to appview
-          this.labeler.processRecord(write.uri, write.record)
-        }
       })
     })
 

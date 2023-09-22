@@ -38,11 +38,9 @@ import { createServices } from './services'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import AppContext from './context'
 import { Sequencer, SequencerLeader } from './sequencer'
-import { Labeler, HiveLabeler, KeywordLabeler } from './labeler'
 import { BackgroundQueue } from './background'
 import DidSqlCache from './did-cache'
 import { Crawlers } from './crawlers'
-import { LabelCache } from './label-cache'
 import { getRedisClient } from './redis'
 import { RuntimeFlags } from './runtime-flags'
 
@@ -126,34 +124,11 @@ export class PDS {
       config.crawlersToNotify ?? [],
     )
 
-    let labeler: Labeler
-    if (config.hiveApiKey) {
-      labeler = new HiveLabeler({
-        db,
-        blobstore,
-        backgroundQueue,
-        labelerDid: config.labelerDid,
-        hiveApiKey: config.hiveApiKey,
-        keywords: config.labelerKeywords,
-      })
-    } else {
-      labeler = new KeywordLabeler({
-        db,
-        blobstore,
-        backgroundQueue,
-        labelerDid: config.labelerDid,
-        keywords: config.labelerKeywords,
-      })
-    }
-
-    const labelCache = new LabelCache(db)
     const appviewAgent = new AtpAgent({ service: config.bskyAppViewEndpoint })
 
     const services = createServices({
       repoSigningKey,
       blobstore,
-      labeler,
-      labelCache,
       appviewAgent,
       appviewDid: config.bskyAppViewDid,
       appviewCdnUrlPattern: config.bskyAppViewCdnUrlPattern,
@@ -183,8 +158,6 @@ export class PDS {
       auth,
       sequencer,
       sequencerLeader,
-      labeler,
-      labelCache,
       runtimeFlags,
       services,
       mailer,
@@ -291,7 +264,6 @@ export class PDS {
     this.ctx.sequencerLeader?.run()
     await this.ctx.sequencer.start()
     await this.ctx.db.startListeningToChannels()
-    this.ctx.labelCache.start()
     await this.ctx.runtimeFlags.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
@@ -303,7 +275,6 @@ export class PDS {
 
   async destroy(): Promise<void> {
     await this.ctx.runtimeFlags.destroy()
-    this.ctx.labelCache.stop()
     await this.ctx.sequencerLeader?.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
