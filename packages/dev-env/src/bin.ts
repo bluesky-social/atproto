@@ -15,7 +15,6 @@ const run = async () => {
   const network = await TestNetworkNoAppView.create({
     pds: {
       port: 2583,
-      enableLabelsCache: true,
       publicUrl: 'http://localhost:2583',
     },
     plc: { port: 2582 },
