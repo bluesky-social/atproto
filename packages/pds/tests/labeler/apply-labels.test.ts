@@ -1,32 +1,25 @@
 import AtpAgent from '@atproto/api'
-import {
-  adminAuth,
-  CloseFn,
-  moderatorAuth,
-  runTestServer,
-  TestServerInfo,
-} from '../_util'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { adminAuth, moderatorAuth } from '../_util'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('unspecced.applyLabels', () => {
-  let server: TestServerInfo
-  let close: CloseFn
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'apply_labels',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
+    agent = network.pds.getClient()
     sc = new SeedClient(agent)
     await basicSeed(sc)
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('requires admin auth.', async () => {
@@ -34,7 +27,7 @@ describe('unspecced.applyLabels', () => {
       {
         labels: [
           {
-            src: server.ctx.cfg.labelerDid,
+            src: network.pds.ctx.cfg.labelerDid,
             uri: sc.dids.carol,
             val: 'cats',
             neg: false,
@@ -56,7 +49,7 @@ describe('unspecced.applyLabels', () => {
       {
         labels: [
           {
-            src: server.ctx.cfg.labelerDid,
+            src: network.pds.ctx.cfg.labelerDid,
             uri: post.uriStr,
             cid: post.cidStr,
             val: 'birds',
@@ -64,7 +57,7 @@ describe('unspecced.applyLabels', () => {
             cts: new Date().toISOString(),
           },
           {
-            src: server.ctx.cfg.labelerDid,
+            src: network.pds.ctx.cfg.labelerDid,
             uri: post.uriStr,
             cid: post.cidStr,
             val: 'bats',
@@ -86,7 +79,7 @@ describe('unspecced.applyLabels', () => {
       {
         labels: [
           {
-            src: server.ctx.cfg.labelerDid,
+            src: network.pds.ctx.cfg.labelerDid,
             uri: post.uriStr,
             cid: post.cidStr,
             val: 'birds',
@@ -94,7 +87,7 @@ describe('unspecced.applyLabels', () => {
             cts: new Date().toISOString(),
           },
           {
-            src: server.ctx.cfg.labelerDid,
+            src: network.pds.ctx.cfg.labelerDid,
             uri: post.uriStr,
             cid: post.cidStr,
             val: 'bats',
@@ -116,14 +109,14 @@ describe('unspecced.applyLabels', () => {
       {
         labels: [
           {
-            src: server.ctx.cfg.labelerDid,
+            src: network.pds.ctx.cfg.labelerDid,
             uri: sc.dids.carol,
             val: 'birds',
             neg: false,
             cts: new Date().toISOString(),
           },
           {
-            src: server.ctx.cfg.labelerDid,
+            src: network.pds.ctx.cfg.labelerDid,
             uri: sc.dids.carol,
             val: 'bats',
             neg: false,
@@ -144,14 +137,14 @@ describe('unspecced.applyLabels', () => {
       {
         labels: [
           {
-            src: server.ctx.cfg.labelerDid,
+            src: network.pds.ctx.cfg.labelerDid,
             uri: sc.dids.carol,
             val: 'birds',
             neg: true,
             cts: new Date().toISOString(),
           },
           {
-            src: server.ctx.cfg.labelerDid,
+            src: network.pds.ctx.cfg.labelerDid,
             uri: sc.dids.carol,
             val: 'bats',
             neg: true,

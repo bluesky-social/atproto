@@ -6,7 +6,7 @@ import {
 import {
   REASONOTHER,
   REASONSPAM,
-} from '../../../src/lexicon/types/com/atproto/moderation/defs'
+} from '../../src/lexicon/types/com/atproto/moderation/defs'
 import {
   runTestServer,
   forSnapshot,
@@ -15,9 +15,9 @@ import {
   TestServerInfo,
   moderatorAuth,
   triageAuth,
-} from '../../_util'
-import { SeedClient } from '../../seeds/client'
-import basicSeed from '../../seeds/basic'
+} from '../_util'
+import { SeedClient } from '../seeds/client'
+import basicSeed from '../seeds/basic'
 
 describe('pds admin get repo view', () => {
   let server: TestServerInfo

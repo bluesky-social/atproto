@@ -9,40 +9,17 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
-      if (ctx.canProxyRead()) {
-        const res = await ctx.appviewAgent.api.app.bsky.actor.getProfiles(
-          params,
-          await ctx.serviceAuthHeaders(requester),
-        )
-        const hasSelf = res.data.profiles.some((prof) => prof.did === requester)
-        if (hasSelf) {
-          return await handleReadAfterWrite(
-            ctx,
-            requester,
-            res,
-            getProfilesMunge,
-          )
-        }
-        return {
-          encoding: 'application/json',
-          body: res.data,
-        }
+      const res = await ctx.appviewAgent.api.app.bsky.actor.getProfiles(
+        params,
+        await ctx.serviceAuthHeaders(requester),
+      )
+      const hasSelf = res.data.profiles.some((prof) => prof.did === requester)
+      if (hasSelf) {
+        return await handleReadAfterWrite(ctx, requester, res, getProfilesMunge)
       }
-
-      const { actors } = params
-      const { db, services } = ctx
-      const actorService = services.appView.actor(db)
-
-      const actorsRes = await actorService.getActors(actors)
-
       return {
         encoding: 'application/json',
-        body: {
-          profiles: await actorService.views.hydrateProfilesDetailed(
-            actorsRes,
-            requester,
-          ),
-        },
+        body: res.data,
       }
     },
   })

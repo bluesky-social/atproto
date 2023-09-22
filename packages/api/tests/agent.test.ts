@@ -197,7 +197,7 @@ describe('agent', () => {
 
     // put the agent through the auth flow
     AtpAgent.configure({ fetch: tokenExpiredFetchHandler })
-    const res1 = await agent.api.app.bsky.feed.getTimeline()
+    const res1 = await createPost(agent)
     AtpAgent.configure({ fetch: defaultFetchHandler })
 
     expect(res1.success).toEqual(true)
@@ -267,9 +267,9 @@ describe('agent', () => {
     // put the agent through the auth flow
     AtpAgent.configure({ fetch: tokenExpiredFetchHandler })
     const [res1, res2, res3] = await Promise.all([
-      agent.api.app.bsky.feed.getTimeline(),
-      agent.api.app.bsky.feed.getTimeline(),
-      agent.api.app.bsky.feed.getTimeline(),
+      createPost(agent),
+      createPost(agent),
+      createPost(agent),
     ])
     AtpAgent.configure({ fetch: defaultFetchHandler })
 
@@ -462,3 +462,14 @@ describe('agent', () => {
     })
   })
 })
+
+const createPost = async (agent: AtpAgent) => {
+  return agent.api.com.atproto.repo.createRecord({
+    repo: agent.session?.did ?? '',
+    collection: 'app.bsky.feed.post',
+    record: {
+      text: 'hello there',
+      createdAt: new Date().toISOString(),
+    },
+  })
+}
