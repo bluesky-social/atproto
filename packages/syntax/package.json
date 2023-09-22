@@ -1,6 +1,20 @@
 {
   "name": "@atproto/syntax",
   "version": "0.1.1",
+  "license": "MIT",
+  "description": "Validation for atproto identifiers and formats: DID, handle, NSID, AT URI, etc",
+  "keywords": [
+    "atproto",
+    "did",
+    "nsid",
+    "at-uri"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/syntax"
+  },
   "main": "src/index.ts",
   "publishConfig": {
     "main": "dist/index.js",
@@ -11,12 +25,6 @@
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "update-main-to-dist": "node ../../update-main-to-dist.js packages/syntax"
-  },
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/bluesky-social/atproto.git",
-    "directory": "packages/syntax"
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^"
