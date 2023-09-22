@@ -1,5 +1,4 @@
 import { LabelPreference } from './moderation/types'
-import { AppBskyActorDefs } from './client'
 
 /**
  * Used by the PersistSessionHandler to indicate what change occurred
@@ -81,15 +80,37 @@ export type BskyLabelPreference = LabelPreference | 'show'
 // TEMP we need to permanently convert 'show' to 'ignore', for now we manually convert -prf
 
 /**
- * Bluesky preferences object
+ * Bluesky feed view preferences
+ */
+
+export interface BskyFeedViewPreference {
+  hideReplies: boolean
+  hideRepliesByUnfollowed: boolean
+  hideRepliesByLikeCount: number
+  hideReposts: boolean
+  hideQuotePosts: boolean
+  [key: string]: any
+}
+
+/**
+ * Bluesky thread view preferences
+ */
+export interface BskyThreadViewPreference {
+  sort: string
+  prioritizeFollowedUsers: boolean
+  [key: string]: any
+}
+
+/**
+ * Bluesky preferences
  */
 export interface BskyPreferences {
   feeds: {
     saved?: string[]
     pinned?: string[]
   }
-  feedViewPrefs: Record<string, Omit<AppBskyActorDefs.FeedViewPref, '$type'>>
-  threadViewPrefs: Omit<AppBskyActorDefs.ThreadViewPref, '$type'>
+  feedViewPrefs: Record<string, BskyFeedViewPreference>
+  threadViewPrefs: BskyThreadViewPreference
   adultContentEnabled: boolean
   contentLabels: Record<string, BskyLabelPreference>
   birthDate: Date | undefined
