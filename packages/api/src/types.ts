@@ -1,5 +1,4 @@
 import { LabelPreference } from './moderation/types'
-import { AppBskyActorDefs } from './client'
 
 /**
  * Used by the PersistSessionHandler to indicate what change occurred
