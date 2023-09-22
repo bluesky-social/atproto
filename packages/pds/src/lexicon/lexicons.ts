@@ -6908,6 +6908,32 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedDefs: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.defs',
+    defs: {
+      skeletonSearchPost: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+      skeletonSearchActor: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetPopular: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getPopular',
@@ -7099,8 +7125,8 @@ export const schemaDict = {
               actors: {
                 type: 'array',
                 items: {
-                  type: 'string',
-                  format: 'did',
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#skeletonSearchActor',
                 },
               },
             },
@@ -7160,8 +7186,8 @@ export const schemaDict = {
               posts: {
                 type: 'array',
                 items: {
-                  type: 'string',
-                  format: 'at-uri',
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#skeletonSearchPost',
                 },
               },
             },
@@ -7310,6 +7336,7 @@ export const ids = {
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedApplyLabels: 'app.bsky.unspecced.applyLabels',
+  AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
   AppBskyUnspeccedGetPopular: 'app.bsky.unspecced.getPopular',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',

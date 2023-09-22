@@ -7,6 +7,7 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
+import * as AppBskyUnspeccedDefs from './defs'
 
 export interface QueryParams {
   /** search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. For typeahead search, only simple term match is supported, not full syntax */
@@ -24,7 +25,7 @@ export interface OutputSchema {
   cursor?: string
   /** count of search hits. optional, may be rounded/truncated, and may not be possible to paginate through all hits */
   hitsTotal?: number
-  actors: string[]
+  actors: AppBskyUnspeccedDefs.SkeletonSearchActor[]
   [k: string]: unknown
 }
 

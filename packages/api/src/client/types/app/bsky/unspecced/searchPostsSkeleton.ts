@@ -6,6 +6,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
+import * as AppBskyUnspeccedDefs from './defs'
 
 export interface QueryParams {
   /** search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended */
@@ -21,7 +22,7 @@ export interface OutputSchema {
   cursor?: string
   /** count of search hits. optional, may be rounded/truncated, and may not be possible to paginate through all hits */
   hitsTotal?: number
-  posts: string[]
+  posts: AppBskyUnspeccedDefs.SkeletonSearchPost[]
   [k: string]: unknown
 }
 
