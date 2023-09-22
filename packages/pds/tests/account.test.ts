@@ -92,7 +92,9 @@ describe('account', () => {
         handle: 'bad-email.test',
         password: 'asdf',
       })
-      await expect(promise).rejects.toThrow('This email address is not supported, please use a different email.')
+      await expect(promise).rejects.toThrow(
+        'This email address is not supported, please use a different email.',
+      )
     })
   })
 
