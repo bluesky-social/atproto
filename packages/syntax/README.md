@@ -1,8 +1,15 @@
-# Syntax
+# @atproto/syntax: validation helpers for identifier strings
 
-Validation logic for AT identifiers - DIDs, Handles, NSIDs, and AT URIs.
+Validation logic for [atproto](https://atproto.com) identifiers - DIDs, Handles, NSIDs, and AT URIs.
+
+[![NPM](https://img.shields.io/npm/v/@atproto/crypto)](https://www.npmjs.com/package/@atproto/syntax)
+[![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
 
 ## Usage
+
+### Handles
+
+Syntax specification: <https://atproto.com/specs/handle>
 
 ```typescript
 import { isValidHandle, ensureValidHandle, isValidDid } from '@atproto/syntax'
@@ -17,7 +24,9 @@ ensureValidDid('did:method:val') // returns void
 ensureValidDid(':did:method:val') // throws
 ```
 
-## NameSpaced IDs (NSID)
+### NameSpaced IDs (NSID)
+
+Syntax specification: <https://atproto.com/specs/nsid>
 
 ```typescript
 import { NSID } from '@atproto/syntax'
@@ -43,7 +52,9 @@ NSID.isValid('example.com/foo') // => false
 NSID.isValid('foo') // => false
 ```
 
-## AT URI
+### AT URI
+
+Syntax specification: <https://atproto.com/specs/at-uri-scheme>
 
 ```typescript
 import { AtUri } from '@atproto/syntax'

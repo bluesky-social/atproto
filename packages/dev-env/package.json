@@ -1,18 +1,23 @@
 {
   "name": "@atproto/dev-env",
   "version": "0.2.6",
+  "license": "MIT",
+  "description": "Local development environment helper for atproto development",
+  "keywords": [
+    "atproto"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/dev-env"
+  },
   "main": "src/index.ts",
   "publishConfig": {
     "main": "dist/index.js",
     "types": "dist/index.d.ts"
   },
   "bin": "dist/bin.js",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/bluesky-social/atproto.git",
-    "directory": "packages/dev-env"
-  },
   "scripts": {
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",

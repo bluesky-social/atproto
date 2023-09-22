@@ -1,6 +1,19 @@
 {
   "name": "@atproto/api",
   "version": "0.6.15",
+  "license": "MIT",
+  "description": "Client library for atproto and Bluesky",
+  "keywords": [
+    "atproto",
+    "bluesky",
+    "api"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/api"
+  },
   "main": "src/index.ts",
   "publishConfig": {
     "main": "dist/index.js",
@@ -15,12 +28,6 @@
     "test": "jest",
     "bench": "jest --config jest.bench.config.js",
     "bench:profile": "node --inspect-brk ../../node_modules/.bin/jest --config jest.bench.config.js"
-  },
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/bluesky-social/atproto.git",
-    "directory": "packages/api"
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
