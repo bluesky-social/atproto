@@ -12,10 +12,7 @@ require('dd-trace') // Only works with commonjs
 
 // Tracer code above must come before anything else
 const path = require('path')
-const {
-  KmsKeypair,
-  S3BlobStore,
-} = require('@atproto/aws')
+const { KmsKeypair, S3BlobStore } = require('@atproto/aws')
 const {
   Database,
   ServerConfig,
