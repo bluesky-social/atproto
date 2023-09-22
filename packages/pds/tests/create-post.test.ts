@@ -36,7 +36,7 @@ describe('pds posts record creation', () => {
     )
     const { value: record } = await agent.api.app.bsky.feed.post.get({
       repo: sc.dids.alice,
-      rkey: new AtUri(res.uri).rkey
+      rkey: new AtUri(res.uri).rkey,
     })
 
     expect(record).toBeTruthy()

@@ -4443,12 +4443,6 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#threadgateView',
           },
-          tags: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
         },
       },
       viewerState: {
