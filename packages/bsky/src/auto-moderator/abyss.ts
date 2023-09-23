@@ -75,7 +75,10 @@ export class Abyss implements ImageFlagger {
   }
 
   getReqUrl(params: { did: string; uri: string }) {
-    return `${this.endpoint}/xrpc/com.atproto.unspecced.scanBlob?did=${params.did}&uri=${params.uri}`
+    const search = new URLSearchParams(params)
+    return `${
+      this.endpoint
+    }/xrpc/com.atproto.unspecced.scanBlob?${search.toString()}`
   }
 }
 
