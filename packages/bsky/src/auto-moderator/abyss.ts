@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { CID } from 'multiformats/cid'
+import { AtUri } from '@atproto/syntax'
 import * as ui8 from 'uint8arrays'
 import { resolveBlob } from '../api/blob-resolver'
 import { retryHttp } from '../util/retry'
@@ -8,7 +9,7 @@ import { IdResolver } from '@atproto/identity'
 import { labelerLogger as log } from '../logger'
 
 export interface ImageFlagger {
-  scanImage(did: string, cid: CID): Promise<string[]>
+  scanImage(did: string, cid: CID, uri: AtUri): Promise<string[]>
 }
 
 export class Abyss implements ImageFlagger {
@@ -22,11 +23,11 @@ export class Abyss implements ImageFlagger {
     this.auth = basicAuth(this.password)
   }
 
-  async scanImage(did: string, cid: CID): Promise<string[]> {
+  async scanImage(did: string, cid: CID, uri: AtUri): Promise<string[]> {
     const start = Date.now()
     const res = await retryHttp(async () => {
       try {
-        return await this.makeReq(did, cid)
+        return await this.makeReq(did, cid, uri)
       } catch (err) {
         log.warn({ err, did, cid: cid.toString() }, 'abyss request failed')
         throw err
@@ -39,20 +40,24 @@ export class Abyss implements ImageFlagger {
     return this.parseRes(res)
   }
 
-  async makeReq(did: string, cid: CID): Promise<ScannerResp> {
+  async makeReq(did: string, cid: CID, uri: AtUri): Promise<ScannerResp> {
     const { stream, contentType } = await resolveBlob(
       did,
       cid,
       this.ctx.db,
       this.ctx.idResolver,
     )
-    const { data } = await axios.post(this.getReqUrl({ did }), stream, {
-      headers: {
-        'Content-Type': contentType,
-        authorization: this.auth,
+    const { data } = await axios.post(
+      this.getReqUrl({ did, uri: uri.toString() }),
+      stream,
+      {
+        headers: {
+          'Content-Type': contentType,
+          authorization: this.auth,
+        },
+        timeout: 10000,
       },
-      timeout: 10000,
-    })
+    )
     return data
   }
 
@@ -69,8 +74,11 @@ export class Abyss implements ImageFlagger {
     return labels
   }
 
-  getReqUrl(params: { did: string }) {
-    return `${this.endpoint}/xrpc/com.atproto.unspecced.scanBlob?did=${params.did}`
+  getReqUrl(params: { did: string; uri: string }) {
+    const search = new URLSearchParams(params)
+    return `${
+      this.endpoint
+    }/xrpc/com.atproto.unspecced.scanBlob?${search.toString()}`
   }
 }
 
