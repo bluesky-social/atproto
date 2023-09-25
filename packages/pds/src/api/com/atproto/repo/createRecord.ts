@@ -6,12 +6,12 @@ import {
   BadCommitSwapError,
   InvalidRecordError,
   PreparedCreate,
-  prepareDelete,
 } from '../../../../repo'
 import AppContext from '../../../../context'
 import { ids } from '../../../../lexicon/lexicons'
 import Database from '../../../../db'
 import { ConcurrentWriteError } from '../../../../services/repo'
+import { AtUri } from '@atproto/syntax'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.createRecord({
@@ -62,16 +62,20 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
-      const backlinkDeletions = validate
-        ? await getBacklinkDeletions(ctx.db, ctx, write)
-        : []
-
-      const writes = [...backlinkDeletions, write]
+      const existing = validate
+        ? await getExistingBacklink(ctx.db, ctx, write)
+        : null
+      if (existing) {
+        return {
+          encoding: 'application/json',
+          body: { uri: existing.uri.toString(), cid: existing.cid.toString() },
+        }
+      }
 
       try {
         await ctx.services
           .repo(ctx.db)
-          .processWrites({ did, writes, swapCommitCid }, 10)
+          .processWrites({ did, writes: [write], swapCommitCid }, 10)
       } catch (err) {
         if (err instanceof BadCommitSwapError) {
           throw new InvalidRequestError(err.message, 'InvalidSwap')
@@ -92,31 +96,28 @@ export default function (server: Server, ctx: AppContext) {
 // @NOTE this logic a placeholder until we allow users to specify these constraints themselves.
 // Ensures that we don't end-up with duplicate likes, reposts, and follows from race conditions.
 
-async function getBacklinkDeletions(
+async function getExistingBacklink(
   tx: Database,
   ctx: AppContext,
   write: PreparedCreate,
-) {
+): Promise<{ uri: AtUri; cid: CID } | null> {
   const recordTxn = ctx.services.record(tx)
   const {
     record,
     uri: { host: did, collection },
   } = write
-  const toDelete = ({ rkey }: { rkey: string }) =>
-    prepareDelete({ did, collection, rkey })
 
   if (
     (collection === ids.AppBskyGraphFollow ||
       collection === ids.AppBskyGraphBlock) &&
     typeof record['subject'] === 'string'
   ) {
-    const backlinks = await recordTxn.getRecordBacklinks({
+    return recordTxn.getExistingBacklink({
       did,
       collection,
       path: 'subject',
       linkTo: record['subject'],
     })
-    return backlinks.map(toDelete)
   }
 
   if (
@@ -124,14 +125,13 @@ async function getBacklinkDeletions(
       collection === ids.AppBskyFeedRepost) &&
     typeof record['subject']?.['uri'] === 'string'
   ) {
-    const backlinks = await recordTxn.getRecordBacklinks({
+    return recordTxn.getExistingBacklink({
       did,
       collection,
-      path: 'subject.uri',
+      path: 'subject',
       linkTo: record['subject']['uri'],
     })
-    return backlinks.map(toDelete)
   }
 
-  return []
+  return null
 }
