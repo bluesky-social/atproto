@@ -24,6 +24,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('view_param').execute()
 }
 
-export async function down(db: Kysely<unknown>): Promise<void> {
+export async function down(_db: Kysely<unknown>): Promise<void> {
   // Migration code
 }
