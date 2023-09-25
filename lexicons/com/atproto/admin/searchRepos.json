@@ -8,7 +8,11 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "term": { "type": "string" },
+          "term": {
+            "type": "string",
+            "description": "DEPRECATED: use 'q' instead"
+          },
+          "q": { "type": "string" },
           "invitedBy": { "type": "string" },
           "limit": {
             "type": "integer",

@@ -8,12 +8,19 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "term": { "type": "string" },
+          "term": {
+            "type": "string",
+            "description": "DEPRECATED: use 'q' instead"
+          },
+          "q": {
+            "type": "string",
+            "description": "search query prefix; not a full query string"
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,
             "maximum": 100,
-            "default": 50
+            "default": 10
           }
         }
       },
