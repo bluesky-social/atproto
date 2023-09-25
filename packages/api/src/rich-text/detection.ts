@@ -74,12 +74,12 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
     while ((match = re.exec(text.utf16))) {
       let [, tag] = match
 
-      tag = tag.replace(/\p{P}+$/gu, '') // strip ending punctuation
+      tag = tag.trim().replace(/\p{P}+$/gu, '') // strip ending punctuation
 
       // inclusive of #, max of 64 chars
       if (tag.length > 66) continue
 
-      const index = text.utf16.indexOf(tag)
+      const index = match.index
 
       facets.push({
         index: {

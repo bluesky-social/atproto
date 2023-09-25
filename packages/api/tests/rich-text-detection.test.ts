@@ -232,6 +232,7 @@ describe('detectFacets', () => {
         [],
       ],
       ['its a #double#rainbow', ['#double#rainbow']],
+      ['##hashash', ['##hashash']],
       ['some #n0n3s@n5e!', ['#n0n3s@n5e']],
       ['works #with,punctuation', ['#with,punctuation']],
       [
@@ -240,6 +241,7 @@ describe('detectFacets', () => {
       ],
       ['strips #multi_trailing___...', ['#multi_trailing']],
       ['works with #🦋 emoji, and #butter🦋fly', ['#🦋', '#butter🦋fly']],
+      ['#same #same #but #diff', ['#same', '#same', '#but', '#diff']],
     ]
 
     for (const [input, tags] of inputs) {
