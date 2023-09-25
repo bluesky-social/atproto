@@ -128,7 +128,7 @@ async function getExistingBacklink(
     return recordTxn.getExistingBacklink({
       did,
       collection,
-      path: 'subject',
+      path: 'subject.uri',
       linkTo: record['subject']['uri'],
     })
   }

@@ -927,6 +927,8 @@ describe('crud operations', () => {
         createdAt: now,
       },
     })
+    expect(like3.uri).toEqual(like1.uri)
+    expect(like3.cid).toEqual(like1.cid)
 
     const getLike1 = aliceAgent.api.com.atproto.repo.getRecord({
       repo: alice.did,
@@ -934,7 +936,7 @@ describe('crud operations', () => {
       rkey: new AtUri(like1.uri).rkey,
     })
 
-    await expect(getLike1).rejects.toThrow('Could not locate record:')
+    await expect(getLike1).resolves.toBeDefined()
 
     const getLike2 = aliceAgent.api.com.atproto.repo.getRecord({
       repo: alice.did,
@@ -943,14 +945,6 @@ describe('crud operations', () => {
     })
 
     await expect(getLike2).resolves.toBeDefined()
-
-    const getLike3 = aliceAgent.api.com.atproto.repo.getRecord({
-      repo: alice.did,
-      collection: 'app.bsky.feed.like',
-      rkey: new AtUri(like3.uri).rkey,
-    })
-
-    await expect(getLike3).resolves.toBeDefined()
   })
 
   it('prevents duplicate reposts', async () => {
@@ -990,6 +984,8 @@ describe('crud operations', () => {
           createdAt: now,
         },
       })
+    expect(repost3.uri).toEqual(repost1.uri)
+    expect(repost3.cid).toEqual(repost1.cid)
 
     const getRepost1 = aliceAgent.api.com.atproto.repo.getRecord({
       repo: alice.did,
@@ -997,7 +993,7 @@ describe('crud operations', () => {
       rkey: new AtUri(repost1.uri).rkey,
     })
 
-    await expect(getRepost1).rejects.toThrow('Could not locate record:')
+    await expect(getRepost1).resolves.toBeDefined()
 
     const getRepost2 = aliceAgent.api.com.atproto.repo.getRecord({
       repo: alice.did,
@@ -1006,14 +1002,6 @@ describe('crud operations', () => {
     })
 
     await expect(getRepost2).resolves.toBeDefined()
-
-    const getRepost3 = aliceAgent.api.com.atproto.repo.getRecord({
-      repo: alice.did,
-      collection: 'app.bsky.feed.repost',
-      rkey: new AtUri(repost3.uri).rkey,
-    })
-
-    await expect(getRepost3).resolves.toBeDefined()
   })
 
   it('prevents duplicate blocks', async () => {
@@ -1053,13 +1041,16 @@ describe('crud operations', () => {
       },
     )
 
+    expect(block3.uri).toEqual(block1.uri)
+    expect(block3.cid).toEqual(block1.cid)
+
     const getBlock1 = aliceAgent.api.com.atproto.repo.getRecord({
       repo: alice.did,
       collection: 'app.bsky.graph.block',
       rkey: new AtUri(block1.uri).rkey,
     })
 
-    await expect(getBlock1).rejects.toThrow('Could not locate record:')
+    await expect(getBlock1).resolves.toBeDefined()
 
     const getBlock2 = aliceAgent.api.com.atproto.repo.getRecord({
       repo: bob.did,
@@ -1068,14 +1059,6 @@ describe('crud operations', () => {
     })
 
     await expect(getBlock2).resolves.toBeDefined()
-
-    const getBlock3 = aliceAgent.api.com.atproto.repo.getRecord({
-      repo: alice.did,
-      collection: 'app.bsky.graph.block',
-      rkey: new AtUri(block3.uri).rkey,
-    })
-
-    await expect(getBlock3).resolves.toBeDefined()
   })
 
   it('prevents duplicate follows', async () => {
@@ -1111,13 +1094,16 @@ describe('crud operations', () => {
         },
       })
 
+    expect(follow3.uri).toEqual(follow1.uri)
+    expect(follow3.cid).toEqual(follow1.cid)
+
     const getFollow1 = aliceAgent.api.com.atproto.repo.getRecord({
       repo: alice.did,
       collection: 'app.bsky.graph.follow',
       rkey: new AtUri(follow1.uri).rkey,
     })
 
-    await expect(getFollow1).rejects.toThrow('Could not locate record:')
+    await expect(getFollow1).resolves.toBeDefined()
 
     const getFollow2 = aliceAgent.api.com.atproto.repo.getRecord({
       repo: bob.did,
@@ -1126,14 +1112,6 @@ describe('crud operations', () => {
     })
 
     await expect(getFollow2).resolves.toBeDefined()
-
-    const getFollow3 = aliceAgent.api.com.atproto.repo.getRecord({
-      repo: alice.did,
-      collection: 'app.bsky.graph.follow',
-      rkey: new AtUri(follow3.uri).rkey,
-    })
-
-    await expect(getFollow3).resolves.toBeDefined()
   })
 
   // Moderation
