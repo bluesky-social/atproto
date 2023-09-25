@@ -22,8 +22,7 @@
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "update-main-to-dist": "node ../../update-main-to-dist.js packages/dev-env",
-    "start": "node dist/bin.js",
-    "start:network": "../dev-infra/with-test-redis-and-db.sh node dist/bin-network.js"
+    "start": "../dev-infra/with-test-redis-and-db.sh node dist/bin.js"
   },
   "dependencies": {
     "@atproto/api": "workspace:^",
