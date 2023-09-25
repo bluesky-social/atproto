@@ -147,6 +147,7 @@ export class FeedService {
         'post_agg.likeCount as likeCount',
         'post_agg.repostCount as repostCount',
         'post_agg.replyCount as replyCount',
+        'post.tags as tags',
         db
           .selectFrom('repost')
           .if(!viewer, (q) => q.where(noMatch))
