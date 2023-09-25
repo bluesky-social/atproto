@@ -1,5 +1,14 @@
 # @atproto/bsky
 
+## 0.0.8
+
+### Patch Changes
+
+- [#1637](https://github.com/bluesky-social/atproto/pull/1637) [`d96f7d9b`](https://github.com/bluesky-social/atproto/commit/d96f7d9b84c6fbab9711059c8584a77d892dcedd) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Introduce general support for tags on posts
+
+- Updated dependencies [[`d96f7d9b`](https://github.com/bluesky-social/atproto/commit/d96f7d9b84c6fbab9711059c8584a77d892dcedd)]:
+  - @atproto/api@0.6.17
+
 ## 0.0.7
 
 ### Patch Changes
