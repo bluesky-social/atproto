@@ -29,6 +29,8 @@ export interface Record {
   labels?:
     | ComAtprotoLabelDefs.SelfLabels
     | { $type: string; [k: string]: unknown }
+  /** Additional non-inline tags describing this post. */
+  tags?: string[]
   createdAt: string
   [k: string]: unknown
 }
