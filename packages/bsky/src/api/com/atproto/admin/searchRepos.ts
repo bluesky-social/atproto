@@ -12,6 +12,11 @@ export default function (server: Server, ctx: AppContext) {
       if (invitedBy) {
         throw new InvalidRequestError('The invitedBy parameter is unsupported')
       }
+      // prefer new 'q' query param over deprecated 'term'
+      const { q } = params
+      if (q) {
+        params.term = q
+      }
 
       const { results, cursor } = await ctx.services
         .actor(db)
