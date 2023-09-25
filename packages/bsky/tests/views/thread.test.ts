@@ -1,8 +1,4 @@
-import AtpAgent, {
-  AppBskyFeedGetPostThread,
-  AppBskyFeedPost,
-  AppBskyFeedDefs,
-} from '@atproto/api'
+import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { forSnapshot, stripViewerFromThread } from '../_util'
@@ -14,7 +10,6 @@ import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/de
 describe('pds thread views', () => {
   let network: TestNetwork
   let agent: AtpAgent
-  let pdsAgent: AtpAgent
   let sc: SeedClient
 
   // account dids, for convenience
@@ -27,7 +22,7 @@ describe('pds thread views', () => {
       dbPostgresSchema: 'bsky_views_thread',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    const pdsAgent = network.pds.getClient()
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     alice = sc.dids.alice
