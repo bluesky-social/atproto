@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.6.17
+
+### Patch Changes
+
+- [#1637](https://github.com/bluesky-social/atproto/pull/1637) [`d96f7d9b`](https://github.com/bluesky-social/atproto/commit/d96f7d9b84c6fbab9711059c8584a77d892dcedd) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Introduce general support for tags on posts
+
 ## 0.6.16
 
 ### Patch Changes
