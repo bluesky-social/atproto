@@ -72,19 +72,20 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
   {
     const re = /(?:^|\s)(#[^\d\s]\S*)(?=\s)?/g
     while ((match = re.exec(text.utf16))) {
-      let [, tag] = match
+      let [tag] = match
+      const hasLeadingSpace = /^\s/.test(tag)
 
       tag = tag.trim().replace(/\p{P}+$/gu, '') // strip ending punctuation
 
       // inclusive of #, max of 64 chars
       if (tag.length > 66) continue
 
-      const index = match.index
+      const index = match.index + (hasLeadingSpace ? 1 : 0)
 
       facets.push({
         index: {
           byteStart: text.utf16IndexToUtf8Index(index),
-          byteEnd: text.utf16IndexToUtf8Index(index + tag.length),
+          byteEnd: text.utf16IndexToUtf8Index(index + tag.length), // inclusive of last char
         },
         features: [
           {
