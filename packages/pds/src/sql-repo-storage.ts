@@ -213,8 +213,22 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
     }
     return writeCarStream(root, async (car) => {
       let cursor: RevCursor | undefined = undefined
+      const writeRows = async (
+        rows: { cid: string; content: Uint8Array }[],
+      ) => {
+        for (const row of rows) {
+          await car.put({
+            cid: CID.parse(row.cid),
+            bytes: row.content,
+          })
+        }
+      }
+      // allow us to write to car while fetching the next page
+      let writePromise: Promise<void> = Promise.resolve()
       do {
         const res = await this.getBlockRange(since, cursor)
+        await writePromise
+        writePromise = writeRows(res)
         for (const row of res) {
           await car.put({
             cid: CID.parse(row.cid),
@@ -231,6 +245,8 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
           cursor = undefined
         }
       } while (cursor)
+      // ensure we flush the last page of blocks
+      await writePromise
     })
   }
 
@@ -240,17 +256,18 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
       .selectFrom('ipld_block')
       .where('creator', '=', this.did)
       .select(['cid', 'repoRev', 'content'])
-      .orderBy('repoRev', 'asc')
-      .orderBy('cid', 'asc')
+      .orderBy('repoRev', 'desc')
+      .orderBy('cid', 'desc')
       .limit(500)
     if (cursor) {
       // use this syntax to ensure we hit the index
       builder = builder.where(
-        sql`((${ref('repoRev')}, ${ref('cid')}) > (${
+        sql`((${ref('repoRev')}, ${ref('cid')}) < (${
           cursor.rev
         }, ${cursor.cid.toString()}))`,
       )
-    } else if (since) {
+    }
+    if (since) {
       builder = builder.where('repoRev', '>', since)
     }
     return builder.execute()
