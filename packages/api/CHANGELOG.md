@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.6.18
+
+### Patch Changes
+
+- [#1651](https://github.com/bluesky-social/atproto/pull/1651) [`2ce8a11b`](https://github.com/bluesky-social/atproto/commit/2ce8a11b8daf5d39027488c5dde8c47b0eb937bf) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds support for hashtags in the `RichText.detectFacets` method.
+
 ## 0.6.17
 
 ### Patch Changes
