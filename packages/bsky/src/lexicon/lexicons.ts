@@ -5622,6 +5622,16 @@ export const schemaDict = {
               type: 'union',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
             },
+            tags: {
+              type: 'array',
+              maxLength: 8,
+              items: {
+                type: 'string',
+                maxLength: 640,
+                maxGraphemes: 64,
+              },
+              description: 'Additional non-inline tags describing this post.',
+            },
             createdAt: {
               type: 'string',
               format: 'datetime',
@@ -6761,6 +6771,7 @@ export const schemaDict = {
               refs: [
                 'lex:app.bsky.richtext.facet#mention',
                 'lex:app.bsky.richtext.facet#link',
+                'lex:app.bsky.richtext.facet#tag',
               ],
             },
           },
@@ -6785,6 +6796,18 @@ export const schemaDict = {
           uri: {
             type: 'string',
             format: 'uri',
+          },
+        },
+      },
+      tag: {
+        type: 'object',
+        description: 'A hashtag.',
+        required: ['tag'],
+        properties: {
+          tag: {
+            type: 'string',
+            maxLength: 640,
+            maxGraphemes: 64,
           },
         },
       },

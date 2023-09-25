@@ -9,7 +9,7 @@
         "index": { "type": "ref", "ref": "#byteSlice" },
         "features": {
           "type": "array",
-          "items": { "type": "union", "refs": ["#mention", "#link"] }
+          "items": { "type": "union", "refs": ["#mention", "#link", "#tag"] }
         }
       }
     },
@@ -27,6 +27,14 @@
       "required": ["uri"],
       "properties": {
         "uri": { "type": "string", "format": "uri" }
+      }
+    },
+    "tag": {
+      "type": "object",
+      "description": "A hashtag.",
+      "required": ["tag"],
+      "properties": {
+        "tag": { "type": "string", "maxLength": 640, "maxGraphemes": 64 }
       }
     },
     "byteSlice": {

@@ -299,6 +299,8 @@ function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
   } else if (isFeedGenerator(record)) {
     toCheck += ' ' + rkey
     toCheck += ' ' + record.displayName
+  } else if (isPost(record)) {
+    toCheck += record.tags?.join(' ')
   }
   if (hasExplicitSlur(toCheck)) {
     throw new InvalidRecordError('Unacceptable slur in record')
