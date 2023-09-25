@@ -240,17 +240,18 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
       .selectFrom('ipld_block')
       .where('creator', '=', this.did)
       .select(['cid', 'repoRev', 'content'])
-      .orderBy('repoRev', 'asc')
-      .orderBy('cid', 'asc')
+      .orderBy('repoRev', 'desc')
+      .orderBy('cid', 'desc')
       .limit(500)
     if (cursor) {
       // use this syntax to ensure we hit the index
       builder = builder.where(
-        sql`((${ref('repoRev')}, ${ref('cid')}) > (${
+        sql`((${ref('repoRev')}, ${ref('cid')}) < (${
           cursor.rev
         }, ${cursor.cid.toString()}))`,
       )
-    } else if (since) {
+    }
+    if (since) {
       builder = builder.where('repoRev', '>', since)
     }
     return builder.execute()
