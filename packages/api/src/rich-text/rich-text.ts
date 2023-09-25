@@ -100,6 +100,7 @@ import { detectFacets } from './detection'
 export type Facet = AppBskyRichtextFacet.Main
 export type FacetLink = AppBskyRichtextFacet.Link
 export type FacetMention = AppBskyRichtextFacet.Mention
+export type FacetTag = AppBskyRichtextFacet.Tag
 export type Entity = AppBskyFeedPost.Entity
 
 export interface RichTextProps {
@@ -140,6 +141,18 @@ export class RichTextSegment {
 
   isMention() {
     return !!this.mention
+  }
+
+  get tag(): FacetTag | undefined {
+    const tag = this.facet?.features.find(AppBskyRichtextFacet.isTag)
+    if (AppBskyRichtextFacet.isTag(tag)) {
+      return tag
+    }
+    return undefined
+  }
+
+  isTag() {
+    return !!this.tag
   }
 }
 
