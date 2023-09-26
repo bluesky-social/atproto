@@ -40,6 +40,7 @@ export default function (server: Server, ctx: AppContext) {
       const SKIP = []
       const filtered = results.flatMap((did) => {
         const actor = actors[did]
+        if (!actor) return SKIP
         if (actor.viewer?.blocking || actor.viewer?.blockedBy) return SKIP
         return actor
       })
