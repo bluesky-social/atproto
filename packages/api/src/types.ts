@@ -14,6 +14,7 @@ export interface AtpSessionData {
   handle: string
   did: string
   email?: string
+  emailConfirmed?: boolean
 }
 
 /**
