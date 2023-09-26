@@ -83,15 +83,15 @@ export class ActorService {
   async getSearchResults({
     cursor,
     limit = 25,
-    term = '',
+    query = '',
     includeSoftDeleted,
   }: {
     cursor?: string
     limit?: number
-    term?: string
+    query?: string
     includeSoftDeleted?: boolean
   }) {
-    const searchField = term.startsWith('did:') ? 'did' : 'handle'
+    const searchField = query.startsWith('did:') ? 'did' : 'handle'
     let paginatedBuilder
     const { ref } = this.db.db.dynamic
     const paginationOptions = {
@@ -101,10 +101,10 @@ export class ActorService {
     }
     let keyset
 
-    if (term && searchField === 'handle') {
+    if (query && searchField === 'handle') {
       keyset = new SearchKeyset(sql``, sql``)
       paginatedBuilder = getUserSearchQuery(this.db, {
-        term,
+        query,
         includeSoftDeleted,
         ...paginationOptions,
       }).select('distance')
@@ -114,10 +114,10 @@ export class ActorService {
         .select([sql<number>`0`.as('distance')])
       keyset = new ListKeyset(ref('indexedAt'), ref('did'))
 
-      // When searchField === 'did', the term will always be a valid string because
-      // searchField is set to 'did' after checking that the term is a valid did
-      if (term && searchField === 'did') {
-        paginatedBuilder = paginatedBuilder.where('actor.did', '=', term)
+      // When searchField === 'did', the query will always be a valid string because
+      // searchField is set to 'did' after checking that the query is a valid did
+      if (query && searchField === 'did') {
+        paginatedBuilder = paginatedBuilder.where('actor.did', '=', query)
       }
       paginatedBuilder = paginate(paginatedBuilder, {
         keyset,
