@@ -22,25 +22,41 @@ import {
   getRepoRev,
   handleReadAfterWrite,
 } from '../util/read-after-write'
+import { authPassthru } from '../../../../../api/com/atproto/admin/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
-    auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
-      const requester = auth.credentials.did
+    auth: ctx.accessOrRoleVerifier,
+    handler: async ({ req, params, auth }) => {
+      const requester =
+        auth.credentials.type === 'access' ? auth.credentials.did : null
       try {
         const res = await ctx.appviewAgent.api.app.bsky.feed.getPostThread(
           params,
-          await ctx.serviceAuthHeaders(requester),
+          requester
+            ? await ctx.serviceAuthHeaders(requester)
+            : authPassthru(req),
         )
-        return await handleReadAfterWrite(
-          ctx,
-          requester,
-          res,
-          getPostThreadMunge,
-        )
+
+        if (requester) {
+          return await handleReadAfterWrite(
+            ctx,
+            requester,
+            res,
+            getPostThreadMunge,
+          )
+        }
+
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
       } catch (err) {
-        if (err instanceof AppBskyFeedGetPostThread.NotFoundError) {
+        // TODO: is this right? checking for requester and error type is safe enough?
+        if (
+          err instanceof AppBskyFeedGetPostThread.NotFoundError &&
+          requester
+        ) {
           const local = await readAfterWriteNotFound(
             ctx,
             params,
