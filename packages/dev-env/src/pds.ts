@@ -39,6 +39,7 @@ export class TestPds {
       moderatorPassword: MOD_PASSWORD,
       triagePassword: TRIAGE_PASSWORD,
       jwtSecret: 'jwt-secret',
+<<<<<<< HEAD
       serviceHandleDomains: ['.test'],
       sequencerLeaderLockId: uniqueLockId(),
       bskyAppViewCdnUrlPattern: 'http://cdn.appview.com/%s/%s/%s',
@@ -65,6 +66,41 @@ export class TestPds {
     if (migrationDb !== server.ctx.db) {
       await migrationDb.close()
     }
+=======
+      availableUserDomains: ['.test'],
+      rateLimitsEnabled: false,
+      appUrlPasswordReset: 'app://forgot-password',
+      emailNoReplyAddress: 'noreply@blueskyweb.xyz',
+      publicUrl: 'https://pds.public.url',
+      dbPostgresUrl: cfg.dbPostgresUrl,
+      maxSubscriptionBuffer: 200,
+      repoBackfillLimitMs: 1000 * 60 * 60, // 1hr
+      sequencerLeaderLockId: uniqueLockId(),
+      dbTxLockNonce: await randomStr(32, 'base32'),
+      bskyAppViewEndpoint: cfg.bskyAppViewEndpoint ?? 'http://fake_address',
+      bskyAppViewDid: cfg.bskyAppViewDid ?? 'did:example:fake',
+      bskyAppViewCdnUrlPattern: 'http://cdn.appview.com/%s/%s/%s',
+      ...cfg,
+    })
+
+    const blobstore = new pds.MemoryBlobStore()
+    const db = config.dbPostgresUrl
+      ? pds.Database.postgres({
+          url: config.dbPostgresUrl,
+          schema: config.dbPostgresSchema,
+          txLockNonce: config.dbTxLockNonce,
+        })
+      : pds.Database.memory()
+    await db.migrateToLatestOrThrow()
+
+    const server = pds.PDS.create({
+      db,
+      blobstore,
+      repoSigningKey,
+      plcRotationKey,
+      config,
+    })
+>>>>>>> main
 
     await server.start()
 

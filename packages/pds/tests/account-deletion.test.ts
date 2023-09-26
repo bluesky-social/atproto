@@ -16,6 +16,10 @@ import { Blob } from '../src/db/tables/blob'
 import { Record } from '../src/db/tables/record'
 import { RepoSeq } from '../src/db/tables/repo-seq'
 import { ACKNOWLEDGE } from '../src/lexicon/types/com/atproto/admin/defs'
+<<<<<<< HEAD
+=======
+import { UserState } from '../src/db/tables/user-state'
+>>>>>>> main
 
 describe('account deletion', () => {
   let server: util.TestServerInfo
@@ -163,9 +167,7 @@ describe('account deletion', () => {
         (row) => row.did === carol.did && row.eventType === 'tombstone',
       ).length,
     ).toEqual(1)
-  })
 
-  it('no longer stores indexed records from the user', async () => {
     expect(updatedDbContents.records).toEqual(
       initialDbContents.records.filter((row) => row.did !== carol.did),
     )
@@ -226,10 +228,18 @@ type DbContents = {
 }
 
 const getDbContents = async (db: Database): Promise<DbContents> => {
+<<<<<<< HEAD
   const [roots, users, blocks, seqs, records, repoBlobs, blobs] =
     await Promise.all([
       db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
       db.db.selectFrom('user_account').orderBy('did').selectAll().execute(),
+=======
+  const [roots, users, userState, blocks, seqs, records, repoBlobs, blobs] =
+    await Promise.all([
+      db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
+      db.db.selectFrom('user_account').orderBy('did').selectAll().execute(),
+      db.db.selectFrom('user_state').orderBy('did').selectAll().execute(),
+>>>>>>> main
       db.db
         .selectFrom('ipld_block')
         .orderBy('creator')

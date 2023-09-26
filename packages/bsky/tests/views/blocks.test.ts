@@ -163,20 +163,61 @@ describe('pds views with blocking', () => {
     ).toBeFalsy()
   })
 
+  it('strips blocked users out of getListFeed', async () => {
+    const listRef = await sc.createList(alice, 'test list', 'curate')
+    await sc.addToList(alice, alice, listRef)
+    await sc.addToList(alice, carol, listRef)
+    await sc.addToList(alice, dan, listRef)
+
+    const resCarol = await agent.api.app.bsky.feed.getListFeed(
+      { list: listRef.uriStr, limit: 100 },
+      { headers: await network.serviceHeaders(carol) },
+    )
+    expect(
+      resCarol.data.feed.some((post) => post.post.author.did === dan),
+    ).toBeFalsy()
+
+    const resDan = await agent.api.app.bsky.feed.getListFeed(
+      { list: listRef.uriStr, limit: 100 },
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(
+      resDan.data.feed.some((post) => post.post.author.did === carol),
+    ).toBeFalsy()
+  })
+
   it('returns block status on getProfile', async () => {
     const resCarol = await agent.api.app.bsky.actor.getProfile(
       { actor: dan },
       { headers: await network.serviceHeaders(carol) },
     )
-    expect(resCarol.data.viewer?.blocking).toBeUndefined
+    expect(resCarol.data.viewer?.blocking).toBeUndefined()
     expect(resCarol.data.viewer?.blockedBy).toBe(true)
 
     const resDan = await agent.api.app.bsky.actor.getProfile(
       { actor: carol },
       { headers: await network.serviceHeaders(dan) },
     )
-    expect(resDan.data.viewer?.blocking).toBeDefined
+    expect(resDan.data.viewer?.blocking).toBeDefined()
     expect(resDan.data.viewer?.blockedBy).toBe(false)
+  })
+
+  it('unsets viewer follow state when blocked', async () => {
+    // there are follows between carol and dan
+    const { data: profile } = await agent.api.app.bsky.actor.getProfile(
+      { actor: carol },
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(profile.viewer?.following).toBeUndefined()
+    expect(profile.viewer?.followedBy).toBeUndefined()
+    const { data: result } = await agent.api.app.bsky.graph.getBlocks(
+      {},
+      { headers: await network.serviceHeaders(dan) },
+    )
+    const blocked = result.blocks.find((block) => block.did === carol)
+    expect(blocked).toBeDefined()
+    expect(blocked?.viewer?.following).toBeUndefined()
+    expect(blocked?.viewer?.followedBy).toBeUndefined()
   })
 
   it('returns block status on getProfiles', async () => {

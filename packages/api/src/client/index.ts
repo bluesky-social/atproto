@@ -95,6 +95,7 @@ import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGener
 import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
+import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
@@ -103,6 +104,8 @@ import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedLike from './types/app/bsky/feed/like'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
+import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
+import * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate'
 import * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 import * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
 import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
@@ -127,10 +130,12 @@ import * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
-import * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
+import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
+import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
+import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
@@ -220,6 +225,7 @@ export * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGener
 export * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
 export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
+export * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
@@ -228,6 +234,8 @@ export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 export * as AppBskyFeedLike from './types/app/bsky/feed/like'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
+export * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
+export * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate'
 export * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 export * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
 export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
@@ -252,10 +260,12 @@ export * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
-export * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
+export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 export * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
+export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
+export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -273,6 +283,7 @@ export const COM_ATPROTO_MODERATION = {
 }
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
+  DefsCuratelist: 'app.bsky.graph.defs#curatelist',
 }
 
 export class AtpBaseClient {
@@ -1224,6 +1235,7 @@ export class FeedNS {
   like: LikeRecord
   post: PostRecord
   repost: RepostRecord
+  threadgate: ThreadgateRecord
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -1231,6 +1243,7 @@ export class FeedNS {
     this.like = new LikeRecord(service)
     this.post = new PostRecord(service)
     this.repost = new RepostRecord(service)
+    this.threadgate = new ThreadgateRecord(service)
   }
 
   describeFeedGenerator(
@@ -1332,6 +1345,17 @@ export class FeedNS {
       })
   }
 
+  getListFeed(
+    params?: AppBskyFeedGetListFeed.QueryParams,
+    opts?: AppBskyFeedGetListFeed.CallOptions,
+  ): Promise<AppBskyFeedGetListFeed.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getListFeed', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetListFeed.toKnownErr(e)
+      })
+  }
+
   getPostThread(
     params?: AppBskyFeedGetPostThread.QueryParams,
     opts?: AppBskyFeedGetPostThread.CallOptions,
@@ -1384,6 +1408,17 @@ export class FeedNS {
       .call('app.bsky.feed.getTimeline', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetTimeline.toKnownErr(e)
+      })
+  }
+
+  searchPosts(
+    params?: AppBskyFeedSearchPosts.QueryParams,
+    opts?: AppBskyFeedSearchPosts.CallOptions,
+  ): Promise<AppBskyFeedSearchPosts.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.searchPosts', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedSearchPosts.toKnownErr(e)
       })
   }
 }
@@ -1627,6 +1662,71 @@ export class RepostRecord {
       'com.atproto.repo.deleteRecord',
       undefined,
       { collection: 'app.bsky.feed.repost', ...params },
+      { headers },
+    )
+  }
+}
+
+export class ThreadgateRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedThreadgate.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.threadgate',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyFeedThreadgate.Record
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.threadgate',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyFeedThreadgate.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.feed.threadgate'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.feed.threadgate', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.threadgate', ...params },
       { headers },
     )
   }
@@ -2174,17 +2274,6 @@ export class UnspeccedNS {
     this._service = service
   }
 
-  applyLabels(
-    data?: AppBskyUnspeccedApplyLabels.InputSchema,
-    opts?: AppBskyUnspeccedApplyLabels.CallOptions,
-  ): Promise<AppBskyUnspeccedApplyLabels.Response> {
-    return this._service.xrpc
-      .call('app.bsky.unspecced.applyLabels', opts?.qp, data, opts)
-      .catch((e) => {
-        throw AppBskyUnspeccedApplyLabels.toKnownErr(e)
-      })
-  }
-
   getPopular(
     params?: AppBskyUnspeccedGetPopular.QueryParams,
     opts?: AppBskyUnspeccedGetPopular.CallOptions,
@@ -2220,6 +2309,28 @@ export class UnspeccedNS {
       .call('app.bsky.unspecced.getTimelineSkeleton', params, undefined, opts)
       .catch((e) => {
         throw AppBskyUnspeccedGetTimelineSkeleton.toKnownErr(e)
+      })
+  }
+
+  searchActorsSkeleton(
+    params?: AppBskyUnspeccedSearchActorsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedSearchActorsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedSearchActorsSkeleton.Response> {
+    return this._service.xrpc
+      .call('app.bsky.unspecced.searchActorsSkeleton', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedSearchActorsSkeleton.toKnownErr(e)
+      })
+  }
+
+  searchPostsSkeleton(
+    params?: AppBskyUnspeccedSearchPostsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedSearchPostsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedSearchPostsSkeleton.Response> {
+    return this._service.xrpc
+      .call('app.bsky.unspecced.searchPostsSkeleton', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedSearchPostsSkeleton.toKnownErr(e)
       })
   }
 }

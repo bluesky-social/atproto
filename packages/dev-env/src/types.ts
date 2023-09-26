@@ -10,7 +10,10 @@ export type PlcConfig = {
 export type PdsConfig = Partial<pds.ServerEnvironment> & {
   didPlcUrl: string
   migration?: string
+<<<<<<< HEAD
   enableLabelsCache?: boolean
+=======
+>>>>>>> main
 }
 
 export type BskyConfig = Partial<bsky.ServerConfig> & {

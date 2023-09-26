@@ -9,7 +9,10 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyActorDefs from './defs'
 
 export interface QueryParams {
+  /** DEPRECATED: use 'q' instead */
   term?: string
+  /** search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended */
+  q?: string
   limit?: number
   cursor?: string
 }

@@ -7,6 +7,7 @@ import { TestNetwork } from '@atproto/dev-env'
 import { ImageRef, SeedClient } from '../seeds/client'
 import usersSeed from '../seeds/users'
 import { CID } from 'multiformats/cid'
+import { AtUri } from '@atproto/syntax'
 import { ImageFlagger } from '../../src/auto-moderator/abyss'
 import { ImageInvalidator } from '../../src/image/invalidator'
 import { sha256 } from '@atproto/crypto'
@@ -157,7 +158,7 @@ class TestInvalidator implements ImageInvalidator {
 }
 
 class TestFlagger implements ImageFlagger {
-  async scanImage(_did: string, cid: CID): Promise<string[]> {
+  async scanImage(_did: string, cid: CID, _uri: AtUri): Promise<string[]> {
     if (cid.equals(badCid1)) {
       return ['kill-it']
     } else if (cid.equals(badCid2)) {

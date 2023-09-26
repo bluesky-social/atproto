@@ -10,6 +10,7 @@ import getFeedGenerator from './app/bsky/feed/getFeedGenerator'
 import getFeedGenerators from './app/bsky/feed/getFeedGenerators'
 import getFeedSkeleton from './app/bsky/feed/getFeedSkeleton'
 import getLikes from './app/bsky/feed/getLikes'
+import getListFeed from './app/bsky/feed/getListFeed'
 import getPostThread from './app/bsky/feed/getPostThread'
 import getPosts from './app/bsky/feed/getPosts'
 import getActorLikes from './app/bsky/feed/getActorLikes'
@@ -70,6 +71,7 @@ export default function (server: Server, ctx: AppContext) {
   getFeedGenerators(server, ctx)
   getFeedSkeleton(server, ctx)
   getLikes(server, ctx)
+  getListFeed(server, ctx)
   getPostThread(server, ctx)
   getPosts(server, ctx)
   getActorLikes(server, ctx)

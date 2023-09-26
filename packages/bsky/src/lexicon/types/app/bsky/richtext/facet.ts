@@ -8,7 +8,7 @@ import { CID } from 'multiformats/cid'
 
 export interface Main {
   index: ByteSlice
-  features: (Mention | Link | { $type: string; [k: string]: unknown })[]
+  features: (Mention | Link | Tag | { $type: string; [k: string]: unknown })[]
   [k: string]: unknown
 }
 
@@ -59,6 +59,22 @@ export function isLink(v: unknown): v is Link {
 
 export function validateLink(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.richtext.facet#link', v)
+}
+
+/** A hashtag. */
+export interface Tag {
+  tag: string
+  [k: string]: unknown
+}
+
+export function isTag(v: unknown): v is Tag {
+  return (
+    isObj(v) && hasProp(v, '$type') && v.$type === 'app.bsky.richtext.facet#tag'
+  )
+}
+
+export function validateTag(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.richtext.facet#tag', v)
 }
 
 /** A text segment. Start is inclusive, end is exclusive. Indices are for utf8-encoded strings. */

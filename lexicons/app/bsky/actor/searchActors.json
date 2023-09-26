@@ -4,16 +4,23 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Find actors matching search criteria.",
+      "description": "Find actors (profiles) matching search criteria.",
       "parameters": {
         "type": "params",
         "properties": {
-          "term": { "type": "string" },
+          "term": {
+            "type": "string",
+            "description": "DEPRECATED: use 'q' instead"
+          },
+          "q": {
+            "type": "string",
+            "description": "search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended"
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,
             "maximum": 100,
-            "default": 50
+            "default": 25
           },
           "cursor": { "type": "string" }
         }

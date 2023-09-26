@@ -1,13 +1,15 @@
 import { Server } from '../../../lexicon'
 import AppContext from '../../../context'
-import simple from './simple'
-import dynamic from './dynamic'
-import preferences from './preferences'
-import munged from './munged'
+import actor from './actor'
+import feed from './feed'
+import graph from './graph'
+import notification from './notification'
+import unspecced from './unspecced'
 
 export default function (server: Server, ctx: AppContext) {
-  simple(server, ctx)
-  dynamic(server, ctx)
-  munged(server, ctx)
-  preferences(server, ctx)
+  actor(server, ctx)
+  feed(server, ctx)
+  graph(server, ctx)
+  notification(server, ctx)
+  unspecced(server, ctx)
 }

@@ -11,7 +11,7 @@ describe('suggested follows', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_views_suggestions',
+      dbPostgresSchema: 'bsky_views_suggested_follows',
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()

@@ -14,12 +14,22 @@ import * as blob from './tables/blob'
 import * as repoBlob from './tables/repo-blob'
 import * as deleteAccountToken from './tables/delete-account-token'
 import * as moderation from './tables/moderation'
+<<<<<<< HEAD
+=======
+import * as mute from './tables/mute'
+import * as listMute from './tables/list-mute'
+>>>>>>> main
 import * as repoSeq from './tables/repo-seq'
 import * as appMigration from './tables/app-migration'
 import * as runtimeFlag from './tables/runtime-flag'
 
+<<<<<<< HEAD
 export type DatabaseSchemaType = appMigration.PartialDB &
   runtimeFlag.PartialDB &
+=======
+export type DatabaseSchemaType = runtimeFlag.PartialDB &
+  appMigration.PartialDB &
+>>>>>>> main
   userAccount.PartialDB &
   userPref.PartialDB &
   didHandle.PartialDB &
@@ -35,6 +45,11 @@ export type DatabaseSchemaType = appMigration.PartialDB &
   repoBlob.PartialDB &
   deleteAccountToken.PartialDB &
   moderation.PartialDB &
+<<<<<<< HEAD
+=======
+  mute.PartialDB &
+  listMute.PartialDB &
+>>>>>>> main
   repoSeq.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>

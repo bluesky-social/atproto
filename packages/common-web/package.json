@@ -1,16 +1,21 @@
 {
   "name": "@atproto/common-web",
   "version": "0.2.0",
+  "license": "MIT",
+  "description": "Shared web-platform-friendly code for atproto libraries",
+  "keywords": [
+    "atproto"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/common-web"
+  },
   "main": "src/index.ts",
   "publishConfig": {
     "main": "dist/index.js",
     "types": "dist/index.d.ts"
-  },
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/bluesky-social/atproto.git",
-    "directory": "packages/common-web"
   },
   "scripts": {
     "test": "jest",

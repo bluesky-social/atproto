@@ -1,24 +1,28 @@
 {
   "name": "@atproto/dev-env",
-  "version": "0.2.3",
+  "version": "0.2.9",
+  "license": "MIT",
+  "description": "Local development environment helper for atproto development",
+  "keywords": [
+    "atproto"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/dev-env"
+  },
   "main": "src/index.ts",
   "publishConfig": {
     "main": "dist/index.js",
     "types": "dist/index.d.ts"
   },
   "bin": "dist/bin.js",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/bluesky-social/atproto.git",
-    "directory": "packages/dev-env"
-  },
   "scripts": {
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "update-main-to-dist": "node ../../update-main-to-dist.js packages/dev-env",
-    "start": "node dist/bin.js",
-    "start:network": "../dev-infra/with-test-redis-and-db.sh node dist/bin-network.js"
+    "start": "../dev-infra/with-test-redis-and-db.sh node dist/bin.js"
   },
   "dependencies": {
     "@atproto/api": "workspace:^",
