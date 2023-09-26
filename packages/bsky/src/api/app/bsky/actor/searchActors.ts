@@ -2,7 +2,7 @@ import { sql } from 'kysely'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import {
-  cleanTerm,
+  cleanQuery,
   getUserSearchQuery,
   SearchKeyset,
 } from '../../../../services/util/search'
@@ -11,37 +11,50 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActors({
     auth: ctx.authOptionalVerifier,
     handler: async ({ auth, params }) => {
-      let { cursor, limit, term: rawTerm, q: rawQ } = params
+      const { cursor, limit } = params
       const requester = auth.credentials.did
-
-      // prefer new 'q' query param over deprecated 'term'
-      if (rawQ) {
-        rawTerm = rawQ
-      }
-
-      const term = cleanTerm(rawTerm || '')
-
+      const rawQuery = params.q ?? params.term
+      const query = cleanQuery(rawQuery || '')
       const db = ctx.db.getReplica('search')
 
-      const results = term
-        ? await getUserSearchQuery(db, { term, limit, cursor })
-            .select('distance')
-            .selectAll('actor')
-            .execute()
-        : []
-      const keyset = new SearchKeyset(sql``, sql``)
+      let results: string[]
+      let resCursor: string | undefined
+      if (ctx.searchAgent) {
+        const res =
+          await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
+            q: query,
+            cursor,
+            limit,
+          })
+        results = res.data.actors.map((a) => a.did)
+        resCursor = res.data.cursor
+      } else {
+        const res = query
+          ? await getUserSearchQuery(db, { query, limit, cursor })
+              .select('distance')
+              .selectAll('actor')
+              .execute()
+          : []
+        results = res.map((a) => a.did)
+        const keyset = new SearchKeyset(sql``, sql``)
+        resCursor = keyset.packFromResult(res)
+      }
 
       const actors = await ctx.services
         .actor(db)
-        .views.profilesList(results, requester)
-      const filtered = actors.filter(
-        (actor) => !actor.viewer?.blocking && !actor.viewer?.blockedBy,
-      )
+        .views.profiles(results, requester)
+
+      const SKIP = []
+      const filtered = results.flatMap((did) => {
+        const actor = actors[did]
+        if (actor.viewer?.blocking || actor.viewer?.blockedBy) return SKIP
+        return actor
+      })
 
       return {
         encoding: 'application/json',
         body: {
-          cursor: keyset.packFromResult(results),
+          cursor: resCursor,
           actors: filtered,
         },
       }

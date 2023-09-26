@@ -8,23 +8,20 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params }) => {
       const db = ctx.db.getPrimary()
       const moderationService = ctx.services.moderation(db)
-      const { invitedBy } = params
+      const { invitedBy, limit, cursor } = params
       if (invitedBy) {
         throw new InvalidRequestError('The invitedBy parameter is unsupported')
       }
       // prefer new 'q' query param over deprecated 'term'
-      const { q } = params
-      if (q) {
-        params.term = q
-      }
+      const query = params.q ?? params.term
 
-      const { results, cursor } = await ctx.services
+      const { results, cursor: resCursor } = await ctx.services
         .actor(db)
-        .getSearchResults({ ...params, includeSoftDeleted: true })
+        .getSearchResults({ query, limit, cursor, includeSoftDeleted: true })
       return {
         encoding: 'application/json',
         body: {
-          cursor,
+          cursor: resCursor,
           repos: await moderationService.views.repo(results),
         },
       }

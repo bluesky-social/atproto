@@ -1,7 +1,7 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import {
-  cleanTerm,
+  cleanQuery,
   getUserSearchQuerySimple,
 } from '../../../../services/util/search'
 
@@ -9,31 +9,37 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActorsTypeahead({
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {
-      let { limit, term: rawTerm, q: rawQ } = params
+      const { limit } = params
       const requester = auth.credentials.did
-
-      // prefer new 'q' query param over deprecated 'term'
-      if (rawQ) {
-        rawTerm = rawQ
-      }
-
-      const term = cleanTerm(rawTerm || '')
-
+      const rawQuery = params.q ?? params.term
+      const query = cleanQuery(rawQuery || '')
       const db = ctx.db.getReplica('search')
 
-      const results = term
-        ? await getUserSearchQuerySimple(db, { term, limit })
-            .selectAll('actor')
-            .execute()
-        : []
+      let results: string[]
+      if (ctx.searchAgent) {
+        const res =
+          await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
+            q: query,
+            typeahead: true,
+            limit,
+          })
+        results = res.data.actors.map((a) => a.did)
+      } else {
+        const res = query
+          ? await getUserSearchQuerySimple(db, { query, limit })
+              .selectAll('actor')
+              .execute()
+          : []
+        results = res.map((a) => a.did)
+      }
 
       const actors = await ctx.services
         .actor(db)
         .views.profilesBasic(results, requester, { omitLabels: true })
 
       const SKIP = []
-      const filtered = results.flatMap((res) => {
-        const actor = actors[res.did]
+      const filtered = results.flatMap((did) => {
+        const actor = actors[did]
         if (actor.viewer?.blocking || actor.viewer?.blockedBy) return SKIP
         return actor
       })

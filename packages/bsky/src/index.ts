@@ -25,6 +25,7 @@ import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
 import { LabelCache } from './label-cache'
 import { NotificationServer } from './notifications'
+import { AtpAgent } from '@atproto/api'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
@@ -100,6 +101,9 @@ export class BskyAppView {
     const backgroundQueue = new BackgroundQueue(db.getPrimary())
     const labelCache = new LabelCache(db.getPrimary())
     const notifServer = new NotificationServer(db.getPrimary())
+    const searchAgent = config.searchEndpoint
+      ? new AtpAgent({ service: config.searchEndpoint })
+      : undefined
 
     const services = createServices({
       imgUriBuilder,
@@ -116,6 +120,7 @@ export class BskyAppView {
       didCache,
       labelCache,
       backgroundQueue,
+      searchAgent,
       algos,
       notifServer,
     })
