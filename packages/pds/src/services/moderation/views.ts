@@ -2,7 +2,6 @@ import { Selectable } from 'kysely'
 import { ArrayEl, cborBytesToRecord } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import Database from '../../db'
-import { MessageQueue } from '../../event-stream/types'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
 import {
@@ -17,19 +16,18 @@ import {
   BlobView,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
-import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import { ModerationAction } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
 import { ModerationReportRowWithHandle } from '.'
-import { getSelfLabels } from '../../app-view/services/label'
+import { ids } from '../../lexicon/lexicons'
 
 export class ModerationViews {
-  constructor(private db: Database, private messageDispatcher: MessageQueue) {}
+  constructor(private db: Database) {}
 
   services = {
     account: AccountService.creator(),
-    record: RecordService.creator(this.messageDispatcher),
+    record: RecordService.creator(),
   }
 
   repo(result: RepoResult, opts: ModViewOptions): Promise<RepoView>
@@ -45,10 +43,15 @@ export class ModerationViews {
       await this.db.db
         .selectFrom('did_handle')
         .leftJoin('user_account', 'user_account.did', 'did_handle.did')
-        .leftJoin('profile', 'profile.creator', 'did_handle.did')
+        .leftJoin('record as profile_record', (join) =>
+          join
+            .onRef('profile_record.did', '=', 'did_handle.did')
+            .on('profile_record.collection', '=', ids.AppBskyActorProfile)
+            .on('profile_record.rkey', '=', 'self'),
+        )
         .leftJoin('ipld_block as profile_block', (join) =>
           join
-            .onRef('profile_block.cid', '=', 'profile.cid')
+            .onRef('profile_block.cid', '=', 'profile_record.cid')
             .onRef('profile_block.creator', '=', 'did_handle.did'),
         )
         .where(
@@ -143,10 +146,9 @@ export class ModerationViews {
         .execute(),
       this.services.account(this.db).getAccountInviteCodes(repo.did),
     ])
-    const [reports, actions, labels] = await Promise.all([
+    const [reports, actions] = await Promise.all([
       this.report(reportResults),
       this.action(actionResults),
-      this.labels(repo.did),
     ])
     return {
       ...repo,
@@ -156,7 +158,6 @@ export class ModerationViews {
         actions,
       },
       invites: inviteCodes,
-      labels,
     }
   }
 
@@ -270,17 +271,11 @@ export class ModerationViews {
         .selectAll()
         .execute(),
     ])
-    const [reports, actions, blobs, labels] = await Promise.all([
+    const [reports, actions, blobs] = await Promise.all([
       this.report(reportResults),
       this.action(actionResults),
       this.blob(record.blobCids),
-      this.labels(record.uri),
     ])
-    const selfLabels = getSelfLabels({
-      uri: result.uri,
-      cid: result.cid,
-      record: result.value as Record<string, unknown>,
-    })
     return {
       ...record,
       blobs,
@@ -289,7 +284,6 @@ export class ModerationViews {
         reports,
         actions,
       },
-      labels: [...labels, ...selfLabels],
     }
   }
 
@@ -608,21 +602,6 @@ export class ModerationViews {
         },
       }
     })
-  }
-
-  // @TODO: call into label service instead on AppView
-  async labels(subject: string, includeNeg?: boolean): Promise<Label[]> {
-    const res = await this.db.db
-      .selectFrom('label')
-      .where('label.uri', '=', subject)
-      .if(!includeNeg, (qb) => qb.where('neg', '=', 0))
-      .selectAll()
-      .execute()
-    return res.map((l) => ({
-      ...l,
-      cid: l.cid === '' ? undefined : l.cid,
-      neg: l.neg === 1,
-    }))
   }
 }
 

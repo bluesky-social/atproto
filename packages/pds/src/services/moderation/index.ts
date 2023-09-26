@@ -4,7 +4,6 @@ import { BlobStore } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
-import { MessageQueue } from '../../event-stream/types'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { RecordService } from '../record'
 import { ModerationViews } from './views'
@@ -13,21 +12,16 @@ import { TAKEDOWN } from '../../lexicon/types/com/atproto/admin/defs'
 import { addHoursToDate } from '../../util/date'
 
 export class ModerationService {
-  constructor(
-    public db: Database,
-    public messageDispatcher: MessageQueue,
-    public blobstore: BlobStore,
-  ) {}
+  constructor(public db: Database, public blobstore: BlobStore) {}
 
-  static creator(messageDispatcher: MessageQueue, blobstore: BlobStore) {
-    return (db: Database) =>
-      new ModerationService(db, messageDispatcher, blobstore)
+  static creator(blobstore: BlobStore) {
+    return (db: Database) => new ModerationService(db, blobstore)
   }
 
-  views = new ModerationViews(this.db, this.messageDispatcher)
+  views = new ModerationViews(this.db)
 
   services = {
-    record: RecordService.creator(this.messageDispatcher),
+    record: RecordService.creator(),
   }
 
   async getAction(id: number): Promise<ModerationActionRow | undefined> {

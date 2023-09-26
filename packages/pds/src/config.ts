@@ -50,12 +50,6 @@ export interface ServerConfigValues {
   moderationEmailAddress?: string
   moderationEmailSmtpUrl?: string
 
-  hiveApiKey?: string
-  labelerDid: string
-  labelerKeywords: Record<string, string>
-
-  feedGenDid?: string
-
   maxSubscriptionBuffer: number
   repoBackfillLimitMs: number
   sequencerLeaderLockId?: number
@@ -179,12 +173,6 @@ export class ServerConfig {
     const moderationEmailSmtpUrl =
       process.env.MODERATION_EMAIL_SMTP_URL || undefined
 
-    const hiveApiKey = process.env.HIVE_API_KEY || undefined
-    const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
-    const labelerKeywords = {}
-
-    const feedGenDid = process.env.FEED_GEN_DID
-
     const dbPostgresUrl = process.env.DB_POSTGRES_URL
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
 
@@ -271,10 +259,6 @@ export class ServerConfig {
       emailNoReplyAddress,
       moderationEmailAddress,
       moderationEmailSmtpUrl,
-      hiveApiKey,
-      labelerDid,
-      labelerKeywords,
-      feedGenDid,
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
       sequencerLeaderLockId,
@@ -465,22 +449,6 @@ export class ServerConfig {
 
   get moderationEmailSmtpUrl() {
     return this.cfg.moderationEmailSmtpUrl
-  }
-
-  get hiveApiKey() {
-    return this.cfg.hiveApiKey
-  }
-
-  get labelerDid() {
-    return this.cfg.labelerDid
-  }
-
-  get labelerKeywords() {
-    return this.cfg.labelerKeywords
-  }
-
-  get feedGenDid() {
-    return this.cfg.feedGenDid
   }
 
   get maxSubscriptionBuffer() {

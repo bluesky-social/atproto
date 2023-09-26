@@ -6905,32 +6905,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyUnspeccedApplyLabels: {
-    lexicon: 1,
-    id: 'app.bsky.unspecced.applyLabels',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Allow a labeler to apply labels directly.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['labels'],
-            properties: {
-              labels: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.label.defs#label',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyUnspeccedDefs: {
     lexicon: 1,
     id: 'app.bsky.unspecced.defs',
@@ -7359,7 +7333,6 @@ export const ids = {
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
-  AppBskyUnspeccedApplyLabels: 'app.bsky.unspecced.applyLabels',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
   AppBskyUnspeccedGetPopular: 'app.bsky.unspecced.getPopular',
   AppBskyUnspeccedGetPopularFeedGenerators:

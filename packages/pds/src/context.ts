@@ -11,13 +11,10 @@ import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
 import { Services } from './services'
-import { MessageDispatcher } from './event-stream/message-queue'
 import { Sequencer, SequencerLeader } from './sequencer'
-import { Labeler } from './labeler'
-import { BackgroundQueue } from './event-stream/background-queue'
+import { BackgroundQueue } from './background'
 import DidSqlCache from './did-cache'
 import { Crawlers } from './crawlers'
-import { LabelCache } from './label-cache'
 import { RuntimeFlags } from './runtime-flags'
 
 export class AppContext {
@@ -35,11 +32,8 @@ export class AppContext {
       mailer: ServerMailer
       moderationMailer: ModerationMailer
       services: Services
-      messageDispatcher: MessageDispatcher
       sequencer: Sequencer
       sequencerLeader: SequencerLeader | null
-      labeler: Labeler
-      labelCache: LabelCache
       runtimeFlags: RuntimeFlags
       backgroundQueue: BackgroundQueue
       appviewAgent: AtpAgent
@@ -115,24 +109,12 @@ export class AppContext {
     return this.opts.services
   }
 
-  get messageDispatcher(): MessageDispatcher {
-    return this.opts.messageDispatcher
-  }
-
   get sequencer(): Sequencer {
     return this.opts.sequencer
   }
 
   get sequencerLeader(): SequencerLeader | null {
     return this.opts.sequencerLeader
-  }
-
-  get labeler(): Labeler {
-    return this.opts.labeler
-  }
-
-  get labelCache(): LabelCache {
-    return this.opts.labelCache
   }
 
   get runtimeFlags(): RuntimeFlags {
