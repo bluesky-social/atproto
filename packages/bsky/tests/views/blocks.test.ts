@@ -495,7 +495,8 @@ describe('pds views with blocking', () => {
     const replyBlockedPost = timeline.feed.find(
       (item) => item.post.uri === replyBlockedUri,
     )
-    expect(replyBlockedPost).toBeUndefined()
+    assert(replyBlockedPost)
+    expect(replyBlockedPost.reply?.parent).toBeUndefined()
     const embedBlockedPost = timeline.feed.find(
       (item) => item.post.uri === embedBlockedUri,
     )
