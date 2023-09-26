@@ -98,9 +98,6 @@ export const runTestServer = async (
     dbPostgresUrl: process.env.DB_POSTGRES_URL,
     blobstoreLocation: `${blobstoreLoc}/blobs`,
     blobstoreTmp: `${blobstoreLoc}/tmp`,
-    labelerDid: 'did:example:labeler',
-    labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
-    feedGenDid: 'did:example:feedGen',
     maxSubscriptionBuffer: 200,
     repoBackfillLimitMs: HOUR,
     sequencerLeaderLockId: uniqueLockId(),
@@ -153,9 +150,6 @@ export const runTestServer = async (
   const pdsServer = await pds.start()
   const pdsPort = (pdsServer.address() as AddressInfo).port
 
-  // we refresh label cache by hand in `processAll` instead of on a timer
-  pds.ctx.labelCache.stop()
-
   return {
     url: `http://localhost:${pdsPort}`,
     ctx: pds.ctx,
@@ -165,7 +159,6 @@ export const runTestServer = async (
     },
     processAll: async () => {
       await pds.ctx.backgroundQueue.processAll()
-      await pds.ctx.labelCache.fullRefresh()
     },
   }
 }

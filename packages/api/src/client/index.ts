@@ -133,7 +133,6 @@ import * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
-import * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
@@ -267,7 +266,6 @@ export * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
-export * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
@@ -2303,17 +2301,6 @@ export class UnspeccedNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
-  }
-
-  applyLabels(
-    data?: AppBskyUnspeccedApplyLabels.InputSchema,
-    opts?: AppBskyUnspeccedApplyLabels.CallOptions,
-  ): Promise<AppBskyUnspeccedApplyLabels.Response> {
-    return this._service.xrpc
-      .call('app.bsky.unspecced.applyLabels', opts?.qp, data, opts)
-      .catch((e) => {
-        throw AppBskyUnspeccedApplyLabels.toKnownErr(e)
-      })
   }
 
   getPopular(

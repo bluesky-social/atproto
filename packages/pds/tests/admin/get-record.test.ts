@@ -120,29 +120,4 @@ describe('pds admin get record view', () => {
     )
     await expect(promise).rejects.toThrow('Record not found')
   })
-
-  it('serves labels.', async () => {
-    const { ctx } = server
-    const labelingService = ctx.services.appView.label(ctx.db)
-    await labelingService.formatAndCreate(
-      ctx.cfg.labelerDid,
-      sc.posts[sc.dids.alice][0].ref.uriStr,
-      sc.posts[sc.dids.alice][0].ref.cidStr,
-      { create: ['kittens', 'puppies', 'birds'] },
-    )
-    await labelingService.formatAndCreate(
-      ctx.cfg.labelerDid,
-      sc.posts[sc.dids.alice][0].ref.uriStr,
-      sc.posts[sc.dids.alice][0].ref.cidStr,
-      { negate: ['birds'] },
-    )
-    const result = await agent.api.com.atproto.admin.getRecord(
-      {
-        uri: sc.posts[sc.dids.alice][0].ref.uriStr,
-        cid: sc.posts[sc.dids.alice][0].ref.cidStr,
-      },
-      { headers: { authorization: adminAuth() } },
-    )
-    expect(forSnapshot(result.data)).toMatchSnapshot()
-  })
 })

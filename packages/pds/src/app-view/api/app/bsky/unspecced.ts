@@ -1,4 +1,4 @@
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { GenericKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
@@ -20,11 +20,6 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: res.data,
       }
-
-      return {
-        encoding: 'application/json',
-        body: { feed: [] },
-      }
     },
   })
 
@@ -41,18 +36,6 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: res.data,
       }
-    },
-  })
-
-  server.app.bsky.unspecced.applyLabels({
-    auth: ctx.roleVerifier,
-    handler: async ({ auth, input }) => {
-      if (!auth.credentials.admin) {
-        throw new AuthRequiredError('Insufficient privileges')
-      }
-      const { services, db } = ctx
-      const { labels } = input.body
-      await services.appView.label(db).createLabels(labels)
     },
   })
 }

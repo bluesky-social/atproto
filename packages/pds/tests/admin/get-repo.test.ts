@@ -108,26 +108,4 @@ describe('pds admin get repo view', () => {
     )
     await expect(promise).rejects.toThrow('Repo not found')
   })
-
-  it('serves labels.', async () => {
-    const { ctx } = server
-    const labelingService = ctx.services.appView.label(ctx.db)
-    await labelingService.formatAndCreate(
-      ctx.cfg.labelerDid,
-      sc.dids.alice,
-      null,
-      { create: ['kittens', 'puppies', 'birds'] },
-    )
-    await labelingService.formatAndCreate(
-      ctx.cfg.labelerDid,
-      sc.dids.alice,
-      null,
-      { negate: ['birds'] },
-    )
-    const result = await agent.api.com.atproto.admin.getRepo(
-      { did: sc.dids.alice },
-      { headers: { authorization: adminAuth() } },
-    )
-    expect(forSnapshot(result.data)).toMatchSnapshot()
-  })
 })

@@ -1,5 +1,6 @@
 import { Selectable } from 'kysely'
 import { AtUri } from '@atproto/syntax'
+import { toSimplifiedISOSafe } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import * as ListBlock from '../../../lexicon/types/app/bsky/graph/listblock'
 import * as lex from '../../../lexicon/lexicons'
@@ -8,7 +9,6 @@ import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { BackgroundQueue } from '../../../background'
 import { NotificationServer } from '../../../notifications'
-import { toSimplifiedISOSafe } from '../util'
 
 const lexId = lex.ids.AppBskyGraphListblock
 type IndexedListBlock = Selectable<DatabaseSchemaType['list_block']>

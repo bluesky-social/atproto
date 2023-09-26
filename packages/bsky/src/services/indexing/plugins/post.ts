@@ -1,6 +1,7 @@
 import { Insertable, Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
+import { toSimplifiedISOSafe } from '@atproto/common'
 import { jsonStringToLex } from '@atproto/lexicon'
 import {
   Record as PostRecord,
@@ -19,7 +20,6 @@ import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { Notification } from '../../../db/tables/notification'
-import { toSimplifiedISOSafe } from '../util'
 import { PrimaryDatabase } from '../../../db'
 import { countAll, excluded } from '../../../db/util'
 import { BackgroundQueue } from '../../../background'

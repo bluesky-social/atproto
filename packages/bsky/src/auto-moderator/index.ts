@@ -280,28 +280,12 @@ export class AutoModerator {
   async storeLabels(uri: AtUri, cid: CID, labels: string[]): Promise<void> {
     if (labels.length < 1) return
     const labelSrvc = this.services.label(this.ctx.db)
-    const formatted = await labelSrvc.formatAndCreate(
+    await labelSrvc.formatAndCreate(
       this.ctx.cfg.labelerDid,
       uri.toString(),
       cid.toString(),
       { create: labels },
     )
-    if (this.pushAgent) {
-      const agent = this.pushAgent
-      try {
-        await agent.api.app.bsky.unspecced.applyLabels({ labels: formatted })
-      } catch (err) {
-        log.error(
-          {
-            err,
-            uri: uri.toString(),
-            labels,
-            receiver: agent.service.toString(),
-          },
-          'failed to push labels',
-        )
-      }
-    }
   }
 
   async processAll() {

@@ -2,7 +2,6 @@ import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as pds from '@atproto/pds'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
-import { MessageDispatcher } from '@atproto/pds/src/event-stream/message-queue'
 import { AtpAgent } from '@atproto/api'
 import { Client as PlcClient } from '@did-plc/lib'
 import { DAY, HOUR } from '@atproto/common-web'
@@ -60,9 +59,6 @@ export class TestPds {
       maxSubscriptionBuffer: 200,
       repoBackfillLimitMs: 1000 * 60 * 60, // 1hr
       sequencerLeaderLockId: uniqueLockId(),
-      labelerDid: 'did:example:labeler',
-      labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
-      feedGenDid: 'did:example:feedGen',
       dbTxLockNonce: await randomStr(32, 'base32'),
       bskyAppViewEndpoint: cfg.bskyAppViewEndpoint ?? 'http://fake_address',
       bskyAppViewDid: cfg.bskyAppViewDid ?? 'did:example:fake',
@@ -80,11 +76,6 @@ export class TestPds {
       : pds.Database.memory()
     await db.migrateToLatestOrThrow()
 
-    if (cfg.bskyAppViewEndpoint && !cfg.enableInProcessAppView) {
-      // Disable communication to app view within pds
-      MessageDispatcher.prototype.send = async () => {}
-    }
-
     const server = pds.PDS.create({
       db,
       blobstore,
@@ -95,8 +86,6 @@ export class TestPds {
 
     await server.start()
 
-    // we refresh label cache by hand in `processAll` instead of on a timer
-    if (!cfg.enableLabelsCache) server.ctx.labelCache.stop()
     return new TestPds(url, port, server)
   }
 
@@ -129,7 +118,6 @@ export class TestPds {
 
   async processAll() {
     await this.ctx.backgroundQueue.processAll()
-    await this.ctx.labelCache.fullRefresh()
   }
 
   async close() {
