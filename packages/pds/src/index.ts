@@ -21,7 +21,6 @@ import {
   Options as XrpcServerOptions,
 } from '@atproto/xrpc-server'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
-import inProcessAppView from './app-view/api'
 import API from './api'
 import * as basicRoutes from './basic-routes'
 import * as wellKnown from './well-known'
@@ -219,7 +218,6 @@ export class PDS {
     let server = createServer(xrpcOpts)
 
     server = API(server, ctx)
-    server = inProcessAppView(server, ctx)
 
     app.use(basicRoutes.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
