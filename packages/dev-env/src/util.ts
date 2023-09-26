@@ -44,6 +44,22 @@ export const mockResolvers = (idResolver: IdResolver, pds: TestPds) => {
   }
 }
 
+export const mockMailer = (pds: TestPds) => {
+  const mailer = pds.ctx.mailer
+  const _origSendMail = mailer.transporter.sendMail
+  mailer.transporter.sendMail = async (opts) => {
+    const result = await _origSendMail.call(mailer.transporter, opts)
+    const message = result[0][0]
+    console.log(`✉️ Email
+Subject: ${message.subject}
+To: ${message.to}
+From: ${message.from}
+Body: ${message.html}
+`)
+    return result
+  }
+}
+
 const usedLockIds = new Set()
 export const uniqueLockId = () => {
   let lockId: number
