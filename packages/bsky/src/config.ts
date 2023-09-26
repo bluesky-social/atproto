@@ -18,6 +18,7 @@ export interface ServerConfigValues {
   handleResolveNameservers?: string[]
   imgUriEndpoint?: string
   blobCacheLocation?: string
+  searchEndpoint?: string
   labelerDid: string
   adminPassword: string
   moderatorPassword?: string
@@ -51,6 +52,7 @@ export class ServerConfig {
       : []
     const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
     const blobCacheLocation = process.env.BLOB_CACHE_LOC
+    const searchEndpoint = process.env.SEARCH_ENDPOINT
     const dbPrimaryPostgresUrl =
       overrides?.dbPrimaryPostgresUrl || process.env.DB_PRIMARY_POSTGRES_URL
     let dbReplicaPostgresUrls = overrides?.dbReplicaPostgresUrls
@@ -97,6 +99,7 @@ export class ServerConfig {
       handleResolveNameservers,
       imgUriEndpoint,
       blobCacheLocation,
+      searchEndpoint,
       labelerDid,
       adminPassword,
       moderatorPassword,
@@ -181,6 +184,10 @@ export class ServerConfig {
 
   get blobCacheLocation() {
     return this.cfg.blobCacheLocation
+  }
+
+  get searchEndpoint() {
+    return this.cfg.searchEndpoint
   }
 
   get labelerDid() {
