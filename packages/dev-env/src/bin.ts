@@ -15,15 +15,11 @@ const run = async () => {
   const network = await TestNetwork.create({
     pds: {
       port: 2583,
-<<<<<<< HEAD
       hostname: 'localhost',
-=======
-      publicUrl: 'http://localhost:2583',
       dbPostgresSchema: 'pds',
     },
     bsky: {
       dbPostgresSchema: 'bsky',
->>>>>>> main
     },
     plc: { port: 2582 },
   })

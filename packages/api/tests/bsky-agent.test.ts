@@ -42,12 +42,7 @@ describe('agent', () => {
       email: 'user1@test.com',
       password: 'password',
     })
-<<<<<<< HEAD
-
-    const displayName1 = await await getProfileDisplayName(agent)
-=======
     const displayName1 = await getProfileDisplayName(agent)
->>>>>>> main
     expect(displayName1).toBeFalsy()
 
     await agent.upsertProfile((existing) => {
@@ -57,11 +52,7 @@ describe('agent', () => {
       }
     })
 
-<<<<<<< HEAD
-    const displayName2 = await await getProfileDisplayName(agent)
-=======
     const displayName2 = await getProfileDisplayName(agent)
->>>>>>> main
     expect(displayName2).toBe('Bob')
 
     await agent.upsertProfile((existing) => {
@@ -71,11 +62,7 @@ describe('agent', () => {
       }
     })
 
-<<<<<<< HEAD
-    const displayName3 = await await getProfileDisplayName(agent)
-=======
     const displayName3 = await getProfileDisplayName(agent)
->>>>>>> main
     expect(displayName3).toBe('BOB')
   })
 
@@ -88,11 +75,7 @@ describe('agent', () => {
       password: 'password',
     })
 
-<<<<<<< HEAD
-    const displayName1 = await await getProfileDisplayName(agent)
-=======
     const displayName1 = await getProfileDisplayName(agent)
->>>>>>> main
     expect(displayName1).toBeFalsy()
 
     let hasConflicted = false
@@ -118,11 +101,7 @@ describe('agent', () => {
     })
     expect(ranTwice).toBe(true)
 
-<<<<<<< HEAD
-    const displayName2 = await await getProfileDisplayName(agent)
-=======
     const displayName2 = await getProfileDisplayName(agent)
->>>>>>> main
     expect(displayName2).toBe('Bob')
   })
 
@@ -135,11 +114,7 @@ describe('agent', () => {
       password: 'password',
     })
 
-<<<<<<< HEAD
-    const displayName1 = await await getProfileDisplayName(agent)
-=======
     const displayName1 = await getProfileDisplayName(agent)
->>>>>>> main
     expect(displayName1).toBeFalsy()
 
     const p = agent.upsertProfile(async (_existing) => {
