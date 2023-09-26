@@ -20,12 +20,14 @@ export default function (server: Server, ctx: AppContext) {
       const {
         action,
         subject,
-        reason,
+        comment,
         createdBy,
         createLabelVals,
         negateLabelVals,
         subjectBlobCids,
         durationInHours,
+        refEventId,
+        meta,
       } = input.body
 
       // apply access rules
@@ -63,8 +65,10 @@ export default function (server: Server, ctx: AppContext) {
           createLabelVals,
           negateLabelVals,
           createdBy,
-          reason,
+          comment: comment || null,
           durationInHours,
+          refEventId,
+          meta: meta || null,
         })
 
         if (

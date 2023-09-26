@@ -50,7 +50,7 @@
               "description": "Indicates how long this action was meant to be in effect before automatically expiring."
             },
             "createdBy": { "type": "string", "format": "did" },
-            "meta": { "type": "object" },
+            "meta": { "type": "ref", "ref": "#actionMeta" },
             "refEventId": {
               "type": "integer",
               "description": "If the event needs a reference to previous event, for instance, when reverting a previous action, the reference event id should be passed"
@@ -66,6 +66,12 @@
         }
       },
       "errors": [{ "name": "SubjectHasAction" }]
+    },
+    "actionMeta": {
+      "type": "object",
+      "properties": {
+        "reportType": { "type": "string" }
+      }
     }
   }
 }

@@ -22,11 +22,12 @@ export interface ActionView {
   subjectBlobCids: string[]
   createLabelVals?: string[]
   negateLabelVals?: string[]
-  reason: string
+  comment: string
   createdBy: string
   createdAt: string
   reversal?: ActionReversal
-  resolvedReportIds: number[]
+  meta?: ActionMeta
+  resolvedReportIds?: number[]
   [k: string]: unknown
 }
 
@@ -56,7 +57,7 @@ export interface ActionViewDetail {
   subjectBlobs: BlobView[]
   createLabelVals?: string[]
   negateLabelVals?: string[]
-  reason: string
+  comment: string
   createdBy: string
   createdAt: string
   reversal?: ActionReversal
@@ -97,7 +98,7 @@ export function validateActionViewCurrent(v: unknown): ValidationResult {
 }
 
 export interface ActionReversal {
-  reason: string
+  comment: string
   createdBy: string
   createdAt: string
   [k: string]: unknown
@@ -115,11 +116,29 @@ export function validateActionReversal(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#actionReversal', v)
 }
 
+export interface ActionMeta {}
+
+export function isActionMeta(v: unknown): v is ActionMeta {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#actionMeta'
+  )
+}
+
+export function validateActionMeta(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#actionMeta', v)
+}
+
 export type ActionType =
   | 'lex:com.atproto.admin.defs#takedown'
   | 'lex:com.atproto.admin.defs#flag'
   | 'lex:com.atproto.admin.defs#acknowledge'
   | 'lex:com.atproto.admin.defs#escalate'
+  | 'lex:com.atproto.admin.defs#comment'
+  | 'lex:com.atproto.admin.defs#label'
+  | 'lex:com.atproto.admin.defs#revert'
+  | 'lex:com.atproto.admin.defs#mute'
   | (string & {})
 
 /** Moderation action type: Takedown. Indicates that content should not be served by the PDS. */
@@ -130,19 +149,31 @@ export const FLAG = 'com.atproto.admin.defs#flag'
 export const ACKNOWLEDGE = 'com.atproto.admin.defs#acknowledge'
 /** Moderation action type: Escalate. Indicates that the content has been flagged for additional review. */
 export const ESCALATE = 'com.atproto.admin.defs#escalate'
+/** Moderation action type: Comment. Indicates that no change is being made to the subject or associated reports, just a comment is being added by a human or automated moderator */
+export const COMMENT = 'com.atproto.admin.defs#comment'
+/** Moderation action type: Label. Indicates that labels associated with the subject are being changed. */
+export const LABEL = 'com.atproto.admin.defs#label'
+/** Moderation action type: Revert. Indicates that a previously taken action is being reversed. */
+export const REVERT = 'com.atproto.admin.defs#revert'
+/** Moderation action type: Mute. Indicates that reports/other events on a subject can be muted for a period of time. */
+export const MUTE = 'com.atproto.admin.defs#mute'
+/** Moderation action type: Report. Indicates that a new report was received for the subject. */
+export const REPORT = 'com.atproto.admin.defs#report'
 
 export interface ReportView {
   id: number
-  reasonType: ComAtprotoModerationDefs.ReasonType
-  reason?: string
+  commentType: ComAtprotoModerationDefs.CommentType
+  comment?: string
   subjectRepoHandle?: string
   subject:
     | RepoRef
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
+  subjectView: SubjectView
   reportedBy: string
   createdAt: string
   resolvedByActionIds: number[]
+  subjectStatus: SubjectStatusType
   [k: string]: unknown
 }
 
@@ -158,19 +189,50 @@ export function validateReportView(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#reportView', v)
 }
 
+export interface SubjectView {
+  id: number
+  subject:
+    | RepoRef
+    | ComAtprotoRepoStrongRef.Main
+    | { $type: string; [k: string]: unknown }
+  updatedAt: string
+  status:
+    | 'lex:com.atproto.admin.defs#resolved'
+    | 'lex:com.atproto.admin.defs#escalated'
+    | 'lex:com.atproto.admin.defs#takendown'
+    | 'lex:com.atproto.admin.defs#muted'
+    | 'lex:com.atproto.admin.defs#needsReview'
+    | (string & {})
+  [k: string]: unknown
+}
+
+export function isSubjectView(v: unknown): v is SubjectView {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#subjectView'
+  )
+}
+
+export function validateSubjectView(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#subjectView', v)
+}
+
 export interface ReportViewDetail {
   id: number
-  reasonType: ComAtprotoModerationDefs.ReasonType
-  reason?: string
+  commentType: ComAtprotoModerationDefs.CommentType
+  comment?: string
   subject:
     | RepoView
     | RepoViewNotFound
     | RecordView
     | RecordViewNotFound
     | { $type: string; [k: string]: unknown }
+  subjectView: SubjectView
   reportedBy: string
   createdAt: string
   resolvedByActions: ActionView[]
+  subjectStatus: SubjectStatusType
   [k: string]: unknown
 }
 
@@ -433,3 +495,22 @@ export function isVideoDetails(v: unknown): v is VideoDetails {
 export function validateVideoDetails(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#videoDetails', v)
 }
+
+export type SubjectStatusType =
+  | 'lex:com.atproto.admin.defs#reported'
+  | 'lex:com.atproto.admin.defs#resolved'
+  | 'lex:com.atproto.admin.defs#takendown'
+  | 'lex:com.atproto.admin.defs#acknowledged'
+  | 'lex:com.atproto.admin.defs#muted'
+  | (string & {})
+
+/** Moderation status of a subject: reported. Indicates that the subject was reported */
+export const REPORTED = 'com.atproto.admin.defs#reported'
+/** Moderation status of a subject: resolved. Indicates that the reports on the subject were marked as resolved */
+export const RESOLVED = 'com.atproto.admin.defs#resolved'
+/** Moderation status of a subject: takendown. Indicates that the subject was taken down */
+export const TAKENDOWN = 'com.atproto.admin.defs#takendown'
+/** Moderation status of a subject: acknowledged. Indicates that the reports on the subject were acknowledged by moderator */
+export const ACKNOWLEDGED = 'com.atproto.admin.defs#acknowledged'
+/** Moderation status of a subject: muted. Indicates that reports were muted by a moderator */
+export const MUTED = 'com.atproto.admin.defs#muted'

@@ -1,14 +1,28 @@
-import { Selectable, sql } from 'kysely'
+import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { PrimaryDatabase } from '../../db'
-import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { ModerationViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
 import { ImageInvalidator } from '../../image/invalidator'
-import { TAKEDOWN } from '../../lexicon/types/com/atproto/admin/defs'
+import {
+  ACKNOWLEDGE,
+  ActionMeta,
+  ESCALATE,
+  FLAG,
+  REVERT,
+  TAKEDOWN,
+} from '../../lexicon/types/com/atproto/admin/defs'
 import { addHoursToDate } from '../../util/date'
+import { adjustModerationSubjectStatus } from './status'
+import {
+  ModerationActionRow,
+  ModerationReportRow,
+  ModerationReportRowWithHandle,
+  SubjectInfo,
+} from './types'
+import { getReportIdsToBeResolved } from './report'
 
 export class ModerationService {
   constructor(
@@ -203,6 +217,24 @@ export class ModerationService {
     return report
   }
 
+  async getCurrentStatus(
+    subject: { did: string } | { uri: AtUri } | { cids: CID[] },
+  ) {
+    let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
+    if ('did' in subject) {
+      builder = builder
+        .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
+        .where('subjectDid', '=', subject.did)
+    } else if ('uri' in subject) {
+      builder = builder
+        .where('subjectType', '=', 'com.atproto.repo.strongRef')
+        .where('subjectUri', '=', subject.uri.toString())
+    }
+    // TODO: Handle the cid status
+    return await builder.execute()
+  }
+
+  // May be we don't need this anymore?
   async getCurrentActions(
     subject: { did: string } | { uri: AtUri } | { cids: CID[] },
   ) {
@@ -238,21 +270,25 @@ export class ModerationService {
     action: ModerationActionRow['action']
     subject: { did: string } | { uri: AtUri; cid: CID }
     subjectBlobCids?: CID[]
-    reason: string
+    comment: string | null
     createLabelVals?: string[]
     negateLabelVals?: string[]
     createdBy: string
     createdAt?: Date
     durationInHours?: number
+    refEventId?: number
+    meta: ActionMeta | null
   }): Promise<ModerationActionRow> {
     this.db.assertTransaction()
     const {
       action,
       createdBy,
-      reason,
+      comment,
       subject,
       subjectBlobCids,
       durationInHours,
+      refEventId,
+      meta,
       createdAt = new Date(),
     } = info
     const createLabelVals =
@@ -287,23 +323,18 @@ export class ModerationService {
       }
     }
 
-    const subjectActions = await this.getCurrentActions(subject)
-    if (subjectActions.length) {
-      throw new InvalidRequestError(
-        `Subject already has an active action: #${subjectActions[0].id}`,
-        'SubjectHasAction',
-      )
-    }
     const actionResult = await this.db.db
       .insertInto('moderation_action')
       .values({
         action,
-        reason,
+        comment,
         createdAt: createdAt.toISOString(),
         createdBy,
         createLabelVals,
         negateLabelVals,
         durationInHours,
+        refEventId,
+        meta,
         expiresAt:
           durationInHours !== undefined
             ? addHoursToDate(durationInHours, createdAt).toISOString()
@@ -314,16 +345,6 @@ export class ModerationService {
       .executeTakeFirstOrThrow()
 
     if (subjectBlobCids?.length && !('did' in subject)) {
-      const blobActions = await this.getCurrentActions({
-        cids: subjectBlobCids,
-      })
-      if (blobActions.length) {
-        throw new InvalidRequestError(
-          `Blob already has an active action: #${blobActions[0].id}`,
-          'SubjectHasAction',
-        )
-      }
-
       await this.db.db
         .insertInto('moderation_action_subject_blob')
         .values(
@@ -333,6 +354,36 @@ export class ModerationService {
           })),
         )
         .execute()
+    }
+
+    await adjustModerationSubjectStatus(this.db, actionResult)
+
+    // TODO: Should escalate resolve reports as well?
+    if ([ACKNOWLEDGE, TAKEDOWN, FLAG].includes(action)) {
+      const reportIdsToBeResolved = await getReportIdsToBeResolved(
+        this.db,
+        subjectInfo,
+      )
+      if (reportIdsToBeResolved.length) {
+        await this.resolveReports({
+          reportIds: reportIdsToBeResolved,
+          actionId: actionResult.id,
+          createdBy: actionResult.createdBy,
+        })
+      }
+    }
+    if (action === REVERT) {
+      const reportIdsToBeResolved = await getReportIdsToBeResolved(
+        this.db,
+        subjectInfo,
+      )
+      if (reportIdsToBeResolved.length) {
+        await this.resolveReports({
+          reportIds: reportIdsToBeResolved,
+          actionId: actionResult.id,
+          createdBy: actionResult.createdBy,
+        })
+      }
     }
 
     return actionResult
@@ -562,30 +613,3 @@ export class ModerationService {
     return report
   }
 }
-
-export type ModerationActionRow = Selectable<ModerationAction>
-export type ReversibleModerationAction = Pick<
-  ModerationActionRow,
-  'id' | 'createdBy' | 'reason'
-> & {
-  createdAt?: Date
-}
-
-export type ModerationReportRow = Selectable<ModerationReport>
-export type ModerationReportRowWithHandle = ModerationReportRow & {
-  handle?: string | null
-}
-
-export type SubjectInfo =
-  | {
-      subjectType: 'com.atproto.admin.defs#repoRef'
-      subjectDid: string
-      subjectUri: null
-      subjectCid: null
-    }
-  | {
-      subjectType: 'com.atproto.repo.strongRef'
-      subjectDid: string
-      subjectUri: string
-      subjectCid: string
-    }

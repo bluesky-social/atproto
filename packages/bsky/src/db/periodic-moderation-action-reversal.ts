@@ -5,7 +5,7 @@ import AppContext from '../context'
 import AtpAgent from '@atproto/api'
 import { buildBasicAuth } from '../auth'
 import { LabelService } from '../services/label'
-import { ModerationActionRow } from '../services/moderation'
+import { ModerationActionRow } from '../services/moderation/types'
 
 export const MODERATION_ACTION_REVERSAL_ID = 1011
 

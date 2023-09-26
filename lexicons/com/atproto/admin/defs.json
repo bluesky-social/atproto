@@ -31,7 +31,7 @@
         "createdBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" },
         "reversal": { "type": "ref", "ref": "#actionReversal" },
-        "meta": { "type": "object" },
+        "meta": { "type": "ref", "ref": "#actionMeta" },
         "resolvedReportIds": { "type": "array", "items": { "type": "integer" } }
       }
     },
@@ -100,6 +100,9 @@
         "createdAt": { "type": "string", "format": "datetime" }
       }
     },
+    "actionMeta": {
+      "type": "object"
+    },
     "actionType": {
       "type": "string",
       "knownValues": [
@@ -158,7 +161,8 @@
         "reportedBy",
         "createdAt",
         "resolvedByActionIds",
-        "subjectView"
+        "subjectView",
+        "subjectStatus"
       ],
       "properties": {
         "id": { "type": "integer" },
@@ -181,6 +185,10 @@
         "resolvedByActionIds": {
           "type": "array",
           "items": { "type": "integer" }
+        },
+        "subjectStatus": {
+          "type": "ref",
+          "ref": "com.atproto.admin.defs#subjectStatusType"
         }
       }
     },
@@ -215,7 +223,8 @@
         "subjectView",
         "reportedBy",
         "createdAt",
-        "resolvedByActions"
+        "resolvedByActions",
+        "subjectStatus"
       ],
       "properties": {
         "id": { "type": "integer" },
@@ -242,6 +251,10 @@
         "resolvedByActions": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.admin.defs#actionView" }
+        },
+        "subjectStatus": {
+          "type": "ref",
+          "ref": "com.atproto.admin.defs#subjectStatusType"
         }
       }
     },
@@ -429,6 +442,36 @@
         "height": { "type": "integer" },
         "length": { "type": "integer" }
       }
+    },
+    "subjectStatusType": {
+      "type": "string",
+      "knownValues": [
+        "#reported",
+        "#resolved",
+        "#takendown",
+        "#acknowledged",
+        "#muted"
+      ]
+    },
+    "reported": {
+      "type": "token",
+      "description": "Moderation status of a subject: reported. Indicates that the subject was reported"
+    },
+    "resolved": {
+      "type": "token",
+      "description": "Moderation status of a subject: resolved. Indicates that the reports on the subject were marked as resolved "
+    },
+    "takendown": {
+      "type": "token",
+      "description": "Moderation status of a subject: takendown. Indicates that the subject was taken down"
+    },
+    "acknowledged": {
+      "type": "token",
+      "description": "Moderation status of a subject: acknowledged. Indicates that the reports on the subject were acknowledged by moderator"
+    },
+    "muted": {
+      "type": "token",
+      "description": "Moderation status of a subject: muted. Indicates that reports were muted by a moderator"
     }
   }
 }

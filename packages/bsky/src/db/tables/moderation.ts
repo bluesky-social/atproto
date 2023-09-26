@@ -4,6 +4,15 @@ import {
   FLAG,
   TAKEDOWN,
   ESCALATE,
+  LABEL,
+  REVERT,
+  MUTE,
+  REPORT,
+  ACKNOWLEDGED,
+  TAKENDOWN,
+  REPORTED,
+  MUTED,
+  ActionMeta,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import {
   REASONOTHER,
@@ -18,17 +27,26 @@ export const actionTableName = 'moderation_action'
 export const actionSubjectBlobTableName = 'moderation_action_subject_blob'
 export const reportTableName = 'moderation_report'
 export const reportResolutionTableName = 'moderation_report_resolution'
+export const subjectStatusTableName = 'moderation_subject_status'
 
 export interface ModerationAction {
   id: Generated<number>
-  action: typeof TAKEDOWN | typeof FLAG | typeof ACKNOWLEDGE | typeof ESCALATE
+  action:
+    | typeof TAKEDOWN
+    | typeof FLAG
+    | typeof ACKNOWLEDGE
+    | typeof ESCALATE
+    | typeof MUTE
+    | typeof REPORT
+    | typeof LABEL
+    | typeof REVERT
   subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
   createLabelVals: string | null
   negateLabelVals: string | null
-  reason: string
+  comment: string | null
   createdAt: string
   createdBy: string
   reversedAt: string | null
@@ -36,6 +54,9 @@ export interface ModerationAction {
   reversedReason: string | null
   durationInHours: number | null
   expiresAt: string | null
+  refEventId: number | null
+  // TODO: better types here?
+  meta: ActionMeta | null
 }
 
 export interface ModerationActionSubjectBlob {
@@ -68,9 +89,25 @@ export interface ModerationReportResolution {
   createdBy: string
 }
 
+export interface ModerationSubjectStatus {
+  id: Generated<number>
+  subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
+  subjectDid: string
+  subjectUri: string | null
+  subjectCid: string | null
+  status:
+    | typeof ACKNOWLEDGED
+    | typeof TAKENDOWN
+    | typeof REPORTED
+    | typeof MUTED
+  createdAt: string
+  updatedAt: string
+}
+
 export type PartialDB = {
   [actionTableName]: ModerationAction
   [actionSubjectBlobTableName]: ModerationActionSubjectBlob
   [reportTableName]: ModerationReport
   [reportResolutionTableName]: ModerationReportResolution
+  [subjectStatusTableName]: ModerationSubjectStatus
 }

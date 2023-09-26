@@ -20,7 +20,7 @@ import {
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
-import { ModerationReportRowWithHandle } from '.'
+import { ModerationReportRowWithHandle } from './types'
 import { getSelfLabels } from '../label'
 
 export class ModerationViews {

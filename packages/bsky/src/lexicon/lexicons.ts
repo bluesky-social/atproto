@@ -15,10 +15,9 @@ export const schemaDict = {
           'action',
           'subject',
           'subjectBlobCids',
-          'reason',
+          'comment',
           'createdBy',
           'createdAt',
-          'resolvedReportIds',
         ],
         properties: {
           id: {
@@ -58,7 +57,7 @@ export const schemaDict = {
               type: 'string',
             },
           },
-          reason: {
+          comment: {
             type: 'string',
           },
           createdBy: {
@@ -72,6 +71,10 @@ export const schemaDict = {
           reversal: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionReversal',
+          },
+          meta: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#actionMeta',
           },
           resolvedReportIds: {
             type: 'array',
@@ -88,7 +91,7 @@ export const schemaDict = {
           'action',
           'subject',
           'subjectBlobs',
-          'reason',
+          'comment',
           'createdBy',
           'createdAt',
           'resolvedReports',
@@ -134,7 +137,7 @@ export const schemaDict = {
               type: 'string',
             },
           },
-          reason: {
+          comment: {
             type: 'string',
           },
           createdBy: {
@@ -178,9 +181,9 @@ export const schemaDict = {
       },
       actionReversal: {
         type: 'object',
-        required: ['reason', 'createdBy', 'createdAt'],
+        required: ['comment', 'createdBy', 'createdAt'],
         properties: {
-          reason: {
+          comment: {
             type: 'string',
           },
           createdBy: {
@@ -193,6 +196,9 @@ export const schemaDict = {
           },
         },
       },
+      actionMeta: {
+        type: 'object',
+      },
       actionType: {
         type: 'string',
         knownValues: [
@@ -200,6 +206,10 @@ export const schemaDict = {
           'lex:com.atproto.admin.defs#flag',
           'lex:com.atproto.admin.defs#acknowledge',
           'lex:com.atproto.admin.defs#escalate',
+          'lex:com.atproto.admin.defs#comment',
+          'lex:com.atproto.admin.defs#label',
+          'lex:com.atproto.admin.defs#revert',
+          'lex:com.atproto.admin.defs#mute',
         ],
       },
       takedown: {
@@ -222,25 +232,52 @@ export const schemaDict = {
         description:
           'Moderation action type: Escalate. Indicates that the content has been flagged for additional review.',
       },
+      comment: {
+        type: 'token',
+        description:
+          'Moderation action type: Comment. Indicates that no change is being made to the subject or associated reports, just a comment is being added by a human or automated moderator',
+      },
+      label: {
+        type: 'token',
+        description:
+          'Moderation action type: Label. Indicates that labels associated with the subject are being changed.',
+      },
+      revert: {
+        type: 'token',
+        description:
+          'Moderation action type: Revert. Indicates that a previously taken action is being reversed.',
+      },
+      mute: {
+        type: 'token',
+        description:
+          'Moderation action type: Mute. Indicates that reports/other events on a subject can be muted for a period of time.',
+      },
+      report: {
+        type: 'token',
+        description:
+          'Moderation action type: Report. Indicates that a new report was received for the subject.',
+      },
       reportView: {
         type: 'object',
         required: [
           'id',
-          'reasonType',
+          'commentType',
           'subject',
           'reportedBy',
           'createdAt',
           'resolvedByActionIds',
+          'subjectView',
+          'subjectStatus',
         ],
         properties: {
           id: {
             type: 'integer',
           },
-          reasonType: {
+          commentType: {
             type: 'ref',
-            ref: 'lex:com.atproto.moderation.defs#reasonType',
+            ref: 'lex:com.atproto.moderation.defs#commentType',
           },
-          reason: {
+          comment: {
             type: 'string',
           },
           subjectRepoHandle: {
@@ -252,6 +289,10 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#repoRef',
               'lex:com.atproto.repo.strongRef',
             ],
+          },
+          subjectView: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#subjectView',
           },
           reportedBy: {
             type: 'string',
@@ -267,27 +308,63 @@ export const schemaDict = {
               type: 'integer',
             },
           },
+          subjectStatus: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#subjectStatusType',
+          },
+        },
+      },
+      subjectView: {
+        type: 'object',
+        required: ['id', 'subject', 'updatedAt', 'status'],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          subject: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.admin.defs#repoRef',
+              'lex:com.atproto.repo.strongRef',
+            ],
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          status: {
+            type: 'string',
+            knownValues: [
+              'lex:com.atproto.admin.defs#resolved',
+              'lex:com.atproto.admin.defs#escalated',
+              'lex:com.atproto.admin.defs#takendown',
+              'lex:com.atproto.admin.defs#muted',
+              'lex:com.atproto.admin.defs#needsReview',
+            ],
+          },
         },
       },
       reportViewDetail: {
         type: 'object',
         required: [
           'id',
-          'reasonType',
+          'commentType',
           'subject',
+          'subjectView',
           'reportedBy',
           'createdAt',
           'resolvedByActions',
+          'subjectStatus',
         ],
         properties: {
           id: {
             type: 'integer',
           },
-          reasonType: {
+          commentType: {
             type: 'ref',
-            ref: 'lex:com.atproto.moderation.defs#reasonType',
+            ref: 'lex:com.atproto.moderation.defs#commentType',
           },
-          reason: {
+          comment: {
             type: 'string',
           },
           subject: {
@@ -298,6 +375,10 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#recordView',
               'lex:com.atproto.admin.defs#recordViewNotFound',
             ],
+          },
+          subjectView: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#subjectView',
           },
           reportedBy: {
             type: 'string',
@@ -313,6 +394,10 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.admin.defs#actionView',
             },
+          },
+          subjectStatus: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#subjectStatusType',
           },
         },
       },
@@ -639,6 +724,41 @@ export const schemaDict = {
             type: 'integer',
           },
         },
+      },
+      subjectStatusType: {
+        type: 'string',
+        knownValues: [
+          'lex:com.atproto.admin.defs#reported',
+          'lex:com.atproto.admin.defs#resolved',
+          'lex:com.atproto.admin.defs#takendown',
+          'lex:com.atproto.admin.defs#acknowledged',
+          'lex:com.atproto.admin.defs#muted',
+        ],
+      },
+      reported: {
+        type: 'token',
+        description:
+          'Moderation status of a subject: reported. Indicates that the subject was reported',
+      },
+      resolved: {
+        type: 'token',
+        description:
+          'Moderation status of a subject: resolved. Indicates that the reports on the subject were marked as resolved ',
+      },
+      takendown: {
+        type: 'token',
+        description:
+          'Moderation status of a subject: takendown. Indicates that the subject was taken down',
+      },
+      acknowledged: {
+        type: 'token',
+        description:
+          'Moderation status of a subject: acknowledged. Indicates that the reports on the subject were acknowledged by moderator',
+      },
+      muted: {
+        type: 'token',
+        description:
+          'Moderation status of a subject: muted. Indicates that reports were muted by a moderator',
       },
     },
   },
@@ -1026,81 +1146,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminResolveModerationReports: {
-    lexicon: 1,
-    id: 'com.atproto.admin.resolveModerationReports',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Resolve moderation reports by an action.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['actionId', 'reportIds', 'createdBy'],
-            properties: {
-              actionId: {
-                type: 'integer',
-              },
-              reportIds: {
-                type: 'array',
-                items: {
-                  type: 'integer',
-                },
-              },
-              createdBy: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionView',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminReverseModerationAction: {
-    lexicon: 1,
-    id: 'com.atproto.admin.reverseModerationAction',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Reverse a moderation action.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['id', 'reason', 'createdBy'],
-            properties: {
-              id: {
-                type: 'integer',
-              },
-              reason: {
-                type: 'string',
-              },
-              createdBy: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionView',
-          },
-        },
-      },
-    },
-  },
   ComAtprotoAdminSearchRepos: {
     lexicon: 1,
     id: 'com.atproto.admin.searchRepos',
@@ -1202,7 +1247,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['action', 'subject', 'reason', 'createdBy'],
+            required: ['action', 'subject', 'createdBy'],
             properties: {
               action: {
                 type: 'string',
@@ -1210,6 +1255,12 @@ export const schemaDict = {
                   'com.atproto.admin.defs#takedown',
                   'com.atproto.admin.defs#flag',
                   'com.atproto.admin.defs#acknowledge',
+                  'com.atproto.admin.defs#escalate',
+                  'com.atproto.admin.defs#comment',
+                  'com.atproto.admin.defs#label',
+                  'com.atproto.admin.defs#revert',
+                  'com.atproto.admin.defs#report',
+                  'com.atproto.admin.defs#mute',
                 ],
               },
               subject: {
@@ -1238,7 +1289,7 @@ export const schemaDict = {
                   type: 'string',
                 },
               },
-              reason: {
+              comment: {
                 type: 'string',
               },
               durationInHours: {
@@ -1249,6 +1300,15 @@ export const schemaDict = {
               createdBy: {
                 type: 'string',
                 format: 'did',
+              },
+              meta: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.takeModerationAction#actionMeta',
+              },
+              refEventId: {
+                type: 'integer',
+                description:
+                  'If the event needs a reference to previous event, for instance, when reverting a previous action, the reference event id should be passed',
               },
             },
           },
@@ -1265,6 +1325,14 @@ export const schemaDict = {
             name: 'SubjectHasAction',
           },
         ],
+      },
+      actionMeta: {
+        type: 'object',
+        properties: {
+          reportType: {
+            type: 'string',
+          },
+        },
       },
     },
   },
@@ -6940,10 +7008,6 @@ export const ids = {
   ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
-  ComAtprotoAdminResolveModerationReports:
-    'com.atproto.admin.resolveModerationReports',
-  ComAtprotoAdminReverseModerationAction:
-    'com.atproto.admin.reverseModerationAction',
   ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',
   ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
