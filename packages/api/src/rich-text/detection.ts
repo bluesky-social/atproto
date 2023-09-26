@@ -90,7 +90,7 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
         features: [
           {
             $type: 'app.bsky.richtext.facet#tag',
-            tag,
+            tag: tag.replace(/^#/, ''),
           },
         ],
       })
