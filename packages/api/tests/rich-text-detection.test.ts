@@ -216,28 +216,28 @@ describe('detectFacets', () => {
       string[],
       { byteStart: number; byteEnd: number }[],
     ][] = [
-      ['#a', ['#a'], [{ byteStart: 0, byteEnd: 2 }]],
+      ['#a', ['a'], [{ byteStart: 0, byteEnd: 2 }]],
       [
         '#a #b',
-        ['#a', '#b'],
+        ['a', 'b'],
         [
           { byteStart: 0, byteEnd: 2 },
           { byteStart: 3, byteEnd: 5 },
         ],
       ],
       ['#1', [], []],
-      ['#tag', ['#tag'], [{ byteStart: 0, byteEnd: 4 }]],
-      ['body #tag', ['#tag'], [{ byteStart: 5, byteEnd: 9 }]],
-      ['#tag body', ['#tag'], [{ byteStart: 0, byteEnd: 4 }]],
-      ['body #tag body', ['#tag'], [{ byteStart: 5, byteEnd: 9 }]],
+      ['#tag', ['tag'], [{ byteStart: 0, byteEnd: 4 }]],
+      ['body #tag', ['tag'], [{ byteStart: 5, byteEnd: 9 }]],
+      ['#tag body', ['tag'], [{ byteStart: 0, byteEnd: 4 }]],
+      ['body #tag body', ['tag'], [{ byteStart: 5, byteEnd: 9 }]],
       ['body #1', [], []],
-      ['body #a1', ['#a1'], [{ byteStart: 5, byteEnd: 8 }]],
+      ['body #a1', ['a1'], [{ byteStart: 5, byteEnd: 8 }]],
       ['#', [], []],
       ['text #', [], []],
       ['text # text', [], []],
       [
         'body #thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-        ['#thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'],
+        ['thisisa64characterstring_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'],
         [{ byteStart: 5, byteEnd: 71 }],
       ],
       [
@@ -247,19 +247,19 @@ describe('detectFacets', () => {
       ],
       [
         'its a #double#rainbow',
-        ['#double#rainbow'],
+        ['double#rainbow'],
         [{ byteStart: 6, byteEnd: 21 }],
       ],
-      ['##hashash', ['##hashash'], [{ byteStart: 0, byteEnd: 9 }]],
-      ['some #n0n3s@n5e!', ['#n0n3s@n5e'], [{ byteStart: 5, byteEnd: 15 }]],
+      ['##hashash', ['#hashash'], [{ byteStart: 0, byteEnd: 9 }]],
+      ['some #n0n3s@n5e!', ['n0n3s@n5e'], [{ byteStart: 5, byteEnd: 15 }]],
       [
         'works #with,punctuation',
-        ['#with,punctuation'],
+        ['with,punctuation'],
         [{ byteStart: 6, byteEnd: 23 }],
       ],
       [
         'strips trailing #punctuation, #like. #this!',
-        ['#punctuation', '#like', '#this'],
+        ['punctuation', 'like', 'this'],
         [
           { byteStart: 16, byteEnd: 28 },
           { byteStart: 30, byteEnd: 35 },
@@ -268,12 +268,12 @@ describe('detectFacets', () => {
       ],
       [
         'strips #multi_trailing___...',
-        ['#multi_trailing'],
+        ['multi_trailing'],
         [{ byteStart: 7, byteEnd: 22 }],
       ],
       [
         'works with #🦋 emoji, and #butter🦋fly',
-        ['#🦋', '#butter🦋fly'],
+        ['🦋', 'butter🦋fly'],
         [
           { byteStart: 11, byteEnd: 16 },
           { byteStart: 28, byteEnd: 42 },
@@ -281,7 +281,7 @@ describe('detectFacets', () => {
       ],
       [
         '#same #same #but #diff',
-        ['#same', '#same', '#but', '#diff'],
+        ['same', 'same', 'but', 'diff'],
         [
           { byteStart: 0, byteEnd: 5 },
           { byteStart: 6, byteEnd: 11 },
@@ -298,7 +298,7 @@ describe('detectFacets', () => {
       let detectedTags: string[] = []
       let detectedIndices: { byteStart: number; byteEnd: number }[] = []
 
-      for (const { facet } of rt.segments()) {
+      for (const { facet, ...rest } of rt.segments()) {
         if (!facet) continue
         for (const feature of facet.features) {
           if (isTag(feature)) {
