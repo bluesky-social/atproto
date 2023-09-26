@@ -1,9 +1,6 @@
 import { sql } from 'kysely'
-<<<<<<< HEAD
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-=======
->>>>>>> main
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import * as scrypt from '../../db/scrypt'
@@ -11,18 +8,10 @@ import { UserAccountEntry } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
 import { countAll, notSoftDeletedClause } from '../../db/util'
-<<<<<<< HEAD
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
-=======
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
-import { paginate, TimeCidKeyset } from '../../db/pagination'
-import * as sequencer from '../../sequencer'
-import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
-import { randomStr } from '@atproto/crypto'
-import { InvalidRequestError } from '@atproto/xrpc-server'
->>>>>>> main
 
 export class AccountService {
   constructor(public db: Database) {}
@@ -285,120 +274,12 @@ export class AccountService {
       .execute()
   }
 
-<<<<<<< HEAD
-=======
-  async mute(info: { did: string; mutedByDid: string; createdAt?: Date }) {
-    const { did, mutedByDid, createdAt = new Date() } = info
-    await this.db.db
-      .insertInto('mute')
-      .values({
-        did,
-        mutedByDid,
-        createdAt: createdAt.toISOString(),
-      })
-      .onConflict((oc) => oc.doNothing())
-      .execute()
-  }
-
-  async unmute(info: { did: string; mutedByDid: string }) {
-    const { did, mutedByDid } = info
-    await this.db.db
-      .deleteFrom('mute')
-      .where('did', '=', did)
-      .where('mutedByDid', '=', mutedByDid)
-      .execute()
-  }
-
-  async getMute(mutedBy: string, did: string): Promise<boolean> {
-    const mutes = await this.getMutes(mutedBy, [did])
-    return mutes[did] ?? false
-  }
-
-  async getMutes(
-    mutedBy: string,
-    dids: string[],
-  ): Promise<Record<string, boolean>> {
-    if (dids.length === 0) return {}
-    const res = await this.db.db
-      .selectFrom('mute')
-      .where('mutedByDid', '=', mutedBy)
-      .where('did', 'in', dids)
-      .selectAll()
-      .execute()
-    return res.reduce((acc, cur) => {
-      acc[cur.did] = true
-      return acc
-    }, {} as Record<string, boolean>)
-  }
-
-  async muteActorList(info: {
-    list: string
-    mutedByDid: string
-    createdAt?: Date
-  }) {
-    const { list, mutedByDid, createdAt = new Date() } = info
-    await this.db.db
-      .insertInto('list_mute')
-      .values({
-        listUri: list,
-        mutedByDid,
-        createdAt: createdAt.toISOString(),
-      })
-      .onConflict((oc) => oc.doNothing())
-      .execute()
-  }
-
-  async unmuteActorList(info: { list: string; mutedByDid: string }) {
-    const { list, mutedByDid } = info
-    await this.db.db
-      .deleteFrom('list_mute')
-      .where('listUri', '=', list)
-      .where('mutedByDid', '=', mutedByDid)
-      .execute()
-  }
-
->>>>>>> main
   async search(opts: {
     term: string
     limit: number
     cursor?: string
     includeSoftDeleted?: boolean
   }): Promise<(RepoRoot & DidHandle)[]> {
-    const { term, limit, cursor, includeSoftDeleted } = opts
-    const { ref } = this.db.db.dynamic
-
-<<<<<<< HEAD
-    const builder = this.db.db
-      .selectFrom('did_handle')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
-      .innerJoin('user_account', 'user_account.did', 'did_handle.did')
-      .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
-      )
-      .where((qb) => {
-        // sqlite doesn't support "ilike", but performs "like" case-insensitively
-        const likeOp = this.db.dialect === 'pg' ? 'ilike' : 'like'
-        if (term.includes('@')) {
-          return qb.where('user_account.email', likeOp, `%${term}%`)
-        }
-        if (term.startsWith('did:')) {
-          return qb.where('did_handle.did', '=', term)
-        }
-        return qb.where('did_handle.handle', likeOp, `${term}%`)
-      })
-      .selectAll(['did_handle', 'repo_root'])
-
-    const keyset = new ListKeyset(
-      ref('repo_root.indexedAt'),
-      ref('did_handle.handle'),
-    )
-
-    return await paginate(builder, {
-      limit,
-      cursor,
-      keyset,
-    }).execute()
-=======
     const builder =
       this.db.dialect === 'pg'
         ? getUserSearchQueryPg(this.db, opts)
@@ -410,7 +291,6 @@ export class AccountService {
             .select(sql<number>`0`.as('distance'))
 
     return await builder.execute()
->>>>>>> main
   }
 
   async list(opts: {

@@ -8,11 +8,11 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
 
       const { data: feed } =
-        await ctx.appviewAgent.api.app.bsky.feed.getFeedGenerator(
+        await ctx.appViewAgent.api.app.bsky.feed.getFeedGenerator(
           { feed: params.feed },
           await ctx.serviceAuthHeaders(requester),
         )
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getFeed(
+      const res = await ctx.appViewAgent.api.app.bsky.feed.getFeed(
         params,
         await ctx.serviceAuthHeaders(requester, feed.view.did),
       )

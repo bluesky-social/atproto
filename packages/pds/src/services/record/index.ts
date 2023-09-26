@@ -70,22 +70,14 @@ export class RecordService {
   async deleteRecord(uri: AtUri) {
     this.db.assertTransaction()
     log.debug({ uri }, 'deleting indexed record')
-    await this.db.db
-      .deleteFrom('backlink')
-      .where('uri', '=', uri.toString())
-<<<<<<< HEAD
-      .execute()
-    await this.db.db
+    const deleteQuery = this.db.db
       .deleteFrom('record')
       .where('uri', '=', uri.toString())
-      .execute()
-=======
     const backlinkQuery = this.db.db
       .deleteFrom('backlink')
       .where('uri', '=', uri.toString())
     await Promise.all([deleteQuery.execute(), backlinkQuery.execute()])
 
->>>>>>> main
     log.info({ uri }, 'deleted indexed record')
   }
 

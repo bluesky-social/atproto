@@ -14,32 +14,20 @@ import { LocalService } from './local'
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
   blobstore: BlobStore
-<<<<<<< HEAD
   pdsHostname: string
   appViewAgent?: AtpAgent
   appViewDid?: string
   appViewCdnUrlPattern?: string
-=======
-  appviewAgent?: AtpAgent
-  appviewDid?: string
-  appviewCdnUrlPattern?: string
->>>>>>> main
   backgroundQueue: BackgroundQueue
   crawlers: Crawlers
 }): Services {
   const {
     repoSigningKey,
     blobstore,
-<<<<<<< HEAD
     pdsHostname,
     appViewAgent,
     appViewDid,
     appViewCdnUrlPattern,
-=======
-    appviewAgent,
-    appviewDid,
-    appviewCdnUrlPattern,
->>>>>>> main
     backgroundQueue,
     crawlers,
   } = resources

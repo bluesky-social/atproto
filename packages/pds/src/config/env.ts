@@ -68,6 +68,7 @@ export const readEnv = (): ServerEnvironment => {
     // rate limits
     rateLimitsEnabled: envBool(process.env.PDS_RATE_LIMITS_ENABLED),
     rateLimitBypassKey: envStr(process.env.PDS_RATE_LIMIT_BYPASS_KEY),
+    rateLimitBypassIps: envList(process.env.PDS_RATE_LIMIT_BYPASS_IPS),
 
     // redis
     redisScratchAddress: envStr(process.env.PDS_REDIS_SCRATCH_ADDRESS),
@@ -155,6 +156,7 @@ export type ServerEnvironment = {
   // rate limits
   rateLimitsEnabled?: boolean
   rateLimitBypassKey?: string
+  rateLimitBypassIps?: string[]
 
   // redis
   redisScratchAddress?: string

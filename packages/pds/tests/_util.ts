@@ -13,10 +13,7 @@ import { PDS, Database } from '../src'
 import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
 import AppContext from '../src/context'
 import { lexToJson } from '@atproto/lexicon'
-<<<<<<< HEAD
 import { ServerEnvironment, envToCfg, envToSecrets } from '../src/config'
-=======
->>>>>>> main
 
 const ADMIN_PASSWORD = 'admin-pass'
 const MODERATOR_PASSWORD = 'moderator-pass'
@@ -84,26 +81,9 @@ export const runTestServer = async (
     adminPassword: ADMIN_PASSWORD,
     moderatorPassword: MODERATOR_PASSWORD,
     jwtSecret: 'jwt-secret',
-<<<<<<< HEAD
     inviteRequired: false,
     inviteEpoch: Date.now(),
     triagePassword: TRIAGE_PASSWORD,
-=======
-    availableUserDomains: ['.test'],
-    rateLimitsEnabled: false,
-    appUrlPasswordReset: 'app://forgot-password',
-    emailNoReplyAddress: 'noreply@blueskyweb.xyz',
-    publicUrl: 'https://pds.public.url',
-    dbPostgresUrl: process.env.DB_POSTGRES_URL,
-    blobstoreLocation: `${blobstoreLoc}/blobs`,
-    blobstoreTmp: `${blobstoreLoc}/tmp`,
-    maxSubscriptionBuffer: 200,
-    repoBackfillLimitMs: HOUR,
-    sequencerLeaderLockId: uniqueLockId(),
-    bskyAppViewEndpoint: 'http://fake_address.invalid',
-    bskyAppViewDid: 'did:example:fake',
-    dbTxLockNonce: await randomStr(32, 'base32'),
->>>>>>> main
     ...params,
   }
 
@@ -130,21 +110,6 @@ export const runTestServer = async (
     await migrationDb.close()
   }
 
-<<<<<<< HEAD
-=======
-  const blobstore =
-    cfg.blobstoreLocation !== undefined
-      ? await DiskBlobStore.create(cfg.blobstoreLocation, cfg.blobstoreTmp)
-      : new MemoryBlobStore()
-
-  const pds = PDS.create({
-    db,
-    blobstore,
-    repoSigningKey,
-    plcRotationKey,
-    config: cfg,
-  })
->>>>>>> main
   const pdsServer = await pds.start()
   const pdsPort = (pdsServer.address() as AddressInfo).port
 

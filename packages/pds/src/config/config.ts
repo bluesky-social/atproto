@@ -156,6 +156,9 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         enabled: true,
         mode: redisCfg !== null ? 'redis' : 'memory',
         bypassKey: env.rateLimitBypassKey,
+        bypassIps: env.rateLimitBypassIps?.map((ipOrCidr) =>
+          ipOrCidr.split('/')[0]?.trim(),
+        ),
       }
     : { enabled: false }
 
@@ -273,6 +276,7 @@ export type RateLimitsConfig =
       enabled: true
       mode: 'memory' | 'redis'
       bypassKey?: string
+      bypassIps?: string[]
     }
   | { enabled: false }
 

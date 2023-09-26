@@ -17,23 +17,9 @@ export default function (server: Server, ctx: AppContext) {
       if (!record) {
         throw new InvalidRequestError(`Could not locate record: ${uri}`)
       }
-<<<<<<< HEAD
     }
 
     const res = await ctx.appViewAgent.api.com.atproto.repo.getRecord(params)
-=======
-      return {
-        encoding: 'application/json',
-        body: {
-          uri: record.uri,
-          cid: record.cid,
-          value: record.value,
-        },
-      }
-    }
-
-    const res = await ctx.appviewAgent.api.com.atproto.repo.getRecord(params)
->>>>>>> main
     return {
       encoding: 'application/json',
       body: res.data,

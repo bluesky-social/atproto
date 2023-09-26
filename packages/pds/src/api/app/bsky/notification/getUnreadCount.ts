@@ -7,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
       const res =
-        await ctx.appviewAgent.api.app.bsky.notification.getUnreadCount(
+        await ctx.appViewAgent.api.app.bsky.notification.getUnreadCount(
           params,
           await ctx.serviceAuthHeaders(requester),
         )

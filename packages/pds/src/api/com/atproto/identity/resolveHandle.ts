@@ -33,14 +33,8 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     // this is not someone on our server, but we help with resolving anyway
-<<<<<<< HEAD
-
     if (!did) {
       did = await tryResolveFromAppview(ctx.appViewAgent, handle)
-=======
-    if (!did) {
-      did = await tryResolveFromAppview(ctx.appviewAgent, handle)
->>>>>>> main
     }
 
     if (!did) {

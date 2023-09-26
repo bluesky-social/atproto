@@ -12,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ req, params, auth }) => {
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getAuthorFeed(
+      const res = await ctx.appViewAgent.api.app.bsky.feed.getAuthorFeed(
         params,
         requester ? await ctx.serviceAuthHeaders(requester) : authPassthru(req),
       )

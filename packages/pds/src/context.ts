@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 import * as nodemailer from 'nodemailer'
-=======
->>>>>>> main
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
@@ -16,20 +13,13 @@ import { ServerAuth } from './auth'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
-<<<<<<< HEAD
 import { Services, createServices } from './services'
-=======
-import { Services } from './services'
->>>>>>> main
 import { Sequencer, SequencerLeader } from './sequencer'
 import { BackgroundQueue } from './background'
 import DidSqlCache from './did-cache'
 import { Crawlers } from './crawlers'
-<<<<<<< HEAD
 import { DiskBlobStore } from './storage'
 import { getRedisClient } from './redis'
-=======
->>>>>>> main
 import { RuntimeFlags } from './runtime-flags'
 
 export type AppContextOptions = {
@@ -55,7 +45,6 @@ export type AppContextOptions = {
 }
 
 export class AppContext {
-<<<<<<< HEAD
   public db: Database
   public blobstore: BlobStore
   public mailer: ServerMailer
@@ -146,34 +135,6 @@ export class AppContext {
       timeout: cfg.identity.resolverTimeout,
     })
     const plcClient = new plc.Client(cfg.identity.plcUrl)
-=======
-  constructor(
-    private opts: {
-      db: Database
-      blobstore: BlobStore
-      redisScratch?: Redis
-      repoSigningKey: crypto.Keypair
-      plcRotationKey: crypto.Keypair
-      idResolver: IdResolver
-      didCache: DidSqlCache
-      auth: auth.ServerAuth
-      cfg: ServerConfig
-      mailer: ServerMailer
-      moderationMailer: ModerationMailer
-      services: Services
-      sequencer: Sequencer
-      sequencerLeader: SequencerLeader | null
-      runtimeFlags: RuntimeFlags
-      backgroundQueue: BackgroundQueue
-      appviewAgent: AtpAgent
-      crawlers: Crawlers
-    },
-  ) {}
-
-  get db(): Database {
-    return this.opts.db
-  }
->>>>>>> main
 
     const sequencer = new Sequencer(db)
     const sequencerLeader = cfg.subscription.sequencerLeaderEnabled
@@ -278,61 +239,6 @@ export class AppContext {
     return auth.optionalAccessOrRoleVerifier(this.auth)
   }
 
-<<<<<<< HEAD
-=======
-  get cfg(): ServerConfig {
-    return this.opts.cfg
-  }
-
-  get mailer(): ServerMailer {
-    return this.opts.mailer
-  }
-
-  get moderationMailer(): ModerationMailer {
-    return this.opts.moderationMailer
-  }
-
-  get services(): Services {
-    return this.opts.services
-  }
-
-  get sequencer(): Sequencer {
-    return this.opts.sequencer
-  }
-
-  get sequencerLeader(): SequencerLeader | null {
-    return this.opts.sequencerLeader
-  }
-
-  get runtimeFlags(): RuntimeFlags {
-    return this.opts.runtimeFlags
-  }
-
-  get backgroundQueue(): BackgroundQueue {
-    return this.opts.backgroundQueue
-  }
-
-  get crawlers(): Crawlers {
-    return this.opts.crawlers
-  }
-
-  get plcClient(): plc.Client {
-    return new plc.Client(this.cfg.didPlcUrl)
-  }
-
-  get idResolver(): IdResolver {
-    return this.opts.idResolver
-  }
-
-  get didCache(): DidSqlCache {
-    return this.opts.didCache
-  }
-
-  get appviewAgent(): AtpAgent {
-    return this.opts.appviewAgent
-  }
-
->>>>>>> main
   async serviceAuthHeaders(did: string, audience?: string) {
     const aud = audience ?? this.cfg.bskyAppView.did
     if (!aud) {
@@ -344,23 +250,6 @@ export class AppContext {
       keypair: this.repoSigningKey,
     })
   }
-<<<<<<< HEAD
-=======
-
-  shouldProxyModeration(): boolean {
-    return (
-      this.cfg.bskyAppViewEndpoint !== undefined &&
-      this.cfg.bskyAppViewModeration === true
-    )
-  }
-
-  canProxyWrite(): boolean {
-    return (
-      this.cfg.bskyAppViewEndpoint !== undefined &&
-      this.cfg.bskyAppViewDid !== undefined
-    )
-  }
->>>>>>> main
 }
 
 export default AppContext

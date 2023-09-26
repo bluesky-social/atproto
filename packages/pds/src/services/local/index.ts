@@ -40,7 +40,7 @@ export class LocalService {
     public db: Database,
     public signingKey: Keypair,
     public pdsHostname: string,
-    public appviewAgent?: AtpAgent,
+    public appViewAgent?: AtpAgent,
     public appviewDid?: string,
     public appviewCdnUrlPattern?: string,
   ) {}
@@ -48,7 +48,7 @@ export class LocalService {
   static creator(
     signingKey: Keypair,
     pdsHostname: string,
-    appviewAgent?: AtpAgent,
+    appViewAgent?: AtpAgent,
     appviewDid?: string,
     appviewCdnUrlPattern?: string,
   ) {
@@ -57,7 +57,7 @@ export class LocalService {
         db,
         signingKey,
         pdsHostname,
-        appviewAgent,
+        appViewAgent,
         appviewDid,
         appviewCdnUrlPattern,
       )
@@ -258,12 +258,12 @@ export class LocalService {
   }
 
   async formatRecordEmbedInternal(did: string, embed: EmbedRecord) {
-    if (!this.appviewAgent || !this.appviewDid) {
+    if (!this.appViewAgent || !this.appviewDid) {
       return null
     }
     const collection = new AtUri(embed.record.uri).collection
     if (collection === ids.AppBskyFeedPost) {
-      const res = await this.appviewAgent.api.app.bsky.feed.getPosts(
+      const res = await this.appViewAgent.api.app.bsky.feed.getPosts(
         {
           uris: [embed.record.uri],
         },
@@ -282,7 +282,7 @@ export class LocalService {
         indexedAt: post.indexedAt,
       }
     } else if (collection === ids.AppBskyFeedGenerator) {
-      const res = await this.appviewAgent.api.app.bsky.feed.getFeedGenerator(
+      const res = await this.appViewAgent.api.app.bsky.feed.getFeedGenerator(
         {
           feed: embed.record.uri,
         },
@@ -293,7 +293,7 @@ export class LocalService {
         ...res.data.view,
       }
     } else if (collection === ids.AppBskyGraphList) {
-      const res = await this.appviewAgent.api.app.bsky.graph.getList(
+      const res = await this.appViewAgent.api.app.bsky.graph.getList(
         {
           list: embed.record.uri,
         },

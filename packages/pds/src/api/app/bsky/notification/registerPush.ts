@@ -3,7 +3,7 @@ import AppContext from '../../../../context'
 import { getNotif } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtpAgent } from '@atproto/api'
-import { getDidDoc } from './util'
+import { getDidDoc } from '../util/resolver'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.registerPush({
