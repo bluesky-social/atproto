@@ -17,7 +17,7 @@
         }
       },
       "errors": [
-        { "name": "UserNotFound" },
+        { "name": "AccountNotFound" },
         { "name": "ExpiredToken" },
         { "name": "InvalidToken" },
         { "name": "InvalidEmail" }

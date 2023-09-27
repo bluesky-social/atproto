@@ -1,4 +1,3 @@
-import express from 'express'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
@@ -11,16 +10,11 @@ import * as auth from './auth'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
-import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
-import { MessageDispatcher } from './event-stream/message-queue'
 import { Sequencer, SequencerLeader } from './sequencer'
-import { Labeler } from './labeler'
-import { BackgroundQueue } from './event-stream/background-queue'
+import { BackgroundQueue } from './background'
 import DidSqlCache from './did-cache'
-import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
-import { LabelCache } from './label-cache'
 import { RuntimeFlags } from './runtime-flags'
 
 export class AppContext {
@@ -34,21 +28,16 @@ export class AppContext {
       idResolver: IdResolver
       didCache: DidSqlCache
       auth: auth.ServerAuth
-      imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       mailer: ServerMailer
       moderationMailer: ModerationMailer
       services: Services
-      messageDispatcher: MessageDispatcher
       sequencer: Sequencer
       sequencerLeader: SequencerLeader | null
-      labeler: Labeler
-      labelCache: LabelCache
       runtimeFlags: RuntimeFlags
       backgroundQueue: BackgroundQueue
-      appviewAgent?: AtpAgent
+      appviewAgent: AtpAgent
       crawlers: Crawlers
-      algos: MountedAlgos
     },
   ) {}
 
@@ -104,10 +93,6 @@ export class AppContext {
     return auth.optionalAccessOrRoleVerifier(this.auth)
   }
 
-  get imgUriBuilder(): ImageUriBuilder {
-    return this.opts.imgUriBuilder
-  }
-
   get cfg(): ServerConfig {
     return this.opts.cfg
   }
@@ -124,24 +109,12 @@ export class AppContext {
     return this.opts.services
   }
 
-  get messageDispatcher(): MessageDispatcher {
-    return this.opts.messageDispatcher
-  }
-
   get sequencer(): Sequencer {
     return this.opts.sequencer
   }
 
   get sequencerLeader(): SequencerLeader | null {
     return this.opts.sequencerLeader
-  }
-
-  get labeler(): Labeler {
-    return this.opts.labeler
-  }
-
-  get labelCache(): LabelCache {
-    return this.opts.labelCache
   }
 
   get runtimeFlags(): RuntimeFlags {
@@ -168,8 +141,8 @@ export class AppContext {
     return this.opts.didCache
   }
 
-  get algos(): MountedAlgos {
-    return this.opts.algos
+  get appviewAgent(): AtpAgent {
+    return this.opts.appviewAgent
   }
 
   async serviceAuthHeaders(did: string, audience?: string) {
@@ -182,40 +155,6 @@ export class AppContext {
       aud,
       keypair: this.repoSigningKey,
     })
-  }
-
-  get appviewAgent(): AtpAgent {
-    if (!this.opts.appviewAgent) {
-      throw new Error('Could not find bsky appview endpoint')
-    }
-    return this.opts.appviewAgent
-  }
-
-  async canProxyRead(
-    req: express.Request,
-    did?: string | null,
-  ): Promise<boolean> {
-    if (!this.cfg.bskyAppViewProxy || !this.cfg.bskyAppViewEndpoint) {
-      return false
-    }
-    if (req.get('x-appview-proxy') !== undefined) {
-      return true
-    }
-    // e.g. /xrpc/a.b.c.d/ -> a.b.c.d/ -> a.b.c.d
-    const endpoint = req.path.replace('/xrpc/', '').replaceAll('/', '')
-    if (!did) {
-      // when no did assigned, only proxy reads if threshold is at max of 10
-      const threshold = this.runtimeFlags.appviewProxy.getThreshold(endpoint)
-      return threshold === 10
-    }
-    return await this.runtimeFlags.appviewProxy.shouldProxy(endpoint, did)
-  }
-
-  canProxyFeedConstruction(req: express.Request): boolean {
-    return (
-      this.cfg.bskyAppViewEndpoint !== undefined &&
-      req.get('x-appview-proxy') !== undefined
-    )
   }
 
   shouldProxyModeration(): boolean {

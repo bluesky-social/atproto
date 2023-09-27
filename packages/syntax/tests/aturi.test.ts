@@ -1,4 +1,6 @@
 import { AtUri, ensureValidAtUri, ensureValidAtUriRegex } from '../src/index'
+import * as readline from 'readline'
+import * as fs from 'fs'
 
 describe('At Uris', () => {
   it('parses valid at uris', () => {
@@ -503,4 +505,21 @@ describe('AtUri validation', () => {
     expectValid('at://did:plc:asdf123#/;')
     expectValid('at://did:plc:asdf123#/,')
   })
+
+  it('conforms to interop valid ATURIs', () => {
+    const lineReader = readline.createInterface({
+      input: fs.createReadStream(
+        `${__dirname}/interop-files/aturi_syntax_valid.txt`,
+      ),
+      terminal: false,
+    })
+    lineReader.on('line', (line) => {
+      if (line.startsWith('#') || line.length == 0) {
+        return
+      }
+      expectValid(line)
+    })
+  })
+
+  // NOTE: this package is currently more permissive than spec about AT URIs, so invalid cases are not errors
 })

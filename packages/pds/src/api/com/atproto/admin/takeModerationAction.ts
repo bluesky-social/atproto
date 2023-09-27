@@ -29,7 +29,6 @@ export default function (server: Server, ctx: AppContext) {
         const transact = db.transaction(async (dbTxn) => {
           const authTxn = services.auth(dbTxn)
           const moderationTxn = services.moderation(dbTxn)
-          const labelTxn = services.appView.label(dbTxn)
           // perform takedowns
           if (result.action === TAKEDOWN && isRepoRef(result.subject)) {
             await authTxn.revokeRefreshTokensByDid(result.subject.did)
@@ -44,18 +43,6 @@ export default function (server: Server, ctx: AppContext) {
               uri: new AtUri(result.subject.uri),
               blobCids: result.subjectBlobCids.map((cid) => CID.parse(cid)),
             })
-          }
-          // apply label creation & negations
-          const applyLabels = (uri: string, cid: string | null) =>
-            labelTxn.formatAndCreate(ctx.cfg.labelerDid, uri, cid, {
-              create: result.createLabelVals,
-              negate: result.negateLabelVals,
-            })
-          if (isRepoRef(result.subject)) {
-            await applyLabels(result.subject.did, null)
-          }
-          if (isStrongRef(result.subject)) {
-            await applyLabels(result.subject.uri, result.subject.cid)
           }
         })
 
@@ -113,7 +100,6 @@ export default function (server: Server, ctx: AppContext) {
       const moderationAction = await db.transaction(async (dbTxn) => {
         const authTxn = services.auth(dbTxn)
         const moderationTxn = services.moderation(dbTxn)
-        const labelTxn = services.appView.label(dbTxn)
 
         const result = await moderationTxn.logAction({
           action: getAction(action),
@@ -149,13 +135,6 @@ export default function (server: Server, ctx: AppContext) {
             blobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
           })
         }
-
-        await labelTxn.formatAndCreate(
-          ctx.cfg.labelerDid,
-          result.subjectUri ?? result.subjectDid,
-          result.subjectCid,
-          { create: createLabelVals, negate: negateLabelVals },
-        )
 
         return result
       })

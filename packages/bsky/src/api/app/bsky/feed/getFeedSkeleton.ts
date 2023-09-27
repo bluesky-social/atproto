@@ -1,6 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { toSkeletonItem } from '../../../../feed-gen/types'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedSkeleton({
@@ -14,24 +15,14 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Unknown feed', 'UnknownFeed')
       }
 
-      const { cursor, feedItems } = await localAlgo(ctx, params, viewer)
-
-      const skeleton = feedItems.map((item) => ({
-        post: item.postUri,
-        reason:
-          item.uri === item.postUri
-            ? undefined
-            : {
-                $type: 'app.bsky.feed.defs#skeletonReasonRepost',
-                repost: item.uri,
-              },
-      }))
+      const result = await localAlgo(ctx, params, viewer)
 
       return {
         encoding: 'application/json',
         body: {
-          cursor,
-          feed: skeleton,
+          // @TODO should we proactively filter blocks/mutes from the skeleton, or treat this similar to other custom feeds?
+          feed: result.feedItems.map(toSkeletonItem),
+          cursor: result.cursor,
         },
       }
     },

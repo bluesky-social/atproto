@@ -1113,6 +1113,10 @@ export const schemaDict = {
           properties: {
             term: {
               type: 'string',
+              description: "DEPRECATED: use 'q' instead",
+            },
+            q: {
+              type: 'string',
             },
             invitedBy: {
               type: 'string',
@@ -2263,7 +2267,7 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'UserNotFound',
+            name: 'AccountNotFound',
           },
           {
             name: 'ExpiredToken',
@@ -3266,7 +3270,6 @@ export const schemaDict = {
             },
             since: {
               type: 'string',
-              format: 'cid',
               description: 'The revision of the repo to catch up from.',
             },
           },
@@ -3295,7 +3298,6 @@ export const schemaDict = {
             },
             since: {
               type: 'string',
-              format: 'cid',
               description: 'Optional revision of the repo to list blobs since',
             },
             limit: {
@@ -3636,32 +3638,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoTempUpgradeRepoVersion: {
-    lexicon: 1,
-    id: 'com.atproto.temp.upgradeRepoVersion',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Upgrade a repo to v3',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['did'],
-            properties: {
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-              force: {
-                type: 'boolean',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyActorDefs: {
     lexicon: 1,
     id: 'app.bsky.actor.defs',
@@ -3832,6 +3808,8 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#contentLabelPref',
             'lex:app.bsky.actor.defs#savedFeedsPref',
             'lex:app.bsky.actor.defs#personalDetailsPref',
+            'lex:app.bsky.actor.defs#feedViewPref',
+            'lex:app.bsky.actor.defs#threadViewPref',
           ],
         },
       },
@@ -3885,6 +3863,53 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
             description: 'The birth date of the owner of the account.',
+          },
+        },
+      },
+      feedViewPref: {
+        type: 'object',
+        required: ['feed'],
+        properties: {
+          feed: {
+            type: 'string',
+            description:
+              'The URI of the feed, or an identifier which describes the feed.',
+          },
+          hideReplies: {
+            type: 'boolean',
+            description: 'Hide replies in the feed.',
+          },
+          hideRepliesByUnfollowed: {
+            type: 'boolean',
+            description:
+              'Hide replies in the feed if they are not by followed users.',
+          },
+          hideRepliesByLikeCount: {
+            type: 'integer',
+            description:
+              'Hide replies in the feed if they do not have this number of likes.',
+          },
+          hideReposts: {
+            type: 'boolean',
+            description: 'Hide reposts in the feed.',
+          },
+          hideQuotePosts: {
+            type: 'boolean',
+            description: 'Hide quote posts in the feed.',
+          },
+        },
+      },
+      threadViewPref: {
+        type: 'object',
+        properties: {
+          sort: {
+            type: 'string',
+            description: 'Sorting mode.',
+            knownValues: ['oldest', 'newest', 'most-likes', 'random'],
+          },
+          prioritizeFollowedUsers: {
+            type: 'boolean',
+            description: 'Show followed users at the top of all replies.',
           },
         },
       },
@@ -4094,18 +4119,24 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Find actors matching search criteria.',
+        description: 'Find actors (profiles) matching search criteria.',
         parameters: {
           type: 'params',
           properties: {
             term: {
               type: 'string',
+              description: "DEPRECATED: use 'q' instead",
+            },
+            q: {
+              type: 'string',
+              description:
+                'search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended',
             },
             limit: {
               type: 'integer',
               minimum: 1,
               maximum: 100,
-              default: 50,
+              default: 25,
             },
             cursor: {
               type: 'string',
@@ -4146,12 +4177,17 @@ export const schemaDict = {
           properties: {
             term: {
               type: 'string',
+              description: "DEPRECATED: use 'q' instead",
+            },
+            q: {
+              type: 'string',
+              description: 'search query prefix; not a full query string',
             },
             limit: {
               type: 'integer',
               minimum: 1,
               maximum: 100,
-              default: 50,
+              default: 10,
             },
           },
         },
@@ -4535,6 +4571,10 @@ export const schemaDict = {
               ref: 'lex:com.atproto.label.defs#label',
             },
           },
+          threadgate: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#threadgateView',
+          },
         },
       },
       viewerState: {
@@ -4631,6 +4671,10 @@ export const schemaDict = {
               ],
             },
           },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.feed.defs#viewerThreadState',
+          },
         },
       },
       notFoundPost: {
@@ -4676,6 +4720,14 @@ export const schemaDict = {
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#viewerState',
+          },
+        },
+      },
+      viewerThreadState: {
+        type: 'object',
+        properties: {
+          canReply: {
+            type: 'boolean',
           },
         },
       },
@@ -4761,6 +4813,29 @@ export const schemaDict = {
           repost: {
             type: 'string',
             format: 'at-uri',
+          },
+        },
+      },
+      threadgateView: {
+        type: 'object',
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          record: {
+            type: 'unknown',
+          },
+          lists: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.graph.defs#listViewBasic',
+            },
           },
         },
       },
@@ -5305,6 +5380,59 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyFeedGetListFeed: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getListFeed',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'A view of a recent posts from actors in a list',
+        parameters: {
+          type: 'params',
+          required: ['list'],
+          properties: {
+            list: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['feed'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              feed: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'UnknownList',
+          },
+        ],
+      },
+    },
+  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -5626,6 +5754,16 @@ export const schemaDict = {
               type: 'union',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
             },
+            tags: {
+              type: 'array',
+              maxLength: 8,
+              items: {
+                type: 'string',
+                maxLength: 640,
+                maxGraphemes: 64,
+              },
+              description: 'Additional non-inline tags describing this post.',
+            },
             createdAt: {
               type: 'string',
               format: 'datetime',
@@ -5702,6 +5840,126 @@ export const schemaDict = {
               type: 'string',
               format: 'datetime',
             },
+          },
+        },
+      },
+    },
+  },
+  AppBskyFeedSearchPosts: {
+    lexicon: 1,
+    id: 'app.bsky.feed.searchPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Find posts matching search criteria',
+        parameters: {
+          type: 'params',
+          required: ['q'],
+          properties: {
+            q: {
+              type: 'string',
+              description:
+                'search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 25,
+            },
+            cursor: {
+              type: 'string',
+              description:
+                'optional pagination mechanism; may not necessarily allow scrolling through entire result set',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              hitsTotal: {
+                type: 'integer',
+                description:
+                  'count of search hits. optional, may be rounded/truncated, and may not be possible to paginate through all hits',
+              },
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'BadQueryString',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyFeedThreadgate: {
+    lexicon: 1,
+    id: 'app.bsky.feed.threadgate',
+    defs: {
+      main: {
+        type: 'record',
+        key: 'tid',
+        description:
+          "Defines interaction gating rules for a thread. The rkey of the threadgate record should match the rkey of the thread's root post.",
+        record: {
+          type: 'object',
+          required: ['post', 'createdAt'],
+          properties: {
+            post: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            allow: {
+              type: 'array',
+              maxLength: 5,
+              items: {
+                type: 'union',
+                refs: [
+                  'lex:app.bsky.feed.threadgate#mentionRule',
+                  'lex:app.bsky.feed.threadgate#followingRule',
+                  'lex:app.bsky.feed.threadgate#listRule',
+                ],
+              },
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+      mentionRule: {
+        type: 'object',
+        description: 'Allow replies from actors mentioned in your post.',
+        properties: {},
+      },
+      followingRule: {
+        type: 'object',
+        description: 'Allow replies from actors you follow.',
+        properties: {},
+      },
+      listRule: {
+        type: 'object',
+        description: 'Allow replies from actors on a list.',
+        required: ['list'],
+        properties: {
+          list: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -5832,18 +6090,30 @@ export const schemaDict = {
       },
       listPurpose: {
         type: 'string',
-        knownValues: ['app.bsky.graph.defs#modlist'],
+        knownValues: [
+          'app.bsky.graph.defs#modlist',
+          'app.bsky.graph.defs#curatelist',
+        ],
       },
       modlist: {
         type: 'token',
         description:
           'A list of actors to apply an aggregate moderation action (mute/block) on',
       },
+      curatelist: {
+        type: 'token',
+        description:
+          'A list of actors used for curation purposes such as list feeds or interaction gating',
+      },
       listViewerState: {
         type: 'object',
         properties: {
           muted: {
             type: 'boolean',
+          },
+          blocked: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -6073,6 +6343,49 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetListBlocks: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getListBlocks',
+    defs: {
+      main: {
+        type: 'query',
+        description: "Which lists is the requester's account blocking?",
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['lists'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              lists: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#listView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphGetListMutes: {
     lexicon: 1,
     id: 'app.bsky.graph.getListMutes',
@@ -6207,6 +6520,42 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyGraphGetSuggestedFollowsByActor: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getSuggestedFollowsByActor',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get suggested follows related to a given actor.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['suggestions'],
+            properties: {
+              suggestions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyGraphList: {
     lexicon: 1,
     id: 'app.bsky.graph.list',
@@ -6248,6 +6597,31 @@ export const schemaDict = {
             labels: {
               type: 'union',
               refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphListblock: {
+    lexicon: 1,
+    id: 'app.bsky.graph.listblock',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A block of an entire list of actors.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['subject', 'createdAt'],
+          properties: {
+            subject: {
+              type: 'string',
+              format: 'at-uri',
             },
             createdAt: {
               type: 'string',
@@ -6590,6 +6964,7 @@ export const schemaDict = {
               refs: [
                 'lex:app.bsky.richtext.facet#mention',
                 'lex:app.bsky.richtext.facet#link',
+                'lex:app.bsky.richtext.facet#tag',
               ],
             },
           },
@@ -6617,6 +6992,18 @@ export const schemaDict = {
           },
         },
       },
+      tag: {
+        type: 'object',
+        description: 'A hashtag.',
+        required: ['tag'],
+        properties: {
+          tag: {
+            type: 'string',
+            maxLength: 640,
+            maxGraphemes: 64,
+          },
+        },
+      },
       byteSlice: {
         type: 'object',
         description:
@@ -6635,27 +7022,27 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyUnspeccedApplyLabels: {
+  AppBskyUnspeccedDefs: {
     lexicon: 1,
-    id: 'app.bsky.unspecced.applyLabels',
+    id: 'app.bsky.unspecced.defs',
     defs: {
-      main: {
-        type: 'procedure',
-        description: 'Allow a labeler to apply labels directly.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['labels'],
-            properties: {
-              labels: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.label.defs#label',
-                },
-              },
-            },
+      skeletonSearchPost: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+      skeletonSearchActor: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
           },
         },
       },
@@ -6667,7 +7054,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'An unspecced view of globally popular items',
+        description:
+          'DEPRECATED: will be removed soon, please find a feed generator alternative',
         parameters: {
           type: 'params',
           properties: {
@@ -6802,6 +7190,132 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedSearchActorsSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.searchActorsSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Backend Actors (profile) search, returning only skeleton',
+        parameters: {
+          type: 'params',
+          required: ['q'],
+          properties: {
+            q: {
+              type: 'string',
+              description:
+                'search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. For typeahead search, only simple term match is supported, not full syntax',
+            },
+            typeahead: {
+              type: 'boolean',
+              description: "if true, acts as fast/simple 'typeahead' query",
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 25,
+            },
+            cursor: {
+              type: 'string',
+              description:
+                'optional pagination mechanism; may not necessarily allow scrolling through entire result set',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actors'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              hitsTotal: {
+                type: 'integer',
+                description:
+                  'count of search hits. optional, may be rounded/truncated, and may not be possible to paginate through all hits',
+              },
+              actors: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#skeletonSearchActor',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'BadQueryString',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyUnspeccedSearchPostsSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.searchPostsSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Backend Posts search, returning only skeleton',
+        parameters: {
+          type: 'params',
+          required: ['q'],
+          properties: {
+            q: {
+              type: 'string',
+              description:
+                'search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 25,
+            },
+            cursor: {
+              type: 'string',
+              description:
+                'optional pagination mechanism; may not necessarily allow scrolling through entire result set',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              hitsTotal: {
+                type: 'integer',
+                description:
+                  'count of search hits. optional, may be rounded/truncated, and may not be possible to paginate through all hits',
+              },
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.defs#skeletonSearchPost',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'BadQueryString',
+          },
+        ],
+      },
+    },
+  },
 }
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
@@ -6880,7 +7394,6 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
-  ComAtprotoTempUpgradeRepoVersion: 'com.atproto.temp.upgradeRepoVersion',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
@@ -6905,6 +7418,7 @@ export const ids = {
   AppBskyFeedGetFeedGenerators: 'app.bsky.feed.getFeedGenerators',
   AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
   AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
+  AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
   AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
   AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
   AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
@@ -6913,6 +7427,8 @@ export const ids = {
   AppBskyFeedLike: 'app.bsky.feed.like',
   AppBskyFeedPost: 'app.bsky.feed.post',
   AppBskyFeedRepost: 'app.bsky.feed.repost',
+  AppBskyFeedSearchPosts: 'app.bsky.feed.searchPosts',
+  AppBskyFeedThreadgate: 'app.bsky.feed.threadgate',
   AppBskyGraphBlock: 'app.bsky.graph.block',
   AppBskyGraphDefs: 'app.bsky.graph.defs',
   AppBskyGraphFollow: 'app.bsky.graph.follow',
@@ -6920,10 +7436,14 @@ export const ids = {
   AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
   AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
   AppBskyGraphGetList: 'app.bsky.graph.getList',
+  AppBskyGraphGetListBlocks: 'app.bsky.graph.getListBlocks',
   AppBskyGraphGetListMutes: 'app.bsky.graph.getListMutes',
   AppBskyGraphGetLists: 'app.bsky.graph.getLists',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
+  AppBskyGraphGetSuggestedFollowsByActor:
+    'app.bsky.graph.getSuggestedFollowsByActor',
   AppBskyGraphList: 'app.bsky.graph.list',
+  AppBskyGraphListblock: 'app.bsky.graph.listblock',
   AppBskyGraphListitem: 'app.bsky.graph.listitem',
   AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
@@ -6935,9 +7455,12 @@ export const ids = {
   AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
-  AppBskyUnspeccedApplyLabels: 'app.bsky.unspecced.applyLabels',
+  AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
   AppBskyUnspeccedGetPopular: 'app.bsky.unspecced.getPopular',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetTimelineSkeleton: 'app.bsky.unspecced.getTimelineSkeleton',
+  AppBskyUnspeccedSearchActorsSkeleton:
+    'app.bsky.unspecced.searchActorsSkeleton',
+  AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',
 }

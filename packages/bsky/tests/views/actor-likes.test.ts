@@ -2,10 +2,6 @@ import AtpAgent, { AtUri } from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import {
-  BlockedByActorError,
-  BlockedActorError,
-} from '@atproto/api/src/client/types/app/bsky/feed/getActorLikes'
 
 describe('bsky actor likes feed views', () => {
   let network: TestNetwork
@@ -17,7 +13,6 @@ describe('bsky actor likes feed views', () => {
   let alice: string
   let bob: string
   let carol: string
-  let dan: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -31,7 +26,6 @@ describe('bsky actor likes feed views', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
-    dan = sc.dids.dan
   })
 
   afterAll(async () => {

@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const user = await ctx.services.account(ctx.db).getAccount(did)
       if (!user) {
-        throw new InvalidRequestError('user not found')
+        throw new InvalidRequestError('user not found', 'AccountNotFound')
       }
 
       if (user.email !== email.toLowerCase()) {

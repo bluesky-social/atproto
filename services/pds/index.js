@@ -12,17 +12,12 @@ require('dd-trace') // Only works with commonjs
 
 // Tracer code above must come before anything else
 const path = require('path')
-const {
-  KmsKeypair,
-  S3BlobStore,
-  CloudfrontInvalidator,
-} = require('@atproto/aws')
+const { KmsKeypair, S3BlobStore } = require('@atproto/aws')
 const {
   Database,
   ServerConfig,
   PDS,
   ViewMaintainer,
-  makeAlgos,
   PeriodicModerationActionReversal,
 } = require('@atproto/pds')
 const { Secp256k1Keypair } = require('@atproto/crypto')
@@ -68,19 +63,12 @@ const main = async () => {
       password: env.smtpPassword,
     }),
   })
-  const cfInvalidator = new CloudfrontInvalidator({
-    distributionId: env.cfDistributionId,
-    pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
-  })
-  const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const pds = PDS.create({
     db,
     blobstore: s3Blobstore,
     repoSigningKey,
     plcRotationKey,
     config: cfg,
-    imgInvalidator: cfInvalidator,
-    algos,
   })
   const viewMaintainer = new ViewMaintainer(migrateDb)
   const viewMaintainerRunning = viewMaintainer.run()
@@ -151,8 +139,6 @@ const getEnv = () => ({
   smtpUsername: process.env.SMTP_USERNAME,
   smtpPassword: process.env.SMTP_PASSWORD,
   s3Bucket: process.env.S3_BUCKET_NAME,
-  cfDistributionId: process.env.CF_DISTRIBUTION_ID,
-  feedPublisherDid: process.env.FEED_PUBLISHER_DID,
 })
 
 const maintainXrpcResource = (span, req) => {

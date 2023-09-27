@@ -1,4 +1,9 @@
-# XRPC API
+# @atproto/xrpc: atproto HTTP API Client
+
+TypeScript client library for talking to [atproto](https://atproto.com) services, with Lexicon schema validation.
+
+[![NPM](https://img.shields.io/npm/v/@atproto/xrpc)](https://www.npmjs.com/package/@atproto/xrpc)
+[![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
 
 ## Usage
 

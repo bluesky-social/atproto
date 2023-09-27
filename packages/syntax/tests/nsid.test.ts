@@ -4,6 +4,8 @@ import {
   InvalidNsidError,
   NSID,
 } from '../src'
+import * as readline from 'readline'
+import * as fs from 'fs'
 
 describe('NSID parsing & creation', () => {
   it('parses valid NSIDs', () => {
@@ -122,5 +124,35 @@ describe('NSID validation', () => {
     expectValid(
       'onion.2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid.lex.deleteThing',
     )
+  })
+
+  it('conforms to interop valid NSIDs', () => {
+    const lineReader = readline.createInterface({
+      input: fs.createReadStream(
+        `${__dirname}/interop-files/nsid_syntax_valid.txt`,
+      ),
+      terminal: false,
+    })
+    lineReader.on('line', (line) => {
+      if (line.startsWith('#') || line.length == 0) {
+        return
+      }
+      expectValid(line)
+    })
+  })
+
+  it('conforms to interop invalid NSIDs', () => {
+    const lineReader = readline.createInterface({
+      input: fs.createReadStream(
+        `${__dirname}/interop-files/nsid_syntax_invalid.txt`,
+      ),
+      terminal: false,
+    })
+    lineReader.on('line', (line) => {
+      if (line.startsWith('#') || line.length == 0) {
+        return
+      }
+      expectInvalid(line)
+    })
   })
 })

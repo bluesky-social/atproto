@@ -48,6 +48,7 @@ describe('agent', () => {
     expect(agent.session?.handle).toEqual(res.data.handle)
     expect(agent.session?.did).toEqual(res.data.did)
     expect(agent.session?.email).toEqual('user1@test.com')
+    expect(agent.session?.emailConfirmed).toEqual(false)
 
     const { data: sessionInfo } = await agent.api.com.atproto.server.getSession(
       {},
@@ -94,6 +95,7 @@ describe('agent', () => {
     expect(agent2.session?.handle).toEqual(res1.data.handle)
     expect(agent2.session?.did).toEqual(res1.data.did)
     expect(agent2.session?.email).toEqual('user2@test.com')
+    expect(agent2.session?.emailConfirmed).toEqual(false)
 
     const { data: sessionInfo } =
       await agent2.api.com.atproto.server.getSession({})
@@ -200,7 +202,7 @@ describe('agent', () => {
 
     // put the agent through the auth flow
     AtpAgent.configure({ fetch: tokenExpiredFetchHandler })
-    const res1 = await agent.api.app.bsky.feed.getTimeline()
+    const res1 = await createPost(agent)
     AtpAgent.configure({ fetch: defaultFetchHandler })
 
     expect(res1.success).toEqual(true)
@@ -209,6 +211,8 @@ describe('agent', () => {
     expect(agent.session?.refreshJwt).not.toEqual(session1.refreshJwt)
     expect(agent.session?.handle).toEqual(session1.handle)
     expect(agent.session?.did).toEqual(session1.did)
+    expect(agent.session?.email).toEqual(session1.email)
+    expect(agent.session?.emailConfirmed).toEqual(session1.emailConfirmed)
 
     expect(events.length).toEqual(2)
     expect(events[0]).toEqual('create')
@@ -270,9 +274,9 @@ describe('agent', () => {
     // put the agent through the auth flow
     AtpAgent.configure({ fetch: tokenExpiredFetchHandler })
     const [res1, res2, res3] = await Promise.all([
-      agent.api.app.bsky.feed.getTimeline(),
-      agent.api.app.bsky.feed.getTimeline(),
-      agent.api.app.bsky.feed.getTimeline(),
+      createPost(agent),
+      createPost(agent),
+      createPost(agent),
     ])
     AtpAgent.configure({ fetch: defaultFetchHandler })
 
@@ -286,6 +290,8 @@ describe('agent', () => {
     expect(agent.session?.refreshJwt).not.toEqual(session1.refreshJwt)
     expect(agent.session?.handle).toEqual(session1.handle)
     expect(agent.session?.did).toEqual(session1.did)
+    expect(agent.session?.email).toEqual(session1.email)
+    expect(agent.session?.emailConfirmed).toEqual(session1.emailConfirmed)
 
     expect(events.length).toEqual(2)
     expect(events[0]).toEqual('create')
@@ -465,3 +471,14 @@ describe('agent', () => {
     })
   })
 })
+
+const createPost = async (agent: AtpAgent) => {
+  return agent.api.com.atproto.repo.createRecord({
+    repo: agent.session?.did ?? '',
+    collection: 'app.bsky.feed.post',
+    record: {
+      text: 'hello there',
+      createdAt: new Date().toISOString(),
+    },
+  })
+}

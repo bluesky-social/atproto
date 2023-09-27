@@ -30,7 +30,8 @@
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
-        }
+        },
+        "threadgate": { "type": "ref", "ref": "#threadgateView" }
       }
     },
     "viewerState": {
@@ -86,7 +87,8 @@
             "type": "union",
             "refs": ["#threadViewPost", "#notFoundPost", "#blockedPost"]
           }
-        }
+        },
+        "viewer": { "type": "ref", "ref": "#viewerThreadState" }
       }
     },
     "notFoundPost": {
@@ -112,6 +114,12 @@
       "properties": {
         "did": { "type": "string", "format": "did" },
         "viewer": { "type": "ref", "ref": "app.bsky.actor.defs#viewerState" }
+      }
+    },
+    "viewerThreadState": {
+      "type": "object",
+      "properties": {
+        "canReply": { "type": "boolean" }
       }
     },
     "generatorView": {
@@ -157,6 +165,18 @@
       "required": ["repost"],
       "properties": {
         "repost": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "threadgateView": {
+      "type": "object",
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "record": { "type": "unknown" },
+        "lists": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "app.bsky.graph.defs#listViewBasic" }
+        }
       }
     }
   }

@@ -6,7 +6,33 @@ import {
   AppBskyActorDefs,
   ComAtprotoRepoPutRecord,
 } from './client'
-import { BskyPreferences, BskyLabelPreference } from './types'
+import {
+  BskyPreferences,
+  BskyLabelPreference,
+  BskyFeedViewPreference,
+  BskyThreadViewPreference,
+} from './types'
+
+const FEED_VIEW_PREF_DEFAULTS = {
+  hideReplies: false,
+  hideRepliesByUnfollowed: false,
+  hideRepliesByLikeCount: 0,
+  hideReposts: false,
+  hideQuotePosts: false,
+}
+const THREAD_VIEW_PREF_DEFAULTS = {
+  sort: 'oldest',
+  prioritizeFollowedUsers: true,
+}
+
+declare global {
+  interface Array<T> {
+    findLast(
+      predicate: (value: T, index: number, obj: T[]) => unknown,
+      thisArg?: any,
+    ): T
+  }
+}
 
 export class BskyAgent extends AtpAgent {
   get app() {
@@ -245,8 +271,15 @@ export class BskyAgent extends AtpAgent {
         saved: undefined,
         pinned: undefined,
       },
+      feedViewPrefs: {
+        home: {
+          ...FEED_VIEW_PREF_DEFAULTS,
+        },
+      },
+      threadViewPrefs: { ...THREAD_VIEW_PREF_DEFAULTS },
       adultContentEnabled: false,
       contentLabels: {},
+      birthDate: undefined,
     }
     const res = await this.app.bsky.actor.getPreferences({})
     for (const pref of res.data.preferences) {
@@ -272,6 +305,27 @@ export class BskyAgent extends AtpAgent {
       ) {
         prefs.feeds.saved = pref.saved
         prefs.feeds.pinned = pref.pinned
+      } else if (
+        AppBskyActorDefs.isPersonalDetailsPref(pref) &&
+        AppBskyActorDefs.validatePersonalDetailsPref(pref).success
+      ) {
+        if (pref.birthDate) {
+          prefs.birthDate = new Date(pref.birthDate)
+        }
+      } else if (
+        AppBskyActorDefs.isFeedViewPref(pref) &&
+        AppBskyActorDefs.validateFeedViewPref(pref).success
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { $type, feed, ...v } = pref
+        prefs.feedViewPrefs[pref.feed] = { ...FEED_VIEW_PREF_DEFAULTS, ...v }
+      } else if (
+        AppBskyActorDefs.isThreadViewPref(pref) &&
+        AppBskyActorDefs.validateThreadViewPref(pref).success
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { $type, ...v } = pref
+        prefs.threadViewPrefs = { ...prefs.threadViewPrefs, ...v }
       }
     }
     return prefs
@@ -314,20 +368,22 @@ export class BskyAgent extends AtpAgent {
 
   async setAdultContentEnabled(v: boolean) {
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
-      const existing = prefs.find(
+      let adultContentPref = prefs.findLast(
         (pref) =>
           AppBskyActorDefs.isAdultContentPref(pref) &&
           AppBskyActorDefs.validateAdultContentPref(pref).success,
       )
-      if (existing) {
-        existing.enabled = v
+      if (adultContentPref) {
+        adultContentPref.enabled = v
       } else {
-        prefs.push({
+        adultContentPref = {
           $type: 'app.bsky.actor.defs#adultContentPref',
           enabled: v,
-        })
+        }
       }
       return prefs
+        .filter((pref) => !AppBskyActorDefs.isAdultContentPref(pref))
+        .concat([adultContentPref])
     })
   }
 
@@ -338,22 +394,88 @@ export class BskyAgent extends AtpAgent {
     }
 
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
-      const existing = prefs.find(
+      let labelPref = prefs.findLast(
         (pref) =>
           AppBskyActorDefs.isContentLabelPref(pref) &&
           AppBskyActorDefs.validateAdultContentPref(pref).success &&
           pref.label === key,
       )
-      if (existing) {
-        existing.visibility = value
+      if (labelPref) {
+        labelPref.visibility = value
       } else {
-        prefs.push({
+        labelPref = {
           $type: 'app.bsky.actor.defs#contentLabelPref',
           label: key,
           visibility: value,
-        })
+        }
       }
       return prefs
+        .filter(
+          (pref) =>
+            !AppBskyActorDefs.isContentLabelPref(pref) || pref.label !== key,
+        )
+        .concat([labelPref])
+    })
+  }
+
+  async setPersonalDetails({
+    birthDate,
+  }: {
+    birthDate: string | Date | undefined
+  }) {
+    birthDate = birthDate instanceof Date ? birthDate.toISOString() : birthDate
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      let personalDetailsPref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isPersonalDetailsPref(pref) &&
+          AppBskyActorDefs.validatePersonalDetailsPref(pref).success,
+      )
+      if (personalDetailsPref) {
+        personalDetailsPref.birthDate = birthDate
+      } else {
+        personalDetailsPref = {
+          $type: 'app.bsky.actor.defs#personalDetailsPref',
+          birthDate,
+        }
+      }
+      return prefs
+        .filter((pref) => !AppBskyActorDefs.isPersonalDetailsPref(pref))
+        .concat([personalDetailsPref])
+    })
+  }
+
+  async setFeedViewPrefs(feed: string, pref: Partial<BskyFeedViewPreference>) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      const existing = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isFeedViewPref(pref) &&
+          AppBskyActorDefs.validateFeedViewPref(pref).success &&
+          pref.feed === feed,
+      )
+      if (existing) {
+        pref = { ...existing, ...pref }
+      }
+      return prefs
+        .filter(
+          (p) => !AppBskyActorDefs.isFeedViewPref(pref) || p.feed !== feed,
+        )
+        .concat([{ ...pref, $type: 'app.bsky.actor.defs#feedViewPref', feed }])
+    })
+  }
+
+  async setThreadViewPrefs(pref: Partial<BskyThreadViewPreference>) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      const existing = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isThreadViewPref(pref) &&
+          AppBskyActorDefs.validateThreadViewPref(pref).success,
+      )
+      if (existing) {
+        pref = { ...existing, ...pref }
+      }
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isThreadViewPref(p))
+        .concat([{ ...pref, $type: 'app.bsky.actor.defs#threadViewPref' }])
     })
   }
 }
@@ -394,7 +516,7 @@ async function updateFeedPreferences(
 ): Promise<{ saved: string[]; pinned: string[] }> {
   let res
   await updatePreferences(agent, (prefs: AppBskyActorDefs.Preferences) => {
-    let feedsPref = prefs.find(
+    let feedsPref = prefs.findLast(
       (pref) =>
         AppBskyActorDefs.isSavedFeedsPref(pref) &&
         AppBskyActorDefs.validateSavedFeedsPref(pref).success,

@@ -1,4 +1,5 @@
 export * from '@atproto/common-web'
+export * from './dates'
 export * from './fs'
 export * from './ipld'
 export * from './ipld-multi'

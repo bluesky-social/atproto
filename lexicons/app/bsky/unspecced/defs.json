@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.unspecced.defs",
+  "defs": {
+    "skeletonSearchPost": {
+      "type": "object",
+      "required": ["uri"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "skeletonSearchActor": {
+      "type": "object",
+      "required": ["did"],
+      "properties": {
+        "did": { "type": "string", "format": "did" }
+      }
+    }
+  }
+}
