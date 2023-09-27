@@ -1,4 +1,9 @@
-import AtpAgent, { AppBskyFeedPost, AtUri, RichText, AppBskyRichtextFacet } from '@atproto/api'
+import AtpAgent, {
+  AppBskyFeedPost,
+  AtUri,
+  RichText,
+  AppBskyRichtextFacet,
+} from '@atproto/api'
 import { runTestServer, TestServerInfo } from './_util'
 import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
@@ -64,8 +69,10 @@ describe('pds posts record creation', () => {
     })
 
     expect(record).toBeTruthy()
-    expect(record.facets?.every(f => {
-      return AppBskyRichtextFacet.isTag(f.features[0])
-    })).toBeTruthy()
+    expect(
+      record.facets?.every((f) => {
+        return AppBskyRichtextFacet.isTag(f.features[0])
+      }),
+    ).toBeTruthy()
   })
 })
