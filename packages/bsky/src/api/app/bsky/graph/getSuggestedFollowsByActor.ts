@@ -78,6 +78,7 @@ async function getSkeleton(
         .selectFrom('like')
         .where('creator', '=', params.actor)
         .select(sql`split_part(subject, '/', 3)`.as('subjectDid'))
+        .orderBy('sortAt', 'desc')
         .limit(1000) // limit to 1000
         .as('likes'),
     )

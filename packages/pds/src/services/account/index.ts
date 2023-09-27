@@ -1,18 +1,17 @@
-import { WhereInterface, sql } from 'kysely'
+import { sql } from 'kysely'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import * as scrypt from '../../db/scrypt'
 import { UserAccountEntry } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
-import { DbRef, countAll, notSoftDeletedClause } from '../../db/util'
+import { countAll, notSoftDeletedClause } from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { NotEmptyArray } from '@atproto/common'
 
 export class AccountService {
   constructor(public db: Database) {}
@@ -355,27 +354,6 @@ export class AccountService {
       .execute()
   }
 
-  whereNotMuted<W extends WhereInterface<any, any>>(
-    qb: W,
-    requester: string,
-    refs: NotEmptyArray<DbRef>,
-  ) {
-    const subjectRefs = sql.join(refs)
-    const actorMute = this.db.db
-      .selectFrom('mute')
-      .where('mutedByDid', '=', requester)
-      .where('did', 'in', sql`(${subjectRefs})`)
-      .select('did as muted')
-    const listMute = this.db.db
-      .selectFrom('list_item')
-      .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
-      .where('list_mute.mutedByDid', '=', requester)
-      .whereRef('list_item.subjectDid', 'in', sql`(${subjectRefs})`)
-      .select('list_item.subjectDid as muted')
-    // Splitting the mute from list-mute checks seems to be more flexible for the query-planner and often quicker
-    return qb.whereNotExists(actorMute).whereNotExists(listMute)
-  }
-
   async search(opts: {
     searchField?: 'did' | 'handle'
     term: string
@@ -397,13 +375,9 @@ export class AccountService {
     const builder =
       this.db.dialect === 'pg'
         ? getUserSearchQueryPg(this.db, opts)
-            .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
             .selectAll('did_handle')
             .selectAll('repo_root')
-            .select('results.distance as distance')
         : getUserSearchQuerySqlite(this.db, opts)
-            .leftJoin('profile', 'profile.creator', 'did_handle.did') // @TODO leaky, for getUserSearchQuerySqlite()
-            .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
             .selectAll('did_handle')
             .selectAll('repo_root')
             .select(sql<number>`0`.as('distance'))

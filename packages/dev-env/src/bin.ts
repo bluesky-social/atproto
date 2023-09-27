@@ -1,5 +1,5 @@
 import { generateMockSetup } from './mock'
-import { TestNetworkNoAppView } from './network-no-appview'
+import { TestNetwork } from './network'
 
 const run = async () => {
   console.log(`
@@ -12,11 +12,14 @@ const run = async () => {
 
 [ created by Bluesky ]`)
 
-  const network = await TestNetworkNoAppView.create({
+  const network = await TestNetwork.create({
     pds: {
       port: 2583,
-      enableLabelsCache: true,
       publicUrl: 'http://localhost:2583',
+      dbPostgresSchema: 'pds',
+    },
+    bsky: {
+      dbPostgresSchema: 'bsky',
     },
     plc: { port: 2582 },
   })
@@ -28,6 +31,7 @@ const run = async () => {
   console.log(
     `🌞 Personal Data server started http://localhost:${network.pds.port}`,
   )
+  console.log(`🌅 Bsky Appview started http://localhost:${network.bsky.port}`)
   for (const fg of network.feedGens) {
     console.log(`🤖 Feed Generator started http://localhost:${fg.port}`)
   }

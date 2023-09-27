@@ -100,8 +100,6 @@ export default function (server: Server, ctx: AppContext) {
   getTimelineSkeleton(server, ctx)
   // com.atproto
   createReport(server, ctx)
-  resolveModerationReports(server, ctx)
-  reverseModerationAction(server, ctx)
   takeModerationAction(server, ctx)
   searchRepos(server, ctx)
   adminGetRecord(server, ctx)

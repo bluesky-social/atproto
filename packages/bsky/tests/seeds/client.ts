@@ -9,7 +9,6 @@ import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/
 import { Record as PostRecord } from '@atproto/api/src/client/types/app/bsky/feed/post'
 import { Record as LikeRecord } from '@atproto/api/src/client/types/app/bsky/feed/like'
 import { Record as FollowRecord } from '@atproto/api/src/client/types/app/bsky/graph/follow'
-import { Record as ListRecord } from '@atproto/api/src/client/types/app/bsky/graph/list'
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.

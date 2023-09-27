@@ -20,6 +20,20 @@ describe('agent', () => {
     await close()
   })
 
+  const getProfileDisplayName = async (
+    agent: BskyAgent,
+  ): Promise<string | undefined> => {
+    try {
+      const res = await agent.api.app.bsky.actor.profile.get({
+        repo: agent.session?.did || '',
+        rkey: 'self',
+      })
+      return res.value.displayName ?? ''
+    } catch (err) {
+      return undefined
+    }
+  }
+
   it('upsertProfile correctly creates and updates profiles.', async () => {
     const agent = new BskyAgent({ service: server.url })
 
@@ -28,9 +42,8 @@ describe('agent', () => {
       email: 'user1@test.com',
       password: 'password',
     })
-
-    const profile1 = await agent.getProfile({ actor: agent.session?.did || '' })
-    expect(profile1.data.displayName).toBeFalsy()
+    const displayName1 = await getProfileDisplayName(agent)
+    expect(displayName1).toBeFalsy()
 
     await agent.upsertProfile((existing) => {
       expect(existing).toBeFalsy()
@@ -39,8 +52,8 @@ describe('agent', () => {
       }
     })
 
-    const profile2 = await agent.getProfile({ actor: agent.session?.did || '' })
-    expect(profile2.data.displayName).toBe('Bob')
+    const displayName2 = await getProfileDisplayName(agent)
+    expect(displayName2).toBe('Bob')
 
     await agent.upsertProfile((existing) => {
       expect(existing).toBeTruthy()
@@ -49,8 +62,8 @@ describe('agent', () => {
       }
     })
 
-    const profile3 = await agent.getProfile({ actor: agent.session?.did || '' })
-    expect(profile3.data.displayName).toBe('BOB')
+    const displayName3 = await getProfileDisplayName(agent)
+    expect(displayName3).toBe('BOB')
   })
 
   it('upsertProfile correctly handles CAS failures.', async () => {
@@ -62,12 +75,12 @@ describe('agent', () => {
       password: 'password',
     })
 
-    const profile1 = await agent.getProfile({ actor: agent.session?.did || '' })
-    expect(profile1.data.displayName).toBeFalsy()
+    const displayName1 = await getProfileDisplayName(agent)
+    expect(displayName1).toBeFalsy()
 
     let hasConflicted = false
     let ranTwice = false
-    await agent.upsertProfile(async (existing) => {
+    await agent.upsertProfile(async (_existing) => {
       if (!hasConflicted) {
         await agent.com.atproto.repo.putRecord({
           repo: agent.session?.did || '',
@@ -88,8 +101,8 @@ describe('agent', () => {
     })
     expect(ranTwice).toBe(true)
 
-    const profile2 = await agent.getProfile({ actor: agent.session?.did || '' })
-    expect(profile2.data.displayName).toBe('Bob')
+    const displayName2 = await getProfileDisplayName(agent)
+    expect(displayName2).toBe('Bob')
   })
 
   it('upsertProfile wont endlessly retry CAS failures.', async () => {
@@ -101,10 +114,10 @@ describe('agent', () => {
       password: 'password',
     })
 
-    const profile1 = await agent.getProfile({ actor: agent.session?.did || '' })
-    expect(profile1.data.displayName).toBeFalsy()
+    const displayName1 = await getProfileDisplayName(agent)
+    expect(displayName1).toBeFalsy()
 
-    const p = agent.upsertProfile(async (existing) => {
+    const p = agent.upsertProfile(async (_existing) => {
       await agent.com.atproto.repo.putRecord({
         repo: agent.session?.did || '',
         collection: 'app.bsky.actor.profile',
@@ -130,7 +143,7 @@ describe('agent', () => {
       password: 'password',
     })
 
-    const p = agent.upsertProfile((existing) => {
+    const p = agent.upsertProfile((_existing) => {
       return {
         displayName: { string: 'Bob' },
       } as unknown as AppBskyActorProfile.Record
@@ -216,6 +229,19 @@ describe('agent', () => {
         adultContentEnabled: false,
         contentLabels: {},
         birthDate: undefined,
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
       })
 
       await agent.setAdultContentEnabled(true)
@@ -224,6 +250,19 @@ describe('agent', () => {
         adultContentEnabled: true,
         contentLabels: {},
         birthDate: undefined,
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
       })
 
       await agent.setAdultContentEnabled(false)
@@ -232,6 +271,19 @@ describe('agent', () => {
         adultContentEnabled: false,
         contentLabels: {},
         birthDate: undefined,
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
       })
 
       await agent.setContentLabelPref('impersonation', 'warn')
@@ -242,6 +294,19 @@ describe('agent', () => {
           impersonation: 'warn',
         },
         birthDate: undefined,
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
       })
 
       await agent.setContentLabelPref('spam', 'show') // will convert to 'ignore'
@@ -254,6 +319,19 @@ describe('agent', () => {
           spam: 'ignore',
         },
         birthDate: undefined,
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
       })
 
       await agent.addSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -268,6 +346,19 @@ describe('agent', () => {
           spam: 'ignore',
         },
         birthDate: undefined,
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -282,6 +373,19 @@ describe('agent', () => {
           spam: 'ignore',
         },
         birthDate: undefined,
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
       })
 
       await agent.removePinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -296,6 +400,19 @@ describe('agent', () => {
           spam: 'ignore',
         },
         birthDate: undefined,
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -310,6 +427,19 @@ describe('agent', () => {
           spam: 'ignore',
         },
         birthDate: undefined,
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -324,6 +454,19 @@ describe('agent', () => {
           spam: 'ignore',
         },
         birthDate: undefined,
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake2')
@@ -344,6 +487,19 @@ describe('agent', () => {
           spam: 'ignore',
         },
         birthDate: undefined,
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -358,6 +514,19 @@ describe('agent', () => {
           spam: 'ignore',
         },
         birthDate: undefined,
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
       })
 
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
@@ -372,6 +541,175 @@ describe('agent', () => {
           spam: 'ignore',
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
+      })
+
+      await agent.setFeedViewPrefs('home', { hideReplies: true })
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'hide',
+          spam: 'ignore',
+        },
+        birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        feedViewPrefs: {
+          home: {
+            hideReplies: true,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
+      })
+
+      await agent.setFeedViewPrefs('home', { hideReplies: false })
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'hide',
+          spam: 'ignore',
+        },
+        birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
+      })
+
+      await agent.setFeedViewPrefs('other', { hideReplies: true })
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'hide',
+          spam: 'ignore',
+        },
+        birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+          other: {
+            hideReplies: true,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
+      })
+
+      await agent.setThreadViewPrefs({ sort: 'random' })
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'hide',
+          spam: 'ignore',
+        },
+        birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+          other: {
+            hideReplies: true,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'random',
+          prioritizeFollowedUsers: true,
+        },
+      })
+
+      await agent.setThreadViewPrefs({ sort: 'oldest' })
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'hide',
+          spam: 'ignore',
+        },
+        birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+          other: {
+            hideReplies: true,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
       })
     })
 
@@ -442,6 +780,34 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#personalDetailsPref',
             birthDate: '2021-09-11T18:05:42.556Z',
           },
+          {
+            $type: 'app.bsky.actor.defs#feedViewPref',
+            feed: 'home',
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+          {
+            $type: 'app.bsky.actor.defs#feedViewPref',
+            feed: 'home',
+            hideReplies: true,
+            hideRepliesByUnfollowed: true,
+            hideRepliesByLikeCount: 10,
+            hideReposts: true,
+            hideQuotePosts: true,
+          },
+          {
+            $type: 'app.bsky.actor.defs#threadViewPref',
+            sort: 'oldest',
+            prioritizeFollowedUsers: true,
+          },
+          {
+            $type: 'app.bsky.actor.defs#threadViewPref',
+            sort: 'newest',
+            prioritizeFollowedUsers: false,
+          },
         ],
       })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
@@ -454,6 +820,19 @@ describe('agent', () => {
           nsfw: 'warn',
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        feedViewPrefs: {
+          home: {
+            hideReplies: true,
+            hideRepliesByUnfollowed: true,
+            hideRepliesByLikeCount: 10,
+            hideReposts: true,
+            hideQuotePosts: true,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'newest',
+          prioritizeFollowedUsers: false,
+        },
       })
 
       await agent.setAdultContentEnabled(false)
@@ -467,6 +846,19 @@ describe('agent', () => {
           nsfw: 'warn',
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        feedViewPrefs: {
+          home: {
+            hideReplies: true,
+            hideRepliesByUnfollowed: true,
+            hideRepliesByLikeCount: 10,
+            hideReposts: true,
+            hideQuotePosts: true,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'newest',
+          prioritizeFollowedUsers: false,
+        },
       })
 
       await agent.setContentLabelPref('nsfw', 'hide')
@@ -480,6 +872,19 @@ describe('agent', () => {
           nsfw: 'hide',
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        feedViewPrefs: {
+          home: {
+            hideReplies: true,
+            hideRepliesByUnfollowed: true,
+            hideRepliesByLikeCount: 10,
+            hideReposts: true,
+            hideQuotePosts: true,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'newest',
+          prioritizeFollowedUsers: false,
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -493,6 +898,19 @@ describe('agent', () => {
           nsfw: 'hide',
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        feedViewPrefs: {
+          home: {
+            hideReplies: true,
+            hideRepliesByUnfollowed: true,
+            hideRepliesByLikeCount: 10,
+            hideReposts: true,
+            hideQuotePosts: true,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'newest',
+          prioritizeFollowedUsers: false,
+        },
       })
 
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
@@ -506,29 +924,98 @@ describe('agent', () => {
           nsfw: 'hide',
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        feedViewPrefs: {
+          home: {
+            hideReplies: true,
+            hideRepliesByUnfollowed: true,
+            hideRepliesByLikeCount: 10,
+            hideReposts: true,
+            hideQuotePosts: true,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'newest',
+          prioritizeFollowedUsers: false,
+        },
       })
 
-      const res = await agent.app.bsky.actor.getPreferences()
-      await expect(res.data.preferences).toStrictEqual([
-        {
-          $type: 'app.bsky.actor.defs#adultContentPref',
-          enabled: false,
-        },
-        {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: 'nsfw',
-          visibility: 'hide',
-        },
-        {
-          $type: 'app.bsky.actor.defs#savedFeedsPref',
+      await agent.setFeedViewPrefs('home', {
+        hideReplies: false,
+        hideRepliesByUnfollowed: false,
+        hideRepliesByLikeCount: 0,
+        hideReposts: false,
+        hideQuotePosts: false,
+      })
+      await agent.setThreadViewPrefs({
+        sort: 'oldest',
+        prioritizeFollowedUsers: true,
+      })
+      await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        {
-          $type: 'app.bsky.actor.defs#personalDetailsPref',
-          birthDate: '2023-09-11T18:05:42.556Z',
+        adultContentEnabled: false,
+        contentLabels: {
+          nsfw: 'hide',
         },
-      ])
+        birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
+      })
+
+      const res = await agent.app.bsky.actor.getPreferences()
+      await expect(res.data.preferences.sort(byType)).toStrictEqual(
+        [
+          {
+            $type: 'app.bsky.actor.defs#adultContentPref',
+            enabled: false,
+          },
+          {
+            $type: 'app.bsky.actor.defs#contentLabelPref',
+            label: 'nsfw',
+            visibility: 'hide',
+          },
+          {
+            $type: 'app.bsky.actor.defs#savedFeedsPref',
+            pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
+            saved: ['at://bob.com/app.bsky.feed.generator/fake'],
+          },
+          {
+            $type: 'app.bsky.actor.defs#personalDetailsPref',
+            birthDate: '2023-09-11T18:05:42.556Z',
+          },
+
+          {
+            $type: 'app.bsky.actor.defs#feedViewPref',
+            feed: 'home',
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+          {
+            $type: 'app.bsky.actor.defs#threadViewPref',
+            sort: 'oldest',
+            prioritizeFollowedUsers: true,
+          },
+        ].sort(byType),
+      )
     })
   })
 })
+
+const byType = (a, b) => a.$type.localeCompare(b.$type)

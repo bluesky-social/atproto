@@ -194,8 +194,14 @@ export class ActorViews {
               mutedByList,
               blockedBy: !!bam.blockedBy([viewer, did]),
               blocking: bam.blocking([viewer, did]) ?? undefined,
-              following: prof?.viewerFollowing || undefined,
-              followedBy: prof?.viewerFollowedBy || undefined,
+              following:
+                prof?.viewerFollowing && !bam.block([viewer, did])
+                  ? prof.viewerFollowing
+                  : undefined,
+              followedBy:
+                prof?.viewerFollowedBy && !bam.block([viewer, did])
+                  ? prof.viewerFollowedBy
+                  : undefined,
             }
           : undefined,
         labels: [...actorLabels, ...selfLabels],
@@ -314,8 +320,14 @@ export class ActorViews {
               mutedByList,
               blockedBy: !!bam.blockedBy([viewer, did]),
               blocking: bam.blocking([viewer, did]) ?? undefined,
-              following: prof?.viewerFollowing || undefined,
-              followedBy: prof?.viewerFollowedBy || undefined,
+              following:
+                prof?.viewerFollowing && !bam.block([viewer, did])
+                  ? prof.viewerFollowing
+                  : undefined,
+              followedBy:
+                prof?.viewerFollowedBy && !bam.block([viewer, did])
+                  ? prof.viewerFollowedBy
+                  : undefined,
             }
           : undefined,
         labels: [...actorLabels, ...selfLabels],

@@ -103,6 +103,7 @@ import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedLike from './types/app/bsky/feed/like'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
+import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
 import * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate'
 import * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 import * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
@@ -128,10 +129,12 @@ import * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
-import * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
+import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
+import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
+import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
@@ -229,6 +232,7 @@ export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 export * as AppBskyFeedLike from './types/app/bsky/feed/like'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
+export * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
 export * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate'
 export * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 export * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
@@ -254,10 +258,12 @@ export * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
-export * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
+export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 export * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
+export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
+export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -1381,6 +1387,17 @@ export class FeedNS {
         throw AppBskyFeedGetTimeline.toKnownErr(e)
       })
   }
+
+  searchPosts(
+    params?: AppBskyFeedSearchPosts.QueryParams,
+    opts?: AppBskyFeedSearchPosts.CallOptions,
+  ): Promise<AppBskyFeedSearchPosts.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.searchPosts', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedSearchPosts.toKnownErr(e)
+      })
+  }
 }
 
 export class GeneratorRecord {
@@ -2234,17 +2251,6 @@ export class UnspeccedNS {
     this._service = service
   }
 
-  applyLabels(
-    data?: AppBskyUnspeccedApplyLabels.InputSchema,
-    opts?: AppBskyUnspeccedApplyLabels.CallOptions,
-  ): Promise<AppBskyUnspeccedApplyLabels.Response> {
-    return this._service.xrpc
-      .call('app.bsky.unspecced.applyLabels', opts?.qp, data, opts)
-      .catch((e) => {
-        throw AppBskyUnspeccedApplyLabels.toKnownErr(e)
-      })
-  }
-
   getPopular(
     params?: AppBskyUnspeccedGetPopular.QueryParams,
     opts?: AppBskyUnspeccedGetPopular.CallOptions,
@@ -2280,6 +2286,28 @@ export class UnspeccedNS {
       .call('app.bsky.unspecced.getTimelineSkeleton', params, undefined, opts)
       .catch((e) => {
         throw AppBskyUnspeccedGetTimelineSkeleton.toKnownErr(e)
+      })
+  }
+
+  searchActorsSkeleton(
+    params?: AppBskyUnspeccedSearchActorsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedSearchActorsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedSearchActorsSkeleton.Response> {
+    return this._service.xrpc
+      .call('app.bsky.unspecced.searchActorsSkeleton', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedSearchActorsSkeleton.toKnownErr(e)
+      })
+  }
+
+  searchPostsSkeleton(
+    params?: AppBskyUnspeccedSearchPostsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedSearchPostsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedSearchPostsSkeleton.Response> {
+    return this._service.xrpc
+      .call('app.bsky.unspecced.searchPostsSkeleton', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedSearchPostsSkeleton.toKnownErr(e)
       })
   }
 }

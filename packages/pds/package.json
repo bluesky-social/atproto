@@ -1,10 +1,16 @@
 {
   "name": "@atproto/pds",
-  "version": "0.1.14",
+  "version": "0.1.19",
   "license": "MIT",
+  "description": "Reference implementation of atproto Personal Data Server (PDS)",
+  "keywords": [
+    "atproto",
+    "pds"
+  ],
+  "homepage": "https://atproto.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bluesky-social/atproto.git",
+    "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/pds"
   },
   "main": "src/index.ts",
@@ -50,7 +56,6 @@
     "http-errors": "^2.0.0",
     "http-terminator": "^3.2.0",
     "ioredis": "^5.3.2",
-    "iso-datestring-validator": "^2.2.2",
     "jsonwebtoken": "^8.5.1",
     "kysely": "^0.22.0",
     "multiformats": "^9.9.0",

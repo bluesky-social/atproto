@@ -4,7 +4,6 @@ import { BlobStore, CommitData, Repo, WriteOpAction } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/syntax'
 import Database from '../../db'
-import { MessageQueue } from '../../event-stream/types'
 import SqlRepoStorage from '../../sql-repo-storage'
 import {
   BadCommitSwapError,
@@ -16,9 +15,8 @@ import { RepoBlobs } from './blobs'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { RecordService } from '../record'
 import * as sequencer from '../../sequencer'
-import { Labeler } from '../../labeler'
 import { wait } from '@atproto/common'
-import { BackgroundQueue } from '../../event-stream/background-queue'
+import { BackgroundQueue } from '../../background'
 import { Crawlers } from '../../crawlers'
 
 export class RepoService {
@@ -27,37 +25,25 @@ export class RepoService {
   constructor(
     public db: Database,
     public repoSigningKey: crypto.Keypair,
-    public messageDispatcher: MessageQueue,
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
     public crawlers: Crawlers,
-    public labeler: Labeler,
   ) {
     this.blobs = new RepoBlobs(db, blobstore, backgroundQueue)
   }
 
   static creator(
     keypair: crypto.Keypair,
-    messageDispatcher: MessageQueue,
     blobstore: BlobStore,
     backgroundQueue: BackgroundQueue,
     crawlers: Crawlers,
-    labeler: Labeler,
   ) {
     return (db: Database) =>
-      new RepoService(
-        db,
-        keypair,
-        messageDispatcher,
-        blobstore,
-        backgroundQueue,
-        crawlers,
-        labeler,
-      )
+      new RepoService(db, keypair, blobstore, backgroundQueue, crawlers)
   }
 
   services = {
-    record: RecordService.creator(this.messageDispatcher),
+    record: RecordService.creator(),
   }
 
   private async serviceTx<T>(
@@ -68,11 +54,9 @@ export class RepoService {
       const srvc = new RepoService(
         dbTxn,
         this.repoSigningKey,
-        this.messageDispatcher,
         this.blobstore,
         this.backgroundQueue,
         this.crawlers,
-        this.labeler,
       )
       return fn(srvc)
     })
@@ -293,15 +277,6 @@ export class RepoService {
     this.db.onCommit(() => {
       this.backgroundQueue.add(async () => {
         await this.crawlers.notifyOfUpdate()
-      })
-      writes.forEach((write) => {
-        if (
-          write.action === WriteOpAction.Create ||
-          write.action === WriteOpAction.Update
-        ) {
-          // @TODO move to appview
-          this.labeler.processRecord(write.uri, write.record)
-        }
       })
     })
 

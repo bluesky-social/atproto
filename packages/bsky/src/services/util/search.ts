@@ -7,17 +7,17 @@ import { GenericKeyset, paginate } from '../../db/pagination'
 export const getUserSearchQuery = (
   db: Database,
   opts: {
-    term: string
+    query: string
     limit: number
     cursor?: string
     includeSoftDeleted?: boolean
   },
 ) => {
   const { ref } = db.db.dynamic
-  const { term, limit, cursor, includeSoftDeleted } = opts
+  const { query, limit, cursor, includeSoftDeleted } = opts
   // Matching user accounts based on handle
-  const distanceAccount = distance(term, ref('handle'))
-  let accountsQb = getMatchingAccountsQb(db, { term, includeSoftDeleted })
+  const distanceAccount = distance(query, ref('handle'))
+  let accountsQb = getMatchingAccountsQb(db, { query, includeSoftDeleted })
   accountsQb = paginate(accountsQb, {
     limit,
     cursor,
@@ -25,8 +25,8 @@ export const getUserSearchQuery = (
     keyset: new SearchKeyset(distanceAccount, ref('actor.did')),
   })
   // Matching profiles based on display name
-  const distanceProfile = distance(term, ref('displayName'))
-  let profilesQb = getMatchingProfilesQb(db, { term, includeSoftDeleted })
+  const distanceProfile = distance(query, ref('displayName'))
+  let profilesQb = getMatchingProfilesQb(db, { query, includeSoftDeleted })
   profilesQb = paginate(profilesQb, {
     limit,
     cursor,
@@ -46,18 +46,18 @@ export const getUserSearchQuery = (
 export const getUserSearchQuerySimple = (
   db: Database,
   opts: {
-    term: string
+    query: string
     limit: number
   },
 ) => {
   const { ref } = db.db.dynamic
-  const { term, limit } = opts
+  const { query, limit } = opts
   // Matching user accounts based on handle
-  const accountsQb = getMatchingAccountsQb(db, { term })
+  const accountsQb = getMatchingAccountsQb(db, { query })
     .orderBy('distance', 'asc')
     .limit(limit)
   // Matching profiles based on display name
-  const profilesQb = getMatchingProfilesQb(db, { term })
+  const profilesQb = getMatchingProfilesQb(db, { query })
     .orderBy('distance', 'asc')
     .limit(limit)
   // Combine and paginate result set
@@ -71,29 +71,29 @@ export const getUserSearchQuerySimple = (
 // Matching user accounts based on handle
 const getMatchingAccountsQb = (
   db: Database,
-  opts: { term: string; includeSoftDeleted?: boolean },
+  opts: { query: string; includeSoftDeleted?: boolean },
 ) => {
   const { ref } = db.db.dynamic
-  const { term, includeSoftDeleted } = opts
-  const distanceAccount = distance(term, ref('handle'))
+  const { query, includeSoftDeleted } = opts
+  const distanceAccount = distance(query, ref('handle'))
   return db.db
     .selectFrom('actor')
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('actor'))),
     )
     .where('actor.handle', 'is not', null)
-    .where(similar(term, ref('handle'))) // Coarse filter engaging trigram index
+    .where(similar(query, ref('handle'))) // Coarse filter engaging trigram index
     .select(['actor.did as did', distanceAccount.as('distance')])
 }
 
 // Matching profiles based on display name
 const getMatchingProfilesQb = (
   db: Database,
-  opts: { term: string; includeSoftDeleted?: boolean },
+  opts: { query: string; includeSoftDeleted?: boolean },
 ) => {
   const { ref } = db.db.dynamic
-  const { term, includeSoftDeleted } = opts
-  const distanceProfile = distance(term, ref('displayName'))
+  const { query, includeSoftDeleted } = opts
+  const distanceProfile = distance(query, ref('displayName'))
   return db.db
     .selectFrom('profile')
     .innerJoin('actor', 'actor.did', 'profile.creator')
@@ -101,7 +101,7 @@ const getMatchingProfilesQb = (
       qb.where(notSoftDeletedClause(ref('actor'))),
     )
     .where('actor.handle', 'is not', null)
-    .where(similar(term, ref('displayName'))) // Coarse filter engaging trigram index
+    .where(similar(query, ref('displayName'))) // Coarse filter engaging trigram index
     .select(['profile.creator as did', distanceProfile.as('distance')])
 }
 
@@ -133,15 +133,16 @@ const combineAccountsAndProfilesQb = (
 }
 
 // Remove leading @ in case a handle is input that way
-export const cleanTerm = (term: string) => term.trim().replace(/^@/g, '')
+export const cleanQuery = (query: string) => query.trim().replace(/^@/g, '')
 
-// Uses pg_trgm strict word similarity to check similarity between a search term and a stored value
-const distance = (term: string, ref: DbRef) =>
-  sql<number>`(${term} <<-> ${ref})`
+// Uses pg_trgm strict word similarity to check similarity between a search query and a stored value
+const distance = (query: string, ref: DbRef) =>
+  sql<number>`(${query} <<-> ${ref})`
 
 // Can utilize trigram index to match on strict word similarity.
 // The word_similarity_threshold is set to .4 (i.e. distance < .6) in db/index.ts.
-const similar = (term: string, ref: DbRef) => sql<boolean>`(${term} <% ${ref})`
+const similar = (query: string, ref: DbRef) =>
+  sql<boolean>`(${query} <% ${ref})`
 
 type Result = { distance: number; did: string }
 type LabeledResult = { primary: number; secondary: string }

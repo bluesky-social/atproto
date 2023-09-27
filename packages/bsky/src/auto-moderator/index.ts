@@ -18,7 +18,10 @@ import { ImageUriBuilder } from '../image/uri'
 import { ImageInvalidator } from '../image/invalidator'
 import { Abyss } from './abyss'
 import { FuzzyMatcher, TextFlagger } from './fuzzy-matcher'
-import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
+import {
+  REASONOTHER,
+  REASONVIOLATION,
+} from '../lexicon/types/com/atproto/moderation/defs'
 
 export class AutoModerator {
   public pushAgent?: AtpAgent
@@ -172,7 +175,7 @@ export class AutoModerator {
   async checkImgForTakedown(uri: AtUri, recordCid: CID, imgCids: CID[]) {
     if (imgCids.length < 0) return
     const results = await Promise.all(
-      imgCids.map((cid) => this.imageFlagger?.scanImage(uri.host, cid)),
+      imgCids.map((cid) => this.imageFlagger?.scanImage(uri.host, cid, uri)),
     )
     const takedownCids: CID[] = []
     for (let i = 0; i < results.length; i++) {
@@ -207,7 +210,39 @@ export class AutoModerator {
     takedownCids: CID[],
     labels: string[],
   ) {
-    const reason = `automated takedown for labels: ${labels.join(', ')}`
+    const reportReason = `automated takedown (${labels.join(
+      ', ',
+    )}). account needs review and possibly additional action`
+    const takedownReason = `automated takedown for labels: ${labels.join(', ')}`
+    log.warn(
+      {
+        uri: uri.toString(),
+        blobCids: takedownCids,
+        labels,
+      },
+      'hard takedown of record (and blobs) based on auto-matching',
+    )
+
+    if (this.services.moderation) {
+      await this.ctx.db.transaction(async (dbTxn) => {
+        // directly/locally create report, even if we use pushAgent for the takedown. don't have acctual account credentials for pushAgent, only admin auth
+        if (!this.services.moderation) {
+          // checked above, outside the transaction
+          return
+        }
+        const modSrvc = this.services.moderation(dbTxn)
+        await modSrvc.report({
+          reportedBy: this.ctx.cfg.labelerDid,
+          reasonType: REASONVIOLATION,
+          subject: {
+            uri: uri,
+            cid: recordCid,
+          },
+          reason: reportReason,
+        })
+      })
+    }
+
     if (this.pushAgent) {
       await this.pushAgent.com.atproto.admin.takeModerationAction({
         action: 'com.atproto.admin.defs#takedown',
@@ -217,7 +252,7 @@ export class AutoModerator {
           cid: recordCid.toString(),
         },
         subjectBlobCids: takedownCids.map((c) => c.toString()),
-        reason,
+        reason: takedownReason,
         createdBy: this.ctx.cfg.labelerDid,
       })
     } else {
@@ -230,7 +265,7 @@ export class AutoModerator {
           action: 'com.atproto.admin.defs#takedown',
           subject: { uri, cid: recordCid },
           subjectBlobCids: takedownCids,
-          reason,
+          reason: takedownReason,
           createdBy: this.ctx.cfg.labelerDid,
         })
         await modSrvc.takedownRecord({
@@ -245,28 +280,12 @@ export class AutoModerator {
   async storeLabels(uri: AtUri, cid: CID, labels: string[]): Promise<void> {
     if (labels.length < 1) return
     const labelSrvc = this.services.label(this.ctx.db)
-    const formatted = await labelSrvc.formatAndCreate(
+    await labelSrvc.formatAndCreate(
       this.ctx.cfg.labelerDid,
       uri.toString(),
       cid.toString(),
       { create: labels },
     )
-    if (this.pushAgent) {
-      const agent = this.pushAgent
-      try {
-        await agent.api.app.bsky.unspecced.applyLabels({ labels: formatted })
-      } catch (err) {
-        log.error(
-          {
-            err,
-            uri: uri.toString(),
-            labels,
-            receiver: agent.service.toString(),
-          },
-          'failed to push labels',
-        )
-      }
-    }
   }
 
   async processAll() {

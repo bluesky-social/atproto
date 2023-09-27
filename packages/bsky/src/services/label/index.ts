@@ -1,9 +1,9 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
+import { toSimplifiedISOSafe } from '@atproto/common'
 import { Database } from '../../db'
 import { Label, isSelfLabels } from '../../lexicon/types/com/atproto/label/defs'
 import { ids } from '../../lexicon/lexicons'
-import { toSimplifiedISOSafe } from '../indexing/util'
 import { LabelCache } from '../../label-cache'
 
 export type Labels = Record<string, Label[]>

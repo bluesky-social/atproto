@@ -6,19 +6,13 @@ import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import { notSoftDeletedClause } from '../../db/util'
 import { Backlink } from '../../db/tables/backlink'
-import { MessageQueue } from '../../event-stream/types'
-import {
-  indexRecord,
-  deleteRecord,
-  deleteRepo,
-} from '../../event-stream/messages'
 import { ids } from '../../lexicon/lexicons'
 
 export class RecordService {
-  constructor(public db: Database, public messageDispatcher: MessageQueue) {}
+  constructor(public db: Database) {}
 
-  static creator(messageDispatcher: MessageQueue) {
-    return (db: Database) => new RecordService(db, messageDispatcher)
+  static creator() {
+    return (db: Database) => new RecordService(db)
   }
 
   async indexRecord(
@@ -70,30 +64,19 @@ export class RecordService {
     }
     await this.addBacklinks(backlinks)
 
-    // Send to indexers
-    await this.messageDispatcher.send(
-      this.db,
-      indexRecord(uri, cid, obj, action, record.indexedAt),
-    )
-
     log.info({ uri }, 'indexed record')
   }
 
-  async deleteRecord(uri: AtUri, cascading = false) {
+  async deleteRecord(uri: AtUri) {
     this.db.assertTransaction()
     log.debug({ uri }, 'deleting indexed record')
     const deleteQuery = this.db.db
       .deleteFrom('record')
       .where('uri', '=', uri.toString())
-      .execute()
-    await this.db.db
+    const backlinkQuery = this.db.db
       .deleteFrom('backlink')
       .where('uri', '=', uri.toString())
-      .execute()
-    await Promise.all([
-      this.messageDispatcher.send(this.db, deleteRecord(uri, cascading)),
-      deleteQuery,
-    ])
+    await Promise.all([deleteQuery.execute(), backlinkQuery.execute()])
 
     log.info({ uri }, 'deleted indexed record')
   }
@@ -233,7 +216,6 @@ export class RecordService {
   async deleteForActor(did: string) {
     // Not done in transaction because it would be too long, prone to contention.
     // Also, this can safely be run multiple times if it fails.
-    await this.messageDispatcher.send(this.db, deleteRepo(did)) // Needs record table
     await this.db.db.deleteFrom('record').where('did', '=', did).execute()
     await this.db.db
       .deleteFrom('user_notification')
