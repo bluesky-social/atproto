@@ -25,7 +25,7 @@ const pkg = require('@atproto/pds/package.json')
 
 const main = async () => {
   const env = readEnv()
-  env.version ||= pkg.version
+  env.version ??= pkg.version
   const cfg = envToCfg(env)
   const secrets = envToSecrets(env)
   const pds = await PDS.create(cfg, secrets)

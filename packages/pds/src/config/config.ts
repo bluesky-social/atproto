@@ -37,11 +37,11 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     dbCfg = {
       dialect: 'pg',
       url: env.dbPostgresUrl,
-      migrationUrl: env.dbPostgresMigrationUrl || env.dbPostgresUrl,
+      migrationUrl: env.dbPostgresMigrationUrl ?? env.dbPostgresUrl,
       schema: env.dbPostgresSchema,
       pool: {
         idleTimeoutMs: env.dbPostgresPoolIdleTimeoutMs ?? 10000,
-        maxUses: env.dbPostgresPoolMaxUses || Infinity,
+        maxUses: env.dbPostgresPoolMaxUses ?? Infinity,
         size: env.dbPostgresPoolSize ?? 10,
       },
     }
@@ -60,7 +60,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       provider: 'disk',
       location: env.blobstoreDiskLocation,
       tempLocation:
-        env.blobstoreDiskTmpLocation || path.join(os.tmpdir(), 'pds/blobs'),
+        env.blobstoreDiskTmpLocation ?? path.join(os.tmpdir(), 'pds/blobs'),
     }
   } else {
     throw new Error('Must configure either S3 or disk blobstore')
@@ -84,10 +84,10 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   }
 
   const identityCfg: ServerConfig['identity'] = {
-    plcUrl: env.didPlcUrl || 'https://plc.bsky-sandbox.dev',
-    cacheMaxTTL: env.didCacheMaxTTL || DAY,
-    cacheStaleTTL: env.didCacheStaleTTL || HOUR,
-    resolverTimeout: env.resolverTimeout || 3 * SECOND,
+    plcUrl: env.didPlcUrl ?? 'https://plc.bsky-sandbox.dev',
+    cacheMaxTTL: env.didCacheMaxTTL ?? DAY,
+    cacheStaleTTL: env.didCacheStaleTTL ?? HOUR,
+    resolverTimeout: env.resolverTimeout ?? 3 * SECOND,
     recoveryDidKey: env.recoveryDidKey ?? null,
     serviceHandleDomains,
   }
@@ -109,7 +109,9 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     emailCfg = null
   } else {
     if (!env.emailFromAddress || !env.emailSmtpUrl) {
-      throw new Error('Partial email config')
+      throw new Error(
+        'Partial email config, must set both emailFromAddress and emailSmtpUrl',
+      )
     }
     emailCfg = {
       smtpUrl: env.emailSmtpUrl,
@@ -122,7 +124,9 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     moderationEmailCfg = null
   } else {
     if (!env.moderationEmailAddress || !env.moderationEmailSmtpUrl) {
-      throw new Error('Partial email config')
+      throw new Error(
+        'Partial moderation email config, must set both emailFromAddress and emailSmtpUrl',
+      )
     }
     moderationEmailCfg = {
       smtpUrl: env.moderationEmailSmtpUrl,
