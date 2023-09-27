@@ -2242,6 +2242,46 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoServerConfirmEmail: {
+    lexicon: 1,
+    id: 'com.atproto.server.confirmEmail',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Confirm an email using a token from com.atproto.server.requestEmailConfirmation.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email', 'token'],
+            properties: {
+              email: {
+                type: 'string',
+              },
+              token: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'AccountNotFound',
+          },
+          {
+            name: 'ExpiredToken',
+          },
+          {
+            name: 'InvalidToken',
+          },
+          {
+            name: 'InvalidEmail',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoServerCreateAccount: {
     lexicon: 1,
     id: 'com.atproto.server.createAccount',
@@ -2526,6 +2566,9 @@ export const schemaDict = {
               email: {
                 type: 'string',
               },
+              emailConfirmed: {
+                type: 'boolean',
+              },
             },
           },
         },
@@ -2756,6 +2799,9 @@ export const schemaDict = {
               email: {
                 type: 'string',
               },
+              emailConfirmed: {
+                type: 'boolean',
+              },
             },
           },
         },
@@ -2854,6 +2900,39 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoServerRequestEmailConfirmation: {
+    lexicon: 1,
+    id: 'com.atproto.server.requestEmailConfirmation',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Request an email with a code to confirm ownership of email',
+      },
+    },
+  },
+  ComAtprotoServerRequestEmailUpdate: {
+    lexicon: 1,
+    id: 'com.atproto.server.requestEmailUpdate',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Request a token in order to update email.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['tokenRequired'],
+            properties: {
+              tokenRequired: {
+                type: 'boolean',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoServerRequestPasswordReset: {
     lexicon: 1,
     id: 'com.atproto.server.requestPasswordReset',
@@ -2928,6 +3007,44 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  ComAtprotoServerUpdateEmail: {
+    lexicon: 1,
+    id: 'com.atproto.server.updateEmail',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Update an account's email.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email'],
+            properties: {
+              email: {
+                type: 'string',
+              },
+              token: {
+                type: 'string',
+                description:
+                  "Requires a token from com.atproto.sever.requestEmailUpdate if the account's email has been confirmed.",
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ExpiredToken',
+          },
+          {
+            name: 'InvalidToken',
+          },
+          {
+            name: 'TokenRequired',
+          },
+        ],
       },
     },
   },
@@ -7240,6 +7357,7 @@ export const ids = {
   ComAtprotoRepoPutRecord: 'com.atproto.repo.putRecord',
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   ComAtprotoRepoUploadBlob: 'com.atproto.repo.uploadBlob',
+  ComAtprotoServerConfirmEmail: 'com.atproto.server.confirmEmail',
   ComAtprotoServerCreateAccount: 'com.atproto.server.createAccount',
   ComAtprotoServerCreateAppPassword: 'com.atproto.server.createAppPassword',
   ComAtprotoServerCreateInviteCode: 'com.atproto.server.createInviteCode',
@@ -7256,10 +7374,14 @@ export const ids = {
   ComAtprotoServerRefreshSession: 'com.atproto.server.refreshSession',
   ComAtprotoServerRequestAccountDelete:
     'com.atproto.server.requestAccountDelete',
+  ComAtprotoServerRequestEmailConfirmation:
+    'com.atproto.server.requestEmailConfirmation',
+  ComAtprotoServerRequestEmailUpdate: 'com.atproto.server.requestEmailUpdate',
   ComAtprotoServerRequestPasswordReset:
     'com.atproto.server.requestPasswordReset',
   ComAtprotoServerResetPassword: 'com.atproto.server.resetPassword',
   ComAtprotoServerRevokeAppPassword: 'com.atproto.server.revokeAppPassword',
+  ComAtprotoServerUpdateEmail: 'com.atproto.server.updateEmail',
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
   ComAtprotoSyncGetCheckout: 'com.atproto.sync.getCheckout',

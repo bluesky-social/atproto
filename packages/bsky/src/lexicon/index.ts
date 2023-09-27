@@ -39,6 +39,7 @@ import * as ComAtprotoRepoGetRecord from './types/com/atproto/repo/getRecord'
 import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords'
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+import * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
@@ -52,9 +53,12 @@ import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSessi
 import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
+import * as ComAtprotoServerRequestEmailConfirmation from './types/com/atproto/server/requestEmailConfirmation'
+import * as ComAtprotoServerRequestEmailUpdate from './types/com/atproto/server/requestEmailUpdate'
 import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
+import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
@@ -557,6 +561,17 @@ export class ServerNS {
     this._server = server
   }
 
+  confirmEmail<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerConfirmEmail.Handler<ExtractAuth<AV>>,
+      ComAtprotoServerConfirmEmail.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.confirmEmail' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   createAccount<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -700,6 +715,28 @@ export class ServerNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  requestEmailConfirmation<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerRequestEmailConfirmation.Handler<ExtractAuth<AV>>,
+      ComAtprotoServerRequestEmailConfirmation.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.requestEmailConfirmation' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  requestEmailUpdate<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerRequestEmailUpdate.Handler<ExtractAuth<AV>>,
+      ComAtprotoServerRequestEmailUpdate.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.requestEmailUpdate' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   requestPasswordReset<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -730,6 +767,17 @@ export class ServerNS {
     >,
   ) {
     const nsid = 'com.atproto.server.revokeAppPassword' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateEmail<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerUpdateEmail.Handler<ExtractAuth<AV>>,
+      ComAtprotoServerUpdateEmail.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.updateEmail' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

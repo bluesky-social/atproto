@@ -1,4 +1,6 @@
 import { sql } from 'kysely'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { MINUTE, lessThanAgoMs } from '@atproto/common'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import * as scrypt from '../../db/scrypt'
@@ -11,7 +13,8 @@ import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { randomStr } from '@atproto/crypto'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { EmailTokenPurpose } from '../../db/tables/email-token'
+import { getRandomToken } from '../../api/com/atproto/server/util'
 
 export class AccountService {
   constructor(public db: Database) {}
@@ -197,7 +200,7 @@ export class AccountService {
   async updateEmail(did: string, email: string) {
     await this.db.db
       .updateTable('user_account')
-      .set({ email: email.toLowerCase() })
+      .set({ email: email.toLowerCase(), emailConfirmedAt: null })
       .where('did', '=', did)
       .executeTakeFirst()
   }
@@ -527,6 +530,49 @@ export class AccountService {
       }
       return acc
     }, {} as Record<string, CodeDetail>)
+  }
+
+  async createEmailToken(
+    did: string,
+    purpose: EmailTokenPurpose,
+  ): Promise<string> {
+    const token = getRandomToken().toUpperCase()
+    await this.db.db
+      .insertInto('email_token')
+      .values({ purpose, did, token, requestedAt: new Date() })
+      .onConflict((oc) => oc.columns(['purpose', 'did']).doUpdateSet({ token }))
+      .execute()
+    return token
+  }
+
+  async deleteEmailToken(did: string, purpose: EmailTokenPurpose) {
+    await this.db.db
+      .deleteFrom('email_token')
+      .where('did', '=', did)
+      .where('purpose', '=', purpose)
+      .executeTakeFirst()
+  }
+
+  async assertValidToken(
+    did: string,
+    purpose: EmailTokenPurpose,
+    token: string,
+    expirationLen = 15 * MINUTE,
+  ) {
+    const res = await this.db.db
+      .selectFrom('email_token')
+      .selectAll()
+      .where('purpose', '=', purpose)
+      .where('did', '=', did)
+      .where('token', '=', token)
+      .executeTakeFirst()
+    if (!res) {
+      throw new InvalidRequestError('Token is invalid', 'InvalidToken')
+    }
+    const expired = !lessThanAgoMs(res.requestedAt, expirationLen)
+    if (expired) {
+      throw new InvalidRequestError('Token is expired', 'ExpiredToken')
+    }
   }
 
   async getLastSeenNotifs(did: string): Promise<string | undefined> {

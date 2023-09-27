@@ -11,22 +11,14 @@ export interface QueryParams {}
 
 export type InputSchema = undefined
 
-export interface OutputSchema {
-  handle: string
-  did: string
-  email?: string
-  emailConfirmed?: boolean
-  [k: string]: unknown
-}
-
 export interface CallOptions {
   headers?: Headers
+  qp?: QueryParams
 }
 
 export interface Response {
   success: boolean
   headers: Headers
-  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {

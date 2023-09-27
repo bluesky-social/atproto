@@ -24,6 +24,8 @@ export class ServerMailer {
     this.templates = {
       resetPassword: this.compile('reset-password'),
       deleteAccount: this.compile('delete-account'),
+      confirmEmail: this.compile('confirm-email'),
+      updateEmail: this.compile('update-email'),
     }
   }
 
@@ -47,6 +49,20 @@ export class ServerMailer {
   async sendAccountDelete(params: { token: string }, mailOpts: Mail.Options) {
     return this.sendTemplate('deleteAccount', params, {
       subject: 'Account Deletion Requested',
+      ...mailOpts,
+    })
+  }
+
+  async sendConfirmEmail(params: { token: string }, mailOpts: Mail.Options) {
+    return this.sendTemplate('confirmEmail', params, {
+      subject: 'Email Confirmation',
+      ...mailOpts,
+    })
+  }
+
+  async sendUpdateEmail(params: { token: string }, mailOpts: Mail.Options) {
+    return this.sendTemplate('updateEmail', params, {
+      subject: 'Email Update Requested',
       ...mailOpts,
     })
   }
