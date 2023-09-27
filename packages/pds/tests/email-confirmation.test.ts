@@ -61,26 +61,34 @@ describe('email confirmation', () => {
     expect(session.data.emailConfirmed).toEqual(false)
   })
 
-  it('allows email update without token when unverified', async () => {
+  it('disallows email update without token when unverified', async () => {
     const res = await agent.api.com.atproto.server.requestEmailUpdate(
       undefined,
       { headers: sc.getHeaders(alice.did) },
     )
     expect(res.data.tokenRequired).toBe(false)
 
-    await agent.api.com.atproto.server.updateEmail(
+    const attempt = agent.api.com.atproto.server.updateEmail(
       {
         email: 'new-alice@example.com',
       },
       { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
     )
-    const session = await agent.api.com.atproto.server.getSession(
-      {},
-      { headers: sc.getHeaders(alice.did) },
-    )
-    expect(session.data.email).toEqual('new-alice@example.com')
-    expect(session.data.emailConfirmed).toEqual(false)
-    alice.email = session.data.email
+    await expect(attempt).rejects.toThrow()
+
+    // await agent.api.com.atproto.server.updateEmail(
+    //   {
+    //     email: 'new-alice@example.com',
+    //   },
+    //   { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
+    // )
+    // const session = await agent.api.com.atproto.server.getSession(
+    //   {},
+    //   { headers: sc.getHeaders(alice.did) },
+    // )
+    // expect(session.data.email).toEqual('new-alice@example.com')
+    // expect(session.data.emailConfirmed).toEqual(false)
+    // alice.email = session.data.email
   })
 
   let confirmToken
@@ -100,7 +108,7 @@ describe('email confirmation', () => {
   it('fails email confirmation with a bad token', async () => {
     const attempt = agent.api.com.atproto.server.confirmEmail(
       {
-        email: 'new-alice@example.com',
+        email: alice.email,
         token: '123456',
       },
       { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
@@ -126,7 +134,7 @@ describe('email confirmation', () => {
   it('confirms email', async () => {
     await agent.api.com.atproto.server.confirmEmail(
       {
-        email: 'new-alice@example.com',
+        email: alice.email,
         token: confirmToken,
       },
       { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
