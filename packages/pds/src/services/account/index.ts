@@ -11,7 +11,6 @@ import { countAll, notSoftDeletedClause } from '../../db/util'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
-import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 
 export class AccountService {
   constructor(public db: Database) {}
@@ -275,22 +274,44 @@ export class AccountService {
   }
 
   async search(opts: {
-    term: string
+    query: string
     limit: number
     cursor?: string
     includeSoftDeleted?: boolean
   }): Promise<(RepoRoot & DidHandle)[]> {
-    const builder =
-      this.db.dialect === 'pg'
-        ? getUserSearchQueryPg(this.db, opts)
-            .selectAll('did_handle')
-            .selectAll('repo_root')
-        : getUserSearchQuerySqlite(this.db, opts)
-            .selectAll('did_handle')
-            .selectAll('repo_root')
-            .select(sql<number>`0`.as('distance'))
+    const { query, limit, cursor, includeSoftDeleted } = opts
+    const { ref } = this.db.db.dynamic
 
-    return await builder.execute()
+    const builder = this.db.db
+      .selectFrom('did_handle')
+      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .innerJoin('user_account', 'user_account.did', 'did_handle.did')
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('repo_root'))),
+      )
+      .where((qb) => {
+        // sqlite doesn't support "ilike", but performs "like" case-insensitively
+        const likeOp = this.db.dialect === 'pg' ? 'ilike' : 'like'
+        if (query.includes('@')) {
+          return qb.where('user_account.email', likeOp, `%${query}%`)
+        }
+        if (query.startsWith('did:')) {
+          return qb.where('did_handle.did', '=', query)
+        }
+        return qb.where('did_handle.handle', likeOp, `${query}%`)
+      })
+      .selectAll(['did_handle', 'repo_root'])
+
+    const keyset = new ListKeyset(
+      ref('repo_root.indexedAt'),
+      ref('did_handle.handle'),
+    )
+
+    return await paginate(builder, {
+      limit,
+      cursor,
+      keyset,
+    }).execute()
   }
 
   async list(opts: {

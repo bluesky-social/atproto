@@ -26,11 +26,11 @@ export default function (server: Server, ctx: AppContext) {
       const { db, services } = ctx
       const moderationService = services.moderation(db)
       const { limit, cursor, invitedBy } = params
-      const term = params.term?.trim() ?? ''
+      const query = params.q?.trim() ?? params.term?.trim() ?? ''
 
       const keyset = new ListKeyset(sql``, sql``)
 
-      if (!term) {
+      if (!query) {
         const results = await services
           .account(db)
           .list({ limit, cursor, includeSoftDeleted: true, invitedBy })
@@ -47,13 +47,13 @@ export default function (server: Server, ctx: AppContext) {
 
       const results = await services
         .account(db)
-        .search({ term, limit, cursor, includeSoftDeleted: true })
+        .search({ query, limit, cursor, includeSoftDeleted: true })
 
       return {
         encoding: 'application/json',
         body: {
           // For did search, we can only find 1 or no match, cursors can be ignored entirely
-          cursor: term.startsWith('did:')
+          cursor: query.startsWith('did:')
             ? undefined
             : keyset.packFromResult(results),
           repos: await moderationService.views.repo(results, {
