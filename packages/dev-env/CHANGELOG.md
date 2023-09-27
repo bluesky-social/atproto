@@ -1,7 +1,5 @@
 # @atproto/dev-env
 
-# <<<<<<< HEAD
-
 ## 0.2.10
 
 ### Patch Changes
@@ -10,8 +8,6 @@
   - @atproto/api@0.6.19
   - @atproto/bsky@0.0.10
   - @atproto/pds@0.1.19
-
-> > > > > > > main
 
 ## 0.2.9
 
