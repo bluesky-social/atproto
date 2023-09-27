@@ -13,17 +13,17 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('user not found')
       }
       // require valid token
-      if (user.emailConfirmedAt) {
-        if (!token) {
-          throw new InvalidRequestError(
-            'confirmation token required',
-            'TokenRequired',
-          )
-        }
-        await ctx.services
-          .account(ctx.db)
-          .assertValidToken(did, 'update_email', token)
+      // @TODO re-enable updating non-verified emails
+      // if (user.emailConfirmedAt) {
+      if (!token) {
+        throw new InvalidRequestError(
+          'confirmation token required',
+          'TokenRequired',
+        )
       }
+      await ctx.services
+        .account(ctx.db)
+        .assertValidToken(did, 'update_email', token)
 
       await ctx.db.transaction(async (dbTxn) => {
         const accntSrvce = ctx.services.account(dbTxn)
