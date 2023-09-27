@@ -90,6 +90,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     resolverTimeout: env.resolverTimeout ?? 3 * SECOND,
     recoveryDidKey: env.recoveryDidKey ?? null,
     serviceHandleDomains,
+    handleBackupNameservers: env.handleBackupNameservers,
   }
 
   // default to being required if left undefined
@@ -246,6 +247,7 @@ export type IdentityConfig = {
   cacheMaxTTL: number
   recoveryDidKey: string | null
   serviceHandleDomains: string[]
+  handleBackupNameservers?: string[]
 }
 
 export type InvitesConfig =

@@ -35,6 +35,7 @@ export const readEnv = (): ServerEnvironment => {
     resolverTimeout: envInt('PDS_ID_RESOLVER_TIMEOUT'),
     recoveryDidKey: envStr('PDS_RECOVERY_DID_KEY'),
     serviceHandleDomains: envList('PDS_SERVICE_HANDLE_DOMAINS'),
+    handleBackupNameservers: envList('PDS_HANDLE_BACKUP_NAMESERVERS'),
 
     // invites
     inviteRequired: envBool('PDS_INVITE_REQUIRED'),
@@ -123,6 +124,7 @@ export type ServerEnvironment = {
   resolverTimeout?: number
   recoveryDidKey?: string
   serviceHandleDomains?: string[] // public hostname by default
+  handleBackupNameservers?: string[]
 
   // invites
   inviteRequired?: boolean

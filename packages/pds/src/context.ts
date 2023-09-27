@@ -133,6 +133,7 @@ export class AppContext {
       plcUrl: cfg.identity.plcUrl,
       didCache,
       timeout: cfg.identity.resolverTimeout,
+      backupNameservers: cfg.identity.handleBackupNameservers,
     })
     const plcClient = new plc.Client(cfg.identity.plcUrl)
 
