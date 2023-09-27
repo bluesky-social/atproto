@@ -918,23 +918,6 @@ describe('moderation', () => {
         'Must be a full moderator to perform an account takedown',
       )
     })
-<<<<<<< HEAD:packages/pds/tests/admin/moderation.test.ts
-=======
-
-    async function reverse(actionId: number) {
-      await agent.api.com.atproto.admin.reverseModerationAction(
-        {
-          id: actionId,
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
-    }
->>>>>>> main:packages/pds/tests/moderation.test.ts
   })
 
   describe('blob takedown', () => {
@@ -981,7 +964,6 @@ describe('moderation', () => {
       await expect(referenceBlob).rejects.toThrow('Could not find blob:')
     })
 
-<<<<<<< HEAD:packages/pds/tests/admin/moderation.test.ts
     it('prevents image blob from being served, even when cached.', async () => {
       const attempt = agent.api.com.atproto.sync.getBlob({
         did: sc.dids.carol,
@@ -990,8 +972,6 @@ describe('moderation', () => {
       await expect(attempt).rejects.toThrow('Blob not found')
     })
 
-=======
->>>>>>> main:packages/pds/tests/moderation.test.ts
     it('restores blob when action is reversed.', async () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
@@ -1008,7 +988,6 @@ describe('moderation', () => {
       // Can post and reference blob
       const post = await sc.post(sc.dids.alice, 'pic', [], [blob])
       expect(post.images[0].image.ref.equals(blob.image.ref)).toBeTruthy()
-<<<<<<< HEAD:packages/pds/tests/admin/moderation.test.ts
 
       // Can fetch through image server
       const res = await agent.api.com.atproto.sync.getBlob({
@@ -1017,8 +996,6 @@ describe('moderation', () => {
       })
 
       expect(res.data.byteLength).toBeGreaterThan(9000)
-=======
->>>>>>> main:packages/pds/tests/moderation.test.ts
     })
   })
 })

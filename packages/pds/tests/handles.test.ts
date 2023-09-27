@@ -50,21 +50,13 @@ describe('handles', () => {
     await close()
   })
 
-<<<<<<< HEAD
-  const getDbHandle = async (did: string): Promise<string | null> => {
-=======
   const getHandleFromDb = async (did: string): Promise<string | undefined> => {
->>>>>>> main
     const res = await ctx.db.db
       .selectFrom('did_handle')
       .selectAll()
       .where('did', '=', did)
       .executeTakeFirst()
-<<<<<<< HEAD
-    return res?.handle ?? null
-=======
     return res?.handle
->>>>>>> main
   }
 
   it('resolves handles', async () => {
@@ -182,13 +174,8 @@ describe('handles', () => {
       },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
-<<<<<<< HEAD
-    const handle = await getDbHandle(alice)
-    expect(handle).toBe('alice.external')
-=======
     const dbHandle = await getHandleFromDb(alice)
     expect(dbHandle).toBe('alice.external')
->>>>>>> main
 
     const data = await idResolver.did.resolveAtprotoData(alice)
     expect(data.handle).toBe('alice.external')
@@ -215,13 +202,8 @@ describe('handles', () => {
       'External handle did not resolve to DID',
     )
 
-<<<<<<< HEAD
-    const handle = await getDbHandle(alice)
-    expect(handle).toBe('alice.external')
-=======
     const dbHandle = await getHandleFromDb(alice)
     expect(dbHandle).toBe('alice.external')
->>>>>>> main
   })
 
   it('allows admin overrules of service domains', async () => {
@@ -235,14 +217,9 @@ describe('handles', () => {
         encoding: 'application/json',
       },
     )
-<<<<<<< HEAD
-    const handle = await getDbHandle(bob)
-    expect(handle).toBe('bob-alt.test')
-=======
 
     const dbHandle = await getHandleFromDb(bob)
     expect(dbHandle).toBe('bob-alt.test')
->>>>>>> main
   })
 
   it('allows admin override of reserved domains', async () => {
@@ -257,13 +234,8 @@ describe('handles', () => {
       },
     )
 
-<<<<<<< HEAD
-    const handle = await getDbHandle(bob)
-    expect(handle).toBe('dril.test')
-=======
     const dbHandle = await getHandleFromDb(bob)
     expect(dbHandle).toBe('dril.test')
->>>>>>> main
   })
 
   it('requires admin auth', async () => {

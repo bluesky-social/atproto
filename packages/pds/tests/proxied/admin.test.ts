@@ -245,10 +245,6 @@ describe('proxies admin requests', () => {
   })
 
   it('takesdown and labels repos, and reverts.', async () => {
-<<<<<<< HEAD
-=======
-    const { db, services } = network.bsky.ctx
->>>>>>> main
     // takedown repo
     const { data: action } =
       await agent.api.com.atproto.admin.takeModerationAction(
@@ -278,13 +274,6 @@ describe('proxies admin requests', () => {
     await expect(tryGetProfileAppview).rejects.toThrow(
       'Account has been taken down',
     )
-<<<<<<< HEAD
-=======
-    const labelsA = await services
-      .label(db.getPrimary())
-      .getLabels(sc.dids.alice, { includeNeg: false, skipCache: true })
-    expect(labelsA.map((l) => l.val)).toEqual(['dogs'])
->>>>>>> main
     // reverse action
     await agent.api.com.atproto.admin.reverseModerationAction(
       { id: action.id, createdBy: 'did:example:admin', reason: 'X' },
@@ -303,20 +292,9 @@ describe('proxies admin requests', () => {
     expect(profileAppview).toEqual(
       expect.objectContaining({ did: sc.dids.alice, handle: 'alice.test' }),
     )
-<<<<<<< HEAD
   })
 
   it('takesdown and labels records, and reverts.', async () => {
-=======
-    const labelsB = await services
-      .label(db.getPrimary())
-      .getLabels(sc.dids.alice, { includeNeg: false, skipCache: true })
-    expect(labelsB.map((l) => l.val)).toEqual(['cats'])
-  })
-
-  it('takesdown and labels records, and reverts.', async () => {
-    const { db, services } = network.bsky.ctx
->>>>>>> main
     const post = sc.posts[sc.dids.alice][0]
     // takedown post
     const { data: action } =
@@ -339,25 +317,11 @@ describe('proxies admin requests', () => {
         },
       )
     // check thread and labels
-<<<<<<< HEAD
     const tryGetPost = agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr, depth: 0 },
       { headers: sc.getHeaders(sc.dids.carol) },
     )
     await expect(tryGetPost).rejects.toThrow(NotFoundError)
-=======
-    const tryGetPostAppview = agent.api.app.bsky.feed.getPostThread(
-      { uri: post.ref.uriStr, depth: 0 },
-      {
-        headers: { ...sc.getHeaders(sc.dids.carol), 'x-appview-proxy': 'true' },
-      },
-    )
-    await expect(tryGetPostAppview).rejects.toThrow(NotFoundError)
-    const labelsA = await services
-      .label(db.getPrimary())
-      .getLabels(post.ref.uriStr, { includeNeg: false, skipCache: true })
-    expect(labelsA.map((l) => l.val)).toEqual(['dogs'])
->>>>>>> main
     // reverse action
     await agent.api.com.atproto.admin.reverseModerationAction(
       { id: action.id, createdBy: 'did:example:admin', reason: 'X' },
@@ -376,13 +340,6 @@ describe('proxies admin requests', () => {
     expect(threadAppview.thread.post).toEqual(
       expect.objectContaining({ uri: post.ref.uriStr, cid: post.ref.cidStr }),
     )
-<<<<<<< HEAD
-=======
-    const labelsB = await services
-      .label(db.getPrimary())
-      .getLabels(post.ref.uriStr, { includeNeg: false, skipCache: true })
-    expect(labelsB.map((l) => l.val)).toEqual(['cats'])
->>>>>>> main
   })
 
   it('does not persist actions and reports on pds.', async () => {
