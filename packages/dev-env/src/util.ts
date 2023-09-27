@@ -49,13 +49,7 @@ export const mockMailer = (pds: TestPds) => {
   const _origSendMail = mailer.transporter.sendMail
   mailer.transporter.sendMail = async (opts) => {
     const result = await _origSendMail.call(mailer.transporter, opts)
-    const message = result[0][0]
-    console.log(`✉️ Email
-Subject: ${message.subject}
-To: ${message.to}
-From: ${message.from}
-Body: ${message.html}
-`)
+    console.log(`✉️ Email: ${JSON.stringify(result, null, 2)}`)
     return result
   }
 }
