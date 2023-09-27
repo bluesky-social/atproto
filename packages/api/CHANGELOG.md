@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.6.19
+
+### Patch Changes
+
+- [#1674](https://github.com/bluesky-social/atproto/pull/1674) [`35b616cd`](https://github.com/bluesky-social/atproto/commit/35b616cd82232879937afc88d3f77d20c6395276) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Strip leading `#` from from detected tag facets
+
 ## 0.6.18
 
 ### Patch Changes
