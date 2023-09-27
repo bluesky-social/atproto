@@ -1,5 +1,13 @@
 # @atproto/lex-cli
 
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.2.2
+  - @atproto/syntax@0.1.2
+
 ## 0.2.1
 
 ### Patch Changes

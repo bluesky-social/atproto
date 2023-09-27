@@ -1,5 +1,17 @@
 # @atproto/api
 
+## 0.6.20
+
+### Patch Changes
+
+- [#1568](https://github.com/bluesky-social/atproto/pull/1568) [`41ee177f`](https://github.com/bluesky-social/atproto/commit/41ee177f5a440490280d17acd8a89bcddaffb23b) Thanks [@dholms](https://github.com/dholms)! - Added email verification and update flows
+
+- Updated dependencies [[`41ee177f`](https://github.com/bluesky-social/atproto/commit/41ee177f5a440490280d17acd8a89bcddaffb23b)]:
+  - @atproto/common-web@0.2.1
+  - @atproto/lexicon@0.2.2
+  - @atproto/syntax@0.1.2
+  - @atproto/xrpc@0.3.2
+
 ## 0.6.19
 
 ### Patch Changes
