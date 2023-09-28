@@ -14,7 +14,6 @@ require('dd-trace') // Only works with commonjs
 const path = require('path')
 const {
   PDS,
-  Database,
   envToCfg,
   envToSecrets,
   readEnv,
@@ -29,17 +28,6 @@ const main = async () => {
   const cfg = envToCfg(env)
   const secrets = envToSecrets(env)
   const pds = await PDS.create(cfg, secrets)
-  if (cfg.db.dialect === 'pg') {
-    // Migrate using credentialed user
-    const migrateDb = Database.postgres({
-      url: cfg.db.migrationUrl,
-      schema: cfg.db.schema,
-    })
-    await migrateDb.migrateToLatestOrThrow()
-    await migrateDb.close()
-  } else {
-    await pds.ctx.db.migrateToLatestOrThrow()
-  }
 
   // If the PDS is configured to proxy moderation, this will be running on appview instead of pds.
   // Also don't run this on the sequencer leader, which may not be configured regarding moderation proxying at all.

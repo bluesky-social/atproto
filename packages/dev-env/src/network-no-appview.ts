@@ -22,7 +22,6 @@ export class TestNetworkNoAppView {
     const pds = await TestPds.create({
       dbPostgresUrl,
       dbPostgresSchema,
-      dbPostgresPoolSize: 5,
       dbSqliteLocation,
       didPlcUrl: plc.url,
       ...params.pds,

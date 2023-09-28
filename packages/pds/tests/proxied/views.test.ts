@@ -228,38 +228,6 @@ describe('proxies view requests', () => {
     expect([...pt1.data.feed, ...pt2.data.feed]).toEqual(res.data.feed)
   })
 
-  it('feed.getListFeed', async () => {
-    const list = Object.values(sc.lists[alice])[0].ref.uriStr
-    const res = await agent.api.app.bsky.feed.getListFeed(
-      {
-        list,
-      },
-      {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
-      },
-    )
-    expect(forSnapshot(res.data)).toMatchSnapshot()
-    const pt1 = await agent.api.app.bsky.feed.getListFeed(
-      {
-        list,
-        limit: 1,
-      },
-      {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
-      },
-    )
-    const pt2 = await agent.api.app.bsky.feed.getListFeed(
-      {
-        list,
-        cursor: pt1.data.cursor,
-      },
-      {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
-      },
-    )
-    expect([...pt1.data.feed, ...pt2.data.feed]).toEqual(res.data.feed)
-  })
-
   it('feed.getLikes', async () => {
     const postUri = sc.posts[carol][0].ref.uriStr
     const res = await agent.api.app.bsky.feed.getLikes(

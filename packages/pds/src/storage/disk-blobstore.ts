@@ -24,7 +24,6 @@ export class DiskBlobStore implements BlobStore {
     this.quarantineLocation = quarantineLocation
   }
 
-  // @TODO move quarantine out of temp by default
   static async create(
     location: string,
     tmpLocation?: string,

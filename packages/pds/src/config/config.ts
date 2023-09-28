@@ -84,7 +84,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   }
 
   const identityCfg: ServerConfig['identity'] = {
-    plcUrl: env.didPlcUrl ?? 'https://plc.bsky-sandbox.dev',
+    plcUrl: env.didPlcUrl ?? 'https://plc.directory',
     cacheMaxTTL: env.didCacheMaxTTL ?? DAY,
     cacheStaleTTL: env.didCacheStaleTTL ?? HOUR,
     resolverTimeout: env.resolverTimeout ?? 3 * SECOND,
@@ -142,9 +142,14 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     sequencerLeaderLockId: env.sequencerLeaderLockId ?? 1100,
   }
 
+  if (!env.bskyAppViewUrl) {
+    throw new Error('Must configure PDS_BSKY_APP_VIEW_URL')
+  } else if (!env.bskyAppViewDid) {
+    throw new Error('Must configure PDS_BSKY_APP_VIEW_DID')
+  }
   const bskyAppViewCfg: ServerConfig['bskyAppView'] = {
-    url: env.bskyAppViewUrl ?? 'https://api.bsky-sandbox.dev',
-    did: env.bskyAppViewDid ?? 'did:plc:abc', // get real did
+    url: env.bskyAppViewUrl,
+    did: env.bskyAppViewDid,
     proxyModeration: env.bskyAppViewModeration ?? false,
     cdnUrlPattern: env.bskyAppViewCdnUrlPattern,
   }
