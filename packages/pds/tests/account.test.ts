@@ -528,24 +528,23 @@ describe('account', () => {
   it('allows only unexpired password reset tokens', async () => {
     await agent.api.com.atproto.server.requestPasswordReset({ email })
 
-    const user = await db.db
-      .updateTable('user_account')
-      .where('email', '=', email)
+    const res = await db.db
+      .updateTable('email_token')
+      .where('purpose', '=', 'reset_password')
+      .where('did', '=', did)
       .set({
-        passwordResetGrantedAt: new Date(
-          Date.now() - 16 * minsToMs,
-        ).toISOString(),
+        requestedAt: new Date(Date.now() - 16 * minsToMs),
       })
-      .returning(['passwordResetToken'])
+      .returning(['token'])
       .executeTakeFirst()
-    if (!user?.passwordResetToken) {
+    if (!res?.token) {
       throw new Error('Missing reset token')
     }
 
     // Use of expired token fails
     await expect(
       agent.api.com.atproto.server.resetPassword({
-        token: user.passwordResetToken,
+        token: res.token,
         password: passwordAlt,
       }),
     ).rejects.toThrow(ComAtprotoServerResetPassword.ExpiredTokenError)

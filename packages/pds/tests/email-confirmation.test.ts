@@ -61,7 +61,7 @@ describe('email confirmation', () => {
     expect(session.data.emailConfirmed).toEqual(false)
   })
 
-  it('disallows email update without token when unverified', async () => {
+  it('disallows email update when unverified', async () => {
     const res = await agent.api.com.atproto.server.requestEmailUpdate(
       undefined,
       { headers: sc.getHeaders(alice.did) },
@@ -75,21 +75,35 @@ describe('email confirmation', () => {
       { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
     )
     await expect(attempt).rejects.toThrow()
-
-    // await agent.api.com.atproto.server.updateEmail(
-    //   {
-    //     email: 'new-alice@example.com',
-    //   },
-    //   { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
-    // )
-    // const session = await agent.api.com.atproto.server.getSession(
-    //   {},
-    //   { headers: sc.getHeaders(alice.did) },
-    // )
-    // expect(session.data.email).toEqual('new-alice@example.com')
-    // expect(session.data.emailConfirmed).toEqual(false)
-    // alice.email = session.data.email
+    const session = await agent.api.com.atproto.server.getSession(
+      {},
+      { headers: sc.getHeaders(alice.did) },
+    )
+    expect(session.data.email).toEqual(alice.email)
+    expect(session.data.emailConfirmed).toEqual(false)
   })
+
+  // it('allows email update without token when unverified', async () => {
+  //   const res = await agent.api.com.atproto.server.requestEmailUpdate(
+  //     undefined,
+  //     { headers: sc.getHeaders(alice.did) },
+  //   )
+  //   expect(res.data.tokenRequired).toBe(false)
+
+  //   await agent.api.com.atproto.server.updateEmail(
+  //     {
+  //       email: 'new-alice@example.com',
+  //     },
+  //     { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
+  //   )
+  //   const session = await agent.api.com.atproto.server.getSession(
+  //     {},
+  //     { headers: sc.getHeaders(alice.did) },
+  //   )
+  //   expect(session.data.email).toEqual('new-alice@example.com')
+  //   expect(session.data.emailConfirmed).toEqual(false)
+  //   alice.email = session.data.email
+  // })
 
   let confirmToken
 
@@ -187,6 +201,19 @@ describe('email confirmation', () => {
     )
     await expect(attempt).rejects.toThrow(
       ComAtprotoServerUpdateEmail.InvalidTokenError,
+    )
+  })
+
+  it('fails email update with a badly formatted email', async () => {
+    const attempt = agent.api.com.atproto.server.updateEmail(
+      {
+        email: 'bad-email@disposeamail.com',
+        token: updateToken,
+      },
+      { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
+    )
+    await expect(attempt).rejects.toThrow(
+      'This email address is not supported, please use a different email.',
     )
   })
 

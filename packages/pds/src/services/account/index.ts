@@ -564,7 +564,7 @@ export class AccountService {
       .selectAll()
       .where('purpose', '=', purpose)
       .where('did', '=', did)
-      .where('token', '=', token)
+      .where('token', '=', token.toUpperCase())
       .executeTakeFirst()
     if (!res) {
       throw new InvalidRequestError('Token is invalid', 'InvalidToken')
@@ -573,6 +573,27 @@ export class AccountService {
     if (expired) {
       throw new InvalidRequestError('Token is expired', 'ExpiredToken')
     }
+  }
+
+  async assertValidTokenAndFindDid(
+    purpose: EmailTokenPurpose,
+    token: string,
+    expirationLen = 15 * MINUTE,
+  ): Promise<string> {
+    const res = await this.db.db
+      .selectFrom('email_token')
+      .selectAll()
+      .where('purpose', '=', purpose)
+      .where('token', '=', token.toUpperCase())
+      .executeTakeFirst()
+    if (!res) {
+      throw new InvalidRequestError('Token is invalid', 'InvalidToken')
+    }
+    const expired = !lessThanAgoMs(res.requestedAt, expirationLen)
+    if (expired) {
+      throw new InvalidRequestError('Token is expired', 'ExpiredToken')
+    }
+    return res.did
   }
 
   async getLastSeenNotifs(did: string): Promise<string | undefined> {

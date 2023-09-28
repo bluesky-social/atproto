@@ -2,7 +2,6 @@ import { AuthRequiredError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { TAKEDOWN } from '../../../../lexicon/types/com/atproto/admin/defs'
 import AppContext from '../../../../context'
-import Database from '../../../../db'
 import { MINUTE } from '@atproto/common'
 
 const REASON_ACCT_DELETION = 'ACCOUNT DELETION'
@@ -22,40 +21,18 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError('Invalid did or password')
       }
 
-      const tokenInfo = await ctx.db.db
-        .selectFrom('did_handle')
-        .innerJoin(
-          'delete_account_token as token',
-          'token.did',
-          'did_handle.did',
-        )
-        .where('did_handle.did', '=', did)
-        .where('token.token', '=', token.toUpperCase())
-        .select([
-          'token.token as token',
-          'token.requestedAt as requestedAt',
-          'token.did as did',
-        ])
-        .executeTakeFirst()
-
-      if (!tokenInfo) {
-        return createInvalidTokenError()
-      }
+      await ctx.services
+        .account(ctx.db)
+        .assertValidToken(did, 'delete_account', token)
 
       const now = new Date()
-      const requestedAt = new Date(tokenInfo.requestedAt)
-      const expiresAt = new Date(requestedAt.getTime() + 15 * minsToMs)
-      if (now > expiresAt) {
-        await removeDeleteToken(ctx.db, tokenInfo.did)
-        return createExpiredTokenError()
-      }
-
       await ctx.db.transaction(async (dbTxn) => {
+        const accountService = ctx.services.account(dbTxn)
         const moderationTxn = ctx.services.moderation(dbTxn)
         const [currentAction] = await moderationTxn.getCurrentActions({ did })
         if (currentAction?.action === TAKEDOWN) {
           // Do not disturb an existing takedown, continue with account deletion
-          return await removeDeleteToken(dbTxn, did)
+          return await accountService.deleteEmailToken(did, 'delete_account')
         }
         if (currentAction) {
           // Reverse existing action to replace it with a self-takedown
@@ -74,7 +51,7 @@ export default function (server: Server, ctx: AppContext) {
           createdAt: now,
         })
         await moderationTxn.takedownRepo({ did, takedownId: takedown.id })
-        await removeDeleteToken(dbTxn, did)
+        await accountService.deleteEmailToken(did, 'delete_account')
       })
 
       ctx.backgroundQueue.add(async (db) => {
@@ -89,35 +66,4 @@ export default function (server: Server, ctx: AppContext) {
       })
     },
   })
-}
-
-type ErrorResponse = {
-  status: number
-  error: string
-  message: string
-}
-
-const minsToMs = 60 * 1000
-
-const createInvalidTokenError = (): ErrorResponse & {
-  error: 'InvalidToken'
-} => ({
-  status: 400,
-  error: 'InvalidToken',
-  message: 'Token is invalid',
-})
-
-const createExpiredTokenError = (): ErrorResponse & {
-  error: 'ExpiredToken'
-} => ({
-  status: 400,
-  error: 'ExpiredToken',
-  message: 'The password reset token has expired',
-})
-
-const removeDeleteToken = async (db: Database, did: string) => {
-  await db.db
-    .deleteFrom('delete_account_token')
-    .where('delete_account_token.did', '=', did)
-    .execute()
 }
