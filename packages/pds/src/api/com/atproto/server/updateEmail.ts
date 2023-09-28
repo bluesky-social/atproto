@@ -12,6 +12,9 @@ export default function (server: Server, ctx: AppContext) {
       if (!user) {
         throw new InvalidRequestError('user not found')
       }
+      if (!user.emailConfirmedAt) {
+        throw new InvalidRequestError('email must be confirmed (temporary)')
+      }
       // require valid token
       if (user.emailConfirmedAt) {
         if (!token) {
