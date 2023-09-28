@@ -101,7 +101,10 @@
       }
     },
     "actionMeta": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "resolveReportIds": { "type": "array", "items": { "type": "integer" } }
+      }
     },
     "actionType": {
       "type": "string",
@@ -156,19 +159,17 @@
       "type": "object",
       "required": [
         "id",
-        "commentType",
+        "reasonType",
         "subject",
         "reportedBy",
         "createdAt",
-        "resolvedByActionIds",
-        "subjectView",
-        "subjectStatus"
+        "resolvedByActionIds"
       ],
       "properties": {
         "id": { "type": "integer" },
-        "commentType": {
+        "reasonType": {
           "type": "ref",
-          "ref": "com.atproto.moderation.defs#commentType"
+          "ref": "com.atproto.moderation.defs#reasonType"
         },
         "comment": { "type": "string" },
         "subjectRepoHandle": { "type": "string" },
@@ -176,19 +177,11 @@
           "type": "union",
           "refs": ["#repoRef", "com.atproto.repo.strongRef"]
         },
-        "subjectView": {
-          "type": "ref",
-          "ref": "com.atproto.admin.defs#subjectView"
-        },
         "reportedBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" },
         "resolvedByActionIds": {
           "type": "array",
           "items": { "type": "integer" }
-        },
-        "subjectStatus": {
-          "type": "ref",
-          "ref": "com.atproto.admin.defs#subjectStatusType"
         }
       }
     },
@@ -218,7 +211,7 @@
       "type": "object",
       "required": [
         "id",
-        "commentType",
+        "reasonType",
         "subject",
         "subjectView",
         "reportedBy",
@@ -228,9 +221,9 @@
       ],
       "properties": {
         "id": { "type": "integer" },
-        "commentType": {
+        "reasonType": {
           "type": "ref",
-          "ref": "com.atproto.moderation.defs#commentType"
+          "ref": "com.atproto.moderation.defs#reasonType"
         },
         "comment": { "type": "string" },
         "subject": {
