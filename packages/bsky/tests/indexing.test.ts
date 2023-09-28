@@ -648,8 +648,9 @@ describe('indexing', () => {
         headers: sc.getHeaders(alice),
       })
       const { token } = await network.pds.ctx.db.db
-        .selectFrom('delete_account_token')
+        .selectFrom('email_token')
         .selectAll()
+        .where('purpose', '=', 'delete_account')
         .where('did', '=', alice)
         .executeTakeFirstOrThrow()
       await pdsAgent.api.com.atproto.server.deleteAccount({
