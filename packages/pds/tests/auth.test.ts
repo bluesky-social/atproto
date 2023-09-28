@@ -68,6 +68,7 @@ describe('auth', () => {
       did: account.did,
       handle: account.handle,
       email,
+      emailConfirmed: false,
     })
     // Valid refresh token
     const nextSession = await refreshSession(account.refreshJwt)
@@ -96,6 +97,7 @@ describe('auth', () => {
       did: session.did,
       handle: session.handle,
       email,
+      emailConfirmed: false,
     })
     // Valid refresh token
     const nextSession = await refreshSession(session.refreshJwt)
@@ -139,6 +141,7 @@ describe('auth', () => {
       did: session.did,
       handle: session.handle,
       email,
+      emailConfirmed: false,
     })
     // Valid refresh token
     const nextSession = await refreshSession(session.refreshJwt)

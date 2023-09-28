@@ -48,6 +48,7 @@ describe('agent', () => {
     expect(agent.session?.handle).toEqual(res.data.handle)
     expect(agent.session?.did).toEqual(res.data.did)
     expect(agent.session?.email).toEqual('user1@test.com')
+    expect(agent.session?.emailConfirmed).toEqual(false)
 
     const { data: sessionInfo } = await agent.api.com.atproto.server.getSession(
       {},
@@ -56,6 +57,7 @@ describe('agent', () => {
       did: res.data.did,
       handle: res.data.handle,
       email: 'user1@test.com',
+      emailConfirmed: false,
     })
 
     expect(events.length).toEqual(1)
@@ -93,6 +95,7 @@ describe('agent', () => {
     expect(agent2.session?.handle).toEqual(res1.data.handle)
     expect(agent2.session?.did).toEqual(res1.data.did)
     expect(agent2.session?.email).toEqual('user2@test.com')
+    expect(agent2.session?.emailConfirmed).toEqual(false)
 
     const { data: sessionInfo } =
       await agent2.api.com.atproto.server.getSession({})
@@ -100,6 +103,7 @@ describe('agent', () => {
       did: res1.data.did,
       handle: res1.data.handle,
       email,
+      emailConfirmed: false,
     })
 
     expect(events.length).toEqual(2)
@@ -142,6 +146,7 @@ describe('agent', () => {
       did: res1.data.did,
       handle: res1.data.handle,
       email: res1.data.email,
+      emailConfirmed: false,
     })
 
     expect(events.length).toEqual(2)
@@ -206,6 +211,8 @@ describe('agent', () => {
     expect(agent.session?.refreshJwt).not.toEqual(session1.refreshJwt)
     expect(agent.session?.handle).toEqual(session1.handle)
     expect(agent.session?.did).toEqual(session1.did)
+    expect(agent.session?.email).toEqual(session1.email)
+    expect(agent.session?.emailConfirmed).toEqual(session1.emailConfirmed)
 
     expect(events.length).toEqual(2)
     expect(events[0]).toEqual('create')
@@ -283,6 +290,8 @@ describe('agent', () => {
     expect(agent.session?.refreshJwt).not.toEqual(session1.refreshJwt)
     expect(agent.session?.handle).toEqual(session1.handle)
     expect(agent.session?.did).toEqual(session1.did)
+    expect(agent.session?.email).toEqual(session1.email)
+    expect(agent.session?.emailConfirmed).toEqual(session1.emailConfirmed)
 
     expect(events.length).toEqual(2)
     expect(events[0]).toEqual('create')

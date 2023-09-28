@@ -8,12 +8,12 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth }) => {
       const did = auth.credentials.did
-      const token = getRandomToken().toUpperCase()
-      const requestedAt = new Date().toISOString()
       const user = await ctx.services.account(ctx.db).getAccount(did)
       if (!user) {
         throw new InvalidRequestError('user not found')
       }
+      const token = getRandomToken().toUpperCase()
+      const requestedAt = new Date().toISOString()
       await ctx.db.db
         .insertInto('delete_account_token')
         .values({ did, token, requestedAt })
