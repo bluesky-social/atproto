@@ -1,6 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as id from '@atproto/identity'
-import { INVALID_HANDLE } from '@atproto/identifier'
+import { INVALID_HANDLE } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 

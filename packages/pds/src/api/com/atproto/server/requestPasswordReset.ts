@@ -1,4 +1,4 @@
-import { INVALID_HANDLE } from '@atproto/identifier'
+import { INVALID_HANDLE } from '@atproto/syntax'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 

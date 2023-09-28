@@ -1,5 +1,5 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { INVALID_HANDLE } from '@atproto/identifier'
+import { INVALID_HANDLE } from '@atproto/syntax'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
