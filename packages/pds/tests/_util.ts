@@ -76,6 +76,8 @@ export const runTestServer = async (
     didPlcUrl: plcUrl,
     serviceHandleDomains: ['.test'],
     sequencerLeaderLockId: uniqueLockId(),
+    bskyAppViewUrl: 'https://appview.invalid',
+    bskyAppViewDid: 'did:example:invalid',
     repoSigningKeyK256PrivateKeyHex: repoSigningPriv,
     plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
     adminPassword: ADMIN_PASSWORD,

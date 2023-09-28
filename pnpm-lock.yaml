@@ -111,12 +111,12 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
     devDependencies:
+      '@atproto/dev-env':
+        specifier: workspace:^
+        version: link:../dev-env
       '@atproto/lex-cli':
         specifier: workspace:^
         version: link:../lex-cli
-      '@atproto/pds':
-        specifier: workspace:^
-        version: link:../pds
       common-tags:
         specifier: ^1.8.2
         version: 1.8.2

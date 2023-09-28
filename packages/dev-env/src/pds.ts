@@ -41,6 +41,8 @@ export class TestPds {
       jwtSecret: 'jwt-secret',
       serviceHandleDomains: ['.test'],
       sequencerLeaderLockId: uniqueLockId(),
+      bskyAppViewUrl: 'https://appview.invalid',
+      bskyAppViewDid: 'did:example:invalid',
       bskyAppViewCdnUrlPattern: 'http://cdn.appview.com/%s/%s/%s',
       repoSigningKeyK256PrivateKeyHex: repoSigningPriv,
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,

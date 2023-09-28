@@ -21,6 +21,8 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('emailConfirmedAt', 'varchar')
     .execute()
 
+  await db.schema.dropIndex('user_account_password_reset_token_idx').execute()
+
   await db.schema
     .alterTable('user_account')
     .dropColumn('passwordResetToken')
@@ -39,6 +41,13 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .alterTable('user_account')
     .dropColumn('emailConfirmedAt')
+    .execute()
+
+  await db.schema
+    .createIndex('user_account_password_reset_token_idx')
+    .unique()
+    .on('user_account')
+    .column('passwordResetToken')
     .execute()
 
   await db.schema
