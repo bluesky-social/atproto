@@ -301,7 +301,9 @@ function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
     toCheck += ' ' + rkey
     toCheck += ' ' + record.displayName
   } else if (isPost(record)) {
-    toCheck += record.tags?.join(' ')
+    if (record.tags) {
+      toCheck += record.tags.join(' ')
+    }
 
     for (const facet of record.facets || []) {
       for (const feat of facet.features) {
