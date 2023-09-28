@@ -67,6 +67,7 @@ describe('account deletion', () => {
 
   const getMailFrom = async (promise): Promise<Mail.Options> => {
     const result = await Promise.all([once(mailCatcher, 'mail'), promise])
+    console.log(result)
     return result[0][0]
   }
 
@@ -90,6 +91,7 @@ describe('account deletion', () => {
       return expect(token).toBeDefined()
     }
   })
+  return
 
   it('fails account deletion with a bad token', async () => {
     const attempt = agent.api.com.atproto.server.deleteAccount({

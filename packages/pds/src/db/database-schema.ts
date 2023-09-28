@@ -12,7 +12,7 @@ import * as ipldBlock from './tables/ipld-block'
 import * as inviteCode from './tables/invite-code'
 import * as blob from './tables/blob'
 import * as repoBlob from './tables/repo-blob'
-import * as deleteAccountToken from './tables/delete-account-token'
+import * as emailToken from './tables/email-token'
 import * as moderation from './tables/moderation'
 import * as repoSeq from './tables/repo-seq'
 import * as appMigration from './tables/app-migration'
@@ -33,7 +33,7 @@ export type DatabaseSchemaType = appMigration.PartialDB &
   inviteCode.PartialDB &
   blob.PartialDB &
   repoBlob.PartialDB &
-  deleteAccountToken.PartialDB &
+  emailToken.PartialDB &
   moderation.PartialDB &
   repoSeq.PartialDB
 

@@ -41,6 +41,7 @@ import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+import * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
@@ -55,9 +56,12 @@ import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSessi
 import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
+import * as ComAtprotoServerRequestEmailConfirmation from './types/com/atproto/server/requestEmailConfirmation'
+import * as ComAtprotoServerRequestEmailUpdate from './types/com/atproto/server/requestEmailUpdate'
 import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
+import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
@@ -170,6 +174,7 @@ export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+export * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 export * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 export * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
@@ -184,9 +189,12 @@ export * as ComAtprotoServerGetSession from './types/com/atproto/server/getSessi
 export * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 export * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 export * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
+export * as ComAtprotoServerRequestEmailConfirmation from './types/com/atproto/server/requestEmailConfirmation'
+export * as ComAtprotoServerRequestEmailUpdate from './types/com/atproto/server/requestEmailUpdate'
 export * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
 export * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
+export * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
@@ -712,6 +720,17 @@ export class ServerNS {
     this._service = service
   }
 
+  confirmEmail(
+    data?: ComAtprotoServerConfirmEmail.InputSchema,
+    opts?: ComAtprotoServerConfirmEmail.CallOptions,
+  ): Promise<ComAtprotoServerConfirmEmail.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.confirmEmail', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerConfirmEmail.toKnownErr(e)
+      })
+  }
+
   createAccount(
     data?: ComAtprotoServerCreateAccount.InputSchema,
     opts?: ComAtprotoServerCreateAccount.CallOptions,
@@ -855,6 +874,28 @@ export class ServerNS {
       })
   }
 
+  requestEmailConfirmation(
+    data?: ComAtprotoServerRequestEmailConfirmation.InputSchema,
+    opts?: ComAtprotoServerRequestEmailConfirmation.CallOptions,
+  ): Promise<ComAtprotoServerRequestEmailConfirmation.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.requestEmailConfirmation', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerRequestEmailConfirmation.toKnownErr(e)
+      })
+  }
+
+  requestEmailUpdate(
+    data?: ComAtprotoServerRequestEmailUpdate.InputSchema,
+    opts?: ComAtprotoServerRequestEmailUpdate.CallOptions,
+  ): Promise<ComAtprotoServerRequestEmailUpdate.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.requestEmailUpdate', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerRequestEmailUpdate.toKnownErr(e)
+      })
+  }
+
   requestPasswordReset(
     data?: ComAtprotoServerRequestPasswordReset.InputSchema,
     opts?: ComAtprotoServerRequestPasswordReset.CallOptions,
@@ -885,6 +926,17 @@ export class ServerNS {
       .call('com.atproto.server.revokeAppPassword', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoServerRevokeAppPassword.toKnownErr(e)
+      })
+  }
+
+  updateEmail(
+    data?: ComAtprotoServerUpdateEmail.InputSchema,
+    opts?: ComAtprotoServerUpdateEmail.CallOptions,
+  ): Promise<ComAtprotoServerUpdateEmail.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.updateEmail', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerUpdateEmail.toKnownErr(e)
       })
   }
 }

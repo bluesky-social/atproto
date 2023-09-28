@@ -16,6 +16,7 @@ export interface OutputSchema {
   handle: string
   did: string
   email?: string
+  emailConfirmed?: boolean
   [k: string]: unknown
 }
 

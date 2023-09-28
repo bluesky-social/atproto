@@ -1,6 +1,7 @@
 import './env'
 import { generateMockSetup } from './mock'
 import { TestNetwork } from './network'
+import { mockMailer } from './util'
 
 const run = async () => {
   console.log(`
@@ -24,6 +25,7 @@ const run = async () => {
     },
     plc: { port: 2582 },
   })
+  mockMailer(network.pds)
   await generateMockSetup(network)
 
   console.log(

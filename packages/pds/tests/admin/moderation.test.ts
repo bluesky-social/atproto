@@ -286,7 +286,8 @@ describe('moderation', () => {
         headers: sc.getHeaders(deleteme.did),
       })
       const { token: deletionToken } = await server.ctx.db.db
-        .selectFrom('delete_account_token')
+        .selectFrom('email_token')
+        .where('purpose', '=', 'delete_account')
         .where('did', '=', deleteme.did)
         .selectAll()
         .executeTakeFirstOrThrow()
