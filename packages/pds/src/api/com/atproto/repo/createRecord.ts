@@ -1,5 +1,4 @@
 import { CID } from 'multiformats/cid'
-import { TID } from '@atproto/common'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import { prepareCreate } from '../../../../repo'
 import { Server } from '../../../../lexicon'
@@ -17,6 +16,18 @@ import { ConcurrentWriteError } from '../../../../services/repo'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.createRecord({
     auth: ctx.accessVerifierCheckTakedown,
+    rateLimit: [
+      {
+        name: 'repo-write-hour',
+        calcKey: ({ auth }) => auth.credentials.did,
+        calcPoints: () => 3,
+      },
+      {
+        name: 'repo-write-day',
+        calcKey: ({ auth }) => auth.credentials.did,
+        calcPoints: () => 3,
+      },
+    ],
     handler: async ({ input, auth }) => {
       const { repo, collection, rkey, record, swapCommit, validate } =
         input.body
@@ -33,12 +44,6 @@ export default function (server: Server, ctx: AppContext) {
           'Unvalidated writes are not yet supported.',
         )
       }
-      if (collection === ids.AppBskyFeedPost && rkey) {
-        throw new InvalidRequestError(
-          'Custom rkeys for post records are not currently supported.',
-        )
-      }
-
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
       let write: PreparedCreate
@@ -47,7 +52,7 @@ export default function (server: Server, ctx: AppContext) {
           did,
           collection,
           record,
-          rkey: rkey || TID.nextStr(),
+          rkey,
           validate,
         })
       } catch (err) {

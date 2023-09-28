@@ -1,27 +1,28 @@
 {
   "name": "@atproto/crypto",
-  "version": "0.2.0",
-  "main": "src/index.ts",
+  "version": "0.2.2",
   "license": "MIT",
+  "description": "Library for cryptographic keys and signing in atproto",
+  "keywords": [
+    "atproto",
+    "cryptography"
+  ],
+  "homepage": "https://atproto.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bluesky-social/atproto.git",
+    "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/crypto"
+  },
+  "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts"
   },
   "scripts": {
     "test": "jest ",
-    "prettier": "prettier --check src/ tests/",
-    "prettier:fix": "prettier --write src/ tests/",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "yarn lint --fix",
-    "verify": "run-p prettier lint",
-    "verify:fix": "yarn prettier:fix && yarn lint:fix",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ./update-pkg.js --update-main-to-dist",
-    "update-main-to-src": "node ./update-pkg.js --update-main-to-src",
-    "prepublish": "npm run update-main-to-dist",
-    "postpublish": "npm run update-main-to-src"
+    "update-main-to-dist": "node ../../update-main-to-dist.js packages/crypto"
   },
   "dependencies": {
     "@noble/curves": "^1.1.0",

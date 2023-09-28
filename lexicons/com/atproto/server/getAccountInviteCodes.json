@@ -28,9 +28,7 @@
           }
         }
       },
-      "errors": [
-        {"name": "DuplicateCreate"}
-      ]
+      "errors": [{ "name": "DuplicateCreate" }]
     }
   }
 }

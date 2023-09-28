@@ -11,23 +11,26 @@ import {
   UserAlreadyExistsError,
 } from '../../../../services/account'
 import { httpLogger, mailerLogger } from '../../../../logger'
+import { DAY, MINUTE } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
     auth: ctx.accessVerifierCheckTakedown,
+    rateLimit: [
+      {
+        durationMs: 5 * MINUTE,
+        points: 10,
+        calcKey: ({ auth }) => auth.credentials.did,
+      },
+      {
+        durationMs: DAY,
+        points: 50,
+        calcKey: ({ auth }) => auth.credentials.did,
+      },
+    ],
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
       const reqHandle = baseNormalizeAndValidate(input.body.handle)
-
-      // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
-      if (isServiceDomain(reqHandle, ctx.cfg.availableUserDomains)) {
-        const available = await ctx.services
-          .account(ctx.db)
-          .isHandleAvailable(reqHandle)
-        if (!available) {
-          throw new InvalidRequestError(`Handle already taken: ${reqHandle}`)
-        }
-      }
 
       const handle = await normalizeAndValidateHandle({
         ctx,
@@ -93,8 +96,6 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
       }
-
-      ctx.contentReporter?.checkHandle({ handle, did: requester })
     },
   })
 }

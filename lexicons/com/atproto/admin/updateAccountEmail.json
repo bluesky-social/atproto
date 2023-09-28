@@ -16,7 +16,7 @@
               "format": "at-identifier",
               "description": "The handle or DID of the repo."
             },
-            "email": {"type": "string"}
+            "email": { "type": "string" }
           }
         }
       }

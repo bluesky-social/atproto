@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { NSID } from '@atproto/nsid'
+import { NSID } from '@atproto/syntax'
 import { requiredPropertiesRefinement } from './util'
 
 // primitives
@@ -173,11 +173,9 @@ export const lexObject = z
     description: z.string().optional(),
     required: z.string().array().optional(),
     nullable: z.string().array().optional(),
-    properties: z
-      .record(
-        z.union([lexRefVariant, lexIpldType, lexArray, lexBlob, lexPrimitive]),
-      )
-      .optional(),
+    properties: z.record(
+      z.union([lexRefVariant, lexIpldType, lexArray, lexBlob, lexPrimitive]),
+    ),
   })
   .strict()
   .superRefine(requiredPropertiesRefinement)

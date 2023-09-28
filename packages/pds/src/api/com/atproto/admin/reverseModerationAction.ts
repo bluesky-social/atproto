@@ -1,25 +1,64 @@
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
+  isRepoRef,
   ACKNOWLEDGE,
   ESCALATE,
   TAKEDOWN,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
+import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
+import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.reverseModerationAction({
     auth: ctx.roleVerifier,
-    handler: async ({ input, auth }) => {
+    handler: async ({ req, input, auth }) => {
       const access = auth.credentials
       const { db, services } = ctx
+      if (ctx.shouldProxyModeration()) {
+        const { data: result } =
+          await ctx.appviewAgent.com.atproto.admin.reverseModerationAction(
+            input.body,
+            authPassthru(req, true),
+          )
+
+        const transact = db.transaction(async (dbTxn) => {
+          const moderationTxn = services.moderation(dbTxn)
+          // reverse takedowns
+          if (result.action === TAKEDOWN && isRepoRef(result.subject)) {
+            await moderationTxn.reverseTakedownRepo({
+              did: result.subject.did,
+            })
+          }
+          if (result.action === TAKEDOWN && isStrongRef(result.subject)) {
+            await moderationTxn.reverseTakedownRecord({
+              uri: new AtUri(result.subject.uri),
+            })
+          }
+        })
+
+        try {
+          await transact
+        } catch (err) {
+          req.log.error(
+            { err, actionId: input.body.id },
+            'proxied moderation action reversal failed',
+          )
+        }
+
+        return {
+          encoding: 'application/json',
+          body: result,
+        }
+      }
+
       const moderationService = services.moderation(db)
       const { id, createdBy, reason } = input.body
 
       const moderationAction = await db.transaction(async (dbTxn) => {
         const moderationTxn = services.moderation(dbTxn)
-        const labelTxn = services.appView.label(dbTxn)
         const now = new Date()
 
         const existing = await moderationTxn.getAction(id)
@@ -54,49 +93,12 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        const result = await moderationTxn.logReverseAction({
+        const result = await moderationTxn.revertAction({
           id,
           createdAt: now,
           createdBy,
           reason,
         })
-
-        if (
-          result.action === TAKEDOWN &&
-          result.subjectType === 'com.atproto.admin.defs#repoRef' &&
-          result.subjectDid
-        ) {
-          await moderationTxn.reverseTakedownRepo({
-            did: result.subjectDid,
-          })
-        }
-
-        if (
-          result.action === TAKEDOWN &&
-          result.subjectType === 'com.atproto.repo.strongRef' &&
-          result.subjectUri
-        ) {
-          await moderationTxn.reverseTakedownRecord({
-            uri: new AtUri(result.subjectUri),
-          })
-        }
-
-        // invert creates & negates
-        const { createLabelVals, negateLabelVals } = result
-        const negate =
-          createLabelVals && createLabelVals.length > 0
-            ? createLabelVals.split(' ')
-            : undefined
-        const create =
-          negateLabelVals && negateLabelVals.length > 0
-            ? negateLabelVals.split(' ')
-            : undefined
-        await labelTxn.formatAndCreate(
-          ctx.cfg.labelerDid,
-          result.subjectUri ?? result.subjectDid,
-          result.subjectCid,
-          { create, negate },
-        )
 
         return result
       })

@@ -1,0 +1,10 @@
+node_modules
+interop-test-files
+dist
+build
+.nyc_output
+coverage
+pnpm-lock.yaml
+.pnpm*
+.changeset
+*.d.ts

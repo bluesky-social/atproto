@@ -14,7 +14,7 @@
           "type": "object",
           "required": ["blob"],
           "properties": {
-            "blob": {"type": "blob"}
+            "blob": { "type": "blob" }
           }
         }
       }

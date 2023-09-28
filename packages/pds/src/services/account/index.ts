@@ -1,18 +1,20 @@
-import { WhereInterface, sql } from 'kysely'
+import { sql } from 'kysely'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { MINUTE, lessThanAgoMs } from '@atproto/common'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import * as scrypt from '../../db/scrypt'
 import { UserAccountEntry } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
-import { DbRef, countAll, notSoftDeletedClause } from '../../db/util'
+import { countAll, notSoftDeletedClause } from '../../db/util'
 import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { randomStr } from '@atproto/crypto'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { NotEmptyArray } from '@atproto/common'
+import { EmailTokenPurpose } from '../../db/tables/email-token'
+import { getRandomToken } from '../../api/com/atproto/server/util'
 
 export class AccountService {
   constructor(public db: Database) {}
@@ -37,7 +39,13 @@ export class AccountService {
         if (handleOrDid.startsWith('did:')) {
           return qb.where('did_handle.did', '=', handleOrDid)
         } else {
-          return qb.where('did_handle.handle', '=', handleOrDid)
+          // lower() is a little hack to avoid using the handle trgm index here, which is slow. not sure why it was preferring
+          // the handle trgm index over the handle unique index. in any case, we end-up using did_handle_handle_lower_idx instead, which is fast.
+          return qb.where(
+            sql`lower(${ref('did_handle.handle')})`,
+            '=',
+            handleOrDid,
+          )
         }
       })
       .selectAll('user_account')
@@ -195,20 +203,20 @@ export class AccountService {
     }
   }
 
-  async isHandleAvailable(handle: string) {
+  async getHandleDid(handle: string): Promise<string | null> {
     // @NOTE see also condition in updateHandle()
     const found = await this.db.db
       .selectFrom('did_handle')
       .where('handle', '=', handle)
-      .select('handle')
+      .selectAll()
       .executeTakeFirst()
-    return !found
+    return found?.did ?? null
   }
 
   async updateEmail(did: string, email: string) {
     await this.db.db
       .updateTable('user_account')
-      .set({ email: email.toLowerCase() })
+      .set({ email: email.toLowerCase(), emailConfirmedAt: null })
       .where('did', '=', did)
       .executeTakeFirst()
   }
@@ -365,27 +373,6 @@ export class AccountService {
       .execute()
   }
 
-  whereNotMuted<W extends WhereInterface<any, any>>(
-    qb: W,
-    requester: string,
-    refs: NotEmptyArray<DbRef>,
-  ) {
-    const subjectRefs = sql.join(refs)
-    const actorMute = this.db.db
-      .selectFrom('mute')
-      .where('mutedByDid', '=', requester)
-      .where('did', 'in', sql`(${subjectRefs})`)
-      .select('did as muted')
-    const listMute = this.db.db
-      .selectFrom('list_item')
-      .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
-      .where('list_mute.mutedByDid', '=', requester)
-      .whereRef('list_item.subjectDid', 'in', sql`(${subjectRefs})`)
-      .select('list_item.subjectDid as muted')
-    // Splitting the mute from list-mute checks seems to be more flexible for the query-planner and often quicker
-    return qb.whereNotExists(actorMute).whereNotExists(listMute)
-  }
-
   async search(opts: {
     searchField?: 'did' | 'handle'
     term: string
@@ -407,13 +394,9 @@ export class AccountService {
     const builder =
       this.db.dialect === 'pg'
         ? getUserSearchQueryPg(this.db, opts)
-            .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
             .selectAll('did_handle')
             .selectAll('repo_root')
-            .select('results.distance as distance')
         : getUserSearchQuerySqlite(this.db, opts)
-            .leftJoin('profile', 'profile.creator', 'did_handle.did') // @TODO leaky, for getUserSearchQuerySqlite()
-            .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
             .selectAll('did_handle')
             .selectAll('repo_root')
             .select(sql<number>`0`.as('distance'))
@@ -565,6 +548,70 @@ export class AccountService {
     }, {} as Record<string, CodeDetail>)
   }
 
+  async createEmailToken(
+    did: string,
+    purpose: EmailTokenPurpose,
+  ): Promise<string> {
+    const token = getRandomToken().toUpperCase()
+    await this.db.db
+      .insertInto('email_token')
+      .values({ purpose, did, token, requestedAt: new Date() })
+      .onConflict((oc) => oc.columns(['purpose', 'did']).doUpdateSet({ token }))
+      .execute()
+    return token
+  }
+
+  async deleteEmailToken(did: string, purpose: EmailTokenPurpose) {
+    await this.db.db
+      .deleteFrom('email_token')
+      .where('did', '=', did)
+      .where('purpose', '=', purpose)
+      .executeTakeFirst()
+  }
+
+  async assertValidToken(
+    did: string,
+    purpose: EmailTokenPurpose,
+    token: string,
+    expirationLen = 15 * MINUTE,
+  ) {
+    const res = await this.db.db
+      .selectFrom('email_token')
+      .selectAll()
+      .where('purpose', '=', purpose)
+      .where('did', '=', did)
+      .where('token', '=', token.toUpperCase())
+      .executeTakeFirst()
+    if (!res) {
+      throw new InvalidRequestError('Token is invalid', 'InvalidToken')
+    }
+    const expired = !lessThanAgoMs(res.requestedAt, expirationLen)
+    if (expired) {
+      throw new InvalidRequestError('Token is expired', 'ExpiredToken')
+    }
+  }
+
+  async assertValidTokenAndFindDid(
+    purpose: EmailTokenPurpose,
+    token: string,
+    expirationLen = 15 * MINUTE,
+  ): Promise<string> {
+    const res = await this.db.db
+      .selectFrom('email_token')
+      .selectAll()
+      .where('purpose', '=', purpose)
+      .where('token', '=', token.toUpperCase())
+      .executeTakeFirst()
+    if (!res) {
+      throw new InvalidRequestError('Token is invalid', 'InvalidToken')
+    }
+    const expired = !lessThanAgoMs(res.requestedAt, expirationLen)
+    if (expired) {
+      throw new InvalidRequestError('Token is expired', 'ExpiredToken')
+    }
+    return res.did
+  }
+
   async getLastSeenNotifs(did: string): Promise<string | undefined> {
     const res = await this.db.db
       .selectFrom('user_state')
@@ -599,6 +646,15 @@ export class AccountService {
       throw new InvalidRequestError(
         `Some preferences are not in the ${namespace} namespace`,
       )
+    }
+    // short-held row lock to prevent races
+    if (this.db.dialect === 'pg') {
+      await this.db.db
+        .selectFrom('user_account')
+        .selectAll()
+        .forUpdate()
+        .where('did', '=', did)
+        .executeTakeFirst()
     }
     // get all current prefs for user and prep new pref rows
     const allPrefs = await this.db.db

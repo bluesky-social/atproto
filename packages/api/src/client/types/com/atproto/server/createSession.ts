@@ -22,6 +22,7 @@ export interface OutputSchema {
   handle: string
   did: string
   email?: string
+  emailConfirmed?: boolean
   [k: string]: unknown
 }
 
@@ -39,7 +40,7 @@ export interface Response {
 
 export class AccountTakedownError extends XRPCError {
   constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
+    super(src.status, src.error, src.message, src.headers)
   }
 }
 

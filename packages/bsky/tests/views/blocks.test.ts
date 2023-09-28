@@ -24,6 +24,7 @@ describe('pds views with blocking', () => {
   let alice: string
   let carol: string
   let dan: string
+  let danBlockUri: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -57,6 +58,7 @@ describe('pds views with blocking', () => {
       { createdAt: new Date().toISOString(), subject: carol },
       sc.getHeaders(dan),
     )
+    danBlockUri = danBlockCarol.uri
     await network.processAll()
   })
 
@@ -74,6 +76,13 @@ describe('pds views with blocking', () => {
         $type: 'app.bsky.feed.defs#blockedPost',
         uri: sc.posts[carol][0].ref.uriStr,
         blocked: true,
+        author: {
+          did: carol,
+          viewer: {
+            blockedBy: false,
+            blocking: danBlockUri,
+          },
+        },
       },
     })
     const { data: threadCarol } = await agent.api.app.bsky.feed.getPostThread(
@@ -85,6 +94,12 @@ describe('pds views with blocking', () => {
         $type: 'app.bsky.feed.defs#blockedPost',
         uri: sc.posts[dan][0].ref.uriStr,
         blocked: true,
+        author: {
+          did: dan,
+          viewer: {
+            blockedBy: true,
+          },
+        },
       },
     })
   })
@@ -148,20 +163,61 @@ describe('pds views with blocking', () => {
     ).toBeFalsy()
   })
 
+  it('strips blocked users out of getListFeed', async () => {
+    const listRef = await sc.createList(alice, 'test list', 'curate')
+    await sc.addToList(alice, alice, listRef)
+    await sc.addToList(alice, carol, listRef)
+    await sc.addToList(alice, dan, listRef)
+
+    const resCarol = await agent.api.app.bsky.feed.getListFeed(
+      { list: listRef.uriStr, limit: 100 },
+      { headers: await network.serviceHeaders(carol) },
+    )
+    expect(
+      resCarol.data.feed.some((post) => post.post.author.did === dan),
+    ).toBeFalsy()
+
+    const resDan = await agent.api.app.bsky.feed.getListFeed(
+      { list: listRef.uriStr, limit: 100 },
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(
+      resDan.data.feed.some((post) => post.post.author.did === carol),
+    ).toBeFalsy()
+  })
+
   it('returns block status on getProfile', async () => {
     const resCarol = await agent.api.app.bsky.actor.getProfile(
       { actor: dan },
       { headers: await network.serviceHeaders(carol) },
     )
-    expect(resCarol.data.viewer?.blocking).toBeUndefined
+    expect(resCarol.data.viewer?.blocking).toBeUndefined()
     expect(resCarol.data.viewer?.blockedBy).toBe(true)
 
     const resDan = await agent.api.app.bsky.actor.getProfile(
       { actor: carol },
       { headers: await network.serviceHeaders(dan) },
     )
-    expect(resDan.data.viewer?.blocking).toBeDefined
+    expect(resDan.data.viewer?.blocking).toBeDefined()
     expect(resDan.data.viewer?.blockedBy).toBe(false)
+  })
+
+  it('unsets viewer follow state when blocked', async () => {
+    // there are follows between carol and dan
+    const { data: profile } = await agent.api.app.bsky.actor.getProfile(
+      { actor: carol },
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(profile.viewer?.following).toBeUndefined()
+    expect(profile.viewer?.followedBy).toBeUndefined()
+    const { data: result } = await agent.api.app.bsky.graph.getBlocks(
+      {},
+      { headers: await network.serviceHeaders(dan) },
+    )
+    const blocked = result.blocks.find((block) => block.did === carol)
+    expect(blocked).toBeDefined()
+    expect(blocked?.viewer?.following).toBeUndefined()
+    expect(blocked?.viewer?.followedBy).toBeUndefined()
   })
 
   it('returns block status on getProfiles', async () => {
@@ -182,6 +238,56 @@ describe('pds views with blocking', () => {
     expect(resDan.data.profiles[0].viewer?.blockedBy).toBe(false)
     expect(resDan.data.profiles[1].viewer?.blocking).toBeDefined()
     expect(resDan.data.profiles[1].viewer?.blockedBy).toBe(false)
+  })
+
+  it('does not return block violating follows', async () => {
+    const resCarol = await agent.api.app.bsky.graph.getFollows(
+      { actor: carol },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(resCarol.data.follows.some((f) => f.did === dan)).toBe(false)
+
+    const resDan = await agent.api.app.bsky.graph.getFollows(
+      { actor: dan },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(resDan.data.follows.some((f) => f.did === carol)).toBe(false)
+  })
+
+  it('does not return block violating followers', async () => {
+    const resCarol = await agent.api.app.bsky.graph.getFollowers(
+      { actor: carol },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(resCarol.data.followers.some((f) => f.did === dan)).toBe(false)
+
+    const resDan = await agent.api.app.bsky.graph.getFollowers(
+      { actor: dan },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(resDan.data.followers.some((f) => f.did === carol)).toBe(false)
+  })
+
+  it('does not return posts from blocked users', async () => {
+    const alicePost = sc.posts[alice][0].ref.uriStr
+    const carolPost = sc.posts[carol][0].ref.uriStr
+    const danPost = sc.posts[dan][0].ref.uriStr
+
+    const resCarol = await agent.api.app.bsky.feed.getPosts(
+      { uris: [alicePost, carolPost, danPost] },
+      { headers: await network.serviceHeaders(carol) },
+    )
+    expect(resCarol.data.posts.some((p) => p.uri === alicePost)).toBe(true)
+    expect(resCarol.data.posts.some((p) => p.uri === carolPost)).toBe(true)
+    expect(resCarol.data.posts.some((p) => p.uri === danPost)).toBe(false)
+
+    const resDan = await agent.api.app.bsky.feed.getPosts(
+      { uris: [alicePost, carolPost, danPost] },
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(resDan.data.posts.some((p) => p.uri === alicePost)).toBe(true)
+    expect(resDan.data.posts.some((p) => p.uri === carolPost)).toBe(false)
+    expect(resDan.data.posts.some((p) => p.uri === danPost)).toBe(true)
   })
 
   it('does not return notifs for blocked accounts', async () => {

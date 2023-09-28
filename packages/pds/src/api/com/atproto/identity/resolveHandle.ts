@@ -1,11 +1,11 @@
 import { AtpAgent } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as ident from '@atproto/identifier'
+import * as ident from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.identity.resolveHandle(async ({ params, req }) => {
+  server.com.atproto.identity.resolveHandle(async ({ params }) => {
     let handle: string
     try {
       handle = ident.normalizeAndEnsureValidHandle(params.handle)
@@ -33,8 +33,7 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     // this is not someone on our server, but we help with resolving anyway
-
-    if (!did && ctx.canProxyRead(req)) {
+    if (!did) {
       did = await tryResolveFromAppview(ctx.appviewAgent, handle)
     }
 

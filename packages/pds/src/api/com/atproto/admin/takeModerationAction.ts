@@ -1,21 +1,66 @@
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
+  isRepoRef,
   ACKNOWLEDGE,
   ESCALATE,
   TAKEDOWN,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
+import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
 import { getSubject, getAction } from '../moderation/util'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
     auth: ctx.roleVerifier,
-    handler: async ({ input, auth }) => {
+    handler: async ({ req, input, auth }) => {
       const access = auth.credentials
       const { db, services } = ctx
+      if (ctx.shouldProxyModeration()) {
+        const { data: result } =
+          await ctx.appviewAgent.com.atproto.admin.takeModerationAction(
+            input.body,
+            authPassthru(req, true),
+          )
+
+        const transact = db.transaction(async (dbTxn) => {
+          const authTxn = services.auth(dbTxn)
+          const moderationTxn = services.moderation(dbTxn)
+          // perform takedowns
+          if (result.action === TAKEDOWN && isRepoRef(result.subject)) {
+            await authTxn.revokeRefreshTokensByDid(result.subject.did)
+            await moderationTxn.takedownRepo({
+              takedownId: result.id,
+              did: result.subject.did,
+            })
+          }
+          if (result.action === TAKEDOWN && isStrongRef(result.subject)) {
+            await moderationTxn.takedownRecord({
+              takedownId: result.id,
+              uri: new AtUri(result.subject.uri),
+              blobCids: result.subjectBlobCids.map((cid) => CID.parse(cid)),
+            })
+          }
+        })
+
+        try {
+          await transact
+        } catch (err) {
+          req.log.error(
+            { err, actionId: result.id },
+            'proxied moderation action failed',
+          )
+        }
+
+        return {
+          encoding: 'application/json',
+          body: result,
+        }
+      }
+
       const moderationService = services.moderation(db)
       const {
         action,
@@ -25,6 +70,7 @@ export default function (server: Server, ctx: AppContext) {
         createLabelVals,
         negateLabelVals,
         subjectBlobCids,
+        durationInHours,
       } = input.body
 
       // apply access rules
@@ -54,7 +100,6 @@ export default function (server: Server, ctx: AppContext) {
       const moderationAction = await db.transaction(async (dbTxn) => {
         const authTxn = services.auth(dbTxn)
         const moderationTxn = services.moderation(dbTxn)
-        const labelTxn = services.appView.label(dbTxn)
 
         const result = await moderationTxn.logAction({
           action: getAction(action),
@@ -64,6 +109,7 @@ export default function (server: Server, ctx: AppContext) {
           negateLabelVals,
           createdBy,
           reason,
+          durationInHours,
         })
 
         if (
@@ -89,13 +135,6 @@ export default function (server: Server, ctx: AppContext) {
             blobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
           })
         }
-
-        await labelTxn.formatAndCreate(
-          ctx.cfg.labelerDid,
-          result.subjectUri ?? result.subjectDid,
-          result.subjectCid,
-          { create: createLabelVals, negate: negateLabelVals },
-        )
 
         return result
       })

@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import AtpAgent, { AppBskyFeedPost } from '@atproto/api'
 import { TestNetwork } from '@atproto/dev-env'
 import { forSnapshot, stripViewerFromPost } from '../_util'
 import { SeedClient } from '../seeds/client'
@@ -7,6 +7,7 @@ import basicSeed from '../seeds/basic'
 describe('pds posts views', () => {
   let network: TestNetwork
   let agent: AtpAgent
+  let pdsAgent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
@@ -14,11 +15,11 @@ describe('pds posts views', () => {
       dbPostgresSchema: 'bsky_views_posts',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getClient()
     sc = new SeedClient(pdsAgent)
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
   })
 
   afterAll(async () => {
@@ -76,11 +77,34 @@ describe('pds posts views', () => {
     const posts = await agent.api.app.bsky.feed.getPosts({ uris })
 
     expect(posts.data.posts.length).toBe(2)
-    const recivedUris = posts.data.posts.map((p) => p.uri).sort()
+    const receivedUris = posts.data.posts.map((p) => p.uri).sort()
     const expected = [
       sc.posts[sc.dids.alice][0].ref.uriStr,
       sc.posts[sc.dids.bob][0].ref.uriStr,
     ].sort()
-    expect(recivedUris).toEqual(expected)
+    expect(receivedUris).toEqual(expected)
+  })
+
+  it('allows for creating posts with tags', async () => {
+    const post: AppBskyFeedPost.Record = {
+      text: 'hello world',
+      tags: ['javascript', 'hehe'],
+      createdAt: new Date().toISOString(),
+    }
+
+    const { uri } = await pdsAgent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.alice },
+      post,
+      sc.getHeaders(sc.dids.alice),
+    )
+
+    await network.processAll()
+    await network.bsky.processAll()
+
+    const { data } = await agent.api.app.bsky.feed.getPosts({ uris: [uri] })
+
+    expect(data.posts.length).toBe(1)
+    // @ts-ignore we know it's a post record
+    expect(data.posts[0].record.tags).toEqual(['javascript', 'hehe'])
   })
 })

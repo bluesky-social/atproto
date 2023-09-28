@@ -6,8 +6,8 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRecord({
     auth: ctx.roleVerifier,
     handler: async ({ params }) => {
-      const { db, services } = ctx
       const { uri, cid } = params
+      const db = ctx.db.getPrimary()
       const result = await db.db
         .selectFrom('record')
         .selectAll()
@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
       }
       return {
         encoding: 'application/json',
-        body: await services.moderation(db).views.recordDetail(result),
+        body: await ctx.services.moderation(db).views.recordDetail(result),
       }
     },
   })

@@ -23,7 +23,11 @@
             },
             "writes": {
               "type": "array",
-              "items": {"type": "union", "refs": ["#create", "#update", "#delete"], "closed": true}
+              "items": {
+                "type": "union",
+                "refs": ["#create", "#update", "#delete"],
+                "closed": true
+              }
             },
             "swapCommit": {
               "type": "string",
@@ -32,18 +36,16 @@
           }
         }
       },
-      "errors": [
-        {"name": "InvalidSwap"}
-      ]
+      "errors": [{ "name": "InvalidSwap" }]
     },
     "create": {
       "type": "object",
       "description": "Create a new record.",
       "required": ["collection", "value"],
       "properties": {
-        "collection": {"type": "string", "format": "nsid"},
-        "rkey": {"type": "string", "maxLength": 15},
-        "value": {"type": "unknown"}
+        "collection": { "type": "string", "format": "nsid" },
+        "rkey": { "type": "string", "maxLength": 15 },
+        "value": { "type": "unknown" }
       }
     },
     "update": {
@@ -51,9 +53,9 @@
       "description": "Update an existing record.",
       "required": ["collection", "rkey", "value"],
       "properties": {
-        "collection": {"type": "string", "format": "nsid"},
-        "rkey": {"type": "string"},
-        "value": {"type": "unknown"}
+        "collection": { "type": "string", "format": "nsid" },
+        "rkey": { "type": "string" },
+        "value": { "type": "unknown" }
       }
     },
     "delete": {
@@ -61,8 +63,8 @@
       "description": "Delete an existing record.",
       "required": ["collection", "rkey"],
       "properties": {
-        "collection": {"type": "string", "format": "nsid"},
-        "rkey": {"type": "string"}
+        "collection": { "type": "string", "format": "nsid" },
+        "rkey": { "type": "string" }
       }
     }
   }

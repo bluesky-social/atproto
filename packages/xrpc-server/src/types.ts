@@ -15,6 +15,11 @@ export type Options = {
     blobLimit?: number
     textLimit?: number
   }
+  rateLimits?: {
+    creator: RateLimiterCreator
+    global?: ServerRateLimitDescription[]
+    shared?: ServerRateLimitDescription[]
+  }
 }
 
 export type UndecodedParams = typeof express.request['query']
@@ -50,13 +55,17 @@ export type HandlerError = zod.infer<typeof handlerError>
 
 export type HandlerOutput = HandlerSuccess | HandlerError
 
-export type XRPCHandler = (ctx: {
+export type XRPCReqContext = {
   auth: HandlerAuth | undefined
   params: Params
   input: HandlerInput | undefined
   req: express.Request
   res: express.Response
-}) => Promise<HandlerOutput> | HandlerOutput | undefined
+}
+
+export type XRPCHandler = (
+  ctx: XRPCReqContext,
+) => Promise<HandlerOutput> | HandlerOutput | undefined
 
 export type XRPCStreamHandler = (ctx: {
   auth: HandlerAuth | undefined
@@ -76,7 +85,66 @@ export type StreamAuthVerifier = (ctx: {
   req: IncomingMessage
 }) => Promise<AuthOutput> | AuthOutput
 
+export type CalcKeyFn = (ctx: XRPCReqContext) => string
+export type CalcPointsFn = (ctx: XRPCReqContext) => number
+
+export interface RateLimiterI {
+  consume: RateLimiterConsume
+}
+
+export type RateLimiterConsume = (
+  ctx: XRPCReqContext,
+  opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
+) => Promise<RateLimiterStatus | RateLimitExceededError | null>
+
+export type RateLimiterCreator = (opts: {
+  keyPrefix: string
+  durationMs: number
+  points: number
+  calcKey?: (ctx: XRPCReqContext) => string
+  calcPoints?: (ctx: XRPCReqContext) => number
+}) => RateLimiterI
+
+export type ServerRateLimitDescription = {
+  name: string
+  durationMs: number
+  points: number
+  calcKey?: (ctx: XRPCReqContext) => string
+  calcPoints?: (ctx: XRPCReqContext) => number
+}
+
+export type SharedRateLimitOpts = {
+  name: string
+  calcKey?: (ctx: XRPCReqContext) => string
+  calcPoints?: (ctx: XRPCReqContext) => number
+}
+
+export type RouteRateLimitOpts = {
+  durationMs: number
+  points: number
+  calcKey?: (ctx: XRPCReqContext) => string
+  calcPoints?: (ctx: XRPCReqContext) => number
+}
+
+export type HandlerRateLimitOpts = SharedRateLimitOpts | RouteRateLimitOpts
+
+export const isShared = (
+  opts: HandlerRateLimitOpts,
+): opts is SharedRateLimitOpts => {
+  return typeof opts['name'] === 'string'
+}
+
+export type RateLimiterStatus = {
+  limit: number
+  duration: number
+  remainingPoints: number
+  msBeforeNext: number
+  consumedPoints: number
+  isFirstInDuration: boolean
+}
+
 export type XRPCHandlerConfig = {
+  rateLimit?: HandlerRateLimitOpts | HandlerRateLimitOpts[]
   auth?: AuthVerifier
   handler: XRPCHandler
 }
@@ -133,7 +201,13 @@ export class XRPCError extends Error {
 }
 
 export function isHandlerError(v: unknown): v is HandlerError {
-  return handlerError.safeParse(v).success
+  return (
+    !!v &&
+    typeof v === 'object' &&
+    typeof v['status'] === 'number' &&
+    (v['error'] === undefined || typeof v['error'] === 'string') &&
+    (v['message'] === undefined || typeof v['message'] === 'string')
+  )
 }
 
 export class InvalidRequestError extends XRPCError {
@@ -154,6 +228,16 @@ export class ForbiddenError extends XRPCError {
   }
 }
 
+export class RateLimitExceededError extends XRPCError {
+  constructor(
+    public status: RateLimiterStatus,
+    errorMessage?: string,
+    customErrorName?: string,
+  ) {
+    super(ResponseType.RateLimitExceeded, errorMessage, customErrorName)
+  }
+}
+
 export class InternalServerError extends XRPCError {
   constructor(errorMessage?: string, customErrorName?: string) {
     super(ResponseType.InternalServerError, errorMessage, customErrorName)
@@ -166,9 +250,9 @@ export class UpstreamFailureError extends XRPCError {
   }
 }
 
-export class NotEnoughResoucesError extends XRPCError {
+export class NotEnoughResourcesError extends XRPCError {
   constructor(errorMessage?: string, customErrorName?: string) {
-    super(ResponseType.NotEnoughResouces, errorMessage, customErrorName)
+    super(ResponseType.NotEnoughResources, errorMessage, customErrorName)
   }
 }
 

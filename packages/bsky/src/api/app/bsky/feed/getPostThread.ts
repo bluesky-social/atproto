@@ -1,97 +1,151 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
-import {
-  FeedRow,
-  ActorInfoMap,
-  PostEmbedViews,
-  PostBlocksMap,
-} from '../../../../services/feed/types'
-import { FeedService, PostInfoMap } from '../../../../services/feed'
-import { Labels } from '../../../../services/label'
 import {
   BlockedPost,
   NotFoundPost,
   ThreadViewPost,
   isNotFoundPost,
+  isThreadViewPost,
 } from '../../../../lexicon/types/app/bsky/feed/defs'
+import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
+import { Record as ThreadgateRecord } from '../../../../lexicon/types/app/bsky/feed/threadgate'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
+import AppContext from '../../../../context'
+import {
+  FeedService,
+  FeedRow,
+  FeedHydrationState,
+  PostInfo,
+} from '../../../../services/feed'
 import {
   getAncestorsAndSelfQb,
   getDescendentsQb,
 } from '../../../../services/util/post'
-
-export type PostThread = {
-  post: FeedRow
-  parent?: PostThread | ParentNotFoundError
-  replies?: PostThread[]
-}
+import { Database } from '../../../../db'
+import DatabaseSchema from '../../../../db/database-schema'
+import { setRepoRev } from '../../../util'
+import { ActorInfoMap, ActorService } from '../../../../services/actor'
+import { violatesThreadGate } from '../../../../services/feed/util'
+import { createPipeline, noRules } from '../../../../pipeline'
 
 export default function (server: Server, ctx: AppContext) {
+  const getPostThread = createPipeline(
+    skeleton,
+    hydration,
+    noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
+    presentation,
+  )
   server.app.bsky.feed.getPostThread({
     auth: ctx.authOptionalVerifier,
-    handler: async ({ params, auth }) => {
-      const { uri, depth, parentHeight } = params
-      const requester = auth.credentials.did
+    handler: async ({ params, auth, res }) => {
+      const viewer = auth.credentials.did
+      const db = ctx.db.getReplica('thread')
+      const feedService = ctx.services.feed(db)
+      const actorService = ctx.services.actor(db)
 
-      const feedService = ctx.services.feed(ctx.db)
-      const labelService = ctx.services.label(ctx.db)
-
-      const threadData = await getThreadData(ctx, uri, depth, parentHeight)
-      if (!threadData) {
-        throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
-      }
-      const relevant = getRelevantIds(threadData)
-      const [actors, posts, labels] = await Promise.all([
-        feedService.getActorInfos(Array.from(relevant.dids), requester, {
-          skipLabels: true,
-        }),
-        feedService.getPostInfos(Array.from(relevant.uris), requester),
-        labelService.getLabelsForSubjects([...relevant.uris, ...relevant.dids]),
+      const [result, repoRev] = await Promise.allSettled([
+        getPostThread({ ...params, viewer }, { db, feedService, actorService }),
+        actorService.getRepoRev(viewer),
       ])
-      const blocks = await feedService.blocksForPosts(posts)
-      const embeds = await feedService.embedsForPosts(posts, blocks, requester)
 
-      const thread = composeThread(
-        threadData,
-        feedService,
-        posts,
-        actors,
-        embeds,
-        blocks,
-        labels,
-      )
-
-      if (isNotFoundPost(thread)) {
-        // @TODO technically this could be returned as a NotFoundPost based on lexicon
-        throw new InvalidRequestError(`Post not found: ${uri}`, 'NotFound')
+      if (repoRev.status === 'fulfilled') {
+        setRepoRev(res, repoRev.value)
+      }
+      if (result.status === 'rejected') {
+        throw result.reason
       }
 
       return {
         encoding: 'application/json',
-        body: { thread },
+        body: result.value,
       }
     },
   })
 }
 
+const skeleton = async (params: Params, ctx: Context) => {
+  const threadData = await getThreadData(params, ctx)
+  if (!threadData) {
+    throw new InvalidRequestError(`Post not found: ${params.uri}`, 'NotFound')
+  }
+  return { params, threadData }
+}
+
+const hydration = async (state: SkeletonState, ctx: Context) => {
+  const { feedService } = ctx
+  const {
+    threadData,
+    params: { viewer },
+  } = state
+  const relevant = getRelevantIds(threadData)
+  const hydrated = await feedService.feedHydration({ ...relevant, viewer })
+  // check root reply interaction rules
+  const anchorPostUri = threadData.post.postUri
+  const rootUri = threadData.post.replyRoot || anchorPostUri
+  const anchor = hydrated.posts[anchorPostUri]
+  const root = hydrated.posts[rootUri]
+  const gate = hydrated.threadgates[rootUri]?.record
+  const viewerCanReply = await checkViewerCanReply(
+    ctx.db.db,
+    anchor ?? null,
+    viewer,
+    new AtUri(rootUri).host,
+    (root?.record ?? null) as PostRecord | null,
+    gate ?? null,
+  )
+  return { ...state, ...hydrated, viewerCanReply }
+}
+
+const presentation = (state: HydrationState, ctx: Context) => {
+  const { params, profiles } = state
+  const { actorService } = ctx
+  const actors = actorService.views.profileBasicPresentation(
+    Object.keys(profiles),
+    state,
+    { viewer: params.viewer },
+  )
+  const thread = composeThread(state.threadData, actors, state, ctx)
+  if (isNotFoundPost(thread)) {
+    // @TODO technically this could be returned as a NotFoundPost based on lexicon
+    throw new InvalidRequestError(`Post not found: ${params.uri}`, 'NotFound')
+  }
+  if (isThreadViewPost(thread) && params.viewer) {
+    thread.viewer = { canReply: state.viewerCanReply }
+  }
+  return { thread }
+}
+
 const composeThread = (
   threadData: PostThread,
-  feedService: FeedService,
-  posts: PostInfoMap,
   actors: ActorInfoMap,
-  embeds: PostEmbedViews,
-  blocks: PostBlocksMap,
-  labels: Labels,
+  state: HydrationState,
+  ctx: Context,
 ) => {
+  const { feedService } = ctx
+  const { posts, threadgates, embeds, blocks, labels, lists } = state
+
   const post = feedService.views.formatPostView(
     threadData.post.postUri,
     actors,
     posts,
+    threadgates,
     embeds,
     labels,
+    lists,
   )
 
-  if (!post || blocks[post.uri]?.reply) {
+  // replies that are invalid due to reply-gating:
+  // a. may appear as the anchor post, but without any parent or replies.
+  // b. may not appear anywhere else in the thread.
+  const isAnchorPost = state.threadData.post.uri === threadData.post.postUri
+  const info = posts[threadData.post.postUri]
+  // @TODO re-enable invalidReplyRoot check
+  // const badReply = !!info?.invalidReplyRoot || !!info?.violatesThreadGate
+  const badReply = !!info?.violatesThreadGate
+  const omitBadReply = !isAnchorPost && badReply
+
+  if (!post || blocks[post.uri]?.reply || omitBadReply) {
     return {
       $type: 'app.bsky.feed.defs#notFoundPost',
       uri: threadData.post.postUri,
@@ -104,11 +158,20 @@ const composeThread = (
       $type: 'app.bsky.feed.defs#blockedPost',
       uri: threadData.post.postUri,
       blocked: true,
+      author: {
+        did: post.author.did,
+        viewer: post.author.viewer
+          ? {
+              blockedBy: post.author.viewer?.blockedBy,
+              blocking: post.author.viewer?.blocking,
+            }
+          : undefined,
+      },
     }
   }
 
   let parent
-  if (threadData.parent) {
+  if (threadData.parent && !badReply) {
     if (threadData.parent instanceof ParentNotFoundError) {
       parent = {
         $type: 'app.bsky.feed.defs#notFoundPost',
@@ -116,30 +179,14 @@ const composeThread = (
         notFound: true,
       }
     } else {
-      parent = composeThread(
-        threadData.parent,
-        feedService,
-        posts,
-        actors,
-        embeds,
-        blocks,
-        labels,
-      )
+      parent = composeThread(threadData.parent, actors, state, ctx)
     }
   }
 
   let replies: (ThreadViewPost | NotFoundPost | BlockedPost)[] | undefined
-  if (threadData.replies) {
+  if (threadData.replies && !badReply) {
     replies = threadData.replies.flatMap((reply) => {
-      const thread = composeThread(
-        reply,
-        feedService,
-        posts,
-        actors,
-        embeds,
-        blocks,
-        labels,
-      )
+      const thread = composeThread(reply, actors, state, ctx)
       // e.g. don't bother including #postNotFound reply placeholders for takedowns. either way matches api contract.
       const skip = []
       return isNotFoundPost(thread) ? skip : thread
@@ -173,18 +220,22 @@ const getRelevantIds = (
   }
   dids.add(thread.post.postAuthorDid)
   uris.add(thread.post.postUri)
+  if (thread.post.replyRoot) {
+    // ensure root is included for checking interactions
+    uris.add(thread.post.replyRoot)
+  }
   return { dids, uris }
 }
 
 const getThreadData = async (
-  ctx: AppContext,
-  uri: string,
-  depth: number,
-  parentHeight: number,
+  params: Params,
+  ctx: Context,
 ): Promise<PostThread | null> => {
-  const feedService = ctx.services.feed(ctx.db)
+  const { db, feedService } = ctx
+  const { uri, depth, parentHeight } = params
+
   const [parents, children] = await Promise.all([
-    getAncestorsAndSelfQb(ctx.db.db, { uri, parentHeight })
+    getAncestorsAndSelfQb(db.db, { uri, parentHeight })
       .selectFrom('ancestor')
       .innerJoin(
         feedService.selectPostQb().as('post'),
@@ -193,7 +244,7 @@ const getThreadData = async (
       )
       .selectAll('post')
       .execute(),
-    getDescendentsQb(ctx.db.db, { uri, depth })
+    getDescendentsQb(db.db, { uri, depth })
       .selectFrom('descendent')
       .innerJoin(
         feedService.selectPostQb().as('post'),
@@ -254,8 +305,54 @@ const getChildrenData = (
   }))
 }
 
+const checkViewerCanReply = async (
+  db: DatabaseSchema,
+  anchor: PostInfo | null,
+  viewer: string | null,
+  owner: string,
+  root: PostRecord | null,
+  threadgate: ThreadgateRecord | null,
+) => {
+  if (!viewer) return false
+  // @TODO re-enable invalidReplyRoot check
+  // if (anchor?.invalidReplyRoot || anchor?.violatesThreadGate) return false
+  if (anchor?.violatesThreadGate) return false
+  const viewerViolatesThreadGate = await violatesThreadGate(
+    db,
+    viewer,
+    owner,
+    root,
+    threadgate,
+  )
+  return !viewerViolatesThreadGate
+}
+
 class ParentNotFoundError extends Error {
   constructor(public uri: string) {
     super(`Parent not found: ${uri}`)
   }
 }
+
+type PostThread = {
+  post: FeedRow
+  parent?: PostThread | ParentNotFoundError
+  replies?: PostThread[]
+}
+
+type Context = {
+  db: Database
+  feedService: FeedService
+  actorService: ActorService
+}
+
+type Params = QueryParams & { viewer: string | null }
+
+type SkeletonState = {
+  params: Params
+  threadData: PostThread
+}
+
+type HydrationState = SkeletonState &
+  FeedHydrationState & {
+    viewerCanReply: boolean
+  }

@@ -21,16 +21,16 @@ const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = [
 const handler: AlgoHandler = async (
   ctx: AppContext,
   params: SkeletonParams,
-  viewer: string,
+  _viewer: string,
 ): Promise<AlgoResponse> => {
   const { limit, cursor } = params
-  const graphService = ctx.services.graph(ctx.db)
+  const db = ctx.db.getReplica('feed')
 
-  const { ref } = ctx.db.db.dynamic
+  const { ref } = db.db.dynamic
 
   // candidates are ranked within a materialized view by like count, depreciated over time.
 
-  let builder = ctx.db.db
+  let builder = db.db
     .selectFrom('algo_whats_hot_view as candidate')
     .innerJoin('post', 'post.uri', 'candidate.uri')
     .leftJoin('post_embed_record', 'post_embed_record.postUri', 'candidate.uri')
@@ -47,14 +47,9 @@ const handler: AlgoHandler = async (
             .orWhereRef('label.uri', '=', ref('post_embed_record.embedUri')),
         ),
     )
-    .where((qb) =>
-      graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
-    )
-    .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
     .select([
       sql<FeedItemType>`${'post'}`.as('type'),
       'post.uri as uri',
-      'post.cid as cid',
       'post.uri as postUri',
       'post.creator as originatorDid',
       'post.creator as postAuthorDid',

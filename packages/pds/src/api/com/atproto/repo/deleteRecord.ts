@@ -9,6 +9,18 @@ import { ConcurrentWriteError } from '../../../../services/repo'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.deleteRecord({
     auth: ctx.accessVerifierCheckTakedown,
+    rateLimit: [
+      {
+        name: 'repo-write-hour',
+        calcKey: ({ auth }) => auth.credentials.did,
+        calcPoints: () => 1,
+      },
+      {
+        name: 'repo-write-day',
+        calcKey: ({ auth }) => auth.credentials.did,
+        calcPoints: () => 1,
+      },
+    ],
     handler: async ({ input, auth }) => {
       const { repo, collection, rkey, swapCommit, swapRecord } = input.body
       const did = await ctx.services.account(ctx.db).getDidForActor(repo)

@@ -1,4 +1,4 @@
-import express from 'express'
+import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -10,52 +10,36 @@ import * as auth from './auth'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
-import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
-import { MessageDispatcher } from './event-stream/message-queue'
 import { Sequencer, SequencerLeader } from './sequencer'
-import { Labeler } from './labeler'
-import { BackgroundQueue } from './event-stream/background-queue'
+import { BackgroundQueue } from './background'
 import DidSqlCache from './did-cache'
-import { MountedAlgos } from './feed-gen/types'
 import { Crawlers } from './crawlers'
-import { LabelCache } from './label-cache'
-import { ContentReporter } from './content-reporter'
+import { RuntimeFlags } from './runtime-flags'
 
 export class AppContext {
-  private _appviewAgent: AtpAgent | null
-
   constructor(
     private opts: {
       db: Database
       blobstore: BlobStore
+      redisScratch?: Redis
       repoSigningKey: crypto.Keypair
       plcRotationKey: crypto.Keypair
       idResolver: IdResolver
       didCache: DidSqlCache
       auth: auth.ServerAuth
-      imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       mailer: ServerMailer
       moderationMailer: ModerationMailer
       services: Services
-      messageDispatcher: MessageDispatcher
       sequencer: Sequencer
       sequencerLeader: SequencerLeader | null
-      labeler: Labeler
-      labelCache: LabelCache
-      contentReporter?: ContentReporter
+      runtimeFlags: RuntimeFlags
       backgroundQueue: BackgroundQueue
+      appviewAgent: AtpAgent
       crawlers: Crawlers
-      algos: MountedAlgos
     },
-  ) {
-    this._appviewAgent = opts.cfg.bskyAppViewEndpoint
-      ? new AtpAgent({
-          service: opts.cfg.bskyAppViewEndpoint,
-        })
-      : null
-  }
+  ) {}
 
   get db(): Database {
     return this.opts.db
@@ -63,6 +47,10 @@ export class AppContext {
 
   get blobstore(): BlobStore {
     return this.opts.blobstore
+  }
+
+  get redisScratch(): Redis | undefined {
+    return this.opts.redisScratch
   }
 
   get repoSigningKey(): crypto.Keypair {
@@ -105,10 +93,6 @@ export class AppContext {
     return auth.optionalAccessOrRoleVerifier(this.auth)
   }
 
-  get imgUriBuilder(): ImageUriBuilder {
-    return this.opts.imgUriBuilder
-  }
-
   get cfg(): ServerConfig {
     return this.opts.cfg
   }
@@ -125,10 +109,6 @@ export class AppContext {
     return this.opts.services
   }
 
-  get messageDispatcher(): MessageDispatcher {
-    return this.opts.messageDispatcher
-  }
-
   get sequencer(): Sequencer {
     return this.opts.sequencer
   }
@@ -137,16 +117,8 @@ export class AppContext {
     return this.opts.sequencerLeader
   }
 
-  get labeler(): Labeler {
-    return this.opts.labeler
-  }
-
-  get labelCache(): LabelCache {
-    return this.opts.labelCache
-  }
-
-  get contentReporter(): ContentReporter | undefined {
-    return this.opts.contentReporter
+  get runtimeFlags(): RuntimeFlags {
+    return this.opts.runtimeFlags
   }
 
   get backgroundQueue(): BackgroundQueue {
@@ -169,8 +141,8 @@ export class AppContext {
     return this.opts.didCache
   }
 
-  get algos(): MountedAlgos {
-    return this.opts.algos
+  get appviewAgent(): AtpAgent {
+    return this.opts.appviewAgent
   }
 
   async serviceAuthHeaders(did: string, audience?: string) {
@@ -185,31 +157,17 @@ export class AppContext {
     })
   }
 
-  get appviewAgent(): AtpAgent {
-    if (!this._appviewAgent) {
-      throw new Error('Could not find bsky appview endpoint')
-    }
-    return this._appviewAgent
-  }
-
-  canProxyRead(req: express.Request): boolean {
-    return (
-      this.cfg.bskyAppViewProxy &&
-      this.cfg.bskyAppViewEndpoint !== undefined &&
-      req.get('x-appview-proxy') !== undefined
-    )
-  }
-
-  canProxyFeedConstruction(req: express.Request): boolean {
+  shouldProxyModeration(): boolean {
     return (
       this.cfg.bskyAppViewEndpoint !== undefined &&
-      req.get('x-appview-proxy') !== undefined
+      this.cfg.bskyAppViewModeration === true
     )
   }
 
   canProxyWrite(): boolean {
     return (
-      this.cfg.bskyAppViewProxy && this.cfg.bskyAppViewEndpoint !== undefined
+      this.cfg.bskyAppViewEndpoint !== undefined &&
+      this.cfg.bskyAppViewDid !== undefined
     )
   }
 }

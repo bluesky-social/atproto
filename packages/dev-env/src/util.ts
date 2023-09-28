@@ -1,11 +1,12 @@
-import { DidResolver, HandleResolver, IdResolver } from '@atproto/identity'
+import { IdResolver } from '@atproto/identity'
 import { TestPds } from './pds'
 import { TestBsky } from './bsky'
 
-export const mockNetworkUtilities = async (pds: TestPds, bsky?: TestBsky) => {
-  await mockResolvers(pds.ctx.idResolver, pds)
+export const mockNetworkUtilities = (pds: TestPds, bsky?: TestBsky) => {
+  mockResolvers(pds.ctx.idResolver, pds)
   if (bsky) {
-    await mockResolvers(bsky.ctx.idResolver, pds)
+    mockResolvers(bsky.ctx.idResolver, pds)
+    mockResolvers(bsky.indexer.ctx.idResolver, pds)
   }
 }
 
@@ -40,6 +41,16 @@ export const mockResolvers = (idResolver: IdResolver, pds: TestPds) => {
     } catch (err) {
       return undefined
     }
+  }
+}
+
+export const mockMailer = (pds: TestPds) => {
+  const mailer = pds.ctx.mailer
+  const _origSendMail = mailer.transporter.sendMail
+  mailer.transporter.sendMail = async (opts) => {
+    const result = await _origSendMail.call(mailer.transporter, opts)
+    console.log(`✉️ Email: ${JSON.stringify(result, null, 2)}`)
+    return result
   }
 }
 

@@ -1,7 +1,7 @@
 import fs from 'fs/promises'
 import { CID } from 'multiformats/cid'
 import AtpAgent from '@atproto/api'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { BlobRef } from '@atproto/lexicon'
 import { Main as Facet } from '@atproto/api/src/client/types/app/bsky/richtext/facet'
 import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/takeModerationAction'
@@ -74,6 +74,10 @@ export class SeedClient {
   likes: Record<string, Record<string, AtUri>>
   replies: Record<string, { text: string; ref: RecordRef }[]>
   reposts: Record<string, RecordRef[]>
+  lists: Record<
+    string,
+    Record<string, { ref: RecordRef; items: Record<string, RecordRef> }>
+  >
   dids: Record<string, string>
 
   constructor(public agent: AtpAgent, public adminAuth?: string) {
@@ -84,6 +88,7 @@ export class SeedClient {
     this.likes = {}
     this.replies = {}
     this.reposts = {}
+    this.lists = {}
     this.dids = {}
   }
 
@@ -117,7 +122,7 @@ export class SeedClient {
     by: string,
     displayName: string,
     description: string,
-    fromUser?: string,
+    selfLabels?: string[],
   ) {
     AVATAR_IMG ??= await fs.readFile(
       'tests/image/fixtures/key-portrait-small.jpg',
@@ -127,7 +132,7 @@ export class SeedClient {
     {
       const res = await this.agent.api.com.atproto.repo.uploadBlob(AVATAR_IMG, {
         encoding: 'image/jpeg',
-        headers: this.getHeaders(fromUser || by),
+        headers: this.getHeaders(by),
       } as any)
       avatarBlob = res.data.blob
     }
@@ -139,8 +144,14 @@ export class SeedClient {
           displayName,
           description,
           avatar: avatarBlob,
+          labels: selfLabels
+            ? {
+                $type: 'com.atproto.label.defs#selfLabels',
+                values: selfLabels.map((val) => ({ val })),
+              }
+            : undefined,
         },
-        this.getHeaders(fromUser || by),
+        this.getHeaders(by),
       )
       this.profiles[by] = {
         displayName,
@@ -311,6 +322,54 @@ export class SeedClient {
     const repost = new RecordRef(res.uri, res.cid)
     this.reposts[by].push(repost)
     return repost
+  }
+
+  async createList(by: string, name: string, purpose: 'mod' | 'curate') {
+    const res = await this.agent.api.app.bsky.graph.list.create(
+      { repo: by },
+      {
+        name,
+        purpose:
+          purpose === 'mod'
+            ? 'app.bsky.graph.defs#modlist'
+            : 'app.bsky.graph.defs#curatelist',
+        createdAt: new Date().toISOString(),
+      },
+      this.getHeaders(by),
+    )
+    this.lists[by] ??= {}
+    const ref = new RecordRef(res.uri, res.cid)
+    this.lists[by][ref.uriStr] = {
+      ref: ref,
+      items: {},
+    }
+    return ref
+  }
+
+  async addToList(by: string, subject: string, list: RecordRef) {
+    const res = await this.agent.api.app.bsky.graph.listitem.create(
+      { repo: by },
+      { subject, list: list.uriStr, createdAt: new Date().toISOString() },
+      this.getHeaders(by),
+    )
+    const ref = new RecordRef(res.uri, res.cid)
+    const found = (this.lists[by] ?? {})[list.uriStr]
+    if (found) {
+      found.items[subject] = ref
+    }
+    return ref
+  }
+
+  async rmFromList(by: string, subject: string, list: RecordRef) {
+    const foundList = (this.lists[by] ?? {})[list.uriStr] ?? {}
+    if (!foundList) return
+    const foundItem = foundList.items[subject]
+    if (!foundItem) return
+    await this.agent.api.app.bsky.graph.listitem.delete(
+      { repo: by, rkey: foundItem.uri.rkey },
+      this.getHeaders(by),
+    )
+    delete foundList.items[subject]
   }
 
   async takeModerationAction(opts: {

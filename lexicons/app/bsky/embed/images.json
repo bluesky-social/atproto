@@ -9,7 +9,7 @@
       "properties": {
         "images": {
           "type": "array",
-          "items": {"type": "ref", "ref": "#image"},
+          "items": { "type": "ref", "ref": "#image" },
           "maxLength": 4
         }
       }
@@ -23,7 +23,17 @@
           "accept": ["image/*"],
           "maxSize": 1000000
         },
-        "alt": {"type": "string"}
+        "alt": { "type": "string" },
+        "aspectRatio": { "type": "ref", "ref": "#aspectRatio" }
+      }
+    },
+    "aspectRatio": {
+      "type": "object",
+      "description": "width:height represents an aspect ratio. It may be approximate, and may not correspond to absolute dimensions in any given unit.",
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 }
       }
     },
     "view": {
@@ -32,7 +42,7 @@
       "properties": {
         "images": {
           "type": "array",
-          "items": {"type": "ref", "ref": "#viewImage"},
+          "items": { "type": "ref", "ref": "#viewImage" },
           "maxLength": 4
         }
       }
@@ -41,9 +51,10 @@
       "type": "object",
       "required": ["thumb", "fullsize", "alt"],
       "properties": {
-        "thumb": {"type": "string"},
-        "fullsize": {"type": "string"},
-        "alt": {"type": "string"}
+        "thumb": { "type": "string" },
+        "fullsize": { "type": "string" },
+        "alt": { "type": "string" },
+        "aspectRatio": { "type": "ref", "ref": "#aspectRatio" }
       }
     }
   }

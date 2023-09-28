@@ -23,7 +23,12 @@ export default async (sc: SeedClient, users = true) => {
   await sc.follow(bob, alice)
   await sc.follow(bob, carol, createdAtMicroseconds())
   await sc.follow(dan, bob, createdAtTimezone())
-  await sc.post(alice, posts.alice[0])
+  await sc.post(alice, posts.alice[0], undefined, undefined, undefined, {
+    labels: {
+      $type: 'com.atproto.label.defs#selfLabels',
+      values: [{ val: 'self-label' }],
+    },
+  })
   await sc.post(bob, posts.bob[0], undefined, undefined, undefined, {
     langs: ['en-US', 'i-klingon'],
   })
@@ -112,7 +117,7 @@ export default async (sc: SeedClient, users = true) => {
     sc.posts[alice][1].ref,
     replies.carol[0],
   )
-  await sc.reply(
+  const alicesReplyToBob = await sc.reply(
     alice,
     sc.posts[alice][1].ref,
     sc.replies[bob][0].ref,
@@ -120,6 +125,7 @@ export default async (sc: SeedClient, users = true) => {
   )
   await sc.repost(carol, sc.posts[dan][1].ref)
   await sc.repost(dan, sc.posts[alice][1].ref)
+  await sc.repost(dan, alicesReplyToBob.ref)
 
   return sc
 }

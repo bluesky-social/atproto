@@ -81,7 +81,6 @@ describe('bsky views with mutes from mute lists', () => {
       sc.getHeaders(alice),
     )
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
   })
 
   it('uses a list for mutes', async () => {
@@ -128,6 +127,20 @@ describe('bsky views with mutes from mute lists', () => {
     ).toBe(false)
   })
 
+  it('removes content from muted users on getListFeed', async () => {
+    const listRef = await sc.createList(bob, 'test list', 'curate')
+    await sc.addToList(alice, bob, listRef)
+    await sc.addToList(alice, carol, listRef)
+    await sc.addToList(alice, dan, listRef)
+    const res = await agent.api.app.bsky.feed.getListFeed(
+      { list: listRef.uriStr },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(
+      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+    ).toBe(false)
+  })
+
   it('returns mute status on getProfile', async () => {
     const res = await agent.api.app.bsky.actor.getProfile(
       { actor: carol },
@@ -166,7 +179,7 @@ describe('bsky views with mutes from mute lists', () => {
     // unfollow so they _would_ show up in suggestions if not for mute
     await sc.unfollow(dan, carol)
     await network.processAll()
-    await network.bsky.ctx.backgroundQueue.processAll()
+    await network.bsky.processAll()
 
     const res = await agent.api.app.bsky.actor.getSuggestions(
       {

@@ -9,11 +9,11 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { actor, limit, cursor } = params
       const requester = auth.credentials.did
-      const { services, db } = ctx
+      const db = ctx.db.getReplica()
       const { ref } = db.db.dynamic
 
-      const actorService = services.actor(db)
-      const graphService = services.graph(db)
+      const actorService = ctx.services.actor(db)
+      const graphService = ctx.services.graph(db)
 
       const creatorRes = await actorService.getActor(actor)
       if (!creatorRes) {
@@ -31,16 +31,16 @@ export default function (server: Server, ctx: AppContext) {
         keyset,
       })
 
-      const [listsRes, creator] = await Promise.all([
+      const [listsRes, profiles] = await Promise.all([
         listsReq.execute(),
-        actorService.views.profile(creatorRes, requester),
+        actorService.views.profiles([creatorRes], requester),
       ])
-      const profileMap = {
-        [creator.did]: creator,
+      if (!profiles[creatorRes.did]) {
+        throw new InvalidRequestError(`Actor not found: ${actor}`)
       }
 
       const lists = listsRes.map((row) =>
-        graphService.formatListView(row, profileMap),
+        graphService.formatListView(row, profiles),
       )
 
       return {

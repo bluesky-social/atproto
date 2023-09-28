@@ -1,5 +1,5 @@
-import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
-import { AtUri } from '@atproto/uri'
+import AtpAgent from '@atproto/api'
+import { AtUri } from '@atproto/syntax'
 import { BlobNotFoundError } from '@atproto/repo'
 import {
   adminAuth,
@@ -22,6 +22,7 @@ import {
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { PeriodicModerationActionReversal } from '../src'
 
 describe('moderation', () => {
   let server: TestServerInfo
@@ -285,7 +286,8 @@ describe('moderation', () => {
         headers: sc.getHeaders(deleteme.did),
       })
       const { token: deletionToken } = await server.ctx.db.db
-        .selectFrom('delete_account_token')
+        .selectFrom('email_token')
+        .where('purpose', '=', 'delete_account')
         .where('did', '=', deleteme.did)
         .selectAll()
         .executeTakeFirstOrThrow()
@@ -826,164 +828,6 @@ describe('moderation', () => {
       )
     })
 
-    it('negates an existing label and reverses.', async () => {
-      const { ctx } = server
-      const post = sc.posts[sc.dids.bob][0].ref
-      const labelingService = ctx.services.appView.label(ctx.db)
-      await labelingService.formatAndCreate(
-        ctx.cfg.labelerDid,
-        post.uriStr,
-        post.cidStr,
-        { create: ['kittens'] },
-      )
-      const action = await actionWithLabels({
-        negateLabelVals: ['kittens'],
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.uriStr,
-          cid: post.cidStr,
-        },
-      })
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
-      await reverse(action.id)
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['kittens'])
-      // Cleanup
-      await labelingService.formatAndCreate(
-        ctx.cfg.labelerDid,
-        post.uriStr,
-        post.cidStr,
-        { negate: ['kittens'] },
-      )
-    })
-
-    it('no-ops when negating an already-negated label and reverses.', async () => {
-      const { ctx } = server
-      const post = sc.posts[sc.dids.bob][0].ref
-      const labelingService = ctx.services.appView.label(ctx.db)
-      const action = await actionWithLabels({
-        negateLabelVals: ['bears'],
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.uriStr,
-          cid: post.cidStr,
-        },
-      })
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
-      await reverse(action.id)
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['bears'])
-      // Cleanup
-      await labelingService.formatAndCreate(
-        ctx.cfg.labelerDid,
-        post.uriStr,
-        post.cidStr,
-        { negate: ['bears'] },
-      )
-    })
-
-    it('creates non-existing labels and reverses.', async () => {
-      const post = sc.posts[sc.dids.bob][0].ref
-      const action = await actionWithLabels({
-        createLabelVals: ['puppies', 'doggies'],
-        negateLabelVals: [],
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.uriStr,
-          cid: post.cidStr,
-        },
-      })
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual([
-        'puppies',
-        'doggies',
-      ])
-      await reverse(action.id)
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
-    })
-
-    it('no-ops when creating an existing label and reverses.', async () => {
-      const { ctx } = server
-      const post = sc.posts[sc.dids.bob][0].ref
-      const labelingService = ctx.services.appView.label(ctx.db)
-      await labelingService.formatAndCreate(
-        ctx.cfg.labelerDid,
-        post.uriStr,
-        post.cidStr,
-        { create: ['birds'] },
-      )
-      const action = await actionWithLabels({
-        createLabelVals: ['birds'],
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.uriStr,
-          cid: post.cidStr,
-        },
-      })
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['birds'])
-      await reverse(action.id)
-      await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
-    })
-
-    it('creates labels on a repo and reverses.', async () => {
-      const action = await actionWithLabels({
-        createLabelVals: ['puppies', 'doggies'],
-        negateLabelVals: [],
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.bob,
-        },
-      })
-      await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual([
-        'puppies',
-        'doggies',
-      ])
-      await reverse(action.id)
-      await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual([])
-    })
-
-    it('creates and negates labels on a repo and reverses.', async () => {
-      const { ctx } = server
-      const labelingService = ctx.services.appView.label(ctx.db)
-      await labelingService.formatAndCreate(
-        ctx.cfg.labelerDid,
-        sc.dids.bob,
-        null,
-        { create: ['kittens'] },
-      )
-      const action = await actionWithLabels({
-        createLabelVals: ['puppies'],
-        negateLabelVals: ['kittens'],
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.bob,
-        },
-      })
-      await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual(['puppies'])
-      await reverse(action.id)
-      await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual(['kittens'])
-    })
-
-    it('does not allow triage moderators to label.', async () => {
-      const attemptLabel = agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: ACKNOWLEDGE,
-          createdBy: 'did:example:moderator',
-          reason: 'Y',
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: sc.dids.bob,
-          },
-          negateLabelVals: ['a'],
-          createLabelVals: ['b', 'c'],
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: triageAuth() },
-        },
-      )
-      await expect(attemptLabel).rejects.toThrow(
-        'Must be a full moderator to label content',
-      )
-    })
-
     it('allows full moderators to takedown.', async () => {
       const { data: action } =
         await agent.api.com.atproto.admin.takeModerationAction(
@@ -1003,6 +847,45 @@ describe('moderation', () => {
         )
       // cleanup
       await reverse(action.id)
+    })
+
+    it('automatically reverses actions marked with duration', async () => {
+      const { data: action } =
+        await agent.api.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            createdBy: 'did:example:moderator',
+            reason: 'Y',
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: sc.dids.bob,
+            },
+            // Use negative value to set the expiry time in the past so that the action is automatically reversed
+            // right away without having to wait n number of hours for a successful assertion
+            durationInHours: -1,
+          },
+          {
+            encoding: 'application/json',
+            headers: { authorization: moderatorAuth() },
+          },
+        )
+
+      // In the actual app, this will be instantiated and run on server startup
+      const periodicReversal = new PeriodicModerationActionReversal(server.ctx)
+      await periodicReversal.findAndRevertDueActions()
+
+      const { data: reversedAction } =
+        await agent.api.com.atproto.admin.getModerationAction(
+          { id: action.id },
+          { headers: { authorization: adminAuth() } },
+        )
+
+      // Verify that the automatic reversal is attributed to the original moderator of the temporary action
+      // and that the reason is set to indicate that the action was automatically reversed.
+      expect(reversedAction.reversal).toMatchObject({
+        createdBy: action.createdBy,
+        reason: '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
+      })
     })
 
     it('does not allow non-full moderators to takedown.', async () => {
@@ -1027,26 +910,6 @@ describe('moderation', () => {
       )
     })
 
-    async function actionWithLabels(
-      opts: Partial<ComAtprotoAdminTakeModerationAction.InputSchema> & {
-        subject: ComAtprotoAdminTakeModerationAction.InputSchema['subject']
-      },
-    ) {
-      const result = await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: FLAG,
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-          ...opts,
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
-      return result.data
-    }
-
     async function reverse(actionId: number) {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
@@ -1060,41 +923,16 @@ describe('moderation', () => {
         },
       )
     }
-
-    async function getRecordLabels(uri: string) {
-      const result = await agent.api.com.atproto.admin.getRecord(
-        { uri },
-        { headers: { authorization: adminAuth() } },
-      )
-      const labels = result.data.labels ?? []
-      return labels.map((l) => l.val)
-    }
-
-    async function getRepoLabels(did: string) {
-      const result = await agent.api.com.atproto.admin.getRepo(
-        { did },
-        { headers: { authorization: adminAuth() } },
-      )
-      const labels = result.data.labels ?? []
-      return labels.map((l) => l.val)
-    }
   })
 
   describe('blob takedown', () => {
     let post: { ref: RecordRef; images: ImageRef[] }
     let blob: ImageRef
-    let imageUri: string
     let actionId: number
+
     beforeAll(async () => {
       post = sc.posts[sc.dids.carol][0]
       blob = post.images[1]
-      imageUri = server.ctx.imgUriBuilder
-        .getCommonSignedUri('feed_thumbnail', blob.image.ref.toString())
-        .replace(server.ctx.cfg.publicUrl, server.url)
-      // Warm image server cache
-      await fetch(imageUri)
-      const cached = await fetch(imageUri)
-      expect(cached.headers.get('x-cache')).toEqual('hit')
       const takeAction = await agent.api.com.atproto.admin.takeModerationAction(
         {
           action: TAKEDOWN,
@@ -1131,12 +969,6 @@ describe('moderation', () => {
       await expect(referenceBlob).rejects.toThrow('Could not find blob:')
     })
 
-    it('prevents image blob from being served, even when cached.', async () => {
-      const fetchImage = await fetch(imageUri)
-      expect(fetchImage.status).toEqual(404)
-      expect(await fetchImage.json()).toEqual({ message: 'Image not found' })
-    })
-
     it('restores blob when action is reversed.', async () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
@@ -1153,12 +985,6 @@ describe('moderation', () => {
       // Can post and reference blob
       const post = await sc.post(sc.dids.alice, 'pic', [], [blob])
       expect(post.images[0].image.ref.equals(blob.image.ref)).toBeTruthy()
-
-      // Can fetch through image server
-      const fetchImage = await fetch(imageUri)
-      expect(fetchImage.status).toEqual(200)
-      const size = Number(fetchImage.headers.get('content-length'))
-      expect(size).toBeGreaterThan(9000)
     })
   })
 })

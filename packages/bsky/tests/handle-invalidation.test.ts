@@ -27,8 +27,10 @@ describe('handle invalidation', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
 
-    const origResolve = network.bsky.ctx.idResolver.handle.resolve
-    network.bsky.ctx.idResolver.handle.resolve = async (handle: string) => {
+    const origResolve = network.bsky.indexer.ctx.idResolver.handle.resolve
+    network.bsky.indexer.ctx.idResolver.handle.resolve = async (
+      handle: string,
+    ) => {
       if (mockHandles[handle] === null) {
         return undefined
       } else if (mockHandles[handle]) {
@@ -44,8 +46,9 @@ describe('handle invalidation', () => {
 
   const backdateIndexedAt = async (did: string) => {
     const TWO_DAYS_AGO = new Date(Date.now() - 2 * DAY).toISOString()
-    await network.bsky.ctx.db.db
-      .updateTable('actor')
+    await network.bsky.ctx.db
+      .getPrimary()
+      .db.updateTable('actor')
       .set({ indexedAt: TWO_DAYS_AGO })
       .where('did', '=', did)
       .execute()

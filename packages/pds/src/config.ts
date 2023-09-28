@@ -38,24 +38,17 @@ export interface ServerConfigValues {
   availableUserDomains: string[]
   handleResolveNameservers?: string[]
 
-  imgUriSalt: string
-  imgUriKey: string
-  imgUriEndpoint?: string
-  blobCacheLocation?: string
+  rateLimitsEnabled: boolean
+  rateLimitBypassKey?: string
+  rateLimitBypassIps?: string[]
+  redisScratchAddress?: string
+  redisScratchPassword?: string
 
   appUrlPasswordReset: string
   emailSmtpUrl?: string
   emailNoReplyAddress: string
   moderationEmailAddress?: string
   moderationEmailSmtpUrl?: string
-
-  hiveApiKey?: string
-  labelerDid: string
-  labelerKeywords: Record<string, string>
-  unacceptableWordsB64?: string
-  falsePositiveWordsB64?: string
-
-  feedGenDid?: string
 
   maxSubscriptionBuffer: number
   repoBackfillLimitMs: number
@@ -65,9 +58,10 @@ export interface ServerConfigValues {
   // this is really only used in test environments
   dbTxLockNonce?: string
 
-  bskyAppViewEndpoint?: string
-  bskyAppViewDid?: string
-  bskyAppViewProxy: boolean
+  bskyAppViewEndpoint: string
+  bskyAppViewDid: string
+  bskyAppViewModeration?: boolean
+  bskyAppViewCdnUrlPattern?: string
 
   crawlersToNotify?: string[]
 }
@@ -148,13 +142,23 @@ export class ServerConfig {
       ? process.env.HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
 
-    const imgUriSalt =
-      process.env.IMG_URI_SALT || '9dd04221f5755bce5f55f47464c27e1e'
-    const imgUriKey =
-      process.env.IMG_URI_KEY ||
-      'f23ecd142835025f42c3db2cf25dd813956c178392760256211f9d315f8ab4d8'
-    const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
-    const blobCacheLocation = process.env.BLOB_CACHE_LOC
+    const rateLimitsEnabled = process.env.RATE_LIMITS_ENABLED === 'true'
+    const rateLimitBypassKey = nonemptyString(process.env.RATE_LIMIT_BYPASS_KEY)
+    const rateLimitBypassIpsStr = nonemptyString(
+      process.env.RATE_LIMIT_BYPASS_IPS,
+    )
+    const rateLimitBypassIps = rateLimitBypassIpsStr
+      ? rateLimitBypassIpsStr.split(',').map((ipOrCidr) => {
+          const ip = ipOrCidr.split('/')[0]
+          return ip.trim()
+        })
+      : undefined
+    const redisScratchAddress = nonemptyString(
+      process.env.REDIS_SCRATCH_ADDRESS,
+    )
+    const redisScratchPassword = nonemptyString(
+      process.env.REDIS_SCRATCH_PASSWORD,
+    )
 
     const appUrlPasswordReset =
       process.env.APP_URL_PASSWORD_RESET || 'app://password-reset'
@@ -168,19 +172,6 @@ export class ServerConfig {
       process.env.MODERATION_EMAIL_ADDRESS || undefined
     const moderationEmailSmtpUrl =
       process.env.MODERATION_EMAIL_SMTP_URL || undefined
-
-    const hiveApiKey = process.env.HIVE_API_KEY || undefined
-    const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
-    const labelerKeywords = {}
-
-    const unacceptableWordsB64 = nonemptyString(
-      process.env.UNACCEPTABLE_WORDS_B64,
-    )
-    const falsePositiveWordsB64 = nonemptyString(
-      process.env.FALSE_POSITIVE_WORDS_B64,
-    )
-
-    const feedGenDid = process.env.FEED_GEN_DID
 
     const dbPostgresUrl = process.env.DB_POSTGRES_URL
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
@@ -211,9 +202,20 @@ export class ServerConfig {
     const bskyAppViewEndpoint = nonemptyString(
       process.env.BSKY_APP_VIEW_ENDPOINT,
     )
+    if (typeof bskyAppViewEndpoint !== 'string') {
+      throw new Error(
+        'No value provided for process.env.BSKY_APP_VIEW_ENDPOINT',
+      )
+    }
     const bskyAppViewDid = nonemptyString(process.env.BSKY_APP_VIEW_DID)
-    const bskyAppViewProxy =
-      process.env.BSKY_APP_VIEW_PROXY === 'true' ? true : false
+    if (typeof bskyAppViewDid !== 'string') {
+      throw new Error('No value provided for process.env.BSKY_APP_VIEW_DID')
+    }
+    const bskyAppViewModeration =
+      process.env.BSKY_APP_VIEW_MODERATION === 'true' ? true : false
+    const bskyAppViewCdnUrlPattern = nonemptyString(
+      process.env.BSKY_APP_VIEW_CDN_URL_PATTERN,
+    )
 
     const crawlersEnv = process.env.CRAWLERS_TO_NOTIFY
     const crawlersToNotify =
@@ -247,21 +249,16 @@ export class ServerConfig {
       databaseLocation,
       availableUserDomains,
       handleResolveNameservers,
-      imgUriSalt,
-      imgUriKey,
-      imgUriEndpoint,
-      blobCacheLocation,
+      rateLimitsEnabled,
+      rateLimitBypassKey,
+      rateLimitBypassIps,
+      redisScratchAddress,
+      redisScratchPassword,
       appUrlPasswordReset,
       emailSmtpUrl,
       emailNoReplyAddress,
       moderationEmailAddress,
       moderationEmailSmtpUrl,
-      hiveApiKey,
-      labelerDid,
-      labelerKeywords,
-      unacceptableWordsB64,
-      falsePositiveWordsB64,
-      feedGenDid,
       maxSubscriptionBuffer,
       repoBackfillLimitMs,
       sequencerLeaderLockId,
@@ -269,7 +266,8 @@ export class ServerConfig {
       dbTxLockNonce,
       bskyAppViewEndpoint,
       bskyAppViewDid,
-      bskyAppViewProxy,
+      bskyAppViewModeration,
+      bskyAppViewCdnUrlPattern,
       crawlersToNotify,
       ...overrides,
     })
@@ -413,20 +411,24 @@ export class ServerConfig {
     return this.cfg.handleResolveNameservers
   }
 
-  get imgUriSalt() {
-    return this.cfg.imgUriSalt
+  get rateLimitsEnabled() {
+    return this.cfg.rateLimitsEnabled
   }
 
-  get imgUriKey() {
-    return this.cfg.imgUriKey
+  get rateLimitBypassKey() {
+    return this.cfg.rateLimitBypassKey
   }
 
-  get imgUriEndpoint() {
-    return this.cfg.imgUriEndpoint
+  get rateLimitBypassIps() {
+    return this.cfg.rateLimitBypassIps
   }
 
-  get blobCacheLocation() {
-    return this.cfg.blobCacheLocation
+  get redisScratchAddress() {
+    return this.cfg.redisScratchAddress
+  }
+
+  get redisScratchPassword() {
+    return this.cfg.redisScratchPassword
   }
 
   get appUrlPasswordReset() {
@@ -447,30 +449,6 @@ export class ServerConfig {
 
   get moderationEmailSmtpUrl() {
     return this.cfg.moderationEmailSmtpUrl
-  }
-
-  get hiveApiKey() {
-    return this.cfg.hiveApiKey
-  }
-
-  get labelerDid() {
-    return this.cfg.labelerDid
-  }
-
-  get labelerKeywords() {
-    return this.cfg.labelerKeywords
-  }
-
-  get unacceptableWordsB64() {
-    return this.cfg.unacceptableWordsB64
-  }
-
-  get falsePositiveWordsB64() {
-    return this.cfg.falsePositiveWordsB64
-  }
-
-  get feedGenDid() {
-    return this.cfg.feedGenDid
   }
 
   get maxSubscriptionBuffer() {
@@ -501,8 +479,12 @@ export class ServerConfig {
     return this.cfg.bskyAppViewDid
   }
 
-  get bskyAppViewProxy() {
-    return this.cfg.bskyAppViewProxy
+  get bskyAppViewModeration() {
+    return this.cfg.bskyAppViewModeration
+  }
+
+  get bskyAppViewCdnUrlPattern() {
+    return this.cfg.bskyAppViewCdnUrlPattern
   }
 
   get crawlersToNotify() {

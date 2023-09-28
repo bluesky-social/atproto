@@ -1,73 +1,28 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import Database from '../../../../db'
+import { MINUTE } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.resetPassword(async ({ input }) => {
-    const { token, password } = input.body
+  server.com.atproto.server.resetPassword({
+    rateLimit: [
+      {
+        durationMs: 5 * MINUTE,
+        points: 50,
+      },
+    ],
+    handler: async ({ input }) => {
+      const { token, password } = input.body
 
-    const tokenInfo = await ctx.db.db
-      .selectFrom('user_account')
-      .select(['did', 'passwordResetGrantedAt'])
-      .where('passwordResetToken', '=', token.toUpperCase())
-      .executeTakeFirst()
+      const did = await ctx.services
+        .account(ctx.db)
+        .assertValidTokenAndFindDid('reset_password', token)
 
-    if (!tokenInfo?.passwordResetGrantedAt) {
-      return createInvalidTokenError()
-    }
-
-    const now = new Date()
-    const grantedAt = new Date(tokenInfo.passwordResetGrantedAt)
-    const expiresAt = new Date(grantedAt.getTime() + 15 * minsToMs)
-
-    if (now > expiresAt) {
-      await unsetResetToken(ctx.db, tokenInfo.did)
-      return createExpiredTokenError()
-    }
-
-    await ctx.db.transaction(async (dbTxn) => {
-      await unsetResetToken(dbTxn, tokenInfo.did)
-      await ctx.services
-        .account(dbTxn)
-        .updateUserPassword(tokenInfo.did, password)
-      await await ctx.services
-        .auth(dbTxn)
-        .revokeRefreshTokensByDid(tokenInfo.did)
-    })
+      await ctx.db.transaction(async (dbTxn) => {
+        const accountService = ctx.services.account(ctx.db)
+        await accountService.updateUserPassword(did, password)
+        await accountService.deleteEmailToken(did, 'reset_password')
+        await ctx.services.auth(dbTxn).revokeRefreshTokensByDid(did)
+      })
+    },
   })
-}
-
-type ErrorResponse = {
-  status: number
-  error: string
-  message: string
-}
-
-const minsToMs = 60 * 1000
-
-const createInvalidTokenError = (): ErrorResponse & {
-  error: 'InvalidToken'
-} => ({
-  status: 400,
-  error: 'InvalidToken',
-  message: 'Token is invalid',
-})
-
-const createExpiredTokenError = (): ErrorResponse & {
-  error: 'ExpiredToken'
-} => ({
-  status: 400,
-  error: 'ExpiredToken',
-  message: 'The password reset token has expired',
-})
-
-const unsetResetToken = async (db: Database, did: string) => {
-  await db.db
-    .updateTable('user_account')
-    .where('did', '=', did)
-    .set({
-      passwordResetToken: null,
-      passwordResetGrantedAt: null,
-    })
-    .execute()
 }

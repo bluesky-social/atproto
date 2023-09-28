@@ -6,55 +6,53 @@ import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
 import compression from 'compression'
 import { IdResolver } from '@atproto/identity'
-import API, { health, blobResolver } from './api'
-import Database from './db'
+import API, { health, wellKnown, blobResolver } from './api'
+import { DatabaseCoordinator } from './db'
 import * as error from './error'
-import { dbLogger, loggerMiddleware, subLogger } from './logger'
+import { dbLogger, loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { createServer } from './lexicon'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
 import AppContext from './context'
-import { RepoSubscription } from './subscription/repo'
 import DidSqlCache from './did-cache'
 import {
   ImageInvalidator,
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
-import { HiveLabeler, KeywordLabeler, Labeler } from './labeler'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
+import { LabelCache } from './label-cache'
+import { NotificationServer } from './notifications'
+import { AtpAgent } from '@atproto/api'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
 export { ServerConfig } from './config'
-export { Database } from './db'
+export { Database, PrimaryDatabase, DatabaseCoordinator } from './db'
+export { PeriodicModerationActionReversal } from './db/periodic-moderation-action-reversal'
+export { Redis } from './redis'
 export { ViewMaintainer } from './db/views'
 export { AppContext } from './context'
 export { makeAlgos } from './feed-gen'
+export * from './indexer'
+export * from './ingester'
 
 export class BskyAppView {
   public ctx: AppContext
   public app: express.Application
-  public sub?: RepoSubscription
   public server?: http.Server
   private terminator?: HttpTerminator
   private dbStatsInterval: NodeJS.Timer
-  private subStatsInterval: NodeJS.Timer
 
-  constructor(opts: {
-    ctx: AppContext
-    app: express.Application
-    sub?: RepoSubscription
-  }) {
+  constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
     this.app = opts.app
-    this.sub = opts.sub
   }
 
   static create(opts: {
-    db: Database
+    db: DatabaseCoordinator
     config: ServerConfig
     imgInvalidator?: ImageInvalidator
     algos?: MountedAlgos
@@ -67,16 +65,18 @@ export class BskyAppView {
     app.use(compression())
 
     const didCache = new DidSqlCache(
-      db,
+      db.getPrimary(),
       config.didCacheStaleTTL,
       config.didCacheMaxTTL,
     )
-    const idResolver = new IdResolver({ plcUrl: config.didPlcUrl, didCache })
+    const idResolver = new IdResolver({
+      plcUrl: config.didPlcUrl,
+      didCache,
+      backupNameservers: config.handleResolveNameservers,
+    })
 
     const imgUriBuilder = new ImageUriBuilder(
-      config.imgUriEndpoint || `${config.publicUrl}/image`,
-      config.imgUriSalt,
-      config.imgUriKey,
+      config.imgUriEndpoint || `${config.publicUrl}/img`,
     )
 
     let imgProcessingServer: ImageProcessingServer | undefined
@@ -98,32 +98,17 @@ export class BskyAppView {
       throw new Error('Missing appview image invalidator')
     }
 
-    const backgroundQueue = new BackgroundQueue(db)
-
-    // @TODO background labeling tasks
-    let labeler: Labeler
-    if (config.hiveApiKey) {
-      labeler = new HiveLabeler(config.hiveApiKey, {
-        db,
-        cfg: config,
-        idResolver,
-        backgroundQueue,
-      })
-    } else {
-      labeler = new KeywordLabeler({
-        db,
-        cfg: config,
-        idResolver,
-        backgroundQueue,
-      })
-    }
+    const backgroundQueue = new BackgroundQueue(db.getPrimary())
+    const labelCache = new LabelCache(db.getPrimary())
+    const notifServer = new NotificationServer(db.getPrimary())
+    const searchAgent = config.searchEndpoint
+      ? new AtpAgent({ service: config.searchEndpoint })
+      : undefined
 
     const services = createServices({
       imgUriBuilder,
       imgInvalidator,
-      idResolver,
-      labeler,
-      backgroundQueue,
+      labelCache,
     })
 
     const ctx = new AppContext({
@@ -133,9 +118,11 @@ export class BskyAppView {
       imgUriBuilder,
       idResolver,
       didCache,
-      labeler,
+      labelCache,
       backgroundQueue,
+      searchAgent,
       algos,
+      notifServer,
     })
 
     let server = createServer({
@@ -150,34 +137,39 @@ export class BskyAppView {
     server = API(server, ctx)
 
     app.use(health.createRouter(ctx))
+    app.use(wellKnown.createRouter(ctx))
     app.use(blobResolver.createRouter(ctx))
     if (imgProcessingServer) {
-      app.use('/image', imgProcessingServer.app)
+      app.use('/img', imgProcessingServer.app)
     }
     app.use(server.xrpc.router)
     app.use(error.handler)
 
-    const sub = config.repoProvider
-      ? new RepoSubscription(
-          ctx,
-          config.repoProvider,
-          config.repoSubLockId,
-          config.indexerConcurrency,
-        )
-      : undefined
-
-    return new BskyAppView({ ctx, app, sub })
+    return new BskyAppView({ ctx, app })
   }
 
   async start(): Promise<http.Server> {
     const { db, backgroundQueue } = this.ctx
-    const { pool } = db.cfg
+    const primary = db.getPrimary()
+    const replicas = db.getReplicas()
     this.dbStatsInterval = setInterval(() => {
       dbLogger.info(
         {
-          idleCount: pool.idleCount,
-          totalCount: pool.totalCount,
-          waitingCount: pool.waitingCount,
+          idleCount: replicas.reduce(
+            (tot, replica) => tot + replica.pool.idleCount,
+            0,
+          ),
+          totalCount: replicas.reduce(
+            (tot, replica) => tot + replica.pool.totalCount,
+            0,
+          ),
+          waitingCount: replicas.reduce(
+            (tot, replica) => tot + replica.pool.waitingCount,
+            0,
+          ),
+          primaryIdleCount: primary.pool.idleCount,
+          primaryTotalCount: primary.pool.totalCount,
+          primaryWaitingCount: primary.pool.waitingCount,
         },
         'db pool stats',
       )
@@ -189,19 +181,7 @@ export class BskyAppView {
         'background queue stats',
       )
     }, 10000)
-    if (this.sub) {
-      this.subStatsInterval = setInterval(() => {
-        subLogger.info(
-          {
-            seq: this.sub?.lastSeq,
-            cursor: this.sub?.lastCursor,
-            runningCount: this.sub?.repoQueue.main.pending,
-            waitingCount: this.sub?.repoQueue.main.size,
-          },
-          'repo subscription stats',
-        )
-      }, 500)
-    }
+    this.ctx.labelCache.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -209,17 +189,15 @@ export class BskyAppView {
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.cfg.assignPort(port)
-    this.sub?.run() // Don't await, backgrounded
     return server
   }
 
-  async destroy(): Promise<void> {
+  async destroy(opts?: { skipDb: boolean }): Promise<void> {
+    this.ctx.labelCache.stop()
     await this.ctx.didCache.destroy()
-    await this.sub?.destroy()
-    clearInterval(this.subStatsInterval)
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
-    await this.ctx.db.close()
+    if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
   }
 }

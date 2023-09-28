@@ -41,43 +41,43 @@ export interface Response {
 
 export class InvalidHandleError extends XRPCError {
   constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
+    super(src.status, src.error, src.message, src.headers)
   }
 }
 
 export class InvalidPasswordError extends XRPCError {
   constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
+    super(src.status, src.error, src.message, src.headers)
   }
 }
 
 export class InvalidInviteCodeError extends XRPCError {
   constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
+    super(src.status, src.error, src.message, src.headers)
   }
 }
 
 export class HandleNotAvailableError extends XRPCError {
   constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
+    super(src.status, src.error, src.message, src.headers)
   }
 }
 
 export class UnsupportedDomainError extends XRPCError {
   constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
+    super(src.status, src.error, src.message, src.headers)
   }
 }
 
 export class UnresolvableDidError extends XRPCError {
   constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
+    super(src.status, src.error, src.message, src.headers)
   }
 }
 
 export class IncompatibleDidDocError extends XRPCError {
   constructor(src: XRPCError) {
-    super(src.status, src.error, src.message)
+    super(src.status, src.error, src.message, src.headers)
   }
 }
 

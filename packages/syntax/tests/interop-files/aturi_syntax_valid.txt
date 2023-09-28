@@ -1,0 +1,1 @@
+../../../../interop-test-files/syntax/aturi_syntax_valid.txt

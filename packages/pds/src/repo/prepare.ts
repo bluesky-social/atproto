@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
-import { TID, dataToCborBlock } from '@atproto/common'
+import { AtUri } from '@atproto/syntax'
+import { MINUTE, TID, dataToCborBlock } from '@atproto/common'
 import {
   LexiconDefNotFoundError,
   RepoRecord,
@@ -31,9 +31,11 @@ import {
   Record as PostRecord,
   isRecord as isPost,
 } from '../lexicon/types/app/bsky/feed/post'
+import { isTag } from '../lexicon/types/app/bsky/richtext/facet'
 import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
 import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
-import { hasExplicitSlur } from '../content-reporter/explicit-slurs'
+import { hasExplicitSlur } from '../handle/explicit-slurs'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 // @TODO do this dynamically off of schemas
 export const blobsForWrite = (record: unknown): PreparedBlobRef[] => {
@@ -154,7 +156,20 @@ export const prepareCreate = async (opts: {
   if (validate) {
     assertValidRecord(record)
   }
-  const rkey = opts.rkey || TID.nextStr()
+
+  const nextRkey = TID.next()
+  if (
+    collection === lex.ids.AppBskyFeedPost &&
+    opts.rkey &&
+    !rkeyIsInWindow(nextRkey, new TID(opts.rkey))
+  ) {
+    // @TODO temporary. allowing a window supports creation of post and gate records at the same time.
+    throw new InvalidRequestError(
+      'Custom rkeys for post records should be near the present.',
+    )
+  }
+
+  const rkey = opts.rkey || nextRkey.toString()
   assertNoExplicitSlurs(rkey, record)
   return {
     action: WriteOpAction.Create,
@@ -166,6 +181,13 @@ export const prepareCreate = async (opts: {
   }
 }
 
+// only allow PUTs to certain collections
+const ALLOWED_PUTS = [
+  lex.ids.AppBskyActorProfile,
+  lex.ids.AppBskyGraphList,
+  lex.ids.AppBskyFeedGenerator,
+]
+
 export const prepareUpdate = async (opts: {
   did: string
   collection: string
@@ -175,6 +197,15 @@ export const prepareUpdate = async (opts: {
   validate?: boolean
 }): Promise<PreparedUpdate> => {
   const { did, collection, rkey, swapCid, validate = true } = opts
+  if (!ALLOWED_PUTS.includes(collection)) {
+    // @TODO temporary
+    throw new InvalidRequestError(
+      `Temporarily only accepting updates for collections: ${ALLOWED_PUTS.join(
+        ', ',
+      )}`,
+    )
+  }
+
   const record = setCollectionName(collection, opts.record, validate)
   if (validate) {
     assertValidRecord(record)
@@ -269,8 +300,26 @@ function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
   } else if (isFeedGenerator(record)) {
     toCheck += ' ' + rkey
     toCheck += ' ' + record.displayName
+  } else if (isPost(record)) {
+    if (record.tags) {
+      toCheck += record.tags.join(' ')
+    }
+
+    for (const facet of record.facets || []) {
+      for (const feat of facet.features) {
+        if (isTag(feat)) {
+          toCheck += ' ' + feat.tag
+        }
+      }
+    }
   }
   if (hasExplicitSlur(toCheck)) {
     throw new InvalidRecordError('Unacceptable slur in record')
   }
+}
+
+// ensures two rkeys are not far apart
+function rkeyIsInWindow(rkey1: TID, rkey2: TID) {
+  const ms = Math.abs(rkey1.timestamp() - rkey2.timestamp()) / 1000
+  return ms < 10 * MINUTE
 }

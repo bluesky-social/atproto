@@ -1,29 +1,30 @@
 {
   "name": "@atproto/xrpc",
-  "version": "0.2.0",
-  "main": "src/index.ts",
-  "scripts": {
-    "prettier": "prettier --check src/",
-    "prettier:fix": "prettier --write src/",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "yarn lint --fix",
-    "verify": "run-p prettier lint",
-    "verify:fix": "yarn prettier:fix && yarn lint:fix",
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ./update-pkg.js --update-main-to-dist",
-    "update-main-to-src": "node ./update-pkg.js --update-main-to-src",
-    "prepublish": "npm run update-main-to-dist",
-    "postpublish": "npm run update-main-to-src"
-  },
+  "version": "0.3.2",
   "license": "MIT",
+  "description": "atproto HTTP API (XRPC) client library",
+  "keywords": [
+    "atproto",
+    "xrpc"
+  ],
+  "homepage": "https://atproto.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bluesky-social/atproto.git",
+    "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/xrpc"
   },
+  "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts"
+  },
+  "scripts": {
+    "build": "node ./build.js",
+    "postbuild": "tsc --build tsconfig.build.json",
+    "update-main-to-dist": "node ../../update-main-to-dist.js packages/xrpc"
+  },
   "dependencies": {
-    "@atproto/lexicon": "*",
+    "@atproto/lexicon": "workspace:^",
     "zod": "^3.21.4"
   }
 }

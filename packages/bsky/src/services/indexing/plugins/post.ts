@@ -1,7 +1,13 @@
 import { Insertable, Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
-import { Record as PostRecord } from '../../../lexicon/types/app/bsky/feed/post'
+import { AtUri } from '@atproto/syntax'
+import { toSimplifiedISOSafe } from '@atproto/common'
+import { jsonStringToLex } from '@atproto/lexicon'
+import {
+  Record as PostRecord,
+  ReplyRef,
+} from '../../../lexicon/types/app/bsky/feed/post'
+import { Record as GateRecord } from '../../../lexicon/types/app/bsky/feed/threadgate'
 import { isMain as isEmbedImage } from '../../../lexicon/types/app/bsky/embed/images'
 import { isMain as isEmbedExternal } from '../../../lexicon/types/app/bsky/embed/external'
 import { isMain as isEmbedRecord } from '../../../lexicon/types/app/bsky/embed/record'
@@ -14,11 +20,13 @@ import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
 import RecordProcessor from '../processor'
 import { Notification } from '../../../db/tables/notification'
-import { toSimplifiedISOSafe } from '../util'
-import Database from '../../../db'
+import { PrimaryDatabase } from '../../../db'
 import { countAll, excluded } from '../../../db/util'
 import { BackgroundQueue } from '../../../background'
 import { getAncestorsAndSelfQb, getDescendentsQb } from '../../util/post'
+import { NotificationServer } from '../../../notifications'
+import * as feedutil from '../../feed/util'
+import { postToThreadgateUri } from '../../feed/util'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -34,7 +42,7 @@ type PostDescendent = {
   depth: number
   cid: string
   creator: string
-  indexedAt: string
+  sortAt: string
 }
 type IndexedPost = {
   post: Post
@@ -68,6 +76,9 @@ const insertFn = async (
     langs: obj.langs?.length
       ? sql<string[]>`${JSON.stringify(obj.langs)}` // sidesteps kysely's array serialization, which is non-jsonb
       : null,
+    tags: obj.tags?.length
+      ? sql<string[]>`${JSON.stringify(obj.tags)}` // sidesteps kysely's array serialization, which is non-jsonb
+      : null,
     indexedAt: timestamp,
   }
   const [insertedPost] = await Promise.all([
@@ -93,6 +104,21 @@ const insertFn = async (
   ])
   if (!insertedPost) {
     return null // Post already indexed
+  }
+
+  if (obj.reply) {
+    const { invalidReplyRoot, violatesThreadGate } = await validateReply(
+      db,
+      uri.host,
+      obj.reply,
+    )
+    if (invalidReplyRoot || violatesThreadGate) {
+      await db
+        .updateTable('post')
+        .where('uri', '=', post.uri)
+        .set({ invalidReplyRoot, violatesThreadGate })
+        .executeTakeFirst()
+    }
   }
 
   const facets = (obj.facets || [])
@@ -163,7 +189,7 @@ const insertFn = async (
     .selectFrom('descendent')
     .innerJoin('post', 'post.uri', 'descendent.uri')
     .selectAll('descendent')
-    .select(['cid', 'creator', 'indexedAt'])
+    .select(['cid', 'creator', 'sortAt'])
     .execute()
   return {
     post: insertedPost,
@@ -195,7 +221,7 @@ const notifsForInsert = (obj: IndexedPost) => {
         author: obj.post.creator,
         recordUri: obj.post.uri,
         recordCid: obj.post.cid,
-        sortAt: obj.post.indexedAt,
+        sortAt: obj.post.sortAt,
       })
     }
   }
@@ -210,7 +236,7 @@ const notifsForInsert = (obj: IndexedPost) => {
           author: obj.post.creator,
           recordUri: obj.post.uri,
           recordCid: obj.post.cid,
-          sortAt: obj.post.indexedAt,
+          sortAt: obj.post.sortAt,
         })
       }
     }
@@ -227,7 +253,7 @@ const notifsForInsert = (obj: IndexedPost) => {
         author: obj.post.creator,
         recordUri: obj.post.uri,
         recordCid: obj.post.cid,
-        sortAt: obj.post.indexedAt,
+        sortAt: obj.post.sortAt,
       })
     }
   }
@@ -246,7 +272,7 @@ const notifsForInsert = (obj: IndexedPost) => {
           author: descendent.creator,
           recordUri: descendent.uri,
           recordCid: descendent.cid,
-          sortAt: descendent.indexedAt,
+          sortAt: descendent.sortAt,
         })
       }
     }
@@ -354,10 +380,11 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
 
 export const makePlugin = (
-  db: Database,
+  db: PrimaryDatabase,
   backgroundQueue: BackgroundQueue,
+  notifServer?: NotificationServer,
 ): PluginType => {
-  return new RecordProcessor(db, backgroundQueue, {
+  return new RecordProcessor(db, backgroundQueue, notifServer, {
     lexId,
     insertFn,
     findDuplicate,
@@ -378,4 +405,59 @@ function separateEmbeds(embed: PostRecord['embed']) {
     return [{ $type: lex.ids.AppBskyEmbedRecord, ...embed.record }, embed.media]
   }
   return [embed]
+}
+
+async function validateReply(
+  db: DatabaseSchema,
+  creator: string,
+  reply: ReplyRef,
+) {
+  const replyRefs = await getReplyRefs(db, reply)
+  // check reply
+  const invalidReplyRoot =
+    !replyRefs.parent || feedutil.invalidReplyRoot(reply, replyRefs.parent)
+  // check interaction
+  const violatesThreadGate = await feedutil.violatesThreadGate(
+    db,
+    creator,
+    new AtUri(reply.root.uri).host,
+    replyRefs.root?.record ?? null,
+    replyRefs.gate?.record ?? null,
+  )
+  return {
+    invalidReplyRoot,
+    violatesThreadGate,
+  }
+}
+
+async function getReplyRefs(db: DatabaseSchema, reply: ReplyRef) {
+  const replyRoot = reply.root.uri
+  const replyParent = reply.parent.uri
+  const replyGate = postToThreadgateUri(replyRoot)
+  const results = await db
+    .selectFrom('record')
+    .where('record.uri', 'in', [replyRoot, replyGate, replyParent])
+    .leftJoin('post', 'post.uri', 'record.uri')
+    .selectAll('post')
+    .select(['record.uri', 'json'])
+    .execute()
+  const root = results.find((ref) => ref.uri === replyRoot)
+  const parent = results.find((ref) => ref.uri === replyParent)
+  const gate = results.find((ref) => ref.uri === replyGate)
+  return {
+    root: root && {
+      uri: root.uri,
+      invalidReplyRoot: root.invalidReplyRoot,
+      record: jsonStringToLex(root.json) as PostRecord,
+    },
+    parent: parent && {
+      uri: parent.uri,
+      invalidReplyRoot: parent.invalidReplyRoot,
+      record: jsonStringToLex(parent.json) as PostRecord,
+    },
+    gate: gate && {
+      uri: gate.uri,
+      record: jsonStringToLex(gate.json) as GateRecord,
+    },
+  }
 }
