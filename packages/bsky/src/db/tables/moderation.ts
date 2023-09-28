@@ -13,6 +13,7 @@ import {
   REPORTED,
   MUTED,
   ActionMeta,
+  ESCALATED,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import {
   REASONOTHER,
@@ -100,6 +101,7 @@ export interface ModerationSubjectStatus {
     | typeof TAKENDOWN
     | typeof REPORTED
     | typeof MUTED
+    | typeof ESCALATED
   createdAt: string
   updatedAt: string
 }

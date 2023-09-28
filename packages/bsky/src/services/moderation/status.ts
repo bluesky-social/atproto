@@ -18,6 +18,16 @@ import {
   ESCALATED,
   ESCALATE,
 } from '../../lexicon/types/com/atproto/admin/defs'
+import { ModerationActionRow } from './types'
+
+const actionTypesImpactingStatus = [
+  ACKNOWLEDGE,
+  REPORT,
+  ESCALATE,
+  REVERT,
+  TAKEDOWN,
+  MUTE,
+]
 
 // TODO: How do we handle revert? for "revert" event we will have a reference event id that is being reversed
 // We will probably need a helper that can take a list of events and compute the final state of the subject
@@ -48,13 +58,43 @@ export const adjustModerationSubjectStatus = async (
   db: PrimaryDatabase,
   moderationAction: Pick<
     ModerationAction,
-    'action' | 'subjectType' | 'subjectDid' | 'subjectUri' | 'subjectCid'
+    | 'action'
+    | 'subjectType'
+    | 'subjectDid'
+    | 'subjectUri'
+    | 'subjectCid'
+    | 'refEventId'
   >,
 ) => {
-  const { action, subjectType, subjectDid, subjectUri, subjectCid } =
-    moderationAction
+  const {
+    action,
+    subjectType,
+    subjectDid,
+    subjectUri,
+    subjectCid,
+    refEventId,
+  } = moderationAction
 
-  const status = getSubjectStatusForModerationAction(action)
+  let actionForStatusMapping = action
+
+  // For all events, we would want to map the new status based on the event itself
+  // However, for revert events, they will be pointing to a previous event that needs to be reverted
+  // In which case, we will have to find out the last event that changed the status before that reference event
+  // and compute the new status based on that
+  // TODO: We may need more here. For instance, if we're reverting a post takedown but since the takedown, we adjusted
+  // labels on the post, does the takedown reversal mean those labels added AFTER the takedown should be reverted as well?
+  if (action === REVERT && refEventId) {
+    const lastActionImpactingStatus = await getPreviousStatusForReversal(
+      db,
+      moderationAction,
+    )
+
+    if (lastActionImpactingStatus) {
+      actionForStatusMapping = lastActionImpactingStatus.action
+    }
+  }
+
+  const status = getSubjectStatusForModerationAction(actionForStatusMapping)
 
   if (!status) {
     return null
@@ -98,4 +138,50 @@ export const getModerationSubjectStatus = async (
     .where('subjectDid', '=', subjectDid)
     .where('subjectUri', '=', subjectUri)
     .executeTakeFirst()
+}
+
+/**
+ * Given a revert event with a reference event id, this function will find the last action event that impacted the status
+ * Which can then be used to determine the new status for the subject after the revert event
+ * Potential flow of events may be
+ * 1. Post is reported
+ * 2. Post is labeled
+ * 3. Post is taken down
+ * 4. Comment left by a mod on the post
+ * 5. Takedown is reverted
+ *
+ * At that point, event #5 will contain the refEventId #3 so this function will find the last event that impacted the status
+ * of the post before event #3 which is #1 so that event will be returned
+ * */
+export const getPreviousStatusForReversal = async (
+  db: PrimaryDatabase,
+  moderationAction: Pick<
+    ModerationActionRow,
+    'refEventId' | 'subjectType' | 'subjectCid' | 'subjectUri' | 'subjectDid'
+  >,
+) => {
+  if (!moderationAction.refEventId) {
+    return null
+  }
+  const lastActionImpactingStatus = await db.db
+    .selectFrom('moderation_action')
+    .where('id', '<', moderationAction.refEventId)
+    .where('subjectType', '=', moderationAction.subjectType)
+    .where('subjectCid', '=', moderationAction.subjectCid)
+    .where('subjectDid', '=', moderationAction.subjectDid)
+    .where('subjectUri', '=', moderationAction.subjectUri)
+    .where('action', 'not in', REVERT)
+    .where(
+      'action',
+      'in',
+      // TODO: wait, why doesn't TS like this? this is string[] right?
+      // @ts-ignore
+      actionTypesImpactingStatus,
+    )
+    // Make sure we get the last action event that impacted the status
+    .orderBy('id', 'desc')
+    .select('action')
+    .executeTakeFirst()
+
+  return lastActionImpactingStatus
 }
