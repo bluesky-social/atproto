@@ -504,6 +504,9 @@ importers:
       cors:
         specifier: ^2.8.5
         version: 2.8.5
+      disposable-email:
+        specifier: ^0.2.3
+        version: 0.2.3
       dotenv:
         specifier: ^16.0.0
         version: 16.0.3
@@ -586,6 +589,9 @@ importers:
       '@types/cors':
         specifier: ^2.8.12
         version: 2.8.12
+      '@types/disposable-email':
+        specifier: ^0.2.0
+        version: 0.2.0
       '@types/express':
         specifier: ^4.17.13
         version: 4.17.13
@@ -5295,6 +5301,10 @@ packages:
     resolution: {integrity: sha512-vt+kDhq/M2ayberEtJcIN/hxXy1Pk+59g2FV/ZQceeaTyCtCucjL2Q7FXlFjtWn4n15KCr1NE2lNNFhp0lEThw==}
     dev: true
 
+  /@types/disposable-email@0.2.0:
+    resolution: {integrity: sha512-i4fPC8+a5j7RlKVe9cOHz6cYVxkSFYuJ78GB3EJPMfBJURWmEsD4gb/gD48j7KAWe0M8ZvdJR6a6GaDohTYttw==}
+    dev: true
+
   /@types/elliptic@6.4.14:
     resolution: {integrity: sha512-z4OBcDAU0GVwDTuwJzQCiL6188QvZMkvoERgcVjq0/mPM8jCfdwZ3x5zQEVoL9WCAru3aG5wl3Z5Ww5wBWn7ZQ==}
     dependencies:
@@ -6646,6 +6656,10 @@ packages:
     dependencies:
       path-type: 4.0.0
     dev: true
+
+  /disposable-email@0.2.3:
+    resolution: {integrity: sha512-gkBQQ5Res431ZXqLlAafrXHizG7/1FWmi8U2RTtriD78Vc10HhBUvdJun3R4eSF0KRIQQJs+wHlxjkED/Hr1EQ==}
+    dev: false
 
   /doctrine@3.0.0:
     resolution: {integrity: sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==}

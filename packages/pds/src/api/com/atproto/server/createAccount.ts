@@ -1,4 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import disposable from 'disposable-email'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import * as plc from '@did-plc/lib'
 import * as scrypt from '../../../../db/scrypt'
@@ -24,6 +25,12 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(
           'No invite code provided',
           'InvalidInviteCode',
+        )
+      }
+
+      if (!disposable.validate(email)) {
+        throw new InvalidRequestError(
+          'This email address is not supported, please use a different email.',
         )
       }
 
