@@ -22,15 +22,9 @@ test: ## Run all tests
 run-dev-env: ## Run a "development environment" shell
 	cd packages/dev-env; pnpm run start
 
-.PHONY: run-dev-pds
-run-dev-pds: ## Run PDS locally
-	if [ ! -f "packages/pds/.dev.env" ]; then cp packages/pds/example.dev.env packages/pds/.dev.env; fi
-	cd packages/pds; ENV=dev pnpm run start | pnpm exec pino-pretty
-
-.PHONY: run-dev-bsky
-run-dev-bsky: ## Run appview ('bsky') locally
-	if [ ! -f "packages/bsky/.dev.env" ]; then cp packages/bsky/example.dev.env packages/bsky/.dev.env; fi
-	cd packages/bsky; ENV=dev pnpm run start | pnpm exec pino-pretty
+.PHONY: run-dev-env-logged
+run-dev-env: ## Run a "development environment" shell
+	LOG_ENABLED=true cd packages/dev-env; pnpm run start | pnpm exec pino-pretty
 
 .PHONY: codegen
 codegen: ## Re-generate packages from lexicon/ files

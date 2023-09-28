@@ -44,9 +44,6 @@ importers:
       babel-eslint:
         specifier: ^10.1.0
         version: 10.1.0(eslint@8.24.0)
-      dotenv:
-        specifier: ^16.0.3
-        version: 16.0.3
       esbuild:
         specifier: ^0.14.48
         version: 0.14.48
@@ -192,9 +189,6 @@ importers:
       cors:
         specifier: ^2.8.5
         version: 2.8.5
-      dotenv:
-        specifier: ^16.0.0
-        version: 16.0.3
       express:
         specifier: ^4.17.2
         version: 4.18.2
@@ -368,7 +362,7 @@ importers:
         specifier: ^5.0.1
         version: 5.1.1
       dotenv:
-        specifier: ^16.0.1
+        specifier: ^16.0.3
         version: 16.0.3
       express:
         specifier: ^4.18.2
@@ -507,9 +501,6 @@ importers:
       cors:
         specifier: ^2.8.5
         version: 2.8.5
-      dotenv:
-        specifier: ^16.0.0
-        version: 16.0.3
       express:
         specifier: ^4.17.2
         version: 4.18.2
@@ -6687,6 +6678,7 @@ packages:
   /dotenv@16.0.3:
     resolution: {integrity: sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==}
     engines: {node: '>=12'}
+    dev: false
 
   /dotenv@8.6.0:
     resolution: {integrity: sha512-IrPdXQsk2BbzvCBGBOTmmSH5SodmqZNt4ERAZDmW4CT+tL8VtvinqywuANaFu4bOMWki16nqf0e4oC0QIaDr/g==}
