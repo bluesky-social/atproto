@@ -19,8 +19,6 @@ import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/g
 import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
-import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
-import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
@@ -113,12 +111,6 @@ import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
-export const COM_ATPROTO_ADMIN = {
-  DefsTakedown: 'com.atproto.admin.defs#takedown',
-  DefsFlag: 'com.atproto.admin.defs#flag',
-  DefsAcknowledge: 'com.atproto.admin.defs#acknowledge',
-  DefsEscalate: 'com.atproto.admin.defs#escalate',
-}
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
   DefsReasonViolation: 'com.atproto.moderation.defs#reasonViolation',
@@ -294,28 +286,6 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.getRepo' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  resolveModerationReports<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminResolveModerationReports.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminResolveModerationReports.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.resolveModerationReports' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  reverseModerationAction<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminReverseModerationAction.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminReverseModerationAction.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.reverseModerationAction' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

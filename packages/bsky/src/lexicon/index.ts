@@ -111,22 +111,6 @@ import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
-export const COM_ATPROTO_ADMIN = {
-  DefsTakedown: 'com.atproto.admin.defs#takedown',
-  DefsFlag: 'com.atproto.admin.defs#flag',
-  DefsAcknowledge: 'com.atproto.admin.defs#acknowledge',
-  DefsEscalate: 'com.atproto.admin.defs#escalate',
-  DefsComment: 'com.atproto.admin.defs#comment',
-  DefsLabel: 'com.atproto.admin.defs#label',
-  DefsRevert: 'com.atproto.admin.defs#revert',
-  DefsMute: 'com.atproto.admin.defs#mute',
-  DefsReport: 'com.atproto.admin.defs#report',
-  DefsReported: 'com.atproto.admin.defs#reported',
-  DefsResolved: 'com.atproto.admin.defs#resolved',
-  DefsTakendown: 'com.atproto.admin.defs#takendown',
-  DefsAcknowledged: 'com.atproto.admin.defs#acknowledged',
-  DefsMuted: 'com.atproto.admin.defs#muted',
-}
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
   DefsReasonViolation: 'com.atproto.moderation.defs#reasonViolation',

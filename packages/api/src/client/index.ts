@@ -7,7 +7,6 @@ import {
 } from '@atproto/xrpc'
 import { schemas } from './lexicons'
 import { CID } from 'multiformats/cid'
-import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
@@ -18,8 +17,6 @@ import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/g
 import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
-import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
-import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
@@ -136,7 +133,6 @@ import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
-export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 export * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 export * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
@@ -147,8 +143,6 @@ export * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/g
 export * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
-export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
-export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
@@ -265,12 +259,6 @@ export * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
-export const COM_ATPROTO_ADMIN = {
-  DefsTakedown: 'com.atproto.admin.defs#takedown',
-  DefsFlag: 'com.atproto.admin.defs#flag',
-  DefsAcknowledge: 'com.atproto.admin.defs#acknowledge',
-  DefsEscalate: 'com.atproto.admin.defs#escalate',
-}
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
   DefsReasonViolation: 'com.atproto.moderation.defs#reasonViolation',
@@ -460,28 +448,6 @@ export class AdminNS {
       .call('com.atproto.admin.getRepo', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoAdminGetRepo.toKnownErr(e)
-      })
-  }
-
-  resolveModerationReports(
-    data?: ComAtprotoAdminResolveModerationReports.InputSchema,
-    opts?: ComAtprotoAdminResolveModerationReports.CallOptions,
-  ): Promise<ComAtprotoAdminResolveModerationReports.Response> {
-    return this._service.xrpc
-      .call('com.atproto.admin.resolveModerationReports', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoAdminResolveModerationReports.toKnownErr(e)
-      })
-  }
-
-  reverseModerationAction(
-    data?: ComAtprotoAdminReverseModerationAction.InputSchema,
-    opts?: ComAtprotoAdminReverseModerationAction.CallOptions,
-  ): Promise<ComAtprotoAdminReverseModerationAction.Response> {
-    return this._service.xrpc
-      .call('com.atproto.admin.reverseModerationAction', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoAdminReverseModerationAction.toKnownErr(e)
       })
   }
 

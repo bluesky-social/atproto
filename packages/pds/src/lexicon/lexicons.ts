@@ -4,644 +4,6 @@
 import { LexiconDoc, Lexicons } from '@atproto/lexicon'
 
 export const schemaDict = {
-  ComAtprotoAdminDefs: {
-    lexicon: 1,
-    id: 'com.atproto.admin.defs',
-    defs: {
-      actionView: {
-        type: 'object',
-        required: [
-          'id',
-          'action',
-          'subject',
-          'subjectBlobCids',
-          'reason',
-          'createdBy',
-          'createdAt',
-          'resolvedReportIds',
-        ],
-        properties: {
-          id: {
-            type: 'integer',
-          },
-          action: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionType',
-          },
-          durationInHours: {
-            type: 'integer',
-            description:
-              'Indicates how long this action was meant to be in effect before automatically expiring.',
-          },
-          subject: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.admin.defs#repoRef',
-              'lex:com.atproto.repo.strongRef',
-            ],
-          },
-          subjectBlobCids: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-          createLabelVals: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-          negateLabelVals: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-          reason: {
-            type: 'string',
-          },
-          createdBy: {
-            type: 'string',
-            format: 'did',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          reversal: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionReversal',
-          },
-          resolvedReportIds: {
-            type: 'array',
-            items: {
-              type: 'integer',
-            },
-          },
-        },
-      },
-      actionViewDetail: {
-        type: 'object',
-        required: [
-          'id',
-          'action',
-          'subject',
-          'subjectBlobs',
-          'reason',
-          'createdBy',
-          'createdAt',
-          'resolvedReports',
-        ],
-        properties: {
-          id: {
-            type: 'integer',
-          },
-          action: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionType',
-          },
-          durationInHours: {
-            type: 'integer',
-            description:
-              'Indicates how long this action was meant to be in effect before automatically expiring.',
-          },
-          subject: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.admin.defs#repoView',
-              'lex:com.atproto.admin.defs#repoViewNotFound',
-              'lex:com.atproto.admin.defs#recordView',
-              'lex:com.atproto.admin.defs#recordViewNotFound',
-            ],
-          },
-          subjectBlobs: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#blobView',
-            },
-          },
-          createLabelVals: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-          negateLabelVals: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-          reason: {
-            type: 'string',
-          },
-          createdBy: {
-            type: 'string',
-            format: 'did',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          reversal: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionReversal',
-          },
-          resolvedReports: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#reportView',
-            },
-          },
-        },
-      },
-      actionViewCurrent: {
-        type: 'object',
-        required: ['id', 'action'],
-        properties: {
-          id: {
-            type: 'integer',
-          },
-          action: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionType',
-          },
-          durationInHours: {
-            type: 'integer',
-            description:
-              'Indicates how long this action was meant to be in effect before automatically expiring.',
-          },
-        },
-      },
-      actionReversal: {
-        type: 'object',
-        required: ['reason', 'createdBy', 'createdAt'],
-        properties: {
-          reason: {
-            type: 'string',
-          },
-          createdBy: {
-            type: 'string',
-            format: 'did',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-        },
-      },
-      actionType: {
-        type: 'string',
-        knownValues: [
-          'lex:com.atproto.admin.defs#takedown',
-          'lex:com.atproto.admin.defs#flag',
-          'lex:com.atproto.admin.defs#acknowledge',
-          'lex:com.atproto.admin.defs#escalate',
-        ],
-      },
-      takedown: {
-        type: 'token',
-        description:
-          'Moderation action type: Takedown. Indicates that content should not be served by the PDS.',
-      },
-      flag: {
-        type: 'token',
-        description:
-          'Moderation action type: Flag. Indicates that the content was reviewed and considered to violate PDS rules, but may still be served.',
-      },
-      acknowledge: {
-        type: 'token',
-        description:
-          'Moderation action type: Acknowledge. Indicates that the content was reviewed and not considered to violate PDS rules.',
-      },
-      escalate: {
-        type: 'token',
-        description:
-          'Moderation action type: Escalate. Indicates that the content has been flagged for additional review.',
-      },
-      reportView: {
-        type: 'object',
-        required: [
-          'id',
-          'reasonType',
-          'subject',
-          'reportedBy',
-          'createdAt',
-          'resolvedByActionIds',
-        ],
-        properties: {
-          id: {
-            type: 'integer',
-          },
-          reasonType: {
-            type: 'ref',
-            ref: 'lex:com.atproto.moderation.defs#reasonType',
-          },
-          reason: {
-            type: 'string',
-          },
-          subjectRepoHandle: {
-            type: 'string',
-          },
-          subject: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.admin.defs#repoRef',
-              'lex:com.atproto.repo.strongRef',
-            ],
-          },
-          reportedBy: {
-            type: 'string',
-            format: 'did',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          resolvedByActionIds: {
-            type: 'array',
-            items: {
-              type: 'integer',
-            },
-          },
-        },
-      },
-      reportViewDetail: {
-        type: 'object',
-        required: [
-          'id',
-          'reasonType',
-          'subject',
-          'reportedBy',
-          'createdAt',
-          'resolvedByActions',
-        ],
-        properties: {
-          id: {
-            type: 'integer',
-          },
-          reasonType: {
-            type: 'ref',
-            ref: 'lex:com.atproto.moderation.defs#reasonType',
-          },
-          reason: {
-            type: 'string',
-          },
-          subject: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.admin.defs#repoView',
-              'lex:com.atproto.admin.defs#repoViewNotFound',
-              'lex:com.atproto.admin.defs#recordView',
-              'lex:com.atproto.admin.defs#recordViewNotFound',
-            ],
-          },
-          reportedBy: {
-            type: 'string',
-            format: 'did',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          resolvedByActions: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#actionView',
-            },
-          },
-        },
-      },
-      repoView: {
-        type: 'object',
-        required: [
-          'did',
-          'handle',
-          'relatedRecords',
-          'indexedAt',
-          'moderation',
-        ],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          handle: {
-            type: 'string',
-            format: 'handle',
-          },
-          email: {
-            type: 'string',
-          },
-          relatedRecords: {
-            type: 'array',
-            items: {
-              type: 'unknown',
-            },
-          },
-          indexedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          moderation: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#moderation',
-          },
-          invitedBy: {
-            type: 'ref',
-            ref: 'lex:com.atproto.server.defs#inviteCode',
-          },
-          invitesDisabled: {
-            type: 'boolean',
-          },
-          inviteNote: {
-            type: 'string',
-          },
-        },
-      },
-      repoViewDetail: {
-        type: 'object',
-        required: [
-          'did',
-          'handle',
-          'relatedRecords',
-          'indexedAt',
-          'moderation',
-        ],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          handle: {
-            type: 'string',
-            format: 'handle',
-          },
-          email: {
-            type: 'string',
-          },
-          relatedRecords: {
-            type: 'array',
-            items: {
-              type: 'unknown',
-            },
-          },
-          indexedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          moderation: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#moderationDetail',
-          },
-          labels: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.label.defs#label',
-            },
-          },
-          invitedBy: {
-            type: 'ref',
-            ref: 'lex:com.atproto.server.defs#inviteCode',
-          },
-          invites: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.server.defs#inviteCode',
-            },
-          },
-          invitesDisabled: {
-            type: 'boolean',
-          },
-          inviteNote: {
-            type: 'string',
-          },
-        },
-      },
-      repoViewNotFound: {
-        type: 'object',
-        required: ['did'],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-        },
-      },
-      repoRef: {
-        type: 'object',
-        required: ['did'],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-        },
-      },
-      recordView: {
-        type: 'object',
-        required: [
-          'uri',
-          'cid',
-          'value',
-          'blobCids',
-          'indexedAt',
-          'moderation',
-          'repo',
-        ],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          cid: {
-            type: 'string',
-            format: 'cid',
-          },
-          value: {
-            type: 'unknown',
-          },
-          blobCids: {
-            type: 'array',
-            items: {
-              type: 'string',
-              format: 'cid',
-            },
-          },
-          indexedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          moderation: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#moderation',
-          },
-          repo: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#repoView',
-          },
-        },
-      },
-      recordViewDetail: {
-        type: 'object',
-        required: [
-          'uri',
-          'cid',
-          'value',
-          'blobs',
-          'indexedAt',
-          'moderation',
-          'repo',
-        ],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          cid: {
-            type: 'string',
-            format: 'cid',
-          },
-          value: {
-            type: 'unknown',
-          },
-          blobs: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#blobView',
-            },
-          },
-          labels: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.label.defs#label',
-            },
-          },
-          indexedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          moderation: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#moderationDetail',
-          },
-          repo: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#repoView',
-          },
-        },
-      },
-      recordViewNotFound: {
-        type: 'object',
-        required: ['uri'],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-        },
-      },
-      moderation: {
-        type: 'object',
-        properties: {
-          currentAction: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionViewCurrent',
-          },
-        },
-      },
-      moderationDetail: {
-        type: 'object',
-        required: ['actions', 'reports'],
-        properties: {
-          currentAction: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionViewCurrent',
-          },
-          actions: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#actionView',
-            },
-          },
-          reports: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#reportView',
-            },
-          },
-        },
-      },
-      blobView: {
-        type: 'object',
-        required: ['cid', 'mimeType', 'size', 'createdAt'],
-        properties: {
-          cid: {
-            type: 'string',
-            format: 'cid',
-          },
-          mimeType: {
-            type: 'string',
-          },
-          size: {
-            type: 'integer',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          details: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.admin.defs#imageDetails',
-              'lex:com.atproto.admin.defs#videoDetails',
-            ],
-          },
-          moderation: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#moderation',
-          },
-        },
-      },
-      imageDetails: {
-        type: 'object',
-        required: ['width', 'height'],
-        properties: {
-          width: {
-            type: 'integer',
-          },
-          height: {
-            type: 'integer',
-          },
-        },
-      },
-      videoDetails: {
-        type: 'object',
-        required: ['width', 'height', 'length'],
-        properties: {
-          width: {
-            type: 'integer',
-          },
-          height: {
-            type: 'integer',
-          },
-          length: {
-            type: 'integer',
-          },
-        },
-      },
-    },
-  },
   ComAtprotoAdminDisableAccountInvites: {
     lexicon: 1,
     id: 'com.atproto.admin.disableAccountInvites',
@@ -1026,81 +388,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminResolveModerationReports: {
-    lexicon: 1,
-    id: 'com.atproto.admin.resolveModerationReports',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Resolve moderation reports by an action.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['actionId', 'reportIds', 'createdBy'],
-            properties: {
-              actionId: {
-                type: 'integer',
-              },
-              reportIds: {
-                type: 'array',
-                items: {
-                  type: 'integer',
-                },
-              },
-              createdBy: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionView',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminReverseModerationAction: {
-    lexicon: 1,
-    id: 'com.atproto.admin.reverseModerationAction',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Reverse a moderation action.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['id', 'reason', 'createdBy'],
-            properties: {
-              id: {
-                type: 'integer',
-              },
-              reason: {
-                type: 'string',
-              },
-              createdBy: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionView',
-          },
-        },
-      },
-    },
-  },
   ComAtprotoAdminSearchRepos: {
     lexicon: 1,
     id: 'com.atproto.admin.searchRepos',
@@ -1206,7 +493,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['action', 'subject', 'reason', 'createdBy'],
+            required: ['action', 'subject', 'createdBy'],
             properties: {
               action: {
                 type: 'string',
@@ -1214,6 +501,12 @@ export const schemaDict = {
                   'com.atproto.admin.defs#takedown',
                   'com.atproto.admin.defs#flag',
                   'com.atproto.admin.defs#acknowledge',
+                  'com.atproto.admin.defs#escalate',
+                  'com.atproto.admin.defs#comment',
+                  'com.atproto.admin.defs#label',
+                  'com.atproto.admin.defs#revert',
+                  'com.atproto.admin.defs#report',
+                  'com.atproto.admin.defs#mute',
                 ],
               },
               subject: {
@@ -1242,7 +535,7 @@ export const schemaDict = {
                   type: 'string',
                 },
               },
-              reason: {
+              comment: {
                 type: 'string',
               },
               durationInHours: {
@@ -1253,6 +546,15 @@ export const schemaDict = {
               createdBy: {
                 type: 'string',
                 format: 'did',
+              },
+              meta: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.takeModerationAction#actionMeta',
+              },
+              refEventId: {
+                type: 'integer',
+                description:
+                  'If the event needs a reference to previous event, for instance, when reverting a previous action, the reference event id should be passed',
               },
             },
           },
@@ -1269,6 +571,14 @@ export const schemaDict = {
             name: 'SubjectHasAction',
           },
         ],
+      },
+      actionMeta: {
+        type: 'object',
+        properties: {
+          reportType: {
+            type: 'string',
+          },
+        },
       },
     },
   },
@@ -7203,7 +6513,6 @@ export const schemaDict = {
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
-  ComAtprotoAdminDefs: 'com.atproto.admin.defs',
   ComAtprotoAdminDisableAccountInvites:
     'com.atproto.admin.disableAccountInvites',
   ComAtprotoAdminDisableInviteCodes: 'com.atproto.admin.disableInviteCodes',
@@ -7215,10 +6524,6 @@ export const ids = {
   ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
-  ComAtprotoAdminResolveModerationReports:
-    'com.atproto.admin.resolveModerationReports',
-  ComAtprotoAdminReverseModerationAction:
-    'com.atproto.admin.reverseModerationAction',
   ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',
   ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',

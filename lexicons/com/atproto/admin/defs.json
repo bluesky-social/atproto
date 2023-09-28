@@ -472,6 +472,10 @@
     "muted": {
       "type": "token",
       "description": "Moderation status of a subject: muted. Indicates that reports were muted by a moderator"
+    },
+    "escalated": {
+      "type": "token",
+      "description": "Moderation status of a subject: escalated. Indicates that reports were escalated by a moderator"
     }
   }
 }

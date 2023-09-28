@@ -15,6 +15,8 @@ import {
   REVERT,
   TAKEDOWN,
   TAKENDOWN,
+  ESCALATED,
+  ESCALATE,
 } from '../../lexicon/types/com/atproto/admin/defs'
 
 // TODO: How do we handle revert? for "revert" event we will have a reference event id that is being reversed
@@ -26,6 +28,8 @@ const getSubjectStatusForModerationAction = (action: string) => {
       return ACKNOWLEDGED
     case REPORT:
       return REPORTED
+    case ESCALATE:
+      return ESCALATED
     case REVERT:
       return null
     case TAKEDOWN:

@@ -358,8 +358,7 @@ export class ModerationService {
 
     await adjustModerationSubjectStatus(this.db, actionResult)
 
-    // TODO: Should escalate resolve reports as well?
-    if ([ACKNOWLEDGE, TAKEDOWN, FLAG].includes(action)) {
+    if ([ACKNOWLEDGE, TAKEDOWN, FLAG, ESCALATE].includes(action)) {
       const reportIdsToBeResolved = await getReportIdsToBeResolved(
         this.db,
         subjectInfo,
