@@ -144,24 +144,22 @@ export class IndexingService {
     const handle: string | null =
       did === handleToDid ? atpData.handle.toLowerCase() : null
 
-    if (actor && actor.handle !== handle) {
-      const actorWithHandle =
-        handle !== null
-          ? await this.db.db
-              .selectFrom('actor')
-              .where('handle', '=', handle)
-              .selectAll()
-              .executeTakeFirst()
-          : null
+    const actorWithHandle =
+      handle !== null
+        ? await this.db.db
+            .selectFrom('actor')
+            .where('handle', '=', handle)
+            .selectAll()
+            .executeTakeFirst()
+        : null
 
-      // handle contention
-      if (handle && actorWithHandle && did !== actorWithHandle.did) {
-        await this.db.db
-          .updateTable('actor')
-          .where('actor.did', '=', actorWithHandle.did)
-          .set({ handle: null })
-          .execute()
-      }
+    // handle contention
+    if (handle && actorWithHandle && did !== actorWithHandle.did) {
+      await this.db.db
+        .updateTable('actor')
+        .where('actor.did', '=', actorWithHandle.did)
+        .set({ handle: null })
+        .execute()
     }
 
     const actorInfo = { handle, indexedAt: timestamp }

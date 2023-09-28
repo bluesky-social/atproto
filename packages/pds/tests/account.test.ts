@@ -76,6 +76,28 @@ describe('account', () => {
     await expect(promise).rejects.toThrow('Input/handle must be a valid handle')
   })
 
+  describe('email validation', () => {
+    it('succeeds on allowed emails', async () => {
+      const promise = agent.api.com.atproto.server.createAccount({
+        email: 'ok-email@gmail.com',
+        handle: 'ok-email.test',
+        password: 'asdf',
+      })
+      await expect(promise).resolves.toBeTruthy()
+    })
+
+    it('fails on disallowed emails', async () => {
+      const promise = agent.api.com.atproto.server.createAccount({
+        email: 'bad-email@disposeamail.com',
+        handle: 'bad-email.test',
+        password: 'asdf',
+      })
+      await expect(promise).rejects.toThrow(
+        'This email address is not supported, please use a different email.',
+      )
+    })
+  })
+
   let did: string
   let jwt: string
 
