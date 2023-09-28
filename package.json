@@ -41,7 +41,6 @@
     "eslint": "^8.24.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "get-port": "^6.1.2",
     "jest": "^28.1.2",
     "node-gyp": "^9.3.1",
     "pino-pretty": "^9.1.0",

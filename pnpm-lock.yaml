@@ -65,9 +65,6 @@ importers:
       eslint-plugin-prettier:
         specifier: ^4.2.1
         version: 4.2.1(eslint-config-prettier@8.5.0)(eslint@8.24.0)(prettier@2.7.1)
-      get-port:
-        specifier: ^6.1.2
-        version: 6.1.2
       jest:
         specifier: ^28.1.2
         version: 28.1.2(@types/node@18.0.0)(ts-node@10.8.2)
