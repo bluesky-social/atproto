@@ -12,7 +12,7 @@ export interface QueryParams {}
 
 export interface InputSchema {
   email: string
-  /**  Requires a token from com.atproto.sever.requestEmailUpdate if the account's email has been confirmed. */
+  /** Requires a token from com.atproto.sever.requestEmailUpdate if the account's email has been confirmed. */
   token?: string
   [k: string]: unknown
 }

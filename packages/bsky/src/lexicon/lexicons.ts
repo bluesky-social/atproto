@@ -3029,7 +3029,7 @@ export const schemaDict = {
               token: {
                 type: 'string',
                 description:
-                  " Requires a token from com.atproto.sever.requestEmailUpdate if the account's email has been confirmed.",
+                  "Requires a token from com.atproto.sever.requestEmailUpdate if the account's email has been confirmed.",
               },
             },
           },
