@@ -13,7 +13,7 @@ require('dd-trace') // Only works with commonjs
 // Tracer code above must come before anything else
 const path = require('path')
 const assert = require('assert')
-const { CloudfrontInvalidator } = require('@atproto/aws')
+const { BunnyInvalidator, CloudfrontInvalidator } = require('@atproto/aws')
 const {
   DatabaseCoordinator,
   PrimaryDatabase,
@@ -59,17 +59,23 @@ const main = async () => {
     imgUriEndpoint: env.imgUriEndpoint,
     blobCacheLocation: env.blobCacheLocation,
   })
-  const cfInvalidator = env.cfDistributionId
-    ? new CloudfrontInvalidator({
-        distributionId: env.cfDistributionId,
-        pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
-      })
-    : undefined
+  let imgInvalidator
+  if (env.bunnyAccessKey) {
+    imgInvalidator = new BunnyInvalidator({
+      accessKey: env.bunnyAccessKey,
+      urlPrefix: cfg.imgUriEndpoint,
+    })
+  } else if (env.cfDistributionId) {
+    imgInvalidator = new CloudfrontInvalidator({
+      distributionId: env.cfDistributionId,
+      pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
+    })
+  }
   const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const bsky = BskyAppView.create({
     db,
     config: cfg,
-    imgInvalidator: cfInvalidator,
+    imgInvalidator,
     algos,
   })
   // separate db needed for more permissions
@@ -127,6 +133,7 @@ const getEnv = () => ({
   imgUriKey: process.env.IMG_URI_KEY,
   imgUriEndpoint: process.env.IMG_URI_ENDPOINT,
   blobCacheLocation: process.env.BLOB_CACHE_LOC,
+  bunnyAccessKey: process.env.BUNNY_ACCESS_KEY,
   cfDistributionId: process.env.CF_DISTRIBUTION_ID,
   feedPublisherDid: process.env.FEED_PUBLISHER_DID,
 })

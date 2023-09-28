@@ -123,6 +123,9 @@ importers:
 
   packages/aws:
     dependencies:
+      '@atproto/common':
+        specifier: workspace:^
+        version: link:../common
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
