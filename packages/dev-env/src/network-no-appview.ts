@@ -4,6 +4,7 @@ import { TestPlc } from './plc'
 import { TestPds } from './pds'
 import { mockNetworkUtilities } from './util'
 import { TestFeedGen } from './feed-gen'
+import { SeedClient } from './seed-client'
 
 export class TestNetworkNoAppView {
   feedGens: TestFeedGen[] = []
@@ -38,6 +39,11 @@ export class TestNetworkNoAppView {
     const fg = await TestFeedGen.create(this.plc.url, feeds)
     this.feedGens.push(fg)
     return fg
+  }
+
+  getSeedClient(): SeedClient {
+    const agent = this.pds.getClient()
+    return new SeedClient(this, agent)
   }
 
   async processAll() {

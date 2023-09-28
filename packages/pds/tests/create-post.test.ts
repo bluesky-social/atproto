@@ -1,30 +1,29 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent, {
   AppBskyFeedPost,
   AtUri,
   RichText,
   AppBskyRichtextFacet,
 } from '@atproto/api'
-import { runTestServer, TestServerInfo } from './_util'
-import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 
 describe('pds posts record creation', () => {
-  let server: TestServerInfo
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'views_posts',
     })
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
     await basicSeed(sc)
-    await server.processAll()
+    await network.processAll()
   })
 
   afterAll(async () => {
-    await server.close()
+    await network.close()
   })
 
   it('allows for creating posts with tags', async () => {

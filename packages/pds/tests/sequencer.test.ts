@@ -1,15 +1,13 @@
-import AtpAgent from '@atproto/api'
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { randomStr } from '@atproto/crypto'
 import { cborEncode, readFromGenerator, wait } from '@atproto/common'
 import { Sequencer, SeqEvt } from '../src/sequencer'
 import Outbox from '../src/sequencer/outbox'
 import { Database } from '../src'
-import { SeedClient } from './seeds/client'
 import userSeed from './seeds/users'
-import { TestServerInfo, runTestServer } from './_util'
 
 describe('sequencer', () => {
-  let server: TestServerInfo
+  let network: TestNetworkNoAppView
   let db: Database
   let sequencer: Sequencer
   let sc: SeedClient
@@ -20,13 +18,12 @@ describe('sequencer', () => {
   let lastSeen: number
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'sequencer',
     })
-    db = server.ctx.db
-    sequencer = server.ctx.sequencer
-    const agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    db = network.pds.ctx.db
+    sequencer = network.pds.ctx.sequencer
+    sc = network.getSeedClient()
     await userSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -35,7 +32,7 @@ describe('sequencer', () => {
   })
 
   afterAll(async () => {
-    await server.close()
+    await network.close()
   })
 
   const randomPost = async (by: string) => sc.post(by, randomStr(8, 'base32'))
@@ -81,7 +78,7 @@ describe('sequencer', () => {
 
   const caughtUp = (outbox: Outbox): (() => Promise<boolean>) => {
     return async () => {
-      const leaderCaughtUp = await server.ctx.sequencerLeader?.isCaughtUp()
+      const leaderCaughtUp = await network.pds.ctx.sequencerLeader?.isCaughtUp()
       if (!leaderCaughtUp) return false
       const lastEvt = await outbox.sequencer.curr()
       if (!lastEvt) return true

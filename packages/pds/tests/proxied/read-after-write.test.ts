@@ -1,7 +1,6 @@
 import util from 'util'
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { RecordRef, SeedClient } from '../seeds/client'
+import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import { ThreadViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { View as RecordEmbedView } from '../../src/lexicon/types/app/bsky/embed/record'
@@ -19,7 +18,7 @@ describe('proxy read after write', () => {
       dbPostgresSchema: 'proxy_read_after_write',
     })
     agent = network.pds.getClient()
-    sc = new SeedClient(agent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
     alice = sc.dids.alice

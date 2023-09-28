@@ -1,7 +1,6 @@
+import { SeedClient } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import { FLAG } from '../../src/lexicon/types/com/atproto/admin/defs'
-import { adminAuth } from '../_util'
-import { SeedClient } from './client'
 import usersSeed from './users'
 
 export default async (sc: SeedClient, invite?: { code: string }) => {
@@ -142,7 +141,7 @@ export default async (sc: SeedClient, invite?: { code: string }) => {
     },
     {
       encoding: 'application/json',
-      headers: { authorization: adminAuth() },
+      headers: sc.adminAuthHeaders(),
     },
   )
 

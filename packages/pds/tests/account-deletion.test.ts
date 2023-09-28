@@ -1,11 +1,10 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { once, EventEmitter } from 'events'
 import { Selectable } from 'kysely'
 import Mail from 'nodemailer/lib/mailer'
 import AtpAgent from '@atproto/api'
-import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import { Database } from '../src'
-import * as util from './_util'
 import { ServerMailer } from '../src/mailer'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { RepoRoot } from '../src/db/tables/repo-root'
@@ -18,9 +17,8 @@ import { RepoSeq } from '../src/db/tables/repo-seq'
 import { ACKNOWLEDGE } from '../src/lexicon/types/com/atproto/admin/defs'
 
 describe('account deletion', () => {
-  let server: util.TestServerInfo
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
-  let close: util.CloseFn
   let sc: SeedClient
 
   let mailer: ServerMailer
@@ -35,15 +33,14 @@ describe('account deletion', () => {
   let carol
 
   beforeAll(async () => {
-    server = await util.runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'account_deletion',
     })
-    close = server.close
-    mailer = server.ctx.mailer
-    db = server.ctx.db
-    blobstore = server.ctx.blobstore
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    mailer = network.pds.ctx.mailer
+    db = network.pds.ctx.db
+    blobstore = network.pds.ctx.blobstore
+    agent = new AtpAgent({ service: network.pds.url })
+    sc = network.getSeedClient()
     await basicSeed(sc)
     carol = sc.accounts[sc.dids.carol]
 
@@ -60,9 +57,7 @@ describe('account deletion', () => {
 
   afterAll(async () => {
     mailer.transporter.sendMail = _origSendMail
-    if (close) {
-      await close()
-    }
+    await network.close()
   })
 
   const getMailFrom = async (promise): Promise<Mail.Options> => {
@@ -91,7 +86,6 @@ describe('account deletion', () => {
       return expect(token).toBeDefined()
     }
   })
-  return
 
   it('fails account deletion with a bad token', async () => {
     const attempt = agent.api.com.atproto.server.deleteAccount({
@@ -125,7 +119,7 @@ describe('account deletion', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: util.adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
       },
     )
     await agent.api.com.atproto.server.deleteAccount({
@@ -133,7 +127,7 @@ describe('account deletion', () => {
       did: carol.did,
       password: carol.password,
     })
-    await server.processAll() // Finish background hard-deletions
+    await network.processAll() // Finish background hard-deletions
   })
 
   it('no longer lets the user log in', async () => {

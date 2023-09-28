@@ -1,37 +1,38 @@
 import { randomBytes } from '@atproto/crypto'
 import { cborEncode } from '@atproto/common'
-import { TestServerInfo, runTestServer } from '../tests/_util'
 import { randomCid } from '@atproto/repo/tests/_util'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
 import { byFrame } from '@atproto/xrpc-server'
 import { WebSocket } from 'ws'
 import { Database } from '../src'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 
 describe('sequencer bench', () => {
-  let server: TestServerInfo
+  let network: TestNetworkNoAppView
 
   let db: Database
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'sequencer_bench',
-      maxSubscriptionBuffer: 20000,
+      pds: {
+        maxSubscriptionBuffer: 20000,
+      },
     })
-    if (!server.ctx.cfg.dbPostgresUrl) {
+    if (network.pds.ctx.cfg.db.dialect !== 'pg') {
       throw new Error('no postgres url')
     }
     db = Database.postgres({
-      url: server.ctx.cfg.dbPostgresUrl,
-      schema: server.ctx.cfg.dbPostgresSchema,
-      txLockNonce: server.ctx.cfg.dbTxLockNonce,
+      url: network.pds.ctx.cfg.db.url,
+      schema: network.pds.ctx.cfg.db.schema,
       poolSize: 50,
     })
 
-    server.ctx.sequencerLeader?.destroy()
+    network.pds.ctx.sequencerLeader?.destroy()
   })
 
   afterAll(async () => {
-    await server.close()
+    await network.close()
   })
 
   const doWrites = async (batches: number, batchSize: number) => {
@@ -78,7 +79,7 @@ describe('sequencer bench', () => {
     totalToRead: number,
     cursor?: number,
   ): Promise<number> => {
-    const serverHost = server.url.replace('http://', '')
+    const serverHost = network.pds.url.replace('http://', '')
     let url = `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos`
     if (cursor !== undefined) {
       url += `?cursor=${cursor}`
@@ -114,7 +115,7 @@ describe('sequencer bench', () => {
     await doWrites(BATCHES, BATCH_SIZE)
     const setup = Date.now()
 
-    await server.ctx.sequencerLeader?.sequenceOutgoing()
+    await network.pds.ctx.sequencerLeader?.sequenceOutgoing()
     const sequencingTime = Date.now() - setup
 
     const liveTailTime = await readAllPromise
