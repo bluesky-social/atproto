@@ -1,7 +1,6 @@
 import AtpAgent, { AppBskyFeedPost } from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { forSnapshot, stripViewerFromPost } from '../_util'
-import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds posts views', () => {
@@ -16,7 +15,7 @@ describe('pds posts views', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
     await network.bsky.processAll()

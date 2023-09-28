@@ -1,11 +1,10 @@
 import assert from 'assert'
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import {
   isNotFoundPost,
   isThreadViewPost,
 } from '../../src/lexicon/types/app/bsky/feed/defs'
-import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { forSnapshot } from '../_util'
 
@@ -21,7 +20,7 @@ describe('views with thread gating', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
   })

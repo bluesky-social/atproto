@@ -2,7 +2,6 @@ import axios, { AxiosInstance } from 'axios'
 import { CID } from 'multiformats/cid'
 import { verifyCidForBytes } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
-import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import { randomBytes } from '@atproto/crypto'
 
@@ -16,8 +15,7 @@ describe('blob resolver', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_blob_resolver',
     })
-    const pdsAgent = network.pds.getClient()
-    const sc = new SeedClient(pdsAgent)
+    const sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
     await network.bsky.processAll()

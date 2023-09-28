@@ -1,7 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
-import { RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
@@ -22,8 +21,7 @@ describe('list feed views', () => {
       dbPostgresSchema: 'bsky_views_list_feed',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob

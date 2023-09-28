@@ -1,14 +1,12 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { forSnapshot, paginateAll } from '../_util'
-import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import usersBulkSeed from '../seeds/users-bulk'
 
 describe('mute views', () => {
   let network: TestNetwork
   let agent: AtpAgent
-  let pdsAgent: AtpAgent
   let sc: SeedClient
   let alice: string
   let bob: string
@@ -22,8 +20,7 @@ describe('mute views', () => {
       dbPostgresSchema: 'bsky_views_mutes',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await usersBulkSeed(sc, 10)
     alice = sc.dids.alice

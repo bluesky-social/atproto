@@ -1,5 +1,5 @@
+import { SeedClient } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
-import { SeedClient } from './client'
 import usersSeed from './users'
 
 export default async (sc: SeedClient, users = true) => {

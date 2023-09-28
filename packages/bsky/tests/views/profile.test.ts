@@ -1,10 +1,9 @@
 import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { forSnapshot, stripViewer } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
-import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds profile views', () => {
@@ -24,7 +23,7 @@ describe('pds profile views', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
     await network.bsky.processAll()

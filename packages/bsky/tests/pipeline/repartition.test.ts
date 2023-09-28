@@ -1,12 +1,12 @@
 import {
   BskyIndexers,
   TestNetworkNoAppView,
+  SeedClient,
   getIndexers,
   getIngester,
   ingestAll,
   processAll,
 } from '@atproto/dev-env'
-import { SeedClient } from '../seeds/client'
 import usersSeed from '../seeds/users'
 import { BskyIngester } from '../../src'
 import { countAll } from '../../src/db/util'
@@ -36,8 +36,7 @@ describe('pipeline indexer repartitioning', () => {
       name: TEST_NAME,
       partitionIdsByIndexer: [[0], [1]], // two indexers, each consuming one partition
     })
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await usersSeed(sc)
   })
 
