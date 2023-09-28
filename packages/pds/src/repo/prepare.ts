@@ -31,6 +31,7 @@ import {
   Record as PostRecord,
   isRecord as isPost,
 } from '../lexicon/types/app/bsky/feed/post'
+import { isTag } from '../lexicon/types/app/bsky/richtext/facet'
 import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
 import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
 import { hasExplicitSlur } from '../handle/explicit-slurs'
@@ -300,7 +301,17 @@ function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
     toCheck += ' ' + rkey
     toCheck += ' ' + record.displayName
   } else if (isPost(record)) {
-    toCheck += record.tags?.join(' ')
+    if (record.tags) {
+      toCheck += record.tags.join(' ')
+    }
+
+    for (const facet of record.facets || []) {
+      for (const feat of facet.features) {
+        if (isTag(feat)) {
+          toCheck += ' ' + feat.tag
+        }
+      }
+    }
   }
   if (hasExplicitSlur(toCheck)) {
     throw new InvalidRecordError('Unacceptable slur in record')
