@@ -17,6 +17,7 @@ import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/g
 import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
 import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
 import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
+import * as ComAtprotoAdminGetModerationStatuses from './types/com/atproto/admin/getModerationStatuses'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -285,6 +286,17 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.getModerationReports' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getModerationStatuses<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminGetModerationStatuses.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminGetModerationStatuses.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.getModerationStatuses' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

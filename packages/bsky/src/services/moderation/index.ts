@@ -592,4 +592,43 @@ export class ModerationService {
 
     return report
   }
+
+  async getSubjectStatuses({
+    cursor,
+    limit = 50,
+    status,
+    subject,
+  }: {
+    cursor?: string
+    limit?: number
+    status?: string
+    subject?: string
+  }) {
+    let builder = this.db.db.selectFrom('moderation_subject_status')
+
+    if (subject) {
+      builder = builder.where((qb) => {
+        return qb
+          .where('subjectDid', '=', subject)
+          .orWhere('subjectUri', '=', subject)
+      })
+    }
+
+    if (status) {
+      // TODO: need to figure out typing for token strings
+      // @ts-ignore
+      builder = builder.where('status', '=', status)
+    }
+
+    if (cursor) {
+      const cursorNumeric = parseInt(cursor, 10)
+      if (isNaN(cursorNumeric)) {
+        throw new InvalidRequestError('Malformed cursor')
+      }
+      builder = builder.where('id', '<', cursorNumeric)
+    }
+
+    const results = await builder.limit(limit).selectAll().execute()
+    return results
+  }
 }

@@ -1067,6 +1067,62 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminGetModerationStatuses: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getModerationStatuses',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'View moderation statuses of subjects (record or repo).',
+        parameters: {
+          type: 'params',
+          properties: {
+            subject: {
+              type: 'string',
+            },
+            status: {
+              type: 'string',
+              knownValues: [
+                'com.atproto.admin.defs#acknowledged',
+                'com.atproto.admin.defs#muted',
+                'com.atproto.admin.defs#escalated',
+                'com.atproto.admin.defs#reported',
+                'com.atproto.admin.defs#takendown',
+              ],
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subjectStatuses'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              subjectStatuses: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.defs#subjectStatusView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminGetRecord: {
     lexicon: 1,
     id: 'com.atproto.admin.getRecord',
@@ -7387,6 +7443,8 @@ export const ids = {
   ComAtprotoAdminGetModerationActions: 'com.atproto.admin.getModerationActions',
   ComAtprotoAdminGetModerationReport: 'com.atproto.admin.getModerationReport',
   ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',
+  ComAtprotoAdminGetModerationStatuses:
+    'com.atproto.admin.getModerationStatuses',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
   ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',

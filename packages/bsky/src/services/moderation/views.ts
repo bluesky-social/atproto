@@ -6,7 +6,10 @@ import { BlobRef, jsonStringToLex } from '@atproto/lexicon'
 import { Database } from '../../db'
 import { Actor } from '../../db/tables/actor'
 import { Record as RecordRow } from '../../db/tables/record'
-import { ModerationAction } from '../../db/tables/moderation'
+import {
+  ModerationAction,
+  ModerationSubjectStatus,
+} from '../../db/tables/moderation'
 import {
   RepoView,
   RepoViewDetail,
@@ -565,6 +568,31 @@ export class ModerationViews {
       cid: l.cid === '' ? undefined : l.cid,
       neg: l.neg,
     }))
+  }
+
+  async subjectStatus(
+    moderationSubjectStatusResult: Selectable<ModerationSubjectStatus>[],
+  ) {
+    const decoratedSubjectStatuses = moderationSubjectStatusResult.map(
+      (subjectStatus) => ({
+        id: subjectStatus.id,
+        status: subjectStatus.status,
+        updatedAt: subjectStatus.updatedAt,
+        subject:
+          subjectStatus.subjectType === 'com.atproto.admin.defs#repoRef'
+            ? {
+                $type: 'com.atproto.admin.defs#repoRef',
+                did: subjectStatus.subjectDid,
+              }
+            : {
+                $type: 'com.atproto.repo.strongRef',
+                uri: subjectStatus.subjectUri,
+                cid: subjectStatus.subjectCid,
+              },
+      }),
+    )
+
+    return decoratedSubjectStatuses
   }
 }
 

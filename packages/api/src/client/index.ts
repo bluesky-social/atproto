@@ -16,6 +16,7 @@ import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/g
 import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
 import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
 import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
+import * as ComAtprotoAdminGetModerationStatuses from './types/com/atproto/admin/getModerationStatuses'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -147,6 +148,7 @@ export * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/g
 export * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
 export * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
 export * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
+export * as ComAtprotoAdminGetModerationStatuses from './types/com/atproto/admin/getModerationStatuses'
 export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -453,6 +455,17 @@ export class AdminNS {
       .call('com.atproto.admin.getModerationReports', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoAdminGetModerationReports.toKnownErr(e)
+      })
+  }
+
+  getModerationStatuses(
+    params?: ComAtprotoAdminGetModerationStatuses.QueryParams,
+    opts?: ComAtprotoAdminGetModerationStatuses.CallOptions,
+  ): Promise<ComAtprotoAdminGetModerationStatuses.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.getModerationStatuses', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminGetModerationStatuses.toKnownErr(e)
       })
   }
 
