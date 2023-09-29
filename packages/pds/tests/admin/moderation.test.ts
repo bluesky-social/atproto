@@ -1,10 +1,14 @@
-import { TestNetworkNoAppView } from '@atproto/dev-env'
+import {
+  TestNetworkNoAppView,
+  ImageRef,
+  RecordRef,
+  SeedClient,
+} from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { BlobNotFoundError } from '@atproto/repo'
 import { forSnapshot } from '../_util'
 import { PeriodicModerationActionReversal } from '../../src/db/periodic-moderation-action-reversal'
-import { ImageRef, RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import {
   ACKNOWLEDGE,
@@ -27,7 +31,7 @@ describe('moderation', () => {
       dbPostgresSchema: 'moderation',
     })
     agent = network.pds.getClient()
-    sc = new SeedClient(agent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
   })
 
