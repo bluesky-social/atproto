@@ -376,7 +376,7 @@ export class ModerationViews {
     opts: ModViewOptions,
   ): Promise<ActionViewDetail> {
     const action = await this.action(result)
-    const reportResults = action.resolvedReportIds.length
+    const reportResults = action.resolvedReportIds?.length
       ? await this.db.db
           .selectFrom('moderation_report')
           .where('id', 'in', action.resolvedReportIds)

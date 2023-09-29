@@ -9,7 +9,6 @@
         "action",
         "subject",
         "subjectBlobCids",
-        "comment",
         "createdBy",
         "createdAt"
       ],
@@ -42,7 +41,6 @@
         "action",
         "subject",
         "subjectBlobs",
-        "comment",
         "createdBy",
         "createdAt",
         "resolvedReports"
@@ -93,7 +91,7 @@
     },
     "actionReversal": {
       "type": "object",
-      "required": ["comment", "createdBy", "createdAt"],
+      "required": ["createdBy", "createdAt"],
       "properties": {
         "comment": { "type": "string" },
         "createdBy": { "type": "string", "format": "did" },
@@ -185,7 +183,7 @@
         }
       }
     },
-    "subjectView": {
+    "subjectStatusView": {
       "type": "object",
       "required": ["id", "subject", "updatedAt", "status"],
       "properties": {
@@ -196,14 +194,8 @@
         },
         "updatedAt": { "type": "string", "format": "datetime" },
         "status": {
-          "type": "string",
-          "knownValues": [
-            "#resolved",
-            "#escalated",
-            "#takendown",
-            "#muted",
-            "#needsReview"
-          ]
+          "type": "ref",
+          "ref": "#subjectStatusType"
         }
       }
     },
@@ -213,11 +205,9 @@
         "id",
         "reasonType",
         "subject",
-        "subjectView",
         "reportedBy",
         "createdAt",
-        "resolvedByActions",
-        "subjectStatus"
+        "resolvedByActions"
       ],
       "properties": {
         "id": { "type": "integer" },
@@ -235,19 +225,15 @@
             "#recordViewNotFound"
           ]
         },
-        "subjectView": {
+        "subjectStatusView": {
           "type": "ref",
-          "ref": "com.atproto.admin.defs#subjectView"
+          "ref": "com.atproto.admin.defs#subjectStatusView"
         },
         "reportedBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" },
         "resolvedByActions": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.admin.defs#actionView" }
-        },
-        "subjectStatus": {
-          "type": "ref",
-          "ref": "com.atproto.admin.defs#subjectStatusType"
         }
       }
     },

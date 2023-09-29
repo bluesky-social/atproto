@@ -2,10 +2,11 @@ import { wait } from '@atproto/common'
 import { Leader } from './leader'
 import { dbLogger } from '../logger'
 import AppContext from '../context'
-import AtpAgent from '@atproto/api'
+import AtpAgent, { AtUri } from '@atproto/api'
 import { buildBasicAuth } from '../auth'
 import { LabelService } from '../services/label'
 import { ModerationActionRow } from '../services/moderation/types'
+import { CID } from 'multiformats/cid'
 
 export const MODERATION_ACTION_REVERSAL_ID = 1011
 
@@ -55,15 +56,24 @@ export class PeriodicModerationActionReversal {
       id: actionRow.id,
       createdBy: actionRow.createdBy,
       createdAt: new Date(),
-      reason: `[SCHEDULED_REVERSAL] Reverting action as originally scheduled`,
+      // TODO: do we need to take care of blob cid separately here?
+      subject:
+        actionRow.subjectUri && actionRow.subjectCid
+          ? {
+              uri: new AtUri(actionRow.subjectUri),
+              cid: CID.parse(actionRow.subjectCid),
+            }
+          : { did: actionRow.subjectDid },
+      comment: `[SCHEDULED_REVERSAL] Reverting action as originally scheduled`,
     }
 
-    if (this.pushAgent) {
-      await this.pushAgent.com.atproto.admin.reverseModerationAction(
-        reverseAction,
-      )
-      return
-    }
+    // TODO: do we still need this?
+    // if (this.pushAgent) {
+    //   await this.pushAgent.com.atproto.admin.reverseModerationAction(
+    //     reverseAction,
+    //   )
+    //   return
+    // }
 
     await this.appContext.db.getPrimary().transaction(async (dbTxn) => {
       const moderationTxn = this.appContext.services.moderation(dbTxn)

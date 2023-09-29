@@ -265,7 +265,7 @@ export class AutoModerator {
           action: 'com.atproto.admin.defs#takedown',
           subject: { uri, cid: recordCid },
           subjectBlobCids: takedownCids,
-          reason: takedownReason,
+          comment: takedownReason,
           createdBy: this.ctx.cfg.labelerDid,
         })
         await modSrvc.takedownRecord({

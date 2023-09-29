@@ -22,7 +22,7 @@ export interface ActionView {
   subjectBlobCids: string[]
   createLabelVals?: string[]
   negateLabelVals?: string[]
-  comment: string
+  comment?: string
   createdBy: string
   createdAt: string
   reversal?: ActionReversal
@@ -57,7 +57,7 @@ export interface ActionViewDetail {
   subjectBlobs: BlobView[]
   createLabelVals?: string[]
   negateLabelVals?: string[]
-  comment: string
+  comment?: string
   createdBy: string
   createdAt: string
   reversal?: ActionReversal
@@ -98,7 +98,7 @@ export function validateActionViewCurrent(v: unknown): ValidationResult {
 }
 
 export interface ActionReversal {
-  comment: string
+  comment?: string
   createdBy: string
   createdAt: string
   [k: string]: unknown
@@ -190,33 +190,27 @@ export function validateReportView(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#reportView', v)
 }
 
-export interface SubjectView {
+export interface SubjectStatusView {
   id: number
   subject:
     | RepoRef
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
   updatedAt: string
-  status:
-    | 'lex:com.atproto.admin.defs#resolved'
-    | 'lex:com.atproto.admin.defs#escalated'
-    | 'lex:com.atproto.admin.defs#takendown'
-    | 'lex:com.atproto.admin.defs#muted'
-    | 'lex:com.atproto.admin.defs#needsReview'
-    | (string & {})
+  status: SubjectStatusType
   [k: string]: unknown
 }
 
-export function isSubjectView(v: unknown): v is SubjectView {
+export function isSubjectStatusView(v: unknown): v is SubjectStatusView {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.defs#subjectView'
+    v.$type === 'com.atproto.admin.defs#subjectStatusView'
   )
 }
 
-export function validateSubjectView(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.defs#subjectView', v)
+export function validateSubjectStatusView(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#subjectStatusView', v)
 }
 
 export interface ReportViewDetail {
@@ -229,11 +223,10 @@ export interface ReportViewDetail {
     | RecordView
     | RecordViewNotFound
     | { $type: string; [k: string]: unknown }
-  subjectView: SubjectView
+  subjectStatusView?: SubjectStatusView
   reportedBy: string
   createdAt: string
   resolvedByActions: ActionView[]
-  subjectStatus: SubjectStatusType
   [k: string]: unknown
 }
 

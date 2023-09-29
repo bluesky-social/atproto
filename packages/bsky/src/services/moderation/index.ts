@@ -20,6 +20,7 @@ import {
   ModerationActionRow,
   ModerationReportRow,
   ModerationReportRowWithHandle,
+  ReversibleModerationAction,
   SubjectInfo,
 } from './types'
 import { getReportIdsToBeResolved } from './report'
@@ -277,7 +278,7 @@ export class ModerationService {
     createdAt?: Date
     durationInHours?: number
     refEventId?: number
-    meta: ActionMeta | null
+    meta?: ActionMeta | null
   }): Promise<ModerationActionRow> {
     this.db.assertTransaction()
     const {
@@ -404,14 +405,17 @@ export class ModerationService {
     id,
     createdBy,
     createdAt,
-    reason,
+    comment,
+    subject,
   }: ReversibleModerationAction) {
     this.db.assertTransaction()
-    const result = await this.logReverseAction({
-      id,
+    const result = await this.logAction({
+      refEventId: id,
+      action: REVERT,
       createdAt,
       createdBy,
-      reason,
+      comment,
+      subject,
     })
 
     if (
@@ -432,29 +436,6 @@ export class ModerationService {
       await this.reverseTakedownRecord({
         uri: new AtUri(result.subjectUri),
       })
-    }
-
-    return result
-  }
-
-  async logReverseAction(
-    info: ReversibleModerationAction,
-  ): Promise<ModerationActionRow> {
-    const { id, createdBy, reason, createdAt = new Date() } = info
-
-    const result = await this.db.db
-      .updateTable('moderation_action')
-      .where('id', '=', id)
-      .set({
-        reversedAt: createdAt.toISOString(),
-        reversedBy: createdBy,
-        reversedReason: reason,
-      })
-      .returningAll()
-      .executeTakeFirst()
-
-    if (!result) {
-      throw new InvalidRequestError('Moderation action not found')
     }
 
     return result

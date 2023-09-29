@@ -15,7 +15,6 @@ export const schemaDict = {
           'action',
           'subject',
           'subjectBlobCids',
-          'comment',
           'createdBy',
           'createdAt',
         ],
@@ -91,7 +90,6 @@ export const schemaDict = {
           'action',
           'subject',
           'subjectBlobs',
-          'comment',
           'createdBy',
           'createdAt',
           'resolvedReports',
@@ -181,7 +179,7 @@ export const schemaDict = {
       },
       actionReversal: {
         type: 'object',
-        required: ['comment', 'createdBy', 'createdAt'],
+        required: ['createdBy', 'createdAt'],
         properties: {
           comment: {
             type: 'string',
@@ -312,7 +310,7 @@ export const schemaDict = {
           },
         },
       },
-      subjectView: {
+      subjectStatusView: {
         type: 'object',
         required: ['id', 'subject', 'updatedAt', 'status'],
         properties: {
@@ -331,14 +329,8 @@ export const schemaDict = {
             format: 'datetime',
           },
           status: {
-            type: 'string',
-            knownValues: [
-              'lex:com.atproto.admin.defs#resolved',
-              'lex:com.atproto.admin.defs#escalated',
-              'lex:com.atproto.admin.defs#takendown',
-              'lex:com.atproto.admin.defs#muted',
-              'lex:com.atproto.admin.defs#needsReview',
-            ],
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#subjectStatusType',
           },
         },
       },
@@ -348,11 +340,9 @@ export const schemaDict = {
           'id',
           'reasonType',
           'subject',
-          'subjectView',
           'reportedBy',
           'createdAt',
           'resolvedByActions',
-          'subjectStatus',
         ],
         properties: {
           id: {
@@ -374,9 +364,9 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#recordViewNotFound',
             ],
           },
-          subjectView: {
+          subjectStatusView: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#subjectView',
+            ref: 'lex:com.atproto.admin.defs#subjectStatusView',
           },
           reportedBy: {
             type: 'string',
@@ -392,10 +382,6 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.admin.defs#actionView',
             },
-          },
-          subjectStatus: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#subjectStatusType',
           },
         },
       },

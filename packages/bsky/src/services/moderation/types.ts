@@ -1,5 +1,7 @@
 import { Selectable } from 'kysely'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
+import { AtUri } from '@atproto/syntax'
+import { CID } from 'multiformats/cid'
 
 export type SubjectInfo =
   | {
@@ -21,6 +23,7 @@ export type ReversibleModerationAction = Pick<
   'id' | 'createdBy' | 'comment'
 > & {
   createdAt?: Date
+  subject: { did: string } | { uri: AtUri; cid: CID }
 }
 
 export type ModerationReportRow = Selectable<ModerationReport>

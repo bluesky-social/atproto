@@ -302,7 +302,7 @@ export class ModerationViews {
               cid: res.subjectCid,
             },
       subjectBlobCids: subjectBlobCidsByActionId[res.id] ?? [],
-      reason: res.reason,
+      comment: res.comment || undefined,
       createdAt: res.createdAt,
       createdBy: res.createdBy,
       createLabelVals:
@@ -331,7 +331,7 @@ export class ModerationViews {
 
   async actionDetail(result: ActionResult): Promise<ActionViewDetail> {
     const action = await this.action(result)
-    const reportResults = action.resolvedReportIds.length
+    const reportResults = action.resolvedReportIds?.length
       ? await this.db.db
           .selectFrom('moderation_report')
           .where('id', 'in', action.resolvedReportIds)
@@ -357,7 +357,7 @@ export class ModerationViews {
       subjectBlobs,
       createLabelVals: action.createLabelVals,
       negateLabelVals: action.negateLabelVals,
-      reason: action.reason,
+      comment: action.comment,
       createdAt: action.createdAt,
       createdBy: action.createdBy,
       reversal: action.reversal,

@@ -65,7 +65,7 @@ export default function (server: Server, ctx: AppContext) {
       const {
         action,
         subject,
-        reason,
+        comment,
         createdBy,
         createLabelVals,
         negateLabelVals,
@@ -108,7 +108,8 @@ export default function (server: Server, ctx: AppContext) {
           createLabelVals,
           negateLabelVals,
           createdBy,
-          reason,
+          // TODO: Revisit this, we are gonna get rid of this whole thing I believe?
+          reason: comment || '',
           durationInHours,
         })
 
