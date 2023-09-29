@@ -24,6 +24,7 @@
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
     "test": "../dev-infra/with-test-redis-and-db.sh jest",
+    "update-main-to-dist": "node ../../update-main-to-dist.js packages/pds",
     "bench": "../dev-infra/with-test-redis-and-db.sh jest --config jest.bench.config.js",
     "test:sqlite": "jest --testPathIgnorePatterns /tests/proxied/*",
     "test:log": "tail -50 test.log | pino-pretty",
