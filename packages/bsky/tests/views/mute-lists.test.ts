@@ -42,7 +42,7 @@ describe('bsky views with mutes from mute lists', () => {
   it('creates a list with some items', async () => {
     const avatar = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-portrait-small.jpg',
+      'tests/sample-img/key-portrait-small.jpg',
       'image/jpeg',
     )
     // alice creates mute list with bob & carol that dan uses

@@ -2,7 +2,7 @@ import { AtpAgent, ComAtprotoServerCreateAccount } from '..'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 
 describe('errors', () => {
-  let network: TestServerInfo
+  let network: TestNetworkNoAppView
   let client: AtpAgent
 
   beforeAll(async () => {

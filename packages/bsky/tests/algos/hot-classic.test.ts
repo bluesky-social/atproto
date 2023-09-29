@@ -41,7 +41,7 @@ describe('algo hot-classic', () => {
   it('returns well liked posts', async () => {
     const img = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-landscape-small.jpg',
+      'tests/sample-img/key-landscape-small.jpg',
       'image/jpeg',
     )
     const one = await sc.post(alice, 'first post', undefined, [img])
