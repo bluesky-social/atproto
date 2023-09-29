@@ -9,30 +9,30 @@ const handler: AlgoHandler = async (
   params: SkeletonParams,
   requester: string,
 ): Promise<AlgoResponse> => {
-  const { cursor, limit = 50 } = params
-  const db = ctx.db.getReplica('feed')
-  const feedService = ctx.services.feed(db)
+  // const { cursor, limit = 50 } = params
+  // const db = ctx.db.getReplica('feed')
+  // const feedService = ctx.services.feed(db)
 
-  const { ref } = db.db.dynamic
+  // const { ref } = db.db.dynamic
 
-  const keyset = new FeedKeyset(ref('post.indexedAt'), ref('post.cid'))
-  const sortFrom = keyset.unpack(cursor)?.primary
+  // const keyset = new FeedKeyset(ref('post.indexedAt'), ref('post.cid'))
+  // const sortFrom = keyset.unpack(cursor)?.primary
 
-  let postsQb = feedService
-    .selectPostQb()
-    .innerJoin('follow', 'follow.subjectDid', 'post.creator')
-    .innerJoin('post_agg', 'post_agg.uri', 'post.uri')
-    .where('post_agg.likeCount', '>=', 5)
-    .where('follow.creator', '=', requester)
-    .where('post.indexedAt', '>', getFeedDateThreshold(sortFrom))
+  // let postsQb = feedService
+  //   .selectPostQb()
+  //   .innerJoin('follow', 'follow.subjectDid', 'post.creator')
+  //   .innerJoin('post_agg', 'post_agg.uri', 'post.uri')
+  //   .where('post_agg.likeCount', '>=', 5)
+  //   .where('follow.creator', '=', requester)
+  //   .where('post.indexedAt', '>', getFeedDateThreshold(sortFrom))
 
-  postsQb = paginate(postsQb, { limit, cursor, keyset, tryIndex: true })
+  // postsQb = paginate(postsQb, { limit, cursor, keyset, tryIndex: true })
 
-  const feedItems = await postsQb.execute()
+  // const feedItems = await postsQb.execute()
 
   return {
-    feedItems,
-    cursor: keyset.packFromResult(feedItems),
+    feedItems: [],
+    // cursor: keyset.packFromResult(feedItems),
   }
 }
 
