@@ -1,10 +1,9 @@
 import fs from 'fs/promises'
+import { TestNetwork, SeedClient, ImageRef } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
 import { AutoModerator } from '../../src/auto-moderator'
 import IndexerContext from '../../src/indexer/context'
 import { sha256RawToCid } from '@atproto/common'
-import { TestNetwork } from '@atproto/dev-env'
-import { ImageRef, SeedClient } from '../seeds/client'
 import usersSeed from '../seeds/users'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
@@ -41,31 +40,31 @@ describe('takedowner', () => {
     autoMod = ctx.autoMod
     autoMod.imageFlagger = new TestFlagger()
     pdsAgent = new AtpAgent({ service: network.pds.url })
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
     const fileBytes1 = await fs.readFile(
-      'tests/image/fixtures/key-portrait-small.jpg',
+      'tests/sample-img/key-portrait-small.jpg',
     )
     const fileBytes2 = await fs.readFile(
-      'tests/image/fixtures/key-portrait-large.jpg',
+      'tests/sample-img/key-portrait-large.jpg',
     )
     badCid1 = sha256RawToCid(await sha256(fileBytes1))
     badCid2 = sha256RawToCid(await sha256(fileBytes2))
     goodBlob = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-landscape-small.jpg',
+      'tests/sample-img/key-landscape-small.jpg',
       'image/jpeg',
     )
     badBlob1 = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-portrait-small.jpg',
+      'tests/sample-img/key-portrait-small.jpg',
       'image/jpeg',
     )
     badBlob2 = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-portrait-large.jpg',
+      'tests/sample-img/key-portrait-large.jpg',
       'image/jpeg',
     )
   })

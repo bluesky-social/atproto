@@ -1,3 +1,4 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import {
   FLAG,
@@ -7,27 +8,25 @@ import {
   REASONOTHER,
   REASONSPAM,
 } from '../../src/lexicon/types/com/atproto/moderation/defs'
-import { runTestServer, forSnapshot, CloseFn, adminAuth } from '../_util'
-import { SeedClient } from '../seeds/client'
+import { forSnapshot } from '../_util'
 import basicSeed from '../seeds/basic'
 
 describe('pds admin get moderation action view', () => {
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
-  let close: CloseFn
   let sc: SeedClient
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'views_admin_get_moderation_report',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
     await basicSeed(sc)
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   beforeAll(async () => {
@@ -78,7 +77,7 @@ describe('pds admin get moderation action view', () => {
   it('gets moderation report for a repo.', async () => {
     const result = await agent.api.com.atproto.admin.getModerationReport(
       { id: 1 },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(forSnapshot(result.data)).toMatchSnapshot()
   })
@@ -86,7 +85,7 @@ describe('pds admin get moderation action view', () => {
   it('gets moderation report for a record.', async () => {
     const result = await agent.api.com.atproto.admin.getModerationReport(
       { id: 2 },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(forSnapshot(result.data)).toMatchSnapshot()
   })
@@ -94,7 +93,7 @@ describe('pds admin get moderation action view', () => {
   it('fails when moderation report does not exist.', async () => {
     const promise = agent.api.com.atproto.admin.getModerationReport(
       { id: 100 },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     await expect(promise).rejects.toThrow('Report not found')
   })

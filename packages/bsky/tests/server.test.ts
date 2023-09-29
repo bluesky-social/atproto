@@ -4,7 +4,6 @@ import axios, { AxiosError } from 'axios'
 import { TestNetwork } from '@atproto/dev-env'
 import { handler as errorHandler } from '../src/error'
 import { Database } from '../src'
-import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 
 describe('server', () => {
@@ -16,8 +15,7 @@ describe('server', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_server',
     })
-    const pdsAgent = network.pds.getClient()
-    const sc = new SeedClient(pdsAgent)
+    const sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
     alice = sc.dids.alice

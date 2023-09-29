@@ -28,11 +28,14 @@ export const mockResolvers = (idResolver: IdResolver, pds: TestPds) => {
     return result
   }
 
+  const origResolveHandleDns = idResolver.handle.resolveDns
   idResolver.handle.resolve = async (handle: string) => {
     const isPdsHandle = pds.ctx.cfg.identity.serviceHandleDomains.some(
       (domain) => handle.endsWith(domain),
     )
-    if (!isPdsHandle) return undefined
+    if (!isPdsHandle) {
+      return origResolveHandleDns.call(idResolver.handle, handle)
+    }
 
     const url = `${pds.url}/.well-known/atproto-did`
     try {

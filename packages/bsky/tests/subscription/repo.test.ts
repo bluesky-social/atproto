@@ -1,6 +1,5 @@
 import AtpAgent from '@atproto/api'
-
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { CommitData } from '@atproto/repo'
 import { RepoService } from '@atproto/pds/src/services/repo'
 import { PreparedWrite } from '@atproto/pds/src/repo'
@@ -11,7 +10,6 @@ import { ids } from '../../src/lexicon/lexicons'
 import { forSnapshot } from '../_util'
 import { AppContext, Database } from '../../src'
 import basicSeed from '../seeds/basic'
-import { SeedClient } from '../seeds/client'
 
 describe('sync', () => {
   let network: TestNetwork
@@ -25,7 +23,7 @@ describe('sync', () => {
     })
     ctx = network.bsky.ctx
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
   })
 

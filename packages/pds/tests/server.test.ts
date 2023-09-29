@@ -1,12 +1,11 @@
 import { AddressInfo } from 'net'
 import express from 'express'
 import axios, { AxiosError } from 'axios'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import AtpAgent, { AtUri } from '@atproto/api'
 import { handler as errorHandler } from '../src/error'
-import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import { Database } from '../src'
-import { TestNetwork } from '@atproto/dev-env'
 import { randomStr } from '@atproto/crypto'
 
 describe('server', () => {
@@ -25,7 +24,7 @@ describe('server', () => {
     })
     db = network.pds.ctx.db
     agent = network.pds.getClient()
-    sc = new SeedClient(agent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
   })

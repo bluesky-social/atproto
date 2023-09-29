@@ -1,6 +1,5 @@
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { FuzzyMatcher, encode } from '../../src/auto-moderator/fuzzy-matcher'
-import { TestNetwork } from '@atproto/dev-env'
-import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { AtpAgent } from '@atproto/api'
 import { ImageInvalidator } from '../../src/image/invalidator'
@@ -25,7 +24,7 @@ describe('fuzzy matcher', () => {
     })
     fuzzyMatcher = new FuzzyMatcher(['evil', 'mean', 'bad'], ['baddie'])
     agent = network.pds.getClient()
-    sc = new SeedClient(agent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
     alice = sc.dids.alice

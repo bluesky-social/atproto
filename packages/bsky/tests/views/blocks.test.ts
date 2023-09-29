@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { TestNetwork, RecordRef, SeedClient } from '@atproto/dev-env'
 import AtpAgent, { AtUri } from '@atproto/api'
 import { BlockedActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
 import { BlockedByActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
@@ -7,9 +8,7 @@ import {
   isViewRecord as isEmbedViewRecord,
   isViewBlocked as isEmbedViewBlocked,
 } from '@atproto/api/src/client/types/app/bsky/embed/record'
-import { TestNetwork } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
-import { RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds views with blocking', () => {
@@ -32,7 +31,7 @@ describe('pds views with blocking', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
     carol = sc.dids.carol

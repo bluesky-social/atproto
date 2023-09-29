@@ -1,6 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { SeedClient } from '../seeds/client'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 
 describe('proxies appview procedures', () => {
@@ -17,7 +16,7 @@ describe('proxies appview procedures', () => {
       dbPostgresSchema: 'proxy_procedures',
     })
     agent = network.pds.getClient()
-    sc = new SeedClient(agent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
     alice = sc.dids.alice

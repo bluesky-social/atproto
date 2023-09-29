@@ -1,25 +1,24 @@
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { range, dataToCborBlock, TID } from '@atproto/common'
 import { CidSet, def } from '@atproto/repo'
 import BlockMap from '@atproto/repo/src/block-map'
+import { CID } from 'multiformats/cid'
 import { Database } from '../src'
 import SqlRepoStorage from '../src/sql-repo-storage'
-import { CloseFn, runTestServer } from './_util'
-import { CID } from 'multiformats/cid'
 
 describe('sql repo storage', () => {
+  let network: TestNetworkNoAppView
   let db: Database
-  let close: CloseFn
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'sql_repo_storage',
     })
-    close = server.close
-    db = server.ctx.db
+    db = network.pds.ctx.db
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('puts and gets blocks.', async () => {
@@ -28,7 +27,7 @@ describe('sql repo storage', () => {
     const cid = await db.transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, did)
       const block = await dataToCborBlock({ my: 'block' })
-      await storage.putBlock(block.cid, block.bytes)
+      await storage.putBlock(block.cid, block.bytes, TID.nextStr())
       return block.cid
     })
 
@@ -44,14 +43,14 @@ describe('sql repo storage', () => {
     const cidA = await db.transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, did)
       const block = await dataToCborBlock({ my: 'block' })
-      await storage.putBlock(block.cid, block.bytes)
+      await storage.putBlock(block.cid, block.bytes, TID.nextStr())
       return block.cid
     })
 
     const cidB = await db.transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, did)
       const block = await dataToCborBlock({ my: 'block' })
-      await storage.putBlock(block.cid, block.bytes)
+      await storage.putBlock(block.cid, block.bytes, TID.nextStr())
       return block.cid
     })
 
@@ -87,13 +86,15 @@ describe('sql repo storage', () => {
         cid: commits[0].cid,
         rev: TID.nextStr(),
         prev: null,
+        since: null,
         newBlocks: blocks0,
         removedCids: new CidSet(),
       })
       await storage.applyCommit({
         cid: commits[1].cid,
-        prev: commits[0].cid,
         rev: TID.nextStr(),
+        prev: commits[0].cid,
+        since: null,
         newBlocks: blocks1,
         removedCids: toRemove,
       })
