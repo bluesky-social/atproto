@@ -15,7 +15,7 @@ const handler: AlgoHandler = async (
 
   const { ref } = db.db.dynamic
 
-  const keyset = new FeedKeyset(ref('post.indexedAt'), ref('post.cid'))
+  const keyset = new FeedKeyset(ref('post.sortAt'), ref('post.cid'))
   const sortFrom = keyset.unpack(cursor)?.primary
 
   let postsQb = feedService
@@ -24,7 +24,7 @@ const handler: AlgoHandler = async (
     .innerJoin('post_agg', 'post_agg.uri', 'post.uri')
     .where('post_agg.likeCount', '>=', 5)
     .where('follow.creator', '=', requester)
-    .where('post.indexedAt', '>', getFeedDateThreshold(sortFrom))
+    .where('post.sortAt', '>', getFeedDateThreshold(sortFrom))
 
   postsQb = paginate(postsQb, { limit, cursor, keyset, tryIndex: true })
 
