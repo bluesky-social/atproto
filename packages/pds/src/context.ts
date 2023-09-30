@@ -16,6 +16,7 @@ import { BackgroundQueue } from './background'
 import DidSqlCache from './did-cache'
 import { Crawlers } from './crawlers'
 import { RuntimeFlags } from './runtime-flags'
+import { Logger } from './logger'
 
 export class AppContext {
   constructor(
@@ -38,6 +39,7 @@ export class AppContext {
       backgroundQueue: BackgroundQueue
       appviewAgent: AtpAgent
       crawlers: Crawlers
+      logger: Logger
     },
   ) {}
 
@@ -127,6 +129,10 @@ export class AppContext {
 
   get crawlers(): Crawlers {
     return this.opts.crawlers
+  }
+
+  get log(): Logger {
+    return this.opts.logger
   }
 
   get plcClient(): plc.Client {

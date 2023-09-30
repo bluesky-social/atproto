@@ -1,5 +1,6 @@
 export * from './types'
 export * from './auth'
+export * from './logger'
 export * from './server'
 export * from './stream'
 export * from './rate-limiter'

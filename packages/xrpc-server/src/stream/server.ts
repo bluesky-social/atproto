@@ -1,16 +1,18 @@
 import { IncomingMessage } from 'http'
 import { WebSocketServer, ServerOptions, WebSocket } from 'ws'
 import { ErrorFrame, Frame } from './frames'
-import logger from './logger'
 import { CloseCode, DisconnectError } from './types'
+import { Logger } from '../logger'
 
 export class XrpcStreamServer {
   wss: WebSocketServer
-  constructor(opts: ServerOptions & { handler: Handler }) {
-    const { handler, ...serverOpts } = opts
+  constructor(opts: ServerOptions & { handler: Handler; logger: Logger }) {
+    const { handler, logger, ...serverOpts } = opts
     this.wss = new WebSocketServer(serverOpts)
     this.wss.on('connection', async (socket, req) => {
-      socket.on('error', (err) => logger.error(err, 'websocket error'))
+      socket.on('error', (err) =>
+        logger.xrpcStream.error(err, 'websocket error'),
+      )
       try {
         const ac = new AbortController()
         const iterator = unwrapIterator(handler(req, ac.signal, socket, this))
@@ -36,7 +38,7 @@ export class XrpcStreamServer {
         if (err instanceof DisconnectError) {
           return socket.close(err.wsCode, err.xrpcCode)
         } else {
-          logger.error(err, 'websocket server error')
+          logger.xrpcStream.error(err, 'websocket server error')
           return socket.terminate()
         }
       }

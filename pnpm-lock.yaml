@@ -295,9 +295,6 @@ importers:
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0
-      pino:
-        specifier: ^8.15.0
-        version: 8.15.0
       zod:
         specifier: 3.21.4
         version: 3.21.4
@@ -691,6 +688,9 @@ importers:
       mime-types:
         specifier: ^2.1.35
         version: 2.1.35
+      pino:
+        specifier: ^8.15.0
+        version: 8.15.0
       rate-limiter-flexible:
         specifier: ^2.4.1
         version: 2.4.1

@@ -14,12 +14,7 @@ import { AtpAgent } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import { IdResolver } from '@atproto/identity'
-import {
-  RateLimiter,
-  RateLimiterCreator,
-  RateLimiterOpts,
-  Options as XrpcServerOptions,
-} from '@atproto/xrpc-server'
+import { Options as XrpcServerOptions } from '@atproto/xrpc-server'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
 import API from './api'
 import * as basicRoutes from './basic-routes'
@@ -28,7 +23,6 @@ import Database from './db'
 import { ServerAuth } from './auth'
 import * as error from './error'
 import compression from './util/compression'
-import { dbLogger, loggerMiddleware, seqLogger } from './logger'
 import { ServerConfig } from './config'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
@@ -42,6 +36,7 @@ import DidSqlCache from './did-cache'
 import { Crawlers } from './crawlers'
 import { getRedisClient } from './redis'
 import { RuntimeFlags } from './runtime-flags'
+import { createLogger } from './logger'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -111,10 +106,13 @@ export class PDS {
       config,
     )
 
+    // @TODO add config
+    const { logger, logMiddleware } = createLogger()
+
     const app = express()
     app.set('trust proxy', true)
     app.use(cors())
-    app.use(loggerMiddleware)
+    app.use(logMiddleware)
     app.use(compression())
 
     const backgroundQueue = new BackgroundQueue(db)
@@ -164,9 +162,11 @@ export class PDS {
       backgroundQueue,
       appviewAgent,
       crawlers,
+      logger,
     })
 
     const xrpcOpts: XrpcServerOptions = {
+      logger,
       validateResponse: config.debugMode,
       payload: {
         jsonLimit: 100 * 1024, // 100kb
@@ -175,24 +175,11 @@ export class PDS {
       },
     }
     if (config.rateLimitsEnabled) {
-      let rlCreator: RateLimiterCreator
-      if (redisScratch) {
-        rlCreator = (opts: RateLimiterOpts) =>
-          RateLimiter.redis(redisScratch, {
-            bypassSecret: config.rateLimitBypassKey,
-            bypassIps: config.rateLimitBypassIps,
-            ...opts,
-          })
-      } else {
-        rlCreator = (opts: RateLimiterOpts) =>
-          RateLimiter.memory({
-            bypassSecret: config.rateLimitBypassKey,
-            bypassIps: config.rateLimitBypassIps,
-            ...opts,
-          })
-      }
       xrpcOpts['rateLimits'] = {
-        creator: rlCreator,
+        enabled: true,
+        bypassSecret: config.rateLimitBypassKey,
+        bypassIps: config.rateLimitBypassIps,
+        redisClient: redisScratch,
         global: [
           {
             name: 'global-ip',
@@ -232,7 +219,7 @@ export class PDS {
     if (db.cfg.dialect === 'pg') {
       const { pool } = db.cfg
       this.dbStatsInterval = setInterval(() => {
-        dbLogger.info(
+        this.ctx.log.db.info(
           {
             idleCount: pool.idleCount,
             totalCount: pool.totalCount,
@@ -240,7 +227,7 @@ export class PDS {
           },
           'db pool stats',
         )
-        dbLogger.info(
+        this.ctx.log.db.info(
           {
             runningCount: backgroundQueue.queue.pending,
             waitingCount: backgroundQueue.queue.size,
@@ -253,9 +240,9 @@ export class PDS {
       if (this.ctx.sequencerLeader?.isLeader) {
         try {
           const seq = await this.ctx.sequencerLeader.lastSeq()
-          seqLogger.info({ seq }, 'sequencer leader stats')
+          this.ctx.log.seq.info({ seq }, 'sequencer leader stats')
         } catch (err) {
-          seqLogger.error({ err }, 'error getting last seq')
+          this.ctx.log.seq.error({ err }, 'error getting last seq')
         }
       }
     }, 500)
