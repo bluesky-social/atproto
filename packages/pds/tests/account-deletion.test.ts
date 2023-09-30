@@ -62,7 +62,6 @@ describe('account deletion', () => {
 
   const getMailFrom = async (promise): Promise<Mail.Options> => {
     const result = await Promise.all([once(mailCatcher, 'mail'), promise])
-    console.log(result)
     return result[0][0]
   }
 

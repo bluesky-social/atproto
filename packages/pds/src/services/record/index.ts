@@ -164,7 +164,7 @@ export class RecordService {
     cid: string
     value: object
     indexedAt: string
-    takedownId: string | null
+    takedownId: number | null
   } | null> {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
