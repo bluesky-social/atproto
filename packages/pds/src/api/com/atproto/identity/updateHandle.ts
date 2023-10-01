@@ -1,12 +1,16 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { normalizeAndValidateHandle } from '../../../../handle'
+import {
+  baseNormalizeAndValidate,
+  isServiceDomain,
+  normalizeAndValidateHandle,
+} from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
   HandleSequenceToken,
   UserAlreadyExistsError,
 } from '../../../../services/account'
-import { httpLogger } from '../../../../logger'
+import { httpLogger, mailerLogger } from '../../../../logger'
 import { DAY, MINUTE } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
@@ -26,42 +30,41 @@ export default function (server: Server, ctx: AppContext) {
     ],
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
+      const reqHandle = baseNormalizeAndValidate(input.body.handle)
+
       const handle = await normalizeAndValidateHandle({
         ctx,
-        handle: input.body.handle,
+        handle: reqHandle,
         did: requester,
       })
 
-      // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
-      const handleDid = await ctx.services.account(ctx.db).getHandleDid(handle)
-
-      let seqHandleTok: HandleSequenceToken
-      if (handleDid) {
-        if (handleDid !== requester) {
-          throw new InvalidRequestError(`Handle already taken: ${handle}`)
-        }
-        seqHandleTok = { did: requester, handle: handle }
-      } else {
-        seqHandleTok = await ctx.db.transaction(async (dbTxn) => {
-          let tok: HandleSequenceToken
+      const { seqHandleTok, invalidated } = await ctx.db.transaction(
+        async (dbTxn) => {
+          const accountTxn = ctx.services.account(dbTxn)
+          let seqHandleTok: HandleSequenceToken
+          let invalidated: { did: string; handle: string } | null = null
           try {
-            tok = await ctx.services
-              .account(dbTxn)
-              .updateHandle(requester, handle)
+            seqHandleTok = await accountTxn.updateHandle(requester, handle)
           } catch (err) {
             if (err instanceof UserAlreadyExistsError) {
-              throw new InvalidRequestError(`Handle already taken: ${handle}`)
+              if (isServiceDomain(handle, ctx.cfg.availableUserDomains)) {
+                throw new InvalidRequestError(`Handle already taken: ${handle}`)
+              } else {
+                invalidated = await accountTxn.invalidateHandle(handle)
+                seqHandleTok = await accountTxn.updateHandle(requester, handle)
+              }
+            } else {
+              throw err
             }
-            throw err
           }
           await ctx.plcClient.updateHandle(
             requester,
             ctx.plcRotationKey,
             handle,
           )
-          return tok
-        })
-      }
+          return { seqHandleTok, invalidated }
+        },
+      )
 
       try {
         await ctx.db.transaction(async (dbTxn) => {
@@ -72,6 +75,26 @@ export default function (server: Server, ctx: AppContext) {
           { err, did: requester, handle },
           'failed to sequence handle update',
         )
+      }
+
+      if (invalidated !== null) {
+        try {
+          const emailRes = await ctx.db.db
+            .selectFrom('user_account')
+            .where('did', '=', invalidated.did)
+            .select('email')
+            .executeTakeFirst()
+          if (emailRes) {
+            await ctx.mailer.sendInvalidatedHandle(invalidated, {
+              to: emailRes.email,
+            })
+          }
+        } catch (err) {
+          mailerLogger.error(
+            { err, invalidated },
+            'error sending handle invalidation mail',
+          )
+        }
       }
     },
   })

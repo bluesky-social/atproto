@@ -24,7 +24,7 @@ export const getUserSearchQueryPg = (
     limit,
     cursor,
     direction: 'asc',
-    keyset: new SearchKeyset(distanceAccount, ref('handle')),
+    keyset: new SearchKeyset(distanceAccount, ref('did_handle.did')),
   })
 }
 
@@ -42,6 +42,7 @@ const getMatchingAccountsQb = (
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('repo_root'))),
     )
+    .where('did_handle.handle', 'is not', null)
     .where(similar(term, ref('handle'))) // Coarse filter engaging trigram index
     .select(['did_handle.did as did', distanceAccount.as('distance')])
 }
@@ -91,6 +92,7 @@ export const getUserSearchQuerySqlite = (
     .if(!includeSoftDeleted, (qb) =>
       qb.where(notSoftDeletedClause(ref('repo_root'))),
     )
+    .where('did_handle.handle', 'is not', null)
     .where((q) => {
       safeWords.forEach((word) => {
         // Match word prefixes against contents of handle and displayName
@@ -99,7 +101,9 @@ export const getUserSearchQuerySqlite = (
       return q
     })
     .if(!!unpackedCursor, (qb) =>
-      unpackedCursor ? qb.where('handle', '>', unpackedCursor.secondary) : qb,
+      unpackedCursor
+        ? qb.where('did_handle.did', '>', unpackedCursor.secondary)
+        : qb,
     )
     .orderBy('handle')
     .limit(limit)
@@ -116,13 +120,13 @@ const distance = (term: string, ref: DbRef) =>
 // The word_similarity_threshold is set to .4 (i.e. distance < .6) in db/index.ts.
 const similar = (term: string, ref: DbRef) => sql<boolean>`(${term} <% ${ref})`
 
-type Result = { distance: number; handle: string }
+type Result = { distance: number; did: string }
 type LabeledResult = { primary: number; secondary: string }
 export class SearchKeyset extends GenericKeyset<Result, LabeledResult> {
   labelResult(result: Result) {
     return {
       primary: result.distance,
-      secondary: result.handle,
+      secondary: result.did,
     }
   }
   labeledResultToCursor(labeled: LabeledResult) {

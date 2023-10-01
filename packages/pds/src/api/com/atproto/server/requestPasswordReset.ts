@@ -1,3 +1,4 @@
+import { INVALID_HANDLE } from '@atproto/syntax'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 
@@ -12,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
         .account(ctx.db)
         .createEmailToken(user.did, 'reset_password')
       await ctx.mailer.sendResetPassword(
-        { handle: user.handle, token },
+        { handle: user.handle ?? INVALID_HANDLE, token },
         { to: user.email },
       )
     }

@@ -1,6 +1,6 @@
 import { Selectable } from 'kysely'
 import { ArrayEl, cborBytesToRecord } from '@atproto/common'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import Database from '../../db'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
@@ -102,7 +102,7 @@ export class ModerationViews {
       }
       return {
         did: r.did,
-        handle: r.handle,
+        handle: r.handle ?? INVALID_HANDLE,
         email: opts.includeEmails && email ? email : undefined,
         relatedRecords,
         indexedAt: r.indexedAt,

@@ -68,3 +68,4 @@ export * as _20230828T153013575Z from './20230828T153013575Z-repo-history-rewrit
 export * as _20230922T033938477Z from './20230922T033938477Z-remove-appview'
 export * as _20230926T195532354Z from './20230926T195532354Z-email-tokens'
 export * as _20230927T212334019Z from './20230927T212334019Z-simplify-email-tokens'
+export * as _20230928T183829445Z from './20230928T183829445Z-optional-handle'

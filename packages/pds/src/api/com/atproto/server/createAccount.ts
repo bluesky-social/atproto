@@ -1,7 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import disposable from 'disposable-email'
-import { normalizeAndValidateHandle } from '../../../../handle'
 import * as plc from '@did-plc/lib'
+import { isServiceDomain, normalizeAndValidateHandle } from '../../../../handle'
 import * as scrypt from '../../../../db/scrypt'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
@@ -11,6 +11,7 @@ import AppContext from '../../../../context'
 import Database from '../../../../db'
 import { AtprotoData } from '@atproto/identity'
 import { MINUTE } from '@atproto/common'
+import { mailerLogger } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -56,6 +57,28 @@ export default function (server: Server, ctx: AppContext) {
       const result = await ctx.db.transaction(async (dbTxn) => {
         const actorTxn = ctx.services.account(dbTxn)
         const repoTxn = ctx.services.repo(dbTxn)
+
+        let invalidated: { did: string; handle: string } | null = null
+        // Register user before going out to PLC to get a real did
+        try {
+          await actorTxn.registerUser({ email, handle, did, passwordScrypt })
+        } catch (err) {
+          if (err instanceof UserAlreadyExistsError) {
+            const got = await actorTxn.getAccount(handle, true)
+            if (got) {
+              if (isServiceDomain(handle, ctx.cfg.availableUserDomains)) {
+                throw new InvalidRequestError(`Handle already taken: ${handle}`)
+              } else {
+                invalidated = await actorTxn.invalidateHandle(handle)
+                await actorTxn.updateHandle(did, handle)
+              }
+            } else {
+              throw new InvalidRequestError(`Email already taken: ${email}`)
+            }
+          } else {
+            throw err
+          }
+        }
 
         // it's a bit goofy that we run this logic twice,
         // but we run it once for a sanity check before doing scrypt & plc ops
@@ -115,8 +138,32 @@ export default function (server: Server, ctx: AppContext) {
           did,
           accessJwt: access.jwt,
           refreshJwt: refresh.jwt,
+          invalidated,
         }
       })
+
+      if (result.invalidated) {
+        try {
+          const emailRes = await ctx.db.db
+            .selectFrom('user_account')
+            .where('did', '=', result.invalidated.did)
+            .select('email')
+            .executeTakeFirst()
+          if (emailRes) {
+            await ctx.mailer.sendInvalidatedHandle(result.invalidated, {
+              to: emailRes.email,
+            })
+          }
+        } catch (err) {
+          mailerLogger.error(
+            {
+              err,
+              invalidated: result.invalidated,
+            },
+            'error sending handle invalidation mail',
+          )
+        }
+      }
 
       return {
         encoding: 'application/json',

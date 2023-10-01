@@ -1,6 +1,6 @@
 import util from 'util'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { cborToLexRecord } from '@atproto/repo'
 import Database from '../../db'
 import { Record as PostRecord } from '../../lexicon/types/app/bsky/feed/post'
@@ -138,7 +138,7 @@ export class LocalService {
       : null
     return {
       did,
-      handle: res.handle,
+      handle: res.handle ?? INVALID_HANDLE,
       displayName: record?.displayName,
       avatar: record?.avatar
         ? this.getImageUrl('avatar', did, record.avatar.ref.toString())
