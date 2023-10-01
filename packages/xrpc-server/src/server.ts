@@ -35,6 +35,7 @@ import {
   RateLimiterConsume,
   isShared,
   RateLimitExceededError,
+  RateLimiterCreator,
 } from './types'
 import {
   decodeQueryParams,
@@ -42,8 +43,8 @@ import {
   validateInput,
   validateOutput,
 } from './util'
-import log from './logger'
-import { consumeMany } from './rate-limiter'
+import { RateLimiter, RateLimiterOpts, consumeMany } from './rate-limiter'
+import { Logger, createLogger } from './logger'
 
 export function createServer(lexicons?: unknown[], options?: Options) {
   return new Server(lexicons, options)
@@ -54,8 +55,10 @@ export class Server {
   routes = express.Router()
   subscriptions = new Map<string, XrpcStreamServer>()
   lex = new Lexicons()
+  logger: Logger
   options: Options
   middleware: Record<'json' | 'text', RequestHandler>
+  rlCreator?: RateLimiterCreator
   globalRateLimiters: RateLimiterI[]
   sharedRateLimiters: Record<string, RateLimiterI>
   routeRateLimiterFns: Record<string, RateLimiterConsume[]>
@@ -64,9 +67,10 @@ export class Server {
     if (lexicons) {
       this.addLexicons(lexicons)
     }
+    this.logger = createLogger(opts?.logger)
     this.router.use(this.routes)
     this.router.use('/xrpc/:methodId', this.catchall.bind(this))
-    this.router.use(errorMiddleware)
+    this.router.use(createErrorMiddleware(this.logger))
     this.router.once('mount', (app: express.Application) => {
       this.enableStreamingOnListen(app)
     })
@@ -75,21 +79,36 @@ export class Server {
       json: express.json({ limit: opts?.payload?.jsonLimit }),
       text: express.text({ limit: opts?.payload?.textLimit }),
     }
+    if (opts?.rateLimits?.enabled) {
+      this.rlCreator = (rlOpts: RateLimiterOpts) => {
+        const rlCfg = {
+          logger: this.logger,
+          bypassSecret: rlOpts.bypassSecret ?? opts.rateLimits?.bypassSecret,
+          bypassIps: rlOpts.bypassIps ?? opts.rateLimits?.bypassIps,
+          ...rlOpts,
+        }
+        if (opts.rateLimits?.redisClient) {
+          return RateLimiter.redis(opts.rateLimits.redisClient, rlCfg)
+        } else {
+          return RateLimiter.memory(rlCfg)
+        }
+      }
+    }
     this.globalRateLimiters = []
     this.sharedRateLimiters = {}
     this.routeRateLimiterFns = {}
-    if (opts?.rateLimits?.global) {
+    if (opts?.rateLimits?.global && this.rlCreator) {
       for (const limit of opts.rateLimits.global) {
-        const rateLimiter = opts.rateLimits.creator({
+        const rateLimiter = this.rlCreator({
           ...limit,
           keyPrefix: `rl-${limit.name}`,
         })
         this.globalRateLimiters.push(rateLimiter)
       }
     }
-    if (opts?.rateLimits?.shared) {
+    if (opts?.rateLimits?.shared && this.rlCreator) {
       for (const limit of opts.rateLimits.shared) {
-        const rateLimiter = opts.rateLimits.creator({
+        const rateLimiter = this.rlCreator({
           ...limit,
           keyPrefix: `rl-${limit.name}`,
         })
@@ -320,6 +339,7 @@ export class Server {
       nsid,
       new XrpcStreamServer({
         noServer: true,
+        logger: this.logger,
         handler: async function* (req, signal) {
           try {
             // authenticate request
@@ -419,15 +439,15 @@ export class Server {
             this.routeRateLimiterFns[nsid].push(consumeFn)
           }
         } else {
-          const { durationMs, points } = limit
-          const rateLimiter = this.options.rateLimits?.creator({
-            keyPrefix: `nsid-${i}`,
-            durationMs,
-            points,
-            calcKey,
-            calcPoints,
-          })
-          if (rateLimiter) {
+          if (this.rlCreator) {
+            const { durationMs, points } = limit
+            const rateLimiter = this.rlCreator({
+              keyPrefix: `nsid-${i}`,
+              durationMs,
+              points,
+              calcKey,
+              calcPoints,
+            })
             this.sharedRateLimiters[nsid] = rateLimiter
             const consumeFn = (ctx: XRPCReqContext) =>
               rateLimiter.consume(ctx, {
@@ -477,26 +497,28 @@ function createAuthMiddleware(verifier: AuthVerifier): RequestHandler {
   }
 }
 
-const errorMiddleware: ErrorRequestHandler = function (err, req, res, next) {
-  const locals: RequestLocals | undefined = req[kRequestLocals]
-  const methodSuffix = locals ? ` method ${locals.nsid}` : ''
-  const xrpcError = XRPCError.fromError(err)
-  if (xrpcError instanceof InternalServerError) {
-    // log trace for unhandled exceptions
-    log.error(err, `unhandled exception in xrpc${methodSuffix}`)
-  } else {
-    // do not log trace for known xrpc errors
-    log.error(
-      {
-        status: xrpcError.type,
-        message: xrpcError.message,
-        name: xrpcError.customErrorName,
-      },
-      `error in xrpc${methodSuffix}`,
-    )
+const createErrorMiddleware =
+  (logger: Logger): ErrorRequestHandler =>
+  (err, req, res, next) => {
+    const locals: RequestLocals | undefined = req[kRequestLocals]
+    const methodSuffix = locals ? ` method ${locals.nsid}` : ''
+    const xrpcError = XRPCError.fromError(err)
+    if (xrpcError instanceof InternalServerError) {
+      // log trace for unhandled exceptions
+      logger.xrpcServer.error(err, `unhandled exception in xrpc${methodSuffix}`)
+    } else {
+      // do not log trace for known xrpc errors
+      logger.xrpcServer.error(
+        {
+          status: xrpcError.type,
+          message: xrpcError.message,
+          name: xrpcError.customErrorName,
+        },
+        `error in xrpc${methodSuffix}`,
+      )
+    }
+    if (res.headersSent) {
+      return next(err)
+    }
+    return res.status(xrpcError.type).json(xrpcError.payload)
   }
-  if (res.headersSent) {
-    return next(err)
-  }
-  return res.status(xrpcError.type).json(xrpcError.payload)
-}

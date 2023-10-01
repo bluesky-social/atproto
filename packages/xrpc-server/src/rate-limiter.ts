@@ -4,7 +4,6 @@ import {
   RateLimiterRedis,
   RateLimiterRes,
 } from 'rate-limiter-flexible'
-import { logger } from './logger'
 import {
   CalcKeyFn,
   CalcPointsFn,
@@ -14,11 +13,13 @@ import {
   RateLimiterStatus,
   XRPCReqContext,
 } from './types'
+import { Logger } from './logger'
 
 export type RateLimiterOpts = {
   keyPrefix: string
   durationMs: number
   points: number
+  logger?: Logger
   bypassSecret?: string
   bypassIps?: string[]
   calcKey?: CalcKeyFn
@@ -28,6 +29,7 @@ export type RateLimiterOpts = {
 
 export class RateLimiter implements RateLimiterI {
   public limiter: RateLimiterAbstract
+  public logger?: Logger
   private bypassSecret?: string
   private bypassIps?: string[]
   private failClosed?: boolean
@@ -38,6 +40,7 @@ export class RateLimiter implements RateLimiterI {
     this.limiter = limiter
     this.bypassSecret = opts.bypassSecret
     this.bypassIps = opts.bypassIps
+    this.logger = opts.logger
     this.calcKey = opts.calcKey ?? defaultKey
     this.calcPoints = opts.calcPoints ?? defaultPoints
   }
@@ -93,7 +96,7 @@ export class RateLimiter implements RateLimiterI {
         if (this.failClosed) {
           throw err
         }
-        logger.error(
+        this.logger?.xrpcServer.error(
           {
             err,
             keyPrefix: this.limiter.keyPrefix,

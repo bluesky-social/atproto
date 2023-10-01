@@ -2,13 +2,16 @@ import { IncomingMessage } from 'http'
 import express from 'express'
 import { isHttpError } from 'http-errors'
 import zod from 'zod'
+import * as pino from 'pino'
 import {
   ResponseType,
   ResponseTypeStrings,
   ResponseTypeNames,
 } from '@atproto/xrpc'
+import { LoggerOpts } from './logger'
 
 export type Options = {
+  logger?: LoggerOpts | pino.Logger
   validateResponse?: boolean
   payload?: {
     jsonLimit?: number
@@ -16,9 +19,12 @@ export type Options = {
     textLimit?: number
   }
   rateLimits?: {
-    creator: RateLimiterCreator
+    enabled: true
     global?: ServerRateLimitDescription[]
     shared?: ServerRateLimitDescription[]
+    bypassSecret?: string
+    bypassIps?: string[]
+    redisClient?: unknown
   }
 }
 

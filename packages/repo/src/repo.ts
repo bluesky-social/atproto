@@ -12,7 +12,6 @@ import {
 import { RepoStorage } from './storage'
 import { MST } from './mst'
 import DataDiff from './data-diff'
-import log from './logger'
 import BlockMap from './block-map'
 import { ReadableRepo } from './readable-repo'
 import * as util from './util'
@@ -102,7 +101,6 @@ export class Repo extends ReadableRepo {
     }
     const commit = await storage.readObj(commitCid, def.versionedCommit)
     const data = await MST.load(storage, commit.data)
-    log.info({ did: commit.did }, 'loaded repo for')
     return new Repo({
       storage,
       data,

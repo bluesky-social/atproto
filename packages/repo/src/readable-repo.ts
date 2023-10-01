@@ -2,7 +2,6 @@ import { CID } from 'multiformats/cid'
 import { def, RepoContents, Commit } from './types'
 import { ReadableBlockstore } from './storage'
 import { MST } from './mst'
-import log from './logger'
 import * as util from './util'
 import * as parse from './parse'
 import { MissingBlocksError } from './error'
@@ -30,7 +29,6 @@ export class ReadableRepo {
   static async load(storage: ReadableBlockstore, commitCid: CID) {
     const commit = await storage.readObj(commitCid, def.versionedCommit)
     const data = await MST.load(storage, commit.data)
-    log.info({ did: commit.did }, 'loaded repo for')
     return new ReadableRepo({
       storage,
       data,
