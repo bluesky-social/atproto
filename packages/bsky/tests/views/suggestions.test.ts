@@ -1,7 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { stripViewer } from '../_util'
-import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds user search views', () => {
@@ -14,8 +13,7 @@ describe('pds user search views', () => {
       dbPostgresSchema: 'bsky_views_suggestions',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
     await network.bsky.processAll()

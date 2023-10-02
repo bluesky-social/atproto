@@ -1,7 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewer } from '../_util'
-import { SeedClient } from '../seeds/client'
 import followsSeed from '../seeds/follows'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
@@ -18,8 +17,7 @@ describe('pds follow views', () => {
       dbPostgresSchema: 'bsky_views_follows',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await followsSeed(sc)
     await network.processAll()
     await network.bsky.processAll()

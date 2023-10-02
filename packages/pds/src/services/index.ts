@@ -14,18 +14,20 @@ import { LocalService } from './local'
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
   blobstore: BlobStore
-  appviewAgent?: AtpAgent
-  appviewDid?: string
-  appviewCdnUrlPattern?: string
+  pdsHostname: string
+  appViewAgent?: AtpAgent
+  appViewDid?: string
+  appViewCdnUrlPattern?: string
   backgroundQueue: BackgroundQueue
   crawlers: Crawlers
 }): Services {
   const {
     repoSigningKey,
     blobstore,
-    appviewAgent,
-    appviewDid,
-    appviewCdnUrlPattern,
+    pdsHostname,
+    appViewAgent,
+    appViewDid,
+    appViewCdnUrlPattern,
     backgroundQueue,
     crawlers,
   } = resources
@@ -41,9 +43,10 @@ export function createServices(resources: {
     ),
     local: LocalService.creator(
       repoSigningKey,
-      appviewAgent,
-      appviewDid,
-      appviewCdnUrlPattern,
+      pdsHostname,
+      appViewAgent,
+      appViewDid,
+      appViewCdnUrlPattern,
     ),
     moderation: ModerationService.creator(blobstore),
   }

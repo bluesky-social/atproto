@@ -12,9 +12,9 @@ export default function (server: Server, ctx: AppContext) {
       const accountService = services.account(db)
       const moderationService = services.moderation(db)
 
-      if (ctx.shouldProxyModeration()) {
+      if (ctx.cfg.bskyAppView.proxyModeration) {
         const { data: resultAppview } =
-          await ctx.appviewAgent.com.atproto.admin.getModerationReport(
+          await ctx.appViewAgent.com.atproto.admin.getModerationReport(
             params,
             authPassthru(req),
           )

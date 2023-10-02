@@ -30,8 +30,7 @@ export class DiskBlobStore implements BlobStore {
     quarantineLocation?: string,
   ): Promise<DiskBlobStore> {
     const tmp = tmpLocation || path.join(os.tmpdir(), 'atproto/blobs')
-    const quarantine =
-      quarantineLocation || path.join(os.tmpdir(), 'atproto/blobs/quarantine')
+    const quarantine = quarantineLocation || path.join(location, 'quarantine')
     await Promise.all([
       fs.mkdir(location, { recursive: true }),
       fs.mkdir(tmp, { recursive: true }),

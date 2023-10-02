@@ -1,6 +1,5 @@
 import AtpAgent, { AtUri } from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { SeedClient } from './seeds/client'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from './seeds/basic'
 import { NotificationServer } from '../src/notifications'
 import { Database } from '../src'
@@ -21,7 +20,7 @@ describe('notification server', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
     await network.bsky.processAll()

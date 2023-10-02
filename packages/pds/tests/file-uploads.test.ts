@@ -1,13 +1,13 @@
 import fs from 'fs/promises'
 import { gzipSync } from 'zlib'
 import AtpAgent from '@atproto/api'
-import { CloseFn, runTestServer, TestServerInfo } from './_util'
-import { Database, ServerConfig } from '../src'
+import { Database } from '../src'
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@atproto/crypto'
 import { BlobRef } from '@atproto/lexicon'
 import { ids } from '../src/lexicon/lexicons'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 
 const alice = {
   email: 'alice@test.com',
@@ -23,30 +23,24 @@ const bob = {
 }
 
 describe('file uploads', () => {
-  let server: TestServerInfo
+  let network: TestNetworkNoAppView
   let aliceAgent: AtpAgent
   let bobAgent: AtpAgent
   let blobstore: DiskBlobStore
   let db: Database
-  let cfg: ServerConfig
-  let serverUrl: string
-  let close: CloseFn
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'file_uploads',
     })
-    blobstore = server.ctx.blobstore as DiskBlobStore
-    db = server.ctx.db
-    close = server.close
-    aliceAgent = new AtpAgent({ service: server.url })
-    bobAgent = new AtpAgent({ service: server.url })
-    cfg = server.ctx.cfg
-    serverUrl = server.url
+    blobstore = network.pds.ctx.blobstore as DiskBlobStore
+    db = network.pds.ctx.db
+    aliceAgent = network.pds.getClient()
+    bobAgent = network.pds.getClient()
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('registers users', async () => {
@@ -69,30 +63,33 @@ describe('file uploads', () => {
 
   it('handles client abort', async () => {
     const abortController = new AbortController()
-    const _putTemp = server.ctx.blobstore.putTemp
-    server.ctx.blobstore.putTemp = function (...args) {
+    const _putTemp = network.pds.ctx.blobstore.putTemp
+    network.pds.ctx.blobstore.putTemp = function (...args) {
       // Abort just as processing blob in packages/pds/src/services/repo/blobs.ts
       process.nextTick(() => abortController.abort())
       return _putTemp.call(this, ...args)
     }
-    const response = fetch(`${server.url}/xrpc/com.atproto.repo.uploadBlob`, {
-      method: 'post',
-      body: Buffer.alloc(5000000), // Enough bytes to get some chunking going on
-      signal: abortController.signal,
-      headers: {
-        'content-type': 'image/jpeg',
-        authorization: `Bearer ${aliceAgent.session?.accessJwt}`,
+    const response = fetch(
+      `${network.pds.url}/xrpc/com.atproto.repo.uploadBlob`,
+      {
+        method: 'post',
+        body: Buffer.alloc(5000000), // Enough bytes to get some chunking going on
+        signal: abortController.signal,
+        headers: {
+          'content-type': 'image/jpeg',
+          authorization: `Bearer ${aliceAgent.session?.accessJwt}`,
+        },
       },
-    })
+    )
     await expect(response).rejects.toThrow('operation was aborted')
     // Cleanup
-    server.ctx.blobstore.putTemp = _putTemp
+    network.pds.ctx.blobstore.putTemp = _putTemp
     // This test would fail from an uncaught exception: this grace period gives time for that to surface
     await new Promise((res) => setTimeout(res, 10))
   })
 
   it('uploads files', async () => {
-    smallFile = await fs.readFile('tests/image/fixtures/key-portrait-small.jpg')
+    smallFile = await fs.readFile('tests/sample-img/key-portrait-small.jpg')
     const res = await aliceAgent.api.com.atproto.repo.uploadBlob(smallFile, {
       encoding: 'image/jpeg',
     })
@@ -149,7 +146,7 @@ describe('file uploads', () => {
   let largeFile: Uint8Array
 
   it('does not allow referencing a file that is outside blob constraints', async () => {
-    largeFile = await fs.readFile('tests/image/fixtures/hd-key.jpg')
+    largeFile = await fs.readFile('tests/sample-img/hd-key.jpg')
     const res = await aliceAgent.api.com.atproto.repo.uploadBlob(largeFile, {
       encoding: 'image/jpeg',
     })
@@ -175,9 +172,7 @@ describe('file uploads', () => {
   })
 
   it('permits duplicate uploads of the same file', async () => {
-    const file = await fs.readFile(
-      'tests/image/fixtures/key-landscape-small.jpg',
-    )
+    const file = await fs.readFile('tests/sample-img/key-landscape-small.jpg')
     const { data: uploadA } = await aliceAgent.api.com.atproto.repo.uploadBlob(
       file,
       {
@@ -237,9 +232,7 @@ describe('file uploads', () => {
   })
 
   it('corrects a bad mimetype', async () => {
-    const file = await fs.readFile(
-      'tests/image/fixtures/key-landscape-large.jpg',
-    )
+    const file = await fs.readFile('tests/sample-img/key-landscape-large.jpg')
     const res = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
       encoding: 'video/mp4',
     } as any)
@@ -256,7 +249,7 @@ describe('file uploads', () => {
   })
 
   it('handles pngs', async () => {
-    const file = await fs.readFile('tests/image/fixtures/at.png')
+    const file = await fs.readFile('tests/sample-img/at.png')
     const res = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
       encoding: 'image/png',
     })

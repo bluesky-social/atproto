@@ -1,6 +1,5 @@
 import AtpAgent, { AtUri } from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { SeedClient } from '../seeds/client'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import { forSnapshot } from '../_util'
 
@@ -19,7 +18,7 @@ describe('proxies view requests', () => {
       dbPostgresSchema: 'proxy_views',
     })
     agent = network.pds.getClient()
-    sc = new SeedClient(agent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -28,6 +27,20 @@ describe('proxies view requests', () => {
     const listRef = await sc.createList(alice, 'test list', 'curate')
     await sc.addToList(alice, alice, listRef)
     await sc.addToList(alice, bob, listRef)
+    await network.processAll()
+  })
+
+  beforeAll(async () => {
+    await agent.api.app.bsky.feed.generator.create(
+      { repo: alice, rkey: 'all' },
+      {
+        did: 'did:example:feedgen',
+        displayName: 'All',
+        description: 'Provides all feed candidates',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
     await network.processAll()
   })
 
@@ -41,7 +54,7 @@ describe('proxies view requests', () => {
         actor: bob,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
@@ -53,7 +66,7 @@ describe('proxies view requests', () => {
         actors: [alice, bob],
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
@@ -75,7 +88,7 @@ describe('proxies view requests', () => {
     const res = await agent.api.app.bsky.actor.getSuggestions(
       {},
       {
-        headers: { ...sc.getHeaders(carol), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(carol) },
       },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
@@ -84,7 +97,7 @@ describe('proxies view requests', () => {
         limit: 1,
       },
       {
-        headers: { ...sc.getHeaders(carol), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(carol) },
       },
     )
     const pt2 = await agent.api.app.bsky.actor.getSuggestions(
@@ -92,7 +105,7 @@ describe('proxies view requests', () => {
         cursor: pt1.data.cursor,
       },
       {
-        headers: { ...sc.getHeaders(carol), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(carol) },
       },
     )
     expect([...pt1.data.actors, ...pt2.data.actors]).toEqual(res.data.actors)
@@ -104,7 +117,7 @@ describe('proxies view requests', () => {
         term: '.test',
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     // sort because pagination is done off of did
@@ -118,7 +131,7 @@ describe('proxies view requests', () => {
         limit: 1,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     const pt2 = await agent.api.app.bsky.actor.searchActors(
@@ -127,7 +140,7 @@ describe('proxies view requests', () => {
         cursor: pt1.data.cursor,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     const sortedPaginated = [...pt1.data.actors, ...pt2.data.actors].sort(
@@ -142,7 +155,7 @@ describe('proxies view requests', () => {
         term: '.test',
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     const sorted = res.data.actors.sort((a, b) =>
@@ -157,7 +170,7 @@ describe('proxies view requests', () => {
         actor: bob,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
@@ -167,7 +180,7 @@ describe('proxies view requests', () => {
         limit: 1,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     const pt2 = await agent.api.app.bsky.feed.getAuthorFeed(
@@ -176,7 +189,7 @@ describe('proxies view requests', () => {
         cursor: pt1.data.cursor,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect([...pt1.data.feed, ...pt2.data.feed]).toEqual(res.data.feed)
@@ -221,7 +234,7 @@ describe('proxies view requests', () => {
         uri: postUri,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
@@ -231,7 +244,7 @@ describe('proxies view requests', () => {
         limit: 1,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     const pt2 = await agent.api.app.bsky.feed.getLikes(
@@ -240,7 +253,7 @@ describe('proxies view requests', () => {
         cursor: pt1.data.cursor,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect([...pt1.data.likes, ...pt2.data.likes]).toEqual(res.data.likes)
@@ -253,7 +266,7 @@ describe('proxies view requests', () => {
         uri: postUri,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
@@ -263,7 +276,7 @@ describe('proxies view requests', () => {
         limit: 1,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     const pt2 = await agent.api.app.bsky.feed.getRepostedBy(
@@ -272,7 +285,7 @@ describe('proxies view requests', () => {
         cursor: pt1.data.cursor,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect([...pt1.data.repostedBy, ...pt2.data.repostedBy]).toEqual(
@@ -287,18 +300,17 @@ describe('proxies view requests', () => {
         uris,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
   })
 
-  // @TODO re-enable when proxying is a full-proxy
-  it.skip('feed.getTimeline', async () => {
+  it('feed.getTimeline', async () => {
     const res = await agent.api.app.bsky.feed.getTimeline(
       {},
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
 
@@ -308,7 +320,7 @@ describe('proxies view requests', () => {
         limit: 2,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     const pt2 = await agent.api.app.bsky.feed.getTimeline(
@@ -316,10 +328,20 @@ describe('proxies view requests', () => {
         cursor: pt1.data.cursor,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect([...pt1.data.feed, ...pt2.data.feed]).toEqual(res.data.feed)
+  })
+
+  it('unspecced.getPopularFeedGenerators', async () => {
+    const res = await agent.api.app.bsky.unspecced.getPopularFeedGenerators(
+      {},
+      {
+        headers: { ...sc.getHeaders(alice) },
+      },
+    )
+    expect(forSnapshot(res.data)).toMatchSnapshot()
   })
 
   let feedUri: string
@@ -350,7 +372,7 @@ describe('proxies view requests', () => {
     const res = await agent.api.app.bsky.feed.getFeedGenerator(
       { feed: feedUri },
       {
-        headers: { ...sc.getHeaders(sc.dids.alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(sc.dids.alice) },
       },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
@@ -360,7 +382,7 @@ describe('proxies view requests', () => {
     const res = await agent.api.app.bsky.feed.getFeedGenerators(
       { feeds: [feedUri.toString()] },
       {
-        headers: { ...sc.getHeaders(sc.dids.alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(sc.dids.alice) },
       },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
@@ -373,7 +395,7 @@ describe('proxies view requests', () => {
     const res = await agent.api.app.bsky.graph.getBlocks(
       {},
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
@@ -382,7 +404,7 @@ describe('proxies view requests', () => {
         limit: 1,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     const pt2 = await agent.api.app.bsky.graph.getBlocks(
@@ -390,7 +412,7 @@ describe('proxies view requests', () => {
         cursor: pt1.data.cursor,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect([...pt1.data.blocks, ...pt2.data.blocks]).toEqual(res.data.blocks)
@@ -403,7 +425,7 @@ describe('proxies view requests', () => {
     const res = await agent.api.app.bsky.graph.getFollows(
       { actor: bob },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
@@ -413,7 +435,7 @@ describe('proxies view requests', () => {
         limit: 1,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     const pt2 = await agent.api.app.bsky.graph.getFollows(
@@ -422,7 +444,7 @@ describe('proxies view requests', () => {
         cursor: pt1.data.cursor,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect([...pt1.data.follows, ...pt2.data.follows]).toEqual(res.data.follows)
@@ -432,7 +454,7 @@ describe('proxies view requests', () => {
     const res = await agent.api.app.bsky.graph.getFollowers(
       { actor: bob },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
@@ -442,7 +464,7 @@ describe('proxies view requests', () => {
         limit: 1,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     const pt2 = await agent.api.app.bsky.graph.getFollowers(
@@ -451,7 +473,7 @@ describe('proxies view requests', () => {
         cursor: pt1.data.cursor,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect([...pt1.data.followers, ...pt2.data.followers]).toEqual(
@@ -506,7 +528,7 @@ describe('proxies view requests', () => {
     const res = await agent.api.app.bsky.graph.getList(
       { list: listUri },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
@@ -516,7 +538,7 @@ describe('proxies view requests', () => {
         limit: 1,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     const pt2 = await agent.api.app.bsky.graph.getList(
@@ -525,7 +547,7 @@ describe('proxies view requests', () => {
         cursor: pt1.data.cursor,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect([...pt1.data.items, ...pt2.data.items]).toEqual(res.data.items)
@@ -535,7 +557,7 @@ describe('proxies view requests', () => {
     const res = await agent.api.app.bsky.graph.getLists(
       { actor: bob },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
@@ -545,7 +567,7 @@ describe('proxies view requests', () => {
         limit: 1,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     const pt2 = await agent.api.app.bsky.graph.getLists(
@@ -554,7 +576,7 @@ describe('proxies view requests', () => {
         cursor: pt1.data.cursor,
       },
       {
-        headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(alice) },
       },
     )
     expect([...pt1.data.lists, ...pt2.data.lists]).toEqual(res.data.lists)

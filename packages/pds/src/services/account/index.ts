@@ -1,4 +1,5 @@
 import { sql } from 'kysely'
+import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { MINUTE, lessThanAgoMs } from '@atproto/common'
 import { dbLogger as log } from '../../logger'
@@ -8,11 +9,9 @@ import { UserAccountEntry } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
 import { countAll, notSoftDeletedClause } from '../../db/util'
-import { getUserSearchQueryPg, getUserSearchQuerySqlite } from '../util/search'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
-import { randomStr } from '@atproto/crypto'
 import { EmailTokenPurpose } from '../../db/tables/email-token'
 import { getRandomToken } from '../../api/com/atproto/server/util'
 
@@ -136,22 +135,12 @@ export class AccountService {
       .onConflict((oc) => oc.doNothing())
       .returning('handle')
       .executeTakeFirst()
-    const registerUserState = this.db.db
-      .insertInto('user_state')
-      .values({
-        did,
-        lastSeenNotifs: new Date().toISOString(),
-      })
-      .onConflict((oc) => oc.doNothing())
-      .returning('did')
-      .executeTakeFirst()
 
-    const [res1, res2, res3] = await Promise.all([
+    const [res1, res2] = await Promise.all([
       registerUserAccnt,
       registerDidHandle,
-      registerUserState,
     ])
-    if (!res1 || !res2 || !res3) {
+    if (!res1 || !res2) {
       throw new UserAlreadyExistsError()
     }
     log.info({ handle, email, did }, 'registered user')
@@ -287,105 +276,45 @@ export class AccountService {
       .execute()
   }
 
-  async mute(info: { did: string; mutedByDid: string; createdAt?: Date }) {
-    const { did, mutedByDid, createdAt = new Date() } = info
-    await this.db.db
-      .insertInto('mute')
-      .values({
-        did,
-        mutedByDid,
-        createdAt: createdAt.toISOString(),
-      })
-      .onConflict((oc) => oc.doNothing())
-      .execute()
-  }
-
-  async unmute(info: { did: string; mutedByDid: string }) {
-    const { did, mutedByDid } = info
-    await this.db.db
-      .deleteFrom('mute')
-      .where('did', '=', did)
-      .where('mutedByDid', '=', mutedByDid)
-      .execute()
-  }
-
-  async getMute(mutedBy: string, did: string): Promise<boolean> {
-    const mutes = await this.getMutes(mutedBy, [did])
-    return mutes[did] ?? false
-  }
-
-  async getMutes(
-    mutedBy: string,
-    dids: string[],
-  ): Promise<Record<string, boolean>> {
-    if (dids.length === 0) return {}
-    const res = await this.db.db
-      .selectFrom('mute')
-      .where('mutedByDid', '=', mutedBy)
-      .where('did', 'in', dids)
-      .selectAll()
-      .execute()
-    return res.reduce((acc, cur) => {
-      acc[cur.did] = true
-      return acc
-    }, {} as Record<string, boolean>)
-  }
-
-  async muteActorList(info: {
-    list: string
-    mutedByDid: string
-    createdAt?: Date
-  }) {
-    const { list, mutedByDid, createdAt = new Date() } = info
-    await this.db.db
-      .insertInto('list_mute')
-      .values({
-        listUri: list,
-        mutedByDid,
-        createdAt: createdAt.toISOString(),
-      })
-      .onConflict((oc) => oc.doNothing())
-      .execute()
-  }
-
-  async unmuteActorList(info: { list: string; mutedByDid: string }) {
-    const { list, mutedByDid } = info
-    await this.db.db
-      .deleteFrom('list_mute')
-      .where('listUri', '=', list)
-      .where('mutedByDid', '=', mutedByDid)
-      .execute()
-  }
-
   async search(opts: {
-    searchField?: 'did' | 'handle'
-    term: string
+    query: string
     limit: number
     cursor?: string
     includeSoftDeleted?: boolean
-  }): Promise<(RepoRoot & DidHandle & { distance: number })[]> {
-    if (opts.searchField === 'did') {
-      const didSearchBuilder = this.db.db
-        .selectFrom('did_handle')
-        .where('did_handle.did', '=', opts.term)
-        .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
-        .selectAll(['did_handle', 'repo_root'])
-        .select(sql<number>`0`.as('distance'))
+  }): Promise<(RepoRoot & DidHandle)[]> {
+    const { query, limit, cursor, includeSoftDeleted } = opts
+    const { ref } = this.db.db.dynamic
 
-      return await didSearchBuilder.execute()
-    }
+    const builder = this.db.db
+      .selectFrom('did_handle')
+      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .innerJoin('user_account', 'user_account.did', 'did_handle.did')
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('repo_root'))),
+      )
+      .where((qb) => {
+        // sqlite doesn't support "ilike", but performs "like" case-insensitively
+        const likeOp = this.db.dialect === 'pg' ? 'ilike' : 'like'
+        if (query.includes('@')) {
+          return qb.where('user_account.email', likeOp, `%${query}%`)
+        }
+        if (query.startsWith('did:')) {
+          return qb.where('did_handle.did', '=', query)
+        }
+        return qb.where('did_handle.handle', likeOp, `${query}%`)
+      })
+      .selectAll(['did_handle', 'repo_root'])
 
-    const builder =
-      this.db.dialect === 'pg'
-        ? getUserSearchQueryPg(this.db, opts)
-            .selectAll('did_handle')
-            .selectAll('repo_root')
-        : getUserSearchQuerySqlite(this.db, opts)
-            .selectAll('did_handle')
-            .selectAll('repo_root')
-            .select(sql<number>`0`.as('distance'))
+    const keyset = new ListKeyset(
+      ref('repo_root.indexedAt'),
+      ref('did_handle.handle'),
+    )
 
-    return await builder.execute()
+    return await paginate(builder, {
+      limit,
+      cursor,
+      keyset,
+    }).execute()
   }
 
   async list(opts: {
@@ -436,10 +365,6 @@ export class AccountService {
     await this.db.db
       .deleteFrom('user_account')
       .where('user_account.did', '=', did)
-      .execute()
-    await this.db.db
-      .deleteFrom('user_state')
-      .where('user_state.did', '=', did)
       .execute()
     await this.db.db
       .deleteFrom('did_handle')
@@ -594,15 +519,6 @@ export class AccountService {
       throw new InvalidRequestError('Token is expired', 'ExpiredToken')
     }
     return res.did
-  }
-
-  async getLastSeenNotifs(did: string): Promise<string | undefined> {
-    const res = await this.db.db
-      .selectFrom('user_state')
-      .where('did', '=', did)
-      .selectAll()
-      .executeTakeFirst()
-    return res?.lastSeenNotifs
   }
 
   async getPreferences(

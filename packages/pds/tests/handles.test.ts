@@ -1,8 +1,7 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { IdResolver } from '@atproto/identity'
-import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
-import * as util from './_util'
 import { AppContext } from '../src'
 
 // outside of suite so they can be used in mock
@@ -24,8 +23,8 @@ jest.mock('dns/promises', () => {
 })
 
 describe('handles', () => {
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
-  let close: util.CloseFn
   let sc: SeedClient
   let ctx: AppContext
   let idResolver: IdResolver
@@ -33,21 +32,20 @@ describe('handles', () => {
   const newHandle = 'alice2.test'
 
   beforeAll(async () => {
-    const server = await util.runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'handles',
     })
-    ctx = server.ctx
-    idResolver = new IdResolver({ plcUrl: ctx.cfg.didPlcUrl })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    ctx = network.pds.ctx
+    idResolver = new IdResolver({ plcUrl: ctx.cfg.identity.plcUrl })
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   const getHandleFromDb = async (did: string): Promise<string | undefined> => {
@@ -213,7 +211,7 @@ describe('handles', () => {
         handle: 'bob-alt.test',
       },
       {
-        headers: { authorization: util.adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
         encoding: 'application/json',
       },
     )
@@ -229,7 +227,7 @@ describe('handles', () => {
         handle: 'dril.test',
       },
       {
-        headers: { authorization: util.adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
         encoding: 'application/json',
       },
     )
@@ -261,7 +259,7 @@ describe('handles', () => {
         handle: 'bob-alt.test',
       },
       {
-        headers: { authorization: util.moderatorAuth() },
+        headers: network.pds.adminAuthHeaders('moderator'),
         encoding: 'application/json',
       },
     )
@@ -272,7 +270,7 @@ describe('handles', () => {
         handle: 'bob-alt.test',
       },
       {
-        headers: { authorization: util.triageAuth() },
+        headers: network.pds.adminAuthHeaders('triage'),
         encoding: 'application/json',
       },
     )

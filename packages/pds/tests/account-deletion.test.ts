@@ -1,11 +1,10 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { once, EventEmitter } from 'events'
 import { Selectable } from 'kysely'
 import Mail from 'nodemailer/lib/mailer'
 import AtpAgent from '@atproto/api'
-import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import { Database } from '../src'
-import * as util from './_util'
 import { ServerMailer } from '../src/mailer'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { RepoRoot } from '../src/db/tables/repo-root'
@@ -16,12 +15,10 @@ import { Blob } from '../src/db/tables/blob'
 import { Record } from '../src/db/tables/record'
 import { RepoSeq } from '../src/db/tables/repo-seq'
 import { ACKNOWLEDGE } from '../src/lexicon/types/com/atproto/admin/defs'
-import { UserState } from '../src/db/tables/user-state'
 
 describe('account deletion', () => {
-  let server: util.TestServerInfo
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
-  let close: util.CloseFn
   let sc: SeedClient
 
   let mailer: ServerMailer
@@ -36,15 +33,14 @@ describe('account deletion', () => {
   let carol
 
   beforeAll(async () => {
-    server = await util.runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'account_deletion',
     })
-    close = server.close
-    mailer = server.ctx.mailer
-    db = server.ctx.db
-    blobstore = server.ctx.blobstore
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    mailer = network.pds.ctx.mailer
+    db = network.pds.ctx.db
+    blobstore = network.pds.ctx.blobstore
+    agent = new AtpAgent({ service: network.pds.url })
+    sc = network.getSeedClient()
     await basicSeed(sc)
     carol = sc.accounts[sc.dids.carol]
 
@@ -61,14 +57,11 @@ describe('account deletion', () => {
 
   afterAll(async () => {
     mailer.transporter.sendMail = _origSendMail
-    if (close) {
-      await close()
-    }
+    await network.close()
   })
 
   const getMailFrom = async (promise): Promise<Mail.Options> => {
     const result = await Promise.all([once(mailCatcher, 'mail'), promise])
-    console.log(result)
     return result[0][0]
   }
 
@@ -92,7 +85,6 @@ describe('account deletion', () => {
       return expect(token).toBeDefined()
     }
   })
-  return
 
   it('fails account deletion with a bad token', async () => {
     const attempt = agent.api.com.atproto.server.deleteAccount({
@@ -126,7 +118,7 @@ describe('account deletion', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: util.adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
       },
     )
     await agent.api.com.atproto.server.deleteAccount({
@@ -134,7 +126,7 @@ describe('account deletion', () => {
       did: carol.did,
       password: carol.password,
     })
-    await server.processAll() // Finish background hard-deletions
+    await network.processAll() // Finish background hard-deletions
   })
 
   it('no longer lets the user log in', async () => {
@@ -152,9 +144,6 @@ describe('account deletion', () => {
     )
     expect(updatedDbContents.users).toEqual(
       initialDbContents.users.filter((row) => row.did !== carol.did),
-    )
-    expect(updatedDbContents.userState).toEqual(
-      initialDbContents.userState.filter((row) => row.did !== carol.did),
     )
     expect(updatedDbContents.blocks).toEqual(
       initialDbContents.blocks.filter((row) => row.creator !== carol.did),
@@ -222,7 +211,6 @@ describe('account deletion', () => {
 type DbContents = {
   roots: RepoRoot[]
   users: Selectable<UserAccount>[]
-  userState: UserState[]
   blocks: IpldBlock[]
   seqs: Selectable<RepoSeq>[]
   records: Record[]
@@ -231,11 +219,10 @@ type DbContents = {
 }
 
 const getDbContents = async (db: Database): Promise<DbContents> => {
-  const [roots, users, userState, blocks, seqs, records, repoBlobs, blobs] =
+  const [roots, users, blocks, seqs, records, repoBlobs, blobs] =
     await Promise.all([
       db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
       db.db.selectFrom('user_account').orderBy('did').selectAll().execute(),
-      db.db.selectFrom('user_state').orderBy('did').selectAll().execute(),
       db.db
         .selectFrom('ipld_block')
         .orderBy('creator')
@@ -256,7 +243,6 @@ const getDbContents = async (db: Database): Promise<DbContents> => {
   return {
     roots,
     users,
-    userState,
     blocks,
     seqs,
     records,

@@ -1,6 +1,5 @@
 import AtpAgent, { AtUri } from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { SeedClient } from '../seeds/client'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import likesSeed from '../seeds/likes'
 
 describe('suggested follows', () => {
@@ -15,7 +14,7 @@ describe('suggested follows', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await likesSeed(sc)
     await network.processAll()
     await network.bsky.processAll()

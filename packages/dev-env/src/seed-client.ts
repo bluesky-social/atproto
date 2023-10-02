@@ -9,8 +9,7 @@ import { Record as LikeRecord } from '@atproto/api/src/client/types/app/bsky/fee
 import { Record as FollowRecord } from '@atproto/api/src/client/types/app/bsky/graph/follow'
 import { AtUri } from '@atproto/syntax'
 import { BlobRef } from '@atproto/lexicon'
-import { adminAuth } from '../_util'
-import { ids } from '../../src/lexicon/lexicons'
+import { TestNetworkNoAppView } from './network-no-appview'
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
@@ -83,7 +82,7 @@ export class SeedClient {
   >
   dids: Record<string, string>
 
-  constructor(public agent: AtpAgent) {
+  constructor(public network: TestNetworkNoAppView, public agent: AtpAgent) {
     this.accounts = {}
     this.profiles = {}
     this.follows = {}
@@ -129,9 +128,7 @@ export class SeedClient {
     description: string,
     selfLabels?: string[],
   ) {
-    AVATAR_IMG ??= await fs.readFile(
-      'tests/image/fixtures/key-portrait-small.jpg',
-    )
+    AVATAR_IMG ??= await fs.readFile('tests/sample-img/key-portrait-small.jpg')
 
     let avatarBlob
     {
@@ -172,7 +169,7 @@ export class SeedClient {
     const res = await this.agent.api.com.atproto.repo.putRecord(
       {
         repo: by,
-        collection: ids.AppBskyActorProfile,
+        collection: 'app.bsky.actor.profile',
         rkey: 'self',
         record,
       },
@@ -438,7 +435,7 @@ export class SeedClient {
       { action, subject, createdBy, reason },
       {
         encoding: 'application/json',
-        headers: { authorization: adminAuth() },
+        headers: this.adminAuthHeaders(),
       },
     )
     return result.data
@@ -455,7 +452,7 @@ export class SeedClient {
         { id, reason, createdBy },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: this.adminAuthHeaders(),
         },
       )
     return result.data
@@ -472,7 +469,7 @@ export class SeedClient {
         { actionId, createdBy, reportIds },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: this.adminAuthHeaders(),
         },
       )
     return result.data
@@ -493,6 +490,10 @@ export class SeedClient {
       },
     )
     return result.data
+  }
+
+  adminAuthHeaders() {
+    return this.network.pds.adminAuthHeaders()
   }
 
   getHeaders(did: string) {

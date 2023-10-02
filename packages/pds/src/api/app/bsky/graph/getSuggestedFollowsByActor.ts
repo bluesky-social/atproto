@@ -7,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
       const res =
-        await ctx.appviewAgent.api.app.bsky.graph.getSuggestedFollowsByActor(
+        await ctx.appViewAgent.api.app.bsky.graph.getSuggestedFollowsByActor(
           params,
           await ctx.serviceAuthHeaders(requester),
         )

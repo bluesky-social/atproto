@@ -1,7 +1,6 @@
+import { SeedClient } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import { FLAG } from '../../src/lexicon/types/com/atproto/admin/defs'
-import { adminAuth } from '../_util'
-import { SeedClient } from './client'
 import usersSeed from './users'
 
 export default async (sc: SeedClient, invite?: { code: string }) => {
@@ -36,12 +35,12 @@ export default async (sc: SeedClient, invite?: { code: string }) => {
   })
   const img1 = await sc.uploadFile(
     carol,
-    'tests/image/fixtures/key-landscape-small.jpg',
+    'tests/sample-img/key-landscape-small.jpg',
     'image/jpeg',
   )
   const img2 = await sc.uploadFile(
     carol,
-    'tests/image/fixtures/key-alt.jpg',
+    'tests/sample-img/key-alt.jpg',
     'image/jpeg',
   )
   await sc.post(
@@ -102,7 +101,7 @@ export default async (sc: SeedClient, invite?: { code: string }) => {
 
   const replyImg = await sc.uploadFile(
     bob,
-    'tests/image/fixtures/key-landscape-small.jpg',
+    'tests/sample-img/key-landscape-small.jpg',
     'image/jpeg',
   )
   await sc.reply(
@@ -142,7 +141,7 @@ export default async (sc: SeedClient, invite?: { code: string }) => {
     },
     {
       encoding: 'application/json',
-      headers: { authorization: adminAuth() },
+      headers: sc.adminAuthHeaders(),
     },
   )
 

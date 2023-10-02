@@ -1,6 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { SeedClient } from '../seeds/client'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import {
   REASONOTHER,
@@ -29,7 +28,7 @@ describe('proxies admin requests', () => {
       },
     })
     agent = network.pds.getClient()
-    sc = new SeedClient(agent)
+    sc = network.getSeedClient()
     const { data: invite } =
       await agent.api.com.atproto.server.createInviteCode(
         { useCount: 10 },
@@ -245,7 +244,6 @@ describe('proxies admin requests', () => {
   })
 
   it('takesdown and labels repos, and reverts.', async () => {
-    const { db, services } = network.bsky.ctx
     // takedown repo
     const { data: action } =
       await agent.api.com.atproto.admin.takeModerationAction(
@@ -269,16 +267,12 @@ describe('proxies admin requests', () => {
     const tryGetProfileAppview = agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.alice },
       {
-        headers: { ...sc.getHeaders(sc.dids.carol), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(sc.dids.carol) },
       },
     )
     await expect(tryGetProfileAppview).rejects.toThrow(
       'Account has been taken down',
     )
-    const labelsA = await services
-      .label(db.getPrimary())
-      .getLabels(sc.dids.alice, { includeNeg: false, skipCache: true })
-    expect(labelsA.map((l) => l.val)).toEqual(['dogs'])
     // reverse action
     await agent.api.com.atproto.admin.reverseModerationAction(
       { id: action.id, createdBy: 'did:example:admin', reason: 'X' },
@@ -291,20 +285,15 @@ describe('proxies admin requests', () => {
     const { data: profileAppview } = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.alice },
       {
-        headers: { ...sc.getHeaders(sc.dids.carol), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(sc.dids.carol) },
       },
     )
     expect(profileAppview).toEqual(
       expect.objectContaining({ did: sc.dids.alice, handle: 'alice.test' }),
     )
-    const labelsB = await services
-      .label(db.getPrimary())
-      .getLabels(sc.dids.alice, { includeNeg: false, skipCache: true })
-    expect(labelsB.map((l) => l.val)).toEqual(['cats'])
   })
 
   it('takesdown and labels records, and reverts.', async () => {
-    const { db, services } = network.bsky.ctx
     const post = sc.posts[sc.dids.alice][0]
     // takedown post
     const { data: action } =
@@ -327,17 +316,11 @@ describe('proxies admin requests', () => {
         },
       )
     // check thread and labels
-    const tryGetPostAppview = agent.api.app.bsky.feed.getPostThread(
+    const tryGetPost = agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr, depth: 0 },
-      {
-        headers: { ...sc.getHeaders(sc.dids.carol), 'x-appview-proxy': 'true' },
-      },
+      { headers: sc.getHeaders(sc.dids.carol) },
     )
-    await expect(tryGetPostAppview).rejects.toThrow(NotFoundError)
-    const labelsA = await services
-      .label(db.getPrimary())
-      .getLabels(post.ref.uriStr, { includeNeg: false, skipCache: true })
-    expect(labelsA.map((l) => l.val)).toEqual(['dogs'])
+    await expect(tryGetPost).rejects.toThrow(NotFoundError)
     // reverse action
     await agent.api.com.atproto.admin.reverseModerationAction(
       { id: action.id, createdBy: 'did:example:admin', reason: 'X' },
@@ -350,16 +333,12 @@ describe('proxies admin requests', () => {
     const { data: threadAppview } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr, depth: 0 },
       {
-        headers: { ...sc.getHeaders(sc.dids.carol), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(sc.dids.carol) },
       },
     )
     expect(threadAppview.thread.post).toEqual(
       expect.objectContaining({ uri: post.ref.uriStr, cid: post.ref.cidStr }),
     )
-    const labelsB = await services
-      .label(db.getPrimary())
-      .getLabels(post.ref.uriStr, { includeNeg: false, skipCache: true })
-    expect(labelsB.map((l) => l.val)).toEqual(['cats'])
   })
 
   it('does not persist actions and reports on pds.', async () => {

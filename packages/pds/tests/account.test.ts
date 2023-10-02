@@ -2,9 +2,9 @@ import { once, EventEmitter } from 'events'
 import AtpAgent, { ComAtprotoServerResetPassword } from '@atproto/api'
 import { IdResolver } from '@atproto/identity'
 import * as crypto from '@atproto/crypto'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 import Mail from 'nodemailer/lib/mailer'
 import { AppContext, Database } from '../src'
-import * as util from './_util'
 import { ServerMailer } from '../src/mailer'
 
 const email = 'alice@test.com'
@@ -14,11 +14,10 @@ const passwordAlt = 'test456'
 const minsToMs = 60 * 1000
 
 describe('account', () => {
-  let serverUrl: string
+  let network: TestNetworkNoAppView
   let ctx: AppContext
   let repoSigningKey: string
   let agent: AtpAgent
-  let close: util.CloseFn
   let mailer: ServerMailer
   let db: Database
   let idResolver: IdResolver
@@ -26,19 +25,19 @@ describe('account', () => {
   let _origSendMail
 
   beforeAll(async () => {
-    const server = await util.runTestServer({
-      termsOfServiceUrl: 'https://example.com/tos',
-      privacyPolicyUrl: '/privacy-policy',
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'account',
+      pds: {
+        termsOfServiceUrl: 'https://example.com/tos',
+        privacyPolicyUrl: 'https://example.com/privacy-policy',
+      },
     })
-    close = server.close
-    mailer = server.ctx.mailer
-    db = server.ctx.db
-    ctx = server.ctx
-    serverUrl = server.url
-    repoSigningKey = server.ctx.repoSigningKey.did()
-    idResolver = new IdResolver({ plcUrl: ctx.cfg.didPlcUrl })
-    agent = new AtpAgent({ service: serverUrl })
+    mailer = network.pds.ctx.mailer
+    db = network.pds.ctx.db
+    ctx = network.pds.ctx
+    repoSigningKey = network.pds.ctx.repoSigningKey.did()
+    idResolver = network.pds.ctx.idResolver
+    agent = network.pds.getClient()
 
     // Catch emails for use in tests
     _origSendMail = mailer.transporter.sendMail
@@ -51,9 +50,7 @@ describe('account', () => {
 
   afterAll(async () => {
     mailer.transporter.sendMail = _origSendMail
-    if (close) {
-      await close()
-    }
+    await network.close()
   })
 
   it('serves the accounts system config', async () => {
@@ -62,7 +59,7 @@ describe('account', () => {
     expect(res.data.availableUserDomains[0]).toBe('.test')
     expect(typeof res.data.inviteCodeRequired).toBe('boolean')
     expect(res.data.links?.privacyPolicy).toBe(
-      'https://pds.public.url/privacy-policy',
+      'https://example.com/privacy-policy',
     )
     expect(res.data.links?.termsOfService).toBe('https://example.com/tos')
   })
@@ -121,7 +118,7 @@ describe('account', () => {
     expect(didData.did).toBe(did)
     expect(didData.handle).toBe(handle)
     expect(didData.signingKey).toBe(repoSigningKey)
-    expect(didData.pds).toBe('https://pds.public.url') // Mapped from publicUrl
+    expect(didData.pds).toBe(network.pds.url)
   })
 
   it('allows a custom set recovery key', async () => {
@@ -137,7 +134,7 @@ describe('account', () => {
 
     expect(didData.rotationKeys).toEqual([
       recoveryKey,
-      ctx.cfg.recoveryKey,
+      ctx.cfg.identity.recoveryDidKey,
       ctx.plcRotationKey.did(),
     ])
   })
@@ -150,10 +147,10 @@ describe('account', () => {
       handle,
       rotationKeys: [
         userKey.did(),
-        ctx.cfg.recoveryKey,
+        ctx.cfg.identity.recoveryDidKey ?? '',
         ctx.plcRotationKey.did(),
       ],
-      pds: ctx.cfg.publicUrl,
+      pds: network.pds.url,
       signer: userKey,
     })
 
@@ -175,10 +172,10 @@ describe('account', () => {
       handle: 'byo-did.test',
       rotationKeys: [
         userKey.did(),
-        ctx.cfg.recoveryKey,
+        ctx.cfg.identity.recoveryDidKey ?? '',
         ctx.plcRotationKey.did(),
       ],
-      pds: ctx.cfg.publicUrl,
+      pds: ctx.cfg.service.publicUrl,
       signer: userKey,
     }
     const baseAccntInfo = {
@@ -244,7 +241,7 @@ describe('account', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: util.adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
       },
     )
 
@@ -258,7 +255,7 @@ describe('account', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: util.adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
       },
     )
 
@@ -274,7 +271,7 @@ describe('account', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: util.moderatorAuth() },
+        headers: network.pds.adminAuthHeaders('moderator'),
       },
     )
     await expect(attemptUpdateMod).rejects.toThrow('Insufficient privileges')
@@ -285,7 +282,7 @@ describe('account', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: util.triageAuth() },
+        headers: network.pds.adminAuthHeaders('triage'),
       },
     )
     await expect(attemptUpdateTriage).rejects.toThrow('Insufficient privileges')

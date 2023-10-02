@@ -1,9 +1,7 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
-import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import { RecordRef } from '@atproto/bsky/tests/seeds/client'
 import { BlockedActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
 import { BlockedByActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
 
@@ -25,7 +23,7 @@ describe('pds views with blocking from block lists', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -52,7 +50,7 @@ describe('pds views with blocking from block lists', () => {
   it('creates a list with some items', async () => {
     const avatar = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-portrait-small.jpg',
+      'tests/sample-img/key-portrait-small.jpg',
       'image/jpeg',
     )
     // alice creates block list with bob & carol that dan uses

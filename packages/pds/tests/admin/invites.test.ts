@@ -1,30 +1,26 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
-import {
-  runTestServer,
-  adminAuth,
-  moderatorAuth,
-  TestServerInfo,
-} from '../_util'
 import { randomStr } from '@atproto/crypto'
-import { SeedClient } from '../seeds/client'
 
 describe('pds admin invite views', () => {
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
-  let server: TestServerInfo
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'views_admin_invites',
-      inviteRequired: true,
-      userInviteInterval: 1,
+      pds: {
+        inviteRequired: true,
+        inviteInterval: 1,
+      },
     })
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
   })
 
   afterAll(async () => {
-    await server.close()
+    await network.close()
   })
 
   let alice: string
@@ -34,7 +30,7 @@ describe('pds admin invite views', () => {
   beforeAll(async () => {
     const adminCode = await agent.api.com.atproto.server.createInviteCode(
       { useCount: 10 },
-      { encoding: 'application/json', headers: { authorization: adminAuth() } },
+      { encoding: 'application/json', headers: network.pds.adminAuthHeaders() },
     )
 
     await sc.createAccount('alice', {
@@ -70,11 +66,11 @@ describe('pds admin invite views', () => {
     )
     await agent.api.com.atproto.server.createInviteCode(
       { useCount: 5, forAccount: alice },
-      { encoding: 'application/json', headers: { authorization: adminAuth() } },
+      { encoding: 'application/json', headers: network.pds.adminAuthHeaders() },
     )
     await agent.api.com.atproto.admin.disableInviteCodes(
       { codes: [adminCode.data.code], accounts: [bob] },
-      { encoding: 'application/json', headers: { authorization: adminAuth() } },
+      { encoding: 'application/json', headers: network.pds.adminAuthHeaders() },
     )
 
     const useCode = async (code: string) => {
@@ -94,7 +90,7 @@ describe('pds admin invite views', () => {
   it('gets a list of invite codes by recency', async () => {
     const result = await agent.api.com.atproto.admin.getInviteCodes(
       {},
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     let lastDate = result.data.codes[0].createdAt
     for (const code of result.data.codes) {
@@ -121,15 +117,15 @@ describe('pds admin invite views', () => {
   it('paginates by recency', async () => {
     const full = await agent.api.com.atproto.admin.getInviteCodes(
       {},
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     const first = await agent.api.com.atproto.admin.getInviteCodes(
       { limit: 5 },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     const second = await agent.api.com.atproto.admin.getInviteCodes(
       { cursor: first.data.cursor },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     const combined = [...first.data.codes, ...second.data.codes]
     expect(combined).toEqual(full.data.codes)
@@ -138,7 +134,7 @@ describe('pds admin invite views', () => {
   it('gets a list of invite codes by usage', async () => {
     const result = await agent.api.com.atproto.admin.getInviteCodes(
       { sort: 'usage' },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     let lastUseCount = result.data.codes[0].uses.length
     for (const code of result.data.codes) {
@@ -157,15 +153,15 @@ describe('pds admin invite views', () => {
   it('paginates by usage', async () => {
     const full = await agent.api.com.atproto.admin.getInviteCodes(
       { sort: 'usage' },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     const first = await agent.api.com.atproto.admin.getInviteCodes(
       { sort: 'usage', limit: 5 },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     const second = await agent.api.com.atproto.admin.getInviteCodes(
       { sort: 'usage', cursor: first.data.cursor },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     const combined = [...first.data.codes, ...second.data.codes]
     expect(combined).toEqual(full.data.codes)
@@ -174,7 +170,7 @@ describe('pds admin invite views', () => {
   it('filters admin.searchRepos by invitedBy', async () => {
     const searchView = await agent.api.com.atproto.admin.searchRepos(
       { invitedBy: alice },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(searchView.data.repos.length).toBe(2)
     expect(searchView.data.repos[0].invitedBy?.available).toBe(1)
@@ -186,7 +182,7 @@ describe('pds admin invite views', () => {
   it('hydrates invites into admin.getRepo', async () => {
     const aliceView = await agent.api.com.atproto.admin.getRepo(
       { did: alice },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(aliceView.data.invitedBy?.available).toBe(10)
     expect(aliceView.data.invitedBy?.uses.length).toBe(3)
@@ -199,7 +195,7 @@ describe('pds admin invite views', () => {
         { codes: ['x'], accounts: [alice] },
         {
           encoding: 'application/json',
-          headers: { authorization: moderatorAuth() },
+          headers: network.pds.adminAuthHeaders('moderator'),
         },
       )
     await expect(attemptDisableInvites).rejects.toThrow(
@@ -212,7 +208,7 @@ describe('pds admin invite views', () => {
       { useCount: 5, forAccount: alice },
       {
         encoding: 'application/json',
-        headers: { authorization: moderatorAuth() },
+        headers: network.pds.adminAuthHeaders('moderator'),
       },
     )
     await expect(attemptCreateInvite).rejects.toThrow('Insufficient privileges')
@@ -222,12 +218,12 @@ describe('pds admin invite views', () => {
     const reasonForDisabling = 'User is selling invites'
     await agent.api.com.atproto.admin.disableAccountInvites(
       { account: carol, note: reasonForDisabling },
-      { encoding: 'application/json', headers: { authorization: adminAuth() } },
+      { encoding: 'application/json', headers: network.pds.adminAuthHeaders() },
     )
 
     const repoRes = await agent.api.com.atproto.admin.getRepo(
       { did: carol },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(repoRes.data.invitesDisabled).toBe(true)
     expect(repoRes.data.inviteNote).toBe(reasonForDisabling)
@@ -244,31 +240,31 @@ describe('pds admin invite views', () => {
     const reasonForDisabling = 'User is selling invites'
     await agent.api.com.atproto.admin.enableAccountInvites(
       { account: carol, note: reasonForEnabling },
-      { encoding: 'application/json', headers: { authorization: adminAuth() } },
+      { encoding: 'application/json', headers: network.pds.adminAuthHeaders() },
     )
 
     const afterEnable = await agent.api.com.atproto.admin.getRepo(
       { did: carol },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(afterEnable.data.invitesDisabled).toBe(false)
     expect(afterEnable.data.inviteNote).toBe(reasonForEnabling)
 
     await agent.api.com.atproto.admin.disableAccountInvites(
       { account: carol, note: reasonForDisabling },
-      { encoding: 'application/json', headers: { authorization: adminAuth() } },
+      { encoding: 'application/json', headers: network.pds.adminAuthHeaders() },
     )
 
     const afterDisable = await agent.api.com.atproto.admin.getRepo(
       { did: carol },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(afterDisable.data.invitesDisabled).toBe(true)
     expect(afterDisable.data.inviteNote).toBe(reasonForDisabling)
   })
 
   it('creates codes in the background but disables them', async () => {
-    const res = await server.ctx.db.db
+    const res = await network.pds.ctx.db.db
       .selectFrom('invite_code')
       .where('forUser', '=', carol)
       .selectAll()
@@ -282,7 +278,7 @@ describe('pds admin invite views', () => {
       { account: alice },
       {
         encoding: 'application/json',
-        headers: { authorization: moderatorAuth() },
+        headers: network.pds.adminAuthHeaders('moderator'),
       },
     )
     await expect(attempt).rejects.toThrow('Insufficient privileges')
@@ -291,12 +287,12 @@ describe('pds admin invite views', () => {
   it('re-enables an accounts invites', async () => {
     await agent.api.com.atproto.admin.enableAccountInvites(
       { account: carol },
-      { encoding: 'application/json', headers: { authorization: adminAuth() } },
+      { encoding: 'application/json', headers: network.pds.adminAuthHeaders() },
     )
 
     const repoRes = await agent.api.com.atproto.admin.getRepo(
       { did: carol },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(repoRes.data.invitesDisabled).toBe(false)
 
@@ -312,7 +308,7 @@ describe('pds admin invite views', () => {
       { account: alice },
       {
         encoding: 'application/json',
-        headers: { authorization: moderatorAuth() },
+        headers: network.pds.adminAuthHeaders('moderator'),
       },
     )
     await expect(attempt).rejects.toThrow('Insufficient privileges')

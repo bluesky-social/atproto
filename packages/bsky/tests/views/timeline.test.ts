@@ -1,9 +1,8 @@
 import assert from 'assert'
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { forSnapshot, getOriginator, paginateAll } from '../_util'
-import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
 import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
@@ -24,8 +23,7 @@ describe('timeline views', () => {
       dbPostgresSchema: 'bsky_views_home_feed',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
     alice = sc.dids.alice

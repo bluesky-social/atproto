@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
       const HOT_CLASSIC_URI =
         'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/hot-classic'
       const HOT_CLASSIC_DID = 'did:plc:5fllqkujj6kqp5izd5jg7gox'
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getFeed(
+      const res = await ctx.appViewAgent.api.app.bsky.feed.getFeed(
         { feed: HOT_CLASSIC_URI, limit: params.limit, cursor: params.cursor },
         await ctx.serviceAuthHeaders(requester, HOT_CLASSIC_DID),
       )

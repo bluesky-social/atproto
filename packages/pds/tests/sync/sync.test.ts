@@ -1,3 +1,4 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { TID } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
@@ -7,10 +8,9 @@ import { AtUri } from '@atproto/syntax'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { CID } from 'multiformats/cid'
 import { AppContext } from '../../src'
-import { adminAuth, CloseFn, runTestServer } from '../_util'
-import { SeedClient } from '../seeds/client'
 
 describe('repo sync', () => {
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
   let did: string
@@ -21,16 +21,13 @@ describe('repo sync', () => {
   let currRoot: CID | undefined
   let ctx: AppContext
 
-  let close: CloseFn
-
   beforeAll(async () => {
-    const server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'repo_sync',
     })
-    ctx = server.ctx
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    ctx = network.pds.ctx
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
     await sc.createAccount('alice', {
       email: 'alice@test.com',
       handle: 'alice.test',
@@ -41,7 +38,7 @@ describe('repo sync', () => {
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('creates and syncs some records', async () => {
@@ -229,7 +226,7 @@ describe('repo sync', () => {
       await expect(tryGetRepoOwner).resolves.toBeDefined()
       const tryGetRepoAdmin = agent.api.com.atproto.sync.getRepo(
         { did },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       )
       await expect(tryGetRepoAdmin).resolves.toBeDefined()
     })

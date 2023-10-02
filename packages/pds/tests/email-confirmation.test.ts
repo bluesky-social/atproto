@@ -1,10 +1,9 @@
 import { once, EventEmitter } from 'events'
 import Mail from 'nodemailer/lib/mailer'
 import AtpAgent from '@atproto/api'
-import { SeedClient } from './seeds/client'
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import userSeed from './seeds/users'
 import { ServerMailer } from '../src/mailer'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
 import {
   ComAtprotoServerConfirmEmail,
   ComAtprotoServerUpdateEmail,
@@ -27,7 +26,7 @@ describe('email confirmation', () => {
     })
     mailer = network.pds.ctx.mailer
     agent = network.pds.getClient()
-    sc = new SeedClient(agent)
+    sc = network.getSeedClient()
     await userSeed(sc)
     alice = sc.accounts[sc.dids.alice]
 

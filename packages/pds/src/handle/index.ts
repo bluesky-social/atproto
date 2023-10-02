@@ -27,11 +27,11 @@ export const normalizeAndValidateHandle = async (opts: {
       'InvalidHandle',
     )
   }
-  if (isServiceDomain(handle, ctx.cfg.availableUserDomains)) {
+  if (isServiceDomain(handle, ctx.cfg.identity.serviceHandleDomains)) {
     // verify constraints on a service domain
     ensureHandleServiceConstraints(
       handle,
-      ctx.cfg.availableUserDomains,
+      ctx.cfg.identity.serviceHandleDomains,
       allowReserved,
     )
   } else {

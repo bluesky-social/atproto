@@ -1,29 +1,23 @@
 import { defaultFetchHandler } from '@atproto/xrpc'
 import {
-  CloseFn,
-  runTestServer,
-  TestServerInfo,
-} from '@atproto/pds/tests/_util'
-import {
   AtpAgent,
   AtpAgentFetchHandlerResponse,
   AtpSessionEvent,
   AtpSessionData,
 } from '..'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 
 describe('agent', () => {
-  let server: TestServerInfo
-  let close: CloseFn
+  let network: TestNetworkNoAppView
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'api_agent',
     })
-    close = server.close
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('creates a new session on account creation.', async () => {
@@ -34,7 +28,7 @@ describe('agent', () => {
       sessions.push(sess)
     }
 
-    const agent = new AtpAgent({ service: server.url, persistSession })
+    const agent = new AtpAgent({ service: network.pds.url, persistSession })
 
     const res = await agent.createAccount({
       handle: 'user1.test',
@@ -74,7 +68,7 @@ describe('agent', () => {
       sessions.push(sess)
     }
 
-    const agent1 = new AtpAgent({ service: server.url, persistSession })
+    const agent1 = new AtpAgent({ service: network.pds.url, persistSession })
 
     const email = 'user2@test.com'
     await agent1.createAccount({
@@ -83,7 +77,7 @@ describe('agent', () => {
       password: 'password',
     })
 
-    const agent2 = new AtpAgent({ service: server.url, persistSession })
+    const agent2 = new AtpAgent({ service: network.pds.url, persistSession })
     const res1 = await agent2.login({
       identifier: 'user2.test',
       password: 'password',
@@ -122,7 +116,7 @@ describe('agent', () => {
       sessions.push(sess)
     }
 
-    const agent1 = new AtpAgent({ service: server.url, persistSession })
+    const agent1 = new AtpAgent({ service: network.pds.url, persistSession })
 
     await agent1.createAccount({
       handle: 'user3.test',
@@ -133,7 +127,7 @@ describe('agent', () => {
       throw new Error('No session created')
     }
 
-    const agent2 = new AtpAgent({ service: server.url, persistSession })
+    const agent2 = new AtpAgent({ service: network.pds.url, persistSession })
     const res1 = await agent2.resumeSession(agent1.session)
 
     expect(agent2.hasSession).toEqual(true)
@@ -165,7 +159,7 @@ describe('agent', () => {
       sessions.push(sess)
     }
 
-    const agent = new AtpAgent({ service: server.url, persistSession })
+    const agent = new AtpAgent({ service: network.pds.url, persistSession })
 
     // create an account and a session with it
     await agent.createAccount({
@@ -230,7 +224,7 @@ describe('agent', () => {
       sessions.push(sess)
     }
 
-    const agent = new AtpAgent({ service: server.url, persistSession })
+    const agent = new AtpAgent({ service: network.pds.url, persistSession })
 
     // create an account and a session with it
     await agent.createAccount({
@@ -309,7 +303,7 @@ describe('agent', () => {
       sessions.push(sess)
     }
 
-    const agent = new AtpAgent({ service: server.url, persistSession })
+    const agent = new AtpAgent({ service: network.pds.url, persistSession })
 
     try {
       await agent.login({
@@ -349,7 +343,7 @@ describe('agent', () => {
       sessions.push(sess)
     }
 
-    const agent = new AtpAgent({ service: server.url, persistSession })
+    const agent = new AtpAgent({ service: network.pds.url, persistSession })
 
     // create an account and a session with it
     await agent.createAccount({
@@ -420,7 +414,7 @@ describe('agent', () => {
         newHandlerCallCount++
       }
 
-      const agent = new AtpAgent({ service: server.url, persistSession })
+      const agent = new AtpAgent({ service: network.pds.url, persistSession })
 
       await agent.createAccount({
         handle: 'user7.test',
@@ -452,7 +446,7 @@ describe('agent', () => {
         sessions.push(sess)
       }
 
-      const agent = new AtpAgent({ service: server.url, persistSession })
+      const agent = new AtpAgent({ service: network.pds.url, persistSession })
 
       await expect(
         agent.createAccount({

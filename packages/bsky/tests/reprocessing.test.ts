@@ -1,14 +1,11 @@
 import axios from 'axios'
 import { AtUri } from '@atproto/syntax'
-import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { SeedClient } from './seeds/client'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from './seeds/basic'
 import { Database } from '../src/db'
 
 describe('reprocessing', () => {
   let network: TestNetwork
-  let pdsAgent: AtpAgent
   let sc: SeedClient
   let alice: string
 
@@ -16,8 +13,7 @@ describe('reprocessing', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_reprocessing',
     })
-    pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
     await network.processAll()

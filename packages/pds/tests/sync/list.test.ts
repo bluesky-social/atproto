@@ -1,25 +1,23 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
-import { CloseFn, runTestServer } from '../_util'
-import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('sync listing', () => {
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
-  let close: CloseFn
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'sync_list',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
     await basicSeed(sc)
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('lists hosted repos in order of creation', async () => {

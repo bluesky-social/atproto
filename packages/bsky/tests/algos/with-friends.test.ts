@@ -1,8 +1,7 @@
 import AtpAgent, { AtUri } from '@atproto/api'
-import { RecordRef, SeedClient } from '../seeds/client'
 import userSeed from '../seeds/users'
 import { makeAlgos } from '../../src'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 
 describe.skip('algo with friends', () => {
   let network: TestNetwork
@@ -28,8 +27,7 @@ describe.skip('algo with friends', () => {
       bsky: { algos: makeAlgos(feedPublisherDid) },
     })
     agent = new AtpAgent({ service: network.bsky.url })
-    const pdsAgent = new AtpAgent({ service: network.pds.url })
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await userSeed(sc)
 
     alice = sc.dids.alice

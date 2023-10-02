@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.1.20",
+  "version": "0.3.0-beta.3",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
@@ -23,9 +23,8 @@
     "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/pds",
-    "start": "node dist/bin.js",
     "test": "../dev-infra/with-test-redis-and-db.sh jest",
+    "update-main-to-dist": "node ../../update-main-to-dist.js packages/pds",
     "bench": "../dev-infra/with-test-redis-and-db.sh jest --config jest.bench.config.js",
     "test:sqlite": "jest --testPathIgnorePatterns /tests/proxied/*",
     "test:log": "tail -50 test.log | pino-pretty",
@@ -34,6 +33,7 @@
   },
   "dependencies": {
     "@atproto/api": "workspace:^",
+    "@atproto/aws": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",
@@ -48,7 +48,6 @@
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "disposable-email": "^0.2.3",
-    "dotenv": "^16.0.0",
     "express": "^4.17.2",
     "express-async-errors": "^3.1.1",
     "file-type": "^16.5.4",
@@ -86,6 +85,7 @@
     "@types/pg": "^8.6.6",
     "@types/qs": "^6.9.7",
     "@types/sharp": "^0.31.0",
-    "axios": "^0.27.2"
+    "axios": "^0.27.2",
+    "ws": "^8.12.0"
   }
 }

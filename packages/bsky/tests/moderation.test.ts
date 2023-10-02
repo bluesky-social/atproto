@@ -1,9 +1,8 @@
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, ImageRef, RecordRef, SeedClient } from '@atproto/dev-env'
 import { TID, cidForCbor } from '@atproto/common'
 import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { forSnapshot } from './_util'
-import { ImageRef, RecordRef, SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
 import {
   ACKNOWLEDGE,
@@ -27,8 +26,7 @@ describe('moderation', () => {
       dbPostgresSchema: 'bsky_moderation',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
   })

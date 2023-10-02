@@ -8,9 +8,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const requester = auth.credentials.did
 
-      if (ctx.shouldProxyModeration()) {
+      if (ctx.cfg.bskyAppView.proxyModeration) {
         const { data: result } =
-          await ctx.appviewAgent.com.atproto.moderation.createReport(
+          await ctx.appViewAgent.com.atproto.moderation.createReport(
             input.body,
             {
               ...(await ctx.serviceAuthHeaders(requester)),

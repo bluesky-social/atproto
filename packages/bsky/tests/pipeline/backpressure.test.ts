@@ -5,8 +5,8 @@ import {
   getIndexers,
   getIngester,
   processAll,
+  SeedClient,
 } from '@atproto/dev-env'
-import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import { BskyIngester } from '../../src'
 
@@ -33,8 +33,7 @@ describe('pipeline backpressure', () => {
       name: TEST_NAME,
       partitionIdsByIndexer: [[0], [1]],
     })
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
   })
 

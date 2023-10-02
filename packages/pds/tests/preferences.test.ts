@@ -1,26 +1,23 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
-import { CloseFn, runTestServer, TestServerInfo } from './_util'
-import { SeedClient } from './seeds/client'
 import usersSeed from './seeds/users'
 
 describe('user preferences', () => {
-  let server: TestServerInfo
-  let close: CloseFn
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'preferences',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
     await usersSeed(sc)
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('requires auth to set or put preferences.', async () => {
@@ -45,7 +42,7 @@ describe('user preferences', () => {
   })
 
   it('only gets preferences in app.bsky namespace.', async () => {
-    const { db, services } = server.ctx
+    const { db, services } = network.pds.ctx
     await db.transaction(async (tx) => {
       await services
         .account(tx)
@@ -101,7 +98,7 @@ describe('user preferences', () => {
       ],
     })
     // Ensure other prefs were not clobbered
-    const { db, services } = server.ctx
+    const { db, services } = network.pds.ctx
     const otherPrefs = await services
       .account(db)
       .getPreferences(sc.dids.alice, 'com.atproto')
