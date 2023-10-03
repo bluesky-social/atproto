@@ -4,7 +4,6 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { BadCommitSwapError, BadRecordSwapError } from '../../../../repo'
 import { CID } from 'multiformats/cid'
-import { ConcurrentWriteError } from '../../../../services/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.deleteRecord({
@@ -41,31 +40,24 @@ export default function (server: Server, ctx: AppContext) {
         rkey,
         swapCid: swapRecordCid,
       })
-      const record = await ctx.services
-        .record(ctx.db)
-        .getRecord(write.uri, null, true)
-      if (!record) {
-        return // No-op if record already doesn't exist
-      }
-
-      const writes = [write]
-
-      try {
-        await ctx.services
-          .repo(ctx.db)
-          .processWrites({ did, writes, swapCommitCid }, 10)
-      } catch (err) {
-        if (
-          err instanceof BadCommitSwapError ||
-          err instanceof BadRecordSwapError
-        ) {
-          throw new InvalidRequestError(err.message, 'InvalidSwap')
-        } else if (err instanceof ConcurrentWriteError) {
-          throw new InvalidRequestError(err.message, 'ConcurrentWrites')
-        } else {
-          throw err
+      await ctx.actorStore.transact(did, async (actorTxn) => {
+        const record = await actorTxn.record.getRecord(write.uri, null, true)
+        if (!record) {
+          return // No-op if record already doesn't exist
         }
-      }
+        try {
+          await actorTxn.repo.processWrites([write], swapCommitCid)
+        } catch (err) {
+          if (
+            err instanceof BadCommitSwapError ||
+            err instanceof BadRecordSwapError
+          ) {
+            throw new InvalidRequestError(err.message, 'InvalidSwap')
+          } else {
+            throw err
+          }
+        }
+      })
     },
   })
 }

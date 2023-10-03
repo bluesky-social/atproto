@@ -21,11 +21,11 @@ import { Crawlers } from './crawlers'
 import { DiskBlobStore } from './storage'
 import { getRedisClient } from './redis'
 import { RuntimeFlags } from './runtime-flags'
-import { UserDbCoordinator } from './user-db'
+import { ActorStore, createActorStore } from './actor-store'
 
 export type AppContextOptions = {
   db: Database
-  userDb: UserDbCoordinator
+  actorStore: ActorStore
   blobstore: BlobStore
   mailer: ServerMailer
   moderationMailer: ModerationMailer
@@ -48,7 +48,7 @@ export type AppContextOptions = {
 
 export class AppContext {
   public db: Database
-  public userDb: UserDbCoordinator
+  public actorStore: ActorStore
   public blobstore: BlobStore
   public mailer: ServerMailer
   public moderationMailer: ModerationMailer
@@ -70,6 +70,7 @@ export class AppContext {
 
   constructor(opts: AppContextOptions) {
     this.db = opts.db
+    this.actorStore = opts.actorStore
     this.blobstore = opts.blobstore
     this.mailer = opts.mailer
     this.moderationMailer = opts.moderationMailer
@@ -105,7 +106,6 @@ export class AppContext {
             poolMaxUses: cfg.db.pool.maxUses,
             poolIdleTimeoutMs: cfg.db.pool.idleTimeoutMs,
           })
-    const userDb = new UserDbCoordinator('./users')
     const blobstore =
       cfg.blobstore.provider === 's3'
         ? new S3BlobStore({ bucket: cfg.blobstore.bucket })
@@ -181,7 +181,7 @@ export class AppContext {
             secrets.plcRotationKey.privateKeyHex,
           )
 
-    const services = createServices({
+    const actorStore = createActorStore({
       repoSigningKey,
       blobstore,
       appViewAgent,
@@ -189,12 +189,20 @@ export class AppContext {
       appViewDid: cfg.bskyAppView.did,
       appViewCdnUrlPattern: cfg.bskyAppView.cdnUrlPattern,
       backgroundQueue,
-      crawlers,
+    })
+
+    const services = createServices({
+      repoSigningKey,
+      blobstore,
+      appViewAgent,
+      pdsHostname: cfg.service.hostname,
+      appViewDid: cfg.bskyAppView.did,
+      appViewCdnUrlPattern: cfg.bskyAppView.cdnUrlPattern,
     })
 
     return new AppContext({
       db,
-      userDb,
+      actorStore,
       blobstore,
       mailer,
       moderationMailer,

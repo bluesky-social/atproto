@@ -6,9 +6,10 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifierCheckTakedown,
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
-      const blob = await ctx.services
-        .repo(ctx.db)
-        .blobs.addUntetheredBlob(requester, input.encoding, input.body)
+
+      const blob = await ctx.actorStore.transact(requester, (actorTxn) => {
+        return actorTxn.repo.blobs.addUntetheredBlob(input.encoding, input.body)
+      })
 
       return {
         encoding: 'application/json',

@@ -1,4 +1,5 @@
 import assert from 'assert'
+import path from 'path'
 import {
   Kysely,
   SqliteDialect,
@@ -14,38 +15,38 @@ import SqliteDB from 'better-sqlite3'
 import { DatabaseSchema } from './schema'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
+export * from './schema'
 
-export class UserDb {
+type CommitHook = () => void
+
+export class ActorDb {
   migrator: Migrator
   destroyed = false
+  commitHooks: CommitHook[] = []
 
-  constructor(public db: Kysely<DatabaseSchema>) {
+  constructor(public did: string, public db: Kysely<DatabaseSchema>) {
     this.migrator = new Migrator({
       db,
       provider: new CtxMigrationProvider(migrations),
     })
   }
 
-  static sqlite(location: string): UserDb {
+  static sqlite(location: string, did: string): ActorDb {
     const db = new Kysely<DatabaseSchema>({
       dialect: new SqliteDialect({
-        database: new SqliteDB(location),
+        database: new SqliteDB(path.join(location, did)),
       }),
     })
-    return new UserDb(db)
+    return new ActorDb(did, db)
   }
 
-  static memory(): UserDb {
-    return UserDb.sqlite(':memory:')
-  }
-
-  async transaction<T>(fn: (db: UserDb) => Promise<T>): Promise<T> {
+  async transaction<T>(fn: (db: ActorDb) => Promise<T>): Promise<T> {
     const leakyTxPlugin = new LeakyTxPlugin()
-    return this.db
+    const { hooks, txRes } = await this.db
       .withPlugin(leakyTxPlugin)
       .transaction()
       .execute(async (txn) => {
-        const dbTxn = new UserDb(txn)
+        const dbTxn = new ActorDb(this.did, txn)
         const txRes = await fn(dbTxn)
           .catch(async (err) => {
             leakyTxPlugin.endTx()
@@ -54,8 +55,16 @@ export class UserDb {
             throw err
           })
           .finally(() => leakyTxPlugin.endTx())
-        return txRes
+        const hooks = dbTxn.commitHooks
+        return { hooks, txRes }
       })
+    hooks.map((hook) => hook())
+    return txRes
+  }
+
+  onCommit(fn: () => void) {
+    this.assertTransaction()
+    this.commitHooks.push(fn)
   }
 
   get isTransaction() {

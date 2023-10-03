@@ -11,7 +11,6 @@ import {
   PreparedCreate,
   PreparedUpdate,
 } from '../../../../repo'
-import { ConcurrentWriteError } from '../../../../services/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
@@ -57,48 +56,43 @@ export default function (server: Server, ctx: AppContext) {
       const swapRecordCid =
         typeof swapRecord === 'string' ? CID.parse(swapRecord) : swapRecord
 
-      const current = await ctx.services
-        .record(ctx.db)
-        .getRecord(uri, null, true)
-      const writeInfo = {
-        did,
-        collection,
-        rkey,
-        record,
-        swapCid: swapRecordCid,
-        validate,
-      }
-
-      let write: PreparedCreate | PreparedUpdate
-      try {
-        write = current
-          ? await prepareUpdate(writeInfo)
-          : await prepareCreate(writeInfo)
-      } catch (err) {
-        if (err instanceof InvalidRecordError) {
-          throw new InvalidRequestError(err.message)
+      const write = await ctx.actorStore.transact(did, async (actorTxn) => {
+        const current = await actorTxn.record.getRecord(uri, null, true)
+        const writeInfo = {
+          did,
+          collection,
+          rkey,
+          record,
+          swapCid: swapRecordCid,
+          validate,
         }
-        throw err
-      }
 
-      const writes = [write]
-
-      try {
-        await ctx.services
-          .repo(ctx.db)
-          .processWrites({ did, writes, swapCommitCid }, 10)
-      } catch (err) {
-        if (
-          err instanceof BadCommitSwapError ||
-          err instanceof BadRecordSwapError
-        ) {
-          throw new InvalidRequestError(err.message, 'InvalidSwap')
-        } else if (err instanceof ConcurrentWriteError) {
-          throw new InvalidRequestError(err.message, 'ConcurrentWrites')
-        } else {
+        let write: PreparedCreate | PreparedUpdate
+        try {
+          write = current
+            ? await prepareUpdate(writeInfo)
+            : await prepareCreate(writeInfo)
+        } catch (err) {
+          if (err instanceof InvalidRecordError) {
+            throw new InvalidRequestError(err.message)
+          }
           throw err
         }
-      }
+
+        try {
+          await actorTxn.repo.processWrites([write], swapCommitCid)
+        } catch (err) {
+          if (
+            err instanceof BadCommitSwapError ||
+            err instanceof BadRecordSwapError
+          ) {
+            throw new InvalidRequestError(err.message, 'InvalidSwap')
+          } else {
+            throw err
+          }
+        }
+        return write
+      })
 
       return {
         encoding: 'application/json',

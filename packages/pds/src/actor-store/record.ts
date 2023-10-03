@@ -1,91 +1,22 @@
-import { CID } from 'multiformats/cid'
 import { AtUri, ensureValidAtUri } from '@atproto/syntax'
-import * as ident from '@atproto/syntax'
-import { cborToLexRecord, WriteOpAction } from '@atproto/repo'
-import { dbLogger as log } from '../logger'
-import { notSoftDeletedClause } from '../user-db/util'
-import { Backlink } from '../user-db/tables/backlink'
+import * as syntax from '@atproto/syntax'
+import { cborToLexRecord } from '@atproto/repo'
+import { notSoftDeletedClause } from '../db/util'
 import { ids } from '../lexicon/lexicons'
-import { UserDb } from '../user-db'
+import { ActorDb, Backlink } from './actor-db'
+import { prepareDelete } from '../repo'
 
-export class RecordService {
-  constructor(public db: UserDb) {}
+export class ActorRecord {
+  constructor(public db: ActorDb) {}
 
   static creator() {
-    return (db: UserDb) => new RecordService(db)
+    return (db: ActorDb) => new ActorRecord(db)
   }
 
-  async indexRecord(
-    uri: AtUri,
-    cid: CID,
-    obj: unknown,
-    action: WriteOpAction.Create | WriteOpAction.Update = WriteOpAction.Create,
-    repoRev?: string,
-    timestamp?: string,
-  ) {
-    this.db.assertTransaction()
-    log.debug({ uri }, 'indexing record')
-    const record = {
-      uri: uri.toString(),
-      cid: cid.toString(),
-      did: uri.host,
-      collection: uri.collection,
-      rkey: uri.rkey,
-      repoRev: repoRev ?? null,
-      indexedAt: timestamp || new Date().toISOString(),
-    }
-    if (!record.did.startsWith('did:')) {
-      throw new Error('Expected indexed URI to contain DID')
-    } else if (record.collection.length < 1) {
-      throw new Error('Expected indexed URI to contain a collection')
-    } else if (record.rkey.length < 1) {
-      throw new Error('Expected indexed URI to contain a record key')
-    }
-
-    // Track current version of record
-    await this.db.db
-      .insertInto('record')
-      .values(record)
-      .onConflict((oc) =>
-        oc.column('uri').doUpdateSet({
-          cid: record.cid,
-          repoRev: repoRev ?? null,
-          indexedAt: record.indexedAt,
-        }),
-      )
-      .execute()
-
-    // Maintain backlinks
-    const backlinks = getBacklinks(uri, obj)
-    if (action === WriteOpAction.Update) {
-      // On update just recreate backlinks from scratch for the record, so we can clear out
-      // the old ones. E.g. for weird cases like updating a follow to be for a different did.
-      await this.removeBacklinksByUri(uri)
-    }
-    await this.addBacklinks(backlinks)
-
-    log.info({ uri }, 'indexed record')
-  }
-
-  async deleteRecord(uri: AtUri) {
-    this.db.assertTransaction()
-    log.debug({ uri }, 'deleting indexed record')
-    const deleteQuery = this.db.db
-      .deleteFrom('record')
-      .where('uri', '=', uri.toString())
-    const backlinkQuery = this.db.db
-      .deleteFrom('backlink')
-      .where('uri', '=', uri.toString())
-    await Promise.all([deleteQuery.execute(), backlinkQuery.execute()])
-
-    log.info({ uri }, 'deleted indexed record')
-  }
-
-  async listCollectionsForDid(did: string): Promise<string[]> {
+  async listCollections(): Promise<string[]> {
     const collections = await this.db.db
       .selectFrom('record')
       .select('collection')
-      .where('did', '=', did)
       .groupBy('collection')
       .execute()
 
@@ -93,7 +24,6 @@ export class RecordService {
   }
 
   async listRecordsForCollection(opts: {
-    did: string
     collection: string
     limit: number
     reverse: boolean
@@ -103,7 +33,6 @@ export class RecordService {
     includeSoftDeleted?: boolean
   }): Promise<{ uri: string; cid: string; value: object }[]> {
     const {
-      did,
       collection,
       limit,
       reverse,
@@ -116,12 +45,7 @@ export class RecordService {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('record')
-      .innerJoin('ipld_block', (join) =>
-        join
-          .onRef('ipld_block.cid', '=', 'record.cid')
-          .on('ipld_block.creator', '=', did),
-      )
-      .where('record.did', '=', did)
+      .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
       .where('record.collection', '=', collection)
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),
@@ -169,11 +93,7 @@ export class RecordService {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('record')
-      .innerJoin('ipld_block', (join) =>
-        join
-          .onRef('ipld_block.cid', '=', 'record.cid')
-          .on('ipld_block.creator', '=', uri.host),
-      )
+      .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
       .where('record.uri', '=', uri.toString())
       .selectAll()
       .if(!includeSoftDeleted, (qb) =>
@@ -213,35 +133,12 @@ export class RecordService {
     return !!record
   }
 
-  async deleteForActor(did: string) {
-    // Not done in transaction because it would be too long, prone to contention.
-    // Also, this can safely be run multiple times if it fails.
-    await this.db.db.deleteFrom('record').where('did', '=', did).execute()
-  }
-
-  async removeBacklinksByUri(uri: AtUri) {
-    await this.db.db
-      .deleteFrom('backlink')
-      .where('uri', '=', uri.toString())
-      .execute()
-  }
-
-  async addBacklinks(backlinks: Backlink[]) {
-    if (backlinks.length === 0) return
-    await this.db.db
-      .insertInto('backlink')
-      .values(backlinks)
-      .onConflict((oc) => oc.doNothing())
-      .execute()
-  }
-
   async getRecordBacklinks(opts: {
-    did: string
     collection: string
     path: string
     linkTo: string
   }) {
-    const { did, collection, path, linkTo } = opts
+    const { collection, path, linkTo } = opts
     return await this.db.db
       .selectFrom('record')
       .innerJoin('backlink', 'backlink.uri', 'record.uri')
@@ -252,17 +149,37 @@ export class RecordService {
       .if(!linkTo.startsWith('at://'), (q) =>
         q.where('backlink.linkToDid', '=', linkTo),
       )
-      .where('record.did', '=', did)
       .where('record.collection', '=', collection)
       .selectAll('record')
       .execute()
+  }
+
+  // @NOTE this logic a placeholder until we allow users to specify these constraints themselves.
+  // Ensures that we don't end-up with duplicate likes, reposts, and follows from race conditions.
+
+  async getBacklinkDeletions(uri: AtUri, record: unknown) {
+    const recordBacklinks = getBacklinks(uri, record)
+    const conflicts = await Promise.all(
+      recordBacklinks.map((backlink) =>
+        this.getRecordBacklinks({
+          collection: uri.collection,
+          path: backlink.path,
+          linkTo: backlink.linkToDid ?? backlink.linkToUri ?? '',
+        }),
+      ),
+    )
+    return conflicts
+      .flat()
+      .map(({ rkey }) =>
+        prepareDelete({ did: this.db.did, collection: uri.collection, rkey }),
+      )
   }
 }
 
 // @NOTE in the future this can be replaced with a more generic routine that pulls backlinks based on lex docs.
 // For now we just want to ensure we're tracking links from follows, blocks, likes, and reposts.
 
-function getBacklinks(uri: AtUri, record: unknown): Backlink[] {
+export const getBacklinks = (uri: AtUri, record: unknown): Backlink[] => {
   if (
     record?.['$type'] === ids.AppBskyGraphFollow ||
     record?.['$type'] === ids.AppBskyGraphBlock
@@ -272,7 +189,7 @@ function getBacklinks(uri: AtUri, record: unknown): Backlink[] {
       return []
     }
     try {
-      ident.ensureValidDid(subject)
+      syntax.ensureValidDid(subject)
     } catch {
       return []
     }

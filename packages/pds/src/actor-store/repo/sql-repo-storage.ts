@@ -8,18 +8,13 @@ import {
 } from '@atproto/repo'
 import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
-import { UserDb } from '../user-db'
-import { IpldBlock } from '../user-db/tables/ipld-block'
+import { ActorDb, IpldBlock } from '../actor-db'
 import { sql } from 'kysely'
 
 export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
   cache: BlockMap = new BlockMap()
 
-  constructor(
-    public db: UserDb,
-    public did: string,
-    public timestamp?: string,
-  ) {
+  constructor(public db: ActorDb, public timestamp?: string) {
     super()
   }
 

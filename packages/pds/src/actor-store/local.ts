@@ -31,13 +31,13 @@ import {
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { UserDb } from '../user-db'
+import { ActorDb } from './actor-db'
 
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
-export class LocalService {
+export class ActorLocal {
   constructor(
-    public db: UserDb,
+    public db: ActorDb,
     public signingKey: Keypair,
     public pdsHostname: string,
     public appViewAgent?: AtpAgent,
@@ -52,8 +52,8 @@ export class LocalService {
     appviewDid?: string,
     appviewCdnUrlPattern?: string,
   ) {
-    return (db: UserDb) =>
-      new LocalService(
+    return (db: ActorDb) =>
+      new ActorLocal(
         db,
         signingKey,
         pdsHostname,

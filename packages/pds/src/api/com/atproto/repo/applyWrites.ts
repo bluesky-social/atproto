@@ -14,7 +14,6 @@ import {
   PreparedWrite,
 } from '../../../../repo'
 import AppContext from '../../../../context'
-import { ConcurrentWriteError } from '../../../../services/repo'
 
 const ratelimitPoints = ({ input }: { input: HandlerInput }) => {
   let points = 0
@@ -108,19 +107,17 @@ export default function (server: Server, ctx: AppContext) {
 
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
-      try {
-        await ctx.services
-          .repo(ctx.db)
-          .processWrites({ did, writes, swapCommitCid }, 10)
-      } catch (err) {
-        if (err instanceof BadCommitSwapError) {
-          throw new InvalidRequestError(err.message, 'InvalidSwap')
-        } else if (err instanceof ConcurrentWriteError) {
-          throw new InvalidRequestError(err.message, 'ConcurrentWrites')
-        } else {
-          throw err
+      await ctx.actorStore.transact(did, async (actorTxn) => {
+        try {
+          await actorTxn.repo.processWrites(writes, swapCommitCid)
+        } catch (err) {
+          if (err instanceof BadCommitSwapError) {
+            throw new InvalidRequestError(err.message, 'InvalidSwap')
+          } else {
+            throw err
+          }
         }
-      }
+      })
     },
   })
 }

@@ -3,25 +3,24 @@ import crypto from 'crypto'
 import { CID } from 'multiformats/cid'
 import bytes from 'bytes'
 import { fromStream as fileTypeFromStream } from 'file-type'
-import { BlobStore, CidSet, WriteOpAction } from '@atproto/repo'
+import { BlobStore, WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BlobRef } from '@atproto/lexicon'
-import { UserDb } from '../user-db'
+import { ActorDb, Blob as BlobTable } from '../actor-db'
 import {
   PreparedBlobRef,
   PreparedWrite,
   PreparedDelete,
   PreparedUpdate,
-} from '../repo/types'
-import { Blob as BlobTable } from '../user-db/tables/blob'
-import * as img from '../image'
-import { BackgroundQueue } from '../background'
+} from '../../repo/types'
+import * as img from '../../image'
+import { BackgroundQueue } from '../../background'
 
-export class Blobs {
+export class ActorBlob {
   constructor(
-    public db: UserDb,
+    public db: ActorDb,
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
   ) {}
@@ -62,8 +61,8 @@ export class Blobs {
     return new BlobRef(cid, mimeType, size)
   }
 
-  async processWriteBlobs(did: string, rev: string, writes: PreparedWrite[]) {
-    await this.deleteDereferencedBlobs(did, writes)
+  async processWriteBlobs(rev: string, writes: PreparedWrite[]) {
+    await this.deleteDereferencedBlobs(writes)
 
     const blobPromises: Promise<void>[] = []
     for (const write of writes) {
@@ -72,15 +71,15 @@ export class Blobs {
         write.action === WriteOpAction.Update
       ) {
         for (const blob of write.blobs) {
-          blobPromises.push(this.verifyBlobAndMakePermanent(did, blob))
-          blobPromises.push(this.associateBlob(blob, write.uri, rev, did))
+          blobPromises.push(this.verifyBlobAndMakePermanent(blob))
+          blobPromises.push(this.associateBlob(blob, write.uri, rev))
         }
       }
     }
     await Promise.all(blobPromises)
   }
 
-  async deleteDereferencedBlobs(did: string, writes: PreparedWrite[]) {
+  async deleteDereferencedBlobs(writes: PreparedWrite[]) {
     const deletes = writes.filter(
       (w) => w.action === WriteOpAction.Delete,
     ) as PreparedDelete[]
@@ -92,7 +91,6 @@ export class Blobs {
 
     const deletedRepoBlobs = await this.db.db
       .deleteFrom('repo_blob')
-      .where('did', '=', did)
       .where('recordUri', 'in', uris)
       .returningAll()
       .execute()
@@ -101,7 +99,6 @@ export class Blobs {
     const deletedRepoBlobCids = deletedRepoBlobs.map((row) => row.cid)
     const duplicateCids = await this.db.db
       .selectFrom('repo_blob')
-      .where('did', '=', did)
       .where('cid', 'in', deletedRepoBlobCids)
       .select('cid')
       .execute()
@@ -135,25 +132,18 @@ export class Blobs {
     const stillUsed = stillUsedRes.map((row) => row.cid)
 
     const blobsToDelete = cidsToDelete.filter((cid) => !stillUsed.includes(cid))
-
-    // @TODO FIX ME
-
-    // move actual blob deletion to the background queue
-    // if (blobsToDelete.length > 0) {
-    //   this.db.onCommit(() => {
-    //     this.backgroundQueue.add(async () => {
-    //       await Promise.allSettled(
-    //         blobsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
-    //       )
-    //     })
-    //   })
-    // }
+    if (blobsToDelete.length > 0) {
+      this.db.onCommit(() => {
+        this.backgroundQueue.add(async () => {
+          await Promise.allSettled(
+            blobsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
+          )
+        })
+      })
+    }
   }
 
-  async verifyBlobAndMakePermanent(
-    creator: string,
-    blob: PreparedBlobRef,
-  ): Promise<void> {
+  async verifyBlobAndMakePermanent(blob: PreparedBlobRef): Promise<void> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('blob')
@@ -189,7 +179,6 @@ export class Blobs {
     blob: PreparedBlobRef,
     recordUri: AtUri,
     repoRev: string,
-    did: string,
   ): Promise<void> {
     await this.db.db
       .insertInto('repo_blob')
@@ -197,30 +186,16 @@ export class Blobs {
         cid: blob.cid.toString(),
         recordUri: recordUri.toString(),
         repoRev,
-        did,
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
   }
 
-  async listSinceRev(did: string, rev?: string): Promise<CID[]> {
-    let builder = this.db.db
-      .selectFrom('repo_blob')
-      .where('did', '=', did)
-      .select('cid')
-    if (rev) {
-      builder = builder.where('repoRev', '>', rev)
-    }
-    const res = await builder.execute()
-    const cids = res.map((row) => CID.parse(row.cid))
-    return new CidSet(cids).toList()
-  }
-
-  async deleteForUser(did: string): Promise<void> {
+  async deleteAll(): Promise<void> {
     // Not done in transaction because it would be too long, prone to contention.
     // Also, this can safely be run multiple times if it fails.
     const deleted = await this.db.db.deleteFrom('blob').returningAll().execute()
-    await this.db.db.deleteFrom('repo_blob').where('did', '=', did).execute()
+    await this.db.db.deleteFrom('repo_blob').execute()
     const deletedCids = deleted.map((d) => d.cid)
     let duplicateCids: string[] = []
     if (deletedCids.length > 0) {

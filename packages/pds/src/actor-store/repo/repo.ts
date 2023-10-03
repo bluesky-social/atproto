@@ -9,130 +9,73 @@ import {
   BadRecordSwapError,
   PreparedCreate,
   PreparedWrite,
-} from '../repo/types'
-import { Blobs } from './blobs'
-import { createWriteToOp, writeToOp } from '../repo'
-import { wait } from '@atproto/common'
-import { BackgroundQueue } from '../background'
-import { Crawlers } from '../crawlers'
-import { UserDb } from '../user-db'
-import { RecordService } from './record'
+} from '../../repo/types'
+import { ActorBlob } from './blob'
+import { createWriteToOp, writeToOp } from '../../repo'
+import { BackgroundQueue } from '../../background'
+import { ActorDb } from '../actor-db'
+import { ActorRecordTransactor } from './record-transactor'
 
-export class RepoService {
-  blobs: Blobs
-  record: RecordService
+export class ActorRepo {
+  blobs: ActorBlob
+  record: ActorRecordTransactor
 
   constructor(
-    public db: UserDb,
+    public db: ActorDb,
     public repoSigningKey: crypto.Keypair,
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
-    public crawlers: Crawlers,
   ) {
-    this.blobs = new Blobs(db, blobstore, backgroundQueue)
-    this.record = new RecordService(db)
+    this.blobs = new ActorBlob(db, blobstore, backgroundQueue)
+    this.record = new ActorRecordTransactor(db)
   }
 
   static creator(
     keypair: crypto.Keypair,
     blobstore: BlobStore,
     backgroundQueue: BackgroundQueue,
-    crawlers: Crawlers,
   ) {
-    return (db: UserDb) =>
-      new RepoService(db, keypair, blobstore, backgroundQueue, crawlers)
+    return (db: ActorDb) =>
+      new ActorRepo(db, keypair, blobstore, backgroundQueue)
   }
 
-  private async serviceTx<T>(
-    fn: (srvc: RepoService) => Promise<T>,
-  ): Promise<T> {
-    this.db.assertNotTransaction()
-    return this.db.transaction((dbTxn) => {
-      const srvc = new RepoService(
-        dbTxn,
-        this.repoSigningKey,
-        this.blobstore,
-        this.backgroundQueue,
-        this.crawlers,
-      )
-      return fn(srvc)
-    })
-  }
-
-  async createRepo(did: string, writes: PreparedCreate[], now: string) {
+  async createRepo(writes: PreparedCreate[], now: string) {
     this.db.assertTransaction()
-    const storage = new SqlRepoStorage(this.db, did, now)
+    const storage = new SqlRepoStorage(this.db, now)
     const writeOps = writes.map(createWriteToOp)
     const commit = await Repo.formatInitCommit(
       storage,
-      did,
+      this.db.did,
       this.repoSigningKey,
       writeOps,
     )
     await Promise.all([
       storage.applyCommit(commit),
       this.indexWrites(writes, now),
-      this.blobs.processWriteBlobs(did, commit.rev, writes),
+      this.blobs.processWriteBlobs(commit.rev, writes),
     ])
     // await this.afterWriteProcessing(did, commit, writes)
   }
 
-  async processCommit(
-    did: string,
-    writes: PreparedWrite[],
-    commitData: CommitData,
-    now: string,
-  ) {
+  async processWrites(writes: PreparedWrite[], swapCommitCid?: CID) {
     this.db.assertTransaction()
-    const storage = new SqlRepoStorage(this.db, did, now)
+    const now = new Date().toISOString()
+    const storage = new SqlRepoStorage(this.db, now)
+    const commit = await this.formatCommit(storage, writes, swapCommitCid)
     await Promise.all([
       // persist the commit to repo storage
-      storage.applyCommit(commitData),
+      storage.applyCommit(commit),
       // & send to indexing
-      this.indexWrites(writes, now, commitData.rev),
+      this.indexWrites(writes, now, commit.rev),
       // process blobs
-      this.blobs.processWriteBlobs(did, commitData.rev, writes),
+      this.blobs.processWriteBlobs(commit.rev, writes),
       // do any other processing needed after write
     ])
     // await this.afterWriteProcessing(did, commitData, writes)
   }
 
-  async processWrites(
-    toWrite: { did: string; writes: PreparedWrite[]; swapCommitCid?: CID },
-    times: number,
-    timeout = 100,
-    prevStorage?: SqlRepoStorage,
-  ) {
-    this.db.assertNotTransaction()
-    const { did, writes, swapCommitCid } = toWrite
-    // we may have some useful cached blocks in the storage, so re-use the previous instance
-    const storage = prevStorage ?? new SqlRepoStorage(this.db, did)
-    try {
-      const commit = await this.formatCommit(
-        storage,
-        did,
-        writes,
-        swapCommitCid,
-      )
-      await this.serviceTx(async (srvcTx) =>
-        srvcTx.processCommit(did, writes, commit, new Date().toISOString()),
-      )
-    } catch (err) {
-      if (err instanceof ConcurrentWriteError) {
-        if (times <= 1) {
-          throw err
-        }
-        await wait(timeout)
-        return this.processWrites(toWrite, times - 1, timeout, storage)
-      } else {
-        throw err
-      }
-    }
-  }
-
   async formatCommit(
     storage: SqlRepoStorage,
-    did: string,
     writes: PreparedWrite[],
     swapCommit?: CID,
   ): Promise<CommitData> {
@@ -140,9 +83,7 @@ export class RepoService {
     // we just check if it is currently held by another txn
     const currRoot = await storage.getRootDetailed()
     if (!currRoot) {
-      throw new InvalidRequestError(
-        `${did} is not a registered repo on this server`,
-      )
+      throw new InvalidRequestError(`No repo root found for ${this.db.did}`)
     }
     if (swapCommit && !currRoot.cid.equals(swapCommit)) {
       throw new BadCommitSwapError(currRoot.cid)
@@ -178,24 +119,12 @@ export class RepoService {
       }
     }
 
-    let commit: CommitData
-    try {
-      const repo = await Repo.load(storage, currRoot.cid)
-      const writeOps = writes.map(writeToOp)
-      commit = await repo.formatCommit(writeOps, this.repoSigningKey)
-    } catch (err) {
-      // if an error occurs, check if it is attributable to a concurrent write
-      const curr = await storage.getRoot()
-      if (!currRoot.cid.equals(curr)) {
-        throw new ConcurrentWriteError()
-      } else {
-        throw err
-      }
-    }
+    const repo = await Repo.load(storage, currRoot.cid)
+    const writeOps = writes.map(writeToOp)
+    const commit = await repo.formatCommit(writeOps, this.repoSigningKey)
 
     // find blocks that would be deleted but are referenced by another record
     const dupeRecordCids = await this.getDuplicateRecordCids(
-      did,
       commit.removedCids.toList(),
       delAndUpdateUris,
     )
@@ -237,7 +166,6 @@ export class RepoService {
   }
 
   async getDuplicateRecordCids(
-    did: string,
     cids: CID[],
     touchedUris: AtUri[],
   ): Promise<CID[]> {
@@ -278,11 +206,5 @@ export class RepoService {
     // await this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute()
     // await this.db.db.deleteFrom('ipld_block').execute()
     // await this.blobs.deleteForUser(did)
-  }
-}
-
-export class ConcurrentWriteError extends Error {
-  constructor() {
-    super('too many concurrent writes')
   }
 }

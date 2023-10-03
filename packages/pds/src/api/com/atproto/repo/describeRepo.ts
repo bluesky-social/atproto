@@ -22,9 +22,9 @@ export default function (server: Server, ctx: AppContext) {
     const handle = id.getHandle(didDoc)
     const handleIsCorrect = handle === account.handle
 
-    const collections = await ctx.services
-      .record(ctx.db)
-      .listCollectionsForDid(account.did)
+    const collections = await ctx.actorStore
+      .reader(account.did)
+      .record.listCollections()
 
     return {
       encoding: 'application/json',

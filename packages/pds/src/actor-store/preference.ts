@@ -1,11 +1,11 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { UserDb } from '../user-db'
+import { ActorDb } from './actor-db'
 
-export class PreferencesService {
-  constructor(public db: UserDb) {}
+export class ActorPreference {
+  constructor(public db: ActorDb) {}
 
   static creator() {
-    return (db: UserDb) => new PreferencesService(db)
+    return (db: ActorDb) => new ActorPreference(db)
   }
 
   async getPreferences(
