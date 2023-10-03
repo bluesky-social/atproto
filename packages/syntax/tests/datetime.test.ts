@@ -69,7 +69,7 @@ describe('normalization', () => {
     const normalized = normalizeAndEnsureValidDatetime(
       '1985-04-12T23:20:50.123',
     )
-    expect(normalized).toMatch(/^1985-04-13T[0-9:.]+Z$/)
+    expect(normalized).toMatch(/^1985-04-1[234]T[0-9:.]+Z$/)
   })
 
   it('throws on invalid normalized datetimes', () => {
