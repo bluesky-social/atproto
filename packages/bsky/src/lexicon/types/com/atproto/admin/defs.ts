@@ -118,6 +118,7 @@ export function validateActionReversal(v: unknown): ValidationResult {
 
 export interface ActionMeta {
   resolveReportIds?: number[]
+  reportType?: ComAtprotoModerationDefs.ReasonType
   [k: string]: unknown
 }
 
@@ -410,9 +411,8 @@ export function validateModeration(v: unknown): ValidationResult {
 }
 
 export interface ModerationDetail {
-  currentAction?: ActionViewCurrent
   actions: ActionView[]
-  reports: ReportView[]
+  subjectStatus?: SubjectStatusView
   [k: string]: unknown
 }
 

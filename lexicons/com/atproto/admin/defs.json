@@ -101,7 +101,11 @@
     "actionMeta": {
       "type": "object",
       "properties": {
-        "resolveReportIds": { "type": "array", "items": { "type": "integer" } }
+        "resolveReportIds": { "type": "array", "items": { "type": "integer" } },
+        "reportType": {
+          "type": "ref",
+          "ref": "com.atproto.moderation.defs#reasonType"
+        }
       }
     },
     "actionType": {
@@ -377,16 +381,15 @@
     },
     "moderationDetail": {
       "type": "object",
-      "required": ["actions", "reports"],
+      "required": ["actions"],
       "properties": {
-        "currentAction": { "type": "ref", "ref": "#actionViewCurrent" },
         "actions": {
           "type": "array",
           "items": { "type": "ref", "ref": "#actionView" }
         },
-        "reports": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "#reportView" }
+        "subjectStatus": {
+          "type": "ref",
+          "ref": "#subjectStatusView"
         }
       }
     },

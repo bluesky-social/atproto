@@ -19,7 +19,7 @@ import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/mo
 import { ModerationAction } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
-import { ModerationReportRowWithHandle } from '.'
+import { ModerationActionRowWithHandle } from '.'
 import { ids } from '../../lexicon/lexicons'
 
 export class ModerationViews {
@@ -609,7 +609,7 @@ type RepoResult = DidHandle & RepoRoot
 
 type ActionResult = Selectable<ModerationAction>
 
-type ReportResult = ModerationReportRowWithHandle
+type ReportResult = ModerationActionRowWithHandle
 
 type RecordResult = {
   uri: string

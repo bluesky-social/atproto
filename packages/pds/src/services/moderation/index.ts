@@ -66,7 +66,7 @@ export class ModerationService {
       .execute()
   }
 
-  async getReport(id: number): Promise<ModerationReportRow | undefined> {
+  async getReport(id: number): Promise<ModerationActionRow | undefined> {
     return await this.db.db
       .selectFrom('moderation_report')
       .selectAll()
@@ -84,7 +84,7 @@ export class ModerationService {
     reverse?: boolean
     reporters?: string[]
     actionedBy?: string
-  }): Promise<ModerationReportRowWithHandle[]> {
+  }): Promise<ModerationActionRowWithHandle[]> {
     const {
       subject,
       resolved,
@@ -196,7 +196,7 @@ export class ModerationService {
       .execute()
   }
 
-  async getReportOrThrow(id: number): Promise<ModerationReportRow> {
+  async getReportOrThrow(id: number): Promise<ModerationActionRow> {
     const report = await this.getReport(id)
     if (!report) throw new InvalidRequestError('Report not found')
     return report
@@ -555,12 +555,12 @@ export class ModerationService {
   }
 
   async report(info: {
-    reasonType: ModerationReportRow['reasonType']
+    reasonType: ModerationActionRow['reasonType']
     reason?: string
     subject: { did: string } | { uri: AtUri; cid?: CID }
     reportedBy: string
     createdAt?: Date
-  }): Promise<ModerationReportRow> {
+  }): Promise<ModerationActionRow> {
     const {
       reasonType,
       reason,
@@ -611,8 +611,8 @@ export class ModerationService {
 
 export type ModerationActionRow = Selectable<ModerationAction>
 
-export type ModerationReportRow = Selectable<ModerationReport>
-export type ModerationReportRowWithHandle = ModerationReportRow & {
+export type ModerationActionRow = Selectable<ModerationReport>
+export type ModerationActionRowWithHandle = ModerationActionRow & {
   handle?: string | null
 }
 

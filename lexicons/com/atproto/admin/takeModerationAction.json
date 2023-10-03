@@ -70,7 +70,11 @@
     "actionMeta": {
       "type": "object",
       "properties": {
-        "reportType": { "type": "string" }
+        "resolveReportIds": { "type": "array", "items": { "type": "integer" } },
+        "reportType": {
+          "type": "ref",
+          "ref": "com.atproto.moderation.defs#reasonType"
+        }
       }
     }
   }

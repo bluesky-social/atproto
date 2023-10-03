@@ -6,10 +6,7 @@ import { BlobRef, jsonStringToLex } from '@atproto/lexicon'
 import { Database } from '../../db'
 import { Actor } from '../../db/tables/actor'
 import { Record as RecordRow } from '../../db/tables/record'
-import {
-  ModerationAction,
-  ModerationSubjectStatus,
-} from '../../db/tables/moderation'
+import { ModerationAction } from '../../db/tables/moderation'
 import {
   RepoView,
   RepoViewDetail,
@@ -20,11 +17,16 @@ import {
   ReportView,
   ReportViewDetail,
   BlobView,
+  SubjectStatusView,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
-import { ModerationReportRowWithHandle } from './types'
+import {
+  ModerationActionRowWithHandle,
+  ModerationSubjectStatusRow,
+} from './types'
 import { getSelfLabels } from '../label'
+import { REASONOTHER } from '../../lexicon/types/com/atproto/moderation/defs'
 
 export class ModerationViews {
   constructor(private db: Database) {}
@@ -107,14 +109,7 @@ export class ModerationViews {
 
   async repoDetail(result: RepoResult): Promise<RepoViewDetail> {
     const repo = await this.repo(result)
-    const [reportResults, actionResults] = await Promise.all([
-      this.db.db
-        .selectFrom('moderation_report')
-        .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
-        .where('subjectDid', '=', repo.did)
-        .orderBy('id', 'desc')
-        .selectAll()
-        .execute(),
+    const [actionResults] = await Promise.all([
       this.db.db
         .selectFrom('moderation_action')
         .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
@@ -123,8 +118,7 @@ export class ModerationViews {
         .selectAll()
         .execute(),
     ])
-    const [reports, actions, labels] = await Promise.all([
-      this.report(reportResults),
+    const [actions, labels] = await Promise.all([
       this.action(actionResults),
       this.labels(repo.did),
     ])
@@ -132,7 +126,6 @@ export class ModerationViews {
       ...repo,
       moderation: {
         ...repo.moderation,
-        reports,
         actions,
       },
       labels,
@@ -208,15 +201,8 @@ export class ModerationViews {
   }
 
   async recordDetail(result: RecordResult): Promise<RecordViewDetail> {
-    const [record, reportResults, actionResults] = await Promise.all([
+    const [record, actionResults, subjectStatusResult] = await Promise.all([
       this.record(result),
-      this.db.db
-        .selectFrom('moderation_report')
-        .where('subjectType', '=', 'com.atproto.repo.strongRef')
-        .where('subjectUri', '=', result.uri)
-        .orderBy('id', 'desc')
-        .selectAll()
-        .execute(),
       this.db.db
         .selectFrom('moderation_action')
         .where('subjectType', '=', 'com.atproto.repo.strongRef')
@@ -224,12 +210,21 @@ export class ModerationViews {
         .orderBy('id', 'desc')
         .selectAll()
         .execute(),
+      this.db.db
+        .selectFrom('moderation_subject_status')
+        .where('subjectType', '=', 'com.atproto.repo.strongRef')
+        .where('subjectUri', '=', result.uri)
+        .orderBy('id', 'desc')
+        .selectAll()
+        .executeTakeFirst(),
     ])
-    const [reports, actions, blobs, labels] = await Promise.all([
-      this.report(reportResults),
+    const [actions, blobs, labels, subjectStatus] = await Promise.all([
       this.action(actionResults),
       this.blob(findBlobRefs(record.value)),
       this.labels(record.uri),
+      subjectStatusResult
+        ? this.subjectStatus(subjectStatusResult)
+        : Promise.resolve(undefined),
     ])
     const selfLabels = getSelfLabels({
       uri: result.uri,
@@ -241,7 +236,7 @@ export class ModerationViews {
       blobs,
       moderation: {
         ...record.moderation,
-        reports,
+        subjectStatus,
         actions,
       },
       labels: [...labels, ...selfLabels],
@@ -336,7 +331,7 @@ export class ModerationViews {
     const action = await this.action(result)
     const reportResults = action.resolvedReportIds?.length
       ? await this.db.db
-          .selectFrom('moderation_report')
+          .selectFrom('moderation_action')
           .where('id', 'in', action.resolvedReportIds)
           .orderBy('id', 'desc')
           .selectAll()
@@ -397,9 +392,9 @@ export class ModerationViews {
       const decoratedView: ReportView = {
         id: res.id,
         createdAt: res.createdAt,
-        reasonType: res.reasonType,
-        reason: res.reason ?? undefined,
-        reportedBy: res.reportedByDid,
+        reasonType: res.meta?.reportType || REASONOTHER,
+        reason: res.comment ?? undefined,
+        reportedBy: res.createdBy,
         subject:
           res.subjectType === 'com.atproto.admin.defs#repoRef'
             ? {
@@ -428,9 +423,11 @@ export class ModerationViews {
     return {
       id: report.id,
       createdAt: report.createdAt,
-      reasonType: report.reasonType,
-      reason: report.reason ?? undefined,
-      reportedBy: report.reportedByDid,
+      // Ideally, we would never have a report entry that does not have a reasonType but at the schema level
+      // we are not guarantying that so in whatever case, if we end up with such entries, default to 'other'
+      reasonType: report.meta?.reportType || REASONOTHER,
+      reason: report.comment ?? undefined,
+      reportedBy: report.createdBy,
       subject:
         report.subjectType === 'com.atproto.admin.defs#repoRef'
           ? {
@@ -569,30 +566,36 @@ export class ModerationViews {
       neg: l.neg,
     }))
   }
-
+  subjectStatus(result: ModerationSubjectStatusRow): Promise<SubjectStatusView>
+  subjectStatus(
+    result: ModerationSubjectStatusRow[],
+  ): Promise<SubjectStatusView[]>
   async subjectStatus(
-    moderationSubjectStatusResult: Selectable<ModerationSubjectStatus>[],
-  ) {
-    const decoratedSubjectStatuses = moderationSubjectStatusResult.map(
-      (subjectStatus) => ({
-        id: subjectStatus.id,
-        status: subjectStatus.status,
-        updatedAt: subjectStatus.updatedAt,
-        subject:
-          subjectStatus.subjectType === 'com.atproto.admin.defs#repoRef'
-            ? {
-                $type: 'com.atproto.admin.defs#repoRef',
-                did: subjectStatus.subjectDid,
-              }
-            : {
-                $type: 'com.atproto.repo.strongRef',
-                uri: subjectStatus.subjectUri,
-                cid: subjectStatus.subjectCid,
-              },
-      }),
-    )
+    result: ModerationSubjectStatusRow | ModerationSubjectStatusRow[],
+  ): Promise<SubjectStatusView | SubjectStatusView[]> {
+    const results = Array.isArray(result) ? result : [result]
+    if (results.length === 0) return []
 
-    return decoratedSubjectStatuses
+    const decoratedSubjectStatuses = results.map((subjectStatus) => ({
+      id: subjectStatus.id,
+      status: subjectStatus.status,
+      updatedAt: subjectStatus.updatedAt,
+      subject:
+        subjectStatus.subjectType === 'com.atproto.admin.defs#repoRef'
+          ? {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: subjectStatus.subjectDid,
+            }
+          : {
+              $type: 'com.atproto.repo.strongRef',
+              uri: subjectStatus.subjectUri,
+              cid: subjectStatus.subjectCid,
+            },
+    }))
+
+    return Array.isArray(results)
+      ? decoratedSubjectStatuses
+      : decoratedSubjectStatuses[0]
   }
 }
 
@@ -600,7 +603,7 @@ type RepoResult = Actor
 
 type ActionResult = Selectable<ModerationAction>
 
-type ReportResult = ModerationReportRowWithHandle
+type ReportResult = ModerationActionRowWithHandle
 
 type RecordResult = RecordRow
 

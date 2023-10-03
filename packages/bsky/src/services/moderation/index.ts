@@ -11,6 +11,7 @@ import {
   ActionMeta,
   ESCALATE,
   FLAG,
+  REPORT,
   REVERT,
   TAKEDOWN,
 } from '../../lexicon/types/com/atproto/admin/defs'
@@ -18,8 +19,7 @@ import { addHoursToDate } from '../../util/date'
 import { adjustModerationSubjectStatus } from './status'
 import {
   ModerationActionRow,
-  ModerationReportRow,
-  ModerationReportRowWithHandle,
+  ModerationActionRowWithHandle,
   ReversibleModerationAction,
   SubjectInfo,
 } from './types'
@@ -84,9 +84,10 @@ export class ModerationService {
       .execute()
   }
 
-  async getReport(id: number): Promise<ModerationReportRow | undefined> {
+  async getReport(id: number): Promise<ModerationActionRow | undefined> {
     return await this.db.db
-      .selectFrom('moderation_report')
+      .selectFrom('moderation_action')
+      .where('action', '=', REPORT)
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
@@ -102,7 +103,7 @@ export class ModerationService {
     reverse?: boolean
     reporters?: string[]
     actionedBy?: string
-  }): Promise<ModerationReportRowWithHandle[]> {
+  }): Promise<ModerationActionRowWithHandle[]> {
     const {
       subject,
       resolved,
@@ -115,7 +116,9 @@ export class ModerationService {
       actionedBy,
     } = opts
     const { ref } = this.db.db.dynamic
-    let builder = this.db.db.selectFrom('moderation_report')
+    let builder = this.db.db
+      .selectFrom('moderation_action')
+      .where('action', '=', REPORT)
     if (subject) {
       builder = builder.where((qb) => {
         return qb
@@ -151,7 +154,7 @@ export class ModerationService {
     }
 
     if (reporters?.length) {
-      builder = builder.where('reportedByDid', 'in', reporters)
+      builder = builder.where('createdBy', 'in', reporters)
     }
 
     if (resolved !== undefined) {
@@ -205,14 +208,14 @@ export class ModerationService {
       builder = builder.where('id', reverse ? '>' : '<', cursorNumeric)
     }
     return await builder
-      .leftJoin('actor', 'actor.did', 'moderation_report.subjectDid')
-      .selectAll(['moderation_report', 'actor'])
+      .leftJoin('actor', 'actor.did', 'moderation_action.subjectDid')
+      .selectAll(['moderation_action', 'actor'])
       .orderBy('id', reverse ? 'asc' : 'desc')
       .limit(limit)
       .execute()
   }
 
-  async getReportOrThrow(id: number): Promise<ModerationReportRow> {
+  async getReportOrThrow(id: number): Promise<ModerationActionRow> {
     const report = await this.getReport(id)
     if (!report) throw new InvalidRequestError('Report not found')
     return report
@@ -544,12 +547,12 @@ export class ModerationService {
   }
 
   async report(info: {
-    reasonType: ModerationReportRow['reasonType']
+    reasonType: string
     reason?: string
     subject: { did: string } | { uri: AtUri; cid: CID }
     reportedBy: string
     createdAt?: Date
-  }): Promise<ModerationReportRow> {
+  }): Promise<ModerationActionRow> {
     const {
       reasonType,
       reason,
@@ -579,12 +582,14 @@ export class ModerationService {
     }
 
     const report = await this.db.db
-      .insertInto('moderation_report')
+      .insertInto('moderation_action')
       .values({
-        reasonType,
-        reason: reason || null,
+        // action: reasonType,
+        action: REPORT,
+        meta: { reportType: reasonType },
+        comment: reason || null,
         createdAt: createdAt.toISOString(),
-        reportedByDid: reportedBy,
+        createdBy: reportedBy,
         ...subjectInfo,
       })
       .returningAll()

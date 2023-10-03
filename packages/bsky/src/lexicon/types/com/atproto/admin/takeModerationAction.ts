@@ -9,6 +9,7 @@ import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 import * as ComAtprotoAdminDefs from './defs'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
+import * as ComAtprotoModerationDefs from '../moderation/defs'
 
 export interface QueryParams {}
 
@@ -73,7 +74,8 @@ export type Handler<HA extends HandlerAuth = never> = (
 ) => Promise<HandlerOutput> | HandlerOutput
 
 export interface ActionMeta {
-  reportType?: string
+  resolveReportIds?: number[]
+  reportType?: ComAtprotoModerationDefs.ReasonType
   [k: string]: unknown
 }
 

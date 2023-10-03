@@ -203,6 +203,10 @@ export const schemaDict = {
               type: 'integer',
             },
           },
+          reportType: {
+            type: 'ref',
+            ref: 'lex:com.atproto.moderation.defs#reasonType',
+          },
         },
       },
       actionType: {
@@ -629,12 +633,8 @@ export const schemaDict = {
       },
       moderationDetail: {
         type: 'object',
-        required: ['actions', 'reports'],
+        required: ['actions'],
         properties: {
-          currentAction: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionViewCurrent',
-          },
           actions: {
             type: 'array',
             items: {
@@ -642,12 +642,9 @@ export const schemaDict = {
               ref: 'lex:com.atproto.admin.defs#actionView',
             },
           },
-          reports: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#reportView',
-            },
+          subjectStatus: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#subjectStatusView',
           },
         },
       },
@@ -1378,8 +1375,15 @@ export const schemaDict = {
       actionMeta: {
         type: 'object',
         properties: {
+          resolveReportIds: {
+            type: 'array',
+            items: {
+              type: 'integer',
+            },
+          },
           reportType: {
-            type: 'string',
+            type: 'ref',
+            ref: 'lex:com.atproto.moderation.defs#reasonType',
           },
         },
       },

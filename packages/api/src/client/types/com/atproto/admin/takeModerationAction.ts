@@ -8,6 +8,7 @@ import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from './defs'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
+import * as ComAtprotoModerationDefs from '../moderation/defs'
 
 export interface QueryParams {}
 
@@ -68,7 +69,8 @@ export function toKnownErr(e: any) {
 }
 
 export interface ActionMeta {
-  reportType?: string
+  resolveReportIds?: number[]
+  reportType?: ComAtprotoModerationDefs.ReasonType
   [k: string]: unknown
 }
 
