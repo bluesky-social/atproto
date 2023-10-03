@@ -21,9 +21,11 @@ import { Crawlers } from './crawlers'
 import { DiskBlobStore } from './storage'
 import { getRedisClient } from './redis'
 import { RuntimeFlags } from './runtime-flags'
+import { UserDbCoordinator } from './user-db'
 
 export type AppContextOptions = {
   db: Database
+  userDb: UserDbCoordinator
   blobstore: BlobStore
   mailer: ServerMailer
   moderationMailer: ModerationMailer
@@ -46,6 +48,7 @@ export type AppContextOptions = {
 
 export class AppContext {
   public db: Database
+  public userDb: UserDbCoordinator
   public blobstore: BlobStore
   public mailer: ServerMailer
   public moderationMailer: ModerationMailer
@@ -102,6 +105,7 @@ export class AppContext {
             poolMaxUses: cfg.db.pool.maxUses,
             poolIdleTimeoutMs: cfg.db.pool.idleTimeoutMs,
           })
+    const userDb = new UserDbCoordinator('./users')
     const blobstore =
       cfg.blobstore.provider === 's3'
         ? new S3BlobStore({ bucket: cfg.blobstore.bucket })
@@ -190,6 +194,7 @@ export class AppContext {
 
     return new AppContext({
       db,
+      userDb,
       blobstore,
       mailer,
       moderationMailer,

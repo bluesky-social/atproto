@@ -2,7 +2,6 @@
 export interface Record {
   uri: string
   cid: string
-  did: string
   collection: string
   rkey: string
   repoRev: string | null

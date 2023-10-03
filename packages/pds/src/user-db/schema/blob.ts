@@ -1,5 +1,4 @@
 export interface Blob {
-  creator: string
   cid: string
   mimeType: string
   size: number

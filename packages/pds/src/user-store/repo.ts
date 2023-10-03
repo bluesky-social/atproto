@@ -3,33 +3,34 @@ import * as crypto from '@atproto/crypto'
 import { BlobStore, CommitData, Repo, WriteOpAction } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/syntax'
-import Database from '../../db'
-import SqlRepoStorage from '../../sql-repo-storage'
+import SqlRepoStorage from './sql-repo-storage'
 import {
   BadCommitSwapError,
   BadRecordSwapError,
   PreparedCreate,
   PreparedWrite,
-} from '../../repo/types'
-import { RepoBlobs } from './blobs'
-import { createWriteToOp, writeToOp } from '../../repo'
-import { RecordService } from '../record'
-import * as sequencer from '../../sequencer'
+} from '../repo/types'
+import { Blobs } from './blobs'
+import { createWriteToOp, writeToOp } from '../repo'
 import { wait } from '@atproto/common'
-import { BackgroundQueue } from '../../background'
-import { Crawlers } from '../../crawlers'
+import { BackgroundQueue } from '../background'
+import { Crawlers } from '../crawlers'
+import { UserDb } from '../user-db'
+import { RecordService } from './record'
 
 export class RepoService {
-  blobs: RepoBlobs
+  blobs: Blobs
+  record: RecordService
 
   constructor(
-    public db: Database,
+    public db: UserDb,
     public repoSigningKey: crypto.Keypair,
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
     public crawlers: Crawlers,
   ) {
-    this.blobs = new RepoBlobs(db, blobstore, backgroundQueue)
+    this.blobs = new Blobs(db, blobstore, backgroundQueue)
+    this.record = new RecordService(db)
   }
 
   static creator(
@@ -38,12 +39,8 @@ export class RepoService {
     backgroundQueue: BackgroundQueue,
     crawlers: Crawlers,
   ) {
-    return (db: Database) =>
+    return (db: UserDb) =>
       new RepoService(db, keypair, blobstore, backgroundQueue, crawlers)
-  }
-
-  services = {
-    record: RecordService.creator(),
   }
 
   private async serviceTx<T>(
@@ -77,7 +74,7 @@ export class RepoService {
       this.indexWrites(writes, now),
       this.blobs.processWriteBlobs(did, commit.rev, writes),
     ])
-    await this.afterWriteProcessing(did, commit, writes)
+    // await this.afterWriteProcessing(did, commit, writes)
   }
 
   async processCommit(
@@ -88,10 +85,6 @@ export class RepoService {
   ) {
     this.db.assertTransaction()
     const storage = new SqlRepoStorage(this.db, did, now)
-    const obtained = await storage.lockRepo()
-    if (!obtained) {
-      throw new ConcurrentWriteError()
-    }
     await Promise.all([
       // persist the commit to repo storage
       storage.applyCommit(commitData),
@@ -101,7 +94,7 @@ export class RepoService {
       this.blobs.processWriteBlobs(did, commitData.rev, writes),
       // do any other processing needed after write
     ])
-    await this.afterWriteProcessing(did, commitData, writes)
+    // await this.afterWriteProcessing(did, commitData, writes)
   }
 
   async processWrites(
@@ -145,10 +138,6 @@ export class RepoService {
   ): Promise<CommitData> {
     // this is not in a txn, so this won't actually hold the lock,
     // we just check if it is currently held by another txn
-    const available = await storage.lockAvailable()
-    if (!available) {
-      throw new ConcurrentWriteError()
-    }
     const currRoot = await storage.getRootDetailed()
     if (!currRoot) {
       throw new InvalidRequestError(
@@ -160,7 +149,6 @@ export class RepoService {
     }
     // cache last commit since there's likely overlap
     await storage.cacheRev(currRoot.rev)
-    const recordTxn = this.services.record(this.db)
     const newRecordCids: CID[] = []
     const delAndUpdateUris: AtUri[] = []
     for (const write of writes) {
@@ -174,7 +162,7 @@ export class RepoService {
       if (swapCid === undefined) {
         continue
       }
-      const record = await recordTxn.getRecord(uri, null, true)
+      const record = await this.record.getRecord(uri, null, true)
       const currRecord = record && CID.parse(record.cid)
       if (action === WriteOpAction.Create && swapCid !== null) {
         throw new BadRecordSwapError(currRecord) // There should be no current record for a create
@@ -227,14 +215,13 @@ export class RepoService {
 
   async indexWrites(writes: PreparedWrite[], now: string, rev?: string) {
     this.db.assertTransaction()
-    const recordTxn = this.services.record(this.db)
     await Promise.all(
       writes.map(async (write) => {
         if (
           write.action === WriteOpAction.Create ||
           write.action === WriteOpAction.Update
         ) {
-          await recordTxn.indexRecord(
+          await this.record.indexRecord(
             write.uri,
             write.cid,
             write.record,
@@ -243,7 +230,7 @@ export class RepoService {
             now,
           )
         } else if (write.action === WriteOpAction.Delete) {
-          await recordTxn.deleteRecord(write.uri)
+          await this.record.deleteRecord(write.uri)
         }
       }),
     )
@@ -261,7 +248,6 @@ export class RepoService {
     const uriStrs = touchedUris.map((u) => u.toString())
     const res = await this.db.db
       .selectFrom('record')
-      .where('did', '=', did)
       .where('cid', 'in', cidStrs)
       .where('uri', 'not in', uriStrs)
       .select('cid')
@@ -269,32 +255,29 @@ export class RepoService {
     return res.map((row) => CID.parse(row.cid))
   }
 
-  async afterWriteProcessing(
-    did: string,
-    commitData: CommitData,
-    writes: PreparedWrite[],
-  ) {
-    this.db.onCommit(() => {
-      this.backgroundQueue.add(async () => {
-        await this.crawlers.notifyOfUpdate()
-      })
-    })
+  // async afterWriteProcessing(
+  //   did: string,
+  //   commitData: CommitData,
+  //   writes: PreparedWrite[],
+  // ) {
+  //   this.db.onCommit(() => {
+  //     this.backgroundQueue.add(async () => {
+  //       await this.crawlers.notifyOfUpdate()
+  //     })
+  //   })
+  //   const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
+  //   await sequencer.sequenceEvt(this.db, seqEvt)
+  // }
 
-    const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
-    await sequencer.sequenceEvt(this.db, seqEvt)
-  }
-
-  async deleteRepo(did: string) {
+  async deleteRepo(_did: string) {
+    // @TODO DELETE FULL SQLITE FILE
     // Not done in transaction because it would be too long, prone to contention.
     // Also, this can safely be run multiple times if it fails.
     // delete all blocks from this did & no other did
-    await this.db.db.deleteFrom('repo_root').where('did', '=', did).execute()
-    await this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute()
-    await this.db.db
-      .deleteFrom('ipld_block')
-      .where('creator', '=', did)
-      .execute()
-    await this.blobs.deleteForUser(did)
+    // await this.db.db.deleteFrom('repo_root').where('did', '=', did).execute()
+    // await this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute()
+    // await this.db.db.deleteFrom('ipld_block').execute()
+    // await this.blobs.deleteForUser(did)
   }
 }
 

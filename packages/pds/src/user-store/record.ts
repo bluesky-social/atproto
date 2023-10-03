@@ -2,17 +2,17 @@ import { CID } from 'multiformats/cid'
 import { AtUri, ensureValidAtUri } from '@atproto/syntax'
 import * as ident from '@atproto/syntax'
 import { cborToLexRecord, WriteOpAction } from '@atproto/repo'
-import { dbLogger as log } from '../../logger'
-import Database from '../../db'
-import { notSoftDeletedClause } from '../../db/util'
-import { Backlink } from '../../db/tables/backlink'
-import { ids } from '../../lexicon/lexicons'
+import { dbLogger as log } from '../logger'
+import { notSoftDeletedClause } from '../user-db/util'
+import { Backlink } from '../user-db/tables/backlink'
+import { ids } from '../lexicon/lexicons'
+import { UserDb } from '../user-db'
 
 export class RecordService {
-  constructor(public db: Database) {}
+  constructor(public db: UserDb) {}
 
   static creator() {
-    return (db: Database) => new RecordService(db)
+    return (db: UserDb) => new RecordService(db)
   }
 
   async indexRecord(

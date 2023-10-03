@@ -8,22 +8,25 @@ import { AtUri } from '@atproto/syntax'
 import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BlobRef } from '@atproto/lexicon'
-import { PreparedBlobRef, PreparedWrite } from '../../repo/types'
-import Database from '../../db'
-import { Blob as BlobTable } from '../../db/tables/blob'
-import * as img from '../../image'
-import { PreparedDelete, PreparedUpdate } from '../../repo'
-import { BackgroundQueue } from '../../background'
+import { UserDb } from '../user-db'
+import {
+  PreparedBlobRef,
+  PreparedWrite,
+  PreparedDelete,
+  PreparedUpdate,
+} from '../repo/types'
+import { Blob as BlobTable } from '../user-db/tables/blob'
+import * as img from '../image'
+import { BackgroundQueue } from '../background'
 
-export class RepoBlobs {
+export class Blobs {
   constructor(
-    public db: Database,
+    public db: UserDb,
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
   ) {}
 
   async addUntetheredBlob(
-    creator: string,
     userSuggestedMime: string,
     blobStream: stream.Readable,
   ): Promise<BlobRef> {
@@ -41,7 +44,6 @@ export class RepoBlobs {
     await this.db.db
       .insertInto('blob')
       .values({
-        creator,
         cid: cid.toString(),
         mimeType,
         size,
@@ -52,7 +54,7 @@ export class RepoBlobs {
       })
       .onConflict((oc) =>
         oc
-          .columns(['creator', 'cid'])
+          .column('cid')
           .doUpdateSet({ tempKey })
           .where('blob.tempKey', 'is not', null),
       )
@@ -120,7 +122,6 @@ export class RepoBlobs {
 
     await this.db.db
       .deleteFrom('blob')
-      .where('creator', '=', did)
       .where('cid', 'in', cidsToDelete)
       .execute()
 
@@ -135,16 +136,18 @@ export class RepoBlobs {
 
     const blobsToDelete = cidsToDelete.filter((cid) => !stillUsed.includes(cid))
 
+    // @TODO FIX ME
+
     // move actual blob deletion to the background queue
-    if (blobsToDelete.length > 0) {
-      this.db.onCommit(() => {
-        this.backgroundQueue.add(async () => {
-          await Promise.allSettled(
-            blobsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
-          )
-        })
-      })
-    }
+    // if (blobsToDelete.length > 0) {
+    //   this.db.onCommit(() => {
+    //     this.backgroundQueue.add(async () => {
+    //       await Promise.allSettled(
+    //         blobsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
+    //       )
+    //     })
+    //   })
+    // }
   }
 
   async verifyBlobAndMakePermanent(
@@ -155,7 +158,6 @@ export class RepoBlobs {
     const found = await this.db.db
       .selectFrom('blob')
       .selectAll()
-      .where('creator', '=', creator)
       .where('cid', '=', blob.cid.toString())
       .whereNotExists(
         // Check if blob has been taken down
@@ -217,11 +219,7 @@ export class RepoBlobs {
   async deleteForUser(did: string): Promise<void> {
     // Not done in transaction because it would be too long, prone to contention.
     // Also, this can safely be run multiple times if it fails.
-    const deleted = await this.db.db
-      .deleteFrom('blob')
-      .where('creator', '=', did)
-      .returningAll()
-      .execute()
+    const deleted = await this.db.db.deleteFrom('blob').returningAll().execute()
     await this.db.db.deleteFrom('repo_blob').where('did', '=', did).execute()
     const deletedCids = deleted.map((d) => d.cid)
     let duplicateCids: string[] = []

@@ -2,7 +2,6 @@ export interface RepoBlob {
   cid: string
   recordUri: string
   repoRev: string | null
-  did: string
   takedownId: number | null
 }
 

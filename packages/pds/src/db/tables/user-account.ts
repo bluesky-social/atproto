@@ -2,6 +2,7 @@ import { Generated, Selectable } from 'kysely'
 
 export interface UserAccount {
   did: string
+  handle: string | null
   email: string
   passwordScrypt: string
   createdAt: string

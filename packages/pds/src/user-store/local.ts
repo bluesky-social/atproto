@@ -2,42 +2,42 @@ import util from 'util'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { cborToLexRecord } from '@atproto/repo'
-import Database from '../../db'
-import { Record as PostRecord } from '../../lexicon/types/app/bsky/feed/post'
-import { Record as ProfileRecord } from '../../lexicon/types/app/bsky/actor/profile'
-import { ids } from '../../lexicon/lexicons'
+import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
+import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
+import { ids } from '../lexicon/lexicons'
 import {
   ProfileViewBasic,
   ProfileView,
   ProfileViewDetailed,
-} from '../../lexicon/types/app/bsky/actor/defs'
-import { FeedViewPost, PostView } from '../../lexicon/types/app/bsky/feed/defs'
+} from '../lexicon/types/app/bsky/actor/defs'
+import { FeedViewPost, PostView } from '../lexicon/types/app/bsky/feed/defs'
 import {
   Main as EmbedImages,
   isMain as isEmbedImages,
-} from '../../lexicon/types/app/bsky/embed/images'
+} from '../lexicon/types/app/bsky/embed/images'
 import {
   Main as EmbedExternal,
   isMain as isEmbedExternal,
-} from '../../lexicon/types/app/bsky/embed/external'
+} from '../lexicon/types/app/bsky/embed/external'
 import {
   Main as EmbedRecord,
   isMain as isEmbedRecord,
   View as EmbedRecordView,
-} from '../../lexicon/types/app/bsky/embed/record'
+} from '../lexicon/types/app/bsky/embed/record'
 import {
   Main as EmbedRecordWithMedia,
   isMain as isEmbedRecordWithMedia,
-} from '../../lexicon/types/app/bsky/embed/recordWithMedia'
+} from '../lexicon/types/app/bsky/embed/recordWithMedia'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import { UserDb } from '../user-db'
 
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
 export class LocalService {
   constructor(
-    public db: Database,
+    public db: UserDb,
     public signingKey: Keypair,
     public pdsHostname: string,
     public appViewAgent?: AtpAgent,
@@ -52,7 +52,7 @@ export class LocalService {
     appviewDid?: string,
     appviewCdnUrlPattern?: string,
   ) {
-    return (db: Database) =>
+    return (db: UserDb) =>
       new LocalService(
         db,
         signingKey,
@@ -81,21 +81,16 @@ export class LocalService {
     })
   }
 
-  async getRecordsSinceRev(did: string, rev: string): Promise<LocalRecords> {
+  async getRecordsSinceRev(rev: string): Promise<LocalRecords> {
     const res = await this.db.db
       .selectFrom('record')
-      .innerJoin('ipld_block', (join) =>
-        join
-          .onRef('record.did', '=', 'ipld_block.creator')
-          .onRef('record.cid', '=', 'ipld_block.cid'),
-      )
+      .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
       .select([
         'ipld_block.content',
         'uri',
         'ipld_block.cid',
         'record.indexedAt',
       ])
-      .where('did', '=', did)
       .where('record.repoRev', '>', rev)
       .orderBy('record.repoRev', 'asc')
       .execute()
@@ -121,16 +116,10 @@ export class LocalService {
     )
   }
 
-  async getProfileBasic(did: string): Promise<ProfileViewBasic | null> {
+  async getProfileBasic(): Promise<ProfileViewBasic | null> {
     const res = await this.db.db
-      .selectFrom('did_handle')
-      .leftJoin('record', 'record.did', 'did_handle.did')
-      .leftJoin('ipld_block', (join) =>
-        join
-          .onRef('record.did', '=', 'ipld_block.creator')
-          .onRef('record.cid', '=', 'ipld_block.cid'),
-      )
-      .where('did_handle.did', '=', did)
+      .selectFrom('record')
+      .leftJoin('ipld_block', 'ipld_block.cid', 'record.cid')
       .where('record.collection', '=', ids.AppBskyActorProfile)
       .where('record.rkey', '=', 'self')
       .selectAll()
@@ -139,9 +128,14 @@ export class LocalService {
     const record = res.content
       ? (cborToLexRecord(res.content) as ProfileRecord)
       : null
+    // @TODO fix
+    const did = ''
+    const handle = ''
     return {
       did,
-      handle: res.handle,
+      handle,
+      // did,
+      // handle: res.handle,
       displayName: record?.displayName,
       avatar: record?.avatar
         ? this.getImageUrl('avatar', did, record.avatar.ref.toString())
@@ -178,7 +172,7 @@ export class LocalService {
     descript: RecordDescript<PostRecord>,
   ): Promise<PostView | null> {
     const { uri, cid, indexedAt, record } = descript
-    const author = await this.getProfileBasic(uri.hostname)
+    const author = await this.getProfileBasic()
     if (!author) return null
     const embed = record.embed
       ? await this.formatPostEmbed(author.did, record)
