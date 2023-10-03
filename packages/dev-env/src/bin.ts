@@ -1,3 +1,4 @@
+import './env'
 import { generateMockSetup } from './mock'
 import { TestNetwork } from './network'
 import { mockMailer } from './util'
@@ -16,7 +17,7 @@ const run = async () => {
   const network = await TestNetwork.create({
     pds: {
       port: 2583,
-      publicUrl: 'http://localhost:2583',
+      hostname: 'localhost',
       dbPostgresSchema: 'pds',
     },
     bsky: {

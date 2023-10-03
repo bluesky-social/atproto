@@ -96,7 +96,7 @@ Object {
             "$type": "app.bsky.embed.images#view",
             "images": Array [
               Object {
-                "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                "alt": "tests/sample-img/key-landscape-small.jpg",
                 "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(6)@jpeg",
                 "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(6)@jpeg",
               },
@@ -129,7 +129,7 @@ Object {
               "$type": "app.bsky.embed.images",
               "images": Array [
                 Object {
-                  "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                  "alt": "tests/sample-img/key-landscape-small.jpg",
                   "image": Object {
                     "$type": "blob",
                     "mimeType": "image/jpeg",
@@ -369,7 +369,7 @@ Object {
           "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
-              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+              "alt": "tests/sample-img/key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(6)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(6)@jpeg",
             },
@@ -402,7 +402,7 @@ Object {
             "$type": "app.bsky.embed.images",
             "images": Array [
               Object {
-                "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                "alt": "tests/sample-img/key-landscape-small.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -605,7 +605,7 @@ Object {
                         "$type": "app.bsky.embed.images",
                         "images": Array [
                           Object {
-                            "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                            "alt": "tests/sample-img/key-landscape-small.jpg",
                             "image": Object {
                               "$type": "blob",
                               "mimeType": "image/jpeg",
@@ -616,7 +616,7 @@ Object {
                             },
                           },
                           Object {
-                            "alt": "tests/image/fixtures/key-alt.jpg",
+                            "alt": "tests/sample-img/key-alt.jpg",
                             "image": Object {
                               "$type": "blob",
                               "mimeType": "image/jpeg",
@@ -813,12 +813,12 @@ Object {
             "$type": "app.bsky.embed.images#view",
             "images": Array [
               Object {
-                "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                "alt": "tests/sample-img/key-landscape-small.jpg",
                 "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(6)@jpeg",
                 "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(6)@jpeg",
               },
               Object {
-                "alt": "tests/image/fixtures/key-alt.jpg",
+                "alt": "tests/sample-img/key-alt.jpg",
                 "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(11)@jpeg",
                 "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(11)@jpeg",
               },
@@ -886,7 +886,7 @@ Object {
               "$type": "app.bsky.embed.images",
               "images": Array [
                 Object {
-                  "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                  "alt": "tests/sample-img/key-landscape-small.jpg",
                   "image": Object {
                     "$type": "blob",
                     "mimeType": "image/jpeg",
@@ -897,7 +897,7 @@ Object {
                   },
                 },
                 Object {
-                  "alt": "tests/image/fixtures/key-alt.jpg",
+                  "alt": "tests/sample-img/key-alt.jpg",
                   "image": Object {
                     "$type": "blob",
                     "mimeType": "image/jpeg",

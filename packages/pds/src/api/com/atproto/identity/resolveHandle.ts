@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
     if (user) {
       did = user.did
     } else {
-      const supportedHandle = ctx.cfg.availableUserDomains.some(
+      const supportedHandle = ctx.cfg.identity.serviceHandleDomains.some(
         (host) => handle.endsWith(host) || handle === host.slice(1),
       )
       // this should be in our DB & we couldn't find it, so fail
@@ -34,7 +34,7 @@ export default function (server: Server, ctx: AppContext) {
 
     // this is not someone on our server, but we help with resolving anyway
     if (!did) {
-      did = await tryResolveFromAppview(ctx.appviewAgent, handle)
+      did = await tryResolveFromAppView(ctx.appViewAgent, handle)
     }
 
     if (!did) {
@@ -52,7 +52,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-async function tryResolveFromAppview(agent: AtpAgent, handle: string) {
+async function tryResolveFromAppView(agent: AtpAgent, handle: string) {
   try {
     const result = await agent.api.com.atproto.identity.resolveHandle({
       handle,

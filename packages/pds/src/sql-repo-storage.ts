@@ -229,12 +229,6 @@ export class SqlRepoStorage extends ReadableBlockstore implements RepoStorage {
         const res = await this.getBlockRange(since, cursor)
         await writePromise
         writePromise = writeRows(res)
-        for (const row of res) {
-          await car.put({
-            cid: CID.parse(row.cid),
-            bytes: row.content,
-          })
-        }
         const lastRow = res.at(-1)
         if (lastRow && lastRow.repoRev) {
           cursor = {

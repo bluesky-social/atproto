@@ -1,7 +1,6 @@
 import { DAY } from '@atproto/common'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
-import { SeedClient } from './seeds/client'
 import userSeed from './seeds/users'
 
 describe('handle invalidation', () => {
@@ -20,7 +19,7 @@ describe('handle invalidation', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await userSeed(sc)
     await network.processAll()
 

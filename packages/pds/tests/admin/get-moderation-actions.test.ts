@@ -1,3 +1,4 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import {
   ACKNOWLEDGE,
@@ -8,33 +9,25 @@ import {
   REASONOTHER,
   REASONSPAM,
 } from '../../src/lexicon/types/com/atproto/moderation/defs'
-import {
-  runTestServer,
-  forSnapshot,
-  CloseFn,
-  adminAuth,
-  paginateAll,
-} from '../_util'
-import { SeedClient } from '../seeds/client'
+import { forSnapshot, paginateAll } from '../_util'
 import basicSeed from '../seeds/basic'
 
 describe('pds admin get moderation actions view', () => {
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
-  let close: CloseFn
   let sc: SeedClient
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'views_admin_get_moderation_actions',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
     await basicSeed(sc)
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   beforeAll(async () => {
@@ -124,7 +117,7 @@ describe('pds admin get moderation actions view', () => {
   it('gets all moderation actions.', async () => {
     const result = await agent.api.com.atproto.admin.getModerationActions(
       {},
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(forSnapshot(result.data.actions)).toMatchSnapshot()
   })
@@ -132,7 +125,7 @@ describe('pds admin get moderation actions view', () => {
   it('gets all moderation actions for a repo.', async () => {
     const result = await agent.api.com.atproto.admin.getModerationActions(
       { subject: Object.values(sc.dids)[0] },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(forSnapshot(result.data.actions)).toMatchSnapshot()
   })
@@ -140,7 +133,7 @@ describe('pds admin get moderation actions view', () => {
   it('gets all moderation actions for a record.', async () => {
     const result = await agent.api.com.atproto.admin.getModerationActions(
       { subject: Object.values(sc.posts)[0][0].ref.uriStr },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(forSnapshot(result.data.actions)).toMatchSnapshot()
   })
@@ -150,7 +143,7 @@ describe('pds admin get moderation actions view', () => {
     const paginator = async (cursor?: string) => {
       const res = await agent.api.com.atproto.admin.getModerationActions(
         { cursor, limit: 3 },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       )
       return res.data
     }
@@ -162,7 +155,7 @@ describe('pds admin get moderation actions view', () => {
 
     const full = await agent.api.com.atproto.admin.getModerationActions(
       {},
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
 
     expect(full.data.actions.length).toEqual(7) // extra one because of seed client

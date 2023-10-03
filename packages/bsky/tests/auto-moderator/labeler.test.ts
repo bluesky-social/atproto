@@ -1,12 +1,11 @@
-import { AtUri, AtpAgent, BlobRef } from '@atproto/api'
+import { TestNetwork } from '@atproto/dev-env'
+import { AtUri, BlobRef } from '@atproto/api'
 import { Readable } from 'stream'
 import { AutoModerator } from '../../src/auto-moderator'
 import IndexerContext from '../../src/indexer/context'
 import { cidForRecord } from '@atproto/repo'
-import { cidForCbor, TID } from '@atproto/common'
+import { TID } from '@atproto/common'
 import { LabelService } from '../../src/services/label'
-import { TestNetwork } from '@atproto/dev-env'
-import { SeedClient } from '../seeds/client'
 import usersSeed from '../seeds/users'
 import { CID } from 'multiformats/cid'
 import { ImgLabeler } from '../../src/auto-moderator/hive'
@@ -37,8 +36,7 @@ describe('labeler', () => {
     autoMod = ctx.autoMod
     autoMod.imgLabeler = new TestImgLabeler()
     labelSrvc = ctx.services.label(ctx.db)
-    const pdsAgent = new AtpAgent({ service: network.pds.url })
-    const sc = new SeedClient(pdsAgent)
+    const sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
@@ -58,7 +56,7 @@ describe('labeler', () => {
       await repoSvc.blobs.associateBlob(
         preparedBlobRef,
         postUri(),
-        await cidForCbor(1),
+        TID.nextStr(),
         alice,
       )
       return blobRef

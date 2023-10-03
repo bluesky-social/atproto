@@ -30,10 +30,8 @@ export class ServerMailer {
   }
 
   // The returned config can be used inside email templates.
-  static getEmailConfig(config: ServerConfig) {
-    return {
-      appUrlPasswordReset: config.appUrlPasswordReset,
-    }
+  static getEmailConfig(_config: ServerConfig) {
+    return {}
   }
 
   async sendResetPassword(
@@ -74,10 +72,10 @@ export class ServerMailer {
     })
     const res = await this.transporter.sendMail({
       ...mailOpts,
-      from: mailOpts.from ?? this.config.emailNoReplyAddress,
+      from: mailOpts.from ?? this.config.email?.fromAddress,
       html,
     })
-    if (!this.config.emailSmtpUrl) {
+    if (!this.config.email?.smtpUrl) {
       mailerLogger.debug(
         'No SMTP URL has been configured. Intended to send email:\n' +
           JSON.stringify(res, null, 2),

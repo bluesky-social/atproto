@@ -1,13 +1,11 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { SeedClient } from '../seeds/client'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import likesSeed from '../seeds/likes'
 import { constantDate, forSnapshot, paginateAll, stripViewer } from '../_util'
 
 describe('pds like views', () => {
   let network: TestNetwork
   let agent: AtpAgent
-  let pdsAgent: AtpAgent
   let sc: SeedClient
 
   // account dids, for convenience
@@ -19,8 +17,7 @@ describe('pds like views', () => {
       dbPostgresSchema: 'bsky_views_likes',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await likesSeed(sc)
     await network.processAll()
     alice = sc.dids.alice

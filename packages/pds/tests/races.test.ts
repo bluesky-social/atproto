@@ -1,25 +1,24 @@
 import AtpAgent from '@atproto/api'
-import { CloseFn, runTestServer } from './_util'
+import { wait } from '@atproto/common'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { CommitData, readCarWithRoot, verifyRepo } from '@atproto/repo'
 import AppContext from '../src/context'
 import { PreparedWrite, prepareCreate } from '../src/repo'
-import { wait } from '@atproto/common'
 import SqlRepoStorage from '../src/sql-repo-storage'
-import { CommitData, readCarWithRoot, verifyRepo } from '@atproto/repo'
 import { ConcurrentWriteError } from '../src/services/repo'
 
 describe('crud operations', () => {
+  let network: TestNetworkNoAppView
   let ctx: AppContext
   let agent: AtpAgent
   let did: string
-  let close: CloseFn
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'races',
     })
-    ctx = server.ctx
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
+    ctx = network.pds.ctx
+    agent = network.pds.getClient()
     await agent.createAccount({
       email: 'alice@test.com',
       handle: 'alice.test',
@@ -29,7 +28,7 @@ describe('crud operations', () => {
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   const formatWrite = async () => {

@@ -1,7 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewer } from '../_util'
-import { SeedClient } from '../seeds/client'
 import repostsSeed from '../seeds/reposts'
 
 describe('pds repost views', () => {
@@ -18,8 +17,7 @@ describe('pds repost views', () => {
       dbPostgresSchema: 'bsky_views_reposts',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await repostsSeed(sc)
     await network.processAll()
     alice = sc.dids.alice

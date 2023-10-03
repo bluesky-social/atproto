@@ -1,3 +1,4 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import {
   ACKNOWLEDGE,
@@ -7,36 +8,25 @@ import {
   REASONOTHER,
   REASONSPAM,
 } from '../../src/lexicon/types/com/atproto/moderation/defs'
-import {
-  runTestServer,
-  forSnapshot,
-  CloseFn,
-  adminAuth,
-  TestServerInfo,
-  moderatorAuth,
-  triageAuth,
-} from '../_util'
-import { SeedClient } from '../seeds/client'
+import { forSnapshot } from '../_util'
 import basicSeed from '../seeds/basic'
 
 describe('pds admin get repo view', () => {
-  let server: TestServerInfo
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
-  let close: CloseFn
   let sc: SeedClient
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'views_admin_get_repo',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
     await basicSeed(sc)
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   beforeAll(async () => {
@@ -77,7 +67,7 @@ describe('pds admin get repo view', () => {
   it('gets a repo by did, even when taken down.', async () => {
     const result = await agent.api.com.atproto.admin.getRepo(
       { did: sc.dids.alice },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(forSnapshot(result.data)).toMatchSnapshot()
   })
@@ -85,15 +75,15 @@ describe('pds admin get repo view', () => {
   it('does not include account emails for triage mods.', async () => {
     const { data: admin } = await agent.api.com.atproto.admin.getRepo(
       { did: sc.dids.bob },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     const { data: moderator } = await agent.api.com.atproto.admin.getRepo(
       { did: sc.dids.bob },
-      { headers: { authorization: moderatorAuth() } },
+      { headers: network.pds.adminAuthHeaders('moderator') },
     )
     const { data: triage } = await agent.api.com.atproto.admin.getRepo(
       { did: sc.dids.bob },
-      { headers: { authorization: triageAuth() } },
+      { headers: network.pds.adminAuthHeaders('triage') },
     )
     expect(admin.email).toEqual('bob@test.com')
     expect(moderator.email).toEqual('bob@test.com')
@@ -104,7 +94,7 @@ describe('pds admin get repo view', () => {
   it('fails when repo does not exist.', async () => {
     const promise = agent.api.com.atproto.admin.getRepo(
       { did: 'did:plc:doesnotexist' },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     await expect(promise).rejects.toThrow('Repo not found')
   })

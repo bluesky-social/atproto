@@ -1,8 +1,12 @@
 import { TID } from '@atproto/common'
 import { AtUri, AtpAgent } from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { TestFeedGen } from '@atproto/dev-env/src/feed-gen'
-import { Handler as SkeletonHandler } from '@atproto/bsky/src/lexicon/types/app/bsky/feed/getFeedSkeleton'
+import {
+  TestNetwork,
+  TestFeedGen,
+  SeedClient,
+  RecordRef,
+} from '@atproto/dev-env'
+import { Handler as SkeletonHandler } from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { GeneratorView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 import { UnknownFeedError } from '@atproto/api/src/client/types/app/bsky/feed/getFeed'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
@@ -11,9 +15,7 @@ import {
   FeedViewPost,
   SkeletonFeedPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
-import { SeedClient } from './seeds/client'
 import basicSeed from './seeds/basic'
-import { RecordRef } from './seeds/client'
 import { forSnapshot, paginateAll } from './_util'
 
 describe('feed generation', () => {
@@ -38,7 +40,7 @@ describe('feed generation', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
     alice = sc.dids.alice

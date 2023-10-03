@@ -1,3 +1,4 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import {
   ACKNOWLEDGE,
@@ -8,33 +9,25 @@ import {
   REASONOTHER,
   REASONSPAM,
 } from '../../src/lexicon/types/com/atproto/moderation/defs'
-import {
-  runTestServer,
-  forSnapshot,
-  CloseFn,
-  adminAuth,
-  paginateAll,
-} from '../_util'
-import { SeedClient } from '../seeds/client'
+import { forSnapshot, paginateAll } from '../_util'
 import basicSeed from '../seeds/basic'
 
 describe('pds admin get moderation reports view', () => {
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
-  let close: CloseFn
   let sc: SeedClient
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'views_admin_get_moderation_reports',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
     await basicSeed(sc)
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   beforeAll(async () => {
@@ -132,7 +125,7 @@ describe('pds admin get moderation reports view', () => {
 
     const allReports = await agent.api.com.atproto.admin.getModerationReports(
       {},
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
 
     const ignoreSubjects = getDids(allReports).slice(0, 2)
@@ -140,7 +133,7 @@ describe('pds admin get moderation reports view', () => {
     const filteredReportsByDid =
       await agent.api.com.atproto.admin.getModerationReports(
         { ignoreSubjects },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       )
 
     // Validate that when ignored by DID, all reports for that DID is ignored
@@ -159,7 +152,7 @@ describe('pds admin get moderation reports view', () => {
         {
           ignoreSubjects: ignoredAtUriSubjects,
         },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       )
 
     // Validate that when ignored by at uri, only the reports for that at uri is ignored
@@ -176,7 +169,7 @@ describe('pds admin get moderation reports view', () => {
   it('gets all moderation reports.', async () => {
     const result = await agent.api.com.atproto.admin.getModerationReports(
       {},
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(forSnapshot(result.data.reports)).toMatchSnapshot()
   })
@@ -184,7 +177,7 @@ describe('pds admin get moderation reports view', () => {
   it('gets all moderation reports for a repo.', async () => {
     const result = await agent.api.com.atproto.admin.getModerationReports(
       { subject: Object.values(sc.dids)[0] },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(forSnapshot(result.data.reports)).toMatchSnapshot()
   })
@@ -192,7 +185,7 @@ describe('pds admin get moderation reports view', () => {
   it('gets all moderation reports for a record.', async () => {
     const result = await agent.api.com.atproto.admin.getModerationReports(
       { subject: Object.values(sc.posts)[0][0].ref.uriStr },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(forSnapshot(result.data.reports)).toMatchSnapshot()
   })
@@ -200,12 +193,12 @@ describe('pds admin get moderation reports view', () => {
   it('gets all resolved/unresolved moderation reports.', async () => {
     const resolved = await agent.api.com.atproto.admin.getModerationReports(
       { resolved: true },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(forSnapshot(resolved.data.reports)).toMatchSnapshot()
     const unresolved = await agent.api.com.atproto.admin.getModerationReports(
       { resolved: false },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
     expect(forSnapshot(unresolved.data.reports)).toMatchSnapshot()
   })
@@ -221,11 +214,11 @@ describe('pds admin get moderation reports view', () => {
     ] = await Promise.all([
       agent.api.com.atproto.admin.getModerationReports(
         { reverse: true },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       ),
       agent.api.com.atproto.admin.getModerationReports(
         {},
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       ),
     ])
 
@@ -237,7 +230,7 @@ describe('pds admin get moderation reports view', () => {
     const reportsWithTakedown =
       await agent.api.com.atproto.admin.getModerationReports(
         { actionType: TAKEDOWN },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       )
     expect(forSnapshot(reportsWithTakedown.data.reports)).toMatchSnapshot()
   })
@@ -248,21 +241,21 @@ describe('pds admin get moderation reports view', () => {
     const [actionedByAdminOne, actionedByAdminTwo] = await Promise.all([
       agent.api.com.atproto.admin.getModerationReports(
         { actionedBy: adminDidOne },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       ),
       agent.api.com.atproto.admin.getModerationReports(
         { actionedBy: adminDidTwo },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       ),
     ])
     const [fullReportOne, fullReportTwo] = await Promise.all([
       agent.api.com.atproto.admin.getModerationReport(
         { id: actionedByAdminOne.data.reports[0].id },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       ),
       agent.api.com.atproto.admin.getModerationReport(
         { id: actionedByAdminTwo.data.reports[0].id },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       ),
     ])
 
@@ -281,7 +274,7 @@ describe('pds admin get moderation reports view', () => {
     const paginator = async (cursor?: string) => {
       const res = await agent.api.com.atproto.admin.getModerationReports(
         { cursor, limit: 3 },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       )
       return res.data
     }
@@ -293,7 +286,7 @@ describe('pds admin get moderation reports view', () => {
 
     const full = await agent.api.com.atproto.admin.getModerationReports(
       {},
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
 
     expect(full.data.reports.length).toEqual(6)
@@ -306,7 +299,7 @@ describe('pds admin get moderation reports view', () => {
       async (cursor?: string) => {
         const res = await agent.api.com.atproto.admin.getModerationReports(
           { cursor, limit: 3, reverse },
-          { headers: { authorization: adminAuth() } },
+          { headers: network.pds.adminAuthHeaders() },
         )
         return res.data
       }
@@ -326,7 +319,7 @@ describe('pds admin get moderation reports view', () => {
   it('filters reports by reporter DID.', async () => {
     const result = await agent.api.com.atproto.admin.getModerationReports(
       { reporters: [sc.dids.alice] },
-      { headers: { authorization: adminAuth() } },
+      { headers: network.pds.adminAuthHeaders() },
     )
 
     const reporterDidsFromReports = [

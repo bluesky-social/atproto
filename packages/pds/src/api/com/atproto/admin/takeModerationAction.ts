@@ -19,9 +19,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ req, input, auth }) => {
       const access = auth.credentials
       const { db, services } = ctx
-      if (ctx.shouldProxyModeration()) {
+      if (ctx.cfg.bskyAppView.proxyModeration) {
         const { data: result } =
-          await ctx.appviewAgent.com.atproto.admin.takeModerationAction(
+          await ctx.appViewAgent.com.atproto.admin.takeModerationAction(
             input.body,
             authPassthru(req, true),
           )

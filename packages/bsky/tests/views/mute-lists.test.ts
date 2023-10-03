@@ -1,7 +1,6 @@
 import AtpAgent, { AtUri } from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
-import { RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('bsky views with mutes from mute lists', () => {
@@ -21,7 +20,7 @@ describe('bsky views with mutes from mute lists', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -43,7 +42,7 @@ describe('bsky views with mutes from mute lists', () => {
   it('creates a list with some items', async () => {
     const avatar = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-portrait-small.jpg',
+      'tests/sample-img/key-portrait-small.jpg',
       'image/jpeg',
     )
     // alice creates mute list with bob & carol that dan uses

@@ -1,28 +1,27 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { runTestServer, CloseFn, paginateAll, adminAuth } from '../_util'
-import { SeedClient } from '../seeds/client'
+import { paginateAll } from '../_util'
 import usersBulkSeed from '../seeds/users-bulk'
 
 describe('pds admin repo search view', () => {
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
-  let close: CloseFn
   let sc: SeedClient
   let headers: { [s: string]: string }
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'views_admin_repo_search',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
     await usersBulkSeed(sc)
-    headers = { authorization: adminAuth() }
+    headers = network.pds.adminAuthHeaders()
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   beforeAll(async () => {

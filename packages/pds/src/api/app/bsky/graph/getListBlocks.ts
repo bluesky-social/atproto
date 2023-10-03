@@ -6,7 +6,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.graph.getListBlocks(
+      const res = await ctx.appViewAgent.api.app.bsky.graph.getListBlocks(
         params,
         await ctx.serviceAuthHeaders(requester),
       )

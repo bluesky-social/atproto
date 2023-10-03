@@ -44,9 +44,11 @@ ENTRYPOINT ["dumb-init", "--"]
 
 WORKDIR /app/services/pds
 COPY --from=build /app /app
+RUN mkdir /app/data && chown node /app/data
 
+VOLUME /app/data
 EXPOSE 3000
-ENV PORT=3000
+ENV PDS_PORT=3000
 ENV NODE_ENV=production
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user

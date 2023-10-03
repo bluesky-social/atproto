@@ -1,10 +1,9 @@
 import { once, EventEmitter } from 'events'
 import Mail from 'nodemailer/lib/mailer'
 import AtpAgent from '@atproto/api'
-import { SeedClient } from './seeds/client'
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import userSeed from './seeds/users'
 import { ServerMailer } from '../src/mailer'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
 import {
   ComAtprotoServerConfirmEmail,
   ComAtprotoServerUpdateEmail,
@@ -27,7 +26,7 @@ describe('email confirmation', () => {
     })
     mailer = network.pds.ctx.mailer
     agent = network.pds.getClient()
-    sc = new SeedClient(agent)
+    sc = network.getSeedClient()
     await userSeed(sc)
     alice = sc.accounts[sc.dids.alice]
 
@@ -61,7 +60,7 @@ describe('email confirmation', () => {
     expect(session.data.emailConfirmed).toEqual(false)
   })
 
-  it('disallows email update without token when unverified', async () => {
+  it('disallows email update when unverified', async () => {
     const res = await agent.api.com.atproto.server.requestEmailUpdate(
       undefined,
       { headers: sc.getHeaders(alice.did) },
@@ -75,21 +74,35 @@ describe('email confirmation', () => {
       { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
     )
     await expect(attempt).rejects.toThrow()
-
-    // await agent.api.com.atproto.server.updateEmail(
-    //   {
-    //     email: 'new-alice@example.com',
-    //   },
-    //   { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
-    // )
-    // const session = await agent.api.com.atproto.server.getSession(
-    //   {},
-    //   { headers: sc.getHeaders(alice.did) },
-    // )
-    // expect(session.data.email).toEqual('new-alice@example.com')
-    // expect(session.data.emailConfirmed).toEqual(false)
-    // alice.email = session.data.email
+    const session = await agent.api.com.atproto.server.getSession(
+      {},
+      { headers: sc.getHeaders(alice.did) },
+    )
+    expect(session.data.email).toEqual(alice.email)
+    expect(session.data.emailConfirmed).toEqual(false)
   })
+
+  // it('allows email update without token when unverified', async () => {
+  //   const res = await agent.api.com.atproto.server.requestEmailUpdate(
+  //     undefined,
+  //     { headers: sc.getHeaders(alice.did) },
+  //   )
+  //   expect(res.data.tokenRequired).toBe(false)
+
+  //   await agent.api.com.atproto.server.updateEmail(
+  //     {
+  //       email: 'new-alice@example.com',
+  //     },
+  //     { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
+  //   )
+  //   const session = await agent.api.com.atproto.server.getSession(
+  //     {},
+  //     { headers: sc.getHeaders(alice.did) },
+  //   )
+  //   expect(session.data.email).toEqual('new-alice@example.com')
+  //   expect(session.data.emailConfirmed).toEqual(false)
+  //   alice.email = session.data.email
+  // })
 
   let confirmToken
 
@@ -187,6 +200,19 @@ describe('email confirmation', () => {
     )
     await expect(attempt).rejects.toThrow(
       ComAtprotoServerUpdateEmail.InvalidTokenError,
+    )
+  })
+
+  it('fails email update with a badly formatted email', async () => {
+    const attempt = agent.api.com.atproto.server.updateEmail(
+      {
+        email: 'bad-email@disposeamail.com',
+        token: updateToken,
+      },
+      { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
+    )
+    await expect(attempt).rejects.toThrow(
+      'This email address is not supported, please use a different email.',
     )
   })
 

@@ -1,5 +1,9 @@
-import { TestNetworkNoAppView, getIngester, ingestAll } from '@atproto/dev-env'
-import { SeedClient } from '../seeds/client'
+import {
+  TestNetworkNoAppView,
+  SeedClient,
+  getIngester,
+  ingestAll,
+} from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import { BskyIngester } from '../../src'
 
@@ -18,8 +22,7 @@ describe('pipeline reingestion', () => {
       name: TEST_NAME,
       ingesterPartitionCount: 1,
     })
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
   })
 

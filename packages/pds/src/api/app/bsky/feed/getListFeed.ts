@@ -6,7 +6,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.accessVerifier,
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.feed.getListFeed(
+      const res = await ctx.appViewAgent.api.app.bsky.feed.getListFeed(
         params,
         await ctx.serviceAuthHeaders(requester),
       )

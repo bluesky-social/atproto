@@ -1,23 +1,17 @@
-import {
-  CloseFn,
-  runTestServer,
-  TestServerInfo,
-} from '@atproto/pds/tests/_util'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { BskyAgent, ComAtprotoRepoPutRecord, AppBskyActorProfile } from '..'
 
 describe('agent', () => {
-  let server: TestServerInfo
-  let close: CloseFn
+  let network: TestNetworkNoAppView
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'bsky_agent',
     })
-    close = server.close
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   const getProfileDisplayName = async (
@@ -35,7 +29,7 @@ describe('agent', () => {
   }
 
   it('upsertProfile correctly creates and updates profiles.', async () => {
-    const agent = new BskyAgent({ service: server.url })
+    const agent = new BskyAgent({ service: network.pds.url })
 
     await agent.createAccount({
       handle: 'user1.test',
@@ -67,7 +61,7 @@ describe('agent', () => {
   })
 
   it('upsertProfile correctly handles CAS failures.', async () => {
-    const agent = new BskyAgent({ service: server.url })
+    const agent = new BskyAgent({ service: network.pds.url })
 
     await agent.createAccount({
       handle: 'user2.test',
@@ -106,7 +100,7 @@ describe('agent', () => {
   })
 
   it('upsertProfile wont endlessly retry CAS failures.', async () => {
-    const agent = new BskyAgent({ service: server.url })
+    const agent = new BskyAgent({ service: network.pds.url })
 
     await agent.createAccount({
       handle: 'user3.test',
@@ -135,7 +129,7 @@ describe('agent', () => {
   })
 
   it('upsertProfile validates the record.', async () => {
-    const agent = new BskyAgent({ service: server.url })
+    const agent = new BskyAgent({ service: network.pds.url })
 
     await agent.createAccount({
       handle: 'user4.test',
@@ -153,70 +147,70 @@ describe('agent', () => {
 
   describe('app', () => {
     it('should retrieve the api app', () => {
-      const agent = new BskyAgent({ service: server.url })
+      const agent = new BskyAgent({ service: network.pds.url })
       expect(agent.app).toBe(agent.api.app)
     })
   })
 
   describe('post', () => {
     it('should throw if no session', async () => {
-      const agent = new BskyAgent({ service: server.url })
+      const agent = new BskyAgent({ service: network.pds.url })
       await expect(agent.post({ text: 'foo' })).rejects.toThrow('Not logged in')
     })
   })
 
   describe('deletePost', () => {
     it('should throw if no session', async () => {
-      const agent = new BskyAgent({ service: server.url })
+      const agent = new BskyAgent({ service: network.pds.url })
       await expect(agent.deletePost('foo')).rejects.toThrow('Not logged in')
     })
   })
 
   describe('like', () => {
     it('should throw if no session', async () => {
-      const agent = new BskyAgent({ service: server.url })
+      const agent = new BskyAgent({ service: network.pds.url })
       await expect(agent.like('foo', 'bar')).rejects.toThrow('Not logged in')
     })
   })
 
   describe('deleteLike', () => {
     it('should throw if no session', async () => {
-      const agent = new BskyAgent({ service: server.url })
+      const agent = new BskyAgent({ service: network.pds.url })
       await expect(agent.deleteLike('foo')).rejects.toThrow('Not logged in')
     })
   })
 
   describe('repost', () => {
     it('should throw if no session', async () => {
-      const agent = new BskyAgent({ service: server.url })
+      const agent = new BskyAgent({ service: network.pds.url })
       await expect(agent.repost('foo', 'bar')).rejects.toThrow('Not logged in')
     })
   })
 
   describe('deleteRepost', () => {
     it('should throw if no session', async () => {
-      const agent = new BskyAgent({ service: server.url })
+      const agent = new BskyAgent({ service: network.pds.url })
       await expect(agent.deleteRepost('foo')).rejects.toThrow('Not logged in')
     })
   })
 
   describe('follow', () => {
     it('should throw if no session', async () => {
-      const agent = new BskyAgent({ service: server.url })
+      const agent = new BskyAgent({ service: network.pds.url })
       await expect(agent.follow('foo')).rejects.toThrow('Not logged in')
     })
   })
 
   describe('deleteFollow', () => {
     it('should throw if no session', async () => {
-      const agent = new BskyAgent({ service: server.url })
+      const agent = new BskyAgent({ service: network.pds.url })
       await expect(agent.deleteFollow('foo')).rejects.toThrow('Not logged in')
     })
   })
 
   describe('preferences methods', () => {
     it('gets and sets preferences correctly', async () => {
-      const agent = new BskyAgent({ service: server.url })
+      const agent = new BskyAgent({ service: network.pds.url })
 
       await agent.createAccount({
         handle: 'user5.test',
@@ -714,7 +708,7 @@ describe('agent', () => {
     })
 
     it('resolves duplicates correctly', async () => {
-      const agent = new BskyAgent({ service: server.url })
+      const agent = new BskyAgent({ service: network.pds.url })
 
       await agent.createAccount({
         handle: 'user6.test',
