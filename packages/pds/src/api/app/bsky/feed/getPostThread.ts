@@ -32,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
         auth.credentials.type === 'access' ? auth.credentials.did : null
 
       if (!requester) {
-        const res = await ctx.appviewAgent.api.app.bsky.feed.getPostThread(
+        const res = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
           params,
           authPassthru(req),
         )
