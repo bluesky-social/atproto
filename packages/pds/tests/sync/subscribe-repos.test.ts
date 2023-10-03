@@ -1,3 +1,4 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import {
   cborDecode,
@@ -17,14 +18,13 @@ import {
   Tombstone as TombstoneEvt,
 } from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
 import { AppContext, Database } from '../../src'
-import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import { CloseFn, runTestServer } from '../_util'
 import { CID } from 'multiformats/cid'
 
 describe('repo subscribe repos', () => {
   let serverHost: string
 
+  let network: TestNetworkNoAppView
   let db: Database
   let ctx: AppContext
 
@@ -35,18 +35,18 @@ describe('repo subscribe repos', () => {
   let carol: string
   let dan: string
 
-  let close: CloseFn
-
   beforeAll(async () => {
-    const server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'repo_subscribe_repos',
+      pds: {
+        repoBackfillLimitMs: HOUR,
+      },
     })
-    serverHost = server.url.replace('http://', '')
-    ctx = server.ctx
-    db = server.ctx.db
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    serverHost = network.pds.url.replace('http://', '')
+    ctx = network.pds.ctx
+    db = network.pds.ctx.db
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -55,7 +55,7 @@ describe('repo subscribe repos', () => {
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   const getRepo = async (did: string): Promise<repo.VerifiedRepo> => {

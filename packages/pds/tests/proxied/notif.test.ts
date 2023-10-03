@@ -3,9 +3,8 @@ import http from 'http'
 import { AddressInfo } from 'net'
 import express from 'express'
 import AtpAgent from '@atproto/api'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { verifyJwt } from '@atproto/xrpc-server'
-import { SeedClient } from '../seeds/client'
 import usersSeed from '../seeds/users'
 import { createServer } from '../../src/lexicon'
 
@@ -24,7 +23,7 @@ describe('notif service proxy', () => {
     network.pds.server.app.get
     const plc = network.plc.getClient()
     agent = network.pds.getClient()
-    sc = new SeedClient(agent)
+    sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
     // piggybacking existing plc did, turn it into a notif service

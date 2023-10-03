@@ -1,10 +1,10 @@
 import { AtUri } from '@atproto/syntax'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.getRecord(async ({ req, params }) => {
+  server.com.atproto.repo.getRecord(async ({ params }) => {
     const { repo, collection, rkey, cid } = params
     const did = await ctx.services.account(ctx.db).getDidForActor(repo)
 
@@ -14,29 +14,23 @@ export default function (server: Server, ctx: AppContext) {
       const record = await ctx.services
         .record(ctx.db)
         .getRecord(uri, cid || null)
-      if (record) {
-        return {
-          encoding: 'application/json',
-          body: {
-            uri: record.uri,
-            cid: record.cid,
-            value: record.value,
-          },
-        }
+      if (!record || record.takedownId !== null) {
+        throw new InvalidRequestError(`Could not locate record: ${uri}`)
+      }
+      return {
+        encoding: 'application/json',
+        body: {
+          uri: uri.toString(),
+          cid: record.cid,
+          value: record.value,
+        },
       }
     }
 
-    if (await ctx.canProxyRead(req)) {
-      const res = await ctx.appviewAgent.api.com.atproto.repo.getRecord(params)
-      return {
-        encoding: 'application/json',
-        body: res.data,
-      }
-    } else {
-      const uri = AtUri.make(did || repo, collection, rkey)
-      throw new InvalidRequestError(
-        `Could not locate record: ${uri.toString()}`,
-      )
+    const res = await ctx.appViewAgent.api.com.atproto.repo.getRecord(params)
+    return {
+      encoding: 'application/json',
+      body: res.data,
     }
   })
 }

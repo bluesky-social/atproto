@@ -1,6 +1,4 @@
-import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { SeedClient } from './seeds/client'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import userSeed from './seeds/users'
 import { IdResolver } from '@atproto/identity'
 import DidSqlCache from '../src/did-cache'
@@ -23,8 +21,7 @@ describe('did cache', () => {
     })
     idResolver = network.bsky.indexer.ctx.idResolver
     didCache = network.bsky.indexer.ctx.didCache
-    const pdsAgent = new AtpAgent({ service: network.pds.url })
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await userSeed(sc)
     await network.processAll()
     alice = sc.dids.alice

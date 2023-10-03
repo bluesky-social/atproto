@@ -41,6 +41,7 @@ import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+import * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
@@ -55,9 +56,12 @@ import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSessi
 import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
+import * as ComAtprotoServerRequestEmailConfirmation from './types/com/atproto/server/requestEmailConfirmation'
+import * as ComAtprotoServerRequestEmailUpdate from './types/com/atproto/server/requestEmailUpdate'
 import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
+import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
@@ -70,7 +74,6 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
-import * as ComAtprotoTempUpgradeRepoVersion from './types/com/atproto/temp/upgradeRepoVersion'
 import * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -95,6 +98,7 @@ import * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGener
 import * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
+import * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
 import * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 import * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 import * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
@@ -103,6 +107,8 @@ import * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 import * as AppBskyFeedLike from './types/app/bsky/feed/like'
 import * as AppBskyFeedPost from './types/app/bsky/feed/post'
 import * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
+import * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
+import * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate'
 import * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 import * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
 import * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
@@ -110,10 +116,13 @@ import * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 import * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 import * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 import * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
+import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
+import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphList from './types/app/bsky/graph/list'
+import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 import * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
@@ -124,10 +133,12 @@ import * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
-import * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
+import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
+import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
+import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
@@ -163,6 +174,7 @@ export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+export * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 export * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 export * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
@@ -177,9 +189,12 @@ export * as ComAtprotoServerGetSession from './types/com/atproto/server/getSessi
 export * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 export * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 export * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
+export * as ComAtprotoServerRequestEmailConfirmation from './types/com/atproto/server/requestEmailConfirmation'
+export * as ComAtprotoServerRequestEmailUpdate from './types/com/atproto/server/requestEmailUpdate'
 export * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
 export * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
+export * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
@@ -192,7 +207,6 @@ export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
-export * as ComAtprotoTempUpgradeRepoVersion from './types/com/atproto/temp/upgradeRepoVersion'
 export * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -217,6 +231,7 @@ export * as AppBskyFeedGetFeedGenerator from './types/app/bsky/feed/getFeedGener
 export * as AppBskyFeedGetFeedGenerators from './types/app/bsky/feed/getFeedGenerators'
 export * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 export * as AppBskyFeedGetLikes from './types/app/bsky/feed/getLikes'
+export * as AppBskyFeedGetListFeed from './types/app/bsky/feed/getListFeed'
 export * as AppBskyFeedGetPostThread from './types/app/bsky/feed/getPostThread'
 export * as AppBskyFeedGetPosts from './types/app/bsky/feed/getPosts'
 export * as AppBskyFeedGetRepostedBy from './types/app/bsky/feed/getRepostedBy'
@@ -225,6 +240,8 @@ export * as AppBskyFeedGetTimeline from './types/app/bsky/feed/getTimeline'
 export * as AppBskyFeedLike from './types/app/bsky/feed/like'
 export * as AppBskyFeedPost from './types/app/bsky/feed/post'
 export * as AppBskyFeedRepost from './types/app/bsky/feed/repost'
+export * as AppBskyFeedSearchPosts from './types/app/bsky/feed/searchPosts'
+export * as AppBskyFeedThreadgate from './types/app/bsky/feed/threadgate'
 export * as AppBskyGraphBlock from './types/app/bsky/graph/block'
 export * as AppBskyGraphDefs from './types/app/bsky/graph/defs'
 export * as AppBskyGraphFollow from './types/app/bsky/graph/follow'
@@ -232,10 +249,13 @@ export * as AppBskyGraphGetBlocks from './types/app/bsky/graph/getBlocks'
 export * as AppBskyGraphGetFollowers from './types/app/bsky/graph/getFollowers'
 export * as AppBskyGraphGetFollows from './types/app/bsky/graph/getFollows'
 export * as AppBskyGraphGetList from './types/app/bsky/graph/getList'
+export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks'
 export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
+export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 export * as AppBskyGraphList from './types/app/bsky/graph/list'
+export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
 export * as AppBskyGraphListitem from './types/app/bsky/graph/listitem'
 export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
@@ -246,10 +266,12 @@ export * as AppBskyNotificationListNotifications from './types/app/bsky/notifica
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
-export * as AppBskyUnspeccedApplyLabels from './types/app/bsky/unspecced/applyLabels'
+export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 export * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
+export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
+export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
 export const COM_ATPROTO_ADMIN = {
   DefsTakedown: 'com.atproto.admin.defs#takedown',
@@ -267,6 +289,7 @@ export const COM_ATPROTO_MODERATION = {
 }
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
+  DefsCuratelist: 'app.bsky.graph.defs#curatelist',
 }
 
 export class AtpBaseClient {
@@ -318,7 +341,6 @@ export class AtprotoNS {
   repo: RepoNS
   server: ServerNS
   sync: SyncNS
-  temp: TempNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -329,7 +351,6 @@ export class AtprotoNS {
     this.repo = new RepoNS(service)
     this.server = new ServerNS(service)
     this.sync = new SyncNS(service)
-    this.temp = new TempNS(service)
   }
 }
 
@@ -699,6 +720,17 @@ export class ServerNS {
     this._service = service
   }
 
+  confirmEmail(
+    data?: ComAtprotoServerConfirmEmail.InputSchema,
+    opts?: ComAtprotoServerConfirmEmail.CallOptions,
+  ): Promise<ComAtprotoServerConfirmEmail.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.confirmEmail', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerConfirmEmail.toKnownErr(e)
+      })
+  }
+
   createAccount(
     data?: ComAtprotoServerCreateAccount.InputSchema,
     opts?: ComAtprotoServerCreateAccount.CallOptions,
@@ -842,6 +874,28 @@ export class ServerNS {
       })
   }
 
+  requestEmailConfirmation(
+    data?: ComAtprotoServerRequestEmailConfirmation.InputSchema,
+    opts?: ComAtprotoServerRequestEmailConfirmation.CallOptions,
+  ): Promise<ComAtprotoServerRequestEmailConfirmation.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.requestEmailConfirmation', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerRequestEmailConfirmation.toKnownErr(e)
+      })
+  }
+
+  requestEmailUpdate(
+    data?: ComAtprotoServerRequestEmailUpdate.InputSchema,
+    opts?: ComAtprotoServerRequestEmailUpdate.CallOptions,
+  ): Promise<ComAtprotoServerRequestEmailUpdate.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.requestEmailUpdate', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerRequestEmailUpdate.toKnownErr(e)
+      })
+  }
+
   requestPasswordReset(
     data?: ComAtprotoServerRequestPasswordReset.InputSchema,
     opts?: ComAtprotoServerRequestPasswordReset.CallOptions,
@@ -872,6 +926,17 @@ export class ServerNS {
       .call('com.atproto.server.revokeAppPassword', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoServerRevokeAppPassword.toKnownErr(e)
+      })
+  }
+
+  updateEmail(
+    data?: ComAtprotoServerUpdateEmail.InputSchema,
+    opts?: ComAtprotoServerUpdateEmail.CallOptions,
+  ): Promise<ComAtprotoServerUpdateEmail.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.updateEmail', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerUpdateEmail.toKnownErr(e)
       })
   }
 }
@@ -1001,25 +1066,6 @@ export class SyncNS {
       .call('com.atproto.sync.requestCrawl', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoSyncRequestCrawl.toKnownErr(e)
-      })
-  }
-}
-
-export class TempNS {
-  _service: AtpServiceClient
-
-  constructor(service: AtpServiceClient) {
-    this._service = service
-  }
-
-  upgradeRepoVersion(
-    data?: ComAtprotoTempUpgradeRepoVersion.InputSchema,
-    opts?: ComAtprotoTempUpgradeRepoVersion.CallOptions,
-  ): Promise<ComAtprotoTempUpgradeRepoVersion.Response> {
-    return this._service.xrpc
-      .call('com.atproto.temp.upgradeRepoVersion', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoTempUpgradeRepoVersion.toKnownErr(e)
       })
   }
 }
@@ -1218,6 +1264,7 @@ export class FeedNS {
   like: LikeRecord
   post: PostRecord
   repost: RepostRecord
+  threadgate: ThreadgateRecord
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -1225,6 +1272,7 @@ export class FeedNS {
     this.like = new LikeRecord(service)
     this.post = new PostRecord(service)
     this.repost = new RepostRecord(service)
+    this.threadgate = new ThreadgateRecord(service)
   }
 
   describeFeedGenerator(
@@ -1326,6 +1374,17 @@ export class FeedNS {
       })
   }
 
+  getListFeed(
+    params?: AppBskyFeedGetListFeed.QueryParams,
+    opts?: AppBskyFeedGetListFeed.CallOptions,
+  ): Promise<AppBskyFeedGetListFeed.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.getListFeed', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedGetListFeed.toKnownErr(e)
+      })
+  }
+
   getPostThread(
     params?: AppBskyFeedGetPostThread.QueryParams,
     opts?: AppBskyFeedGetPostThread.CallOptions,
@@ -1378,6 +1437,17 @@ export class FeedNS {
       .call('app.bsky.feed.getTimeline', params, undefined, opts)
       .catch((e) => {
         throw AppBskyFeedGetTimeline.toKnownErr(e)
+      })
+  }
+
+  searchPosts(
+    params?: AppBskyFeedSearchPosts.QueryParams,
+    opts?: AppBskyFeedSearchPosts.CallOptions,
+  ): Promise<AppBskyFeedSearchPosts.Response> {
+    return this._service.xrpc
+      .call('app.bsky.feed.searchPosts', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyFeedSearchPosts.toKnownErr(e)
       })
   }
 }
@@ -1626,11 +1696,77 @@ export class RepostRecord {
   }
 }
 
+export class ThreadgateRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyFeedThreadgate.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.feed.threadgate',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyFeedThreadgate.Record
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.feed.threadgate',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyFeedThreadgate.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.feed.threadgate'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.feed.threadgate', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.feed.threadgate', ...params },
+      { headers },
+    )
+  }
+}
+
 export class GraphNS {
   _service: AtpServiceClient
   block: BlockRecord
   follow: FollowRecord
   list: ListRecord
+  listblock: ListblockRecord
   listitem: ListitemRecord
 
   constructor(service: AtpServiceClient) {
@@ -1638,6 +1774,7 @@ export class GraphNS {
     this.block = new BlockRecord(service)
     this.follow = new FollowRecord(service)
     this.list = new ListRecord(service)
+    this.listblock = new ListblockRecord(service)
     this.listitem = new ListitemRecord(service)
   }
 
@@ -1685,6 +1822,17 @@ export class GraphNS {
       })
   }
 
+  getListBlocks(
+    params?: AppBskyGraphGetListBlocks.QueryParams,
+    opts?: AppBskyGraphGetListBlocks.CallOptions,
+  ): Promise<AppBskyGraphGetListBlocks.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getListBlocks', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetListBlocks.toKnownErr(e)
+      })
+  }
+
   getListMutes(
     params?: AppBskyGraphGetListMutes.QueryParams,
     opts?: AppBskyGraphGetListMutes.CallOptions,
@@ -1715,6 +1863,22 @@ export class GraphNS {
       .call('app.bsky.graph.getMutes', params, undefined, opts)
       .catch((e) => {
         throw AppBskyGraphGetMutes.toKnownErr(e)
+      })
+  }
+
+  getSuggestedFollowsByActor(
+    params?: AppBskyGraphGetSuggestedFollowsByActor.QueryParams,
+    opts?: AppBskyGraphGetSuggestedFollowsByActor.CallOptions,
+  ): Promise<AppBskyGraphGetSuggestedFollowsByActor.Response> {
+    return this._service.xrpc
+      .call(
+        'app.bsky.graph.getSuggestedFollowsByActor',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw AppBskyGraphGetSuggestedFollowsByActor.toKnownErr(e)
       })
   }
 
@@ -1946,6 +2110,71 @@ export class ListRecord {
   }
 }
 
+export class ListblockRecord {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  async list(
+    params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: AppBskyGraphListblock.Record }[]
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
+      collection: 'app.bsky.graph.listblock',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: AppBskyGraphListblock.Record
+  }> {
+    const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
+      collection: 'app.bsky.graph.listblock',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: Omit<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: AppBskyGraphListblock.Record,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    record.$type = 'app.bsky.graph.listblock'
+    const res = await this._service.xrpc.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      { collection: 'app.bsky.graph.listblock', ...params, record },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: Omit<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._service.xrpc.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'app.bsky.graph.listblock', ...params },
+      { headers },
+    )
+  }
+}
+
 export class ListitemRecord {
   _service: AtpServiceClient
 
@@ -2074,17 +2303,6 @@ export class UnspeccedNS {
     this._service = service
   }
 
-  applyLabels(
-    data?: AppBskyUnspeccedApplyLabels.InputSchema,
-    opts?: AppBskyUnspeccedApplyLabels.CallOptions,
-  ): Promise<AppBskyUnspeccedApplyLabels.Response> {
-    return this._service.xrpc
-      .call('app.bsky.unspecced.applyLabels', opts?.qp, data, opts)
-      .catch((e) => {
-        throw AppBskyUnspeccedApplyLabels.toKnownErr(e)
-      })
-  }
-
   getPopular(
     params?: AppBskyUnspeccedGetPopular.QueryParams,
     opts?: AppBskyUnspeccedGetPopular.CallOptions,
@@ -2120,6 +2338,28 @@ export class UnspeccedNS {
       .call('app.bsky.unspecced.getTimelineSkeleton', params, undefined, opts)
       .catch((e) => {
         throw AppBskyUnspeccedGetTimelineSkeleton.toKnownErr(e)
+      })
+  }
+
+  searchActorsSkeleton(
+    params?: AppBskyUnspeccedSearchActorsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedSearchActorsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedSearchActorsSkeleton.Response> {
+    return this._service.xrpc
+      .call('app.bsky.unspecced.searchActorsSkeleton', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedSearchActorsSkeleton.toKnownErr(e)
+      })
+  }
+
+  searchPostsSkeleton(
+    params?: AppBskyUnspeccedSearchPostsSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedSearchPostsSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedSearchPostsSkeleton.Response> {
+    return this._service.xrpc
+      .call('app.bsky.unspecced.searchPostsSkeleton', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedSearchPostsSkeleton.toKnownErr(e)
       })
   }
 }

@@ -1,20 +1,18 @@
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import * as jwt from 'jsonwebtoken'
-import { CloseFn, runTestServer, TestServerInfo } from './_util'
 
 describe('app_passwords', () => {
-  let server: TestServerInfo
+  let network: TestNetworkNoAppView
   let accntAgent: AtpAgent
   let appAgent: AtpAgent
-  let close: CloseFn
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'app_passwords',
     })
-    accntAgent = new AtpAgent({ service: server.url })
-    appAgent = new AtpAgent({ service: server.url })
-    close = server.close
+    accntAgent = network.pds.getClient()
+    appAgent = network.pds.getClient()
 
     await accntAgent.createAccount({
       handle: 'alice.test',
@@ -24,7 +22,7 @@ describe('app_passwords', () => {
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   let appPass: string
@@ -128,7 +126,7 @@ describe('app_passwords', () => {
   })
 
   it('no longer allows session creation after revocation', async () => {
-    const newAgent = new AtpAgent({ service: server.url })
+    const newAgent = network.pds.getClient()
     const attempt = newAgent.login({
       identifier: 'alice.test',
       password: appPass,

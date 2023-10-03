@@ -6,9 +6,9 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.resolveModerationReports({
     auth: ctx.roleVerifier,
     handler: async ({ req, input }) => {
-      if (ctx.shouldProxyModeration()) {
+      if (ctx.cfg.bskyAppView.proxyModeration) {
         const { data: result } =
-          await ctx.appviewAgent.com.atproto.admin.resolveModerationReports(
+          await ctx.appViewAgent.com.atproto.admin.resolveModerationReports(
             input.body,
             authPassthru(req, true),
           )

@@ -1,7 +1,6 @@
+import { sql } from 'kysely'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { SearchKeyset } from '../../../../services/util/search'
-import { sql } from 'kysely'
 import { ListKeyset } from '../../../../services/account'
 import { authPassthru } from './util'
 
@@ -9,11 +8,11 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
     auth: ctx.roleVerifier,
     handler: async ({ req, params, auth }) => {
-      if (ctx.shouldProxyModeration()) {
+      if (ctx.cfg.bskyAppView.proxyModeration) {
         // @TODO merge invite details to this list view. could also add
         // support for invitedBy param, which is not supported by appview.
         const { data: result } =
-          await ctx.appviewAgent.com.atproto.admin.searchRepos(
+          await ctx.appViewAgent.com.atproto.admin.searchRepos(
             params,
             authPassthru(req),
           )
@@ -26,14 +25,15 @@ export default function (server: Server, ctx: AppContext) {
       const access = auth.credentials
       const { db, services } = ctx
       const moderationService = services.moderation(db)
-      const { term = '', limit = 50, cursor, invitedBy } = params
+      const { limit, cursor, invitedBy } = params
+      const query = params.q?.trim() ?? params.term?.trim() ?? ''
 
-      if (!term) {
+      const keyset = new ListKeyset(sql``, sql``)
+
+      if (!query) {
         const results = await services
           .account(db)
           .list({ limit, cursor, includeSoftDeleted: true, invitedBy })
-        const keyset = new ListKeyset(sql``, sql``)
-
         return {
           encoding: 'application/json',
           body: {
@@ -45,19 +45,17 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const searchField = term.startsWith('did:') ? 'did' : 'handle'
-
       const results = await services
         .account(db)
-        .search({ searchField, term, limit, cursor, includeSoftDeleted: true })
-      const keyset = new SearchKeyset(sql``, sql``)
+        .search({ query, limit, cursor, includeSoftDeleted: true })
 
       return {
         encoding: 'application/json',
         body: {
           // For did search, we can only find 1 or no match, cursors can be ignored entirely
-          cursor:
-            searchField === 'did' ? undefined : keyset.packFromResult(results),
+          cursor: query.startsWith('did:')
+            ? undefined
+            : keyset.packFromResult(results),
           repos: await moderationService.views.repo(results, {
             includeEmails: access.moderator,
           }),

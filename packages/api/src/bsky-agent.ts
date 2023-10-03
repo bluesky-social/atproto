@@ -6,7 +6,24 @@ import {
   AppBskyActorDefs,
   ComAtprotoRepoPutRecord,
 } from './client'
-import { BskyPreferences, BskyLabelPreference } from './types'
+import {
+  BskyPreferences,
+  BskyLabelPreference,
+  BskyFeedViewPreference,
+  BskyThreadViewPreference,
+} from './types'
+
+const FEED_VIEW_PREF_DEFAULTS = {
+  hideReplies: false,
+  hideRepliesByUnfollowed: false,
+  hideRepliesByLikeCount: 0,
+  hideReposts: false,
+  hideQuotePosts: false,
+}
+const THREAD_VIEW_PREF_DEFAULTS = {
+  sort: 'oldest',
+  prioritizeFollowedUsers: true,
+}
 
 declare global {
   interface Array<T> {
@@ -254,6 +271,12 @@ export class BskyAgent extends AtpAgent {
         saved: undefined,
         pinned: undefined,
       },
+      feedViewPrefs: {
+        home: {
+          ...FEED_VIEW_PREF_DEFAULTS,
+        },
+      },
+      threadViewPrefs: { ...THREAD_VIEW_PREF_DEFAULTS },
       adultContentEnabled: false,
       contentLabels: {},
       birthDate: undefined,
@@ -289,6 +312,20 @@ export class BskyAgent extends AtpAgent {
         if (pref.birthDate) {
           prefs.birthDate = new Date(pref.birthDate)
         }
+      } else if (
+        AppBskyActorDefs.isFeedViewPref(pref) &&
+        AppBskyActorDefs.validateFeedViewPref(pref).success
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { $type, feed, ...v } = pref
+        prefs.feedViewPrefs[pref.feed] = { ...FEED_VIEW_PREF_DEFAULTS, ...v }
+      } else if (
+        AppBskyActorDefs.isThreadViewPref(pref) &&
+        AppBskyActorDefs.validateThreadViewPref(pref).success
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { $type, ...v } = pref
+        prefs.threadViewPrefs = { ...prefs.threadViewPrefs, ...v }
       }
     }
     return prefs
@@ -404,6 +441,41 @@ export class BskyAgent extends AtpAgent {
       return prefs
         .filter((pref) => !AppBskyActorDefs.isPersonalDetailsPref(pref))
         .concat([personalDetailsPref])
+    })
+  }
+
+  async setFeedViewPrefs(feed: string, pref: Partial<BskyFeedViewPreference>) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      const existing = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isFeedViewPref(pref) &&
+          AppBskyActorDefs.validateFeedViewPref(pref).success &&
+          pref.feed === feed,
+      )
+      if (existing) {
+        pref = { ...existing, ...pref }
+      }
+      return prefs
+        .filter(
+          (p) => !AppBskyActorDefs.isFeedViewPref(pref) || p.feed !== feed,
+        )
+        .concat([{ ...pref, $type: 'app.bsky.actor.defs#feedViewPref', feed }])
+    })
+  }
+
+  async setThreadViewPrefs(pref: Partial<BskyThreadViewPreference>) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      const existing = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isThreadViewPref(pref) &&
+          AppBskyActorDefs.validateThreadViewPref(pref).success,
+      )
+      if (existing) {
+        pref = { ...existing, ...pref }
+      }
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isThreadViewPref(p))
+        .concat([{ ...pref, $type: 'app.bsky.actor.defs#threadViewPref' }])
     })
   }
 }

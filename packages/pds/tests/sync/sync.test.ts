@@ -1,3 +1,4 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { TID } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
@@ -7,10 +8,9 @@ import { AtUri } from '@atproto/syntax'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { CID } from 'multiformats/cid'
 import { AppContext } from '../../src'
-import { adminAuth, CloseFn, runTestServer } from '../_util'
-import { SeedClient } from '../seeds/client'
 
 describe('repo sync', () => {
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
   let did: string
@@ -21,16 +21,13 @@ describe('repo sync', () => {
   let currRoot: CID | undefined
   let ctx: AppContext
 
-  let close: CloseFn
-
   beforeAll(async () => {
-    const server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'repo_sync',
     })
-    ctx = server.ctx
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    ctx = network.pds.ctx
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
     await sc.createAccount('alice', {
       email: 'alice@test.com',
       handle: 'alice.test',
@@ -41,7 +38,7 @@ describe('repo sync', () => {
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('creates and syncs some records', async () => {
@@ -116,6 +113,39 @@ describe('repo sync', () => {
   it('syncs latest repo commit', async () => {
     const commit = await agent.api.com.atproto.sync.getLatestCommit({ did })
     expect(commit.data.cid).toEqual(currRoot?.toString())
+  })
+
+  it('syncs `since` a given rev', async () => {
+    const repoBefore = await repo.Repo.load(storage, currRoot)
+
+    // add a post
+    const { obj, uri } = await makePost(sc, did)
+    if (!repoData[uri.collection]) {
+      repoData[uri.collection] = {}
+    }
+    repoData[uri.collection][uri.rkey] = obj
+    uris.push(uri)
+
+    const carRes = await agent.api.com.atproto.sync.getRepo({
+      did,
+      since: repoBefore.commit.rev,
+    })
+    const car = await repo.readCarWithRoot(carRes.data)
+    expect(car.blocks.size).toBeLessThan(10) // should only contain new blocks
+    const synced = await repo.verifyDiff(
+      repoBefore,
+      car.blocks,
+      car.root,
+      did,
+      ctx.repoSigningKey.did(),
+    )
+    expect(synced.writes.length).toBe(1)
+    await storage.applyCommit(synced.commit)
+    const loaded = await repo.Repo.load(storage, car.root)
+    const contents = await loaded.getContents()
+    expect(contents).toEqual(repoData)
+
+    currRoot = car.root
   })
 
   it('sync a record proof', async () => {
@@ -196,7 +226,7 @@ describe('repo sync', () => {
       await expect(tryGetRepoOwner).resolves.toBeDefined()
       const tryGetRepoAdmin = agent.api.com.atproto.sync.getRepo(
         { did },
-        { headers: { authorization: adminAuth() } },
+        { headers: network.pds.adminAuthHeaders() },
       )
       await expect(tryGetRepoAdmin).resolves.toBeDefined()
     })

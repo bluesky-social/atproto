@@ -34,6 +34,7 @@ import {
   RateLimiterI,
   RateLimiterConsume,
   isShared,
+  RateLimitExceededError,
 } from './types'
 import {
   decodeQueryParams,
@@ -247,7 +248,10 @@ export class Server {
 
         // handle rate limits
         if (consumeRateLimit) {
-          await consumeRateLimit(reqCtx)
+          const result = await consumeRateLimit(reqCtx)
+          if (result instanceof RateLimitExceededError) {
+            return next(result)
+          }
         }
 
         // run the handler
@@ -401,7 +405,8 @@ export class Server {
         ? config.rateLimit
         : [config.rateLimit]
       this.routeRateLimiterFns[nsid] = []
-      for (const limit of limits) {
+      for (let i = 0; i < limits.length; i++) {
+        const limit = limits[i]
         const { calcKey, calcPoints } = limit
         if (isShared(limit)) {
           const rateLimiter = this.sharedRateLimiters[limit.name]
@@ -416,7 +421,7 @@ export class Server {
         } else {
           const { durationMs, points } = limit
           const rateLimiter = this.options.rateLimits?.creator({
-            keyPrefix: nsid,
+            keyPrefix: `nsid-${i}`,
             durationMs,
             points,
             calcKey,
@@ -475,14 +480,23 @@ function createAuthMiddleware(verifier: AuthVerifier): RequestHandler {
 const errorMiddleware: ErrorRequestHandler = function (err, req, res, next) {
   const locals: RequestLocals | undefined = req[kRequestLocals]
   const methodSuffix = locals ? ` method ${locals.nsid}` : ''
-  if (err instanceof XRPCError) {
-    log.error(err, `error in xrpc${methodSuffix}`)
-  } else {
+  const xrpcError = XRPCError.fromError(err)
+  if (xrpcError instanceof InternalServerError) {
+    // log trace for unhandled exceptions
     log.error(err, `unhandled exception in xrpc${methodSuffix}`)
+  } else {
+    // do not log trace for known xrpc errors
+    log.error(
+      {
+        status: xrpcError.type,
+        message: xrpcError.message,
+        name: xrpcError.customErrorName,
+      },
+      `error in xrpc${methodSuffix}`,
+    )
   }
   if (res.headersSent) {
     return next(err)
   }
-  const xrpcError = XRPCError.fromError(err)
   return res.status(xrpcError.type).json(xrpcError.payload)
 }

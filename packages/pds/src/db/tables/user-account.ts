@@ -5,8 +5,7 @@ export interface UserAccount {
   email: string
   passwordScrypt: string
   createdAt: string
-  passwordResetToken: string | null
-  passwordResetGrantedAt: string | null
+  emailConfirmedAt: string | null
   invitesDisabled: Generated<0 | 1>
   inviteNote: string | null
 }

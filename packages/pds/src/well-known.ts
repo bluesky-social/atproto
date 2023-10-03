@@ -6,7 +6,7 @@ export const createRouter = (ctx: AppContext): express.Router => {
 
   router.get('/.well-known/atproto-did', async function (req, res) {
     const handle = req.hostname
-    const supportedHandle = ctx.cfg.availableUserDomains.some(
+    const supportedHandle = ctx.cfg.identity.serviceHandleDomains.some(
       (host) => handle.endsWith(host) || handle === host.slice(1),
     )
     if (!supportedHandle) {

@@ -20,10 +20,10 @@ export default function (server: Server, ctx: AppContext) {
           includeEmails: access.moderator,
         }))
 
-      if (ctx.shouldProxyModeration()) {
+      if (ctx.cfg.bskyAppView.proxyModeration) {
         try {
           const { data: recordDetailAppview } =
-            await ctx.appviewAgent.com.atproto.admin.getRecord(
+            await ctx.appViewAgent.com.atproto.admin.getRecord(
               params,
               authPassthru(req),
             )

@@ -5,7 +5,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.identity.resolveHandle(async ({ params, req }) => {
+  server.com.atproto.identity.resolveHandle(async ({ params }) => {
     let handle: string
     try {
       handle = ident.normalizeAndEnsureValidHandle(params.handle)
@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
     if (user) {
       did = user.did
     } else {
-      const supportedHandle = ctx.cfg.availableUserDomains.some(
+      const supportedHandle = ctx.cfg.identity.serviceHandleDomains.some(
         (host) => handle.endsWith(host) || handle === host.slice(1),
       )
       // this should be in our DB & we couldn't find it, so fail
@@ -33,9 +33,8 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     // this is not someone on our server, but we help with resolving anyway
-
-    if (!did && (await ctx.canProxyRead(req))) {
-      did = await tryResolveFromAppview(ctx.appviewAgent, handle)
+    if (!did) {
+      did = await tryResolveFromAppView(ctx.appViewAgent, handle)
     }
 
     if (!did) {
@@ -53,7 +52,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-async function tryResolveFromAppview(agent: AtpAgent, handle: string) {
+async function tryResolveFromAppView(agent: AtpAgent, handle: string) {
   try {
     const result = await agent.api.com.atproto.identity.resolveHandle({
       handle,

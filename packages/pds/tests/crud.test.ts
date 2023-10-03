@@ -1,6 +1,8 @@
 import fs from 'fs/promises'
 import { AtUri } from '@atproto/syntax'
 import AtpAgent from '@atproto/api'
+import { BlobRef } from '@atproto/lexicon'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 import * as createRecord from '@atproto/api/src/client/types/com/atproto/repo/createRecord'
 import * as putRecord from '@atproto/api/src/client/types/com/atproto/repo/putRecord'
 import * as deleteRecord from '@atproto/api/src/client/types/com/atproto/repo/deleteRecord'
@@ -9,10 +11,9 @@ import { cidForCbor, TID, ui8ToArrayBuffer } from '@atproto/common'
 import { BlobNotFoundError } from '@atproto/repo'
 import { defaultFetchHandler } from '@atproto/xrpc'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
-import { adminAuth, CloseFn, paginateAll, runTestServer } from './_util'
+import { paginateAll } from './_util'
 import AppContext from '../src/context'
 import { TAKEDOWN } from '../src/lexicon/types/com/atproto/admin/defs'
-import { BlobRef } from '@atproto/lexicon'
 import { ids } from '../src/lexicon/lexicons'
 
 const alice = {
@@ -29,25 +30,24 @@ const bob = {
 }
 
 describe('crud operations', () => {
+  let network: TestNetworkNoAppView
   let ctx: AppContext
   let agent: AtpAgent
   let aliceAgent: AtpAgent
   let bobAgent: AtpAgent
-  let close: CloseFn
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'crud',
     })
-    ctx = server.ctx
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    aliceAgent = new AtpAgent({ service: server.url })
-    bobAgent = new AtpAgent({ service: server.url })
+    ctx = network.pds.ctx
+    agent = network.pds.getClient()
+    aliceAgent = network.pds.getClient()
+    bobAgent = network.pds.getClient()
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('registers users', async () => {
@@ -174,9 +174,7 @@ describe('crud operations', () => {
   })
 
   it('attaches images to a post', async () => {
-    const file = await fs.readFile(
-      'tests/image/fixtures/key-landscape-small.jpg',
-    )
+    const file = await fs.readFile('tests/sample-img/key-landscape-small.jpg')
     const uploadedRes = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
       encoding: 'image/jpeg',
     })
@@ -1170,7 +1168,7 @@ describe('crud operations', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: { authorization: network.pds.adminAuth() },
         },
       )
 
@@ -1193,7 +1191,7 @@ describe('crud operations', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: adminAuth() },
+        headers: { authorization: network.pds.adminAuth() },
       },
     )
   })
@@ -1215,7 +1213,7 @@ describe('crud operations', () => {
         },
         {
           encoding: 'application/json',
-          headers: { authorization: adminAuth() },
+          headers: { authorization: network.pds.adminAuth() },
         },
       )
 
@@ -1233,7 +1231,7 @@ describe('crud operations', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: adminAuth() },
+        headers: { authorization: network.pds.adminAuth() },
       },
     )
   })

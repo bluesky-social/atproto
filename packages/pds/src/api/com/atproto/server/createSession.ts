@@ -11,12 +11,12 @@ export default function (server: Server, ctx: AppContext) {
       {
         durationMs: DAY,
         points: 300,
-        calcKey: ({ input }) => input.body.identifier,
+        calcKey: ({ input, req }) => `${input.body.identifier}-${req.ip}`,
       },
       {
         durationMs: 5 * MINUTE,
         points: 30,
-        calcKey: ({ input }) => input.body.identifier,
+        calcKey: ({ input, req }) => `${input.body.identifier}-${req.ip}`,
       },
     ],
     handler: async ({ input }) => {
@@ -68,6 +68,7 @@ export default function (server: Server, ctx: AppContext) {
           did: user.did,
           handle: user.handle,
           email: user.email,
+          emailConfirmed: !!user.emailConfirmedAt,
           accessJwt: access.jwt,
           refreshJwt: refresh.jwt,
         },

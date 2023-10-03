@@ -1,12 +1,11 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent, { BlobRef } from '@atproto/api'
-import { runTestServer, TestServerInfo } from './_util'
 import { Database } from '../src'
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import { ids } from '../src/lexicon/lexicons'
-import { SeedClient } from './seeds/client'
 
 describe('blob deletes', () => {
-  let server: TestServerInfo
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
 
@@ -17,13 +16,13 @@ describe('blob deletes', () => {
   let bob: string
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'blob_deletes',
     })
-    blobstore = server.ctx.blobstore as DiskBlobStore
-    db = server.ctx.db
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    blobstore = network.pds.ctx.blobstore as DiskBlobStore
+    db = network.pds.ctx.db
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
     await sc.createAccount('alice', {
       email: 'alice@test.com',
       handle: 'alice.test',
@@ -39,7 +38,7 @@ describe('blob deletes', () => {
   })
 
   afterAll(async () => {
-    await server.close()
+    await network.close()
   })
 
   const getDbBlobsForDid = (did: string) => {
@@ -53,12 +52,12 @@ describe('blob deletes', () => {
   it('deletes blob when record is deleted', async () => {
     const img = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-portrait-small.jpg',
+      'tests/sample-img/key-portrait-small.jpg',
       'image/jpeg',
     )
     const post = await sc.post(alice, 'test', undefined, [img])
     await sc.deletePost(alice, post.ref.uri)
-    await server.processAll()
+    await network.processAll()
 
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(0)
@@ -70,17 +69,17 @@ describe('blob deletes', () => {
   it('deletes blob when blob-ref in record is updated', async () => {
     const img = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-portrait-small.jpg',
+      'tests/sample-img/key-portrait-small.jpg',
       'image/jpeg',
     )
     const img2 = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-landscape-small.jpg',
+      'tests/sample-img/key-landscape-small.jpg',
       'image/jpeg',
     )
     await updateProfile(sc, alice, img.image, img.image)
     await updateProfile(sc, alice, img2.image, img2.image)
-    await server.processAll()
+    await network.processAll()
 
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(1)
@@ -99,17 +98,17 @@ describe('blob deletes', () => {
   it('does not delete blob when blob-ref in record is not updated', async () => {
     const img = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-portrait-small.jpg',
+      'tests/sample-img/key-portrait-small.jpg',
       'image/jpeg',
     )
     const img2 = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-landscape-small.jpg',
+      'tests/sample-img/key-landscape-small.jpg',
       'image/jpeg',
     )
     await updateProfile(sc, alice, img.image, img.image)
     await updateProfile(sc, alice, img.image, img2.image)
-    await server.processAll()
+    await network.processAll()
 
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(2)
@@ -125,7 +124,7 @@ describe('blob deletes', () => {
   it('does not delete blob when blob is reused by another record in same commit', async () => {
     const img = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-portrait-small.jpg',
+      'tests/sample-img/key-portrait-small.jpg',
       'image/jpeg',
     )
     const post = await sc.post(alice, 'post', undefined, [img])
@@ -160,7 +159,7 @@ describe('blob deletes', () => {
       },
       { encoding: 'application/json', headers: sc.getHeaders(alice) },
     )
-    await server.processAll()
+    await network.processAll()
 
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(1)
@@ -172,12 +171,12 @@ describe('blob deletes', () => {
   it('does not delete blob from blob store if another user is using it', async () => {
     const imgAlice = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-landscape-small.jpg',
+      'tests/sample-img/key-landscape-small.jpg',
       'image/jpeg',
     )
     const imgBob = await sc.uploadFile(
       bob,
-      'tests/image/fixtures/key-landscape-small.jpg',
+      'tests/sample-img/key-landscape-small.jpg',
       'image/jpeg',
     )
     const postAlice = await sc.post(alice, 'post', undefined, [imgAlice])

@@ -6,12 +6,14 @@ import * as post from './tables/post'
 import * as postEmbed from './tables/post-embed'
 import * as postAgg from './tables/post-agg'
 import * as repost from './tables/repost'
+import * as threadGate from './tables/thread-gate'
 import * as feedItem from './tables/feed-item'
 import * as follow from './tables/follow'
 import * as like from './tables/like'
 import * as list from './tables/list'
 import * as listItem from './tables/list-item'
 import * as listMute from './tables/list-mute'
+import * as listBlock from './tables/list-block'
 import * as mute from './tables/mute'
 import * as actorBlock from './tables/actor-block'
 import * as feedGenerator from './tables/feed-generator'
@@ -37,12 +39,14 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   postEmbed.PartialDB &
   postAgg.PartialDB &
   repost.PartialDB &
+  threadGate.PartialDB &
   feedItem.PartialDB &
   follow.PartialDB &
   like.PartialDB &
   list.PartialDB &
   listItem.PartialDB &
   listMute.PartialDB &
+  listBlock.PartialDB &
   mute.PartialDB &
   actorBlock.PartialDB &
   feedGenerator.PartialDB &

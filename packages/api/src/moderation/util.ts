@@ -1,8 +1,4 @@
-import {
-  AppBskyEmbedRecord,
-  AppBskyEmbedRecordWithMedia,
-  AppBskyFeedPost,
-} from '../client'
+import { AppBskyEmbedRecord, AppBskyEmbedRecordWithMedia } from '../client'
 import { ModerationDecision, ModerationUI } from './types'
 
 export function takeHighestPriorityDecision(

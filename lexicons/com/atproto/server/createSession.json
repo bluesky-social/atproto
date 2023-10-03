@@ -29,7 +29,8 @@
             "refreshJwt": { "type": "string" },
             "handle": { "type": "string", "format": "handle" },
             "did": { "type": "string", "format": "did" },
-            "email": { "type": "string" }
+            "email": { "type": "string" },
+            "emailConfirmed": { "type": "boolean" }
           }
         }
       },

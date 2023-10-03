@@ -1,29 +1,23 @@
 import { defaultFetchHandler } from '@atproto/xrpc'
 import {
-  CloseFn,
-  runTestServer,
-  TestServerInfo,
-} from '@atproto/pds/tests/_util'
-import {
   AtpAgent,
   AtpAgentFetchHandlerResponse,
   AtpSessionEvent,
   AtpSessionData,
 } from '..'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 
 describe('agent', () => {
-  let server: TestServerInfo
-  let close: CloseFn
+  let network: TestNetworkNoAppView
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'api_agent',
     })
-    close = server.close
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('creates a new session on account creation.', async () => {
@@ -34,7 +28,7 @@ describe('agent', () => {
       sessions.push(sess)
     }
 
-    const agent = new AtpAgent({ service: server.url, persistSession })
+    const agent = new AtpAgent({ service: network.pds.url, persistSession })
 
     const res = await agent.createAccount({
       handle: 'user1.test',
@@ -48,6 +42,7 @@ describe('agent', () => {
     expect(agent.session?.handle).toEqual(res.data.handle)
     expect(agent.session?.did).toEqual(res.data.did)
     expect(agent.session?.email).toEqual('user1@test.com')
+    expect(agent.session?.emailConfirmed).toEqual(false)
 
     const { data: sessionInfo } = await agent.api.com.atproto.server.getSession(
       {},
@@ -56,6 +51,7 @@ describe('agent', () => {
       did: res.data.did,
       handle: res.data.handle,
       email: 'user1@test.com',
+      emailConfirmed: false,
     })
 
     expect(events.length).toEqual(1)
@@ -72,7 +68,7 @@ describe('agent', () => {
       sessions.push(sess)
     }
 
-    const agent1 = new AtpAgent({ service: server.url, persistSession })
+    const agent1 = new AtpAgent({ service: network.pds.url, persistSession })
 
     const email = 'user2@test.com'
     await agent1.createAccount({
@@ -81,7 +77,7 @@ describe('agent', () => {
       password: 'password',
     })
 
-    const agent2 = new AtpAgent({ service: server.url, persistSession })
+    const agent2 = new AtpAgent({ service: network.pds.url, persistSession })
     const res1 = await agent2.login({
       identifier: 'user2.test',
       password: 'password',
@@ -93,6 +89,7 @@ describe('agent', () => {
     expect(agent2.session?.handle).toEqual(res1.data.handle)
     expect(agent2.session?.did).toEqual(res1.data.did)
     expect(agent2.session?.email).toEqual('user2@test.com')
+    expect(agent2.session?.emailConfirmed).toEqual(false)
 
     const { data: sessionInfo } =
       await agent2.api.com.atproto.server.getSession({})
@@ -100,6 +97,7 @@ describe('agent', () => {
       did: res1.data.did,
       handle: res1.data.handle,
       email,
+      emailConfirmed: false,
     })
 
     expect(events.length).toEqual(2)
@@ -118,7 +116,7 @@ describe('agent', () => {
       sessions.push(sess)
     }
 
-    const agent1 = new AtpAgent({ service: server.url, persistSession })
+    const agent1 = new AtpAgent({ service: network.pds.url, persistSession })
 
     await agent1.createAccount({
       handle: 'user3.test',
@@ -129,7 +127,7 @@ describe('agent', () => {
       throw new Error('No session created')
     }
 
-    const agent2 = new AtpAgent({ service: server.url, persistSession })
+    const agent2 = new AtpAgent({ service: network.pds.url, persistSession })
     const res1 = await agent2.resumeSession(agent1.session)
 
     expect(agent2.hasSession).toEqual(true)
@@ -142,6 +140,7 @@ describe('agent', () => {
       did: res1.data.did,
       handle: res1.data.handle,
       email: res1.data.email,
+      emailConfirmed: false,
     })
 
     expect(events.length).toEqual(2)
@@ -160,7 +159,7 @@ describe('agent', () => {
       sessions.push(sess)
     }
 
-    const agent = new AtpAgent({ service: server.url, persistSession })
+    const agent = new AtpAgent({ service: network.pds.url, persistSession })
 
     // create an account and a session with it
     await agent.createAccount({
@@ -197,7 +196,7 @@ describe('agent', () => {
 
     // put the agent through the auth flow
     AtpAgent.configure({ fetch: tokenExpiredFetchHandler })
-    const res1 = await agent.api.app.bsky.feed.getTimeline()
+    const res1 = await createPost(agent)
     AtpAgent.configure({ fetch: defaultFetchHandler })
 
     expect(res1.success).toEqual(true)
@@ -206,6 +205,8 @@ describe('agent', () => {
     expect(agent.session?.refreshJwt).not.toEqual(session1.refreshJwt)
     expect(agent.session?.handle).toEqual(session1.handle)
     expect(agent.session?.did).toEqual(session1.did)
+    expect(agent.session?.email).toEqual(session1.email)
+    expect(agent.session?.emailConfirmed).toEqual(session1.emailConfirmed)
 
     expect(events.length).toEqual(2)
     expect(events[0]).toEqual('create')
@@ -223,7 +224,7 @@ describe('agent', () => {
       sessions.push(sess)
     }
 
-    const agent = new AtpAgent({ service: server.url, persistSession })
+    const agent = new AtpAgent({ service: network.pds.url, persistSession })
 
     // create an account and a session with it
     await agent.createAccount({
@@ -267,9 +268,9 @@ describe('agent', () => {
     // put the agent through the auth flow
     AtpAgent.configure({ fetch: tokenExpiredFetchHandler })
     const [res1, res2, res3] = await Promise.all([
-      agent.api.app.bsky.feed.getTimeline(),
-      agent.api.app.bsky.feed.getTimeline(),
-      agent.api.app.bsky.feed.getTimeline(),
+      createPost(agent),
+      createPost(agent),
+      createPost(agent),
     ])
     AtpAgent.configure({ fetch: defaultFetchHandler })
 
@@ -283,6 +284,8 @@ describe('agent', () => {
     expect(agent.session?.refreshJwt).not.toEqual(session1.refreshJwt)
     expect(agent.session?.handle).toEqual(session1.handle)
     expect(agent.session?.did).toEqual(session1.did)
+    expect(agent.session?.email).toEqual(session1.email)
+    expect(agent.session?.emailConfirmed).toEqual(session1.emailConfirmed)
 
     expect(events.length).toEqual(2)
     expect(events[0]).toEqual('create')
@@ -300,7 +303,7 @@ describe('agent', () => {
       sessions.push(sess)
     }
 
-    const agent = new AtpAgent({ service: server.url, persistSession })
+    const agent = new AtpAgent({ service: network.pds.url, persistSession })
 
     try {
       await agent.login({
@@ -340,7 +343,7 @@ describe('agent', () => {
       sessions.push(sess)
     }
 
-    const agent = new AtpAgent({ service: server.url, persistSession })
+    const agent = new AtpAgent({ service: network.pds.url, persistSession })
 
     // create an account and a session with it
     await agent.createAccount({
@@ -411,7 +414,7 @@ describe('agent', () => {
         newHandlerCallCount++
       }
 
-      const agent = new AtpAgent({ service: server.url, persistSession })
+      const agent = new AtpAgent({ service: network.pds.url, persistSession })
 
       await agent.createAccount({
         handle: 'user7.test',
@@ -443,7 +446,7 @@ describe('agent', () => {
         sessions.push(sess)
       }
 
-      const agent = new AtpAgent({ service: server.url, persistSession })
+      const agent = new AtpAgent({ service: network.pds.url, persistSession })
 
       await expect(
         agent.createAccount({
@@ -462,3 +465,14 @@ describe('agent', () => {
     })
   })
 })
+
+const createPost = async (agent: AtpAgent) => {
+  return agent.api.com.atproto.repo.createRecord({
+    repo: agent.session?.did ?? '',
+    collection: 'app.bsky.feed.post',
+    record: {
+      text: 'hello there',
+      createdAt: new Date().toISOString(),
+    },
+  })
+}

@@ -4,6 +4,8 @@ import {
   ensureValidHandleRegex,
   InvalidHandleError,
 } from '../src'
+import * as readline from 'readline'
+import * as fs from 'fs'
 
 describe('handle validation', () => {
   const expectValid = (h: string) => {
@@ -189,6 +191,36 @@ describe('handle validation', () => {
       'www.masełkowski.pl.com',
     ]
     badStackoverflow.forEach(expectInvalid)
+  })
+
+  it('conforms to interop valid handles', () => {
+    const lineReader = readline.createInterface({
+      input: fs.createReadStream(
+        `${__dirname}/interop-files/handle_syntax_valid.txt`,
+      ),
+      terminal: false,
+    })
+    lineReader.on('line', (line) => {
+      if (line.startsWith('#') || line.length == 0) {
+        return
+      }
+      expectValid(line)
+    })
+  })
+
+  it('conforms to interop invalid handles', () => {
+    const lineReader = readline.createInterface({
+      input: fs.createReadStream(
+        `${__dirname}/interop-files/handle_syntax_invalid.txt`,
+      ),
+      terminal: false,
+    })
+    lineReader.on('line', (line) => {
+      if (line.startsWith('#') || line.length == 0) {
+        return
+      }
+      expectInvalid(line)
+    })
   })
 })
 

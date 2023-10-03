@@ -4,7 +4,6 @@ import { Leader } from './leader'
 import { dbLogger } from '../logger'
 import AppContext from '../context'
 import { ModerationActionRow } from '../services/moderation'
-import { LabelService } from '../app-view/services/label'
 
 export const MODERATION_ACTION_REVERSAL_ID = 1011
 
@@ -14,39 +13,15 @@ export class PeriodicModerationActionReversal {
 
   constructor(private appContext: AppContext) {}
 
-  // invert label creation & negations
-  async reverseLabels(labelTxn: LabelService, actionRow: ModerationActionRow) {
-    let uri: string
-    let cid: string | null = null
-
-    if (actionRow.subjectUri && actionRow.subjectCid) {
-      uri = actionRow.subjectUri
-      cid = actionRow.subjectCid
-    } else {
-      uri = actionRow.subjectDid
-    }
-
-    await labelTxn.formatAndCreate(this.appContext.cfg.labelerDid, uri, cid, {
-      create: actionRow.negateLabelVals
-        ? actionRow.negateLabelVals.split(' ')
-        : undefined,
-      negate: actionRow.createLabelVals
-        ? actionRow.createLabelVals.split(' ')
-        : undefined,
-    })
-  }
-
   async revertAction(actionRow: ModerationActionRow) {
     return this.appContext.db.transaction(async (dbTxn) => {
       const moderationTxn = this.appContext.services.moderation(dbTxn)
-      const labelTxn = this.appContext.services.appView.label(dbTxn)
       await moderationTxn.revertAction({
         id: actionRow.id,
         createdBy: actionRow.createdBy,
         createdAt: new Date(),
         reason: `[SCHEDULED_REVERSAL] Reverting action as originally scheduled`,
       })
-      await this.reverseLabels(labelTxn, actionRow)
     })
   }
 

@@ -11,9 +11,8 @@ import AtpAgent, {
   AppBskyFeedRepost,
   AppBskyGraphFollow,
 } from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { forSnapshot } from './_util'
-import { SeedClient } from './seeds/client'
 import usersSeed from './seeds/users'
 import basicSeed from './seeds/basic'
 import { ids } from '../src/lexicon/lexicons'
@@ -31,7 +30,7 @@ describe('indexing', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await usersSeed(sc)
     // Data in tests is not processed from subscription
     await network.processAll()
@@ -648,8 +647,9 @@ describe('indexing', () => {
         headers: sc.getHeaders(alice),
       })
       const { token } = await network.pds.ctx.db.db
-        .selectFrom('delete_account_token')
+        .selectFrom('email_token')
         .selectAll()
+        .where('purpose', '=', 'delete_account')
         .where('did', '=', alice)
         .executeTakeFirstOrThrow()
       await pdsAgent.api.com.atproto.server.deleteAccount({

@@ -1,9 +1,8 @@
 import AtpAgent from '@atproto/api'
 import { wait } from '@atproto/common'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { forSnapshot, paginateAll, stripViewer } from '../_util'
-import { SeedClient } from '../seeds/client'
 import usersBulkSeed from '../seeds/users-bulk'
 
 describe('pds actor search views', () => {
@@ -17,8 +16,7 @@ describe('pds actor search views', () => {
       dbPostgresSchema: 'bsky_views_actor_search',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
 
     await wait(50) // allow pending sub to be established
     await network.bsky.ingester.sub.destroy()

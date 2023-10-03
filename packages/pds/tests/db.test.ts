@@ -1,26 +1,23 @@
 import { sql } from 'kysely'
 import { once } from 'events'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { createDeferrable, wait } from '@atproto/common'
 import { Database } from '../src'
 import { Leader, appMigration } from '../src/db/leader'
-import { runTestServer, CloseFn } from './_util'
 
 describe('db', () => {
-  let close: CloseFn
+  let network: TestNetworkNoAppView
   let db: Database
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'db',
     })
-    close = server.close
-    db = server.ctx.db
+    db = network.pds.ctx.db
   })
 
   afterAll(async () => {
-    if (close) {
-      await close()
-    }
+    await network.close()
   })
 
   describe('transaction()', () => {

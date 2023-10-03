@@ -7,7 +7,6 @@ import {
   ComAtprotoServerCreateSession,
   ComAtprotoServerGetSession,
   ComAtprotoServerRefreshSession,
-  ComAtprotoRepoUploadBlob,
 } from './client'
 import {
   AtpSessionData,
@@ -96,6 +95,7 @@ export class AtpAgent {
         handle: res.data.handle,
         did: res.data.did,
         email: opts.email,
+        emailConfirmed: false,
       }
       return res
     } catch (e) {
@@ -127,6 +127,7 @@ export class AtpAgent {
         handle: res.data.handle,
         did: res.data.did,
         email: res.data.email,
+        emailConfirmed: res.data.emailConfirmed,
       }
       return res
     } catch (e) {
@@ -155,6 +156,7 @@ export class AtpAgent {
       }
       this.session.email = res.data.email
       this.session.handle = res.data.handle
+      this.session.emailConfirmed = res.data.emailConfirmed
       return res
     } catch (e) {
       this.session = undefined
@@ -269,6 +271,7 @@ export class AtpAgent {
     } else if (isNewSessionObject(this._baseClient, res.body)) {
       // succeeded, update the session
       this.session = {
+        ...(this.session || {}),
         accessJwt: res.body.accessJwt,
         refreshJwt: res.body.refreshJwt,
         handle: res.body.handle,

@@ -111,12 +111,12 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
     devDependencies:
+      '@atproto/dev-env':
+        specifier: workspace:^
+        version: link:../dev-env
       '@atproto/lex-cli':
         specifier: workspace:^
         version: link:../lex-cli
-      '@atproto/pds':
-        specifier: workspace:^
-        version: link:../pds
       common-tags:
         specifier: ^1.8.2
         version: 1.8.2
@@ -192,9 +192,6 @@ importers:
       cors:
         specifier: ^2.8.5
         version: 2.8.5
-      dotenv:
-        specifier: ^16.0.0
-        version: 16.0.3
       express:
         specifier: ^4.17.2
         version: 4.18.2
@@ -213,9 +210,6 @@ importers:
       ioredis:
         specifier: ^5.3.2
         version: 5.3.2
-      iso-datestring-validator:
-        specifier: ^2.2.2
-        version: 2.2.2
       kysely:
         specifier: ^0.22.0
         version: 0.22.0
@@ -292,6 +286,9 @@ importers:
       cbor-x:
         specifier: ^1.5.1
         version: 1.5.1
+      iso-datestring-validator:
+        specifier: ^2.2.2
+        version: 2.2.2
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0
@@ -346,6 +343,9 @@ importers:
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
+      '@atproto/lexicon':
+        specifier: workspace:^
+        version: link:../lexicon
       '@atproto/pds':
         specifier: workspace:^
         version: link:../pds
@@ -368,7 +368,7 @@ importers:
         specifier: ^5.0.1
         version: 5.1.1
       dotenv:
-        specifier: ^16.0.1
+        specifier: ^16.0.3
         version: 16.0.3
       express:
         specifier: ^4.18.2
@@ -376,6 +376,9 @@ importers:
       get-port:
         specifier: ^6.1.2
         version: 6.1.2
+      multiformats:
+        specifier: ^9.9.0
+        version: 9.9.0
       sharp:
         specifier: ^0.31.2
         version: 0.31.2
@@ -386,12 +389,6 @@ importers:
       ts-node:
         specifier: ^10.8.1
         version: 10.8.2(@swc/core@1.3.42)(@types/node@18.17.8)(typescript@4.9.5)
-
-  packages/identifier:
-    dependencies:
-      '@atproto/syntax':
-        specifier: workspace:^
-        version: link:../syntax
 
   packages/identity:
     dependencies:
@@ -466,17 +463,14 @@ importers:
         specifier: ^3.21.4
         version: 3.21.4
 
-  packages/nsid:
-    dependencies:
-      '@atproto/syntax':
-        specifier: workspace:^
-        version: link:../syntax
-
   packages/pds:
     dependencies:
       '@atproto/api':
         specifier: workspace:^
         version: link:../api
+      '@atproto/aws':
+        specifier: workspace:^
+        version: link:../aws
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
@@ -516,9 +510,9 @@ importers:
       cors:
         specifier: ^2.8.5
         version: 2.8.5
-      dotenv:
-        specifier: ^16.0.0
-        version: 16.0.3
+      disposable-email:
+        specifier: ^0.2.3
+        version: 0.2.3
       express:
         specifier: ^4.17.2
         version: 4.18.2
@@ -543,18 +537,12 @@ importers:
       ioredis:
         specifier: ^5.3.2
         version: 5.3.2
-      iso-datestring-validator:
-        specifier: ^2.2.2
-        version: 2.2.2
       jsonwebtoken:
         specifier: ^8.5.1
         version: 8.5.1
       kysely:
         specifier: ^0.22.0
         version: 0.22.0
-      lru-cache:
-        specifier: ^10.0.1
-        version: 10.0.1
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0
@@ -604,6 +592,9 @@ importers:
       '@types/cors':
         specifier: ^2.8.12
         version: 2.8.12
+      '@types/disposable-email':
+        specifier: ^0.2.0
+        version: 0.2.0
       '@types/express':
         specifier: ^4.17.13
         version: 4.17.13
@@ -628,6 +619,9 @@ importers:
       axios:
         specifier: ^0.27.2
         version: 0.27.2
+      ws:
+        specifier: ^8.12.0
+        version: 8.12.0
 
   packages/repo:
     dependencies:
@@ -670,12 +664,6 @@ importers:
       '@atproto/common-web':
         specifier: workspace:^
         version: link:../common-web
-
-  packages/uri:
-    dependencies:
-      '@atproto/syntax':
-        specifier: workspace:^
-        version: link:../syntax
 
   packages/xrpc:
     dependencies:
@@ -5319,6 +5307,10 @@ packages:
     resolution: {integrity: sha512-vt+kDhq/M2ayberEtJcIN/hxXy1Pk+59g2FV/ZQceeaTyCtCucjL2Q7FXlFjtWn4n15KCr1NE2lNNFhp0lEThw==}
     dev: true
 
+  /@types/disposable-email@0.2.0:
+    resolution: {integrity: sha512-i4fPC8+a5j7RlKVe9cOHz6cYVxkSFYuJ78GB3EJPMfBJURWmEsD4gb/gD48j7KAWe0M8ZvdJR6a6GaDohTYttw==}
+    dev: true
+
   /@types/elliptic@6.4.14:
     resolution: {integrity: sha512-z4OBcDAU0GVwDTuwJzQCiL6188QvZMkvoERgcVjq0/mPM8jCfdwZ3x5zQEVoL9WCAru3aG5wl3Z5Ww5wBWn7ZQ==}
     dependencies:
@@ -6670,6 +6662,10 @@ packages:
     dependencies:
       path-type: 4.0.0
     dev: true
+
+  /disposable-email@0.2.3:
+    resolution: {integrity: sha512-gkBQQ5Res431ZXqLlAafrXHizG7/1FWmi8U2RTtriD78Vc10HhBUvdJun3R4eSF0KRIQQJs+wHlxjkED/Hr1EQ==}
+    dev: false
 
   /doctrine@3.0.0:
     resolution: {integrity: sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==}
@@ -8998,11 +8994,6 @@ packages:
     resolution: {integrity: sha512-lcHwpNoggQTObv5apGNCTdJrO69eHOZMi4BNC+rTLER8iHAqGrUVeLh/irVIM7zTw2bOXA8T6uNPeujwOLg/2Q==}
     dev: false
 
-  /lru-cache@10.0.1:
-    resolution: {integrity: sha512-IJ4uwUTi2qCccrioU6g9g/5rvvVl13bsdczUUcqbciD9iLr095yj8DQKdObriEvuNSx325N1rV1O0sJFszx75g==}
-    engines: {node: 14 || >=16.14}
-    dev: false
-
   /lru-cache@4.1.5:
     resolution: {integrity: sha512-sWZlbEP2OsHNkXrMl5GYk/jKk70MBng6UU4YI/qGDYbgf6YbP4EvmqISbXCoJiRKs+1bSpFHVgQxvJ17F2li5g==}
     dependencies:
@@ -10831,6 +10822,7 @@ packages:
 
   /tslib@2.6.2:
     resolution: {integrity: sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==}
+    requiresBuild: true
     dev: false
 
   /tsutils@3.21.0(typescript@4.8.4):
@@ -11217,7 +11209,6 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
-    dev: false
 
   /xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}

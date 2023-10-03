@@ -12,7 +12,6 @@ const handler: AlgoHandler = async (
   const { limit, cursor } = params
   const db = ctx.db.getReplica('feed')
   const feedService = ctx.services.feed(db)
-  const graphService = ctx.services.graph(db)
 
   const { ref } = db.db.dynamic
 
@@ -31,10 +30,6 @@ const handler: AlgoHandler = async (
             .whereRef('follow.subjectDid', '=', 'post.creator'),
         ),
     )
-    .where((qb) =>
-      graphService.whereNotMuted(qb, viewer, [ref('post.creator')]),
-    )
-    .whereNotExists(graphService.blockQb(viewer, [ref('post.creator')]))
     .select('candidate.score')
     .select('candidate.cid')
 

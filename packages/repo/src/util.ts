@@ -95,7 +95,7 @@ export const readCar = async (
   const roots = await car.getRoots()
   const blocks = new BlockMap()
   for await (const block of verifyIncomingCarBlocks(car.blocks())) {
-    await blocks.set(block.cid, block.bytes)
+    blocks.set(block.cid, block.bytes)
   }
   return {
     roots,
