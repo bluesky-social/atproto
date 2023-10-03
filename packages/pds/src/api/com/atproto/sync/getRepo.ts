@@ -1,11 +1,9 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { byteIterableToStream } from '@atproto/common'
 import { Server } from '../../../../lexicon'
-import SqlRepoStorage, {
-  RepoRootNotFoundError,
-} from '../../../../sql-repo-storage'
 import AppContext from '../../../../context'
 import { isUserOrAdmin } from '../../../../auth'
+import { RepoRootNotFoundError } from '../../../../actor-store/repo/sql-repo-reader'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRepo({
@@ -22,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const storage = new SqlRepoStorage(ctx.db, did)
+      const storage = ctx.actorStore.reader(did).repo.storage
       let carStream: AsyncIterable<Uint8Array>
       try {
         carStream = await storage.getCarStream(since)

@@ -3,85 +3,79 @@ import * as crypto from '@atproto/crypto'
 import { BlobStore, CommitData, Repo, WriteOpAction } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/syntax'
-import SqlRepoStorage from './sql-repo-storage'
+import { SqlRepoTransactor } from './sql-repo-transactor'
 import {
   BadCommitSwapError,
   BadRecordSwapError,
   PreparedCreate,
   PreparedWrite,
 } from '../../repo/types'
-import { ActorBlob } from './blob'
+import { BlobTransactor } from '../blob/transactor'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { BackgroundQueue } from '../../background'
 import { ActorDb } from '../actor-db'
-import { ActorRecordTransactor } from './record-transactor'
+import { RecordTransactor } from '../record/transactor'
+import { RepoReader } from './reader'
 
-export class ActorRepo {
-  blobs: ActorBlob
-  record: ActorRecordTransactor
+export class RepoTransactor extends RepoReader {
+  blob: BlobTransactor
+  record: RecordTransactor
+  storage: SqlRepoTransactor
+  now: string
 
   constructor(
     public db: ActorDb,
     public repoSigningKey: crypto.Keypair,
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
+    now?: string,
   ) {
-    this.blobs = new ActorBlob(db, blobstore, backgroundQueue)
-    this.record = new ActorRecordTransactor(db)
+    super(db, blobstore)
+    this.blob = new BlobTransactor(db, blobstore, backgroundQueue)
+    this.record = new RecordTransactor(db)
+    this.now = now ?? new Date().toISOString()
+    this.storage = new SqlRepoTransactor(db, this.now)
   }
 
-  static creator(
-    keypair: crypto.Keypair,
-    blobstore: BlobStore,
-    backgroundQueue: BackgroundQueue,
-  ) {
-    return (db: ActorDb) =>
-      new ActorRepo(db, keypair, blobstore, backgroundQueue)
-  }
-
-  async createRepo(writes: PreparedCreate[], now: string) {
+  async createRepo(writes: PreparedCreate[]) {
     this.db.assertTransaction()
-    const storage = new SqlRepoStorage(this.db, now)
     const writeOps = writes.map(createWriteToOp)
     const commit = await Repo.formatInitCommit(
-      storage,
+      this.storage,
       this.db.did,
       this.repoSigningKey,
       writeOps,
     )
     await Promise.all([
-      storage.applyCommit(commit),
-      this.indexWrites(writes, now),
-      this.blobs.processWriteBlobs(commit.rev, writes),
+      this.storage.applyCommit(commit),
+      this.indexWrites(writes),
+      this.blob.processWriteBlobs(commit.rev, writes),
     ])
     // await this.afterWriteProcessing(did, commit, writes)
   }
 
   async processWrites(writes: PreparedWrite[], swapCommitCid?: CID) {
     this.db.assertTransaction()
-    const now = new Date().toISOString()
-    const storage = new SqlRepoStorage(this.db, now)
-    const commit = await this.formatCommit(storage, writes, swapCommitCid)
+    const commit = await this.formatCommit(writes, swapCommitCid)
     await Promise.all([
       // persist the commit to repo storage
-      storage.applyCommit(commit),
+      this.storage.applyCommit(commit),
       // & send to indexing
-      this.indexWrites(writes, now, commit.rev),
+      this.indexWrites(writes, commit.rev),
       // process blobs
-      this.blobs.processWriteBlobs(commit.rev, writes),
+      this.blob.processWriteBlobs(commit.rev, writes),
       // do any other processing needed after write
     ])
     // await this.afterWriteProcessing(did, commitData, writes)
   }
 
   async formatCommit(
-    storage: SqlRepoStorage,
     writes: PreparedWrite[],
     swapCommit?: CID,
   ): Promise<CommitData> {
     // this is not in a txn, so this won't actually hold the lock,
     // we just check if it is currently held by another txn
-    const currRoot = await storage.getRootDetailed()
+    const currRoot = await this.storage.getRootDetailed()
     if (!currRoot) {
       throw new InvalidRequestError(`No repo root found for ${this.db.did}`)
     }
@@ -89,7 +83,7 @@ export class ActorRepo {
       throw new BadCommitSwapError(currRoot.cid)
     }
     // cache last commit since there's likely overlap
-    await storage.cacheRev(currRoot.rev)
+    await this.storage.cacheRev(currRoot.rev)
     const newRecordCids: CID[] = []
     const delAndUpdateUris: AtUri[] = []
     for (const write of writes) {
@@ -119,7 +113,7 @@ export class ActorRepo {
       }
     }
 
-    const repo = await Repo.load(storage, currRoot.cid)
+    const repo = await Repo.load(this.storage, currRoot.cid)
     const writeOps = writes.map(writeToOp)
     const commit = await repo.formatCommit(writeOps, this.repoSigningKey)
 
@@ -136,13 +130,15 @@ export class ActorRepo {
     // (for instance a record that was moved but cid stayed the same)
     const newRecordBlocks = commit.newBlocks.getMany(newRecordCids)
     if (newRecordBlocks.missing.length > 0) {
-      const missingBlocks = await storage.getBlocks(newRecordBlocks.missing)
+      const missingBlocks = await this.storage.getBlocks(
+        newRecordBlocks.missing,
+      )
       commit.newBlocks.addMap(missingBlocks.blocks)
     }
     return commit
   }
 
-  async indexWrites(writes: PreparedWrite[], now: string, rev?: string) {
+  async indexWrites(writes: PreparedWrite[], rev?: string) {
     this.db.assertTransaction()
     await Promise.all(
       writes.map(async (write) => {
@@ -156,7 +152,7 @@ export class ActorRepo {
             write.record,
             write.action,
             rev,
-            now,
+            this.now,
           )
         } else if (write.action === WriteOpAction.Delete) {
           await this.record.deleteRecord(write.uri)

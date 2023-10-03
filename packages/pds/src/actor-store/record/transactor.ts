@@ -3,9 +3,9 @@ import { AtUri } from '@atproto/syntax'
 import { WriteOpAction } from '@atproto/repo'
 import { dbLogger as log } from '../../logger'
 import { Backlink } from '../actor-db'
-import { ActorRecord, getBacklinks } from '../record'
+import { RecordReader, getBacklinks } from './reader'
 
-export class ActorRecordTransactor extends ActorRecord {
+export class RecordTransactor extends RecordReader {
   async indexRecord(
     uri: AtUri,
     cid: CID,

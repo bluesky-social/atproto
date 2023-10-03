@@ -2,7 +2,6 @@ import { CID } from 'multiformats/cid'
 import * as repo from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import SqlRepoStorage from '../../../../sql-repo-storage'
 import AppContext from '../../../../context'
 import { byteIterableToStream } from '@atproto/common'
 import { isUserOrAdmin } from '../../../../auth'
@@ -21,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
           throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
         }
       }
-      const storage = new SqlRepoStorage(ctx.db, did)
+      const storage = ctx.actorStore.reader(did).repo.storage
       const commit = params.commit
         ? CID.parse(params.commit)
         : await storage.getRoot()

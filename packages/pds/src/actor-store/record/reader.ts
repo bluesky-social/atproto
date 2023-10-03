@@ -1,17 +1,13 @@
 import { AtUri, ensureValidAtUri } from '@atproto/syntax'
 import * as syntax from '@atproto/syntax'
 import { cborToLexRecord } from '@atproto/repo'
-import { notSoftDeletedClause } from '../db/util'
-import { ids } from '../lexicon/lexicons'
-import { ActorDb, Backlink } from './actor-db'
-import { prepareDelete } from '../repo'
+import { notSoftDeletedClause } from '../../db/util'
+import { ids } from '../../lexicon/lexicons'
+import { ActorDb, Backlink } from '../actor-db'
+import { prepareDelete } from '../../repo'
 
-export class ActorRecord {
+export class RecordReader {
   constructor(public db: ActorDb) {}
-
-  static creator() {
-    return (db: ActorDb) => new ActorRecord(db)
-  }
 
   async listCollections(): Promise<string[]> {
     const collections = await this.db.db

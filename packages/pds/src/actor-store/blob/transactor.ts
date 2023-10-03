@@ -17,13 +17,16 @@ import {
 } from '../../repo/types'
 import * as img from '../../image'
 import { BackgroundQueue } from '../../background'
+import { BlobReader } from './reader'
 
-export class ActorBlob {
+export class BlobTransactor extends BlobReader {
   constructor(
     public db: ActorDb,
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
-  ) {}
+  ) {
+    super(db, blobstore)
+  }
 
   async addUntetheredBlob(
     userSuggestedMime: string,

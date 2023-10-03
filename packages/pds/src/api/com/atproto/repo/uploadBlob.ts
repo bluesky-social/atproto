@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
 
       const blob = await ctx.actorStore.transact(requester, (actorTxn) => {
-        return actorTxn.repo.blobs.addUntetheredBlob(input.encoding, input.body)
+        return actorTxn.repo.blob.addUntetheredBlob(input.encoding, input.body)
       })
 
       return {

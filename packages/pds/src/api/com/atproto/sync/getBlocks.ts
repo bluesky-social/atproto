@@ -3,7 +3,6 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { byteIterableToStream } from '@atproto/common'
 import { blocksToCarStream } from '@atproto/repo'
 import { Server } from '../../../../lexicon'
-import SqlRepoStorage from '../../../../sql-repo-storage'
 import AppContext from '../../../../context'
 import { isUserOrAdmin } from '../../../../auth'
 
@@ -23,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const cids = params.cids.map((c) => CID.parse(c))
-      const storage = new SqlRepoStorage(ctx.db, did)
+      const storage = ctx.actorStore.reader(did).repo.storage
       const got = await storage.getBlocks(cids)
       if (got.missing.length > 0) {
         const missingStr = got.missing.map((c) => c.toString())

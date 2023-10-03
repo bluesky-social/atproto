@@ -1,34 +1,13 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ActorDb } from './actor-db'
+import { PreferenceReader, UserPreference, prefMatchNamespace } from './reader'
 
-export class ActorPreference {
-  constructor(public db: ActorDb) {}
-
-  static creator() {
-    return (db: ActorDb) => new ActorPreference(db)
-  }
-
-  async getPreferences(
-    did: string,
-    namespace?: string,
-  ): Promise<UserPreference[]> {
-    const prefsRes = await this.db.db
-      .selectFrom('user_pref')
-      .orderBy('id')
-      .selectAll()
-      .execute()
-    return prefsRes
-      .filter((pref) => !namespace || matchNamespace(namespace, pref.name))
-      .map((pref) => JSON.parse(pref.valueJson))
-  }
-
+export class PreferenceTransactor extends PreferenceReader {
   async putPreferences(
-    did: string,
     values: UserPreference[],
     namespace: string,
   ): Promise<void> {
     this.db.assertTransaction()
-    if (!values.every((value) => matchNamespace(namespace, value.$type))) {
+    if (!values.every((value) => prefMatchNamespace(namespace, value.$type))) {
       throw new InvalidRequestError(
         `Some preferences are not in the ${namespace} namespace`,
       )
@@ -40,13 +19,12 @@ export class ActorPreference {
       .execute()
     const putPrefs = values.map((value) => {
       return {
-        did,
         name: value.$type,
         valueJson: JSON.stringify(value),
       }
     })
     const allPrefIdsInNamespace = allPrefs
-      .filter((pref) => matchNamespace(namespace, pref.name))
+      .filter((pref) => prefMatchNamespace(namespace, pref.name))
       .map((pref) => pref.id)
     // replace all prefs in given namespace
     if (allPrefIdsInNamespace.length) {
@@ -59,10 +37,4 @@ export class ActorPreference {
       await this.db.db.insertInto('user_pref').values(putPrefs).execute()
     }
   }
-}
-
-export type UserPreference = Record<string, unknown> & { $type: string }
-
-const matchNamespace = (namespace: string, fullname: string) => {
-  return fullname === namespace || fullname.startsWith(`${namespace}.`)
 }

@@ -2,40 +2,40 @@ import util from 'util'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { cborToLexRecord } from '@atproto/repo'
-import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
-import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
-import { ids } from '../lexicon/lexicons'
+import { AtpAgent } from '@atproto/api'
+import { Keypair } from '@atproto/crypto'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import { Record as PostRecord } from '../../lexicon/types/app/bsky/feed/post'
+import { Record as ProfileRecord } from '../../lexicon/types/app/bsky/actor/profile'
+import { ids } from '../../lexicon/lexicons'
 import {
   ProfileViewBasic,
   ProfileView,
   ProfileViewDetailed,
-} from '../lexicon/types/app/bsky/actor/defs'
-import { FeedViewPost, PostView } from '../lexicon/types/app/bsky/feed/defs'
+} from '../../lexicon/types/app/bsky/actor/defs'
+import { FeedViewPost, PostView } from '../../lexicon/types/app/bsky/feed/defs'
 import {
   Main as EmbedImages,
   isMain as isEmbedImages,
-} from '../lexicon/types/app/bsky/embed/images'
+} from '../../lexicon/types/app/bsky/embed/images'
 import {
   Main as EmbedExternal,
   isMain as isEmbedExternal,
-} from '../lexicon/types/app/bsky/embed/external'
+} from '../../lexicon/types/app/bsky/embed/external'
 import {
   Main as EmbedRecord,
   isMain as isEmbedRecord,
   View as EmbedRecordView,
-} from '../lexicon/types/app/bsky/embed/record'
+} from '../../lexicon/types/app/bsky/embed/record'
 import {
   Main as EmbedRecordWithMedia,
   isMain as isEmbedRecordWithMedia,
-} from '../lexicon/types/app/bsky/embed/recordWithMedia'
-import { AtpAgent } from '@atproto/api'
-import { Keypair } from '@atproto/crypto'
-import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { ActorDb } from './actor-db'
+} from '../../lexicon/types/app/bsky/embed/recordWithMedia'
+import { ActorDb } from '../actor-db'
 
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
-export class ActorLocal {
+export class LocalReader {
   constructor(
     public db: ActorDb,
     public signingKey: Keypair,
@@ -44,24 +44,6 @@ export class ActorLocal {
     public appviewDid?: string,
     public appviewCdnUrlPattern?: string,
   ) {}
-
-  static creator(
-    signingKey: Keypair,
-    pdsHostname: string,
-    appViewAgent?: AtpAgent,
-    appviewDid?: string,
-    appviewCdnUrlPattern?: string,
-  ) {
-    return (db: ActorDb) =>
-      new ActorLocal(
-        db,
-        signingKey,
-        pdsHostname,
-        appViewAgent,
-        appviewDid,
-        appviewCdnUrlPattern,
-      )
-  }
 
   getImageUrl(pattern: CommonSignedUris, did: string, cid: string) {
     if (!this.appviewCdnUrlPattern) {
