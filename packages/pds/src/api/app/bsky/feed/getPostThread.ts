@@ -22,17 +22,33 @@ import {
   getRepoRev,
   handleReadAfterWrite,
 } from '../util/read-after-write'
+import { authPassthru } from '../../../com/atproto/admin/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
-    auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
-      const requester = auth.credentials.did
+    auth: ctx.accessOrRoleVerifier,
+    handler: async ({ req, params, auth }) => {
+      const requester =
+        auth.credentials.type === 'access' ? auth.credentials.did : null
+
+      if (!requester) {
+        const res = await ctx.appviewAgent.api.app.bsky.feed.getPostThread(
+          params,
+          authPassthru(req),
+        )
+
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
       try {
         const res = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
           params,
           await ctx.serviceAuthHeaders(requester),
         )
+
         return await handleReadAfterWrite(
           ctx,
           requester,
