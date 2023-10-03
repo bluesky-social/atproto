@@ -1,4 +1,3 @@
-import { isValidISODateString } from 'iso-datestring-validator'
 import { CID } from 'multiformats/cid'
 import { ValidationResult, ValidationError } from '../types'
 import {
@@ -6,19 +5,18 @@ import {
   ensureValidHandle,
   ensureValidNsid,
   ensureValidAtUri,
+  ensureValidDatetime,
 } from '@atproto/syntax'
 import { validateLanguage } from '@atproto/common-web'
 
 export function datetime(path: string, value: string): ValidationResult {
   try {
-    if (!isValidISODateString(value)) {
-      throw new Error()
-    }
+    ensureValidDatetime(value)
   } catch {
     return {
       success: false,
       error: new ValidationError(
-        `${path} must be an iso8601 formatted datetime`,
+        `${path} must be an valid atproto datetime (both RFC-3339 and ISO-8601)`,
       ),
     }
   }
