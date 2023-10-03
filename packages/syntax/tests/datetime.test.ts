@@ -1,7 +1,7 @@
 import {
   isValidDatetime,
   ensureValidDatetime,
-  normalizeDatetime,
+  normalizeAndEnsureValidDatetime,
   InvalidDatetimeError,
 } from '../src'
 import * as readline from 'readline'
@@ -66,7 +66,15 @@ describe('datetime validation', () => {
 
 describe('normalization', () => {
   it('normalizes datetimes', () => {
-    const normalized = normalizeDatetime('1985-04-12T23:20:50.123')
+    const normalized = normalizeAndEnsureValidDatetime(
+      '1985-04-12T23:20:50.123',
+    )
     expect(normalized).toMatch(/^1985-04-13T[0-9:.]+Z$/)
+  })
+
+  it('throws on invalid normalized datetimes', () => {
+    expect(() => normalizeAndEnsureValidDatetime('blah')).toThrow(
+      InvalidDatetimeError,
+    )
   })
 })

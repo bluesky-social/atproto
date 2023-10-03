@@ -26,17 +26,16 @@ export const ensureValidDatetime = (dtStr: string): void => {
 }
 
 // Normalize date strings to simplified ISO so that the lexical sort preserves temporal sort.
-// Rather than failing on an invalid date format, returns valid unix epoch.
-export const normalizeDatetime = (dtStr: string): string => {
+// Does *not* accept all possible strings, but will (arbitrarily) normalize no-timezone to local timezone.
+export const normalizeAndEnsureValidDatetime = (dtStr: string): string => {
   const date = new Date(dtStr)
   if (isNaN(date.getTime())) {
-    return new Date(0).toISOString()
+    throw new InvalidDatetimeError(
+      'datetime did not parse as any timestamp format',
+    )
   }
   const iso = date.toISOString()
-  if (!isValidDatetime(iso)) {
-    // Occurs in rare cases, e.g. where resulting UTC year is negative. These also don't preserve lexical sort.
-    return new Date(0).toISOString()
-  }
+  ensureValidDatetime(iso)
   return iso // YYYY-MM-DDTHH:mm:ss.sssZ
 }
 
