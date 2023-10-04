@@ -30,12 +30,11 @@ export class Outbox {
   // immediately yield them
   async *events(
     backfillCursor?: number,
-    backFillTime?: string,
     signal?: AbortSignal,
   ): AsyncGenerator<SeqEvt> {
     // catch up as much as we can
     if (backfillCursor !== undefined) {
-      for await (const evt of this.getBackfill(backfillCursor, backFillTime)) {
+      for await (const evt of this.getBackfill(backfillCursor)) {
         if (signal?.aborted) return
         this.lastSeen = evt.seq
         yield evt
@@ -67,7 +66,6 @@ export class Outbox {
       if (backfillCursor !== undefined) {
         const cutoverEvts = await this.sequencer.requestSeqRange({
           earliestSeq: this.lastSeen > -1 ? this.lastSeen : backfillCursor,
-          earliestTime: backFillTime,
         })
         this.outBuffer.pushMany(cutoverEvts)
         // dont worry about dupes, we ensure order on yield
