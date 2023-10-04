@@ -3376,7 +3376,7 @@ export const schemaDict = {
       },
       repo: {
         type: 'object',
-        required: ['did', 'head'],
+        required: ['did', 'head', 'rev'],
         properties: {
           did: {
             type: 'string',
@@ -3385,6 +3385,9 @@ export const schemaDict = {
           head: {
             type: 'string',
             format: 'cid',
+          },
+          rev: {
+            type: 'string',
           },
         },
       },
