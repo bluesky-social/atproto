@@ -34,10 +34,11 @@
     },
     "repo": {
       "type": "object",
-      "required": ["did", "head"],
+      "required": ["did", "head", "rev"],
       "properties": {
         "did": { "type": "string", "format": "did" },
-        "head": { "type": "string", "format": "cid" }
+        "head": { "type": "string", "format": "cid" },
+        "rev": { "type": "string" }
       }
     }
   }
