@@ -1,5 +1,6 @@
 import path from 'node:path'
 import os from 'node:os'
+import fs from 'node:fs/promises'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as pds from '@atproto/pds'
@@ -7,6 +8,7 @@ import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { AtpAgent } from '@atproto/api'
 import { PdsConfig } from './types'
 import { uniqueLockId } from './util'
+import { getMigrator } from '@atproto/pds/src/service-db'
 
 const ADMIN_PASSWORD = 'admin-pass'
 const MOD_PASSWORD = 'mod-pass'
@@ -30,9 +32,12 @@ export class TestPds {
     const url = `http://localhost:${port}`
 
     const blobstoreLoc = path.join(os.tmpdir(), randomStr(8, 'base32'))
+    const dbDirLoc = path.join(os.tmpdir(), randomStr(8, 'base32'))
+    await fs.mkdir(dbDirLoc, { recursive: true })
 
     const env: pds.ServerEnvironment = {
       port,
+      dbSqliteDirectory: dbDirLoc,
       blobstoreDiskLocation: blobstoreLoc,
       recoveryDidKey: recoveryKey,
       adminPassword: ADMIN_PASSWORD,
@@ -56,17 +61,8 @@ export class TestPds {
 
     // Separate migration db on postgres in case migration changes some
     // connection state that we need in the tests, e.g. "alter database ... set ..."
-    const migrationDb =
-      cfg.db.dialect === 'pg'
-        ? pds.Database.postgres({
-            url: cfg.db.url,
-            schema: cfg.db.schema,
-          })
-        : server.ctx.db
-    await migrationDb.migrateToLatestOrThrow()
-    if (migrationDb !== server.ctx.db) {
-      await migrationDb.close()
-    }
+    const migrator = getMigrator(server.ctx.db)
+    await migrator.migrateToLatestOrThrow()
 
     await server.start()
 

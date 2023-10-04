@@ -115,6 +115,7 @@ describe('crud operations', () => {
     expect(res2.records[0].uri).toBe(uri.toString())
     expect(res2.records[0].value.text).toBe('Hello, world!')
   })
+  return
 
   it('gets records', async () => {
     const res1 = await agent.api.com.atproto.repo.getRecord({

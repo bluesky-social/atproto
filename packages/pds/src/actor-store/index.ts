@@ -2,7 +2,7 @@ import path from 'path'
 import { AtpAgent } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
-import { ActorDb } from './actor-db'
+import { ActorDb, getMigrator } from './actor-db'
 import { BackgroundQueue } from '../background'
 import { RecordReader } from './record/reader'
 import { LocalReader } from './local/reader'
@@ -43,6 +43,11 @@ export const createActorStore = (
         const store = createActorTransactor(did, dbTxn, resources)
         return fn(store)
       })
+    },
+    create: async (did: string) => {
+      const db = dbCreator(did)
+      const migrator = getMigrator(db)
+      await migrator.migrateToLatestOrThrow()
     },
     destroy: async (did: string) => {
       // @TODO
@@ -118,6 +123,7 @@ export type ActorStore = {
   db: (did: string) => ActorDb
   reader: (did: string) => ActorStoreReader
   transact: <T>(did: string, store: ActorStoreTransactFn<T>) => Promise<T>
+  create: (did: string) => Promise<void>
   destroy: (did: string) => Promise<void>
 }
 
