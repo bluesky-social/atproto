@@ -60,9 +60,9 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       .selectFrom('repo_seq')
       .selectAll()
       .where('seq', 'is not', null)
-      .where('sequencedAt', '>', time)
+      .where('sequencedAt', '>=', time)
+      .orderBy('sequencedAt', 'asc')
       .limit(1)
-      .orderBy('sequencedAt', 'desc')
       .executeTakeFirst()
     return got || null
   }

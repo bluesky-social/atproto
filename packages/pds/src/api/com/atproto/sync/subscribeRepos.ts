@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
           message: 'Requested cursor exceeded limit. Possibly missing events',
         }
         const startEvt = await ctx.sequencer.earliestAfterTime(backfillTime)
-        outboxCursor = startEvt?.seq ?? undefined
+        outboxCursor = startEvt?.seq ? startEvt.seq - 1 : undefined
       } else {
         outboxCursor = cursor
       }
