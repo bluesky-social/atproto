@@ -1,4 +1,3 @@
-import Database from '../db'
 import { z } from 'zod'
 import { cborEncode, schema } from '@atproto/common'
 import {
@@ -10,32 +9,17 @@ import {
 } from '@atproto/repo'
 import { PreparedWrite } from '../repo'
 import { CID } from 'multiformats/cid'
-import { EventType, RepoSeqInsert } from '../db/tables/repo-seq'
+import { ServiceDb, RepoSeqEventType, RepoSeqInsert } from '../service-db'
 
-export const sequenceEvt = async (dbTxn: Database, evt: RepoSeqInsert) => {
+export const sequenceEvt = async (dbTxn: ServiceDb, evt: RepoSeqInsert) => {
   dbTxn.assertTransaction()
-  await dbTxn.notify('new_repo_event')
   if (evt.eventType === 'rebase') {
     await invalidatePrevRepoOps(dbTxn, evt.did)
   } else if (evt.eventType === 'handle') {
     await invalidatePrevHandleOps(dbTxn, evt.did)
   }
 
-  const res = await dbTxn.db
-    .insertInto('repo_seq')
-    .values(evt)
-    .returning('id')
-    .executeTakeFirst()
-
-  // since sqlite is serializable, sequence right after insert instead of relying on sequencer-leader
-  if (res && dbTxn.dialect === 'sqlite') {
-    await dbTxn.db
-      .updateTable('repo_seq')
-      .set({ seq: res.id })
-      .where('id', '=', res.id)
-      .execute()
-    await dbTxn.notify('outgoing_repo_seq')
-  }
+  await dbTxn.db.insertInto('repo_seq').values(evt).execute()
 }
 
 export const formatSeqCommit = async (
@@ -123,9 +107,9 @@ export const formatSeqTombstone = async (
 }
 
 export const invalidatePrevSeqEvts = async (
-  db: Database,
+  db: ServiceDb,
   did: string,
-  eventTypes: EventType[],
+  eventTypes: RepoSeqEventType[],
 ) => {
   if (eventTypes.length < 1) return
   await db.db
@@ -137,11 +121,11 @@ export const invalidatePrevSeqEvts = async (
     .execute()
 }
 
-export const invalidatePrevRepoOps = async (db: Database, did: string) => {
+export const invalidatePrevRepoOps = async (db: ServiceDb, did: string) => {
   return invalidatePrevSeqEvts(db, did, ['append', 'rebase'])
 }
 
-export const invalidatePrevHandleOps = async (db: Database, did: string) => {
+export const invalidatePrevHandleOps = async (db: ServiceDb, did: string) => {
   return invalidatePrevSeqEvts(db, did, ['handle'])
 }
 

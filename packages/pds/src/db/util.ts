@@ -1,6 +1,7 @@
 import {
   DummyDriver,
   DynamicModule,
+  Kysely,
   RawBuilder,
   SelectQueryBuilder,
   sql,
@@ -8,7 +9,7 @@ import {
   SqliteIntrospector,
   SqliteQueryCompiler,
 } from 'kysely'
-import DatabaseSchema from './database-schema'
+import { DynamicReferenceBuilder } from 'kysely/dist/cjs/dynamic/dynamic-reference-builder'
 
 export const actorWhereClause = (actor: string) => {
   if (actor.startsWith('did:')) {
@@ -30,7 +31,7 @@ export const softDeleted = (repoOrRecord: { takedownId: number | null }) => {
 export const countAll = sql<number>`count(*)`
 
 // For use with doUpdateSet()
-export const excluded = <T>(db: DatabaseSchema, col) => {
+export const excluded = <T, S>(db: Kysely<S>, col) => {
   return sql<T>`${db.dynamic.ref(`excluded.${col}`)}`
 }
 
@@ -53,6 +54,8 @@ export const dummyDialect = {
     return new SqliteQueryCompiler()
   },
 }
+
+export type Ref = DynamicReferenceBuilder<any>
 
 export type DbRef = RawBuilder | ReturnType<DynamicModule['ref']>
 

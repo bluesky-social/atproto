@@ -3,8 +3,8 @@ import AppContext from '../../../../context'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import { handleReadAfterWrite } from '../util/read-after-write'
 import { authPassthru } from '../../../../api/com/atproto/admin/util'
-import { LocalRecords } from '../../../../services/local'
 import { isReasonRepost } from '../../../../lexicon/types/app/bsky/feed/defs'
+import { LocalRecords } from '../../../../actor-store/local/reader'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
@@ -33,7 +33,7 @@ const getAuthorMunge = async (
   local: LocalRecords,
   requester: string,
 ): Promise<OutputSchema> => {
-  const localSrvc = ctx.services.local(ctx.db)
+  const actorStore = ctx.actorStore.reader(requester)
   const localProf = local.profile
   // only munge on own feed
   if (!isUsersFeed(original, requester)) {
@@ -48,7 +48,7 @@ const getAuthorMunge = async (
           ...item,
           post: {
             ...item.post,
-            author: localSrvc.updateProfileViewBasic(
+            author: actorStore.local.updateProfileViewBasic(
               item.post.author,
               localProf.record,
             ),
@@ -59,7 +59,7 @@ const getAuthorMunge = async (
       }
     })
   }
-  feed = await localSrvc.formatAndInsertPostsInFeed(feed, local.posts)
+  feed = await actorStore.local.formatAndInsertPostsInFeed(feed, local.posts)
   return {
     ...original,
     feed,

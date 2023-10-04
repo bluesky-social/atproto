@@ -3,7 +3,7 @@ import AppContext from '../../../../context'
 import { authPassthru } from '../../../../api/com/atproto/admin/util'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/actor/getProfile'
 import { handleReadAfterWrite } from '../util/read-after-write'
-import { LocalRecords } from '../../../../services/local'
+import { LocalRecords } from '../../../../actor-store/local/reader'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
@@ -30,9 +30,10 @@ const getProfileMunge = async (
   ctx: AppContext,
   original: OutputSchema,
   local: LocalRecords,
+  requester: string,
 ): Promise<OutputSchema> => {
   if (!local.profile) return original
-  return ctx.services
-    .local(ctx.db)
-    .updateProfileDetailed(original, local.profile.record)
+  return ctx.actorStore
+    .reader(requester)
+    .local.updateProfileDetailed(original, local.profile.record)
 }

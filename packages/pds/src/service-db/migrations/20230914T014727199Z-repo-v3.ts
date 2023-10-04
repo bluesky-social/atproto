@@ -1,22 +1,6 @@
-import { Kysely, sql } from 'kysely'
-import { Dialect } from '..'
+import { Kysely } from 'kysely'
 
-export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
-  // sequencer leader sequence
-  if (dialect !== 'sqlite') {
-    const res = await db
-      .selectFrom('repo_seq')
-      .select('seq')
-      .where('seq', 'is not', null)
-      .orderBy('seq', 'desc')
-      .limit(1)
-      .executeTakeFirst()
-    const startAt = res?.seq ? res.seq + 50000 : 1
-    await sql`CREATE SEQUENCE repo_seq_sequence START ${sql.literal(
-      startAt,
-    )};`.execute(db)
-  }
-
+export async function up(db: Kysely<any>): Promise<void> {
   // user account cursor idx
   await db.schema
     .createIndex('user_account_cursor_idx')
@@ -96,10 +80,7 @@ export async function up(db: Kysely<any>, dialect: Dialect): Promise<void> {
   await db.schema.dropTable('repo_commit_block').execute()
 }
 
-export async function down(
-  db: Kysely<unknown>,
-  dialect: Dialect,
-): Promise<void> {
+export async function down(db: Kysely<unknown>): Promise<void> {
   // repo v3
   await db.schema
     .createTable('repo_commit_block')
@@ -157,9 +138,4 @@ export async function down(
 
   // user account cursor idx
   await db.schema.dropIndex('user_account_cursor_idx').execute()
-
-  // sequencer leader sequence
-  if (dialect !== 'sqlite') {
-    await sql`DROP SEQUENCE repo_seq_sequence;`.execute(db)
-  }
 }

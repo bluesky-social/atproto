@@ -1,3 +1,4 @@
+import path from 'path'
 import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
@@ -14,17 +15,17 @@ import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
 import { Services, createServices } from './services'
-import { Sequencer, SequencerLeader } from './sequencer'
+import { Sequencer } from './sequencer'
 import { BackgroundQueue } from './background'
 import DidSqlCache from './did-cache'
 import { Crawlers } from './crawlers'
 import { DiskBlobStore } from './storage'
 import { getRedisClient } from './redis'
-import { RuntimeFlags } from './runtime-flags'
 import { ActorStore, createActorStore } from './actor-store'
+import { ServiceDb } from './service-db'
 
 export type AppContextOptions = {
-  db: Database
+  db: ServiceDb
   actorStore: ActorStore
   blobstore: BlobStore
   mailer: ServerMailer
@@ -34,9 +35,7 @@ export type AppContextOptions = {
   plcClient: plc.Client
   services: Services
   sequencer: Sequencer
-  sequencerLeader?: SequencerLeader
   backgroundQueue: BackgroundQueue
-  runtimeFlags: RuntimeFlags
   redisScratch?: Redis
   crawlers: Crawlers
   appViewAgent: AtpAgent
@@ -47,7 +46,7 @@ export type AppContextOptions = {
 }
 
 export class AppContext {
-  public db: Database
+  public db: ServiceDb
   public actorStore: ActorStore
   public blobstore: BlobStore
   public mailer: ServerMailer
@@ -57,9 +56,7 @@ export class AppContext {
   public plcClient: plc.Client
   public services: Services
   public sequencer: Sequencer
-  public sequencerLeader?: SequencerLeader
   public backgroundQueue: BackgroundQueue
-  public runtimeFlags: RuntimeFlags
   public redisScratch?: Redis
   public crawlers: Crawlers
   public appViewAgent: AtpAgent
@@ -79,9 +76,7 @@ export class AppContext {
     this.plcClient = opts.plcClient
     this.services = opts.services
     this.sequencer = opts.sequencer
-    this.sequencerLeader = opts.sequencerLeader
     this.backgroundQueue = opts.backgroundQueue
-    this.runtimeFlags = opts.runtimeFlags
     this.redisScratch = opts.redisScratch
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
@@ -96,16 +91,9 @@ export class AppContext {
     secrets: ServerSecrets,
     overrides?: Partial<AppContextOptions>,
   ): Promise<AppContext> {
-    const db =
-      cfg.db.dialect === 'sqlite'
-        ? Database.sqlite(cfg.db.location)
-        : Database.postgres({
-            url: cfg.db.url,
-            schema: cfg.db.schema,
-            poolSize: cfg.db.pool.size,
-            poolMaxUses: cfg.db.pool.maxUses,
-            poolIdleTimeoutMs: cfg.db.pool.idleTimeoutMs,
-          })
+    const db: ServiceDb = Database.sqlite(
+      path.join(cfg.db.directory, 'service.sqlite'),
+    )
     const blobstore =
       cfg.blobstore.provider === 's3'
         ? new S3BlobStore({ bucket: cfg.blobstore.bucket })
@@ -142,12 +130,7 @@ export class AppContext {
     const plcClient = new plc.Client(cfg.identity.plcUrl)
 
     const sequencer = new Sequencer(db)
-    const sequencerLeader = cfg.subscription.sequencerLeaderEnabled
-      ? new SequencerLeader(db, cfg.subscription.sequencerLeaderLockId)
-      : undefined
-
-    const backgroundQueue = new BackgroundQueue(db)
-    const runtimeFlags = new RuntimeFlags(db)
+    const backgroundQueue = new BackgroundQueue()
     const redisScratch = cfg.redis
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
@@ -185,20 +168,14 @@ export class AppContext {
       repoSigningKey,
       blobstore,
       appViewAgent,
+      dbDirectory: cfg.db.directory,
       pdsHostname: cfg.service.hostname,
       appViewDid: cfg.bskyAppView.did,
       appViewCdnUrlPattern: cfg.bskyAppView.cdnUrlPattern,
       backgroundQueue,
     })
 
-    const services = createServices({
-      repoSigningKey,
-      blobstore,
-      appViewAgent,
-      pdsHostname: cfg.service.hostname,
-      appViewDid: cfg.bskyAppView.did,
-      appViewCdnUrlPattern: cfg.bskyAppView.cdnUrlPattern,
-    })
+    const services = createServices()
 
     return new AppContext({
       db,
@@ -211,9 +188,7 @@ export class AppContext {
       plcClient,
       services,
       sequencer,
-      sequencerLeader,
       backgroundQueue,
-      runtimeFlags,
       redisScratch,
       crawlers,
       appViewAgent,

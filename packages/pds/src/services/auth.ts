@@ -1,15 +1,11 @@
 import { HOUR } from '@atproto/common'
-import Database from '../db'
 import { RefreshToken, getRefreshTokenId } from '../auth'
+import { ServiceDb } from '../service-db'
 
 const REFRESH_GRACE_MS = 2 * HOUR
 
 export class AuthService {
-  constructor(public db: Database) {}
-
-  static creator() {
-    return (db: Database) => new AuthService(db)
-  }
+  constructor(public db: ServiceDb) {}
 
   async grantRefreshToken(
     payload: RefreshToken,
@@ -33,7 +29,6 @@ export class AuthService {
     this.db.assertTransaction()
     const token = await this.db.db
       .selectFrom('refresh_token')
-      .if(this.db.dialect !== 'sqlite', (qb) => qb.forUpdate())
       .where('id', '=', id)
       .selectAll()
       .executeTakeFirst()

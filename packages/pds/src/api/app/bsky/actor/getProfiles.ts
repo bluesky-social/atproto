@@ -1,7 +1,7 @@
+import { LocalRecords } from '../../../../actor-store/local/reader'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/actor/getProfiles'
-import { LocalRecords } from '../../../../services/local'
 import { handleReadAfterWrite } from '../util/read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
@@ -35,9 +35,9 @@ const getProfilesMunge = async (
   if (!localProf) return original
   const profiles = original.profiles.map((prof) => {
     if (prof.did !== requester) return prof
-    return ctx.services
-      .local(ctx.db)
-      .updateProfileDetailed(prof, localProf.record)
+    return ctx.actorStore
+      .reader(requester)
+      .local.updateProfileDetailed(prof, localProf.record)
   })
   return {
     ...original,

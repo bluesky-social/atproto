@@ -2,7 +2,7 @@ export interface RepoBlob {
   cid: string
   recordUri: string
   repoRev: string | null
-  takedownId: number | null
+  takedownId: string | null
 }
 
 export const tableName = 'repo_blob'

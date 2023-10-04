@@ -14,14 +14,14 @@ import {
 } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import {
   LocalRecords,
-  LocalService,
   RecordDescript,
-} from '../../../../services/local'
+} from '../../../../actor-store/local/reader'
 import {
   getLocalLag,
   getRepoRev,
   handleReadAfterWrite,
 } from '../util/read-after-write'
+import { ActorStoreReader } from '../../../../actor-store'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
@@ -75,6 +75,7 @@ const getPostThreadMunge = async (
   ctx: AppContext,
   original: OutputSchema,
   local: LocalRecords,
+  requester: string,
 ): Promise<OutputSchema> => {
   // @TODO if is NotFoundPost, handle similarly to error
   // @NOTE not necessary right now as we never return those for the requested uri
@@ -82,7 +83,7 @@ const getPostThreadMunge = async (
     return original
   }
   const thread = await addPostsToThread(
-    ctx.services.local(ctx.db),
+    ctx.actorStore.reader(requester),
     original.thread,
     local.posts,
   )
@@ -93,7 +94,7 @@ const getPostThreadMunge = async (
 }
 
 const addPostsToThread = async (
-  localSrvc: LocalService,
+  actorStore: ActorStoreReader,
   original: ThreadViewPost,
   posts: RecordDescript<PostRecord>[],
 ) => {
@@ -101,7 +102,7 @@ const addPostsToThread = async (
   if (inThread.length === 0) return original
   let thread: ThreadViewPost = original
   for (const record of inThread) {
-    thread = await insertIntoThreadReplies(localSrvc, thread, record)
+    thread = await insertIntoThreadReplies(actorStore, thread, record)
   }
   return thread
 }
@@ -119,12 +120,12 @@ const findPostsInThread = (
 }
 
 const insertIntoThreadReplies = async (
-  localSrvc: LocalService,
+  actorStore: ActorStoreReader,
   view: ThreadViewPost,
   descript: RecordDescript<PostRecord>,
 ): Promise<ThreadViewPost> => {
   if (descript.record.reply?.parent.uri === view.post.uri) {
-    const postView = await threadPostView(localSrvc, descript)
+    const postView = await threadPostView(actorStore, descript)
     if (!postView) return view
     const replies = [postView, ...(view.replies ?? [])]
     return {
@@ -136,7 +137,7 @@ const insertIntoThreadReplies = async (
   const replies = await Promise.all(
     view.replies.map(async (reply) =>
       isThreadViewPost(reply)
-        ? await insertIntoThreadReplies(localSrvc, reply, descript)
+        ? await insertIntoThreadReplies(actorStore, reply, descript)
         : reply,
     ),
   )
@@ -147,10 +148,10 @@ const insertIntoThreadReplies = async (
 }
 
 const threadPostView = async (
-  localSrvc: LocalService,
+  actorStore: ActorStoreReader,
   descript: RecordDescript<PostRecord>,
 ): Promise<ThreadViewPost | null> => {
-  const postView = await localSrvc.getPost(descript)
+  const postView = await actorStore.local.getPost(descript)
   if (!postView) return null
   return {
     $type: 'app.bsky.feed.defs#threadViewPost',
@@ -174,14 +175,14 @@ const readAfterWriteNotFound = async (
   if (uri.hostname !== requester) {
     return null
   }
-  const localSrvc = ctx.services.local(ctx.db)
-  const local = await localSrvc.getRecordsSinceRev(requester, rev)
+  const actorStore = ctx.actorStore.reader(requester)
+  const local = await actorStore.local.getRecordsSinceRev(rev)
   const found = local.posts.find((p) => p.uri.toString() === uri.toString())
   if (!found) return null
-  let thread = await threadPostView(localSrvc, found)
+  let thread = await threadPostView(actorStore, found)
   if (!thread) return null
   const rest = local.posts.filter((p) => p.uri.toString() !== uri.toString())
-  thread = await addPostsToThread(localSrvc, thread, rest)
+  thread = await addPostsToThread(actorStore, thread, rest)
   const highestParent = getHighestParent(thread)
   if (highestParent) {
     try {

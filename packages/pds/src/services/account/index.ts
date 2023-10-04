@@ -3,24 +3,22 @@ import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { MINUTE, lessThanAgoMs } from '@atproto/common'
 import { dbLogger as log } from '../../logger'
-import Database from '../../db'
-import * as scrypt from '../../db/scrypt'
-import { UserAccountEntry } from '../../db/tables/user-account'
-import { DidHandle } from '../../db/tables/did-handle'
-import { RepoRoot } from '../../db/tables/repo-root'
+import * as scrypt from './scrypt'
 import { countAll, notSoftDeletedClause } from '../../db/util'
-import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
-import { EmailTokenPurpose } from '../../db/tables/email-token'
 import { getRandomToken } from '../../api/com/atproto/server/util'
+import {
+  ServiceDb,
+  UserAccountEntry,
+  DidHandle,
+  RepoRoot,
+  EmailTokenPurpose,
+} from '../../service-db'
+import { paginate, TimeCidKeyset } from '../../db/pagination'
 
 export class AccountService {
-  constructor(public db: Database) {}
-
-  static creator() {
-    return (db: Database) => new AccountService(db)
-  }
+  constructor(public db: ServiceDb) {}
 
   async getAccount(
     handleOrDid: string,
@@ -294,14 +292,13 @@ export class AccountService {
       )
       .where((qb) => {
         // sqlite doesn't support "ilike", but performs "like" case-insensitively
-        const likeOp = this.db.dialect === 'pg' ? 'ilike' : 'like'
         if (query.includes('@')) {
-          return qb.where('user_account.email', likeOp, `%${query}%`)
+          return qb.where('user_account.email', 'like', `%${query}%`)
         }
         if (query.startsWith('did:')) {
           return qb.where('did_handle.did', '=', query)
         }
-        return qb.where('did_handle.handle', likeOp, `${query}%`)
+        return qb.where('did_handle.handle', 'like', `${query}%`)
       })
       .selectAll(['did_handle', 'repo_root'])
 
@@ -523,6 +520,23 @@ export class AccountService {
       throw new InvalidRequestError('Token is expired', 'ExpiredToken')
     }
     return res.did
+  }
+
+  async takedownActor(info: { takedownId: string; did: string }) {
+    const { takedownId, did } = info
+    await this.db.db
+      .updateTable('user_account')
+      .set({ takedownId })
+      .where('did', '=', did)
+      .execute()
+  }
+
+  async reverseActorTakedown(info: { did: string }) {
+    await this.db.db
+      .updateTable('repo_root')
+      .set({ takedownId: null })
+      .where('did', '=', info.did)
+      .execute()
   }
 }
 

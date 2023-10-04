@@ -2,15 +2,15 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import disposable from 'disposable-email'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import * as plc from '@did-plc/lib'
-import * as scrypt from '../../../../db/scrypt'
+import * as scrypt from '../../../../services/account/scrypt'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
 import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
-import Database from '../../../../db'
 import { AtprotoData } from '@atproto/identity'
 import { MINUTE } from '@atproto/common'
+import { ServiceDb } from '../../../../service-db'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -50,26 +50,29 @@ export default function (server: Server, ctx: AppContext) {
       // if the provided did document is poorly setup, we throw
       const { did, plcOp } = await getDidAndPlcOp(ctx, handle, input.body)
 
+      await ctx.actorStore.transact(did, async (actorTxn) => {
+        await actorTxn.repo.createRepo([])
+      })
+
       const now = new Date().toISOString()
       const passwordScrypt = await scrypt.genSaltAndHash(password)
 
       const result = await ctx.db.transaction(async (dbTxn) => {
-        const actorTxn = ctx.services.account(dbTxn)
-        const repoTxn = ctx.services.repo(dbTxn)
+        const accountTxn = ctx.services.account(dbTxn)
 
         // it's a bit goofy that we run this logic twice,
         // but we run it once for a sanity check before doing scrypt & plc ops
         // & a second time for locking + integrity check
         if (ctx.cfg.invites.required && inviteCode) {
-          await ensureCodeIsAvailable(dbTxn, inviteCode, true)
+          await ensureCodeIsAvailable(dbTxn, inviteCode)
         }
 
         // Register user before going out to PLC to get a real did
         try {
-          await actorTxn.registerUser({ email, handle, did, passwordScrypt })
+          await accountTxn.registerUser({ email, handle, did, passwordScrypt })
         } catch (err) {
           if (err instanceof UserAlreadyExistsError) {
-            const got = await actorTxn.getAccount(handle, true)
+            const got = await accountTxn.getAccount(handle, true)
             if (got) {
               throw new InvalidRequestError(`Handle already taken: ${handle}`)
             } else {
@@ -108,9 +111,6 @@ export default function (server: Server, ctx: AppContext) {
         const refresh = ctx.auth.createRefreshToken({ did })
         await ctx.services.auth(dbTxn).grantRefreshToken(refresh.payload, null)
 
-        // Setup repo root
-        await repoTxn.createRepo(did, [], now)
-
         return {
           did,
           accessJwt: access.jwt,
@@ -132,9 +132,8 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 export const ensureCodeIsAvailable = async (
-  db: Database,
+  db: ServiceDb,
   inviteCode: string,
-  withLock = false,
 ): Promise<void> => {
   const { ref } = db.db.dynamic
   const invite = await db.db
@@ -148,7 +147,6 @@ export const ensureCodeIsAvailable = async (
         .whereRef('did', '=', ref('invite_code.forUser')),
     )
     .where('code', '=', inviteCode)
-    .if(withLock && db.dialect === 'pg', (qb) => qb.forUpdate().skipLocked())
     .executeTakeFirst()
 
   if (!invite || invite.disabled) {

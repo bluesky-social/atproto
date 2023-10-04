@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
-import { prepareCreate } from '../../../../repo'
+import { prepareCreate, prepareDelete } from '../../../../repo'
 import { Server } from '../../../../lexicon'
 import {
   BadCommitSwapError,
@@ -59,9 +59,16 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       await ctx.actorStore.transact(did, async (actorTxn) => {
-        const backlinkDeletions = validate
-          ? await actorTxn.record.getBacklinkDeletions(write.uri, write.record)
+        const backlinkConflicts = validate
+          ? await actorTxn.record.getBacklinkConflicts(write.uri, write.record)
           : []
+        const backlinkDeletions = backlinkConflicts.map((uri) =>
+          prepareDelete({
+            did: uri.hostname,
+            collection: uri.collection,
+            rkey: uri.rkey,
+          }),
+        )
         const writes = [...backlinkDeletions, write]
         try {
           await actorTxn.repo.processWrites(writes, swapCommitCid)

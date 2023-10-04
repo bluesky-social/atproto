@@ -1,11 +1,15 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
-import { WriteOpAction } from '@atproto/repo'
+import { BlobStore, WriteOpAction } from '@atproto/repo'
 import { dbLogger as log } from '../../logger'
-import { Backlink } from '../actor-db'
+import { ActorDb, Backlink } from '../actor-db'
 import { RecordReader, getBacklinks } from './reader'
 
 export class RecordTransactor extends RecordReader {
+  constructor(public db: ActorDb, public blobstore: BlobStore) {
+    super(db)
+  }
+
   async indexRecord(
     uri: AtUri,
     cid: CID,
@@ -92,5 +96,57 @@ export class RecordTransactor extends RecordReader {
       .values(backlinks)
       .onConflict((oc) => oc.doNothing())
       .execute()
+  }
+
+  async takedownRecord(info: {
+    takedownId: string
+    uri: AtUri
+    blobCids?: CID[]
+  }) {
+    this.db.assertTransaction()
+    await this.db.db
+      .updateTable('record')
+      .set({ takedownId: info.takedownId })
+      .where('uri', '=', info.uri.toString())
+      .where('takedownId', 'is', null)
+      .executeTakeFirst()
+    if (info.blobCids?.length) {
+      await this.db.db
+        .updateTable('repo_blob')
+        .set({ takedownId: info.takedownId })
+        .where('recordUri', '=', info.uri.toString())
+        .where(
+          'cid',
+          'in',
+          info.blobCids.map((c) => c.toString()),
+        )
+        .where('takedownId', 'is', null)
+        .executeTakeFirst()
+      await Promise.all(
+        info.blobCids.map((cid) => this.blobstore.quarantine(cid)),
+      )
+    }
+  }
+
+  async reverseTakedownRecord(info: { uri: AtUri }) {
+    this.db.assertTransaction()
+    await this.db.db
+      .updateTable('record')
+      .set({ takedownId: null })
+      .where('uri', '=', info.uri.toString())
+      .execute()
+    const blobs = await this.db.db
+      .updateTable('repo_blob')
+      .set({ takedownId: null })
+      .where('takedownId', 'is not', null)
+      .where('recordUri', '=', info.uri.toString())
+      .returning('cid')
+      .execute()
+    await Promise.all(
+      blobs.map(async (blob) => {
+        const cid = CID.parse(blob.cid)
+        await this.blobstore.unquarantine(cid)
+      }),
+    )
   }
 }

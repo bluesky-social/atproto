@@ -6,14 +6,6 @@ import * as ipldBlock from './ipld-block'
 import * as blob from './blob'
 import * as repoBlob from './repo-blob'
 
-export type { UserPref } from './user-pref'
-export type { RepoRoot } from './repo-root'
-export type { Record } from './record'
-export type { Backlink } from './backlink'
-export type { IpldBlock } from './ipld-block'
-export type { Blob } from './blob'
-export type { RepoBlob } from './repo-blob'
-
 export type DatabaseSchema = userPref.PartialDB &
   repoRoot.PartialDB &
   record.PartialDB &
@@ -21,3 +13,11 @@ export type DatabaseSchema = userPref.PartialDB &
   ipldBlock.PartialDB &
   blob.PartialDB &
   repoBlob.PartialDB
+
+export type { UserPref } from './user-pref'
+export type { RepoRoot } from './repo-root'
+export type { Record } from './record'
+export type { Backlink } from './backlink'
+export type { IpldBlock } from './ipld-block'
+export type { Blob } from './blob'
+export type { RepoBlob } from './repo-blob'

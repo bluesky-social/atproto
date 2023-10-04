@@ -4,7 +4,6 @@ import { cborToLexRecord } from '@atproto/repo'
 import { notSoftDeletedClause } from '../../db/util'
 import { ids } from '../../lexicon/lexicons'
 import { ActorDb, Backlink } from '../actor-db'
-import { prepareDelete } from '../../repo'
 
 export class RecordReader {
   constructor(public db: ActorDb) {}
@@ -84,7 +83,7 @@ export class RecordReader {
     cid: string
     value: object
     indexedAt: string
-    takedownId: number | null
+    takedownId: string | null
   } | null> {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
@@ -153,7 +152,7 @@ export class RecordReader {
   // @NOTE this logic a placeholder until we allow users to specify these constraints themselves.
   // Ensures that we don't end-up with duplicate likes, reposts, and follows from race conditions.
 
-  async getBacklinkDeletions(uri: AtUri, record: unknown) {
+  async getBacklinkConflicts(uri: AtUri, record: unknown): Promise<AtUri[]> {
     const recordBacklinks = getBacklinks(uri, record)
     const conflicts = await Promise.all(
       recordBacklinks.map((backlink) =>
@@ -166,9 +165,7 @@ export class RecordReader {
     )
     return conflicts
       .flat()
-      .map(({ rkey }) =>
-        prepareDelete({ did: this.db.did, collection: uri.collection, rkey }),
-      )
+      .map(({ rkey }) => AtUri.make(uri.hostname, uri.collection, rkey))
   }
 }
 

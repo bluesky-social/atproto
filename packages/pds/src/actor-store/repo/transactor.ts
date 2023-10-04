@@ -25,6 +25,7 @@ export class RepoTransactor extends RepoReader {
 
   constructor(
     public db: ActorDb,
+    public did: string,
     public repoSigningKey: crypto.Keypair,
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
@@ -32,7 +33,7 @@ export class RepoTransactor extends RepoReader {
   ) {
     super(db, blobstore)
     this.blob = new BlobTransactor(db, blobstore, backgroundQueue)
-    this.record = new RecordTransactor(db)
+    this.record = new RecordTransactor(db, blobstore)
     this.now = now ?? new Date().toISOString()
     this.storage = new SqlRepoTransactor(db, this.now)
   }
@@ -42,7 +43,7 @@ export class RepoTransactor extends RepoReader {
     const writeOps = writes.map(createWriteToOp)
     const commit = await Repo.formatInitCommit(
       this.storage,
-      this.db.did,
+      this.did,
       this.repoSigningKey,
       writeOps,
     )
@@ -77,7 +78,7 @@ export class RepoTransactor extends RepoReader {
     // we just check if it is currently held by another txn
     const currRoot = await this.storage.getRootDetailed()
     if (!currRoot) {
-      throw new InvalidRequestError(`No repo root found for ${this.db.did}`)
+      throw new InvalidRequestError(`No repo root found for ${this.did}`)
     }
     if (swapCommit && !currRoot.cid.equals(swapCommit)) {
       throw new BadCommitSwapError(currRoot.cid)

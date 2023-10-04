@@ -1,6 +1,6 @@
 import { Headers } from '@atproto/xrpc'
 import { readStickyLogger as log } from '../../../../logger'
-import { LocalRecords } from '../../../../services/local'
+import { LocalRecords } from '../../../../actor-store/local/reader'
 import AppContext from '../../../../context'
 
 export type ApiRes<T> = {
@@ -72,8 +72,9 @@ export const readAfterWriteInternal = async <T>(
 ): Promise<{ data: T; lag?: number }> => {
   const rev = getRepoRev(res.headers)
   if (!rev) return { data: res.data }
-  const localSrvc = ctx.services.local(ctx.db)
-  const local = await localSrvc.getRecordsSinceRev(requester, rev)
+  const local = await ctx.actorStore
+    .reader(requester)
+    .local.getRecordsSinceRev(rev)
   const data = await munge(ctx, res.data, local, requester)
   return {
     data,

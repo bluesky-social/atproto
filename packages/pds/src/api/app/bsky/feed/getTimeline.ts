@@ -2,7 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getTimeline'
 import { handleReadAfterWrite } from '../util/read-after-write'
-import { LocalRecords } from '../../../../services/local'
+import { LocalRecords } from '../../../../actor-store/local/reader'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
@@ -22,10 +22,11 @@ const getTimelineMunge = async (
   ctx: AppContext,
   original: OutputSchema,
   local: LocalRecords,
+  requester: string,
 ): Promise<OutputSchema> => {
-  const feed = await ctx.services
-    .local(ctx.db)
-    .formatAndInsertPostsInFeed([...original.feed], local.posts)
+  const feed = await ctx.actorStore
+    .reader(requester)
+    .local.formatAndInsertPostsInFeed([...original.feed], local.posts)
   return {
     ...original,
     feed,

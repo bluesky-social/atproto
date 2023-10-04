@@ -24,29 +24,11 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     termsOfServiceUrl: env.termsOfServiceUrl,
   }
 
-  let dbCfg: ServerConfig['db']
-  if (env.dbSqliteLocation && env.dbPostgresUrl) {
-    throw new Error('Cannot set both sqlite & postgres db env vars')
+  if (!env.dbSqliteDirectory) {
+    throw new Error('Must configure a sqlite directory')
   }
-  if (env.dbSqliteLocation) {
-    dbCfg = {
-      dialect: 'sqlite',
-      location: env.dbSqliteLocation,
-    }
-  } else if (env.dbPostgresUrl) {
-    dbCfg = {
-      dialect: 'pg',
-      url: env.dbPostgresUrl,
-      migrationUrl: env.dbPostgresMigrationUrl ?? env.dbPostgresUrl,
-      schema: env.dbPostgresSchema,
-      pool: {
-        idleTimeoutMs: env.dbPostgresPoolIdleTimeoutMs ?? 10000,
-        maxUses: env.dbPostgresPoolMaxUses ?? Infinity,
-        size: env.dbPostgresPoolSize ?? 10,
-      },
-    }
-  } else {
-    throw new Error('Must configure either sqlite or postgres db')
+  const dbCfg: ServerConfig['db'] = {
+    directory: env.dbSqliteDirectory,
   }
 
   let blobstoreCfg: ServerConfig['blobstore']
@@ -192,7 +174,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 
 export type ServerConfig = {
   service: ServiceConfig
-  db: SqliteConfig | PostgresConfig
+  db: DatabaseConfig
   blobstore: S3BlobstoreConfig | DiskBlobstoreConfig
   identity: IdentityConfig
   invites: InvitesConfig
@@ -215,23 +197,8 @@ export type ServiceConfig = {
   termsOfServiceUrl?: string
 }
 
-export type SqliteConfig = {
-  dialect: 'sqlite'
-  location: string
-}
-
-export type PostgresPoolConfig = {
-  size: number
-  maxUses: number
-  idleTimeoutMs: number
-}
-
-export type PostgresConfig = {
-  dialect: 'pg'
-  url: string
-  migrationUrl: string
-  pool: PostgresPoolConfig
-  schema?: string
+export type DatabaseConfig = {
+  directory: string
 }
 
 export type S3BlobstoreConfig = {

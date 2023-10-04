@@ -1,11 +1,8 @@
 import { Kysely, sql } from 'kysely'
-import { Dialect } from '..'
 
 // @TODO make takedownId a varchar w/o fkey?
 
-export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
-  const binaryDatatype = dialect === 'sqlite' ? 'blob' : sql`bytea`
-
+export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('app_migration')
     .addColumn('id', 'varchar', (col) => col.primaryKey())
@@ -108,18 +105,13 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('size', 'integer', (col) => col.notNull())
-    .addColumn('content', binaryDatatype, (col) => col.notNull())
+    .addColumn('content', 'blob', (col) => col.notNull())
     .addPrimaryKeyConstraint('ipld_block_pkey', ['creator', 'cid'])
     .execute()
 
-  const moderationActionBuilder =
-    dialect === 'pg'
-      ? db.schema
-          .createTable('moderation_action')
-          .addColumn('id', 'serial', (col) => col.primaryKey())
-      : db.schema
-          .createTable('moderation_action')
-          .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
+  const moderationActionBuilder = db.schema
+    .createTable('moderation_action')
+    .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
   await moderationActionBuilder
     .addColumn('action', 'varchar', (col) => col.notNull())
     .addColumn('subjectType', 'varchar', (col) => col.notNull())
@@ -150,14 +142,9 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     ])
     .execute()
 
-  const moderationReportBuilder =
-    dialect === 'pg'
-      ? db.schema
-          .createTable('moderation_report')
-          .addColumn('id', 'serial', (col) => col.primaryKey())
-      : db.schema
-          .createTable('moderation_report')
-          .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
+  const moderationReportBuilder = db.schema
+    .createTable('moderation_report')
+    .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
   await moderationReportBuilder
     .addColumn('subjectType', 'varchar', (col) => col.notNull())
     .addColumn('subjectDid', 'varchar', (col) => col.notNull())
@@ -269,20 +256,14 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .execute()
 
   // @TODO renamed indexes for consistency
-  const repoSeqBuilder =
-    dialect === 'pg'
-      ? db.schema
-          .createTable('repo_seq')
-          .addColumn('id', 'bigserial', (col) => col.primaryKey())
-          .addColumn('seq', 'bigint', (col) => col.unique())
-      : db.schema
-          .createTable('repo_seq')
-          .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
-          .addColumn('seq', 'integer', (col) => col.unique())
+  const repoSeqBuilder = db.schema
+    .createTable('repo_seq')
+    .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
+    .addColumn('seq', 'integer', (col) => col.unique())
   await repoSeqBuilder
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('eventType', 'varchar', (col) => col.notNull())
-    .addColumn('event', binaryDatatype, (col) => col.notNull())
+    .addColumn('event', 'blob', (col) => col.notNull())
     .addColumn('invalidated', 'int2', (col) => col.notNull().defaultTo(0))
     .addColumn('sequencedAt', 'varchar', (col) => col.notNull())
     .execute()
@@ -328,14 +309,9 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
     .column('passwordResetToken')
     .execute()
 
-  const userPrefBuilder =
-    dialect === 'pg'
-      ? db.schema
-          .createTable('user_pref')
-          .addColumn('id', 'bigserial', (col) => col.primaryKey())
-      : db.schema
-          .createTable('user_pref')
-          .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
+  const userPrefBuilder = db.schema
+    .createTable('user_pref')
+    .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
   await userPrefBuilder
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('name', 'varchar', (col) => col.notNull())

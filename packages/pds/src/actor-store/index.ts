@@ -1,3 +1,4 @@
+import path from 'path'
 import { AtpAgent } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
@@ -9,11 +10,13 @@ import { PreferenceReader } from './preference/reader'
 import { RepoReader } from './repo/reader'
 import { RepoTransactor } from './repo/transactor'
 import { PreferenceTransactor } from './preference/preference'
+import { Database } from '../db'
 
 type ActorStoreResources = {
   repoSigningKey: crypto.Keypair
   blobstore: BlobStore
   backgroundQueue: BackgroundQueue
+  dbDirectory: string
   pdsHostname: string
   appViewAgent?: AtpAgent
   appViewDid?: string
@@ -23,25 +26,32 @@ type ActorStoreResources = {
 export const createActorStore = (
   resources: ActorStoreResources,
 ): ActorStore => {
+  const dbCreator = (did: string): ActorDb => {
+    const location = path.join(resources.dbDirectory, did)
+    return Database.sqlite(location)
+  }
+
   return {
-    db: (did: string) => {
-      return ActorDb.sqlite('', did)
-    },
+    db: dbCreator,
     reader: (did: string) => {
-      const db = ActorDb.sqlite('', did)
+      const db = dbCreator(did)
       return createActorReader(db, resources)
     },
     transact: <T>(did: string, fn: ActorStoreTransactFn<T>) => {
-      const db = ActorDb.sqlite('', did)
+      const db = dbCreator(did)
       return db.transaction((dbTxn) => {
-        const store = createActorTransactor(dbTxn, resources)
+        const store = createActorTransactor(did, dbTxn, resources)
         return fn(store)
       })
+    },
+    destroy: async (did: string) => {
+      // @TODO
     },
   }
 }
 
 const createActorTransactor = (
+  did: string,
   db: ActorDb,
   resources: ActorStoreResources,
 ): ActorStoreTransactor => {
@@ -56,7 +66,13 @@ const createActorTransactor = (
   } = resources
   return {
     db,
-    repo: new RepoTransactor(db, repoSigningKey, blobstore, backgroundQueue),
+    repo: new RepoTransactor(
+      db,
+      did,
+      repoSigningKey,
+      blobstore,
+      backgroundQueue,
+    ),
     record: new RecordReader(db),
     local: new LocalReader(
       db,
@@ -102,6 +118,7 @@ export type ActorStore = {
   db: (did: string) => ActorDb
   reader: (did: string) => ActorStoreReader
   transact: <T>(did: string, store: ActorStoreTransactFn<T>) => Promise<T>
+  destroy: (did: string) => Promise<void>
 }
 
 export type ActorStoreTransactFn<T> = (fn: ActorStoreTransactor) => Promise<T>

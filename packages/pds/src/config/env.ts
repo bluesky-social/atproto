@@ -10,16 +10,8 @@ export const readEnv = (): ServerEnvironment => {
     privacyPolicyUrl: envStr('PDS_PRIVACY_POLICY_URL'),
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
 
-    // db: one required
-    // sqlite
-    dbSqliteLocation: envStr('PDS_DB_SQLITE_LOCATION'),
-    // postgres
-    dbPostgresUrl: envStr('PDS_DB_POSTGRES_URL'),
-    dbPostgresMigrationUrl: envStr('PDS_DB_POSTGRES_MIGRATION_URL'),
-    dbPostgresSchema: envStr('PDS_DB_POSTGRES_SCHEMA'),
-    dbPostgresPoolSize: envInt('PDS_DB_POSTGRES_POOL_SIZE'),
-    dbPostgresPoolMaxUses: envInt('PDS_DB_POSTGRES_POOL_MAX_USES'),
-    dbPostgresPoolIdleTimeoutMs: envInt('PDS_DB_POSTGRES_POOL_IDLE_TIMEOUT_MS'),
+    // database
+    dbSqliteDirectory: envStr('PDS_DB_SQLITE_DIRECTORY'),
 
     // blobstore: one required
     // s3
@@ -103,14 +95,8 @@ export type ServerEnvironment = {
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
 
-  // db: one required
-  dbSqliteLocation?: string
-  dbPostgresUrl?: string
-  dbPostgresMigrationUrl?: string
-  dbPostgresSchema?: string
-  dbPostgresPoolSize?: number
-  dbPostgresPoolMaxUses?: number
-  dbPostgresPoolIdleTimeoutMs?: number
+  // database
+  dbSqliteDirectory?: string
 
   // blobstore: one required
   blobstoreS3Bucket?: string

@@ -1,18 +1,17 @@
 import EventEmitter from 'events'
 import TypedEmitter from 'typed-emitter'
-import Database from '../db'
 import { seqLogger as log } from '../logger'
-import { RepoSeqEntry } from '../db/tables/repo-seq'
-import { cborDecode } from '@atproto/common'
+import { SECOND, cborDecode, wait } from '@atproto/common'
 import { CommitEvt, HandleEvt, SeqEvt, TombstoneEvt } from './events'
+import { ServiceDb, RepoSeqEntry } from '../service-db'
 
 export * from './events'
 
 export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   polling = false
-  queued = false
+  triesWithNoResults = 0
 
-  constructor(public db: Database, public lastSeen = 0) {
+  constructor(public db: ServiceDb, public lastSeen = 0) {
     super()
     // note: this does not err when surpassed, just prints a warning to stderr
     this.setMaxListeners(100)
@@ -23,20 +22,13 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     if (curr) {
       this.lastSeen = curr.seq ?? 0
     }
-    this.db.channels.outgoing_repo_seq.addListener('message', () => {
-      if (!this.polling) {
-        this.pollDb()
-      } else {
-        this.queued = true // poll again once current poll completes
-      }
-    })
+    this.pollDb()
   }
 
   async curr(): Promise<SeqRow | null> {
     const got = await this.db.db
       .selectFrom('repo_seq')
       .selectAll()
-      .where('seq', 'is not', null)
       .orderBy('seq', 'desc')
       .limit(1)
       .executeTakeFirst()
@@ -47,7 +39,6 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     const got = await this.db.db
       .selectFrom('repo_seq')
       .selectAll()
-      .where('seq', 'is not', null)
       .where('seq', '>', cursor)
       .limit(1)
       .orderBy('seq', 'asc')
@@ -67,7 +58,6 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       .selectFrom('repo_seq')
       .selectAll()
       .orderBy('seq', 'asc')
-      .where('seq', 'is not', null)
       .where('invalidated', '=', 0)
     if (earliestSeq !== undefined) {
       seqQb = seqQb.where('seq', '>', earliestSeq)
@@ -122,6 +112,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async pollDb() {
+    // if already polling, do not start another poll
+    if (this.polling) return
     try {
       this.polling = true
       const evts = await this.requestSeqRange({
@@ -129,19 +121,22 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         limit: 1000,
       })
       if (evts.length > 0) {
-        this.queued = true // should poll again immediately
+        this.triesWithNoResults = 0
         this.emit('events', evts)
         this.lastSeen = evts.at(-1)?.seq ?? this.lastSeen
+      } else {
+        this.triesWithNoResults++
+        // when no results, exponential backoff on pulling, with a max of a 5 second wait
+        const waitTime = Math.max(
+          Math.pow(2, this.triesWithNoResults),
+          5 & SECOND,
+        )
+        await wait(waitTime)
       }
+      this.pollDb()
     } catch (err) {
       log.error({ err, lastSeen: this.lastSeen }, 'sequencer failed to poll db')
-    } finally {
-      this.polling = false
-      if (this.queued) {
-        // if queued, poll again
-        this.queued = false
-        this.pollDb()
-      }
+      this.pollDb()
     }
   }
 }
