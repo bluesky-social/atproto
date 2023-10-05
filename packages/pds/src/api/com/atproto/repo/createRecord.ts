@@ -58,7 +58,7 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
-      await ctx.actorStore.transact(did, async (actorTxn) => {
+      const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
         const backlinkConflicts = validate
           ? await actorTxn.record.getBacklinkConflicts(write.uri, write.record)
           : []
@@ -71,7 +71,7 @@ export default function (server: Server, ctx: AppContext) {
         )
         const writes = [...backlinkDeletions, write]
         try {
-          await actorTxn.repo.processWrites(writes, swapCommitCid)
+          return await actorTxn.repo.processWrites(writes, swapCommitCid)
         } catch (err) {
           if (err instanceof BadCommitSwapError) {
             throw new InvalidRequestError(err.message, 'InvalidSwap')
@@ -79,6 +79,10 @@ export default function (server: Server, ctx: AppContext) {
           throw err
         }
       })
+
+      await ctx.services
+        .account(ctx.db)
+        .updateRepoRoot(did, commit.cid, commit.rev)
 
       return {
         encoding: 'application/json',

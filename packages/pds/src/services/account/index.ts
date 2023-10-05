@@ -16,6 +16,7 @@ import {
   EmailTokenPurpose,
 } from '../../service-db'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
+import { CID } from 'multiformats/cid'
 
 export class AccountService {
   constructor(public db: ServiceDb) {}
@@ -166,6 +167,21 @@ export class AccountService {
       throw new UserAlreadyExistsError()
     }
     return { did, handle }
+  }
+
+  async updateRepoRoot(did: string, cid: CID, rev: string) {
+    await this.db.db
+      .insertInto('repo_root')
+      .values({
+        did,
+        root: cid.toString(),
+        rev,
+        indexedAt: new Date().toISOString(),
+      })
+      .onConflict((oc) =>
+        oc.column('did').doUpdateSet({ root: cid.toString(), rev }),
+      )
+      .execute()
   }
 
   async sequenceHandle(tok: HandleSequenceToken) {

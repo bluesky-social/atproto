@@ -8,7 +8,7 @@ import { AtUri } from '@atproto/syntax'
 import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BlobRef } from '@atproto/lexicon'
-import { ActorDb, Blob as BlobTable } from '../actor-db'
+import { ActorDb, Blob as BlobTable } from '../db'
 import {
   PreparedBlobRef,
   PreparedWrite,

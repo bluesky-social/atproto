@@ -1,7 +1,7 @@
 import { CommitData, RepoStorage, BlockMap } from '@atproto/repo'
 import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
-import { ActorDb, IpldBlock } from '../actor-db'
+import { ActorDb, IpldBlock } from '../db'
 import { SqlRepoReader } from './sql-repo-reader'
 
 export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {

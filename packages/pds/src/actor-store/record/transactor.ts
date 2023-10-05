@@ -2,7 +2,7 @@ import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { BlobStore, WriteOpAction } from '@atproto/repo'
 import { dbLogger as log } from '../../logger'
-import { ActorDb, Backlink } from '../actor-db'
+import { ActorDb, Backlink } from '../db'
 import { RecordReader, getBacklinks } from './reader'
 
 export class RecordTransactor extends RecordReader {
@@ -23,13 +23,12 @@ export class RecordTransactor extends RecordReader {
     const record = {
       uri: uri.toString(),
       cid: cid.toString(),
-      did: uri.host,
       collection: uri.collection,
       rkey: uri.rkey,
       repoRev: repoRev ?? null,
       indexedAt: timestamp || new Date().toISOString(),
     }
-    if (!record.did.startsWith('did:')) {
+    if (!uri.hostname.startsWith('did:')) {
       throw new Error('Expected indexed URI to contain DID')
     } else if (record.collection.length < 1) {
       throw new Error('Expected indexed URI to contain a collection')

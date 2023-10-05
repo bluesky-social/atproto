@@ -40,13 +40,13 @@ export default function (server: Server, ctx: AppContext) {
         rkey,
         swapCid: swapRecordCid,
       })
-      await ctx.actorStore.transact(did, async (actorTxn) => {
+      const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
         const record = await actorTxn.record.getRecord(write.uri, null, true)
         if (!record) {
-          return // No-op if record already doesn't exist
+          return null // No-op if record already doesn't exist
         }
         try {
-          await actorTxn.repo.processWrites([write], swapCommitCid)
+          return await actorTxn.repo.processWrites([write], swapCommitCid)
         } catch (err) {
           if (
             err instanceof BadCommitSwapError ||
@@ -58,6 +58,12 @@ export default function (server: Server, ctx: AppContext) {
           }
         }
       })
+
+      if (commit !== null) {
+        await ctx.services
+          .account(ctx.db)
+          .updateRepoRoot(did, commit.cid, commit.rev)
+      }
     },
   })
 }

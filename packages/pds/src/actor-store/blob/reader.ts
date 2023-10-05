@@ -2,7 +2,7 @@ import stream from 'stream'
 import { CID } from 'multiformats/cid'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ActorDb } from '../actor-db'
+import { ActorDb } from '../db'
 import { notSoftDeletedClause } from '../../db/util'
 
 export class BlobReader {

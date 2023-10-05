@@ -4,8 +4,9 @@ import { IdResolver } from '@atproto/identity'
 import * as crypto from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import Mail from 'nodemailer/lib/mailer'
-import { AppContext, Database } from '../src'
+import { AppContext } from '../src'
 import { ServerMailer } from '../src/mailer'
+import { ServiceDb } from '../src/service-db'
 
 const email = 'alice@test.com'
 const handle = 'alice.test'
@@ -19,7 +20,7 @@ describe('account', () => {
   let repoSigningKey: string
   let agent: AtpAgent
   let mailer: ServerMailer
-  let db: Database
+  let db: ServiceDb
   let idResolver: IdResolver
   const mailCatcher = new EventEmitter()
   let _origSendMail

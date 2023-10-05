@@ -13,7 +13,7 @@ import {
 import { BlobTransactor } from '../blob/transactor'
 import { createWriteToOp, writeToOp } from '../../repo'
 import { BackgroundQueue } from '../../background'
-import { ActorDb } from '../actor-db'
+import { ActorDb } from '../db'
 import { RecordTransactor } from '../record/transactor'
 import { RepoReader } from './reader'
 
@@ -38,7 +38,7 @@ export class RepoTransactor extends RepoReader {
     this.storage = new SqlRepoTransactor(db, this.now)
   }
 
-  async createRepo(writes: PreparedCreate[]) {
+  async createRepo(writes: PreparedCreate[]): Promise<CommitData> {
     this.db.assertTransaction()
     const writeOps = writes.map(createWriteToOp)
     const commit = await Repo.formatInitCommit(
@@ -52,6 +52,7 @@ export class RepoTransactor extends RepoReader {
       this.indexWrites(writes),
       this.blob.processWriteBlobs(commit.rev, writes),
     ])
+    return commit
     // await this.afterWriteProcessing(did, commit, writes)
   }
 
@@ -67,6 +68,7 @@ export class RepoTransactor extends RepoReader {
       this.blob.processWriteBlobs(commit.rev, writes),
       // do any other processing needed after write
     ])
+    return commit
     // await this.afterWriteProcessing(did, commitData, writes)
   }
 

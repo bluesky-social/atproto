@@ -13,3 +13,15 @@ export const fileExists = async (location: string): Promise<boolean> => {
     throw err
   }
 }
+
+export const rmIfExists = async (filepath: string): Promise<void> => {
+  try {
+    await fs.rm(filepath)
+  } catch (err) {
+    if (isErrnoException(err) && err.code === 'ENOENT') {
+      // if blob not found, then it's already been deleted & we can just return
+      return
+    }
+    throw err
+  }
+}

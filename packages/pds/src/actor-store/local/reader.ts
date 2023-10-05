@@ -31,7 +31,7 @@ import {
   Main as EmbedRecordWithMedia,
   isMain as isEmbedRecordWithMedia,
 } from '../../lexicon/types/app/bsky/embed/recordWithMedia'
-import { ActorDb } from '../actor-db'
+import { ActorDb } from '../db'
 
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 

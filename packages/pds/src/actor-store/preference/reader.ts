@@ -1,4 +1,4 @@
-import { ActorDb } from '../actor-db'
+import { ActorDb } from '../db'
 
 export class PreferenceReader {
   constructor(public db: ActorDb) {}

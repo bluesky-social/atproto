@@ -7,7 +7,7 @@ import { CID } from 'multiformats/cid'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { randomStr } from '@atproto/crypto'
 import { httpLogger as log } from '../logger'
-import { isErrnoException, fileExists } from '@atproto/common'
+import { isErrnoException, fileExists, rmIfExists } from '@atproto/common'
 
 export class DiskBlobStore implements BlobStore {
   location: string
@@ -120,15 +120,7 @@ export class DiskBlobStore implements BlobStore {
   }
 
   async delete(cid: CID): Promise<void> {
-    try {
-      await fs.rm(this.getStoredPath(cid))
-    } catch (err) {
-      if (isErrnoException(err) && err.code === 'ENOENT') {
-        // if blob not found, then it's already been deleted & we can just return
-        return
-      }
-      throw err
-    }
+    await rmIfExists(this.getStoredPath(cid))
   }
 }
 

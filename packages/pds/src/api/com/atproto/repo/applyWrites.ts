@@ -107,9 +107,9 @@ export default function (server: Server, ctx: AppContext) {
 
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
-      await ctx.actorStore.transact(did, async (actorTxn) => {
+      const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
         try {
-          await actorTxn.repo.processWrites(writes, swapCommitCid)
+          return await actorTxn.repo.processWrites(writes, swapCommitCid)
         } catch (err) {
           if (err instanceof BadCommitSwapError) {
             throw new InvalidRequestError(err.message, 'InvalidSwap')
@@ -118,6 +118,10 @@ export default function (server: Server, ctx: AppContext) {
           }
         }
       })
+
+      await ctx.services
+        .account(ctx.db)
+        .updateRepoRoot(did, commit.cid, commit.rev)
     },
   })
 }

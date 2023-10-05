@@ -6,7 +6,7 @@ import {
 } from '@atproto/repo'
 import { chunkArray } from '@atproto/common'
 import { CID } from 'multiformats/cid'
-import { ActorDb } from '../actor-db'
+import { ActorDb } from '../db'
 import { sql } from 'kysely'
 
 export class SqlRepoReader extends ReadableBlockstore {

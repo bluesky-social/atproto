@@ -2,7 +2,8 @@ import path from 'path'
 import { AtpAgent } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
-import { ActorDb, getMigrator } from './actor-db'
+import { rmIfExists } from '@atproto/common'
+import { ActorDb, getMigrator } from './db'
 import { BackgroundQueue } from '../background'
 import { RecordReader } from './record/reader'
 import { LocalReader } from './local/reader'
@@ -50,7 +51,9 @@ export const createActorStore = (
       await migrator.migrateToLatestOrThrow()
     },
     destroy: async (did: string) => {
-      // @TODO
+      await rmIfExists(path.join(resources.dbDirectory, did))
+      await rmIfExists(path.join(resources.dbDirectory, `${did}-wal`))
+      await rmIfExists(path.join(resources.dbDirectory, `${did}-shm`))
     },
   }
 }

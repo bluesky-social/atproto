@@ -51,8 +51,8 @@ export default function (server: Server, ctx: AppContext) {
       const { did, plcOp } = await getDidAndPlcOp(ctx, handle, input.body)
 
       await ctx.actorStore.create(did)
-      await ctx.actorStore.transact(did, async (actorTxn) => {
-        await actorTxn.repo.createRepo([])
+      const commit = await ctx.actorStore.transact(did, (actorTxn) => {
+        return actorTxn.repo.createRepo([])
       })
 
       const now = new Date().toISOString()
@@ -60,6 +60,8 @@ export default function (server: Server, ctx: AppContext) {
 
       const result = await ctx.db.transaction(async (dbTxn) => {
         const accountTxn = ctx.services.account(dbTxn)
+
+        await accountTxn.updateRepoRoot(did, commit.cid, commit.rev)
 
         // it's a bit goofy that we run this logic twice,
         // but we run it once for a sanity check before doing scrypt & plc ops
