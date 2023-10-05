@@ -1,9 +1,9 @@
+import { DAY, MINUTE } from '@atproto/common'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { AuthScope } from '../../../../auth'
-import { DAY, MINUTE } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createSession({
@@ -55,7 +55,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const access = ctx.auth.createAccessToken({
+      const access = await ctx.auth.createAccessToken({
         did: user.did,
         scope: appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
       })

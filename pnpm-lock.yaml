@@ -537,9 +537,15 @@ importers:
       ioredis:
         specifier: ^5.3.2
         version: 5.3.2
+      jose:
+        specifier: ^4.15.2
+        version: 4.15.2
       jsonwebtoken:
         specifier: ^8.5.1
         version: 8.5.1
+      key-encoder:
+        specifier: ^2.0.3
+        version: 2.0.3
       kysely:
         specifier: ^0.22.0
         version: 0.22.0
@@ -8728,6 +8734,10 @@ packages:
       - supports-color
       - ts-node
     dev: true
+
+  /jose@4.15.2:
+    resolution: {integrity: sha512-IY73F228OXRl9ar3jJagh7Vnuhj/GzBunPiZP13K0lOl7Am9SoWW3kEzq3MCllJMTtZqHTiDXQvoRd4U95aU6A==}
+    dev: false
 
   /joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}

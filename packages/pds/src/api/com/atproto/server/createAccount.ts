@@ -104,7 +104,7 @@ export default function (server: Server, ctx: AppContext) {
             .execute()
         }
 
-        const access = ctx.auth.createAccessToken({ did })
+        const access = await ctx.auth.createAccessToken({ did })
         const refresh = ctx.auth.createRefreshToken({ did })
         await ctx.services.auth(dbTxn).grantRefreshToken(refresh.payload, null)
 

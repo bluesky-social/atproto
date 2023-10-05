@@ -3,14 +3,20 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import * as ui8 from 'uint8arrays'
 import express from 'express'
 import * as jwt from 'jsonwebtoken'
+import * as jose from 'jose'
 import AppContext from './context'
 import { softDeleted } from './db/util'
+import { KeyObject } from 'crypto'
+import * as c from 'crypto'
+import KeyEncoder from 'key-encoder'
+const keyEncoder = new KeyEncoder('secp256k1')
 
 const BEARER = 'Bearer '
 const BASIC = 'Basic '
 
 export type ServerAuthOpts = {
   jwtSecret: string
+  jwtSigningKey?: crypto.Secp256k1Keypair
   adminPass: string
   moderatorPass?: string
   triagePass?: string
@@ -33,18 +39,20 @@ export type RefreshToken = AuthToken & { jti: string }
 
 export class ServerAuth {
   private _secret: string
+  private _signingKey?: crypto.Secp256k1Keypair
   private _adminPass: string
   private _moderatorPass?: string
   private _triagePass?: string
 
   constructor(opts: ServerAuthOpts) {
     this._secret = opts.jwtSecret
+    this._signingKey = opts.jwtSigningKey
     this._adminPass = opts.adminPass
     this._moderatorPass = opts.moderatorPass
     this._triagePass = opts.triagePass
   }
 
-  createAccessToken(opts: {
+  async createAccessToken(opts: {
     did: string
     scope?: AuthScope
     expiresIn?: string | number
@@ -54,13 +62,33 @@ export class ServerAuth {
       scope,
       sub: did,
     }
-    return {
+    // jose.decodeJwt
+    const x = new jose.SignJWT({ scope })
+      .setProtectedHeader({ alg: 'ES256K' })
+      .setExpirationTime(expiresIn)
+      .setSubject(did)
+    if (this._signingKey) {
+      const key = c.createPrivateKey({
+        format: 'pem',
+        key: keyEncoder.encodePrivate(
+          Buffer.from(await this._signingKey.export()),
+          'raw',
+          'pem',
+        ),
+      })
+      const signed = await x.sign(key)
+      console.log(signed)
+    }
+    // console.log(await x.sign())
+    const y = {
       payload: payload as AuthToken, // exp set by sign()
       jwt: jwt.sign(payload, this._secret, {
         expiresIn: expiresIn,
         mutatePayload: true,
       }),
     }
+    console.log(y)
+    return y
   }
 
   createRefreshToken(opts: {

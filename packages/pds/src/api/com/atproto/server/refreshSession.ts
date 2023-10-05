@@ -45,7 +45,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Token has been revoked', 'ExpiredToken')
       }
 
-      const access = ctx.auth.createAccessToken({
+      const access = await ctx.auth.createAccessToken({
         did: user.did,
         scope: res.appPassName === null ? AuthScope.Access : AuthScope.AppPass,
       })

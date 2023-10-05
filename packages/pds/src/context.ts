@@ -152,7 +152,14 @@ export class AppContext {
 
     const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
 
+    const jwtSigningKey =
+      secrets.jwtSigningKey &&
+      (await crypto.Secp256k1Keypair.import(
+        secrets.jwtSigningKey.privateKeyHex,
+      ))
+
     const auth = new ServerAuth({
+      jwtSigningKey,
       jwtSecret: secrets.jwtSecret,
       adminPass: secrets.adminPassword,
       moderatorPass: secrets.moderatorPassword,
