@@ -17,7 +17,6 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
     auth: ctx.roleVerifier,
     handler: async ({ req, input, auth }) => {
-      return {} as any
       // const access = auth.credentials
       // const { db, services } = ctx
       // if (ctx.cfg.bskyAppView.proxyModeration) {
@@ -26,7 +25,6 @@ export default function (server: Server, ctx: AppContext) {
       //       input.body,
       //       authPassthru(req, true),
       //     )
-
       //   const transact = db.transaction(async (dbTxn) => {
       //     const authTxn = services.auth(dbTxn)
       //     const moderationTxn = services.moderation(dbTxn)
@@ -46,7 +44,6 @@ export default function (server: Server, ctx: AppContext) {
       //       })
       //     }
       //   })
-
       //   try {
       //     await transact
       //   } catch (err) {
@@ -55,13 +52,11 @@ export default function (server: Server, ctx: AppContext) {
       //       'proxied moderation action failed',
       //     )
       //   }
-
       //   return {
       //     encoding: 'application/json',
       //     body: result,
       //   }
       // }
-
       // const moderationService = services.moderation(db)
       // const {
       //   action,
@@ -73,9 +68,7 @@ export default function (server: Server, ctx: AppContext) {
       //   subjectBlobCids,
       //   durationInHours,
       // } = input.body
-
       // // apply access rules
-
       // // if less than admin access then can not takedown an account
       // if (!access.moderator && action === TAKEDOWN && 'did' in subject) {
       //   throw new AuthRequiredError(
@@ -95,13 +88,10 @@ export default function (server: Server, ctx: AppContext) {
       // ) {
       //   throw new AuthRequiredError('Must be a full moderator to label content')
       // }
-
       // validateLabels([...(createLabelVals ?? []), ...(negateLabelVals ?? [])])
-
       // const moderationAction = await db.transaction(async (dbTxn) => {
       //   const authTxn = services.auth(dbTxn)
       //   const moderationTxn = services.moderation(dbTxn)
-
       //   const result = await moderationTxn.logAction({
       //     action: getAction(action),
       //     subject: getSubject(subject),
@@ -112,7 +102,6 @@ export default function (server: Server, ctx: AppContext) {
       //     reason,
       //     durationInHours,
       //   })
-
       //   if (
       //     result.action === TAKEDOWN &&
       //     result.subjectType === 'com.atproto.admin.defs#repoRef' &&
@@ -124,7 +113,6 @@ export default function (server: Server, ctx: AppContext) {
       //       did: result.subjectDid,
       //     })
       //   }
-
       //   if (
       //     result.action === TAKEDOWN &&
       //     result.subjectType === 'com.atproto.repo.strongRef' &&
@@ -136,10 +124,8 @@ export default function (server: Server, ctx: AppContext) {
       //       blobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
       //     })
       //   }
-
       //   return result
       // })
-
       // return {
       //   encoding: 'application/json',
       //   body: await moderationService.views.action(moderationAction),

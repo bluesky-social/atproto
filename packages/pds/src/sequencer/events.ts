@@ -9,18 +9,7 @@ import {
 } from '@atproto/repo'
 import { PreparedWrite } from '../repo'
 import { CID } from 'multiformats/cid'
-import { ServiceDb, RepoSeqEventType, RepoSeqInsert } from '../service-db'
-
-export const sequenceEvt = async (dbTxn: ServiceDb, evt: RepoSeqInsert) => {
-  dbTxn.assertTransaction()
-  if (evt.eventType === 'rebase') {
-    await invalidatePrevRepoOps(dbTxn, evt.did)
-  } else if (evt.eventType === 'handle') {
-    await invalidatePrevHandleOps(dbTxn, evt.did)
-  }
-
-  await dbTxn.db.insertInto('repo_seq').values(evt).execute()
-}
+import { RepoSeqInsert } from '../service-db'
 
 export const formatSeqCommit = async (
   did: string,
@@ -104,29 +93,6 @@ export const formatSeqTombstone = async (
     event: cborEncode(evt),
     sequencedAt: new Date().toISOString(),
   }
-}
-
-export const invalidatePrevSeqEvts = async (
-  db: ServiceDb,
-  did: string,
-  eventTypes: RepoSeqEventType[],
-) => {
-  if (eventTypes.length < 1) return
-  await db.db
-    .updateTable('repo_seq')
-    .where('did', '=', did)
-    .where('eventType', 'in', eventTypes)
-    .where('invalidated', '=', 0)
-    .set({ invalidated: 1 })
-    .execute()
-}
-
-export const invalidatePrevRepoOps = async (db: ServiceDb, did: string) => {
-  return invalidatePrevSeqEvts(db, did, ['append', 'rebase'])
-}
-
-export const invalidatePrevHandleOps = async (db: ServiceDb, did: string) => {
-  return invalidatePrevSeqEvts(db, did, ['handle'])
 }
 
 export const commitEvtOp = z.object({

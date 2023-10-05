@@ -2,8 +2,19 @@ import EventEmitter from 'events'
 import TypedEmitter from 'typed-emitter'
 import { seqLogger as log } from '../logger'
 import { SECOND, cborDecode, wait } from '@atproto/common'
-import { CommitEvt, HandleEvt, SeqEvt, TombstoneEvt } from './events'
-import { ServiceDb, RepoSeqEntry } from '../service-db'
+import {
+  CommitEvt,
+  HandleEvt,
+  SeqEvt,
+  TombstoneEvt,
+  formatSeqCommit,
+  formatSeqHandleUpdate,
+  formatSeqTombstone,
+} from './events'
+import { ServiceDb, RepoSeqEntry, RepoSeqInsert } from '../service-db'
+import { CommitData } from '@atproto/repo'
+import { PreparedWrite } from '../repo'
+import { Crawlers } from '../crawlers'
 
 export * from './events'
 
@@ -11,7 +22,11 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   polling = false
   triesWithNoResults = 0
 
-  constructor(public db: ServiceDb, public lastSeen = 0) {
+  constructor(
+    public db: ServiceDb,
+    public crawlers: Crawlers,
+    public lastSeen = 0,
+  ) {
     super()
     // note: this does not err when surpassed, just prints a warning to stderr
     this.setMaxListeners(100)
@@ -138,6 +153,30 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       log.error({ err, lastSeen: this.lastSeen }, 'sequencer failed to poll db')
       this.pollDb()
     }
+  }
+
+  async sequenceEvt(evt: RepoSeqInsert) {
+    await this.db.db.insertInto('repo_seq').values(evt).execute()
+    this.crawlers.notifyOfUpdate()
+  }
+
+  async sequenceCommit(
+    did: string,
+    commitData: CommitData,
+    writes: PreparedWrite[],
+  ) {
+    const evt = await formatSeqCommit(did, commitData, writes)
+    await this.sequenceEvt(evt)
+  }
+
+  async sequenceHandleUpdate(did: string, handle: string) {
+    const evt = await formatSeqHandleUpdate(did, handle)
+    await this.sequenceEvt(evt)
+  }
+
+  async sequenceTombstone(did: string) {
+    const evt = await formatSeqTombstone(did)
+    await this.sequenceEvt(evt)
   }
 }
 

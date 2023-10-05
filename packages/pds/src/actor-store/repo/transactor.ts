@@ -53,7 +53,6 @@ export class RepoTransactor extends RepoReader {
       this.blob.processWriteBlobs(commit.rev, writes),
     ])
     return commit
-    // await this.afterWriteProcessing(did, commit, writes)
   }
 
   async processWrites(writes: PreparedWrite[], swapCommitCid?: CID) {
@@ -66,10 +65,8 @@ export class RepoTransactor extends RepoReader {
       this.indexWrites(writes, commit.rev),
       // process blobs
       this.blob.processWriteBlobs(commit.rev, writes),
-      // do any other processing needed after write
     ])
     return commit
-    // await this.afterWriteProcessing(did, commitData, writes)
   }
 
   async formatCommit(
@@ -181,20 +178,6 @@ export class RepoTransactor extends RepoReader {
       .execute()
     return res.map((row) => CID.parse(row.cid))
   }
-
-  // async afterWriteProcessing(
-  //   did: string,
-  //   commitData: CommitData,
-  //   writes: PreparedWrite[],
-  // ) {
-  //   this.db.onCommit(() => {
-  //     this.backgroundQueue.add(async () => {
-  //       await this.crawlers.notifyOfUpdate()
-  //     })
-  //   })
-  //   const seqEvt = await sequencer.formatSeqCommit(did, commitData, writes)
-  //   await sequencer.sequenceEvt(this.db, seqEvt)
-  // }
 
   async deleteRepo(_did: string) {
     // @TODO DELETE FULL SQLITE FILE

@@ -58,31 +58,42 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
-      const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
-        const backlinkConflicts = validate
-          ? await actorTxn.record.getBacklinkConflicts(write.uri, write.record)
-          : []
-        const backlinkDeletions = backlinkConflicts.map((uri) =>
-          prepareDelete({
-            did: uri.hostname,
-            collection: uri.collection,
-            rkey: uri.rkey,
-          }),
-        )
-        const writes = [...backlinkDeletions, write]
-        try {
-          return await actorTxn.repo.processWrites(writes, swapCommitCid)
-        } catch (err) {
-          if (err instanceof BadCommitSwapError) {
-            throw new InvalidRequestError(err.message, 'InvalidSwap')
+      const { commit, writes } = await ctx.actorStore.transact(
+        did,
+        async (actorTxn) => {
+          const backlinkConflicts = validate
+            ? await actorTxn.record.getBacklinkConflicts(
+                write.uri,
+                write.record,
+              )
+            : []
+          const backlinkDeletions = backlinkConflicts.map((uri) =>
+            prepareDelete({
+              did: uri.hostname,
+              collection: uri.collection,
+              rkey: uri.rkey,
+            }),
+          )
+          const writes = [...backlinkDeletions, write]
+          try {
+            const commit = await actorTxn.repo.processWrites(
+              writes,
+              swapCommitCid,
+            )
+            return { commit, writes }
+          } catch (err) {
+            if (err instanceof BadCommitSwapError) {
+              throw new InvalidRequestError(err.message, 'InvalidSwap')
+            }
+            throw err
           }
-          throw err
-        }
-      })
+        },
+      )
 
       await ctx.services
         .account(ctx.db)
         .updateRepoRoot(did, commit.cid, commit.rev)
+      await ctx.sequencer.sequenceCommit(did, commit, writes)
 
       return {
         encoding: 'application/json',

@@ -5,7 +5,6 @@ import { MINUTE, lessThanAgoMs } from '@atproto/common'
 import { dbLogger as log } from '../../logger'
 import * as scrypt from './scrypt'
 import { countAll, notSoftDeletedClause } from '../../db/util'
-import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { getRandomToken } from '../../api/com/atproto/server/util'
 import {
@@ -182,12 +181,6 @@ export class AccountService {
         oc.column('did').doUpdateSet({ root: cid.toString(), rev }),
       )
       .execute()
-  }
-
-  async sequenceHandle(tok: HandleSequenceToken) {
-    this.db.assertTransaction()
-    const seqEvt = await sequencer.formatSeqHandleUpdate(tok.did, tok.handle)
-    await sequencer.sequenceEvt(this.db, seqEvt)
   }
 
   async getHandleDid(handle: string): Promise<string | null> {
@@ -368,9 +361,20 @@ export class AccountService {
     }).execute()
   }
 
+  async markForDeletion(did: string): Promise<void> {
+    await this.db.db
+      .updateTable('repo_root')
+      .set({ takedownId: 'ACCOUNT_DELETION' })
+      .where('did', '=', did)
+      .where('takedownId', 'is', null)
+      .execute()
+  }
+
   async deleteAccount(did: string): Promise<void> {
     // Not done in transaction because it would be too long, prone to contention.
     // Also, this can safely be run multiple times if it fails.
+    await this.db.db.deleteFrom('repo_root').where('did', '=', did).execute()
+    await this.db.db.deleteFrom('email_token').where('did', '=', did).execute()
     await this.db.db
       .deleteFrom('refresh_token')
       .where('did', '=', did)
@@ -383,10 +387,6 @@ export class AccountService {
       .deleteFrom('did_handle')
       .where('did_handle.did', '=', did)
       .execute()
-    const seqEvt = await sequencer.formatSeqTombstone(did)
-    await this.db.transaction(async (txn) => {
-      await sequencer.sequenceEvt(txn, seqEvt)
-    })
   }
 
   selectInviteCodesQb() {

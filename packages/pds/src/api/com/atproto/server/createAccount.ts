@@ -120,6 +120,8 @@ export default function (server: Server, ctx: AppContext) {
         }
       })
 
+      await ctx.sequencer.sequenceCommit(did, commit, [])
+
       return {
         encoding: 'application/json',
         body: {

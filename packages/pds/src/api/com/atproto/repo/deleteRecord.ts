@@ -63,6 +63,7 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.services
           .account(ctx.db)
           .updateRepoRoot(did, commit.cid, commit.rev)
+        await ctx.sequencer.sequenceCommit(did, commit, [write])
       }
     },
   })

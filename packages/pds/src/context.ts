@@ -129,13 +129,16 @@ export class AppContext {
     })
     const plcClient = new plc.Client(cfg.identity.plcUrl)
 
-    const sequencer = new Sequencer(db)
     const backgroundQueue = new BackgroundQueue()
+    const crawlers = new Crawlers(
+      cfg.service.hostname,
+      cfg.crawlers,
+      backgroundQueue,
+    )
+    const sequencer = new Sequencer(db, crawlers)
     const redisScratch = cfg.redis
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
-
-    const crawlers = new Crawlers(cfg.service.hostname, cfg.crawlers)
 
     const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
 
