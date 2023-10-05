@@ -25,18 +25,32 @@ const main = async () => {
     dbPostgresUrl: env.dbPostgresUrl,
     dbPostgresSchema: env.dbPostgresSchema,
   })
+
+  // configure zero, one, or both image invalidators
   let imgInvalidator
-  if (env.bunnyAccessKey) {
-    imgInvalidator = new BunnyInvalidator({
-      accessKey: env.bunnyAccessKey,
-      urlPrefix: cfg.imgUriEndpoint,
-    })
-  } else if (env.cfDistributionId) {
-    imgInvalidator = new CloudfrontInvalidator({
-      distributionId: env.cfDistributionId,
-      pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
-    })
+  const bunnyInvalidator = env.bunnyAccessKey
+    ? new BunnyInvalidator({
+        accessKey: env.bunnyAccessKey,
+        urlPrefix: cfg.imgUriEndpoint,
+      })
+    : undefined
+  const cfInvalidator = env.cfDistributionId
+    ? new CloudfrontInvalidator({
+        distributionId: env.cfDistributionId,
+        pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
+      })
+    : undefined
+  if (bunnyInvalidator && imgInvalidator) {
+    imgInvalidator = new MultiImageInvalidator([
+      bunnyInvalidator,
+      imgInvalidator,
+    ])
+  } else if (bunnyInvalidator) {
+    imgInvalidator = bunnyInvalidator
+  } else if (cfInvalidator) {
+    imgInvalidator = cfInvalidator
   }
+
   const redis = new Redis(
     cfg.redisSentinelName
       ? {

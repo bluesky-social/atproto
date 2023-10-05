@@ -13,7 +13,11 @@ require('dd-trace') // Only works with commonjs
 // Tracer code above must come before anything else
 const path = require('path')
 const assert = require('assert')
-const { BunnyInvalidator, CloudfrontInvalidator } = require('@atproto/aws')
+const {
+  BunnyInvalidator,
+  CloudfrontInvalidator,
+  MultiImageInvalidator,
+} = require('@atproto/aws')
 const {
   DatabaseCoordinator,
   PrimaryDatabase,
@@ -59,18 +63,33 @@ const main = async () => {
     imgUriEndpoint: env.imgUriEndpoint,
     blobCacheLocation: env.blobCacheLocation,
   })
+
+  // configure zero, one, or both image invalidators
   let imgInvalidator
-  if (env.bunnyAccessKey) {
-    imgInvalidator = new BunnyInvalidator({
-      accessKey: env.bunnyAccessKey,
-      urlPrefix: cfg.imgUriEndpoint,
-    })
-  } else if (env.cfDistributionId) {
-    imgInvalidator = new CloudfrontInvalidator({
-      distributionId: env.cfDistributionId,
-      pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
-    })
+  const bunnyInvalidator = env.bunnyAccessKey
+    ? new BunnyInvalidator({
+        accessKey: env.bunnyAccessKey,
+        urlPrefix: cfg.imgUriEndpoint,
+      })
+    : undefined
+  const cfInvalidator = env.cfDistributionId
+    ? new CloudfrontInvalidator({
+        distributionId: env.cfDistributionId,
+        pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
+      })
+    : undefined
+
+  if (bunnyInvalidator && imgInvalidator) {
+    imgInvalidator = new MultiImageInvalidator([
+      bunnyInvalidator,
+      imgInvalidator,
+    ])
+  } else if (bunnyInvalidator) {
+    imgInvalidator = bunnyInvalidator
+  } else if (cfInvalidator) {
+    imgInvalidator = cfInvalidator
   }
+
   const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const bsky = BskyAppView.create({
     db,
