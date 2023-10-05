@@ -8,7 +8,7 @@ import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { RecordService } from '../record'
 import { ModerationViews } from './views'
 import SqlRepoStorage from '../../sql-repo-storage'
-import { TAKEDOWN } from '../../lexicon/types/com/atproto/admin/defs'
+import { REPORT, TAKEDOWN } from '../../lexicon/types/com/atproto/admin/defs'
 import { addHoursToDate } from '../../util/date'
 
 export class ModerationService {
@@ -68,7 +68,7 @@ export class ModerationService {
 
   async getReport(id: number): Promise<ModerationActionRow | undefined> {
     return await this.db.db
-      .selectFrom('moderation_report')
+      .selectFrom('moderation_action')
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
@@ -97,7 +97,7 @@ export class ModerationService {
       actionedBy,
     } = opts
     const { ref } = this.db.db.dynamic
-    let builder = this.db.db.selectFrom('moderation_report')
+    let builder = this.db.db.selectFrom('moderation_action')
     if (subject) {
       builder = builder.where((qb) => {
         return qb
@@ -133,7 +133,7 @@ export class ModerationService {
     }
 
     if (reporters?.length) {
-      builder = builder.where('reportedByDid', 'in', reporters)
+      builder = builder.where('createdBy', 'in', reporters)
     }
 
     if (resolved !== undefined) {
@@ -189,8 +189,8 @@ export class ModerationService {
     }
 
     return await builder
-      .leftJoin('did_handle', 'did_handle.did', 'moderation_report.subjectDid')
-      .selectAll(['moderation_report', 'did_handle'])
+      .leftJoin('did_handle', 'did_handle.did', 'moderation_action.subjectDid')
+      .selectAll(['moderation_action', 'did_handle'])
       .orderBy('id', reverse ? 'asc' : 'desc')
       .limit(limit)
       .execute()
@@ -237,7 +237,7 @@ export class ModerationService {
     action: ModerationActionRow['action']
     subject: { did: string } | { uri: AtUri; cid: CID }
     subjectBlobCids?: CID[]
-    reason: string
+    comment?: string
     createLabelVals?: string[]
     negateLabelVals?: string[]
     createdBy: string
@@ -248,7 +248,7 @@ export class ModerationService {
     const {
       action,
       createdBy,
-      reason,
+      comment,
       subject,
       subjectBlobCids,
       durationInHours,
@@ -313,7 +313,7 @@ export class ModerationService {
       .insertInto('moderation_action')
       .values({
         action,
-        reason,
+        comment,
         createdAt: createdAt.toISOString(),
         createdBy,
         createLabelVals,
@@ -514,7 +514,7 @@ export class ModerationService {
 
     if (!reportIds.length) return
     const reports = await this.db.db
-      .selectFrom('moderation_report')
+      .selectFrom('moderation_action')
       .where('id', 'in', reportIds)
       .select(['id', 'subjectType', 'subjectDid', 'subjectUri'])
       .execute()
@@ -555,7 +555,7 @@ export class ModerationService {
   }
 
   async report(info: {
-    reasonType: ModerationActionRow['reasonType']
+    reasonType: string
     reason?: string
     subject: { did: string } | { uri: AtUri; cid?: CID }
     reportedBy: string
@@ -594,12 +594,12 @@ export class ModerationService {
     }
 
     const report = await this.db.db
-      .insertInto('moderation_report')
+      .insertInto('moderation_action')
       .values({
-        reasonType,
-        reason: reason || null,
+        action: REPORT,
+        comment: reason || null,
         createdAt: createdAt.toISOString(),
-        reportedByDid: reportedBy,
+        createdBy: reportedBy,
         ...subjectInfo,
       })
       .returningAll()
@@ -610,8 +610,6 @@ export class ModerationService {
 }
 
 export type ModerationActionRow = Selectable<ModerationAction>
-
-export type ModerationActionRow = Selectable<ModerationReport>
 export type ModerationActionRowWithHandle = ModerationActionRow & {
   handle?: string | null
 }

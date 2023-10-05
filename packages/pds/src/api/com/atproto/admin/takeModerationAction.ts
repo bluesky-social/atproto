@@ -108,8 +108,7 @@ export default function (server: Server, ctx: AppContext) {
           createLabelVals,
           negateLabelVals,
           createdBy,
-          // TODO: Revisit this, we are gonna get rid of this whole thing I believe?
-          reason: comment || '',
+          comment,
           durationInHours,
         })
 

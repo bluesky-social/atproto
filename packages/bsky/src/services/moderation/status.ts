@@ -2,23 +2,21 @@
 
 import { PrimaryDatabase } from '../../db'
 import {
-  ModerationAction,
+  ModerationEvent,
   ModerationSubjectStatus,
 } from '../../db/tables/moderation'
 import {
   ACKNOWLEDGE,
-  ACKNOWLEDGED,
+  REVIEWOPEN,
   MUTE,
-  MUTED,
+  REVIEWCLOSED,
   REPORT,
-  REPORTED,
+  REVIEWESCALATED,
   REVERT,
   TAKEDOWN,
-  TAKENDOWN,
-  ESCALATED,
   ESCALATE,
 } from '../../lexicon/types/com/atproto/admin/defs'
-import { ModerationActionRow } from './types'
+import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 
 const actionTypesImpactingStatus = [
   ACKNOWLEDGE,
@@ -32,22 +30,37 @@ const actionTypesImpactingStatus = [
 // TODO: How do we handle revert? for "revert" event we will have a reference event id that is being reversed
 // We will probably need a helper that can take a list of events and compute the final state of the subject
 // That helper will have to be invoked here with all events up until the point where the reverted event was created
-const getSubjectStatusForModerationAction = (action: string) => {
+const getSubjectStatusForModerationEvent = ({
+  action,
+  durationInHours,
+}: {
+  action: string
+  durationInHours: number | null
+}): Partial<ModerationSubjectStatusRow> => {
   switch (action) {
     case ACKNOWLEDGE:
-      return ACKNOWLEDGED
+      return {
+        reviewState: REVIEWCLOSED,
+        lastReviewedAt: new Date().toISOString(),
+      }
     case REPORT:
-      return REPORTED
+      return {
+        reviewState: REVIEWOPEN,
+        lastReportedAt: new Date().toISOString(),
+      }
     case ESCALATE:
-      return ESCALATED
+      return {
+        reviewState: REVIEWESCALATED,
+        lastReviewedAt: new Date().toISOString(),
+      }
     case REVERT:
-      return null
+      return {}
     case TAKEDOWN:
-      return TAKENDOWN
+      return { takendown: true, lastReviewedAt: new Date().toISOString() }
     case MUTE:
-      return MUTED
+      return { muteUntil: new Date().toISOString() }
     default:
-      return null
+      return {}
   }
 }
 
@@ -56,13 +69,14 @@ const getSubjectStatusForModerationAction = (action: string) => {
 // If the action event does not affect the status, it will do nothing
 export const adjustModerationSubjectStatus = async (
   db: PrimaryDatabase,
-  moderationAction: Pick<
-    ModerationAction,
+  moderationEvent: Pick<
+    ModerationEvent,
     | 'action'
     | 'subjectType'
     | 'subjectDid'
     | 'subjectUri'
     | 'subjectCid'
+    | 'durationInHours'
     | 'refEventId'
   >,
 ) => {
@@ -73,9 +87,12 @@ export const adjustModerationSubjectStatus = async (
     subjectUri,
     subjectCid,
     refEventId,
-  } = moderationAction
+  } = moderationEvent
 
-  let actionForStatusMapping = action
+  let actionForStatusMapping = {
+    action,
+    durationInHours: moderationEvent.durationInHours,
+  }
 
   // For all events, we would want to map the new status based on the event itself
   // However, for revert events, they will be pointing to a previous event that needs to be reverted
@@ -86,35 +103,48 @@ export const adjustModerationSubjectStatus = async (
   if (action === REVERT && refEventId) {
     const lastActionImpactingStatus = await getPreviousStatusForReversal(
       db,
-      moderationAction,
+      moderationEvent,
     )
 
     if (lastActionImpactingStatus) {
-      actionForStatusMapping = lastActionImpactingStatus.action
+      actionForStatusMapping = {
+        action: lastActionImpactingStatus.action,
+        durationInHours: moderationEvent.durationInHours,
+      }
     }
   }
 
-  const status = getSubjectStatusForModerationAction(actionForStatusMapping)
+  const subjectStatus = getSubjectStatusForModerationEvent(
+    actionForStatusMapping,
+  )
 
-  if (!status) {
+  if (!subjectStatus) {
     return null
   }
 
   const now = new Date().toISOString()
+  const identifier =
+    subjectType === 'com.atproto.admin.defs#repoRef'
+      ? { did: subjectDid }
+      : { recordPath: subjectUri, recordCid: subjectCid } // TODO: Build the recordPath properly here
+  const defaultData = {
+    note: null,
+    reviewState: null,
+  }
+  // TODO: fix this?
+  // @ts-ignore
   return db.db
     .insertInto('moderation_subject_status')
     .values({
-      status,
-      subjectDid,
-      subjectType,
-      subjectCid,
-      subjectUri,
+      ...identifier,
+      ...defaultData,
+      ...subjectStatus,
       createdAt: now,
       updatedAt: now,
     })
     .onConflict((oc) =>
-      oc.column('status').doUpdateSet({
-        status,
+      oc.constraint('moderation_subject_status_unique_key').doUpdateSet({
+        ...subjectStatus,
         updatedAt: now,
       }),
     )
@@ -125,18 +155,16 @@ export const adjustModerationSubjectStatus = async (
 export const getModerationSubjectStatus = async (
   db: PrimaryDatabase,
   {
-    subjectType,
-    subjectCid,
-    subjectDid,
-    subjectUri,
-  }: Omit<ModerationSubjectStatus, 'id' | 'createdAt' | 'updatedAt' | 'status'>,
+    did,
+    recordPath,
+    recordCid,
+  }: Pick<ModerationSubjectStatus, 'did' | 'recordPath' | 'recordCid'>,
 ) => {
   return db.db
     .selectFrom('moderation_subject_status')
-    .where('subjectType', '=', subjectType)
-    .where('subjectCid', '=', subjectCid)
-    .where('subjectDid', '=', subjectDid)
-    .where('subjectUri', '=', subjectUri)
+    .where('did', '=', did)
+    .where('recordPath', '=', recordPath)
+    .where('recordCid', '=', recordCid)
     .executeTakeFirst()
 }
 
@@ -155,22 +183,22 @@ export const getModerationSubjectStatus = async (
  * */
 export const getPreviousStatusForReversal = async (
   db: PrimaryDatabase,
-  moderationAction: Pick<
-    ModerationActionRow,
+  moderationEvent: Pick<
+    ModerationEventRow,
     'refEventId' | 'subjectType' | 'subjectCid' | 'subjectUri' | 'subjectDid'
   >,
 ) => {
-  if (!moderationAction.refEventId) {
+  if (!moderationEvent.refEventId) {
     return null
   }
   const lastActionImpactingStatus = await db.db
-    .selectFrom('moderation_action')
-    .where('id', '<', moderationAction.refEventId)
-    .where('subjectType', '=', moderationAction.subjectType)
-    .where('subjectCid', '=', moderationAction.subjectCid)
-    .where('subjectDid', '=', moderationAction.subjectDid)
-    .where('subjectUri', '=', moderationAction.subjectUri)
-    .where('action', 'not in', REVERT)
+    .selectFrom('moderation_event')
+    .where('id', '<', moderationEvent.refEventId)
+    .where('subjectType', '=', moderationEvent.subjectType)
+    .where('subjectCid', '=', moderationEvent.subjectCid)
+    .where('subjectDid', '=', moderationEvent.subjectDid)
+    .where('subjectUri', '=', moderationEvent.subjectUri)
+    .where('action', '!=', REVERT)
     .where(
       'action',
       'in',

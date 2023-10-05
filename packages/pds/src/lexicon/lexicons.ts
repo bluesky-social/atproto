@@ -316,7 +316,14 @@ export const schemaDict = {
       },
       subjectStatusView: {
         type: 'object',
-        required: ['id', 'subject', 'updatedAt', 'status'],
+        required: [
+          'id',
+          'subject',
+          'createdAt',
+          'updatedAt',
+          'reviewState',
+          'note',
+        ],
         properties: {
           id: {
             type: 'integer',
@@ -332,9 +339,35 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
-          status: {
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          reviewState: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#subjectStatusType',
+          },
+          note: {
+            type: 'string',
+          },
+          muteUntil: {
+            type: 'string',
+            format: 'datetime',
+          },
+          lastReviewedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          lastReportedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          takendown: {
+            type: 'boolean',
+          },
+          suspendUntil: {
+            type: 'string',
+            format: 'datetime',
           },
         },
       },
@@ -368,7 +401,7 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#recordViewNotFound',
             ],
           },
-          subjectStatusView: {
+          subjectStatus: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#subjectStatusView',
           },
@@ -633,15 +666,7 @@ export const schemaDict = {
       },
       moderationDetail: {
         type: 'object',
-        required: ['actions'],
         properties: {
-          actions: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#actionView',
-            },
-          },
           subjectStatus: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#subjectStatusView',
@@ -706,45 +731,28 @@ export const schemaDict = {
           },
         },
       },
-      subjectStatusType: {
+      subjectReviewState: {
         type: 'string',
         knownValues: [
-          'lex:com.atproto.admin.defs#reported',
-          'lex:com.atproto.admin.defs#resolved',
-          'lex:com.atproto.admin.defs#takendown',
-          'lex:com.atproto.admin.defs#acknowledged',
-          'lex:com.atproto.admin.defs#muted',
+          'lex:com.atproto.admin.defs#reviewOpen',
+          'lex:com.atproto.admin.defs#reviewEscalated',
+          'lex:com.atproto.admin.defs#reviewClosed',
         ],
       },
-      reported: {
+      reviewOpen: {
         type: 'token',
         description:
-          'Moderation status of a subject: reported. Indicates that the subject was reported',
+          'Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator',
       },
-      resolved: {
+      reviewEscalated: {
         type: 'token',
         description:
-          'Moderation status of a subject: resolved. Indicates that the reports on the subject were marked as resolved ',
+          'Moderator review status of a subject: Escalated. Indicates that the subject was escalated for review by a moderator',
       },
-      takendown: {
+      reviewClosed: {
         type: 'token',
         description:
-          'Moderation status of a subject: takendown. Indicates that the subject was taken down',
-      },
-      acknowledged: {
-        type: 'token',
-        description:
-          'Moderation status of a subject: acknowledged. Indicates that the reports on the subject were acknowledged by moderator',
-      },
-      muted: {
-        type: 'token',
-        description:
-          'Moderation status of a subject: muted. Indicates that reports were muted by a moderator',
-      },
-      escalated: {
-        type: 'token',
-        description:
-          'Moderation status of a subject: escalated. Indicates that reports were escalated by a moderator',
+          'Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator',
       },
     },
   },
@@ -912,7 +920,7 @@ export const schemaDict = {
   },
   ComAtprotoAdminGetModerationActions: {
     lexicon: 1,
-    id: 'com.atproto.admin.getModerationActions',
+    id: 'com.atproto.admin.getModerationEvents',
     defs: {
       main: {
         type: 'query',
@@ -1077,15 +1085,38 @@ export const schemaDict = {
             subject: {
               type: 'string',
             },
-            status: {
+            note: {
               type: 'string',
-              knownValues: [
-                'com.atproto.admin.defs#acknowledged',
-                'com.atproto.admin.defs#muted',
-                'com.atproto.admin.defs#escalated',
-                'com.atproto.admin.defs#reported',
-                'com.atproto.admin.defs#takendown',
-              ],
+              description: 'Search subjects by keyword from notes',
+            },
+            reportedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reported after a given timestamp',
+            },
+            reportedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reported before a given timestamp',
+            },
+            reviewedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reviewed after a given timestamp',
+            },
+            reviewedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reviewed before a given timestamp',
+            },
+            includeMuted: {
+              type: 'boolean',
+              description:
+                "By default, we don't include muted subjects in the results. Set this to true to include them.",
+            },
+            reviewState: {
+              type: 'string',
+              description: 'Specify when fetching subjects in a certain state',
             },
             limit: {
               type: 'integer',
@@ -7444,7 +7475,7 @@ export const ids = {
   ComAtprotoAdminEnableAccountInvites: 'com.atproto.admin.enableAccountInvites',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
   ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationAction',
-  ComAtprotoAdminGetModerationActions: 'com.atproto.admin.getModerationActions',
+  ComAtprotoAdminGetModerationActions: 'com.atproto.admin.getModerationEvents',
   ComAtprotoAdminGetModerationReport: 'com.atproto.admin.getModerationReport',
   ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',
   ComAtprotoAdminGetModerationStatuses:

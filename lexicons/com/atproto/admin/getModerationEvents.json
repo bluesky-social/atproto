@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.admin.getModerationActions",
+  "id": "com.atproto.admin.getModerationEvents",
   "defs": {
     "main": {
       "type": "query",

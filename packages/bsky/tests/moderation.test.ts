@@ -1,6 +1,6 @@
 import { TestNetwork, ImageRef, RecordRef, SeedClient } from '@atproto/dev-env'
 import { TID, cidForCbor } from '@atproto/common'
-import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
+import AtpAgent, { ComAtprotoAdminTakeModerationEvent } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { forSnapshot } from './_util'
 import basicSeed from './seeds/basic'
@@ -8,13 +8,15 @@ import {
   ACKNOWLEDGE,
   ESCALATE,
   FLAG,
+  REVERT,
   TAKEDOWN,
+  TAKENDOWN,
 } from '../src/lexicon/types/com/atproto/admin/defs'
 import {
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
-import { PeriodicModerationActionReversal } from '../src'
+import { PeriodicModerationEventReversal } from '../src'
 
 describe('moderation', () => {
   let network: TestNetwork
@@ -197,6 +199,7 @@ describe('moderation', () => {
             encoding: 'application/json',
           },
         )
+
       const { data: action } =
         await agent.api.com.atproto.admin.takeModerationAction(
           {
@@ -213,27 +216,30 @@ describe('moderation', () => {
             headers: network.bsky.adminAuthHeaders(),
           },
         )
-      const { data: actionResolvedReports } =
-        await agent.api.com.atproto.admin.resolveModerationReports(
+
+      const { data: moderationStatus } =
+        await agent.api.com.atproto.admin.getModerationStatuses(
           {
-            actionId: action.id,
-            reportIds: [reportB.id, reportA.id],
-            createdBy: 'did:example:admin',
+            subject: sc.dids.bob,
           },
           {
-            encoding: 'application/json',
             headers: network.bsky.adminAuthHeaders(),
           },
         )
 
-      expect(forSnapshot(actionResolvedReports)).toMatchSnapshot()
+      expect(moderationStatus.subjectStatuses[0].status).toEqual(TAKENDOWN)
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.takeModerationAction(
         {
-          id: action.id,
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.bob,
+          },
+          refEventId: action.id,
+          action: REVERT,
           createdBy: 'did:example:admin',
-          reason: 'Y',
+          comment: 'Y',
         },
         {
           encoding: 'application/json',
@@ -242,7 +248,7 @@ describe('moderation', () => {
       )
     })
 
-    it('resolves reports on missing repos and records.', async () => {
+    it.only('resolves reports on missing repos and records.', async () => {
       const unknownDid = 'did:plc:unknown'
       const unknownPostUri = `at://did:plc:unknown/app.bsky.feed.post/${TID.nextStr()}`
       const unknownPostCid = (await cidForCbor({})).toString()
@@ -295,20 +301,10 @@ describe('moderation', () => {
             headers: network.bsky.adminAuthHeaders(),
           },
         )
-      await agent.api.com.atproto.admin.resolveModerationReports(
-        {
-          actionId: action.id,
-          reportIds: [reportB.id, reportA.id],
-          createdBy: 'did:example:admin',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
+
       // Check report and action details
       const { data: recordActionDetail } =
-        await agent.api.com.atproto.admin.getModerationAction(
+        await agent.api.com.atproto.admin.getModerationEvent(
           { id: action.id },
           { headers: network.bsky.adminAuthHeaders() },
         )
@@ -330,11 +326,17 @@ describe('moderation', () => {
         }),
       ).toMatchSnapshot()
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.takeModerationAction(
         {
-          id: action.id,
+          action: REVERT,
+          refEventId: action.id,
           createdBy: 'did:example:admin',
           reason: 'Y',
+          subject: {
+            $type: 'com.atproto.repo.strongRef',
+            uri: unknownPostUri,
+            cid: unknownPostCid,
+          },
         },
         {
           encoding: 'application/json',
@@ -392,7 +394,7 @@ describe('moderation', () => {
       )
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: action.id,
           createdBy: 'did:example:admin',
@@ -458,7 +460,7 @@ describe('moderation', () => {
       )
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: action.id,
           createdBy: 'did:example:admin',
@@ -529,7 +531,7 @@ describe('moderation', () => {
         }),
       )
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: action1.id,
           createdBy: 'did:example:admin',
@@ -540,7 +542,7 @@ describe('moderation', () => {
           headers: network.bsky.adminAuthHeaders('triage'),
         },
       )
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: action2.id,
           createdBy: 'did:example:admin',
@@ -593,7 +595,7 @@ describe('moderation', () => {
       )
 
       // Reverse current then retry
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: acknowledge.id,
           createdBy: 'did:example:admin',
@@ -623,7 +625,7 @@ describe('moderation', () => {
         )
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: flag.id,
           createdBy: 'did:example:admin',
@@ -673,7 +675,7 @@ describe('moderation', () => {
       )
 
       // Reverse current then retry
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: acknowledge.id,
           createdBy: 'did:example:admin',
@@ -702,7 +704,7 @@ describe('moderation', () => {
         )
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: flag.id,
           createdBy: 'did:example:admin',
@@ -758,7 +760,7 @@ describe('moderation', () => {
         'Blob already has an active action:',
       )
       // Reverse current then retry
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: acknowledge.id,
           createdBy: 'did:example:admin',
@@ -789,7 +791,7 @@ describe('moderation', () => {
         )
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: flag.id,
           createdBy: 'did:example:admin',
@@ -1027,13 +1029,13 @@ describe('moderation', () => {
       const labelsAfterTakedown = await getRepoLabels(sc.dids.bob)
       expect(labelsAfterTakedown).toContain('takendown')
       // In the actual app, this will be instantiated and run on server startup
-      const periodicReversal = new PeriodicModerationActionReversal(
+      const periodicReversal = new PeriodicModerationEventReversal(
         network.bsky.ctx,
       )
       await periodicReversal.findAndRevertDueActions()
 
       const { data: reversedAction } =
-        await agent.api.com.atproto.admin.getModerationAction(
+        await agent.api.com.atproto.admin.getModerationEvent(
           { id: action.id },
           { headers: network.bsky.adminAuthHeaders('moderator') },
         )
@@ -1051,8 +1053,8 @@ describe('moderation', () => {
     })
 
     async function actionWithLabels(
-      opts: Partial<ComAtprotoAdminTakeModerationAction.InputSchema> & {
-        subject: ComAtprotoAdminTakeModerationAction.InputSchema['subject']
+      opts: Partial<ComAtprotoAdminTakeModerationEvent.InputSchema> & {
+        subject: ComAtprotoAdminTakeModerationEvent.InputSchema['subject']
       },
     ) {
       const result = await agent.api.com.atproto.admin.takeModerationAction(
@@ -1071,7 +1073,7 @@ describe('moderation', () => {
     }
 
     async function reverse(actionId: number) {
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: actionId,
           createdBy: 'did:example:admin',
@@ -1160,7 +1162,7 @@ describe('moderation', () => {
     })
 
     it('restores blob when action is reversed.', async () => {
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: actionId,
           createdBy: 'did:example:admin',

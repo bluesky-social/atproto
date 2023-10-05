@@ -44,11 +44,7 @@ import takeModerationAction from './com/atproto/admin/takeModerationAction'
 import searchRepos from './com/atproto/admin/searchRepos'
 import adminGetRecord from './com/atproto/admin/getRecord'
 import getRepo from './com/atproto/admin/getRepo'
-import getModerationAction from './com/atproto/admin/getModerationAction'
-import getModerationActions from './com/atproto/admin/getModerationActions'
-import getModerationReport from './com/atproto/admin/getModerationReport'
 import getModerationStatuses from './com/atproto/admin/getModerationStatuses'
-import getModerationReports from './com/atproto/admin/getModerationReports'
 import resolveHandle from './com/atproto/identity/resolveHandle'
 import getRecord from './com/atproto/repo/getRecord'
 
@@ -105,10 +101,6 @@ export default function (server: Server, ctx: AppContext) {
   searchRepos(server, ctx)
   adminGetRecord(server, ctx)
   getRepo(server, ctx)
-  getModerationAction(server, ctx)
-  getModerationActions(server, ctx)
-  getModerationReport(server, ctx)
-  getModerationReports(server, ctx)
   getModerationStatuses(server, ctx)
   resolveHandle(server, ctx)
   getRecord(server, ctx)

@@ -271,7 +271,7 @@ describe('notification views', () => {
     // Cleanup
     await Promise.all(
       actionResults.map((result) =>
-        agent.api.com.atproto.admin.reverseModerationAction(
+        agent.api.com.atproto.admin.reverseModerationEvent(
           {
             id: result.data.id,
             createdBy: 'did:example:admin',

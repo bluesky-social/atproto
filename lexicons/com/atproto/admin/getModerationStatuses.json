@@ -9,15 +9,37 @@
         "type": "params",
         "properties": {
           "subject": { "type": "string" },
-          "status": {
+          "note": {
             "type": "string",
-            "knownValues": [
-              "com.atproto.admin.defs#acknowledged",
-              "com.atproto.admin.defs#muted",
-              "com.atproto.admin.defs#escalated",
-              "com.atproto.admin.defs#reported",
-              "com.atproto.admin.defs#takendown"
-            ]
+            "description": "Search subjects by keyword from notes"
+          },
+          "reportedAfter": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Search subjects reported after a given timestamp"
+          },
+          "reportedBefore": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Search subjects reported before a given timestamp"
+          },
+          "reviewedAfter": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Search subjects reviewed after a given timestamp"
+          },
+          "reviewedBefore": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Search subjects reviewed before a given timestamp"
+          },
+          "includeMuted": {
+            "type": "boolean",
+            "description": "By default, we don't include muted subjects in the results. Set this to true to include them."
+          },
+          "reviewState": {
+            "type": "string",
+            "description": "Specify when fetching subjects in a certain state"
           },
           "limit": {
             "type": "integer",

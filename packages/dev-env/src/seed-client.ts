@@ -10,6 +10,7 @@ import { Record as FollowRecord } from '@atproto/api/src/client/types/app/bsky/g
 import { AtUri } from '@atproto/syntax'
 import { BlobRef } from '@atproto/lexicon'
 import { TestNetworkNoAppView } from './network-no-appview'
+import { REVERT } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
@@ -424,6 +425,7 @@ export class SeedClient {
     subject: TakeActionInput['subject']
     reason?: string
     createdBy?: string
+    meta?: TakeActionInput['meta']
   }) {
     const {
       action,
@@ -443,35 +445,18 @@ export class SeedClient {
 
   async reverseModerationAction(opts: {
     id: number
+    subject: TakeActionInput['subject']
     reason?: string
     createdBy?: string
   }) {
-    const { id, reason = 'X', createdBy = 'did:example:admin' } = opts
-    const result =
-      await this.agent.api.com.atproto.admin.reverseModerationAction(
-        { id, reason, createdBy },
-        {
-          encoding: 'application/json',
-          headers: this.adminAuthHeaders(),
-        },
-      )
-    return result.data
-  }
-
-  async resolveReports(opts: {
-    actionId: number
-    reportIds: number[]
-    createdBy?: string
-  }) {
-    const { actionId, reportIds, createdBy = 'did:example:admin' } = opts
-    const result =
-      await this.agent.api.com.atproto.admin.resolveModerationReports(
-        { actionId, createdBy, reportIds },
-        {
-          encoding: 'application/json',
-          headers: this.adminAuthHeaders(),
-        },
-      )
+    const { id, subject, reason = 'X', createdBy = 'did:example:admin' } = opts
+    const result = await this.agent.api.com.atproto.admin.takeModerationAction(
+      { refEventId: id, subject, action: REVERT, comment: reason, createdBy },
+      {
+        encoding: 'application/json',
+        headers: this.adminAuthHeaders(),
+      },
+    )
     return result.data
   }
 

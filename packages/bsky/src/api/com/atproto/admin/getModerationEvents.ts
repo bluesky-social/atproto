@@ -2,16 +2,23 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.getModerationAction({
+  server.com.atproto.admin.getModerationEvents({
     auth: ctx.roleVerifier,
     handler: async ({ params }) => {
-      const { id } = params
+      const { subject, limit = 50, cursor } = params
       const db = ctx.db.getPrimary()
       const moderationService = ctx.services.moderation(db)
-      const result = await moderationService.getActionOrThrow(id)
+      const results = await moderationService.getEvents({
+        subject,
+        limit,
+        cursor,
+      })
       return {
         encoding: 'application/json',
-        body: await moderationService.views.actionDetail(result),
+        body: {
+          cursor: results.at(-1)?.id.toString() ?? undefined,
+          actions: await moderationService.views.action(results),
+        },
       }
     },
   })

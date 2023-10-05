@@ -21,6 +21,7 @@ import { AccountService } from '../account'
 import { RecordService } from '../record'
 import { ModerationActionRowWithHandle } from '.'
 import { ids } from '../../lexicon/lexicons'
+import { REASONOTHER } from '../../lexicon/types/com/atproto/moderation/defs'
 
 export class ModerationViews {
   constructor(private db: Database) {}
@@ -129,14 +130,7 @@ export class ModerationViews {
     opts: ModViewOptions,
   ): Promise<RepoViewDetail> {
     const repo = await this.repo(result, opts)
-    const [reportResults, actionResults, inviteCodes] = await Promise.all([
-      this.db.db
-        .selectFrom('moderation_report')
-        .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
-        .where('subjectDid', '=', repo.did)
-        .orderBy('id', 'desc')
-        .selectAll()
-        .execute(),
+    const [actionResults, inviteCodes] = await Promise.all([
       this.db.db
         .selectFrom('moderation_action')
         .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
@@ -146,15 +140,11 @@ export class ModerationViews {
         .execute(),
       this.services.account(this.db).getAccountInviteCodes(repo.did),
     ])
-    const [reports, actions] = await Promise.all([
-      this.report(reportResults),
-      this.action(actionResults),
-    ])
+    const actions = await this.action(actionResults)
     return {
       ...repo,
       moderation: {
         ...repo.moderation,
-        reports,
         actions,
       },
       invites: inviteCodes,
@@ -249,20 +239,8 @@ export class ModerationViews {
     result: RecordResult,
     opts: ModViewOptions,
   ): Promise<RecordViewDetail> {
-    const [record, reportResults, actionResults] = await Promise.all([
+    const [record, actionResults] = await Promise.all([
       this.record(result, opts),
-      this.db.db
-        .selectFrom('moderation_report')
-        .where('subjectType', '=', 'com.atproto.repo.strongRef')
-        .where('subjectUri', '=', result.uri)
-        .leftJoin(
-          'did_handle',
-          'did_handle.did',
-          'moderation_report.subjectDid',
-        )
-        .orderBy('id', 'desc')
-        .selectAll()
-        .execute(),
       this.db.db
         .selectFrom('moderation_action')
         .where('subjectType', '=', 'com.atproto.repo.strongRef')
@@ -271,8 +249,7 @@ export class ModerationViews {
         .selectAll()
         .execute(),
     ])
-    const [reports, actions, blobs] = await Promise.all([
-      this.report(reportResults),
+    const [actions, blobs] = await Promise.all([
       this.action(actionResults),
       this.blob(record.blobCids),
     ])
@@ -281,7 +258,6 @@ export class ModerationViews {
       blobs,
       moderation: {
         ...record.moderation,
-        reports,
         actions,
       },
     }
@@ -344,7 +320,7 @@ export class ModerationViews {
               cid: res.subjectCid,
             },
       subjectBlobCids: subjectBlobCidsByActionId[res.id] ?? [],
-      reason: res.reason,
+      comment: res.comment ?? undefined,
       createdAt: res.createdAt,
       createdBy: res.createdBy,
       createLabelVals:
@@ -378,7 +354,7 @@ export class ModerationViews {
     const action = await this.action(result)
     const reportResults = action.resolvedReportIds?.length
       ? await this.db.db
-          .selectFrom('moderation_report')
+          .selectFrom('moderation_action')
           .where('id', 'in', action.resolvedReportIds)
           .orderBy('id', 'desc')
           .selectAll()
@@ -434,9 +410,9 @@ export class ModerationViews {
       const decoratedView: ReportView = {
         id: res.id,
         createdAt: res.createdAt,
-        reasonType: res.reasonType,
-        reason: res.reason ?? undefined,
-        reportedBy: res.reportedByDid,
+        reasonType: res.meta?.reportType || REASONOTHER,
+        reason: res.comment ?? undefined,
+        reportedBy: res.createdBy,
         subject:
           res.subjectType === 'com.atproto.admin.defs#repoRef'
             ? {
@@ -465,9 +441,11 @@ export class ModerationViews {
     return {
       id: report.id,
       createdAt: report.createdAt,
-      reasonType: report.reasonType,
-      reason: report.reason ?? undefined,
-      reportedBy: report.reportedByDid,
+      // Ideally, we would never have a report entry that does not have a reasonType but at the schema level
+      // we are not guarantying that so in whatever case, if we end up with such entries, default to 'other'
+      reasonType: report.meta?.reportType || REASONOTHER,
+      reason: report.comment ?? undefined,
+      reportedBy: report.createdBy,
       subject:
         report.subjectType === 'com.atproto.admin.defs#repoRef'
           ? {

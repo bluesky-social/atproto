@@ -189,7 +189,14 @@
     },
     "subjectStatusView": {
       "type": "object",
-      "required": ["id", "subject", "updatedAt", "status"],
+      "required": [
+        "id",
+        "subject",
+        "createdAt",
+        "updatedAt",
+        "reviewState",
+        "note"
+      ],
       "properties": {
         "id": { "type": "integer" },
         "subject": {
@@ -197,9 +204,32 @@
           "refs": ["#repoRef", "com.atproto.repo.strongRef"]
         },
         "updatedAt": { "type": "string", "format": "datetime" },
-        "status": {
+        "createdAt": { "type": "string", "format": "datetime" },
+        "reviewState": {
           "type": "ref",
           "ref": "#subjectStatusType"
+        },
+        "note": {
+          "type": "string"
+        },
+        "muteUntil": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "lastReviewedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "lastReportedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "takendown": {
+          "type": "boolean"
+        },
+        "suspendUntil": {
+          "type": "string",
+          "format": "datetime"
         }
       }
     },
@@ -229,7 +259,7 @@
             "#recordViewNotFound"
           ]
         },
-        "subjectStatusView": {
+        "subjectStatus": {
           "type": "ref",
           "ref": "com.atproto.admin.defs#subjectStatusView"
         },
@@ -381,12 +411,7 @@
     },
     "moderationDetail": {
       "type": "object",
-      "required": ["actions"],
       "properties": {
-        "actions": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "#actionView" }
-        },
         "subjectStatus": {
           "type": "ref",
           "ref": "#subjectStatusView"
@@ -425,39 +450,21 @@
         "length": { "type": "integer" }
       }
     },
-    "subjectStatusType": {
+    "subjectReviewState": {
       "type": "string",
-      "knownValues": [
-        "#reported",
-        "#resolved",
-        "#takendown",
-        "#acknowledged",
-        "#muted"
-      ]
+      "knownValues": ["#reviewOpen", "#reviewEscalated", "#reviewClosed"]
     },
-    "reported": {
+    "reviewOpen": {
       "type": "token",
-      "description": "Moderation status of a subject: reported. Indicates that the subject was reported"
+      "description": "Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator"
     },
-    "resolved": {
+    "reviewEscalated": {
       "type": "token",
-      "description": "Moderation status of a subject: resolved. Indicates that the reports on the subject were marked as resolved "
+      "description": "Moderator review status of a subject: Escalated. Indicates that the subject was escalated for review by a moderator"
     },
-    "takendown": {
+    "reviewClosed": {
       "type": "token",
-      "description": "Moderation status of a subject: takendown. Indicates that the subject was taken down"
-    },
-    "acknowledged": {
-      "type": "token",
-      "description": "Moderation status of a subject: acknowledged. Indicates that the reports on the subject were acknowledged by moderator"
-    },
-    "muted": {
-      "type": "token",
-      "description": "Moderation status of a subject: muted. Indicates that reports were muted by a moderator"
-    },
-    "escalated": {
-      "type": "token",
-      "description": "Moderation status of a subject: escalated. Indicates that reports were escalated by a moderator"
+      "description": "Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator"
     }
   }
 }

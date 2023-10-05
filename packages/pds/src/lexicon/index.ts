@@ -14,7 +14,7 @@ import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/di
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
-import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
+import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationEvents'
 import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
 import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 import * as ComAtprotoAdminGetModerationStatuses from './types/com/atproto/admin/getModerationStatuses'
@@ -126,12 +126,9 @@ export const COM_ATPROTO_ADMIN = {
   DefsRevert: 'com.atproto.admin.defs#revert',
   DefsMute: 'com.atproto.admin.defs#mute',
   DefsReport: 'com.atproto.admin.defs#report',
-  DefsReported: 'com.atproto.admin.defs#reported',
-  DefsResolved: 'com.atproto.admin.defs#resolved',
-  DefsTakendown: 'com.atproto.admin.defs#takendown',
-  DefsAcknowledged: 'com.atproto.admin.defs#acknowledged',
-  DefsMuted: 'com.atproto.admin.defs#muted',
-  DefsEscalated: 'com.atproto.admin.defs#escalated',
+  DefsReviewOpen: 'com.atproto.admin.defs#reviewOpen',
+  DefsReviewEscalated: 'com.atproto.admin.defs#reviewEscalated',
+  DefsReviewClosed: 'com.atproto.admin.defs#reviewClosed',
 }
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -256,14 +253,14 @@ export class AdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getModerationActions<AV extends AuthVerifier>(
+  getModerationEvents<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
       ComAtprotoAdminGetModerationActions.Handler<ExtractAuth<AV>>,
       ComAtprotoAdminGetModerationActions.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'com.atproto.admin.getModerationActions' // @ts-ignore
+    const nsid = 'com.atproto.admin.getModerationEvents' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -18,12 +17,11 @@ import {
 import { addHoursToDate } from '../../util/date'
 import { adjustModerationSubjectStatus } from './status'
 import {
-  ModerationActionRow,
-  ModerationActionRowWithHandle,
-  ReversibleModerationAction,
+  ModerationEventRow,
+  ModerationSubjectStatusRow,
+  ReversibleModerationEvent,
   SubjectInfo,
 } from './types'
-import { getReportIdsToBeResolved } from './report'
 
 export class ModerationService {
   constructor(
@@ -42,27 +40,27 @@ export class ModerationService {
 
   views = new ModerationViews(this.db)
 
-  async getAction(id: number): Promise<ModerationActionRow | undefined> {
+  async getEvent(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
-      .selectFrom('moderation_action')
+      .selectFrom('moderation_event')
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
   }
 
-  async getActionOrThrow(id: number): Promise<ModerationActionRow> {
-    const action = await this.getAction(id)
-    if (!action) throw new InvalidRequestError('Action not found')
-    return action
+  async getEventOrThrow(id: number): Promise<ModerationEventRow> {
+    const event = await this.getEvent(id)
+    if (!event) throw new InvalidRequestError('Moderation event not found')
+    return event
   }
 
-  async getActions(opts: {
+  async getEvents(opts: {
     subject?: string
     limit: number
     cursor?: string
-  }): Promise<ModerationActionRow[]> {
+  }): Promise<ModerationEventRow[]> {
     const { subject, limit, cursor } = opts
-    let builder = this.db.db.selectFrom('moderation_action')
+    let builder = this.db.db.selectFrom('moderation_event')
     if (subject) {
       builder = builder.where((qb) => {
         return qb
@@ -84,141 +82,13 @@ export class ModerationService {
       .execute()
   }
 
-  async getReport(id: number): Promise<ModerationActionRow | undefined> {
+  async getReport(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
-      .selectFrom('moderation_action')
+      .selectFrom('moderation_event')
       .where('action', '=', REPORT)
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
-  }
-
-  async getReports(opts: {
-    subject?: string
-    resolved?: boolean
-    actionType?: string
-    limit: number
-    cursor?: string
-    ignoreSubjects?: string[]
-    reverse?: boolean
-    reporters?: string[]
-    actionedBy?: string
-  }): Promise<ModerationActionRowWithHandle[]> {
-    const {
-      subject,
-      resolved,
-      actionType,
-      limit,
-      cursor,
-      ignoreSubjects,
-      reverse = false,
-      reporters,
-      actionedBy,
-    } = opts
-    const { ref } = this.db.db.dynamic
-    let builder = this.db.db
-      .selectFrom('moderation_action')
-      .where('action', '=', REPORT)
-    if (subject) {
-      builder = builder.where((qb) => {
-        return qb
-          .where('subjectDid', '=', subject)
-          .orWhere('subjectUri', '=', subject)
-      })
-    }
-
-    if (ignoreSubjects?.length) {
-      const ignoreUris: string[] = []
-      const ignoreDids: string[] = []
-
-      ignoreSubjects.forEach((subject) => {
-        if (subject.startsWith('at://')) {
-          ignoreUris.push(subject)
-        } else if (subject.startsWith('did:')) {
-          ignoreDids.push(subject)
-        }
-      })
-
-      if (ignoreDids.length) {
-        builder = builder.where('subjectDid', 'not in', ignoreDids)
-      }
-      if (ignoreUris.length) {
-        builder = builder.where((qb) => {
-          // Without the null condition, postgres will ignore all reports where `subjectUri` is null
-          // which will make all the account reports be ignored as well
-          return qb
-            .where('subjectUri', 'not in', ignoreUris)
-            .orWhere('subjectUri', 'is', null)
-        })
-      }
-    }
-
-    if (reporters?.length) {
-      builder = builder.where('createdBy', 'in', reporters)
-    }
-
-    if (resolved !== undefined) {
-      const resolutionsQuery = this.db.db
-        .selectFrom('moderation_report_resolution')
-        .selectAll()
-        .whereRef(
-          'moderation_report_resolution.reportId',
-          '=',
-          ref('moderation_report.id'),
-        )
-      builder = resolved
-        ? builder.whereExists(resolutionsQuery)
-        : builder.whereNotExists(resolutionsQuery)
-    }
-    if (actionType !== undefined || actionedBy !== undefined) {
-      let resolutionActionsQuery = this.db.db
-        .selectFrom('moderation_report_resolution')
-        .innerJoin(
-          'moderation_action',
-          'moderation_action.id',
-          'moderation_report_resolution.actionId',
-        )
-        .whereRef(
-          'moderation_report_resolution.reportId',
-          '=',
-          ref('moderation_report.id'),
-        )
-
-      if (actionType) {
-        resolutionActionsQuery = resolutionActionsQuery
-          .where('moderation_action.action', '=', sql`${actionType}`)
-          .where('moderation_action.reversedAt', 'is', null)
-      }
-
-      if (actionedBy) {
-        resolutionActionsQuery = resolutionActionsQuery.where(
-          'moderation_action.createdBy',
-          '=',
-          actionedBy,
-        )
-      }
-
-      builder = builder.whereExists(resolutionActionsQuery.selectAll())
-    }
-    if (cursor) {
-      const cursorNumeric = parseInt(cursor, 10)
-      if (isNaN(cursorNumeric)) {
-        throw new InvalidRequestError('Malformed cursor')
-      }
-      builder = builder.where('id', reverse ? '>' : '<', cursorNumeric)
-    }
-    return await builder
-      .leftJoin('actor', 'actor.did', 'moderation_action.subjectDid')
-      .selectAll(['moderation_action', 'actor'])
-      .orderBy('id', reverse ? 'asc' : 'desc')
-      .limit(limit)
-      .execute()
-  }
-
-  async getReportOrThrow(id: number): Promise<ModerationActionRow> {
-    const report = await this.getReport(id)
-    if (!report) throw new InvalidRequestError('Report not found')
-    return report
   }
 
   async getCurrentStatus(
@@ -226,13 +96,9 @@ export class ModerationService {
   ) {
     let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
     if ('did' in subject) {
-      builder = builder
-        .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
-        .where('subjectDid', '=', subject.did)
+      builder = builder.where('did', '=', subject.did)
     } else if ('uri' in subject) {
-      builder = builder
-        .where('subjectType', '=', 'com.atproto.repo.strongRef')
-        .where('subjectUri', '=', subject.uri.toString())
+      builder = builder.where('recordPath', '=', subject.uri.toString())
     }
     // TODO: Handle the cid status
     return await builder.execute()
@@ -244,7 +110,7 @@ export class ModerationService {
   ) {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
-      .selectFrom('moderation_action')
+      .selectFrom('moderation_event')
       .selectAll()
       .where('reversedAt', 'is', null)
     if ('did' in subject) {
@@ -271,7 +137,7 @@ export class ModerationService {
   }
 
   async logAction(info: {
-    action: ModerationActionRow['action']
+    action: ModerationEventRow['action']
     subject: { did: string } | { uri: AtUri; cid: CID }
     subjectBlobCids?: CID[]
     comment: string | null
@@ -282,7 +148,7 @@ export class ModerationService {
     durationInHours?: number
     refEventId?: number
     meta?: ActionMeta | null
-  }): Promise<ModerationActionRow> {
+  }): Promise<ModerationEventRow> {
     this.db.assertTransaction()
     const {
       action,
@@ -328,7 +194,7 @@ export class ModerationService {
     }
 
     const actionResult = await this.db.db
-      .insertInto('moderation_action')
+      .insertInto('moderation_event')
       .values({
         action,
         comment,
@@ -360,41 +226,51 @@ export class ModerationService {
         .execute()
     }
 
-    await adjustModerationSubjectStatus(this.db, actionResult)
+    try {
+      await adjustModerationSubjectStatus(this.db, actionResult)
+    } catch (err) {
+      console.error(err)
+    }
 
-    if ([ACKNOWLEDGE, TAKEDOWN, FLAG, ESCALATE].includes(action)) {
-      const reportIdsToBeResolved = await getReportIdsToBeResolved(
-        this.db,
-        subjectInfo,
-      )
-      if (reportIdsToBeResolved.length) {
-        await this.resolveReports({
-          reportIds: reportIdsToBeResolved,
-          actionId: actionResult.id,
-          createdBy: actionResult.createdBy,
-        })
-      }
-    }
-    if (action === REVERT) {
-      const reportIdsToBeResolved = await getReportIdsToBeResolved(
-        this.db,
-        subjectInfo,
-      )
-      if (reportIdsToBeResolved.length) {
-        await this.resolveReports({
-          reportIds: reportIdsToBeResolved,
-          actionId: actionResult.id,
-          createdBy: actionResult.createdBy,
-        })
-      }
-    }
+    // if ([ACKNOWLEDGE, TAKEDOWN, FLAG, ESCALATE].includes(action)) {
+    //   const reportIdsToBeResolved = await getReportIdsToBeResolved(
+    //     this.db,
+    //     subjectInfo,
+    //   )
+    // TODO: We don't need to keep track of individual report resolutions
+    // if (reportIdsToBeResolved.length) {
+    //   try {
+    //     await this.resolveReports({
+    //       reportIds: reportIdsToBeResolved,
+    //       actionId: actionResult.id,
+    //       createdBy: actionResult.createdBy,
+    //     })
+    //   } catch (err) {
+    //     console.error(err)
+    //   }
+    // }
+    // }
+    // if (action === REVERT) {
+    // TODO: We don't need to keep track of individual report resolutions
+    // const reportIdsToBeResolved = await getReportIdsToBeResolved(
+    //   this.db,
+    //   subjectInfo,
+    // )
+    // if (reportIdsToBeResolved.length) {
+    //   await this.resolveReports({
+    //     reportIds: reportIdsToBeResolved,
+    //     actionId: actionResult.id,
+    //     createdBy: actionResult.createdBy,
+    //   })
+    // }
+    // }
 
     return actionResult
   }
 
-  async getActionsDueForReversal(): Promise<ModerationActionRow[]> {
+  async getActionsDueForReversal(): Promise<ModerationEventRow[]> {
     const actionsDueForReversal = await this.db.db
-      .selectFrom('moderation_action')
+      .selectFrom('moderation_event')
       .where('durationInHours', 'is not', null)
       .where('expiresAt', '<', new Date().toISOString())
       .where('reversedAt', 'is', null)
@@ -410,7 +286,7 @@ export class ModerationService {
     createdAt,
     comment,
     subject,
-  }: ReversibleModerationAction) {
+  }: ReversibleModerationEvent) {
     this.db.assertTransaction()
     const result = await this.logAction({
       refEventId: id,
@@ -495,64 +371,13 @@ export class ModerationService {
       .execute()
   }
 
-  async resolveReports(info: {
-    reportIds: number[]
-    actionId: number
-    createdBy: string
-    createdAt?: Date
-  }): Promise<void> {
-    const { reportIds, actionId, createdBy, createdAt = new Date() } = info
-    const action = await this.getActionOrThrow(actionId)
-
-    if (!reportIds.length) return
-    const reports = await this.db.db
-      .selectFrom('moderation_report')
-      .where('id', 'in', reportIds)
-      .select(['id', 'subjectType', 'subjectDid', 'subjectUri'])
-      .execute()
-
-    reportIds.forEach((reportId) => {
-      const report = reports.find((r) => r.id === reportId)
-      if (!report) throw new InvalidRequestError('Report not found')
-      if (action.subjectDid !== report.subjectDid) {
-        // Report and action always must target repo or record from the same did
-        throw new InvalidRequestError(
-          `Report ${report.id} cannot be resolved by action`,
-        )
-      }
-      if (
-        action.subjectType === 'com.atproto.repo.strongRef' &&
-        report.subjectType === 'com.atproto.repo.strongRef' &&
-        report.subjectUri !== action.subjectUri
-      ) {
-        // If report and action are both for a record, they must be for the same record
-        throw new InvalidRequestError(
-          `Report ${report.id} cannot be resolved by action`,
-        )
-      }
-    })
-
-    await this.db.db
-      .insertInto('moderation_report_resolution')
-      .values(
-        reportIds.map((reportId) => ({
-          reportId,
-          actionId,
-          createdAt: createdAt.toISOString(),
-          createdBy,
-        })),
-      )
-      .onConflict((oc) => oc.doNothing())
-      .execute()
-  }
-
   async report(info: {
-    reasonType: string
+    reasonType: NonNullable<ModerationEventRow['meta']>['reportType']
     reason?: string
     subject: { did: string } | { uri: AtUri; cid: CID }
     reportedBy: string
     createdAt?: Date
-  }): Promise<ModerationActionRow> {
+  }): Promise<ModerationEventRow> {
     const {
       reasonType,
       reason,
@@ -561,52 +386,37 @@ export class ModerationService {
       subject,
     } = info
 
-    // Resolve subject info
-    let subjectInfo: SubjectInfo
-    if ('did' in subject) {
-      // Allowing dids that may not exist: may not be known yet to appview but needs to remain reportable.
-      subjectInfo = {
-        subjectType: 'com.atproto.admin.defs#repoRef',
-        subjectDid: subject.did,
-        subjectUri: null,
-        subjectCid: null,
-      }
-    } else {
-      // Allowing records/blobs that may not exist: may not be known yet to appview but needs to remain reportable.
-      subjectInfo = {
-        subjectType: 'com.atproto.repo.strongRef',
-        subjectDid: subject.uri.host,
-        subjectUri: subject.uri.toString(),
-        subjectCid: subject.cid.toString(),
-      }
-    }
+    const event = await this.logAction({
+      action: REPORT,
+      meta: { reportType: reasonType },
+      comment: reason || null,
+      createdBy: reportedBy,
+      subject,
+      createdAt,
+    })
 
-    const report = await this.db.db
-      .insertInto('moderation_action')
-      .values({
-        // action: reasonType,
-        action: REPORT,
-        meta: { reportType: reasonType },
-        comment: reason || null,
-        createdAt: createdAt.toISOString(),
-        createdBy: reportedBy,
-        ...subjectInfo,
-      })
-      .returningAll()
-      .executeTakeFirstOrThrow()
-
-    return report
+    return event
   }
 
   async getSubjectStatuses({
     cursor,
     limit = 50,
-    status,
+    reviewState,
+    reviewedAfter,
+    reviewedBefore,
+    reportedAfter,
+    reportedBefore,
+    includeMuted,
     subject,
   }: {
     cursor?: string
     limit?: number
-    status?: string
+    reviewedBefore?: string
+    reviewState?: ModerationSubjectStatusRow['reviewState']
+    reviewedAfter?: string
+    reportedAfter?: string
+    reportedBefore?: string
+    includeMuted?: boolean
     subject?: string
   }) {
     let builder = this.db.db.selectFrom('moderation_subject_status')
@@ -614,15 +424,34 @@ export class ModerationService {
     if (subject) {
       builder = builder.where((qb) => {
         return qb
-          .where('subjectDid', '=', subject)
-          .orWhere('subjectUri', '=', subject)
+          .where('did', '=', subject)
+          .orWhere('recordPath', '=', subject)
+          .orWhere('recordCid', '=', subject)
       })
     }
 
-    if (status) {
-      // TODO: need to figure out typing for token strings
-      // @ts-ignore
-      builder = builder.where('status', '=', status)
+    if (reviewState) {
+      builder = builder.where('reviewState', '=', reviewState)
+    }
+
+    if (reviewedAfter) {
+      builder = builder.where('lastReviewedAt', '>', reviewedAfter)
+    }
+
+    if (reviewedBefore) {
+      builder = builder.where('lastReviewedAt', '<', reviewedBefore)
+    }
+
+    if (reportedAfter) {
+      builder = builder.where('lastReviewedAt', '>', reportedAfter)
+    }
+
+    if (reportedBefore) {
+      builder = builder.where('lastReportedAt', '<', reportedBefore)
+    }
+
+    if (!includeMuted) {
+      builder = builder.where('muteUntil', '<', new Date().toISOString())
     }
 
     if (cursor) {

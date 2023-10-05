@@ -210,7 +210,7 @@ describe('pds profile views', () => {
     await expect(promise).rejects.toThrow('Account has been taken down')
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.reverseModerationEvent(
       {
         id: action.id,
         createdBy: 'did:example:admin',

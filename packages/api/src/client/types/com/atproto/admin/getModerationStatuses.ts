@@ -10,13 +10,20 @@ import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   subject?: string
-  status?:
-    | 'com.atproto.admin.defs#acknowledged'
-    | 'com.atproto.admin.defs#muted'
-    | 'com.atproto.admin.defs#escalated'
-    | 'com.atproto.admin.defs#reported'
-    | 'com.atproto.admin.defs#takendown'
-    | (string & {})
+  /** Search subjects by keyword from notes */
+  note?: string
+  /** Search subjects reported after a given timestamp */
+  reportedAfter?: string
+  /** Search subjects reported before a given timestamp */
+  reportedBefore?: string
+  /** Search subjects reviewed after a given timestamp */
+  reviewedAfter?: string
+  /** Search subjects reviewed before a given timestamp */
+  reviewedBefore?: string
+  /** By default, we don't include muted subjects in the results. Set this to true to include them. */
+  includeMuted?: boolean
+  /** Specify when fetching subjects in a certain state */
+  reviewState?: string
   limit?: number
   cursor?: string
 }

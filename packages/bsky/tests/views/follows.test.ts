@@ -147,7 +147,7 @@ describe('pds follow views', () => {
       sc.dids.dan,
     )
 
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.reverseModerationEvent(
       {
         id: modAction.id,
         createdBy: 'did:example:admin',
@@ -276,7 +276,7 @@ describe('pds follow views', () => {
       sc.dids.dan,
     )
 
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.reverseModerationEvent(
       {
         id: modAction.id,
         createdBy: 'did:example:admin',

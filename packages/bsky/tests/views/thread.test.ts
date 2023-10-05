@@ -194,7 +194,7 @@ describe('pds thread views', () => {
       )
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: modAction.id,
           createdBy: 'did:example:admin',
@@ -234,7 +234,7 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: modAction.id,
           createdBy: 'did:example:admin',
@@ -274,7 +274,7 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: modAction.id,
           createdBy: 'did:example:admin',
@@ -317,7 +317,7 @@ describe('pds thread views', () => {
       )
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: modAction.id,
           createdBy: 'did:example:admin',
@@ -365,7 +365,7 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.reverseModerationEvent(
         {
           id: modAction.id,
           createdBy: 'did:example:admin',
@@ -418,7 +418,7 @@ describe('pds thread views', () => {
       // Cleanup
       await Promise.all(
         actionResults.map((result) =>
-          agent.api.com.atproto.admin.reverseModerationAction(
+          agent.api.com.atproto.admin.reverseModerationEvent(
             {
               id: result.data.id,
               createdBy: 'did:example:admin',

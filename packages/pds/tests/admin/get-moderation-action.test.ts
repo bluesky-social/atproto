@@ -63,15 +63,13 @@ describe('pds admin get moderation action view', () => {
         cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       },
     })
-    await sc.resolveReports({
-      actionId: flagRepo.id,
-      reportIds: [reportRepo.id, reportRecord.id],
+    await sc.reverseModerationAction({
+      id: flagRepo.id,
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.alice,
+      },
     })
-    await sc.resolveReports({
-      actionId: takedownRecord.id,
-      reportIds: [reportRecord.id],
-    })
-    await sc.reverseModerationAction({ id: flagRepo.id })
   })
 
   it('gets moderation action for a repo.', async () => {

@@ -5,12 +5,12 @@ import AppContext from '../context'
 import AtpAgent, { AtUri } from '@atproto/api'
 import { buildBasicAuth } from '../auth'
 import { LabelService } from '../services/label'
-import { ModerationActionRow } from '../services/moderation/types'
+import { ModerationEventRow } from '../services/moderation/types'
 import { CID } from 'multiformats/cid'
 
 export const MODERATION_ACTION_REVERSAL_ID = 1011
 
-export class PeriodicModerationActionReversal {
+export class PeriodicModerationEventReversal {
   leader = new Leader(
     MODERATION_ACTION_REVERSAL_ID,
     this.appContext.db.getPrimary(),
@@ -30,7 +30,7 @@ export class PeriodicModerationActionReversal {
   }
 
   // invert label creation & negations
-  async reverseLabels(labelTxn: LabelService, actionRow: ModerationActionRow) {
+  async reverseLabels(labelTxn: LabelService, actionRow: ModerationEventRow) {
     let uri: string
     let cid: string | null = null
 
@@ -51,7 +51,7 @@ export class PeriodicModerationActionReversal {
     })
   }
 
-  async revertAction(actionRow: ModerationActionRow) {
+  async revertAction(actionRow: ModerationEventRow) {
     const reverseAction = {
       id: actionRow.id,
       createdBy: actionRow.createdBy,
@@ -69,7 +69,7 @@ export class PeriodicModerationActionReversal {
 
     // TODO: do we still need this?
     // if (this.pushAgent) {
-    //   await this.pushAgent.com.atproto.admin.reverseModerationAction(
+    //   await this.pushAgent.com.atproto.admin.reverseModerationEvent(
     //     reverseAction,
     //   )
     //   return

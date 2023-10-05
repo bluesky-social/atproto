@@ -136,7 +136,7 @@ describe('list feed views', () => {
     expect(hasBob).toBe(false)
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.reverseModerationEvent(
       {
         id: actionRes.data.id,
         createdBy: 'did:example:admin',
@@ -177,7 +177,7 @@ describe('list feed views', () => {
     expect(hasPost).toBe(false)
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.reverseModerationEvent(
       {
         id: actionRes.data.id,
         createdBy: 'did:example:admin',

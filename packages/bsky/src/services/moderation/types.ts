@@ -1,7 +1,6 @@
 import { Selectable } from 'kysely'
 import {
-  ModerationAction,
-  ModerationReport,
+  ModerationEvent,
   ModerationSubjectStatus,
 } from '../../db/tables/moderation'
 import { AtUri } from '@atproto/syntax'
@@ -21,16 +20,16 @@ export type SubjectInfo =
       subjectCid: string
     }
 
-export type ModerationActionRow = Selectable<ModerationAction>
-export type ReversibleModerationAction = Pick<
-  ModerationActionRow,
+export type ModerationEventRow = Selectable<ModerationEvent>
+export type ReversibleModerationEvent = Pick<
+  ModerationEventRow,
   'id' | 'createdBy' | 'comment'
 > & {
   createdAt?: Date
   subject: { did: string } | { uri: AtUri; cid: CID }
 }
 
-export type ModerationActionRowWithHandle = ModerationActionRow & {
+export type ModerationEventRowWithHandle = ModerationEventRow & {
   handle?: string | null
 }
 export type ModerationSubjectStatusRow = Selectable<ModerationSubjectStatus>

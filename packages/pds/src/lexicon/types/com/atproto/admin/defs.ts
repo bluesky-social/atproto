@@ -198,7 +198,14 @@ export interface SubjectStatusView {
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
   updatedAt: string
-  status: SubjectStatusType
+  createdAt: string
+  reviewState: SubjectReviewState
+  note: string
+  muteUntil?: string
+  lastReviewedAt?: string
+  lastReportedAt?: string
+  takendown?: boolean
+  suspendUntil?: string
   [k: string]: unknown
 }
 
@@ -224,7 +231,7 @@ export interface ReportViewDetail {
     | RecordView
     | RecordViewNotFound
     | { $type: string; [k: string]: unknown }
-  subjectStatusView?: SubjectStatusView
+  subjectStatus?: SubjectStatusView
   reportedBy: string
   createdAt: string
   resolvedByActions: ActionView[]
@@ -411,7 +418,6 @@ export function validateModeration(v: unknown): ValidationResult {
 }
 
 export interface ModerationDetail {
-  actions: ActionView[]
   subjectStatus?: SubjectStatusView
   [k: string]: unknown
 }
@@ -490,23 +496,15 @@ export function validateVideoDetails(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#videoDetails', v)
 }
 
-export type SubjectStatusType =
-  | 'lex:com.atproto.admin.defs#reported'
-  | 'lex:com.atproto.admin.defs#resolved'
-  | 'lex:com.atproto.admin.defs#takendown'
-  | 'lex:com.atproto.admin.defs#acknowledged'
-  | 'lex:com.atproto.admin.defs#muted'
+export type SubjectReviewState =
+  | 'lex:com.atproto.admin.defs#reviewOpen'
+  | 'lex:com.atproto.admin.defs#reviewEscalated'
+  | 'lex:com.atproto.admin.defs#reviewClosed'
   | (string & {})
 
-/** Moderation status of a subject: reported. Indicates that the subject was reported */
-export const REPORTED = 'com.atproto.admin.defs#reported'
-/** Moderation status of a subject: resolved. Indicates that the reports on the subject were marked as resolved */
-export const RESOLVED = 'com.atproto.admin.defs#resolved'
-/** Moderation status of a subject: takendown. Indicates that the subject was taken down */
-export const TAKENDOWN = 'com.atproto.admin.defs#takendown'
-/** Moderation status of a subject: acknowledged. Indicates that the reports on the subject were acknowledged by moderator */
-export const ACKNOWLEDGED = 'com.atproto.admin.defs#acknowledged'
-/** Moderation status of a subject: muted. Indicates that reports were muted by a moderator */
-export const MUTED = 'com.atproto.admin.defs#muted'
-/** Moderation status of a subject: escalated. Indicates that reports were escalated by a moderator */
-export const ESCALATED = 'com.atproto.admin.defs#escalated'
+/** Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator */
+export const REVIEWOPEN = 'com.atproto.admin.defs#reviewOpen'
+/** Moderator review status of a subject: Escalated. Indicates that the subject was escalated for review by a moderator */
+export const REVIEWESCALATED = 'com.atproto.admin.defs#reviewEscalated'
+/** Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator */
+export const REVIEWCLOSED = 'com.atproto.admin.defs#reviewClosed'

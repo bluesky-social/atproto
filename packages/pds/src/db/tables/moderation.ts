@@ -4,6 +4,11 @@ import {
   FLAG,
   TAKEDOWN,
   ESCALATE,
+  ActionMeta,
+  MUTE,
+  REPORT,
+  LABEL,
+  REVERT,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import {
   REASONOTHER,
@@ -21,14 +26,22 @@ export const reportResolutionTableName = 'moderation_report_resolution'
 
 export interface ModerationAction {
   id: Generated<number>
-  action: typeof TAKEDOWN | typeof FLAG | typeof ACKNOWLEDGE | typeof ESCALATE
+  action:
+    | typeof TAKEDOWN
+    | typeof FLAG
+    | typeof ACKNOWLEDGE
+    | typeof ESCALATE
+    | typeof MUTE
+    | typeof REPORT
+    | typeof LABEL
+    | typeof REVERT
   subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
   createLabelVals: string | null
   negateLabelVals: string | null
-  reason: string
+  comment: string | null
   createdAt: string
   createdBy: string
   reversedAt: string | null
@@ -36,6 +49,9 @@ export interface ModerationAction {
   reversedReason: string | null
   durationInHours: number | null
   expiresAt: string | null
+  refEventId: number | null
+  // TODO: better types here?
+  meta: ActionMeta | null
 }
 
 export interface ModerationActionSubjectBlob {

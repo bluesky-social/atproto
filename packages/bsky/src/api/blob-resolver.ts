@@ -90,8 +90,8 @@ export async function resolveBlob(
       .selectFrom('moderation_action_subject_blob')
       .select('actionId')
       .innerJoin(
-        'moderation_action',
-        'moderation_action.id',
+        'moderation_event',
+        'moderation_event.id',
         'moderation_action_subject_blob.actionId',
       )
       .where('cid', '=', cidStr)

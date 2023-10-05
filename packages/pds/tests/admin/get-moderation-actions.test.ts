@@ -56,6 +56,11 @@ describe('pds admin get moderation actions view', () => {
     // Reverse an action
     await sc.reverseModerationAction({
       id: recordActions[0].id,
+      subject: {
+        $type: 'com.atproto.repo.strongRef',
+        uri: posts[0].ref.uriStr,
+        cid: posts[0].ref.cidStr,
+      },
     })
     // Take actions on repos
     const repoActions: Awaited<ReturnType<typeof sc.takeModerationAction>>[] =
@@ -87,9 +92,10 @@ describe('pds admin get moderation actions view', () => {
         },
       })
       if (ab) {
-        await sc.resolveReports({
-          actionId: action.id,
-          reportIds: [report.id],
+        await sc.takeModerationAction({
+          action: ACKNOWLEDGE,
+          subject: action.subject,
+          meta: { resolveReportIds: [report.id] },
         })
       }
     }
@@ -106,16 +112,17 @@ describe('pds admin get moderation actions view', () => {
         },
       })
       if (ab) {
-        await sc.resolveReports({
-          actionId: action.id,
-          reportIds: [report.id],
+        await sc.takeModerationAction({
+          action: ACKNOWLEDGE,
+          subject: action.subject,
+          meta: { resolveReportIds: [report.id] },
         })
       }
     }
   })
 
   it('gets all moderation actions.', async () => {
-    const result = await agent.api.com.atproto.admin.getModerationActions(
+    const result = await agent.api.com.atproto.admin.getModerationEvents(
       {},
       { headers: network.pds.adminAuthHeaders() },
     )
@@ -123,7 +130,7 @@ describe('pds admin get moderation actions view', () => {
   })
 
   it('gets all moderation actions for a repo.', async () => {
-    const result = await agent.api.com.atproto.admin.getModerationActions(
+    const result = await agent.api.com.atproto.admin.getModerationEvents(
       { subject: Object.values(sc.dids)[0] },
       { headers: network.pds.adminAuthHeaders() },
     )
@@ -131,7 +138,7 @@ describe('pds admin get moderation actions view', () => {
   })
 
   it('gets all moderation actions for a record.', async () => {
-    const result = await agent.api.com.atproto.admin.getModerationActions(
+    const result = await agent.api.com.atproto.admin.getModerationEvents(
       { subject: Object.values(sc.posts)[0][0].ref.uriStr },
       { headers: network.pds.adminAuthHeaders() },
     )
@@ -141,7 +148,7 @@ describe('pds admin get moderation actions view', () => {
   it('paginates.', async () => {
     const results = (results) => results.flatMap((res) => res.actions)
     const paginator = async (cursor?: string) => {
-      const res = await agent.api.com.atproto.admin.getModerationActions(
+      const res = await agent.api.com.atproto.admin.getModerationEvents(
         { cursor, limit: 3 },
         { headers: network.pds.adminAuthHeaders() },
       )
@@ -153,7 +160,7 @@ describe('pds admin get moderation actions view', () => {
       expect(res.actions.length).toBeLessThanOrEqual(3),
     )
 
-    const full = await agent.api.com.atproto.admin.getModerationActions(
+    const full = await agent.api.com.atproto.admin.getModerationEvents(
       {},
       { headers: network.pds.adminAuthHeaders() },
     )

@@ -170,7 +170,7 @@ describe('pds author feed views', () => {
     await expect(attempt).rejects.toThrow('Profile not found')
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.reverseModerationEvent(
       {
         id: action.id,
         createdBy: 'did:example:admin',
@@ -220,7 +220,7 @@ describe('pds author feed views', () => {
     expect(postBlock.feed.map((item) => item.post.uri)).not.toContain(post.uri)
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.reverseModerationEvent(
       {
         id: action.id,
         createdBy: 'did:example:admin',

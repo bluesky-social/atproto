@@ -78,7 +78,7 @@ describe('takedowner', () => {
     await network.processAll()
     await autoMod.processAll()
     const modAction = await ctx.db.db
-      .selectFrom('moderation_action')
+      .selectFrom('moderation_event')
       .where('subjectUri', '=', post.ref.uriStr)
       .select(['action', 'id'])
       .executeTakeFirst()
@@ -120,7 +120,7 @@ describe('takedowner', () => {
     )
     await network.processAll()
     const modAction = await ctx.db.db
-      .selectFrom('moderation_action')
+      .selectFrom('moderation_event')
       .where('subjectUri', '=', res.data.uri)
       .select(['action', 'id'])
       .executeTakeFirst()

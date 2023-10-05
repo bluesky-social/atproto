@@ -1,8 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/syntax'
-import { ModerationAction } from '../../../../db/tables/moderation'
-import { ModerationReport } from '../../../../db/tables/moderation'
 import { InputSchema as ReportInput } from '../../../../lexicon/types/com/atproto/moderation/createReport'
 import { InputSchema as ActionInput } from '../../../../lexicon/types/com/atproto/admin/takeModerationAction'
 import {
@@ -10,6 +8,9 @@ import {
   FLAG,
   TAKEDOWN,
   ESCALATE,
+  REVERT,
+  COMMENT,
+  MUTE,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import {
   REASONOTHER,
@@ -19,6 +20,8 @@ import {
   REASONSEXUAL,
   REASONVIOLATION,
 } from '../../../../lexicon/types/com/atproto/moderation/defs'
+import { ModerationEvent } from '../../../../db/tables/moderation'
+import { ModerationSubjectStatusRow } from '../../../../services/moderation/types'
 
 type SubjectInput = ReportInput['subject'] | ActionInput['subject']
 
@@ -44,9 +47,13 @@ export const getSubject = (subject: SubjectInput) => {
 
 export const getReasonType = (reasonType: ReportInput['reasonType']) => {
   if (reasonTypes.has(reasonType)) {
-    return reasonType as ModerationReport['reasonType']
+    return reasonType as NonNullable<ModerationEvent['meta']>['reportType']
   }
   throw new InvalidRequestError('Invalid reason type')
+}
+
+export const getReviewState = (reviewState?: string) => {
+  return reviewState as ModerationSubjectStatusRow['reviewState']
 }
 
 export const getAction = (action: ActionInput['action']) => {
@@ -54,9 +61,12 @@ export const getAction = (action: ActionInput['action']) => {
     action === TAKEDOWN ||
     action === FLAG ||
     action === ACKNOWLEDGE ||
+    action === REVERT ||
+    action === MUTE ||
+    action === COMMENT ||
     action === ESCALATE
   ) {
-    return action as ModerationAction['action']
+    return action as ModerationEvent['action']
   }
   throw new InvalidRequestError('Invalid action')
 }

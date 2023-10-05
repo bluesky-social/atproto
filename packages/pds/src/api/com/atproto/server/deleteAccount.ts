@@ -46,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
         const takedown = await moderationTxn.logAction({
           action: TAKEDOWN,
           subject: { did },
-          reason: REASON_ACCT_DELETION,
+          comment: REASON_ACCT_DELETION,
           createdBy: did,
           createdAt: now,
         })
