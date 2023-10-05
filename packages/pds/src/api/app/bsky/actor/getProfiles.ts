@@ -1,3 +1,4 @@
+import { ActorStoreReader } from '../../../../actor-store'
 import { LocalRecords } from '../../../../actor-store/local/reader'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
@@ -26,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const getProfilesMunge = async (
-  ctx: AppContext,
+  store: ActorStoreReader,
   original: OutputSchema,
   local: LocalRecords,
   requester: string,
@@ -35,9 +36,7 @@ const getProfilesMunge = async (
   if (!localProf) return original
   const profiles = original.profiles.map((prof) => {
     if (prof.did !== requester) return prof
-    return ctx.actorStore
-      .reader(requester)
-      .local.updateProfileDetailed(prof, localProf.record)
+    return store.local.updateProfileDetailed(prof, localProf.record)
   })
   return {
     ...original,

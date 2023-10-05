@@ -5,6 +5,7 @@ import { handleReadAfterWrite } from '../util/read-after-write'
 import { authPassthru } from '../../../../api/com/atproto/admin/util'
 import { isReasonRepost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { LocalRecords } from '../../../../actor-store/local/reader'
+import { ActorStoreReader } from '../../../../actor-store'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
@@ -28,12 +29,11 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const getAuthorMunge = async (
-  ctx: AppContext,
+  store: ActorStoreReader,
   original: OutputSchema,
   local: LocalRecords,
   requester: string,
 ): Promise<OutputSchema> => {
-  const actorStore = ctx.actorStore.reader(requester)
   const localProf = local.profile
   // only munge on own feed
   if (!isUsersFeed(original, requester)) {
@@ -48,7 +48,7 @@ const getAuthorMunge = async (
           ...item,
           post: {
             ...item.post,
-            author: actorStore.local.updateProfileViewBasic(
+            author: store.local.updateProfileViewBasic(
               item.post.author,
               localProf.record,
             ),
@@ -59,7 +59,7 @@ const getAuthorMunge = async (
       }
     })
   }
-  feed = await actorStore.local.formatAndInsertPostsInFeed(feed, local.posts)
+  feed = await store.local.formatAndInsertPostsInFeed(feed, local.posts)
   return {
     ...original,
     feed,

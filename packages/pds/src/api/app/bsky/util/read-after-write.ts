@@ -2,6 +2,7 @@ import { Headers } from '@atproto/xrpc'
 import { readStickyLogger as log } from '../../../../logger'
 import { LocalRecords } from '../../../../actor-store/local/reader'
 import AppContext from '../../../../context'
+import { ActorStoreReader } from '../../../../actor-store'
 
 export type ApiRes<T> = {
   headers: Headers
@@ -9,7 +10,7 @@ export type ApiRes<T> = {
 }
 
 export type MungeFn<T> = (
-  ctx: AppContext,
+  actorStore: ActorStoreReader,
   original: T,
   local: LocalRecords,
   requester: string,
@@ -72,10 +73,14 @@ export const readAfterWriteInternal = async <T>(
 ): Promise<{ data: T; lag?: number }> => {
   const rev = getRepoRev(res.headers)
   if (!rev) return { data: res.data }
-  const local = await ctx.actorStore
-    .reader(requester)
-    .local.getRecordsSinceRev(rev)
-  const data = await munge(ctx, res.data, local, requester)
+  const { data, local } = await ctx.actorStore.read(
+    requester,
+    async (store) => {
+      const local = await store.local.getRecordsSinceRev(rev)
+      const data = await munge(store, res.data, local, requester)
+      return { data, local }
+    },
+  )
   return {
     data,
     lag: getLocalLag(local),

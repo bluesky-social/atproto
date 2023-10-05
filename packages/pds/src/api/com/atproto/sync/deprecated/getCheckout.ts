@@ -1,9 +1,8 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { byteIterableToStream } from '@atproto/common'
 import { Server } from '../../../../../lexicon'
 import AppContext from '../../../../../context'
 import { isUserOrAdmin } from '../../../../../auth'
-import { RepoRootNotFoundError } from '../../../../../actor-store/repo/sql-repo-reader'
+import { getCarStream } from '../getRepo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getCheckout({
@@ -20,20 +19,11 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const storage = ctx.actorStore.reader(did).repo.storage
-      let carStream: AsyncIterable<Uint8Array>
-      try {
-        carStream = await storage.getCarStream()
-      } catch (err) {
-        if (err instanceof RepoRootNotFoundError) {
-          throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
-        }
-        throw err
-      }
+      const carStream = await getCarStream(ctx, did)
 
       return {
         encoding: 'application/vnd.ipld.car',
-        body: byteIterableToStream(carStream),
+        body: carStream,
       }
     },
   })

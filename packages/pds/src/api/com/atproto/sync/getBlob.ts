@@ -10,16 +10,17 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, res }) => {
       // @TODO verify repo is not taken down
       const cid = CID.parse(params.cid)
-      let found
-      try {
-        found = await ctx.actorStore.reader(params.did).repo.blob.getBlob(cid)
-      } catch (err) {
-        if (err instanceof BlobNotFoundError) {
-          throw new InvalidRequestError('Blob not found')
-        } else {
-          throw err
+      const found = await ctx.actorStore.read(params.did, async (store) => {
+        try {
+          return await store.repo.blob.getBlob(cid)
+        } catch (err) {
+          if (err instanceof BlobNotFoundError) {
+            throw new InvalidRequestError('Blob not found')
+          } else {
+            throw err
+          }
         }
-      }
+      })
       if (!found) {
         throw new InvalidRequestError('Blob not found')
       }

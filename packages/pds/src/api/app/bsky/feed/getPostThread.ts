@@ -41,12 +41,16 @@ export default function (server: Server, ctx: AppContext) {
         )
       } catch (err) {
         if (err instanceof AppBskyFeedGetPostThread.NotFoundError) {
-          const local = await readAfterWriteNotFound(
-            ctx,
-            params,
-            requester,
-            err.headers,
-          )
+          const headers = err.headers
+          const local = await ctx.actorStore.read(requester, async (store) => {
+            return readAfterWriteNotFound(
+              ctx,
+              store,
+              params,
+              requester,
+              headers,
+            )
+          })
           if (local === null) {
             throw err
           } else {
@@ -72,21 +76,16 @@ export default function (server: Server, ctx: AppContext) {
 // ----------------
 
 const getPostThreadMunge = async (
-  ctx: AppContext,
+  store: ActorStoreReader,
   original: OutputSchema,
   local: LocalRecords,
-  requester: string,
 ): Promise<OutputSchema> => {
   // @TODO if is NotFoundPost, handle similarly to error
   // @NOTE not necessary right now as we never return those for the requested uri
   if (!isThreadViewPost(original.thread)) {
     return original
   }
-  const thread = await addPostsToThread(
-    ctx.actorStore.reader(requester),
-    original.thread,
-    local.posts,
-  )
+  const thread = await addPostsToThread(store, original.thread, local.posts)
   return {
     ...original,
     thread,
@@ -164,6 +163,7 @@ const threadPostView = async (
 
 const readAfterWriteNotFound = async (
   ctx: AppContext,
+  store: ActorStoreReader,
   params: QueryParams,
   requester: string,
   headers?: Headers,
@@ -175,14 +175,13 @@ const readAfterWriteNotFound = async (
   if (uri.hostname !== requester) {
     return null
   }
-  const actorStore = ctx.actorStore.reader(requester)
-  const local = await actorStore.local.getRecordsSinceRev(rev)
+  const local = await store.local.getRecordsSinceRev(rev)
   const found = local.posts.find((p) => p.uri.toString() === uri.toString())
   if (!found) return null
-  let thread = await threadPostView(actorStore, found)
+  let thread = await threadPostView(store, found)
   if (!thread) return null
   const rest = local.posts.filter((p) => p.uri.toString() !== uri.toString())
-  thread = await addPostsToThread(actorStore, thread, rest)
+  thread = await addPostsToThread(store, thread, rest)
   const highestParent = getHighestParent(thread)
   if (highestParent) {
     try {

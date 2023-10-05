@@ -1,9 +1,13 @@
+import stream from 'stream'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { byteIterableToStream } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { isUserOrAdmin } from '../../../../auth'
-import { RepoRootNotFoundError } from '../../../../actor-store/repo/sql-repo-reader'
+import {
+  RepoRootNotFoundError,
+  SqlRepoReader,
+} from '../../../../actor-store/repo/sql-repo-reader'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRepo({
@@ -20,21 +24,34 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const storage = ctx.actorStore.reader(did).repo.storage
-      let carStream: AsyncIterable<Uint8Array>
-      try {
-        carStream = await storage.getCarStream(since)
-      } catch (err) {
-        if (err instanceof RepoRootNotFoundError) {
-          throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
-        }
-        throw err
-      }
+      const carStream = await getCarStream(ctx, did, since)
 
       return {
         encoding: 'application/vnd.ipld.car',
-        body: byteIterableToStream(carStream),
+        body: carStream,
       }
     },
   })
+}
+
+export const getCarStream = async (
+  ctx: AppContext,
+  did: string,
+  since?: string,
+): Promise<stream.Readable> => {
+  // must open up the db outside of store interface so that we can close the file handle after finished streaming
+  const actorDb = await ctx.actorStore.db(did)
+  const storage = new SqlRepoReader(actorDb)
+  let carIter: AsyncIterable<Uint8Array>
+  try {
+    carIter = await storage.getCarStream(since)
+  } catch (err) {
+    if (err instanceof RepoRootNotFoundError) {
+      throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
+    }
+    throw err
+  }
+  const carStream = byteIterableToStream(carIter)
+  carStream.on('close', actorDb.close)
+  return carStream
 }

@@ -5,6 +5,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { byteIterableToStream } from '@atproto/common'
 import { isUserOrAdmin } from '../../../../auth'
+import { SqlRepoReader } from '../../../../actor-store/repo/sql-repo-reader'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRecord({
@@ -20,17 +21,22 @@ export default function (server: Server, ctx: AppContext) {
           throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
         }
       }
-      const storage = ctx.actorStore.reader(did).repo.storage
+      // must open up the db outside of store interface so that we can close the file handle after finished streaming
+      const actorDb = await ctx.actorStore.db(did)
+      const storage = new SqlRepoReader(actorDb)
       const commit = params.commit
         ? CID.parse(params.commit)
         : await storage.getRoot()
+
       if (!commit) {
         throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
       }
-      const proof = repo.getRecords(storage, commit, [{ collection, rkey }])
+      const carIter = repo.getRecords(storage, commit, [{ collection, rkey }])
+      const carStream = byteIterableToStream(carIter)
+      carStream.on('close', actorDb.close)
       return {
         encoding: 'application/vnd.ipld.car',
-        body: byteIterableToStream(proof),
+        body: carStream,
       }
     },
   })

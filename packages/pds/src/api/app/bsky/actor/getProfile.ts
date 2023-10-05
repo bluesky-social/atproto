@@ -4,6 +4,7 @@ import { authPassthru } from '../../../../api/com/atproto/admin/util'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/actor/getProfile'
 import { handleReadAfterWrite } from '../util/read-after-write'
 import { LocalRecords } from '../../../../actor-store/local/reader'
+import { ActorStoreReader } from '../../../../actor-store'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
@@ -27,13 +28,10 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const getProfileMunge = async (
-  ctx: AppContext,
+  store: ActorStoreReader,
   original: OutputSchema,
   local: LocalRecords,
-  requester: string,
 ): Promise<OutputSchema> => {
   if (!local.profile) return original
-  return ctx.actorStore
-    .reader(requester)
-    .local.updateProfileDetailed(original, local.profile.record)
+  return store.local.updateProfileDetailed(original, local.profile.record)
 }

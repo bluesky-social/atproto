@@ -27,28 +27,31 @@ type ActorStoreResources = {
 export const createActorStore = (
   resources: ActorStoreResources,
 ): ActorStore => {
-  const dbCreator = (did: string): ActorDb => {
+  const getAndMigrateDb = async (did: string): Promise<ActorDb> => {
     const location = path.join(resources.dbDirectory, did)
-    return Database.sqlite(location)
+    const db: ActorDb = Database.sqlite(location)
+    const migrator = getMigrator(db)
+    await migrator.migrateToLatestOrThrow()
+    return db
   }
 
   return {
-    db: dbCreator,
-    reader: (did: string) => {
-      const db = dbCreator(did)
-      return createActorReader(db, resources)
+    db: getAndMigrateDb,
+    read: async <T>(did: string, fn: ActorStoreReadFn<T>) => {
+      const db = await getAndMigrateDb(did)
+      const reader = createActorReader(did, db, resources)
+      const result = await fn(reader)
+      await db.close()
+      return result
     },
-    transact: <T>(did: string, fn: ActorStoreTransactFn<T>) => {
-      const db = dbCreator(did)
-      return db.transaction((dbTxn) => {
+    transact: async <T>(did: string, fn: ActorStoreTransactFn<T>) => {
+      const db = await getAndMigrateDb(did)
+      const result = await db.transaction((dbTxn) => {
         const store = createActorTransactor(did, dbTxn, resources)
         return fn(store)
       })
-    },
-    create: async (did: string) => {
-      const db = dbCreator(did)
-      const migrator = getMigrator(db)
-      await migrator.migrateToLatestOrThrow()
+      await db.close()
+      return result
     },
     destroy: async (did: string) => {
       await rmIfExists(path.join(resources.dbDirectory, did))
@@ -95,6 +98,7 @@ const createActorTransactor = (
 }
 
 const createActorReader = (
+  did: string,
   db: ActorDb,
   resources: ActorStoreResources,
 ): ActorStoreReader => {
@@ -119,26 +123,24 @@ const createActorReader = (
       appViewCdnUrlPattern,
     ),
     pref: new PreferenceReader(db),
+    transact: async <T>(fn: ActorStoreTransactFn<T>): Promise<T> => {
+      return db.transaction((dbTxn) => {
+        const store = createActorTransactor(did, dbTxn, resources)
+        return fn(store)
+      })
+    },
   }
 }
 
 export type ActorStore = {
-  db: (did: string) => ActorDb
-  reader: (did: string) => ActorStoreReader
-  transact: <T>(did: string, store: ActorStoreTransactFn<T>) => Promise<T>
-  create: (did: string) => Promise<void>
+  db: (did: string) => Promise<ActorDb>
+  read: <T>(did: string, fn: ActorStoreReadFn<T>) => Promise<T>
+  transact: <T>(did: string, fn: ActorStoreTransactFn<T>) => Promise<T>
   destroy: (did: string) => Promise<void>
 }
 
+export type ActorStoreReadFn<T> = (fn: ActorStoreReader) => Promise<T>
 export type ActorStoreTransactFn<T> = (fn: ActorStoreTransactor) => Promise<T>
-
-export type ActorStoreTransactor = {
-  db: ActorDb
-  repo: RepoTransactor
-  record: RecordReader
-  local: LocalReader
-  pref: PreferenceTransactor
-}
 
 export type ActorStoreReader = {
   db: ActorDb
@@ -146,4 +148,13 @@ export type ActorStoreReader = {
   record: RecordReader
   local: LocalReader
   pref: PreferenceReader
+  transact: <T>(fn: ActorStoreTransactFn<T>) => Promise<T>
+}
+
+export type ActorStoreTransactor = {
+  db: ActorDb
+  repo: RepoTransactor
+  record: RecordReader
+  local: LocalReader
+  pref: PreferenceTransactor
 }
