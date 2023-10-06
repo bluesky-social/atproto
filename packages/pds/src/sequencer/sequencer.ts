@@ -19,7 +19,8 @@ import { Crawlers } from '../crawlers'
 export * from './events'
 
 export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
-  polling = false
+  destroyed = false
+  pollPromise: Promise<void> | null = null
   triesWithNoResults = 0
 
   constructor(
@@ -37,7 +38,17 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     if (curr) {
       this.lastSeen = curr.seq ?? 0
     }
-    this.pollDb()
+    if (this.pollPromise === null) {
+      this.pollPromise = this.pollDb()
+    }
+  }
+
+  async destroy() {
+    this.destroyed = true
+    if (this.pollPromise) {
+      await this.pollPromise
+    }
+    this.emit('close')
   }
 
   async curr(): Promise<SeqRow | null> {
@@ -126,11 +137,10 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     return seqEvts
   }
 
-  async pollDb() {
+  private async pollDb(): Promise<void> {
+    if (this.destroyed) return
     // if already polling, do not start another poll
-    if (this.polling) return
     try {
-      this.polling = true
       const evts = await this.requestSeqRange({
         earliestSeq: this.lastSeen,
         limit: 1000,
@@ -148,10 +158,10 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         )
         await wait(waitTime)
       }
-      this.pollDb()
+      this.pollPromise = this.pollDb()
     } catch (err) {
       log.error({ err, lastSeen: this.lastSeen }, 'sequencer failed to poll db')
-      this.pollDb()
+      this.pollPromise = this.pollDb()
     }
   }
 
@@ -184,6 +194,7 @@ type SeqRow = RepoSeqEntry
 
 type SequencerEvents = {
   events: (evts: SeqEvt[]) => void
+  close: () => void
 }
 
 export type SequencerEmitter = TypedEmitter<SequencerEvents>

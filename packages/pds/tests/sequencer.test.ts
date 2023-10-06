@@ -3,12 +3,12 @@ import { randomStr } from '@atproto/crypto'
 import { cborEncode, readFromGenerator, wait } from '@atproto/common'
 import { Sequencer, SeqEvt } from '../src/sequencer'
 import Outbox from '../src/sequencer/outbox'
-import { Database } from '../src'
 import userSeed from './seeds/users'
+import { ServiceDb } from '../src/service-db'
 
 describe('sequencer', () => {
   let network: TestNetworkNoAppView
-  let db: Database
+  let db: ServiceDb
   let sequencer: Sequencer
   let sc: SeedClient
   let alice: string
@@ -78,8 +78,6 @@ describe('sequencer', () => {
 
   const caughtUp = (outbox: Outbox): (() => Promise<boolean>) => {
     return async () => {
-      const leaderCaughtUp = await network.pds.ctx.sequencerLeader?.isCaughtUp()
-      if (!leaderCaughtUp) return false
       const lastEvt = await outbox.sequencer.curr()
       if (!lastEvt) return true
       return outbox.lastSeen >= (lastEvt.seq ?? 0)

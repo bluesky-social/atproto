@@ -17,6 +17,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
     auth: ctx.roleVerifier,
     handler: async ({ req, input, auth }) => {
+      return {} as any
       // const access = auth.credentials
       // const { db, services } = ctx
       // if (ctx.cfg.bskyAppView.proxyModeration) {

@@ -258,8 +258,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   // @TODO renamed indexes for consistency
   const repoSeqBuilder = db.schema
     .createTable('repo_seq')
-    .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
-    .addColumn('seq', 'integer', (col) => col.unique())
+    .addColumn('seq', 'integer', (col) => col.autoIncrement().primaryKey())
   await repoSeqBuilder
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('eventType', 'varchar', (col) => col.notNull())
