@@ -2,7 +2,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { proxyUnauthed, resultPassthru } from '../../../proxy'
+import { proxy, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.listRecords(async ({ params }) => {
@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
       throw new InvalidRequestError(`Could not find repo: ${repo}`)
     }
 
-    const proxied = await proxyUnauthed(ctx, account.pdsDid, async (agent) => {
+    const proxied = await proxy(ctx, account.pdsDid, async (agent) => {
       const result = await agent.api.com.atproto.repo.listRecords(params)
       return resultPassthru(result)
     })

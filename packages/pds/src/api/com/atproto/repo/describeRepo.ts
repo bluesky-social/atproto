@@ -2,7 +2,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as id from '@atproto/identity'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { proxyUnauthed, resultPassthru } from '../../../proxy'
+import { proxy, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.describeRepo(async ({ params }) => {
@@ -13,7 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       throw new InvalidRequestError(`Could not find user: ${repo}`)
     }
 
-    const proxied = await proxyUnauthed(ctx, account.pdsDid, async (agent) => {
+    const proxied = await proxy(ctx, account.pdsDid, async (agent) => {
       const result = await agent.api.com.atproto.repo.describeRepo(params)
       return resultPassthru(result)
     })

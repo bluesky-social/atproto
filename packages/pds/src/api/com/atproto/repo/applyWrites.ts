@@ -48,12 +48,16 @@ export default function (server: Server, ctx: AppContext) {
     ],
 
     handler: async ({ input, auth, req }) => {
-      const proxied = await proxy(ctx, auth.credentials, async (agent) => {
-        await agent.api.com.atproto.repo.applyWrites(
-          input.body,
-          authPassthru(req, true),
-        )
-      })
+      const proxied = await proxy(
+        ctx,
+        auth.credentials.audience,
+        async (agent) => {
+          await agent.api.com.atproto.repo.applyWrites(
+            input.body,
+            authPassthru(req, true),
+          )
+        },
+      )
       if (proxied !== null) {
         return proxied
       }

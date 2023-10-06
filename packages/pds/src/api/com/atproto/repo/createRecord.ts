@@ -35,13 +35,17 @@ export default function (server: Server, ctx: AppContext) {
       },
     ],
     handler: async ({ input, auth, req }) => {
-      const proxied = await proxy(ctx, auth.credentials, async (agent) => {
-        const result = await agent.api.com.atproto.repo.createRecord(
-          input.body,
-          authPassthru(req, true),
-        )
-        return resultPassthru(result)
-      })
+      const proxied = await proxy(
+        ctx,
+        auth.credentials.audience,
+        async (agent) => {
+          const result = await agent.api.com.atproto.repo.createRecord(
+            input.body,
+            authPassthru(req, true),
+          )
+          return resultPassthru(result)
+        },
+      )
       if (proxied !== null) {
         return proxied
       }

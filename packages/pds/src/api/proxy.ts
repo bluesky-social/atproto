@@ -6,16 +6,16 @@ import AppContext from '../context'
 
 export const proxy = async <T>(
   ctx: AppContext,
-  creds: { audience?: string },
+  pdsDid: string | null | undefined,
   fn: (agent: AtpAgent) => Promise<T>,
 ): Promise<T | null> => {
-  if (!creds.audience || creds.audience === ctx.cfg.service.did) {
-    return null // credentials are for this pds, skip proxying
+  if (isThisPds(ctx, pdsDid)) {
+    return null // skip proxying
   }
   const accountService = ctx.services.account(ctx.db)
-  const pds = await accountService.getPds(creds.audience)
+  const pds = pdsDid && (await accountService.getPds(pdsDid))
   if (!pds) {
-    throw new UpstreamFailureError('unknown pds in credentials')
+    throw new UpstreamFailureError('unknown pds')
   }
   // @TODO reuse agents
   const agent = new AtpAgent({ service: `https://${pds.host}` })
@@ -38,24 +38,10 @@ export const proxy = async <T>(
   }
 }
 
-export const proxyUnauthed = async <T>(
+export const isThisPds = (
   ctx: AppContext,
-  pdsDid: string | null,
-  fn: (agent: AtpAgent) => Promise<T>,
-): Promise<T | null> => {
-  if (isThisPds(ctx, pdsDid)) {
-    return null // credentials are for this pds, skip proxying
-  }
-  const accountService = ctx.services.account(ctx.db)
-  const pds = pdsDid && (await accountService.getPds(pdsDid))
-  if (!pds) {
-    throw new UpstreamFailureError('unknown pds')
-  }
-  const agent = new AtpAgent({ service: `https://${pds.host}` })
-  return fn(agent)
-}
-
-export const isThisPds = (ctx: AppContext, pdsDid: string | null) => {
+  pdsDid: string | null | undefined,
+) => {
   return !pdsDid || pdsDid === ctx.cfg.service.did
 }
 
