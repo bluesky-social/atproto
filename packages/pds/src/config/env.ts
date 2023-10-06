@@ -43,8 +43,6 @@ export const readEnv = (): ServerEnvironment => {
     // subscription
     maxSubscriptionBuffer: envInt('PDS_MAX_SUBSCRIPTION_BUFFER'),
     repoBackfillLimitMs: envInt('PDS_REPO_BACKFILL_LIMIT_MS'),
-    sequencerLeaderEnabled: envBool('PDS_SEQUENCER_LEADER_ENABLED'),
-    sequencerLeaderLockId: envInt('PDS_SEQUENCER_LEADER_LOCK_ID'),
 
     // appview
     bskyAppViewUrl: envStr('PDS_BSKY_APP_VIEW_URL'),
@@ -126,8 +124,6 @@ export type ServerEnvironment = {
   // subscription
   maxSubscriptionBuffer?: number
   repoBackfillLimitMs?: number
-  sequencerLeaderEnabled?: boolean
-  sequencerLeaderLockId?: number
 
   // appview
   bskyAppViewUrl?: string

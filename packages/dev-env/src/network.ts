@@ -44,9 +44,6 @@ export class TestNetwork extends TestNetworkNoAppView {
     })
     const pds = await TestPds.create({
       port: pdsPort,
-      dbPostgresUrl,
-      dbPostgresSchema,
-      dbPostgresPoolSize: 5,
       didPlcUrl: plc.url,
       bskyAppViewUrl: bsky.url,
       bskyAppViewDid: bsky.ctx.cfg.serverDid,
@@ -65,14 +62,8 @@ export class TestNetwork extends TestNetworkNoAppView {
     const start = Date.now()
     while (Date.now() - start < timeout) {
       await wait(50)
-      if (!this.pds.ctx.sequencerLeader) {
-        throw new Error('Sequencer leader not configured on the pds')
-      }
-      const caughtUp = await this.pds.ctx.sequencerLeader.isCaughtUp()
-      if (!caughtUp) continue
       const { lastSeq } = await db
         .selectFrom('repo_seq')
-        .where('seq', 'is not', null)
         .select(db.fn.max('repo_seq.seq').as('lastSeq'))
         .executeTakeFirstOrThrow()
       const { cursor } = sub.partitions.get(0)

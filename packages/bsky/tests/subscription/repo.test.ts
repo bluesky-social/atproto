@@ -103,7 +103,6 @@ describe('sync', () => {
       email: 'jack@test.com',
       password: 'password',
     })
-    await network.pds.ctx.sequencerLeader?.isCaughtUp()
     await network.processAll()
     // confirm jack was indexed as an actor despite the bad event
     const actors = await dumpTable(ctx.db.getPrimary(), 'actor', ['did'])

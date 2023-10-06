@@ -120,8 +120,6 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const subscriptionCfg: ServerConfig['subscription'] = {
     maxBuffer: env.maxSubscriptionBuffer ?? 500,
     repoBackfillLimitMs: env.repoBackfillLimitMs ?? DAY,
-    sequencerLeaderEnabled: env.sequencerLeaderEnabled ?? true,
-    sequencerLeaderLockId: env.sequencerLeaderLockId ?? 1100,
   }
 
   if (!env.bskyAppViewUrl) {
@@ -240,8 +238,6 @@ export type EmailConfig = {
 export type SubscriptionConfig = {
   maxBuffer: number
   repoBackfillLimitMs: number
-  sequencerLeaderEnabled: boolean
-  sequencerLeaderLockId: number
 }
 
 export type RedisScratchConfig = {

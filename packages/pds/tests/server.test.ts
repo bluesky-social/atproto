@@ -5,12 +5,12 @@ import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import AtpAgent, { AtUri } from '@atproto/api'
 import { handler as errorHandler } from '../src/error'
 import basicSeed from './seeds/basic'
-import { Database } from '../src'
 import { randomStr } from '@atproto/crypto'
+import { ServiceDb } from '../src/service-db'
 
 describe('server', () => {
   let network: TestNetwork
-  let db: Database
+  let db: ServiceDb
   let agent: AtpAgent
   let sc: SeedClient
   let alice: string
@@ -139,9 +139,6 @@ describe('server', () => {
   })
 
   it('healthcheck fails when database is unavailable.', async () => {
-    // destroy to release lock & allow db to close
-    await network.pds.ctx.sequencerLeader?.destroy()
-
     await db.close()
     let error: AxiosError
     try {

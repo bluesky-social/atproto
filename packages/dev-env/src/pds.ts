@@ -7,7 +7,6 @@ import * as pds from '@atproto/pds'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { AtpAgent } from '@atproto/api'
 import { PdsConfig } from './types'
-import { uniqueLockId } from './util'
 import { getMigrator } from '@atproto/pds/src/service-db'
 
 const ADMIN_PASSWORD = 'admin-pass'
@@ -45,7 +44,6 @@ export class TestPds {
       triagePassword: TRIAGE_PASSWORD,
       jwtSecret: 'jwt-secret',
       serviceHandleDomains: ['.test'],
-      sequencerLeaderLockId: uniqueLockId(),
       bskyAppViewUrl: 'https://appview.invalid',
       bskyAppViewDid: 'did:example:invalid',
       bskyAppViewCdnUrlPattern: 'http://cdn.appview.com/%s/%s/%s',
