@@ -104,17 +104,20 @@ export default function (server: Server, ctx: AppContext) {
             .execute()
         }
 
-        const access = await ctx.auth.createAccessToken({ did })
-        const refresh = ctx.auth.createRefreshToken({ did })
-        await ctx.services.auth(dbTxn).grantRefreshToken(refresh.payload, null)
+        const [accessJwt, refreshJwt] = await Promise.all([
+          ctx.auth.createAccessToken({ did }),
+          ctx.auth.createRefreshToken({ did }),
+        ])
+        const refreshPayload = ctx.auth.decodeRefreshToken(refreshJwt)
+        await ctx.services.auth(dbTxn).grantRefreshToken(refreshPayload, null)
 
         // Setup repo root
         await repoTxn.createRepo(did, [], now)
 
         return {
           did,
-          accessJwt: access.jwt,
-          refreshJwt: refresh.jwt,
+          accessJwt,
+          refreshJwt,
         }
       })
 

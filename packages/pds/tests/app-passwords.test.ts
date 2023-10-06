@@ -1,6 +1,6 @@
+import * as jose from 'jose'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
-import * as jwt from 'jsonwebtoken'
 
 describe('app_passwords', () => {
   let network: TestNetworkNoAppView
@@ -44,9 +44,7 @@ describe('app_passwords', () => {
   })
 
   it('creates an access token for an app with a restricted scope', () => {
-    const decoded = jwt.decode(appAgent.session?.accessJwt ?? '', {
-      json: true,
-    })
+    const decoded = jose.decodeJwt(appAgent.session?.accessJwt ?? '')
     expect(decoded?.scope).toEqual('com.atproto.appPass')
   })
 
@@ -66,7 +64,7 @@ describe('app_passwords', () => {
     const attempt = appAgent.api.com.atproto.server.createAppPassword({
       name: 'another-one',
     })
-    await expect(attempt).rejects.toThrow('Token could not be verified')
+    await expect(attempt).rejects.toThrow('Bad token scope')
   })
 
   it('persists scope across refreshes', async () => {
@@ -93,15 +91,13 @@ describe('app_passwords', () => {
     )
 
     const attempt = appAgent.api.com.atproto.server.createAppPassword(
-      {
-        name: 'another-one',
-      },
+      { name: 'another-one' },
       {
         encoding: 'application/json',
         headers: { authorization: `Bearer ${session.data.accessJwt}` },
       },
     )
-    await expect(attempt).rejects.toThrow('Token could not be verified')
+    await expect(attempt).rejects.toThrow('Bad token scope')
   })
 
   it('lists available app-specific passwords', async () => {

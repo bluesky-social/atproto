@@ -156,6 +156,7 @@ export class AppContext {
       secrets.jwtSigningKey &&
       (await crypto.Secp256k1Keypair.import(
         secrets.jwtSigningKey.privateKeyHex,
+        { exportable: true },
       ))
 
     const auth = new ServerAuth({

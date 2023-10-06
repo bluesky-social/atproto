@@ -55,12 +55,16 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const access = await ctx.auth.createAccessToken({
-        did: user.did,
-        scope: appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
-      })
-      const refresh = ctx.auth.createRefreshToken({ did: user.did })
-      await authService.grantRefreshToken(refresh.payload, appPasswordName)
+      const [accessJwt, refreshJwt] = await Promise.all([
+        ctx.auth.createAccessToken({
+          did: user.did,
+          scope:
+            appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
+        }),
+        ctx.auth.createRefreshToken({ did: user.did }),
+      ])
+      const refreshPayload = ctx.auth.decodeRefreshToken(refreshJwt)
+      await authService.grantRefreshToken(refreshPayload, appPasswordName)
 
       return {
         encoding: 'application/json',
@@ -69,8 +73,8 @@ export default function (server: Server, ctx: AppContext) {
           handle: user.handle,
           email: user.email,
           emailConfirmed: !!user.emailConfirmedAt,
-          accessJwt: access.jwt,
-          refreshJwt: refresh.jwt,
+          accessJwt,
+          refreshJwt,
         },
       }
     },

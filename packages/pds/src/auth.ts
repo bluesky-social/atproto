@@ -1,18 +1,18 @@
+import * as assert from 'node:assert'
+import { KeyObject, createPrivateKey, createSecretKey } from 'node:crypto'
+import express from 'express'
+import KeyEncoder from 'key-encoder'
+import * as ui8 from 'uint8arrays'
+import * as jose from 'jose'
 import * as crypto from '@atproto/crypto'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import * as ui8 from 'uint8arrays'
-import express from 'express'
-import * as jwt from 'jsonwebtoken'
-import * as jose from 'jose'
 import AppContext from './context'
 import { softDeleted } from './db/util'
-import { KeyObject } from 'crypto'
-import * as c from 'crypto'
-import KeyEncoder from 'key-encoder'
-const keyEncoder = new KeyEncoder('secp256k1')
 
 const BEARER = 'Bearer '
 const BASIC = 'Basic '
+const SECP256K1_JWT = 'ES256K'
+const HMACSHA256_JWT = 'HS256'
 
 export type ServerAuthOpts = {
   jwtSecret: string
@@ -38,15 +38,16 @@ export type AuthToken = {
 export type RefreshToken = AuthToken & { jti: string }
 
 export class ServerAuth {
-  private _secret: string
-  private _signingKey?: crypto.Secp256k1Keypair
+  private _signingSecret: KeyObject
+  private _signingKeyPromise?: Promise<KeyObject>
   private _adminPass: string
   private _moderatorPass?: string
   private _triagePass?: string
 
   constructor(opts: ServerAuthOpts) {
-    this._secret = opts.jwtSecret
-    this._signingKey = opts.jwtSigningKey
+    this._signingSecret = createSecretKey(Buffer.from(opts.jwtSecret))
+    this._signingKeyPromise =
+      opts.jwtSigningKey && createPrivateKeyObject(opts.jwtSigningKey)
     this._adminPass = opts.adminPass
     this._moderatorPass = opts.moderatorPass
     this._triagePass = opts.triagePass
@@ -58,87 +59,73 @@ export class ServerAuth {
     expiresIn?: string | number
   }) {
     const { did, scope = AuthScope.Access, expiresIn = '120mins' } = opts
-    const payload = {
-      scope,
-      sub: did,
-    }
-    // jose.decodeJwt
-    const x = new jose.SignJWT({ scope })
-      .setProtectedHeader({ alg: 'ES256K' })
-      .setExpirationTime(expiresIn)
+
+    const signer = new jose.SignJWT({ scope })
       .setSubject(did)
-    if (this._signingKey) {
-      const key = c.createPrivateKey({
-        format: 'pem',
-        key: keyEncoder.encodePrivate(
-          Buffer.from(await this._signingKey.export()),
-          'raw',
-          'pem',
-        ),
-      })
-      const signed = await x.sign(key)
-      console.log(signed)
+      .setIssuedAt()
+      .setExpirationTime(expiresIn)
+
+    if (this._signingKeyPromise) {
+      const key = await this._signingKeyPromise
+      return signer.setProtectedHeader({ alg: SECP256K1_JWT }).sign(key)
+    } else {
+      const key = this._signingSecret
+      return signer.setProtectedHeader({ alg: HMACSHA256_JWT }).sign(key)
     }
-    // console.log(await x.sign())
-    const y = {
-      payload: payload as AuthToken, // exp set by sign()
-      jwt: jwt.sign(payload, this._secret, {
-        expiresIn: expiresIn,
-        mutatePayload: true,
-      }),
-    }
-    console.log(y)
-    return y
   }
 
-  createRefreshToken(opts: {
+  async createRefreshToken(opts: {
     did: string
     jti?: string
     expiresIn?: string | number
   }) {
     const { did, jti = getRefreshTokenId(), expiresIn = '90days' } = opts
-    const payload = {
-      scope: AuthScope.Refresh,
-      sub: did,
-      jti,
-    }
-    return {
-      payload: payload as RefreshToken, // exp set by sign()
-      jwt: jwt.sign(payload, this._secret, {
-        expiresIn: expiresIn,
-        mutatePayload: true,
-      }),
+
+    const signer = new jose.SignJWT({ scope: AuthScope.Refresh })
+      .setSubject(did)
+      .setJti(jti)
+      .setIssuedAt()
+      .setExpirationTime(expiresIn)
+
+    if (this._signingKeyPromise) {
+      const key = await this._signingKeyPromise
+      return signer.setProtectedHeader({ alg: SECP256K1_JWT }).sign(key)
+    } else {
+      const key = this._signingSecret
+      return signer.setProtectedHeader({ alg: HMACSHA256_JWT }).sign(key)
     }
   }
 
-  getCredentials(
+  // @NOTE unsafe for verification, should only be used w/ direct output from createRefreshToken()
+  decodeRefreshToken(jwt: string) {
+    const token = jose.decodeJwt(jwt)
+    assert.ok(token.scope === AuthScope.Refresh, 'not a refresh token')
+    return token as RefreshToken
+  }
+
+  async getCredentials(
     req: express.Request,
     scopes = [AuthScope.Access],
-  ): { did: string; scope: AuthScope } | null {
+  ): Promise<{ did: string; scope: AuthScope } | null> {
     const token = this.getToken(req)
     if (!token) return null
-    const payload = this.verifyToken(token, scopes)
+    const payload = await this.verifyToken(token, scopes)
     const sub = payload.sub
     if (typeof sub !== 'string' || !sub.startsWith('did:')) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
-    return { did: sub, scope: payload.scope }
+    return { did: sub, scope: payload.scope as AuthScope }
   }
 
-  getCredentialsOrThrow(
+  async getCredentialsOrThrow(
     req: express.Request,
     scopes: AuthScope[],
-  ): { did: string; scope: AuthScope } {
-    const creds = this.getCredentials(req, scopes)
+  ): Promise<{ did: string; scope: AuthScope }> {
+    const creds = await this.getCredentials(req, scopes)
     if (creds === null) {
       throw new AuthRequiredError(undefined, 'AuthMissing')
     }
     return creds
-  }
-
-  verifyUser(req: express.Request, did: string, scopes: AuthScope[]): boolean {
-    const authorized = this.getCredentials(req, scopes)
-    return authorized !== null && authorized.did === did
   }
 
   verifyRole(req: express.Request) {
@@ -166,22 +153,23 @@ export class ServerAuth {
     return header.slice(BEARER.length)
   }
 
-  verifyToken(
+  async verifyToken(
     token: string,
     scopes: AuthScope[],
-    options?: jwt.VerifyOptions,
-  ): jwt.JwtPayload {
+    options?: jose.JWTVerifyOptions,
+  ): Promise<jose.JWTPayload> {
+    const header = jose.decodeProtectedHeader(token)
+    let result: jose.JWTVerifyResult
     try {
-      const payload = jwt.verify(token, this._secret, options)
-      if (typeof payload === 'string' || 'signature' in payload) {
-        throw new InvalidRequestError('Malformed token', 'InvalidToken')
+      if (header.alg === SECP256K1_JWT && this._signingKeyPromise) {
+        const key = await this._signingKeyPromise
+        result = await jose.jwtVerify(token, key, options)
+      } else {
+        const key = this._signingSecret
+        result = await jose.jwtVerify(token, key, options)
       }
-      if (scopes.length > 0 && !scopes.includes(payload.scope)) {
-        throw new InvalidRequestError('Bad token scope', 'InvalidToken')
-      }
-      return payload
     } catch (err) {
-      if (err instanceof jwt.TokenExpiredError) {
+      if (err?.['code'] === 'ERR_JWT_EXPIRED') {
         throw new InvalidRequestError('Token has expired', 'ExpiredToken')
       }
       throw new InvalidRequestError(
@@ -189,6 +177,10 @@ export class ServerAuth {
         'InvalidToken',
       )
     }
+    if (scopes.length > 0 && !scopes.includes(result.payload.scope as any)) {
+      throw new InvalidRequestError('Bad token scope', 'InvalidToken')
+    }
+    return result.payload
   }
 
   toString(): string {
@@ -215,7 +207,7 @@ export const parseBasicAuth = (
 export const accessVerifier =
   (auth: ServerAuth) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
-    const creds = auth.getCredentialsOrThrow(ctx.req, [
+    const creds = await auth.getCredentialsOrThrow(ctx.req, [
       AuthScope.Access,
       AuthScope.AppPass,
     ])
@@ -228,7 +220,7 @@ export const accessVerifier =
 export const accessVerifierNotAppPassword =
   (auth: ServerAuth) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
-    const creds = auth.getCredentialsOrThrow(ctx.req, [AuthScope.Access])
+    const creds = await auth.getCredentialsOrThrow(ctx.req, [AuthScope.Access])
     return {
       credentials: creds,
       artifacts: auth.getToken(ctx.req),
@@ -238,7 +230,7 @@ export const accessVerifierNotAppPassword =
 export const accessVerifierCheckTakedown =
   (auth: ServerAuth, { db, services }: AppContext) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
-    const creds = auth.getCredentialsOrThrow(ctx.req, [
+    const creds = await auth.getCredentialsOrThrow(ctx.req, [
       AuthScope.Access,
       AuthScope.AppPass,
     ])
@@ -326,7 +318,7 @@ export const isUserOrAdmin = (
 export const refreshVerifier =
   (auth: ServerAuth) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
-    const creds = auth.getCredentialsOrThrow(ctx.req, [AuthScope.Refresh])
+    const creds = await auth.getCredentialsOrThrow(ctx.req, [AuthScope.Refresh])
     return {
       credentials: creds,
       artifacts: auth.getToken(ctx.req),
@@ -352,3 +344,13 @@ export enum AuthStatus {
   Invalid,
   Missing,
 }
+
+const createPrivateKeyObject = async (
+  privateKey: crypto.Secp256k1Keypair,
+): Promise<KeyObject> => {
+  const raw = await privateKey.export()
+  const key = keyEncoder.encodePrivate(ui8.toString(raw, 'hex'), 'raw', 'pem')
+  return createPrivateKey({ format: 'pem', key })
+}
+
+const keyEncoder = new KeyEncoder('secp256k1')
