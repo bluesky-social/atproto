@@ -5,7 +5,7 @@ import disposable from 'disposable-email'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.updateEmail({
-    auth: ctx.accessVerifierCheckTakedown,
+    auth: ctx.accessVerifierNotAppPassword,
     handler: async ({ auth, input }) => {
       const did = auth.credentials.did
       const { token, email } = input.body
