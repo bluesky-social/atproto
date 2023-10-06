@@ -50,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
       // if the provided did document is poorly setup, we throw
       const { did, plcOp } = await getDidAndPlcOp(ctx, handle, input.body)
 
-      const commit = await ctx.actorStore.transact(did, (actorTxn) => {
+      const commit = await ctx.actorStore.create(did, (actorTxn) => {
         return actorTxn.repo.createRepo([])
       })
 

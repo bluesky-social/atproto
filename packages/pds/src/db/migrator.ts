@@ -1,7 +1,7 @@
 import { Kysely, Migrator as KyselyMigrator, Migration } from 'kysely'
 
 export class Migrator<T> extends KyselyMigrator {
-  constructor(db: Kysely<T>, migrations: Record<string, Migration>) {
+  constructor(public db: Kysely<T>, migrations: Record<string, Migration>) {
     super({
       db,
       provider: {

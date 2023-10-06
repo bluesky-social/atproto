@@ -1,7 +1,7 @@
 import { AddressInfo } from 'net'
 import express from 'express'
 import axios, { AxiosError } from 'axios'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import AtpAgent, { AtUri } from '@atproto/api'
 import { handler as errorHandler } from '../src/error'
 import basicSeed from './seeds/basic'
@@ -9,14 +9,14 @@ import { randomStr } from '@atproto/crypto'
 import { ServiceDb } from '../src/service-db'
 
 describe('server', () => {
-  let network: TestNetwork
+  let network: TestNetworkNoAppView
   let db: ServiceDb
   let agent: AtpAgent
   let sc: SeedClient
   let alice: string
 
   beforeAll(async () => {
-    network = await TestNetwork.create({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'server',
       pds: {
         version: '0.0.0',

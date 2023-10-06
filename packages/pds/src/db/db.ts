@@ -18,16 +18,14 @@ export class Database<Schema> {
   constructor(public db: Kysely<Schema>) {}
 
   static sqlite<T>(location: string): Database<T> {
+    const sqliteDb = new SqliteDB(location)
+    sqliteDb.pragma('journal_mode = WAL')
     const db = new Kysely<T>({
       dialect: new SqliteDialect({
-        database: new SqliteDB(location),
+        database: sqliteDb,
       }),
     })
     return new Database(db)
-  }
-
-  protected createTxnInstance(txn: Kysely<Schema>): Database<Schema> {
-    return new Database(txn)
   }
 
   async transaction<T>(fn: (db: Database<Schema>) => Promise<T>): Promise<T> {
