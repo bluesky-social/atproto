@@ -70,7 +70,6 @@ export class ModerationViews {
         .execute(),
       this.db.db
         .selectFrom('moderation_action')
-        .where('reversedAt', 'is', null)
         .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
         .where(
           'subjectDid',
@@ -183,7 +182,6 @@ export class ModerationViews {
         .execute(),
       this.db.db
         .selectFrom('moderation_action')
-        .where('reversedAt', 'is', null)
         .where('subjectType', '=', 'com.atproto.repo.strongRef')
         .where(
           'subjectUri',
@@ -330,16 +328,6 @@ export class ModerationViews {
       negateLabelVals:
         res.negateLabelVals && res.negateLabelVals.length > 0
           ? res.negateLabelVals.split(' ')
-          : undefined,
-      reversal:
-        res.reversedAt !== null &&
-        res.reversedBy !== null &&
-        res.reversedReason !== null
-          ? {
-              createdAt: res.reversedAt,
-              createdBy: res.reversedBy,
-              reason: res.reversedReason,
-            }
           : undefined,
       resolvedReportIds: reportIdsByActionId[res.id] ?? [],
     }))
@@ -538,7 +526,6 @@ export class ModerationViews {
         .execute(),
       this.db.db
         .selectFrom('moderation_action')
-        .where('reversedAt', 'is', null)
         .innerJoin(
           'moderation_action_subject_blob as subject_blob',
           'subject_blob.actionId',

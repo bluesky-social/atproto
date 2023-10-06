@@ -44,9 +44,6 @@ export interface ModerationAction {
   comment: string | null
   createdAt: string
   createdBy: string
-  reversedAt: string | null
-  reversedBy: string | null
-  reversedReason: string | null
   durationInHours: number | null
   expiresAt: string | null
   refEventId: number | null

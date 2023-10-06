@@ -20,8 +20,8 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.getPrimary()
       const moderationService = ctx.services.moderation(db)
       const results = await moderationService.getSubjectStatuses({
-        subject,
         reviewState: getReviewState(reviewState),
+        subject,
         reviewedAfter,
         reviewedBefore,
         reportedAfter,
@@ -30,11 +30,15 @@ export default function (server: Server, ctx: AppContext) {
         limit,
         cursor,
       })
+      const subjectStatuses = await moderationService.views.subjectStatus(
+        results,
+      )
+      const newCursor = results.at(-1)?.id.toString() ?? undefined
       return {
         encoding: 'application/json',
         body: {
-          cursor: results.at(-1)?.id.toString() ?? undefined,
-          subjectStatuses: await moderationService.views.subjectStatus(results),
+          cursor: newCursor,
+          subjectStatuses,
         },
       }
     },

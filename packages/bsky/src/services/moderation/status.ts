@@ -1,5 +1,6 @@
 // This may require better organization but for now, just dumping functions here containing DB queries for moderation status
 
+import { AtUri } from '@atproto/syntax'
 import { PrimaryDatabase } from '../../db'
 import {
   ModerationEvent,
@@ -36,7 +37,7 @@ const getSubjectStatusForModerationEvent = ({
 }: {
   action: string
   durationInHours: number | null
-}): Partial<ModerationSubjectStatusRow> => {
+}): Partial<ModerationSubjectStatusRow> | null => {
   switch (action) {
     case ACKNOWLEDGE:
       return {
@@ -53,14 +54,28 @@ const getSubjectStatusForModerationEvent = ({
         reviewState: REVIEWESCALATED,
         lastReviewedAt: new Date().toISOString(),
       }
+    // REVERT can only come through when a revert event is emitted but there are no status impacting event
+    // before it. In which case, we will default to REVIEWCLOSED
     case REVERT:
-      return {}
+      return {
+        reviewState: REVIEWCLOSED,
+        lastReviewedAt: new Date().toISOString(),
+      }
     case TAKEDOWN:
-      return { takendown: true, lastReviewedAt: new Date().toISOString() }
+      return {
+        takendown: true,
+        reviewState: REVIEWCLOSED,
+        lastReviewedAt: new Date().toISOString(),
+      }
     case MUTE:
-      return { muteUntil: new Date().toISOString() }
+      return {
+        // By default, mute for 24hrs
+        muteUntil: new Date(
+          Date.now() + (durationInHours || 24) * 60 * 60 * 1000,
+        ).toISOString(),
+      }
     default:
-      return {}
+      return null
   }
 }
 
@@ -80,19 +95,15 @@ export const adjustModerationSubjectStatus = async (
     | 'refEventId'
   >,
 ) => {
-  const {
-    action,
-    subjectType,
-    subjectDid,
-    subjectUri,
-    subjectCid,
-    refEventId,
-  } = moderationEvent
+  const { action, subjectDid, subjectUri, subjectCid, refEventId } =
+    moderationEvent
 
   let actionForStatusMapping = {
     action,
     durationInHours: moderationEvent.durationInHours,
   }
+  // TODO: Ugghhh hate this
+  let revertingEvent: ModerationEventRow | undefined | Record<string, unknown>
 
   // For all events, we would want to map the new status based on the event itself
   // However, for revert events, they will be pointing to a previous event that needs to be reverted
@@ -101,11 +112,18 @@ export const adjustModerationSubjectStatus = async (
   // TODO: We may need more here. For instance, if we're reverting a post takedown but since the takedown, we adjusted
   // labels on the post, does the takedown reversal mean those labels added AFTER the takedown should be reverted as well?
   if (action === REVERT && refEventId) {
-    const lastActionImpactingStatus = await getPreviousStatusForReversal(
-      db,
-      moderationEvent,
-    )
+    const [lastActionImpactingStatus, refEvent] = await Promise.all([
+      getPreviousStatusForReversal(db, moderationEvent),
+      db.db
+        .selectFrom('moderation_event')
+        .where('id', '=', refEventId)
+        .selectAll()
+        .executeTakeFirst(),
+    ])
+    revertingEvent = refEvent
 
+    // If the action being reverted does not have a previously known/status impacting action,
+    // passing revert itself will default to state to reviewclosed
     if (lastActionImpactingStatus) {
       actionForStatusMapping = {
         action: lastActionImpactingStatus.action,
@@ -123,49 +141,67 @@ export const adjustModerationSubjectStatus = async (
   }
 
   const now = new Date().toISOString()
-  const identifier =
-    subjectType === 'com.atproto.admin.defs#repoRef'
-      ? { did: subjectDid }
-      : { recordPath: subjectUri, recordCid: subjectCid } // TODO: Build the recordPath properly here
+  // If subjectUri exists, it's not a repoRef so pass along the uri to get identifier back
+  const identifier = getStatusIdentifierFromSubject(subjectUri || subjectDid)
+
+  // Set these because we don't want to override them if they're already set
   const defaultData = {
     note: null,
     reviewState: null,
+    recordCid: subjectCid || null,
   }
-  // TODO: fix this?
-  // @ts-ignore
-  return db.db
+  const newStatus = {
+    ...defaultData,
+    ...subjectStatus,
+    ...identifier,
+    createdAt: now,
+    updatedAt: now,
+    // TODO: fix this?
+    // @ts-ignore
+  } as ModerationSubjectStatusRow
+
+  // If the event being reverted is a takedown event and the new status
+  // also doesn't settle on takendown revert back the takendown flag
+  if (revertingEvent?.action === TAKEDOWN && !subjectStatus.takendown) {
+    newStatus.takendown = false
+    subjectStatus.takendown = false
+  }
+
+  const insertQuery = db.db
     .insertInto('moderation_subject_status')
-    .values({
-      ...identifier,
-      ...defaultData,
-      ...subjectStatus,
-      createdAt: now,
-      updatedAt: now,
-    })
+    .values(newStatus)
     .onConflict((oc) =>
-      oc.constraint('moderation_subject_status_unique_key').doUpdateSet({
+      oc.constraint('did_record_path_unique_idx').doUpdateSet({
         ...subjectStatus,
         updatedAt: now,
       }),
     )
-    .executeTakeFirst()
+
+  const status = await insertQuery.executeTakeFirst()
+  return status
 }
 
-// TODO: The builder probably needs to handle null cases
+type ModerationSubjectStatusFilter =
+  | Pick<ModerationSubjectStatus, 'did'>
+  | Pick<ModerationSubjectStatus, 'did' | 'recordPath'>
+  | Pick<ModerationSubjectStatus, 'did' | 'recordPath' | 'recordCid'>
 export const getModerationSubjectStatus = async (
   db: PrimaryDatabase,
-  {
-    did,
-    recordPath,
-    recordCid,
-  }: Pick<ModerationSubjectStatus, 'did' | 'recordPath' | 'recordCid'>,
+  filters: ModerationSubjectStatusFilter,
 ) => {
-  return db.db
+  let builder = db.db
     .selectFrom('moderation_subject_status')
-    .where('did', '=', did)
-    .where('recordPath', '=', recordPath)
-    .where('recordCid', '=', recordCid)
-    .executeTakeFirst()
+    // DID will always be passed at the very least
+    .where('did', '=', filters.did)
+    .where('recordPath', '=', 'recordPath' in filters ? filters.recordPath : '')
+
+  if ('recordCid' in filters) {
+    builder = builder.where('recordCid', '=', filters.recordCid)
+  } else {
+    builder = builder.where('recordCid', 'is', null)
+  }
+
+  return builder.executeTakeFirst()
 }
 
 /**
@@ -191,25 +227,46 @@ export const getPreviousStatusForReversal = async (
   if (!moderationEvent.refEventId) {
     return null
   }
-  const lastActionImpactingStatus = await db.db
+  const lastActionImpactingStatusQuery = db.db
     .selectFrom('moderation_event')
     .where('id', '<', moderationEvent.refEventId)
     .where('subjectType', '=', moderationEvent.subjectType)
-    .where('subjectCid', '=', moderationEvent.subjectCid)
-    .where('subjectDid', '=', moderationEvent.subjectDid)
-    .where('subjectUri', '=', moderationEvent.subjectUri)
-    .where('action', '!=', REVERT)
+    .where((qb) => {
+      if (moderationEvent.subjectType === 'com.atproto.admin.defs#repoRef') {
+        return qb
+          .where('subjectDid', '=', moderationEvent.subjectDid)
+          .where('subjectUri', 'is', null)
+          .where('subjectCid', 'is', null)
+      }
+
+      return qb
+        .where('subjectUri', '=', moderationEvent.subjectUri)
+        .where('subjectCid', '=', moderationEvent.subjectCid)
+    })
     .where(
       'action',
       'in',
-      // TODO: wait, why doesn't TS like this? this is string[] right?
-      // @ts-ignore
-      actionTypesImpactingStatus,
+      actionTypesImpactingStatus.filter(
+        (status) => status !== REVERT,
+      ) as ModerationEventRow['action'][],
     )
     // Make sure we get the last action event that impacted the status
     .orderBy('id', 'desc')
     .select('action')
-    .executeTakeFirst()
 
-  return lastActionImpactingStatus
+  return lastActionImpactingStatusQuery.executeTakeFirst()
+}
+
+export const getStatusIdentifierFromSubject = (subject: string | AtUri) => {
+  if (typeof subject === 'string' && subject.startsWith('did:')) {
+    return {
+      did: subject,
+    }
+  }
+
+  const uri = typeof subject === 'string' ? new AtUri(subject) : subject
+  return {
+    did: uri.host,
+    recordPath: `${uri.collection}/${uri.rkey}`,
+  }
 }

@@ -1,4 +1,4 @@
-import { Kysely } from 'kysely'
+import { Kysely, sql } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
@@ -28,7 +28,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
     // Identifiers
     .addColumn('did', 'varchar', (col) => col.notNull())
-    .addColumn('recordPath', 'varchar')
+    // Default to '' so that we can apply unique constraints on did and recordPath columns
+    .addColumn('recordPath', 'varchar', (col) => col.notNull().defaultTo(''))
     .addColumn('recordCid', 'varchar')
 
     // human review team state
@@ -47,13 +48,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     // timestamps
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('updatedAt', 'varchar', (col) => col.notNull())
-
-    // indices
-    .addUniqueConstraint('moderation_subject_status_unique_key', [
-      'did',
-      'recordPath',
-      'recordCid',
-    ])
+    .addUniqueConstraint('did_record_path_unique_idx', ['did', 'recordPath'])
     .execute()
 }
 

@@ -96,7 +96,6 @@ export async function resolveBlob(
       )
       .where('cid', '=', cidStr)
       .where('action', '=', TAKEDOWN)
-      .where('reversedAt', 'is', null)
       .executeTakeFirst(),
   ])
   if (takedown) {

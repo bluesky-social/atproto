@@ -15,7 +15,10 @@ import {
   TAKEDOWN,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { addHoursToDate } from '../../util/date'
-import { adjustModerationSubjectStatus } from './status'
+import {
+  adjustModerationSubjectStatus,
+  getStatusIdentifierFromSubject,
+} from './status'
 import {
   ModerationEventRow,
   ModerationSubjectStatusRow,
@@ -109,10 +112,7 @@ export class ModerationService {
     subject: { did: string } | { uri: AtUri } | { cids: CID[] },
   ) {
     const { ref } = this.db.db.dynamic
-    let builder = this.db.db
-      .selectFrom('moderation_event')
-      .selectAll()
-      .where('reversedAt', 'is', null)
+    let builder = this.db.db.selectFrom('moderation_event').selectAll()
     if ('did' in subject) {
       builder = builder
         .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
@@ -214,56 +214,12 @@ export class ModerationService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    if (subjectBlobCids?.length && !('did' in subject)) {
-      await this.db.db
-        .insertInto('moderation_action_subject_blob')
-        .values(
-          subjectBlobCids.map((cid) => ({
-            actionId: actionResult.id,
-            cid: cid.toString(),
-          })),
-        )
-        .execute()
-    }
-
+    // TODO: This shouldn't be in try/catch, for debugging only
     try {
       await adjustModerationSubjectStatus(this.db, actionResult)
     } catch (err) {
       console.error(err)
     }
-
-    // if ([ACKNOWLEDGE, TAKEDOWN, FLAG, ESCALATE].includes(action)) {
-    //   const reportIdsToBeResolved = await getReportIdsToBeResolved(
-    //     this.db,
-    //     subjectInfo,
-    //   )
-    // TODO: We don't need to keep track of individual report resolutions
-    // if (reportIdsToBeResolved.length) {
-    //   try {
-    //     await this.resolveReports({
-    //       reportIds: reportIdsToBeResolved,
-    //       actionId: actionResult.id,
-    //       createdBy: actionResult.createdBy,
-    //     })
-    //   } catch (err) {
-    //     console.error(err)
-    //   }
-    // }
-    // }
-    // if (action === REVERT) {
-    // TODO: We don't need to keep track of individual report resolutions
-    // const reportIdsToBeResolved = await getReportIdsToBeResolved(
-    //   this.db,
-    //   subjectInfo,
-    // )
-    // if (reportIdsToBeResolved.length) {
-    //   await this.resolveReports({
-    //     reportIds: reportIdsToBeResolved,
-    //     actionId: actionResult.id,
-    //     createdBy: actionResult.createdBy,
-    //   })
-    // }
-    // }
 
     return actionResult
   }
@@ -273,7 +229,6 @@ export class ModerationService {
       .selectFrom('moderation_event')
       .where('durationInHours', 'is not', null)
       .where('expiresAt', '<', new Date().toISOString())
-      .where('reversedAt', 'is', null)
       .selectAll()
       .execute()
 
@@ -422,12 +377,14 @@ export class ModerationService {
     let builder = this.db.db.selectFrom('moderation_subject_status')
 
     if (subject) {
-      builder = builder.where((qb) => {
-        return qb
-          .where('did', '=', subject)
-          .orWhere('recordPath', '=', subject)
-          .orWhere('recordCid', '=', subject)
-      })
+      const subjectInfo = getStatusIdentifierFromSubject(subject)
+      builder = builder
+        .where('did', '=', subjectInfo.did)
+        .where((qb) =>
+          subjectInfo.recordPath
+            ? qb.where('recordPath', '=', subjectInfo.recordPath)
+            : qb.where('recordPath', '=', ''),
+        )
     }
 
     if (reviewState) {
@@ -451,7 +408,11 @@ export class ModerationService {
     }
 
     if (!includeMuted) {
-      builder = builder.where('muteUntil', '<', new Date().toISOString())
+      builder = builder.where((qb) =>
+        qb
+          .where('muteUntil', '<', new Date().toISOString())
+          .orWhere('muteUntil', 'is', null),
+      )
     }
 
     if (cursor) {
@@ -462,6 +423,8 @@ export class ModerationService {
       builder = builder.where('id', '<', cursorNumeric)
     }
 
+    // console.log(builder.limit(limit).selectAll().compile())
+    // builder.limit(limit).selectAll().execute().then(console.log)
     const results = await builder.limit(limit).selectAll().execute()
     return results
   }

@@ -67,10 +67,6 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
-          reversal: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionReversal',
-          },
           meta: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#actionMeta',
@@ -145,10 +141,6 @@ export const schemaDict = {
           createdAt: {
             type: 'string',
             format: 'datetime',
-          },
-          reversal: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionReversal',
           },
           resolvedReports: {
             type: 'array',
@@ -316,14 +308,7 @@ export const schemaDict = {
       },
       subjectStatusView: {
         type: 'object',
-        required: [
-          'id',
-          'subject',
-          'createdAt',
-          'updatedAt',
-          'reviewState',
-          'note',
-        ],
+        required: ['id', 'subject', 'createdAt', 'updatedAt', 'reviewState'],
         properties: {
           id: {
             type: 'integer',
@@ -345,7 +330,7 @@ export const schemaDict = {
           },
           reviewState: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#subjectStatusType',
+            ref: 'lex:com.atproto.admin.defs#subjectReviewState',
           },
           note: {
             type: 'string',
@@ -918,7 +903,7 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminGetModerationActions: {
+  ComAtprotoAdminGetModerationEvents: {
     lexicon: 1,
     id: 'com.atproto.admin.getModerationEvents',
     defs: {
@@ -7475,7 +7460,7 @@ export const ids = {
   ComAtprotoAdminEnableAccountInvites: 'com.atproto.admin.enableAccountInvites',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
   ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationAction',
-  ComAtprotoAdminGetModerationActions: 'com.atproto.admin.getModerationEvents',
+  ComAtprotoAdminGetModerationEvents: 'com.atproto.admin.getModerationEvents',
   ComAtprotoAdminGetModerationReport: 'com.atproto.admin.getModerationReport',
   ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',
   ComAtprotoAdminGetModerationStatuses:

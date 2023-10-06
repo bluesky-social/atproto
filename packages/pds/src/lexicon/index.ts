@@ -14,7 +14,7 @@ import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/di
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
-import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationEvents'
+import * as ComAtprotoAdminGetModerationEvents from './types/com/atproto/admin/getModerationEvents'
 import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
 import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 import * as ComAtprotoAdminGetModerationStatuses from './types/com/atproto/admin/getModerationStatuses'
@@ -256,8 +256,8 @@ export class AdminNS {
   getModerationEvents<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ComAtprotoAdminGetModerationActions.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminGetModerationActions.HandlerReqCtx<ExtractAuth<AV>>
+      ComAtprotoAdminGetModerationEvents.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminGetModerationEvents.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
     const nsid = 'com.atproto.admin.getModerationEvents' // @ts-ignore

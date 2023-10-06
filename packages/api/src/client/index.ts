@@ -13,7 +13,7 @@ import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/di
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
-import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationEvents'
+import * as ComAtprotoAdminGetModerationEvents from './types/com/atproto/admin/getModerationEvents'
 import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
 import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 import * as ComAtprotoAdminGetModerationStatuses from './types/com/atproto/admin/getModerationStatuses'
@@ -145,7 +145,7 @@ export * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/di
 export * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 export * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 export * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
-export * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationEvents'
+export * as ComAtprotoAdminGetModerationEvents from './types/com/atproto/admin/getModerationEvents'
 export * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
 export * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 export * as ComAtprotoAdminGetModerationStatuses from './types/com/atproto/admin/getModerationStatuses'
@@ -423,13 +423,13 @@ export class AdminNS {
   }
 
   getModerationEvents(
-    params?: ComAtprotoAdminGetModerationActions.QueryParams,
-    opts?: ComAtprotoAdminGetModerationActions.CallOptions,
-  ): Promise<ComAtprotoAdminGetModerationActions.Response> {
+    params?: ComAtprotoAdminGetModerationEvents.QueryParams,
+    opts?: ComAtprotoAdminGetModerationEvents.CallOptions,
+  ): Promise<ComAtprotoAdminGetModerationEvents.Response> {
     return this._service.xrpc
       .call('com.atproto.admin.getModerationEvents', params, undefined, opts)
       .catch((e) => {
-        throw ComAtprotoAdminGetModerationActions.toKnownErr(e)
+        throw ComAtprotoAdminGetModerationEvents.toKnownErr(e)
       })
   }
 

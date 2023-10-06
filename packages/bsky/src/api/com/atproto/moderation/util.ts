@@ -11,6 +11,8 @@ import {
   REVERT,
   COMMENT,
   MUTE,
+  LABEL,
+  REPORT,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import {
   REASONOTHER,
@@ -37,8 +39,9 @@ export const getSubject = (subject: SubjectInput) => {
     typeof subject.uri === 'string' &&
     typeof subject.cid === 'string'
   ) {
+    const uri = new AtUri(subject.uri)
     return {
-      uri: new AtUri(subject.uri),
+      uri,
       cid: CID.parse(subject.cid),
     }
   }
@@ -62,8 +65,10 @@ export const getAction = (action: ActionInput['action']) => {
     action === FLAG ||
     action === ACKNOWLEDGE ||
     action === REVERT ||
+    action === LABEL ||
     action === MUTE ||
     action === COMMENT ||
+    action === REPORT ||
     action === ESCALATE
   ) {
     return action as ModerationEvent['action']

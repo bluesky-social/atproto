@@ -164,9 +164,11 @@ export class ModerationService {
         )
 
       if (actionType) {
-        resolutionActionsQuery = resolutionActionsQuery
-          .where('moderation_action.action', '=', sql`${actionType}`)
-          .where('moderation_action.reversedAt', 'is', null)
+        resolutionActionsQuery = resolutionActionsQuery.where(
+          'moderation_action.action',
+          '=',
+          sql`${actionType}`,
+        )
       }
 
       if (actionedBy) {
@@ -206,10 +208,7 @@ export class ModerationService {
     subject: { did: string } | { uri: AtUri } | { cids: CID[] },
   ) {
     const { ref } = this.db.db.dynamic
-    let builder = this.db.db
-      .selectFrom('moderation_action')
-      .selectAll()
-      .where('reversedAt', 'is', null)
+    let builder = this.db.db.selectFrom('moderation_action').selectAll()
     if ('did' in subject) {
       builder = builder
         .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
@@ -360,7 +359,6 @@ export class ModerationService {
       // Get entries that have an durationInHours that has passed and have not been reversed
       .where('durationInHours', 'is not', null)
       .where('expiresAt', '<', new Date().toISOString())
-      .where('reversedAt', 'is', null)
       .selectAll()
       .execute()
 
@@ -420,9 +418,9 @@ export class ModerationService {
       .updateTable('moderation_action')
       .where('id', '=', id)
       .set({
-        reversedAt: createdAt.toISOString(),
-        reversedBy: createdBy,
-        reversedReason: reason,
+        // reversedAt: createdAt.toISOString(),
+        // reversedBy: createdBy,
+        // reversedReason: reason,
       })
       .returningAll()
       .executeTakeFirst()

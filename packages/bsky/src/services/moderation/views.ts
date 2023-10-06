@@ -57,7 +57,6 @@ export class ModerationViews {
         .execute(),
       this.db.db
         .selectFrom('moderation_event')
-        .where('reversedAt', 'is', null)
         .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
         .where(
           'subjectDid',
@@ -142,16 +141,6 @@ export class ModerationViews {
         res.negateLabelVals && res.negateLabelVals.length > 0
           ? res.negateLabelVals.split(' ')
           : undefined,
-      reversal:
-        res.reversedAt !== null &&
-        res.reversedBy !== null &&
-        res.reversedReason !== null
-          ? {
-              createdAt: res.reversedAt,
-              createdBy: res.reversedBy,
-              reason: res.reversedReason,
-            }
-          : undefined,
     }))
 
     return Array.isArray(result) ? views : views[0]
@@ -189,7 +178,6 @@ export class ModerationViews {
         .execute(),
       this.db.db
         .selectFrom('moderation_event')
-        .where('reversedAt', 'is', null)
         .where('subjectType', '=', 'com.atproto.repo.strongRef')
         .where(
           'subjectUri',
@@ -337,7 +325,6 @@ export class ModerationViews {
     if (!blobs.length) return []
     const actionResults = await this.db.db
       .selectFrom('moderation_event')
-      .where('reversedAt', 'is', null)
       .innerJoin(
         'moderation_action_subject_blob as subject_blob',
         'subject_blob.actionId',
@@ -402,7 +389,17 @@ export class ModerationViews {
     if (results.length === 0) return []
 
     const decoratedSubjectStatuses = results.map((subjectStatus) => ({
-      ...subjectStatus,
+      id: subjectStatus.id,
+      reviewState: subjectStatus.reviewState,
+      createdAt: subjectStatus.createdAt,
+      updatedAt: subjectStatus.updatedAt,
+      // TODO: not a fan of this TS BS but gotta move on now
+      note: subjectStatus.note ?? undefined,
+      lastReviewedAt: subjectStatus.lastReviewedAt ?? undefined,
+      lastReportedAt: subjectStatus.lastReportedAt ?? undefined,
+      muteUntil: subjectStatus.muteUntil ?? undefined,
+      suspendUntil: subjectStatus.suspendUntil ?? undefined,
+      takendown: subjectStatus.takendown ?? undefined,
       subject: !subjectStatus.recordPath
         ? {
             $type: 'com.atproto.admin.defs#repoRef',
@@ -410,13 +407,16 @@ export class ModerationViews {
           }
         : {
             $type: 'com.atproto.repo.strongRef',
-            uri: subjectStatus.recordPath,
+            uri: AtUri.make(
+              subjectStatus.did,
+              // Not too intuitive but the recordpath is basically <collection>/<rkey>
+              // which is what the last 2 params of .make() arguments are
+              ...subjectStatus.recordPath.split('/'),
+            ).toString(),
             cid: subjectStatus.recordCid,
           },
     }))
 
-    // TODO: This is a hack to get the subject status to compile
-    // @ts-ignore
     return Array.isArray(results)
       ? decoratedSubjectStatuses
       : decoratedSubjectStatuses[0]

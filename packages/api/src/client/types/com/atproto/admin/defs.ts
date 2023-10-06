@@ -25,7 +25,6 @@ export interface ActionView {
   comment?: string
   createdBy: string
   createdAt: string
-  reversal?: ActionReversal
   meta?: ActionMeta
   resolvedReportIds?: number[]
   [k: string]: unknown
@@ -60,7 +59,6 @@ export interface ActionViewDetail {
   comment?: string
   createdBy: string
   createdAt: string
-  reversal?: ActionReversal
   resolvedReports: ReportView[]
   [k: string]: unknown
 }
@@ -200,7 +198,7 @@ export interface SubjectStatusView {
   updatedAt: string
   createdAt: string
   reviewState: SubjectReviewState
-  note: string
+  note?: string
   muteUntil?: string
   lastReviewedAt?: string
   lastReportedAt?: string

@@ -29,7 +29,6 @@
         "comment": { "type": "string" },
         "createdBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" },
-        "reversal": { "type": "ref", "ref": "#actionReversal" },
         "meta": { "type": "ref", "ref": "#actionMeta" },
         "resolvedReportIds": { "type": "array", "items": { "type": "integer" } }
       }
@@ -70,7 +69,6 @@
         "comment": { "type": "string" },
         "createdBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" },
-        "reversal": { "type": "ref", "ref": "#actionReversal" },
         "resolvedReports": {
           "type": "array",
           "items": { "type": "ref", "ref": "#reportView" }
@@ -189,14 +187,7 @@
     },
     "subjectStatusView": {
       "type": "object",
-      "required": [
-        "id",
-        "subject",
-        "createdAt",
-        "updatedAt",
-        "reviewState",
-        "note"
-      ],
+      "required": ["id", "subject", "createdAt", "updatedAt", "reviewState"],
       "properties": {
         "id": { "type": "integer" },
         "subject": {
@@ -207,7 +198,7 @@
         "createdAt": { "type": "string", "format": "datetime" },
         "reviewState": {
           "type": "ref",
-          "ref": "#subjectStatusType"
+          "ref": "#subjectReviewState"
         },
         "note": {
           "type": "string"
