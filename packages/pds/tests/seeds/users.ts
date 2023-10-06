@@ -22,7 +22,7 @@ export default async (sc: SeedClient, invite?: { code: string }) => {
   return sc
 }
 
-const users = {
+export const users = {
   alice: {
     email: 'alice@test.com',
     handle: 'alice.test',
