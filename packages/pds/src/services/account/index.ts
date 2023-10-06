@@ -22,6 +22,7 @@ export class AccountService {
     return (db: Database) => new AccountService(db)
   }
 
+  // @TODO decouple account from repo_root, move takedownId.
   async getAccount(
     handleOrDid: string,
     includeSoftDeleted = false,

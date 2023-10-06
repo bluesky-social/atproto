@@ -15,7 +15,7 @@ import {
 } from '../../../../repo'
 import AppContext from '../../../../context'
 import { ConcurrentWriteError } from '../../../../services/repo'
-import { proxy, authPassthru } from '../../../proxy'
+import { proxy, authPassthru, ensureThisPds } from '../../../proxy'
 
 const ratelimitPoints = ({ input }: { input: HandlerInput }) => {
   let points = 0
@@ -60,11 +60,14 @@ export default function (server: Server, ctx: AppContext) {
 
       const tx = input.body
       const { repo, validate, swapCommit } = tx
-      const did = await ctx.services.account(ctx.db).getDidForActor(repo)
-
-      if (!did) {
+      const account = await ctx.services.account(ctx.db).getAccount(repo)
+      if (!account) {
         throw new InvalidRequestError(`Could not find repo: ${repo}`)
       }
+
+      const { did, pdsDid } = account
+      ensureThisPds(ctx, pdsDid)
+
       if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
       }

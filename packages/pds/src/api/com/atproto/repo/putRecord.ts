@@ -12,7 +12,12 @@ import {
   PreparedUpdate,
 } from '../../../../repo'
 import { ConcurrentWriteError } from '../../../../services/repo'
-import { proxy, resultPassthru, authPassthru } from '../../../proxy'
+import {
+  proxy,
+  resultPassthru,
+  authPassthru,
+  ensureThisPds,
+} from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
@@ -50,11 +55,14 @@ export default function (server: Server, ctx: AppContext) {
         swapCommit,
         swapRecord,
       } = input.body
-      const did = await ctx.services.account(ctx.db).getDidForActor(repo)
-
-      if (!did) {
+      const account = await ctx.services.account(ctx.db).getAccount(repo)
+      if (!account) {
         throw new InvalidRequestError(`Could not find repo: ${repo}`)
       }
+
+      const { did, pdsDid } = account
+      ensureThisPds(ctx, pdsDid)
+
       if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
       }
