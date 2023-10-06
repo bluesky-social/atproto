@@ -12,6 +12,7 @@ import AppContext from '../../../../context'
 import { ids } from '../../../../lexicon/lexicons'
 import Database from '../../../../db'
 import { ConcurrentWriteError } from '../../../../services/repo'
+import { proxy, resultPassthru, authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.createRecord({
@@ -28,7 +29,18 @@ export default function (server: Server, ctx: AppContext) {
         calcPoints: () => 3,
       },
     ],
-    handler: async ({ input, auth }) => {
+    handler: async ({ input, auth, req }) => {
+      const proxied = await proxy(ctx, auth.credentials, async (agent) => {
+        const result = await agent.api.com.atproto.repo.createRecord(
+          input.body,
+          authPassthru(req, true),
+        )
+        return resultPassthru(result)
+      })
+      if (proxied !== null) {
+        return proxied
+      }
+
       const { repo, collection, rkey, record, swapCommit, validate } =
         input.body
       const did = await ctx.services.account(ctx.db).getDidForActor(repo)

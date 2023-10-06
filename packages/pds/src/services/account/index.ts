@@ -594,6 +594,15 @@ export class AccountService {
       await this.db.db.insertInto('user_pref').values(putPrefs).execute()
     }
   }
+
+  // @TODO cache w/ in-mem lookup
+  async getPds(pdsDid: string) {
+    return await this.db.db
+      .selectFrom('pds')
+      .where('did', '=', pdsDid)
+      .selectAll()
+      .executeTakeFirst()
+  }
 }
 
 export type UserPreference = Record<string, unknown> & { $type: string }

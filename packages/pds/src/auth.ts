@@ -113,21 +113,31 @@ export class ServerAuth {
   async getCredentials(
     req: express.Request,
     scopes = [AuthScope.Access],
-  ): Promise<{ did: string; scope: AuthScope } | null> {
+  ): Promise<{ did: string; scope: AuthScope; audience?: string } | null> {
     const token = this.getToken(req)
     if (!token) return null
     const payload = await this.verifyToken(token, scopes)
-    const sub = payload.sub
+    const { sub, aud, scope } = payload
     if (typeof sub !== 'string' || !sub.startsWith('did:')) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
-    return { did: sub, scope: payload.scope as AuthScope }
+    if (
+      aud !== undefined &&
+      (typeof aud !== 'string' || !aud.startsWith('did:'))
+    ) {
+      throw new InvalidRequestError('Malformed token', 'InvalidToken')
+    }
+    return {
+      did: sub,
+      audience: aud,
+      scope: scope as AuthScope,
+    }
   }
 
   async getCredentialsOrThrow(
     req: express.Request,
     scopes: AuthScope[],
-  ): Promise<{ did: string; scope: AuthScope }> {
+  ): Promise<{ did: string; scope: AuthScope; audience?: string }> {
     const creds = await this.getCredentials(req, scopes)
     if (creds === null) {
       throw new AuthRequiredError(undefined, 'AuthMissing')
