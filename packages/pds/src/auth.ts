@@ -33,9 +33,10 @@ export type AuthToken = {
   scope: AuthScope
   sub: string
   exp: number
+  aud?: string
 }
 
-export type RefreshToken = AuthToken & { jti: string }
+export type RefreshToken = AuthToken & { jti: string; aud: string }
 
 export class ServerAuth {
   private _signingSecret: KeyObject
@@ -55,6 +56,7 @@ export class ServerAuth {
 
   async createAccessToken(opts: {
     did: string
+    pdsDid?: string | null
     scope?: AuthScope
     expiresIn?: string | number
   }) {
@@ -64,6 +66,9 @@ export class ServerAuth {
       .setSubject(did)
       .setIssuedAt()
       .setExpirationTime(expiresIn)
+    if (opts.pdsDid) {
+      signer.setAudience(opts.pdsDid)
+    }
 
     if (this._signingKeyPromise) {
       const key = await this._signingKeyPromise
@@ -76,6 +81,7 @@ export class ServerAuth {
 
   async createRefreshToken(opts: {
     did: string
+    identityDid: string
     jti?: string
     expiresIn?: string | number
   }) {
@@ -83,6 +89,7 @@ export class ServerAuth {
 
     const signer = new jose.SignJWT({ scope: AuthScope.Refresh })
       .setSubject(did)
+      .setAudience(opts.identityDid)
       .setJti(jti)
       .setIssuedAt()
       .setExpirationTime(expiresIn)

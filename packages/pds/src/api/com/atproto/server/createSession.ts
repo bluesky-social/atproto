@@ -58,10 +58,14 @@ export default function (server: Server, ctx: AppContext) {
       const [accessJwt, refreshJwt] = await Promise.all([
         ctx.auth.createAccessToken({
           did: user.did,
+          pdsDid: user.pdsDid,
           scope:
             appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
         }),
-        ctx.auth.createRefreshToken({ did: user.did }),
+        ctx.auth.createRefreshToken({
+          did: user.did,
+          identityDid: ctx.cfg.service.did,
+        }),
       ])
       const refreshPayload = ctx.auth.decodeRefreshToken(refreshJwt)
       await authService.grantRefreshToken(refreshPayload, appPasswordName)

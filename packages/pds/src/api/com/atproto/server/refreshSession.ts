@@ -36,6 +36,7 @@ export default function (server: Server, ctx: AppContext) {
         if (!rotateRes) return null
         const refreshJwt = await ctx.auth.createRefreshToken({
           did: user.did,
+          identityDid: ctx.cfg.service.did,
           jti: rotateRes.nextId,
         })
         const refreshPayload = ctx.auth.decodeRefreshToken(refreshJwt)
@@ -48,6 +49,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const accessJwt = await ctx.auth.createAccessToken({
         did: user.did,
+        pdsDid: user.pdsDid,
         scope: res.appPassName === null ? AuthScope.Access : AuthScope.AppPass,
       })
 

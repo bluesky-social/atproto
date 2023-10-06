@@ -25,12 +25,13 @@ export class AccountService {
   async getAccount(
     handleOrDid: string,
     includeSoftDeleted = false,
-  ): Promise<(UserAccountEntry & DidHandle & RepoRoot) | null> {
+  ): Promise<AccountInfo | null> {
     const { ref } = this.db.db.dynamic
     const result = await this.db.db
       .selectFrom('user_account')
       .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
       .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .leftJoin('pds', 'pds.id', 'user_account.pdsId')
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('repo_root'))),
       )
@@ -47,6 +48,7 @@ export class AccountService {
           )
         }
       })
+      .select(['pds.did as pdsDid'])
       .selectAll('user_account')
       .selectAll('did_handle')
       .selectAll('repo_root')
@@ -68,16 +70,18 @@ export class AccountService {
   async getAccountByEmail(
     email: string,
     includeSoftDeleted = false,
-  ): Promise<(UserAccountEntry & DidHandle & RepoRoot) | null> {
+  ): Promise<AccountInfo | null> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('user_account')
       .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
       .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .leftJoin('pds', 'pds.id', 'user_account.pdsId')
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('repo_root'))),
       )
       .where('email', '=', email.toLowerCase())
+      .select(['pds.did as pdsDid'])
       .selectAll('user_account')
       .selectAll('did_handle')
       .selectAll('repo_root')
@@ -113,16 +117,18 @@ export class AccountService {
     email: string
     handle: string
     did: string
+    pdsId?: number
     passwordScrypt: string
   }) {
     this.db.assertTransaction()
-    const { email, handle, did, passwordScrypt } = opts
+    const { email, handle, did, pdsId, passwordScrypt } = opts
     log.debug({ handle, email }, 'registering user')
     const registerUserAccnt = this.db.db
       .insertInto('user_account')
       .values({
         email: email.toLowerCase(),
         did,
+        pdsId,
         passwordScrypt,
         createdAt: new Date().toISOString(),
       })
@@ -623,3 +629,7 @@ const matchNamespace = (namespace: string, fullname: string) => {
 }
 
 export type HandleSequenceToken = { did: string; handle: string }
+
+type AccountInfo = UserAccountEntry &
+  DidHandle &
+  RepoRoot & { pdsDid: string | null }
