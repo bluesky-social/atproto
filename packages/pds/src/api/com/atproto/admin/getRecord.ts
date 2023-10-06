@@ -2,7 +2,8 @@ import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru, mergeRepoViewPdsDetails } from './util'
+import { mergeRepoViewPdsDetails } from './util'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRecord({

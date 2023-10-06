@@ -22,7 +22,7 @@ import {
   getRepoRev,
   handleReadAfterWrite,
 } from '../util/read-after-write'
-import { authPassthru } from '../../../com/atproto/admin/util'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({

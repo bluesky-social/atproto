@@ -2,9 +2,9 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import { handleReadAfterWrite } from '../util/read-after-write'
-import { authPassthru } from '../../../../api/com/atproto/admin/util'
 import { LocalRecords } from '../../../../services/local'
 import { isReasonRepost } from '../../../../lexicon/types/app/bsky/feed/defs'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({

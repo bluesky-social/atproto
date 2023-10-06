@@ -11,7 +11,7 @@ import {
 import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
 import { getSubject, getAction } from '../moderation/util'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { authPassthru } from './util'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
