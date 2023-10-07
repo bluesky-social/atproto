@@ -8,6 +8,18 @@ export const schemaDict = {
     lexicon: 1,
     id: 'com.atproto.admin.defs',
     defs: {
+      subjectState: {
+        type: 'object',
+        required: ['applied'],
+        properties: {
+          applied: {
+            type: 'boolean',
+          },
+          ref: {
+            type: 'string',
+          },
+        },
+      },
       actionView: {
         type: 'object',
         required: [
@@ -441,6 +453,24 @@ export const schemaDict = {
           did: {
             type: 'string',
             format: 'did',
+          },
+        },
+      },
+      repoBlobRef: {
+        type: 'object',
+        required: ['did', 'cid'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          recordUri: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -1026,6 +1056,55 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminGetSubjectState: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getSubjectState',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Fetch the service-specific the admin state of a subject (account, record, or blob)',
+        parameters: {
+          type: 'params',
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+            },
+            uri: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            blob: {
+              type: 'string',
+              format: 'cid',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                  'lex:com.atproto.admin.defs#repoBlobRef',
+                ],
+              },
+              takedown: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.defs#subjectState',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminResolveModerationReports: {
     lexicon: 1,
     id: 'com.atproto.admin.resolveModerationReports',
@@ -1319,6 +1398,59 @@ export const schemaDict = {
               handle: {
                 type: 'string',
                 format: 'handle',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminUpdateSubjectState: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateSubjectState',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Update the service-specific admin state of a subject (account, record, or blob)',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                  'lex:com.atproto.admin.defs#repoBlobRef',
+                ],
+              },
+              takedown: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.defs#subjectState',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                  'lex:com.atproto.admin.defs#repoBlobRef',
+                ],
+              },
+              takedown: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.defs#subjectState',
               },
             },
           },
@@ -7335,6 +7467,7 @@ export const ids = {
   ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
+  ComAtprotoAdminGetSubjectState: 'com.atproto.admin.getSubjectState',
   ComAtprotoAdminResolveModerationReports:
     'com.atproto.admin.resolveModerationReports',
   ComAtprotoAdminReverseModerationAction:
@@ -7344,6 +7477,7 @@ export const ids = {
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
+  ComAtprotoAdminUpdateSubjectState: 'com.atproto.admin.updateSubjectState',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',
   ComAtprotoIdentityUpdateHandle: 'com.atproto.identity.updateHandle',
   ComAtprotoLabelDefs: 'com.atproto.label.defs',
