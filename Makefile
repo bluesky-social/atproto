@@ -23,7 +23,7 @@ run-dev-env: ## Run a "development environment" shell
 	cd packages/dev-env; pnpm run start
 
 .PHONY: run-dev-env-logged
-run-dev-env: ## Run a "development environment" shell
+run-dev-env-logged: ## Run a "development environment" shell (with logging)
 	LOG_ENABLED=true cd packages/dev-env; pnpm run start | pnpm exec pino-pretty
 
 .PHONY: codegen
