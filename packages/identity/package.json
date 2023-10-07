@@ -23,7 +23,7 @@
     "test": "jest",
     "test:log": "cat test.log | pino-pretty",
     "build": "node ./build.js",
-    "docs": "tsdoc --src=src/*,src/handle/*,src/did/*",
+    "docs": "tsdoc --src=src/*,src/handle/*,src/did/* --dest=API.md",
     "postbuild": "tsc --build tsconfig.build.json",
     "update-main-to-dist": "node ../../update-main-to-dist.js packages/identity"
   },
