@@ -15,52 +15,51 @@
 
 ### :gear: getDid
 
-| Function | Type |
-| ---------- | ---------- |
+| Function | Type                                                                                                                                                                                                                                                        |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `getDid` | `(doc: { id?: string; alsoKnownAs?: string[]; verificationMethod?: { id?: string; type?: string; controller?: string; publicKeyMultibase?: string; }[]; service?: { id?: string; type?: string; serviceEndpoint?: string or Record<...>; }[]; }) => string` |
 
 ### :gear: getKey
 
-| Function | Type |
-| ---------- | ---------- |
+| Function | Type                                                                                                                                                                                                                                                        |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `getKey` | `(doc: { id?: string; alsoKnownAs?: string[]; verificationMethod?: { id?: string; type?: string; controller?: string; publicKeyMultibase?: string; }[]; service?: { id?: string; type?: string; serviceEndpoint?: string or Record<...>; }[]; }) => string` |
 
 ### :gear: getHandle
 
-| Function | Type |
-| ---------- | ---------- |
+| Function    | Type                                                                                                                                                                                                                                                        |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `getHandle` | `(doc: { id?: string; alsoKnownAs?: string[]; verificationMethod?: { id?: string; type?: string; controller?: string; publicKeyMultibase?: string; }[]; service?: { id?: string; type?: string; serviceEndpoint?: string or Record<...>; }[]; }) => string` |
 
 ### :gear: getPds
 
-| Function | Type |
-| ---------- | ---------- |
+| Function | Type                                                                                                                                                                                                                                                        |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `getPds` | `(doc: { id?: string; alsoKnownAs?: string[]; verificationMethod?: { id?: string; type?: string; controller?: string; publicKeyMultibase?: string; }[]; service?: { id?: string; type?: string; serviceEndpoint?: string or Record<...>; }[]; }) => string` |
 
 ### :gear: getFeedGen
 
-| Function | Type |
-| ---------- | ---------- |
+| Function     | Type                                                                                                                                                                                                                                                        |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `getFeedGen` | `(doc: { id?: string; alsoKnownAs?: string[]; verificationMethod?: { id?: string; type?: string; controller?: string; publicKeyMultibase?: string; }[]; service?: { id?: string; type?: string; serviceEndpoint?: string or Record<...>; }[]; }) => string` |
 
 ### :gear: getNotif
 
-| Function | Type |
-| ---------- | ---------- |
+| Function   | Type                                                                                                                                                                                                                                                        |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `getNotif` | `(doc: { id?: string; alsoKnownAs?: string[]; verificationMethod?: { id?: string; type?: string; controller?: string; publicKeyMultibase?: string; }[]; service?: { id?: string; type?: string; serviceEndpoint?: string or Record<...>; }[]; }) => string` |
 
 ### :gear: parseToAtprotoDocument
 
-| Function | Type |
-| ---------- | ---------- |
+| Function                 | Type                                                                                                                                                                                                                                                              |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `parseToAtprotoDocument` | `(doc: { id?: string; alsoKnownAs?: string[]; verificationMethod?: { id?: string; type?: string; controller?: string; publicKeyMultibase?: string; }[]; service?: { id?: string; type?: string; serviceEndpoint?: string or Record<...>; }[]; }) => Partial<...>` |
 
 ### :gear: ensureAtpDocument
 
-| Function | Type |
-| ---------- | ---------- |
+| Function            | Type                                                                                                                                                                                                                                                             |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ensureAtpDocument` | `(doc: { id?: string; alsoKnownAs?: string[]; verificationMethod?: { id?: string; type?: string; controller?: string; publicKeyMultibase?: string; }[]; service?: { id?: string; type?: string; serviceEndpoint?: string or Record<...>; }[]; }) => AtprotoData` |
-
 
 ## :wrench: Constants
 
@@ -70,22 +69,21 @@
 
 ### :gear: verificationMethod
 
-| Constant | Type |
-| ---------- | ---------- |
+| Constant             | Type                                                                                                                                                         |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `verificationMethod` | `ZodObject<{ id: ZodString; type: ZodString; controller: ZodString; publicKeyMultibase: ZodOptional<ZodString>; }, "strip", ZodTypeAny, { ...; }, { ...; }>` |
 
 ### :gear: service
 
-| Constant | Type |
-| ---------- | ---------- |
+| Constant  | Type                                                                                                                                                                |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `service` | `ZodObject<{ id: ZodString; type: ZodString; serviceEndpoint: ZodUnion<[ZodString, ZodRecord<ZodString, ZodUnknown>]>; }, "strip", ZodTypeAny, { ...; }, { ...; }>` |
 
 ### :gear: didDocument
 
-| Constant | Type |
-| ---------- | ---------- |
+| Constant      | Type                                                                                                                                                                                                                                                                                                                               |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `didDocument` | `ZodObject<{ id: ZodString; alsoKnownAs: ZodOptional<ZodArray<ZodString, "many">>; verificationMethod: ZodOptional<ZodArray<ZodObject<{ id: ZodString; type: ZodString; controller: ZodString; publicKeyMultibase: ZodOptional<...>; }, "strip", ZodTypeAny, { ...; }, { ...; }>, "many">>; service: ZodOptional<...>; }, "str...` |
-
 
 ## :factory: DidNotFoundError
 
@@ -109,10 +107,9 @@ Calling code must validate handle/DID pariing against the DID document itself.
 
 #### :gear: parseDnsResult
 
-| Method | Type |
-| ---------- | ---------- |
+| Method           | Type                                     |
+| ---------------- | ---------------------------------------- |
 | `parseDnsResult` | `(chunkedResults: string[][]) => string` |
-
 
 ## :factory: BaseResolver
 
@@ -126,16 +123,14 @@ Throws if argument is not a valid DidDocument.
 
 Only checks type structure, does not parse internal fields.
 
-| Method | Type |
-| ---------- | ---------- |
+| Method           | Type                                                                                                                                                                                                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `validateDidDoc` | `(did: string, val: unknown) => { id?: string; alsoKnownAs?: string[]; verificationMethod?: { id?: string; type?: string; controller?: string; publicKeyMultibase?: string; }[]; service?: { id?: string; type?: string; serviceEndpoint?: string or Record<...>; }[]; }` |
 
 Parameters:
 
-* `did`: - DID to verify against field in the document itself
-* `val`: - object to verify structure as a DidDocument
-
-
+- `did`: - DID to verify against field in the document itself
+- `val`: - object to verify structure as a DidDocument
 
 ## :factory: DidWebResolver
 

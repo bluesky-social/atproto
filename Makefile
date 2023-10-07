@@ -37,7 +37,7 @@ codegen: ## Re-generate packages from lexicon/ files
 .PHONY: docs
 docs: ## Re-generate API documentation (eg, READMEs)
 	pnpm run --filter @atproto/identity docs
-	pnpm prettier --write packages/identity/README.md
+	pnpm prettier --write packages/identity/API.md
 
 .PHONY: lint
 lint: ## Run style checks and verify syntax
