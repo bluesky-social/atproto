@@ -1,7 +1,9 @@
 AT Protocol Reference Implementation (TypeScript)
 =================================================
 
-Welcome friends! This repository contains Bluesky's reference implementation of AT Protocol and the `app.bsky` microblogging application services.
+Welcome friends!
+
+This repository contains Bluesky's reference implementation of AT Protocol, and of the `app.bsky` microblogging application service backend.
 
 
 ## What is in here?
@@ -13,7 +15,7 @@ Welcome friends! This repository contains Bluesky's reference implementation of 
 | `@atproto/api`: client library | [README](./packages/api/README.md) | [![NPM](https://img.shields.io/npm/v/@atproto/api)](https://www.npmjs.com/package/@atproto/api) |
 | `@atproto/common-web`: shared code and helpers which can run in web browsers | [README](./packages/common-web/README.md) | [![NPM](https://img.shields.io/npm/v/@atproto/common-web)](https://www.npmjs.com/package/@atproto/common-web) |
 | `@atproto/common`: shared code and helpers which doesn't work in web browsers | [README](./packages/common/README.md) | [![NPM](https://img.shields.io/npm/v/@atproto/common)](https://www.npmjs.com/package/@atproto/common) |
-| `@atproto/crypto`: | [README](./packages/crypto/README.md) | [![NPM](https://img.shields.io/npm/v/@atproto/crypto)](https://www.npmjs.com/package/@atproto/crypto) |
+| `@atproto/crypto`: cryptographic signing and key serialization | [README](./packages/crypto/README.md) | [![NPM](https://img.shields.io/npm/v/@atproto/crypto)](https://www.npmjs.com/package/@atproto/crypto) |
 | `@atproto/identity`: DID and handle resolution | [README](./packages/identity/README.md) | [![NPM](https://img.shields.io/npm/v/@atproto/identity)](https://www.npmjs.com/package/@atproto/identity) |
 | `@atproto/lexicon`: schema definition language | [README](./packages/lexicon/README.md) | [![NPM](https://img.shields.io/npm/v/@atproto/lexicon)](https://www.npmjs.com/package/@atproto/lexicon) |
 | `@atproto/repo`: data storage structure, including MST | [README](./packages/repo/README.md) | [![NPM](https://img.shields.io/npm/v/@atproto/repo)](https://www.npmjs.com/package/@atproto/repo) |
@@ -32,10 +34,12 @@ Welcome friends! This repository contains Bluesky's reference implementation of 
 
 The source code for the Bluesky Social client app (for web and mobile) can be found at [bluesky-social/social-app](https://github.com/bluesky-social/social-app).
 
+Go programming language source code is in [bluesky-social/indigo](https://github.com/bluesky-social/indigo), including the BGS implementation.
+
 
 ## Developer Quickstart
 
-You'll need Node.js version 18; we recommend [`nvm`](https://github.com/nvm-sh/nvm) for managing Node installation. This repository uses `pnpm` to manage multiple packages, which you can install with `npm install --global pnpm`.
+We recommend [`nvm`](https://github.com/nvm-sh/nvm) for managing Node.js installs. This project requires Node.js version 18. `pnpm` is used to manage the workspace of multiple packages. You can install it with `npm install --global pnpm`.
 
 There is a Makefile which can help with basic development tasks:
 
@@ -77,18 +81,23 @@ The Bluesky Social application encompasses a set of schemas and APIs built in th
 - We may not respond to your issue or PR.
 - We may close an issue or PR without much feedback.
 - We may lock discussions or contributions if our attention is getting DDOSed.
-- We're not going to provide support for build issues.
+- We do not provide support for build issues.
 
 **Guidelines:**
 
-- Check for existing issues before filing a new one please.
+- Check for existing issues before filing a new one, please.
 - Open an issue and give some time for discussion before submitting a PR.
-- Stay away from PRs like...
-  - Changing "Post" to "Skeet."
-  - Refactoring the codebase, eg to replace mobx with redux or something.
-  - Adding entirely new features without prior discussion. 
+- If submitting a PR that includes a lexicon change, please get sign off on the lexicon change _before_ doing the implementation.
+- Issues are for bugs & feature requests related to the TypeScript implementation of atproto and related services.
+  - For high-level discussions, please use the [Discussion Forum](https://github.com/bluesky-social/atproto/discussions).
+  - For client issues, please use the relevant [social-app](https://github.com/bluesky-social/social-app) repo.
+- Stay away from PRs that:
+  - Refactor large parts of the codebase
+  - Add entirely new features without prior discussion
+  - Change the tooling or frameworks used without prior discussion
+  - Introduce new unnecessary dependencies
 
-Remember, we serve a wide community of users. Our day to day involves us constantly asking "which top priority is our top priority." If you submit well-written PRs that solve problems concisely, that's an awesome contribution. Otherwise, as much as we'd love to accept your ideas and contributions, we really don't have the bandwidth. That's what forking is for!
+Remember, we serve a wide community of users. Our day-to-day involves us constantly asking "which top priority is our top priority." If you submit well-written PRs that solve problems concisely, that's an awesome contribution. Otherwise, as much as we'd love to accept your ideas and contributions, we really don't have the bandwidth.
 
 ## Are you a developer interested in building on atproto?
 
