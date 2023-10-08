@@ -11,27 +11,27 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ req, params, auth }) => {
       const access = auth.credentials
       const { db, services } = ctx
-      const { uri, cid } = params
-      const result = await services
-        .record(db)
-        .getRecord(new AtUri(uri), cid ?? null, true)
-      const recordDetail =
-        result &&
-        (await services.moderation(db).views.recordDetail(result, {
-          includeEmails: access.moderator,
-        }))
+      const { uri: uriStr, cid } = params
+      const uri = new AtUri(uriStr)
 
       if (ctx.cfg.bskyAppView.proxyModeration) {
         try {
-          const { data: recordDetailAppview } =
-            await ctx.appViewAgent.com.atproto.admin.getRecord(
+          const [{ data: recordDetailAppview }, account] = await Promise.all([
+            ctx.appViewAgent.com.atproto.admin.getRecord(
               params,
               authPassthru(req),
-            )
-          if (recordDetail) {
+            ),
+            services.account(db).getAccount(uri.host, true),
+          ])
+          const localRepoView =
+            account &&
+            (await services.moderation(db).views.repo(account, {
+              includeEmails: access.moderator,
+            }))
+          if (localRepoView) {
             recordDetailAppview.repo = mergeRepoViewPdsDetails(
               recordDetailAppview.repo,
-              recordDetail.repo,
+              localRepoView,
             )
           }
           return {
@@ -46,6 +46,14 @@ export default function (server: Server, ctx: AppContext) {
           }
         }
       }
+
+      // @TODO when proxying fetch repo info directly rather than via record
+      const result = await services.record(db).getRecord(uri, cid ?? null, true)
+      const recordDetail =
+        result &&
+        (await services.moderation(db).views.recordDetail(result, {
+          includeEmails: access.moderator,
+        }))
 
       if (!recordDetail) {
         throw new InvalidRequestError('Record not found', 'RecordNotFound')
