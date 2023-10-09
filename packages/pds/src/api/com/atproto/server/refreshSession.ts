@@ -3,6 +3,7 @@ import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { AuthScope } from '../../../../auth'
+import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.refreshSession({
@@ -50,10 +51,13 @@ export default function (server: Server, ctx: AppContext) {
         scope: res.appPassName === null ? AuthScope.Access : AuthScope.AppPass,
       })
 
+      const didDoc = await didDocForSession(ctx, user.did)
+
       return {
         encoding: 'application/json',
         body: {
           did: user.did,
+          didDoc,
           handle: user.handle,
           accessJwt: access.jwt,
           refreshJwt: res.refresh.jwt,

@@ -1,9 +1,10 @@
+import { DAY, MINUTE } from '@atproto/common'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { AuthScope } from '../../../../auth'
-import { DAY, MINUTE } from '@atproto/common'
+import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createSession({
@@ -60,12 +61,16 @@ export default function (server: Server, ctx: AppContext) {
         scope: appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
       })
       const refresh = ctx.auth.createRefreshToken({ did: user.did })
-      await authService.grantRefreshToken(refresh.payload, appPasswordName)
+      const [didDoc] = await Promise.all([
+        didDocForSession(ctx, user.did),
+        authService.grantRefreshToken(refresh.payload, appPasswordName),
+      ])
 
       return {
         encoding: 'application/json',
         body: {
           did: user.did,
+          didDoc,
           handle: user.handle,
           email: user.email,
           emailConfirmed: !!user.emailConfirmedAt,
