@@ -259,7 +259,7 @@ export const accessVerifierCheckTakedown =
       )
     }
     return {
-      credentials: creds,
+      credentials: { ...creds, pdsDid: actor.pdsDid },
       artifacts: auth.getToken(ctx.req),
     }
   }

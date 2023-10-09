@@ -1,7 +1,12 @@
 import { streamToBytes } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru, proxy, resultPassthru } from '../../../proxy'
+import {
+  authPassthru,
+  ensureThisPds,
+  proxy,
+  resultPassthru,
+} from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.uploadBlob({
@@ -21,6 +26,8 @@ export default function (server: Server, ctx: AppContext) {
       if (proxied !== null) {
         return proxied
       }
+
+      ensureThisPds(ctx, auth.credentials.pdsDid)
 
       const requester = auth.credentials.did
       const blob = await ctx.services
