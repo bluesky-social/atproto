@@ -1,4 +1,4 @@
-import { Kysely, sql } from 'kysely'
+import { Kysely } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
@@ -48,12 +48,15 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     // timestamps
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('updatedAt', 'varchar', (col) => col.notNull())
-    .addUniqueConstraint('did_record_path_unique_idx', ['did', 'recordPath'])
+    .addUniqueConstraint('moderation_status_unique_idx', ['did', 'recordPath'])
     .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.alterTable('moderation_event').renameTo('moderation_action')
+  await db.schema
+    .alterTable('moderation_event')
+    .renameTo('moderation_action')
+    .execute()
   await db.schema
     .alterTable('moderation_action')
     .renameColumn('comment', 'reason')
