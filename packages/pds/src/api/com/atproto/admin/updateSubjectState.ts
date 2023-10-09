@@ -22,9 +22,13 @@ export default function (server: Server, ctx: AppContext) {
       }
       const { subject, takedown } = input.body
       const modSrvc = ctx.services.moderation(ctx.db)
+      const authSrvc = ctx.services.auth(ctx.db)
       if (takedown) {
         if (isRepoRef(subject)) {
-          await modSrvc.updateRepoTakedownState(subject.did, takedown)
+          await Promise.all([
+            await modSrvc.updateRepoTakedownState(subject.did, takedown),
+            await authSrvc.revokeRefreshTokensByDid(subject.did),
+          ])
         } else if (isStrongRef(subject)) {
           await modSrvc.updateRecordTakedownState(
             new AtUri(subject.uri),
