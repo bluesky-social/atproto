@@ -62,16 +62,15 @@ export default function (server: Server, ctx: AppContext) {
         return proxied
       }
 
+      ensureThisPds(ctx, auth.credentials.pdsDid)
+
       const tx = input.body
       const { repo, validate, swapCommit } = tx
-      const account = await ctx.services.account(ctx.db).getAccount(repo)
-      if (!account) {
+      const did = await ctx.services.account(ctx.db).getDidForActor(repo)
+
+      if (!did) {
         throw new InvalidRequestError(`Could not find repo: ${repo}`)
       }
-
-      const { did, pdsDid } = account
-      ensureThisPds(ctx, pdsDid)
-
       if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
       }
