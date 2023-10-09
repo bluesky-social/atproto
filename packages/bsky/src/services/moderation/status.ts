@@ -18,6 +18,7 @@ import {
   ESCALATE,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
+import { HOUR } from '@atproto/common'
 
 const actionTypesImpactingStatus = [
   ACKNOWLEDGE,
@@ -71,7 +72,7 @@ const getSubjectStatusForModerationEvent = ({
       return {
         // By default, mute for 24hrs
         muteUntil: new Date(
-          Date.now() + (durationInHours || 24) * 60 * 60 * 1000,
+          Date.now() + (durationInHours || 24) * HOUR,
         ).toISOString(),
       }
     default:
@@ -94,6 +95,7 @@ export const adjustModerationSubjectStatus = async (
     | 'durationInHours'
     | 'refEventId'
   >,
+  refEvent: ModerationEventRow | undefined,
 ) => {
   const { action, subjectDid, subjectUri, subjectCid, refEventId } =
     moderationEvent
@@ -112,14 +114,11 @@ export const adjustModerationSubjectStatus = async (
   // TODO: We may need more here. For instance, if we're reverting a post takedown but since the takedown, we adjusted
   // labels on the post, does the takedown reversal mean those labels added AFTER the takedown should be reverted as well?
   if (action === REVERT && refEventId) {
-    const [lastActionImpactingStatus, refEvent] = await Promise.all([
-      getPreviousStatusForReversal(db, moderationEvent),
-      db.db
-        .selectFrom('moderation_event')
-        .where('id', '=', refEventId)
-        .selectAll()
-        .executeTakeFirst(),
-    ])
+    const lastActionImpactingStatus = await getPreviousStatusForReversal(
+      db,
+      moderationEvent,
+    )
+
     revertingEvent = refEvent
 
     // If the action being reverted does not have a previously known/status impacting action,
@@ -171,7 +170,7 @@ export const adjustModerationSubjectStatus = async (
     .insertInto('moderation_subject_status')
     .values(newStatus)
     .onConflict((oc) =>
-      oc.constraint('did_record_path_unique_idx').doUpdateSet({
+      oc.constraint('moderation_status_unique_idx').doUpdateSet({
         ...subjectStatus,
         updatedAt: now,
       }),

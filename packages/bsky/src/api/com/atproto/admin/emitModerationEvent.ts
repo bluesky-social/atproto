@@ -9,6 +9,7 @@ import {
   TAKEDOWN,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { getSubject, getAction } from '../moderation/util'
+import { ModerationEventRow } from '../../../../services/moderation/types'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.emitModerationEvent({
@@ -57,19 +58,49 @@ export default function (server: Server, ctx: AppContext) {
       const moderationAction = await db.transaction(async (dbTxn) => {
         const moderationTxn = ctx.services.moderation(dbTxn)
         const labelTxn = ctx.services.label(dbTxn)
+        // Helper function for applying labels from a moderation event row
+        // This is used for both applying labels for an action and reverting labels
+        // from the reference event when reverting an action
+        const applyLabels = async (
+          labelParams: Pick<
+            ModerationEventRow,
+            | 'subjectCid'
+            | 'subjectDid'
+            | 'subjectUri'
+            | 'createLabelVals'
+            | 'negateLabelVals'
+          >,
+        ) =>
+          labelTxn.formatAndCreate(
+            ctx.cfg.labelerDid,
+            labelParams.subjectUri ?? labelParams.subjectDid,
+            labelParams.subjectCid,
+            {
+              create: labelParams.createLabelVals?.length
+                ? labelParams.createLabelVals.split(' ')
+                : undefined,
+              negate: labelParams.negateLabelVals?.length
+                ? labelParams.negateLabelVals.split(' ')
+                : undefined,
+            },
+          )
 
-        const result = await moderationTxn.logAction({
-          action: getAction(action),
-          subject: getSubject(subject),
-          subjectBlobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
-          createLabelVals,
-          negateLabelVals,
-          createdBy,
-          comment: comment || null,
-          durationInHours,
-          refEventId,
-          meta: meta || null,
-        })
+        const result = await moderationTxn.logAction(
+          {
+            action: getAction(action),
+            subject: getSubject(subject),
+            subjectBlobCids:
+              subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
+            createLabelVals,
+            negateLabelVals,
+            createdBy,
+            comment: comment || null,
+            durationInHours,
+            refEventId,
+            meta: meta || null,
+          },
+          applyLabels,
+        )
 
         if (
           result.action === TAKEDOWN &&
@@ -95,12 +126,7 @@ export default function (server: Server, ctx: AppContext) {
           })
         }
 
-        await labelTxn.formatAndCreate(
-          ctx.cfg.labelerDid,
-          result.subjectUri ?? result.subjectDid,
-          result.subjectCid,
-          { create: createLabelVals, negate: negateLabelVals },
-        )
+        await applyLabels(result)
 
         return result
       })

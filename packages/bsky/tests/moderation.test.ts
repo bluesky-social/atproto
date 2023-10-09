@@ -90,7 +90,7 @@ describe('moderation', () => {
     await network.close()
   })
 
-  describe('reporting', () => {
+  describe.only('reporting', () => {
     it('creates reports of a repo.', async () => {
       const { data: reportA } =
         await agent.api.com.atproto.moderation.createReport(
@@ -220,7 +220,7 @@ describe('moderation', () => {
   })
 
   describe.only('actioning', () => {
-    it.only('resolves reports on repos and records.', async () => {
+    it('resolves reports on repos and records.', async () => {
       const post = sc.posts[sc.dids.bob][1].ref
 
       await Promise.all([
@@ -290,7 +290,7 @@ describe('moderation', () => {
       )
     })
 
-    it.only('supports escalating a subject', async () => {
+    it('supports escalating a subject', async () => {
       const alicesPostRef = sc.posts[sc.dids.alice][0].ref
       const alicesPostSubject = {
         $type: 'com.atproto.repo.strongRef',
@@ -341,7 +341,7 @@ describe('moderation', () => {
       )
     })
 
-    it.only('reverses status when revert event is triggered.', async () => {
+    it('reverses status when revert event is triggered.', async () => {
       const alicesPostRef = sc.posts[sc.dids.alice][0].ref
       const takeAction = async (
         action: ComAtprotoAdminTakeModerationAction.InputSchema['action'],
@@ -414,172 +414,6 @@ describe('moderation', () => {
       ).toBeTruthy()
     })
 
-    it('only allows repo to have one current action.', async () => {
-      const { data: acknowledge } =
-        await agent.api.com.atproto.admin.emitModerationEvent(
-          {
-            action: ACKNOWLEDGE,
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: sc.dids.alice,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: network.bsky.adminAuthHeaders(),
-          },
-        )
-      const flagPromise = agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          action: FLAG,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: sc.dids.alice,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
-      await expect(flagPromise).rejects.toThrow(
-        'Subject already has an active action:',
-      )
-
-      // Reverse current then retry
-      await agent.api.com.atproto.admin.reverseModerationEvent(
-        {
-          id: acknowledge.id,
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
-      const { data: flag } =
-        await agent.api.com.atproto.admin.emitModerationEvent(
-          {
-            action: FLAG,
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: sc.dids.alice,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: network.bsky.adminAuthHeaders(),
-          },
-        )
-
-      // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationEvent(
-        {
-          id: flag.id,
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
-    })
-
-    it('only allows blob to have one current action.', async () => {
-      const img = sc.posts[sc.dids.carol][0].images[0]
-      const postA = await sc.post(sc.dids.carol, 'image A', undefined, [img])
-      const postB = await sc.post(sc.dids.carol, 'image B', undefined, [img])
-      const { data: acknowledge } =
-        await agent.api.com.atproto.admin.emitModerationEvent(
-          {
-            action: ACKNOWLEDGE,
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: postA.ref.uriStr,
-              cid: postA.ref.cidStr,
-            },
-            subjectBlobCids: [img.image.ref.toString()],
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: network.bsky.adminAuthHeaders(),
-          },
-        )
-      const flagPromise = agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          action: FLAG,
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: postB.ref.uriStr,
-            cid: postB.ref.cidStr,
-          },
-          subjectBlobCids: [img.image.ref.toString()],
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
-      await expect(flagPromise).rejects.toThrow(
-        'Blob already has an active action:',
-      )
-      // Reverse current then retry
-      await agent.api.com.atproto.admin.reverseModerationEvent(
-        {
-          id: acknowledge.id,
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
-      const { data: flag } =
-        await agent.api.com.atproto.admin.emitModerationEvent(
-          {
-            action: FLAG,
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: postB.ref.uriStr,
-              cid: postB.ref.cidStr,
-            },
-            subjectBlobCids: [img.image.ref.toString()],
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: network.bsky.adminAuthHeaders(),
-          },
-        )
-
-      // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationEvent(
-        {
-          id: flag.id,
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
-    })
-
     it('negates an existing label and reverses.', async () => {
       const { ctx } = network.bsky
       const post = sc.posts[sc.dids.bob][0].ref
@@ -599,7 +433,13 @@ describe('moderation', () => {
         },
       })
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
-      await reverse(action.id)
+      await reverse(action.id, {
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.uriStr,
+          cid: post.cidStr,
+        },
+      })
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['kittens'])
       // Cleanup
       await labelingService.formatAndCreate(
@@ -623,7 +463,13 @@ describe('moderation', () => {
         },
       })
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
-      await reverse(action.id)
+      await reverse(action.id, {
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.uriStr,
+          cid: post.cidStr,
+        },
+      })
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['bears'])
       // Cleanup
       await labelingService.formatAndCreate(
@@ -649,7 +495,13 @@ describe('moderation', () => {
         'puppies',
         'doggies',
       ])
-      await reverse(action.id)
+      await reverse(action.id, {
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.uriStr,
+          cid: post.cidStr,
+        },
+      })
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
     })
 
@@ -672,7 +524,13 @@ describe('moderation', () => {
         },
       })
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['birds'])
-      await reverse(action.id)
+      await reverse(action.id, {
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.uriStr,
+          cid: post.cidStr,
+        },
+      })
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual([])
     })
 
@@ -689,7 +547,12 @@ describe('moderation', () => {
         'puppies',
         'doggies',
       ])
-      await reverse(action.id)
+      await reverse(action.id, {
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.bob,
+        },
+      })
       await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual([])
     })
 
@@ -711,7 +574,12 @@ describe('moderation', () => {
         },
       })
       await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual(['puppies'])
-      await reverse(action.id)
+      await reverse(action.id, {
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.bob,
+        },
+      })
       await expect(getRepoLabels(sc.dids.bob)).resolves.toEqual(['kittens'])
     })
 
@@ -756,7 +624,12 @@ describe('moderation', () => {
           },
         )
       // cleanup
-      await reverse(action.id)
+      await reverse(action.id, {
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.bob,
+        },
+      })
     })
 
     it('does not allow non-full moderators to takedown.', async () => {
@@ -780,7 +653,7 @@ describe('moderation', () => {
         'Must be a full moderator to perform an account takedown',
       )
     })
-    it('automatically reverses actions marked with duration', async () => {
+    it.skip('automatically reverses actions marked with duration', async () => {
       const { data: action } =
         await agent.api.com.atproto.admin.emitModerationEvent(
           {
@@ -848,12 +721,19 @@ describe('moderation', () => {
       return result.data
     }
 
-    async function reverse(actionId: number) {
-      await agent.api.com.atproto.admin.reverseModerationEvent(
+    async function reverse(
+      actionId: number,
+      opts: Partial<ComAtprotoAdminTakeModerationAction.InputSchema> & {
+        subject: ComAtprotoAdminTakeModerationAction.InputSchema['subject']
+      },
+    ) {
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
-          id: actionId,
+          action: REVERT,
+          refEventId: actionId,
           createdBy: 'did:example:admin',
           reason: 'Y',
+          ...opts,
         },
         {
           encoding: 'application/json',

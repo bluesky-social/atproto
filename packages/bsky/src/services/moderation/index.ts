@@ -136,19 +136,31 @@ export class ModerationService {
     return await builder.execute()
   }
 
-  async logAction(info: {
-    action: ModerationEventRow['action']
-    subject: { did: string } | { uri: AtUri; cid: CID }
-    subjectBlobCids?: CID[]
-    comment: string | null
-    createLabelVals?: string[]
-    negateLabelVals?: string[]
-    createdBy: string
-    createdAt?: Date
-    durationInHours?: number
-    refEventId?: number
-    meta?: ActionMeta | null
-  }): Promise<ModerationEventRow> {
+  async logAction(
+    info: {
+      action: ModerationEventRow['action']
+      subject: { did: string } | { uri: AtUri; cid: CID }
+      subjectBlobCids?: CID[]
+      comment: string | null
+      createLabelVals?: string[]
+      negateLabelVals?: string[]
+      createdBy: string
+      createdAt?: Date
+      durationInHours?: number
+      refEventId?: number
+      meta?: ActionMeta | null
+    },
+    applyLabels: (
+      labelParams: Pick<
+        ModerationEventRow,
+        | 'subjectCid'
+        | 'subjectDid'
+        | 'subjectUri'
+        | 'createLabelVals'
+        | 'negateLabelVals'
+      >,
+    ) => Promise<unknown>,
+  ): Promise<ModerationEventRow> {
     this.db.assertTransaction()
     const {
       action,
@@ -214,11 +226,30 @@ export class ModerationService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
+    const refEvent = await (refEventId
+      ? this.db.db
+          .selectFrom('moderation_event')
+          .where('id', '=', refEventId)
+          .selectAll()
+          .executeTakeFirst()
+      : Promise.resolve(undefined))
+
     // TODO: This shouldn't be in try/catch, for debugging only
-    try {
-      await adjustModerationSubjectStatus(this.db, actionResult)
-    } catch (err) {
-      console.error(err)
+    // try {
+    await adjustModerationSubjectStatus(this.db, actionResult, refEvent)
+    // } catch (err) {
+    // console.error(err)
+    // }
+
+    if (
+      action === REVERT &&
+      (refEvent?.createLabelVals || refEvent?.negateLabelVals)
+    ) {
+      await applyLabels({
+        ...refEvent,
+        createLabelVals: refEvent.negateLabelVals,
+        negateLabelVals: refEvent.createLabelVals,
+      })
     }
 
     return actionResult
