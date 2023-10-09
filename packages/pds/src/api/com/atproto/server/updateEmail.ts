@@ -5,7 +5,7 @@ import disposable from 'disposable-email'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.updateEmail({
-    auth: ctx.accessVerifierCheckTakedown,
+    auth: ctx.accessVerifierNotAppPassword,
     handler: async ({ auth, input }) => {
       const did = auth.credentials.did
       const { token, email } = input.body
@@ -18,10 +18,7 @@ export default function (server: Server, ctx: AppContext) {
       if (!user) {
         throw new InvalidRequestError('user not found')
       }
-      if (!user.emailConfirmedAt) {
-        throw new InvalidRequestError('email must be confirmed (temporary)')
-      }
-      // require valid token
+      // require valid token if user email is confirmed
       if (user.emailConfirmedAt) {
         if (!token) {
           throw new InvalidRequestError(
