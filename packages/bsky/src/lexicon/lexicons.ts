@@ -436,6 +436,44 @@ export const schemaDict = {
           },
         },
       },
+      userAccountView: {
+        type: 'object',
+        required: ['did', 'handle', 'indexedAt'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          email: {
+            type: 'string',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          invitedBy: {
+            type: 'ref',
+            ref: 'lex:com.atproto.server.defs#inviteCode',
+          },
+          invites: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.server.defs#inviteCode',
+            },
+          },
+          invitesDisabled: {
+            type: 'boolean',
+          },
+          inviteNote: {
+            type: 'string',
+          },
+        },
+      },
       repoViewNotFound: {
         type: 'object',
         required: ['did'],
@@ -1100,6 +1138,33 @@ export const schemaDict = {
                 ref: 'lex:com.atproto.admin.defs#subjectState',
               },
             },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminGetUserAccountInfo: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getUserAccountInfo',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'View details about a user account.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#userAccountView',
           },
         },
       },
@@ -7468,6 +7533,7 @@ export const ids = {
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
   ComAtprotoAdminGetSubjectState: 'com.atproto.admin.getSubjectState',
+  ComAtprotoAdminGetUserAccountInfo: 'com.atproto.admin.getUserAccountInfo',
   ComAtprotoAdminResolveModerationReports:
     'com.atproto.admin.resolveModerationReports',
   ComAtprotoAdminReverseModerationAction:

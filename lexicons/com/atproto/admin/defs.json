@@ -251,6 +251,29 @@
         "inviteNote": { "type": "string" }
       }
     },
+    "userAccountView": {
+      "type": "object",
+      "required": ["did", "handle", "indexedAt"],
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "handle": { "type": "string", "format": "handle" },
+        "email": { "type": "string" },
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "invitedBy": {
+          "type": "ref",
+          "ref": "com.atproto.server.defs#inviteCode"
+        },
+        "invites": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "com.atproto.server.defs#inviteCode"
+          }
+        },
+        "invitesDisabled": { "type": "boolean" },
+        "inviteNote": { "type": "string" }
+      }
+    },
     "repoViewNotFound": {
       "type": "object",
       "required": ["did"],

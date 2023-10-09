@@ -19,6 +19,7 @@ import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminGetSubjectState from './types/com/atproto/admin/getSubjectState'
+import * as ComAtprotoAdminGetUserAccountInfo from './types/com/atproto/admin/getUserAccountInfo'
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -154,6 +155,7 @@ export * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/
 export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 export * as ComAtprotoAdminGetSubjectState from './types/com/atproto/admin/getSubjectState'
+export * as ComAtprotoAdminGetUserAccountInfo from './types/com/atproto/admin/getUserAccountInfo'
 export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -483,6 +485,17 @@ export class AdminNS {
       .call('com.atproto.admin.getSubjectState', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoAdminGetSubjectState.toKnownErr(e)
+      })
+  }
+
+  getUserAccountInfo(
+    params?: ComAtprotoAdminGetUserAccountInfo.QueryParams,
+    opts?: ComAtprotoAdminGetUserAccountInfo.CallOptions,
+  ): Promise<ComAtprotoAdminGetUserAccountInfo.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.getUserAccountInfo', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminGetUserAccountInfo.toKnownErr(e)
       })
   }
 

@@ -256,6 +256,30 @@ export function validateRepoViewDetail(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#repoViewDetail', v)
 }
 
+export interface UserAccountView {
+  did: string
+  handle: string
+  email?: string
+  indexedAt: string
+  invitedBy?: ComAtprotoServerDefs.InviteCode
+  invites?: ComAtprotoServerDefs.InviteCode[]
+  invitesDisabled?: boolean
+  inviteNote?: string
+  [k: string]: unknown
+}
+
+export function isUserAccountView(v: unknown): v is UserAccountView {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#userAccountView'
+  )
+}
+
+export function validateUserAccountView(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#userAccountView', v)
+}
+
 export interface RepoViewNotFound {
   did: string
   [k: string]: unknown
