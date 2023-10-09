@@ -14,6 +14,7 @@ import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { EmailTokenPurpose } from '../../db/tables/email-token'
 import { getRandomToken } from '../../api/com/atproto/server/util'
+import { OptionalJoin } from '../../db/types'
 
 export class AccountService {
   constructor(public db: Database) {}
@@ -31,10 +32,10 @@ export class AccountService {
     const result = await this.db.db
       .selectFrom('user_account')
       .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .leftJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .leftJoin('pds', 'pds.id', 'user_account.pdsId')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .where((qb) => {
         if (handleOrDid.startsWith('did:')) {
@@ -60,10 +61,11 @@ export class AccountService {
   // Repo exists and is not taken-down
   async isRepoAvailable(did: string) {
     const found = await this.db.db
-      .selectFrom('repo_root')
-      .where('did', '=', did)
-      .where('takedownId', 'is', null)
-      .select('did')
+      .selectFrom('user_account')
+      .innerJoin('repo_root', 'repo_root.did', 'user_account.did')
+      .where('user_account.did', '=', did)
+      .where('user_account.takedownId', 'is', null)
+      .select('user_account.did')
       .executeTakeFirst()
     return found !== undefined
   }
@@ -76,10 +78,10 @@ export class AccountService {
     const found = await this.db.db
       .selectFrom('user_account')
       .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .leftJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .leftJoin('pds', 'pds.id', 'user_account.pdsId')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .where('email', '=', email.toLowerCase())
       .select(['pds.did as pdsDid'])
@@ -104,9 +106,9 @@ export class AccountService {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('did_handle')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .innerJoin('user_account', 'user_account.did', 'did_handle.did')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .where('handle', '=', handleOrDid)
       .select('did_handle.did')
@@ -283,6 +285,7 @@ export class AccountService {
       .execute()
   }
 
+  // @NOTE only searches active repos, not all accounts.
   async search(opts: {
     query: string
     limit: number
@@ -297,7 +300,7 @@ export class AccountService {
       .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .innerJoin('user_account', 'user_account.did', 'did_handle.did')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .where((qb) => {
         // sqlite doesn't support "ilike", but performs "like" case-insensitively
@@ -324,6 +327,7 @@ export class AccountService {
     }).execute()
   }
 
+  // @NOTE only searches active repos, not all accounts.
   async list(opts: {
     limit: number
     cursor?: string
@@ -336,8 +340,9 @@ export class AccountService {
     let builder = this.db.db
       .selectFrom('repo_root')
       .innerJoin('did_handle', 'did_handle.did', 'repo_root.did')
+      .innerJoin('user_account', 'user_account.did', 'repo_root.did')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .selectAll('did_handle')
       .selectAll('repo_root')
@@ -642,4 +647,4 @@ export type HandleSequenceToken = { did: string; handle: string }
 
 type AccountInfo = UserAccountEntry &
   DidHandle &
-  RepoRoot & { pdsDid: string | null }
+  OptionalJoin<RepoRoot> & { pdsDid: string | null }

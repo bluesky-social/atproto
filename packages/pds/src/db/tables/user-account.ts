@@ -9,6 +9,7 @@ export interface UserAccount {
   invitesDisabled: Generated<0 | 1>
   inviteNote: string | null
   pdsId: number | null
+  takedownId: number | null
 }
 
 export type UserAccountEntry = Selectable<UserAccount>
