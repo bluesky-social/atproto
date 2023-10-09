@@ -203,7 +203,7 @@ describe('repo sync', () => {
 
   describe('repo takedown', () => {
     beforeAll(async () => {
-      await sc.takeModerationAction({
+      await sc.emitModerationEvent({
         action: TAKEDOWN,
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',

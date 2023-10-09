@@ -167,7 +167,7 @@ describe('pds thread views', () => {
   describe('takedown', () => {
     it('blocks post by actor', async () => {
       const { data: modAction } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             subject: {
@@ -209,7 +209,7 @@ describe('pds thread views', () => {
 
     it('blocks replies by actor', async () => {
       const { data: modAction } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             subject: {
@@ -249,7 +249,7 @@ describe('pds thread views', () => {
 
     it('blocks ancestors by actor', async () => {
       const { data: modAction } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             subject: {
@@ -290,7 +290,7 @@ describe('pds thread views', () => {
     it('blocks post by record', async () => {
       const postRef = sc.posts[alice][1].ref
       const { data: modAction } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             subject: {
@@ -339,7 +339,7 @@ describe('pds thread views', () => {
       const parent = threadPreTakedown.data.thread.parent?.['post']
 
       const { data: modAction } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             subject: {
@@ -388,7 +388,7 @@ describe('pds thread views', () => {
 
       const actionResults = await Promise.all(
         [post1, post2].map((post) =>
-          agent.api.com.atproto.admin.takeModerationAction(
+          agent.api.com.atproto.admin.emitModerationEvent(
             {
               action: TAKEDOWN,
               subject: {

@@ -187,7 +187,7 @@ describe('pds profile views', () => {
 
   it('blocked by actor takedown', async () => {
     const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: TAKEDOWN,
           subject: {

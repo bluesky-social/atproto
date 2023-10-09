@@ -238,7 +238,7 @@ describe('pds actor search views', () => {
   })
 
   it('search blocks by actor takedown', async () => {
-    await agent.api.com.atproto.admin.takeModerationAction(
+    await agent.api.com.atproto.admin.emitModerationEvent(
       {
         action: TAKEDOWN,
         subject: {

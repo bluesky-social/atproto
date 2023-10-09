@@ -122,7 +122,7 @@ describe('pds follow views', () => {
 
   it('blocks followers by actor takedown', async () => {
     const { data: modAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: TAKEDOWN,
           subject: {
@@ -251,7 +251,7 @@ describe('pds follow views', () => {
 
   it('blocks follows by actor takedown', async () => {
     const { data: modAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: TAKEDOWN,
           subject: {

@@ -243,7 +243,7 @@ describe('auth', () => {
       email: 'iris@test.com',
       password: 'password',
     })
-    await agent.api.com.atproto.admin.takeModerationAction(
+    await agent.api.com.atproto.admin.emitModerationEvent(
       {
         action: TAKEDOWN,
         subject: {
@@ -269,7 +269,7 @@ describe('auth', () => {
       email: 'jared@test.com',
       password: 'password',
     })
-    await agent.api.com.atproto.admin.takeModerationAction(
+    await agent.api.com.atproto.admin.emitModerationEvent(
       {
         action: TAKEDOWN,
         subject: {

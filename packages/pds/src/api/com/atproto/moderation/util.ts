@@ -3,7 +3,7 @@ import { AtUri } from '@atproto/syntax'
 import { ModerationAction } from '../../../../db/tables/moderation'
 import { ModerationReport } from '../../../../db/tables/moderation'
 import { InputSchema as ReportInput } from '../../../../lexicon/types/com/atproto/moderation/createReport'
-import { InputSchema as ActionInput } from '../../../../lexicon/types/com/atproto/admin/takeModerationAction'
+import { InputSchema as ActionInput } from '../../../../lexicon/types/com/atproto/admin/emitModerationEvent'
 import {
   ACKNOWLEDGE,
   FLAG,

@@ -1155,7 +1155,7 @@ describe('crud operations', () => {
     expect(posts.records.map((r) => r.uri)).toContain(post.uri)
 
     const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: TAKEDOWN,
           subject: {
@@ -1201,7 +1201,7 @@ describe('crud operations', () => {
     expect(posts.records.length).toBeGreaterThan(0)
 
     const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: TAKEDOWN,
           subject: {

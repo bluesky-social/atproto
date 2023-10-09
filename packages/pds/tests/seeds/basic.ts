@@ -128,7 +128,7 @@ export default async (sc: SeedClient, invite?: { code: string }) => {
   await sc.repost(dan, sc.posts[alice][1].ref)
   await sc.repost(dan, alicesReplyToBob.ref)
 
-  await sc.agent.com.atproto.admin.takeModerationAction(
+  await sc.agent.com.atproto.admin.emitModerationEvent(
     {
       action: FLAG,
       subject: {

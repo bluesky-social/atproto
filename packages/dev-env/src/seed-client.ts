@@ -2,7 +2,7 @@ import fs from 'fs/promises'
 import { CID } from 'multiformats/cid'
 import AtpAgent from '@atproto/api'
 import { Main as Facet } from '@atproto/api/src/client/types/app/bsky/richtext/facet'
-import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/takeModerationAction'
+import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/emitModerationEvent'
 import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/moderation/createReport'
 import { Record as PostRecord } from '@atproto/api/src/client/types/app/bsky/feed/post'
 import { Record as LikeRecord } from '@atproto/api/src/client/types/app/bsky/feed/like'
@@ -420,7 +420,7 @@ export class SeedClient {
     delete foundList.items[subject]
   }
 
-  async takeModerationAction(opts: {
+  async emitModerationEvent(opts: {
     action: TakeActionInput['action']
     subject: TakeActionInput['subject']
     reason?: string
@@ -433,7 +433,7 @@ export class SeedClient {
       reason = 'X',
       createdBy = 'did:example:admin',
     } = opts
-    const result = await this.agent.api.com.atproto.admin.takeModerationAction(
+    const result = await this.agent.api.com.atproto.admin.emitModerationEvent(
       { action, subject, createdBy, reason },
       {
         encoding: 'application/json',
@@ -450,7 +450,7 @@ export class SeedClient {
     createdBy?: string
   }) {
     const { id, subject, reason = 'X', createdBy = 'did:example:admin' } = opts
-    const result = await this.agent.api.com.atproto.admin.takeModerationAction(
+    const result = await this.agent.api.com.atproto.admin.emitModerationEvent(
       { refEventId: id, subject, action: REVERT, comment: reason, createdBy },
       {
         encoding: 'application/json',

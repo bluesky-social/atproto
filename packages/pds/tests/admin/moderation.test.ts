@@ -193,7 +193,7 @@ describe('moderation', () => {
           },
         )
       const { data: action } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             subject: {
@@ -294,7 +294,7 @@ describe('moderation', () => {
       await network.processAll()
       // Take action on deleted content
       const { data: action } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: FLAG,
             subject: {
@@ -380,7 +380,7 @@ describe('moderation', () => {
           },
         )
       const { data: action } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             subject: {
@@ -445,7 +445,7 @@ describe('moderation', () => {
           },
         )
       const { data: action } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             subject: {
@@ -496,7 +496,7 @@ describe('moderation', () => {
       const postRef1 = sc.posts[sc.dids.alice][0].ref
       const postRef2 = sc.posts[sc.dids.bob][0].ref
       const { data: action1 } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: ESCALATE,
             subject: {
@@ -523,7 +523,7 @@ describe('moderation', () => {
         }),
       )
       const { data: action2 } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: ACKNOWLEDGE,
             subject: {
@@ -577,7 +577,7 @@ describe('moderation', () => {
     it('only allows record to have one current action.', async () => {
       const postRef = sc.posts[sc.dids.alice][0].ref
       const { data: acknowledge } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: ACKNOWLEDGE,
             subject: {
@@ -593,7 +593,7 @@ describe('moderation', () => {
             headers: network.pds.adminAuthHeaders(),
           },
         )
-      const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
+      const flagPromise = agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: FLAG,
           subject: {
@@ -626,7 +626,7 @@ describe('moderation', () => {
         },
       )
       const { data: flag } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: FLAG,
             subject: {
@@ -659,7 +659,7 @@ describe('moderation', () => {
 
     it('only allows repo to have one current action.', async () => {
       const { data: acknowledge } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: ACKNOWLEDGE,
             subject: {
@@ -674,7 +674,7 @@ describe('moderation', () => {
             headers: network.pds.adminAuthHeaders(),
           },
         )
-      const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
+      const flagPromise = agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: FLAG,
           subject: {
@@ -706,7 +706,7 @@ describe('moderation', () => {
         },
       )
       const { data: flag } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: FLAG,
             subject: {
@@ -741,7 +741,7 @@ describe('moderation', () => {
       const postA = await sc.post(sc.dids.carol, 'image A', undefined, [img])
       const postB = await sc.post(sc.dids.carol, 'image B', undefined, [img])
       const { data: acknowledge } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: ACKNOWLEDGE,
             subject: {
@@ -758,7 +758,7 @@ describe('moderation', () => {
             headers: network.pds.adminAuthHeaders(),
           },
         )
-      const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
+      const flagPromise = agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: FLAG,
           subject: {
@@ -791,7 +791,7 @@ describe('moderation', () => {
         },
       )
       const { data: flag } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: FLAG,
             subject: {
@@ -825,7 +825,7 @@ describe('moderation', () => {
 
     it('allows full moderators to takedown.', async () => {
       const { data: action } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             createdBy: 'did:example:moderator',
@@ -856,7 +856,7 @@ describe('moderation', () => {
 
     it('automatically reverses actions marked with duration', async () => {
       const { data: action } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             createdBy: 'did:example:moderator',
@@ -897,7 +897,7 @@ describe('moderation', () => {
 
     it('does not allow non-full moderators to takedown.', async () => {
       const attemptTakedownTriage =
-        agent.api.com.atproto.admin.takeModerationAction(
+        agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             createdBy: 'did:example:moderator',
@@ -926,7 +926,7 @@ describe('moderation', () => {
     beforeAll(async () => {
       post = sc.posts[sc.dids.carol][0]
       blob = post.images[1]
-      const takeAction = await agent.api.com.atproto.admin.takeModerationAction(
+      const takeAction = await agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: TAKEDOWN,
           subject: {

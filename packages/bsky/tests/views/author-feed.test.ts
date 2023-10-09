@@ -147,7 +147,7 @@ describe('pds author feed views', () => {
     expect(preBlock.feed.length).toBeGreaterThan(0)
 
     const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: TAKEDOWN,
           subject: {
@@ -194,7 +194,7 @@ describe('pds author feed views', () => {
     const post = preBlock.feed[0].post
 
     const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: TAKEDOWN,
           subject: {

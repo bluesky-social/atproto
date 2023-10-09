@@ -138,7 +138,7 @@ describe('feed generation', () => {
       sc.getHeaders(alice),
     )
     await network.processAll()
-    await agent.api.com.atproto.admin.takeModerationAction(
+    await agent.api.com.atproto.admin.emitModerationEvent(
       {
         action: TAKEDOWN,
         subject: {

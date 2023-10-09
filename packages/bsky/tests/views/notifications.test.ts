@@ -235,7 +235,7 @@ describe('notification views', () => {
     const postRef2 = sc.posts[sc.dids.dan][1].ref // Mention
     const actionResults = await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        agent.api.com.atproto.admin.takeModerationAction(
+        agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             subject: {

@@ -113,7 +113,7 @@ describe('list feed views', () => {
   })
 
   it('blocks posts by actor takedown', async () => {
-    const actionRes = await agent.api.com.atproto.admin.takeModerationAction(
+    const actionRes = await agent.api.com.atproto.admin.emitModerationEvent(
       {
         action: TAKEDOWN,
         subject: {
@@ -151,7 +151,7 @@ describe('list feed views', () => {
 
   it('blocks posts by record takedown.', async () => {
     const postRef = sc.replies[bob][0].ref // Post and reply parent
-    const actionRes = await agent.api.com.atproto.admin.takeModerationAction(
+    const actionRes = await agent.api.com.atproto.admin.emitModerationEvent(
       {
         action: TAKEDOWN,
         subject: {

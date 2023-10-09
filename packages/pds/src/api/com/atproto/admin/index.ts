@@ -1,6 +1,6 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import takeModerationAction from './takeModerationAction'
+import emitModerationEvent from './emitModerationEvent'
 import searchRepos from './searchRepos'
 import getRecord from './getRecord'
 import getRepo from './getRepo'
@@ -17,7 +17,7 @@ import updateAccountEmail from './updateAccountEmail'
 import sendEmail from './sendEmail'
 
 export default function (server: Server, ctx: AppContext) {
-  takeModerationAction(server, ctx)
+  emitModerationEvent(server, ctx)
   searchRepos(server, ctx)
   getRecord(server, ctx)
   getRepo(server, ctx)

@@ -48,14 +48,14 @@ describe('pds admin get moderation action view', () => {
         cid: sc.posts[sc.dids.alice][0].ref.cidStr,
       },
     })
-    const flagRepo = await sc.takeModerationAction({
+    const flagRepo = await sc.emitModerationEvent({
       action: FLAG,
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
       },
     })
-    const takedownRecord = await sc.takeModerationAction({
+    const takedownRecord = await sc.emitModerationEvent({
       action: TAKEDOWN,
       subject: {
         $type: 'com.atproto.repo.strongRef',

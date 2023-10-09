@@ -25,7 +25,7 @@ describe('pds admin repo search view', () => {
   })
 
   beforeAll(async () => {
-    await sc.takeModerationAction({
+    await sc.emitModerationEvent({
       action: TAKEDOWN,
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',

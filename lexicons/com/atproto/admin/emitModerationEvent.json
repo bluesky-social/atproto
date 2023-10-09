@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.admin.takeModerationAction",
+  "id": "com.atproto.admin.emitModerationEvent",
   "defs": {
     "main": {
       "type": "procedure",

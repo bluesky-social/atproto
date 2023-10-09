@@ -106,7 +106,7 @@ describe('account deletion', () => {
 
   it('deletes account with a valid token & password', async () => {
     // Perform account deletion, including when there's an existing mod action on the account
-    await agent.api.com.atproto.admin.takeModerationAction(
+    await agent.api.com.atproto.admin.emitModerationEvent(
       {
         action: ACKNOWLEDGE,
         subject: {

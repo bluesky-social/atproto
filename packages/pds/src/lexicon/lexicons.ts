@@ -1300,7 +1300,7 @@ export const schemaDict = {
   },
   ComAtprotoAdminTakeModerationAction: {
     lexicon: 1,
-    id: 'com.atproto.admin.takeModerationAction',
+    id: 'com.atproto.admin.emitModerationEvent',
     defs: {
       main: {
         type: 'procedure',
@@ -1365,7 +1365,7 @@ export const schemaDict = {
               },
               meta: {
                 type: 'ref',
-                ref: 'lex:com.atproto.admin.takeModerationAction#actionMeta',
+                ref: 'lex:com.atproto.admin.emitModerationEvent#actionMeta',
               },
               refEventId: {
                 type: 'integer',
@@ -7469,7 +7469,7 @@ export const ids = {
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
   ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',
   ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
-  ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
+  ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.emitModerationEvent',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',

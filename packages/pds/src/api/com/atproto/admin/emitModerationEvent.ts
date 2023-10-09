@@ -14,14 +14,14 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.takeModerationAction({
+  server.com.atproto.admin.emitModerationEvent({
     auth: ctx.roleVerifier,
     handler: async ({ req, input, auth }) => {
       const access = auth.credentials
       const { db, services } = ctx
       if (ctx.cfg.bskyAppView.proxyModeration) {
         const { data: result } =
-          await ctx.appViewAgent.com.atproto.admin.takeModerationAction(
+          await ctx.appViewAgent.com.atproto.admin.emitModerationEvent(
             input.body,
             authPassthru(req, true),
           )

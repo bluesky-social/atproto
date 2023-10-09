@@ -83,13 +83,13 @@ export function isActionMeta(v: unknown): v is ActionMeta {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.takeModerationAction#actionMeta'
+    v.$type === 'com.atproto.admin.emitModerationEvent#actionMeta'
   )
 }
 
 export function validateActionMeta(v: unknown): ValidationResult {
   return lexicons.validate(
-    'com.atproto.admin.takeModerationAction#actionMeta',
+    'com.atproto.admin.emitModerationEvent#actionMeta',
     v,
   )
 }

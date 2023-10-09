@@ -21,7 +21,7 @@ import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
-import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
+import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/emitModerationEvent'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
@@ -153,7 +153,7 @@ export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
-export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
+export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/emitModerationEvent'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
@@ -510,12 +510,12 @@ export class AdminNS {
       })
   }
 
-  takeModerationAction(
+  emitModerationEvent(
     data?: ComAtprotoAdminTakeModerationAction.InputSchema,
     opts?: ComAtprotoAdminTakeModerationAction.CallOptions,
   ): Promise<ComAtprotoAdminTakeModerationAction.Response> {
     return this._service.xrpc
-      .call('com.atproto.admin.takeModerationAction', opts?.qp, data, opts)
+      .call('com.atproto.admin.emitModerationEvent', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminTakeModerationAction.toKnownErr(e)
       })

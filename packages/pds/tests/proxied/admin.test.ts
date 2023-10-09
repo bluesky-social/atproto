@@ -103,7 +103,7 @@ describe('proxies admin requests', () => {
   it('takes actions and resolves reports', async () => {
     const post = sc.posts[sc.dids.bob][1]
     const { data: actionA } =
-      await agent.api.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: FLAG,
           subject: {
@@ -121,7 +121,7 @@ describe('proxies admin requests', () => {
       )
     expect(forSnapshot(actionA)).toMatchSnapshot()
     const { data: actionB } =
-      await agent.api.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: ACKNOWLEDGE,
           subject: {
@@ -246,7 +246,7 @@ describe('proxies admin requests', () => {
   it('takesdown and labels repos, and reverts.', async () => {
     // takedown repo
     const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: TAKEDOWN,
           subject: {
@@ -297,7 +297,7 @@ describe('proxies admin requests', () => {
     const post = sc.posts[sc.dids.alice][0]
     // takedown post
     const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: TAKEDOWN,
           subject: {

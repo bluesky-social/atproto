@@ -184,7 +184,7 @@ describe('timeline views', () => {
   it('blocks posts, reposts, replies by actor takedown', async () => {
     const actionResults = await Promise.all(
       [bob, carol].map((did) =>
-        agent.api.com.atproto.admin.takeModerationAction(
+        agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             subject: {
@@ -232,7 +232,7 @@ describe('timeline views', () => {
     const postRef2 = sc.replies[bob][0].ref // Post and reply parent
     const actionResults = await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        agent.api.com.atproto.admin.takeModerationAction(
+        agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             subject: {

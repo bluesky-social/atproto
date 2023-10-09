@@ -244,7 +244,7 @@ export class AutoModerator {
     }
 
     if (this.pushAgent) {
-      await this.pushAgent.com.atproto.admin.takeModerationAction({
+      await this.pushAgent.com.atproto.admin.emitModerationEvent({
         action: 'com.atproto.admin.defs#takedown',
         subject: {
           $type: 'com.atproto.repo.strongRef',

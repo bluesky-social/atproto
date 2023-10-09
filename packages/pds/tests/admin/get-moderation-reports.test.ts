@@ -71,7 +71,7 @@ describe('pds admin get moderation reports view', () => {
     for (let i = 0; i < recordReports.length; ++i) {
       const report = recordReports[i]
       const ab = oneIn(2)(report, i)
-      const action = await sc.takeModerationAction({
+      const action = await sc.emitModerationEvent({
         action: getAction(i),
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -94,7 +94,7 @@ describe('pds admin get moderation reports view', () => {
     for (let i = 0; i < repoReports.length; ++i) {
       const report = repoReports[i]
       const ab = oneIn(2)(report, i)
-      const action = await sc.takeModerationAction({
+      const action = await sc.emitModerationEvent({
         action: getAction(i),
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',

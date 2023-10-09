@@ -38,12 +38,12 @@ describe('pds admin get moderation actions view', () => {
       .filter(oneIn(2))
     const dids = Object.values(sc.dids).filter(oneIn(2))
     // Take actions on records
-    const recordActions: Awaited<ReturnType<typeof sc.takeModerationAction>>[] =
+    const recordActions: Awaited<ReturnType<typeof sc.emitModerationEvent>>[] =
       []
     for (let i = 0; i < posts.length; ++i) {
       const post = posts[i]
       recordActions.push(
-        await sc.takeModerationAction({
+        await sc.emitModerationEvent({
           action: getAction(i),
           subject: {
             $type: 'com.atproto.repo.strongRef',
@@ -63,12 +63,12 @@ describe('pds admin get moderation actions view', () => {
       },
     })
     // Take actions on repos
-    const repoActions: Awaited<ReturnType<typeof sc.takeModerationAction>>[] =
+    const repoActions: Awaited<ReturnType<typeof sc.emitModerationEvent>>[] =
       []
     for (let i = 0; i < dids.length; ++i) {
       const did = dids[i]
       repoActions.push(
-        await sc.takeModerationAction({
+        await sc.emitModerationEvent({
           action: getAction(i),
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
@@ -92,7 +92,7 @@ describe('pds admin get moderation actions view', () => {
         },
       })
       if (ab) {
-        await sc.takeModerationAction({
+        await sc.emitModerationEvent({
           action: ACKNOWLEDGE,
           subject: action.subject,
           meta: { resolveReportIds: [report.id] },
@@ -112,7 +112,7 @@ describe('pds admin get moderation actions view', () => {
         },
       })
       if (ab) {
-        await sc.takeModerationAction({
+        await sc.emitModerationEvent({
           action: ACKNOWLEDGE,
           subject: action.subject,
           meta: { resolveReportIds: [report.id] },

@@ -22,7 +22,7 @@ import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
-import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
+import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/emitModerationEvent'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
@@ -341,14 +341,14 @@ export class AdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  takeModerationAction<AV extends AuthVerifier>(
+  emitModerationEvent<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
       ComAtprotoAdminTakeModerationAction.Handler<ExtractAuth<AV>>,
       ComAtprotoAdminTakeModerationAction.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'com.atproto.admin.takeModerationAction' // @ts-ignore
+    const nsid = 'com.atproto.admin.emitModerationEvent' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

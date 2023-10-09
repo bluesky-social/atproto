@@ -51,7 +51,7 @@ describe('account', () => {
     const code = await createInviteCode(network, agent, 1, account.did)
     // takedown the user's account
     const { data: takedownAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: TAKEDOWN,
           subject: {

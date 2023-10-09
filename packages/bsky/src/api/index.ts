@@ -40,7 +40,7 @@ import registerPush from './app/bsky/notification/registerPush'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
 import getTimelineSkeleton from './app/bsky/unspecced/getTimelineSkeleton'
 import createReport from './com/atproto/moderation/createReport'
-import takeModerationAction from './com/atproto/admin/takeModerationAction'
+import emitModerationEvent from './com/atproto/admin/emitModerationEvent'
 import searchRepos from './com/atproto/admin/searchRepos'
 import adminGetRecord from './com/atproto/admin/getRecord'
 import getRepo from './com/atproto/admin/getRepo'
@@ -97,7 +97,7 @@ export default function (server: Server, ctx: AppContext) {
   getTimelineSkeleton(server, ctx)
   // com.atproto
   createReport(server, ctx)
-  takeModerationAction(server, ctx)
+  emitModerationEvent(server, ctx)
   searchRepos(server, ctx)
   adminGetRecord(server, ctx)
   getRepo(server, ctx)

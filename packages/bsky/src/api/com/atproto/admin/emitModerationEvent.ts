@@ -11,7 +11,7 @@ import {
 import { getSubject, getAction } from '../moderation/util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.takeModerationAction({
+  server.com.atproto.admin.emitModerationEvent({
     auth: ctx.roleVerifier,
     handler: async ({ input, auth }) => {
       const access = auth.credentials

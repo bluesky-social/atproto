@@ -241,7 +241,7 @@ describe('moderation', () => {
       ])
 
       const { data: takedownBobsAccount } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             subject: {
@@ -272,7 +272,7 @@ describe('moderation', () => {
       })
 
       // Cleanup
-      await agent.api.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
@@ -298,7 +298,7 @@ describe('moderation', () => {
         cid: alicesPostRef.cid.toString(),
       }
       const { data: action1 } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: ESCALATE,
             subject: alicesPostSubject,
@@ -322,7 +322,7 @@ describe('moderation', () => {
       })
 
       // Cleanup
-      await agent.api.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
           refEventId: action1.id,
           action: REVERT,
@@ -356,7 +356,7 @@ describe('moderation', () => {
           createdBy: 'did:example:admin',
           reason: 'Y',
         }
-        return agent.api.com.atproto.admin.takeModerationAction(
+        return agent.api.com.atproto.admin.emitModerationEvent(
           {
             action,
             ...baseAction,
@@ -416,7 +416,7 @@ describe('moderation', () => {
 
     it('only allows repo to have one current action.', async () => {
       const { data: acknowledge } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: ACKNOWLEDGE,
             subject: {
@@ -431,7 +431,7 @@ describe('moderation', () => {
             headers: network.bsky.adminAuthHeaders(),
           },
         )
-      const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
+      const flagPromise = agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: FLAG,
           subject: {
@@ -463,7 +463,7 @@ describe('moderation', () => {
         },
       )
       const { data: flag } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: FLAG,
             subject: {
@@ -498,7 +498,7 @@ describe('moderation', () => {
       const postA = await sc.post(sc.dids.carol, 'image A', undefined, [img])
       const postB = await sc.post(sc.dids.carol, 'image B', undefined, [img])
       const { data: acknowledge } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: ACKNOWLEDGE,
             subject: {
@@ -515,7 +515,7 @@ describe('moderation', () => {
             headers: network.bsky.adminAuthHeaders(),
           },
         )
-      const flagPromise = agent.api.com.atproto.admin.takeModerationAction(
+      const flagPromise = agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: FLAG,
           subject: {
@@ -548,7 +548,7 @@ describe('moderation', () => {
         },
       )
       const { data: flag } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: FLAG,
             subject: {
@@ -716,7 +716,7 @@ describe('moderation', () => {
     })
 
     it('does not allow triage moderators to label.', async () => {
-      const attemptLabel = agent.api.com.atproto.admin.takeModerationAction(
+      const attemptLabel = agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: ACKNOWLEDGE,
           createdBy: 'did:example:moderator',
@@ -740,7 +740,7 @@ describe('moderation', () => {
 
     it('allows full moderators to takedown.', async () => {
       const { data: action } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             createdBy: 'did:example:moderator',
@@ -761,7 +761,7 @@ describe('moderation', () => {
 
     it('does not allow non-full moderators to takedown.', async () => {
       const attemptTakedownTriage =
-        agent.api.com.atproto.admin.takeModerationAction(
+        agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             createdBy: 'did:example:moderator',
@@ -782,7 +782,7 @@ describe('moderation', () => {
     })
     it('automatically reverses actions marked with duration', async () => {
       const { data: action } =
-        await agent.api.com.atproto.admin.takeModerationAction(
+        await agent.api.com.atproto.admin.emitModerationEvent(
           {
             action: TAKEDOWN,
             createdBy: 'did:example:moderator',
@@ -833,7 +833,7 @@ describe('moderation', () => {
         subject: ComAtprotoAdminTakeModerationAction.InputSchema['subject']
       },
     ) {
-      const result = await agent.api.com.atproto.admin.takeModerationAction(
+      const result = await agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: FLAG,
           createdBy: 'did:example:admin',
@@ -901,7 +901,7 @@ describe('moderation', () => {
       await fetch(imageUri)
       const cached = await fetch(imageUri)
       expect(cached.headers.get('x-cache')).toEqual('hit')
-      const takeAction = await agent.api.com.atproto.admin.takeModerationAction(
+      const takeAction = await agent.api.com.atproto.admin.emitModerationEvent(
         {
           action: TAKEDOWN,
           subject: {

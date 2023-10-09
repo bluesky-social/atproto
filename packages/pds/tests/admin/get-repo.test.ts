@@ -30,7 +30,7 @@ describe('pds admin get repo view', () => {
   })
 
   beforeAll(async () => {
-    const acknowledge = await sc.takeModerationAction({
+    const acknowledge = await sc.emitModerationEvent({
       action: ACKNOWLEDGE,
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
@@ -55,7 +55,7 @@ describe('pds admin get repo view', () => {
       },
     })
     await sc.reverseModerationAction({ id: acknowledge.id })
-    await sc.takeModerationAction({
+    await sc.emitModerationEvent({
       action: TAKEDOWN,
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
