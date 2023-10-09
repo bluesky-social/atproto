@@ -263,6 +263,7 @@ const getDidAndPlcOp = async (
 // @TODO this implementation is a stub
 const assignPds = async (ctx: AppContext) => {
   const pdses = await ctx.db.db.selectFrom('pds').selectAll().execute()
+  if (!pdses.length) return
   const pds = pdses.at(randomInt(pdses.length))
   return pds
 }
