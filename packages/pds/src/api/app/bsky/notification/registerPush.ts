@@ -4,11 +4,26 @@ import { getNotif } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtpAgent } from '@atproto/api'
 import { getDidDoc } from '../util/resolver'
+import { authPassthru, proxy } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.registerPush({
     auth: ctx.accessVerifier,
-    handler: async ({ auth, input }) => {
+    handler: async ({ auth, input, req }) => {
+      const proxied = await proxy(
+        ctx,
+        auth.credentials.audience,
+        async (agent) => {
+          await agent.api.app.bsky.notification.registerPush(
+            input.body,
+            authPassthru(req, true),
+          )
+        },
+      )
+      if (proxied !== null) {
+        return proxied
+      }
+
       const { serviceDid } = input.body
       const {
         credentials: { did },

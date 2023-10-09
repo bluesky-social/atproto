@@ -3,12 +3,29 @@ import AppContext from '../../../../context'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/actor/getProfile'
 import { handleReadAfterWrite } from '../util/read-after-write'
 import { LocalRecords } from '../../../../services/local'
-import { authPassthru } from '../../../proxy'
+import { authPassthru, proxy, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
     auth: ctx.accessOrRoleVerifier,
     handler: async ({ req, auth, params }) => {
+      if (auth.credentials.type === 'access') {
+        const proxied = await proxy(
+          ctx,
+          auth.credentials.audience,
+          async (agent) => {
+            const result = await agent.api.app.bsky.actor.getProfile(
+              params,
+              authPassthru(req),
+            )
+            return resultPassthru(result)
+          },
+        )
+        if (proxied !== null) {
+          return proxied
+        }
+      }
+
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null
       const res = await ctx.appViewAgent.api.app.bsky.actor.getProfile(

@@ -2,6 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { AuthScope } from '../../../../auth'
 
+// @TODO may need to proxy to pds
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getPreferences({
     auth: ctx.accessVerifier,

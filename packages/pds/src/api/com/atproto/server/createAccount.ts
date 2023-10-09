@@ -123,7 +123,7 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.services.auth(dbTxn).grantRefreshToken(refreshPayload, null)
 
         // Setup repo root
-        // @TODO contact pds for repo setup
+        // @TODO contact pds for repo setup, will look like createAccount but bringing own did
         await repoTxn.createRepo(did, [], now)
 
         return {

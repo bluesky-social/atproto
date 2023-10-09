@@ -1,11 +1,27 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { authPassthru, proxy, resultPassthru } from '../../../proxy'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopular({
     auth: ctx.accessVerifier,
-    handler: async ({ auth, params }) => {
+    handler: async ({ auth, params, req }) => {
+      const proxied = await proxy(
+        ctx,
+        auth.credentials.audience,
+        async (agent) => {
+          const result = await agent.api.app.bsky.unspecced.getPopular(
+            params,
+            authPassthru(req),
+          )
+          return resultPassthru(result)
+        },
+      )
+      if (proxied !== null) {
+        return proxied
+      }
+
       const requester = auth.credentials.did
       const HOT_CLASSIC_URI =
         'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/hot-classic'
