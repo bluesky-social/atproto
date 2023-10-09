@@ -18,6 +18,7 @@ import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/g
 import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
+import * as ComAtprotoAdminGetSubjectState from './types/com/atproto/admin/getSubjectState'
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -25,6 +26,7 @@ import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
+import * as ComAtprotoAdminUpdateSubjectState from './types/com/atproto/admin/updateSubjectState'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 import * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
@@ -151,6 +153,7 @@ export * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/g
 export * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
+export * as ComAtprotoAdminGetSubjectState from './types/com/atproto/admin/getSubjectState'
 export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -158,6 +161,7 @@ export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
+export * as ComAtprotoAdminUpdateSubjectState from './types/com/atproto/admin/updateSubjectState'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 export * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
@@ -471,6 +475,17 @@ export class AdminNS {
       })
   }
 
+  getSubjectState(
+    params?: ComAtprotoAdminGetSubjectState.QueryParams,
+    opts?: ComAtprotoAdminGetSubjectState.CallOptions,
+  ): Promise<ComAtprotoAdminGetSubjectState.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.getSubjectState', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminGetSubjectState.toKnownErr(e)
+      })
+  }
+
   resolveModerationReports(
     data?: ComAtprotoAdminResolveModerationReports.InputSchema,
     opts?: ComAtprotoAdminResolveModerationReports.CallOptions,
@@ -545,6 +560,17 @@ export class AdminNS {
       .call('com.atproto.admin.updateAccountHandle', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminUpdateAccountHandle.toKnownErr(e)
+      })
+  }
+
+  updateSubjectState(
+    data?: ComAtprotoAdminUpdateSubjectState.InputSchema,
+    opts?: ComAtprotoAdminUpdateSubjectState.CallOptions,
+  ): Promise<ComAtprotoAdminUpdateSubjectState.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.updateSubjectState', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminUpdateSubjectState.toKnownErr(e)
       })
   }
 }

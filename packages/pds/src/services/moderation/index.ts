@@ -8,7 +8,13 @@ import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { RecordService } from '../record'
 import { ModerationViews } from './views'
 import SqlRepoStorage from '../../sql-repo-storage'
-import { TAKEDOWN } from '../../lexicon/types/com/atproto/admin/defs'
+import {
+  TAKEDOWN,
+  RepoBlobRef,
+  RepoRef,
+  SubjectState,
+} from '../../lexicon/types/com/atproto/admin/defs'
+import { Main as StrongRef } from '../../lexicon/types/com/atproto/repo/strongRef'
 import { addHoursToDate } from '../../util/date'
 
 export class ModerationService {
@@ -22,6 +28,106 @@ export class ModerationService {
 
   services = {
     record: RecordService.creator(),
+  }
+
+  async getRepoTakedownState(
+    did: string,
+  ): Promise<StateResponse<RepoRef> | null> {
+    const res = await this.db.db
+      .selectFrom('repo_root')
+      .select('takedownId')
+      .where('did', '=', did)
+      .executeTakeFirst()
+    if (!res) return null
+    const state = takedownIdToSubjectState(res.takedownId ?? null)
+    return {
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: did,
+      },
+      state: {
+        takedown: state,
+      },
+    }
+  }
+
+  async getRecordTakedownState(
+    uri: AtUri,
+  ): Promise<StateResponse<StrongRef> | null> {
+    const res = await this.db.db
+      .selectFrom('record')
+      .select(['takedownId', 'cid'])
+      .where('uri', '=', uri.toString())
+      .executeTakeFirst()
+    if (!res) return null
+    const state = takedownIdToSubjectState(res.takedownId ?? null)
+    return {
+      subject: {
+        $type: 'com.atproto.repo.strongRef',
+        uri: uri.toString(),
+        cid: res.cid,
+      },
+      state: {
+        takedown: state,
+      },
+    }
+  }
+
+  async getBlobTakedownState(
+    did: string,
+    cid: CID,
+  ): Promise<StateResponse<RepoBlobRef> | null> {
+    const res = await this.db.db
+      .selectFrom('repo_blob')
+      .select('takedownId')
+      .where('did', '=', did)
+      .where('cid', '=', cid.toString())
+      .executeTakeFirst()
+    if (!res) return null
+    const state = takedownIdToSubjectState(res.takedownId ?? null)
+    return {
+      subject: {
+        $type: 'com.atproto.admin.defs#repoBlobRef',
+        did: did,
+        cid: cid.toString(),
+      },
+      state: {
+        takedown: state,
+      },
+    }
+  }
+
+  async updateRepoTakedownState(did: string, state: SubjectState) {
+    const takedownId = subjectStateToTakedownId(state)
+    await this.db.db
+      .updateTable('repo_root')
+      .set({ takedownId })
+      .where('did', '=', did)
+      .executeTakeFirst()
+  }
+
+  async updateRecordTakedownState(uri: AtUri, state: SubjectState) {
+    const takedownId = subjectStateToTakedownId(state)
+    await this.db.db
+      .updateTable('record')
+      .set({ takedownId })
+      .where('uri', '=', uri.toString())
+      .executeTakeFirst()
+  }
+
+  async updateBlobTakedownState(did: string, blob: CID, state: SubjectState) {
+    const takedownId = subjectStateToTakedownId(state)
+    await this.db.db
+      .updateTable('repo_blob')
+      .set({ takedownId })
+      .where('did', '=', did)
+      .where('cid', '=', blob.toString())
+      .executeTakeFirst()
+    if (state.applied) {
+      await this.blobstore.unquarantine(blob)
+    } else {
+      await this.blobstore.quarantine(blob)
+    }
   }
 
   async getAction(id: number): Promise<ModerationActionRow | undefined> {
@@ -437,7 +543,7 @@ export class ModerationService {
   async takedownRepo(info: { takedownId: number; did: string }) {
     await this.db.db
       .updateTable('repo_root')
-      .set({ takedownId: info.takedownId })
+      .set({ takedownId: info.takedownId.toString() })
       .where('did', '=', info.did)
       .where('takedownId', 'is', null)
       .executeTakeFirst()
@@ -459,14 +565,14 @@ export class ModerationService {
     this.db.assertTransaction()
     await this.db.db
       .updateTable('record')
-      .set({ takedownId: info.takedownId })
+      .set({ takedownId: info.takedownId.toString() })
       .where('uri', '=', info.uri.toString())
       .where('takedownId', 'is', null)
       .executeTakeFirst()
     if (info.blobCids?.length) {
       await this.db.db
         .updateTable('repo_blob')
-        .set({ takedownId: info.takedownId })
+        .set({ takedownId: info.takedownId.toString() })
         .where('recordUri', '=', info.uri.toString())
         .where(
           'cid',
@@ -607,6 +713,19 @@ export class ModerationService {
 
     return report
   }
+}
+
+const takedownIdToSubjectState = (id: string | null): SubjectState => {
+  return id === null ? { applied: false } : { applied: true, ref: id }
+}
+
+const subjectStateToTakedownId = (state: SubjectState): string | null => {
+  return state.applied ? state.ref ?? new Date().toISOString() : null
+}
+
+type StateResponse<T> = {
+  subject: T
+  state: { takedown: SubjectState }
 }
 
 export type ModerationActionRow = Selectable<ModerationAction>

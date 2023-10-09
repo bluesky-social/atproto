@@ -10,6 +10,24 @@ import * as ComAtprotoModerationDefs from '../moderation/defs'
 import * as ComAtprotoServerDefs from '../server/defs'
 import * as ComAtprotoLabelDefs from '../label/defs'
 
+export interface SubjectState {
+  applied: boolean
+  ref?: string
+  [k: string]: unknown
+}
+
+export function isSubjectState(v: unknown): v is SubjectState {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#subjectState'
+  )
+}
+
+export function validateSubjectState(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#subjectState', v)
+}
+
 export interface ActionView {
   id: number
   action: ActionType
@@ -270,6 +288,25 @@ export function isRepoRef(v: unknown): v is RepoRef {
 
 export function validateRepoRef(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#repoRef', v)
+}
+
+export interface RepoBlobRef {
+  did: string
+  cid: string
+  recordUri?: string
+  [k: string]: unknown
+}
+
+export function isRepoBlobRef(v: unknown): v is RepoBlobRef {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#repoBlobRef'
+  )
+}
+
+export function validateRepoBlobRef(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#repoBlobRef', v)
 }
 
 export interface RecordView {
