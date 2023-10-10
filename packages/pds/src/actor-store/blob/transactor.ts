@@ -83,7 +83,7 @@ export class BlobTransactor extends BlobReader {
     await Promise.all(blobPromises)
   }
 
-  async updateBlobTakedownState(did: string, blob: CID, state: SubjectState) {
+  async updateBlobTakedownState(blob: CID, state: SubjectState) {
     const takedownId = state.applied
       ? state.ref ?? new Date().toISOString()
       : null

@@ -1,6 +1,7 @@
-import { AtUri, ensureValidAtUri } from '@atproto/syntax'
 import * as syntax from '@atproto/syntax'
+import { AtUri, ensureValidAtUri } from '@atproto/syntax'
 import { cborToLexRecord } from '@atproto/repo'
+import { CID } from 'multiformats/cid'
 import { notSoftDeletedClause } from '../../db/util'
 import { ids } from '../../lexicon/lexicons'
 import { ActorDb, Backlink } from '../db'
@@ -132,13 +133,22 @@ export class RecordReader {
   async getRecordTakedownState(uri: AtUri): Promise<SubjectState | null> {
     const res = await this.db.db
       .selectFrom('record')
-      .select(['takedownId', 'cid'])
+      .select('takedownId')
       .where('uri', '=', uri.toString())
       .executeTakeFirst()
     if (!res) return null
     return res.takedownId
       ? { applied: true, ref: res.takedownId }
       : { applied: false }
+  }
+
+  async getCurrentRecordCid(uri: AtUri): Promise<CID | null> {
+    const res = await this.db.db
+      .selectFrom('record')
+      .select('cid')
+      .where('uri', '=', uri.toString())
+      .executeTakeFirst()
+    return res ? CID.parse(res.cid) : null
   }
 
   async getRecordBacklinks(opts: {

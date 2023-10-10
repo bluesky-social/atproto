@@ -76,7 +76,6 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     const got = await this.db.db
       .selectFrom('repo_seq')
       .selectAll()
-      .where('seq', 'is not', null)
       .where('sequencedAt', '>=', time)
       .orderBy('sequencedAt', 'asc')
       .limit(1)

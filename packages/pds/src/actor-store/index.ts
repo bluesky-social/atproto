@@ -13,6 +13,7 @@ import { RepoTransactor } from './repo/transactor'
 import { PreferenceTransactor } from './preference/preference'
 import { Database } from '../db'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { RecordTransactor } from './record/transactor'
 
 type ActorStoreResources = {
   repoSigningKey: crypto.Keypair
@@ -118,7 +119,7 @@ const createActorTransactor = (
       blobstore,
       backgroundQueue,
     ),
-    record: new RecordReader(db),
+    record: new RecordTransactor(db, blobstore),
     local: new LocalReader(
       db,
       repoSigningKey,
@@ -189,7 +190,7 @@ export type ActorStoreReader = {
 export type ActorStoreTransactor = {
   db: ActorDb
   repo: RepoTransactor
-  record: RecordReader
+  record: RecordTransactor
   local: LocalReader
   pref: PreferenceTransactor
 }

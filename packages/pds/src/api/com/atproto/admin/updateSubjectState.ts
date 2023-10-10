@@ -21,24 +21,27 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
       const { subject, takedown } = input.body
-      const modSrvc = ctx.services.moderation(ctx.db)
-      const authSrvc = ctx.services.auth(ctx.db)
+      // const modSrvc = ctx.services.moderation(ctx.db)
+      // const authSrvc = ctx.services.auth(ctx.db)
       if (takedown) {
         if (isRepoRef(subject)) {
           await Promise.all([
-            await modSrvc.updateRepoTakedownState(subject.did, takedown),
-            await authSrvc.revokeRefreshTokensByDid(subject.did),
+            ctx.services
+              .account(ctx.db)
+              .updateAccountTakedownState(subject.did, takedown),
+            ctx.services.auth(ctx.db).revokeRefreshTokensByDid(subject.did),
           ])
         } else if (isStrongRef(subject)) {
-          await modSrvc.updateRecordTakedownState(
-            new AtUri(subject.uri),
-            takedown,
+          const uri = new AtUri(subject.uri)
+          await ctx.actorStore.transact(uri.hostname, (store) =>
+            store.record.updateRecordTakedownState(uri, takedown),
           )
         } else if (isRepoBlobRef(subject)) {
-          await modSrvc.updateBlobTakedownState(
-            subject.did,
-            CID.parse(subject.cid),
-            takedown,
+          await ctx.actorStore.transact(subject.did, (store) =>
+            store.repo.blob.updateBlobTakedownState(
+              CID.parse(subject.cid),
+              takedown,
+            ),
           )
         } else {
           throw new InvalidRequestError('Invalid subject')
