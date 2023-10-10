@@ -141,6 +141,7 @@ export class PDS {
     await this.ctx.sequencer.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
+    await this.ctx.actorStore.close()
     await this.ctx.db.close()
     await this.ctx.redisScratch?.quit()
     clearInterval(this.dbStatsInterval)
