@@ -21,6 +21,8 @@ const run = async () => {
     },
     bsky: {
       dbPostgresSchema: 'bsky',
+      port: 2584,
+      publicUrl: 'http://localhost:2584',
     },
     plc: { port: 2582 },
   })

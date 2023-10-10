@@ -15,6 +15,7 @@ import { Database } from '../db'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { RecordTransactor } from './record/transactor'
 import { CID } from 'multiformats/cid'
+import { LRUCache } from 'lru-cache'
 import DiskBlobStore from '../disk-blobstore'
 
 type ActorStoreResources = {
@@ -28,56 +29,87 @@ type ActorStoreResources = {
   appViewCdnUrlPattern?: string
 }
 
-export const createActorStore = (
-  resources: ActorStoreResources,
-): ActorStore => {
-  const getDb = (did: string): ActorDb => {
-    const location = path.join(resources.dbDirectory, did)
+export class ActorStore {
+  cache: LRUCache<string, ActorDb>
+
+  constructor(public resources: ActorStoreResources) {
+    this.cache = new LRUCache<string, ActorDb>({
+      max: 2000,
+      dispose: async (db) => {
+        await db.close()
+      },
+    })
+  }
+
+  private loadDbFile(did: string): ActorDb {
+    const location = path.join(this.resources.dbDirectory, did)
     return Database.sqlite(location)
   }
 
-  return {
-    db: getDb,
-    read: async <T>(did: string, fn: ActorStoreReadFn<T>) => {
-      const db = getDb(did)
-      const reader = createActorReader(did, db, resources)
-      const result = await fn(reader)
-      await db.close()
-      return result
-    },
-    transact: async <T>(did: string, fn: ActorStoreTransactFn<T>) => {
-      const db = getDb(did)
-      const result = await transactAndRetryOnLock(did, db, resources, fn)
-      await db.close()
-      return result
-    },
-    create: async <T>(did: string, fn: ActorStoreTransactFn<T>) => {
-      const db = getDb(did)
-      const migrator = getMigrator(db)
-      await migrator.migrateToLatestOrThrow()
-      const result = await db.transaction((dbTxn) => {
-        const store = createActorTransactor(did, dbTxn, resources)
-        return fn(store)
-      })
-      await db.close()
-      return result
-    },
+  db(did: string): ActorDb {
+    let got = this.cache.get(did)
+    if (!got) {
+      got = this.loadDbFile(did)
+      this.cache.set(did, got)
+    }
+    return got
+  }
 
-    destroy: async (did: string) => {
-      const blobstore = resources.blobstore(did)
-      if (blobstore instanceof DiskBlobStore) {
-        await blobstore.deleteAll()
-      } else {
-        const db = getDb(did)
-        const blobRows = await db.db.selectFrom('blob').select('cid').execute()
-        const cids = blobRows.map((row) => CID.parse(row.cid))
-        await Promise.allSettled(cids.map((cid) => blobstore.delete(cid)))
-        await db.close()
+  reader(did: string) {
+    const db = this.db(did)
+    return createActorReader(did, db, this.resources)
+  }
+
+  async transact<T>(did: string, fn: ActorStoreTransactFn<T>) {
+    const db = this.db(did)
+    const result = await transactAndRetryOnLock(did, db, this.resources, fn)
+    return result
+  }
+
+  async create<T>(did: string, fn: ActorStoreTransactFn<T>) {
+    const db = this.loadDbFile(did)
+    const migrator = getMigrator(db)
+    await migrator.migrateToLatestOrThrow()
+    const result = await db.transaction((dbTxn) => {
+      const store = createActorTransactor(did, dbTxn, this.resources)
+      return fn(store)
+    })
+    this.cache.set(did, db)
+    return result
+  }
+
+  async destroy(did: string) {
+    const blobstore = this.resources.blobstore(did)
+    if (blobstore instanceof DiskBlobStore) {
+      await blobstore.deleteAll()
+    } else {
+      const db = this.db(did)
+      const blobRows = await db.db.selectFrom('blob').select('cid').execute()
+      const cids = blobRows.map((row) => CID.parse(row.cid))
+      await Promise.allSettled(cids.map((cid) => blobstore.delete(cid)))
+    }
+
+    const got = this.cache.get(did)
+    this.cache.delete(did)
+    if (got) {
+      await got.close()
+    }
+
+    await rmIfExists(path.join(this.resources.dbDirectory, did))
+    await rmIfExists(path.join(this.resources.dbDirectory, `${did}-wal`))
+    await rmIfExists(path.join(this.resources.dbDirectory, `${did}-shm`))
+  }
+
+  async close() {
+    const promises: Promise<void>[] = []
+    for (const key of this.cache.keys()) {
+      const got = this.cache.get(key)
+      this.cache.delete(key)
+      if (got) {
+        promises.push(got.close())
       }
-      await rmIfExists(path.join(resources.dbDirectory, did))
-      await rmIfExists(path.join(resources.dbDirectory, `${did}-wal`))
-      await rmIfExists(path.join(resources.dbDirectory, `${did}-shm`))
-    },
+    }
+    await Promise.all(promises)
   }
 }
 
@@ -178,14 +210,6 @@ const createActorReader = (
       })
     },
   }
-}
-
-export type ActorStore = {
-  db: (did: string) => ActorDb
-  read: <T>(did: string, fn: ActorStoreReadFn<T>) => Promise<T>
-  transact: <T>(did: string, fn: ActorStoreTransactFn<T>) => Promise<T>
-  create: <T>(did: string, fn: ActorStoreTransactFn<T>) => Promise<T>
-  destroy: (did: string) => Promise<void>
 }
 
 export type ActorStoreReadFn<T> = (fn: ActorStoreReader) => Promise<T>

@@ -21,7 +21,7 @@ import DidSqlCache from './did-cache'
 import { Crawlers } from './crawlers'
 import { DiskBlobStore } from './disk-blobstore'
 import { getRedisClient } from './redis'
-import { ActorStore, createActorStore } from './actor-store'
+import { ActorStore } from './actor-store'
 import { ServiceDb } from './service-db'
 
 export type AppContextOptions = {
@@ -167,7 +167,7 @@ export class AppContext {
             secrets.plcRotationKey.privateKeyHex,
           )
 
-    const actorStore = createActorStore({
+    const actorStore = new ActorStore({
       repoSigningKey,
       blobstore,
       appViewAgent,

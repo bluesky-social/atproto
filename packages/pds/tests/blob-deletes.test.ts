@@ -39,9 +39,7 @@ describe('blob deletes', () => {
   })
 
   const getDbBlobsForDid = (did: string) => {
-    return ctx.actorStore.read(did, (store) =>
-      store.db.db.selectFrom('blob').selectAll().execute(),
-    )
+    return ctx.actorStore.db(did).db.selectFrom('blob').selectAll().execute()
   }
 
   it('deletes blob when record is deleted', async () => {

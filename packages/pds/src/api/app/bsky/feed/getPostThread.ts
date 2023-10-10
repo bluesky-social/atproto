@@ -58,15 +58,14 @@ export default function (server: Server, ctx: AppContext) {
       } catch (err) {
         if (err instanceof AppBskyFeedGetPostThread.NotFoundError) {
           const headers = err.headers
-          const local = await ctx.actorStore.read(requester, async (store) => {
-            return readAfterWriteNotFound(
-              ctx,
-              store,
-              params,
-              requester,
-              headers,
-            )
-          })
+          const store = ctx.actorStore.reader(requester)
+          const local = await readAfterWriteNotFound(
+            ctx,
+            store,
+            params,
+            requester,
+            headers,
+          )
           if (local === null) {
             throw err
           } else {

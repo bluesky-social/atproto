@@ -39,8 +39,7 @@ export const getCarStream = async (
   did: string,
   since?: string,
 ): Promise<stream.Readable> => {
-  // must open up the db outside of store interface so that we can close the file handle after finished streaming
-  const actorDb = await ctx.actorStore.db(did)
+  const actorDb = ctx.actorStore.db(did)
   const storage = new SqlRepoReader(actorDb)
   let carIter: AsyncIterable<Uint8Array>
   try {
@@ -51,7 +50,5 @@ export const getCarStream = async (
     }
     throw err
   }
-  const carStream = byteIterableToStream(carIter)
-  carStream.on('close', actorDb.close)
-  return carStream
+  return byteIterableToStream(carIter)
 }

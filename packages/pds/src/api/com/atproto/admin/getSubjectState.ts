@@ -13,14 +13,11 @@ export default function (server: Server, ctx: AppContext) {
       let body: OutputSchema | null = null
       if (uri) {
         const parsedUri = new AtUri(uri)
-        const [state, cid] = await ctx.actorStore.read(
-          parsedUri.hostname,
-          (store) =>
-            Promise.all([
-              store.record.getRecordTakedownState(parsedUri),
-              store.record.getCurrentRecordCid(parsedUri),
-            ]),
-        )
+        const store = ctx.actorStore.reader(parsedUri.hostname)
+        const [state, cid] = await Promise.all([
+          store.record.getRecordTakedownState(parsedUri),
+          store.record.getCurrentRecordCid(parsedUri),
+        ])
         if (cid && state) {
           body = {
             subject: {
@@ -39,9 +36,9 @@ export default function (server: Server, ctx: AppContext) {
             'Must provide a did to request blob state',
           )
         }
-        const state = await ctx.actorStore.read(did, (store) =>
-          store.repo.blob.getBlobTakedownState(CID.parse(blob)),
-        )
+        const state = await ctx.actorStore
+          .reader(did)
+          .repo.blob.getBlobTakedownState(CID.parse(blob))
         if (state) {
           body = {
             subject: {

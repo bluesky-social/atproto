@@ -74,13 +74,12 @@ describe('file uploads', () => {
     })
     smallBlob = res.data.blob
 
-    const found = await ctx.actorStore.read(alice, (store) =>
-      store.db.db
-        .selectFrom('blob')
-        .selectAll()
-        .where('cid', '=', smallBlob.ref.toString())
-        .executeTakeFirst(),
-    )
+    const found = await ctx.actorStore
+      .db(alice)
+      .db.selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', smallBlob.ref.toString())
+      .executeTakeFirst()
 
     expect(found?.mimeType).toBe('image/jpeg')
     expect(found?.size).toBe(smallFile.length)
@@ -96,13 +95,12 @@ describe('file uploads', () => {
   })
 
   it('after being referenced, the file is moved to permanent storage', async () => {
-    const found = await ctx.actorStore.read(alice, (store) =>
-      store.db.db
-        .selectFrom('blob')
-        .selectAll()
-        .where('cid', '=', smallBlob.ref.toString())
-        .executeTakeFirst(),
-    )
+    const found = await ctx.actorStore
+      .db(alice)
+      .db.selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', smallBlob.ref.toString())
+      .executeTakeFirst()
     expect(found?.tempKey).toBeNull()
     const hasStored = ctx.blobstore(alice).hasStored(smallBlob.ref)
     expect(hasStored).toBeTruthy()
@@ -142,13 +140,12 @@ describe('file uploads', () => {
   })
 
   it('does not make a blob permanent if referencing failed', async () => {
-    const found = await ctx.actorStore.read(alice, (store) =>
-      store.db.db
-        .selectFrom('blob')
-        .selectAll()
-        .where('cid', '=', largeBlob.ref.toString())
-        .executeTakeFirst(),
-    )
+    const found = await ctx.actorStore
+      .db(alice)
+      .db.selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', largeBlob.ref.toString())
+      .executeTakeFirst()
 
     expect(found?.tempKey).toBeDefined()
     const hasTemp = await ctx.blobstore(alice).hasTemp(found?.tempKey as string)
@@ -199,13 +196,12 @@ describe('file uploads', () => {
         encoding: 'image/jpeg',
       } as any)
     expect(uploadAfterPermanent).toEqual(uploadA)
-    const blob = await ctx.actorStore.read(alice, (store) =>
-      store.db.db
-        .selectFrom('blob')
-        .selectAll()
-        .where('cid', '=', uploadAfterPermanent.blob.ref.toString())
-        .executeTakeFirstOrThrow(),
-    )
+    const blob = await ctx.actorStore
+      .db(alice)
+      .db.selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', uploadAfterPermanent.blob.ref.toString())
+      .executeTakeFirstOrThrow()
     expect(blob.tempKey).toEqual(null)
   })
 
@@ -230,13 +226,12 @@ describe('file uploads', () => {
       encoding: 'video/mp4',
     } as any)
 
-    const found = await ctx.actorStore.read(alice, (store) =>
-      store.db.db
-        .selectFrom('blob')
-        .selectAll()
-        .where('cid', '=', res.data.blob.ref.toString())
-        .executeTakeFirst(),
-    )
+    const found = await ctx.actorStore
+      .db(alice)
+      .db.selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', res.data.blob.ref.toString())
+      .executeTakeFirst()
 
     expect(found?.mimeType).toBe('image/jpeg')
     expect(found?.width).toBe(1280)
@@ -250,13 +245,12 @@ describe('file uploads', () => {
       encoding: 'image/png',
     })
 
-    const found = await ctx.actorStore.read(alice, (store) =>
-      store.db.db
-        .selectFrom('blob')
-        .selectAll()
-        .where('cid', '=', res.data.blob.ref.toString())
-        .executeTakeFirst(),
-    )
+    const found = await ctx.actorStore
+      .db(alice)
+      .db.selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', res.data.blob.ref.toString())
+      .executeTakeFirst()
 
     expect(found?.mimeType).toBe('image/png')
     expect(found?.width).toBe(554)
@@ -270,13 +264,12 @@ describe('file uploads', () => {
       encoding: 'test/fake',
     } as any)
 
-    const found = await ctx.actorStore.read(alice, (store) =>
-      store.db.db
-        .selectFrom('blob')
-        .selectAll()
-        .where('cid', '=', res.data.blob.ref.toString())
-        .executeTakeFirst(),
-    )
+    const found = await ctx.actorStore
+      .db(alice)
+      .db.selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', res.data.blob.ref.toString())
+      .executeTakeFirst()
 
     expect(found?.mimeType).toBe('test/fake')
   })

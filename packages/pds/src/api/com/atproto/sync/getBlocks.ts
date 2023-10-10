@@ -22,9 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const cids = params.cids.map((c) => CID.parse(c))
-      const got = await ctx.actorStore.read(did, (store) =>
-        store.repo.storage.getBlocks(cids),
-      )
+      const got = await ctx.actorStore.reader(did).repo.storage.getBlocks(cids)
       if (got.missing.length > 0) {
         const missingStr = got.missing.map((c) => c.toString())
         throw new InvalidRequestError(`Could not find cids: ${missingStr}`)

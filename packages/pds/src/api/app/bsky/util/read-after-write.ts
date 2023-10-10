@@ -73,14 +73,9 @@ export const readAfterWriteInternal = async <T>(
 ): Promise<{ data: T; lag?: number }> => {
   const rev = getRepoRev(res.headers)
   if (!rev) return { data: res.data }
-  const { data, local } = await ctx.actorStore.read(
-    requester,
-    async (store) => {
-      const local = await store.local.getRecordsSinceRev(rev)
-      const data = await munge(store, res.data, local, requester)
-      return { data, local }
-    },
-  )
+  const store = ctx.actorStore.reader(requester)
+  const local = await store.local.getRecordsSinceRev(rev)
+  const data = await munge(store, res.data, local, requester)
   return {
     data,
     lag: getLocalLag(local),

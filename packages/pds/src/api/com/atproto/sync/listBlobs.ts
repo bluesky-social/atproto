@@ -18,9 +18,9 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const blobCids = await ctx.actorStore.read(did, (store) => {
-        return store.repo.blob.listBlobs({ since, limit, cursor })
-      })
+      const blobCids = await ctx.actorStore
+        .reader(did)
+        .repo.blob.listBlobs({ since, limit, cursor })
 
       return {
         encoding: 'application/json',
