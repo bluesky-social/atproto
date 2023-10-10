@@ -3,19 +3,12 @@ import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { OutputSchema } from '../../../../lexicon/types/com/atproto/admin/getSubjectState'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getSubjectState({
     auth: ctx.roleVerifier,
-    handler: async ({ params, auth }) => {
-      const access = auth.credentials
-      // if less than admin access then cannot perform a takedown
-      if (!access.moderator) {
-        throw new AuthRequiredError(
-          'Must be a full moderator to update subject state',
-        )
-      }
+    handler: async ({ params }) => {
       const { did, uri, blob } = params
       const modSrvc = ctx.services.moderation(ctx.db)
       let body: OutputSchema | null

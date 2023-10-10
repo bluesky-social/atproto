@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.roleVerifier,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
-      // if less than admin access then cannot perform a takedown
+      // if less than moderator access then cannot perform a takedown
       if (!access.moderator) {
         throw new AuthRequiredError(
           'Must be a full moderator to update subject state',
