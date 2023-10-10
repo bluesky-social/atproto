@@ -4,7 +4,6 @@ import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { AppContext } from '../src'
 import { DAY } from '@atproto/common'
 import { genInvCodes } from '../src/api/com/atproto/server/util'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
 describe('account', () => {
   let network: TestNetworkNoAppView
@@ -50,34 +49,33 @@ describe('account', () => {
     // assign an invite code to the user
     const code = await createInviteCode(network, agent, 1, account.did)
     // takedown the user's account
-    const { data: takedownAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: account.did,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+    await agent.api.com.atproto.admin.updateSubjectState(
+      {
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: account.did,
         },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+        takedown: { applied: true },
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
     // attempt to create account with the previously generated invite code
     const promise = createAccountWithInvite(agent, code)
     await expect(promise).rejects.toThrow(
       ComAtprotoServerCreateAccount.InvalidInviteCodeError,
     )
 
-    // double check that reversing the takedown action makes the invite code valid again
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    // double check that undoing the takedown makes the invite code valid again
+    await agent.api.com.atproto.admin.updateSubjectState(
       {
-        id: takedownAction.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: account.did,
+        },
+        takedown: { applied: false },
       },
       {
         encoding: 'application/json',

@@ -28,7 +28,7 @@ import compression from './util/compression'
 
 export * from './config'
 export { Database } from './db'
-export { DiskBlobStore, MemoryBlobStore } from './storage'
+export { DiskBlobStore } from './disk-blobstore'
 export { AppContext } from './context'
 export { httpLogger } from './logger'
 

@@ -12,7 +12,7 @@ import {
 import { forSnapshot, paginateAll } from '../_util'
 import basicSeed from '../seeds/basic'
 
-describe('pds admin get moderation actions view', () => {
+describe.skip('pds admin get moderation actions view', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient

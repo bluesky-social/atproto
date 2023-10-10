@@ -6,37 +6,41 @@ import path from 'path'
 import { CID } from 'multiformats/cid'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { randomStr } from '@atproto/crypto'
-import { httpLogger as log } from '../logger'
+import { httpLogger as log } from './logger'
 import { isErrnoException, fileExists, rmIfExists } from '@atproto/common'
 
 export class DiskBlobStore implements BlobStore {
-  location: string
-  tmpLocation: string
-  quarantineLocation: string
-
   constructor(
-    location: string,
-    tmpLocation: string,
-    quarantineLocation: string,
-  ) {
-    this.location = location
-    this.tmpLocation = tmpLocation
-    this.quarantineLocation = quarantineLocation
-  }
+    public did: string,
+    public location: string,
+    public tmpLocation: string,
+    public quarantineLocation: string,
+  ) {}
 
-  static async create(
+  static creator(
     location: string,
     tmpLocation?: string,
     quarantineLocation?: string,
-  ): Promise<DiskBlobStore> {
-    const tmp = tmpLocation || path.join(os.tmpdir(), 'atproto/blobs')
-    const quarantine = quarantineLocation || path.join(location, 'quarantine')
-    await Promise.all([
-      fs.mkdir(location, { recursive: true }),
-      fs.mkdir(tmp, { recursive: true }),
-      fs.mkdir(quarantine, { recursive: true }),
-    ])
-    return new DiskBlobStore(location, tmp, quarantine)
+  ) {
+    return (did: string) => {
+      const tmp = tmpLocation || path.join(os.tmpdir(), 'atproto/blobs')
+      const quarantine = quarantineLocation || path.join(location, 'quarantine')
+      return new DiskBlobStore(did, location, tmp, quarantine)
+    }
+  }
+
+  private async ensureDir() {
+    await fs.mkdir(path.join(this.location, this.did), { recursive: true })
+  }
+
+  private async ensureTemp() {
+    await fs.mkdir(path.join(this.tmpLocation, this.did), { recursive: true })
+  }
+
+  private async ensureQuarantine() {
+    await fs.mkdir(path.join(this.quarantineLocation, this.did), {
+      recursive: true,
+    })
   }
 
   private genKey() {
@@ -44,15 +48,15 @@ export class DiskBlobStore implements BlobStore {
   }
 
   getTmpPath(key: string): string {
-    return path.join(this.tmpLocation, key)
+    return path.join(this.tmpLocation, this.did, key)
   }
 
   getStoredPath(cid: CID): string {
-    return path.join(this.location, cid.toString())
+    return path.join(this.location, this.did, cid.toString())
   }
 
   getQuarantinePath(cid: CID): string {
-    return path.join(this.quarantineLocation, cid.toString())
+    return path.join(this.quarantineLocation, this.did, cid.toString())
   }
 
   async hasTemp(key: string): Promise<boolean> {
@@ -64,12 +68,14 @@ export class DiskBlobStore implements BlobStore {
   }
 
   async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
+    await this.ensureTemp()
     const key = this.genKey()
     await fs.writeFile(this.getTmpPath(key), bytes)
     return key
   }
 
   async makePermanent(key: string, cid: CID): Promise<void> {
+    await this.ensureDir()
     const tmpPath = this.getTmpPath(key)
     const storedPath = this.getStoredPath(cid)
     const alreadyHas = await this.hasStored(cid)
@@ -88,14 +94,17 @@ export class DiskBlobStore implements BlobStore {
     cid: CID,
     bytes: Uint8Array | stream.Readable,
   ): Promise<void> {
+    await this.ensureDir()
     await fs.writeFile(this.getStoredPath(cid), bytes)
   }
 
   async quarantine(cid: CID): Promise<void> {
+    await this.ensureQuarantine()
     await fs.rename(this.getStoredPath(cid), this.getQuarantinePath(cid))
   }
 
   async unquarantine(cid: CID): Promise<void> {
+    await this.ensureDir()
     await fs.rename(this.getQuarantinePath(cid), this.getStoredPath(cid))
   }
 
@@ -121,6 +130,10 @@ export class DiskBlobStore implements BlobStore {
 
   async delete(cid: CID): Promise<void> {
     await rmIfExists(this.getStoredPath(cid))
+  }
+
+  async deleteAll(): Promise<void> {
+    await rmIfExists(this.location, true)
   }
 }
 

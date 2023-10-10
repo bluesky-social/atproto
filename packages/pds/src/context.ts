@@ -19,7 +19,7 @@ import { Sequencer } from './sequencer'
 import { BackgroundQueue } from './background'
 import DidSqlCache from './did-cache'
 import { Crawlers } from './crawlers'
-import { DiskBlobStore } from './storage'
+import { DiskBlobStore } from './disk-blobstore'
 import { getRedisClient } from './redis'
 import { ActorStore, createActorStore } from './actor-store'
 import { ServiceDb } from './service-db'
@@ -27,7 +27,7 @@ import { ServiceDb } from './service-db'
 export type AppContextOptions = {
   db: ServiceDb
   actorStore: ActorStore
-  blobstore: BlobStore
+  blobstore: (did: string) => BlobStore
   mailer: ServerMailer
   moderationMailer: ModerationMailer
   didCache: DidSqlCache
@@ -48,7 +48,7 @@ export type AppContextOptions = {
 export class AppContext {
   public db: ServiceDb
   public actorStore: ActorStore
-  public blobstore: BlobStore
+  public blobstore: (did: string) => BlobStore
   public mailer: ServerMailer
   public moderationMailer: ModerationMailer
   public didCache: DidSqlCache
@@ -96,8 +96,8 @@ export class AppContext {
     )
     const blobstore =
       cfg.blobstore.provider === 's3'
-        ? new S3BlobStore({ bucket: cfg.blobstore.bucket })
-        : await DiskBlobStore.create(
+        ? S3BlobStore.creator({ bucket: cfg.blobstore.bucket })
+        : DiskBlobStore.creator(
             cfg.blobstore.location,
             cfg.blobstore.tempLocation,
           )

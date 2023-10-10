@@ -199,6 +199,10 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     const evt = await formatSeqTombstone(did)
     await this.sequenceEvt(evt)
   }
+
+  async deleteAllForUser(did: string) {
+    await this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute()
+  }
 }
 
 type SeqRow = RepoSeqEntry

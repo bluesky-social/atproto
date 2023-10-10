@@ -1,20 +1,23 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { once, EventEmitter } from 'events'
+import path from 'path'
 import { Selectable } from 'kysely'
 import Mail from 'nodemailer/lib/mailer'
 import AtpAgent from '@atproto/api'
 import basicSeed from './seeds/basic'
-import { Database } from '../src'
 import { ServerMailer } from '../src/mailer'
-import { BlobNotFoundError, BlobStore } from '@atproto/repo'
-import { RepoRoot } from '../src/db/tables/repo-root'
-import { UserAccount } from '../src/db/tables/user-account'
-import { IpldBlock } from '../src/db/tables/ipld-block'
-import { RepoBlob } from '../src/db/tables/repo-blob'
-import { Blob } from '../src/db/tables/blob'
-import { Record } from '../src/db/tables/record'
-import { RepoSeq } from '../src/db/tables/repo-seq'
-import { ACKNOWLEDGE } from '../src/lexicon/types/com/atproto/admin/defs'
+import { BlobNotFoundError } from '@atproto/repo'
+import {
+  RepoRoot,
+  UserAccount,
+  RepoSeq,
+  AppPassword,
+  DidHandle,
+  EmailToken,
+  RefreshToken,
+  ServiceDb,
+} from '../src/service-db'
+import { fileExists } from '@atproto/common'
 
 describe('account deletion', () => {
   let network: TestNetworkNoAppView
@@ -22,10 +25,9 @@ describe('account deletion', () => {
   let sc: SeedClient
 
   let mailer: ServerMailer
-  let db: Database
+  let db: ServiceDb
   let initialDbContents: DbContents
   let updatedDbContents: DbContents
-  let blobstore: BlobStore
   const mailCatcher = new EventEmitter()
   let _origSendMail
 
@@ -38,7 +40,6 @@ describe('account deletion', () => {
     })
     mailer = network.pds.ctx.mailer
     db = network.pds.ctx.db
-    blobstore = network.pds.ctx.blobstore
     agent = new AtpAgent({ service: network.pds.url })
     sc = network.getSeedClient()
     await basicSeed(sc)
@@ -105,16 +106,14 @@ describe('account deletion', () => {
   })
 
   it('deletes account with a valid token & password', async () => {
-    // Perform account deletion, including when there's an existing mod action on the account
-    await agent.api.com.atproto.admin.takeModerationAction(
+    // Perform account deletion, including when the account is already "taken down"
+    await agent.api.com.atproto.admin.updateSubjectState(
       {
-        action: ACKNOWLEDGE,
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: carol.did,
         },
-        createdBy: 'did:example:admin',
-        reason: 'X',
+        takedown: { applied: true },
       },
       {
         encoding: 'application/json',
@@ -139,48 +138,55 @@ describe('account deletion', () => {
 
   it('no longer store the user account or repo', async () => {
     updatedDbContents = await getDbContents(db)
-    expect(updatedDbContents.roots).toEqual(
-      initialDbContents.roots.filter((row) => row.did !== carol.did),
+    expect(updatedDbContents.repoRoots).toEqual(
+      initialDbContents.repoRoots.filter((row) => row.did !== carol.did),
     )
-    expect(updatedDbContents.users).toEqual(
-      initialDbContents.users.filter((row) => row.did !== carol.did),
+    expect(updatedDbContents.didHandles).toEqual(
+      initialDbContents.didHandles.filter((row) => row.did !== carol.did),
     )
-    expect(updatedDbContents.blocks).toEqual(
-      initialDbContents.blocks.filter((row) => row.creator !== carol.did),
+    expect(updatedDbContents.userAccounts).toEqual(
+      initialDbContents.userAccounts.filter((row) => row.did !== carol.did),
     )
     // check all seqs for this did are gone, except for the tombstone
     expect(
-      updatedDbContents.seqs.filter((row) => row.eventType !== 'tombstone'),
-    ).toEqual(initialDbContents.seqs.filter((row) => row.did !== carol.did))
+      updatedDbContents.repoSeqs.filter((row) => row.eventType !== 'tombstone'),
+    ).toEqual(initialDbContents.repoSeqs.filter((row) => row.did !== carol.did))
     // check we do have a tombstone for this did
     expect(
-      updatedDbContents.seqs.filter(
+      updatedDbContents.repoSeqs.filter(
         (row) => row.did === carol.did && row.eventType === 'tombstone',
       ).length,
     ).toEqual(1)
-
-    expect(updatedDbContents.records).toEqual(
-      initialDbContents.records.filter((row) => row.did !== carol.did),
+    expect(updatedDbContents.appPasswords).toEqual(
+      initialDbContents.appPasswords.filter((row) => row.did !== carol.did),
     )
+    expect(updatedDbContents.emailTokens).toEqual(
+      initialDbContents.emailTokens.filter((row) => row.did !== carol.did),
+    )
+    expect(updatedDbContents.refreshTokens).toEqual(
+      initialDbContents.refreshTokens.filter((row) => row.did !== carol.did),
+    )
+  })
+
+  it('deletes the users actor store', async () => {
+    const sqliteDir = network.pds.ctx.cfg.db.directory
+    const dbExists = await fileExists(path.join(sqliteDir, carol.did))
+    expect(dbExists).toBe(false)
+    const walExists = await fileExists(path.join(sqliteDir, `${carol.did}-wal`))
+    expect(walExists).toBe(false)
+    const shmExists = await fileExists(path.join(sqliteDir, `${carol.did}-shm`))
+    expect(shmExists).toBe(false)
   })
 
   it('deletes relevant blobs', async () => {
     const imgs = sc.posts[carol.did][0].images
-    // carols first blob is used by other accounts
     const first = imgs[0].image.ref
-    // carols second blob is used by only her
     const second = imgs[1].image.ref
-    const got = await blobstore.getBytes(first)
-    expect(got).toBeDefined()
-    const attempt = blobstore.getBytes(second)
-    await expect(attempt).rejects.toThrow(BlobNotFoundError)
-
-    expect(updatedDbContents.repoBlobs).toEqual(
-      initialDbContents.repoBlobs.filter((row) => row.did !== carol.did),
-    )
-    expect(updatedDbContents.blobs).toEqual(
-      initialDbContents.blobs.filter((row) => row.creator !== carol.did),
-    )
+    const blobstore = network.pds.ctx.blobstore(carol.did)
+    const attempt1 = blobstore.getBytes(first)
+    await expect(attempt1).rejects.toThrow(BlobNotFoundError)
+    const attempt2 = blobstore.getBytes(second)
+    await expect(attempt2).rejects.toThrow(BlobNotFoundError)
   })
 
   it('can delete an empty user', async () => {
@@ -209,44 +215,46 @@ describe('account deletion', () => {
 })
 
 type DbContents = {
-  roots: RepoRoot[]
-  users: Selectable<UserAccount>[]
-  blocks: IpldBlock[]
-  seqs: Selectable<RepoSeq>[]
-  records: Record[]
-  repoBlobs: RepoBlob[]
-  blobs: Blob[]
+  repoRoots: RepoRoot[]
+  didHandles: DidHandle[]
+  userAccounts: Selectable<UserAccount>[]
+  repoSeqs: Selectable<RepoSeq>[]
+  appPasswords: AppPassword[]
+  emailTokens: EmailToken[]
+  refreshTokens: RefreshToken[]
 }
 
-const getDbContents = async (db: Database): Promise<DbContents> => {
-  const [roots, users, blocks, seqs, records, repoBlobs, blobs] =
-    await Promise.all([
-      db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
-      db.db.selectFrom('user_account').orderBy('did').selectAll().execute(),
-      db.db
-        .selectFrom('ipld_block')
-        .orderBy('creator')
-        .orderBy('cid')
-        .selectAll()
-        .execute(),
-      db.db.selectFrom('repo_seq').orderBy('id').selectAll().execute(),
-      db.db.selectFrom('record').orderBy('uri').selectAll().execute(),
-      db.db
-        .selectFrom('repo_blob')
-        .orderBy('did')
-        .orderBy('cid')
-        .selectAll()
-        .execute(),
-      db.db.selectFrom('blob').orderBy('cid').selectAll().execute(),
-    ])
+const getDbContents = async (db: ServiceDb): Promise<DbContents> => {
+  const [
+    repoRoots,
+    didHandles,
+    userAccounts,
+    repoSeqs,
+    appPasswords,
+    emailTokens,
+    refreshTokens,
+  ] = await Promise.all([
+    db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
+    db.db.selectFrom('did_handle').orderBy('did').selectAll().execute(),
+    db.db.selectFrom('user_account').orderBy('did').selectAll().execute(),
+    db.db.selectFrom('repo_seq').orderBy('seq').selectAll().execute(),
+    db.db
+      .selectFrom('app_password')
+      .orderBy('did')
+      .orderBy('name')
+      .selectAll()
+      .execute(),
+    db.db.selectFrom('email_token').orderBy('token').selectAll().execute(),
+    db.db.selectFrom('refresh_token').orderBy('id').selectAll().execute(),
+  ])
 
   return {
-    roots,
-    users,
-    blocks,
-    seqs,
-    records,
-    repoBlobs,
-    blobs,
+    repoRoots,
+    didHandles,
+    userAccounts,
+    repoSeqs,
+    appPasswords,
+    emailTokens,
+    refreshTokens,
   }
 }

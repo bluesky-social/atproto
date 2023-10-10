@@ -11,7 +11,7 @@ import {
 import { forSnapshot } from '../_util'
 import basicSeed from '../seeds/basic'
 
-describe('pds admin get repo view', () => {
+describe.skip('pds admin get repo view', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient

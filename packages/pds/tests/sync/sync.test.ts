@@ -5,7 +5,6 @@ import { randomStr } from '@atproto/crypto'
 import * as repo from '@atproto/repo'
 import { MemoryBlockstore } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { CID } from 'multiformats/cid'
 import { AppContext } from '../../src'
 
@@ -203,13 +202,18 @@ describe('repo sync', () => {
 
   describe('repo takedown', () => {
     beforeAll(async () => {
-      await sc.takeModerationAction({
-        action: TAKEDOWN,
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did,
+      await agent.api.com.atproto.admin.updateSubjectState(
+        {
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did,
+          },
+          takedown: {
+            applied: true,
+          },
         },
-      })
+        { headers: sc.adminAuthHeaders(), encoding: 'application/json' },
+      )
       agent.api.xrpc.unsetHeader('authorization')
     })
 

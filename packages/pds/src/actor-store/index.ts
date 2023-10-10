@@ -14,10 +14,12 @@ import { PreferenceTransactor } from './preference/preference'
 import { Database } from '../db'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { RecordTransactor } from './record/transactor'
+import { CID } from 'multiformats/cid'
+import DiskBlobStore from '../disk-blobstore'
 
 type ActorStoreResources = {
   repoSigningKey: crypto.Keypair
-  blobstore: BlobStore
+  blobstore: (did: string) => BlobStore
   backgroundQueue: BackgroundQueue
   dbDirectory: string
   pdsHostname: string
@@ -62,6 +64,16 @@ export const createActorStore = (
     },
 
     destroy: async (did: string) => {
+      const blobstore = resources.blobstore(did)
+      if (blobstore instanceof DiskBlobStore) {
+        await blobstore.deleteAll()
+      } else {
+        const db = getDb(did)
+        const blobRows = await db.db.selectFrom('blob').select('cid').execute()
+        const cids = blobRows.map((row) => CID.parse(row.cid))
+        await Promise.allSettled(cids.map((cid) => blobstore.delete(cid)))
+        await db.close()
+      }
       await rmIfExists(path.join(resources.dbDirectory, did))
       await rmIfExists(path.join(resources.dbDirectory, `${did}-wal`))
       await rmIfExists(path.join(resources.dbDirectory, `${did}-shm`))
@@ -110,16 +122,17 @@ const createActorTransactor = (
     appViewDid,
     appViewCdnUrlPattern,
   } = resources
+  const userBlobstore = blobstore(did)
   return {
     db,
     repo: new RepoTransactor(
       db,
       did,
       repoSigningKey,
-      blobstore,
+      userBlobstore,
       backgroundQueue,
     ),
-    record: new RecordTransactor(db, blobstore),
+    record: new RecordTransactor(db, userBlobstore),
     local: new LocalReader(
       db,
       repoSigningKey,
@@ -147,7 +160,7 @@ const createActorReader = (
   } = resources
   return {
     db,
-    repo: new RepoReader(db, blobstore),
+    repo: new RepoReader(db, blobstore(did)),
     record: new RecordReader(db),
     local: new LocalReader(
       db,

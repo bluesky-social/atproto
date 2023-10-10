@@ -17,7 +17,7 @@ export class S3BlobStore implements BlobStore {
   private client: aws.S3
   private bucket: string
 
-  constructor(cfg: S3Config) {
+  constructor(public did: string, cfg: S3Config) {
     const { bucket, ...rest } = cfg
     this.bucket = bucket
     this.client = new aws.S3({
@@ -26,20 +26,26 @@ export class S3BlobStore implements BlobStore {
     })
   }
 
+  static creator(cfg: S3Config) {
+    return (did: string) => {
+      return new S3BlobStore(did, cfg)
+    }
+  }
+
   private genKey() {
     return randomStr(32, 'base32')
   }
 
   private getTmpPath(key: string): string {
-    return `tmp/${key}`
+    return `tmp/${this.did}/${key}`
   }
 
   private getStoredPath(cid: CID): string {
-    return `blocks/${cid.toString()}`
+    return `blocks/${this.did}/${cid.toString()}`
   }
 
   private getQuarantinedPath(cid: CID): string {
-    return `quarantine/${cid.toString()}`
+    return `quarantine/${this.did}/${cid.toString()}`
   }
 
   async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {

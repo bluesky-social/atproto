@@ -6,7 +6,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('purpose', 'varchar', (col) => col.notNull())
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('token', 'varchar', (col) => col.notNull())
-    .addColumn('requestedAt', 'datetime', (col) => col.notNull())
+    .addColumn('requestedAt', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint('email_token_pkey', ['purpose', 'did'])
     .addUniqueConstraint('email_token_purpose_token_unique', [
       'purpose',

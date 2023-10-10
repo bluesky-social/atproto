@@ -29,6 +29,7 @@ export default function (server: Server, ctx: AppContext) {
       await Promise.all([
         accountService.deleteAccount(did),
         ctx.actorStore.destroy(did),
+        await ctx.sequencer.deleteAllForUser(did),
       ])
       await ctx.sequencer.sequenceTombstone(did)
     },

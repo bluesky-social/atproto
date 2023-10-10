@@ -8,7 +8,7 @@ export interface EmailToken {
   purpose: EmailTokenPurpose
   did: string
   token: string
-  requestedAt: Date
+  requestedAt: string
 }
 
 export const tableName = 'email_token'

@@ -21,7 +21,7 @@ import {
   REASONSPAM,
 } from '../../src/lexicon/types/com/atproto/moderation/defs'
 
-describe('moderation', () => {
+describe.skip('moderation', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient

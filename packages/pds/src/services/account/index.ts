@@ -526,13 +526,12 @@ export class AccountService {
     purpose: EmailTokenPurpose,
   ): Promise<string> {
     const token = getRandomToken().toUpperCase()
+    const now = new Date().toISOString()
     await this.db.db
       .insertInto('email_token')
-      .values({ purpose, did, token, requestedAt: new Date() })
+      .values({ purpose, did, token, requestedAt: now })
       .onConflict((oc) =>
-        oc
-          .columns(['purpose', 'did'])
-          .doUpdateSet({ token, requestedAt: new Date() }),
+        oc.columns(['purpose', 'did']).doUpdateSet({ token, requestedAt: now }),
       )
       .execute()
     return token
@@ -562,7 +561,7 @@ export class AccountService {
     if (!res) {
       throw new InvalidRequestError('Token is invalid', 'InvalidToken')
     }
-    const expired = !lessThanAgoMs(res.requestedAt, expirationLen)
+    const expired = !lessThanAgoMs(new Date(res.requestedAt), expirationLen)
     if (expired) {
       throw new InvalidRequestError('Token is expired', 'ExpiredToken')
     }
@@ -582,7 +581,7 @@ export class AccountService {
     if (!res) {
       throw new InvalidRequestError('Token is invalid', 'InvalidToken')
     }
-    const expired = !lessThanAgoMs(res.requestedAt, expirationLen)
+    const expired = !lessThanAgoMs(new Date(res.requestedAt), expirationLen)
     if (expired) {
       throw new InvalidRequestError('Token is expired', 'ExpiredToken')
     }
