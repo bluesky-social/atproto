@@ -1,21 +1,19 @@
+import { proxy } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru } from '../../../../api/com/atproto/admin/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollows({
     auth: ctx.accessOrRoleVerifier,
-    handler: async ({ req, params, auth }) => {
+    handler: async (request) => {
+      const { auth } = request
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null
-      const res = await ctx.appViewAgent.api.app.bsky.graph.getFollows(
-        params,
-        requester ? await ctx.serviceAuthHeaders(requester) : authPassthru(req),
+      return proxy(
+        request,
+        ctx.appViewAgent.service.href,
+        requester ? await ctx.serviceAuthHeaders(requester) : undefined,
       )
-      return {
-        encoding: 'application/json',
-        body: res.data,
-      }
     },
   })
 }

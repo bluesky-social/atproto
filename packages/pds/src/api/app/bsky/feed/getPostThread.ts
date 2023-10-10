@@ -1,6 +1,7 @@
 import { AtUri } from '@atproto/syntax'
 import { AppBskyFeedGetPostThread } from '@atproto/api'
 import { Headers } from '@atproto/xrpc'
+import { proxy } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
@@ -22,25 +23,17 @@ import {
   getRepoRev,
   handleReadAfterWrite,
 } from '../util/read-after-write'
-import { authPassthru } from '../../../com/atproto/admin/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.accessOrRoleVerifier,
-    handler: async ({ req, params, auth }) => {
+    handler: async (request) => {
+      const { params, auth } = request
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null
 
       if (!requester) {
-        const res = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
-          params,
-          authPassthru(req),
-        )
-
-        return {
-          encoding: 'application/json',
-          body: res.data,
-        }
+        return proxy(request, ctx.appViewAgent.service.href)
       }
 
       try {

@@ -1,10 +1,12 @@
+import { proxy } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeed({
     auth: ctx.accessVerifier,
-    handler: async ({ params, auth }) => {
+    handler: async (request) => {
+      const { params, auth } = request
       const requester = auth.credentials.did
 
       const { data: feed } =
@@ -12,14 +14,12 @@ export default function (server: Server, ctx: AppContext) {
           { feed: params.feed },
           await ctx.serviceAuthHeaders(requester),
         )
-      const res = await ctx.appViewAgent.api.app.bsky.feed.getFeed(
-        params,
+
+      return proxy(
+        request,
+        ctx.appViewAgent.service.href,
         await ctx.serviceAuthHeaders(requester, feed.view.did),
       )
-      return {
-        encoding: 'application/json',
-        body: res.data,
-      }
     },
   })
 }

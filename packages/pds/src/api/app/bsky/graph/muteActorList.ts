@@ -1,16 +1,18 @@
+import { proxy } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.muteActorList({
     auth: ctx.accessVerifier,
-    handler: async ({ auth, input }) => {
+    handler: async (request) => {
+      const { auth } = request
       const requester = auth.credentials.did
-
-      await ctx.appViewAgent.api.app.bsky.graph.muteActorList(input.body, {
-        ...(await ctx.serviceAuthHeaders(requester)),
-        encoding: 'application/json',
-      })
+      return proxy(
+        request,
+        ctx.appViewAgent.service.href,
+        await ctx.serviceAuthHeaders(requester),
+      )
     },
   })
 }
