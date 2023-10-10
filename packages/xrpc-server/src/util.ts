@@ -287,7 +287,7 @@ export function serverTimingHeader(timings: ServerTiming[]) {
 }
 
 export async function proxy(
-  ctx: XRPCReqContext,
+  ctx: { input: HandlerInput | undefined; req: IncomingMessage },
   host: string,
   opts?: {
     headers?: Record<string, string>
