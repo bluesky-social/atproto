@@ -28,6 +28,7 @@
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/lexicon": "workspace:^",
+    "axios": "^0.27.2",
     "cbor-x": "^1.5.1",
     "express": "^4.17.2",
     "http-errors": "^2.0.0",

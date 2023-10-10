@@ -1,4 +1,6 @@
-import { Readable } from 'stream'
+import assert from 'assert'
+import { IncomingMessage, ServerResponse } from 'http'
+import { Readable, finished } from 'stream'
 import express, {
   ErrorRequestHandler,
   NextFunction,
@@ -35,6 +37,7 @@ import {
   RateLimiterConsume,
   isShared,
   RateLimitExceededError,
+  isHandlerPassthru,
 } from './types'
 import {
   decodeQueryParams,
@@ -256,6 +259,24 @@ export class Server {
 
         // run the handler
         const outputUnvalidated = await handler(reqCtx)
+
+        if (isHandlerPassthru(outputUnvalidated)) {
+          const { passthru } = outputUnvalidated
+          assert.ok(
+            passthru.statusCode && passthru.statusMessage,
+            'Missing status: passthru response may not originate from a ClientRequest',
+          )
+          res.statusCode = passthru.statusCode
+          res.statusMessage = passthru.statusMessage
+          if (!res.headersSent) {
+            for (const [name, value] of Object.entries(passthru.headers)) {
+              if (value !== undefined) {
+                res.setHeader(name, value)
+              }
+            }
+          }
+          return pipePassthru(passthru, req, res, next)
+        }
 
         if (isHandlerError(outputUnvalidated)) {
           throw XRPCError.fromError(outputUnvalidated)
@@ -499,4 +520,29 @@ const errorMiddleware: ErrorRequestHandler = function (err, req, res, next) {
     return next(err)
   }
   return res.status(xrpcError.type).json(xrpcError.payload)
+}
+
+function pipePassthru(
+  passthru: Readable,
+  req: IncomingMessage,
+  res: ServerResponse,
+  next: NextFunction,
+) {
+  let passthruFinished = false
+  finished(passthru, { readable: true, writable: false }, (err) => {
+    passthruFinished = true
+    if (err) {
+      if (res.headersSent || req.destroyed) {
+        res.destroy()
+      } else {
+        next(new InternalServerError())
+      }
+    }
+  })
+  finished(res, () => {
+    if (!passthruFinished) {
+      passthru.destroy()
+    }
+  })
+  passthru.pipe(res)
 }

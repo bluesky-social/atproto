@@ -688,6 +688,9 @@ importers:
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
+      axios:
+        specifier: ^0.27.2
+        version: 0.27.2
       cbor-x:
         specifier: ^1.5.1
         version: 1.5.1

@@ -1,4 +1,6 @@
 import assert from 'assert'
+import axios, { AxiosError } from 'axios'
+import { IncomingMessage } from 'http'
 import { Readable, Transform } from 'stream'
 import { createDeflate, createGunzip } from 'zlib'
 import express from 'express'
@@ -9,6 +11,7 @@ import {
   LexXrpcProcedure,
   LexXrpcQuery,
   LexXrpcSubscription,
+  stringifyLex,
 } from '@atproto/lexicon'
 import { forwardStreamErrors, MaxSizeChecker } from '@atproto/common'
 import {
@@ -21,6 +24,10 @@ import {
   InternalServerError,
   Options,
   XRPCError,
+  XRPCReqContext,
+  HandlerPassthru,
+  UpstreamFailureError,
+  UpstreamTimeoutError,
 } from './types'
 
 export function decodeQueryParams(
@@ -214,7 +221,7 @@ function isValidEncoding(possibleStr: string, value: string) {
   return possible.includes(normalized)
 }
 
-export function hasBody(req: express.Request) {
+export function hasBody(req: IncomingMessage) {
   const contentLength = req.headers['content-length']
   const transferEncoding = req.headers['transfer-encoding']
   return (contentLength && parseInt(contentLength, 10) > 0) || transferEncoding
@@ -277,6 +284,71 @@ export function serverTimingHeader(timings: ServerTiming[]) {
       return header
     })
     .join(', ')
+}
+
+export async function proxy(
+  ctx: XRPCReqContext,
+  host: string,
+  opts?: {
+    headers?: Record<string, string>
+    timeout?: number
+  },
+): Promise<HandlerPassthru> {
+  // headers
+  const headers: Record<string, string> = Object.create(null)
+  for (const [name, value] of Object.entries(ctx.req.headers)) {
+    if (value !== undefined) {
+      headers[name] = Array.isArray(value) ? value.join(', ') : value
+    }
+  }
+  if (opts?.headers) {
+    for (const [name, value] of Object.entries(opts.headers)) {
+      headers[name.toLowerCase()] = value
+    }
+  }
+  // payload
+  let payload: Readable | Uint8Array | string | undefined
+  if (ctx.input?.body !== undefined) {
+    if (
+      ctx.input.body instanceof Readable ||
+      ctx.input.body instanceof Uint8Array ||
+      typeof ctx.input.body === 'string'
+    ) {
+      payload = ctx.input.body
+    } else if (ctx.input.body) {
+      payload = stringifyLex(ctx.input.body)
+      delete headers['content-length'] // may have changed payload
+    }
+    // server decompressed input based on content encoding
+    const contentEncoding = ctx.req.headers['content-encoding']
+    if (contentEncoding === 'gzip' || contentEncoding === 'deflate') {
+      delete headers['content-encoding']
+      delete headers['content-length']
+    }
+  }
+  try {
+    const result = await axios.request({
+      responseType: 'stream',
+      method: ctx.req.method,
+      baseURL: host,
+      url: ctx.req.url,
+      headers,
+      data: payload,
+      validateStatus: (status) => status < 500,
+      timeout: opts?.timeout,
+      decompress: false,
+    })
+    return { passthru: result.data }
+  } catch (err) {
+    if (err instanceof AxiosError) {
+      if (err.code === 'ECONNABORTED') {
+        throw new UpstreamTimeoutError()
+      } else {
+        throw new UpstreamFailureError()
+      }
+    }
+    throw err
+  }
 }
 
 export class ServerTimer implements ServerTiming {

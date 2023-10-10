@@ -53,7 +53,9 @@ export const handlerError = zod.object({
 })
 export type HandlerError = zod.infer<typeof handlerError>
 
-export type HandlerOutput = HandlerSuccess | HandlerError
+export type HandlerPassthru = { passthru: IncomingMessage }
+
+export type HandlerOutput = HandlerSuccess | HandlerError | HandlerPassthru
 
 export type XRPCReqContext = {
   auth: HandlerAuth | undefined
@@ -207,6 +209,14 @@ export function isHandlerError(v: unknown): v is HandlerError {
     typeof v['status'] === 'number' &&
     (v['error'] === undefined || typeof v['error'] === 'string') &&
     (v['message'] === undefined || typeof v['message'] === 'string')
+  )
+}
+
+export function isHandlerPassthru(v: unknown): v is HandlerPassthru {
+  return (
+    typeof v === 'object' &&
+    v !== null &&
+    v['passthru'] instanceof IncomingMessage
   )
 }
 
