@@ -206,7 +206,13 @@ describe('Proxy', () => {
     }
   })
 
-  proxy.method('io.example.headers', proxyHandler)
+  proxy.method('io.example.headers', (ctx) => {
+    return xrpcServer.proxy(ctx, client.uri.href, {
+      headers: {
+        'My-Custom-Header-Override': 'my-custom-header-override-b',
+      },
+    })
+  })
   server.method('io.example.headers', (ctx) => {
     return {
       encoding: 'application/json',
@@ -345,10 +351,14 @@ describe('Proxy', () => {
     const res = await proxyClient.call('io.example.headers', {}, undefined, {
       headers: {
         'my-custom-header-up': 'my-custom-header-up-val',
+        'mY-custoM-headeR-overridE': 'my-custom-header-override-a',
       },
     })
     expect(res.success).toBeTruthy()
     expect(res.data['my-custom-header-up']).toBe('my-custom-header-up-val')
+    expect(res.data['my-custom-header-override']).toBe(
+      'my-custom-header-override-b',
+    )
     expect(res.headers['my-custom-header-down']).toBe(
       'my-custom-header-down-val',
     )
