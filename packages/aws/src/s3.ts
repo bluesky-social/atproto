@@ -129,10 +129,18 @@ export class S3BlobStore implements BlobStore {
   }
 
   async hasStored(cid: CID): Promise<boolean> {
+    return this.hasKey(this.getStoredPath(cid))
+  }
+
+  async hasTemp(key: string): Promise<boolean> {
+    return this.hasKey(this.getTmpPath(key))
+  }
+
+  private async hasKey(key: string) {
     try {
       const res = await this.client.headObject({
         Bucket: this.bucket,
-        Key: this.getStoredPath(cid),
+        Key: key,
       })
       return res.$metadata.httpStatusCode === 200
     } catch (err) {

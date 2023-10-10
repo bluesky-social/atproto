@@ -2,7 +2,7 @@ import fs from 'fs/promises'
 import { gzipSync } from 'zlib'
 import AtpAgent from '@atproto/api'
 import { AppContext } from '../src'
-import DiskBlobStore from '../src/storage/disk-blobstore'
+import DiskBlobStore from '../src/disk-blobstore'
 import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@atproto/crypto'
 import { BlobRef } from '@atproto/lexicon'
@@ -16,13 +16,11 @@ describe('file uploads', () => {
   let bob: string
   let agent: AtpAgent
   let sc: SeedClient
-  let blobstore: DiskBlobStore
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'file_uploads',
     })
-    blobstore = network.pds.ctx.blobstore as DiskBlobStore
     ctx = network.pds.ctx
     agent = network.pds.getClient()
     sc = network.getSeedClient()
@@ -41,8 +39,10 @@ describe('file uploads', () => {
 
   it('handles client abort', async () => {
     const abortController = new AbortController()
-    const _putTemp = network.pds.ctx.blobstore.putTemp
-    network.pds.ctx.blobstore.putTemp = function (...args) {
+    const _putTemp = DiskBlobStore.prototype.putTemp
+    // const _putTemp = network.pds.ctx.blobstore.putTemp
+    DiskBlobStore.prototype.putTemp = function (...args) {
+      // network.pds.ctx.blobstore.putTemp = function (...args) {
       // Abort just as processing blob in packages/pds/src/services/repo/blobs.ts
       process.nextTick(() => abortController.abort())
       return _putTemp.call(this, ...args)
@@ -61,7 +61,7 @@ describe('file uploads', () => {
     )
     await expect(response).rejects.toThrow('operation was aborted')
     // Cleanup
-    network.pds.ctx.blobstore.putTemp = _putTemp
+    DiskBlobStore.prototype.putTemp = _putTemp
     // This test would fail from an uncaught exception: this grace period gives time for that to surface
     await new Promise((res) => setTimeout(res, 10))
   })
@@ -87,7 +87,8 @@ describe('file uploads', () => {
     expect(found?.tempKey).toBeDefined()
     expect(found?.width).toBe(87)
     expect(found?.height).toBe(150)
-    expect(await blobstore.hasTemp(found?.tempKey as string)).toBeTruthy()
+    const hasKey = await ctx.blobstore(alice).hasTemp(found?.tempKey as string)
+    expect(hasKey).toBeTruthy()
   })
 
   it('can reference the file', async () => {
@@ -103,8 +104,9 @@ describe('file uploads', () => {
         .executeTakeFirst(),
     )
     expect(found?.tempKey).toBeNull()
-    expect(await blobstore.hasStored(smallBlob.ref)).toBeTruthy()
-    const storedBytes = await blobstore.getBytes(smallBlob.ref)
+    const hasStored = ctx.blobstore(alice).hasStored(smallBlob.ref)
+    expect(hasStored).toBeTruthy()
+    const storedBytes = await ctx.blobstore(alice).getBytes(smallBlob.ref)
     expect(uint8arrays.equals(smallFile, storedBytes)).toBeTruthy()
   })
 
@@ -149,8 +151,10 @@ describe('file uploads', () => {
     )
 
     expect(found?.tempKey).toBeDefined()
-    expect(await blobstore.hasTemp(found?.tempKey as string)).toBeTruthy()
-    expect(await blobstore.hasStored(largeBlob.ref)).toBeFalsy()
+    const hasTemp = await ctx.blobstore(alice).hasTemp(found?.tempKey as string)
+    expect(hasTemp).toBeTruthy()
+    const hasStored = await ctx.blobstore(alice).hasStored(largeBlob.ref)
+    expect(hasStored).toBeFalsy()
   })
 
   it('permits duplicate uploads of the same file', async () => {
