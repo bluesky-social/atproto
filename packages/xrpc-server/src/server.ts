@@ -264,7 +264,7 @@ export class Server {
           const { passthru } = outputUnvalidated
           assert.ok(
             passthru.statusCode && passthru.statusMessage,
-            'Missing status: passthru response may not originate from a ClientRequest',
+            'Missing status: passthru response must originate from a ClientRequest.',
           )
           res.statusCode = passthru.statusCode
           res.statusMessage = passthru.statusMessage
