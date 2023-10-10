@@ -298,7 +298,7 @@ describe('detectFacets', () => {
       const detectedTags: string[] = []
       const detectedIndices: { byteStart: number; byteEnd: number }[] = []
 
-      for (const { facet, ..._rest } of rt.segments()) {
+      for (const { facet } of rt.segments()) {
         if (!facet) continue
         for (const feature of facet.features) {
           if (isTag(feature)) {
