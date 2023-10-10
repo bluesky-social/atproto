@@ -410,7 +410,7 @@ function genServerXrpcMethod(
     | LexXrpcProcedure
   file.addImportDeclaration({
     moduleSpecifier: '@atproto/xrpc-server',
-    namedImports: [{ name: 'HandlerAuth' }],
+    namedImports: [{ name: 'HandlerAuth' }, { name: 'HandlerPassthru' }],
   })
   //= export interface HandlerInput {...}
   if (def.type === 'procedure' && def.input?.encoding) {
@@ -504,7 +504,9 @@ function genServerXrpcMethod(
   file.addTypeAlias({
     isExported: true,
     name: 'HandlerOutput',
-    type: `HandlerError | ${hasHandlerSuccess ? 'HandlerSuccess' : 'void'}`,
+    type: `HandlerError | HandlerPassthru | ${
+      hasHandlerSuccess ? 'HandlerSuccess' : 'void'
+    }`,
   })
 
   file.addTypeAlias({
