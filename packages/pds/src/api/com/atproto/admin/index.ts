@@ -4,7 +4,7 @@ import emitModerationEvent from './emitModerationEvent'
 import searchRepos from './searchRepos'
 import getRecord from './getRecord'
 import getRepo from './getRepo'
-import getModerationAction from './getModerationAction'
+import getModerationEvent from './getModerationEvent'
 import getModerationEvents from './getModerationEvents'
 import getModerationReport from './getModerationReport'
 import getModerationReports from './getModerationReports'
@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
   searchRepos(server, ctx)
   getRecord(server, ctx)
   getRepo(server, ctx)
-  getModerationAction(server, ctx)
+  getModerationEvent(server, ctx)
   getModerationEvents(server, ctx)
   getModerationReport(server, ctx)
   getModerationReports(server, ctx)

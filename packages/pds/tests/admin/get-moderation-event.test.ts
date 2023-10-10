@@ -74,7 +74,7 @@ describe('pds admin get moderation action view', () => {
 
   it('gets moderation action for a repo.', async () => {
     // id 2 because id 1 is in seed client
-    const result = await agent.api.com.atproto.admin.getModerationAction(
+    const result = await agent.api.com.atproto.admin.getModerationEvent(
       { id: 2 },
       { headers: { authorization: network.pds.adminAuth() } },
     )
@@ -83,7 +83,7 @@ describe('pds admin get moderation action view', () => {
 
   it('gets moderation action for a record.', async () => {
     // id 3 because id 1 is in seed client
-    const result = await agent.api.com.atproto.admin.getModerationAction(
+    const result = await agent.api.com.atproto.admin.getModerationEvent(
       { id: 3 },
       { headers: { authorization: network.pds.adminAuth() } },
     )
@@ -91,7 +91,7 @@ describe('pds admin get moderation action view', () => {
   })
 
   it('fails when moderation action does not exist.', async () => {
-    const promise = agent.api.com.atproto.admin.getModerationAction(
+    const promise = agent.api.com.atproto.admin.getModerationEvent(
       { id: 100 },
       { headers: { authorization: network.pds.adminAuth() } },
     )

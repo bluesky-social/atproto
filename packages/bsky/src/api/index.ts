@@ -47,6 +47,7 @@ import getRepo from './com/atproto/admin/getRepo'
 import getModerationStatuses from './com/atproto/admin/getModerationStatuses'
 import resolveHandle from './com/atproto/identity/resolveHandle'
 import getRecord from './com/atproto/repo/getRecord'
+import getModerationEvents from './com/atproto/admin/getModerationEvents'
 
 export * as health from './health'
 
@@ -101,6 +102,7 @@ export default function (server: Server, ctx: AppContext) {
   searchRepos(server, ctx)
   adminGetRecord(server, ctx)
   getRepo(server, ctx)
+  getModerationEvents(server, ctx)
   getModerationStatuses(server, ctx)
   resolveHandle(server, ctx)
   getRecord(server, ctx)

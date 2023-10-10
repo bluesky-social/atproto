@@ -4,7 +4,7 @@ import { authPassthru, mergeRepoViewPdsDetails } from './util'
 import { isRepoView } from '../../../../lexicon/types/com/atproto/admin/defs'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.getModerationAction({
+  server.com.atproto.admin.getModerationEvent({
     auth: ctx.roleVerifier,
     handler: async ({ req, params, auth }) => {
       const access = auth.credentials
@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
 
       if (ctx.cfg.bskyAppView.proxyModeration) {
         const { data: resultAppview } =
-          await ctx.appViewAgent.com.atproto.admin.getModerationAction(
+          await ctx.appViewAgent.com.atproto.admin.getModerationEvent(
             params,
             authPassthru(req),
           )

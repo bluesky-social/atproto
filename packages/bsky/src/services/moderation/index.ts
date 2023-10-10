@@ -6,10 +6,7 @@ import { ModerationViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
 import { ImageInvalidator } from '../../image/invalidator'
 import {
-  ACKNOWLEDGE,
   ActionMeta,
-  ESCALATE,
-  FLAG,
   REPORT,
   REVERT,
   TAKEDOWN,
@@ -25,6 +22,17 @@ import {
   ReversibleModerationEvent,
   SubjectInfo,
 } from './types'
+
+type LabelerFunc = (
+  labelParams: Pick<
+    ModerationEventRow,
+    | 'subjectCid'
+    | 'subjectDid'
+    | 'subjectUri'
+    | 'createLabelVals'
+    | 'negateLabelVals'
+  >,
+) => Promise<unknown>
 
 export class ModerationService {
   constructor(
@@ -150,16 +158,7 @@ export class ModerationService {
       refEventId?: number
       meta?: ActionMeta | null
     },
-    applyLabels: (
-      labelParams: Pick<
-        ModerationEventRow,
-        | 'subjectCid'
-        | 'subjectDid'
-        | 'subjectUri'
-        | 'createLabelVals'
-        | 'negateLabelVals'
-      >,
-    ) => Promise<unknown>,
+    applyLabels?: LabelerFunc,
   ): Promise<ModerationEventRow> {
     this.db.assertTransaction()
     const {
@@ -243,6 +242,7 @@ export class ModerationService {
 
     if (
       action === REVERT &&
+      applyLabels &&
       (refEvent?.createLabelVals || refEvent?.negateLabelVals)
     ) {
       await applyLabels({
@@ -266,22 +266,24 @@ export class ModerationService {
     return actionsDueForReversal
   }
 
-  async revertAction({
-    id,
-    createdBy,
-    createdAt,
-    comment,
-    subject,
-  }: ReversibleModerationEvent) {
+  // TODO: This isn't ideal. inside .logAction() we fetch the refEventId but the event itself
+  // is already being fetched before calling `revertAction`
+  async revertAction(
+    { id, createdBy, createdAt, comment, subject }: ReversibleModerationEvent,
+    applyLabels: LabelerFunc,
+  ) {
     this.db.assertTransaction()
-    const result = await this.logAction({
-      refEventId: id,
-      action: REVERT,
-      createdAt,
-      createdBy,
-      comment,
-      subject,
-    })
+    const result = await this.logAction(
+      {
+        refEventId: id,
+        action: REVERT,
+        createdAt,
+        createdBy,
+        comment,
+        subject,
+      },
+      applyLabels,
+    )
 
     if (
       result.action === TAKEDOWN &&

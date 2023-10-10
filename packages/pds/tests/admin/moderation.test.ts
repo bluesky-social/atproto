@@ -323,12 +323,12 @@ describe('moderation', () => {
       )
       // Check report and action details
       const { data: repoDeletionActionDetail } =
-        await agent.api.com.atproto.admin.getModerationAction(
+        await agent.api.com.atproto.admin.getModerationEvent(
           { id: action.id - 1 },
           { headers: network.pds.adminAuthHeaders() },
         )
       const { data: recordActionDetail } =
-        await agent.api.com.atproto.admin.getModerationAction(
+        await agent.api.com.atproto.admin.getModerationEvent(
           { id: action.id },
           { headers: network.pds.adminAuthHeaders() },
         )
@@ -882,7 +882,7 @@ describe('moderation', () => {
       await periodicReversal.findAndRevertDueActions()
 
       const { data: reversedAction } =
-        await agent.api.com.atproto.admin.getModerationAction(
+        await agent.api.com.atproto.admin.getModerationEvent(
           { id: action.id },
           { headers: network.pds.adminAuthHeaders() },
         )

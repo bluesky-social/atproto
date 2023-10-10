@@ -4,7 +4,6 @@ import { dbLogger } from '../logger'
 import AppContext from '../context'
 import AtpAgent, { AtUri } from '@atproto/api'
 import { buildBasicAuth } from '../auth'
-import { LabelService } from '../services/label'
 import { ModerationEventRow } from '../services/moderation/types'
 import { CID } from 'multiformats/cid'
 
@@ -27,28 +26,6 @@ export class PeriodicModerationEventReversal {
         buildBasicAuth(url.username, url.password),
       )
     }
-  }
-
-  // invert label creation & negations
-  async reverseLabels(labelTxn: LabelService, actionRow: ModerationEventRow) {
-    let uri: string
-    let cid: string | null = null
-
-    if (actionRow.subjectUri && actionRow.subjectCid) {
-      uri = actionRow.subjectUri
-      cid = actionRow.subjectCid
-    } else {
-      uri = actionRow.subjectDid
-    }
-
-    await labelTxn.formatAndCreate(this.appContext.cfg.labelerDid, uri, cid, {
-      create: actionRow.negateLabelVals
-        ? actionRow.negateLabelVals.split(' ')
-        : undefined,
-      negate: actionRow.createLabelVals
-        ? actionRow.createLabelVals.split(' ')
-        : undefined,
-    })
   }
 
   async revertAction(actionRow: ModerationEventRow) {
@@ -77,9 +54,22 @@ export class PeriodicModerationEventReversal {
 
     await this.appContext.db.getPrimary().transaction(async (dbTxn) => {
       const moderationTxn = this.appContext.services.moderation(dbTxn)
-      await moderationTxn.revertAction(reverseAction)
       const labelTxn = this.appContext.services.label(dbTxn)
-      await this.reverseLabels(labelTxn, actionRow)
+      await moderationTxn.revertAction(reverseAction, async (labelParams) =>
+        labelTxn.formatAndCreate(
+          this.appContext.cfg.labelerDid,
+          labelParams.subjectUri ?? labelParams.subjectDid,
+          labelParams.subjectCid,
+          {
+            create: labelParams.createLabelVals?.length
+              ? labelParams.createLabelVals.split(' ')
+              : undefined,
+            negate: labelParams.negateLabelVals?.length
+              ? labelParams.negateLabelVals.split(' ')
+              : undefined,
+          },
+        ),
+      )
     })
   }
 

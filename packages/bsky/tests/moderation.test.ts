@@ -1,5 +1,4 @@
 import { TestNetwork, ImageRef, RecordRef, SeedClient } from '@atproto/dev-env'
-import { TID, cidForCbor } from '@atproto/common'
 import AtpAgent, {
   ComAtprotoAdminGetModerationStatuses,
   ComAtprotoAdminTakeModerationAction,
@@ -17,6 +16,7 @@ import {
   REVERT,
   REVIEWCLOSED,
   REVIEWESCALATED,
+  REVIEWOPEN,
   TAKEDOWN,
 } from '../src/lexicon/types/com/atproto/admin/defs'
 import {
@@ -653,7 +653,12 @@ describe('moderation', () => {
         'Must be a full moderator to perform an account takedown',
       )
     })
-    it.skip('automatically reverses actions marked with duration', async () => {
+    it('automatically reverses actions marked with duration', async () => {
+      await createReport({
+        reasonType: REASONSPAM,
+        reportedAccount: sc.dids.bob,
+        reporterAccount: sc.dids.alice,
+      })
       const { data: action } =
         await agent.api.com.atproto.admin.emitModerationEvent(
           {
@@ -683,17 +688,27 @@ describe('moderation', () => {
       )
       await periodicReversal.findAndRevertDueActions()
 
-      const { data: reversedAction } =
-        await agent.api.com.atproto.admin.getModerationEvent(
-          { id: action.id },
+      const [{ data: eventList }, { data: statuses }] = await Promise.all([
+        agent.api.com.atproto.admin.getModerationEvents(
+          { subject: sc.dids.bob },
           { headers: network.bsky.adminAuthHeaders('moderator') },
-        )
+        ),
+        agent.api.com.atproto.admin.getModerationStatuses(
+          { subject: sc.dids.bob },
+          { headers: network.bsky.adminAuthHeaders('moderator') },
+        ),
+      ])
 
       // Verify that the automatic reversal is attributed to the original moderator of the temporary action
       // and that the reason is set to indicate that the action was automatically reversed.
-      expect(reversedAction.reversal).toMatchObject({
+      expect(eventList.actions[0]).toMatchObject({
         createdBy: action.createdBy,
-        reason: '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
+        comment:
+          '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
+      })
+      expect(statuses.subjectStatuses[0]).toMatchObject({
+        takendown: false,
+        reviewState: REVIEWOPEN,
       })
 
       // Verify that labels are also reversed when takedown action is reversed

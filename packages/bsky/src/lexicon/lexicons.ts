@@ -879,7 +879,7 @@ export const schemaDict = {
   },
   ComAtprotoAdminGetModerationAction: {
     lexicon: 1,
-    id: 'com.atproto.admin.getModerationAction',
+    id: 'com.atproto.admin.getModerationEvent',
     defs: {
       main: {
         type: 'query',
@@ -7459,7 +7459,7 @@ export const ids = {
   ComAtprotoAdminDisableInviteCodes: 'com.atproto.admin.disableInviteCodes',
   ComAtprotoAdminEnableAccountInvites: 'com.atproto.admin.enableAccountInvites',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
-  ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationAction',
+  ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationEvent',
   ComAtprotoAdminGetModerationEvents: 'com.atproto.admin.getModerationEvents',
   ComAtprotoAdminGetModerationReport: 'com.atproto.admin.getModerationReport',
   ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',

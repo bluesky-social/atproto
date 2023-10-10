@@ -13,7 +13,7 @@ import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
-import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
+import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationEvent'
 import * as ComAtprotoAdminGetModerationEvents from './types/com/atproto/admin/getModerationEvents'
 import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
 import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
@@ -242,14 +242,14 @@ export class AdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getModerationAction<AV extends AuthVerifier>(
+  getModerationEvent<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
       ComAtprotoAdminGetModerationAction.Handler<ExtractAuth<AV>>,
       ComAtprotoAdminGetModerationAction.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'com.atproto.admin.getModerationAction' // @ts-ignore
+    const nsid = 'com.atproto.admin.getModerationEvent' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

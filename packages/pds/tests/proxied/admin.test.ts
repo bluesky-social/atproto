@@ -201,7 +201,7 @@ describe('proxies admin requests', () => {
 
   it('fetches action details.', async () => {
     const { data: result } =
-      await agent.api.com.atproto.admin.getModerationAction(
+      await agent.api.com.atproto.admin.getModerationEvent(
         { id: 3 },
         { headers: network.pds.adminAuthHeaders() },
       )
