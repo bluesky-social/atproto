@@ -6,7 +6,6 @@ import {
   encodeMethodCallBody,
   httpResponseCodeToEnum,
   httpResponseBodyParse,
-  normalizeHeaders,
 } from './util'
 import {
   FetchHandler,
@@ -72,11 +71,11 @@ export class ServiceClient {
   }
 
   setHeader(key: string, value: string): void {
-    this.headers[key] = value
+    this.headers[key.toLowerCase()] = value
   }
 
   unsetHeader(key: string): void {
-    delete this.headers[key]
+    delete this.headers[key.toLowerCase()]
   }
 
   async call(
@@ -145,11 +144,10 @@ export async function defaultFetchHandler(
   try {
     // The duplex field is now required for streaming bodies, but not yet reflected
     // anywhere in docs or types. See whatwg/fetch#1438, nodejs/node#46221.
-    const headers = normalizeHeaders(httpHeaders)
     const reqInit: RequestInit & { duplex: string } = {
       method: httpMethod,
-      headers,
-      body: encodeMethodCallBody(headers, httpReqBody),
+      headers: httpHeaders,
+      body: encodeMethodCallBody(httpHeaders, httpReqBody),
       duplex: 'half',
     }
     const res = await fetch(httpUri, reqInit)
