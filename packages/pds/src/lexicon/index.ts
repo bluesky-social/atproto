@@ -19,6 +19,8 @@ import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/g
 import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
+import * as ComAtprotoAdminGetSubjectState from './types/com/atproto/admin/getSubjectState'
+import * as ComAtprotoAdminGetUserAccountInfo from './types/com/atproto/admin/getUserAccountInfo'
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -26,6 +28,7 @@ import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
+import * as ComAtprotoAdminUpdateSubjectState from './types/com/atproto/admin/updateSubjectState'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
@@ -301,6 +304,28 @@ export class AdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getSubjectState<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminGetSubjectState.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminGetSubjectState.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.getSubjectState' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getUserAccountInfo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminGetUserAccountInfo.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminGetUserAccountInfo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.getUserAccountInfo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   resolveModerationReports<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -375,6 +400,17 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.updateAccountHandle' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateSubjectState<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminUpdateSubjectState.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminUpdateSubjectState.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.updateSubjectState' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

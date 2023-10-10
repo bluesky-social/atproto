@@ -1,11 +1,17 @@
 import { sql } from 'kysely'
+import { CID } from 'multiformats/cid'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { MINUTE, lessThanAgoMs } from '@atproto/common'
+import { INVALID_HANDLE } from '@atproto/syntax'
 import { dbLogger as log } from '../../logger'
 import * as scrypt from './scrypt'
 import { countAll, notSoftDeletedClause } from '../../db/util'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
+import {
+  UserAccountView,
+  SubjectState,
+} from '../../lexicon/types/com/atproto/admin/defs'
 import { getRandomToken } from '../../api/com/atproto/server/util'
 import {
   ServiceDb,
@@ -15,7 +21,6 @@ import {
   EmailTokenPurpose,
 } from '../../service-db'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
-import { CID } from 'multiformats/cid'
 
 export class AccountService {
   constructor(public db: ServiceDb) {}
@@ -361,13 +366,27 @@ export class AccountService {
     }).execute()
   }
 
-  async markForDeletion(did: string): Promise<void> {
+  async getAccountTakedownState(did: string): Promise<SubjectState | null> {
+    const res = await this.db.db
+      .selectFrom('repo_root')
+      .select('takedownId')
+      .where('did', '=', did)
+      .executeTakeFirst()
+    if (!res) return null
+    return res.takedownId
+      ? { applied: true, ref: res.takedownId }
+      : { applied: false }
+  }
+
+  async updateAccountTakedownState(did: string, state: SubjectState) {
+    const takedownId = state.applied
+      ? state.ref ?? new Date().toISOString()
+      : null
     await this.db.db
       .updateTable('repo_root')
-      .set({ takedownId: 'ACCOUNT_DELETION' })
+      .set({ takedownId })
       .where('did', '=', did)
-      .where('takedownId', 'is', null)
-      .execute()
+      .executeTakeFirst()
   }
 
   async deleteAccount(did: string): Promise<void> {
@@ -387,6 +406,38 @@ export class AccountService {
       .deleteFrom('did_handle')
       .where('did_handle.did', '=', did)
       .execute()
+  }
+
+  async adminView(did: string): Promise<UserAccountView | null> {
+    const accountQb = this.db.db
+      .selectFrom('did_handle')
+      .innerJoin('user_account', 'user_account.did', 'did_handle.did')
+      .where('did_handle.did', '=', did)
+      .select([
+        'did_handle.did',
+        'did_handle.handle',
+        'user_account.email',
+        'user_account.invitesDisabled',
+        'user_account.inviteNote',
+        'user_account.createdAt as indexedAt',
+      ])
+
+    const [account, invites, invitedBy] = await Promise.all([
+      accountQb.executeTakeFirst(),
+      this.getAccountInviteCodes(did),
+      this.getInvitedByForAccounts([did]),
+    ])
+
+    if (!account) return null
+
+    return {
+      ...account,
+      handle: account?.handle ?? INVALID_HANDLE,
+      invitesDisabled: account.invitesDisabled === 1,
+      inviteNote: account.inviteNote ?? undefined,
+      invites,
+      invitedBy: invitedBy[did],
+    }
   }
 
   selectInviteCodesQb() {

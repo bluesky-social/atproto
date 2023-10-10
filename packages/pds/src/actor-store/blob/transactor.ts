@@ -18,6 +18,7 @@ import {
 import * as img from '../../image'
 import { BackgroundQueue } from '../../background'
 import { BlobReader } from './reader'
+import { SubjectState } from '../../lexicon/types/com/atproto/admin/defs'
 
 export class BlobTransactor extends BlobReader {
   constructor(
@@ -80,6 +81,22 @@ export class BlobTransactor extends BlobReader {
       }
     }
     await Promise.all(blobPromises)
+  }
+
+  async updateBlobTakedownState(did: string, blob: CID, state: SubjectState) {
+    const takedownId = state.applied
+      ? state.ref ?? new Date().toISOString()
+      : null
+    await this.db.db
+      .updateTable('repo_blob')
+      .set({ takedownId })
+      .where('cid', '=', blob.toString())
+      .executeTakeFirst()
+    if (state.applied) {
+      await this.blobstore.unquarantine(blob)
+    } else {
+      await this.blobstore.quarantine(blob)
+    }
   }
 
   async deleteDereferencedBlobs(writes: PreparedWrite[]) {

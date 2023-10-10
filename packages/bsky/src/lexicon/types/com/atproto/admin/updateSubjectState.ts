@@ -7,21 +7,35 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
+import * as ComAtprotoAdminDefs from './defs'
+import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
 
-export interface QueryParams {
-  limit: number
-  cursor?: string
-}
+export interface QueryParams {}
 
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  cursor?: string
-  repos: Repo[]
+export interface InputSchema {
+  subject:
+    | ComAtprotoAdminDefs.RepoRef
+    | ComAtprotoRepoStrongRef.Main
+    | ComAtprotoAdminDefs.RepoBlobRef
+    | { $type: string; [k: string]: unknown }
+  takedown?: ComAtprotoAdminDefs.SubjectState
   [k: string]: unknown
 }
 
-export type HandlerInput = undefined
+export interface OutputSchema {
+  subject:
+    | ComAtprotoAdminDefs.RepoRef
+    | ComAtprotoRepoStrongRef.Main
+    | ComAtprotoAdminDefs.RepoBlobRef
+    | { $type: string; [k: string]: unknown }
+  takedown?: ComAtprotoAdminDefs.SubjectState
+  [k: string]: unknown
+}
+
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
 
 export interface HandlerSuccess {
   encoding: 'application/json'
@@ -45,22 +59,3 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
-
-export interface Repo {
-  did: string
-  head: string
-  rev: string
-  [k: string]: unknown
-}
-
-export function isRepo(v: unknown): v is Repo {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.listRepos#repo'
-  )
-}
-
-export function validateRepo(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.sync.listRepos#repo', v)
-}

@@ -4,6 +4,7 @@ import { cborToLexRecord } from '@atproto/repo'
 import { notSoftDeletedClause } from '../../db/util'
 import { ids } from '../../lexicon/lexicons'
 import { ActorDb, Backlink } from '../db'
+import { SubjectState } from '../../lexicon/types/com/atproto/admin/defs'
 
 export class RecordReader {
   constructor(public db: ActorDb) {}
@@ -104,7 +105,7 @@ export class RecordReader {
       cid: record.cid,
       value: cborToLexRecord(record.content),
       indexedAt: record.indexedAt,
-      takedownId: record.takedownId,
+      takedownId: record.takedownId ? record.takedownId.toString() : null,
     }
   }
 
@@ -126,6 +127,18 @@ export class RecordReader {
     }
     const record = await builder.executeTakeFirst()
     return !!record
+  }
+
+  async getRecordTakedownState(uri: AtUri): Promise<SubjectState | null> {
+    const res = await this.db.db
+      .selectFrom('record')
+      .select(['takedownId', 'cid'])
+      .where('uri', '=', uri.toString())
+      .executeTakeFirst()
+    if (!res) return null
+    return res.takedownId
+      ? { applied: true, ref: res.takedownId }
+      : { applied: false }
   }
 
   async getRecordBacklinks(opts: {

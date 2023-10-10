@@ -4,6 +4,7 @@ import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorDb } from '../db'
 import { notSoftDeletedClause } from '../../db/util'
+import { SubjectState } from '../../lexicon/types/com/atproto/admin/defs'
 
 export class BlobReader {
   constructor(public db: ActorDb, public blobstore: BlobStore) {}
@@ -57,5 +58,17 @@ export class BlobReader {
     }
     const res = await builder.execute()
     return res.map((row) => row.cid)
+  }
+
+  async getBlobTakedownState(cid: CID): Promise<SubjectState | null> {
+    const res = await this.db.db
+      .selectFrom('repo_blob')
+      .select('takedownId')
+      .where('cid', '=', cid.toString())
+      .executeTakeFirst()
+    if (!res) return null
+    return res.takedownId
+      ? { applied: true, ref: res.takedownId }
+      : { applied: false }
   }
 }

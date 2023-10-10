@@ -8,6 +8,18 @@ export const schemaDict = {
     lexicon: 1,
     id: 'com.atproto.admin.defs',
     defs: {
+      subjectState: {
+        type: 'object',
+        required: ['applied'],
+        properties: {
+          applied: {
+            type: 'boolean',
+          },
+          ref: {
+            type: 'string',
+          },
+        },
+      },
       actionView: {
         type: 'object',
         required: [
@@ -424,6 +436,44 @@ export const schemaDict = {
           },
         },
       },
+      userAccountView: {
+        type: 'object',
+        required: ['did', 'handle', 'indexedAt'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          email: {
+            type: 'string',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          invitedBy: {
+            type: 'ref',
+            ref: 'lex:com.atproto.server.defs#inviteCode',
+          },
+          invites: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.server.defs#inviteCode',
+            },
+          },
+          invitesDisabled: {
+            type: 'boolean',
+          },
+          inviteNote: {
+            type: 'string',
+          },
+        },
+      },
       repoViewNotFound: {
         type: 'object',
         required: ['did'],
@@ -441,6 +491,24 @@ export const schemaDict = {
           did: {
             type: 'string',
             format: 'did',
+          },
+        },
+      },
+      repoBlobRef: {
+        type: 'object',
+        required: ['did', 'cid'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          recordUri: {
+            type: 'string',
+            format: 'at-uri',
           },
         },
       },
@@ -1026,6 +1094,82 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminGetSubjectState: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getSubjectState',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Fetch the service-specific the admin state of a subject (account, record, or blob)',
+        parameters: {
+          type: 'params',
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+            },
+            uri: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            blob: {
+              type: 'string',
+              format: 'cid',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                  'lex:com.atproto.admin.defs#repoBlobRef',
+                ],
+              },
+              takedown: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.defs#subjectState',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminGetUserAccountInfo: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getUserAccountInfo',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'View details about a user account.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#userAccountView',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminResolveModerationReports: {
     lexicon: 1,
     id: 'com.atproto.admin.resolveModerationReports',
@@ -1319,6 +1463,59 @@ export const schemaDict = {
               handle: {
                 type: 'string',
                 format: 'handle',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminUpdateSubjectState: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateSubjectState',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Update the service-specific admin state of a subject (account, record, or blob)',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                  'lex:com.atproto.admin.defs#repoBlobRef',
+                ],
+              },
+              takedown: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.defs#subjectState',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                  'lex:com.atproto.admin.defs#repoBlobRef',
+                ],
+              },
+              takedown: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.defs#subjectState',
               },
             },
           },
@@ -3376,7 +3573,7 @@ export const schemaDict = {
       },
       repo: {
         type: 'object',
-        required: ['did', 'head'],
+        required: ['did', 'head', 'rev'],
         properties: {
           did: {
             type: 'string',
@@ -3385,6 +3582,9 @@ export const schemaDict = {
           head: {
             type: 'string',
             format: 'cid',
+          },
+          rev: {
+            type: 'string',
           },
         },
       },
@@ -7332,6 +7532,8 @@ export const ids = {
   ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
+  ComAtprotoAdminGetSubjectState: 'com.atproto.admin.getSubjectState',
+  ComAtprotoAdminGetUserAccountInfo: 'com.atproto.admin.getUserAccountInfo',
   ComAtprotoAdminResolveModerationReports:
     'com.atproto.admin.resolveModerationReports',
   ComAtprotoAdminReverseModerationAction:
@@ -7341,6 +7543,7 @@ export const ids = {
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
+  ComAtprotoAdminUpdateSubjectState: 'com.atproto.admin.updateSubjectState',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',
   ComAtprotoIdentityUpdateHandle: 'com.atproto.identity.updateHandle',
   ComAtprotoLabelDefs: 'com.atproto.label.defs',

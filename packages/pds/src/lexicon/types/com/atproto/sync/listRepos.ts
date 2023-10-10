@@ -49,6 +49,7 @@ export type Handler<HA extends HandlerAuth = never> = (
 export interface Repo {
   did: string
   head: string
+  rev: string
   [k: string]: unknown
 }
 

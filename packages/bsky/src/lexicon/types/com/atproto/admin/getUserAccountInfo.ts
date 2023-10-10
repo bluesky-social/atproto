@@ -7,20 +7,14 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
+import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
-  limit: number
-  cursor?: string
+  did: string
 }
 
 export type InputSchema = undefined
-
-export interface OutputSchema {
-  cursor?: string
-  repos: Repo[]
-  [k: string]: unknown
-}
-
+export type OutputSchema = ComAtprotoAdminDefs.UserAccountView
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {
@@ -45,22 +39,3 @@ export type HandlerReqCtx<HA extends HandlerAuth = never> = {
 export type Handler<HA extends HandlerAuth = never> = (
   ctx: HandlerReqCtx<HA>,
 ) => Promise<HandlerOutput> | HandlerOutput
-
-export interface Repo {
-  did: string
-  head: string
-  rev: string
-  [k: string]: unknown
-}
-
-export function isRepo(v: unknown): v is Repo {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.sync.listRepos#repo'
-  )
-}
-
-export function validateRepo(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.sync.listRepos#repo', v)
-}

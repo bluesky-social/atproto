@@ -1,5 +1,6 @@
 import { Transporter } from 'nodemailer'
 import Mail from 'nodemailer/lib/mailer'
+import { htmlToText } from 'nodemailer-html-to-text'
 import SMTPTransport from 'nodemailer/lib/smtp-transport'
 import { ServerConfig } from '../config'
 import { mailerLogger } from '../logger'
@@ -14,14 +15,17 @@ export class ModerationMailer {
   ) {
     this.config = config
     this.transporter = transporter
+    this.transporter.use('compile', htmlToText())
   }
 
   async send({ content }: { content: string }, mailOpts: Mail.Options) {
-    const res = await this.transporter.sendMail({
+    const mail = {
       ...mailOpts,
-      text: content,
+      html: content,
       from: this.config.moderationEmail?.fromAddress,
-    })
+    }
+
+    const res = await this.transporter.sendMail(mail)
 
     if (!this.config.moderationEmail?.smtpUrl) {
       mailerLogger.debug(

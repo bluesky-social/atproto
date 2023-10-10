@@ -3,6 +3,8 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { MINUTE } from '@atproto/common'
 
+const REASON_ACCT_DELETION = 'account_deletion'
+
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deleteAccount({
     rateLimit: {
@@ -20,7 +22,10 @@ export default function (server: Server, ctx: AppContext) {
 
       const accountService = await ctx.services.account(ctx.db)
       await accountService.assertValidToken(did, 'delete_account', token)
-      await accountService.markForDeletion(did)
+      await accountService.updateAccountTakedownState(did, {
+        applied: true,
+        ref: REASON_ACCT_DELETION,
+      })
       await Promise.all([
         accountService.deleteAccount(did),
         ctx.actorStore.destroy(did),
