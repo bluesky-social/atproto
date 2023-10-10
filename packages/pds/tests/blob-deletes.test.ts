@@ -57,7 +57,7 @@ describe('blob deletes', () => {
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(0)
 
-    const hasImg = await ctx.blobstore.hasStored(img.image.ref)
+    const hasImg = await ctx.blobstore(alice).hasStored(img.image.ref)
     expect(hasImg).toBeFalsy()
   })
 
@@ -80,10 +80,10 @@ describe('blob deletes', () => {
     expect(dbBlobs.length).toBe(1)
     expect(dbBlobs[0].cid).toEqual(img2.image.ref.toString())
 
-    const hasImg = await ctx.blobstore.hasStored(img.image.ref)
+    const hasImg = await ctx.blobstore(alice).hasStored(img.image.ref)
     expect(hasImg).toBeFalsy()
 
-    const hasImg2 = await ctx.blobstore.hasStored(img2.image.ref)
+    const hasImg2 = await ctx.blobstore(alice).hasStored(img2.image.ref)
     expect(hasImg2).toBeTruthy()
 
     // reset
@@ -108,10 +108,10 @@ describe('blob deletes', () => {
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(2)
 
-    const hasImg = await ctx.blobstore.hasStored(img.image.ref)
+    const hasImg = await ctx.blobstore(alice).hasStored(img.image.ref)
     expect(hasImg).toBeTruthy()
 
-    const hasImg2 = await ctx.blobstore.hasStored(img2.image.ref)
+    const hasImg2 = await ctx.blobstore(alice).hasStored(img2.image.ref)
     expect(hasImg2).toBeTruthy()
     await updateProfile(sc, alice)
   })
@@ -159,11 +159,11 @@ describe('blob deletes', () => {
     const dbBlobs = await getDbBlobsForDid(alice)
     expect(dbBlobs.length).toBe(1)
 
-    const hasImg = await ctx.blobstore.hasStored(img.image.ref)
+    const hasImg = await ctx.blobstore(alice).hasStored(img.image.ref)
     expect(hasImg).toBeTruthy()
   })
 
-  it('does not delete blob from blob store if another user is using it', async () => {
+  it('does delete blob from user blob store if another user is using it', async () => {
     const imgAlice = await sc.uploadFile(
       alice,
       'tests/sample-img/key-landscape-small.jpg',
@@ -177,9 +177,10 @@ describe('blob deletes', () => {
     const postAlice = await sc.post(alice, 'post', undefined, [imgAlice])
     await sc.post(bob, 'post', undefined, [imgBob])
     await sc.deletePost(alice, postAlice.ref.uri)
+    await network.processAll()
 
-    const hasImg = await ctx.blobstore.hasStored(imgBob.image.ref)
-    expect(hasImg).toBeTruthy()
+    const hasImg = await ctx.blobstore(alice).hasStored(imgAlice.image.ref)
+    expect(hasImg).toBeFalsy()
   })
 })
 

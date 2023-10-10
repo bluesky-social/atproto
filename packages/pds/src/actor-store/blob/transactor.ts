@@ -141,26 +141,13 @@ export class BlobTransactor extends BlobReader {
       .deleteFrom('blob')
       .where('cid', 'in', cidsToDelete)
       .execute()
-
-    // check if these blobs are used by other users before deleting from blobstore
-    const stillUsedRes = await this.db.db
-      .selectFrom('blob')
-      .where('cid', 'in', cidsToDelete)
-      .select('cid')
-      .distinct()
-      .execute()
-    const stillUsed = stillUsedRes.map((row) => row.cid)
-
-    const blobsToDelete = cidsToDelete.filter((cid) => !stillUsed.includes(cid))
-    if (blobsToDelete.length > 0) {
-      this.db.onCommit(() => {
-        this.backgroundQueue.add(async () => {
-          await Promise.allSettled(
-            blobsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
-          )
-        })
+    this.db.onCommit(() => {
+      this.backgroundQueue.add(async () => {
+        await Promise.allSettled(
+          cidsToDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
+        )
       })
-    }
+    })
   }
 
   async verifyBlobAndMakePermanent(blob: PreparedBlobRef): Promise<void> {
@@ -209,29 +196,6 @@ export class BlobTransactor extends BlobReader {
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
-  }
-
-  async deleteAll(): Promise<void> {
-    // Not done in transaction because it would be too long, prone to contention.
-    // Also, this can safely be run multiple times if it fails.
-    const deleted = await this.db.db.deleteFrom('blob').returningAll().execute()
-    await this.db.db.deleteFrom('repo_blob').execute()
-    const deletedCids = deleted.map((d) => d.cid)
-    let duplicateCids: string[] = []
-    if (deletedCids.length > 0) {
-      const res = await this.db.db
-        .selectFrom('repo_blob')
-        .where('cid', 'in', deletedCids)
-        .selectAll()
-        .execute()
-      duplicateCids = res.map((d) => d.cid)
-    }
-    const toDelete = deletedCids.filter((cid) => !duplicateCids.includes(cid))
-    if (toDelete.length > 0) {
-      await Promise.all(
-        toDelete.map((cid) => this.blobstore.delete(CID.parse(cid))),
-      )
-    }
   }
 }
 

@@ -178,15 +178,4 @@ export class RepoTransactor extends RepoReader {
       .execute()
     return res.map((row) => CID.parse(row.cid))
   }
-
-  async deleteRepo(_did: string) {
-    // @TODO DELETE FULL SQLITE FILE
-    // Not done in transaction because it would be too long, prone to contention.
-    // Also, this can safely be run multiple times if it fails.
-    // delete all blocks from this did & no other did
-    // await this.db.db.deleteFrom('repo_root').where('did', '=', did).execute()
-    // await this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute()
-    // await this.db.db.deleteFrom('ipld_block').execute()
-    // await this.blobs.deleteForUser(did)
-  }
 }

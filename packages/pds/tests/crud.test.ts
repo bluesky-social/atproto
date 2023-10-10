@@ -13,7 +13,6 @@ import { defaultFetchHandler } from '@atproto/xrpc'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { paginateAll } from './_util'
 import AppContext from '../src/context'
-import { TAKEDOWN } from '../src/lexicon/types/com/atproto/admin/defs'
 import { ids } from '../src/lexicon/lexicons'
 
 const alice = {
@@ -180,9 +179,9 @@ describe('crud operations', () => {
     })
     const uploaded = uploadedRes.data.blob
     // Expect blobstore not to have image yet
-    await expect(ctx.blobstore.getBytes(uploaded.ref)).rejects.toThrow(
-      BlobNotFoundError,
-    )
+    await expect(
+      ctx.blobstore(alice.did).getBytes(uploaded.ref),
+    ).rejects.toThrow(BlobNotFoundError)
     // Associate image with post, image should be placed in blobstore
     const res = await aliceAgent.api.app.bsky.feed.post.create(
       { repo: alice.did },
@@ -206,7 +205,7 @@ describe('crud operations', () => {
     expect(images.length).toEqual(1)
     expect(uploaded.ref.equals(images[0].image.ref)).toBeTruthy()
     // Ensure that the uploaded image is now in the blobstore, i.e. doesn't throw BlobNotFoundError
-    await ctx.blobstore.getBytes(uploaded.ref)
+    await ctx.blobstore(alice.did).getBytes(uploaded.ref)
     // Cleanup
     await aliceAgent.api.app.bsky.feed.post.delete({
       rkey: postUri.rkey,
@@ -1137,104 +1136,103 @@ describe('crud operations', () => {
   // Moderation
   // --------------
 
-  // it("doesn't serve taken-down record", async () => {
-  //   const created = await aliceAgent.api.app.bsky.feed.post.create(
-  //     { repo: alice.did },
-  //     {
-  //       $type: 'app.bsky.feed.post',
-  //       text: 'Hello, world!',
-  //       createdAt: new Date().toISOString(),
-  //     },
-  //   )
-  //   const postUri = new AtUri(created.uri)
-  //   const post = await agent.api.app.bsky.feed.post.get({
-  //     repo: alice.did,
-  //     rkey: postUri.rkey,
-  //   })
-  //   const posts = await agent.api.app.bsky.feed.post.list({ repo: alice.did })
-  //   expect(posts.records.map((r) => r.uri)).toContain(post.uri)
+  it("doesn't serve taken-down record", async () => {
+    const created = await aliceAgent.api.app.bsky.feed.post.create(
+      { repo: alice.did },
+      {
+        $type: 'app.bsky.feed.post',
+        text: 'Hello, world!',
+        createdAt: new Date().toISOString(),
+      },
+    )
+    const postUri = new AtUri(created.uri)
+    const post = await agent.api.app.bsky.feed.post.get({
+      repo: alice.did,
+      rkey: postUri.rkey,
+    })
+    const posts = await agent.api.app.bsky.feed.post.list({ repo: alice.did })
+    expect(posts.records.map((r) => r.uri)).toContain(post.uri)
 
-  //   const { data: action } =
-  //     await agent.api.com.atproto.admin.takeModerationAction(
-  //       {
-  //         action: TAKEDOWN,
-  //         subject: {
-  //           $type: 'com.atproto.repo.strongRef',
-  //           uri: created.uri,
-  //           cid: created.cid,
-  //         },
-  //         createdBy: 'did:example:admin',
-  //         reason: 'Y',
-  //       },
-  //       {
-  //         encoding: 'application/json',
-  //         headers: { authorization: network.pds.adminAuth() },
-  //       },
-  //     )
+    await agent.api.com.atproto.admin.updateSubjectState(
+      {
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: created.uri,
+          cid: created.cid,
+        },
+        takedown: { applied: true },
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: network.pds.adminAuth() },
+      },
+    )
 
-  //   const postTakedownPromise = agent.api.app.bsky.feed.post.get({
-  //     repo: alice.did,
-  //     rkey: postUri.rkey,
-  //   })
-  //   await expect(postTakedownPromise).rejects.toThrow('Could not locate record')
-  //   const postsTakedown = await agent.api.app.bsky.feed.post.list({
-  //     repo: alice.did,
-  //   })
-  //   expect(postsTakedown.records.map((r) => r.uri)).not.toContain(post.uri)
+    const postTakedownPromise = agent.api.app.bsky.feed.post.get({
+      repo: alice.did,
+      rkey: postUri.rkey,
+    })
+    await expect(postTakedownPromise).rejects.toThrow('Could not locate record')
+    const postsTakedown = await agent.api.app.bsky.feed.post.list({
+      repo: alice.did,
+    })
+    expect(postsTakedown.records.map((r) => r.uri)).not.toContain(post.uri)
 
-  //   // Cleanup
-  //   await agent.api.com.atproto.admin.reverseModerationAction(
-  //     {
-  //       id: action.id,
-  //       createdBy: 'did:example:admin',
-  //       reason: 'Y',
-  //     },
-  //     {
-  //       encoding: 'application/json',
-  //       headers: { authorization: network.pds.adminAuth() },
-  //     },
-  //   )
-  // })
+    // Cleanup
+    await agent.api.com.atproto.admin.updateSubjectState(
+      {
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: created.uri,
+          cid: created.cid,
+        },
+        takedown: { applied: false },
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: network.pds.adminAuth() },
+      },
+    )
+  })
 
-  // it("doesn't serve taken-down actor", async () => {
-  //   const posts = await agent.api.app.bsky.feed.post.list({ repo: alice.did })
-  //   expect(posts.records.length).toBeGreaterThan(0)
+  it("doesn't serve taken-down actor", async () => {
+    const posts = await agent.api.app.bsky.feed.post.list({ repo: alice.did })
+    expect(posts.records.length).toBeGreaterThan(0)
 
-  //   const { data: action } =
-  //     await agent.api.com.atproto.admin.takeModerationAction(
-  //       {
-  //         action: TAKEDOWN,
-  //         subject: {
-  //           $type: 'com.atproto.admin.defs#repoRef',
-  //           did: alice.did,
-  //         },
-  //         createdBy: 'did:example:admin',
-  //         reason: 'Y',
-  //       },
-  //       {
-  //         encoding: 'application/json',
-  //         headers: { authorization: network.pds.adminAuth() },
-  //       },
-  //     )
+    await agent.api.com.atproto.admin.updateSubjectState(
+      {
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: alice.did,
+        },
+        takedown: { applied: true },
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: network.pds.adminAuth() },
+      },
+    )
 
-  //   const tryListPosts = agent.api.app.bsky.feed.post.list({
-  //     repo: alice.did,
-  //   })
-  //   await expect(tryListPosts).rejects.toThrow(/Could not find repo/)
+    const tryListPosts = agent.api.app.bsky.feed.post.list({
+      repo: alice.did,
+    })
+    await expect(tryListPosts).rejects.toThrow(/Could not find repo/)
 
-  //   // Cleanup
-  //   await agent.api.com.atproto.admin.reverseModerationAction(
-  //     {
-  //       id: action.id,
-  //       createdBy: 'did:example:admin',
-  //       reason: 'Y',
-  //     },
-  //     {
-  //       encoding: 'application/json',
-  //       headers: { authorization: network.pds.adminAuth() },
-  //     },
-  //   )
-  // })
+    // Cleanup
+    await agent.api.com.atproto.admin.updateSubjectState(
+      {
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: alice.did,
+        },
+        takedown: { applied: false },
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: network.pds.adminAuth() },
+      },
+    )
+  })
 })
 
 function createDeepObject(depth: number) {

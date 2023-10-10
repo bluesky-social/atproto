@@ -531,7 +531,7 @@ describe('account', () => {
       .where('purpose', '=', 'reset_password')
       .where('did', '=', did)
       .set({
-        requestedAt: new Date(Date.now() - 16 * minsToMs),
+        requestedAt: new Date(Date.now() - 16 * minsToMs).toISOString(),
       })
       .returning(['token'])
       .executeTakeFirst()

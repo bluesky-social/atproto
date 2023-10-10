@@ -8,7 +8,7 @@ import AtpAgent from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { BlobNotFoundError } from '@atproto/repo'
 import { forSnapshot } from '../_util'
-import { PeriodicModerationActionReversal } from '../../src/db/periodic-moderation-action-reversal'
+// import { PeriodicModerationActionReversal } from '../../src/db/periodic-moderation-action-reversal'
 import basicSeed from '../seeds/basic'
 import {
   ACKNOWLEDGE,
@@ -854,46 +854,46 @@ describe.skip('moderation', () => {
       )
     })
 
-    it('automatically reverses actions marked with duration', async () => {
-      const { data: action } =
-        await agent.api.com.atproto.admin.takeModerationAction(
-          {
-            action: TAKEDOWN,
-            createdBy: 'did:example:moderator',
-            reason: 'Y',
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: sc.dids.bob,
-            },
-            // Use negative value to set the expiry time in the past so that the action is automatically reversed
-            // right away without having to wait n number of hours for a successful assertion
-            durationInHours: -1,
-          },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders('moderator'),
-          },
-        )
+    // it('automatically reverses actions marked with duration', async () => {
+    //   const { data: action } =
+    //     await agent.api.com.atproto.admin.takeModerationAction(
+    //       {
+    //         action: TAKEDOWN,
+    //         createdBy: 'did:example:moderator',
+    //         reason: 'Y',
+    //         subject: {
+    //           $type: 'com.atproto.admin.defs#repoRef',
+    //           did: sc.dids.bob,
+    //         },
+    //         // Use negative value to set the expiry time in the past so that the action is automatically reversed
+    //         // right away without having to wait n number of hours for a successful assertion
+    //         durationInHours: -1,
+    //       },
+    //       {
+    //         encoding: 'application/json',
+    //         headers: network.pds.adminAuthHeaders('moderator'),
+    //       },
+    //     )
 
-      // In the actual app, this will be instantiated and run on server startup
-      const periodicReversal = new PeriodicModerationActionReversal(
-        network.pds.ctx,
-      )
-      await periodicReversal.findAndRevertDueActions()
+    //   // In the actual app, this will be instantiated and run on server startup
+    //   const periodicReversal = new PeriodicModerationActionReversal(
+    //     network.pds.ctx,
+    //   )
+    //   await periodicReversal.findAndRevertDueActions()
 
-      const { data: reversedAction } =
-        await agent.api.com.atproto.admin.getModerationAction(
-          { id: action.id },
-          { headers: network.pds.adminAuthHeaders() },
-        )
+    //   const { data: reversedAction } =
+    //     await agent.api.com.atproto.admin.getModerationAction(
+    //       { id: action.id },
+    //       { headers: network.pds.adminAuthHeaders() },
+    //     )
 
-      // Verify that the automatic reversal is attributed to the original moderator of the temporary action
-      // and that the reason is set to indicate that the action was automatically reversed.
-      expect(reversedAction.reversal).toMatchObject({
-        createdBy: action.createdBy,
-        reason: '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
-      })
-    })
+    //   // Verify that the automatic reversal is attributed to the original moderator of the temporary action
+    //   // and that the reason is set to indicate that the action was automatically reversed.
+    //   expect(reversedAction.reversal).toMatchObject({
+    //     createdBy: action.createdBy,
+    //     reason: '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
+    //   })
+    // })
 
     it('does not allow non-full moderators to takedown.', async () => {
       const attemptTakedownTriage =
@@ -947,7 +947,9 @@ describe.skip('moderation', () => {
     })
 
     it('removes blob from the store', async () => {
-      const tryGetBytes = network.pds.ctx.blobstore.getBytes(blob.image.ref)
+      const tryGetBytes = network.pds.ctx
+        .blobstore(sc.dids.carol)
+        .getBytes(blob.image.ref)
       await expect(tryGetBytes).rejects.toThrow(BlobNotFoundError)
     })
 
