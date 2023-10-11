@@ -13,7 +13,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     hostname === 'localhost'
       ? `http://localhost:${port}`
       : `https://${hostname}`
-  const did = env.serviceDid ?? `did:web:${hostname}`
+  const publicHostname = new URL(publicUrl).host
+  const did = env.serviceDid ?? `did:web:${encodeURIComponent(publicHostname)}`
   const serviceCfg: ServerConfig['service'] = {
     port,
     hostname,
