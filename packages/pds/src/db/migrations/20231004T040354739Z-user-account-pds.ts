@@ -13,6 +13,7 @@ export async function up(db: Kysely<unknown>, dialect: Dialect): Promise<void> {
   await pdsBuilder
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('host', 'varchar', (col) => col.notNull())
+    .addColumn('weight', 'integer', (col) => col.notNull().defaultTo(1))
     .execute()
   await db.schema
     .alterTable('user_account')

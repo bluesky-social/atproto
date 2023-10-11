@@ -1,4 +1,3 @@
-import { randomInt } from 'node:crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import disposable from 'disposable-email'
 import * as plc from '@did-plc/lib'
@@ -263,7 +262,18 @@ const getDidAndPlcOp = async (
 // @TODO this implementation is a stub
 const assignPds = async (ctx: AppContext) => {
   const pdses = await ctx.db.db.selectFrom('pds').selectAll().execute()
-  if (!pdses.length) return
-  const pds = pdses.at(randomInt(pdses.length))
-  return pds
+  const idx = randomIndexByWeight(pdses.map((pds) => pds.weight))
+  if (idx === -1) return
+  return pdses.at(idx)
+}
+
+const randomIndexByWeight = (weights) => {
+  let sum = 0
+  const cumulative = weights.map((weight) => {
+    sum += weight
+    return sum
+  })
+  if (!sum) return -1
+  const rand = Math.random() * sum
+  return cumulative.findIndex((item) => item >= rand)
 }
