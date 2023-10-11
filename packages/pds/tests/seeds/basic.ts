@@ -128,22 +128,22 @@ export default async (sc: SeedClient, invite?: { code: string }) => {
   await sc.repost(dan, sc.posts[alice][1].ref)
   await sc.repost(dan, alicesReplyToBob.ref)
 
-  // await sc.agent.com.atproto.admin.takeModerationAction(
-  //   {
-  //     action: FLAG,
-  //     subject: {
-  //       $type: 'com.atproto.admin.defs#repoRef',
-  //       did: dan,
-  //     },
-  //     createdBy: 'did:example:admin',
-  //     reason: 'test',
-  //     createLabelVals: ['repo-action-label'],
-  //   },
-  //   {
-  //     encoding: 'application/json',
-  //     headers: sc.adminAuthHeaders(),
-  //   },
-  // )
+  await sc.agent.com.atproto.admin.takeModerationAction(
+    {
+      action: FLAG,
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: dan,
+      },
+      createdBy: 'did:example:admin',
+      reason: 'test',
+      createLabelVals: ['repo-action-label'],
+    },
+    {
+      encoding: 'application/json',
+      headers: sc.adminAuthHeaders(),
+    },
+  )
 
   return sc
 }
