@@ -6,6 +6,7 @@ import {
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { AtpAgent } from '@atproto/api'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.reverseModerationAction({
@@ -16,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
       const moderationService = ctx.services.moderation(db)
       const { id, createdBy, reason } = input.body
 
-      const moderationAction = await db.transaction(async (dbTxn) => {
+      const { result, restored } = await db.transaction(async (dbTxn) => {
         const moderationTxn = ctx.services.moderation(dbTxn)
         const labelTxn = ctx.services.label(dbTxn)
         const now = new Date()
@@ -53,7 +54,7 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        const result = await moderationTxn.revertAction({
+        const { result, restored } = await moderationTxn.revertAction({
           id,
           createdAt: now,
           createdBy,
@@ -77,12 +78,33 @@ export default function (server: Server, ctx: AppContext) {
           { create, negate },
         )
 
-        return result
+        return { result, restored }
       })
+
+      if (restored) {
+        const { did, subjects } = restored
+        const data = await ctx.idResolver.did.resolveAtprotoData(did)
+        const agent = new AtpAgent({ service: data.pds })
+        const headers = await ctx.serviceAuthHeaders(did)
+        await Promise.all(
+          subjects.map((subject) =>
+            agent.api.com.atproto.admin.updateSubjectState(
+              {
+                subject,
+                takedown: {
+                  applied: false,
+                },
+              },
+              { ...headers, encoding: 'application/json' },
+            ),
+          ),
+        )
+        data.pds
+      }
 
       return {
         encoding: 'application/json',
-        body: await moderationService.views.action(moderationAction),
+        body: await moderationService.views.action(result),
       }
     },
   })

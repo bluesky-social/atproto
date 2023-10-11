@@ -9,6 +9,8 @@ import {
   TAKEDOWN,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { getSubject, getAction } from '../moderation/util'
+import { AtpAgent } from '@atproto/api'
+import { TakedownSubjects } from '../../../../services/moderation'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
@@ -52,7 +54,7 @@ export default function (server: Server, ctx: AppContext) {
 
       validateLabels([...(createLabelVals ?? []), ...(negateLabelVals ?? [])])
 
-      const moderationAction = await db.transaction(async (dbTxn) => {
+      const { result, takenDown } = await db.transaction(async (dbTxn) => {
         const moderationTxn = ctx.services.moderation(dbTxn)
         const labelTxn = ctx.services.label(dbTxn)
 
@@ -67,13 +69,15 @@ export default function (server: Server, ctx: AppContext) {
           durationInHours,
         })
 
+        let takenDown: TakedownSubjects | undefined
+
         if (
           result.action === TAKEDOWN &&
           result.subjectType === 'com.atproto.admin.defs#repoRef' &&
           result.subjectDid
         ) {
           // No credentials to revoke on appview
-          await moderationTxn.takedownRepo({
+          takenDown = await moderationTxn.takedownRepo({
             takedownId: result.id,
             did: result.subjectDid,
           })
@@ -82,11 +86,13 @@ export default function (server: Server, ctx: AppContext) {
         if (
           result.action === TAKEDOWN &&
           result.subjectType === 'com.atproto.repo.strongRef' &&
-          result.subjectUri
+          result.subjectUri &&
+          result.subjectCid
         ) {
-          await moderationTxn.takedownRecord({
+          takenDown = await moderationTxn.takedownRecord({
             takedownId: result.id,
             uri: new AtUri(result.subjectUri),
+            cid: CID.parse(result.subjectCid),
             blobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
           })
         }
@@ -98,12 +104,36 @@ export default function (server: Server, ctx: AppContext) {
           { create: createLabelVals, negate: negateLabelVals },
         )
 
-        return result
+        return { result, takenDown }
       })
+
+      if (takenDown) {
+        const { did, subjects } = takenDown
+        if (did && subjects.length > 0) {
+          const data = await ctx.idResolver.did.resolveAtprotoData(did)
+          const agent = new AtpAgent({ service: data.pds })
+          const headers = await ctx.serviceAuthHeaders(did)
+          await Promise.all(
+            subjects.map((subject) =>
+              agent.api.com.atproto.admin.updateSubjectState(
+                {
+                  subject,
+                  takedown: {
+                    applied: true,
+                    ref: result.id.toString(),
+                  },
+                },
+                { ...headers, encoding: 'application/json' },
+              ),
+            ),
+          )
+          data.pds
+        }
+      }
 
       return {
         encoding: 'application/json',
-        body: await moderationService.views.action(moderationAction),
+        body: await moderationService.views.action(result),
       }
     },
   })

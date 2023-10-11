@@ -1,5 +1,7 @@
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
+import { AtpAgent } from '@atproto/api'
+import { Keypair } from '@atproto/crypto'
 import { DatabaseCoordinator } from './db'
 import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
@@ -10,7 +12,7 @@ import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
 import { LabelCache } from './label-cache'
 import { NotificationServer } from './notifications'
-import { AtpAgent } from '@atproto/api'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 
 export class AppContext {
   constructor(
@@ -19,6 +21,7 @@ export class AppContext {
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       services: Services
+      signingKey: Keypair
       idResolver: IdResolver
       didCache: DidSqlCache
       labelCache: LabelCache
@@ -43,6 +46,10 @@ export class AppContext {
 
   get services(): Services {
     return this.opts.services
+  }
+
+  get signingKey(): Keypair {
+    return this.opts.signingKey
   }
 
   get plcClient(): plc.Client {
@@ -89,6 +96,15 @@ export class AppContext {
 
   get roleVerifier() {
     return auth.roleVerifier(this.cfg)
+  }
+
+  async serviceAuthHeaders(aud: string) {
+    const iss = this.cfg.serverDid
+    return createServiceAuthHeaders({
+      iss,
+      aud,
+      keypair: this.signingKey,
+    })
   }
 
   get backgroundQueue(): BackgroundQueue {
