@@ -246,5 +246,101 @@ describe('multi-pds auth', () => {
         profileRef.uri,
       )
     })
+
+    it('initiates token refresh when account moves pdses, issues updated credentials.', async () => {
+      // don't assign bob to separate pds
+      await entryway.ctx.db.db.updateTable('pds').set({ weight: 0 }).execute()
+      const {
+        data: { did, ...initialSession },
+      } = await entrywayAgent.api.com.atproto.server.createAccount({
+        email: 'bob@test.com',
+        handle: 'bob.test',
+        password: 'test123',
+      })
+      // use initial session credentials for a write
+      await entrywayAgent.com.atproto.repo.putRecord(
+        {
+          repo: did,
+          collection: ids.AppBskyActorProfile,
+          rkey: 'self',
+          record: { displayName: 'Bob' },
+        },
+        {
+          headers: SeedClient.getHeaders(initialSession.accessJwt),
+          encoding: 'application/json',
+        },
+      )
+      // now move bob to a separate pds
+      await entryway.ctx.services.repo(entryway.ctx.db).deleteRepo(did)
+      await plc
+        .getClient()
+        .updatePds(did, pds.ctx.plcRotationKey, pds.ctx.cfg.service.publicUrl)
+      await plc
+        .getClient()
+        .updateAtprotoKey(
+          did,
+          pds.ctx.plcRotationKey,
+          pds.ctx.repoSigningKey.did(),
+        )
+      const { id: pdsId } = await entryway.ctx.db.db
+        .updateTable('pds')
+        .set({ weight: 1 })
+        .returningAll()
+        .executeTakeFirstOrThrow()
+      await entryway.ctx.db.db
+        .updateTable('user_account')
+        .set({ pdsId })
+        .where('did', '=', did)
+        .returningAll()
+        .executeTakeFirst()
+      await pdsAgent.api.com.atproto.server.createAccount({
+        did,
+        email: 'bob@test.com',
+        handle: 'bob.test',
+        password: 'test123',
+      })
+      // attempt a write again on bob's original pds with same creds
+      const tryPutRecord = entrywayAgent.com.atproto.repo.putRecord(
+        {
+          repo: did,
+          collection: ids.AppBskyActorProfile,
+          rkey: 'self',
+          record: { displayName: 'Bob!' },
+        },
+        {
+          headers: SeedClient.getHeaders(initialSession.accessJwt),
+          encoding: 'application/json',
+        },
+      )
+      await expect(tryPutRecord).rejects.toThrow(
+        'Token audience is out of date',
+      )
+      const err = await tryPutRecord.catch((err) => err)
+      expect(err.status).toBe(400)
+      expect(err.error).toBe('ExpiredToken')
+      // refresh session and try again
+      const { data: session } =
+        await entrywayAgent.com.atproto.server.refreshSession(undefined, {
+          headers: SeedClient.getHeaders(initialSession.refreshJwt),
+        })
+      await entrywayAgent.com.atproto.repo.putRecord(
+        {
+          repo: did,
+          collection: ids.AppBskyActorProfile,
+          rkey: 'self',
+          record: { displayName: 'Bob!' },
+        },
+        {
+          headers: SeedClient.getHeaders(session.accessJwt),
+          encoding: 'application/json',
+        },
+      )
+      const { data: profile } = await pdsAgent.com.atproto.repo.getRecord({
+        repo: did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+      })
+      expect(profile.value['displayName']).toEqual('Bob!')
+    })
   })
 })
