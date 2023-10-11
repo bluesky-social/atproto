@@ -18,7 +18,11 @@ export const proxy = async <T>(
     throw new UpstreamFailureError('unknown pds')
   }
   // @TODO reuse agents
-  const agent = new AtpAgent({ service: `https://${pds.host}` })
+  const service = new URL(`https://${pds.host}`)
+  if (service.hostname === 'localhost') {
+    service.protocol = 'http:'
+  }
+  const agent = new AtpAgent({ service })
   try {
     return await fn(agent)
   } catch (err) {
