@@ -145,16 +145,39 @@ export class ModerationService {
     return await builder.execute()
   }
 
-  async logEvent(
-    info: {
-      event: ModEventType
-      subject: { did: string } | { uri: AtUri; cid: CID }
-      subjectBlobCids?: CID[]
-      createdBy: string
-      createdAt?: Date
-    },
-    applyLabels?: LabelerFunc,
-  ): Promise<ModerationEventRow> {
+  buildSubjectInfo(
+    subject: { did: string } | { uri: AtUri; cid: CID },
+    subjectBlobCids?: CID[],
+  ): SubjectInfo {
+    if ('did' in subject) {
+      if (subjectBlobCids?.length) {
+        throw new InvalidRequestError('Blobs do not apply to repo subjects')
+      }
+      // Allowing dids that may not exist: may have been deleted but needs to remain actionable.
+      return {
+        subjectType: 'com.atproto.admin.defs#repoRef',
+        subjectDid: subject.did,
+        subjectUri: null,
+        subjectCid: null,
+      }
+    }
+
+    // Allowing records/blobs that may not exist: may have been deleted but needs to remain actionable.
+    return {
+      subjectType: 'com.atproto.repo.strongRef',
+      subjectDid: subject.uri.host,
+      subjectUri: subject.uri.toString(),
+      subjectCid: subject.cid.toString(),
+    }
+  }
+
+  async logEvent(info: {
+    event: ModEventType
+    subject: { did: string } | { uri: AtUri; cid: CID }
+    subjectBlobCids?: CID[]
+    createdBy: string
+    createdAt?: Date
+  }): Promise<ModerationEventRow> {
     this.db.assertTransaction()
     const {
       event,
@@ -165,27 +188,7 @@ export class ModerationService {
     } = info
 
     // Resolve subject info
-    let subjectInfo: SubjectInfo
-    if ('did' in subject) {
-      // Allowing dids that may not exist: may have been deleted but needs to remain actionable.
-      subjectInfo = {
-        subjectType: 'com.atproto.admin.defs#repoRef',
-        subjectDid: subject.did,
-        subjectUri: null,
-        subjectCid: null,
-      }
-      if (subjectBlobCids?.length) {
-        throw new InvalidRequestError('Blobs do not apply to repo subjects')
-      }
-    } else {
-      // Allowing records/blobs that may not exist: may have been deleted but needs to remain actionable.
-      subjectInfo = {
-        subjectType: 'com.atproto.repo.strongRef',
-        subjectDid: subject.uri.host,
-        subjectUri: subject.uri.toString(),
-        subjectCid: subject.cid.toString(),
-      }
-    }
+    const subjectInfo = this.buildSubjectInfo(subject, subjectBlobCids)
 
     const createLabelVals =
       isModEventLabel(event) && event.createLabelVals.length > 0
@@ -253,18 +256,15 @@ export class ModerationService {
     applyLabels: LabelerFunc,
   ) {
     this.db.assertTransaction()
-    const result = await this.logEvent(
-      {
-        event: {
-          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
-          comment,
-        },
-        createdAt,
-        createdBy,
-        subject,
+    const result = await this.logEvent({
+      event: {
+        $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+        comment,
       },
-      applyLabels,
-    )
+      createdAt,
+      createdBy,
+      subject,
+    })
 
     if (
       result.action === 'com.atproto.admin.defs#modEventTakedown' &&
@@ -441,5 +441,21 @@ export class ModerationService {
 
     const results = await builder.limit(limit).selectAll().execute()
     return results
+  }
+
+  async isSubjectTakendown(
+    subject: { did: string } | { uri: AtUri },
+  ): Promise<boolean> {
+    const { did, recordPath } = getStatusIdentifierFromSubject(
+      'did' in subject ? subject.did : subject.uri,
+    )
+    let builder = this.db.db
+      .selectFrom('moderation_subject_status')
+      .where('did', '=', did)
+      .where('recordPath', '=', recordPath || '')
+
+    const result = await builder.select('takendown').executeTakeFirst()
+
+    return !!result?.takendown
   }
 }

@@ -20,11 +20,13 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.getPrimary()
       const moderationService = ctx.services.moderation(db)
       const { subject, createdBy, subjectBlobCids, event } = input.body
+      const isTakedownEvent = isModEventTakedown(event)
+      const isReverseTakedownEvent = isModEventReverseTakedown(event)
 
       // apply access rules
 
       // if less than moderator access then can not takedown an account
-      if (!access.moderator && isModEventTakedown(event) && 'did' in subject) {
+      if (!access.moderator && isTakedownEvent && 'did' in subject) {
         throw new AuthRequiredError(
           'Must be a full moderator to perform an account takedown',
         )
@@ -32,9 +34,7 @@ export default function (server: Server, ctx: AppContext) {
       // if less than moderator access then can only take ack and escalation actions
       if (
         !access.moderator &&
-        (isModEventFlag(event) ||
-          isModEventTakedown(event) ||
-          isModEventReverseTakedown(event))
+        (isModEventFlag(event) || isTakedownEvent || isReverseTakedownEvent)
       ) {
         throw new AuthRequiredError(
           'Must be a full moderator to take this type of action',
@@ -50,6 +50,22 @@ export default function (server: Server, ctx: AppContext) {
           ...(event.createLabelVals ?? []),
           ...(event.negateLabelVals ?? []),
         ])
+      }
+
+      const subjectInfo = getSubject(subject)
+
+      if (isTakedownEvent || isReverseTakedownEvent) {
+        const isSubjectTakendown = await moderationService.isSubjectTakendown(
+          subjectInfo,
+        )
+
+        if (isSubjectTakendown && isTakedownEvent) {
+          throw new InvalidRequestError(`Subject is already taken down`)
+        }
+
+        if (!isSubjectTakendown && isReverseTakedownEvent) {
+          throw new InvalidRequestError(`Subject is not taken down`)
+        }
       }
 
       const moderationAction = await db.transaction(async (dbTxn) => {
@@ -82,16 +98,12 @@ export default function (server: Server, ctx: AppContext) {
             },
           )
 
-        const result = await moderationTxn.logEvent(
-          {
-            event,
-            subject: getSubject(subject),
-            subjectBlobCids:
-              subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
-            createdBy,
-          },
-          applyLabels,
-        )
+        const result = await moderationTxn.logEvent({
+          event,
+          subject: subjectInfo,
+          subjectBlobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
+          createdBy,
+        })
 
         if (
           result.action === 'com.atproto.admin.defs#modEventTakedown' &&

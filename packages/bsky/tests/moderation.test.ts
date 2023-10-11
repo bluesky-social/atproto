@@ -251,7 +251,7 @@ describe('moderation', () => {
         }),
       ])
 
-      const { data: takedownBobsAccount } = await performTakedown({
+      await performTakedown({
         account: sc.dids.bob,
       })
 
@@ -574,6 +574,26 @@ describe('moderation', () => {
       )
     })
 
+    it('does not allow take down event on takendown post or reverse takedown on available post.', async () => {
+      await performTakedown({
+        account: sc.dids.bob,
+      })
+      await expect(
+        performTakedown({
+          account: sc.dids.bob,
+        }),
+      ).rejects.toThrow('Subject is already taken down')
+
+      // Cleanup
+      await performReverseTakedown({
+        account: sc.dids.bob,
+      })
+      await expect(
+        performReverseTakedown({
+          account: sc.dids.bob,
+        }),
+      ).rejects.toThrow('Subject is not taken down')
+    })
     it('allows full moderators to takedown.', async () => {
       await agent.api.com.atproto.admin.emitModerationEvent(
         {
@@ -674,7 +694,7 @@ describe('moderation', () => {
       })
       expect(statuses.subjectStatuses[0]).toMatchObject({
         takendown: false,
-        reviewState: REVIEWCLOSED
+        reviewState: REVIEWCLOSED,
       })
     })
 
