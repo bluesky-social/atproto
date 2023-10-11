@@ -161,6 +161,7 @@ export class AppContext {
 
     const auth = new ServerAuth({
       jwtSigningKey,
+      jwtVerifyKeyHex: secrets.jwtVerifyKey?.publicKeyHex,
       jwtSecret: secrets.jwtSecret,
       adminPass: secrets.adminPassword,
       moderatorPass: secrets.moderatorPassword,

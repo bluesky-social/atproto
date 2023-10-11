@@ -1,7 +1,8 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import * as ui8 from 'uint8arrays'
-import AtpAgent, { AtUri } from '@atproto/api'
+import * as jose from 'jose'
+import AtpAgent from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import {
   SeedClient,
@@ -23,6 +24,7 @@ describe('multi-pds auth', () => {
   beforeAll(async () => {
     const jwtSigningKey = await Secp256k1Keypair.create({ exportable: true })
     const jwtSigningPriv = ui8.toString(await jwtSigningKey.export(), 'hex')
+    const jwtVerifyPub = jwtSigningKey.publicKeyStr('hex')
     const plcRotationKey = await Secp256k1Keypair.create({ exportable: true })
     const plcRotationPriv = ui8.toString(await plcRotationKey.export(), 'hex')
     const recoveryKey = (await Secp256k1Keypair.create()).did()
@@ -40,7 +42,8 @@ describe('multi-pds auth', () => {
       dbPostgresSchema: 'multi_pds_account_pds',
       didPlcUrl: plc.url,
       recoveryDidKey: recoveryKey,
-      jwtSigningKeyK256PrivateKeyHex: jwtSigningPriv,
+      jwtVerifyKeyK256PublicKeyHex: jwtVerifyPub,
+      jwtSigningKeyK256PrivateKeyHex: undefined, // no private key material on pds for jwts
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
     })
     await entryway.ctx.db.db
@@ -117,6 +120,8 @@ describe('multi-pds auth', () => {
         password: 'test123',
       })
     accessToken = session.accessJwt
+    const tokenHeader = jose.decodeProtectedHeader(accessToken)
+    expect(tokenHeader.alg).toBe('ES256K') // asymmetric, from the jwt key and not the secret
     const { data: entrywayResult } =
       await entrywayAgent.api.com.atproto.server.getSession(
         {},

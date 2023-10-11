@@ -1,5 +1,10 @@
 import * as assert from 'node:assert'
-import { KeyObject, createPrivateKey, createSecretKey } from 'node:crypto'
+import {
+  KeyObject,
+  createPrivateKey,
+  createPublicKey,
+  createSecretKey,
+} from 'node:crypto'
 import express from 'express'
 import KeyEncoder from 'key-encoder'
 import * as ui8 from 'uint8arrays'
@@ -17,6 +22,7 @@ const HMACSHA256_JWT = 'HS256'
 export type ServerAuthOpts = {
   jwtSecret: string
   jwtSigningKey?: crypto.Secp256k1Keypair
+  jwtVerifyKeyHex?: string
   adminPass: string
   moderatorPass?: string
   triagePass?: string
@@ -41,6 +47,7 @@ export type RefreshToken = AuthToken & { jti: string; aud: string }
 export class ServerAuth {
   private _signingSecret: KeyObject
   private _signingKeyPromise?: Promise<KeyObject>
+  private _verifyKeyPromise?: Promise<KeyObject>
   private _adminPass: string
   private _moderatorPass?: string
   private _triagePass?: string
@@ -49,6 +56,9 @@ export class ServerAuth {
     this._signingSecret = createSecretKey(Buffer.from(opts.jwtSecret))
     this._signingKeyPromise =
       opts.jwtSigningKey && createPrivateKeyObject(opts.jwtSigningKey)
+    this._verifyKeyPromise = opts.jwtVerifyKeyHex
+      ? createPublicKeyObject(opts.jwtVerifyKeyHex)
+      : this._signingKeyPromise
     this._adminPass = opts.adminPass
     this._moderatorPass = opts.moderatorPass
     this._triagePass = opts.triagePass
@@ -178,8 +188,8 @@ export class ServerAuth {
     const header = jose.decodeProtectedHeader(token)
     let result: jose.JWTVerifyResult
     try {
-      if (header.alg === SECP256K1_JWT && this._signingKeyPromise) {
-        const key = await this._signingKeyPromise
+      if (header.alg === SECP256K1_JWT && this._verifyKeyPromise) {
+        const key = await this._verifyKeyPromise
         result = await jose.jwtVerify(token, key, options)
       } else {
         const key = this._signingSecret
@@ -368,6 +378,13 @@ const createPrivateKeyObject = async (
   const raw = await privateKey.export()
   const key = keyEncoder.encodePrivate(ui8.toString(raw, 'hex'), 'raw', 'pem')
   return createPrivateKey({ format: 'pem', key })
+}
+
+const createPublicKeyObject = async (
+  publicKeyHex: string,
+): Promise<KeyObject> => {
+  const key = keyEncoder.encodePublic(publicKeyHex, 'raw', 'pem')
+  return createPublicKey({ format: 'pem', key })
 }
 
 const keyEncoder = new KeyEncoder('secp256k1')
