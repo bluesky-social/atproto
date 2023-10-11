@@ -335,7 +335,7 @@ Object {
       "description": "blah blah",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "name": "new list",
-      "purpose": "app.bsky.graph.defs#blocklist",
+      "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(0)",
       "viewer": Object {
         "blocked": "record(1)",
@@ -379,7 +379,7 @@ Object {
       "description": "big list of blocks",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "name": "alice blocks",
-      "purpose": "app.bsky.graph.defs#blocklist",
+      "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(4)",
       "viewer": Object {
         "blocked": "record(5)",
@@ -430,7 +430,7 @@ Object {
       "description": "blah blah",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "name": "new list",
-      "purpose": "app.bsky.graph.defs#blocklist",
+      "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(0)",
       "viewer": Object {
         "muted": false,
@@ -473,7 +473,7 @@ Object {
       "description": "big list of blocks",
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "name": "alice blocks",
-      "purpose": "app.bsky.graph.defs#blocklist",
+      "purpose": "app.bsky.graph.defs#modlist",
       "uri": "record(3)",
       "viewer": Object {
         "blocked": "record(4)",
@@ -554,7 +554,7 @@ Object {
     "description": "big list of blocks",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "name": "alice blocks",
-    "purpose": "app.bsky.graph.defs#blocklist",
+    "purpose": "app.bsky.graph.defs#modlist",
     "uri": "record(0)",
     "viewer": Object {
       "blocked": "record(1)",
