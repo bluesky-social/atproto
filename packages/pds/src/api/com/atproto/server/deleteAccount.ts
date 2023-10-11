@@ -29,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         const moderationTxn = ctx.services.moderation(dbTxn)
         const currState = await moderationTxn.getRepoTakedownState(did)
         // Do not disturb an existing takedown, continue with account deletion
-        if (currState?.state.takedown.applied !== true) {
+        if (currState?.takedown.applied !== true) {
           await moderationTxn.updateRepoTakedownState(did, {
             applied: true,
             ref: REASON_ACCT_DELETION,

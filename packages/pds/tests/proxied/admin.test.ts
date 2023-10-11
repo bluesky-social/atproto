@@ -37,7 +37,10 @@ describe('proxies admin requests', () => {
           headers: network.pds.adminAuthHeaders(),
         },
       )
-    await basicSeed(sc, invite)
+    await basicSeed(sc, {
+      inviteCode: invite.code,
+      addModLabels: true,
+    })
     await network.processAll()
   })
 

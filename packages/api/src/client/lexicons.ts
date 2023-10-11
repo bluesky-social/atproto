@@ -1262,9 +1262,6 @@ export const schemaDict = {
             q: {
               type: 'string',
             },
-            invitedBy: {
-              type: 'string',
-            },
             limit: {
               type: 'integer',
               minimum: 1,
