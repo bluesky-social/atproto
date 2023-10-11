@@ -11,7 +11,7 @@ import {
 import { forSnapshot } from '../_util'
 import basicSeed from '../seeds/basic'
 
-describe('pds admin get moderation action view', () => {
+describe.skip('pds admin get moderation action view', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient

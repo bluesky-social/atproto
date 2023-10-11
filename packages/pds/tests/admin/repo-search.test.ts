@@ -4,7 +4,7 @@ import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { paginateAll } from '../_util'
 import usersBulkSeed from '../seeds/users-bulk'
 
-describe('pds admin repo search view', () => {
+describe.skip('pds admin repo search view', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient

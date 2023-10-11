@@ -35,11 +35,16 @@ export default function (server: Server, ctx: AppContext) {
             takedown,
           )
         } else if (isRepoBlobRef(subject)) {
-          await modSrvc.updateBlobTakedownState(
-            subject.did,
-            CID.parse(subject.cid),
-            takedown,
-          )
+          try {
+            await modSrvc.updateBlobTakedownState(
+              subject.did,
+              CID.parse(subject.cid),
+              takedown,
+            )
+          } catch (err) {
+            console.log(err)
+            throw err
+          }
         } else {
           throw new InvalidRequestError('Invalid subject')
         }

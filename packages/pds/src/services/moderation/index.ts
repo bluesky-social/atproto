@@ -11,7 +11,7 @@ import { Main as StrongRef } from '../../lexicon/types/com/atproto/repo/strongRe
 
 type StateResponse<T> = {
   subject: T
-  state: { takedown: SubjectState }
+  takedown: SubjectState
 }
 
 export class ModerationService {
@@ -36,9 +36,7 @@ export class ModerationService {
         $type: 'com.atproto.admin.defs#repoRef',
         did: did,
       },
-      state: {
-        takedown: state,
-      },
+      takedown: state,
     }
   }
 
@@ -58,9 +56,7 @@ export class ModerationService {
         uri: uri.toString(),
         cid: res.cid,
       },
-      state: {
-        takedown: state,
-      },
+      takedown: state,
     }
   }
 
@@ -82,9 +78,7 @@ export class ModerationService {
         did: did,
         cid: cid.toString(),
       },
-      state: {
-        takedown: state,
-      },
+      takedown: state,
     }
   }
 
@@ -94,7 +88,7 @@ export class ModerationService {
       .updateTable('repo_root')
       .set({ takedownId })
       .where('did', '=', did)
-      .executeTakeFirst()
+      .execute()
   }
 
   async updateRecordTakedownState(uri: AtUri, state: SubjectState) {
@@ -103,7 +97,7 @@ export class ModerationService {
       .updateTable('record')
       .set({ takedownId })
       .where('uri', '=', uri.toString())
-      .executeTakeFirst()
+      .execute()
   }
 
   async updateBlobTakedownState(did: string, blob: CID, state: SubjectState) {
@@ -113,11 +107,11 @@ export class ModerationService {
       .set({ takedownId })
       .where('did', '=', did)
       .where('cid', '=', blob.toString())
-      .executeTakeFirst()
+      .execute()
     if (state.applied) {
-      await this.blobstore.unquarantine(blob)
-    } else {
       await this.blobstore.quarantine(blob)
+    } else {
+      await this.blobstore.unquarantine(blob)
     }
   }
 }
