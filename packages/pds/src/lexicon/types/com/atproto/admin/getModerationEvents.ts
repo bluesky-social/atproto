@@ -19,7 +19,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   cursor?: string
-  actions: ComAtprotoAdminDefs.ActionView[]
+  events: ComAtprotoAdminDefs.ModEventView[]
   [k: string]: unknown
 }
 

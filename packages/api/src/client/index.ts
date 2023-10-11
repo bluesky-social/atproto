@@ -10,9 +10,10 @@ import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
+import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
-import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationEvent'
+import * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
 import * as ComAtprotoAdminGetModerationEvents from './types/com/atproto/admin/getModerationEvents'
 import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
 import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
@@ -21,7 +22,6 @@ import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
-import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/emitModerationEvent'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
@@ -142,9 +142,10 @@ import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 export * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
+export * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
 export * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 export * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
-export * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationEvent'
+export * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
 export * as ComAtprotoAdminGetModerationEvents from './types/com/atproto/admin/getModerationEvents'
 export * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
 export * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
@@ -153,7 +154,6 @@ export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
-export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/emitModerationEvent'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
@@ -272,15 +272,6 @@ export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecce
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
 export const COM_ATPROTO_ADMIN = {
-  DefsTakedown: 'com.atproto.admin.defs#takedown',
-  DefsFlag: 'com.atproto.admin.defs#flag',
-  DefsAcknowledge: 'com.atproto.admin.defs#acknowledge',
-  DefsEscalate: 'com.atproto.admin.defs#escalate',
-  DefsComment: 'com.atproto.admin.defs#comment',
-  DefsLabel: 'com.atproto.admin.defs#label',
-  DefsRevert: 'com.atproto.admin.defs#revert',
-  DefsMute: 'com.atproto.admin.defs#mute',
-  DefsReport: 'com.atproto.admin.defs#report',
   DefsReviewOpen: 'com.atproto.admin.defs#reviewOpen',
   DefsReviewEscalated: 'com.atproto.admin.defs#reviewEscalated',
   DefsReviewClosed: 'com.atproto.admin.defs#reviewClosed',
@@ -389,6 +380,17 @@ export class AdminNS {
       })
   }
 
+  emitModerationEvent(
+    data?: ComAtprotoAdminEmitModerationEvent.InputSchema,
+    opts?: ComAtprotoAdminEmitModerationEvent.CallOptions,
+  ): Promise<ComAtprotoAdminEmitModerationEvent.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.emitModerationEvent', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminEmitModerationEvent.toKnownErr(e)
+      })
+  }
+
   enableAccountInvites(
     data?: ComAtprotoAdminEnableAccountInvites.InputSchema,
     opts?: ComAtprotoAdminEnableAccountInvites.CallOptions,
@@ -412,13 +414,13 @@ export class AdminNS {
   }
 
   getModerationEvent(
-    params?: ComAtprotoAdminGetModerationAction.QueryParams,
-    opts?: ComAtprotoAdminGetModerationAction.CallOptions,
-  ): Promise<ComAtprotoAdminGetModerationAction.Response> {
+    params?: ComAtprotoAdminGetModerationEvent.QueryParams,
+    opts?: ComAtprotoAdminGetModerationEvent.CallOptions,
+  ): Promise<ComAtprotoAdminGetModerationEvent.Response> {
     return this._service.xrpc
       .call('com.atproto.admin.getModerationEvent', params, undefined, opts)
       .catch((e) => {
-        throw ComAtprotoAdminGetModerationAction.toKnownErr(e)
+        throw ComAtprotoAdminGetModerationEvent.toKnownErr(e)
       })
   }
 
@@ -507,17 +509,6 @@ export class AdminNS {
       .call('com.atproto.admin.sendEmail', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminSendEmail.toKnownErr(e)
-      })
-  }
-
-  emitModerationEvent(
-    data?: ComAtprotoAdminTakeModerationAction.InputSchema,
-    opts?: ComAtprotoAdminTakeModerationAction.CallOptions,
-  ): Promise<ComAtprotoAdminTakeModerationAction.Response> {
-    return this._service.xrpc
-      .call('com.atproto.admin.emitModerationEvent', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoAdminTakeModerationAction.toKnownErr(e)
       })
   }
 

@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           cursor: results.at(-1)?.id.toString() ?? undefined,
-          actions: await moderationService.views.action(results),
+          events: await moderationService.views.event(results),
         },
       }
     },

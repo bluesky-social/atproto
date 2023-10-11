@@ -10,43 +10,54 @@ import * as ComAtprotoModerationDefs from '../moderation/defs'
 import * as ComAtprotoServerDefs from '../server/defs'
 import * as ComAtprotoLabelDefs from '../label/defs'
 
-export interface ActionView {
+export interface ModEventView {
   id: number
-  action: ActionType
-  /** Indicates how long this action was meant to be in effect before automatically expiring. */
-  durationInHours?: number
+  event:
+    | ModEventTakedown
+    | ModEventReverseTakedown
+    | ModEventComment
+    | ModEventReport
+    | ModEventLabel
+    | ModEventFlag
+    | ModEventAcknowledge
+    | ModEventEscalate
+    | ModEventMute
+    | { $type: string; [k: string]: unknown }
   subject:
     | RepoRef
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
   subjectBlobCids: string[]
-  createLabelVals?: string[]
-  negateLabelVals?: string[]
-  comment?: string
   createdBy: string
   createdAt: string
-  meta?: ActionMeta
-  resolvedReportIds?: number[]
   [k: string]: unknown
 }
 
-export function isActionView(v: unknown): v is ActionView {
+export function isModEventView(v: unknown): v is ModEventView {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.defs#actionView'
+    v.$type === 'com.atproto.admin.defs#modEventView'
   )
 }
 
-export function validateActionView(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.defs#actionView', v)
+export function validateModEventView(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventView', v)
 }
 
-export interface ActionViewDetail {
+export interface ModEventViewDetail {
   id: number
-  action: ActionType
-  /** Indicates how long this action was meant to be in effect before automatically expiring. */
-  durationInHours?: number
+  event:
+    | ModEventTakedown
+    | ModEventReverseTakedown
+    | ModEventComment
+    | ModEventReport
+    | ModEventLabel
+    | ModEventFlag
+    | ModEventAcknowledge
+    | ModEventEscalate
+    | ModEventMute
+    | { $type: string; [k: string]: unknown }
   subject:
     | RepoView
     | RepoViewNotFound
@@ -54,113 +65,22 @@ export interface ActionViewDetail {
     | RecordViewNotFound
     | { $type: string; [k: string]: unknown }
   subjectBlobs: BlobView[]
-  createLabelVals?: string[]
-  negateLabelVals?: string[]
-  comment?: string
-  createdBy: string
-  createdAt: string
-  resolvedReports: ReportView[]
-  [k: string]: unknown
-}
-
-export function isActionViewDetail(v: unknown): v is ActionViewDetail {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.defs#actionViewDetail'
-  )
-}
-
-export function validateActionViewDetail(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.defs#actionViewDetail', v)
-}
-
-export interface ActionViewCurrent {
-  id: number
-  action: ActionType
-  /** Indicates how long this action was meant to be in effect before automatically expiring. */
-  durationInHours?: number
-  [k: string]: unknown
-}
-
-export function isActionViewCurrent(v: unknown): v is ActionViewCurrent {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.defs#actionViewCurrent'
-  )
-}
-
-export function validateActionViewCurrent(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.defs#actionViewCurrent', v)
-}
-
-export interface ActionReversal {
-  comment?: string
   createdBy: string
   createdAt: string
   [k: string]: unknown
 }
 
-export function isActionReversal(v: unknown): v is ActionReversal {
+export function isModEventViewDetail(v: unknown): v is ModEventViewDetail {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.defs#actionReversal'
+    v.$type === 'com.atproto.admin.defs#modEventViewDetail'
   )
 }
 
-export function validateActionReversal(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.defs#actionReversal', v)
+export function validateModEventViewDetail(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventViewDetail', v)
 }
-
-export interface ActionMeta {
-  resolveReportIds?: number[]
-  reportType?: ComAtprotoModerationDefs.ReasonType
-  [k: string]: unknown
-}
-
-export function isActionMeta(v: unknown): v is ActionMeta {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.defs#actionMeta'
-  )
-}
-
-export function validateActionMeta(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.defs#actionMeta', v)
-}
-
-export type ActionType =
-  | 'lex:com.atproto.admin.defs#takedown'
-  | 'lex:com.atproto.admin.defs#flag'
-  | 'lex:com.atproto.admin.defs#acknowledge'
-  | 'lex:com.atproto.admin.defs#escalate'
-  | 'lex:com.atproto.admin.defs#comment'
-  | 'lex:com.atproto.admin.defs#label'
-  | 'lex:com.atproto.admin.defs#revert'
-  | 'lex:com.atproto.admin.defs#mute'
-  | (string & {})
-
-/** Moderation action type: Takedown. Indicates that content should not be served by the PDS. */
-export const TAKEDOWN = 'com.atproto.admin.defs#takedown'
-/** Moderation action type: Flag. Indicates that the content was reviewed and considered to violate PDS rules, but may still be served. */
-export const FLAG = 'com.atproto.admin.defs#flag'
-/** Moderation action type: Acknowledge. Indicates that the content was reviewed and not considered to violate PDS rules. */
-export const ACKNOWLEDGE = 'com.atproto.admin.defs#acknowledge'
-/** Moderation action type: Escalate. Indicates that the content has been flagged for additional review. */
-export const ESCALATE = 'com.atproto.admin.defs#escalate'
-/** Moderation action type: Comment. Indicates that no change is being made to the subject or associated reports, just a comment is being added by a human or automated moderator */
-export const COMMENT = 'com.atproto.admin.defs#comment'
-/** Moderation action type: Label. Indicates that labels associated with the subject are being changed. */
-export const LABEL = 'com.atproto.admin.defs#label'
-/** Moderation action type: Revert. Indicates that a previously taken action is being reversed. */
-export const REVERT = 'com.atproto.admin.defs#revert'
-/** Moderation action type: Mute. Indicates that reports/other events on a subject can be muted for a period of time. */
-export const MUTE = 'com.atproto.admin.defs#mute'
-/** Moderation action type: Report. Indicates that a new report was received for the subject. */
-export const REPORT = 'com.atproto.admin.defs#report'
 
 export interface ReportView {
   id: number
@@ -232,7 +152,7 @@ export interface ReportViewDetail {
   subjectStatus?: SubjectStatusView
   reportedBy: string
   createdAt: string
-  resolvedByActions: ActionView[]
+  resolvedByActions: ModEventView[]
   [k: string]: unknown
 }
 
@@ -399,7 +319,7 @@ export function validateRecordViewNotFound(v: unknown): ValidationResult {
 }
 
 export interface Moderation {
-  currentAction?: ActionViewCurrent
+  status?: SubjectStatusView
   [k: string]: unknown
 }
 
@@ -506,3 +426,171 @@ export const REVIEWOPEN = 'com.atproto.admin.defs#reviewOpen'
 export const REVIEWESCALATED = 'com.atproto.admin.defs#reviewEscalated'
 /** Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator */
 export const REVIEWCLOSED = 'com.atproto.admin.defs#reviewClosed'
+
+/** Take down a subject permanently or temporarily */
+export interface ModEventTakedown {
+  /** Indicates how long the takedown should be in effect before automatically expiring. */
+  durationInHours?: number
+  [k: string]: unknown
+}
+
+export function isModEventTakedown(v: unknown): v is ModEventTakedown {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#modEventTakedown'
+  )
+}
+
+export function validateModEventTakedown(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventTakedown', v)
+}
+
+/** Revert take down action on a subject */
+export interface ModEventReverseTakedown {
+  /** Describe reasoning behind the reversal. */
+  comment?: string
+  [k: string]: unknown
+}
+
+export function isModEventReverseTakedown(
+  v: unknown,
+): v is ModEventReverseTakedown {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#modEventReverseTakedown'
+  )
+}
+
+export function validateModEventReverseTakedown(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventReverseTakedown', v)
+}
+
+/** Add a comment to a subject */
+export interface ModEventComment {
+  comment: string
+  /** Reference a previous event by id on the subject */
+  refEventId?: number
+  [k: string]: unknown
+}
+
+export function isModEventComment(v: unknown): v is ModEventComment {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#modEventComment'
+  )
+}
+
+export function validateModEventComment(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventComment', v)
+}
+
+/** Report a subject */
+export interface ModEventReport {
+  comment?: string
+  reportType: ComAtprotoModerationDefs.ReasonType
+  [k: string]: unknown
+}
+
+export function isModEventReport(v: unknown): v is ModEventReport {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#modEventReport'
+  )
+}
+
+export function validateModEventReport(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventReport', v)
+}
+
+/** Apply/Negate labels on a subject */
+export interface ModEventLabel {
+  createLabelVals: string[]
+  negateLabelVals: string[]
+  [k: string]: unknown
+}
+
+export function isModEventLabel(v: unknown): v is ModEventLabel {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#modEventLabel'
+  )
+}
+
+export function validateModEventLabel(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventLabel', v)
+}
+
+export interface ModEventFlag {
+  comment?: string
+  [k: string]: unknown
+}
+
+export function isModEventFlag(v: unknown): v is ModEventFlag {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#modEventFlag'
+  )
+}
+
+export function validateModEventFlag(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventFlag', v)
+}
+
+export interface ModEventAcknowledge {
+  comment?: string
+  [k: string]: unknown
+}
+
+export function isModEventAcknowledge(v: unknown): v is ModEventAcknowledge {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#modEventAcknowledge'
+  )
+}
+
+export function validateModEventAcknowledge(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventAcknowledge', v)
+}
+
+export interface ModEventEscalate {
+  comment?: string
+  [k: string]: unknown
+}
+
+export function isModEventEscalate(v: unknown): v is ModEventEscalate {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#modEventEscalate'
+  )
+}
+
+export function validateModEventEscalate(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventEscalate', v)
+}
+
+/** Mute incoming reports on a subject */
+export interface ModEventMute {
+  /** Indicates how long the subject should remain muted. */
+  durationInHours: number
+  [k: string]: unknown
+}
+
+export function isModEventMute(v: unknown): v is ModEventMute {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#modEventMute'
+  )
+}
+
+export function validateModEventMute(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventMute', v)
+}

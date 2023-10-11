@@ -8,16 +8,15 @@ import { Actor } from '../../db/tables/actor'
 import { Record as RecordRow } from '../../db/tables/record'
 import { ModerationEvent } from '../../db/tables/moderation'
 import {
+  ModEventView,
   RepoView,
   RepoViewDetail,
   RecordView,
   RecordViewDetail,
-  ActionView,
-  ActionViewDetail,
-  ReportView,
   ReportViewDetail,
   BlobView,
   SubjectStatusView,
+  ModEventViewDetail,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
@@ -105,43 +104,84 @@ export class ModerationViews {
 
     return Array.isArray(result) ? views : views[0]
   }
-  action(result: ActionResult): Promise<ActionView>
-  action(result: ActionResult[]): Promise<ActionView[]>
-  async action(
-    result: ActionResult | ActionResult[],
-  ): Promise<ActionView | ActionView[]> {
+  event(result: EventResult): Promise<ModEventView>
+  event(result: EventResult[]): Promise<ModEventView[]>
+  async event(
+    result: EventResult | EventResult[],
+  ): Promise<ModEventView | ModEventView[]> {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
-    const views = results.map((res) => ({
-      id: res.id,
-      action: res.action,
-      durationInHours: res.durationInHours ?? undefined,
-      subject:
-        res.subjectType === 'com.atproto.admin.defs#repoRef'
-          ? {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: res.subjectDid,
-            }
-          : {
-              $type: 'com.atproto.repo.strongRef',
-              uri: res.subjectUri,
-              cid: res.subjectCid,
-            },
-      // TODO: do we need this?
-      subjectBlobCids: [],
-      comment: res.comment || undefined,
-      createdAt: res.createdAt,
-      createdBy: res.createdBy,
-      createLabelVals:
-        res.createLabelVals && res.createLabelVals.length > 0
-          ? res.createLabelVals.split(' ')
-          : undefined,
-      negateLabelVals:
-        res.negateLabelVals && res.negateLabelVals.length > 0
-          ? res.negateLabelVals.split(' ')
-          : undefined,
-    }))
+    const views = results.map((res) => {
+      const eventView: ModEventView = {
+        id: res.id,
+        event: {
+          $type: res.action,
+        },
+        subject:
+          res.subjectType === 'com.atproto.admin.defs#repoRef'
+            ? {
+                $type: 'com.atproto.admin.defs#repoRef',
+                did: res.subjectDid,
+              }
+            : {
+                $type: 'com.atproto.repo.strongRef',
+                uri: res.subjectUri,
+                cid: res.subjectCid,
+              },
+        subjectBlobCids: [],
+        createdBy: res.createdBy,
+        createdAt: res.createdAt,
+      }
+
+      if (
+        [
+          'com.atproto.admin.defs#modEventTakedown',
+          'com.atproto.admin.defs#modEventMute',
+        ].includes(res.action)
+      ) {
+        eventView.event = {
+          ...eventView.event,
+          durationInHours: res.durationInHours ?? undefined,
+        }
+      }
+
+      if (res.action === 'com.atproto.admin.defs#modEventLabel') {
+        eventView.event = {
+          ...eventView.event,
+          createLabelVals: res.createLabelVals?.length
+            ? res.createLabelVals.split(' ')
+            : [],
+          negateLabelVals: res.negateLabelVals?.length
+            ? res.negateLabelVals.split(' ')
+            : [],
+        }
+      }
+
+      if (res.action === 'com.atproto.admin.defs#modEventReport') {
+        eventView.event = {
+          ...eventView.event,
+          comment: res.comment ?? undefined,
+          reportType: res.meta?.reportType ?? undefined,
+        }
+      }
+
+      if (res.action === 'com.atproto.admin.defs#modEventReverseTakedown') {
+        eventView.event = {
+          ...eventView.event,
+          comment: res.comment ?? undefined,
+        }
+      }
+
+      if (res.action === 'com.atproto.admin.defs#modEventComment') {
+        eventView.event = {
+          ...eventView.event,
+          comment: res.comment ?? undefined,
+        }
+      }
+
+      return eventView
+    })
 
     return Array.isArray(result) ? views : views[0]
   }
@@ -264,6 +304,8 @@ export class ModerationViews {
       createdAt: report.createdAt,
       // Ideally, we would never have a report entry that does not have a reasonType but at the schema level
       // we are not guarantying that so in whatever case, if we end up with such entries, default to 'other'
+      // TODO: fix this
+      // @ts-ignore
       reasonType: report.meta?.reportType || REASONOTHER,
       reason: report.comment ?? undefined,
       reportedBy: report.createdBy,
@@ -425,18 +467,18 @@ export class ModerationViews {
 
 type RepoResult = Actor
 
-type ActionResult = Selectable<ModerationEvent>
+type EventResult = Selectable<ModerationEvent>
 
 type ReportResult = ModerationEventRowWithHandle
 
 type RecordResult = RecordRow
 
 type SubjectResult = Pick<
-  ActionResult & ReportResult,
+  EventResult & ReportResult,
   'id' | 'subjectType' | 'subjectDid' | 'subjectUri' | 'subjectCid'
 >
 
-type SubjectView = ActionViewDetail['subject'] & ReportViewDetail['subject']
+type SubjectView = ModEventViewDetail['subject'] & ReportViewDetail['subject']
 
 function didFromUri(uri: string) {
   return new AtUri(uri).host

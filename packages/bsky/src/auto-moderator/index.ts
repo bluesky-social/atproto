@@ -245,14 +245,16 @@ export class AutoModerator {
 
     if (this.pushAgent) {
       await this.pushAgent.com.atproto.admin.emitModerationEvent({
-        action: 'com.atproto.admin.defs#takedown',
+        event: {
+          $type: 'com.atproto.admin.defs#modEventTakedown',
+          comment: takedownReason,
+        },
         subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: uri.toString(),
           cid: recordCid.toString(),
         },
         subjectBlobCids: takedownCids.map((c) => c.toString()),
-        reason: takedownReason,
         createdBy: this.ctx.cfg.labelerDid,
       })
     } else {
@@ -261,11 +263,13 @@ export class AutoModerator {
           throw new Error('no mod push agent or uri invalidator setup')
         }
         const modSrvc = this.services.moderation(dbTxn)
-        const action = await modSrvc.logAction({
-          action: 'com.atproto.admin.defs#takedown',
+        const action = await modSrvc.logEvent({
+          event: {
+            $type: 'com.atproto.admin.defs#modEventTakedown',
+            comment: takedownReason,
+          },
           subject: { uri, cid: recordCid },
           subjectBlobCids: takedownCids,
-          comment: takedownReason,
           createdBy: this.ctx.cfg.labelerDid,
         })
         await modSrvc.takedownRecord({

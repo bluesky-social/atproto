@@ -9,20 +9,20 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["action", "subject", "createdBy"],
+          "required": ["event", "subject", "createdBy"],
           "properties": {
-            "action": {
-              "type": "string",
-              "knownValues": [
-                "com.atproto.admin.defs#takedown",
-                "com.atproto.admin.defs#flag",
-                "com.atproto.admin.defs#acknowledge",
-                "com.atproto.admin.defs#escalate",
-                "com.atproto.admin.defs#comment",
-                "com.atproto.admin.defs#label",
-                "com.atproto.admin.defs#revert",
-                "com.atproto.admin.defs#report",
-                "com.atproto.admin.defs#mute"
+            "event": {
+              "type": "union",
+              "refs": [
+                "com.atproto.admin.defs#modEventTakedown",
+                "com.atproto.admin.defs#modEventFlag",
+                "com.atproto.admin.defs#modEventAcknowledge",
+                "com.atproto.admin.defs#modEventEscalate",
+                "com.atproto.admin.defs#modEventComment",
+                "com.atproto.admin.defs#modEventLabel",
+                "com.atproto.admin.defs#modEventReport",
+                "com.atproto.admin.defs#modEventMute",
+                "com.atproto.admin.defs#modEventReverseTakedown"
               ]
             },
             "subject": {
@@ -36,25 +36,7 @@
               "type": "array",
               "items": { "type": "string", "format": "cid" }
             },
-            "createLabelVals": {
-              "type": "array",
-              "items": { "type": "string" }
-            },
-            "negateLabelVals": {
-              "type": "array",
-              "items": { "type": "string" }
-            },
-            "comment": { "type": "string" },
-            "durationInHours": {
-              "type": "integer",
-              "description": "Indicates how long this action was meant to be in effect before automatically expiring."
-            },
-            "createdBy": { "type": "string", "format": "did" },
-            "meta": { "type": "ref", "ref": "#actionMeta" },
-            "refEventId": {
-              "type": "integer",
-              "description": "If the event needs a reference to previous event, for instance, when reverting a previous action, the reference event id should be passed"
-            }
+            "createdBy": { "type": "string", "format": "did" }
           }
         }
       },
@@ -62,19 +44,10 @@
         "encoding": "application/json",
         "schema": {
           "type": "ref",
-          "ref": "com.atproto.admin.defs#actionView"
+          "ref": "com.atproto.admin.defs#modEventView"
         }
       },
       "errors": [{ "name": "SubjectHasAction" }]
-    },
-    "actionMeta": {
-      "type": "object",
-      "properties": {
-        "reportType": {
-          "type": "ref",
-          "ref": "com.atproto.moderation.defs#reasonType"
-        }
-      }
     }
   }
 }

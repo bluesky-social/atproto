@@ -63,8 +63,7 @@ describe('pds admin get moderation actions view', () => {
       },
     })
     // Take actions on repos
-    const repoActions: Awaited<ReturnType<typeof sc.emitModerationEvent>>[] =
-      []
+    const repoActions: Awaited<ReturnType<typeof sc.emitModerationEvent>>[] = []
     for (let i = 0; i < dids.length; ++i) {
       const did = dids[i]
       repoActions.push(

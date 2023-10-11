@@ -16,7 +16,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "ref",
-          "ref": "com.atproto.admin.defs#actionViewDetail"
+          "ref": "com.atproto.admin.defs#modEventViewDetail"
         }
       }
     }

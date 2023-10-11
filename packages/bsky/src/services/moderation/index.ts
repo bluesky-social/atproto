@@ -6,10 +6,10 @@ import { ModerationViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
 import { ImageInvalidator } from '../../image/invalidator'
 import {
-  ActionMeta,
-  REPORT,
-  REVERT,
-  TAKEDOWN,
+  isModEventComment,
+  isModEventLabel,
+  isModEventReport,
+  isModEventTakedown,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { addHoursToDate } from '../../util/date'
 import {
@@ -17,6 +17,7 @@ import {
   getStatusIdentifierFromSubject,
 } from './status'
 import {
+  ModEventType,
   ModerationEventRow,
   ModerationSubjectStatusRow,
   ReversibleModerationEvent,
@@ -96,7 +97,7 @@ export class ModerationService {
   async getReport(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
       .selectFrom('moderation_event')
-      .where('action', '=', REPORT)
+      .where('action', '=', 'com.atproto.admin.defs#modEventReport')
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
@@ -144,42 +145,24 @@ export class ModerationService {
     return await builder.execute()
   }
 
-  async logAction(
+  async logEvent(
     info: {
-      action: ModerationEventRow['action']
+      event: ModEventType
       subject: { did: string } | { uri: AtUri; cid: CID }
       subjectBlobCids?: CID[]
-      comment: string | null
-      createLabelVals?: string[]
-      negateLabelVals?: string[]
       createdBy: string
       createdAt?: Date
-      durationInHours?: number
-      refEventId?: number
-      meta?: ActionMeta | null
     },
     applyLabels?: LabelerFunc,
   ): Promise<ModerationEventRow> {
     this.db.assertTransaction()
     const {
-      action,
+      event,
       createdBy,
-      comment,
       subject,
       subjectBlobCids,
-      durationInHours,
-      refEventId,
-      meta,
       createdAt = new Date(),
     } = info
-    const createLabelVals =
-      info.createLabelVals && info.createLabelVals.length > 0
-        ? info.createLabelVals.join(' ')
-        : undefined
-    const negateLabelVals =
-      info.negateLabelVals && info.negateLabelVals.length > 0
-        ? info.negateLabelVals.join(' ')
-        : undefined
 
     // Resolve subject info
     let subjectInfo: SubjectInfo
@@ -204,53 +187,50 @@ export class ModerationService {
       }
     }
 
+    const createLabelVals =
+      isModEventLabel(event) && event.createLabelVals.length > 0
+        ? event.createLabelVals.join(' ')
+        : undefined
+    const negateLabelVals =
+      isModEventLabel(event) && event.negateLabelVals.length > 0
+        ? event.negateLabelVals.join(' ')
+        : undefined
+
+    const meta: Record<string, string> = {}
+
+    if (isModEventReport(event)) {
+      meta.reportType = event.reportType
+    }
+
     const actionResult = await this.db.db
       .insertInto('moderation_event')
       .values({
-        action,
-        comment,
+        // TODO: WHYYY?
+        // @ts-ignore
+        action: event.$type,
+        comment: event.comment,
         createdAt: createdAt.toISOString(),
         createdBy,
         createLabelVals,
         negateLabelVals,
-        durationInHours,
-        refEventId,
+        durationInHours: event.durationInHours,
+        refEventId: event.refEventId,
         meta,
         expiresAt:
-          durationInHours !== undefined
-            ? addHoursToDate(durationInHours, createdAt).toISOString()
+          isModEventTakedown(event) && event.durationInHours
+            ? addHoursToDate(event.durationInHours, createdAt).toISOString()
             : undefined,
         ...subjectInfo,
       })
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    const refEvent = await (refEventId
-      ? this.db.db
-          .selectFrom('moderation_event')
-          .where('id', '=', refEventId)
-          .selectAll()
-          .executeTakeFirst()
-      : Promise.resolve(undefined))
-
     // TODO: This shouldn't be in try/catch, for debugging only
     // try {
-    await adjustModerationSubjectStatus(this.db, actionResult, refEvent)
+    await adjustModerationSubjectStatus(this.db, actionResult)
     // } catch (err) {
     // console.error(err)
     // }
-
-    if (
-      action === REVERT &&
-      applyLabels &&
-      (refEvent?.createLabelVals || refEvent?.negateLabelVals)
-    ) {
-      await applyLabels({
-        ...refEvent,
-        createLabelVals: refEvent.negateLabelVals,
-        negateLabelVals: refEvent.createLabelVals,
-      })
-    }
 
     return actionResult
   }
@@ -266,27 +246,28 @@ export class ModerationService {
     return actionsDueForReversal
   }
 
-  // TODO: This isn't ideal. inside .logAction() we fetch the refEventId but the event itself
+  // TODO: This isn't ideal. inside .logEvent() we fetch the refEventId but the event itself
   // is already being fetched before calling `revertAction`
   async revertAction(
-    { id, createdBy, createdAt, comment, subject }: ReversibleModerationEvent,
+    { createdBy, createdAt, comment, subject }: ReversibleModerationEvent,
     applyLabels: LabelerFunc,
   ) {
     this.db.assertTransaction()
-    const result = await this.logAction(
+    const result = await this.logEvent(
       {
-        refEventId: id,
-        action: REVERT,
+        event: {
+          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          comment,
+        },
         createdAt,
         createdBy,
-        comment,
         subject,
       },
       applyLabels,
     )
 
     if (
-      result.action === TAKEDOWN &&
+      result.action === 'com.atproto.admin.defs#modEventTakedown' &&
       result.subjectType === 'com.atproto.admin.defs#repoRef' &&
       result.subjectDid
     ) {
@@ -296,7 +277,7 @@ export class ModerationService {
     }
 
     if (
-      result.action === TAKEDOWN &&
+      result.action === 'com.atproto.admin.defs#modEventTakedown' &&
       result.subjectType === 'com.atproto.repo.strongRef' &&
       result.subjectUri
     ) {
@@ -374,10 +355,12 @@ export class ModerationService {
       subject,
     } = info
 
-    const event = await this.logAction({
-      action: REPORT,
-      meta: { reportType: reasonType },
-      comment: reason || null,
+    const event = await this.logEvent({
+      event: {
+        $type: 'com.atproto.admin.defs#modEventReport',
+        reportType: reasonType,
+        comment: reason || null,
+      },
       createdBy: reportedBy,
       subject,
       createdAt,
@@ -456,8 +439,6 @@ export class ModerationService {
       builder = builder.where('id', '<', cursorNumeric)
     }
 
-    // console.log(builder.limit(limit).selectAll().compile())
-    // builder.limit(limit).selectAll().execute().then(console.log)
     const results = await builder.limit(limit).selectAll().execute()
     return results
   }

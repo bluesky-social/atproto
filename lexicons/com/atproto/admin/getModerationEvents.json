@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List moderation actions related to a subject.",
+      "description": "List moderation events related to a subject.",
       "parameters": {
         "type": "params",
         "properties": {
@@ -22,14 +22,14 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["actions"],
+          "required": ["events"],
           "properties": {
             "cursor": { "type": "string" },
-            "actions": {
+            "events": {
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "com.atproto.admin.defs#actionView"
+                "ref": "com.atproto.admin.defs#modEventView"
               }
             }
           }

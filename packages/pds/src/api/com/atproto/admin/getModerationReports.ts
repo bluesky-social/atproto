@@ -22,7 +22,6 @@ export default function (server: Server, ctx: AppContext) {
       const {
         subject,
         resolved,
-        actionType,
         limit = 50,
         cursor,
         ignoreSubjects = [],
@@ -34,7 +33,6 @@ export default function (server: Server, ctx: AppContext) {
       const results = await moderationService.getReports({
         subject,
         resolved,
-        actionType,
         limit,
         cursor,
         ignoreSubjects,

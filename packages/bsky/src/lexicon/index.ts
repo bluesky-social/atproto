@@ -11,9 +11,10 @@ import {
 import { schemas } from './lexicons'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
+import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
-import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationEvent'
+import * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
 import * as ComAtprotoAdminGetModerationEvents from './types/com/atproto/admin/getModerationEvents'
 import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
 import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
@@ -22,7 +23,6 @@ import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
-import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/emitModerationEvent'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
@@ -117,15 +117,6 @@ import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecce
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
 export const COM_ATPROTO_ADMIN = {
-  DefsTakedown: 'com.atproto.admin.defs#takedown',
-  DefsFlag: 'com.atproto.admin.defs#flag',
-  DefsAcknowledge: 'com.atproto.admin.defs#acknowledge',
-  DefsEscalate: 'com.atproto.admin.defs#escalate',
-  DefsComment: 'com.atproto.admin.defs#comment',
-  DefsLabel: 'com.atproto.admin.defs#label',
-  DefsRevert: 'com.atproto.admin.defs#revert',
-  DefsMute: 'com.atproto.admin.defs#mute',
-  DefsReport: 'com.atproto.admin.defs#report',
   DefsReviewOpen: 'com.atproto.admin.defs#reviewOpen',
   DefsReviewEscalated: 'com.atproto.admin.defs#reviewEscalated',
   DefsReviewClosed: 'com.atproto.admin.defs#reviewClosed',
@@ -220,6 +211,17 @@ export class AdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  emitModerationEvent<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminEmitModerationEvent.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminEmitModerationEvent.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.emitModerationEvent' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   enableAccountInvites<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -245,8 +247,8 @@ export class AdminNS {
   getModerationEvent<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ComAtprotoAdminGetModerationAction.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminGetModerationAction.HandlerReqCtx<ExtractAuth<AV>>
+      ComAtprotoAdminGetModerationEvent.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminGetModerationEvent.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
     const nsid = 'com.atproto.admin.getModerationEvent' // @ts-ignore
@@ -338,17 +340,6 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.sendEmail' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  emitModerationEvent<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminTakeModerationAction.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminTakeModerationAction.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.emitModerationEvent' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

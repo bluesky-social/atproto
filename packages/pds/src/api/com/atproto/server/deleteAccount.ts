@@ -1,6 +1,5 @@
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { TAKEDOWN } from '../../../../lexicon/types/com/atproto/admin/defs'
 import AppContext from '../../../../context'
 import { MINUTE } from '@atproto/common'
 
@@ -30,7 +29,10 @@ export default function (server: Server, ctx: AppContext) {
         const accountService = ctx.services.account(dbTxn)
         const moderationTxn = ctx.services.moderation(dbTxn)
         const [currentAction] = await moderationTxn.getCurrentActions({ did })
-        if (currentAction?.action === TAKEDOWN) {
+        if (
+          // @ts-ignore
+          currentAction?.action === 'com.atproto.admin.defs.#modEventTakedown'
+        ) {
           // Do not disturb an existing takedown, continue with account deletion
           return await accountService.deleteEmailToken(did, 'delete_account')
         }
@@ -43,8 +45,9 @@ export default function (server: Server, ctx: AppContext) {
             createdAt: now,
           })
         }
-        const takedown = await moderationTxn.logAction({
-          action: TAKEDOWN,
+        const takedown = await moderationTxn.logEvent({
+          // @ts-ignore
+          action: 'com.atproto.admin.defs.#modEventTakedown',
           subject: { did },
           comment: REASON_ACCT_DELETION,
           createdBy: did,

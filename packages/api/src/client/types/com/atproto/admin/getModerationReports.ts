@@ -16,12 +16,6 @@ export interface QueryParams {
   /** Filter reports made by one or more DIDs */
   reporters?: string[]
   resolved?: boolean
-  actionType?:
-    | 'com.atproto.admin.defs#takedown'
-    | 'com.atproto.admin.defs#flag'
-    | 'com.atproto.admin.defs#acknowledge'
-    | 'com.atproto.admin.defs#escalate'
-    | (string & {})
   limit?: number
   cursor?: string
   /** Reverse the order of the returned records? when true, returns reports in chronological order */

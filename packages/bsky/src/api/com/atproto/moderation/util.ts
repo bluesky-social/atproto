@@ -4,17 +4,6 @@ import { AtUri } from '@atproto/syntax'
 import { InputSchema as ReportInput } from '../../../../lexicon/types/com/atproto/moderation/createReport'
 import { InputSchema as ActionInput } from '../../../../lexicon/types/com/atproto/admin/emitModerationEvent'
 import {
-  ACKNOWLEDGE,
-  FLAG,
-  TAKEDOWN,
-  ESCALATE,
-  REVERT,
-  COMMENT,
-  MUTE,
-  LABEL,
-  REPORT,
-} from '../../../../lexicon/types/com/atproto/admin/defs'
-import {
   REASONOTHER,
   REASONSPAM,
   REASONMISLEADING,
@@ -57,23 +46,6 @@ export const getReasonType = (reasonType: ReportInput['reasonType']) => {
 
 export const getReviewState = (reviewState?: string) => {
   return reviewState as ModerationSubjectStatusRow['reviewState']
-}
-
-export const getAction = (action: ActionInput['action']) => {
-  if (
-    action === TAKEDOWN ||
-    action === FLAG ||
-    action === ACKNOWLEDGE ||
-    action === REVERT ||
-    action === LABEL ||
-    action === MUTE ||
-    action === COMMENT ||
-    action === REPORT ||
-    action === ESCALATE
-  ) {
-    return action as ModerationEvent['action']
-  }
-  throw new InvalidRequestError('Invalid action')
 }
 
 const reasonTypes = new Set([

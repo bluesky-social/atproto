@@ -7,31 +7,13 @@ import {
   ModerationSubjectStatus,
 } from '../../db/tables/moderation'
 import {
-  ACKNOWLEDGE,
   REVIEWOPEN,
-  MUTE,
   REVIEWCLOSED,
-  REPORT,
   REVIEWESCALATED,
-  REVERT,
-  TAKEDOWN,
-  ESCALATE,
 } from '../../lexicon/types/com/atproto/admin/defs'
-import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
+import { ModerationSubjectStatusRow } from './types'
 import { HOUR } from '@atproto/common'
 
-const actionTypesImpactingStatus = [
-  ACKNOWLEDGE,
-  REPORT,
-  ESCALATE,
-  REVERT,
-  TAKEDOWN,
-  MUTE,
-]
-
-// TODO: How do we handle revert? for "revert" event we will have a reference event id that is being reversed
-// We will probably need a helper that can take a list of events and compute the final state of the subject
-// That helper will have to be invoked here with all events up until the point where the reverted event was created
 const getSubjectStatusForModerationEvent = ({
   action,
   durationInHours,
@@ -40,35 +22,33 @@ const getSubjectStatusForModerationEvent = ({
   durationInHours: number | null
 }): Partial<ModerationSubjectStatusRow> | null => {
   switch (action) {
-    case ACKNOWLEDGE:
+    case 'com.atproto.admin.defs#modEventAcknowledge':
       return {
         reviewState: REVIEWCLOSED,
         lastReviewedAt: new Date().toISOString(),
       }
-    case REPORT:
+    case 'com.atproto.admin.defs#modEventReport':
       return {
         reviewState: REVIEWOPEN,
         lastReportedAt: new Date().toISOString(),
       }
-    case ESCALATE:
+    case 'com.atproto.admin.defs#modEventEscalate':
       return {
         reviewState: REVIEWESCALATED,
         lastReviewedAt: new Date().toISOString(),
       }
-    // REVERT can only come through when a revert event is emitted but there are no status impacting event
-    // before it. In which case, we will default to REVIEWCLOSED
-    case REVERT:
+    case 'com.atproto.admin.defs#modEventReverseTakedown':
       return {
         reviewState: REVIEWCLOSED,
         lastReviewedAt: new Date().toISOString(),
       }
-    case TAKEDOWN:
+    case 'com.atproto.admin.defs#modEventTakedown':
       return {
         takendown: true,
         reviewState: REVIEWCLOSED,
         lastReviewedAt: new Date().toISOString(),
       }
-    case MUTE:
+    case 'com.atproto.admin.defs#modEventMute':
       return {
         // By default, mute for 24hrs
         muteUntil: new Date(
@@ -95,45 +75,13 @@ export const adjustModerationSubjectStatus = async (
     | 'durationInHours'
     | 'refEventId'
   >,
-  refEvent: ModerationEventRow | undefined,
 ) => {
-  const { action, subjectDid, subjectUri, subjectCid, refEventId } =
-    moderationEvent
+  const { action, subjectDid, subjectUri, subjectCid } = moderationEvent
 
-  let actionForStatusMapping = {
+  const subjectStatus = getSubjectStatusForModerationEvent({
     action,
     durationInHours: moderationEvent.durationInHours,
-  }
-  // TODO: Ugghhh hate this
-  let revertingEvent: ModerationEventRow | undefined | Record<string, unknown>
-
-  // For all events, we would want to map the new status based on the event itself
-  // However, for revert events, they will be pointing to a previous event that needs to be reverted
-  // In which case, we will have to find out the last event that changed the status before that reference event
-  // and compute the new status based on that
-  // TODO: We may need more here. For instance, if we're reverting a post takedown but since the takedown, we adjusted
-  // labels on the post, does the takedown reversal mean those labels added AFTER the takedown should be reverted as well?
-  if (action === REVERT && refEventId) {
-    const lastActionImpactingStatus = await getPreviousStatusForReversal(
-      db,
-      moderationEvent,
-    )
-
-    revertingEvent = refEvent
-
-    // If the action being reverted does not have a previously known/status impacting action,
-    // passing revert itself will default to state to reviewclosed
-    if (lastActionImpactingStatus) {
-      actionForStatusMapping = {
-        action: lastActionImpactingStatus.action,
-        durationInHours: moderationEvent.durationInHours,
-      }
-    }
-  }
-
-  const subjectStatus = getSubjectStatusForModerationEvent(
-    actionForStatusMapping,
-  )
+  })
 
   if (!subjectStatus) {
     return null
@@ -159,9 +107,10 @@ export const adjustModerationSubjectStatus = async (
     // @ts-ignore
   } as ModerationSubjectStatusRow
 
-  // If the event being reverted is a takedown event and the new status
-  // also doesn't settle on takendown revert back the takendown flag
-  if (revertingEvent?.action === TAKEDOWN && !subjectStatus.takendown) {
+  if (
+    action === 'com.atproto.admin.defs#modEventReverseTakedown' &&
+    !subjectStatus.takendown
+  ) {
     newStatus.takendown = false
     subjectStatus.takendown = false
   }
@@ -201,59 +150,6 @@ export const getModerationSubjectStatus = async (
   }
 
   return builder.executeTakeFirst()
-}
-
-/**
- * Given a revert event with a reference event id, this function will find the last action event that impacted the status
- * Which can then be used to determine the new status for the subject after the revert event
- * Potential flow of events may be
- * 1. Post is reported
- * 2. Post is labeled
- * 3. Post is taken down
- * 4. Comment left by a mod on the post
- * 5. Takedown is reverted
- *
- * At that point, event #5 will contain the refEventId #3 so this function will find the last event that impacted the status
- * of the post before event #3 which is #1 so that event will be returned
- * */
-export const getPreviousStatusForReversal = async (
-  db: PrimaryDatabase,
-  moderationEvent: Pick<
-    ModerationEventRow,
-    'refEventId' | 'subjectType' | 'subjectCid' | 'subjectUri' | 'subjectDid'
-  >,
-) => {
-  if (!moderationEvent.refEventId) {
-    return null
-  }
-  const lastActionImpactingStatusQuery = db.db
-    .selectFrom('moderation_event')
-    .where('id', '<', moderationEvent.refEventId)
-    .where('subjectType', '=', moderationEvent.subjectType)
-    .where((qb) => {
-      if (moderationEvent.subjectType === 'com.atproto.admin.defs#repoRef') {
-        return qb
-          .where('subjectDid', '=', moderationEvent.subjectDid)
-          .where('subjectUri', 'is', null)
-          .where('subjectCid', 'is', null)
-      }
-
-      return qb
-        .where('subjectUri', '=', moderationEvent.subjectUri)
-        .where('subjectCid', '=', moderationEvent.subjectCid)
-    })
-    .where(
-      'action',
-      'in',
-      actionTypesImpactingStatus.filter(
-        (status) => status !== REVERT,
-      ) as ModerationEventRow['action'][],
-    )
-    // Make sure we get the last action event that impacted the status
-    .orderBy('id', 'desc')
-    .select('action')
-
-  return lastActionImpactingStatusQuery.executeTakeFirst()
 }
 
 export const getStatusIdentifierFromSubject = (subject: string | AtUri) => {

@@ -5,6 +5,7 @@ import {
 } from '../../db/tables/moderation'
 import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
+import { ComAtprotoAdminDefs } from '@atproto/api'
 
 export type SubjectInfo =
   | {
@@ -33,3 +34,14 @@ export type ModerationEventRowWithHandle = ModerationEventRow & {
   handle?: string | null
 }
 export type ModerationSubjectStatusRow = Selectable<ModerationSubjectStatus>
+
+export type ModEventType =
+  | ComAtprotoAdminDefs.ModEventTakedown
+  | ComAtprotoAdminDefs.ModEventFlag
+  | ComAtprotoAdminDefs.ModEventAcknowledge
+  | ComAtprotoAdminDefs.ModEventEscalate
+  | ComAtprotoAdminDefs.ModEventComment
+  | ComAtprotoAdminDefs.ModEventLabel
+  | ComAtprotoAdminDefs.ModEventReport
+  | ComAtprotoAdminDefs.ModEventMute
+  | ComAtprotoAdminDefs.ModEventReverseTakedown

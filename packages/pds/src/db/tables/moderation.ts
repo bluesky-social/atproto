@@ -1,16 +1,5 @@
 import { Generated } from 'kysely'
 import {
-  ACKNOWLEDGE,
-  FLAG,
-  TAKEDOWN,
-  ESCALATE,
-  ActionMeta,
-  MUTE,
-  REPORT,
-  LABEL,
-  REVERT,
-} from '../../lexicon/types/com/atproto/admin/defs'
-import {
   REASONOTHER,
   REASONSPAM,
   REASONMISLEADING,
@@ -27,14 +16,15 @@ export const reportResolutionTableName = 'moderation_report_resolution'
 export interface ModerationAction {
   id: Generated<number>
   action:
-    | typeof TAKEDOWN
-    | typeof FLAG
-    | typeof ACKNOWLEDGE
-    | typeof ESCALATE
-    | typeof MUTE
-    | typeof REPORT
-    | typeof LABEL
-    | typeof REVERT
+    | 'com.atproto.admin.defs#modEventTakedown'
+    | 'com.atproto.admin.defs#modEventFlag'
+    | 'com.atproto.admin.defs#modEventAcknowledge'
+    | 'com.atproto.admin.defs#modEventEscalate'
+    | 'com.atproto.admin.defs#modEventComment'
+    | 'com.atproto.admin.defs#modEventLabel'
+    | 'com.atproto.admin.defs#modEventReport'
+    | 'com.atproto.admin.defs#modEventMute'
+    | 'com.atproto.admin.defs#modEventReverseTakedown'
   subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
   subjectUri: string | null
@@ -48,7 +38,7 @@ export interface ModerationAction {
   expiresAt: string | null
   refEventId: number | null
   // TODO: better types here?
-  meta: ActionMeta | null
+  meta: Record<string, string> | null
 }
 
 export interface ModerationActionSubjectBlob {

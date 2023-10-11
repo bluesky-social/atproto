@@ -4,11 +4,10 @@ import { BlobStore } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
-import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
+import { ModerationAction } from '../../db/tables/moderation'
 import { RecordService } from '../record'
 import { ModerationViews } from './views'
 import SqlRepoStorage from '../../sql-repo-storage'
-import { REPORT, TAKEDOWN } from '../../lexicon/types/com/atproto/admin/defs'
 import { addHoursToDate } from '../../util/date'
 
 export class ModerationService {
@@ -232,7 +231,7 @@ export class ModerationService {
     return await builder.execute()
   }
 
-  async logAction(info: {
+  async logEvent(info: {
     action: ModerationActionRow['action']
     subject: { did: string } | { uri: AtUri; cid: CID }
     subjectBlobCids?: CID[]
@@ -384,7 +383,7 @@ export class ModerationService {
     })
 
     if (
-      result.action === TAKEDOWN &&
+      result.action === 'com.atproto.admin.defs#modEventTakedown' &&
       result.subjectType === 'com.atproto.admin.defs#repoRef' &&
       result.subjectDid
     ) {
@@ -394,7 +393,7 @@ export class ModerationService {
     }
 
     if (
-      result.action === TAKEDOWN &&
+      result.action === 'com.atproto.admin.defs#modEventTakedown' &&
       result.subjectType === 'com.atproto.repo.strongRef' &&
       result.subjectUri
     ) {
@@ -594,7 +593,7 @@ export class ModerationService {
     const report = await this.db.db
       .insertInto('moderation_action')
       .values({
-        action: REPORT,
+        action: 'com.atproto.admin.defs#modEventReport',
         comment: reason || null,
         createdAt: createdAt.toISOString(),
         createdBy: reportedBy,

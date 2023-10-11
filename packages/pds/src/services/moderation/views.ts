@@ -9,8 +9,8 @@ import {
   RepoViewDetail,
   RecordView,
   RecordViewDetail,
-  ActionView,
-  ActionViewDetail,
+  ModEventView,
+  ModEventViewDetail,
   ReportView,
   ReportViewDetail,
   BlobView,
@@ -261,11 +261,11 @@ export class ModerationViews {
     }
   }
 
-  action(result: ActionResult): Promise<ActionView>
-  action(result: ActionResult[]): Promise<ActionView[]>
+  action(result: EventResult): Promise<ModEventView>
+  action(result: EventResult[]): Promise<ModEventView[]>
   async action(
-    result: ActionResult | ActionResult[],
-  ): Promise<ActionView | ActionView[]> {
+    result: EventResult | EventResult[],
+  ): Promise<ModEventView | ModEventView[]> {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
@@ -304,7 +304,7 @@ export class ModerationViews {
 
     const views = results.map((res) => ({
       id: res.id,
-      action: res.action,
+      event: { $type: res.action },
       durationInHours: res.durationInHours ?? undefined,
       subject:
         res.subjectType === 'com.atproto.admin.defs#repoRef'
@@ -336,26 +336,17 @@ export class ModerationViews {
   }
 
   async actionDetail(
-    result: ActionResult,
+    result: EventResult,
     opts: ModViewOptions,
-  ): Promise<ActionViewDetail> {
+  ): Promise<ModEventViewDetail> {
     const action = await this.action(result)
-    const reportResults = action.resolvedReportIds?.length
-      ? await this.db.db
-          .selectFrom('moderation_action')
-          .where('id', 'in', action.resolvedReportIds)
-          .orderBy('id', 'desc')
-          .selectAll()
-          .execute()
-      : []
-    const [subject, resolvedReports, subjectBlobs] = await Promise.all([
+    const [subject, subjectBlobs] = await Promise.all([
       this.subject(result, opts),
-      this.report(reportResults),
       this.blob(action.subjectBlobCids),
     ])
     return {
       id: action.id,
-      action: action.action,
+      event: { $type: action.action },
       durationInHours: action.durationInHours,
       subject,
       subjectBlobs,
@@ -365,7 +356,6 @@ export class ModerationViews {
       createdAt: action.createdAt,
       createdBy: action.createdBy,
       reversal: action.reversal,
-      resolvedReports,
     }
   }
 
@@ -572,7 +562,7 @@ export class ModerationViews {
 
 type RepoResult = DidHandle & RepoRoot
 
-type ActionResult = Selectable<ModerationAction>
+type EventResult = Selectable<ModerationAction>
 
 type ReportResult = ModerationActionRowWithHandle
 
@@ -585,11 +575,11 @@ type RecordResult = {
 }
 
 type SubjectResult = Pick<
-  ActionResult & ReportResult,
+  EventResult & ReportResult,
   'id' | 'subjectType' | 'subjectDid' | 'subjectUri' | 'subjectCid'
 >
 
-type SubjectView = ActionViewDetail['subject'] & ReportViewDetail['subject']
+type SubjectView = ModEventViewDetail['subject'] & ReportViewDetail['subject']
 
 function didFromUri(uri: string) {
   return new AtUri(uri).host

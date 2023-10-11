@@ -6,7 +6,6 @@ import { CID } from 'multiformats/cid'
 import { ensureValidDid } from '@atproto/syntax'
 import { forwardStreamErrors, VerifyCidTransform } from '@atproto/common'
 import { IdResolver, DidNotFoundError } from '@atproto/identity'
-import { TAKEDOWN } from '../lexicon/types/com/atproto/admin/defs'
 import AppContext from '../context'
 import { httpLogger as log } from '../logger'
 import { retryHttp } from '../util/retry'
@@ -95,7 +94,8 @@ export async function resolveBlob(
         'moderation_action_subject_blob.actionId',
       )
       .where('cid', '=', cidStr)
-      .where('action', '=', TAKEDOWN)
+      // TODO: fix this
+      // .where('action', '=', 'takedown')
       .executeTakeFirst(),
   ])
   if (takedown) {
