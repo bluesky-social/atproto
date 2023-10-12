@@ -51,9 +51,9 @@ import * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
-import * as ComAtprotoServerGetSigningKey from './types/com/atproto/server/getSigningKey'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
+import * as ComAtprotoServerGetSigningKey from './types/com/atproto/server/getSigningKey'
 import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
@@ -185,9 +185,9 @@ export * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 export * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 export * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 export * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
-export * as ComAtprotoServerGetSigningKey from './types/com/atproto/server/getSigningKey'
 export * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 export * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
+export * as ComAtprotoServerGetSigningKey from './types/com/atproto/server/getSigningKey'
 export * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 export * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 export * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
@@ -821,17 +821,6 @@ export class ServerNS {
       })
   }
 
-  getSigningKey(
-    data?: ComAtprotoServerGetSigningKey.InputSchema,
-    opts?: ComAtprotoServerGetSigningKey.CallOptions,
-  ): Promise<ComAtprotoServerGetSigningKey.Response> {
-    return this._service.xrpc
-      .call('com.atproto.server.getSigningKey', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoServerGetSigningKey.toKnownErr(e)
-      })
-  }
-
   getAccountInviteCodes(
     params?: ComAtprotoServerGetAccountInviteCodes.QueryParams,
     opts?: ComAtprotoServerGetAccountInviteCodes.CallOptions,
@@ -851,6 +840,17 @@ export class ServerNS {
       .call('com.atproto.server.getSession', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoServerGetSession.toKnownErr(e)
+      })
+  }
+
+  getSigningKey(
+    data?: ComAtprotoServerGetSigningKey.InputSchema,
+    opts?: ComAtprotoServerGetSigningKey.CallOptions,
+  ): Promise<ComAtprotoServerGetSigningKey.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.getSigningKey', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerGetSigningKey.toKnownErr(e)
       })
   }
 
