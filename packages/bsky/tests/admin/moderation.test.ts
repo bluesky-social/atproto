@@ -980,7 +980,7 @@ describe('moderation', () => {
           },
         )
 
-      const res1 = await pdsAgent.api.com.atproto.admin.getSubjectState(
+      const res1 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         {
           did: sc.dids.bob,
         },
@@ -991,7 +991,7 @@ describe('moderation', () => {
       // cleanup
       await reverse(action.id)
 
-      const res2 = await pdsAgent.api.com.atproto.admin.getSubjectState(
+      const res2 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         {
           did: sc.dids.bob,
         },
@@ -1022,7 +1022,7 @@ describe('moderation', () => {
           },
         )
 
-      const res1 = await pdsAgent.api.com.atproto.admin.getSubjectState(
+      const res1 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         {
           uri,
         },
@@ -1033,7 +1033,7 @@ describe('moderation', () => {
       // cleanup
       await reverse(action.id)
 
-      const res2 = await pdsAgent.api.com.atproto.admin.getSubjectState(
+      const res2 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         {
           uri,
         },
@@ -1242,7 +1242,7 @@ describe('moderation', () => {
     })
 
     it('fans takedown out to pds', async () => {
-      const res = await pdsAgent.api.com.atproto.admin.getSubjectState(
+      const res = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         {
           did: sc.dids.carol,
           blob: blob.image.ref.toString(),
@@ -1278,7 +1278,7 @@ describe('moderation', () => {
     })
 
     it('fans reversal out to pds', async () => {
-      const res = await pdsAgent.api.com.atproto.admin.getSubjectState(
+      const res = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         {
           did: sc.dids.carol,
           blob: blob.image.ref.toString(),

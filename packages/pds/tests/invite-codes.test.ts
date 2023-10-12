@@ -53,7 +53,7 @@ describe('account', () => {
       $type: 'com.atproto.admin.defs#repoRef',
       did: account.did,
     }
-    await agent.api.com.atproto.admin.updateSubjectState(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
         subject,
         takedown: { applied: true },
@@ -70,7 +70,7 @@ describe('account', () => {
     )
 
     // double check that reversing the takedown action makes the invite code valid again
-    await agent.api.com.atproto.admin.updateSubjectState(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
         subject,
         takedown: { applied: false },

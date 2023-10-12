@@ -49,7 +49,7 @@ describe('moderation', () => {
   })
 
   it('takes down accounts', async () => {
-    await agent.api.com.atproto.admin.updateSubjectState(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
         subject: repoSubject,
         takedown: { applied: true, ref: 'test-repo' },
@@ -59,7 +59,7 @@ describe('moderation', () => {
         headers: network.pds.adminAuthHeaders('moderator'),
       },
     )
-    const res = await agent.api.com.atproto.admin.getSubjectState(
+    const res = await agent.api.com.atproto.admin.getSubjectStatus(
       {
         did: repoSubject.did,
       },
@@ -71,7 +71,7 @@ describe('moderation', () => {
   })
 
   it('restores takendown accounts', async () => {
-    await agent.api.com.atproto.admin.updateSubjectState(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
         subject: repoSubject,
         takedown: { applied: false },
@@ -81,7 +81,7 @@ describe('moderation', () => {
         headers: network.pds.adminAuthHeaders('moderator'),
       },
     )
-    const res = await agent.api.com.atproto.admin.getSubjectState(
+    const res = await agent.api.com.atproto.admin.getSubjectStatus(
       {
         did: repoSubject.did,
       },
@@ -93,7 +93,7 @@ describe('moderation', () => {
   })
 
   it('takes down records', async () => {
-    await agent.api.com.atproto.admin.updateSubjectState(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
         subject: recordSubject,
         takedown: { applied: true, ref: 'test-record' },
@@ -103,7 +103,7 @@ describe('moderation', () => {
         headers: network.pds.adminAuthHeaders('moderator'),
       },
     )
-    const res = await agent.api.com.atproto.admin.getSubjectState(
+    const res = await agent.api.com.atproto.admin.getSubjectStatus(
       {
         uri: recordSubject.uri,
       },
@@ -115,7 +115,7 @@ describe('moderation', () => {
   })
 
   it('restores takendown records', async () => {
-    await agent.api.com.atproto.admin.updateSubjectState(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
         subject: recordSubject,
         takedown: { applied: false },
@@ -125,7 +125,7 @@ describe('moderation', () => {
         headers: network.pds.adminAuthHeaders('moderator'),
       },
     )
-    const res = await agent.api.com.atproto.admin.getSubjectState(
+    const res = await agent.api.com.atproto.admin.getSubjectStatus(
       {
         uri: recordSubject.uri,
       },
@@ -142,7 +142,7 @@ describe('moderation', () => {
       did: sc.dids.bob,
     }
     const attemptTakedownTriage =
-      agent.api.com.atproto.admin.updateSubjectState(
+      agent.api.com.atproto.admin.updateSubjectStatus(
         {
           subject,
           takedown: { applied: true },
@@ -155,7 +155,7 @@ describe('moderation', () => {
     await expect(attemptTakedownTriage).rejects.toThrow(
       'Must be a full moderator to update subject state',
     )
-    const res = await agent.api.com.atproto.admin.getSubjectState(
+    const res = await agent.api.com.atproto.admin.getSubjectStatus(
       {
         did: subject.did,
       },
@@ -166,7 +166,7 @@ describe('moderation', () => {
 
   describe('blob takedown', () => {
     it('takes down blobs', async () => {
-      await agent.api.com.atproto.admin.updateSubjectState(
+      await agent.api.com.atproto.admin.updateSubjectStatus(
         {
           subject: blobSubject,
           takedown: { applied: true, ref: 'test-blob' },
@@ -176,7 +176,7 @@ describe('moderation', () => {
           headers: network.pds.adminAuthHeaders(),
         },
       )
-      const res = await agent.api.com.atproto.admin.getSubjectState(
+      const res = await agent.api.com.atproto.admin.getSubjectStatus(
         {
           did: blobSubject.did,
           blob: blobSubject.cid,
@@ -214,7 +214,7 @@ describe('moderation', () => {
     })
 
     it('restores blob when takedown is removed', async () => {
-      await agent.api.com.atproto.admin.updateSubjectState(
+      await agent.api.com.atproto.admin.updateSubjectStatus(
         {
           subject: blobSubject,
           takedown: { applied: false },

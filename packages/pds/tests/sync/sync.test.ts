@@ -197,7 +197,7 @@ describe('repo sync', () => {
 
   describe('repo takedown', () => {
     beforeAll(async () => {
-      await agent.api.com.atproto.admin.updateSubjectState(
+      await agent.api.com.atproto.admin.updateSubjectStatus(
         {
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',

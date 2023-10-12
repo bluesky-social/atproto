@@ -242,7 +242,7 @@ describe('auth', () => {
       email: 'iris@test.com',
       password: 'password',
     })
-    await agent.api.com.atproto.admin.updateSubjectState(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
@@ -266,7 +266,7 @@ describe('auth', () => {
       email: 'jared@test.com',
       password: 'password',
     })
-    await agent.api.com.atproto.admin.updateSubjectState(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',

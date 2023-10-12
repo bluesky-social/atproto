@@ -1158,7 +1158,7 @@ describe('crud operations', () => {
       uri: created.uri,
       cid: created.cid,
     }
-    await agent.api.com.atproto.admin.updateSubjectState(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
         subject,
         takedown: { applied: true },
@@ -1180,7 +1180,7 @@ describe('crud operations', () => {
     expect(postsTakedown.records.map((r) => r.uri)).not.toContain(post.uri)
 
     // Cleanup
-    await agent.api.com.atproto.admin.updateSubjectState(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
         subject,
         takedown: { applied: false },
@@ -1201,7 +1201,7 @@ describe('crud operations', () => {
       did: alice.did,
     }
 
-    await agent.api.com.atproto.admin.updateSubjectState(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
         subject,
         takedown: { applied: true },
@@ -1218,7 +1218,7 @@ describe('crud operations', () => {
     await expect(tryListPosts).rejects.toThrow(/Could not find repo/)
 
     // Cleanup
-    await agent.api.com.atproto.admin.updateSubjectState(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
         subject,
         takedown: { applied: false },

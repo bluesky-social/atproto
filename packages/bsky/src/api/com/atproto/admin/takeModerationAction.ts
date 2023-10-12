@@ -112,7 +112,7 @@ export default function (server: Server, ctx: AppContext) {
           const agent = await ctx.pdsAdminAgent(did)
           await Promise.all(
             subjects.map((subject) =>
-              agent.api.com.atproto.admin.updateSubjectState({
+              agent.api.com.atproto.admin.updateSubjectStatus({
                 subject,
                 takedown: {
                   applied: true,

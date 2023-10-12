@@ -105,7 +105,7 @@ describe('account deletion', () => {
 
   it('deletes account with a valid token & password', async () => {
     // Perform account deletion, including when there's an existing takedown on the account
-    await agent.api.com.atproto.admin.updateSubjectState(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
