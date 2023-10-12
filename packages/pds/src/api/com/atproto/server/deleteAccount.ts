@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const accountService = await ctx.services.account(ctx.db)
       await accountService.assertValidToken(did, 'delete_account', token)
-      await accountService.updateAccountTakedownState(did, {
+      await accountService.updateAccountTakedownStatus(did, {
         applied: true,
         ref: REASON_ACCT_DELETION,
       })

@@ -17,53 +17,47 @@ export default function (server: Server, ctx: AppContext) {
             'Must provide a did to request blob state',
           )
         }
-        const state = await ctx.actorStore
+        const takedown = await ctx.actorStore
           .reader(did)
-          .repo.blob.getBlobTakedownState(CID.parse(blob))
-        if (state) {
+          .repo.blob.getBlobTakedownStatus(CID.parse(blob))
+        if (takedown) {
           body = {
             subject: {
               $type: 'com.atproto.admin.defs#repoBlobRef',
               did: did,
               cid: blob,
             },
-            state: {
-              takedown: state,
-            },
+            takedown,
           }
         }
       } else if (uri) {
         const parsedUri = new AtUri(uri)
         const store = ctx.actorStore.reader(parsedUri.hostname)
-        const [state, cid] = await Promise.all([
-          store.record.getRecordTakedownState(parsedUri),
+        const [takedown, cid] = await Promise.all([
+          store.record.getRecordTakedownStatus(parsedUri),
           store.record.getCurrentRecordCid(parsedUri),
         ])
-        if (cid && state) {
+        if (cid && takedown) {
           body = {
             subject: {
               $type: 'com.atproto.repo.strongRef',
               uri: parsedUri.toString(),
               cid: cid.toString(),
             },
-            state: {
-              takedown: state,
-            },
+            takedown,
           }
         }
       } else if (did) {
-        const state = await ctx.services
+        const takedown = await ctx.services
           .account(ctx.db)
-          .getAccountTakedownState(did)
-        if (state) {
+          .getAccountTakedownStatus(did)
+        if (takedown) {
           body = {
             subject: {
               $type: 'com.atproto.admin.defs#repoRef',
               did: did,
             },
-            state: {
-              takedown: state,
-            },
+            takedown,
           }
         }
       } else {

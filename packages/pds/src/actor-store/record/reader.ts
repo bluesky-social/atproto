@@ -5,7 +5,7 @@ import { CID } from 'multiformats/cid'
 import { notSoftDeletedClause } from '../../db/util'
 import { ids } from '../../lexicon/lexicons'
 import { ActorDb, Backlink } from '../db'
-import { SubjectState } from '../../lexicon/types/com/atproto/admin/defs'
+import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 
 export class RecordReader {
   constructor(public db: ActorDb) {}
@@ -130,7 +130,7 @@ export class RecordReader {
     return !!record
   }
 
-  async getRecordTakedownState(uri: AtUri): Promise<SubjectState | null> {
+  async getRecordTakedownStatus(uri: AtUri): Promise<StatusAttr | null> {
     const res = await this.db.db
       .selectFrom('record')
       .select('takedownId')

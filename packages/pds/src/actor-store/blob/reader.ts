@@ -4,7 +4,7 @@ import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorDb } from '../db'
 import { notSoftDeletedClause } from '../../db/util'
-import { SubjectState } from '../../lexicon/types/com/atproto/admin/defs'
+import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 
 export class BlobReader {
   constructor(public db: ActorDb, public blobstore: BlobStore) {}
@@ -16,9 +16,8 @@ export class BlobReader {
     const found = await this.db.db
       .selectFrom('blob')
       .selectAll()
-      .innerJoin('repo_blob', 'repo_blob.cid', 'blob.cid')
       .where('blob.cid', '=', cid.toString())
-      .where(notSoftDeletedClause(ref('repo_blob')))
+      .where(notSoftDeletedClause(ref('blob')))
       .executeTakeFirst()
     if (!found) {
       throw new InvalidRequestError('Blob not found')
@@ -60,9 +59,9 @@ export class BlobReader {
     return res.map((row) => row.cid)
   }
 
-  async getBlobTakedownState(cid: CID): Promise<SubjectState | null> {
+  async getBlobTakedownStatus(cid: CID): Promise<StatusAttr | null> {
     const res = await this.db.db
-      .selectFrom('repo_blob')
+      .selectFrom('blob')
       .select('takedownId')
       .where('cid', '=', cid.toString())
       .executeTakeFirst()

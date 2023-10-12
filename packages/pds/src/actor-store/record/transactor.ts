@@ -4,7 +4,7 @@ import { BlobStore, WriteOpAction } from '@atproto/repo'
 import { dbLogger as log } from '../../logger'
 import { ActorDb, Backlink } from '../db'
 import { RecordReader, getBacklinks } from './reader'
-import { SubjectState } from '../../lexicon/types/com/atproto/admin/defs'
+import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 
 export class RecordTransactor extends RecordReader {
   constructor(public db: ActorDb, public blobstore: BlobStore) {
@@ -98,9 +98,9 @@ export class RecordTransactor extends RecordReader {
       .execute()
   }
 
-  async updateRecordTakedownState(uri: AtUri, state: SubjectState) {
-    const takedownId = state.applied
-      ? state.ref ?? new Date().toISOString()
+  async updateRecordTakedownStatus(uri: AtUri, takedown: StatusAttr) {
+    const takedownId = takedown.applied
+      ? takedown.ref ?? new Date().toISOString()
       : null
     await this.db.db
       .updateTable('record')

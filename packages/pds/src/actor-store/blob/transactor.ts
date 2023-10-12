@@ -18,7 +18,7 @@ import {
 import * as img from '../../image'
 import { BackgroundQueue } from '../../background'
 import { BlobReader } from './reader'
-import { SubjectState } from '../../lexicon/types/com/atproto/admin/defs'
+import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 
 export class BlobTransactor extends BlobReader {
   constructor(
@@ -83,19 +83,19 @@ export class BlobTransactor extends BlobReader {
     await Promise.all(blobPromises)
   }
 
-  async updateBlobTakedownState(blob: CID, state: SubjectState) {
-    const takedownId = state.applied
-      ? state.ref ?? new Date().toISOString()
+  async updateBlobTakedownStatus(blob: CID, takedown: StatusAttr) {
+    const takedownId = takedown.applied
+      ? takedown.ref ?? new Date().toISOString()
       : null
     await this.db.db
-      .updateTable('repo_blob')
+      .updateTable('blob')
       .set({ takedownId })
       .where('cid', '=', blob.toString())
       .executeTakeFirst()
-    if (state.applied) {
-      await this.blobstore.unquarantine(blob)
-    } else {
+    if (takedown.applied) {
       await this.blobstore.quarantine(blob)
+    } else {
+      await this.blobstore.unquarantine(blob)
     }
   }
 
@@ -151,19 +151,11 @@ export class BlobTransactor extends BlobReader {
   }
 
   async verifyBlobAndMakePermanent(blob: PreparedBlobRef): Promise<void> {
-    const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('blob')
       .selectAll()
       .where('cid', '=', blob.cid.toString())
-      .whereNotExists(
-        // Check if blob has been taken down
-        this.db.db
-          .selectFrom('repo_blob')
-          .selectAll()
-          .where('takedownId', 'is not', null)
-          .whereRef('cid', '=', ref('blob.cid')),
-      )
+      .where('takedownId', 'is', null)
       .executeTakeFirst()
     if (!found) {
       throw new InvalidRequestError(

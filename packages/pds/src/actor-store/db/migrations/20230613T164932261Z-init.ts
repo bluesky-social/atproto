@@ -57,6 +57,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('width', 'integer')
     .addColumn('height', 'integer')
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addColumn('takedownId', 'varchar')
     .execute()
   await db.schema
     .createIndex('blob_tempkey_idx')
@@ -69,7 +70,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('recordUri', 'varchar', (col) => col.notNull())
     .addColumn('repoRev', 'varchar', (col) => col.notNull())
-    .addColumn('takedownId', 'varchar')
     .addPrimaryKeyConstraint(`repo_blob_pkey`, ['cid', 'recordUri'])
     .execute()
 

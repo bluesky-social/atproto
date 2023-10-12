@@ -21,24 +21,22 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
       const { subject, takedown } = input.body
-      // const modSrvc = ctx.services.moderation(ctx.db)
-      // const authSrvc = ctx.services.auth(ctx.db)
       if (takedown) {
         if (isRepoRef(subject)) {
           await Promise.all([
             ctx.services
               .account(ctx.db)
-              .updateAccountTakedownState(subject.did, takedown),
+              .updateAccountTakedownStatus(subject.did, takedown),
             ctx.services.auth(ctx.db).revokeRefreshTokensByDid(subject.did),
           ])
         } else if (isStrongRef(subject)) {
           const uri = new AtUri(subject.uri)
           await ctx.actorStore.transact(uri.hostname, (store) =>
-            store.record.updateRecordTakedownState(uri, takedown),
+            store.record.updateRecordTakedownStatus(uri, takedown),
           )
         } else if (isRepoBlobRef(subject)) {
           await ctx.actorStore.transact(subject.did, (store) =>
-            store.repo.blob.updateBlobTakedownState(
+            store.repo.blob.updateBlobTakedownStatus(
               CID.parse(subject.cid),
               takedown,
             ),

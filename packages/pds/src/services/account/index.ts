@@ -364,7 +364,7 @@ export class AccountService {
     }).execute()
   }
 
-  async getAccountTakedownState(did: string): Promise<StatusAttr | null> {
+  async getAccountTakedownStatus(did: string): Promise<StatusAttr | null> {
     const res = await this.db.db
       .selectFrom('repo_root')
       .select('takedownId')
@@ -376,7 +376,7 @@ export class AccountService {
       : { applied: false }
   }
 
-  async updateAccountTakedownState(did: string, takedown: StatusAttr) {
+  async updateAccountTakedownStatus(did: string, takedown: StatusAttr) {
     const takedownId = takedown.applied
       ? takedown.ref ?? new Date().toISOString()
       : null
