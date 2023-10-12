@@ -2,23 +2,24 @@ import { TestNetwork, ImageRef, RecordRef, SeedClient } from '@atproto/dev-env'
 import { TID, cidForCbor } from '@atproto/common'
 import AtpAgent, { ComAtprotoAdminTakeModerationAction } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
-import { forSnapshot } from './_util'
-import basicSeed from './seeds/basic'
+import { forSnapshot } from '../_util'
+import basicSeed from '../seeds/basic'
 import {
   ACKNOWLEDGE,
   ESCALATE,
   FLAG,
   TAKEDOWN,
-} from '../src/lexicon/types/com/atproto/admin/defs'
+} from '../../src/lexicon/types/com/atproto/admin/defs'
 import {
   REASONOTHER,
   REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
-import { PeriodicModerationActionReversal } from '../src'
+} from '../../src/lexicon/types/com/atproto/moderation/defs'
+import { PeriodicModerationActionReversal } from '../../src'
 
 describe('moderation', () => {
   let network: TestNetwork
   let agent: AtpAgent
+  let pdsAgent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
@@ -26,6 +27,7 @@ describe('moderation', () => {
       dbPostgresSchema: 'bsky_moderation',
     })
     agent = network.bsky.getClient()
+    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -960,6 +962,86 @@ describe('moderation', () => {
       )
     })
 
+    it('fans out repo takedowns to pds', async () => {
+      const { data: action } =
+        await agent.api.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            createdBy: 'did:example:moderator',
+            reason: 'Y',
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: sc.dids.bob,
+            },
+          },
+          {
+            encoding: 'application/json',
+            headers: network.bsky.adminAuthHeaders(),
+          },
+        )
+
+      const res1 = await pdsAgent.api.com.atproto.admin.getSubjectState(
+        {
+          did: sc.dids.bob,
+        },
+        { headers: network.pds.adminAuthHeaders() },
+      )
+      expect(res1.data.takedown?.applied).toBe(true)
+
+      // cleanup
+      await reverse(action.id)
+
+      const res2 = await pdsAgent.api.com.atproto.admin.getSubjectState(
+        {
+          did: sc.dids.bob,
+        },
+        { headers: network.pds.adminAuthHeaders() },
+      )
+      expect(res2.data.takedown?.applied).toBe(false)
+    })
+
+    it('fans out record takedowns to pds', async () => {
+      const post = sc.posts[sc.dids.bob][0]
+      const uri = post.ref.uriStr
+      const cid = post.ref.cidStr
+      const { data: action } =
+        await agent.api.com.atproto.admin.takeModerationAction(
+          {
+            action: TAKEDOWN,
+            createdBy: 'did:example:moderator',
+            reason: 'Y',
+            subject: {
+              $type: 'com.atproto.repo.strongRef',
+              uri,
+              cid,
+            },
+          },
+          {
+            encoding: 'application/json',
+            headers: network.bsky.adminAuthHeaders(),
+          },
+        )
+
+      const res1 = await pdsAgent.api.com.atproto.admin.getSubjectState(
+        {
+          uri,
+        },
+        { headers: network.pds.adminAuthHeaders() },
+      )
+      expect(res1.data.takedown?.applied).toBe(true)
+
+      // cleanup
+      await reverse(action.id)
+
+      const res2 = await pdsAgent.api.com.atproto.admin.getSubjectState(
+        {
+          uri,
+        },
+        { headers: network.pds.adminAuthHeaders() },
+      )
+      expect(res2.data.takedown?.applied).toBe(false)
+    })
+
     it('allows full moderators to takedown.', async () => {
       const { data: action } =
         await agent.api.com.atproto.admin.takeModerationAction(
@@ -1159,6 +1241,17 @@ describe('moderation', () => {
       expect(await fetchImage.json()).toEqual({ message: 'Image not found' })
     })
 
+    it('fans takedown out to pds', async () => {
+      const res = await pdsAgent.api.com.atproto.admin.getSubjectState(
+        {
+          did: sc.dids.carol,
+          blob: blob.image.ref.toString(),
+        },
+        { headers: network.pds.adminAuthHeaders() },
+      )
+      expect(res.data.takedown?.applied).toBe(true)
+    })
+
     it('restores blob when action is reversed.', async () => {
       await agent.api.com.atproto.admin.reverseModerationAction(
         {
@@ -1182,6 +1275,17 @@ describe('moderation', () => {
       expect(fetchImage.status).toEqual(200)
       const size = Number(fetchImage.headers.get('content-length'))
       expect(size).toBeGreaterThan(9000)
+    })
+
+    it('fans reversal out to pds', async () => {
+      const res = await pdsAgent.api.com.atproto.admin.getSubjectState(
+        {
+          did: sc.dids.carol,
+          blob: blob.image.ref.toString(),
+        },
+        { headers: network.pds.adminAuthHeaders() },
+      )
+      expect(res.data.takedown?.applied).toBe(false)
     })
   })
 })
