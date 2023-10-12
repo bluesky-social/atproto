@@ -12,7 +12,7 @@ import {
 import { forSnapshot, paginateAll } from '../_util'
 import basicSeed from '../seeds/basic'
 
-describe('pds admin get moderation actions view', () => {
+describe('admin get moderation actions view', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
@@ -23,7 +23,7 @@ describe('pds admin get moderation actions view', () => {
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()
-    await basicSeed(sc, { addModLabels: true })
+    await basicSeed(sc)
   })
 
   afterAll(async () => {
@@ -158,7 +158,7 @@ describe('pds admin get moderation actions view', () => {
       { headers: network.pds.adminAuthHeaders() },
     )
 
-    expect(full.data.actions.length).toEqual(7) // extra one because of seed client
+    expect(full.data.actions.length).toEqual(6)
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 })
