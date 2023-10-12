@@ -18,6 +18,22 @@ export const getPdsAccountInfo = async (
   }
 }
 
+export const getPdsAccountInfos = async (
+  ctx: AppContext,
+  dids: string[],
+): Promise<Record<string, UserAccountView>> => {
+  const unique = [...new Set(dids)]
+  const infos = await Promise.all(
+    unique.map((did) => getPdsAccountInfo(ctx, did)),
+  )
+  return infos.reduce((acc, cur) => {
+    if (cur) {
+      acc[cur.did] = cur
+    }
+    return acc
+  }, {} as Record<string, UserAccountView>)
+}
+
 export const addAccountInfoToRepoViewDetail = (
   repoView: RepoViewDetail,
   accountInfo: UserAccountView | null,

@@ -1,5 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { addAccountInfoToRepoView, getPdsAccountInfos } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
@@ -14,11 +15,24 @@ export default function (server: Server, ctx: AppContext) {
       const { results, cursor: resCursor } = await ctx.services
         .actor(db)
         .getSearchResults({ query, limit, cursor, includeSoftDeleted: true })
+
+      const [partialRepos, actorInfos] = await Promise.all([
+        moderationService.views.repo(results),
+        getPdsAccountInfos(
+          ctx,
+          results.map((r) => r.did),
+        ),
+      ])
+
+      const repos = partialRepos.map((repo) =>
+        addAccountInfoToRepoView(repo, actorInfos[repo.did] ?? null),
+      )
+
       return {
         encoding: 'application/json',
         body: {
           cursor: resCursor,
-          repos: await moderationService.views.repo(results),
+          repos,
         },
       }
     },
