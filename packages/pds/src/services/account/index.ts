@@ -14,7 +14,7 @@ import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { EmailTokenPurpose } from '../../db/tables/email-token'
 import { getRandomToken } from '../../api/com/atproto/server/util'
-import { UserAccountView } from '../../lexicon/types/com/atproto/admin/defs'
+import { AccountView } from '../../lexicon/types/com/atproto/admin/defs'
 import { INVALID_HANDLE } from '@atproto/syntax'
 
 export class AccountService {
@@ -378,7 +378,7 @@ export class AccountService {
     })
   }
 
-  async adminView(did: string): Promise<UserAccountView | null> {
+  async adminView(did: string): Promise<AccountView | null> {
     const accountQb = this.db.db
       .selectFrom('did_handle')
       .innerJoin('user_account', 'user_account.did', 'did_handle.did')
