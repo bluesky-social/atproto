@@ -11,6 +11,7 @@ import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
+import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
 import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
@@ -19,7 +20,6 @@ import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
-import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -147,6 +147,7 @@ export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 export * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 export * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
+export * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 export * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 export * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
 export * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
@@ -155,7 +156,6 @@ export * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/
 export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 export * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
-export * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -400,6 +400,17 @@ export class AdminNS {
       })
   }
 
+  getAccountInfo(
+    params?: ComAtprotoAdminGetAccountInfo.QueryParams,
+    opts?: ComAtprotoAdminGetAccountInfo.CallOptions,
+  ): Promise<ComAtprotoAdminGetAccountInfo.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.getAccountInfo', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminGetAccountInfo.toKnownErr(e)
+      })
+  }
+
   getInviteCodes(
     params?: ComAtprotoAdminGetInviteCodes.QueryParams,
     opts?: ComAtprotoAdminGetInviteCodes.CallOptions,
@@ -485,17 +496,6 @@ export class AdminNS {
       .call('com.atproto.admin.getSubjectStatus', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoAdminGetSubjectStatus.toKnownErr(e)
-      })
-  }
-
-  getAccountInfo(
-    params?: ComAtprotoAdminGetAccountInfo.QueryParams,
-    opts?: ComAtprotoAdminGetAccountInfo.CallOptions,
-  ): Promise<ComAtprotoAdminGetAccountInfo.Response> {
-    return this._service.xrpc
-      .call('com.atproto.admin.getAccountInfo', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoAdminGetAccountInfo.toKnownErr(e)
       })
   }
 

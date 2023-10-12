@@ -798,6 +798,33 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminGetAccountInfo: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getAccountInfo',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'View details about an account.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#accountView',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminGetInviteCodes: {
     lexicon: 1,
     id: 'com.atproto.admin.getInviteCodes',
@@ -1138,33 +1165,6 @@ export const schemaDict = {
                 ref: 'lex:com.atproto.admin.defs#statusAttr',
               },
             },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminGetAccountInfo: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getAccountInfo',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'View details about an account.',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#accountView',
           },
         },
       },
@@ -7522,6 +7522,7 @@ export const ids = {
     'com.atproto.admin.disableAccountInvites',
   ComAtprotoAdminDisableInviteCodes: 'com.atproto.admin.disableInviteCodes',
   ComAtprotoAdminEnableAccountInvites: 'com.atproto.admin.enableAccountInvites',
+  ComAtprotoAdminGetAccountInfo: 'com.atproto.admin.getAccountInfo',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
   ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationAction',
   ComAtprotoAdminGetModerationActions: 'com.atproto.admin.getModerationActions',
@@ -7530,7 +7531,6 @@ export const ids = {
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
   ComAtprotoAdminGetSubjectStatus: 'com.atproto.admin.getSubjectStatus',
-  ComAtprotoAdminGetAccountInfo: 'com.atproto.admin.getAccountInfo',
   ComAtprotoAdminResolveModerationReports:
     'com.atproto.admin.resolveModerationReports',
   ComAtprotoAdminReverseModerationAction:
