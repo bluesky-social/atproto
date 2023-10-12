@@ -13,20 +13,19 @@ export default function (server: Server, ctx: AppContext) {
       if (!result) {
         throw new InvalidRequestError('Repo not found', 'RepoNotFound')
       }
-      const [repo, accountInfo] = await Promise.all([
+      const [partialRepo, accountInfo] = await Promise.all([
         ctx.services.moderation(db).views.repoDetail(result),
         getPdsAccountInfo(ctx, result.did),
       ])
 
-      const body = addAccountInfoToRepoViewDetail(
-        repo,
+      const repo = addAccountInfoToRepoViewDetail(
+        partialRepo,
         accountInfo,
         auth.credentials.moderator,
       )
-      // add in pds account info if available
       return {
         encoding: 'application/json',
-        body,
+        body: repo,
       }
     },
   })
