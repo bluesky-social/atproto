@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
       const moderationService = ctx.services.moderation(db)
       const { id, createdBy, reason } = input.body
 
-      const moderationAction = await db.transaction(async (dbTxn) => {
+      const { result, restored } = await db.transaction(async (dbTxn) => {
         const moderationTxn = ctx.services.moderation(dbTxn)
         const labelTxn = ctx.services.label(dbTxn)
         const now = new Date()
@@ -53,7 +53,7 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        const result = await moderationTxn.revertAction({
+        const { result, restored } = await moderationTxn.revertAction({
           id,
           createdAt: now,
           createdBy,
@@ -77,12 +77,27 @@ export default function (server: Server, ctx: AppContext) {
           { create, negate },
         )
 
-        return result
+        return { result, restored }
       })
+
+      if (restored) {
+        const { did, subjects } = restored
+        const agent = await ctx.pdsAdminAgent(did)
+        await Promise.all(
+          subjects.map((subject) =>
+            agent.api.com.atproto.admin.updateSubjectStatus({
+              subject,
+              takedown: {
+                applied: false,
+              },
+            }),
+          ),
+        )
+      }
 
       return {
         encoding: 'application/json',
-        body: await moderationService.views.action(moderationAction),
+        body: await moderationService.views.action(result),
       }
     },
   })

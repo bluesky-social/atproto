@@ -1153,13 +1153,14 @@ describe('crud operations', () => {
     const posts = await agent.api.app.bsky.feed.post.list({ repo: alice.did })
     expect(posts.records.map((r) => r.uri)).toContain(post.uri)
 
-    await agent.api.com.atproto.admin.updateSubjectState(
+    const subject = {
+      $type: 'com.atproto.repo.strongRef',
+      uri: created.uri,
+      cid: created.cid,
+    }
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: created.uri,
-          cid: created.cid,
-        },
+        subject,
         takedown: { applied: true },
       },
       {
@@ -1179,13 +1180,9 @@ describe('crud operations', () => {
     expect(postsTakedown.records.map((r) => r.uri)).not.toContain(post.uri)
 
     // Cleanup
-    await agent.api.com.atproto.admin.updateSubjectState(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: created.uri,
-          cid: created.cid,
-        },
+        subject,
         takedown: { applied: false },
       },
       {
@@ -1199,12 +1196,14 @@ describe('crud operations', () => {
     const posts = await agent.api.app.bsky.feed.post.list({ repo: alice.did })
     expect(posts.records.length).toBeGreaterThan(0)
 
-    await agent.api.com.atproto.admin.updateSubjectState(
+    const subject = {
+      $type: 'com.atproto.admin.defs#repoRef',
+      did: alice.did,
+    }
+
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: alice.did,
-        },
+        subject,
         takedown: { applied: true },
       },
       {
@@ -1219,12 +1218,9 @@ describe('crud operations', () => {
     await expect(tryListPosts).rejects.toThrow(/Could not find repo/)
 
     // Cleanup
-    await agent.api.com.atproto.admin.updateSubjectState(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: alice.did,
-        },
+        subject,
         takedown: { applied: false },
       },
       {

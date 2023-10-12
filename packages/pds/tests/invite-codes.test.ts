@@ -49,12 +49,13 @@ describe('account', () => {
     // assign an invite code to the user
     const code = await createInviteCode(network, agent, 1, account.did)
     // takedown the user's account
-    await agent.api.com.atproto.admin.updateSubjectState(
+    const subject = {
+      $type: 'com.atproto.admin.defs#repoRef',
+      did: account.did,
+    }
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: account.did,
-        },
+        subject,
         takedown: { applied: true },
       },
       {
@@ -68,13 +69,10 @@ describe('account', () => {
       ComAtprotoServerCreateAccount.InvalidInviteCodeError,
     )
 
-    // double check that undoing the takedown makes the invite code valid again
-    await agent.api.com.atproto.admin.updateSubjectState(
+    // double check that reversing the takedown action makes the invite code valid again
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: account.did,
-        },
+        subject,
         takedown: { applied: false },
       },
       {

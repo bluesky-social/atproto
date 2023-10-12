@@ -4,14 +4,11 @@ import fs from 'node:fs/promises'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as pds from '@atproto/pds'
+import { getMigrator } from '@atproto/pds/src/service-db'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { AtpAgent } from '@atproto/api'
 import { PdsConfig } from './types'
-import { getMigrator } from '@atproto/pds/src/service-db'
-
-const ADMIN_PASSWORD = 'admin-pass'
-const MOD_PASSWORD = 'mod-pass'
-const TRIAGE_PASSWORD = 'triage-pass'
+import { ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD } from './const'
 
 export class TestPds {
   constructor(

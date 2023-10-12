@@ -8,10 +8,6 @@ import { dbLogger as log } from '../../logger'
 import * as scrypt from './scrypt'
 import { countAll, notSoftDeletedClause } from '../../db/util'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
-import {
-  UserAccountView,
-  SubjectState,
-} from '../../lexicon/types/com/atproto/admin/defs'
 import { getRandomToken } from '../../api/com/atproto/server/util'
 import {
   ServiceDb,
@@ -21,6 +17,8 @@ import {
   EmailTokenPurpose,
 } from '../../service-db'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
+import { StatusAttr } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { AccountView } from '../../lexicon/types/com/atproto/admin/defs'
 
 export class AccountService {
   constructor(public db: ServiceDb) {}
@@ -366,7 +364,7 @@ export class AccountService {
     }).execute()
   }
 
-  async getAccountTakedownState(did: string): Promise<SubjectState | null> {
+  async getAccountTakedownState(did: string): Promise<StatusAttr | null> {
     const res = await this.db.db
       .selectFrom('repo_root')
       .select('takedownId')
@@ -378,9 +376,9 @@ export class AccountService {
       : { applied: false }
   }
 
-  async updateAccountTakedownState(did: string, state: SubjectState) {
-    const takedownId = state.applied
-      ? state.ref ?? new Date().toISOString()
+  async updateAccountTakedownState(did: string, takedown: StatusAttr) {
+    const takedownId = takedown.applied
+      ? takedown.ref ?? new Date().toISOString()
       : null
     await this.db.db
       .updateTable('repo_root')
@@ -408,7 +406,7 @@ export class AccountService {
       .execute()
   }
 
-  async adminView(did: string): Promise<UserAccountView | null> {
+  async adminView(did: string): Promise<AccountView | null> {
     const accountQb = this.db.db
       .selectFrom('did_handle')
       .innerJoin('user_account', 'user_account.did', 'did_handle.did')

@@ -9,6 +9,7 @@ import { Client as PlcClient } from '@did-plc/lib'
 import { BskyConfig } from './types'
 import { uniqueLockId } from './util'
 import { TestNetworkNoAppView } from './network-no-appview'
+import { ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD } from './const'
 
 export class TestBsky {
   constructor(
@@ -43,9 +44,9 @@ export class TestBsky {
       didCacheMaxTTL: DAY,
       ...cfg,
       // Each test suite gets its own lock id for the repo subscription
-      adminPassword: 'admin-pass',
-      moderatorPassword: 'moderator-pass',
-      triagePassword: 'triage-pass',
+      adminPassword: ADMIN_PASSWORD,
+      moderatorPassword: MOD_PASSWORD,
+      triagePassword: TRIAGE_PASSWORD,
       labelerDid: 'did:example:labeler',
       feedGenDid: 'did:example:feedGen',
     })
@@ -78,6 +79,7 @@ export class TestBsky {
       config,
       algos: cfg.algos,
       imgInvalidator: cfg.imgInvalidator,
+      signingKey: serviceKeypair,
     })
     // indexer
     const ns = cfg.dbPostgresSchema

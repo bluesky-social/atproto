@@ -223,6 +223,14 @@ export class AppContext {
     return auth.roleVerifier(this.auth)
   }
 
+  get roleOrAdminServiceVerifier() {
+    return auth.roleOrAdminServiceVerifier(
+      this.auth,
+      this.idResolver,
+      this.cfg.bskyAppView.did,
+    )
+  }
+
   get accessOrRoleVerifier() {
     return auth.accessOrRoleVerifier(this.auth)
   }
