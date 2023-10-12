@@ -20,6 +20,7 @@ describe('entryway', () => {
   let pdsAgent: AtpAgent
   let alice: string
   let accessToken: string
+  let pdsId: number
 
   beforeAll(async () => {
     const jwtSigningKey = await Secp256k1Keypair.create({ exportable: true })
@@ -47,14 +48,16 @@ describe('entryway', () => {
       jwtSigningKeyK256PrivateKeyHex: undefined, // no private key material on pds for jwts
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
     })
-    await entryway.ctx.db.db
+    const pdsRow = await entryway.ctx.db.db
       .insertInto('pds')
       .values({
         did: pds.ctx.cfg.service.did,
         host: new URL(pds.ctx.cfg.service.publicUrl).host,
         weight: 0,
       })
-      .execute()
+      .returningAll()
+      .executeTakeFirstOrThrow()
+    pdsId = pdsRow.id
     mockNetworkUtilities([entryway, pds])
     entrywayAgent = entryway.getClient()
     pdsAgent = pds.getClient()
@@ -75,6 +78,7 @@ describe('entryway', () => {
       handle: 'alice.test',
       password: 'test123',
     })
+    alice = did
     await entryway.ctx.db.db.updateTable('pds').set({ weight: 0 }).execute()
 
     // @TODO move these steps into account creation process
@@ -90,7 +94,6 @@ describe('entryway', () => {
         pds.ctx.repoSigningKey.did(),
       )
 
-    alice = did
     await pdsAgent.api.com.atproto.server.createAccount({
       did,
       email: 'alice@test.com',
@@ -103,7 +106,7 @@ describe('entryway', () => {
       .getAccount(did)
     assert(entrywayAccount)
     expect(entrywayAccount.did).toBe(did)
-    expect(entrywayAccount.pdsId).not.toBe(null)
+    expect(entrywayAccount.pdsId).toBe(pdsId)
     expect(entrywayAccount.pdsDid).toBe(pds.ctx.cfg.service.did)
     expect(entrywayAccount.root).toBe(null)
 
@@ -280,10 +283,6 @@ describe('entryway', () => {
         pds.ctx.plcRotationKey,
         pds.ctx.repoSigningKey.did(),
       )
-    const { id: pdsId } = await entryway.ctx.db.db
-      .selectFrom('pds')
-      .selectAll()
-      .executeTakeFirstOrThrow()
     await entryway.ctx.db.db
       .updateTable('user_account')
       .set({ pdsId })
