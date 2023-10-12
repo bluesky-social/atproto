@@ -10,22 +10,22 @@ import { BlobNotFoundError } from '@atproto/repo'
 import {
   RepoRoot,
   UserAccount,
-  RepoSeq,
   AppPassword,
   DidHandle,
   EmailToken,
   RefreshToken,
-  ServiceDb,
 } from '../src/service-db'
 import { fileExists } from '@atproto/common'
+import { AppContext } from '../src'
+import { RepoSeq } from '../src/sequencer/db'
 
 describe('account deletion', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
 
+  let ctx: AppContext
   let mailer: ServerMailer
-  let db: ServiceDb
   let initialDbContents: DbContents
   let updatedDbContents: DbContents
   const mailCatcher = new EventEmitter()
@@ -38,8 +38,8 @@ describe('account deletion', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'account_deletion',
     })
-    mailer = network.pds.ctx.mailer
-    db = network.pds.ctx.db
+    ctx = network.pds.ctx
+    mailer = ctx.mailer
     agent = new AtpAgent({ service: network.pds.url })
     sc = network.getSeedClient()
     await basicSeed(sc)
@@ -53,7 +53,7 @@ describe('account deletion', () => {
       return result
     }
 
-    initialDbContents = await getDbContents(db)
+    initialDbContents = await getDbContents(ctx)
   })
 
   afterAll(async () => {
@@ -137,7 +137,7 @@ describe('account deletion', () => {
   })
 
   it('no longer store the user account or repo', async () => {
-    updatedDbContents = await getDbContents(db)
+    updatedDbContents = await getDbContents(ctx)
     expect(updatedDbContents.repoRoots).toEqual(
       initialDbContents.repoRoots.filter((row) => row.did !== carol.did),
     )
@@ -218,26 +218,26 @@ type DbContents = {
   repoRoots: RepoRoot[]
   didHandles: DidHandle[]
   userAccounts: Selectable<UserAccount>[]
-  repoSeqs: Selectable<RepoSeq>[]
   appPasswords: AppPassword[]
   emailTokens: EmailToken[]
   refreshTokens: RefreshToken[]
+  repoSeqs: Selectable<RepoSeq>[]
 }
 
-const getDbContents = async (db: ServiceDb): Promise<DbContents> => {
+const getDbContents = async (ctx: AppContext): Promise<DbContents> => {
+  const { db, sequencer } = ctx
   const [
     repoRoots,
     didHandles,
     userAccounts,
-    repoSeqs,
     appPasswords,
     emailTokens,
     refreshTokens,
+    repoSeqs,
   ] = await Promise.all([
     db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
     db.db.selectFrom('did_handle').orderBy('did').selectAll().execute(),
     db.db.selectFrom('user_account').orderBy('did').selectAll().execute(),
-    db.db.selectFrom('repo_seq').orderBy('seq').selectAll().execute(),
     db.db
       .selectFrom('app_password')
       .orderBy('did')
@@ -246,15 +246,16 @@ const getDbContents = async (db: ServiceDb): Promise<DbContents> => {
       .execute(),
     db.db.selectFrom('email_token').orderBy('token').selectAll().execute(),
     db.db.selectFrom('refresh_token').orderBy('id').selectAll().execute(),
+    sequencer.db.db.selectFrom('repo_seq').orderBy('seq').selectAll().execute(),
   ])
 
   return {
     repoRoots,
     didHandles,
     userAccounts,
-    repoSeqs,
     appPasswords,
     emailTokens,
     refreshTokens,
+    repoSeqs,
   }
 }
