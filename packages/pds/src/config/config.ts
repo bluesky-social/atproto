@@ -20,6 +20,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     hostname,
     publicUrl,
     did,
+    isEntryway: env.isEntryway !== false, // defaults true
     version: env.version, // default?
     privacyPolicyUrl: env.privacyPolicyUrl,
     termsOfServiceUrl: env.termsOfServiceUrl,
@@ -211,6 +212,7 @@ export type ServiceConfig = {
   hostname: string
   publicUrl: string
   did: string
+  isEntryway: boolean
   version?: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string

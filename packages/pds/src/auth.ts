@@ -10,7 +10,11 @@ import KeyEncoder from 'key-encoder'
 import * as ui8 from 'uint8arrays'
 import * as jose from 'jose'
 import * as crypto from '@atproto/crypto'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  ForbiddenError,
+  InvalidRequestError,
+} from '@atproto/xrpc-server'
 import AppContext from './context'
 import { softDeleted } from './db/util'
 
@@ -232,12 +236,15 @@ export const parseBasicAuth = (
 }
 
 export const accessVerifier =
-  (auth: ServerAuth) =>
+  (auth: ServerAuth, { cfg }: AppContext) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
     const creds = await auth.getCredentialsOrThrow(ctx.req, [
       AuthScope.Access,
       AuthScope.AppPass,
     ])
+    if (!cfg.service.isEntryway && creds.audience !== cfg.service.did) {
+      throw new AuthRequiredError('Bad token audience')
+    }
     return {
       credentials: creds,
       artifacts: auth.getToken(ctx.req),
@@ -245,9 +252,12 @@ export const accessVerifier =
   }
 
 export const accessVerifierNotAppPassword =
-  (auth: ServerAuth) =>
+  (auth: ServerAuth, { cfg }: AppContext) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
     const creds = await auth.getCredentialsOrThrow(ctx.req, [AuthScope.Access])
+    if (!cfg.service.isEntryway && creds.audience !== cfg.service.did) {
+      throw new AuthRequiredError('Bad token audience')
+    }
     return {
       credentials: creds,
       artifacts: auth.getToken(ctx.req),
@@ -255,14 +265,21 @@ export const accessVerifierNotAppPassword =
   }
 
 export const accessVerifierCheckTakedown =
-  (auth: ServerAuth, { db, services }: AppContext) =>
+  (auth: ServerAuth, { db, services, cfg }: AppContext) =>
   async (ctx: { req: express.Request; res: express.Response }) => {
     const creds = await auth.getCredentialsOrThrow(ctx.req, [
       AuthScope.Access,
       AuthScope.AppPass,
     ])
+    if (!cfg.service.isEntryway && creds.audience !== cfg.service.did) {
+      throw new AuthRequiredError('Bad token audience')
+    }
     const actor = await services.account(db).getAccount(creds.did, true)
-    if (!actor || softDeleted(actor)) {
+    if (!actor) {
+      // will be turned into ExpiredToken for the client if proxied by entryway
+      throw new ForbiddenError('Account not found', 'AccountNotFound')
+    }
+    if (softDeleted(actor)) {
       throw new AuthRequiredError(
         'Account has been taken down',
         'AccountTakedown',
@@ -274,8 +291,8 @@ export const accessVerifierCheckTakedown =
     }
   }
 
-export const accessOrRoleVerifier = (auth: ServerAuth) => {
-  const verifyAccess = accessVerifier(auth)
+export const accessOrRoleVerifier = (auth: ServerAuth, ctx: AppContext) => {
+  const verifyAccess = accessVerifier(auth, ctx)
   const verifyRole = roleVerifier(auth)
   return async (ctx: { req: express.Request; res: express.Response }) => {
     // For non-admin tokens, we don't want to consider alternative verifiers and let it fail if it fails
@@ -301,8 +318,11 @@ export const accessOrRoleVerifier = (auth: ServerAuth) => {
   }
 }
 
-export const optionalAccessOrRoleVerifier = (auth: ServerAuth) => {
-  const verifyAccess = accessVerifier(auth)
+export const optionalAccessOrRoleVerifier = (
+  auth: ServerAuth,
+  ctx: AppContext,
+) => {
+  const verifyAccess = accessVerifier(auth, ctx)
   return async (ctx: { req: express.Request; res: express.Response }) => {
     try {
       return await verifyAccess(ctx)

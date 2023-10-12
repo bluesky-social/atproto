@@ -7,6 +7,7 @@ export const readEnv = (): ServerEnvironment => {
     hostname: envStr('PDS_HOSTNAME'),
     serviceDid: envStr('PDS_SERVICE_DID'),
     version: envStr('PDS_VERSION'),
+    isEntryway: envBool('PDS_IS_ENTRYWAY'),
     privacyPolicyUrl: envStr('PDS_PRIVACY_POLICY_URL'),
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
 
@@ -106,6 +107,7 @@ export type ServerEnvironment = {
   hostname?: string
   serviceDid?: string
   version?: string
+  isEntryway?: boolean
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
 

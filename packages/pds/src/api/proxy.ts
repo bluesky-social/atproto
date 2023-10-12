@@ -1,7 +1,11 @@
 import * as express from 'express'
 import AtpAgent from '@atproto/api'
 import { Headers, XRPCError } from '@atproto/xrpc'
-import { InvalidRequestError, UpstreamFailureError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  UpstreamFailureError,
+} from '@atproto/xrpc-server'
 import AppContext from '../context'
 
 export const proxy = async <T>(
@@ -9,7 +13,7 @@ export const proxy = async <T>(
   pdsDid: string | null | undefined,
   fn: (agent: AtpAgent) => Promise<T>,
 ): Promise<T | null> => {
-  if (isThisPds(ctx, pdsDid)) {
+  if (isThisPds(ctx, pdsDid) || !ctx.cfg.service.isEntryway) {
     return null // skip proxying
   }
   const accountService = ctx.services.account(ctx.db)
@@ -50,14 +54,19 @@ export const isThisPds = (
 }
 
 // @NOTE on the identity service this serves a 400 w/ ExpiredToken to prompt a refresh flow from the client.
-// but on our other PDSes the same case should be a 403 w/ AccountNotFound, assuming their access token verifies.
+// the analogous case on our non-entryway PDSes would be a 403 w/ AccountNotFound when the user can auth but doesn't have an account.
 export const ensureThisPds = (ctx: AppContext, pdsDid: string | null) => {
   if (!isThisPds(ctx, pdsDid)) {
-    // instruct client to refresh token during potential account migration
-    throw new InvalidRequestError(
-      'Token audience is out of date',
-      'ExpiredToken',
-    )
+    if (ctx.cfg.service.isEntryway) {
+      // instruct client to refresh token during potential account migration
+      throw new InvalidRequestError(
+        'Token audience is out of date',
+        'ExpiredToken',
+      )
+    } else {
+      // this shouldn't really happen, since we validate the token's audience on our non-entryway PDSes.
+      throw new AuthRequiredError('Bad token audience')
+    }
   }
 }
 

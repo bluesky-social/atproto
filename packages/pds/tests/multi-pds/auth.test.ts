@@ -38,6 +38,7 @@ describe('multi-pds auth', () => {
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
     })
     pds = await TestPds.create({
+      isEntryway: false,
       dbPostgresUrl: process.env.DB_POSTGRES_URL,
       dbPostgresSchema: 'multi_pds_account_pds',
       didPlcUrl: plc.url,
@@ -51,6 +52,7 @@ describe('multi-pds auth', () => {
       .values({
         did: pds.ctx.cfg.service.did,
         host: new URL(pds.ctx.cfg.service.publicUrl).host,
+        weight: 0,
       })
       .execute()
     mockNetworkUtilities([entryway, pds])
@@ -65,6 +67,7 @@ describe('multi-pds auth', () => {
   })
 
   it('assigns user to a pds.', async () => {
+    await entryway.ctx.db.db.updateTable('pds').set({ weight: 1 }).execute()
     const {
       data: { did },
     } = await entrywayAgent.api.com.atproto.server.createAccount({
@@ -72,6 +75,7 @@ describe('multi-pds auth', () => {
       handle: 'alice.test',
       password: 'test123',
     })
+    await entryway.ctx.db.db.updateTable('pds').set({ weight: 0 }).execute()
 
     // @TODO move these steps into account creation process
     await entryway.ctx.services.repo(entryway.ctx.db).deleteRepo(did)
@@ -248,8 +252,6 @@ describe('multi-pds auth', () => {
     })
 
     it('initiates token refresh when account moves off of entryway.', async () => {
-      // don't assign bob to separate pds
-      await entryway.ctx.db.db.updateTable('pds').set({ weight: 0 }).execute()
       const {
         data: { did, ...initialSession },
       } = await entrywayAgent.api.com.atproto.server.createAccount({
@@ -283,9 +285,8 @@ describe('multi-pds auth', () => {
           pds.ctx.repoSigningKey.did(),
         )
       const { id: pdsId } = await entryway.ctx.db.db
-        .updateTable('pds')
-        .set({ weight: 1 })
-        .returningAll()
+        .selectFrom('pds')
+        .selectAll()
         .executeTakeFirstOrThrow()
       await entryway.ctx.db.db
         .updateTable('user_account')
@@ -341,6 +342,62 @@ describe('multi-pds auth', () => {
         rkey: 'self',
       })
       expect(profile.value['displayName']).toEqual('Bob!')
+    })
+
+    it('initiates token refresh when account moves off of pds.', async () => {
+      const {
+        data: { did, ...initialSession },
+      } = await entrywayAgent.api.com.atproto.server.createAccount({
+        email: 'carol@test.com',
+        handle: 'carol.test',
+        password: 'test123',
+      })
+      const outdatedAccessToken = await entryway.ctx.auth.createAccessToken({
+        did,
+        pdsDid: pds.ctx.cfg.service.did, // pretending that carol was previously on this pds
+      })
+      // attempt a write again on carol's previous pds with same creds
+      const tryPutRecord = entrywayAgent.com.atproto.repo.putRecord(
+        {
+          repo: did,
+          collection: ids.AppBskyActorProfile,
+          rkey: 'self',
+          record: { displayName: 'Carol!' },
+        },
+        {
+          headers: SeedClient.getHeaders(outdatedAccessToken),
+          encoding: 'application/json',
+        },
+      )
+      await expect(tryPutRecord).rejects.toThrow(
+        'Token audience is out of date',
+      )
+      const err = await tryPutRecord.catch((err) => err)
+      expect(err.status).toBe(400)
+      expect(err.error).toBe('ExpiredToken')
+      // refresh session and try again
+      const { data: session } =
+        await entrywayAgent.com.atproto.server.refreshSession(undefined, {
+          headers: SeedClient.getHeaders(initialSession.refreshJwt),
+        })
+      await entrywayAgent.com.atproto.repo.putRecord(
+        {
+          repo: did,
+          collection: ids.AppBskyActorProfile,
+          rkey: 'self',
+          record: { displayName: 'Carol!' },
+        },
+        {
+          headers: SeedClient.getHeaders(session.accessJwt),
+          encoding: 'application/json',
+        },
+      )
+      const { data: profile } = await entrywayAgent.com.atproto.repo.getRecord({
+        repo: did,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+      })
+      expect(profile.value['displayName']).toEqual('Carol!')
     })
   })
 })
