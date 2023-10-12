@@ -6,7 +6,6 @@ import {
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { AtpAgent } from '@atproto/api'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.reverseModerationAction({
@@ -83,23 +82,17 @@ export default function (server: Server, ctx: AppContext) {
 
       if (restored) {
         const { did, subjects } = restored
-        const data = await ctx.idResolver.did.resolveAtprotoData(did)
-        const agent = new AtpAgent({ service: data.pds })
-        const headers = await ctx.serviceAuthHeaders(did)
+        const agent = await ctx.pdsAdminAgent(did)
         await Promise.all(
           subjects.map((subject) =>
-            agent.api.com.atproto.admin.updateSubjectState(
-              {
-                subject,
-                takedown: {
-                  applied: false,
-                },
+            agent.api.com.atproto.admin.updateSubjectState({
+              subject,
+              takedown: {
+                applied: false,
               },
-              { ...headers, encoding: 'application/json' },
-            ),
+            }),
           ),
         )
-        data.pds
       }
 
       return {

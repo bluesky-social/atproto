@@ -78,6 +78,7 @@ export class TestBsky {
       config,
       algos: cfg.algos,
       imgInvalidator: cfg.imgInvalidator,
+      signingKey: serviceKeypair,
     })
     // indexer
     const ns = cfg.dbPostgresSchema

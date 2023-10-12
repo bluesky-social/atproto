@@ -2,6 +2,7 @@ import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
+import { createServiceJwt } from '@atproto/xrpc-server'
 import { DatabaseCoordinator } from './db'
 import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
@@ -12,7 +13,6 @@ import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
 import { LabelCache } from './label-cache'
 import { NotificationServer } from './notifications'
-import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 
 export class AppContext {
   constructor(
@@ -98,13 +98,21 @@ export class AppContext {
     return auth.roleVerifier(this.cfg)
   }
 
-  async serviceAuthHeaders(aud: string) {
+  async serviceAuthJwt(aud: string) {
     const iss = this.cfg.serverDid
-    return createServiceAuthHeaders({
+    return createServiceJwt({
       iss,
       aud,
       keypair: this.signingKey,
     })
+  }
+
+  async pdsAdminAgent(did: string): Promise<AtpAgent> {
+    const data = await this.idResolver.did.resolveAtprotoData(did)
+    const agent = new AtpAgent({ service: data.pds })
+    const jwt = await this.serviceAuthJwt(did)
+    agent.api.setHeader('authorization', `Bearer ${jwt}`)
+    return agent
   }
 
   get backgroundQueue(): BackgroundQueue {

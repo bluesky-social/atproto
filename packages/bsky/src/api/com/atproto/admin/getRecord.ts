@@ -1,6 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { addAccountInfoToRepoView, getPdsAccountInfo } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRecord({
@@ -17,9 +18,16 @@ export default function (server: Server, ctx: AppContext) {
       if (!result) {
         throw new InvalidRequestError('Record not found', 'RecordNotFound')
       }
+      const [record, accountInfo] = await Promise.all([
+        ctx.services.moderation(db).views.recordDetail(result),
+        getPdsAccountInfo(ctx, result.did),
+      ])
+
+      record.repo = addAccountInfoToRepoView(record.repo, accountInfo)
+
       return {
         encoding: 'application/json',
-        body: await ctx.services.moderation(db).views.recordDetail(result),
+        body: record,
       }
     },
   })

@@ -9,7 +9,6 @@ import {
   TAKEDOWN,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { getSubject, getAction } from '../moderation/util'
-import { AtpAgent } from '@atproto/api'
 import { TakedownSubjects } from '../../../../services/moderation'
 
 export default function (server: Server, ctx: AppContext) {
@@ -110,24 +109,18 @@ export default function (server: Server, ctx: AppContext) {
       if (takenDown) {
         const { did, subjects } = takenDown
         if (did && subjects.length > 0) {
-          const data = await ctx.idResolver.did.resolveAtprotoData(did)
-          const agent = new AtpAgent({ service: data.pds })
-          const headers = await ctx.serviceAuthHeaders(did)
+          const agent = await ctx.pdsAdminAgent(did)
           await Promise.all(
             subjects.map((subject) =>
-              agent.api.com.atproto.admin.updateSubjectState(
-                {
-                  subject,
-                  takedown: {
-                    applied: true,
-                    ref: result.id.toString(),
-                  },
+              agent.api.com.atproto.admin.updateSubjectState({
+                subject,
+                takedown: {
+                  applied: true,
+                  ref: result.id.toString(),
                 },
-                { ...headers, encoding: 'application/json' },
-              ),
+              }),
             ),
           )
-          data.pds
         }
       }
 

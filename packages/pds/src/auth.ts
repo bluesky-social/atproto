@@ -1,10 +1,15 @@
 import * as crypto from '@atproto/crypto'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  verifyJwt,
+} from '@atproto/xrpc-server'
 import * as ui8 from 'uint8arrays'
 import express from 'express'
 import * as jwt from 'jsonwebtoken'
 import AppContext from './context'
 import { softDeleted } from './db/util'
+import { IdResolver } from '@atproto/identity'
 
 const BEARER = 'Bearer '
 const BASIC = 'Basic '
@@ -253,6 +258,50 @@ export const accessOrRoleVerifier = (auth: ServerAuth) => {
     }
   }
 }
+
+export const roleOrAdminServiceVerifier = (
+  auth: ServerAuth,
+  idResolver: IdResolver,
+  iss: string,
+) => {
+  const verifyService = adminServiceVerifier(idResolver, iss)
+  const verifyRole = roleVerifier(auth)
+  return async (ctx: { req: express.Request; res: express.Response }) => {
+    if (ctx.req.headers.authorization?.startsWith(BEARER)) {
+      return verifyService(ctx)
+    } else {
+      return verifyRole(ctx)
+    }
+  }
+}
+
+export const getJwtStrFromReq = (req: express.Request): string | null => {
+  const { authorization = '' } = req.headers
+  if (!authorization.startsWith(BEARER)) {
+    return null
+  }
+  return authorization.replace(BEARER, '').trim()
+}
+
+export const adminServiceVerifier =
+  (idResolver: IdResolver, iss: string) =>
+  async (reqCtx: { req: express.Request; res: express.Response }) => {
+    const jwtStr = getJwtStrFromReq(reqCtx.req)
+    if (!jwtStr) {
+      throw new AuthRequiredError('missing jwt', 'MissingJwt')
+    }
+    await verifyJwt(jwtStr, null, async (did: string) => {
+      if (did !== iss) {
+        throw new AuthRequiredError(
+          'Untrusted issuer for admin actions',
+          'UntrustedIss',
+        )
+      }
+      const atprotoData = await idResolver.did.resolveAtprotoData(did)
+      return atprotoData.signingKey
+    })
+    return { credentials: { admin: true, moderator: true, triage: true } }
+  }
 
 export const optionalAccessOrRoleVerifier = (auth: ServerAuth) => {
   const verifyAccess = accessVerifier(auth)
