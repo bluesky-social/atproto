@@ -16,7 +16,7 @@ export class RecordTransactor extends RecordReader {
     cid: CID,
     obj: unknown,
     action: WriteOpAction.Create | WriteOpAction.Update = WriteOpAction.Create,
-    repoRev?: string,
+    repoRev: string,
     timestamp?: string,
   ) {
     this.db.assertTransaction()
@@ -26,7 +26,7 @@ export class RecordTransactor extends RecordReader {
       cid: cid.toString(),
       collection: uri.collection,
       rkey: uri.rkey,
-      repoRev: repoRev ?? null,
+      repoRev: repoRev,
       indexedAt: timestamp || new Date().toISOString(),
     }
     if (!uri.hostname.startsWith('did:')) {
@@ -44,7 +44,7 @@ export class RecordTransactor extends RecordReader {
       .onConflict((oc) =>
         oc.column('uri').doUpdateSet({
           cid: record.cid,
-          repoRev: repoRev ?? null,
+          repoRev: repoRev,
           indexedAt: record.indexedAt,
         }),
       )

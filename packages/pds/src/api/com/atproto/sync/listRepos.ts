@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
     let builder = ctx.db.db
       .selectFrom('user_account')
       .innerJoin('repo_root', 'repo_root.did', 'user_account.did')
-      .where(notSoftDeletedClause(ref('repo_root')))
+      .where(notSoftDeletedClause(ref('user_account')))
       .select([
         'user_account.did as did',
         'repo_root.root as head',

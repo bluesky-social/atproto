@@ -49,7 +49,7 @@ export class RepoTransactor extends RepoReader {
     )
     await Promise.all([
       this.storage.applyCommit(commit),
-      this.indexWrites(writes),
+      this.indexWrites(writes, commit.rev),
       this.blob.processWriteBlobs(commit.rev, writes),
     ])
     return commit
@@ -138,7 +138,7 @@ export class RepoTransactor extends RepoReader {
     return commit
   }
 
-  async indexWrites(writes: PreparedWrite[], rev?: string) {
+  async indexWrites(writes: PreparedWrite[], rev: string) {
     this.db.assertTransaction()
     await Promise.all(
       writes.map(async (write) => {

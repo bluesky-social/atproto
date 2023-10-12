@@ -1,7 +1,7 @@
 export interface RepoBlob {
   cid: string
   recordUri: string
-  repoRev: string | null
+  repoRev: string
 }
 
 export const tableName = 'repo_blob'

@@ -1,5 +1,5 @@
-// NOTE this file can be edited by hand, but it is also appended to by the migration:create command.
-// It's important that every migration is exported from here with the proper name. We'd simplify
-// this with kysely's FileMigrationProvider, but it doesn't play nicely with the build process.
+import * as init from './001-init'
 
-export * as _20231012T200556520Z from './20231012T200556520Z-init'
+export default {
+  '001': init,
+}

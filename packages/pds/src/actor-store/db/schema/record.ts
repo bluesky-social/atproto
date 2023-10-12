@@ -4,7 +4,7 @@ export interface Record {
   cid: string
   collection: string
   rkey: string
-  repoRev: string | null
+  repoRev: string
   indexedAt: string
   takedownId: string | null
 }

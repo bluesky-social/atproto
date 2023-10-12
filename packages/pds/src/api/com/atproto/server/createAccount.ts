@@ -139,17 +139,11 @@ export const ensureCodeIsAvailable = async (
   db: ServiceDb,
   inviteCode: string,
 ): Promise<void> => {
-  const { ref } = db.db.dynamic
   const invite = await db.db
     .selectFrom('invite_code')
-    .selectAll()
-    .whereNotExists((qb) =>
-      qb
-        .selectFrom('repo_root')
-        .selectAll()
-        .where('takedownId', 'is not', null)
-        .whereRef('did', '=', ref('invite_code.forUser')),
-    )
+    .leftJoin('user_account', 'user_account.did', 'invite_code.forUser')
+    .where('takedownId', 'is', null)
+    .selectAll('invite_code')
     .where('code', '=', inviteCode)
     .executeTakeFirst()
 

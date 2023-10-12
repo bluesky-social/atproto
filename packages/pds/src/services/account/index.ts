@@ -33,7 +33,7 @@ export class AccountService {
       .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
       .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .where((qb) => {
         if (handleOrDid.startsWith('did:')) {
@@ -58,10 +58,11 @@ export class AccountService {
   // Repo exists and is not taken-down
   async isRepoAvailable(did: string) {
     const found = await this.db.db
-      .selectFrom('repo_root')
-      .where('did', '=', did)
-      .where('takedownId', 'is', null)
-      .select('did')
+      .selectFrom('user_account')
+      .innerJoin('repo_root', 'repo_root.did', 'user_account.did')
+      .where('user_account.did', '=', did)
+      .where('user_account.takedownId', 'is', null)
+      .select('user_account.did')
       .executeTakeFirst()
     return found !== undefined
   }
@@ -76,7 +77,7 @@ export class AccountService {
       .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
       .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .where('email', '=', email.toLowerCase())
       .selectAll('user_account')
@@ -100,9 +101,9 @@ export class AccountService {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('did_handle')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .innerJoin('user_account', 'user_account.did', 'did_handle.did')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .where('handle', '=', handleOrDid)
       .select('did_handle.did')
@@ -300,7 +301,7 @@ export class AccountService {
       .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .innerJoin('user_account', 'user_account.did', 'did_handle.did')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .where((qb) => {
         // sqlite doesn't support "ilike", but performs "like" case-insensitively
@@ -337,9 +338,10 @@ export class AccountService {
 
     let builder = this.db.db
       .selectFrom('repo_root')
+      .innerJoin('user_account', 'user_account.did', 'repo_root.did')
       .innerJoin('did_handle', 'did_handle.did', 'repo_root.did')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .selectAll('did_handle')
       .selectAll('repo_root')
@@ -366,7 +368,7 @@ export class AccountService {
 
   async getAccountTakedownStatus(did: string): Promise<StatusAttr | null> {
     const res = await this.db.db
-      .selectFrom('repo_root')
+      .selectFrom('user_account')
       .select('takedownId')
       .where('did', '=', did)
       .executeTakeFirst()
@@ -381,7 +383,7 @@ export class AccountService {
       ? takedown.ref ?? new Date().toISOString()
       : null
     await this.db.db
-      .updateTable('repo_root')
+      .updateTable('user_account')
       .set({ takedownId })
       .where('did', '=', did)
       .executeTakeFirst()
@@ -597,7 +599,7 @@ export class AccountService {
 
   async reverseActorTakedown(info: { did: string }) {
     await this.db.db
-      .updateTable('repo_root')
+      .updateTable('user_account')
       .set({ takedownId: null })
       .where('did', '=', info.did)
       .execute()
