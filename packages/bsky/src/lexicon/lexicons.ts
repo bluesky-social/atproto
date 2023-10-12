@@ -1097,7 +1097,7 @@ export const schemaDict = {
               },
               takedown: {
                 type: 'ref',
-                ref: 'lex:com.atproto.admin.defs#subjectStatus',
+                ref: 'lex:com.atproto.admin.defs#statusAttr',
               },
             },
           },

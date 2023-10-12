@@ -24,7 +24,7 @@ export interface OutputSchema {
     | ComAtprotoRepoStrongRef.Main
     | ComAtprotoAdminDefs.RepoBlobRef
     | { $type: string; [k: string]: unknown }
-  takedown?: ComAtprotoAdminDefs.SubjectStatus
+  takedown?: ComAtprotoAdminDefs.StatusAttr
   [k: string]: unknown
 }
 

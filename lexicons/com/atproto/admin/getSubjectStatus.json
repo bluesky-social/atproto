@@ -29,7 +29,7 @@
             },
             "takedown": {
               "type": "ref",
-              "ref": "com.atproto.admin.defs#subjectStatus"
+              "ref": "com.atproto.admin.defs#statusAttr"
             }
           }
         }
