@@ -9,13 +9,17 @@ import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from './defs'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
 
-export interface QueryParams {
-  did?: string
-  uri?: string
-  blob?: string
-}
+export interface QueryParams {}
 
-export type InputSchema = undefined
+export interface InputSchema {
+  subject:
+    | ComAtprotoAdminDefs.RepoRef
+    | ComAtprotoRepoStrongRef.Main
+    | ComAtprotoAdminDefs.RepoBlobRef
+    | { $type: string; [k: string]: unknown }
+  takedown?: ComAtprotoAdminDefs.StatusAttr
+  [k: string]: unknown
+}
 
 export interface OutputSchema {
   subject:
@@ -23,12 +27,14 @@ export interface OutputSchema {
     | ComAtprotoRepoStrongRef.Main
     | ComAtprotoAdminDefs.RepoBlobRef
     | { $type: string; [k: string]: unknown }
-  takedown?: ComAtprotoAdminDefs.SubjectState
+  takedown?: ComAtprotoAdminDefs.StatusAttr
   [k: string]: unknown
 }
 
 export interface CallOptions {
   headers?: Headers
+  qp?: QueryParams
+  encoding: 'application/json'
 }
 
 export interface Response {

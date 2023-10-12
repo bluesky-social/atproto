@@ -10,22 +10,22 @@ import * as ComAtprotoModerationDefs from '../moderation/defs'
 import * as ComAtprotoServerDefs from '../server/defs'
 import * as ComAtprotoLabelDefs from '../label/defs'
 
-export interface SubjectState {
+export interface StatusAttr {
   applied: boolean
   ref?: string
   [k: string]: unknown
 }
 
-export function isSubjectState(v: unknown): v is SubjectState {
+export function isStatusAttr(v: unknown): v is StatusAttr {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.defs#subjectState'
+    v.$type === 'com.atproto.admin.defs#statusAttr'
   )
 }
 
-export function validateSubjectState(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.defs#subjectState', v)
+export function validateStatusAttr(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#statusAttr', v)
 }
 
 export interface ActionView {

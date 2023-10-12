@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.admin.getSubjectState",
+  "id": "com.atproto.admin.getSubjectStatus",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Fetch the service-specific the admin state of a subject (account, record, or blob)",
+      "description": "Fetch the service-specific the admin status of a subject (account, record, or blob)",
       "parameters": {
         "type": "params",
         "properties": {
@@ -29,7 +29,7 @@
             },
             "takedown": {
               "type": "ref",
-              "ref": "com.atproto.admin.defs#subjectState"
+              "ref": "com.atproto.admin.defs#statusAttr"
             }
           }
         }
