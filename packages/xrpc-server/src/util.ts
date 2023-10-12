@@ -24,7 +24,6 @@ import {
   InternalServerError,
   Options,
   XRPCError,
-  XRPCReqContext,
   HandlerPassthru,
   UpstreamFailureError,
   UpstreamTimeoutError,
@@ -301,6 +300,7 @@ export async function proxy(
       headers[name] = Array.isArray(value) ? value.join(', ') : value
     }
   }
+  delete headers['host']
   if (opts?.headers) {
     for (const [name, value] of Object.entries(opts.headers)) {
       headers[name.toLowerCase()] = value

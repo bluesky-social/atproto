@@ -1,5 +1,6 @@
 import * as http from 'http'
 import getPort from 'get-port'
+import { wait } from '@atproto/common'
 import xrpc, { ServiceClient } from '@atproto/xrpc'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
@@ -9,7 +10,6 @@ import { gzipSync } from 'zlib'
 import { cidForCbor } from '@atproto/common'
 import { XRPCError } from '@atproto/xrpc'
 import assert from 'assert'
-import { wait } from '@atproto/common'
 
 const LEXICONS = [
   {
