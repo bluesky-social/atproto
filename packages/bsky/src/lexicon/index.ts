@@ -48,7 +48,7 @@ import * as ComAtprotoServerCreateSession from './types/com/atproto/server/creat
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
-import * as ComAtprotoServerGenerateSigningKey from './types/com/atproto/server/generateSigningKey'
+import * as ComAtprotoServerGetSigningKey from './types/com/atproto/server/getSigningKey'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
@@ -661,14 +661,14 @@ export class ServerNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  generateSigningKey<AV extends AuthVerifier>(
+  getSigningKey<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ComAtprotoServerGenerateSigningKey.Handler<ExtractAuth<AV>>,
-      ComAtprotoServerGenerateSigningKey.HandlerReqCtx<ExtractAuth<AV>>
+      ComAtprotoServerGetSigningKey.Handler<ExtractAuth<AV>>,
+      ComAtprotoServerGetSigningKey.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'com.atproto.server.generateSigningKey' // @ts-ignore
+    const nsid = 'com.atproto.server.getSigningKey' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
