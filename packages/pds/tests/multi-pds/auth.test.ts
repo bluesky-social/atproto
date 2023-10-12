@@ -247,7 +247,7 @@ describe('multi-pds auth', () => {
       )
     })
 
-    it('initiates token refresh when account moves pdses, issues updated credentials.', async () => {
+    it('initiates token refresh when account moves off of entryway.', async () => {
       // don't assign bob to separate pds
       await entryway.ctx.db.db.updateTable('pds').set({ weight: 0 }).execute()
       const {
