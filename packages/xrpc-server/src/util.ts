@@ -295,8 +295,9 @@ export async function proxy(
 ): Promise<HandlerPassthru> {
   // headers
   const headers: Record<string, string> = Object.create(null)
+  const hopByHop = getHopByHopHeaders(ctx.req.headers.connection)
   for (const [name, value] of Object.entries(ctx.req.headers)) {
-    if (value !== undefined) {
+    if (value !== undefined && !hopByHop.has(name)) {
       headers[name] = Array.isArray(value) ? value.join(', ') : value
     }
   }
@@ -349,6 +350,22 @@ export async function proxy(
     }
     throw err
   }
+}
+
+export function getHopByHopHeaders(connectionHeader?: string) {
+  const hopByHop = new Set([
+    'connection',
+    'keep-alive',
+    'proxy-authenticate',
+    'proxy-authorization',
+    'te',
+    'trailer',
+    'transfer-encoding',
+    'upgrade',
+  ])
+  const additional = (connectionHeader ?? '').split(/\s*,\s*/)
+  additional.forEach((header) => hopByHop.add(header.toLowerCase()))
+  return hopByHop
 }
 
 export class ServerTimer implements ServerTiming {

@@ -41,6 +41,7 @@ import {
 } from './types'
 import {
   decodeQueryParams,
+  getHopByHopHeaders,
   getQueryParams,
   validateInput,
   validateOutput,
@@ -269,8 +270,9 @@ export class Server {
           res.statusCode = passthru.statusCode
           res.statusMessage = passthru.statusMessage
           if (!res.headersSent) {
+            const hopByHop = getHopByHopHeaders(passthru.headers.connection)
             for (const [name, value] of Object.entries(passthru.headers)) {
-              if (value !== undefined) {
+              if (value !== undefined && !hopByHop.has(name)) {
                 res.setHeader(name, value)
               }
             }

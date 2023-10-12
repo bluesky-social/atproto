@@ -103,6 +103,18 @@ const LEXICONS = [
   },
   {
     lexicon: 1,
+    id: 'io.example.stream',
+    defs: {
+      main: {
+        type: 'query',
+        output: {
+          encoding: '*/*',
+        },
+      },
+    },
+  },
+  {
+    lexicon: 1,
     id: 'io.example.headers',
     defs: {
       main: {
@@ -206,6 +218,14 @@ describe('Proxy', () => {
     }
   })
 
+  proxy.method('io.example.stream', proxyHandler)
+  server.method('io.example.stream', () => {
+    return {
+      encoding: 'application/octet-stream',
+      body: Readable.from(Buffer.from('streaming bytes')),
+    }
+  })
+
   proxy.method('io.example.headers', (ctx) => {
     return xrpcServer.proxy(ctx, client.uri.href, {
       headers: {
@@ -218,6 +238,8 @@ describe('Proxy', () => {
       encoding: 'application/json',
       body: ctx.req.headers,
       headers: {
+        connection: 'x-dont-pass-me-down',
+        'x-dont-pass-me-down': 'x-dont-pass-me-down-val',
         'my-custom-header-down': 'my-custom-header-down-val',
       },
     }
@@ -275,6 +297,7 @@ describe('Proxy', () => {
     expect(res.data.arr).toEqual([3])
     expect(res.data.def).toEqual(0)
     expect(res.headers['content-type']).toContain('application/json')
+    expect(res.headers['content-length']).toBeDefined()
   })
 
   it('proxies json input', async () => {
@@ -295,6 +318,7 @@ describe('Proxy', () => {
     expect(res.data.arr).toEqual([3])
     expect(res.data.def).toEqual(0)
     expect(res.headers['content-type']).toContain('application/json')
+    expect(res.headers['content-length']).toBeDefined()
   })
 
   it('proxies blob input uncompressed', async () => {
@@ -308,6 +332,7 @@ describe('Proxy', () => {
     expect(res.success).toBeTruthy()
     expect(res.data.cid).toBe(cid.toString())
     expect(res.headers['content-type']).toContain('application/json')
+    expect(res.headers['content-length']).toBeDefined()
   })
 
   it('proxies blob input compressed', async () => {
@@ -327,6 +352,7 @@ describe('Proxy', () => {
     expect(res.success).toBeTruthy()
     expect(res.data.cid).toBe(cid.toString())
     expect(res.headers['content-type']).toContain('application/json')
+    expect(res.headers['content-length']).toBeDefined()
   })
 
   it('proxies blob output uncompressed', async () => {
@@ -335,6 +361,7 @@ describe('Proxy', () => {
     expect(res.data.byteLength).toBe(1024)
     expect(res.headers['content-type']).toBe('application/octet-stream')
     expect(res.headers['content-encoding']).toBe('identity')
+    expect(res.headers['content-length']).toBeDefined()
   })
 
   it('proxies blob output compressed', async () => {
@@ -345,6 +372,16 @@ describe('Proxy', () => {
     expect(res.data.byteLength).toBe(1024)
     expect(res.headers['content-type']).toBe('application/octet-stream')
     expect(res.headers['content-encoding']).toBe('gzip')
+    expect(res.headers['content-length']).toBeDefined()
+  })
+
+  it('proxies chunked output', async () => {
+    const res = await proxyClient.call('io.example.stream')
+    expect(res.success).toBeTruthy()
+    expect(Buffer.from(res.data).toString()).toBe('streaming bytes')
+    expect(res.headers['content-type']).toBe('application/octet-stream')
+    expect(res.headers['content-length']).toBeUndefined()
+    expect(res.headers['transfer-encoding']).toBe('chunked')
   })
 
   it('proxies custom headers', async () => {
@@ -363,6 +400,19 @@ describe('Proxy', () => {
       'my-custom-header-down-val',
     )
     expect(res.headers['content-type']).toContain('application/json')
+    expect(res.headers['content-length']).toBeDefined()
+  })
+
+  it('does not proxy hop-by-hop headers', async () => {
+    const res = await proxyClient.call('io.example.headers', {}, undefined, {
+      headers: {
+        'proxy-authenticate': 'proxy-authenticate-val',
+      },
+    })
+    expect(res.success).toBeTruthy()
+    expect(res.data['proxy-authenticate']).toBeUndefined()
+    expect(res.headers['x-dont-pass-me-down']).toBeUndefined()
+    expect(res.headers['connection']).not.toContain('x-dont-pass-me-down')
   })
 
   it('proxies 4xx errors', async () => {
