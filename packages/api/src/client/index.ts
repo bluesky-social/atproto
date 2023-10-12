@@ -51,6 +51,7 @@ import * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 import * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
+import * as ComAtprotoServerGenerateSigningKey from './types/com/atproto/server/generateSigningKey'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
@@ -184,6 +185,7 @@ export * as ComAtprotoServerDefs from './types/com/atproto/server/defs'
 export * as ComAtprotoServerDeleteAccount from './types/com/atproto/server/deleteAccount'
 export * as ComAtprotoServerDeleteSession from './types/com/atproto/server/deleteSession'
 export * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
+export * as ComAtprotoServerGenerateSigningKey from './types/com/atproto/server/generateSigningKey'
 export * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 export * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
 export * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
@@ -816,6 +818,17 @@ export class ServerNS {
       .call('com.atproto.server.describeServer', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoServerDescribeServer.toKnownErr(e)
+      })
+  }
+
+  generateSigningKey(
+    data?: ComAtprotoServerGenerateSigningKey.InputSchema,
+    opts?: ComAtprotoServerGenerateSigningKey.CallOptions,
+  ): Promise<ComAtprotoServerGenerateSigningKey.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.generateSigningKey', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerGenerateSigningKey.toKnownErr(e)
       })
   }
 

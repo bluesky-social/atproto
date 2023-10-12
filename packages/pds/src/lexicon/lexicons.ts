@@ -2315,6 +2315,9 @@ export const schemaDict = {
               recoveryKey: {
                 type: 'string',
               },
+              plcOp: {
+                type: 'bytes',
+              },
             },
           },
         },
@@ -2726,6 +2729,29 @@ export const schemaDict = {
           },
           termsOfService: {
             type: 'string',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerGenerateSigningKey: {
+    lexicon: 1,
+    id: 'com.atproto.server.generateSigningKey',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Generate a per-repo signing key for account creation.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['signingKey'],
+            properties: {
+              signingKey: {
+                type: 'bytes',
+                description: 'Public signing key in the form of a did:key.',
+              },
+            },
           },
         },
       },
@@ -7370,6 +7396,7 @@ export const ids = {
   ComAtprotoServerDeleteAccount: 'com.atproto.server.deleteAccount',
   ComAtprotoServerDeleteSession: 'com.atproto.server.deleteSession',
   ComAtprotoServerDescribeServer: 'com.atproto.server.describeServer',
+  ComAtprotoServerGenerateSigningKey: 'com.atproto.server.generateSigningKey',
   ComAtprotoServerGetAccountInviteCodes:
     'com.atproto.server.getAccountInviteCodes',
   ComAtprotoServerGetSession: 'com.atproto.server.getSession',
