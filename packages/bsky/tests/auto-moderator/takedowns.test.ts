@@ -93,8 +93,9 @@ describe('takedowner', () => {
       .executeTakeFirst()
     expect(record?.takedownId).toEqual(modAction.id)
 
-    const recordPds = await network.pds.ctx.db.db
-      .selectFrom('record')
+    const recordPds = await network.pds.ctx.actorStore
+      .reader(post.ref.uri.hostname)
+      .db.db.selectFrom('record')
       .where('uri', '=', post.ref.uriStr)
       .select('takedownId')
       .executeTakeFirst()
@@ -135,8 +136,9 @@ describe('takedowner', () => {
       .executeTakeFirst()
     expect(record?.takedownId).toEqual(modAction.id)
 
-    const recordPds = await network.pds.ctx.db.db
-      .selectFrom('record')
+    const recordPds = await network.pds.ctx.actorStore
+      .reader(alice)
+      .db.db.selectFrom('record')
       .where('uri', '=', res.data.uri)
       .select('takedownId')
       .executeTakeFirst()

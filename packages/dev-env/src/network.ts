@@ -60,18 +60,18 @@ export class TestNetwork extends TestNetworkNoAppView {
     const sub = this.bsky.indexer.sub
     const { db } = this.pds.ctx.db
     const start = Date.now()
+    const { lastSeq } = await db
+      .selectFrom('repo_seq')
+      .select(db.fn.max('repo_seq.seq').as('lastSeq'))
+      .executeTakeFirstOrThrow()
     while (Date.now() - start < timeout) {
-      await wait(50)
-      const { lastSeq } = await db
-        .selectFrom('repo_seq')
-        .select(db.fn.max('repo_seq.seq').as('lastSeq'))
-        .executeTakeFirstOrThrow()
-      const { cursor } = sub.partitions.get(0)
-      if (cursor === lastSeq) {
+      const partitionState = sub.partitions.get(0)
+      if (partitionState?.cursor === lastSeq) {
         // has seen last seq, just need to wait for it to finish processing
         await sub.repoQueue.main.onIdle()
         return
       }
+      await wait(5)
     }
     throw new Error(`Sequence was not processed within ${timeout}ms`)
   }

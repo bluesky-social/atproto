@@ -513,9 +513,18 @@ describe('indexing', () => {
           validate: false,
         }),
       ])
+      const writeCommit = await network.pds.ctx.actorStore.transact(
+        sc.dids.alice,
+        (store) => store.repo.processWrites(writes),
+      )
       await pdsServices
-        .repo(pdsDb)
-        .processWrites({ did: sc.dids.alice, writes }, 1)
+        .account(pdsDb)
+        .updateRepoRoot(sc.dids.alice, writeCommit.cid, writeCommit.rev)
+      await network.pds.ctx.sequencer.sequenceCommit(
+        sc.dids.alice,
+        writeCommit,
+        writes,
+      )
       // Index
       const { data: commit } =
         await pdsAgent.api.com.atproto.sync.getLatestCommit({
