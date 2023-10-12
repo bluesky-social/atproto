@@ -9,7 +9,7 @@ import { addAccountInfoToRepoView, getPdsAccountInfo } from './util'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getModerationReport({
     auth: ctx.roleVerifier,
-    handler: async ({ params }) => {
+    handler: async ({ params, auth }) => {
       const { id } = params
       const db = ctx.db.getPrimary()
       const moderationService = ctx.services.moderation(db)
@@ -21,11 +21,16 @@ export default function (server: Server, ctx: AppContext) {
 
       // add in pds account info if available
       if (isRepoView(report.subject)) {
-        report.subject = addAccountInfoToRepoView(report.subject, accountInfo)
+        report.subject = addAccountInfoToRepoView(
+          report.subject,
+          accountInfo,
+          auth.credentials.moderator,
+        )
       } else if (isRecordView(report.subject)) {
         report.subject.repo = addAccountInfoToRepoView(
           report.subject.repo,
           accountInfo,
+          auth.credentials.moderator,
         )
       }
 

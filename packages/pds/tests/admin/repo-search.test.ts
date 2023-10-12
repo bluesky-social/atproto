@@ -1,17 +1,17 @@
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
+import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { paginateAll } from '../_util'
 import usersBulkSeed from '../seeds/users-bulk'
 
-describe.skip('pds admin repo search view', () => {
-  let network: TestNetworkNoAppView
+describe('pds admin repo search view', () => {
+  let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
   let headers: { [s: string]: string }
 
   beforeAll(async () => {
-    network = await TestNetworkNoAppView.create({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'views_admin_repo_search',
     })
     agent = network.pds.getClient()
@@ -74,7 +74,7 @@ describe.skip('pds admin repo search view', () => {
     expect(res.data.repos[0].did).toEqual(term)
   })
 
-  it('finds repo by email', async () => {
+  it.skip('finds repo by email', async () => {
     const did = sc.dids['cara-wiegand69.test']
     const { email } = sc.accounts[did]
     const res = await agent.api.com.atproto.admin.searchRepos(

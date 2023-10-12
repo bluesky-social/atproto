@@ -37,11 +37,12 @@ export const getPdsAccountInfos = async (
 export const addAccountInfoToRepoViewDetail = (
   repoView: RepoViewDetail,
   accountInfo: UserAccountView | null,
+  includeEmail = false,
 ): RepoViewDetail => {
   if (!accountInfo) return repoView
   return {
     ...repoView,
-    email: accountInfo.email,
+    email: includeEmail ? accountInfo.email : undefined,
     invitedBy: accountInfo.invitedBy,
     invitesDisabled: accountInfo.invitesDisabled,
     inviteNote: accountInfo.inviteNote,
@@ -52,11 +53,12 @@ export const addAccountInfoToRepoViewDetail = (
 export const addAccountInfoToRepoView = (
   repoView: RepoView,
   accountInfo: UserAccountView | null,
+  includeEmail = false,
 ): RepoView => {
   if (!accountInfo) return repoView
   return {
     ...repoView,
-    email: accountInfo.email,
+    email: includeEmail ? accountInfo.email : undefined,
     invitedBy: accountInfo.invitedBy,
     invitesDisabled: accountInfo.invitesDisabled,
     inviteNote: accountInfo.inviteNote,

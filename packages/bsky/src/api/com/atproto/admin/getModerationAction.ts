@@ -9,7 +9,7 @@ import {
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getModerationAction({
     auth: ctx.roleVerifier,
-    handler: async ({ params }) => {
+    handler: async ({ params, auth }) => {
       const { id } = params
       const db = ctx.db.getPrimary()
       const moderationService = ctx.services.moderation(db)
@@ -22,11 +22,16 @@ export default function (server: Server, ctx: AppContext) {
 
       // add in pds account info if available
       if (isRepoView(action.subject)) {
-        action.subject = addAccountInfoToRepoView(action.subject, accountInfo)
+        action.subject = addAccountInfoToRepoView(
+          action.subject,
+          accountInfo,
+          auth.credentials.moderator,
+        )
       } else if (isRecordView(action.subject)) {
         action.subject.repo = addAccountInfoToRepoView(
           action.subject.repo,
           accountInfo,
+          auth.credentials.moderator,
         )
       }
 

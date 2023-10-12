@@ -1,4 +1,4 @@
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import {
   FLAG,
@@ -11,18 +11,18 @@ import {
 import { forSnapshot } from '../_util'
 import basicSeed from '../seeds/basic'
 
-describe.skip('pds admin get moderation action view', () => {
-  let network: TestNetworkNoAppView
+describe('pds admin get moderation action view', () => {
+  let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
-    network = await TestNetworkNoAppView.create({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'views_admin_get_moderation_action',
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()
-    await basicSeed(sc)
+    await basicSeed(sc, { addModLabels: true })
   })
 
   afterAll(async () => {
@@ -75,7 +75,6 @@ describe.skip('pds admin get moderation action view', () => {
   })
 
   it('gets moderation action for a repo.', async () => {
-    // id 2 because id 1 is in seed client
     const result = await agent.api.com.atproto.admin.getModerationAction(
       { id: 2 },
       { headers: { authorization: network.pds.adminAuth() } },
@@ -84,7 +83,6 @@ describe.skip('pds admin get moderation action view', () => {
   })
 
   it('gets moderation action for a record.', async () => {
-    // id 3 because id 1 is in seed client
     const result = await agent.api.com.atproto.admin.getModerationAction(
       { id: 3 },
       { headers: { authorization: network.pds.adminAuth() } },

@@ -5,7 +5,7 @@ import { addAccountInfoToRepoView, getPdsAccountInfos } from './util'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
     auth: ctx.roleVerifier,
-    handler: async ({ params }) => {
+    handler: async ({ params, auth }) => {
       const db = ctx.db.getPrimary()
       const moderationService = ctx.services.moderation(db)
       const { limit, cursor } = params
@@ -25,7 +25,11 @@ export default function (server: Server, ctx: AppContext) {
       ])
 
       const repos = partialRepos.map((repo) =>
-        addAccountInfoToRepoView(repo, actorInfos[repo.did] ?? null),
+        addAccountInfoToRepoView(
+          repo,
+          actorInfos[repo.did] ?? null,
+          auth.credentials.moderator,
+        ),
       )
 
       return {

@@ -1,4 +1,4 @@
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
+import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import {
   ACKNOWLEDGE,
@@ -12,18 +12,18 @@ import {
 import { forSnapshot, paginateAll } from '../_util'
 import basicSeed from '../seeds/basic'
 
-describe.skip('pds admin get moderation actions view', () => {
-  let network: TestNetworkNoAppView
+describe('pds admin get moderation actions view', () => {
+  let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
-    network = await TestNetworkNoAppView.create({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'views_admin_get_moderation_actions',
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()
-    await basicSeed(sc)
+    await basicSeed(sc, { addModLabels: true })
   })
 
   afterAll(async () => {

@@ -1,9 +1,4 @@
-import {
-  TestNetworkNoAppView,
-  ImageRef,
-  RecordRef,
-  SeedClient,
-} from '@atproto/dev-env'
+import { TestNetworkNoAppView, ImageRef, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { BlobNotFoundError } from '@atproto/repo'
 import basicSeed from '../seeds/basic'
@@ -11,11 +6,17 @@ import {
   RepoBlobRef,
   RepoRef,
 } from '../../src/lexicon/types/com/atproto/admin/defs'
+import { Main as StrongRef } from '../../src/lexicon/types/com/atproto/repo/strongRef'
 
 describe('moderation', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
+
+  let repoSubject: RepoRef
+  let recordSubject: StrongRef
+  let blobSubject: RepoBlobRef
+  let blobRef: ImageRef
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -24,6 +25,23 @@ describe('moderation', () => {
     agent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
+    await network.processAll()
+    repoSubject = {
+      $type: 'com.atproto.admin.defs#repoRef',
+      did: sc.dids.bob,
+    }
+    const post = sc.posts[sc.dids.carol][0]
+    recordSubject = {
+      $type: 'com.atproto.repo.strongRef',
+      uri: post.ref.uriStr,
+      cid: post.ref.cidStr,
+    }
+    blobRef = post.images[1]
+    blobSubject = {
+      $type: 'com.atproto.admin.defs#repoBlobRef',
+      did: sc.dids.carol,
+      cid: blobRef.image.ref.toString(),
+    }
   })
 
   afterAll(async () => {
@@ -31,15 +49,10 @@ describe('moderation', () => {
   })
 
   it('takes down accounts', async () => {
-    const subject = {
-      $type: 'com.atproto.admin.defs#repoRef',
-      did: sc.dids.bob,
-    }
-
     await agent.api.com.atproto.admin.updateSubjectState(
       {
-        subject,
-        takedown: { applied: true, ref: 'test' },
+        subject: repoSubject,
+        takedown: { applied: true, ref: 'test-repo' },
       },
       {
         encoding: 'application/json',
@@ -48,24 +61,19 @@ describe('moderation', () => {
     )
     const res = await agent.api.com.atproto.admin.getSubjectState(
       {
-        did: subject.did,
+        did: repoSubject.did,
       },
       { headers: network.pds.adminAuthHeaders('moderator') },
     )
     expect(res.data.subject.did).toEqual(sc.dids.bob)
     expect(res.data.takedown?.applied).toBe(true)
-    expect(res.data.takedown?.ref).toBe('test')
+    expect(res.data.takedown?.ref).toBe('test-repo')
   })
 
   it('restores takendown accounts', async () => {
-    const subject = {
-      $type: 'com.atproto.admin.defs#repoRef',
-      did: sc.dids.bob,
-    }
-
     await agent.api.com.atproto.admin.updateSubjectState(
       {
-        subject,
+        subject: repoSubject,
         takedown: { applied: false },
       },
       {
@@ -75,11 +83,55 @@ describe('moderation', () => {
     )
     const res = await agent.api.com.atproto.admin.getSubjectState(
       {
-        did: subject.did,
+        did: repoSubject.did,
       },
       { headers: network.pds.adminAuthHeaders('moderator') },
     )
     expect(res.data.subject.did).toEqual(sc.dids.bob)
+    expect(res.data.takedown?.applied).toBe(false)
+    expect(res.data.takedown?.ref).toBeUndefined()
+  })
+
+  it('takes down records', async () => {
+    await agent.api.com.atproto.admin.updateSubjectState(
+      {
+        subject: recordSubject,
+        takedown: { applied: true, ref: 'test-record' },
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders('moderator'),
+      },
+    )
+    const res = await agent.api.com.atproto.admin.getSubjectState(
+      {
+        uri: recordSubject.uri,
+      },
+      { headers: network.pds.adminAuthHeaders('moderator') },
+    )
+    expect(res.data.subject.uri).toEqual(recordSubject.uri)
+    expect(res.data.takedown?.applied).toBe(true)
+    expect(res.data.takedown?.ref).toBe('test-record')
+  })
+
+  it('restores takendown records', async () => {
+    await agent.api.com.atproto.admin.updateSubjectState(
+      {
+        subject: recordSubject,
+        takedown: { applied: false },
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders('moderator'),
+      },
+    )
+    const res = await agent.api.com.atproto.admin.getSubjectState(
+      {
+        uri: recordSubject.uri,
+      },
+      { headers: network.pds.adminAuthHeaders('moderator') },
+    )
+    expect(res.data.subject.uri).toEqual(recordSubject.uri)
     expect(res.data.takedown?.applied).toBe(false)
     expect(res.data.takedown?.ref).toBeUndefined()
   })
@@ -113,32 +165,32 @@ describe('moderation', () => {
   })
 
   describe('blob takedown', () => {
-    let post: { ref: RecordRef; images: ImageRef[] }
-    let blob: ImageRef
-    let subject: RepoBlobRef
-
-    beforeAll(async () => {
-      post = sc.posts[sc.dids.carol][0]
-      blob = post.images[1]
-      subject = {
-        $type: 'com.atproto.admin.defs#repoBlobRef',
-        did: sc.dids.carol,
-        cid: blob.image.ref.toString(),
-      }
+    it('takes down blobs', async () => {
       await agent.api.com.atproto.admin.updateSubjectState(
         {
-          subject,
-          takedown: { applied: true },
+          subject: blobSubject,
+          takedown: { applied: true, ref: 'test-blob' },
         },
         {
           encoding: 'application/json',
           headers: network.pds.adminAuthHeaders(),
         },
       )
+      const res = await agent.api.com.atproto.admin.getSubjectState(
+        {
+          did: blobSubject.did,
+          blob: blobSubject.cid,
+        },
+        { headers: network.pds.adminAuthHeaders('moderator') },
+      )
+      expect(res.data.subject.did).toEqual(blobSubject.did)
+      expect(res.data.subject.cid).toEqual(blobSubject.cid)
+      expect(res.data.takedown?.applied).toBe(true)
+      expect(res.data.takedown?.ref).toBe('test-blob')
     })
 
     it('removes blob from the store', async () => {
-      const tryGetBytes = network.pds.ctx.blobstore.getBytes(blob.image.ref)
+      const tryGetBytes = network.pds.ctx.blobstore.getBytes(blobRef.image.ref)
       await expect(tryGetBytes).rejects.toThrow(BlobNotFoundError)
     })
 
@@ -148,15 +200,15 @@ describe('moderation', () => {
         'tests/sample-img/key-alt.jpg',
         'image/jpeg',
       )
-      expect(uploaded.image.ref.equals(blob.image.ref)).toBeTruthy()
-      const referenceBlob = sc.post(sc.dids.alice, 'pic', [], [blob])
+      expect(uploaded.image.ref.equals(blobRef.image.ref)).toBeTruthy()
+      const referenceBlob = sc.post(sc.dids.alice, 'pic', [], [blobRef])
       await expect(referenceBlob).rejects.toThrow('Could not find blob:')
     })
 
     it('prevents image blob from being served, even when cached.', async () => {
       const attempt = agent.api.com.atproto.sync.getBlob({
         did: sc.dids.carol,
-        cid: blob.image.ref.toString(),
+        cid: blobRef.image.ref.toString(),
       })
       await expect(attempt).rejects.toThrow('Blob not found')
     })
@@ -164,7 +216,7 @@ describe('moderation', () => {
     it('restores blob when takedown is removed', async () => {
       await agent.api.com.atproto.admin.updateSubjectState(
         {
-          subject,
+          subject: blobSubject,
           takedown: { applied: false },
         },
         {
@@ -174,13 +226,13 @@ describe('moderation', () => {
       )
 
       // Can post and reference blob
-      const post = await sc.post(sc.dids.alice, 'pic', [], [blob])
-      expect(post.images[0].image.ref.equals(blob.image.ref)).toBeTruthy()
+      const post = await sc.post(sc.dids.alice, 'pic', [], [blobRef])
+      expect(post.images[0].image.ref.equals(blobRef.image.ref)).toBeTruthy()
 
       // Can fetch through image server
       const res = await agent.api.com.atproto.sync.getBlob({
         did: sc.dids.carol,
-        cid: blob.image.ref.toString(),
+        cid: blobRef.image.ref.toString(),
       })
 
       expect(res.data.byteLength).toBeGreaterThan(9000)

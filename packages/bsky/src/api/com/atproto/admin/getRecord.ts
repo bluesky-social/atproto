@@ -6,7 +6,7 @@ import { addAccountInfoToRepoView, getPdsAccountInfo } from './util'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRecord({
     auth: ctx.roleVerifier,
-    handler: async ({ params }) => {
+    handler: async ({ params, auth }) => {
       const { uri, cid } = params
       const db = ctx.db.getPrimary()
       const result = await db.db
@@ -23,7 +23,11 @@ export default function (server: Server, ctx: AppContext) {
         getPdsAccountInfo(ctx, result.did),
       ])
 
-      record.repo = addAccountInfoToRepoView(record.repo, accountInfo)
+      record.repo = addAccountInfoToRepoView(
+        record.repo,
+        accountInfo,
+        auth.credentials.moderator,
+      )
 
       return {
         encoding: 'application/json',
