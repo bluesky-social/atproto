@@ -1,7 +1,6 @@
 import { Insertable, Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/syntax'
-import { toSimplifiedISOSafe } from '@atproto/common'
+import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { jsonStringToLex } from '@atproto/lexicon'
 import {
   Record as PostRecord,
@@ -68,7 +67,7 @@ const insertFn = async (
     cid: cid.toString(),
     creator: uri.host,
     text: obj.text,
-    createdAt: toSimplifiedISOSafe(obj.createdAt),
+    createdAt: normalizeDatetimeAlways(obj.createdAt),
     replyRoot: obj.reply?.root?.uri || null,
     replyRootCid: obj.reply?.root?.cid || null,
     replyParent: obj.reply?.parent?.uri || null,
