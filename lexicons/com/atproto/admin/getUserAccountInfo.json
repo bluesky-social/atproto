@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.admin.getUserAccountInfo",
+  "id": "com.atproto.admin.getAccountInfo",
   "defs": {
     "main": {
       "type": "query",
-      "description": "View details about a user account.",
+      "description": "View details about an account.",
       "parameters": {
         "type": "params",
         "required": ["did"],
@@ -16,7 +16,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "ref",
-          "ref": "com.atproto.admin.defs#userAccountView"
+          "ref": "com.atproto.admin.defs#accountView"
         }
       }
     }

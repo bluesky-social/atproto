@@ -20,7 +20,7 @@ import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminGetSubjectState from './types/com/atproto/admin/getSubjectState'
-import * as ComAtprotoAdminGetUserAccountInfo from './types/com/atproto/admin/getUserAccountInfo'
+import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -315,14 +315,14 @@ export class AdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getUserAccountInfo<AV extends AuthVerifier>(
+  getAccountInfo<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ComAtprotoAdminGetUserAccountInfo.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminGetUserAccountInfo.HandlerReqCtx<ExtractAuth<AV>>
+      ComAtprotoAdminGetAccountInfo.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminGetAccountInfo.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'com.atproto.admin.getUserAccountInfo' // @ts-ignore
+    const nsid = 'com.atproto.admin.getAccountInfo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

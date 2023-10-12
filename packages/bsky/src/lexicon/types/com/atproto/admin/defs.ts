@@ -256,7 +256,7 @@ export function validateRepoViewDetail(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#repoViewDetail', v)
 }
 
-export interface UserAccountView {
+export interface AccountView {
   did: string
   handle: string
   email?: string
@@ -268,16 +268,16 @@ export interface UserAccountView {
   [k: string]: unknown
 }
 
-export function isUserAccountView(v: unknown): v is UserAccountView {
+export function isAccountView(v: unknown): v is AccountView {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.defs#userAccountView'
+    v.$type === 'com.atproto.admin.defs#accountView'
   )
 }
 
-export function validateUserAccountView(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.defs#userAccountView', v)
+export function validateAccountView(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#accountView', v)
 }
 
 export interface RepoViewNotFound {

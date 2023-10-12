@@ -3,7 +3,7 @@ import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.getUserAccountInfo({
+  server.com.atproto.admin.getAccountInfo({
     auth: ctx.roleOrAdminServiceVerifier,
     handler: async ({ params }) => {
       const view = await ctx.services.account(ctx.db).adminView(params.did)

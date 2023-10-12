@@ -2,16 +2,16 @@ import AppContext from '../../../../context'
 import {
   RepoView,
   RepoViewDetail,
-  UserAccountView,
+  AccountView,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 
 export const getPdsAccountInfo = async (
   ctx: AppContext,
   did: string,
-): Promise<UserAccountView | null> => {
+): Promise<AccountView | null> => {
   try {
     const agent = await ctx.pdsAdminAgent(did)
-    const res = await agent.api.com.atproto.admin.getUserAccountInfo({ did })
+    const res = await agent.api.com.atproto.admin.getAccountInfo({ did })
     return res.data
   } catch (err) {
     return null
@@ -21,7 +21,7 @@ export const getPdsAccountInfo = async (
 export const getPdsAccountInfos = async (
   ctx: AppContext,
   dids: string[],
-): Promise<Record<string, UserAccountView>> => {
+): Promise<Record<string, AccountView>> => {
   const unique = [...new Set(dids)]
   const infos = await Promise.all(
     unique.map((did) => getPdsAccountInfo(ctx, did)),
@@ -31,12 +31,12 @@ export const getPdsAccountInfos = async (
       acc[cur.did] = cur
     }
     return acc
-  }, {} as Record<string, UserAccountView>)
+  }, {} as Record<string, AccountView>)
 }
 
 export const addAccountInfoToRepoViewDetail = (
   repoView: RepoViewDetail,
-  accountInfo: UserAccountView | null,
+  accountInfo: AccountView | null,
   includeEmail = false,
 ): RepoViewDetail => {
   if (!accountInfo) return repoView
@@ -52,7 +52,7 @@ export const addAccountInfoToRepoViewDetail = (
 
 export const addAccountInfoToRepoView = (
   repoView: RepoView,
-  accountInfo: UserAccountView | null,
+  accountInfo: AccountView | null,
   includeEmail = false,
 ): RepoView => {
   if (!accountInfo) return repoView

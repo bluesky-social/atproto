@@ -251,7 +251,7 @@
         "inviteNote": { "type": "string" }
       }
     },
-    "userAccountView": {
+    "accountView": {
       "type": "object",
       "required": ["did", "handle", "indexedAt"],
       "properties": {

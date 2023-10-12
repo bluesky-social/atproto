@@ -19,7 +19,7 @@ import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminGetSubjectState from './types/com/atproto/admin/getSubjectState'
-import * as ComAtprotoAdminGetUserAccountInfo from './types/com/atproto/admin/getUserAccountInfo'
+import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -155,7 +155,7 @@ export * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/
 export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 export * as ComAtprotoAdminGetSubjectState from './types/com/atproto/admin/getSubjectState'
-export * as ComAtprotoAdminGetUserAccountInfo from './types/com/atproto/admin/getUserAccountInfo'
+export * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
 export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -488,14 +488,14 @@ export class AdminNS {
       })
   }
 
-  getUserAccountInfo(
-    params?: ComAtprotoAdminGetUserAccountInfo.QueryParams,
-    opts?: ComAtprotoAdminGetUserAccountInfo.CallOptions,
-  ): Promise<ComAtprotoAdminGetUserAccountInfo.Response> {
+  getAccountInfo(
+    params?: ComAtprotoAdminGetAccountInfo.QueryParams,
+    opts?: ComAtprotoAdminGetAccountInfo.CallOptions,
+  ): Promise<ComAtprotoAdminGetAccountInfo.Response> {
     return this._service.xrpc
-      .call('com.atproto.admin.getUserAccountInfo', params, undefined, opts)
+      .call('com.atproto.admin.getAccountInfo', params, undefined, opts)
       .catch((e) => {
-        throw ComAtprotoAdminGetUserAccountInfo.toKnownErr(e)
+        throw ComAtprotoAdminGetAccountInfo.toKnownErr(e)
       })
   }
 

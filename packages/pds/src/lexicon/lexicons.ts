@@ -436,7 +436,7 @@ export const schemaDict = {
           },
         },
       },
-      userAccountView: {
+      accountView: {
         type: 'object',
         required: ['did', 'handle', 'indexedAt'],
         properties: {
@@ -1143,13 +1143,13 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminGetUserAccountInfo: {
+  ComAtprotoAdminGetAccountInfo: {
     lexicon: 1,
-    id: 'com.atproto.admin.getUserAccountInfo',
+    id: 'com.atproto.admin.getAccountInfo',
     defs: {
       main: {
         type: 'query',
-        description: 'View details about a user account.',
+        description: 'View details about an account.',
         parameters: {
           type: 'params',
           required: ['did'],
@@ -1164,7 +1164,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#userAccountView',
+            ref: 'lex:com.atproto.admin.defs#accountView',
           },
         },
       },
@@ -7530,7 +7530,7 @@ export const ids = {
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
   ComAtprotoAdminGetSubjectState: 'com.atproto.admin.getSubjectState',
-  ComAtprotoAdminGetUserAccountInfo: 'com.atproto.admin.getUserAccountInfo',
+  ComAtprotoAdminGetAccountInfo: 'com.atproto.admin.getAccountInfo',
   ComAtprotoAdminResolveModerationReports:
     'com.atproto.admin.resolveModerationReports',
   ComAtprotoAdminReverseModerationAction:

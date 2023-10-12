@@ -167,8 +167,8 @@ describe('pds admin invite views', () => {
     expect(combined).toEqual(full.data.codes)
   })
 
-  it('hydrates invites into admin.getUserAccountInfo', async () => {
-    const aliceView = await agent.api.com.atproto.admin.getUserAccountInfo(
+  it('hydrates invites into admin.getAccountInfo', async () => {
+    const aliceView = await agent.api.com.atproto.admin.getAccountInfo(
       { did: alice },
       { headers: network.pds.adminAuthHeaders() },
     )
@@ -209,7 +209,7 @@ describe('pds admin invite views', () => {
       { encoding: 'application/json', headers: network.pds.adminAuthHeaders() },
     )
 
-    const repoRes = await agent.api.com.atproto.admin.getUserAccountInfo(
+    const repoRes = await agent.api.com.atproto.admin.getAccountInfo(
       { did: carol },
       { headers: network.pds.adminAuthHeaders() },
     )
@@ -231,7 +231,7 @@ describe('pds admin invite views', () => {
       { encoding: 'application/json', headers: network.pds.adminAuthHeaders() },
     )
 
-    const afterEnable = await agent.api.com.atproto.admin.getUserAccountInfo(
+    const afterEnable = await agent.api.com.atproto.admin.getAccountInfo(
       { did: carol },
       { headers: network.pds.adminAuthHeaders() },
     )
@@ -243,7 +243,7 @@ describe('pds admin invite views', () => {
       { encoding: 'application/json', headers: network.pds.adminAuthHeaders() },
     )
 
-    const afterDisable = await agent.api.com.atproto.admin.getUserAccountInfo(
+    const afterDisable = await agent.api.com.atproto.admin.getAccountInfo(
       { did: carol },
       { headers: network.pds.adminAuthHeaders() },
     )
@@ -278,7 +278,7 @@ describe('pds admin invite views', () => {
       { encoding: 'application/json', headers: network.pds.adminAuthHeaders() },
     )
 
-    const repoRes = await agent.api.com.atproto.admin.getUserAccountInfo(
+    const repoRes = await agent.api.com.atproto.admin.getAccountInfo(
       { did: carol },
       { headers: network.pds.adminAuthHeaders() },
     )

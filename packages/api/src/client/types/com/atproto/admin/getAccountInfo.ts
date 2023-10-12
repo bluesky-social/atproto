@@ -13,7 +13,7 @@ export interface QueryParams {
 }
 
 export type InputSchema = undefined
-export type OutputSchema = ComAtprotoAdminDefs.UserAccountView
+export type OutputSchema = ComAtprotoAdminDefs.AccountView
 
 export interface CallOptions {
   headers?: Headers
