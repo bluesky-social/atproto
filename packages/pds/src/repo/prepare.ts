@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, ensureValidRecordKey } from '@atproto/syntax'
 import { MINUTE, TID, dataToCborBlock } from '@atproto/common'
 import {
   LexiconDefNotFoundError,
@@ -170,6 +170,8 @@ export const prepareCreate = async (opts: {
   }
 
   const rkey = opts.rkey || nextRkey.toString()
+  // @TODO: validate against Lexicon record 'key' type, not just overall recordkey syntax
+  ensureValidRecordKey(rkey)
   assertNoExplicitSlurs(rkey, record)
   return {
     action: WriteOpAction.Create,
