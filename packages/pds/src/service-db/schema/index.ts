@@ -7,7 +7,6 @@ import * as appPassword from './app-password'
 import * as inviteCode from './invite-code'
 import * as emailToken from './email-token'
 import * as moderation from './moderation'
-import * as repoSeq from './repo-seq'
 import * as appMigration from './app-migration'
 
 export type DatabaseSchema = appMigration.PartialDB &
@@ -19,8 +18,7 @@ export type DatabaseSchema = appMigration.PartialDB &
   didCache.PartialDB &
   inviteCode.PartialDB &
   emailToken.PartialDB &
-  moderation.PartialDB &
-  repoSeq.PartialDB
+  moderation.PartialDB
 
 export type { UserAccount, UserAccountEntry } from './user-account'
 export type { DidHandle } from './did-handle'
@@ -36,10 +34,4 @@ export type {
   ModerationReport,
   ModerationReportResolution,
 } from './moderation'
-export type {
-  RepoSeq,
-  RepoSeqEntry,
-  RepoSeqInsert,
-  RepoSeqEventType,
-} from './repo-seq'
 export type { AppMigration } from './app-migration'

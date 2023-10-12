@@ -58,12 +58,9 @@ export class TestNetwork extends TestNetworkNoAppView {
 
   async processFullSubscription(timeout = 5000) {
     const sub = this.bsky.indexer.sub
-    const { db } = this.pds.ctx.db
     const start = Date.now()
-    const { lastSeq } = await db
-      .selectFrom('repo_seq')
-      .select(db.fn.max('repo_seq.seq').as('lastSeq'))
-      .executeTakeFirstOrThrow()
+    const lastSeq = await this.pds.ctx.sequencer.curr()
+    if (!lastSeq) return
     while (Date.now() - start < timeout) {
       const partitionState = sub.partitions.get(0)
       if (partitionState?.cursor === lastSeq) {

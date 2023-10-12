@@ -135,7 +135,10 @@ export class AppContext {
       cfg.crawlers,
       backgroundQueue,
     )
-    const sequencer = new Sequencer(db, crawlers)
+    const sequencer = new Sequencer(
+      path.join(cfg.db.directory, 'repo_seq.sqlite'),
+      crawlers,
+    )
     const redisScratch = cfg.redis
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined

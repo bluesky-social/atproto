@@ -2,6 +2,7 @@ import EventEmitter from 'events'
 import TypedEmitter from 'typed-emitter'
 import { seqLogger as log } from '../logger'
 import { SECOND, cborDecode, wait } from '@atproto/common'
+import { CommitData } from '@atproto/repo'
 import {
   CommitEvt,
   HandleEvt,
@@ -11,33 +12,35 @@ import {
   formatSeqHandleUpdate,
   formatSeqTombstone,
 } from './events'
-import { ServiceDb, RepoSeqEntry, RepoSeqInsert } from '../service-db'
-import { CommitData } from '@atproto/repo'
+import { SequencerDb, getMigrator, RepoSeqEntry, RepoSeqInsert } from './db'
 import { PreparedWrite } from '../repo'
 import { Crawlers } from '../crawlers'
+import { Database } from '../db'
 
 export * from './events'
 
 export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
+  db: SequencerDb
   destroyed = false
   pollPromise: Promise<void> | null = null
   triesWithNoResults = 0
 
   constructor(
-    public db: ServiceDb,
+    dbLocation: string,
     public crawlers: Crawlers,
     public lastSeen = 0,
   ) {
     super()
     // note: this does not err when surpassed, just prints a warning to stderr
     this.setMaxListeners(100)
+    this.db = Database.sqlite(dbLocation)
   }
 
   async start() {
+    const migrator = getMigrator(this.db)
+    await migrator.migrateToLatestOrThrow()
     const curr = await this.curr()
-    if (curr) {
-      this.lastSeen = curr.seq ?? 0
-    }
+    this.lastSeen = curr ?? 0
     if (this.pollPromise === null) {
       this.pollPromise = this.pollDb()
     }
@@ -51,14 +54,14 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     this.emit('close')
   }
 
-  async curr(): Promise<SeqRow | null> {
+  async curr(): Promise<number | null> {
     const got = await this.db.db
       .selectFrom('repo_seq')
       .selectAll()
       .orderBy('seq', 'desc')
       .limit(1)
       .executeTakeFirst()
-    return got || null
+    return got?.seq ?? null
   }
 
   async next(cursor: number): Promise<SeqRow | null> {

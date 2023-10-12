@@ -7,8 +7,6 @@ export type RepoSeqEventType =
   | 'migrate'
   | 'tombstone'
 
-export const REPO_SEQ_SEQUENCE = 'repo_seq_sequence'
-
 export interface RepoSeq {
   seq: GeneratedAlways<number>
   did: string
@@ -21,8 +19,6 @@ export interface RepoSeq {
 export type RepoSeqInsert = Insertable<RepoSeq>
 export type RepoSeqEntry = Selectable<RepoSeq>
 
-export const tableName = 'repo_seq'
-
-export type PartialDB = {
-  [tableName]: RepoSeq
+export type SequencerDbSchema = {
+  repo_seq: RepoSeq
 }

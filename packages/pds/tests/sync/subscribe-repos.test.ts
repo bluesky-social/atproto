@@ -1,12 +1,6 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
-import {
-  cborDecode,
-  HOUR,
-  MINUTE,
-  readFromGenerator,
-  wait,
-} from '@atproto/common'
+import { cborDecode, HOUR, readFromGenerator, wait } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import * as repo from '@atproto/repo'
 import { readCar } from '@atproto/repo'
@@ -20,13 +14,11 @@ import {
 import { AppContext } from '../../src'
 import basicSeed from '../seeds/basic'
 import { CID } from 'multiformats/cid'
-import { ServiceDb } from '../../src/service-db'
 
 describe('repo subscribe repos', () => {
   let serverHost: string
 
   let network: TestNetworkNoAppView
-  let db: ServiceDb
   let ctx: AppContext
 
   let agent: AtpAgent
@@ -45,7 +37,6 @@ describe('repo subscribe repos', () => {
     })
     serverHost = network.pds.url.replace('http://', '')
     ctx = network.pds.ctx
-    db = network.pds.ctx.db
     agent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
@@ -109,25 +100,6 @@ describe('repo subscribe repos', () => {
       }
     }
     return evts
-  }
-
-  const getAllEvents = (userDid: string, frames: Frame[]) => {
-    const types: unknown[] = []
-    for (const frame of frames) {
-      if (frame instanceof MessageFrame) {
-        if (
-          (frame.header.t === '#commit' &&
-            (frame.body as CommitEvt).repo === userDid) ||
-          (frame.header.t === '#handle' &&
-            (frame.body as HandleEvt).did === userDid) ||
-          (frame.header.t === '#tombstone' &&
-            (frame.body as TombstoneEvt).did === userDid)
-        ) {
-          types.push(frame.body)
-        }
-      }
-    }
-    return types
   }
 
   const verifyCommitEvents = async (frames: Frame[]) => {
@@ -200,13 +172,8 @@ describe('repo subscribe repos', () => {
     const isDone = async (evt: any) => {
       if (evt === undefined) return false
       if (evt instanceof ErrorFrame) return true
-      const curr = await db.db
-        .selectFrom('repo_seq')
-        .select('seq')
-        .limit(1)
-        .orderBy('seq', 'desc')
-        .executeTakeFirst()
-      return curr !== undefined && evt.body.seq === curr.seq
+      const curr = await ctx.sequencer.curr()
+      return evt.body.seq === curr
     }
 
     return readFromGenerator(gen, isDone, waitFor)
@@ -269,7 +236,7 @@ describe('repo subscribe repos', () => {
   })
 
   it('backfills only from provided cursor', async () => {
-    const seqs = await db.db
+    const seqs = await ctx.sequencer.db.db
       .selectFrom('repo_seq')
       .selectAll()
       .orderBy('seq', 'asc')

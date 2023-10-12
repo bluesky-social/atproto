@@ -9,7 +9,7 @@ import {
 } from '@atproto/repo'
 import { PreparedWrite } from '../repo'
 import { CID } from 'multiformats/cid'
-import { RepoSeqInsert } from '../service-db'
+import { RepoSeqInsert } from './db'
 
 export const formatSeqCommit = async (
   did: string,
