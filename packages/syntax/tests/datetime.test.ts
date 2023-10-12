@@ -1,7 +1,8 @@
 import {
   isValidDatetime,
   ensureValidDatetime,
-  normalizeAndEnsureValidDatetime,
+  normalizeDatetime,
+  normalizeDatetimeAlways,
   InvalidDatetimeError,
 } from '../src'
 import * as readline from 'readline'
@@ -10,6 +11,8 @@ import * as fs from 'fs'
 describe('datetime validation', () => {
   const expectValid = (h: string) => {
     ensureValidDatetime(h)
+    normalizeDatetime(h)
+    normalizeDatetimeAlways(h)
   }
   const expectInvalid = (h: string) => {
     expect(() => ensureValidDatetime(h)).toThrow(InvalidDatetimeError)
@@ -66,15 +69,38 @@ describe('datetime validation', () => {
 
 describe('normalization', () => {
   it('normalizes datetimes', () => {
-    const normalized = normalizeAndEnsureValidDatetime(
-      '1985-04-12T23:20:50.123',
+    expect(normalizeDatetime('1234-04-12T23:20:50Z')).toEqual(
+      '1234-04-12T23:20:50.000Z',
     )
-    expect(normalized).toMatch(/^1985-04-1[234]T[0-9:.]+Z$/)
+    expect(normalizeDatetime('1985-04-12T23:20:50Z')).toEqual(
+      '1985-04-12T23:20:50.000Z',
+    )
+    expect(normalizeDatetime('1985-04-12T23:20:50.123')).toEqual(
+      '1985-04-12T23:20:50.123Z',
+    )
+    expect(normalizeDatetime('1985-04-12 23:20:50.123')).toEqual(
+      '1985-04-12T23:20:50.123Z',
+    )
+    expect(normalizeDatetime('1985-04-12T10:20:50.1+01:00')).toEqual(
+      '1985-04-12T09:20:50.100Z',
+    )
+    expect(normalizeDatetime('Fri, 02 Jan 1999 12:34:56 GMT')).toEqual(
+      '1999-01-02T12:34:56.000Z',
+    )
   })
 
   it('throws on invalid normalized datetimes', () => {
-    expect(() => normalizeAndEnsureValidDatetime('blah')).toThrow(
+    expect(() => normalizeDatetime('')).toThrow(InvalidDatetimeError)
+    expect(() => normalizeDatetime('blah')).toThrow(InvalidDatetimeError)
+    expect(() => normalizeDatetime('1999-19-39T23:20:50.123Z')).toThrow(
       InvalidDatetimeError,
     )
+  })
+
+  it('normalizes datetimes always', () => {
+    expect(normalizeDatetimeAlways('1985-04-12T23:20:50Z')).toEqual(
+      '1985-04-12T23:20:50.000Z',
+    )
+    expect(normalizeDatetimeAlways('blah')).toEqual('1970-01-01T00:00:00.000Z')
   })
 })
