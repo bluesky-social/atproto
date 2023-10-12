@@ -12,7 +12,7 @@ import {
   TAKEDOWN,
   RepoBlobRef,
   RepoRef,
-  SubjectState,
+  StatusAttr,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { Main as StrongRef } from '../../lexicon/types/com/atproto/repo/strongRef'
 import { addHoursToDate } from '../../util/date'
@@ -32,51 +32,47 @@ export class ModerationService {
 
   async getRepoTakedownState(
     did: string,
-  ): Promise<StateResponse<RepoRef> | null> {
+  ): Promise<StatusResponse<RepoRef> | null> {
     const res = await this.db.db
       .selectFrom('repo_root')
       .select('takedownId')
       .where('did', '=', did)
       .executeTakeFirst()
     if (!res) return null
-    const state = takedownIdToSubjectState(res.takedownId ?? null)
+    const state = takedownIdToStatus(res.takedownId ?? null)
     return {
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: did,
       },
-      state: {
-        takedown: state,
-      },
+      takedown: state,
     }
   }
 
   async getRecordTakedownState(
     uri: AtUri,
-  ): Promise<StateResponse<StrongRef> | null> {
+  ): Promise<StatusResponse<StrongRef> | null> {
     const res = await this.db.db
       .selectFrom('record')
       .select(['takedownId', 'cid'])
       .where('uri', '=', uri.toString())
       .executeTakeFirst()
     if (!res) return null
-    const state = takedownIdToSubjectState(res.takedownId ?? null)
+    const state = takedownIdToStatus(res.takedownId ?? null)
     return {
       subject: {
         $type: 'com.atproto.repo.strongRef',
         uri: uri.toString(),
         cid: res.cid,
       },
-      state: {
-        takedown: state,
-      },
+      takedown: state,
     }
   }
 
   async getBlobTakedownState(
     did: string,
     cid: CID,
-  ): Promise<StateResponse<RepoBlobRef> | null> {
+  ): Promise<StatusResponse<RepoBlobRef> | null> {
     const res = await this.db.db
       .selectFrom('repo_blob')
       .select('takedownId')
@@ -84,21 +80,19 @@ export class ModerationService {
       .where('cid', '=', cid.toString())
       .executeTakeFirst()
     if (!res) return null
-    const state = takedownIdToSubjectState(res.takedownId ?? null)
+    const state = takedownIdToStatus(res.takedownId ?? null)
     return {
       subject: {
         $type: 'com.atproto.admin.defs#repoBlobRef',
         did: did,
         cid: cid.toString(),
       },
-      state: {
-        takedown: state,
-      },
+      takedown: state,
     }
   }
 
-  async updateRepoTakedownState(did: string, state: SubjectState) {
-    const takedownId = subjectStateToTakedownId(state)
+  async updateRepoTakedownState(did: string, takedown: StatusAttr) {
+    const takedownId = statusToTakedownId(takedown)
     await this.db.db
       .updateTable('repo_root')
       .set({ takedownId })
@@ -106,8 +100,8 @@ export class ModerationService {
       .executeTakeFirst()
   }
 
-  async updateRecordTakedownState(uri: AtUri, state: SubjectState) {
-    const takedownId = subjectStateToTakedownId(state)
+  async updateRecordTakedownState(uri: AtUri, takedown: StatusAttr) {
+    const takedownId = statusToTakedownId(takedown)
     await this.db.db
       .updateTable('record')
       .set({ takedownId })
@@ -115,18 +109,18 @@ export class ModerationService {
       .executeTakeFirst()
   }
 
-  async updateBlobTakedownState(did: string, blob: CID, state: SubjectState) {
-    const takedownId = subjectStateToTakedownId(state)
+  async updateBlobTakedownState(did: string, blob: CID, takedown: StatusAttr) {
+    const takedownId = statusToTakedownId(takedown)
     await this.db.db
       .updateTable('repo_blob')
       .set({ takedownId })
       .where('did', '=', did)
       .where('cid', '=', blob.toString())
       .executeTakeFirst()
-    if (state.applied) {
-      await this.blobstore.unquarantine(blob)
-    } else {
+    if (takedown.applied) {
       await this.blobstore.quarantine(blob)
+    } else {
+      await this.blobstore.unquarantine(blob)
     }
   }
 
@@ -715,17 +709,17 @@ export class ModerationService {
   }
 }
 
-const takedownIdToSubjectState = (id: string | null): SubjectState => {
+const takedownIdToStatus = (id: string | null): StatusAttr => {
   return id === null ? { applied: false } : { applied: true, ref: id }
 }
 
-const subjectStateToTakedownId = (state: SubjectState): string | null => {
+const statusToTakedownId = (state: StatusAttr): string | null => {
   return state.applied ? state.ref ?? new Date().toISOString() : null
 }
 
-type StateResponse<T> = {
+type StatusResponse<T> = {
   subject: T
-  state: { takedown: SubjectState }
+  takedown: StatusAttr
 }
 
 export type ModerationActionRow = Selectable<ModerationAction>

@@ -8,7 +8,7 @@ export const schemaDict = {
     lexicon: 1,
     id: 'com.atproto.admin.defs',
     defs: {
-      subjectState: {
+      statusAttr: {
         type: 'object',
         required: ['applied'],
         properties: {
@@ -1056,14 +1056,14 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminGetSubjectState: {
+  ComAtprotoAdminGetSubjectStatus: {
     lexicon: 1,
-    id: 'com.atproto.admin.getSubjectState',
+    id: 'com.atproto.admin.getSubjectStatus',
     defs: {
       main: {
         type: 'query',
         description:
-          'Fetch the service-specific the admin state of a subject (account, record, or blob)',
+          'Fetch the service-specific the admin status of a subject (account, record, or blob)',
         parameters: {
           type: 'params',
           properties: {
@@ -1097,7 +1097,7 @@ export const schemaDict = {
               },
               takedown: {
                 type: 'ref',
-                ref: 'lex:com.atproto.admin.defs#subjectState',
+                ref: 'lex:com.atproto.admin.defs#subjectStatus',
               },
             },
           },
@@ -1405,14 +1405,14 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminUpdateSubjectState: {
+  ComAtprotoAdminUpdateSubjectStatus: {
     lexicon: 1,
-    id: 'com.atproto.admin.updateSubjectState',
+    id: 'com.atproto.admin.updateSubjectStatus',
     defs: {
       main: {
         type: 'procedure',
         description:
-          'Update the service-specific admin state of a subject (account, record, or blob)',
+          'Update the service-specific admin status of a subject (account, record, or blob)',
         input: {
           encoding: 'application/json',
           schema: {
@@ -1429,7 +1429,7 @@ export const schemaDict = {
               },
               takedown: {
                 type: 'ref',
-                ref: 'lex:com.atproto.admin.defs#subjectState',
+                ref: 'lex:com.atproto.admin.defs#statusAttr',
               },
             },
           },
@@ -1450,7 +1450,7 @@ export const schemaDict = {
               },
               takedown: {
                 type: 'ref',
-                ref: 'lex:com.atproto.admin.defs#subjectState',
+                ref: 'lex:com.atproto.admin.defs#statusAttr',
               },
             },
           },
@@ -7467,7 +7467,7 @@ export const ids = {
   ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
-  ComAtprotoAdminGetSubjectState: 'com.atproto.admin.getSubjectState',
+  ComAtprotoAdminGetSubjectStatus: 'com.atproto.admin.getSubjectStatus',
   ComAtprotoAdminResolveModerationReports:
     'com.atproto.admin.resolveModerationReports',
   ComAtprotoAdminReverseModerationAction:
@@ -7477,7 +7477,7 @@ export const ids = {
   ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
-  ComAtprotoAdminUpdateSubjectState: 'com.atproto.admin.updateSubjectState',
+  ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',
   ComAtprotoIdentityUpdateHandle: 'com.atproto.identity.updateHandle',
   ComAtprotoLabelDefs: 'com.atproto.label.defs',

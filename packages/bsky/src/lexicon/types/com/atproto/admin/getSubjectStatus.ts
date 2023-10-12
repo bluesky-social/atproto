@@ -10,17 +10,13 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 import * as ComAtprotoAdminDefs from './defs'
 import * as ComAtprotoRepoStrongRef from '../repo/strongRef'
 
-export interface QueryParams {}
-
-export interface InputSchema {
-  subject:
-    | ComAtprotoAdminDefs.RepoRef
-    | ComAtprotoRepoStrongRef.Main
-    | ComAtprotoAdminDefs.RepoBlobRef
-    | { $type: string; [k: string]: unknown }
-  takedown?: ComAtprotoAdminDefs.SubjectState
-  [k: string]: unknown
+export interface QueryParams {
+  did?: string
+  uri?: string
+  blob?: string
 }
+
+export type InputSchema = undefined
 
 export interface OutputSchema {
   subject:
@@ -28,14 +24,11 @@ export interface OutputSchema {
     | ComAtprotoRepoStrongRef.Main
     | ComAtprotoAdminDefs.RepoBlobRef
     | { $type: string; [k: string]: unknown }
-  takedown?: ComAtprotoAdminDefs.SubjectState
+  takedown?: ComAtprotoAdminDefs.SubjectStatus
   [k: string]: unknown
 }
 
-export interface HandlerInput {
-  encoding: 'application/json'
-  body: InputSchema
-}
+export type HandlerInput = undefined
 
 export interface HandlerSuccess {
   encoding: 'application/json'

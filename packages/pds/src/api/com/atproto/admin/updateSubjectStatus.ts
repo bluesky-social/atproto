@@ -10,7 +10,7 @@ import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/rep
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.updateSubjectState({
+  server.com.atproto.admin.updateSubjectStatus({
     auth: ctx.roleVerifier,
     handler: async ({ input, auth }) => {
       const access = auth.credentials

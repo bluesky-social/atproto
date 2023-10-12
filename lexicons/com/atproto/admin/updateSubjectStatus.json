@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.admin.updateSubjectState",
+  "id": "com.atproto.admin.updateSubjectStatus",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Update the service-specific admin state of a subject (account, record, or blob)",
+      "description": "Update the service-specific admin status of a subject (account, record, or blob)",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -21,7 +21,7 @@
             },
             "takedown": {
               "type": "ref",
-              "ref": "com.atproto.admin.defs#subjectState"
+              "ref": "com.atproto.admin.defs#statusAttr"
             }
           }
         }
@@ -42,7 +42,7 @@
             },
             "takedown": {
               "type": "ref",
-              "ref": "com.atproto.admin.defs#subjectState"
+              "ref": "com.atproto.admin.defs#statusAttr"
             }
           }
         }
