@@ -13,7 +13,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   /** Public signing key in the form of a did:key. */
-  signingKey: Uint8Array
+  signingKey: string
   [k: string]: unknown
 }
 

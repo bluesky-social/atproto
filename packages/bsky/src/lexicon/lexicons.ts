@@ -2748,7 +2748,7 @@ export const schemaDict = {
             required: ['signingKey'],
             properties: {
               signingKey: {
-                type: 'bytes',
+                type: 'string',
                 description: 'Public signing key in the form of a did:key.',
               },
             },
