@@ -22,7 +22,7 @@ export class AuthService {
     return (db: Database) => new AuthService(db, jwtSecret)
   }
 
-  private createAccessToken(opts: {
+  createAccessToken(opts: {
     did: string
     scope?: AuthScope
     expiresIn?: string | number
@@ -41,7 +41,7 @@ export class AuthService {
     }
   }
 
-  private createRefreshToken(opts: {
+  createRefreshToken(opts: {
     did: string
     jti?: string
     expiresIn?: string | number

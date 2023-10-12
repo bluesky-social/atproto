@@ -66,7 +66,7 @@ describe('app_passwords', () => {
     const attempt = appAgent.api.com.atproto.server.createAppPassword({
       name: 'another-one',
     })
-    await expect(attempt).rejects.toThrow('Token could not be verified')
+    await expect(attempt).rejects.toThrow('Bad token scope')
   })
 
   it('persists scope across refreshes', async () => {

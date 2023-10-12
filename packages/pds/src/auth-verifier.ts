@@ -80,7 +80,7 @@ export class AuthVerifier {
     this._triagePass = opts.triagePass
   }
 
-  // verifiers
+  // verifiers (arrow fns to preserve scope)
 
   access = (ctx: ReqCtx): AccessOutput => {
     return this.validateAccessToken(ctx.req, [
