@@ -65,8 +65,6 @@ describe('moderation', () => {
     )
 
   const performTakedown = async ({
-    account,
-    content,
     durationInHours,
     ...rest
   }: TakedownParams & Pick<ModEventTakedown, 'durationInHours'>) =>
@@ -76,16 +74,17 @@ describe('moderation', () => {
           $type: 'com.atproto.admin.defs#modEventTakedown',
           durationInHours,
         },
-        subject: account
-          ? {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: sc.dids.bob,
-            }
-          : {
-              $type: 'com.atproto.repo.strongRef',
-              uri: content.uri,
-              cid: content.cid,
-            },
+        subject:
+          'account' in rest
+            ? {
+                $type: 'com.atproto.admin.defs#repoRef',
+                did: rest.account,
+              }
+            : {
+                $type: 'com.atproto.repo.strongRef',
+                uri: rest.content.uri,
+                cid: rest.content.cid,
+              },
         createdBy: 'did:example:admin',
         ...rest,
       },
@@ -95,28 +94,25 @@ describe('moderation', () => {
       },
     )
 
-  const performReverseTakedown = async ({
-    account,
-    content,
-    ...rest
-  }: TakedownParams) =>
+  const performReverseTakedown = async (params: TakedownParams) =>
     agent.api.com.atproto.admin.emitModerationEvent(
       {
         event: {
           $type: 'com.atproto.admin.defs#modEventReverseTakedown',
         },
-        subject: account
-          ? {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: sc.dids.bob,
-            }
-          : {
-              $type: 'com.atproto.repo.strongRef',
-              uri: content.uri,
-              cid: content.cid,
-            },
+        subject:
+          'account' in params
+            ? {
+                $type: 'com.atproto.admin.defs#repoRef',
+                did: params.account,
+              }
+            : {
+                $type: 'com.atproto.repo.strongRef',
+                uri: params.content.uri,
+                cid: params.content.cid,
+              },
         createdBy: 'did:example:admin',
-        ...rest,
+        ...params,
       },
       {
         encoding: 'application/json',
@@ -149,7 +145,7 @@ describe('moderation', () => {
     await network.close()
   })
 
-  describe.only('reporting', () => {
+  describe('reporting', () => {
     it('creates reports of a repo.', async () => {
       const { data: reportA } = await createReport({
         reasonType: REASONSPAM,
@@ -230,7 +226,7 @@ describe('moderation', () => {
     })
   })
 
-  describe.only('actioning', () => {
+  describe('actioning', () => {
     it('resolves reports on repos and records.', async () => {
       const post = sc.posts[sc.dids.bob][1].ref
 
@@ -769,7 +765,6 @@ describe('moderation', () => {
     let post: { ref: RecordRef; images: ImageRef[] }
     let blob: ImageRef
     let imageUri: string
-    let actionId: number
     beforeAll(async () => {
       const { ctx } = network.bsky
       post = sc.posts[sc.dids.carol][0]
@@ -785,25 +780,13 @@ describe('moderation', () => {
       await fetch(imageUri)
       const cached = await fetch(imageUri)
       expect(cached.headers.get('x-cache')).toEqual('hit')
-      const emitModEvent =
-        await agent.api.com.atproto.admin.emitModerationEvent(
-          {
-            action: TAKEDOWN,
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: post.ref.uriStr,
-              cid: post.ref.cidStr,
-            },
-            subjectBlobCids: [blob.image.ref.toString()],
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: network.bsky.adminAuthHeaders(),
-          },
-        )
-      actionId = emitModEvent.data.id
+      await performTakedown({
+        content: {
+          uri: post.ref.uriStr,
+          cid: post.ref.cidStr,
+        },
+        subjectBlobCids: [blob.image.ref.toString()],
+      })
     })
 
     it('prevents resolution of blob', async () => {
@@ -823,17 +806,13 @@ describe('moderation', () => {
     })
 
     it('restores blob when action is reversed.', async () => {
-      await agent.api.com.atproto.admin.reverseModerationEvent(
-        {
-          id: actionId,
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+      await performReverseTakedown({
+        content: {
+          uri: post.ref.uriStr,
+          cid: post.ref.cidStr,
         },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
-        },
-      )
+        subjectBlobCids: [blob.image.ref.toString()],
+      })
 
       // Can resolve blob
       const blobPath = `/blob/${sc.dids.carol}/${blob.image.ref.toString()}`

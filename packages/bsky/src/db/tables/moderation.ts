@@ -37,15 +37,11 @@ export interface ModerationEvent {
   meta: Record<string, string> | null
 }
 
-export interface ModerationEventSubjectBlob {
-  actionId: number
-  cid: string
-}
-
 export interface ModerationSubjectStatus {
   id: Generated<number>
   did: string
   recordCid: string | null
+  blobCids: string[] | null
   recordPath: string | null
   reviewState: typeof REVIEWCLOSED | typeof REVIEWOPEN | typeof REVIEWESCALATED
   createdAt: string
@@ -60,6 +56,5 @@ export interface ModerationSubjectStatus {
 
 export type PartialDB = {
   [eventTableName]: ModerationEvent
-  [actionSubjectBlobTableName]: ModerationEventSubjectBlob
   [subjectStatusTableName]: ModerationSubjectStatus
 }

@@ -1,4 +1,4 @@
-import { Selectable } from 'kysely'
+import { Selectable, sql } from 'kysely'
 import { ArrayEl } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { INVALID_HANDLE } from '@atproto/syntax'
@@ -304,8 +304,6 @@ export class ModerationViews {
       createdAt: report.createdAt,
       // Ideally, we would never have a report entry that does not have a reasonType but at the schema level
       // we are not guarantying that so in whatever case, if we end up with such entries, default to 'other'
-      // TODO: fix this
-      // @ts-ignore
       reasonType: report.meta?.reportType || REASONOTHER,
       reason: report.comment ?? undefined,
       reportedBy: report.createdBy,
@@ -365,43 +363,33 @@ export class ModerationViews {
 
   async blob(blobs: BlobRef[]): Promise<BlobView[]> {
     if (!blobs.length) return []
-    const actionResults = await this.db.db
-      .selectFrom('moderation_event')
-      .innerJoin(
-        'moderation_action_subject_blob as subject_blob',
-        'subject_blob.actionId',
-        'moderation_event.id',
-      )
+    const { ref } = this.db.db.dynamic
+    const modStatusResults = await this.db.db
+      .selectFrom('moderation_subject_status')
       .where(
-        'subject_blob.cid',
-        'in',
-        blobs.map((blob) => blob.ref.toString()),
+        sql<string>`${ref(
+          'moderation_subject_status.blobCids',
+        )} @> ${JSON.stringify(blobs.map((blob) => blob.ref.toString()))}`,
       )
-      .select(['id', 'action', 'durationInHours', 'cid'])
-      .execute()
-    const actionByCid = actionResults.reduce(
-      (acc, cur) => Object.assign(acc, { [cur.cid]: cur }),
-      {} as Record<string, ArrayEl<typeof actionResults>>,
+      .selectAll()
+      .executeTakeFirst()
+    const statusByCid = (modStatusResults?.blobCids || [])?.reduce(
+      (acc, cur) => Object.assign(acc, { [cur]: cur }),
+      {} as Record<string, ArrayEl<typeof modStatusResults>>,
     )
     // Intentionally missing details field, since we don't have any on appview.
     // We also don't know when the blob was created, so we use a canned creation time.
     const unknownTime = new Date(0).toISOString()
     return blobs.map((blob) => {
       const cid = blob.ref.toString()
-      const action = actionByCid[cid]
+      const status = statusByCid[cid]
       return {
         cid,
         mimeType: blob.mimeType,
         size: blob.size,
         createdAt: unknownTime,
         moderation: {
-          currentAction: action
-            ? {
-                id: action.id,
-                action: action.action,
-                durationInHours: action.durationInHours ?? undefined,
-              }
-            : undefined,
+          status,
         },
       }
     })

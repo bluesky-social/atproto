@@ -228,12 +228,7 @@ export class ModerationService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    // TODO: This shouldn't be in try/catch, for debugging only
-    // try {
-    await adjustModerationSubjectStatus(this.db, actionResult)
-    // } catch (err) {
-    // console.error(err)
-    // }
+    await adjustModerationSubjectStatus(this.db, actionResult, subjectBlobCids)
 
     return actionResult
   }

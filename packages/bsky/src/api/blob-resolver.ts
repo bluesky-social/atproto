@@ -10,6 +10,7 @@ import AppContext from '../context'
 import { httpLogger as log } from '../logger'
 import { retryHttp } from '../util/retry'
 import { Database } from '../db'
+import { sql } from 'kysely'
 
 // Resolve and verify blob from its origin host
 
@@ -82,20 +83,16 @@ export async function resolveBlob(
   db: Database,
   idResolver: IdResolver,
 ) {
+  const { ref } = db.db.dynamic
   const cidStr = cid.toString()
+
   const [{ pds }, takedown] = await Promise.all([
     idResolver.did.resolveAtprotoData(did), // @TODO cache did info
     db.db
-      .selectFrom('moderation_action_subject_blob')
-      .select('actionId')
-      .innerJoin(
-        'moderation_event',
-        'moderation_event.id',
-        'moderation_action_subject_blob.actionId',
-      )
-      .where('cid', '=', cidStr)
-      // TODO: fix this
-      // .where('action', '=', 'takedown')
+      .selectFrom('moderation_subject_status')
+      .select('id')
+      .where(sql<string>`${ref('blobCids')} @> ${JSON.stringify([cidStr])}`)
+      .where('takendown', 'is', true)
       .executeTakeFirst(),
   ])
   if (takedown) {

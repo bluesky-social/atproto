@@ -13,6 +13,8 @@ import {
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { ModerationSubjectStatusRow } from './types'
 import { HOUR } from '@atproto/common'
+import { CID } from 'multiformats/cid'
+import { sql } from 'kysely'
 
 const getSubjectStatusForModerationEvent = ({
   action,
@@ -75,6 +77,7 @@ export const adjustModerationSubjectStatus = async (
     | 'durationInHours'
     | 'refEventId'
   >,
+  blobCids?: CID[],
 ) => {
   const { action, subjectDid, subjectUri, subjectCid } = moderationEvent
 
@@ -103,6 +106,9 @@ export const adjustModerationSubjectStatus = async (
     ...identifier,
     createdAt: now,
     updatedAt: now,
+    blobCids: blobCids?.length
+      ? sql<string[]>`${JSON.stringify(blobCids.map((c) => c.toString()))}`
+      : null,
     // TODO: fix this?
     // @ts-ignore
   } as ModerationSubjectStatusRow
@@ -122,6 +128,8 @@ export const adjustModerationSubjectStatus = async (
       oc.constraint('moderation_status_unique_idx').doUpdateSet({
         ...subjectStatus,
         updatedAt: now,
+        // TODO: This may result in unnecessary updates
+        blobCids: newStatus.blobCids,
       }),
     )
 

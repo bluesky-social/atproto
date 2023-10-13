@@ -30,6 +30,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('did', 'varchar', (col) => col.notNull())
     // Default to '' so that we can apply unique constraints on did and recordPath columns
     .addColumn('recordPath', 'varchar', (col) => col.notNull().defaultTo(''))
+    .addColumn('blobCids', 'jsonb')
     .addColumn('recordCid', 'varchar')
 
     // human review team state
