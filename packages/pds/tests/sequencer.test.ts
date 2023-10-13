@@ -178,6 +178,8 @@ describe('sequencer', () => {
     }
     await expect(overloadBuffer).rejects.toThrow('Stream consumer too slow')
 
+    await createPromise
+
     const fromDb = await loadFromDb(lastSeen)
     lastSeen = fromDb.at(-1)?.seq ?? lastSeen
   })
