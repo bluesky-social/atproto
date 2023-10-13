@@ -32,7 +32,7 @@ export class SqlRepoReader extends ReadableBlockstore {
     if (!res) return null
     return {
       cid: CID.parse(res.cid),
-      rev: res.rev ?? '', // @TODO add not-null constraint to rev
+      rev: res.rev,
     }
   }
 
