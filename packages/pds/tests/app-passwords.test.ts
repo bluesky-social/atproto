@@ -101,7 +101,7 @@ describe('app_passwords', () => {
         headers: { authorization: `Bearer ${session.data.accessJwt}` },
       },
     )
-    await expect(attempt).rejects.toThrow('Token could not be verified')
+    await expect(attempt).rejects.toThrow('Bad token scope')
   })
 
   it('lists available app-specific passwords', async () => {
