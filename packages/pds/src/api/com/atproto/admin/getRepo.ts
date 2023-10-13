@@ -1,7 +1,8 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru, mergeRepoViewPdsDetails } from './util'
+import { mergeRepoViewPdsDetails } from './util'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRepo({
@@ -10,10 +11,10 @@ export default function (server: Server, ctx: AppContext) {
       const access = auth.credentials
       const { db, services } = ctx
       const { did } = params
-      const result = await services.account(db).getAccount(did, true)
+      const account = await services.account(db).getAccount(did, true)
       const repoDetail =
-        result &&
-        (await services.moderation(db).views.repoDetail(result, {
+        account &&
+        (await services.moderation(db).views.repoDetail(account, {
           includeEmails: access.moderator,
         }))
 

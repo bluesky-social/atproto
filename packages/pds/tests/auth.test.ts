@@ -1,4 +1,4 @@
-import * as jwt from 'jsonwebtoken'
+import * as jose from 'jose'
 import AtpAgent from '@atproto/api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
@@ -159,9 +159,9 @@ describe('auth', () => {
     const refresh1 = await refreshSession(account.refreshJwt)
     const refresh2 = await refreshSession(account.refreshJwt)
 
-    const token0 = jwt.decode(account.refreshJwt, { json: true })
-    const token1 = jwt.decode(refresh1.refreshJwt, { json: true })
-    const token2 = jwt.decode(refresh2.refreshJwt, { json: true })
+    const token0 = jose.decodeJwt(account.refreshJwt)
+    const token1 = jose.decodeJwt(refresh1.refreshJwt)
+    const token2 = jose.decodeJwt(refresh2.refreshJwt)
 
     expect(typeof token1?.jti).toEqual('string')
     expect(token1?.jti).toEqual(token2?.jti)
@@ -177,7 +177,7 @@ describe('auth', () => {
       password: 'password',
     })
     await refreshSession(account.refreshJwt)
-    const token = jwt.decode(account.refreshJwt, { json: true })
+    const token = jose.decodeJwt(account.refreshJwt)
 
     // Update expiration (i.e. grace period) to end immediately
     const refreshUpdated = await db.db
@@ -219,9 +219,7 @@ describe('auth', () => {
       password: 'password',
     })
     const refreshWithAccess = refreshSession(account.accessJwt)
-    await expect(refreshWithAccess).rejects.toThrow(
-      'Token could not be verified',
-    )
+    await expect(refreshWithAccess).rejects.toThrow('Bad token scope')
   })
 
   it('expired refresh token cannot be used to refresh a session.', async () => {
@@ -231,10 +229,13 @@ describe('auth', () => {
       email: 'holga@test.com',
       password: 'password',
     })
-    const refresh = auth.createRefreshToken({ did: account.did, expiresIn: -1 })
-    const refreshExpired = refreshSession(refresh.jwt)
+    const refreshJwt = await auth.createRefreshToken({
+      did: account.did,
+      expiresIn: -1,
+    })
+    const refreshExpired = refreshSession(refreshJwt)
     await expect(refreshExpired).rejects.toThrow('Token has expired')
-    await deleteSession(refresh.jwt) // No problem revoking an expired token
+    await deleteSession(refreshJwt) // No problem revoking an expired token
   })
 
   it('actor takedown disallows fresh session.', async () => {

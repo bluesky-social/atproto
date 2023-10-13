@@ -1,9 +1,9 @@
+import { DAY, MINUTE } from '@atproto/common'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { AuthScope } from '../../../../auth'
-import { DAY, MINUTE } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createSession({
@@ -55,12 +55,20 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const access = ctx.auth.createAccessToken({
-        did: user.did,
-        scope: appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
-      })
-      const refresh = ctx.auth.createRefreshToken({ did: user.did })
-      await authService.grantRefreshToken(refresh.payload, appPasswordName)
+      const [accessJwt, refreshJwt] = await Promise.all([
+        ctx.auth.createAccessToken({
+          did: user.did,
+          pdsDid: user.pdsDid,
+          scope:
+            appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
+        }),
+        ctx.auth.createRefreshToken({
+          did: user.did,
+          identityDid: ctx.cfg.service.did,
+        }),
+      ])
+      const refreshPayload = ctx.auth.decodeRefreshToken(refreshJwt)
+      await authService.grantRefreshToken(refreshPayload, appPasswordName)
 
       return {
         encoding: 'application/json',
@@ -69,8 +77,8 @@ export default function (server: Server, ctx: AppContext) {
           handle: user.handle,
           email: user.email,
           emailConfirmed: !!user.emailConfirmedAt,
-          accessJwt: access.jwt,
-          refreshJwt: refresh.jwt,
+          accessJwt,
+          refreshJwt,
         },
       }
     },

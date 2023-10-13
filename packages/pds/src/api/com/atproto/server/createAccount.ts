@@ -1,7 +1,10 @@
+import { randomInt } from 'node:crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import disposable from 'disposable-email'
-import { normalizeAndValidateHandle } from '../../../../handle'
 import * as plc from '@did-plc/lib'
+import { MINUTE } from '@atproto/common'
+import { AtprotoData } from '@atproto/identity'
+import { normalizeAndValidateHandle } from '../../../../handle'
 import * as scrypt from '../../../../db/scrypt'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
@@ -9,8 +12,6 @@ import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
-import { AtprotoData } from '@atproto/identity'
-import { MINUTE } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -52,6 +53,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const now = new Date().toISOString()
       const passwordScrypt = await scrypt.genSaltAndHash(password)
+      const pds = await assignPds(ctx)
 
       const result = await ctx.db.transaction(async (dbTxn) => {
         const actorTxn = ctx.services.account(dbTxn)
@@ -66,7 +68,13 @@ export default function (server: Server, ctx: AppContext) {
 
         // Register user before going out to PLC to get a real did
         try {
-          await actorTxn.registerUser({ email, handle, did, passwordScrypt })
+          await actorTxn.registerUser({
+            email,
+            handle,
+            did,
+            pdsId: pds?.id,
+            passwordScrypt,
+          })
         } catch (err) {
           if (err instanceof UserAlreadyExistsError) {
             const got = await actorTxn.getAccount(handle, true)
@@ -104,17 +112,24 @@ export default function (server: Server, ctx: AppContext) {
             .execute()
         }
 
-        const access = ctx.auth.createAccessToken({ did })
-        const refresh = ctx.auth.createRefreshToken({ did })
-        await ctx.services.auth(dbTxn).grantRefreshToken(refresh.payload, null)
+        const [accessJwt, refreshJwt] = await Promise.all([
+          ctx.auth.createAccessToken({ did, pdsDid: pds?.did }),
+          ctx.auth.createRefreshToken({
+            did,
+            identityDid: ctx.cfg.service.did,
+          }),
+        ])
+        const refreshPayload = ctx.auth.decodeRefreshToken(refreshJwt)
+        await ctx.services.auth(dbTxn).grantRefreshToken(refreshPayload, null)
 
         // Setup repo root
+        // @TODO contact pds for repo setup, will look like createAccount but bringing own did
         await repoTxn.createRepo(did, [], now)
 
         return {
           did,
-          accessJwt: access.jwt,
-          refreshJwt: refresh.jwt,
+          accessJwt,
+          refreshJwt,
         }
       })
 
@@ -243,4 +258,12 @@ const getDidAndPlcOp = async (
   }
 
   return { did: input.did, plcOp: null }
+}
+
+// @TODO this implementation is a stub
+const assignPds = async (ctx: AppContext) => {
+  const pdses = await ctx.db.db.selectFrom('pds').selectAll().execute()
+  if (!pdses.length) return
+  const pds = pdses.at(randomInt(pdses.length))
+  return pds
 }

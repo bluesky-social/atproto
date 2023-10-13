@@ -2,7 +2,7 @@ import { sql } from 'kysely'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { ListKeyset } from '../../../../services/account'
-import { authPassthru } from './util'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({

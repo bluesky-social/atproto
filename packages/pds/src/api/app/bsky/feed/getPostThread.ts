@@ -22,12 +22,29 @@ import {
   getRepoRev,
   handleReadAfterWrite,
 } from '../util/read-after-write'
-import { authPassthru } from '../../../com/atproto/admin/util'
+import { authPassthru, proxy, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.accessOrRoleVerifier,
     handler: async ({ req, params, auth }) => {
+      if (auth.credentials.type === 'access') {
+        const proxied = await proxy(
+          ctx,
+          auth.credentials.audience,
+          async (agent) => {
+            const result = await agent.api.app.bsky.feed.getPostThread(
+              params,
+              authPassthru(req),
+            )
+            return resultPassthru(result)
+          },
+        )
+        if (proxied !== null) {
+          return proxied
+        }
+      }
+
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null
 

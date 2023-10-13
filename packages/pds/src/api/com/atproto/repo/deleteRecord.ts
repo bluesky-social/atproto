@@ -5,6 +5,7 @@ import AppContext from '../../../../context'
 import { BadCommitSwapError, BadRecordSwapError } from '../../../../repo'
 import { CID } from 'multiformats/cid'
 import { ConcurrentWriteError } from '../../../../services/repo'
+import { proxy, authPassthru, ensureThisPds } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.deleteRecord({
@@ -21,7 +22,23 @@ export default function (server: Server, ctx: AppContext) {
         calcPoints: () => 1,
       },
     ],
-    handler: async ({ input, auth }) => {
+    handler: async ({ input, auth, req }) => {
+      const proxied = await proxy(
+        ctx,
+        auth.credentials.audience,
+        async (agent) => {
+          await agent.api.com.atproto.repo.deleteRecord(
+            input.body,
+            authPassthru(req, true),
+          )
+        },
+      )
+      if (proxied !== null) {
+        return proxied
+      }
+
+      ensureThisPds(ctx, auth.credentials.pdsDid)
+
       const { repo, collection, rkey, swapCommit, swapRecord } = input.body
       const did = await ctx.services.account(ctx.db).getDidForActor(repo)
 

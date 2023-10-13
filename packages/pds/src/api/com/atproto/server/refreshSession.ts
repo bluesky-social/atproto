@@ -22,10 +22,10 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const lastRefreshId = ctx.auth.verifyToken(
+      const { jti: lastRefreshId } = await ctx.auth.verifyToken(
         ctx.auth.getToken(req) ?? '',
         [],
-      ).jti
+      )
       if (!lastRefreshId) {
         throw new Error('Unexpected missing refresh token id')
       }
@@ -34,19 +34,22 @@ export default function (server: Server, ctx: AppContext) {
         const authTxn = ctx.services.auth(dbTxn)
         const rotateRes = await authTxn.rotateRefreshToken(lastRefreshId)
         if (!rotateRes) return null
-        const refresh = ctx.auth.createRefreshToken({
+        const refreshJwt = await ctx.auth.createRefreshToken({
           did: user.did,
+          identityDid: ctx.cfg.service.did,
           jti: rotateRes.nextId,
         })
-        await authTxn.grantRefreshToken(refresh.payload, rotateRes.appPassName)
-        return { refresh, appPassName: rotateRes.appPassName }
+        const refreshPayload = ctx.auth.decodeRefreshToken(refreshJwt)
+        await authTxn.grantRefreshToken(refreshPayload, rotateRes.appPassName)
+        return { refreshJwt, appPassName: rotateRes.appPassName }
       })
       if (res === null) {
         throw new InvalidRequestError('Token has been revoked', 'ExpiredToken')
       }
 
-      const access = ctx.auth.createAccessToken({
+      const accessJwt = await ctx.auth.createAccessToken({
         did: user.did,
+        pdsDid: user.pdsDid,
         scope: res.appPassName === null ? AuthScope.Access : AuthScope.AppPass,
       })
 
@@ -55,8 +58,8 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           did: user.did,
           handle: user.handle,
-          accessJwt: access.jwt,
-          refreshJwt: res.refresh.jwt,
+          accessJwt: accessJwt,
+          refreshJwt: res.refreshJwt,
         },
       }
     },

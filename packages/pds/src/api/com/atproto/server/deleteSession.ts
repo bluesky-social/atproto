@@ -9,9 +9,12 @@ export default function (server: Server, ctx: AppContext) {
     if (!token) {
       throw new AuthRequiredError()
     }
-    const refreshToken = ctx.auth.verifyToken(token, [AuthScope.Refresh], {
-      ignoreExpiration: true,
-    })
+    const refreshToken = await ctx.auth.verifyToken(
+      token,
+      [AuthScope.Refresh],
+      { clockTolerance: Infinity }, // ignore expiration
+    )
+
     if (!refreshToken.jti) {
       throw new Error('Unexpected missing refresh token id')
     }

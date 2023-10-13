@@ -20,6 +20,8 @@ export class TestPds {
   ) {}
 
   static async create(config: PdsConfig): Promise<TestPds> {
+    const jwtSigningKey = await Secp256k1Keypair.create({ exportable: true })
+    const jwtSigningPriv = ui8.toString(await jwtSigningKey.export(), 'hex')
     const repoSigningKey = await Secp256k1Keypair.create({ exportable: true })
     const repoSigningPriv = ui8.toString(await repoSigningKey.export(), 'hex')
     const plcRotationKey = await Secp256k1Keypair.create({ exportable: true })
@@ -39,6 +41,7 @@ export class TestPds {
       moderatorPassword: MOD_PASSWORD,
       triagePassword: TRIAGE_PASSWORD,
       jwtSecret: 'jwt-secret',
+      jwtSigningKeyK256PrivateKeyHex: jwtSigningPriv,
       serviceHandleDomains: ['.test'],
       sequencerLeaderLockId: uniqueLockId(),
       bskyAppViewUrl: 'https://appview.invalid',
