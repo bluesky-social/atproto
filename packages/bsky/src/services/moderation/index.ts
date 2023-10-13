@@ -116,35 +116,6 @@ export class ModerationService {
     return await builder.execute()
   }
 
-  // May be we don't need this anymore?
-  async getCurrentActions(
-    subject: { did: string } | { uri: AtUri } | { cids: CID[] },
-  ) {
-    const { ref } = this.db.db.dynamic
-    let builder = this.db.db.selectFrom('moderation_event').selectAll()
-    if ('did' in subject) {
-      builder = builder
-        .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
-        .where('subjectDid', '=', subject.did)
-    } else if ('uri' in subject) {
-      builder = builder
-        .where('subjectType', '=', 'com.atproto.repo.strongRef')
-        .where('subjectUri', '=', subject.uri.toString())
-    } else {
-      const blobsForAction = this.db.db
-        .selectFrom('moderation_action_subject_blob')
-        .selectAll()
-        .whereRef('actionId', '=', ref('moderation_action.id'))
-        .where(
-          'cid',
-          'in',
-          subject.cids.map((cid) => cid.toString()),
-        )
-      builder = builder.whereExists(blobsForAction)
-    }
-    return await builder.execute()
-  }
-
   buildSubjectInfo(
     subject: { did: string } | { uri: AtUri; cid: CID },
     subjectBlobCids?: CID[],
