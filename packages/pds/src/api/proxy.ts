@@ -47,7 +47,7 @@ export const getPdsEndpoint = (host: string) => {
   if (service.hostname === 'localhost') {
     service.protocol = 'http:'
   }
-  return service.href
+  return service.origin
 }
 
 export const isThisPds = (

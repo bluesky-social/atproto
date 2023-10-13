@@ -12,7 +12,7 @@ import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
-import { getPdsEndpoint } from '../../../proxy'
+import { getPdsEndpoint, isThisPds } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -22,6 +22,12 @@ export default function (server: Server, ctx: AppContext) {
     },
     handler: async ({ input, req }) => {
       const { email, password, inviteCode } = input.body
+
+      if (!ctx.cfg.service.isEntryway && !input.body.did && !input.body.plcOp) {
+        throw new InvalidRequestError(
+          'non-entryway pds requires bringing a DID or PLC operation',
+        )
+      }
 
       if (ctx.cfg.invites.required && !inviteCode) {
         throw new InvalidRequestError(
@@ -48,10 +54,9 @@ export default function (server: Server, ctx: AppContext) {
         await ensureCodeIsAvailable(ctx.db, inviteCode)
       }
 
-      const pds = await assignPds(ctx)
-
       // determine the did & any plc ops we need to send
       // if the provided did document is poorly setup, we throw
+      const pds = await assignPds(ctx)
       const { did, plcOp } = await getDidAndPlcOp(ctx, pds, handle, input.body)
 
       const now = new Date().toISOString()
@@ -90,7 +95,7 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         // Generate a real did with PLC
-        if (plcOp && !pds) {
+        if (plcOp && isThisPds(ctx, pds?.did)) {
           try {
             await ctx.plcClient.sendOperation(did, plcOp)
           } catch (err) {
@@ -114,19 +119,6 @@ export default function (server: Server, ctx: AppContext) {
             .execute()
         }
 
-        if (pds) {
-          const agent = new AtpAgent({ service: getPdsEndpoint(pds.host) })
-          const { data: acct } = await agent.com.atproto.server.createAccount({
-            ...input.body,
-            plcOp: plcOp ? cborEncode(plcOp) : undefined,
-          })
-          return {
-            did: acct.did,
-            accessJwt: acct.accessJwt,
-            refreshJwt: acct.refreshJwt,
-          }
-        }
-
         const [accessJwt, refreshJwt] = await Promise.all([
           ctx.auth.createAccessToken({ did }),
           ctx.auth.createRefreshToken({
@@ -137,9 +129,17 @@ export default function (server: Server, ctx: AppContext) {
         const refreshPayload = ctx.auth.decodeRefreshToken(refreshJwt)
         await ctx.services.auth(dbTxn).grantRefreshToken(refreshPayload, null)
 
-        // Setup repo root
-        // @TODO contact pds for repo setup, will look like createAccount but bringing own did
-        await repoTxn.createRepo(did, [], now)
+        if (!pds || isThisPds(ctx, pds.did)) {
+          // Setup repo root
+          await repoTxn.createRepo(did, [], now)
+        } else {
+          const agent = new AtpAgent({ service: getPdsEndpoint(pds.host) })
+          await agent.com.atproto.server.createAccount({
+            ...input.body,
+            did,
+            plcOp: plcOp ? cborEncode(plcOp) : undefined,
+          })
+        }
 
         return {
           did,
@@ -309,7 +309,8 @@ const getDidAndPlcOp = async (
     )
   }
 
-  if (input.did.startsWith('did:plc')) {
+  // non-entryway pds doesn't require matching plc rotation key, will be handled by its entryway
+  if (input.did.startsWith('did:plc') && ctx.cfg.service.isEntryway) {
     const data = await ctx.plcClient.getDocumentData(input.did)
     if (!data.rotationKeys.includes(ctx.plcRotationKey.did())) {
       throw new InvalidRequestError(
