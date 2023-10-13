@@ -21,6 +21,7 @@ import { AccountService } from '../account'
 import { RecordService } from '../record'
 import { ModerationReportRowWithHandle } from '.'
 import { ids } from '../../lexicon/lexicons'
+import { OptionalJoin } from '../../db/types'
 
 export class ModerationViews {
   constructor(private db: Database) {}
@@ -41,29 +42,29 @@ export class ModerationViews {
 
     const [info, actionResults, invitedBy] = await Promise.all([
       await this.db.db
-        .selectFrom('did_handle')
-        .leftJoin('user_account', 'user_account.did', 'did_handle.did')
+        .selectFrom('user_account')
         .leftJoin('record as profile_record', (join) =>
           join
-            .onRef('profile_record.did', '=', 'did_handle.did')
+            .onRef('profile_record.did', '=', 'user_account.did')
             .on('profile_record.collection', '=', ids.AppBskyActorProfile)
             .on('profile_record.rkey', '=', 'self'),
         )
         .leftJoin('ipld_block as profile_block', (join) =>
           join
             .onRef('profile_block.cid', '=', 'profile_record.cid')
-            .onRef('profile_block.creator', '=', 'did_handle.did'),
+            .onRef('profile_block.creator', '=', 'user_account.did'),
         )
         .where(
-          'did_handle.did',
+          'user_account.did',
           'in',
           results.map((r) => r.did),
         )
         .select([
-          'did_handle.did as did',
+          'user_account.did as did',
           'user_account.email as email',
           'user_account.invitesDisabled as invitesDisabled',
           'user_account.inviteNote as inviteNote',
+          'user_account.createdAt',
           'profile_block.content as profileBytes',
         ])
         .execute(),
@@ -93,7 +94,7 @@ export class ModerationViews {
     )
 
     const views = results.map((r) => {
-      const { email, invitesDisabled, profileBytes, inviteNote } =
+      const { email, invitesDisabled, profileBytes, inviteNote, createdAt } =
         infoByDid[r.did] ?? {}
       const action = actionByDid[r.did]
       const relatedRecords: object[] = []
@@ -105,7 +106,7 @@ export class ModerationViews {
         handle: r.handle,
         email: opts.includeEmails && email ? email : undefined,
         relatedRecords,
-        indexedAt: r.indexedAt,
+        indexedAt: r.indexedAt ?? createdAt,
         moderation: {
           currentAction: action
             ? {
@@ -605,7 +606,7 @@ export class ModerationViews {
   }
 }
 
-type RepoResult = DidHandle & RepoRoot
+type RepoResult = DidHandle & OptionalJoin<RepoRoot>
 
 type ActionResult = Selectable<ModerationAction>
 

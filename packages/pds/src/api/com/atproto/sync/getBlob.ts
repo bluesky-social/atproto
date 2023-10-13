@@ -11,10 +11,20 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.optionalAccessOrRoleVerifier,
     handler: async ({ params, res, auth }) => {
       const { ref } = ctx.db.db.dynamic
+      const { did } = params
+
+      if (!isUserOrAdmin(auth, did)) {
+        const available = await ctx.services
+          .account(ctx.db)
+          .isRepoAvailable(did)
+        if (!available) {
+          throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
+        }
+      }
+
       const found = await ctx.db.db
         .selectFrom('blob')
         .selectAll()
-        .innerJoin('repo_root', 'repo_root.did', 'blob.creator')
         .innerJoin('repo_blob', (join) =>
           join
             .onRef('repo_blob.cid', '=', 'blob.cid')
@@ -23,10 +33,6 @@ export default function (server: Server, ctx: AppContext) {
         .where('blob.cid', '=', params.cid)
         .where('blob.creator', '=', params.did)
         .where(notSoftDeletedClause(ref('repo_blob')))
-        .if(!isUserOrAdmin(auth, params.did), (qb) =>
-          // takedown check for anyone other than an admin or the user
-          qb.where(notSoftDeletedClause(ref('repo_root'))),
-        )
         .executeTakeFirst()
       if (!found) {
         throw new InvalidRequestError('Blob not found')

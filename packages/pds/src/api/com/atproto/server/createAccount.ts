@@ -157,7 +157,7 @@ export const ensureCodeIsAvailable = async (
     .selectAll()
     .whereNotExists((qb) =>
       qb
-        .selectFrom('repo_root')
+        .selectFrom('user_account')
         .selectAll()
         .where('takedownId', 'is not', null)
         .whereRef('did', '=', ref('invite_code.forUser')),
