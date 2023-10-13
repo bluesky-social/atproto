@@ -468,6 +468,7 @@ export class AccountService {
       const usesRes = await this.db.db
         .selectFrom('invite_code_use')
         .where('code', 'in', codes)
+        .orderBy('usedAt', 'desc')
         .selectAll()
         .execute()
       for (const use of usesRes) {
