@@ -6,6 +6,7 @@ import { MINUTE } from '@atproto/common'
 
 const REASON_ACCT_DELETION = 'ACCOUNT DELETION'
 
+// @TODO negotiate account deletions between pds and entryway
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deleteAccount({
     rateLimit: {
