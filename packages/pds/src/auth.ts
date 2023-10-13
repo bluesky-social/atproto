@@ -40,18 +40,40 @@ export type RefreshToken = AuthToken & { jti: string; aud: string }
 
 export class ServerAuth {
   private _signingSecret: KeyObject
-  private _signingKeyPromise?: Promise<KeyObject>
+  private _signingKey?: KeyObject
   private _adminPass: string
   private _moderatorPass?: string
   private _triagePass?: string
 
-  constructor(opts: ServerAuthOpts) {
-    this._signingSecret = createSecretKey(Buffer.from(opts.jwtSecret))
-    this._signingKeyPromise =
-      opts.jwtSigningKey && createPrivateKeyObject(opts.jwtSigningKey)
+  constructor(opts: {
+    signingSecret: KeyObject
+    signingKey?: KeyObject
+    adminPass: string
+    moderatorPass?: string
+    triagePass?: string
+  }) {
+    this._signingSecret = opts.signingSecret
+    this._signingKey = opts.signingKey
     this._adminPass = opts.adminPass
     this._moderatorPass = opts.moderatorPass
     this._triagePass = opts.triagePass
+  }
+
+  static async create(opts: ServerAuthOpts): Promise<ServerAuth> {
+    const signingSecret = createSecretKey(Buffer.from(opts.jwtSecret))
+    const signingKey = opts.jwtSigningKey
+      ? await createPrivateKeyObject(opts.jwtSigningKey)
+      : undefined
+    const adminPass = opts.adminPass
+    const moderatorPass = opts.moderatorPass
+    const triagePass = opts.triagePass
+    return new ServerAuth({
+      signingSecret,
+      signingKey,
+      adminPass,
+      moderatorPass,
+      triagePass,
+    })
   }
 
   async createAccessToken(opts: {
@@ -70,8 +92,8 @@ export class ServerAuth {
       signer.setAudience(opts.pdsDid)
     }
 
-    if (this._signingKeyPromise) {
-      const key = await this._signingKeyPromise
+    if (this._signingKey) {
+      const key = this._signingKey
       return signer.setProtectedHeader({ alg: SECP256K1_JWT }).sign(key)
     } else {
       const key = this._signingSecret
@@ -94,8 +116,8 @@ export class ServerAuth {
       .setIssuedAt()
       .setExpirationTime(expiresIn)
 
-    if (this._signingKeyPromise) {
-      const key = await this._signingKeyPromise
+    if (this._signingKey) {
+      const key = await this._signingKey
       return signer.setProtectedHeader({ alg: SECP256K1_JWT }).sign(key)
     } else {
       const key = this._signingSecret
@@ -178,8 +200,8 @@ export class ServerAuth {
     const header = jose.decodeProtectedHeader(token)
     let result: jose.JWTVerifyResult
     try {
-      if (header.alg === SECP256K1_JWT && this._signingKeyPromise) {
-        const key = await this._signingKeyPromise
+      if (header.alg === SECP256K1_JWT && this._signingKey) {
+        const key = await this._signingKey
         result = await jose.jwtVerify(token, key, options)
       } else {
         const key = this._signingSecret
