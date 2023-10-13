@@ -15,24 +15,29 @@ export default function (server: Server, ctx: AppContext) {
     const backfillTime = new Date(
       Date.now() - ctx.cfg.subscription.repoBackfillLimitMs,
     ).toISOString()
+    let outboxCursor: number | undefined = undefined
     if (cursor !== undefined) {
       const [next, curr] = await Promise.all([
         ctx.sequencer.next(cursor),
         ctx.sequencer.curr(),
       ])
-      if (next && next.sequencedAt < backfillTime) {
+      if (cursor > (curr?.seq ?? 0)) {
+        throw new InvalidRequestError('Cursor in the future.', 'FutureCursor')
+      } else if (next && next.sequencedAt < backfillTime) {
+        // if cursor is before backfill time, find earliest cursor from backfill window
         yield {
           $type: '#info',
           name: 'OutdatedCursor',
           message: 'Requested cursor exceeded limit. Possibly missing events',
         }
-      }
-      if (cursor > (curr?.seq ?? 0)) {
-        throw new InvalidRequestError('Cursor in the future.', 'FutureCursor')
+        const startEvt = await ctx.sequencer.earliestAfterTime(backfillTime)
+        outboxCursor = startEvt?.seq ? startEvt.seq - 1 : undefined
+      } else {
+        outboxCursor = cursor
       }
     }
 
-    for await (const evt of outbox.events(cursor, backfillTime, signal)) {
+    for await (const evt of outbox.events(outboxCursor, signal)) {
       if (evt.type === 'commit') {
         yield {
           $type: '#commit',

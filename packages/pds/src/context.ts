@@ -159,7 +159,7 @@ export class AppContext {
         { exportable: true },
       ))
 
-    const auth = new ServerAuth({
+    const auth = await ServerAuth.create({
       jwtSigningKey,
       jwtVerifyKeyHex: secrets.jwtVerifyKey?.publicKeyHex,
       jwtSecret: secrets.jwtSecret,

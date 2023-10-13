@@ -124,3 +124,25 @@ export class AsyncBufferFullError extends Error {
     super(`ReachedMaxBufferSize: ${maxSize}`)
   }
 }
+
+export const handleAllSettledErrors = (
+  results: PromiseSettledResult<unknown>[],
+) => {
+  const errors = results.filter(isRejected).map((res) => res.reason)
+  if (errors.length === 0) {
+    return
+  }
+  if (errors.length === 1) {
+    throw errors[0]
+  }
+  throw new AggregateError(
+    errors,
+    'Multiple errors: ' + errors.map((err) => err?.message).join('\n'),
+  )
+}
+
+const isRejected = (
+  result: PromiseSettledResult<unknown>,
+): result is PromiseRejectedResult => {
+  return result.status === 'rejected'
+}
