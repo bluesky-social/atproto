@@ -18,7 +18,10 @@ export default function (server: Server, ctx: AppContext) {
         async (agent) => {
           const result = await agent.api.com.atproto.repo.uploadBlob(
             await streamToBytes(input.body), // @TODO proxy streaming
-            authPassthru(req, true),
+            {
+              ...authPassthru(req),
+              encoding: input.encoding,
+            },
           )
           return resultPassthru(result)
         },

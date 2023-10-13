@@ -161,6 +161,7 @@ export class AppContext {
 
     const auth = await ServerAuth.create({
       jwtSigningKey,
+      jwtVerifyKeyHex: secrets.jwtVerifyKey?.publicKeyHex,
       jwtSecret: secrets.jwtSecret,
       adminPass: secrets.adminPassword,
       moderatorPass: secrets.moderatorPassword,
@@ -221,11 +222,11 @@ export class AppContext {
   }
 
   get accessVerifier() {
-    return auth.accessVerifier(this.auth)
+    return auth.accessVerifier(this.auth, this)
   }
 
   get accessVerifierNotAppPassword() {
-    return auth.accessVerifierNotAppPassword(this.auth)
+    return auth.accessVerifierNotAppPassword(this.auth, this)
   }
 
   get accessVerifierCheckTakedown() {
@@ -241,11 +242,11 @@ export class AppContext {
   }
 
   get accessOrRoleVerifier() {
-    return auth.accessOrRoleVerifier(this.auth)
+    return auth.accessOrRoleVerifier(this.auth, this)
   }
 
   get optionalAccessOrRoleVerifier() {
-    return auth.optionalAccessOrRoleVerifier(this.auth)
+    return auth.optionalAccessOrRoleVerifier(this.auth, this)
   }
 
   async serviceAuthHeaders(did: string, audience?: string) {

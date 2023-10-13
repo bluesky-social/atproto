@@ -13,12 +13,14 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     hostname === 'localhost'
       ? `http://localhost:${port}`
       : `https://${hostname}`
-  const did = env.serviceDid ?? `did:web:${hostname}`
+  const publicHostname = new URL(publicUrl).host
+  const did = env.serviceDid ?? `did:web:${encodeURIComponent(publicHostname)}`
   const serviceCfg: ServerConfig['service'] = {
     port,
     hostname,
     publicUrl,
     did,
+    isEntryway: env.isEntryway !== false, // defaults true
     version: env.version, // default?
     privacyPolicyUrl: env.privacyPolicyUrl,
     termsOfServiceUrl: env.termsOfServiceUrl,
@@ -210,6 +212,7 @@ export type ServiceConfig = {
   hostname: string
   publicUrl: string
   did: string
+  isEntryway: boolean
   version?: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
