@@ -94,9 +94,10 @@ describe('user preferences', () => {
       ],
     })
     // Ensure other prefs were not clobbered
-    const otherPrefs = await network.pds.ctx.actorStore
-      .reader(sc.dids.alice)
-      .pref.getPreferences('com.atproto')
+    const otherPrefs = await network.pds.ctx.actorStore.read(
+      sc.dids.alice,
+      (store) => store.pref.getPreferences('com.atproto'),
+    )
     expect(otherPrefs).toEqual([{ $type: 'com.atproto.server.defs#unknown' }])
   })
 

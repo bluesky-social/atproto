@@ -17,9 +17,9 @@ export default function (server: Server, ctx: AppContext) {
             'Must provide a did to request blob state',
           )
         }
-        const takedown = await ctx.actorStore
-          .reader(did)
-          .repo.blob.getBlobTakedownStatus(CID.parse(blob))
+        const takedown = await ctx.actorStore.read(did, (store) =>
+          store.repo.blob.getBlobTakedownStatus(CID.parse(blob)),
+        )
         if (takedown) {
           body = {
             subject: {
@@ -32,11 +32,14 @@ export default function (server: Server, ctx: AppContext) {
         }
       } else if (uri) {
         const parsedUri = new AtUri(uri)
-        const store = ctx.actorStore.reader(parsedUri.hostname)
-        const [takedown, cid] = await Promise.all([
-          store.record.getRecordTakedownStatus(parsedUri),
-          store.record.getCurrentRecordCid(parsedUri),
-        ])
+        const [takedown, cid] = await ctx.actorStore.read(
+          parsedUri.hostname,
+          (store) =>
+            Promise.all([
+              store.record.getRecordTakedownStatus(parsedUri),
+              store.record.getCurrentRecordCid(parsedUri),
+            ]),
+        )
         if (cid && takedown) {
           body = {
             subject: {

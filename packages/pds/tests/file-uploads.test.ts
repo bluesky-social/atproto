@@ -8,10 +8,12 @@ import { randomBytes } from '@atproto/crypto'
 import { BlobRef } from '@atproto/lexicon'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { users } from './seeds/users'
+import { ActorDb } from '../src/actor-store/db'
 
 describe('file uploads', () => {
   let network: TestNetworkNoAppView
   let ctx: AppContext
+  let aliceDb: ActorDb
   let alice: string
   let bob: string
   let agent: AtpAgent
@@ -28,6 +30,7 @@ describe('file uploads', () => {
     await sc.createAccount('bob', users.bob)
     alice = sc.dids.alice
     bob = sc.dids.bob
+    aliceDb = await network.pds.ctx.actorStore.db(alice)
   })
 
   afterAll(async () => {
@@ -74,9 +77,8 @@ describe('file uploads', () => {
     })
     smallBlob = res.data.blob
 
-    const found = await ctx.actorStore
-      .db(alice)
-      .db.selectFrom('blob')
+    const found = await aliceDb.db
+      .selectFrom('blob')
       .selectAll()
       .where('cid', '=', smallBlob.ref.toString())
       .executeTakeFirst()
@@ -95,9 +97,8 @@ describe('file uploads', () => {
   })
 
   it('after being referenced, the file is moved to permanent storage', async () => {
-    const found = await ctx.actorStore
-      .db(alice)
-      .db.selectFrom('blob')
+    const found = await aliceDb.db
+      .selectFrom('blob')
       .selectAll()
       .where('cid', '=', smallBlob.ref.toString())
       .executeTakeFirst()
@@ -140,9 +141,8 @@ describe('file uploads', () => {
   })
 
   it('does not make a blob permanent if referencing failed', async () => {
-    const found = await ctx.actorStore
-      .db(alice)
-      .db.selectFrom('blob')
+    const found = await aliceDb.db
+      .selectFrom('blob')
       .selectAll()
       .where('cid', '=', largeBlob.ref.toString())
       .executeTakeFirst()
@@ -196,9 +196,8 @@ describe('file uploads', () => {
         encoding: 'image/jpeg',
       } as any)
     expect(uploadAfterPermanent).toEqual(uploadA)
-    const blob = await ctx.actorStore
-      .db(alice)
-      .db.selectFrom('blob')
+    const blob = await aliceDb.db
+      .selectFrom('blob')
       .selectAll()
       .where('cid', '=', uploadAfterPermanent.blob.ref.toString())
       .executeTakeFirstOrThrow()
@@ -226,9 +225,8 @@ describe('file uploads', () => {
       encoding: 'video/mp4',
     } as any)
 
-    const found = await ctx.actorStore
-      .db(alice)
-      .db.selectFrom('blob')
+    const found = await aliceDb.db
+      .selectFrom('blob')
       .selectAll()
       .where('cid', '=', res.data.blob.ref.toString())
       .executeTakeFirst()
@@ -245,9 +243,8 @@ describe('file uploads', () => {
       encoding: 'image/png',
     })
 
-    const found = await ctx.actorStore
-      .db(alice)
-      .db.selectFrom('blob')
+    const found = await aliceDb.db
+      .selectFrom('blob')
       .selectAll()
       .where('cid', '=', res.data.blob.ref.toString())
       .executeTakeFirst()
@@ -264,9 +261,8 @@ describe('file uploads', () => {
       encoding: 'test/fake',
     } as any)
 
-    const found = await ctx.actorStore
-      .db(alice)
-      .db.selectFrom('blob')
+    const found = await aliceDb.db
+      .selectFrom('blob')
       .selectAll()
       .where('cid', '=', res.data.blob.ref.toString())
       .executeTakeFirst()

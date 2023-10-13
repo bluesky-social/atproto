@@ -2,7 +2,7 @@ import path from 'path'
 import { AtpAgent } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
-import { isErrnoException, rmIfExists, wait } from '@atproto/common'
+import { fileExists, isErrnoException, rmIfExists, wait } from '@atproto/common'
 import { ActorDb, getMigrator } from './db'
 import { BackgroundQueue } from '../background'
 import { RecordReader } from './record/reader'
@@ -17,6 +17,7 @@ import { RecordTransactor } from './record/transactor'
 import { CID } from 'multiformats/cid'
 import { LRUCache } from 'lru-cache'
 import DiskBlobStore from '../disk-blobstore'
+import { mkdir } from 'fs/promises'
 
 type ActorStoreResources = {
   repoSigningKey: crypto.Keypair
@@ -41,33 +42,61 @@ export class ActorStore {
     })
   }
 
-  private loadDbFile(did: string): ActorDb {
-    const location = path.join(this.resources.dbDirectory, did)
+  private async getDbLocation(did: string) {
+    const { location } = await this.getDbPartitionAndLocation(did)
+    return location
+  }
+
+  private async getDbPartitionAndLocation(did: string) {
+    const didHash = await crypto.sha256Hex(did)
+    const partition = path.join(this.resources.dbDirectory, didHash.slice(0, 2))
+    const location = path.join(partition, didHash.slice(2))
+    return { partition, location }
+  }
+
+  private async loadDbFile(
+    did: string,
+    shouldCreate = false,
+  ): Promise<ActorDb> {
+    const { partition, location } = await this.getDbPartitionAndLocation(did)
+    const exists = await fileExists(location)
+    if (!exists) {
+      if (shouldCreate) {
+        await mkdir(partition, { recursive: true })
+      } else {
+        throw new InvalidRequestError('Repo not found', 'NotFound')
+      }
+    }
     return Database.sqlite(location)
   }
 
-  db(did: string): ActorDb {
+  async db(did: string): Promise<ActorDb> {
     let got = this.cache.get(did)
     if (!got) {
-      got = this.loadDbFile(did)
+      got = await this.loadDbFile(did)
       this.cache.set(did, got)
     }
     return got
   }
 
-  reader(did: string) {
-    const db = this.db(did)
+  async reader(did: string) {
+    const db = await this.db(did)
     return createActorReader(did, db, this.resources)
   }
 
+  async read<T>(did: string, fn: ActorStoreReadFn<T>) {
+    const reader = await this.reader(did)
+    return fn(reader)
+  }
+
   async transact<T>(did: string, fn: ActorStoreTransactFn<T>) {
-    const db = this.db(did)
+    const db = await this.db(did)
     const result = await transactAndRetryOnLock(did, db, this.resources, fn)
     return result
   }
 
   async create<T>(did: string, fn: ActorStoreTransactFn<T>) {
-    const db = this.loadDbFile(did)
+    const db = await this.loadDbFile(did, true)
     const migrator = getMigrator(db)
     await migrator.migrateToLatestOrThrow()
     const result = await db.transaction((dbTxn) => {
@@ -83,7 +112,7 @@ export class ActorStore {
     if (blobstore instanceof DiskBlobStore) {
       await blobstore.deleteAll()
     } else {
-      const db = this.db(did)
+      const db = await this.db(did)
       const blobRows = await db.db.selectFrom('blob').select('cid').execute()
       const cids = blobRows.map((row) => CID.parse(row.cid))
       await Promise.allSettled(cids.map((cid) => blobstore.delete(cid)))
@@ -95,9 +124,10 @@ export class ActorStore {
       await got.close()
     }
 
-    await rmIfExists(path.join(this.resources.dbDirectory, did))
-    await rmIfExists(path.join(this.resources.dbDirectory, `${did}-wal`))
-    await rmIfExists(path.join(this.resources.dbDirectory, `${did}-shm`))
+    const dbLocation = await this.getDbLocation(did)
+    await rmIfExists(dbLocation)
+    await rmIfExists(`${dbLocation}-wal`)
+    await rmIfExists(`${dbLocation}-shm`)
   }
 
   async close() {

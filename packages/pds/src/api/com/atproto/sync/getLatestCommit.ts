@@ -20,9 +20,9 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
       }
-      const root = await ctx.actorStore
-        .reader(did)
-        .repo.storage.getRootDetailed()
+      const root = await ctx.actorStore.read(did, (store) =>
+        store.repo.storage.getRootDetailed(),
+      )
       if (root === null) {
         throw new InvalidRequestError(
           `Could not find root for DID: ${did}`,

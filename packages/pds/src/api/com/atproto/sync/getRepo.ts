@@ -39,7 +39,7 @@ export const getCarStream = async (
   did: string,
   since?: string,
 ): Promise<stream.Readable> => {
-  const actorDb = ctx.actorStore.db(did)
+  const actorDb = await ctx.actorStore.db(did)
   const storage = new SqlRepoReader(actorDb)
   let carIter: AsyncIterable<Uint8Array>
   try {
