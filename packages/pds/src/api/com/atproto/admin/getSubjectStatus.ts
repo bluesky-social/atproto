@@ -7,7 +7,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getSubjectStatus({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.roleOrAdminService,
     handler: async ({ params }) => {
       const { did, uri, blob } = params
       const modSrvc = ctx.services.moderation(ctx.db)

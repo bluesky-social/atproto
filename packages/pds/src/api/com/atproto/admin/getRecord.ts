@@ -4,7 +4,7 @@ import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRecord({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.role,
     handler: async ({ req, params }) => {
       const { data: recordDetailAppview } =
         await ctx.appViewAgent.com.atproto.admin.getRecord(

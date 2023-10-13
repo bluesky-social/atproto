@@ -22,7 +22,7 @@ export default async (sc: SeedClient, opts?: { inviteCode?: string }) => {
     sc.dids.bob,
     users.bob.displayName,
     users.bob.description,
-    users.alice.selfLabels,
+    users.bob.selfLabels,
   )
 
   return sc
