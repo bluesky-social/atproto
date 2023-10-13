@@ -7,8 +7,15 @@ import { BlobNotFoundError } from '@atproto/repo'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlob({
     auth: ctx.authVerifier.optionalAccessOrRole,
-    handler: async ({ params, res }) => {
-      // @TODO verify repo is not taken down
+    handler: async ({ params, res, auth }) => {
+      if (ctx.authVerifier.isUserOrAdmin(auth, params.did)) {
+        const available = await ctx.services
+          .account(ctx.db)
+          .isRepoAvailable(params.did)
+        if (!available) {
+          throw new InvalidRequestError('Blob not found')
+        }
+      }
       const cid = CID.parse(params.cid)
       const found = await ctx.actorStore.read(params.did, async (store) => {
         try {
