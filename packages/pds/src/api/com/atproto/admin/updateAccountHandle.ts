@@ -10,7 +10,7 @@ import { httpLogger } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateAccountHandle({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.role,
     handler: async ({ input, auth }) => {
       if (!auth.credentials.admin) {
         throw new AuthRequiredError('Insufficient privileges')

@@ -3,7 +3,7 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.updateSeen({
-    auth: ctx.accessVerifier,
+    auth: ctx.authVerifier.access,
     handler: async ({ input, auth }) => {
       const requester = auth.credentials.did
 
