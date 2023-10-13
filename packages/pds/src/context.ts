@@ -23,11 +23,13 @@ import { DiskBlobStore } from './disk-blobstore'
 import { getRedisClient } from './redis'
 import { ActorStore } from './actor-store'
 import { ServiceDb } from './service-db'
+import { LocalViewer } from './read-after-write/viewer'
 
 export type AppContextOptions = {
   db: ServiceDb
   actorStore: ActorStore
   blobstore: (did: string) => BlobStore
+  localViewer: (did: string) => Promise<LocalViewer>
   mailer: ServerMailer
   moderationMailer: ModerationMailer
   didCache: DidSqlCache
@@ -49,6 +51,7 @@ export class AppContext {
   public db: ServiceDb
   public actorStore: ActorStore
   public blobstore: (did: string) => BlobStore
+  public localViewer: (did: string) => Promise<LocalViewer>
   public mailer: ServerMailer
   public moderationMailer: ModerationMailer
   public didCache: DidSqlCache
@@ -69,6 +72,7 @@ export class AppContext {
     this.db = opts.db
     this.actorStore = opts.actorStore
     this.blobstore = opts.blobstore
+    this.localViewer = opts.localViewer
     this.mailer = opts.mailer
     this.moderationMailer = opts.moderationMailer
     this.didCache = opts.didCache
@@ -173,12 +177,18 @@ export class AppContext {
     const actorStore = new ActorStore({
       repoSigningKey,
       blobstore,
-      appViewAgent,
       dbDirectory: cfg.db.directory,
-      pdsHostname: cfg.service.hostname,
-      appViewDid: cfg.bskyAppView.did,
-      appViewCdnUrlPattern: cfg.bskyAppView.cdnUrlPattern,
       backgroundQueue,
+    })
+
+    const localViewer = LocalViewer.creator({
+      actorStore,
+      serviceDb: db,
+      signingKey: repoSigningKey,
+      appViewAgent,
+      pdsHostname: cfg.service.hostname,
+      appviewDid: cfg.bskyAppView.did,
+      appviewCdnUrlPattern: cfg.bskyAppView.cdnUrlPattern,
     })
 
     const services = createServices()
@@ -187,6 +197,7 @@ export class AppContext {
       db,
       actorStore,
       blobstore,
+      localViewer,
       mailer,
       moderationMailer,
       didCache,

@@ -2,9 +2,11 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { authPassthru } from '../../../../api/com/atproto/admin/util'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/actor/getProfile'
-import { handleReadAfterWrite } from '../util/read-after-write'
-import { LocalRecords } from '../../../../actor-store/local/reader'
-import { ActorStoreReader } from '../../../../actor-store'
+import {
+  LocalViewer,
+  handleReadAfterWrite,
+  LocalRecords,
+} from '../../../../read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
@@ -28,10 +30,10 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const getProfileMunge = async (
-  store: ActorStoreReader,
+  localViewer: LocalViewer,
   original: OutputSchema,
   local: LocalRecords,
 ): Promise<OutputSchema> => {
   if (!local.profile) return original
-  return store.local.updateProfileDetailed(original, local.profile.record)
+  return localViewer.updateProfileDetailed(original, local.profile.record)
 }

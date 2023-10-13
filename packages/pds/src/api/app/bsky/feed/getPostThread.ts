@@ -13,15 +13,13 @@ import {
   QueryParams,
 } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import {
-  LocalRecords,
-  RecordDescript,
-} from '../../../../actor-store/local/reader'
-import {
+  LocalViewer,
   getLocalLag,
   getRepoRev,
   handleReadAfterWrite,
-} from '../util/read-after-write'
-import { ActorStoreReader } from '../../../../actor-store'
+  LocalRecords,
+  RecordDescript,
+} from '../../../../read-after-write'
 import { authPassthru } from '../../../com/atproto/admin/util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -58,7 +56,7 @@ export default function (server: Server, ctx: AppContext) {
       } catch (err) {
         if (err instanceof AppBskyFeedGetPostThread.NotFoundError) {
           const headers = err.headers
-          const store = await ctx.actorStore.reader(requester)
+          const store = await ctx.localViewer(requester)
           const local = await readAfterWriteNotFound(
             ctx,
             store,
@@ -91,7 +89,7 @@ export default function (server: Server, ctx: AppContext) {
 // ----------------
 
 const getPostThreadMunge = async (
-  store: ActorStoreReader,
+  localViewer: LocalViewer,
   original: OutputSchema,
   local: LocalRecords,
 ): Promise<OutputSchema> => {
@@ -100,7 +98,11 @@ const getPostThreadMunge = async (
   if (!isThreadViewPost(original.thread)) {
     return original
   }
-  const thread = await addPostsToThread(store, original.thread, local.posts)
+  const thread = await addPostsToThread(
+    localViewer,
+    original.thread,
+    local.posts,
+  )
   return {
     ...original,
     thread,
@@ -108,7 +110,7 @@ const getPostThreadMunge = async (
 }
 
 const addPostsToThread = async (
-  actorStore: ActorStoreReader,
+  localViewer: LocalViewer,
   original: ThreadViewPost,
   posts: RecordDescript<PostRecord>[],
 ) => {
@@ -116,7 +118,7 @@ const addPostsToThread = async (
   if (inThread.length === 0) return original
   let thread: ThreadViewPost = original
   for (const record of inThread) {
-    thread = await insertIntoThreadReplies(actorStore, thread, record)
+    thread = await insertIntoThreadReplies(localViewer, thread, record)
   }
   return thread
 }
@@ -134,12 +136,12 @@ const findPostsInThread = (
 }
 
 const insertIntoThreadReplies = async (
-  actorStore: ActorStoreReader,
+  localViewer: LocalViewer,
   view: ThreadViewPost,
   descript: RecordDescript<PostRecord>,
 ): Promise<ThreadViewPost> => {
   if (descript.record.reply?.parent.uri === view.post.uri) {
-    const postView = await threadPostView(actorStore, descript)
+    const postView = await threadPostView(localViewer, descript)
     if (!postView) return view
     const replies = [postView, ...(view.replies ?? [])]
     return {
@@ -151,7 +153,7 @@ const insertIntoThreadReplies = async (
   const replies = await Promise.all(
     view.replies.map(async (reply) =>
       isThreadViewPost(reply)
-        ? await insertIntoThreadReplies(actorStore, reply, descript)
+        ? await insertIntoThreadReplies(localViewer, reply, descript)
         : reply,
     ),
   )
@@ -162,10 +164,10 @@ const insertIntoThreadReplies = async (
 }
 
 const threadPostView = async (
-  actorStore: ActorStoreReader,
+  localViewer: LocalViewer,
   descript: RecordDescript<PostRecord>,
 ): Promise<ThreadViewPost | null> => {
-  const postView = await actorStore.local.getPost(descript)
+  const postView = await localViewer.getPost(descript)
   if (!postView) return null
   return {
     $type: 'app.bsky.feed.defs#threadViewPost',
@@ -178,7 +180,7 @@ const threadPostView = async (
 
 const readAfterWriteNotFound = async (
   ctx: AppContext,
-  store: ActorStoreReader,
+  localViewer: LocalViewer,
   params: QueryParams,
   requester: string,
   headers?: Headers,
@@ -190,13 +192,13 @@ const readAfterWriteNotFound = async (
   if (uri.hostname !== requester) {
     return null
   }
-  const local = await store.local.getRecordsSinceRev(rev)
+  const local = await localViewer.getRecordsSinceRev(rev)
   const found = local.posts.find((p) => p.uri.toString() === uri.toString())
   if (!found) return null
-  let thread = await threadPostView(store, found)
+  let thread = await threadPostView(localViewer, found)
   if (!thread) return null
   const rest = local.posts.filter((p) => p.uri.toString() !== uri.toString())
-  thread = await addPostsToThread(store, thread, rest)
+  thread = await addPostsToThread(localViewer, thread, rest)
   const highestParent = getHighestParent(thread)
   if (highestParent) {
     try {

@@ -1,12 +1,10 @@
 import path from 'path'
-import { AtpAgent } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import { fileExists, isErrnoException, rmIfExists, wait } from '@atproto/common'
 import { ActorDb, getMigrator } from './db'
 import { BackgroundQueue } from '../background'
 import { RecordReader } from './record/reader'
-import { LocalReader } from './local/reader'
 import { PreferenceReader } from './preference/reader'
 import { RepoReader } from './repo/reader'
 import { RepoTransactor } from './repo/transactor'
@@ -24,10 +22,6 @@ type ActorStoreResources = {
   blobstore: (did: string) => BlobStore
   backgroundQueue: BackgroundQueue
   dbDirectory: string
-  pdsHostname: string
-  appViewAgent?: AtpAgent
-  appViewDid?: string
-  appViewCdnUrlPattern?: string
 }
 
 export class ActorStore {
@@ -175,15 +169,7 @@ const createActorTransactor = (
   db: ActorDb,
   resources: ActorStoreResources,
 ): ActorStoreTransactor => {
-  const {
-    repoSigningKey,
-    blobstore,
-    backgroundQueue,
-    pdsHostname,
-    appViewAgent,
-    appViewDid,
-    appViewCdnUrlPattern,
-  } = resources
+  const { repoSigningKey, blobstore, backgroundQueue } = resources
   const userBlobstore = blobstore(did)
   return {
     db,
@@ -195,14 +181,6 @@ const createActorTransactor = (
       backgroundQueue,
     ),
     record: new RecordTransactor(db, userBlobstore),
-    local: new LocalReader(
-      db,
-      repoSigningKey,
-      pdsHostname,
-      appViewAgent,
-      appViewDid,
-      appViewCdnUrlPattern,
-    ),
     pref: new PreferenceTransactor(db),
   }
 }
@@ -212,26 +190,11 @@ const createActorReader = (
   db: ActorDb,
   resources: ActorStoreResources,
 ): ActorStoreReader => {
-  const {
-    repoSigningKey,
-    blobstore,
-    pdsHostname,
-    appViewAgent,
-    appViewDid,
-    appViewCdnUrlPattern,
-  } = resources
+  const { blobstore } = resources
   return {
     db,
     repo: new RepoReader(db, blobstore(did)),
     record: new RecordReader(db),
-    local: new LocalReader(
-      db,
-      repoSigningKey,
-      pdsHostname,
-      appViewAgent,
-      appViewDid,
-      appViewCdnUrlPattern,
-    ),
     pref: new PreferenceReader(db),
     transact: async <T>(fn: ActorStoreTransactFn<T>): Promise<T> => {
       return db.transaction((dbTxn) => {
@@ -249,7 +212,6 @@ export type ActorStoreReader = {
   db: ActorDb
   repo: RepoReader
   record: RecordReader
-  local: LocalReader
   pref: PreferenceReader
   transact: <T>(fn: ActorStoreTransactFn<T>) => Promise<T>
 }
@@ -258,6 +220,5 @@ export type ActorStoreTransactor = {
   db: ActorDb
   repo: RepoTransactor
   record: RecordTransactor
-  local: LocalReader
   pref: PreferenceTransactor
 }

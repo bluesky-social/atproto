@@ -1,26 +1,7 @@
 import { Headers } from '@atproto/xrpc'
-import { readStickyLogger as log } from '../../../../logger'
-import { LocalRecords } from '../../../../actor-store/local/reader'
-import AppContext from '../../../../context'
-import { ActorStoreReader } from '../../../../actor-store'
-
-export type ApiRes<T> = {
-  headers: Headers
-  data: T
-}
-
-export type MungeFn<T> = (
-  actorStore: ActorStoreReader,
-  original: T,
-  local: LocalRecords,
-  requester: string,
-) => Promise<T>
-
-export type HandlerResponse<T> = {
-  encoding: 'application/json'
-  body: T
-  headers?: Record<string, string>
-}
+import { readStickyLogger as log } from '../logger'
+import AppContext from '../context'
+import { ApiRes, HandlerResponse, LocalRecords, MungeFn } from './types'
 
 export const getRepoRev = (headers: Headers): string | undefined => {
   return headers['atproto-repo-rev']
@@ -73,9 +54,9 @@ export const readAfterWriteInternal = async <T>(
 ): Promise<{ data: T; lag?: number }> => {
   const rev = getRepoRev(res.headers)
   if (!rev) return { data: res.data }
-  const store = await ctx.actorStore.reader(requester)
-  const local = await store.local.getRecordsSinceRev(rev)
-  const data = await munge(store, res.data, local, requester)
+  const localViewer = await ctx.localViewer(requester)
+  const local = await localViewer.getRecordsSinceRev(rev)
+  const data = await munge(localViewer, res.data, local, requester)
   return {
     data,
     lag: getLocalLag(local),

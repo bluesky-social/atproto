@@ -1,11 +1,13 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
-import { handleReadAfterWrite } from '../util/read-after-write'
 import { authPassthru } from '../../../../api/com/atproto/admin/util'
 import { isReasonRepost } from '../../../../lexicon/types/app/bsky/feed/defs'
-import { LocalRecords } from '../../../../actor-store/local/reader'
-import { ActorStoreReader } from '../../../../actor-store'
+import {
+  LocalViewer,
+  handleReadAfterWrite,
+  LocalRecords,
+} from '../../../../read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
@@ -29,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const getAuthorMunge = async (
-  store: ActorStoreReader,
+  localViewer: LocalViewer,
   original: OutputSchema,
   local: LocalRecords,
   requester: string,
@@ -48,7 +50,7 @@ const getAuthorMunge = async (
           ...item,
           post: {
             ...item.post,
-            author: store.local.updateProfileViewBasic(
+            author: localViewer.updateProfileViewBasic(
               item.post.author,
               localProf.record,
             ),
@@ -59,7 +61,7 @@ const getAuthorMunge = async (
       }
     })
   }
-  feed = await store.local.formatAndInsertPostsInFeed(feed, local.posts)
+  feed = await localViewer.formatAndInsertPostsInFeed(feed, local.posts)
   return {
     ...original,
     feed,
