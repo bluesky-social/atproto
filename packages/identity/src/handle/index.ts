@@ -50,7 +50,7 @@ export class HandleResolver {
     const url = new URL('/.well-known/atproto-did', `https://${handle}`)
     try {
       const res = await fetch(url, { signal })
-      const did = await res.text()
+      const did = (await res.text()).split('\n')[0].trim()
       if (typeof did === 'string' && did.startsWith('did:')) {
         return did
       }

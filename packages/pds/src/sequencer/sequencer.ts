@@ -55,6 +55,18 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     return got || null
   }
 
+  async earliestAfterTime(time: string): Promise<SeqRow | null> {
+    const got = await this.db.db
+      .selectFrom('repo_seq')
+      .selectAll()
+      .where('seq', 'is not', null)
+      .where('sequencedAt', '>=', time)
+      .orderBy('sequencedAt', 'asc')
+      .limit(1)
+      .executeTakeFirst()
+    return got || null
+  }
+
   async requestSeqRange(opts: {
     earliestSeq?: number
     latestSeq?: number
