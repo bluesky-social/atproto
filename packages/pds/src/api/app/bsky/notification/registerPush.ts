@@ -7,7 +7,7 @@ import { getDidDoc } from '../util/resolver'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.registerPush({
-    auth: ctx.accessVerifier,
+    auth: ctx.authVerifier.access,
     handler: async ({ auth, input }) => {
       const { serviceDid } = input.body
       const {
