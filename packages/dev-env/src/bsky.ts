@@ -325,20 +325,17 @@ export async function ingestAll(
   network: TestNetworkNoAppView,
   ingester: bsky.BskyIngester,
 ) {
-  const pdsDb = network.pds.ctx.db.db
+  const sequencer = network.pds.ctx.sequencer
   await network.pds.processAll()
   // eslint-disable-next-line no-constant-condition
   while (true) {
     await wait(50)
     // check ingester
-    const [ingesterCursor, { lastSeq }] = await Promise.all([
+    const [ingesterCursor, curr] = await Promise.all([
       ingester.sub.getCursor(),
-      pdsDb
-        .selectFrom('repo_seq')
-        .select(pdsDb.fn.max('repo_seq.seq').as('lastSeq'))
-        .executeTakeFirstOrThrow(),
+      sequencer.curr(),
     ])
-    const ingesterCaughtUp = ingesterCursor === lastSeq
+    const ingesterCaughtUp = curr !== null && ingesterCursor === curr
     if (ingesterCaughtUp) return
   }
 }
