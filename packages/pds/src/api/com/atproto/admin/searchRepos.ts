@@ -4,7 +4,7 @@ import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.role,
     handler: async ({ req, params }) => {
       // @TODO merge invite details to this list view. could also add
       // support for invitedBy param, which is not supported by appview.

@@ -11,7 +11,7 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
-    auth: ctx.accessOrRoleVerifier,
+    auth: ctx.authVerifier.accessOrRole,
     handler: async ({ req, params, auth }) => {
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null

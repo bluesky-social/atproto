@@ -2,10 +2,10 @@ import { AccountService } from './account'
 import { AuthService } from './auth'
 import { ServiceDb } from '../service-db'
 
-export function createServices(): Services {
+export function createServices(jwtSecret: string): Services {
   return {
     account: (db: ServiceDb) => new AccountService(db),
-    auth: (db: ServiceDb) => new AuthService(db),
+    auth: (db: ServiceDb) => new AuthService(db, jwtSecret),
   }
 }
 

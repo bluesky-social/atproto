@@ -8,7 +8,7 @@ import { InviteCode } from '../../../../service-db'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createInviteCodes({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.role,
     handler: async ({ input, req, auth }) => {
       if (!auth.credentials.admin) {
         throw new AuthRequiredError('Insufficient privileges')

@@ -3,7 +3,6 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { byteIterableToStream } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { isUserOrAdmin } from '../../../../auth'
 import {
   RepoRootNotFoundError,
   SqlRepoReader,
@@ -11,11 +10,11 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRepo({
-    auth: ctx.optionalAccessOrRoleVerifier,
+    auth: ctx.authVerifier.optionalAccessOrRole,
     handler: async ({ params, auth }) => {
       const { did, since } = params
       // takedown check for anyone other than an admin or the user
-      if (!isUserOrAdmin(auth, did)) {
+      if (!ctx.authVerifier.isUserOrAdmin(auth, did)) {
         const available = await ctx.services
           .account(ctx.db)
           .isRepoAvailable(did)

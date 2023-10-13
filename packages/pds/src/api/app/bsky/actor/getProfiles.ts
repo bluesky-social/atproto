@@ -9,7 +9,7 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfiles({
-    auth: ctx.accessVerifier,
+    auth: ctx.authVerifier.access,
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
       const res = await ctx.appViewAgent.api.app.bsky.actor.getProfiles(

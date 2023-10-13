@@ -6,7 +6,7 @@ import { BlobNotFoundError } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlob({
-    auth: ctx.optionalAccessOrRoleVerifier,
+    auth: ctx.authVerifier.optionalAccessOrRole,
     handler: async ({ params, res }) => {
       // @TODO verify repo is not taken down
       const cid = CID.parse(params.cid)
