@@ -71,7 +71,7 @@ describe('entryway', () => {
   it('assigns user to a pds.', async () => {
     await entryway.ctx.db.db.updateTable('pds').set({ weight: 1 }).execute()
     const {
-      data: { did },
+      data: { did, ...initialSession },
     } = await entrywayAgent.api.com.atproto.server.createAccount({
       email: 'alice@test.com',
       handle: 'alice.test',
@@ -79,6 +79,9 @@ describe('entryway', () => {
     })
     alice = did
     await entryway.ctx.db.db.updateTable('pds').set({ weight: 0 }).execute()
+
+    const token = jose.decodeJwt(initialSession.accessJwt)
+    expect(token.aud).toBe(pds.ctx.cfg.service.did)
 
     const entrywayAccount = await entryway.ctx.services
       .account(entryway.ctx.db)
@@ -119,7 +122,9 @@ describe('entryway', () => {
         password: 'test123',
       })
     accessToken = session.accessJwt
+    const tokenBody = jose.decodeJwt(accessToken)
     const tokenHeader = jose.decodeProtectedHeader(accessToken)
+    expect(tokenBody.aud).toBe(pds.ctx.cfg.service.did)
     expect(tokenHeader.alg).toBe('ES256K') // asymmetric, from the jwt key and not the secret
     const { data: entrywayResult } =
       await entrywayAgent.api.com.atproto.server.getSession(
@@ -226,7 +231,7 @@ describe('entryway', () => {
         repo: alice,
         collection: ids.AppBskyActorProfile,
         rkey: 'self',
-        record: { displayName: `Alice 4` },
+        record: { displayName: 'Alice 4' },
       },
       {
         headers: SeedClient.getHeaders(accessToken),

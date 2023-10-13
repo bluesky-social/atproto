@@ -120,7 +120,7 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         const [accessJwt, refreshJwt] = await Promise.all([
-          ctx.auth.createAccessToken({ did }),
+          ctx.auth.createAccessToken({ did, pdsDid: pds?.did }),
           ctx.auth.createRefreshToken({
             did,
             identityDid: ctx.cfg.service.did,
