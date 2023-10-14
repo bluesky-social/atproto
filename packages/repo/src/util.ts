@@ -88,6 +88,10 @@ export const blocksToCarFile = (
   return streamToBuffer(carStream)
 }
 
+export const readCarStream = (stream: AsyncIterable<Uint8Array>) => {
+  return CarReader.fromIterable(stream)
+}
+
 export const readCar = async (
   bytes: Uint8Array,
 ): Promise<{ roots: CID[]; blocks: BlockMap }> => {
