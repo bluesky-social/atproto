@@ -30,7 +30,7 @@ Our default branch, which contains all our changes is [waverly](https://github.c
 git checkout main
 git remote add upstream https://github.com/bluesky-social/atproto.git
 git fetch upstream
-git pull origin main
+git pull upstream main
 git checkout waverly
 git pull
 git merge main
