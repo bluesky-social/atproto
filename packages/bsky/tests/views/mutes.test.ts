@@ -1,14 +1,12 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { forSnapshot, paginateAll } from '../_util'
-import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import usersBulkSeed from '../seeds/users-bulk'
 
 describe('mute views', () => {
   let network: TestNetwork
   let agent: AtpAgent
-  let pdsAgent: AtpAgent
   let sc: SeedClient
   let alice: string
   let bob: string
@@ -22,8 +20,7 @@ describe('mute views', () => {
       dbPostgresSchema: 'bsky_views_mutes',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await usersBulkSeed(sc, 10)
     alice = sc.dids.alice
@@ -81,6 +78,20 @@ describe('mute views', () => {
   it('removes content from muted users on getTimeline', async () => {
     const res = await agent.api.app.bsky.feed.getTimeline(
       { limit: 100 },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(
+      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+    ).toBe(false)
+  })
+
+  it('removes content from muted users on getListFeed', async () => {
+    const listRef = await sc.createList(bob, 'test list', 'curate')
+    await sc.addToList(alice, bob, listRef)
+    await sc.addToList(alice, carol, listRef)
+    await sc.addToList(alice, dan, listRef)
+    const res = await agent.api.app.bsky.feed.getListFeed(
+      { list: listRef.uriStr },
       { headers: await network.serviceHeaders(alice) },
     )
     expect(

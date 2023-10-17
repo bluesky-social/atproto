@@ -1,5 +1,5 @@
 import * as streams from '../src/streams'
-import { PassThrough, Readable, pipeline } from 'node:stream'
+import { PassThrough, Readable } from 'node:stream'
 
 describe('streams', () => {
   describe('forwardStreamErrors', () => {

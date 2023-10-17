@@ -1,4 +1,4 @@
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { lexToJson } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import {
@@ -180,6 +180,7 @@ export const stripViewerFromPost = (postUnknown: unknown): PostView => {
 // @NOTE mutates
 export const stripViewerFromThread = <T>(thread: T): T => {
   if (!isThreadViewPost(thread)) return thread
+  delete thread.viewer
   thread.post = stripViewerFromPost(thread.post)
   if (isThreadViewPost(thread.parent)) {
     thread.parent = stripViewerFromThread(thread.parent)

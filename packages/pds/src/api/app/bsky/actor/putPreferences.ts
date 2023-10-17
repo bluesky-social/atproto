@@ -5,7 +5,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.putPreferences({
-    auth: ctx.accessVerifierCheckTakedown,
+    auth: ctx.authVerifier.accessCheckTakedown,
     handler: async ({ auth, input }) => {
       const { preferences } = input.body
       const requester = auth.credentials.did

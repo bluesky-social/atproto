@@ -1,4 +1,4 @@
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
@@ -13,20 +13,19 @@ import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.reverseModerationAction({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.role,
     handler: async ({ req, input, auth }) => {
       const access = auth.credentials
       const { db, services } = ctx
-      if (ctx.shouldProxyModeration()) {
+      if (ctx.cfg.bskyAppView.proxyModeration) {
         const { data: result } =
-          await ctx.appviewAgent.com.atproto.admin.reverseModerationAction(
+          await ctx.appViewAgent.com.atproto.admin.reverseModerationAction(
             input.body,
             authPassthru(req, true),
           )
 
         const transact = db.transaction(async (dbTxn) => {
           const moderationTxn = services.moderation(dbTxn)
-          const labelTxn = services.appView.label(dbTxn)
           // reverse takedowns
           if (result.action === TAKEDOWN && isRepoRef(result.subject)) {
             await moderationTxn.reverseTakedownRepo({
@@ -37,18 +36,6 @@ export default function (server: Server, ctx: AppContext) {
             await moderationTxn.reverseTakedownRecord({
               uri: new AtUri(result.subject.uri),
             })
-          }
-          // invert label creation & negations
-          const reverseLabels = (uri: string, cid: string | null) =>
-            labelTxn.formatAndCreate(ctx.cfg.labelerDid, uri, cid, {
-              create: result.negateLabelVals,
-              negate: result.createLabelVals,
-            })
-          if (isRepoRef(result.subject)) {
-            await reverseLabels(result.subject.did, null)
-          }
-          if (isStrongRef(result.subject)) {
-            await reverseLabels(result.subject.uri, result.subject.cid)
           }
         })
 
@@ -72,7 +59,6 @@ export default function (server: Server, ctx: AppContext) {
 
       const moderationAction = await db.transaction(async (dbTxn) => {
         const moderationTxn = services.moderation(dbTxn)
-        const labelTxn = services.appView.label(dbTxn)
         const now = new Date()
 
         const existing = await moderationTxn.getAction(id)
@@ -113,23 +99,6 @@ export default function (server: Server, ctx: AppContext) {
           createdBy,
           reason,
         })
-
-        // invert creates & negates
-        const { createLabelVals, negateLabelVals } = result
-        const negate =
-          createLabelVals && createLabelVals.length > 0
-            ? createLabelVals.split(' ')
-            : undefined
-        const create =
-          negateLabelVals && negateLabelVals.length > 0
-            ? negateLabelVals.split(' ')
-            : undefined
-        await labelTxn.formatAndCreate(
-          ctx.cfg.labelerDid,
-          result.subjectUri ?? result.subjectDid,
-          result.subjectCid,
-          { create, negate },
-        )
 
         return result
       })

@@ -1,26 +1,23 @@
 import { sql } from 'kysely'
 import { once } from 'events'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { createDeferrable, wait } from '@atproto/common'
 import { Database } from '../src'
 import { Leader, appMigration } from '../src/db/leader'
-import { runTestServer, CloseFn } from './_util'
 
 describe('db', () => {
-  let close: CloseFn
+  let network: TestNetworkNoAppView
   let db: Database
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'db',
     })
-    close = server.close
-    db = server.ctx.db
+    db = network.pds.ctx.db
   })
 
   afterAll(async () => {
-    if (close) {
-      await close()
-    }
+    await network.close()
   })
 
   describe('transaction()', () => {
@@ -31,6 +28,7 @@ describe('db', () => {
           .values({
             did: 'x',
             root: 'x',
+            rev: 'x',
             indexedAt: 'bad-date',
           })
           .returning('did')
@@ -52,6 +50,7 @@ describe('db', () => {
       expect(row).toEqual({
         did: 'x',
         root: 'x',
+        rev: 'x',
         indexedAt: 'bad-date',
         takedownId: null,
       })
@@ -173,7 +172,7 @@ describe('db', () => {
       if (db.dialect !== 'pg') return
       for (let i = 0; i < 100; i++) {
         await db.transaction(async (dbTxn) => {
-          const locked = await dbTxn.txAdvisoryLock('asfd')
+          const locked = await dbTxn.takeTxAdvisoryLock('asfd')
           expect(locked).toBe(true)
         })
       }
@@ -183,18 +182,18 @@ describe('db', () => {
       if (db.dialect !== 'pg') return
       const deferable = createDeferrable()
       const tx1 = db.transaction(async (dbTxn) => {
-        const locked = await dbTxn.txAdvisoryLock('asdf')
+        const locked = await dbTxn.takeTxAdvisoryLock('asdf')
         expect(locked).toBe(true)
         await deferable.complete
       })
       // give it just a second to ensure it gets the lock
       await wait(10)
       const tx2 = db.transaction(async (dbTxn) => {
-        const locked = await dbTxn.txAdvisoryLock('asdf')
+        const locked = await dbTxn.takeTxAdvisoryLock('asdf')
         expect(locked).toBe(false)
         deferable.resolve()
         await tx1
-        const locked2 = await dbTxn.txAdvisoryLock('asdf')
+        const locked2 = await dbTxn.takeTxAdvisoryLock('asdf')
         expect(locked2).toBe(true)
       })
       await tx2

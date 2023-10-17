@@ -1,9 +1,8 @@
 import { HOUR } from '@atproto/common'
 import AtpAgent, { AtUri } from '@atproto/api'
-import { SeedClient } from '../seeds/client'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import { makeAlgos } from '../../src'
-import { TestNetwork } from '@atproto/dev-env'
 
 describe.skip('algo whats-hot', () => {
   let network: TestNetwork
@@ -28,8 +27,7 @@ describe.skip('algo whats-hot', () => {
       bsky: { algos: makeAlgos(feedPublisherDid) },
     })
     agent = new AtpAgent({ service: network.bsky.url })
-    const pdsAgent = new AtpAgent({ service: network.pds.url })
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
 
     alice = sc.dids.alice
@@ -46,7 +44,7 @@ describe.skip('algo whats-hot', () => {
   it('returns well liked posts', async () => {
     const img = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-landscape-small.jpg',
+      'tests/sample-img/key-landscape-small.jpg',
       'image/jpeg',
     )
     const one = await sc.post(carol, 'carol is in the chat')

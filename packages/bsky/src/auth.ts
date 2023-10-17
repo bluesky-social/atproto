@@ -18,7 +18,7 @@ export const authVerifier =
       const atprotoData = await idResolver.did.resolveAtprotoData(did)
       return atprotoData.signingKey
     })
-    return { credentials: { did } }
+    return { credentials: { did }, artifacts: { aud: opts.aud } }
   }
 
 export const authOptionalVerifier =

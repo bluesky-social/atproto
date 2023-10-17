@@ -1,48 +1,27 @@
 import { Selectable, sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { BlobStore } from '@atproto/repo'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import Database from '../../db'
-import { MessageQueue } from '../../event-stream/types'
 import { ModerationAction, ModerationReport } from '../../db/tables/moderation'
 import { RecordService } from '../record'
 import { ModerationViews } from './views'
 import SqlRepoStorage from '../../sql-repo-storage'
-import { ImageInvalidator } from '../../image/invalidator'
-import { ImageUriBuilder } from '../../image/uri'
 import { TAKEDOWN } from '../../lexicon/types/com/atproto/admin/defs'
 import { addHoursToDate } from '../../util/date'
 
 export class ModerationService {
-  constructor(
-    public db: Database,
-    public messageDispatcher: MessageQueue,
-    public blobstore: BlobStore,
-    public imgUriBuilder: ImageUriBuilder,
-    public imgInvalidator: ImageInvalidator,
-  ) {}
+  constructor(public db: Database, public blobstore: BlobStore) {}
 
-  static creator(
-    messageDispatcher: MessageQueue,
-    blobstore: BlobStore,
-    imgUriBuilder: ImageUriBuilder,
-    imgInvalidator: ImageInvalidator,
-  ) {
-    return (db: Database) =>
-      new ModerationService(
-        db,
-        messageDispatcher,
-        blobstore,
-        imgUriBuilder,
-        imgInvalidator,
-      )
+  static creator(blobstore: BlobStore) {
+    return (db: Database) => new ModerationService(db, blobstore)
   }
 
-  views = new ModerationViews(this.db, this.messageDispatcher)
+  views = new ModerationViews(this.db)
 
   services = {
-    record: RecordService.creator(this.messageDispatcher),
+    record: RecordService.creator(),
   }
 
   async getAction(id: number): Promise<ModerationActionRow | undefined> {
@@ -375,16 +354,14 @@ export class ModerationService {
     return actionResult
   }
 
-  async getActionsDueForReversal(): Promise<
-    Array<{ id: number; createdBy: string }>
-  > {
+  async getActionsDueForReversal(): Promise<Array<ModerationActionRow>> {
     const actionsDueForReversal = await this.db.db
       .selectFrom('moderation_action')
       // Get entries that have an durationInHours that has passed and have not been reversed
       .where('durationInHours', 'is not', null)
       .where('expiresAt', '<', new Date().toISOString())
       .where('reversedAt', 'is', null)
-      .select(['id', 'createdBy'])
+      .selectAll()
       .execute()
 
     return actionsDueForReversal
@@ -499,14 +476,7 @@ export class ModerationService {
         .where('takedownId', 'is', null)
         .executeTakeFirst()
       await Promise.all(
-        info.blobCids.map(async (cid) => {
-          await this.blobstore.quarantine(cid)
-          const paths = ImageUriBuilder.commonSignedUris.map((id) => {
-            const uri = this.imgUriBuilder.getCommonSignedUri(id, cid)
-            return uri.replace(this.imgUriBuilder.endpoint, '')
-          })
-          await this.imgInvalidator.invalidate(cid.toString(), paths)
-        }),
+        info.blobCids.map((cid) => this.blobstore.quarantine(cid)),
       )
     }
   }
@@ -602,7 +572,7 @@ export class ModerationService {
     // Resolve subject info
     let subjectInfo: SubjectInfo
     if ('did' in subject) {
-      const repo = await new SqlRepoStorage(this.db, subject.did).getHead()
+      const repo = await new SqlRepoStorage(this.db, subject.did).getRoot()
       if (!repo) throw new InvalidRequestError('Repo not found')
       subjectInfo = {
         subjectType: 'com.atproto.admin.defs#repoRef',

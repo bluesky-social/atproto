@@ -1,4 +1,4 @@
-import { SeedClient } from './client'
+import { SeedClient } from '@atproto/dev-env'
 
 export default async (sc: SeedClient, invite?: { code: string }) => {
   await sc.createAccount('alice', { ...users.alice, inviteCode: invite?.code })
@@ -16,7 +16,7 @@ export default async (sc: SeedClient, invite?: { code: string }) => {
     sc.dids.bob,
     users.bob.displayName,
     users.bob.description,
-    users.alice.selfLabels,
+    users.bob.selfLabels,
   )
 
   return sc

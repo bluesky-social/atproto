@@ -1,7 +1,7 @@
-import * as ident from '@atproto/identifier'
+import * as ident from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { reservedSubdomains } from './reserved'
-import { hasExplicitSlur } from '../content-reporter/explicit-slurs'
+import { hasExplicitSlur } from './explicit-slurs'
 import AppContext from '../context'
 
 export const normalizeAndValidateHandle = async (opts: {
@@ -27,11 +27,11 @@ export const normalizeAndValidateHandle = async (opts: {
       'InvalidHandle',
     )
   }
-  if (isServiceDomain(handle, ctx.cfg.availableUserDomains)) {
+  if (isServiceDomain(handle, ctx.cfg.identity.serviceHandleDomains)) {
     // verify constraints on a service domain
     ensureHandleServiceConstraints(
       handle,
-      ctx.cfg.availableUserDomains,
+      ctx.cfg.identity.serviceHandleDomains,
       allowReserved,
     )
   } else {

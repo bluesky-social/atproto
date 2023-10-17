@@ -1,26 +1,23 @@
-import AtpAgent from '@atproto/api'
 import * as jwt from 'jsonwebtoken'
+import AtpAgent from '@atproto/api'
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import * as CreateSession from '@atproto/api/src/client/types/com/atproto/server/createSession'
 import * as RefreshSession from '@atproto/api/src/client/types/com/atproto/server/refreshSession'
-import { SeedClient } from './seeds/client'
-import { adminAuth, CloseFn, runTestServer, TestServerInfo } from './_util'
 
 describe('auth', () => {
-  let server: TestServerInfo
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
-  let close: CloseFn
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'auth',
     })
-    agent = new AtpAgent({ service: server.url })
-    close = server.close
+    agent = network.pds.getClient()
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   const createAccount = async (info) => {
@@ -68,6 +65,7 @@ describe('auth', () => {
       did: account.did,
       handle: account.handle,
       email,
+      emailConfirmed: false,
     })
     // Valid refresh token
     const nextSession = await refreshSession(account.refreshJwt)
@@ -96,6 +94,7 @@ describe('auth', () => {
       did: session.did,
       handle: session.handle,
       email,
+      emailConfirmed: false,
     })
     // Valid refresh token
     const nextSession = await refreshSession(session.refreshJwt)
@@ -139,6 +138,7 @@ describe('auth', () => {
       did: session.did,
       handle: session.handle,
       email,
+      emailConfirmed: false,
     })
     // Valid refresh token
     const nextSession = await refreshSession(session.refreshJwt)
@@ -170,7 +170,7 @@ describe('auth', () => {
   })
 
   it('refresh token is revoked after grace period completes.', async () => {
-    const { db } = server.ctx
+    const { db } = network.pds.ctx
     const account = await createAccount({
       handle: 'evan.test',
       email: 'evan@test.com',
@@ -219,19 +219,19 @@ describe('auth', () => {
       password: 'password',
     })
     const refreshWithAccess = refreshSession(account.accessJwt)
-    await expect(refreshWithAccess).rejects.toThrow(
-      'Token could not be verified',
-    )
+    await expect(refreshWithAccess).rejects.toThrow('Bad token scope')
   })
 
   it('expired refresh token cannot be used to refresh a session.', async () => {
-    const { auth } = server.ctx
+    const { services, db } = network.pds.ctx
     const account = await createAccount({
       handle: 'holga.test',
       email: 'holga@test.com',
       password: 'password',
     })
-    const refresh = auth.createRefreshToken({ did: account.did, expiresIn: -1 })
+    const refresh = services
+      .auth(db)
+      .createRefreshToken({ did: account.did, expiresIn: -1 })
     const refreshExpired = refreshSession(refresh.jwt)
     await expect(refreshExpired).rejects.toThrow('Token has expired')
     await deleteSession(refresh.jwt) // No problem revoking an expired token
@@ -255,7 +255,7 @@ describe('auth', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: adminAuth() },
+        headers: { authorization: network.pds.adminAuth() },
       },
     )
     await expect(
@@ -281,7 +281,7 @@ describe('auth', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: adminAuth() },
+        headers: { authorization: network.pds.adminAuth() },
       },
     )
     await expect(refreshSession(account.refreshJwt)).rejects.toThrow(

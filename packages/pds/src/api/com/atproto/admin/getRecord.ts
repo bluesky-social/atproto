@@ -1,4 +1,4 @@
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
@@ -6,7 +6,7 @@ import { authPassthru, mergeRepoViewPdsDetails } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRecord({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.role,
     handler: async ({ req, params, auth }) => {
       const access = auth.credentials
       const { db, services } = ctx
@@ -20,10 +20,10 @@ export default function (server: Server, ctx: AppContext) {
           includeEmails: access.moderator,
         }))
 
-      if (ctx.shouldProxyModeration()) {
+      if (ctx.cfg.bskyAppView.proxyModeration) {
         try {
           const { data: recordDetailAppview } =
-            await ctx.appviewAgent.com.atproto.admin.getRecord(
+            await ctx.appViewAgent.com.atproto.admin.getRecord(
               params,
               authPassthru(req),
             )

@@ -15,6 +15,7 @@ export default function (server: Server, ctx: AppContext) {
       .select([
         'user_account.did as did',
         'repo_root.root as head',
+        'repo_root.rev as rev',
         'user_account.createdAt as createdAt',
       ])
     const keyset = new TimeDidKeyset(
@@ -29,7 +30,11 @@ export default function (server: Server, ctx: AppContext) {
       tryIndex: true,
     })
     const res = await builder.execute()
-    const repos = res.map((row) => ({ did: row.did, head: row.head }))
+    const repos = res.map((row) => ({
+      did: row.did,
+      head: row.head,
+      rev: row.rev ?? '',
+    }))
     return {
       encoding: 'application/json',
       body: {

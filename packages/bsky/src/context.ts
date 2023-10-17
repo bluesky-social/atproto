@@ -9,6 +9,8 @@ import DidSqlCache from './did-cache'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
 import { LabelCache } from './label-cache'
+import { NotificationServer } from './notifications'
+import { AtpAgent } from '@atproto/api'
 
 export class AppContext {
   constructor(
@@ -21,7 +23,9 @@ export class AppContext {
       didCache: DidSqlCache
       labelCache: LabelCache
       backgroundQueue: BackgroundQueue
+      searchAgent?: AtpAgent
       algos: MountedAlgos
+      notifServer: NotificationServer
     },
   ) {}
 
@@ -55,6 +59,14 @@ export class AppContext {
 
   get labelCache(): LabelCache {
     return this.opts.labelCache
+  }
+
+  get notifServer(): NotificationServer {
+    return this.opts.notifServer
+  }
+
+  get searchAgent(): AtpAgent | undefined {
+    return this.opts.searchAgent
   }
 
   get authVerifier() {

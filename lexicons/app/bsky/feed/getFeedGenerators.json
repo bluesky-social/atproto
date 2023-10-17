@@ -11,7 +11,7 @@
         "properties": {
           "feeds": {
             "type": "array",
-            "items": {"type": "string", "format": "at-uri"}
+            "items": { "type": "string", "format": "at-uri" }
           }
         }
       },
@@ -23,7 +23,10 @@
           "properties": {
             "feeds": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.feed.defs#generatorView"}
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.feed.defs#generatorView"
+              }
             }
           }
         }

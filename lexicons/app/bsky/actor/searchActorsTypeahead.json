@@ -8,8 +8,20 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "term": {"type": "string"},
-          "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50}
+          "term": {
+            "type": "string",
+            "description": "DEPRECATED: use 'q' instead"
+          },
+          "q": {
+            "type": "string",
+            "description": "search query prefix; not a full query string"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 10
+          }
         }
       },
       "output": {
@@ -20,7 +32,10 @@
           "properties": {
             "actors": {
               "type": "array",
-              "items": {"type": "ref", "ref": "app.bsky.actor.defs#profileViewBasic"}
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.actor.defs#profileViewBasic"
+              }
             }
           }
         }

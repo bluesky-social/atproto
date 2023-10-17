@@ -2,7 +2,7 @@ import z from 'zod'
 import { CID } from 'multiformats'
 
 import { ReadableBlockstore } from '../storage'
-import { schema as common, cidForCbor } from '@atproto/common'
+import { schema as common, cidForCbor, dataToCborBlock } from '@atproto/common'
 import { BlockWriter } from '@ipld/car/api'
 import * as util from './util'
 import BlockMap from '../block-map'
@@ -153,6 +153,13 @@ export class MST {
   // Instead we keep track of whether the pointer is outdated and only (recursively) calculate when needed
   async getPointer(): Promise<CID> {
     if (!this.outdatedPointer) return this.pointer
+    const { cid } = await this.serialize()
+    this.pointer = cid
+    this.outdatedPointer = false
+    return this.pointer
+  }
+
+  async serialize(): Promise<{ cid: CID; bytes: Uint8Array }> {
     let entries = await this.getEntries()
     const outdated = entries.filter(
       (e) => e.isTree() && e.outdatedPointer,
@@ -161,9 +168,12 @@ export class MST {
       await Promise.all(outdated.map((e) => e.getPointer()))
       entries = await this.getEntries()
     }
-    this.pointer = await util.cidForEntries(entries)
-    this.outdatedPointer = false
-    return this.pointer
+    const data = util.serializeNodeData(entries)
+    const block = await dataToCborBlock(data)
+    return {
+      cid: block.cid,
+      bytes: block.bytes,
+    }
   }
 
   // In most cases, we get the layer of a node from a hint on creation

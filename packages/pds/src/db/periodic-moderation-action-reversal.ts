@@ -3,6 +3,7 @@ import { wait } from '@atproto/common'
 import { Leader } from './leader'
 import { dbLogger } from '../logger'
 import AppContext from '../context'
+import { ModerationActionRow } from '../services/moderation'
 
 export const MODERATION_ACTION_REVERSAL_ID = 1011
 
@@ -12,12 +13,12 @@ export class PeriodicModerationActionReversal {
 
   constructor(private appContext: AppContext) {}
 
-  async revertAction({ id, createdBy }: { id: number; createdBy: string }) {
+  async revertAction(actionRow: ModerationActionRow) {
     return this.appContext.db.transaction(async (dbTxn) => {
       const moderationTxn = this.appContext.services.moderation(dbTxn)
       await moderationTxn.revertAction({
-        id,
-        createdBy,
+        id: actionRow.id,
+        createdBy: actionRow.createdBy,
         createdAt: new Date(),
         reason: `[SCHEDULED_REVERSAL] Reverting action as originally scheduled`,
       })

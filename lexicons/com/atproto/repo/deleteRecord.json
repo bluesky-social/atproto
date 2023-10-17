@@ -38,9 +38,7 @@
           }
         }
       },
-      "errors": [
-        {"name": "InvalidSwap"}
-      ]
+      "errors": [{ "name": "InvalidSwap" }]
     }
   }
 }

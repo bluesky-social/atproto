@@ -2,7 +2,6 @@ import { AuthRequiredError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
-import { AuthScope } from '../../../../auth'
 import { DAY, MINUTE } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
@@ -11,12 +10,12 @@ export default function (server: Server, ctx: AppContext) {
       {
         durationMs: DAY,
         points: 300,
-        calcKey: ({ input }) => input.body.identifier,
+        calcKey: ({ input, req }) => `${input.body.identifier}-${req.ip}`,
       },
       {
         durationMs: 5 * MINUTE,
         points: 30,
-        calcKey: ({ input }) => input.body.identifier,
+        calcKey: ({ input, req }) => `${input.body.identifier}-${req.ip}`,
       },
     ],
     handler: async ({ input }) => {
@@ -55,12 +54,10 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const access = ctx.auth.createAccessToken({
-        did: user.did,
-        scope: appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
-      })
-      const refresh = ctx.auth.createRefreshToken({ did: user.did })
-      await authService.grantRefreshToken(refresh.payload, appPasswordName)
+      const { access, refresh } = await authService.createSession(
+        user.did,
+        appPasswordName,
+      )
 
       return {
         encoding: 'application/json',
@@ -68,6 +65,7 @@ export default function (server: Server, ctx: AppContext) {
           did: user.did,
           handle: user.handle,
           email: user.email,
+          emailConfirmed: !!user.emailConfirmedAt,
           accessJwt: access.jwt,
           refreshJwt: refresh.jwt,
         },

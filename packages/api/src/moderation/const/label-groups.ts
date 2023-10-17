@@ -130,6 +130,7 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
       LABELS['net-abuse'],
       LABELS['impersonation'],
       LABELS['scam'],
+      LABELS['misleading'],
     ],
     strings: {
       settings: {

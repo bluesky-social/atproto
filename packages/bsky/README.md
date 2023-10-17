@@ -1,3 +1,10 @@
-# Bsky App View
+# @atproto/bsky: Bluesky AppView Service
 
-The Bsky App View. This contains the indexers and XRPC methods for reading data from the Bsky application.
+TypeScript implementation of the `app.bsky` Lexicons backing the https://bsky.app microblogging application.
+
+[![NPM](https://img.shields.io/npm/v/@atproto/bsky)](https://www.npmjs.com/package/@atproto/bsky)
+[![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
+
+## License
+
+MIT License

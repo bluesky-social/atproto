@@ -1,9 +1,11 @@
+import { mapDefined } from '@atproto/common'
 import { Database } from '../../db'
 import {
   FeedViewPost,
   GeneratorView,
   PostView,
 } from '../../lexicon/types/app/bsky/feed/defs'
+import { isListRule } from '../../lexicon/types/app/bsky/feed/threadgate'
 import {
   Main as EmbedImages,
   isMain as isEmbedImages,
@@ -21,7 +23,6 @@ import {
   ViewRecord,
 } from '../../lexicon/types/app/bsky/embed/record'
 import {
-  ActorInfoMap,
   PostEmbedViews,
   FeedGenInfo,
   FeedRow,
@@ -29,31 +30,37 @@ import {
   PostInfoMap,
   RecordEmbedViewRecord,
   PostBlocksMap,
-  kSelfLabels,
+  FeedHydrationState,
+  ThreadgateInfoMap,
+  ThreadgateInfo,
 } from './types'
 import { Labels, getSelfLabels } from '../label'
 import { ImageUriBuilder } from '../../image/uri'
+import { LabelCache } from '../../label-cache'
+import { ActorInfoMap, ActorService } from '../actor'
+import { ListInfoMap, GraphService } from '../graph'
 
 export class FeedViews {
-  constructor(public db: Database, public imgUriBuilder: ImageUriBuilder) {}
+  constructor(
+    public db: Database,
+    public imgUriBuilder: ImageUriBuilder,
+    public labelCache: LabelCache,
+  ) {}
 
-  static creator(imgUriBuilder: ImageUriBuilder) {
-    return (db: Database) => new FeedViews(db, imgUriBuilder)
+  static creator(imgUriBuilder: ImageUriBuilder, labelCache: LabelCache) {
+    return (db: Database) => new FeedViews(db, imgUriBuilder, labelCache)
+  }
+
+  services = {
+    actor: ActorService.creator(this.imgUriBuilder, this.labelCache)(this.db),
+    graph: GraphService.creator(this.imgUriBuilder)(this.db),
   }
 
   formatFeedGeneratorView(
     info: FeedGenInfo,
     profiles: ActorInfoMap,
-    labels?: Labels,
   ): GeneratorView {
     const profile = profiles[info.creator]
-    if (profile && !profile.labels) {
-      // If the creator labels are not hydrated yet, attempt to pull them
-      // from labels: e.g. compatible with embedsForPosts() batching label hydration.
-      const profileLabels = labels?.[info.creator] ?? []
-      const profileSelfLabels = profile[kSelfLabels] ?? []
-      profile.labels = [...profileLabels, ...profileSelfLabels]
-    }
     return {
       uri: info.uri,
       cid: info.cid,
@@ -83,21 +90,30 @@ export class FeedViews {
 
   formatFeed(
     items: FeedRow[],
-    actors: ActorInfoMap,
-    posts: PostInfoMap,
-    embeds: PostEmbedViews,
-    labels: Labels,
-    blocks: PostBlocksMap,
-    usePostViewUnion?: boolean,
+    state: FeedHydrationState,
+    opts?: {
+      viewer?: string | null
+      usePostViewUnion?: boolean
+    },
   ): FeedViewPost[] {
+    const { posts, threadgates, profiles, blocks, embeds, labels, lists } =
+      state
+    const actors = this.services.actor.views.profileBasicPresentation(
+      Object.keys(profiles),
+      state,
+      opts,
+    )
     const feed: FeedViewPost[] = []
     for (const item of items) {
+      const info = posts[item.postUri]
       const post = this.formatPostView(
         item.postUri,
         actors,
         posts,
+        threadgates,
         embeds,
         labels,
+        lists,
       )
       // skip over not found & blocked posts
       if (!post || blocks[post.uri]?.reply) {
@@ -110,36 +126,41 @@ export class FeedViews {
         if (!originator) {
           continue
         } else {
-          const originatorLabels = labels[item.originatorDid] ?? []
-          const originatorSelfLabels = originator[kSelfLabels] ?? []
           feedPost['reason'] = {
             $type: 'app.bsky.feed.defs#reasonRepost',
-            by: {
-              ...originator,
-              labels: [...originatorLabels, ...originatorSelfLabels],
-            },
+            by: originator,
             indexedAt: item.sortAt,
           }
         }
       }
-      if (item.replyParent && item.replyRoot) {
+      // posts that violate reply-gating may appear in feeds, but without any thread context
+      if (
+        item.replyParent &&
+        item.replyRoot &&
+        !info?.invalidReplyRoot &&
+        !info?.violatesThreadGate
+      ) {
         const replyParent = this.formatMaybePostView(
           item.replyParent,
           actors,
           posts,
+          threadgates,
           embeds,
           labels,
+          lists,
           blocks,
-          usePostViewUnion,
+          opts,
         )
         const replyRoot = this.formatMaybePostView(
           item.replyRoot,
           actors,
           posts,
+          threadgates,
           embeds,
           labels,
+          lists,
           blocks,
-          usePostViewUnion,
+          opts,
         )
         if (replyRoot && replyParent) {
           feedPost['reply'] = {
@@ -157,17 +178,15 @@ export class FeedViews {
     uri: string,
     actors: ActorInfoMap,
     posts: PostInfoMap,
+    threadgates: ThreadgateInfoMap,
     embeds: PostEmbedViews,
     labels: Labels,
+    lists: ListInfoMap,
   ): PostView | undefined {
     const post = posts[uri]
+    const gate = threadgates[uri]
     const author = actors[post?.creator]
     if (!post || !author) return undefined
-    // If the author labels are not hydrated yet, attempt to pull them
-    // from labels: e.g. compatible with hydrateFeed() batching label hydration.
-    const authorLabels = labels[author.did] ?? []
-    const authorSelfLabels = author[kSelfLabels] ?? []
-    author.labels ??= [...authorLabels, ...authorSelfLabels]
     const postLabels = labels[uri] ?? []
     const postSelfLabels = getSelfLabels({
       uri: post.uri,
@@ -191,6 +210,10 @@ export class FeedViews {
           }
         : undefined,
       labels: [...postLabels, ...postSelfLabels],
+      threadgate:
+        !post.record.reply && gate
+          ? this.formatThreadgate(gate, lists)
+          : undefined,
     }
   }
 
@@ -198,14 +221,26 @@ export class FeedViews {
     uri: string,
     actors: ActorInfoMap,
     posts: PostInfoMap,
+    threadgates: ThreadgateInfoMap,
     embeds: PostEmbedViews,
     labels: Labels,
+    lists: ListInfoMap,
     blocks: PostBlocksMap,
-    usePostViewUnion?: boolean,
+    opts?: {
+      usePostViewUnion?: boolean
+    },
   ): MaybePostView | undefined {
-    const post = this.formatPostView(uri, actors, posts, embeds, labels)
+    const post = this.formatPostView(
+      uri,
+      actors,
+      posts,
+      threadgates,
+      embeds,
+      labels,
+      lists,
+    )
     if (!post) {
-      if (!usePostViewUnion) return
+      if (!opts?.usePostViewUnion) return
       return this.notFoundPost(uri)
     }
     if (
@@ -213,7 +248,7 @@ export class FeedViews {
       post.author.viewer?.blocking ||
       blocks[uri]?.reply
     ) {
-      if (!usePostViewUnion) return
+      if (!opts?.usePostViewUnion) return
       return this.blockedPost(post)
     }
     return {
@@ -260,6 +295,7 @@ export class FeedViews {
         img.image.ref,
       ),
       alt: img.alt,
+      aspectRatio: img.aspectRatio,
     }))
     return {
       $type: 'app.bsky.embed.images#view',
@@ -341,6 +377,20 @@ export class FeedViews {
         record: embedRecordView,
       },
       media: mediaEmbed,
+    }
+  }
+
+  formatThreadgate(gate: ThreadgateInfo, lists: ListInfoMap) {
+    return {
+      uri: gate.uri,
+      cid: gate.cid,
+      record: gate.record,
+      lists: mapDefined(gate.record.allow ?? [], (rule) => {
+        if (!isListRule(rule)) return
+        const list = lists[rule.list]
+        if (!list) return
+        return this.services.graph.formatListViewBasic(list)
+      }),
     }
   }
 }

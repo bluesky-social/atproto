@@ -6,7 +6,7 @@ import { CodeDetail } from '../../../../services/account'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getAccountInviteCodes({
-    auth: ctx.accessVerifierCheckTakedown,
+    auth: ctx.authVerifier.accessNotAppPassword,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
       const { includeUsed, createAvailable } = params
@@ -25,13 +25,17 @@ export default function (server: Server, ctx: AppContext) {
       let created: string[] = []
 
       const now = new Date().toISOString()
-      if (createAvailable && ctx.cfg.userInviteInterval !== null) {
+      if (
+        createAvailable &&
+        ctx.cfg.invites.required &&
+        ctx.cfg.invites.interval !== null
+      ) {
         const { toCreate, total } = await calculateCodesToCreate({
           did: requester,
           userCreatedAt: new Date(user.createdAt).getTime(),
           codes: userCodes,
-          epoch: ctx.cfg.userInviteEpoch,
-          interval: ctx.cfg.userInviteInterval,
+          epoch: ctx.cfg.invites.epoch,
+          interval: ctx.cfg.invites.interval,
         })
         if (toCreate > 0) {
           created = genInvCodes(ctx.cfg, toCreate)

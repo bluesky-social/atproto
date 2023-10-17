@@ -1,4 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import disposable from 'disposable-email'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import * as plc from '@did-plc/lib'
 import * as scrypt from '../../../../db/scrypt'
@@ -20,10 +21,16 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, req }) => {
       const { email, password, inviteCode } = input.body
 
-      if (ctx.cfg.inviteRequired && !inviteCode) {
+      if (ctx.cfg.invites.required && !inviteCode) {
         throw new InvalidRequestError(
           'No invite code provided',
           'InvalidInviteCode',
+        )
+      }
+
+      if (!disposable.validate(email)) {
+        throw new InvalidRequestError(
+          'This email address is not supported, please use a different email.',
         )
       }
 
@@ -35,7 +42,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       // check that the invite code still has uses
-      if (ctx.cfg.inviteRequired && inviteCode) {
+      if (ctx.cfg.invites.required && inviteCode) {
         await ensureCodeIsAvailable(ctx.db, inviteCode)
       }
 
@@ -53,7 +60,7 @@ export default function (server: Server, ctx: AppContext) {
         // it's a bit goofy that we run this logic twice,
         // but we run it once for a sanity check before doing scrypt & plc ops
         // & a second time for locking + integrity check
-        if (ctx.cfg.inviteRequired && inviteCode) {
+        if (ctx.cfg.invites.required && inviteCode) {
           await ensureCodeIsAvailable(dbTxn, inviteCode, true)
         }
 
@@ -86,7 +93,7 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         // insert invite code use
-        if (ctx.cfg.inviteRequired && inviteCode) {
+        if (ctx.cfg.invites.required && inviteCode) {
           await dbTxn.db
             .insertInto('invite_code_use')
             .values({
@@ -97,9 +104,9 @@ export default function (server: Server, ctx: AppContext) {
             .execute()
         }
 
-        const access = ctx.auth.createAccessToken({ did })
-        const refresh = ctx.auth.createRefreshToken({ did })
-        await ctx.services.auth(dbTxn).grantRefreshToken(refresh.payload, null)
+        const { access, refresh } = await ctx.services
+          .auth(dbTxn)
+          .createSession(did, null)
 
         // Setup repo root
         await repoTxn.createRepo(did, [], now)
@@ -110,8 +117,6 @@ export default function (server: Server, ctx: AppContext) {
           refreshJwt: refresh.jwt,
         }
       })
-
-      ctx.contentReporter?.checkHandle({ handle, did: result.did })
 
       return {
         encoding: 'application/json',
@@ -178,7 +183,10 @@ const getDidAndPlcOp = async (
   // if the user is not bringing a DID, then we format a create op for PLC
   // but we don't send until we ensure the username & email are available
   if (!input.did) {
-    const rotationKeys = [ctx.cfg.recoveryKey, ctx.plcRotationKey.did()]
+    const rotationKeys = [ctx.plcRotationKey.did()]
+    if (ctx.cfg.identity.recoveryDidKey) {
+      rotationKeys.unshift(ctx.cfg.identity.recoveryDidKey)
+    }
     if (input.recoveryKey) {
       rotationKeys.unshift(input.recoveryKey)
     }
@@ -186,7 +194,7 @@ const getDidAndPlcOp = async (
       signingKey: ctx.repoSigningKey.did(),
       rotationKeys,
       handle,
-      pds: ctx.cfg.publicUrl,
+      pds: ctx.cfg.service.publicUrl,
       signer: ctx.plcRotationKey,
     })
     return {
@@ -212,7 +220,7 @@ const getDidAndPlcOp = async (
       'provided handle does not match DID document handle',
       'IncompatibleDidDoc',
     )
-  } else if (atpData.pds !== ctx.cfg.publicUrl) {
+  } else if (atpData.pds !== ctx.cfg.service.publicUrl) {
     throw new InvalidRequestError(
       'DID document pds endpoint does not match service endpoint',
       'IncompatibleDidDoc',

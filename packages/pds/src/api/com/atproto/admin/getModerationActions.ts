@@ -4,11 +4,11 @@ import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getModerationActions({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.role,
     handler: async ({ req, params }) => {
-      if (ctx.shouldProxyModeration()) {
+      if (ctx.cfg.bskyAppView.proxyModeration) {
         const { data: result } =
-          await ctx.appviewAgent.com.atproto.admin.getModerationActions(
+          await ctx.appViewAgent.com.atproto.admin.getModerationActions(
             params,
             authPassthru(req),
           )

@@ -15,6 +15,7 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.getReplica()
       const { ref } = db.db.dynamic
       const feedService = ctx.services.feed(db)
+      const actorService = ctx.services.actor(db)
 
       let inner = db.db
         .selectFrom('feed_generator')
@@ -49,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       const creators = Object.values(genInfos).map((gen) => gen.creator)
-      const profiles = await feedService.getActorInfos(creators, requester)
+      const profiles = await actorService.views.profiles(creators, requester)
 
       const genViews: GeneratorView[] = []
       for (const row of res) {

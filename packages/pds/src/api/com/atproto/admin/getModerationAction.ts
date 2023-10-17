@@ -5,16 +5,16 @@ import { isRepoView } from '../../../../lexicon/types/com/atproto/admin/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getModerationAction({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.role,
     handler: async ({ req, params, auth }) => {
       const access = auth.credentials
       const { db, services } = ctx
       const accountService = services.account(db)
       const moderationService = services.moderation(db)
 
-      if (ctx.shouldProxyModeration()) {
+      if (ctx.cfg.bskyAppView.proxyModeration) {
         const { data: resultAppview } =
-          await ctx.appviewAgent.com.atproto.admin.getModerationAction(
+          await ctx.appViewAgent.com.atproto.admin.getModerationAction(
             params,
             authPassthru(req),
           )

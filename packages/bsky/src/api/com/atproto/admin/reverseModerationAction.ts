@@ -1,4 +1,3 @@
-import { AtUri } from '@atproto/uri'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import {
   ACKNOWLEDGE,

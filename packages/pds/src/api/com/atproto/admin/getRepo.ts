@@ -5,7 +5,7 @@ import { authPassthru, mergeRepoViewPdsDetails } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRepo({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.role,
     handler: async ({ req, params, auth }) => {
       const access = auth.credentials
       const { db, services } = ctx
@@ -17,10 +17,10 @@ export default function (server: Server, ctx: AppContext) {
           includeEmails: access.moderator,
         }))
 
-      if (ctx.shouldProxyModeration()) {
+      if (ctx.cfg.bskyAppView.proxyModeration) {
         try {
           let { data: repoDetailAppview } =
-            await ctx.appviewAgent.com.atproto.admin.getRepo(
+            await ctx.appViewAgent.com.atproto.admin.getRepo(
               params,
               authPassthru(req),
             )

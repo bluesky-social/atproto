@@ -1,24 +1,24 @@
-import { range, dataToCborBlock } from '@atproto/common'
-import { def } from '@atproto/repo'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { range, dataToCborBlock, TID } from '@atproto/common'
+import { CidSet, def } from '@atproto/repo'
 import BlockMap from '@atproto/repo/src/block-map'
+import { CID } from 'multiformats/cid'
 import { Database } from '../src'
 import SqlRepoStorage from '../src/sql-repo-storage'
-import { CloseFn, runTestServer } from './_util'
 
 describe('sql repo storage', () => {
+  let network: TestNetworkNoAppView
   let db: Database
-  let close: CloseFn
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'sql_repo_storage',
     })
-    close = server.close
-    db = server.ctx.db
+    db = network.pds.ctx.db
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('puts and gets blocks.', async () => {
@@ -27,7 +27,7 @@ describe('sql repo storage', () => {
     const cid = await db.transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, did)
       const block = await dataToCborBlock({ my: 'block' })
-      await storage.putBlock(block.cid, block.bytes)
+      await storage.putBlock(block.cid, block.bytes, TID.nextStr())
       return block.cid
     })
 
@@ -43,14 +43,14 @@ describe('sql repo storage', () => {
     const cidA = await db.transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, did)
       const block = await dataToCborBlock({ my: 'block' })
-      await storage.putBlock(block.cid, block.bytes)
+      await storage.putBlock(block.cid, block.bytes, TID.nextStr())
       return block.cid
     })
 
     const cidB = await db.transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, did)
       const block = await dataToCborBlock({ my: 'block' })
-      await storage.putBlock(block.cid, block.bytes)
+      await storage.putBlock(block.cid, block.bytes, TID.nextStr())
       return block.cid
     })
 
@@ -75,41 +75,50 @@ describe('sql repo storage', () => {
     blocks.slice(5, 10).forEach((block) => {
       blocks1.set(block.cid, block.bytes)
     })
+    const toRemoveList = blocks0
+      .entries()
+      .slice(0, 2)
+      .map((b) => b.cid)
+    const toRemove = new CidSet(toRemoveList)
     await db.transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, did)
       await storage.applyCommit({
-        commit: commits[0].cid,
+        cid: commits[0].cid,
+        rev: TID.nextStr(),
         prev: null,
-        blocks: blocks0,
+        since: null,
+        newBlocks: blocks0,
+        removedCids: new CidSet(),
       })
       await storage.applyCommit({
-        commit: commits[1].cid,
+        cid: commits[1].cid,
+        rev: TID.nextStr(),
         prev: commits[0].cid,
-        blocks: blocks1,
+        since: null,
+        newBlocks: blocks1,
+        removedCids: toRemove,
       })
     })
 
     const storage = new SqlRepoStorage(db, did)
-    const head = await storage.getHead()
+    const head = await storage.getRoot()
     if (!head) {
       throw new Error('could not get repo head')
     }
     expect(head.toString()).toEqual(commits[1].cid.toString())
-    const commitPath = await storage.getCommitPath(head, null)
-    if (!commitPath) {
-      throw new Error('could not get commit path')
+
+    const cidsRes = await db.db
+      .selectFrom('ipld_block')
+      .where('creator', '=', did)
+      .select('cid')
+      .execute()
+    const allCids = new CidSet(cidsRes.map((row) => CID.parse(row.cid)))
+    for (const entry of blocks1.entries()) {
+      expect(allCids.has(entry.cid)).toBe(true)
     }
-    expect(commitPath.length).toBe(2)
-    expect(commitPath[0].equals(commits[0].cid)).toBeTruthy()
-    expect(commitPath[1].equals(commits[1].cid)).toBeTruthy()
-    const commitData = await storage.getCommits(head, null)
-    if (!commitData) {
-      throw new Error('could not get commit data')
+    for (const entry of blocks0.entries()) {
+      const shouldHave = !toRemove.has(entry.cid)
+      expect(allCids.has(entry.cid)).toBe(shouldHave)
     }
-    expect(commitData.length).toBe(2)
-    expect(commitData[0].commit.equals(commits[0].cid)).toBeTruthy()
-    expect(commitData[0].blocks.equals(blocks0)).toBeTruthy()
-    expect(commitData[1].commit.equals(commits[1].cid)).toBeTruthy()
-    expect(commitData[1].blocks.equals(blocks1)).toBeTruthy()
   })
 })

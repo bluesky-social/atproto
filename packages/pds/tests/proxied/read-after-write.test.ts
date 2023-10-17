@@ -1,7 +1,6 @@
 import util from 'util'
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { RecordRef, SeedClient } from '../seeds/client'
+import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import { ThreadViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { View as RecordEmbedView } from '../../src/lexicon/types/app/bsky/embed/record'
@@ -19,7 +18,7 @@ describe('proxy read after write', () => {
       dbPostgresSchema: 'proxy_read_after_write',
     })
     agent = network.pds.getClient()
-    sc = new SeedClient(agent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
@@ -35,7 +34,7 @@ describe('proxy read after write', () => {
     await sc.updateProfile(alice, { displayName: 'blah' })
     const res = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
-      { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
+      { headers: { ...sc.getHeaders(alice) } },
     )
     expect(res.data.displayName).toEqual('blah')
     expect(res.data.description).toBeUndefined()
@@ -44,18 +43,18 @@ describe('proxy read after write', () => {
   it('handles image formatting', async () => {
     const blob = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-landscape-small.jpg',
+      'tests/sample-img/key-landscape-small.jpg',
       'image/jpeg',
     )
     await sc.updateProfile(alice, { displayName: 'blah', avatar: blob.image })
 
     const res = await agent.api.app.bsky.actor.getProfile(
       { actor: alice },
-      { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
+      { headers: { ...sc.getHeaders(alice) } },
     )
     expect(res.data.avatar).toEqual(
       util.format(
-        network.pds.ctx.cfg.bskyAppViewCdnUrlPattern,
+        network.pds.ctx.cfg.bskyAppView.cdnUrlPattern,
         'avatar',
         alice,
         blob.image.ref.toString(),
@@ -66,7 +65,7 @@ describe('proxy read after write', () => {
   it('handles read after write on getAuthorFeed', async () => {
     const res = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
-      { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
+      { headers: { ...sc.getHeaders(alice) } },
     )
     for (const item of res.data.feed) {
       if (item.post.author.did === alice) {
@@ -95,7 +94,7 @@ describe('proxy read after write', () => {
     replyRef2 = reply2.ref
     const res = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][0].ref.uriStr },
-      { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
+      { headers: { ...sc.getHeaders(alice) } },
     )
     const layerOne = res.data.thread.replies as ThreadViewPost[]
     expect(layerOne.length).toBe(1)
@@ -108,7 +107,7 @@ describe('proxy read after write', () => {
   it('handles read after write on a thread that is not found on appview', async () => {
     const res = await agent.api.app.bsky.feed.getPostThread(
       { uri: replyRef1.uriStr },
-      { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
+      { headers: { ...sc.getHeaders(alice) } },
     )
     const thread = res.data.thread as ThreadViewPost
     expect(thread.post.uri).toEqual(replyRef1.uriStr)
@@ -140,7 +139,7 @@ describe('proxy read after write', () => {
     )
     const res = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[carol][0].ref.uriStr },
-      { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
+      { headers: { ...sc.getHeaders(alice) } },
     )
     const replies = res.data.thread.replies as ThreadViewPost[]
     expect(replies.length).toBe(1)
@@ -160,7 +159,7 @@ describe('proxy read after write', () => {
     )
     const res = await agent.api.app.bsky.feed.getTimeline(
       {},
-      { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
+      { headers: { ...sc.getHeaders(alice) } },
     )
     expect(res.data.feed[0].post.uri).toEqual(postRes.uri)
   })
@@ -168,7 +167,7 @@ describe('proxy read after write', () => {
   it('returns lag headers', async () => {
     const res = await agent.api.app.bsky.feed.getTimeline(
       {},
-      { headers: { ...sc.getHeaders(alice), 'x-appview-proxy': 'true' } },
+      { headers: { ...sc.getHeaders(alice) } },
     )
     const lag = res.headers['atproto-upstream-lag']
     expect(lag).toBeDefined()

@@ -419,12 +419,12 @@ Array [
           "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
-              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+              "alt": "tests/sample-img/key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(5)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(5)@jpeg",
             },
             Object {
-              "alt": "tests/image/fixtures/key-alt.jpg",
+              "alt": "tests/sample-img/key-alt.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(6)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(6)@jpeg",
             },
@@ -475,7 +475,7 @@ Array [
             "$type": "app.bsky.embed.images",
             "images": Array [
               Object {
-                "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                "alt": "tests/sample-img/key-landscape-small.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -486,7 +486,7 @@ Array [
                 },
               },
               Object {
-                "alt": "tests/image/fixtures/key-alt.jpg",
+                "alt": "tests/sample-img/key-alt.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -679,12 +679,12 @@ Array [
                 "$type": "app.bsky.embed.images#view",
                 "images": Array [
                   Object {
-                    "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                    "alt": "tests/sample-img/key-landscape-small.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(5)@jpeg",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(5)@jpeg",
                   },
                   Object {
-                    "alt": "tests/image/fixtures/key-alt.jpg",
+                    "alt": "tests/sample-img/key-alt.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(6)@jpeg",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(6)@jpeg",
                   },
@@ -735,7 +735,7 @@ Array [
                 "$type": "app.bsky.embed.images",
                 "images": Array [
                   Object {
-                    "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                    "alt": "tests/sample-img/key-landscape-small.jpg",
                     "image": Object {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -746,7 +746,7 @@ Array [
                     },
                   },
                   Object {
-                    "alt": "tests/image/fixtures/key-alt.jpg",
+                    "alt": "tests/sample-img/key-alt.jpg",
                     "image": Object {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -906,12 +906,12 @@ Array [
           "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
-              "alt": "tests/image/fixtures/key-landscape-small.jpg",
+              "alt": "tests/sample-img/key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(4)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(4)@jpeg",
             },
             Object {
-              "alt": "tests/image/fixtures/key-alt.jpg",
+              "alt": "tests/sample-img/key-alt.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(5)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(5)@jpeg",
             },
@@ -962,7 +962,7 @@ Array [
             "$type": "app.bsky.embed.images",
             "images": Array [
               Object {
-                "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                "alt": "tests/sample-img/key-landscape-small.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -973,7 +973,7 @@ Array [
                 },
               },
               Object {
-                "alt": "tests/image/fixtures/key-alt.jpg",
+                "alt": "tests/sample-img/key-alt.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -1265,6 +1265,135 @@ Object {
       "indexedAt": "1970-01-01T00:00:00.000Z",
       "likeCount": 0,
       "uri": "record(5)",
+      "viewer": Object {},
+    },
+  ],
+}
+`;
+
+exports[`feed generation getSuggestedFeeds returns list of suggested feed generators 1`] = `
+Object {
+  "feeds": Array [
+    Object {
+      "cid": "cids(0)",
+      "creator": Object {
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+        "did": "user(1)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "labels": Array [
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(1)",
+            "uri": "record(3)",
+            "val": "self-label-a",
+          },
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(1)",
+            "uri": "record(3)",
+            "val": "self-label-b",
+          },
+        ],
+        "viewer": Object {
+          "blockedBy": false,
+          "followedBy": "record(2)",
+          "following": "record(1)",
+          "muted": false,
+        },
+      },
+      "description": "Provides all feed candidates",
+      "did": "user(0)",
+      "displayName": "All",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "likeCount": 2,
+      "uri": "record(0)",
+      "viewer": Object {
+        "like": "record(4)",
+      },
+    },
+    Object {
+      "cid": "cids(3)",
+      "creator": Object {
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+        "did": "user(1)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "labels": Array [
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(1)",
+            "uri": "record(3)",
+            "val": "self-label-a",
+          },
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(1)",
+            "uri": "record(3)",
+            "val": "self-label-b",
+          },
+        ],
+        "viewer": Object {
+          "blockedBy": false,
+          "followedBy": "record(2)",
+          "following": "record(1)",
+          "muted": false,
+        },
+      },
+      "description": "Provides even-indexed feed candidates",
+      "did": "user(0)",
+      "displayName": "Even",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "likeCount": 0,
+      "uri": "record(5)",
+      "viewer": Object {},
+    },
+    Object {
+      "cid": "cids(4)",
+      "creator": Object {
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+        "did": "user(1)",
+        "displayName": "ali",
+        "handle": "alice.test",
+        "labels": Array [
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(1)",
+            "uri": "record(3)",
+            "val": "self-label-a",
+          },
+          Object {
+            "cid": "cids(2)",
+            "cts": "1970-01-01T00:00:00.000Z",
+            "neg": false,
+            "src": "user(1)",
+            "uri": "record(3)",
+            "val": "self-label-b",
+          },
+        ],
+        "viewer": Object {
+          "blockedBy": false,
+          "followedBy": "record(2)",
+          "following": "record(1)",
+          "muted": false,
+        },
+      },
+      "description": "Provides all feed candidates, blindly ignoring pagination limit",
+      "did": "user(0)",
+      "displayName": "Bad Pagination",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "likeCount": 0,
+      "uri": "record(6)",
       "viewer": Object {},
     },
   ],

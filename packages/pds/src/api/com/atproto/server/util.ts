@@ -6,7 +6,7 @@ import { ServerConfig } from '../../../../config'
 // ex: bsky-app-abc234-567xy
 // regex: bsky-app-[a-z2-7]{5}-[a-z2-7]{5}
 export const genInvCode = (cfg: ServerConfig): string => {
-  return cfg.publicHostname.replaceAll('.', '-') + '-' + getRandomToken()
+  return cfg.service.hostname.replaceAll('.', '-') + '-' + getRandomToken()
 }
 
 export const genInvCodes = (cfg: ServerConfig, count: number): string[] => {

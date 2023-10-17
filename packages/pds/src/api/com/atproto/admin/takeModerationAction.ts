@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
@@ -15,13 +15,13 @@ import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.role,
     handler: async ({ req, input, auth }) => {
       const access = auth.credentials
       const { db, services } = ctx
-      if (ctx.shouldProxyModeration()) {
+      if (ctx.cfg.bskyAppView.proxyModeration) {
         const { data: result } =
-          await ctx.appviewAgent.com.atproto.admin.takeModerationAction(
+          await ctx.appViewAgent.com.atproto.admin.takeModerationAction(
             input.body,
             authPassthru(req, true),
           )
@@ -29,7 +29,6 @@ export default function (server: Server, ctx: AppContext) {
         const transact = db.transaction(async (dbTxn) => {
           const authTxn = services.auth(dbTxn)
           const moderationTxn = services.moderation(dbTxn)
-          const labelTxn = services.appView.label(dbTxn)
           // perform takedowns
           if (result.action === TAKEDOWN && isRepoRef(result.subject)) {
             await authTxn.revokeRefreshTokensByDid(result.subject.did)
@@ -44,18 +43,6 @@ export default function (server: Server, ctx: AppContext) {
               uri: new AtUri(result.subject.uri),
               blobCids: result.subjectBlobCids.map((cid) => CID.parse(cid)),
             })
-          }
-          // apply label creation & negations
-          const applyLabels = (uri: string, cid: string | null) =>
-            labelTxn.formatAndCreate(ctx.cfg.labelerDid, uri, cid, {
-              create: result.createLabelVals,
-              negate: result.negateLabelVals,
-            })
-          if (isRepoRef(result.subject)) {
-            await applyLabels(result.subject.did, null)
-          }
-          if (isStrongRef(result.subject)) {
-            await applyLabels(result.subject.uri, result.subject.cid)
           }
         })
 
@@ -113,7 +100,6 @@ export default function (server: Server, ctx: AppContext) {
       const moderationAction = await db.transaction(async (dbTxn) => {
         const authTxn = services.auth(dbTxn)
         const moderationTxn = services.moderation(dbTxn)
-        const labelTxn = services.appView.label(dbTxn)
 
         const result = await moderationTxn.logAction({
           action: getAction(action),
@@ -149,13 +135,6 @@ export default function (server: Server, ctx: AppContext) {
             blobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
           })
         }
-
-        await labelTxn.formatAndCreate(
-          ctx.cfg.labelerDid,
-          result.subjectUri ?? result.subjectDid,
-          result.subjectCid,
-          { create: createLabelVals, negate: negateLabelVals },
-        )
 
         return result
       })

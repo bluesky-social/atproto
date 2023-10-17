@@ -3,7 +3,7 @@ import { CID } from 'multiformats/cid'
 import { cidForCbor, TID } from '@atproto/common'
 import * as pdsRepo from '@atproto/pds/src/repo/prepare'
 import { WriteOpAction } from '@atproto/repo'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import AtpAgent, {
   AppBskyActorProfile,
   AppBskyFeedPost,
@@ -11,9 +11,8 @@ import AtpAgent, {
   AppBskyFeedRepost,
   AppBskyGraphFollow,
 } from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { forSnapshot } from './_util'
-import { SeedClient } from './seeds/client'
 import usersSeed from './seeds/users'
 import basicSeed from './seeds/basic'
 import { ids } from '../src/lexicon/lexicons'
@@ -31,7 +30,7 @@ describe('indexing', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await usersSeed(sc)
     // Data in tests is not processed from subscription
     await network.processAll()
@@ -426,10 +425,11 @@ describe('indexing', () => {
         { headers: await network.serviceHeaders(sc.dids.alice) },
       )
       // Index
-      const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
-        did: sc.dids.alice,
-      })
-      await services.indexing(db).indexRepo(sc.dids.alice, head.root)
+      const { data: commit } =
+        await pdsAgent.api.com.atproto.sync.getLatestCommit({
+          did: sc.dids.alice,
+        })
+      await services.indexing(db).indexRepo(sc.dids.alice, commit.cid)
       await network.bsky.processAll()
       // Check
       const { data: profile } = await agent.api.app.bsky.actor.getProfile(
@@ -470,10 +470,11 @@ describe('indexing', () => {
         sc.getHeaders(sc.dids.alice),
       )
       // Index
-      const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
-        did: sc.dids.alice,
-      })
-      await services.indexing(db).indexRepo(sc.dids.alice, head.root)
+      const { data: commit } =
+        await pdsAgent.api.com.atproto.sync.getLatestCommit({
+          did: sc.dids.alice,
+        })
+      await services.indexing(db).indexRepo(sc.dids.alice, commit.cid)
       await network.bsky.processAll()
       // Check
       const { data: profile } = await agent.api.app.bsky.actor.getProfile(
@@ -516,10 +517,11 @@ describe('indexing', () => {
         .repo(pdsDb)
         .processWrites({ did: sc.dids.alice, writes }, 1)
       // Index
-      const { data: head } = await pdsAgent.api.com.atproto.sync.getHead({
-        did: sc.dids.alice,
-      })
-      await services.indexing(db).indexRepo(sc.dids.alice, head.root)
+      const { data: commit } =
+        await pdsAgent.api.com.atproto.sync.getLatestCommit({
+          did: sc.dids.alice,
+        })
+      await services.indexing(db).indexRepo(sc.dids.alice, commit.cid)
       // Check
       const getGoodPost = agent.api.app.bsky.feed.getPostThread(
         { uri: writes[0].uri.toString(), depth: 0 },
@@ -645,8 +647,9 @@ describe('indexing', () => {
         headers: sc.getHeaders(alice),
       })
       const { token } = await network.pds.ctx.db.db
-        .selectFrom('delete_account_token')
+        .selectFrom('email_token')
         .selectAll()
+        .where('purpose', '=', 'delete_account')
         .where('did', '=', alice)
         .executeTakeFirstOrThrow()
       await pdsAgent.api.com.atproto.server.deleteAccount({

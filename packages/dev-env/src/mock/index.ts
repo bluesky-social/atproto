@@ -1,10 +1,10 @@
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import AtpAgent from '@waverlyai/atproto-api'
 import {
   REASONSPAM,
   REASONOTHER,
 } from '@atproto/api/src/client/types/com/atproto/moderation/defs'
-import { TestNetworkNoAppView } from '../index'
+import { TestNetwork } from '../index'
 import { postTexts, replyTexts } from './data'
 import labeledImgB64 from './img/labeled-img-b64'
 import blurHashB64 from './img/blur-hash-avatar-b64'
@@ -24,7 +24,7 @@ function* dateGen() {
   return ''
 }
 
-export async function generateMockSetup(env: TestNetworkNoAppView) {
+export async function generateMockSetup(env: TestNetwork) {
   const date = dateGen()
 
   const rand = (n: number) => Math.floor(Math.random() * n)
@@ -257,29 +257,27 @@ export async function generateMockSetup(env: TestNetworkNoAppView) {
     },
   )
 
-  const ctx = env.pds.ctx
+  const ctx = env.bsky.ctx
   if (ctx) {
-    await ctx.db.db
-      .insertInto('label')
-      .values([
-        {
-          src: ctx.cfg.labelerDid,
-          uri: labeledPost.uri,
-          cid: labeledPost.cid,
-          val: 'nudity',
-          neg: 0,
-          cts: new Date().toISOString(),
-        },
-        {
-          src: ctx.cfg.labelerDid,
-          uri: filteredPost.uri,
-          cid: filteredPost.cid,
-          val: 'dmca-violation',
-          neg: 0,
-          cts: new Date().toISOString(),
-        },
-      ])
-      .execute()
+    const labelSrvc = ctx.services.label(ctx.db.getPrimary())
+    await labelSrvc.createLabels([
+      {
+        src: ctx.cfg.labelerDid,
+        uri: labeledPost.uri,
+        cid: labeledPost.cid,
+        val: 'nudity',
+        neg: false,
+        cts: new Date().toISOString(),
+      },
+      {
+        src: ctx.cfg.labelerDid,
+        uri: filteredPost.uri,
+        cid: filteredPost.cid,
+        val: 'dmca-violation',
+        neg: false,
+        cts: new Date().toISOString(),
+      },
+    ])
   }
 
   await waverly.addGroupPosts(testUsers, date)

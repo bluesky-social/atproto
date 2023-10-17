@@ -11,11 +11,11 @@
           "type": "object",
           "required": ["codeCount", "useCount"],
           "properties": {
-            "codeCount": {"type": "integer", "default": 1},
-            "useCount": {"type": "integer"},
+            "codeCount": { "type": "integer", "default": 1 },
+            "useCount": { "type": "integer" },
             "forAccounts": {
               "type": "array",
-              "items": {"type": "string", "format": "did"}
+              "items": { "type": "string", "format": "did" }
             }
           }
         }
@@ -26,9 +26,9 @@
           "type": "object",
           "required": ["codes"],
           "properties": {
-            "codes": { 
+            "codes": {
               "type": "array",
-              "items": {"type": "ref", "ref": "#accountCodes"}
+              "items": { "type": "ref", "ref": "#accountCodes" }
             }
           }
         }
@@ -38,10 +38,10 @@
       "type": "object",
       "required": ["account", "codes"],
       "properties": {
-        "account": {"type": "string"},
-        "codes": { 
+        "account": { "type": "string" },
+        "codes": {
           "type": "array",
-          "items": {"type": "string"}
+          "items": { "type": "string" }
         }
       }
     }

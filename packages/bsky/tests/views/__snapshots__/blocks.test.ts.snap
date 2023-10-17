@@ -126,6 +126,9 @@ Object {
       "uri": "record(0)",
       "viewer": Object {},
     },
+    "viewer": Object {
+      "canReply": true,
+    },
   },
 }
 `;
@@ -201,6 +204,9 @@ Object {
       "viewer": Object {},
     },
     "replies": Array [],
+    "viewer": Object {
+      "canReply": true,
+    },
   },
 }
 `;
@@ -289,7 +295,7 @@ Object {
             "$type": "app.bsky.embed.images#view",
             "images": Array [
               Object {
-                "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                "alt": "tests/sample-img/key-landscape-small.jpg",
                 "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(4)@jpeg",
                 "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(4)@jpeg",
               },
@@ -322,7 +328,7 @@ Object {
               "$type": "app.bsky.embed.images",
               "images": Array [
                 Object {
-                  "alt": "tests/image/fixtures/key-landscape-small.jpg",
+                  "alt": "tests/sample-img/key-landscape-small.jpg",
                   "image": Object {
                     "$type": "blob",
                     "mimeType": "image/jpeg",
@@ -353,6 +359,9 @@ Object {
         },
       },
     ],
+    "viewer": Object {
+      "canReply": true,
+    },
   },
 }
 `;

@@ -1,32 +1,38 @@
 {
   "name": "@atproto/lex-cli",
-  "version": "0.2.0",
+  "version": "0.2.2",
+  "license": "MIT",
+  "description": "TypeScript codegen tool for atproto Lexicon schemas",
+  "keywords": [
+    "atproto",
+    "lexicon"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/lex-cli"
+  },
   "bin": {
     "lex": "dist/index.js"
   },
   "main": "src/index.ts",
-  "scripts": {
-    "prettier": "prettier --check src/",
-    "prettier:fix": "prettier --write src/",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "yarn lint --fix",
-    "verify": "run-p prettier lint",
-    "verify:fix": "yarn prettier:fix && yarn lint:fix",
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json"
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/src/index.d.ts"
   },
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/bluesky-social/atproto.git",
-    "directory": "packages/lex-cli"
+  "scripts": {
+    "build": "node ./build.js",
+    "postbuild": "tsc --build tsconfig.build.json",
+    "update-main-to-dist": "node ../../update-main-to-dist.js packages/lex-cli"
   },
   "dependencies": {
-    "@atproto/lexicon": "*",
-    "@atproto/nsid": "*",
+    "@atproto/lexicon": "workspace:^",
+    "@atproto/syntax": "workspace:^",
     "chalk": "^5.1.1",
     "commander": "^9.4.0",
     "ts-morph": "^16.0.0",
-    "yesno": "^0.4.0"
+    "yesno": "^0.4.0",
+    "zod": "^3.21.4"
   }
 }

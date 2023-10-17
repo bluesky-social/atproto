@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.feed.threadgate",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "description": "Defines interaction gating rules for a thread. The rkey of the threadgate record should match the rkey of the thread's root post.",
+      "record": {
+        "type": "object",
+        "required": ["post", "createdAt"],
+        "properties": {
+          "post": { "type": "string", "format": "at-uri" },
+          "allow": {
+            "type": "array",
+            "maxLength": 5,
+            "items": {
+              "type": "union",
+              "refs": ["#mentionRule", "#followingRule", "#listRule"]
+            }
+          },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    },
+    "mentionRule": {
+      "type": "object",
+      "description": "Allow replies from actors mentioned in your post.",
+      "properties": {}
+    },
+    "followingRule": {
+      "type": "object",
+      "description": "Allow replies from actors you follow.",
+      "properties": {}
+    },
+    "listRule": {
+      "type": "object",
+      "description": "Allow replies from actors on a list.",
+      "required": ["list"],
+      "properties": {
+        "list": { "type": "string", "format": "at-uri" }
+      }
+    }
+  }
+}

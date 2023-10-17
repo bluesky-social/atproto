@@ -1,8 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { paginate } from '../../../../db/pagination'
-import { ListKeyset } from '../../../../services/actor'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
@@ -10,27 +8,20 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params }) => {
       const db = ctx.db.getPrimary()
       const moderationService = ctx.services.moderation(db)
-      const { term = '', limit, cursor, invitedBy } = params
+      const { invitedBy, limit, cursor } = params
       if (invitedBy) {
         throw new InvalidRequestError('The invitedBy parameter is unsupported')
       }
+      // prefer new 'q' query param over deprecated 'term'
+      const query = params.q ?? params.term
 
-      const searchField = term.startsWith('did:') ? 'did' : 'handle'
-
-      const { ref } = db.db.dynamic
-      const keyset = new ListKeyset(ref('indexedAt'), ref('did'))
-      let resultQb = ctx.services
+      const { results, cursor: resCursor } = await ctx.services
         .actor(db)
-        .searchQb(searchField, term)
-        .selectAll()
-      resultQb = paginate(resultQb, { keyset, cursor, limit })
-
-      const results = await resultQb.execute()
-
+        .getSearchResults({ query, limit, cursor, includeSoftDeleted: true })
       return {
         encoding: 'application/json',
         body: {
-          cursor: keyset.packFromResult(results),
+          cursor: resCursor,
           repos: await moderationService.views.repo(results),
         },
       }

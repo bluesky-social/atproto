@@ -21,18 +21,21 @@ export const mockResolvers = (idResolver: IdResolver, pds: TestPds) => {
     const service = result?.service?.find((svc) => svc.id === '#atproto_pds')
     if (typeof service?.serviceEndpoint === 'string') {
       service.serviceEndpoint = service.serviceEndpoint.replace(
-        pds.ctx.cfg.publicUrl,
+        pds.ctx.cfg.service.publicUrl,
         `http://localhost:${pds.port}`,
       )
     }
     return result
   }
 
+  const origResolveHandleDns = idResolver.handle.resolveDns
   idResolver.handle.resolve = async (handle: string) => {
-    const isPdsHandle = pds.ctx.cfg.availableUserDomains.some((domain) =>
-      handle.endsWith(domain),
+    const isPdsHandle = pds.ctx.cfg.identity.serviceHandleDomains.some(
+      (domain) => handle.endsWith(domain),
     )
-    if (!isPdsHandle) return undefined
+    if (!isPdsHandle) {
+      return origResolveHandleDns.call(idResolver.handle, handle)
+    }
 
     const url = `${pds.url}/.well-known/atproto-did`
     try {
@@ -41,6 +44,16 @@ export const mockResolvers = (idResolver: IdResolver, pds: TestPds) => {
     } catch (err) {
       return undefined
     }
+  }
+}
+
+export const mockMailer = (pds: TestPds) => {
+  const mailer = pds.ctx.mailer
+  const _origSendMail = mailer.transporter.sendMail
+  mailer.transporter.sendMail = async (opts) => {
+    const result = await _origSendMail.call(mailer.transporter, opts)
+    console.log(`✉️ Email: ${JSON.stringify(result, null, 2)}`)
+    return result
   }
 }
 

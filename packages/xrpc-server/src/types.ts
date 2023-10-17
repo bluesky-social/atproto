@@ -95,7 +95,7 @@ export interface RateLimiterI {
 export type RateLimiterConsume = (
   ctx: XRPCReqContext,
   opts?: { calcKey?: CalcKeyFn; calcPoints?: CalcPointsFn },
-) => Promise<RateLimiterStatus | null>
+) => Promise<RateLimiterStatus | RateLimitExceededError | null>
 
 export type RateLimiterCreator = (opts: {
   keyPrefix: string
@@ -201,7 +201,13 @@ export class XRPCError extends Error {
 }
 
 export function isHandlerError(v: unknown): v is HandlerError {
-  return handlerError.safeParse(v).success
+  return (
+    !!v &&
+    typeof v === 'object' &&
+    typeof v['status'] === 'number' &&
+    (v['error'] === undefined || typeof v['error'] === 'string') &&
+    (v['message'] === undefined || typeof v['message'] === 'string')
+  )
 }
 
 export class InvalidRequestError extends XRPCError {
@@ -224,7 +230,7 @@ export class ForbiddenError extends XRPCError {
 
 export class RateLimitExceededError extends XRPCError {
   constructor(
-    status: RateLimiterStatus,
+    public status: RateLimiterStatus,
     errorMessage?: string,
     customErrorName?: string,
   ) {

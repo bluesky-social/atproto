@@ -105,6 +105,22 @@ export class Redis {
     return await this.driver.del(this.ns(key))
   }
 
+  async expire(key: string, seconds: number) {
+    return await this.driver.expire(this.ns(key), seconds)
+  }
+
+  async zremrangebyscore(key: string, min: number, max: number) {
+    return await this.driver.zremrangebyscore(this.ns(key), min, max)
+  }
+
+  async zcount(key: string, min: number, max: number) {
+    return await this.driver.zcount(this.ns(key), min, max)
+  }
+
+  async zadd(key: string, score: number, member: number | string) {
+    return await this.driver.zadd(this.ns(key), score, member)
+  }
+
   async destroy() {
     await this.driver.quit()
   }

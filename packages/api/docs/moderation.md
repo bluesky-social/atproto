@@ -80,7 +80,7 @@ interface LabelerSettings {
 Applications need to produce the [Post Moderation Behaviors](./moderation-behaviors/posts.md) using the `moderatePost()` API.
 
 ```typescript
-import {moderatePost} from '@atproto/api'
+import { moderatePost } from '@atproto/api'
 
 const postMod = moderatePost(postView, getOpts())
 
@@ -119,7 +119,7 @@ if (postMod.avatar.alert) {
 Applications need to produce the [Profile Moderation Behaviors](./moderation-behaviors/profiles.md) using the `moderateProfile()` API.
 
 ```typescript
-import {moderateProfile} from '@atproto/api'
+import { moderateProfile } from '@atproto/api'
 
 const profileMod = moderateProfile(profileView, getOpts())
 
