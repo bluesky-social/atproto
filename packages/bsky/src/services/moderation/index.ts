@@ -19,6 +19,7 @@ import {
 import {
   ModEventType,
   ModerationEventRow,
+  ModerationEventRowWithHandle,
   ModerationSubjectStatusRow,
   ReversibleModerationEvent,
   SubjectInfo,
@@ -70,13 +71,29 @@ export class ModerationService {
     subject?: string
     limit: number
     cursor?: string
-  }): Promise<ModerationEventRow[]> {
-    const { subject, limit, cursor } = opts
-    let builder = this.db.db.selectFrom('moderation_event')
+    sortDirection?: 'asc' | 'desc'
+  }): Promise<ModerationEventRowWithHandle[]> {
+    const { subject, limit, cursor, sortDirection = 'desc' } = opts
+    let builder = this.db.db
+      .selectFrom('moderation_event')
+      .leftJoin(
+        'actor as creatorActor',
+        'creatorActor.did',
+        'moderation_event.createdBy',
+      )
+      .leftJoin(
+        'actor as subjectActor',
+        'subjectActor.did',
+        'moderation_event.subjectDid',
+      )
     if (subject) {
       builder = builder.where((qb) => {
         return qb
-          .where('subjectDid', '=', subject)
+          .where((subQb) =>
+            subQb
+              .where('subjectDid', '=', subject)
+              .where('subjectUri', 'is', null),
+          )
           .orWhere('subjectUri', '=', subject)
       })
     }
@@ -85,11 +102,19 @@ export class ModerationService {
       if (isNaN(cursorNumeric)) {
         throw new InvalidRequestError('Malformed cursor')
       }
-      builder = builder.where('id', '<', cursorNumeric)
+      builder = builder.where(
+        'id',
+        sortDirection === 'asc' ? '>' : '<',
+        cursorNumeric,
+      )
     }
     return await builder
-      .selectAll()
-      .orderBy('id', 'desc')
+      .selectAll(['moderation_event'])
+      .select([
+        'subjectActor.handle as subjectHandle',
+        'creatorActor.handle as creatorHandle',
+      ])
+      .orderBy('id', sortDirection)
       .limit(limit)
       .execute()
   }
@@ -233,7 +258,6 @@ export class ModerationService {
     })
 
     if (
-      result.action === 'com.atproto.admin.defs#modEventTakedown' &&
       result.subjectType === 'com.atproto.admin.defs#repoRef' &&
       result.subjectDid
     ) {
@@ -243,7 +267,6 @@ export class ModerationService {
     }
 
     if (
-      result.action === 'com.atproto.admin.defs#modEventTakedown' &&
       result.subjectType === 'com.atproto.repo.strongRef' &&
       result.subjectUri
     ) {
@@ -344,6 +367,10 @@ export class ModerationService {
     reportedAfter,
     reportedBefore,
     includeMuted,
+    ignoreSubjects,
+    sortDirection,
+    lastReviewedBy,
+    sortField,
     subject,
   }: {
     cursor?: string
@@ -355,13 +382,19 @@ export class ModerationService {
     reportedBefore?: string
     includeMuted?: boolean
     subject?: string
+    ignoreSubjects?: string[]
+    sortDirection: 'asc' | 'desc'
+    lastReviewedBy?: string
+    sortField: 'lastReviewedAt' | 'lastReportedAt'
   }) {
-    let builder = this.db.db.selectFrom('moderation_subject_status')
+    let builder = this.db.db
+      .selectFrom('moderation_subject_status')
+      .leftJoin('actor', 'actor.did', 'moderation_subject_status.did')
 
     if (subject) {
       const subjectInfo = getStatusIdentifierFromSubject(subject)
       builder = builder
-        .where('did', '=', subjectInfo.did)
+        .where('moderation_subject_status.did', '=', subjectInfo.did)
         .where((qb) =>
           subjectInfo.recordPath
             ? qb.where('recordPath', '=', subjectInfo.recordPath)
@@ -369,8 +402,18 @@ export class ModerationService {
         )
     }
 
+    if (ignoreSubjects?.length) {
+      builder = builder
+        .where('moderation_subject_status.did', 'not in', ignoreSubjects)
+        .where('recordPath', 'not in', ignoreSubjects)
+    }
+
     if (reviewState) {
       builder = builder.where('reviewState', '=', reviewState)
+    }
+
+    if (lastReviewedBy) {
+      builder = builder.where('lastReviewedBy', '=', lastReviewedBy)
     }
 
     if (reviewedAfter) {
@@ -397,6 +440,8 @@ export class ModerationService {
       )
     }
 
+    builder = builder.orderBy(sortField, sortDirection)
+
     if (cursor) {
       const cursorNumeric = parseInt(cursor, 10)
       if (isNaN(cursorNumeric)) {
@@ -405,7 +450,11 @@ export class ModerationService {
       builder = builder.where('id', '<', cursorNumeric)
     }
 
-    const results = await builder.limit(limit).selectAll().execute()
+    const results = await builder
+      .limit(limit)
+      .select('actor.handle as handle')
+      .selectAll('moderation_subject_status')
+      .execute()
     return results
   }
 

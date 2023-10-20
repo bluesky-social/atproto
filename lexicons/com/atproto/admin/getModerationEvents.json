@@ -8,6 +8,11 @@
       "parameters": {
         "type": "params",
         "properties": {
+          "sortDirection": {
+            "type": "string",
+            "default": "desc",
+            "enum": ["asc", "desc"]
+          },
           "subject": { "type": "string" },
           "limit": {
             "type": "integer",

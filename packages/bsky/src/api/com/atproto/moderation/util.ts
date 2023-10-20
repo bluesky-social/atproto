@@ -13,6 +13,11 @@ import {
 } from '../../../../lexicon/types/com/atproto/moderation/defs'
 import { ModerationEvent } from '../../../../db/tables/moderation'
 import { ModerationSubjectStatusRow } from '../../../../services/moderation/types'
+import {
+  REVIEWCLOSED,
+  REVIEWESCALATED,
+  REVIEWOPEN,
+} from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
 type SubjectInput = ReportInput['subject'] | ActionInput['subject']
 
@@ -45,8 +50,14 @@ export const getReasonType = (reasonType: ReportInput['reasonType']) => {
 }
 
 export const getReviewState = (reviewState?: string) => {
-  return reviewState as ModerationSubjectStatusRow['reviewState']
+  if (!reviewState) return undefined
+  if (reviewStates.has(reviewState)) {
+    return reviewState as ModerationSubjectStatusRow['reviewState']
+  }
+  throw new InvalidRequestError('Invalid review state')
 }
+
+const reviewStates = new Set([REVIEWCLOSED, REVIEWESCALATED, REVIEWOPEN])
 
 const reasonTypes = new Set([
   REASONOTHER,

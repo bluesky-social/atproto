@@ -23,6 +23,7 @@ import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import {
   ModerationEventRowWithHandle,
   ModerationSubjectStatusRow,
+  ModerationSubjectStatusRowWithHandle,
 } from './types'
 import { getSelfLabels } from '../label'
 import { REASONOTHER } from '../../lexicon/types/com/atproto/moderation/defs'
@@ -132,6 +133,8 @@ export class ModerationViews {
         subjectBlobCids: [],
         createdBy: res.createdBy,
         createdAt: res.createdAt,
+        subjectHandle: res.subjectHandle ?? undefined,
+        creatorHandle: res.creatorHandle ?? undefined,
       }
 
       if (
@@ -270,10 +273,12 @@ export class ModerationViews {
       this.record(result),
       this.db.db
         .selectFrom('moderation_subject_status')
+        .leftJoin('actor', 'actor.did', 'moderation_subject_status.did')
         // TODO: We need to build the path manually here, right?
         .where('recordPath', '=', result.uri)
         .orderBy('id', 'desc')
-        .selectAll()
+        .select('actor.handle as handle')
+        .selectAll('moderation_subject_status')
         .executeTakeFirst(),
     ])
     const [blobs, labels, subjectStatus] = await Promise.all([
@@ -408,12 +413,16 @@ export class ModerationViews {
       neg: l.neg,
     }))
   }
-  subjectStatus(result: ModerationSubjectStatusRow): Promise<SubjectStatusView>
   subjectStatus(
-    result: ModerationSubjectStatusRow[],
+    result: ModerationSubjectStatusRowWithHandle,
+  ): Promise<SubjectStatusView>
+  subjectStatus(
+    result: ModerationSubjectStatusRowWithHandle[],
   ): Promise<SubjectStatusView[]>
   async subjectStatus(
-    result: ModerationSubjectStatusRow | ModerationSubjectStatusRow[],
+    result:
+      | ModerationSubjectStatusRowWithHandle
+      | ModerationSubjectStatusRowWithHandle[],
   ): Promise<SubjectStatusView | SubjectStatusView[]> {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
@@ -425,11 +434,13 @@ export class ModerationViews {
       updatedAt: subjectStatus.updatedAt,
       // TODO: not a fan of this TS BS but gotta move on now
       note: subjectStatus.note ?? undefined,
+      lastReviewedBy: subjectStatus.lastReviewedBy ?? undefined,
       lastReviewedAt: subjectStatus.lastReviewedAt ?? undefined,
       lastReportedAt: subjectStatus.lastReportedAt ?? undefined,
       muteUntil: subjectStatus.muteUntil ?? undefined,
       suspendUntil: subjectStatus.suspendUntil ?? undefined,
       takendown: subjectStatus.takendown ?? undefined,
+      subjectRepoHandle: subjectStatus.handle ?? undefined,
       subject: !subjectStatus.recordPath
         ? {
             $type: 'com.atproto.admin.defs#repoRef',
@@ -455,7 +466,7 @@ export class ModerationViews {
 
 type RepoResult = Actor
 
-type EventResult = Selectable<ModerationEvent>
+type EventResult = ModerationEventRowWithHandle
 
 type ReportResult = ModerationEventRowWithHandle
 

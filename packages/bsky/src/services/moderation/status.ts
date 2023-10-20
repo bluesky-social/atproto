@@ -18,14 +18,17 @@ import { sql } from 'kysely'
 
 const getSubjectStatusForModerationEvent = ({
   action,
+  createdBy,
   durationInHours,
 }: {
   action: string
+  createdBy: string
   durationInHours: number | null
 }): Partial<ModerationSubjectStatusRow> | null => {
   switch (action) {
     case 'com.atproto.admin.defs#modEventAcknowledge':
       return {
+        lastReviewedBy: createdBy,
         reviewState: REVIEWCLOSED,
         lastReviewedAt: new Date().toISOString(),
       }
@@ -36,17 +39,20 @@ const getSubjectStatusForModerationEvent = ({
       }
     case 'com.atproto.admin.defs#modEventEscalate':
       return {
+        lastReviewedBy: createdBy,
         reviewState: REVIEWESCALATED,
         lastReviewedAt: new Date().toISOString(),
       }
     case 'com.atproto.admin.defs#modEventReverseTakedown':
       return {
+        lastReviewedBy: createdBy,
         reviewState: REVIEWCLOSED,
         lastReviewedAt: new Date().toISOString(),
       }
     case 'com.atproto.admin.defs#modEventTakedown':
       return {
         takendown: true,
+        lastReviewedBy: createdBy,
         reviewState: REVIEWCLOSED,
         lastReviewedAt: new Date().toISOString(),
       }
@@ -76,13 +82,16 @@ export const adjustModerationSubjectStatus = async (
     | 'subjectCid'
     | 'durationInHours'
     | 'refEventId'
+    | 'createdBy'
   >,
   blobCids?: CID[],
 ) => {
-  const { action, subjectDid, subjectUri, subjectCid } = moderationEvent
+  const { action, subjectDid, subjectUri, subjectCid, createdBy } =
+    moderationEvent
 
   const subjectStatus = getSubjectStatusForModerationEvent({
     action,
+    createdBy,
     durationInHours: moderationEvent.durationInHours,
   })
 

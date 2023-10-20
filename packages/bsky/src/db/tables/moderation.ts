@@ -46,6 +46,7 @@ export interface ModerationSubjectStatus {
   reviewState: typeof REVIEWCLOSED | typeof REVIEWOPEN | typeof REVIEWESCALATED
   createdAt: string
   updatedAt: string
+  lastReviewedBy: string | null
   lastReviewedAt: string | null
   lastReportedAt: string | null
   muteUntil: string | null

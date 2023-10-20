@@ -24,6 +24,11 @@ export interface QueryParams {
   includeMuted?: boolean
   /** Specify when fetching subjects in a certain state */
   reviewState?: string
+  ignoreSubjects?: string[]
+  /** Get all subject statuses that were reviewed by a specific moderator */
+  lastReviewedBy?: string
+  sortField?: 'lastReviewedAt' | 'lastReportedAt'
+  sortDirection?: 'asc' | 'desc'
   limit?: number
   cursor?: string
 }

@@ -31,9 +31,12 @@ export type ReversibleModerationEvent = Pick<
 }
 
 export type ModerationEventRowWithHandle = ModerationEventRow & {
-  handle?: string | null
+  subjectHandle?: string | null
+  creatorHandle?: string | null
 }
 export type ModerationSubjectStatusRow = Selectable<ModerationSubjectStatus>
+export type ModerationSubjectStatusRowWithHandle =
+  ModerationSubjectStatusRow & { handle: string | null }
 
 export type ModEventType =
   | ComAtprotoAdminDefs.ModEventTakedown

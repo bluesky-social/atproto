@@ -106,7 +106,7 @@ export default function (server: Server, ctx: AppContext) {
         })
 
         if (
-          result.action === 'com.atproto.admin.defs#modEventTakedown' &&
+          isTakedownEvent &&
           result.subjectType === 'com.atproto.admin.defs#repoRef' &&
           result.subjectDid
         ) {
@@ -118,7 +118,7 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         if (
-          result.action === 'com.atproto.admin.defs#modEventTakedown' &&
+          isTakedownEvent &&
           result.subjectType === 'com.atproto.repo.strongRef' &&
           result.subjectUri
         ) {

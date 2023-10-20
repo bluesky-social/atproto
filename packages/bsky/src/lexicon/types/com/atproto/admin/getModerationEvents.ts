@@ -10,6 +10,7 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
+  sortDirection: 'asc' | 'desc'
   subject?: string
   limit: number
   cursor?: string

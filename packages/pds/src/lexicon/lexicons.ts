@@ -57,6 +57,12 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          creatorHandle: {
+            type: 'string',
+          },
+          subjectHandle: {
+            type: 'string',
+          },
         },
       },
       modEventViewDetail: {
@@ -174,6 +180,9 @@ export const schemaDict = {
               'lex:com.atproto.repo.strongRef',
             ],
           },
+          subjectRepoHandle: {
+            type: 'string',
+          },
           updatedAt: {
             type: 'string',
             format: 'datetime',
@@ -192,6 +201,10 @@ export const schemaDict = {
           muteUntil: {
             type: 'string',
             format: 'datetime',
+          },
+          lastReviewedBy: {
+            type: 'string',
+            format: 'did',
           },
           lastReviewedAt: {
             type: 'string',
@@ -933,6 +946,11 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            sortDirection: {
+              type: 'string',
+              default: 'desc',
+              enum: ['asc', 'desc'],
+            },
             subject: {
               type: 'string',
             },
@@ -1113,6 +1131,28 @@ export const schemaDict = {
             reviewState: {
               type: 'string',
               description: 'Specify when fetching subjects in a certain state',
+            },
+            ignoreSubjects: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
+            lastReviewedBy: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Get all subject statuses that were reviewed by a specific moderator',
+            },
+            sortField: {
+              type: 'string',
+              default: 'lastReportedAt',
+              enum: ['lastReviewedAt', 'lastReportedAt'],
+            },
+            sortDirection: {
+              type: 'string',
+              default: 'desc',
+              enum: ['asc', 'desc'],
             },
             limit: {
               type: 'integer',

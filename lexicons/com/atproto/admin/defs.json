@@ -34,7 +34,9 @@
         },
         "subjectBlobCids": { "type": "array", "items": { "type": "string" } },
         "createdBy": { "type": "string", "format": "did" },
-        "createdAt": { "type": "string", "format": "datetime" }
+        "createdAt": { "type": "string", "format": "datetime" },
+        "creatorHandle": { "type": "string" },
+        "subjectHandle": { "type": "string" }
       }
     },
     "modEventViewDetail": {
@@ -119,6 +121,7 @@
           "type": "union",
           "refs": ["#repoRef", "com.atproto.repo.strongRef"]
         },
+        "subjectRepoHandle": { "type": "string" },
         "updatedAt": { "type": "string", "format": "datetime" },
         "createdAt": { "type": "string", "format": "datetime" },
         "reviewState": {
@@ -131,6 +134,10 @@
         "muteUntil": {
           "type": "string",
           "format": "datetime"
+        },
+        "lastReviewedBy": {
+          "type": "string",
+          "format": "did"
         },
         "lastReviewedAt": {
           "type": "string",

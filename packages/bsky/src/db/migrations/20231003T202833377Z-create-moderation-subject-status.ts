@@ -38,6 +38,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('note', 'varchar')
     .addColumn('muteUntil', 'varchar')
     .addColumn('lastReviewedAt', 'varchar')
+    .addColumn('lastReviewedBy', 'varchar')
 
     // report state
     .addColumn('lastReportedAt', 'varchar')

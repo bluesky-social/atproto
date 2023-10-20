@@ -30,6 +30,8 @@ export interface ModEventView {
   subjectBlobCids: string[]
   createdBy: string
   createdAt: string
+  creatorHandle?: string
+  subjectHandle?: string
   [k: string]: unknown
 }
 
@@ -115,11 +117,13 @@ export interface SubjectStatusView {
     | RepoRef
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
+  subjectRepoHandle?: string
   updatedAt: string
   createdAt: string
   reviewState: SubjectReviewState
   note?: string
   muteUntil?: string
+  lastReviewedBy?: string
   lastReviewedAt?: string
   lastReportedAt?: string
   takendown?: boolean
