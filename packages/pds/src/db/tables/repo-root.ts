@@ -5,6 +5,7 @@ export interface RepoRoot {
   rev: string | null
   indexedAt: string
   takedownId: number | null
+  emailConfirmedAt: string | null
 }
 
 export const tableName = 'repo_root'

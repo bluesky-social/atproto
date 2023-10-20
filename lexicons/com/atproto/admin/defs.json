@@ -240,7 +240,8 @@
           }
         },
         "invitesDisabled": { "type": "boolean" },
-        "inviteNote": { "type": "string" }
+        "inviteNote": { "type": "string" },
+        "emailConfirmedAt": { "type": "string", "format": "datetime" }
       }
     },
     "repoViewNotFound": {

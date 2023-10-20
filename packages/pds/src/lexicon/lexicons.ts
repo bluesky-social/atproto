@@ -422,6 +422,10 @@ export const schemaDict = {
           inviteNote: {
             type: 'string',
           },
+          emailConfirmedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
         },
       },
       repoViewNotFound: {

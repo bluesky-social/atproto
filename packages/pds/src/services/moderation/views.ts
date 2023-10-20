@@ -118,6 +118,7 @@ export class ModerationViews {
         invitedBy: invitedBy[r.did],
         invitesDisabled: invitesDisabled === 1,
         inviteNote: inviteNote ?? undefined,
+        emailConfirmedAt: r.emailConfirmedAt ?? undefined,
       }
     })
 
