@@ -6083,8 +6083,12 @@ export const schemaDict = {
       },
       listItemView: {
         type: 'object',
-        required: ['subject'],
+        required: ['uri', 'subject'],
         properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
           subject: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileView',
