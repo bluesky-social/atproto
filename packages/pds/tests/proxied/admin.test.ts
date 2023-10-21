@@ -1,17 +1,17 @@
-import AtpAgent from '@atproto/api'
+import AtpAgent from '@waverlyai/atproto-api'
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import {
   REASONOTHER,
   REASONSPAM,
-} from '@atproto/api/src/client/types/com/atproto/moderation/defs'
+} from '@waverlyai/atproto-api/src/client/types/com/atproto/moderation/defs'
 import { forSnapshot } from '../_util'
 import {
   ACKNOWLEDGE,
   FLAG,
   TAKEDOWN,
-} from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { NotFoundError } from '@atproto/api/src/client/types/app/bsky/feed/getPostThread'
+} from '@waverlyai/atproto-api/src/client/types/com/atproto/admin/defs'
+import { NotFoundError } from '@waverlyai/atproto-api/src/client/types/app/bsky/feed/getPostThread'
 
 describe('proxies admin requests', () => {
   let network: TestNetwork

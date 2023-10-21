@@ -1,4 +1,4 @@
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent } from '@waverlyai/atproto-api'
 import { crawlerLogger as log } from './logger'
 import { MINUTE } from '@atproto/common'
 

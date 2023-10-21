@@ -1,4 +1,4 @@
-import AtpAgent from '@atproto/api'
+import AtpAgent from '@waverlyai/atproto-api'
 import { wait } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { CommitData, readCarWithRoot, verifyRepo } from '@atproto/repo'

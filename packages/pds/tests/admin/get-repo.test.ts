@@ -1,9 +1,9 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import AtpAgent from '@waverlyai/atproto-api'
 import {
   ACKNOWLEDGE,
   TAKEDOWN,
-} from '@atproto/api/src/client/types/com/atproto/admin/defs'
+} from '@waverlyai/atproto-api/src/client/types/com/atproto/admin/defs'
 import {
   REASONOTHER,
   REASONSPAM,

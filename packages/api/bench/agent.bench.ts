@@ -1,4 +1,4 @@
-import { BskyAgent } from '@atproto/api'
+import { BskyAgent } from '@waverlyai/atproto-api'
 
 describe('Agent Benchmarks', () => {
   it('Creates new Agent instance 10 times', () => {

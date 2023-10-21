@@ -111,9 +111,6 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
     devDependencies:
-      '@atproto/dev-env':
-        specifier: workspace:^
-        version: link:../dev-env
       '@atproto/lex-cli':
         specifier: workspace:^
         version: link:../lex-cli
@@ -160,8 +157,8 @@ importers:
   packages/bsky:
     dependencies:
       '@atproto/api':
-        specifier: workspace:^
-        version: link:../api
+        specifier: ^0.6.20
+        version: 0.6.20
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
@@ -241,15 +238,9 @@ importers:
         specifier: 3.0.0
         version: 3.0.0
     devDependencies:
-      '@atproto/dev-env':
-        specifier: workspace:^
-        version: link:../dev-env
       '@atproto/lex-cli':
         specifier: workspace:^
         version: link:../lex-cli
-      '@atproto/pds':
-        specifier: workspace:^
-        version: link:../pds
       '@atproto/xrpc':
         specifier: workspace:^
         version: link:../xrpc
@@ -331,9 +322,6 @@ importers:
 
   packages/dev-env:
     dependencies:
-      '@atproto/api':
-        specifier: workspace:^
-        version: link:../api
       '@atproto/bsky':
         specifier: workspace:^
         version: link:../bsky
@@ -349,9 +337,6 @@ importers:
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
-      '@atproto/pds':
-        specifier: workspace:^
-        version: link:../pds
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
@@ -364,6 +349,12 @@ importers:
       '@did-plc/server':
         specifier: ^0.0.1
         version: 0.0.1
+      '@waverlyai/atproto-api':
+        specifier: workspace:^
+        version: link:../api
+      '@waverlyai/atproto-pds':
+        specifier: workspace:^
+        version: link:../pds
       better-sqlite3:
         specifier: ^7.6.2
         version: 7.6.2
@@ -468,9 +459,6 @@ importers:
 
   packages/pds:
     dependencies:
-      '@atproto/api':
-        specifier: workspace:^
-        version: link:../api
       '@atproto/aws':
         specifier: workspace:^
         version: link:../aws
@@ -501,6 +489,9 @@ importers:
       '@did-plc/lib':
         specifier: ^0.0.1
         version: 0.0.1
+      '@waverlyai/atproto-api':
+        specifier: workspace:^
+        version: link:../api
       better-sqlite3:
         specifier: ^7.6.2
         version: 7.6.2
@@ -583,9 +574,6 @@ importers:
       '@atproto/bsky':
         specifier: workspace:^
         version: link:../bsky
-      '@atproto/dev-env':
-        specifier: workspace:^
-        version: link:../dev-env
       '@atproto/lex-cli':
         specifier: workspace:^
         version: link:../lex-cli
@@ -755,7 +743,7 @@ importers:
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../../packages/crypto
-      '@atproto/pds':
+      '@waverlyai/atproto-pds':
         specifier: workspace:^
         version: link:../../packages/pds
       dd-trace:
@@ -777,6 +765,27 @@ packages:
       '@jridgewell/trace-mapping': 0.3.19
     dev: true
 
+  /@atproto/api@0.6.20:
+    resolution: {integrity: sha512-+peoKgkaxbglXQg9qEZcZIvyWm39yj0+syV3TBDrz5cWK4OIsdOyYBg2iISy+jvB5RzEUMe2WvOojP6Nq34mOg==}
+    dependencies:
+      '@atproto/common-web': 0.2.1
+      '@atproto/lexicon': 0.2.2
+      '@atproto/syntax': 0.1.2
+      '@atproto/xrpc': 0.3.2
+      multiformats: 9.9.0
+      tlds: 1.234.0
+      typed-emitter: 2.1.0
+    dev: false
+
+  /@atproto/common-web@0.2.1:
+    resolution: {integrity: sha512-5AoDKkKz7JhXSiicjhPihA/MJMlSuTQ9Aed9fflPuoTuT6C3aXbxaUZEcqqipSwlCfGpOzPmJmWJjMWWsYr2ew==}
+    dependencies:
+      graphemer: 1.4.0
+      multiformats: 9.9.0
+      uint8arrays: 3.0.0
+      zod: 3.21.4
+    dev: false
+
   /@atproto/common@0.1.0:
     resolution: {integrity: sha512-OB5tWE2R19jwiMIs2IjQieH5KTUuMb98XGCn9h3xuu6NanwjlmbCYMv08fMYwIp3UQ6jcq//84cDT3Bu6fJD+A==}
     dependencies:
@@ -793,6 +802,29 @@ packages:
       multiformats: 9.9.0
       one-webcrypto: 1.0.3
       uint8arrays: 3.0.0
+
+  /@atproto/lexicon@0.2.2:
+    resolution: {integrity: sha512-CvmjaSDavHMOJTuNYE8VjYhL7TVxBYV8QSWh2jHCpzfmj02DvVD9UBIfnoVv67POJkEtWXddjoV9beaIbaq/Xg==}
+    dependencies:
+      '@atproto/common-web': 0.2.1
+      '@atproto/syntax': 0.1.2
+      iso-datestring-validator: 2.2.2
+      multiformats: 9.9.0
+      zod: 3.21.4
+    dev: false
+
+  /@atproto/syntax@0.1.2:
+    resolution: {integrity: sha512-n6VSuccMGouwftCvZBq9WNwI0qYCMOH/lTHSV+/dT232lX7pIrqisOlErUSBoOJ49B1Wxy1DjeeBS26ap9SsGQ==}
+    dependencies:
+      '@atproto/common-web': 0.2.1
+    dev: false
+
+  /@atproto/xrpc@0.3.2:
+    resolution: {integrity: sha512-D9jGjcFnEMHuGQ56v6+78uX3RiytKLrA5ITLq6shy0Qj6Zvt5MqV+/cTFuNPKrNCrnWOtHFeRQwMqyGhNS9qZQ==}
+    dependencies:
+      '@atproto/lexicon': 0.2.2
+      zod: 3.21.4
+    dev: false
 
   /@aws-crypto/crc32@2.0.0:
     resolution: {integrity: sha512-TvE1r2CUueyXOuHdEigYjIZVesInd9KN+K/TFFNfkkxRThiNxO6i4ZqqAVMoEjAamZZ1AA8WXJkjCz7YShHPQA==}

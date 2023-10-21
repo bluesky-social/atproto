@@ -1,10 +1,10 @@
-import AtpAgent, { ComAtprotoServerCreateAccount } from '@atproto/api'
+import AtpAgent, { ComAtprotoServerCreateAccount } from '@waverlyai/atproto-api'
 import * as crypto from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { AppContext } from '../src'
 import { DAY } from '@atproto/common'
 import { genInvCodes } from '../src/api/com/atproto/server/util'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { TAKEDOWN } from '@waverlyai/atproto-api/src/client/types/com/atproto/admin/defs'
 
 describe('account', () => {
   let network: TestNetworkNoAppView

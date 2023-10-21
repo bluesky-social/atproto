@@ -4,7 +4,7 @@ import {
   RecordRef,
   SeedClient,
 } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import AtpAgent from '@waverlyai/atproto-api'
 import { AtUri } from '@atproto/syntax'
 import { BlobNotFoundError } from '@atproto/repo'
 import { forSnapshot } from '../_util'

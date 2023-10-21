@@ -3,7 +3,7 @@
  * It's not our prettiest work, but it gets the job done
  */
 
-import { BskyAgent, stringifyLex, jsonToLex } from '@atproto/api'
+import { BskyAgent, stringifyLex, jsonToLex } from '@waverlyai/atproto-api'
 import RNFS from 'react-native-fs'
 
 const GET_TIMEOUT = 15e3 // 15s

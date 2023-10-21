@@ -1,5 +1,5 @@
 import util from 'util'
-import AtpAgent from '@atproto/api'
+import AtpAgent from '@waverlyai/atproto-api'
 import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import { ThreadViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'

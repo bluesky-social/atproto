@@ -1,5 +1,5 @@
 import { makeAlgos } from '@atproto/bsky'
-import AtpAgent, { AtUri, FeedNS } from '@atproto/api'
+import AtpAgent, { AtUri, FeedNS } from '@waverlyai/atproto-api'
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import { forSnapshot } from '../_util'

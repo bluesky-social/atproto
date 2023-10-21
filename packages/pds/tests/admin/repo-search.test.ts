@@ -1,6 +1,6 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import AtpAgent from '@waverlyai/atproto-api'
+import { TAKEDOWN } from '@waverlyai/atproto-api/src/client/types/com/atproto/admin/defs'
 import { paginateAll } from '../_util'
 import usersBulkSeed from '../seeds/users-bulk'
 

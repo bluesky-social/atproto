@@ -1,9 +1,9 @@
 import * as jwt from 'jsonwebtoken'
-import AtpAgent from '@atproto/api'
+import AtpAgent from '@waverlyai/atproto-api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import * as CreateSession from '@atproto/api/src/client/types/com/atproto/server/createSession'
-import * as RefreshSession from '@atproto/api/src/client/types/com/atproto/server/refreshSession'
+import { TAKEDOWN } from '@waverlyai/atproto-api/src/client/types/com/atproto/admin/defs'
+import * as CreateSession from '@waverlyai/atproto-api/src/client/types/com/atproto/server/createSession'
+import * as RefreshSession from '@waverlyai/atproto-api/src/client/types/com/atproto/server/refreshSession'
 
 describe('auth', () => {
   let network: TestNetworkNoAppView

@@ -4,7 +4,7 @@ import AtpAgent, {
   AtUri,
   RichText,
   AppBskyRichtextFacet,
-} from '@atproto/api'
+} from '@waverlyai/atproto-api'
 import basicSeed from './seeds/basic'
 
 describe('pds posts record creation', () => {

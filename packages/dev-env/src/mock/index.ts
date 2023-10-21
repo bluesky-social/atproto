@@ -3,7 +3,7 @@ import AtpAgent from '@waverlyai/atproto-api'
 import {
   REASONSPAM,
   REASONOTHER,
-} from '@atproto/api/src/client/types/com/atproto/moderation/defs'
+} from '@waverlyai/atproto-api/src/client/types/com/atproto/moderation/defs'
 import { TestNetwork } from '../index'
 import { postTexts, replyTexts } from './data'
 import labeledImgB64 from './img/labeled-img-b64'
@@ -136,7 +136,7 @@ export async function generateMockSetup(env: TestNetwork) {
     )
   }
 
-  await waverly.updateUsers(allUsers)
+  //  await waverly.updateUsers(allUsers)
 
   // Report one user
   const reporter = picka(users)

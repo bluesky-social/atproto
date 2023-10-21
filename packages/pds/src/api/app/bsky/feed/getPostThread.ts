@@ -1,5 +1,5 @@
 import { AtUri } from '@atproto/syntax'
-import { AppBskyFeedGetPostThread } from '@atproto/api'
+import { AppBskyFeedGetPostThread } from '@waverlyai/atproto-api'
 import { Headers } from '@atproto/xrpc'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
