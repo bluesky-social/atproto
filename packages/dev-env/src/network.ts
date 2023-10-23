@@ -70,12 +70,6 @@ export class TestNetwork extends TestNetworkNoAppView {
       }
       await wait(5)
     }
-    console.log(sub.partitions)
-    console.log(
-      `SEQUENCER TIMED OUT: (${lastSeq}, ${sub.partitions.get(0).cursor})`,
-    )
-    const ingesterCursor = await this.bsky.ingester.sub.getCursor()
-    console.log('INGESTER CURSOR: ', ingesterCursor)
     throw new Error(`Sequence was not processed within ${timeout}ms`)
   }
 
