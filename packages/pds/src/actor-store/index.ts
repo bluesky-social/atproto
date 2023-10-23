@@ -33,6 +33,16 @@ export class ActorStore {
       dispose: async (db) => {
         await db.close()
       },
+      fetchMethod: async (key, _staleValue, { signal }) => {
+        const loaded = await this.loadDbFile(key)
+        // if fetch is aborted then another handler opened the db first
+        // so we can close this handle and return `undefined`
+        if (signal.aborted) {
+          await loaded.close()
+          return undefined
+        }
+        return loaded
+      },
     })
   }
 
@@ -65,10 +75,9 @@ export class ActorStore {
   }
 
   async db(did: string): Promise<ActorDb> {
-    let got = this.cache.get(did)
+    const got = await this.cache.fetch(did)
     if (!got) {
-      got = await this.loadDbFile(did)
-      this.cache.set(did, got)
+      throw new InvalidRequestError('Repo not found', 'NotFound')
     }
     return got
   }
