@@ -37,8 +37,8 @@ export class SqlRepoReader extends ReadableBlockstore {
     const cached = this.cache.get(cid)
     if (cached) return cached
     const found = await this.db.db
-      .selectFrom('ipld_block')
-      .where('ipld_block.cid', '=', cid.toString())
+      .selectFrom('repo_block')
+      .where('repo_block.cid', '=', cid.toString())
       .select('content')
       .executeTakeFirst()
     if (!found) return null
@@ -60,9 +60,9 @@ export class SqlRepoReader extends ReadableBlockstore {
     await Promise.all(
       chunkArray(missingStr, 500).map(async (batch) => {
         const res = await this.db.db
-          .selectFrom('ipld_block')
-          .where('ipld_block.cid', 'in', batch)
-          .select(['ipld_block.cid as cid', 'ipld_block.content as content'])
+          .selectFrom('repo_block')
+          .where('repo_block.cid', 'in', batch)
+          .select(['repo_block.cid as cid', 'repo_block.content as content'])
           .execute()
         for (const row of res) {
           const cid = CID.parse(row.cid)
@@ -117,7 +117,7 @@ export class SqlRepoReader extends ReadableBlockstore {
   async getBlockRange(since?: string, cursor?: RevCursor) {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
-      .selectFrom('ipld_block')
+      .selectFrom('repo_block')
       .select(['cid', 'repoRev', 'content'])
       .orderBy('repoRev', 'desc')
       .orderBy('cid', 'desc')

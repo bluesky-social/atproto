@@ -105,11 +105,11 @@ export class LocalViewer {
   async getRecordsSinceRev(rev: string): Promise<LocalRecords> {
     const res = await this.actorDb.db
       .selectFrom('record')
-      .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
+      .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
       .select([
-        'ipld_block.content',
+        'repo_block.content',
         'uri',
-        'ipld_block.cid',
+        'repo_block.cid',
         'record.indexedAt',
       ])
       .where('record.repoRev', '>', rev)
@@ -140,7 +140,7 @@ export class LocalViewer {
   async getProfileBasic(): Promise<ProfileViewBasic | null> {
     const profileQuery = this.actorDb.db
       .selectFrom('record')
-      .leftJoin('ipld_block', 'ipld_block.cid', 'record.cid')
+      .leftJoin('repo_block', 'repo_block.cid', 'record.cid')
       .where('record.collection', '=', ids.AppBskyActorProfile)
       .where('record.rkey', '=', 'self')
       .selectAll()

@@ -42,7 +42,7 @@ export class RecordReader {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('record')
-      .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
+      .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
       .where('record.collection', '=', collection)
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),
@@ -90,7 +90,7 @@ export class RecordReader {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('record')
-      .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
+      .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
       .where('record.uri', '=', uri.toString())
       .selectAll()
       .if(!includeSoftDeleted, (qb) =>

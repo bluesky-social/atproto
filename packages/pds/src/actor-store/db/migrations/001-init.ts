@@ -9,7 +9,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
-    .createTable('ipld_block')
+    .createTable('repo_block')
     .addColumn('cid', 'varchar', (col) => col.primaryKey())
     .addColumn('repoRev', 'varchar', (col) => col.notNull())
     .addColumn('size', 'integer', (col) => col.notNull())
@@ -17,8 +17,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
-    .createIndex('ipld_block_repo_rev_idx')
-    .on('ipld_block')
+    .createIndex('repo_block_repo_rev_idx')
+    .on('repo_block')
     .columns(['repoRev', 'cid'])
     .execute()
 
@@ -99,6 +99,6 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('record_blob').execute()
   await db.schema.dropTable('blob').execute()
   await db.schema.dropTable('record').execute()
-  await db.schema.dropTable('ipld_block').execute()
+  await db.schema.dropTable('repo_block').execute()
   await db.schema.dropTable('repo_root').execute()
 }
