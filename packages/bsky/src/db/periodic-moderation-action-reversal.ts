@@ -2,9 +2,8 @@ import { wait } from '@atproto/common'
 import { Leader } from './leader'
 import { dbLogger } from '../logger'
 import AppContext from '../context'
-import AtpAgent, { AtUri } from '@atproto/api'
-import { buildBasicAuth } from '../auth'
-import { ModerationEventRow } from '../services/moderation/types'
+import { AtUri } from '@atproto/api'
+import { ModerationSubjectStatusRow } from '../services/moderation/types'
 import { CID } from 'multiformats/cid'
 
 export const MODERATION_ACTION_REVERSAL_ID = 1011
@@ -15,61 +14,34 @@ export class PeriodicModerationEventReversal {
     this.appContext.db.getPrimary(),
   )
   destroyed = false
-  pushAgent?: AtpAgent
 
-  constructor(private appContext: AppContext) {
-    if (appContext.cfg.moderationActionReverseUrl) {
-      const url = new URL(appContext.cfg.moderationActionReverseUrl)
-      this.pushAgent = new AtpAgent({ service: url.origin })
-      this.pushAgent.api.setHeader(
-        'authorization',
-        buildBasicAuth(url.username, url.password),
-      )
-    }
-  }
+  constructor(private appContext: AppContext) {}
 
-  async revertAction(actionRow: ModerationEventRow) {
-    const reverseAction = {
-      id: actionRow.id,
-      createdBy: actionRow.createdBy,
-      createdAt: new Date(),
-      // TODO: do we need to take care of blob cid separately here?
-      subject:
-        actionRow.subjectUri && actionRow.subjectCid
-          ? {
-              uri: new AtUri(actionRow.subjectUri),
-              cid: CID.parse(actionRow.subjectCid),
-            }
-          : { did: actionRow.subjectDid },
-      comment: `[SCHEDULED_REVERSAL] Reverting action as originally scheduled`,
-    }
-
-    // TODO: do we still need this?
-    // if (this.pushAgent) {
-    //   await this.pushAgent.com.atproto.admin.reverseModerationEvent(
-    //     reverseAction,
-    //   )
-    //   return
-    // }
-
+  async revertState(eventRow: ModerationSubjectStatusRow) {
     await this.appContext.db.getPrimary().transaction(async (dbTxn) => {
       const moderationTxn = this.appContext.services.moderation(dbTxn)
-      const labelTxn = this.appContext.services.label(dbTxn)
-      await moderationTxn.revertAction(reverseAction, async (labelParams) =>
-        labelTxn.formatAndCreate(
-          this.appContext.cfg.labelerDid,
-          labelParams.subjectUri ?? labelParams.subjectDid,
-          labelParams.subjectCid,
-          {
-            create: labelParams.createLabelVals?.length
-              ? labelParams.createLabelVals.split(' ')
-              : undefined,
-            negate: labelParams.negateLabelVals?.length
-              ? labelParams.negateLabelVals.split(' ')
-              : undefined,
-          },
-        ),
-      )
+      const originalEvent =
+        await moderationTxn.getLastReversibleEventForSubject(eventRow)
+      if (originalEvent) {
+        await moderationTxn.revertState({
+          refEventId: originalEvent.id,
+          action: originalEvent.action,
+          createdBy: originalEvent.createdBy,
+          comment:
+            '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
+          subject:
+            eventRow.recordPath && eventRow.recordCid
+              ? {
+                  uri: AtUri.make(
+                    eventRow.did,
+                    ...eventRow.recordPath.split('/'),
+                  ),
+                  cid: CID.parse(eventRow.recordCid),
+                }
+              : { did: eventRow.did },
+          createdAt: new Date(),
+        })
+      }
     })
   }
 
@@ -77,12 +49,12 @@ export class PeriodicModerationEventReversal {
     const moderationService = this.appContext.services.moderation(
       this.appContext.db.getPrimary(),
     )
-    const actionsDueForReversal =
-      await moderationService.getActionsDueForReversal()
+    const subjectsDueForReversal =
+      await moderationService.getSubjectsDueForReversal()
 
     // We shouldn't have too many actions due for reversal at any given time, so running in parallel is probably fine
     // Internally, each reversal runs within its own transaction
-    await Promise.all(actionsDueForReversal.map(this.revertAction.bind(this)))
+    await Promise.all(subjectsDueForReversal.map(this.revertState.bind(this)))
   }
 
   async run() {

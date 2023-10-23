@@ -47,6 +47,15 @@ const getSubjectStatusForModerationEvent = ({
       return {
         lastReviewedBy: createdBy,
         reviewState: REVIEWCLOSED,
+        takendown: false,
+        suspendUntil: null,
+        lastReviewedAt: new Date().toISOString(),
+      }
+    case 'com.atproto.admin.defs#modEventReverseMute':
+      return {
+        lastReviewedBy: createdBy,
+        muteUntil: null,
+        reviewState: REVIEWOPEN,
         lastReviewedAt: new Date().toISOString(),
       }
     case 'com.atproto.admin.defs#modEventTakedown':
@@ -58,6 +67,9 @@ const getSubjectStatusForModerationEvent = ({
       }
     case 'com.atproto.admin.defs#modEventMute':
       return {
+        lastReviewedBy: createdBy,
+        reviewState: REVIEWOPEN,
+        lastReviewedAt: new Date().toISOString(),
         // By default, mute for 24hrs
         muteUntil: new Date(
           Date.now() + (durationInHours || 24) * HOUR,
@@ -119,7 +131,6 @@ export const adjustModerationSubjectStatus = async (
       ? sql<string[]>`${JSON.stringify(blobCids.map((c) => c.toString()))}`
       : null,
     // TODO: fix this?
-    // @ts-ignore
   } as ModerationSubjectStatusRow
 
   if (

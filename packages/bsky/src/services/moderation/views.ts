@@ -147,6 +147,14 @@ export class ModerationViews {
           ...eventView.event,
           durationInHours: res.durationInHours ?? undefined,
         }
+
+        if (res.durationInHours) {
+          const createdAt = new Date(eventView.createdAt)
+          createdAt.setTime(
+            createdAt.getTime() + res.durationInHours * 3600 * 1000,
+          )
+          eventView.event.expiresAt = createdAt.toISOString()
+        }
       }
 
       if (res.action === 'com.atproto.admin.defs#modEventLabel') {

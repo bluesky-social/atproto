@@ -435,6 +435,8 @@ export const REVIEWCLOSED = 'com.atproto.admin.defs#reviewClosed'
 export interface ModEventTakedown {
   /** Indicates how long the takedown should be in effect before automatically expiring. */
   durationInHours?: number
+  /** Indicates at what time the subject's takedown will be/was reverted. */
+  expiresAt?: string
   [k: string]: unknown
 }
 
@@ -584,6 +586,8 @@ export function validateModEventEscalate(v: unknown): ValidationResult {
 export interface ModEventMute {
   /** Indicates how long the subject should remain muted. */
   durationInHours: number
+  /** Indicates at what time the subject will be unmuted. */
+  expiresAt?: string
   [k: string]: unknown
 }
 
@@ -597,4 +601,23 @@ export function isModEventMute(v: unknown): v is ModEventMute {
 
 export function validateModEventMute(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#modEventMute', v)
+}
+
+/** Revert mute action on a subject */
+export interface ModEventReverseMute {
+  /** Describe reasoning behind the reversal. */
+  comment?: string
+  [k: string]: unknown
+}
+
+export function isModEventReverseMute(v: unknown): v is ModEventReverseMute {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#modEventReverseMute'
+  )
+}
+
+export function validateModEventReverseMute(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventReverseMute', v)
 }

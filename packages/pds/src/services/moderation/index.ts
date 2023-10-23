@@ -352,7 +352,7 @@ export class ModerationService {
     return actionResult
   }
 
-  async getActionsDueForReversal(): Promise<Array<ModerationActionRow>> {
+  async getSubjectsDueForReversal(): Promise<Array<ModerationActionRow>> {
     const actionsDueForReversal = await this.db.db
       .selectFrom('moderation_action')
       // Get entries that have an durationInHours that has passed and have not been reversed

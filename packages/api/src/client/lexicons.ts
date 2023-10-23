@@ -615,6 +615,12 @@ export const schemaDict = {
             description:
               'Indicates how long the takedown should be in effect before automatically expiring.',
           },
+          expiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              "Indicates at what time the subject's takedown will be/was reverted.",
+          },
         },
       },
       modEventReverseTakedown: {
@@ -707,6 +713,21 @@ export const schemaDict = {
             type: 'integer',
             description: 'Indicates how long the subject should remain muted.',
           },
+          expiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'Indicates at what time the subject will be unmuted.',
+          },
+        },
+      },
+      modEventReverseMute: {
+        type: 'object',
+        description: 'Revert mute action on a subject',
+        properties: {
+          comment: {
+            type: 'string',
+            description: 'Describe reasoning behind the reversal.',
+          },
         },
       },
     },
@@ -796,6 +817,7 @@ export const schemaDict = {
                   'lex:com.atproto.admin.defs#modEventReport',
                   'lex:com.atproto.admin.defs#modEventMute',
                   'lex:com.atproto.admin.defs#modEventReverseTakedown',
+                  'lex:com.atproto.admin.defs#modEventReverseMute',
                 ],
               },
               subject: {

@@ -30,7 +30,7 @@ export class PeriodicModerationActionReversal {
       this.appContext.db,
     )
     const actionsDueForReversal =
-      await moderationService.getActionsDueForReversal()
+      await moderationService.getSubjectsDueForReversal()
 
     // We shouldn't have too many actions due for reversal at any given time, so running in parallel is probably fine
     // Internally, each reversal runs within its own transaction

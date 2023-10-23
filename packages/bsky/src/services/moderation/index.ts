@@ -6,8 +6,8 @@ import { ModerationViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
 import { ImageInvalidator } from '../../image/invalidator'
 import {
-  isModEventComment,
   isModEventLabel,
+  isModEventMute,
   isModEventReport,
   isModEventTakedown,
 } from '../../lexicon/types/com/atproto/admin/defs'
@@ -24,17 +24,6 @@ import {
   ReversibleModerationEvent,
   SubjectInfo,
 } from './types'
-
-type LabelerFunc = (
-  labelParams: Pick<
-    ModerationEventRow,
-    | 'subjectCid'
-    | 'subjectDid'
-    | 'subjectUri'
-    | 'createLabelVals'
-    | 'negateLabelVals'
-  >,
-) => Promise<unknown>
 
 export class ModerationService {
   constructor(
@@ -216,7 +205,8 @@ export class ModerationService {
         refEventId: event.refEventId,
         meta,
         expiresAt:
-          isModEventTakedown(event) && event.durationInHours
+          (isModEventTakedown(event) || isModEventMute(event)) &&
+          event.durationInHours
             ? addHoursToDate(event.durationInHours, createdAt).toISOString()
             : undefined,
         ...subjectInfo,
@@ -229,33 +219,85 @@ export class ModerationService {
     return actionResult
   }
 
-  async getActionsDueForReversal(): Promise<ModerationEventRow[]> {
-    const actionsDueForReversal = await this.db.db
+  async getLastReversibleEventForSubject({
+    did,
+    muteUntil,
+    recordPath,
+    suspendUntil,
+  }: ModerationSubjectStatusRow) {
+    const isSuspended = suspendUntil && new Date(suspendUntil) < new Date()
+    const isMuted = muteUntil && new Date(muteUntil) < new Date()
+
+    // If the subject is neither suspended nor muted don't bother finding the last reversible event
+    // Ideally, this should never happen because the caller of this method should only call this
+    // after ensuring that the suspended or muted subjects are being reversed
+    if (!isSuspended && !isMuted) {
+      return null
+    }
+
+    let builder = this.db.db
       .selectFrom('moderation_event')
-      .where('durationInHours', 'is not', null)
-      .where('expiresAt', '<', new Date().toISOString())
+      .where('subjectDid', '=', did)
+
+    if (recordPath) {
+      builder = builder.where('subjectUri', 'like', `%${recordPath}%`)
+    }
+
+    // Means the subject was suspended and needs to be unsuspended
+    if (isSuspended) {
+      builder = builder
+        .where('action', '=', 'com.atproto.admin.defs#modEventTakedown')
+        .where('durationInHours', 'is not', null)
+    }
+    if (isMuted) {
+      builder = builder
+        .where('action', '=', 'com.atproto.admin.defs#modEventMute')
+        .where('durationInHours', 'is not', null)
+    }
+
+    return await builder
+      .orderBy('id', 'desc')
+      .selectAll()
+      .limit(1)
+      .executeTakeFirst()
+  }
+
+  async getSubjectsDueForReversal(): Promise<ModerationSubjectStatusRow[]> {
+    const subjectsDueForReversal = await this.db.db
+      .selectFrom('moderation_subject_status')
+      .where('suspendUntil', '<', new Date().toISOString())
+      .orWhere('muteUntil', '<', new Date().toISOString())
       .selectAll()
       .execute()
 
-    return actionsDueForReversal
+    return subjectsDueForReversal
   }
 
-  // TODO: This isn't ideal. inside .logEvent() we fetch the refEventId but the event itself
-  // is already being fetched before calling `revertAction`
-  async revertAction(
-    { createdBy, createdAt, comment, subject }: ReversibleModerationEvent,
-    applyLabels: LabelerFunc,
-  ) {
+  async revertState({
+    createdBy,
+    createdAt,
+    comment,
+    subject,
+    action,
+  }: ReversibleModerationEvent) {
+    const isRevertingTakedown =
+      action === 'com.atproto.admin.defs#modEventTakedown'
     this.db.assertTransaction()
     const result = await this.logEvent({
       event: {
-        $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+        $type: isRevertingTakedown
+          ? 'com.atproto.admin.defs#modEventReverseTakedown'
+          : 'com.atproto.admin.defs#modEventReverseMute',
         comment,
       },
       createdAt,
       createdBy,
       subject,
     })
+
+    if (!isRevertingTakedown) {
+      return result
+    }
 
     if (
       result.subjectType === 'com.atproto.admin.defs#repoRef' &&
