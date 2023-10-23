@@ -1,5 +1,5 @@
 import { once, EventEmitter } from 'events'
-import AtpAgent, { ComAtprotoServerResetPassword } from '@atproto/api'
+import AtpAgent, { ComAtprotoServerResetPassword } from '@waverlyai/atproto-api'
 import { IdResolver } from '@atproto/identity'
 import * as crypto from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'

@@ -1,4 +1,4 @@
-import { Handler as SkeletonHandler } from '@atproto/pds/src/lexicon/types/app/bsky/feed/getFeedSkeleton'
+import { Handler as SkeletonHandler } from '@waverlyai/atproto-pds/src/lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { TestServerParams } from './types'
 import { TestPlc } from './plc'
 import { TestPds } from './pds'

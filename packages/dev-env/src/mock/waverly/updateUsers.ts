@@ -10,8 +10,8 @@ import aiEverydayAvatarB64 from './img/ai-everyday-avatar-b64'
 import aiGlamAvatarB64 from './img/ai-glam-avatar-b64'
 import photoTrioAvatarB64 from './img/photo-trio-avatar-b64'
 import smartGadgetsAvatarB64 from './img/smart-gadgets-avatar-b64'
-import { BlobRef } from '@atproto/api'
-import { Record as Profile } from '@atproto/api/src/client/types/app/bsky/actor/profile'
+import { BlobRef } from '@waverlyai/atproto-api'
+import { Record as Profile } from '@waverlyai/atproto-api/src/client/types/app/bsky/actor/profile'
 
 interface UserUpdate {
   avatar?: string

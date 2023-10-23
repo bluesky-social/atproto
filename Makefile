@@ -18,13 +18,15 @@ build: ## Compile all modules
 test: ## Run all tests
 	pnpm test
 
+## For Waverly we need to use localhost for the public URL, so that the image server works
 .PHONY: run-dev-env
 run-dev-env: ## Run a "development environment" shell
-	cd packages/dev-env; pnpm run start
+	cd packages/dev-env; PUBLIC_URL=LOCALHOST pnpm run start
 
+## For Waverly we need to use localhost for the public URL, so that the image server works
 .PHONY: run-dev-env-logged
 run-dev-env-logged: ## Run a "development environment" shell (with logging)
-	LOG_ENABLED=true cd packages/dev-env; pnpm run start | pnpm exec pino-pretty
+	cd packages/dev-env; PUBLIC_URL=LOCALHOST LOG_ENABLED=true pnpm run start | pnpm exec pino-pretty
 
 .PHONY: codegen
 codegen: ## Re-generate packages from lexicon/ files

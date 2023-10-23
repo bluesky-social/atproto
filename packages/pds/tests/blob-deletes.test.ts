@@ -1,5 +1,5 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import AtpAgent, { BlobRef } from '@atproto/api'
+import AtpAgent, { BlobRef } from '@waverlyai/atproto-api'
 import { Database } from '../src'
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import { ids } from '../src/lexicon/lexicons'

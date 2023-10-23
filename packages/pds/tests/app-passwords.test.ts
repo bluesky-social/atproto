@@ -1,5 +1,5 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import AtpAgent from '@waverlyai/atproto-api'
 import * as jwt from 'jsonwebtoken'
 
 describe('app_passwords', () => {

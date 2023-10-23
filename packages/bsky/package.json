@@ -31,7 +31,7 @@
     "migration:create": "ts-node ./bin/migration-create.ts"
   },
   "dependencies": {
-    "@atproto/api": "workspace:^",
+    "@atproto/api": "^0.6.20",
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/syntax": "workspace:^",
@@ -60,10 +60,8 @@
     "uint8arrays": "3.0.0"
   },
   "devDependencies": {
-    "@atproto/api": "workspace:^",
-    "@atproto/dev-env": "workspace:^",
+    "@atproto/api": "^0.6.20",
     "@atproto/lex-cli": "workspace:^",
-    "@atproto/pds": "workspace:^",
     "@atproto/xrpc": "workspace:^",
     "@did-plc/server": "^0.0.1",
     "@types/cors": "^2.8.12",

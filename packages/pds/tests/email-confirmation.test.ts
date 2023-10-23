@@ -1,13 +1,13 @@
 import { once, EventEmitter } from 'events'
 import Mail from 'nodemailer/lib/mailer'
-import AtpAgent from '@atproto/api'
+import AtpAgent from '@waverlyai/atproto-api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import userSeed from './seeds/users'
 import { ServerMailer } from '../src/mailer'
 import {
   ComAtprotoServerConfirmEmail,
   ComAtprotoServerUpdateEmail,
-} from '@atproto/api'
+} from '@waverlyai/atproto-api'
 
 describe('email confirmation', () => {
   let network: TestNetworkNoAppView

@@ -19,8 +19,8 @@ const {
   readEnv,
   httpLogger,
   PeriodicModerationActionReversal,
-} = require('@atproto/pds')
-const pkg = require('@atproto/pds/package.json')
+} = require('@waverlyai/atproto-pds')
+const pkg = require('@waverlyai/atproto-pds/package.json')
 
 const main = async () => {
   const env = readEnv()

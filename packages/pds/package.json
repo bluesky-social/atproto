@@ -32,7 +32,7 @@
     "migration:create": "ts-node ./bin/migration-create.ts"
   },
   "dependencies": {
-    "@atproto/api": "workspace:^",
+    "@waverlyai/atproto-api": "workspace:^",
     "@atproto/aws": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
@@ -71,9 +71,8 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "@atproto/api": "workspace:^",
+    "@waverlyai/atproto-api": "workspace:^",
     "@atproto/bsky": "workspace:^",
-    "@atproto/dev-env": "workspace:^",
     "@atproto/lex-cli": "workspace:^",
     "@did-plc/server": "^0.0.1",
     "@types/cors": "^2.8.12",
@@ -85,7 +84,6 @@
     "@types/pg": "^8.6.6",
     "@types/qs": "^6.9.7",
     "@types/sharp": "^0.31.0",
-    "@waverlyai/atproto-api": "*",
     "axios": "^0.27.2",
     "ws": "^8.12.0"
   }

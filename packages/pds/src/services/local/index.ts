@@ -29,7 +29,7 @@ import {
   Main as EmbedRecordWithMedia,
   isMain as isEmbedRecordWithMedia,
 } from '../../lexicon/types/app/bsky/embed/recordWithMedia'
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent } from '@waverlyai/atproto-api'
 import { Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 

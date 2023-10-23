@@ -1,4 +1,4 @@
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent } from '@waverlyai/atproto-api'
 import { randomStr } from '@atproto/crypto'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import userSeed from './seeds/basic'

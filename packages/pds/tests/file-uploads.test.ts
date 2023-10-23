@@ -1,6 +1,6 @@
 import fs from 'fs/promises'
 import { gzipSync } from 'zlib'
-import AtpAgent from '@atproto/api'
+import AtpAgent from '@waverlyai/atproto-api'
 import { Database } from '../src'
 import DiskBlobStore from '../src/storage/disk-blobstore'
 import * as uint8arrays from 'uint8arrays'

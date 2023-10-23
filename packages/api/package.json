@@ -40,7 +40,6 @@
   },
   "devDependencies": {
     "@atproto/lex-cli": "workspace:^",
-    "@atproto/dev-env": "workspace:^",
     "common-tags": "^1.8.2"
   }
 }

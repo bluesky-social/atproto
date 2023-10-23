@@ -3,7 +3,7 @@ import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as bsky from '@atproto/bsky'
 import { DAY, HOUR, wait } from '@atproto/common-web'
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent } from '@waverlyai/atproto-api'
 import { Secp256k1Keypair, randomIntFromSeed } from '@atproto/crypto'
 import { Client as PlcClient } from '@did-plc/lib'
 import { BskyConfig } from './types'
@@ -33,11 +33,15 @@ export class TestBsky {
       signer: serviceKeypair,
     })
 
+    // For Waverly
+    const publicUrl =
+      cfg.defaultPublicUrl === 'LOCALHOST' ? url : cfg.defaultPublicUrl
+
     const config = new bsky.ServerConfig({
       version: '0.0.0',
       port,
       didPlcUrl: cfg.plcUrl,
-      publicUrl: 'https://bsky.public.url',
+      publicUrl,
       serverDid,
       didCacheStaleTTL: HOUR,
       didCacheMaxTTL: DAY,

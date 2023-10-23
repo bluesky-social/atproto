@@ -1,4 +1,4 @@
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent } from '@waverlyai/atproto-api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as ident from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
