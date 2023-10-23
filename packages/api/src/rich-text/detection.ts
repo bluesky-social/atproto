@@ -86,7 +86,8 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
       facets.push({
         index: {
           byteStart: text.utf16IndexToUtf8Index(index),
-          byteEnd: text.utf16IndexToUtf8Index(index + tag.length), // inclusive of last char
+          // inclusive of last char TODO do we want this?
+          byteEnd: text.utf16IndexToUtf8Index(index + tag.length),
         },
         features: [
           {
