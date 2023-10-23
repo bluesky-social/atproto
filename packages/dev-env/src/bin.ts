@@ -14,12 +14,17 @@ const run = async () => {
 
 [ created by Bluesky ]`)
 
+  // For Waverly
   let port = 2583
   let hostname = 'localhost'
+  let defaultPublicUrl = 'https://bsky.public.url'
   if (process.env.PUBLIC_URL) {
-    const url = new URL(process.env.PUBLIC_URL)
-    port = Number(url.port)
-    hostname = url.hostname
+    defaultPublicUrl = process.env.PUBLIC_URL
+    if (defaultPublicUrl !== 'LOCALHOST') {
+      const url = new URL(process.env.PUBLIC_URL)
+      port = Number(url.port)
+      hostname = url.hostname
+    }
   }
 
   const network = await TestNetwork.create({
@@ -30,6 +35,7 @@ const run = async () => {
     },
     bsky: {
       dbPostgresSchema: 'bsky',
+      defaultPublicUrl,
     },
     plc: { port: 2582 },
   })
@@ -46,6 +52,10 @@ const run = async () => {
   for (const fg of network.feedGens) {
     console.log(`🤖 Feed Generator started http://localhost:${fg.port}`)
   }
+
+  // For Waverly
+  // Useful debug info
+  console.log(`🌐 Using public bsky URL ${network.bsky.ctx.cfg.publicUrl}`)
 }
 
 run()

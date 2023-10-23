@@ -23,6 +23,8 @@ export type BskyConfig = Partial<bsky.ServerConfig> & {
   algos?: bsky.MountedAlgos
   indexer?: Partial<bsky.IndexerConfig>
   ingester?: Partial<bsky.IngesterConfig>
+  // For Waverly
+  defaultPublicUrl?: string
 }
 
 export type TestServerParams = {

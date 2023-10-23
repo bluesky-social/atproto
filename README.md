@@ -2,7 +2,7 @@
 
 Welcome friends!
 
-It has been specialized for [Waverly](https://waverly.social) check out [our specific documentation](./WAVERLY_README.md).
+It has been specialized for [Waverly](https://waverly.social) check out [our specific documentation](./README_WAVERLY.md).
 
 ---
 This repository contains Bluesky's reference implementation of AT Protocol, and of the `app.bsky` microblogging application service backend.

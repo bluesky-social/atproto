@@ -36,13 +36,21 @@ export const mockResolvers = (idResolver: IdResolver, pds: TestPds) => {
     if (!isPdsHandle) {
       return origResolveHandleDns.call(idResolver.handle, handle)
     }
-
     const url = `${pds.url}/.well-known/atproto-did`
-    try {
-      const res = await fetch(url, { headers: { host: handle } })
-      return await res.text()
-    } catch (err) {
-      return undefined
+    if (new URL(url).hostname !== 'localhost') {
+      try {
+        const res = await fetch(url, { headers: { host: handle } })
+        return await res.text()
+      } catch (err) {
+        return undefined
+      }
+    } else {
+      // For Waverly
+      // For localhost, just get the the did from the db
+      const account = await pds.ctx.services
+        .account(pds.ctx.db)
+        .getAccount(handle, true)
+      return account?.did
     }
   }
 }

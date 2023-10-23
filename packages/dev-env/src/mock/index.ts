@@ -1,5 +1,4 @@
 import { AtUri } from '@atproto/syntax'
-import AtpAgent from '@waverlyai/atproto-api'
 import {
   REASONSPAM,
   REASONOTHER,
@@ -9,6 +8,7 @@ import { postTexts, replyTexts } from './data'
 import labeledImgB64 from './img/labeled-img-b64'
 import blurHashB64 from './img/blur-hash-avatar-b64'
 import * as waverly from './waverly'
+import { User } from './waverly'
 
 // NOTE
 // deterministic date generator
@@ -40,18 +40,14 @@ export async function generateMockSetup(env: TestNetwork) {
     alice: env.pds.getClient(),
     bob: env.pds.getClient(),
     carla: env.pds.getClient(),
+
+    // For Waverly
     phil: env.pds.getClient(),
     dave: env.pds.getClient(),
     kira: env.pds.getClient(),
     aman: env.pds.getClient(),
   }
-  interface User {
-    email: string
-    did: string
-    handle: string
-    password: string
-    agent: AtpAgent
-  }
+
   const users: User[] = [
     {
       email: 'alice@test.com',
@@ -119,6 +115,7 @@ export async function generateMockSetup(env: TestNetwork) {
   const testUsers = [...users, ...groupUsers]
   const demoUsers = [...dUsers, ...groupUsers]
   const allUsers = Array.from(new Set([...testUsers, ...demoUsers]))
+
   for (const user of allUsers) {
     const res = await clients.loggedout.api.com.atproto.server.createAccount({
       email: user.email,
@@ -136,7 +133,7 @@ export async function generateMockSetup(env: TestNetwork) {
     )
   }
 
-  //  await waverly.updateUsers(allUsers)
+  await waverly.updateUsers(allUsers)
 
   // Report one user
   const reporter = picka(users)

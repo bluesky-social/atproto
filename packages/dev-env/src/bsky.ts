@@ -33,11 +33,15 @@ export class TestBsky {
       signer: serviceKeypair,
     })
 
+    // For Waverly
+    const publicUrl =
+      cfg.defaultPublicUrl === 'LOCALHOST' ? url : cfg.defaultPublicUrl
+
     const config = new bsky.ServerConfig({
       version: '0.0.0',
       port,
       didPlcUrl: cfg.plcUrl,
-      publicUrl: 'https://bsky.public.url',
+      publicUrl,
       serverDid,
       didCacheStaleTTL: HOUR,
       didCacheMaxTTL: DAY,

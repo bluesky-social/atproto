@@ -1,11 +1,10 @@
 import fs from 'fs/promises'
 import { AtUri } from '@atproto/uri'
 import AtpAgent, { AppBskyEmbedExternal, BlobRef } from '@waverlyai/atproto-api'
-import { CloseFn, runTestServer } from './_util'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 import * as Miniblog from '../src/lexicon/types/social/waverly/miniblog'
 import { ids } from '../src/lexicon/lexicons'
 import { BlobNotFoundError } from '@atproto/repo'
-import AppContext from '../src/context'
 
 const loremIpsum =
   'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla vitae arcu ut nulla dictum sagittis. Integer viverra ullamcorper augue vitae gravida. Cras quis mauris ac eros iaculis aliquam. Aliquam sit amet quam vitae turpis vehicula pellentesque sed feugiat turpis. Nam interdum laoreet pulvinar. Nulla eu blandit lectus. Sed quis tortor eget metus vulputate blandit sit amet nec erat. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse potenti.' +
@@ -19,42 +18,48 @@ const alice = {
   handle: 'alice.test',
   did: '',
   password: 'alice-pass',
+  accessJwt: '',
 }
 
 describe('waverly crud operations', () => {
-  let ctx: AppContext
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
-  let aliceAgent: AtpAgent
-  let close: CloseFn
+
+  const asAlice = () => {
+    agent.api.setHeader('authorization', `Bearer ${alice.accessJwt}`)
+  }
+
+  const asAnonymous = () => {
+    agent.api.setHeader('authorization', '')
+  }
 
   beforeAll(async () => {
-    const server = await runTestServer({
-      dbPostgresSchema: 'waverly_crud',
+    network = await TestNetworkNoAppView.create({
+      dbPostgresSchema: 'db',
     })
-    ctx = server.ctx
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    aliceAgent = new AtpAgent({ service: server.url })
+    agent = network.pds.getClient()
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('registers users', async () => {
+    asAnonymous()
     const res = await agent.api.com.atproto.server.createAccount({
       email: alice.email,
       handle: alice.handle,
       password: alice.password,
     })
-    aliceAgent.api.setHeader('authorization', `Bearer ${res.data.accessJwt}`)
     alice.did = res.data.did
+    alice.accessJwt = res.data.accessJwt
   })
 
   let uri1: AtUri
   let subjectUri1: AtUri
   it('creates records', async () => {
-    const res1 = await aliceAgent.api.com.atproto.repo.createRecord({
+    asAlice()
+    const res1 = await agent.api.com.atproto.repo.createRecord({
       repo: alice.did,
       collection: ids.AppBskyFeedPost,
       record: {
@@ -64,7 +69,7 @@ describe('waverly crud operations', () => {
       },
     })
     subjectUri1 = new AtUri(res1.data.uri)
-    const res2 = await aliceAgent.api.com.atproto.repo.createRecord({
+    const res2 = await agent.api.com.atproto.repo.createRecord({
       repo: alice.did,
       collection: ids.SocialWaverlyMiniblog,
       record: {
@@ -84,6 +89,7 @@ describe('waverly crud operations', () => {
   })
 
   it('lists records', async () => {
+    asAnonymous()
     const res = await agent.api.com.atproto.repo.listRecords({
       repo: alice.did,
       collection: ids.SocialWaverlyMiniblog,
@@ -96,6 +102,7 @@ describe('waverly crud operations', () => {
   })
 
   it('gets records', async () => {
+    asAnonymous()
     const res = await agent.api.com.atproto.repo.getRecord({
       repo: alice.did,
       collection: ids.SocialWaverlyMiniblog,
@@ -109,7 +116,8 @@ describe('waverly crud operations', () => {
 
   let uri2: AtUri
   it('creates records without subject', async () => {
-    const res1 = await aliceAgent.api.com.atproto.repo.createRecord({
+    asAlice()
+    const res1 = await agent.api.com.atproto.repo.createRecord({
       repo: alice.did,
       collection: ids.SocialWaverlyMiniblog,
       record: {
@@ -122,6 +130,7 @@ describe('waverly crud operations', () => {
     expect(res1.data.uri).toBe(
       `at://${alice.did}/social.waverly.miniblog/${uri2.rkey}`,
     )
+    asAnonymous()
     const res2 = await agent.api.com.atproto.repo.getRecord({
       repo: alice.did,
       collection: ids.SocialWaverlyMiniblog,
@@ -134,7 +143,8 @@ describe('waverly crud operations', () => {
   })
 
   it('adds subjects to records', async () => {
-    const res1 = await aliceAgent.api.com.atproto.repo.createRecord({
+    asAlice()
+    const res1 = await agent.api.com.atproto.repo.createRecord({
       repo: alice.did,
       collection: ids.AppBskyFeedPost,
       record: {
@@ -143,6 +153,7 @@ describe('waverly crud operations', () => {
         createdAt: new Date().toISOString(),
       },
     })
+    asAnonymous()
     const res2 = await agent.api.com.atproto.repo.getRecord({
       repo: alice.did,
       collection: ids.SocialWaverlyMiniblog,
@@ -153,13 +164,15 @@ describe('waverly crud operations', () => {
       uri: res1.data.uri.toString(),
       cid: res1.data.cid.toString(),
     }
-    const res3 = await aliceAgent.api.com.atproto.repo.putRecord({
+    asAlice()
+    const res3 = await agent.api.com.atproto.repo.putRecord({
       repo: alice.did,
       collection: ids.SocialWaverlyMiniblog,
       rkey: uri2.rkey,
       record,
     })
     expect(res3.data.uri).toBe(uri2.toString())
+    asAnonymous()
     const res4 = await agent.api.com.atproto.repo.getRecord({
       repo: alice.did,
       collection: ids.SocialWaverlyMiniblog,
@@ -172,16 +185,18 @@ describe('waverly crud operations', () => {
   })
 
   it('deletes records', async () => {
-    await aliceAgent.api.com.atproto.repo.deleteRecord({
+    asAlice()
+    await agent.api.com.atproto.repo.deleteRecord({
       repo: alice.did,
       collection: ids.SocialWaverlyMiniblog,
       rkey: uri1.rkey,
     })
-    await aliceAgent.api.com.atproto.repo.deleteRecord({
+    await agent.api.com.atproto.repo.deleteRecord({
       repo: alice.did,
       collection: ids.SocialWaverlyMiniblog,
       rkey: uri2.rkey,
     })
+    asAnonymous()
     const res1 = await agent.api.com.atproto.repo.listRecords({
       repo: alice.did,
       collection: ids.SocialWaverlyMiniblog,
@@ -190,7 +205,8 @@ describe('waverly crud operations', () => {
   })
 
   it('creates records with alternate api', async () => {
-    const res = await aliceAgent.api.social.waverly.miniblog.create(
+    asAlice()
+    const res = await agent.api.social.waverly.miniblog.create(
       { repo: alice.did },
       {
         text: loremIpsum,
@@ -204,7 +220,8 @@ describe('waverly crud operations', () => {
   })
 
   it('lists records with alternate api', async () => {
-    const res = await aliceAgent.api.social.waverly.miniblog.list({
+    asAlice()
+    const res = await agent.api.social.waverly.miniblog.list({
       repo: alice.did,
     })
     expect(res.records.length).toBe(1)
@@ -213,7 +230,8 @@ describe('waverly crud operations', () => {
   })
 
   it('gets records with alternate api', async () => {
-    const res = await aliceAgent.api.social.waverly.miniblog.get({
+    asAlice()
+    const res = await agent.api.social.waverly.miniblog.get({
       repo: alice.did,
       rkey: uri1.rkey,
     })
@@ -222,29 +240,29 @@ describe('waverly crud operations', () => {
   })
 
   it('deletes records with alternate api', async () => {
-    await aliceAgent.api.social.waverly.miniblog.delete({
+    asAlice()
+    await agent.api.social.waverly.miniblog.delete({
       repo: alice.did,
       rkey: uri1.rkey,
     })
-    const res = await aliceAgent.api.social.waverly.miniblog.list({
+    const res = await agent.api.social.waverly.miniblog.list({
       repo: alice.did,
     })
     expect(res.records.length).toBe(0)
   })
 
   it('creates records with image embed', async () => {
-    const file = await fs.readFile(
-      'tests/image/fixtures/key-landscape-small.jpg',
-    )
-    const uploadedRes = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
+    asAlice()
+    const file = await fs.readFile('tests/sample-img/key-landscape-small.jpg')
+    const uploadedRes = await agent.api.com.atproto.repo.uploadBlob(file, {
       encoding: 'image/jpeg',
     })
     const uploaded = uploadedRes.data.blob
     // Expect blobstore not to have image yet
-    await expect(ctx.blobstore.getBytes(uploaded.ref)).rejects.toThrow(
-      BlobNotFoundError,
-    )
-    const res1 = await await aliceAgent.api.social.waverly.miniblog.create(
+    await expect(
+      network.pds.ctx.blobstore.getBytes(uploaded.ref),
+    ).rejects.toThrow(BlobNotFoundError)
+    const res1 = await await agent.api.social.waverly.miniblog.create(
       { repo: alice.did },
       {
         $type: ids.SocialWaverlyMiniblog,
@@ -257,23 +275,24 @@ describe('waverly crud operations', () => {
       },
     )
     const uri = new AtUri(res1.uri)
-    const res2 = await aliceAgent.api.social.waverly.miniblog.get({
+    const res2 = await agent.api.social.waverly.miniblog.get({
       repo: alice.did,
       rkey: uri.rkey,
     })
     expect(res2.uri).toBe(uri.toString())
-    const images = res2.value.embed?.images as { image: BlobRef }[]
+    const images = (res2.value.embed as any)?.images as { image: BlobRef }[]
     expect(images.length).toEqual(1)
     expect(uploaded.ref.equals(images[0].image.ref)).toBeTruthy()
     // Cleanup
-    await aliceAgent.api.social.waverly.miniblog.delete({
+    await agent.api.social.waverly.miniblog.delete({
       repo: alice.did,
       rkey: uri.rkey,
     })
   })
 
   it('creates records with link embed', async () => {
-    const res1 = await await aliceAgent.api.social.waverly.miniblog.create(
+    asAlice()
+    const res1 = await await agent.api.social.waverly.miniblog.create(
       { repo: alice.did },
       {
         $type: ids.SocialWaverlyMiniblog,
@@ -290,15 +309,16 @@ describe('waverly crud operations', () => {
       },
     )
     const uri = new AtUri(res1.uri)
-    const res2 = await aliceAgent.api.social.waverly.miniblog.get({
+    const res2 = await agent.api.social.waverly.miniblog.get({
       repo: alice.did,
       rkey: uri.rkey,
     })
     expect(res2.uri).toBe(uri.toString())
-    const external = res2.value.embed?.external as AppBskyEmbedExternal.External
+    const external = (res2.value.embed as any)
+      ?.external as AppBskyEmbedExternal.External
     expect(external.uri).toBe('https://waverly.social')
     // Cleanup
-    await aliceAgent.api.social.waverly.miniblog.delete({
+    await agent.api.social.waverly.miniblog.delete({
       repo: alice.did,
       rkey: uri.rkey,
     })
