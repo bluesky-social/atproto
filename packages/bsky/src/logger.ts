@@ -12,4 +12,12 @@ export const httpLogger: ReturnType<typeof subsystemLogger> =
 
 export const loggerMiddleware = pinoHttp({
   logger: httpLogger,
+  serializers: {
+    err: (err) => {
+      return {
+        code: err?.code,
+        message: err?.message,
+      }
+    },
+  },
 })
