@@ -48,7 +48,7 @@ export class RepoTransactor extends RepoReader {
       writeOps,
     )
     await Promise.all([
-      this.storage.applyCommit(commit),
+      this.storage.applyCommit(commit, true),
       this.indexWrites(writes, commit.rev),
       this.blob.processWriteBlobs(commit.rev, writes),
     ])

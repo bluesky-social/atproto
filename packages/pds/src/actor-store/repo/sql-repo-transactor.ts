@@ -73,23 +73,34 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
       .execute()
   }
 
-  async applyCommit(commit: CommitData) {
+  async applyCommit(commit: CommitData, isCreate?: boolean) {
     await Promise.all([
-      this.updateRoot(commit.cid, commit.rev),
+      this.updateRoot(commit.cid, commit.rev, isCreate),
       this.putMany(commit.newBlocks, commit.rev),
       this.deleteMany(commit.removedCids.toList()),
     ])
   }
 
-  async updateRoot(cid: CID, rev: string): Promise<void> {
-    await this.db.db
-      .insertInto('repo_root')
-      .values({
-        cid: cid.toString(),
-        rev: rev,
-        indexedAt: this.now,
-      })
-      .execute()
+  async updateRoot(cid: CID, rev: string, isCreate = false): Promise<void> {
+    if (isCreate) {
+      await this.db.db
+        .insertInto('repo_root')
+        .values({
+          cid: cid.toString(),
+          rev: rev,
+          indexedAt: this.now,
+        })
+        .execute()
+    } else {
+      await this.db.db
+        .updateTable('repo_root')
+        .set({
+          cid: cid.toString(),
+          rev: rev,
+          indexedAt: this.now,
+        })
+        .execute()
+    }
   }
 
   async destroy(): Promise<void> {
