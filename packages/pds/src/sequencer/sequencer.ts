@@ -165,11 +165,8 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         this.lastSeen = evts.at(-1)?.seq ?? this.lastSeen
       } else {
         this.triesWithNoResults++
-        // when no results, exponential backoff on pulling, with a max of a 5 second wait
-        const waitTime = Math.max(
-          Math.pow(2, this.triesWithNoResults),
-          5 & SECOND,
-        )
+        // when no results, exponential backoff on pulling, with a max of a second wait
+        const waitTime = Math.max(Math.pow(2, this.triesWithNoResults), SECOND)
         await wait(waitTime)
       }
       this.pollPromise = this.pollDb()
