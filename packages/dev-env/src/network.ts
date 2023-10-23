@@ -70,6 +70,9 @@ export class TestNetwork extends TestNetworkNoAppView {
       }
       await wait(5)
     }
+    console.log(
+      `SEQUENCER TIMED OUT: (${lastSeq}, ${sub.partitions.get(0).cursor})`,
+    )
     throw new Error(`Sequence was not processed within ${timeout}ms`)
   }
 
