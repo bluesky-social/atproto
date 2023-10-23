@@ -60,10 +60,10 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       if (commit !== null) {
+        await ctx.sequencer.sequenceCommit(did, commit, [write])
         await ctx.services
           .account(ctx.db)
           .updateRepoRoot(did, commit.cid, commit.rev)
-        await ctx.sequencer.sequenceCommit(did, commit, [write])
       }
     },
   })
