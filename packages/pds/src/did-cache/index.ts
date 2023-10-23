@@ -19,16 +19,20 @@ export class DidSqliteCache implements DidCache {
   }
 
   async cacheDid(did: string, doc: DidDocument): Promise<void> {
-    await this.db.db
-      .insertInto('did_doc')
-      .values({ did, doc: JSON.stringify(doc), updatedAt: Date.now() })
-      .onConflict((oc) =>
-        oc.column('did').doUpdateSet({
-          doc: excluded(this.db.db, 'doc'),
-          updatedAt: Date.now(),
-        }),
-      )
-      .executeTakeFirst()
+    try {
+      await this.db.db
+        .insertInto('did_doc')
+        .values({ did, doc: JSON.stringify(doc), updatedAt: Date.now() })
+        .onConflict((oc) =>
+          oc.column('did').doUpdateSet({
+            doc: excluded(this.db.db, 'doc'),
+            updatedAt: Date.now(),
+          }),
+        )
+        .executeTakeFirst()
+    } catch (err) {
+      didCacheLogger.error({ did, doc, err }, 'failed to cache did')
+    }
   }
 
   async refreshCache(
@@ -50,6 +54,15 @@ export class DidSqliteCache implements DidCache {
   }
 
   async checkCache(did: string): Promise<CacheResult | null> {
+    try {
+      return await this.checkCacheInternal(did)
+    } catch (err) {
+      didCacheLogger.error({ did, err }, 'failed to check did cache')
+      return null
+    }
+  }
+
+  async checkCacheInternal(did: string): Promise<CacheResult | null> {
     const res = await this.db.db
       .selectFrom('did_doc')
       .where('did', '=', did)
@@ -74,10 +87,14 @@ export class DidSqliteCache implements DidCache {
   }
 
   async clearEntry(did: string): Promise<void> {
-    await this.db.db
-      .deleteFrom('did_doc')
-      .where('did', '=', did)
-      .executeTakeFirst()
+    try {
+      await this.db.db
+        .deleteFrom('did_doc')
+        .where('did', '=', did)
+        .executeTakeFirst()
+    } catch (err) {
+      didCacheLogger.error({ did, err }, 'clearing did cache entry failed')
+    }
   }
 
   async clear(): Promise<void> {
