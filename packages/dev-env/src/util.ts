@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { IdResolver } from '@atproto/identity'
 import { TestPds } from './pds'
 import { TestBsky } from './bsky'
@@ -39,8 +40,8 @@ export const mockResolvers = (idResolver: IdResolver, pds: TestPds) => {
 
     const url = `${pds.url}/.well-known/atproto-did`
     try {
-      const res = await fetch(url, { headers: { host: handle } })
-      return await res.text()
+      const res = await axios.get(url, { headers: { host: handle } })
+      return res.data
     } catch (err) {
       return undefined
     }
