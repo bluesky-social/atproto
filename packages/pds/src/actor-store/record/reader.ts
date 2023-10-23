@@ -161,12 +161,7 @@ export class RecordReader {
       .selectFrom('record')
       .innerJoin('backlink', 'backlink.uri', 'record.uri')
       .where('backlink.path', '=', path)
-      .if(linkTo.startsWith('at://'), (q) =>
-        q.where('backlink.linkToUri', '=', linkTo),
-      )
-      .if(!linkTo.startsWith('at://'), (q) =>
-        q.where('backlink.linkToDid', '=', linkTo),
-      )
+      .where('backlink.linkTo', '=', linkTo)
       .where('record.collection', '=', collection)
       .selectAll('record')
       .execute()
@@ -182,7 +177,7 @@ export class RecordReader {
         this.getRecordBacklinks({
           collection: uri.collection,
           path: backlink.path,
-          linkTo: backlink.linkToDid ?? backlink.linkToUri ?? '',
+          linkTo: backlink.linkTo,
         }),
       ),
     )
@@ -213,8 +208,7 @@ export const getBacklinks = (uri: AtUri, record: unknown): Backlink[] => {
       {
         uri: uri.toString(),
         path: 'subject',
-        linkToDid: subject,
-        linkToUri: null,
+        linkTo: subject,
       },
     ]
   }
@@ -235,8 +229,7 @@ export const getBacklinks = (uri: AtUri, record: unknown): Backlink[] => {
       {
         uri: uri.toString(),
         path: 'subject.uri',
-        linkToUri: subject.uri,
-        linkToDid: null,
+        linkTo: subject.uri,
       },
     ]
   }

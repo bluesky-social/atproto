@@ -1,4 +1,4 @@
-import { Kysely, sql } from 'kysely'
+import { Kysely } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
@@ -76,24 +76,13 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createTable('backlink')
     .addColumn('uri', 'varchar', (col) => col.notNull())
     .addColumn('path', 'varchar', (col) => col.notNull())
-    .addColumn('linkToUri', 'varchar')
-    .addColumn('linkToDid', 'varchar')
+    .addColumn('linkTo', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint('backlinks_pkey', ['uri', 'path'])
-    .addCheckConstraint(
-      'backlink_link_to_chk',
-      // Exactly one of linkToUri or linkToDid should be set
-      sql`("linkToUri" is null and "linkToDid" is not null) or ("linkToUri" is not null and "linkToDid" is null)`,
-    )
     .execute()
   await db.schema
-    .createIndex('backlink_path_to_uri_idx')
+    .createIndex('backlink_link_to_idx')
     .on('backlink')
-    .columns(['path', 'linkToUri'])
-    .execute()
-  await db.schema
-    .createIndex('backlink_path_to_did_idx')
-    .on('backlink')
-    .columns(['path', 'linkToDid'])
+    .columns(['path', 'linkTo'])
     .execute()
 
   await db.schema
