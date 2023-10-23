@@ -1,23 +1,26 @@
 import PQueue from 'p-queue'
 import { CacheResult, DidCache, DidDocument } from '@atproto/identity'
-import { excluded } from './db/util'
-import { dbLogger } from './logger'
-import { ServiceDb } from './service-db'
+import { excluded } from '../db/util'
+import { didCacheLogger } from '../logger'
+import { DidCacheDb, getMigrator } from './db'
+import { Database } from '../db'
 
-export class DidSqlCache implements DidCache {
+export class DidSqliteCache implements DidCache {
+  db: DidCacheDb
   public pQueue: PQueue | null //null during teardown
 
   constructor(
-    public db: ServiceDb,
+    dbLocation: string,
     public staleTTL: number,
     public maxTTL: number,
   ) {
+    this.db = Database.sqlite(dbLocation)
     this.pQueue = new PQueue()
   }
 
   async cacheDid(did: string, doc: DidDocument): Promise<void> {
     await this.db.db
-      .insertInto('did_cache')
+      .insertInto('did_doc')
       .values({ did, doc: JSON.stringify(doc), updatedAt: Date.now() })
       .onConflict((oc) =>
         oc.column('did').doUpdateSet({
@@ -41,14 +44,14 @@ export class DidSqlCache implements DidCache {
           await this.clearEntry(did)
         }
       } catch (err) {
-        dbLogger.error({ did, err }, 'refreshing did cache failed')
+        didCacheLogger.error({ did, err }, 'refreshing did cache failed')
       }
     })
   }
 
   async checkCache(did: string): Promise<CacheResult | null> {
     const res = await this.db.db
-      .selectFrom('did_cache')
+      .selectFrom('did_doc')
       .where('did', '=', did)
       .selectAll()
       .executeTakeFirst()
@@ -72,17 +75,21 @@ export class DidSqlCache implements DidCache {
 
   async clearEntry(did: string): Promise<void> {
     await this.db.db
-      .deleteFrom('did_cache')
+      .deleteFrom('did_doc')
       .where('did', '=', did)
       .executeTakeFirst()
   }
 
   async clear(): Promise<void> {
-    await this.db.db.deleteFrom('did_cache').execute()
+    await this.db.db.deleteFrom('did_doc').execute()
   }
 
   async processAll() {
     await this.pQueue?.onIdle()
+  }
+
+  async migrateOrThrow() {
+    await getMigrator(this.db).migrateToLatestOrThrow()
   }
 
   async destroy() {
@@ -93,5 +100,3 @@ export class DidSqlCache implements DidCache {
     await pQueue?.onIdle()
   }
 }
-
-export default DidSqlCache

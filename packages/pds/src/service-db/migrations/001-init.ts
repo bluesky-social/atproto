@@ -18,13 +18,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
-    .createTable('did_cache')
-    .addColumn('did', 'varchar', (col) => col.primaryKey())
-    .addColumn('doc', 'text', (col) => col.notNull())
-    .addColumn('updatedAt', 'bigint', (col) => col.notNull())
-    .execute()
-
-  await db.schema
     .createTable('did_handle')
     .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('handle', 'varchar', (col) => col.unique())
@@ -126,7 +119,6 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('invite_code_use').execute()
   await db.schema.dropTable('invite_code').execute()
   await db.schema.dropTable('did_handle').execute()
-  await db.schema.dropTable('did_cache').execute()
   await db.schema.dropTable('app_password').execute()
   await db.schema.dropTable('app_migration').execute()
 }
