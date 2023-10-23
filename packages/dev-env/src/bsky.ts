@@ -83,7 +83,7 @@ export class TestBsky {
     })
     // indexer
     const ns = cfg.dbPostgresSchema
-      ? await randomIntFromSeed(cfg.dbPostgresSchema, 10000)
+      ? await randomIntFromSeed(cfg.dbPostgresSchema, 100000)
       : undefined
     const indexerCfg = new bsky.IndexerConfig({
       version: '0.0.0',
