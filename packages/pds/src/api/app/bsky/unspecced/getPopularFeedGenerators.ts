@@ -5,7 +5,7 @@ import { authPassthru, proxy, resultPassthru } from '../../../proxy'
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopularFeedGenerators({
-    auth: ctx.accessVerifier,
+    auth: ctx.authVerifier.access,
     handler: async ({ auth, params, req }) => {
       const proxied = await proxy(
         ctx,

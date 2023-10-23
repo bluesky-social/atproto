@@ -21,7 +21,7 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
-    auth: ctx.accessVerifierCheckTakedown,
+    auth: ctx.authVerifier.accessCheckTakedown,
     rateLimit: [
       {
         name: 'repo-write-hour',

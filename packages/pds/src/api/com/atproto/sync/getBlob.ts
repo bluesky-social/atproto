@@ -3,17 +3,16 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { notSoftDeletedClause } from '../../../../db/util'
-import { isUserOrAdmin } from '../../../../auth'
 import { BlobNotFoundError } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlob({
-    auth: ctx.optionalAccessOrRoleVerifier,
+    auth: ctx.authVerifier.optionalAccessOrRole,
     handler: async ({ params, res, auth }) => {
       const { ref } = ctx.db.db.dynamic
       const { did } = params
 
-      if (!isUserOrAdmin(auth, did)) {
+      if (!ctx.authVerifier.isUserOrAdmin(auth, params.did)) {
         const available = await ctx.services
           .account(ctx.db)
           .isRepoAvailable(did)

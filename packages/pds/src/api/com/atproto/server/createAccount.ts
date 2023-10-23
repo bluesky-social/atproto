@@ -111,15 +111,13 @@ export default function (server: Server, ctx: AppContext) {
             .execute()
         }
 
-        const [accessJwt, refreshJwt] = await Promise.all([
-          ctx.auth.createAccessToken({ did, pdsDid: pds?.did }),
-          ctx.auth.createRefreshToken({
+        const { access, refresh } = await ctx.services
+          .auth(dbTxn)
+          .createSession({
             did,
-            identityDid: ctx.cfg.service.did,
-          }),
-        ])
-        const refreshPayload = ctx.auth.decodeRefreshToken(refreshJwt)
-        await ctx.services.auth(dbTxn).grantRefreshToken(refreshPayload, null)
+            pdsDid: pds?.did ?? null,
+            appPasswordName: null,
+          })
 
         // Setup repo root
         // @TODO contact pds for repo setup, will look like createAccount but bringing own did
@@ -127,8 +125,8 @@ export default function (server: Server, ctx: AppContext) {
 
         return {
           did,
-          accessJwt,
-          refreshJwt,
+          accessJwt: access,
+          refreshJwt: refresh,
         }
       })
 

@@ -58,7 +58,7 @@ describe('pds views with blocking from block lists', () => {
       { repo: alice },
       {
         name: 'alice blocks',
-        purpose: 'app.bsky.graph.defs#blocklist',
+        purpose: 'app.bsky.graph.defs#modlist',
         description: 'big list of blocks',
         avatar: avatar.image,
         createdAt: new Date().toISOString(),
@@ -335,7 +335,7 @@ describe('pds views with blocking from block lists', () => {
       { repo: alice },
       {
         name: 'new list',
-        purpose: 'app.bsky.graph.defs#blocklist',
+        purpose: 'app.bsky.graph.defs#modlist',
         description: 'blah blah',
         createdAt: new Date().toISOString(),
       },

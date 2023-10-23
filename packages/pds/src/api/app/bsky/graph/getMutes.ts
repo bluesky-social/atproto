@@ -4,7 +4,7 @@ import { authPassthru, proxy, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getMutes({
-    auth: ctx.accessVerifier,
+    auth: ctx.authVerifier.access,
     handler: async ({ auth, params, req }) => {
       const proxied = await proxy(
         ctx,

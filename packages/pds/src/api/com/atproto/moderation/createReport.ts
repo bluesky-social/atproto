@@ -5,7 +5,7 @@ import { authPassthru, proxy, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
-    auth: ctx.accessVerifierCheckTakedown,
+    auth: ctx.authVerifier.accessCheckTakedown,
     handler: async ({ input, auth, req }) => {
       const proxied = await proxy(
         ctx,

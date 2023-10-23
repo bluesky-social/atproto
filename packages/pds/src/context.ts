@@ -8,8 +8,7 @@ import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { Database } from './db'
 import { ServerConfig, ServerSecrets } from './config'
-import * as auth from './auth'
-import { ServerAuth } from './auth'
+import { AuthVerifier, getAuthKeys } from './auth-verifier'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
@@ -38,7 +37,7 @@ export type AppContextOptions = {
   redisScratch?: Redis
   crawlers: Crawlers
   appViewAgent: AtpAgent
-  auth: auth.ServerAuth
+  authVerifier: AuthVerifier
   repoSigningKey: crypto.Keypair
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
@@ -60,7 +59,7 @@ export class AppContext {
   public redisScratch?: Redis
   public crawlers: Crawlers
   public appViewAgent: AtpAgent
-  public auth: auth.ServerAuth
+  public authVerifier: AuthVerifier
   public repoSigningKey: crypto.Keypair
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
@@ -81,7 +80,7 @@ export class AppContext {
     this.redisScratch = opts.redisScratch
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
-    this.auth = opts.auth
+    this.authVerifier = opts.authVerifier
     this.repoSigningKey = opts.repoSigningKey
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
@@ -152,17 +151,10 @@ export class AppContext {
 
     const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
 
-    const jwtSigningKey =
-      secrets.jwtSigningKey &&
-      (await crypto.Secp256k1Keypair.import(
-        secrets.jwtSigningKey.privateKeyHex,
-        { exportable: true },
-      ))
+    const authKeys = await getAuthKeys(secrets)
 
-    const auth = await ServerAuth.create({
-      jwtSigningKey,
-      jwtVerifyKeyHex: secrets.jwtVerifyKey?.publicKeyHex,
-      jwtSecret: secrets.jwtSecret,
+    const authVerifier = new AuthVerifier(db, {
+      authKeys,
       adminPass: secrets.adminPassword,
       moderatorPass: secrets.moderatorPassword,
       triagePass: secrets.triagePassword,
@@ -191,6 +183,8 @@ export class AppContext {
       blobstore,
       appViewAgent,
       pdsHostname: cfg.service.hostname,
+      authKeys,
+      identityDid: cfg.service.did,
       appViewDid: cfg.bskyAppView.did,
       appViewCdnUrlPattern: cfg.bskyAppView.cdnUrlPattern,
       backgroundQueue,
@@ -213,40 +207,12 @@ export class AppContext {
       redisScratch,
       crawlers,
       appViewAgent,
-      auth,
+      authVerifier,
       repoSigningKey,
       plcRotationKey,
       cfg,
       ...(overrides ?? {}),
     })
-  }
-
-  get accessVerifier() {
-    return auth.accessVerifier(this.auth, this)
-  }
-
-  get accessVerifierNotAppPassword() {
-    return auth.accessVerifierNotAppPassword(this.auth, this)
-  }
-
-  get accessVerifierCheckTakedown() {
-    return auth.accessVerifierCheckTakedown(this.auth, this)
-  }
-
-  get refreshVerifier() {
-    return auth.refreshVerifier(this.auth)
-  }
-
-  get roleVerifier() {
-    return auth.roleVerifier(this.auth)
-  }
-
-  get accessOrRoleVerifier() {
-    return auth.accessOrRoleVerifier(this.auth, this)
-  }
-
-  get optionalAccessOrRoleVerifier() {
-    return auth.optionalAccessOrRoleVerifier(this.auth, this)
   }
 
   async serviceAuthHeaders(did: string, audience?: string) {
