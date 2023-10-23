@@ -16,6 +16,12 @@ export const httpLogger = subsystemLogger('pds')
 export const loggerMiddleware = pinoHttp({
   logger: httpLogger,
   serializers: {
+    err: (err) => {
+      return {
+        code: err?.code,
+        message: err?.message,
+      }
+    },
     req: (req) => {
       const serialized = pino.stdSerializers.req(req)
       const authHeader = serialized.headers.authorization || ''
