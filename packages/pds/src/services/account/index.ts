@@ -354,7 +354,7 @@ export class AccountService {
           'did_handle.did',
         )
         .innerJoin('invite_code', 'invite_code.code', 'code_use.code')
-        .where('invite_code.forUser', '=', invitedBy)
+        .where('invite_code.forAccount', '=', invitedBy)
     }
 
     const keyset = new ListKeyset(ref('indexedAt'), ref('handle'))
@@ -448,7 +448,7 @@ export class AccountService {
         'invite_code.code as code',
         'invite_code.availableUses as available',
         'invite_code.disabled as disabled',
-        'invite_code.forUser as forAccount',
+        'invite_code.forAccount as forAccount',
         'invite_code.createdBy as createdBy',
         'invite_code.createdAt as createdAt',
         this.db.db

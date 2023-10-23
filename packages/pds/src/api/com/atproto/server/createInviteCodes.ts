@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
             code: code,
             availableUses: useCount,
             disabled: 0 as const,
-            forUser: account,
+            forAccount: account,
             createdBy: 'admin',
             createdAt: new Date().toISOString(),
           })

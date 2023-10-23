@@ -41,14 +41,14 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('code', 'varchar', (col) => col.primaryKey())
     .addColumn('availableUses', 'integer', (col) => col.notNull())
     .addColumn('disabled', 'int2', (col) => col.defaultTo(0))
-    .addColumn('forUser', 'varchar', (col) => col.notNull())
+    .addColumn('forAccount', 'varchar', (col) => col.notNull())
     .addColumn('createdBy', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .execute()
   await db.schema
-    .createIndex('invite_code_for_user_idx')
+    .createIndex('invite_code_for_account_idx')
     .on('invite_code')
-    .column('forUser')
+    .column('forAccount')
     .execute()
 
   await db.schema

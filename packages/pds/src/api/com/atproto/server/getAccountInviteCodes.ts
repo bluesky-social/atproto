@@ -43,7 +43,7 @@ export default function (server: Server, ctx: AppContext) {
             code: code,
             availableUses: 1,
             disabled: user.invitesDisabled,
-            forUser: requester,
+            forAccount: requester,
             createdBy: requester,
             createdAt: now,
           }))
@@ -51,7 +51,7 @@ export default function (server: Server, ctx: AppContext) {
             await dbTxn.db.insertInto('invite_code').values(rows).execute()
             const finalRoutineInviteCodes = await dbTxn.db
               .selectFrom('invite_code')
-              .where('forUser', '=', requester)
+              .where('forAccount', '=', requester)
               .where('createdBy', '!=', 'admin') // dont count admin-gifted codes aginast the user
               .selectAll()
               .execute()

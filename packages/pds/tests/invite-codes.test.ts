@@ -213,7 +213,7 @@ describe('account', () => {
       code: code,
       availableUses: 1,
       disabled: 0 as const,
-      forUser: account.did,
+      forAccount: account.did,
       createdBy: account.did,
       createdAt: new Date(Date.now() - 5 * DAY).toISOString(),
     }))
@@ -298,15 +298,15 @@ describe('account', () => {
     const fromDb = await ctx.db.db
       .selectFrom('invite_code')
       .selectAll()
-      .where('forUser', 'in', accounts)
+      .where('forAccount', 'in', accounts)
       .execute()
     expect(fromDb.length).toBe(6)
     const dbCodesByUser = {}
     for (const row of fromDb) {
       expect(row.disabled).toBe(0)
       expect(row.availableUses).toBe(2)
-      dbCodesByUser[row.forUser] ??= []
-      dbCodesByUser[row.forUser].push(row.code)
+      dbCodesByUser[row.forAccount] ??= []
+      dbCodesByUser[row.forAccount].push(row.code)
     }
     for (const { account, codes } of res.data.codes) {
       expect(codes.length).toBe(2)

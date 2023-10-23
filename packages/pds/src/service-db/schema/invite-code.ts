@@ -2,7 +2,7 @@ export interface InviteCode {
   code: string
   availableUses: number
   disabled: 0 | 1
-  forUser: string
+  forAccount: string
   createdBy: string
   createdAt: string
 }
