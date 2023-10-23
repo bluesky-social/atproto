@@ -1,6 +1,6 @@
 import util from 'util'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { cborToLexRecord } from '@atproto/repo'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
@@ -145,7 +145,7 @@ export class LocalViewer {
       .where('record.rkey', '=', 'self')
       .selectAll()
     const handleQuery = this.serviceDb.db
-      .selectFrom('did_handle')
+      .selectFrom('user_account')
       .where('did', '=', this.did)
       .selectAll()
     const [profileRes, handleRes] = await Promise.all([
@@ -158,7 +158,7 @@ export class LocalViewer {
       : null
     return {
       did: this.did,
-      handle: handleRes.handle,
+      handle: handleRes.handle ?? INVALID_HANDLE,
       displayName: record?.displayName,
       avatar: record?.avatar
         ? this.getImageUrl('avatar', record.avatar.ref.toString())

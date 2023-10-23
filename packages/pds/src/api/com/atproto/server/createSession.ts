@@ -1,8 +1,9 @@
+import { DAY, MINUTE } from '@atproto/common'
+import { INVALID_HANDLE } from '@atproto/syntax'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
-import { DAY, MINUTE } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createSession({
@@ -63,7 +64,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           did: user.did,
-          handle: user.handle,
+          handle: user.handle ?? INVALID_HANDLE,
           email: user.email,
           emailConfirmed: !!user.emailConfirmedAt,
           accessJwt: access.jwt,

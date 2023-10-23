@@ -103,7 +103,7 @@ describe('handle invalidation', () => {
     await backdateIndexedAt(bob)
     // update alices handle so that the pds will let bob take her old handle
     await network.pds.ctx.db.db
-      .updateTable('did_handle')
+      .updateTable('user_account')
       .where('did', '=', alice)
       .set({ handle: 'not-alice.test' })
       .execute()

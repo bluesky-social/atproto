@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -12,11 +11,9 @@ import { getRandomToken } from '../../api/com/atproto/server/util'
 import {
   ServiceDb,
   UserAccountEntry,
-  DidHandle,
-  RepoRoot,
   EmailTokenPurpose,
 } from '../../service-db'
-import { paginate, TimeCidKeyset } from '../../db/pagination'
+import { TimeCidKeyset } from '../../db/pagination'
 import { StatusAttr } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { AccountView } from '../../lexicon/types/com/atproto/admin/defs'
 
@@ -26,31 +23,21 @@ export class AccountService {
   async getAccount(
     handleOrDid: string,
     includeSoftDeleted = false,
-  ): Promise<(UserAccountEntry & DidHandle & RepoRoot) | null> {
+  ): Promise<UserAccountEntry | null> {
     const { ref } = this.db.db.dynamic
     const result = await this.db.db
       .selectFrom('user_account')
-      .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .where((qb) => {
         if (handleOrDid.startsWith('did:')) {
-          return qb.where('did_handle.did', '=', handleOrDid)
+          return qb.where('user_account.did', '=', handleOrDid)
         } else {
-          // lower() is a little hack to avoid using the handle trgm index here, which is slow. not sure why it was preferring
-          // the handle trgm index over the handle unique index. in any case, we end-up using did_handle_handle_lower_idx instead, which is fast.
-          return qb.where(
-            sql`lower(${ref('did_handle.handle')})`,
-            '=',
-            handleOrDid,
-          )
+          return qb.where('user_account.handle', '=', handleOrDid)
         }
       })
-      .selectAll('user_account')
-      .selectAll('did_handle')
-      .selectAll('repo_root')
+      .selectAll()
       .executeTakeFirst()
     return result || null
   }
@@ -70,19 +57,15 @@ export class AccountService {
   async getAccountByEmail(
     email: string,
     includeSoftDeleted = false,
-  ): Promise<(UserAccountEntry & DidHandle & RepoRoot) | null> {
+  ): Promise<UserAccountEntry | null> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('user_account')
-      .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .where('email', '=', email.toLowerCase())
       .selectAll('user_account')
-      .selectAll('did_handle')
-      .selectAll('repo_root')
       .executeTakeFirst()
     return found || null
   }
@@ -100,13 +83,12 @@ export class AccountService {
     }
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
-      .selectFrom('did_handle')
-      .innerJoin('user_account', 'user_account.did', 'did_handle.did')
+      .selectFrom('user_account')
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .where('handle', '=', handleOrDid)
-      .select('did_handle.did')
+      .select('did')
       .executeTakeFirst()
     return found ? found.did : null
   }
@@ -119,30 +101,20 @@ export class AccountService {
   }) {
     this.db.assertTransaction()
     const { email, handle, did, passwordScrypt } = opts
-    log.debug({ handle, email }, 'registering user')
-    const registerUserAccnt = this.db.db
+    const registered = await this.db.db
       .insertInto('user_account')
       .values({
         email: email.toLowerCase(),
         did,
+        handle,
         passwordScrypt,
         createdAt: new Date().toISOString(),
       })
       .onConflict((oc) => oc.doNothing())
       .returning('did')
       .executeTakeFirst()
-    const registerDidHandle = this.db.db
-      .insertInto('did_handle')
-      .values({ did, handle })
-      .onConflict((oc) => oc.doNothing())
-      .returning('handle')
-      .executeTakeFirst()
 
-    const [res1, res2] = await Promise.all([
-      registerUserAccnt,
-      registerDidHandle,
-    ])
-    if (!res1 || !res2) {
+    if (!registered) {
       throw new UserAlreadyExistsError()
     }
     log.info({ handle, email, did }, 'registered user')
@@ -155,13 +127,13 @@ export class AccountService {
     handle: string,
   ): Promise<HandleSequenceToken> {
     const res = await this.db.db
-      .updateTable('did_handle')
+      .updateTable('user_account')
       .set({ handle })
       .where('did', '=', did)
       .whereNotExists(
         // @NOTE see also condition in isHandleAvailable()
         this.db.db
-          .selectFrom('did_handle')
+          .selectFrom('user_account')
           .where('handle', '=', handle)
           .selectAll(),
       )
@@ -190,7 +162,7 @@ export class AccountService {
   async getHandleDid(handle: string): Promise<string | null> {
     // @NOTE see also condition in updateHandle()
     const found = await this.db.db
-      .selectFrom('did_handle')
+      .selectFrom('user_account')
       .where('handle', '=', handle)
       .selectAll()
       .executeTakeFirst()
@@ -287,85 +259,6 @@ export class AccountService {
       .execute()
   }
 
-  async search(opts: {
-    query: string
-    limit: number
-    cursor?: string
-    includeSoftDeleted?: boolean
-  }): Promise<(RepoRoot & DidHandle)[]> {
-    const { query, limit, cursor, includeSoftDeleted } = opts
-    const { ref } = this.db.db.dynamic
-
-    const builder = this.db.db
-      .selectFrom('did_handle')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
-      .innerJoin('user_account', 'user_account.did', 'did_handle.did')
-      .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('user_account'))),
-      )
-      .where((qb) => {
-        // sqlite doesn't support "ilike", but performs "like" case-insensitively
-        if (query.includes('@')) {
-          return qb.where('user_account.email', 'like', `%${query}%`)
-        }
-        if (query.startsWith('did:')) {
-          return qb.where('did_handle.did', '=', query)
-        }
-        return qb.where('did_handle.handle', 'like', `${query}%`)
-      })
-      .selectAll(['did_handle', 'repo_root'])
-
-    const keyset = new ListKeyset(
-      ref('repo_root.indexedAt'),
-      ref('did_handle.handle'),
-    )
-
-    return await paginate(builder, {
-      limit,
-      cursor,
-      keyset,
-    }).execute()
-  }
-
-  async list(opts: {
-    limit: number
-    cursor?: string
-    includeSoftDeleted?: boolean
-    invitedBy?: string
-  }): Promise<(RepoRoot & DidHandle)[]> {
-    const { limit, cursor, includeSoftDeleted, invitedBy } = opts
-    const { ref } = this.db.db.dynamic
-
-    let builder = this.db.db
-      .selectFrom('repo_root')
-      .innerJoin('user_account', 'user_account.did', 'repo_root.did')
-      .innerJoin('did_handle', 'did_handle.did', 'repo_root.did')
-      .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('user_account'))),
-      )
-      .selectAll('did_handle')
-      .selectAll('repo_root')
-
-    if (invitedBy) {
-      builder = builder
-        .innerJoin(
-          'invite_code_use as code_use',
-          'code_use.usedBy',
-          'did_handle.did',
-        )
-        .innerJoin('invite_code', 'invite_code.code', 'code_use.code')
-        .where('invite_code.forAccount', '=', invitedBy)
-    }
-
-    const keyset = new ListKeyset(ref('indexedAt'), ref('handle'))
-
-    return await paginate(builder, {
-      limit,
-      cursor,
-      keyset,
-    }).execute()
-  }
-
   async getAccountTakedownStatus(did: string): Promise<StatusAttr | null> {
     const res = await this.db.db
       .selectFrom('user_account')
@@ -402,20 +295,15 @@ export class AccountService {
       .deleteFrom('user_account')
       .where('user_account.did', '=', did)
       .execute()
-    await this.db.db
-      .deleteFrom('did_handle')
-      .where('did_handle.did', '=', did)
-      .execute()
   }
 
   async adminView(did: string): Promise<AccountView | null> {
     const accountQb = this.db.db
-      .selectFrom('did_handle')
-      .innerJoin('user_account', 'user_account.did', 'did_handle.did')
-      .where('did_handle.did', '=', did)
+      .selectFrom('user_account')
+      .where('user_account.did', '=', did)
       .select([
-        'did_handle.did',
-        'did_handle.handle',
+        'user_account.did',
+        'user_account.handle',
         'user_account.email',
         'user_account.invitesDisabled',
         'user_account.inviteNote',

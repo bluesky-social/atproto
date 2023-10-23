@@ -18,18 +18,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
-    .createTable('did_handle')
-    .addColumn('did', 'varchar', (col) => col.primaryKey())
-    .addColumn('handle', 'varchar', (col) => col.unique())
-    .execute()
-  await db.schema
-    .createIndex(`did_handle_handle_lower_idx`)
-    .unique()
-    .on('did_handle')
-    .expression(sql`lower("handle")`)
-    .execute()
-
-  await db.schema
     .createTable('invite_code')
     .addColumn('code', 'varchar', (col) => col.primaryKey())
     .addColumn('availableUses', 'integer', (col) => col.notNull())
@@ -77,6 +65,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('user_account')
     .addColumn('did', 'varchar', (col) => col.primaryKey())
+    .addColumn('handle', 'varchar')
     .addColumn('email', 'varchar', (col) => col.notNull())
     .addColumn('passwordScrypt', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
@@ -90,6 +79,12 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .unique()
     .on('user_account')
     .expression(sql`lower("email")`)
+    .execute()
+  await db.schema
+    .createIndex(`user_account_handle_lower_idx`)
+    .unique()
+    .on('user_account')
+    .expression(sql`lower("handle")`)
     .execute()
   await db.schema
     .createIndex('user_account_cursor_idx')
@@ -118,7 +113,6 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('refresh_token').execute()
   await db.schema.dropTable('invite_code_use').execute()
   await db.schema.dropTable('invite_code').execute()
-  await db.schema.dropTable('did_handle').execute()
   await db.schema.dropTable('app_password').execute()
   await db.schema.dropTable('app_migration').execute()
 }

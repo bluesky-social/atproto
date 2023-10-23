@@ -1,5 +1,4 @@
 import * as userAccount from './user-account'
-import * as didHandle from './did-handle'
 import * as repoRoot from './repo-root'
 import * as refreshToken from './refresh-token'
 import * as appPassword from './app-password'
@@ -9,7 +8,6 @@ import * as appMigration from './app-migration'
 
 export type DatabaseSchema = appMigration.PartialDB &
   userAccount.PartialDB &
-  didHandle.PartialDB &
   refreshToken.PartialDB &
   appPassword.PartialDB &
   repoRoot.PartialDB &
@@ -17,7 +15,6 @@ export type DatabaseSchema = appMigration.PartialDB &
   emailToken.PartialDB
 
 export type { UserAccount, UserAccountEntry } from './user-account'
-export type { DidHandle } from './did-handle'
 export type { RepoRoot } from './repo-root'
 export type { RefreshToken } from './refresh-token'
 export type { AppPassword } from './app-password'

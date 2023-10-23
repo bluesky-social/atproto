@@ -50,11 +50,11 @@ describe('handles', () => {
 
   const getHandleFromDb = async (did: string): Promise<string | undefined> => {
     const res = await ctx.db.db
-      .selectFrom('did_handle')
+      .selectFrom('user_account')
       .selectAll()
       .where('did', '=', did)
       .executeTakeFirst()
-    return res?.handle
+    return res?.handle ?? undefined
   }
 
   it('resolves handles', async () => {

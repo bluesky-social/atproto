@@ -1,3 +1,4 @@
+import { INVALID_HANDLE } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
@@ -34,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           did: user.did,
-          handle: user.handle,
+          handle: user.handle ?? INVALID_HANDLE,
           accessJwt: res.access.jwt,
           refreshJwt: res.refresh.jwt,
         },
