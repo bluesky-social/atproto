@@ -239,12 +239,14 @@ export class LocalViewer {
       const { uri, title, description, thumb } = embed.external
       return {
         $type: 'app.bsky.embed.external#view',
-        uri,
-        title,
-        description,
-        thumb: thumb
-          ? this.getImageUrl('feed_thumbnail', thumb.ref.toString())
-          : undefined,
+        external: {
+          uri,
+          title,
+          description,
+          thumb: thumb
+            ? this.getImageUrl('feed_thumbnail', thumb.ref.toString())
+            : undefined,
+        },
       }
     }
   }
