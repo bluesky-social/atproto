@@ -70,7 +70,8 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
     }
   }
   {
-    const re = /(?:^|\s)(#[^\d\s]\S*)(?=\s)?/g
+    const re =
+      /(^|\s)(#[\p{L}\p{Emoji_Presentation}]{1}[\p{L}\p{Emoji_Presentation}\d_-]*)/gu
     while ((match = re.exec(text.utf16))) {
       let [tag] = match
       const hasLeadingSpace = /^\s/.test(tag)
@@ -90,7 +91,7 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
         features: [
           {
             $type: 'app.bsky.richtext.facet#tag',
-            tag: tag.replace(/^#/, ''),
+            tag: tag.replace(/^#/, ''), // strip leading #
           },
         ],
       })
