@@ -66,17 +66,10 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
-    .createTable('repo_blob')
-    .addColumn('cid', 'varchar', (col) => col.notNull())
+    .createTable('record_blob')
+    .addColumn('blobCid', 'varchar', (col) => col.notNull())
     .addColumn('recordUri', 'varchar', (col) => col.notNull())
-    .addColumn('repoRev', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint(`repo_blob_pkey`, ['cid', 'recordUri'])
-    .execute()
-
-  await db.schema
-    .createIndex('repo_blob_repo_rev_idx')
-    .on('repo_blob')
-    .column('repoRev')
+    .addPrimaryKeyConstraint(`record_blob_pkey`, ['blobCid', 'recordUri'])
     .execute()
 
   await db.schema
@@ -114,7 +107,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('user_pref').execute()
   await db.schema.dropTable('backlink').execute()
-  await db.schema.dropTable('repo_blob').execute()
+  await db.schema.dropTable('record_blob').execute()
   await db.schema.dropTable('blob').execute()
   await db.schema.dropTable('record').execute()
   await db.schema.dropTable('ipld_block').execute()

@@ -45,18 +45,20 @@ export class BlobReader {
   }): Promise<string[]> {
     const { since, cursor, limit } = opts
     let builder = this.db.db
-      .selectFrom('repo_blob')
-      .select('cid')
-      .orderBy('cid', 'asc')
+      .selectFrom('record_blob')
+      .select('blobCid')
+      .orderBy('blobCid', 'asc')
       .limit(limit)
     if (since) {
-      builder = builder.where('repoRev', '>', since)
+      builder = builder
+        .innerJoin('record', 'record.uri', 'record_blob.recordUri')
+        .where('record.repoRev', '>', since)
     }
     if (cursor) {
-      builder = builder.where('cid', '>', cursor)
+      builder = builder.where('blobCid', '>', cursor)
     }
     const res = await builder.execute()
-    return res.map((row) => row.cid)
+    return res.map((row) => row.blobCid)
   }
 
   async getBlobTakedownStatus(cid: CID): Promise<StatusAttr | null> {

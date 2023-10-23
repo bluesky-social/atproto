@@ -4,7 +4,7 @@ import * as record from './record'
 import * as backlink from './backlink'
 import * as ipldBlock from './ipld-block'
 import * as blob from './blob'
-import * as repoBlob from './repo-blob'
+import * as recordBlob from './record-blob'
 
 export type DatabaseSchema = userPref.PartialDB &
   repoRoot.PartialDB &
@@ -12,7 +12,7 @@ export type DatabaseSchema = userPref.PartialDB &
   backlink.PartialDB &
   ipldBlock.PartialDB &
   blob.PartialDB &
-  repoBlob.PartialDB
+  recordBlob.PartialDB
 
 export type { UserPref } from './user-pref'
 export type { RepoRoot } from './repo-root'
@@ -20,4 +20,4 @@ export type { Record } from './record'
 export type { Backlink } from './backlink'
 export type { IpldBlock } from './ipld-block'
 export type { Blob } from './blob'
-export type { RepoBlob } from './repo-blob'
+export type { RecordBlob } from './record-blob'

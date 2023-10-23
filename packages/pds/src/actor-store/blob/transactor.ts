@@ -76,7 +76,7 @@ export class BlobTransactor extends BlobReader {
       ) {
         for (const blob of write.blobs) {
           blobPromises.push(this.verifyBlobAndMakePermanent(blob))
-          blobPromises.push(this.associateBlob(blob, write.uri, rev))
+          blobPromises.push(this.associateBlob(blob, write.uri))
         }
       }
     }
@@ -110,17 +110,17 @@ export class BlobTransactor extends BlobReader {
     if (uris.length === 0) return
 
     const deletedRepoBlobs = await this.db.db
-      .deleteFrom('repo_blob')
+      .deleteFrom('record_blob')
       .where('recordUri', 'in', uris)
       .returningAll()
       .execute()
     if (deletedRepoBlobs.length < 1) return
 
-    const deletedRepoBlobCids = deletedRepoBlobs.map((row) => row.cid)
+    const deletedRepoBlobCids = deletedRepoBlobs.map((row) => row.blobCid)
     const duplicateCids = await this.db.db
-      .selectFrom('repo_blob')
-      .where('cid', 'in', deletedRepoBlobCids)
-      .select('cid')
+      .selectFrom('record_blob')
+      .where('blobCid', 'in', deletedRepoBlobCids)
+      .select('blobCid')
       .execute()
 
     const newBlobCids = writes
@@ -131,7 +131,10 @@ export class BlobTransactor extends BlobReader {
       )
       .flat()
       .map((b) => b.cid.toString())
-    const cidsToKeep = [...newBlobCids, ...duplicateCids.map((row) => row.cid)]
+    const cidsToKeep = [
+      ...newBlobCids,
+      ...duplicateCids.map((row) => row.blobCid),
+    ]
     const cidsToDelete = deletedRepoBlobCids.filter(
       (cid) => !cidsToKeep.includes(cid),
     )
@@ -174,17 +177,12 @@ export class BlobTransactor extends BlobReader {
     }
   }
 
-  async associateBlob(
-    blob: PreparedBlobRef,
-    recordUri: AtUri,
-    repoRev: string,
-  ): Promise<void> {
+  async associateBlob(blob: PreparedBlobRef, recordUri: AtUri): Promise<void> {
     await this.db.db
-      .insertInto('repo_blob')
+      .insertInto('record_blob')
       .values({
-        cid: blob.cid.toString(),
+        blobCid: blob.cid.toString(),
         recordUri: recordUri.toString(),
-        repoRev,
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
