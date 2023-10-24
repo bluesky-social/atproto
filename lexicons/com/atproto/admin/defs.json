@@ -74,6 +74,10 @@
             "#recordViewNotFound"
           ]
         },
+        "subjectStatus": {
+          "type": "ref",
+          "ref": "com.atproto.admin.defs#subjectStatusView"
+        },
         "subjectBlobs": {
           "type": "array",
           "items": { "type": "ref", "ref": "#blobView" }
@@ -494,9 +498,9 @@
         }
       }
     },
-    "modEventReverseMute": {
+    "modEventUnmute": {
       "type": "object",
-      "description": "Revert mute action on a subject",
+      "description": "Unmute action on a subject",
       "properties": {
         "comment": {
           "type": "string",

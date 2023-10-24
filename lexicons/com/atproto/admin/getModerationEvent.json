@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "View details about a moderation action.",
+      "description": "View details about a moderation event.",
       "parameters": {
         "type": "params",
         "required": ["id"],

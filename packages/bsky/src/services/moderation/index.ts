@@ -287,7 +287,7 @@ export class ModerationService {
       event: {
         $type: isRevertingTakedown
           ? 'com.atproto.admin.defs#modEventReverseTakedown'
-          : 'com.atproto.admin.defs#modEventReverseMute',
+          : 'com.atproto.admin.defs#modEventUnmute',
         comment,
       },
       createdAt,
@@ -403,6 +403,7 @@ export class ModerationService {
   async getSubjectStatuses({
     cursor,
     limit = 50,
+    takendown,
     reviewState,
     reviewedAfter,
     reviewedBefore,
@@ -417,6 +418,7 @@ export class ModerationService {
   }: {
     cursor?: string
     limit?: number
+    takendown?: boolean
     reviewedBefore?: string
     reviewState?: ModerationSubjectStatusRow['reviewState']
     reviewedAfter?: string
@@ -472,6 +474,10 @@ export class ModerationService {
 
     if (reportedBefore) {
       builder = builder.where('lastReportedAt', '<', reportedBefore)
+    }
+
+    if (takendown) {
+      builder = builder.where('takendown', '=', true)
     }
 
     if (!includeMuted) {

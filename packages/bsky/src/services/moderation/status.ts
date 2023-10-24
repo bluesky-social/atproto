@@ -51,7 +51,7 @@ const getSubjectStatusForModerationEvent = ({
         suspendUntil: null,
         lastReviewedAt: new Date().toISOString(),
       }
-    case 'com.atproto.admin.defs#modEventReverseMute':
+    case 'com.atproto.admin.defs#modEventUnmute':
       return {
         lastReviewedBy: createdBy,
         muteUntil: null,

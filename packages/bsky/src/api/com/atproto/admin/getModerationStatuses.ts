@@ -8,6 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params }) => {
       const {
         subject,
+        takendown,
         reviewState,
         reviewedAfter,
         reviewedBefore,
@@ -23,31 +24,37 @@ export default function (server: Server, ctx: AppContext) {
       } = params
       const db = ctx.db.getPrimary()
       const moderationService = ctx.services.moderation(db)
-      const results = await moderationService.getSubjectStatuses({
-        reviewState: getReviewState(reviewState),
-        subject,
-        reviewedAfter,
-        reviewedBefore,
-        reportedAfter,
-        reportedBefore,
-        includeMuted,
-        ignoreSubjects,
-        sortDirection,
-        lastReviewedBy,
-        sortField,
-        limit,
-        cursor,
-      })
-      const subjectStatuses = await moderationService.views.subjectStatus(
-        results,
-      )
-      const newCursor = results.at(-1)?.id.toString() ?? undefined
-      return {
-        encoding: 'application/json',
-        body: {
-          cursor: newCursor,
-          subjectStatuses,
-        },
+      try {
+        const results = await moderationService.getSubjectStatuses({
+          reviewState: getReviewState(reviewState),
+          subject,
+          takendown,
+          reviewedAfter,
+          reviewedBefore,
+          reportedAfter,
+          reportedBefore,
+          includeMuted,
+          ignoreSubjects,
+          sortDirection,
+          lastReviewedBy,
+          sortField,
+          limit,
+          cursor,
+        })
+        const subjectStatuses = await moderationService.views.subjectStatus(
+          results,
+        )
+        const newCursor = results.at(-1)?.id.toString() ?? undefined
+        return {
+          encoding: 'application/json',
+          body: {
+            cursor: newCursor,
+            subjectStatuses,
+          },
+        }
+      } catch (err) {
+        console.error(err)
+        throw err
       }
     },
   })

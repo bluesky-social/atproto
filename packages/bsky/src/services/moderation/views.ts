@@ -196,6 +196,25 @@ export class ModerationViews {
 
     return Array.isArray(result) ? views : views[0]
   }
+
+  async eventDetail(result: EventResult): Promise<ModEventViewDetail> {
+    const [event, subject] = await Promise.all([
+      this.event(result),
+      this.subject(result),
+    ])
+    const allBlobs = findBlobRefs(subject.value)
+    const subjectBlobs = await this.blob(
+      allBlobs.filter((blob) =>
+        event.subjectBlobCids.includes(blob.ref.toString()),
+      ),
+    )
+    return {
+      ...event,
+      subject,
+      subjectBlobs,
+    }
+  }
+
   async repoDetail(result: RepoResult): Promise<RepoViewDetail> {
     const repo = await this.repo(result)
     const labels = await this.labels(repo.did)

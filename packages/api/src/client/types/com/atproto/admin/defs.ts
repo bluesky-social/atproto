@@ -66,6 +66,7 @@ export interface ModEventViewDetail {
     | RecordView
     | RecordViewNotFound
     | { $type: string; [k: string]: unknown }
+  subjectStatus?: SubjectStatusView
   subjectBlobs: BlobView[]
   createdBy: string
   createdAt: string
@@ -603,21 +604,21 @@ export function validateModEventMute(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#modEventMute', v)
 }
 
-/** Revert mute action on a subject */
-export interface ModEventReverseMute {
+/** Unmute action on a subject */
+export interface ModEventUnmute {
   /** Describe reasoning behind the reversal. */
   comment?: string
   [k: string]: unknown
 }
 
-export function isModEventReverseMute(v: unknown): v is ModEventReverseMute {
+export function isModEventUnmute(v: unknown): v is ModEventUnmute {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.defs#modEventReverseMute'
+    v.$type === 'com.atproto.admin.defs#modEventUnmute'
   )
 }
 
-export function validateModEventReverseMute(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.defs#modEventReverseMute', v)
+export function validateModEventUnmute(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventUnmute', v)
 }

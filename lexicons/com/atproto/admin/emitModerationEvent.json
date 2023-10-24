@@ -23,7 +23,7 @@
                 "com.atproto.admin.defs#modEventReport",
                 "com.atproto.admin.defs#modEventMute",
                 "com.atproto.admin.defs#modEventReverseTakedown",
-                "com.atproto.admin.defs#modEventReverseMute"
+                "com.atproto.admin.defs#modEventUnmute"
               ]
             },
             "subject": {

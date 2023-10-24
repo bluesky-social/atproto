@@ -57,6 +57,10 @@
             "default": "desc",
             "enum": ["asc", "desc"]
           },
+          "takendown": {
+            "type": "boolean",
+            "description": "Get subjects that were taken down"
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,

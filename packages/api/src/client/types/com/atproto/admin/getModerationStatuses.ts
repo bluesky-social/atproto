@@ -29,6 +29,8 @@ export interface QueryParams {
   lastReviewedBy?: string
   sortField?: 'lastReviewedAt' | 'lastReportedAt'
   sortDirection?: 'asc' | 'desc'
+  /** Get subjects that were taken down */
+  takendown?: boolean
   limit?: number
   cursor?: string
 }

@@ -102,6 +102,10 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#recordViewNotFound',
             ],
           },
+          subjectStatus: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#subjectStatusView',
+          },
           subjectBlobs: {
             type: 'array',
             items: {
@@ -720,9 +724,9 @@ export const schemaDict = {
           },
         },
       },
-      modEventReverseMute: {
+      modEventUnmute: {
         type: 'object',
-        description: 'Revert mute action on a subject',
+        description: 'Unmute action on a subject',
         properties: {
           comment: {
             type: 'string',
@@ -817,7 +821,7 @@ export const schemaDict = {
                   'lex:com.atproto.admin.defs#modEventReport',
                   'lex:com.atproto.admin.defs#modEventMute',
                   'lex:com.atproto.admin.defs#modEventReverseTakedown',
-                  'lex:com.atproto.admin.defs#modEventReverseMute',
+                  'lex:com.atproto.admin.defs#modEventUnmute',
                 ],
               },
               subject: {
@@ -938,7 +942,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'View details about a moderation action.',
+        description: 'View details about a moderation event.',
         parameters: {
           type: 'params',
           required: ['id'],
@@ -1175,6 +1179,10 @@ export const schemaDict = {
               type: 'string',
               default: 'desc',
               enum: ['asc', 'desc'],
+            },
+            takendown: {
+              type: 'boolean',
+              description: 'Get subjects that were taken down',
             },
             limit: {
               type: 'integer',
