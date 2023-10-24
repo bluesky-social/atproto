@@ -302,7 +302,6 @@ export class AccountService {
         'account.handle',
         'account.email',
         'account.invitesDisabled',
-        'account.inviteNote',
         'account.createdAt as indexedAt',
       ])
 
@@ -318,7 +317,6 @@ export class AccountService {
       ...account,
       handle: account?.handle ?? INVALID_HANDLE,
       invitesDisabled: account.invitesDisabled === 1,
-      inviteNote: account.inviteNote ?? undefined,
       invites,
       invitedBy: invitedBy[did],
     }

@@ -71,7 +71,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('emailConfirmedAt', 'varchar')
     .addColumn('invitesDisabled', 'int2', (col) => col.notNull().defaultTo(0))
-    .addColumn('inviteNote', 'varchar')
     .addColumn('takedownId', 'varchar')
     .execute()
   await db.schema

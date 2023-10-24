@@ -8,7 +8,6 @@ export interface Account {
   createdAt: string
   emailConfirmedAt: string | null
   invitesDisabled: Generated<0 | 1>
-  inviteNote: string | null
   takedownId: string | null
 }
 
