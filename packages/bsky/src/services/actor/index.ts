@@ -66,7 +66,13 @@ export class ActorService {
           qb = qb.orWhere('actor.did', 'in', dids)
         }
         if (handles.length) {
-          qb = qb.orWhere('actor.handle', 'in', handles)
+          qb = qb.orWhere(
+            'actor.handle',
+            'in',
+            handles.length === 1
+              ? [handles[0], handles[0]] // a silly (but worthwhile) optimization to avoid usage of actor_handle_tgrm_idx
+              : handles,
+          )
         }
         return qb
       })
