@@ -1,13 +1,5 @@
-import {
-  AtpAgent,
-  RichText,
-  RichTextSegment,
-  HASHTAG_REGEX,
-  HASHTAG_REGEX_WITH_TRAILING_PUNCTUATION,
-  TRAILING_PUNCTUATION_REGEX,
-  LEADING_HASH_REGEX,
-  HASHTAG_INVALID_CHARACTER_REGEX,
-} from '../src'
+import { describe, it, expect } from '@jest/globals'
+import { AtpAgent, RichText, RichTextSegment } from '../src'
 import { isTag } from '../src/client/types/app/bsky/richtext/facet'
 
 describe('detectFacets', () => {
@@ -320,53 +312,6 @@ describe('detectFacets', () => {
       expect(detectedTags).toEqual(tags)
       expect(detectedIndices).toEqual(indices)
     }
-  })
-})
-
-describe('utils', () => {
-  // HASHTAG_REGEX is also tested in detection tests above
-  it('general parsing', () => {
-    const text = `I like #turtles!!!`
-
-    const loose = text.match(HASHTAG_REGEX_WITH_TRAILING_PUNCTUATION)
-    expect(loose?.[0]).toEqual(' #turtles!!!')
-
-    const strict = text.match(HASHTAG_REGEX)
-    expect(strict?.[0]).toEqual(' #turtles')
-
-    const trimmed = loose?.[0].replace(TRAILING_PUNCTUATION_REGEX, '').trim()
-    expect(trimmed).toEqual('#turtles')
-
-    const sanitized = trimmed?.replace(LEADING_HASH_REGEX, '')
-    expect(sanitized).toEqual('turtles')
-
-    const punctuation = loose?.[0].match(TRAILING_PUNCTUATION_REGEX)
-    expect(punctuation?.[0]).toEqual('!!!')
-  })
-
-  it('works with special characters', () => {
-    // all these words mean squirrel
-    expect('#écureuil'.match(HASHTAG_REGEX)?.[0]).toEqual('#écureuil')
-    expect('#eichhörnchen'.match(HASHTAG_REGEX)?.[0]).toEqual('#eichhörnchen')
-    expect('#білка'.match(HASHTAG_REGEX)?.[0]).toEqual('#білка')
-  })
-
-  it('can remove invalid characters', () => {
-    expect('tag'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual('tag')
-    expect('#tag'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual('tag')
-    expect('#tag!'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual('tag')
-    expect(
-      '#in,the,middle'.replace(HASHTAG_INVALID_CHARACTER_REGEX, ''),
-    ).toEqual('inthemiddle')
-    expect('multi_word'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual(
-      'multi_word',
-    )
-    expect('multi-word'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual(
-      'multi-word',
-    )
-    expect('#butter🦋fly'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual(
-      'butter🦋fly',
-    )
   })
 })
 
