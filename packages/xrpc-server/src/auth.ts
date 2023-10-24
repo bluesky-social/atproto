@@ -66,12 +66,17 @@ export const verifyJwt = async (
 
   const msgBytes = ui8.fromString(parts.slice(0, 2).join('.'), 'utf8')
   const sigBytes = ui8.fromString(sig, 'base64url')
+  const verifySignatureWithKey = (key: string) => {
+    return crypto.verifySignature(key, msgBytes, sigBytes, {
+      lowS: false,
+    })
+  }
 
   const signingKey = await getSigningKey(payload.iss, false)
 
   let validSig: boolean
   try {
-    validSig = await crypto.verifySignature(signingKey, msgBytes, sigBytes)
+    validSig = await verifySignatureWithKey(signingKey)
   } catch (err) {
     throw new AuthRequiredError(
       'could not verify jwt signature',
@@ -85,7 +90,7 @@ export const verifyJwt = async (
     try {
       validSig =
         freshSigningKey !== signingKey
-          ? await crypto.verifySignature(freshSigningKey, msgBytes, sigBytes)
+          ? await verifySignatureWithKey(freshSigningKey)
           : false
     } catch (err) {
       throw new AuthRequiredError(
