@@ -26,7 +26,7 @@ export class RepoTransactor extends RepoReader {
   constructor(
     public db: ActorDb,
     public did: string,
-    public repoSigningKey: crypto.Keypair,
+    public signingKey: crypto.Keypair,
     public blobstore: BlobStore,
     public backgroundQueue: BackgroundQueue,
     now?: string,
@@ -44,7 +44,7 @@ export class RepoTransactor extends RepoReader {
     const commit = await Repo.formatInitCommit(
       this.storage,
       this.did,
-      this.repoSigningKey,
+      this.signingKey,
       writeOps,
     )
     await Promise.all([
@@ -115,7 +115,7 @@ export class RepoTransactor extends RepoReader {
 
     const repo = await Repo.load(this.storage, currRoot.cid)
     const writeOps = writes.map(writeToOp)
-    const commit = await repo.formatCommit(writeOps, this.repoSigningKey)
+    const commit = await repo.formatCommit(writeOps, this.signingKey)
 
     // find blocks that would be deleted but are referenced by another record
     const dupeRecordCids = await this.getDuplicateRecordCids(

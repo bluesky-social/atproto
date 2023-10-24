@@ -18,8 +18,6 @@ export class TestPds {
   ) {}
 
   static async create(config: PdsConfig): Promise<TestPds> {
-    const repoSigningKey = await Secp256k1Keypair.create({ exportable: true })
-    const repoSigningPriv = ui8.toString(await repoSigningKey.export(), 'hex')
     const plcRotationKey = await Secp256k1Keypair.create({ exportable: true })
     const plcRotationPriv = ui8.toString(await plcRotationKey.export(), 'hex')
     const recoveryKey = (await Secp256k1Keypair.create()).did()
@@ -44,7 +42,6 @@ export class TestPds {
       bskyAppViewUrl: 'https://appview.invalid',
       bskyAppViewDid: 'did:example:invalid',
       bskyAppViewCdnUrlPattern: 'http://cdn.appview.com/%s/%s/%s',
-      repoSigningKeyK256PrivateKeyHex: repoSigningPriv,
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
       inviteRequired: false,
       ...config,

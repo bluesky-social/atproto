@@ -68,13 +68,6 @@ export const readEnv = (): ServerEnvironment => {
     moderatorPassword: envStr('PDS_MODERATOR_PASSWORD'),
     triagePassword: envStr('PDS_TRIAGE_PASSWORD'),
 
-    // keys: only one of each required
-    // kms
-    repoSigningKeyKmsKeyId: envStr('PDS_REPO_SIGNING_KEY_KMS_KEY_ID'),
-    // memory
-    repoSigningKeyK256PrivateKeyHex: envStr(
-      'PDS_REPO_SIGNING_KEY_K256_PRIVATE_KEY_HEX',
-    ),
     // kms
     plcRotationKeyKmsKeyId: envStr('PDS_PLC_ROTATION_KEY_KMS_KEY_ID'),
     // memory
@@ -150,8 +143,6 @@ export type ServerEnvironment = {
   triagePassword?: string
 
   // keys
-  repoSigningKeyKmsKeyId?: string
-  repoSigningKeyK256PrivateKeyHex?: string
   plcRotationKeyKmsKeyId?: string
   plcRotationKeyK256PrivateKeyHex?: string
 }

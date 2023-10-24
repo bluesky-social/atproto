@@ -4,12 +4,14 @@ import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { CommitData, readCarWithRoot, verifyRepo } from '@atproto/repo'
 import AppContext from '../src/context'
 import { PreparedWrite, prepareCreate } from '../src/repo'
+import { Keypair } from '@atproto/crypto'
 
 describe('crud operations', () => {
   let network: TestNetworkNoAppView
   let ctx: AppContext
   let agent: AtpAgent
   let did: string
+  let signingKey: Keypair
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -23,6 +25,7 @@ describe('crud operations', () => {
       password: 'alice-pass',
     })
     did = agent.session?.did || ''
+    signingKey = await network.pds.ctx.actorStore.keypair(did)
   })
 
   afterAll(async () => {
@@ -79,7 +82,7 @@ describe('crud operations', () => {
       car.blocks,
       car.root,
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     expect(verified.creates.length).toBe(2)
     expect(verified.creates[0].cid.equals(write.cid)).toBeTruthy()

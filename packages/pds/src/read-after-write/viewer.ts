@@ -41,8 +41,8 @@ type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 export class LocalViewer {
   did: string
   actorDb: ActorDb
+  actorKey: Keypair
   serviceDb: ServiceDb
-  signingKey: Keypair
   pdsHostname: string
   appViewAgent?: AtpAgent
   appviewDid?: string
@@ -51,8 +51,8 @@ export class LocalViewer {
   constructor(params: {
     did: string
     actorDb: ActorDb
+    actorKey: Keypair
     serviceDb: ServiceDb
-    signingKey: Keypair
     pdsHostname: string
     appViewAgent?: AtpAgent
     appviewDid?: string
@@ -60,8 +60,8 @@ export class LocalViewer {
   }) {
     this.did = params.did
     this.actorDb = params.actorDb
+    this.actorKey = params.actorKey
     this.serviceDb = params.serviceDb
-    this.signingKey = params.signingKey
     this.pdsHostname = params.pdsHostname
     this.appViewAgent = params.appViewAgent
     this.appviewDid = params.appviewDid
@@ -71,7 +71,6 @@ export class LocalViewer {
   static creator(params: {
     actorStore: ActorStore
     serviceDb: ServiceDb
-    signingKey: Keypair
     pdsHostname: string
     appViewAgent?: AtpAgent
     appviewDid?: string
@@ -79,8 +78,11 @@ export class LocalViewer {
   }) {
     const { actorStore, ...rest } = params
     return async (did: string) => {
-      const actorDb = await actorStore.db(did)
-      return new LocalViewer({ did, actorDb, ...rest })
+      const [actorDb, actorKey] = await Promise.all([
+        actorStore.db(did),
+        actorStore.keypair(did),
+      ])
+      return new LocalViewer({ did, actorDb, actorKey, ...rest })
     }
   }
 
@@ -98,7 +100,7 @@ export class LocalViewer {
     return createServiceAuthHeaders({
       iss: did,
       aud: this.appviewDid,
-      keypair: this.signingKey,
+      keypair: this.actorKey,
     })
   }
 
