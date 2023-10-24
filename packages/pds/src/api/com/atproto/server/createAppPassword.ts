@@ -3,7 +3,7 @@ import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAppPassword({
-    auth: ctx.accessVerifierNotAppPassword,
+    auth: ctx.authVerifier.accessNotAppPassword,
     handler: async ({ auth, input }) => {
       const { name } = input.body
       const appPassword = await ctx.services
