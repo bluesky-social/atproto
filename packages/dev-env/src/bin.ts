@@ -24,6 +24,7 @@ const run = async () => {
       dbPostgresSchema: 'pds',
     },
     bsky: {
+      port: 36011, // For Waverly, force a port
       dbPostgresSchema: 'bsky',
       defaultPublicUrl,
     },

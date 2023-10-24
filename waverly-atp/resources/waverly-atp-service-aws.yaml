@@ -26,6 +26,20 @@ spec:
       targetPort: 2583
   type: NodePort
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: waverly-atp-bsky
+  namespace: waverly-fargate
+spec:
+  selector:
+    app: waverly-atp
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 36011
+  type: NodePort  
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -59,6 +73,16 @@ spec:
             backend:
               service:
                 name: waverly-atp-pds
+                port:
+                  number: 80
+    - host: "bsky.${SUB_DOMAIN}.waverly.social"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: waverly-atp-bsky
                 port:
                   number: 80
 ---

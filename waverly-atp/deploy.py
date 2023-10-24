@@ -21,7 +21,7 @@ parser.add_argument("context", help="The EKS Context")
 args = parser.parse_args()
 
 os.environ["SUB_DOMAIN"] = "test"
-os.environ["PUBLIC_URL"] = "https://pds.test.waverly.social"
+os.environ["PUBLIC_URL"] = "https://bsky.test.waverly.social"
 
 def usage() -> None:
     print("USAGE")
