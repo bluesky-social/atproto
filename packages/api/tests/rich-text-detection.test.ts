@@ -1,4 +1,12 @@
-import { AtpAgent, RichText, RichTextSegment } from '../src'
+import {
+  AtpAgent,
+  RichText,
+  RichTextSegment,
+  HASHTAG_REGEX,
+  HASHTAG_REGEX_WITH_TRAILING_PUNCTUATION,
+  TRAILING_PUNCTUATION_REGEX,
+  LEADING_HASH_REGEX,
+} from '../src'
 import { isTag } from '../src/client/types/app/bsky/richtext/facet'
 
 describe('detectFacets', () => {
@@ -276,6 +284,9 @@ describe('detectFacets', () => {
           { byteStart: 48, byteEnd: 61 },
         ],
       ],
+      // emoji modifiers
+      ['#👍🏻', ['👍🏻'], [{ byteStart: 0, byteEnd: 9 }]],
+      ['#👍🏿', ['👍🏿'], [{ byteStart: 0, byteEnd: 9 }]],
       [
         '#same #same #but #diff',
         ['same', 'same', 'but', 'diff'],
@@ -308,6 +319,29 @@ describe('detectFacets', () => {
       expect(detectedTags).toEqual(tags)
       expect(detectedIndices).toEqual(indices)
     }
+  })
+})
+
+describe('regexes', () => {
+  // HASHTAG_REGEX is tested in detection tests above
+
+  it('works', () => {
+    const text = `I like #turtles!!!`
+
+    const loose = text.match(HASHTAG_REGEX_WITH_TRAILING_PUNCTUATION)
+    expect(loose?.[0]).toEqual(' #turtles!!!')
+
+    const strict = text.match(HASHTAG_REGEX)
+    expect(strict?.[0]).toEqual(' #turtles')
+
+    const trimmed = loose?.[0].replace(TRAILING_PUNCTUATION_REGEX, '').trim()
+    expect(trimmed).toEqual('#turtles')
+
+    const sanitized = trimmed?.replace(LEADING_HASH_REGEX, '')
+    expect(sanitized).toEqual('turtles')
+
+    const punctuation = loose?.[0].match(TRAILING_PUNCTUATION_REGEX)
+    expect(punctuation?.[0]).toEqual('!!!')
   })
 })
 
