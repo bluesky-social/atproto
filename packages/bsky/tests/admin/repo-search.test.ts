@@ -74,19 +74,6 @@ describe('admin repo search view', () => {
     expect(res.data.repos[0].did).toEqual(term)
   })
 
-  it.skip('finds repo by email', async () => {
-    const did = sc.dids['cara-wiegand69.test']
-    const { email } = sc.accounts[did]
-    const res = await agent.api.com.atproto.admin.searchRepos(
-      { term: email },
-      { headers },
-    )
-
-    expect(res.data.repos.length).toEqual(1)
-    expect(res.data.repos[0].did).toEqual(did)
-    expect(res.data.repos[0].email).toEqual(email)
-  })
-
   it('paginates with term', async () => {
     const results = (results) => results.flatMap((res) => res.users)
     const paginator = async (cursor?: string) => {
