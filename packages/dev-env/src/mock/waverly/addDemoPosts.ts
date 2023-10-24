@@ -1,6 +1,6 @@
 import User from './User'
 import { demoPosts } from './demoPosts'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import postMiniBlog from './post'
 
 // TODO no second level reply

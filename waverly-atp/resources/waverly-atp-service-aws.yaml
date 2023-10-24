@@ -92,26 +92,26 @@ spec:
             - name: PUBLIC_URL
               value: "${PUBLIC_URL}"
             - name: PGPORT
-              value: 5433
+              value: "5433"
             - name: PGHOST
-              value: localhost
+              value: "localhost"
             - name: PGUSER
-              value: pg
+              value: "pg"
             - name: PGPASSWORD
-              value: password
+              value: "password"
             - name: PGDATABASE
-              value: postgres
+              value: "postgres"
             - name: DB_POSTGRES_URL
-              value: postgresql://pg:password@127.0.0.1:5433/postgres
+              value: "postgresql://pg:password@127.0.0.1:5433/postgres"
             - name: REDIS_HOST
-              value: 127.0.0.1:6379
+              value: "127.0.0.1:6379"
         - name: redis
           image: redis:7.0-alpine
         - name: db
           image: postgres:14.4-alpine
           env:
             - name: POSTGRES_USER
-              value: pg
+              value: "pg"
             - name: POSTGRES_PASSWORD
-              value: password
+              value: "password"
 

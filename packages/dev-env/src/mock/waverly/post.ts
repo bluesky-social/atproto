@@ -1,6 +1,6 @@
 import User from './User'
 import { LongPost } from './demoPosts'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import getWaverlyUri from './getWaverlyUri'
 import { Main as Images } from '@waverlyai/atproto-api/src/client/types/app/bsky/embed/images'
 import { Main as External } from '@waverlyai/atproto-api/src/client/types/app/bsky/embed/external'

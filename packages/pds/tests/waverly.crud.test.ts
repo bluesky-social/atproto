@@ -1,5 +1,5 @@
 import fs from 'fs/promises'
-import { AtUri } from '@atproto/uri'
+import { AtUri } from '@atproto/syntax'
 import AtpAgent, { AppBskyEmbedExternal, BlobRef } from '@waverlyai/atproto-api'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import * as Miniblog from '../src/lexicon/types/social/waverly/miniblog'
