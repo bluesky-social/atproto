@@ -22,6 +22,7 @@ export default function (server: Server, ctx: AppContext) {
         .where('did', '=', did)
         .select('cid')
         .orderBy('cid', 'asc')
+        .groupBy('cid')
         .limit(limit)
       if (since) {
         builder = builder.where('repoRev', '>', since)
