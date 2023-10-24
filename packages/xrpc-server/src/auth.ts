@@ -4,10 +4,13 @@ import * as crypto from '@atproto/crypto'
 import * as ui8 from 'uint8arrays'
 import { AuthRequiredError } from './types'
 
-type ServiceJwtParams = {
+type ServiceJwtPayload = {
   iss: string
   aud: string
   exp?: number
+}
+
+type ServiceJwtParams = ServiceJwtPayload & {
   keypair: crypto.Keypair
 }
 
@@ -46,7 +49,7 @@ export const verifyJwt = async (
   jwtStr: string,
   ownDid: string | null, // null indicates to skip the audience check
   getSigningKey: (did: string) => Promise<string>,
-): Promise<string> => {
+): Promise<ServiceJwtPayload> => {
   const parts = jwtStr.split('.')
   if (parts.length !== 3) {
     throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
@@ -85,7 +88,7 @@ export const verifyJwt = async (
     )
   }
 
-  return payload.iss
+  return payload
 }
 
 const parseB64UrlToJson = (b64: string) => {

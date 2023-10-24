@@ -39,6 +39,14 @@ type RoleOutput = {
   }
 }
 
+type AdminServiceOutput = {
+  credentials: {
+    type: 'service'
+    aud: string
+    iss: string
+  }
+}
+
 type AccessOutput = {
   credentials: {
     type: 'access'
@@ -190,27 +198,37 @@ export class AuthVerifier {
     }
   }
 
-  adminService = async (reqCtx: ReqCtx): Promise<RoleOutput> => {
+  adminService = async (reqCtx: ReqCtx): Promise<AdminServiceOutput> => {
     const jwtStr = bearerTokenFromReq(reqCtx.req)
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    await verifyServiceJwt(jwtStr, null, async (did: string) => {
-      if (did !== this.adminServiceDid) {
-        throw new AuthRequiredError(
-          'Untrusted issuer for admin actions',
-          'UntrustedIss',
-        )
-      }
-      const atprotoData = await this.idResolver.did.resolveAtprotoData(did)
-      return atprotoData.signingKey
-    })
+    const payload = await verifyServiceJwt(
+      jwtStr,
+      null,
+      async (did: string) => {
+        if (did !== this.adminServiceDid) {
+          throw new AuthRequiredError(
+            'Untrusted issuer for admin actions',
+            'UntrustedIss',
+          )
+        }
+        const atprotoData = await this.idResolver.did.resolveAtprotoData(did)
+        return atprotoData.signingKey
+      },
+    )
     return {
-      credentials: { type: 'role', admin: true, moderator: true, triage: true },
+      credentials: {
+        type: 'service',
+        aud: payload.aud,
+        iss: payload.iss,
+      },
     }
   }
 
-  roleOrAdminService = async (reqCtx: ReqCtx): Promise<RoleOutput> => {
+  roleOrAdminService = async (
+    reqCtx: ReqCtx,
+  ): Promise<RoleOutput | AdminServiceOutput> => {
     if (isBearerToken(reqCtx.req)) {
       return this.adminService(reqCtx)
     } else {
