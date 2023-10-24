@@ -1,10 +1,10 @@
-# Deploying
+# Deploying to AWS
 
 ## First time on cluster
 
 From [https://github.com/kubernetes-sigs/aws-efs-csi-driver/]
 
-Go in [https://us-east-2.console.aws.amazon.com/eks/], navigate to Add-ons and add the Amazon EFS CSI Driver. (I've tried with a yaml and did not worked so I followed the doc main path).
+Go in [https://us-east-2.console.aws.amazon.com/eks/], navigate to Add-ons and add the Amazon EFS CSI Driver. (I've tried with a yaml and it did not work so I followed the doc main path).
 
 ## Setting Up The Python Development Environment
 
@@ -16,6 +16,15 @@ This project uses a virtual environment to manage Python packages.
 
 ## Deploy
 
+From `waverly-atp/` run:
+
 ```bash
+# Make sure you're on the waverly branch
+git checkout waverly
+
+# Check that the tree is still clean, everything should be pushed.
+git status
+# nothing to commit, working tree clean
+
 waverly-atp$ python deploy.py prod-test3 --force
 ```

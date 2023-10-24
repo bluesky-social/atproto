@@ -67,6 +67,10 @@ make codegen
 
 ```
 
+## Publishing to the AWS server
+
+The documentation is in [waverly-atp](./waverly-atp/README.md).
+
 ## Resetting all the node_modules and lock-file
 
 Careful! This deletes a lot of stuff, commit or backup or stash before you proceed. From the main directory:
