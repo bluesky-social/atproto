@@ -92,7 +92,7 @@ spec:
             - name: PUBLIC_URL
               value: "${PUBLIC_URL}"
             - name: PGPORT
-              value: "5433"
+              value: "5432"
             - name: PGHOST
               value: "localhost"
             - name: PGUSER
@@ -102,7 +102,7 @@ spec:
             - name: PGDATABASE
               value: "postgres"
             - name: DB_POSTGRES_URL
-              value: "postgresql://pg:password@127.0.0.1:5433/postgres"
+              value: "postgresql://pg:password@127.0.0.1:5432/postgres"
             - name: REDIS_HOST
               value: "127.0.0.1:6379"
         - name: redis
