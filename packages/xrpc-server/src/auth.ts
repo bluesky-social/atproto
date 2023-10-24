@@ -45,7 +45,7 @@ const jsonToB64Url = (json: Record<string, unknown>): string => {
 export const verifyJwt = async (
   jwtStr: string,
   ownDid: string | null, // null indicates to skip the audience check
-  getSigningKey: (did: string) => Promise<string>,
+  getSigningKey: (did: string, forceRefresh: boolean) => Promise<string>,
 ): Promise<string> => {
   const parts = jwtStr.split('.')
   if (parts.length !== 3) {
@@ -67,7 +67,7 @@ export const verifyJwt = async (
   const msgBytes = ui8.fromString(parts.slice(0, 2).join('.'), 'utf8')
   const sigBytes = ui8.fromString(sig, 'base64url')
 
-  const signingKey = await getSigningKey(payload.iss)
+  const signingKey = await getSigningKey(payload.iss, false)
 
   let validSig: boolean
   try {
@@ -78,6 +78,23 @@ export const verifyJwt = async (
       'BadJwtSignature',
     )
   }
+
+  if (!validSig) {
+    // get fresh signing key in case it failed due to a recent rotation
+    const freshSigningKey = await getSigningKey(payload.iss, true)
+    try {
+      validSig =
+        freshSigningKey !== signingKey
+          ? await crypto.verifySignature(freshSigningKey, msgBytes, sigBytes)
+          : false
+    } catch (err) {
+      throw new AuthRequiredError(
+        'could not verify jwt signature',
+        'BadJwtSignature',
+      )
+    }
+  }
+
   if (!validSig) {
     throw new AuthRequiredError(
       'jwt signature does not match jwt issuer',

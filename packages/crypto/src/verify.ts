@@ -10,7 +10,7 @@ export const verifySignature = (
   const parsed = parseDidKey(didKey)
   const plugin = plugins.find((p) => p.jwtAlg === parsed.jwtAlg)
   if (!plugin) {
-    throw new Error(`Unsupported signature alg: :${parsed.jwtAlg}`)
+    throw new Error(`Unsupported signature alg: ${parsed.jwtAlg}`)
   }
   return plugin.verifySignature(didKey, data, sig)
 }
