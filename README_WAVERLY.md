@@ -99,6 +99,10 @@ git pull
 make deps
 make build
 
+# Check that the tree is still clean
+git status
+# nothing to commit, working tree clean
+
 # For each of the package you want to publish, run the corresponding line.
 # You do not need to publish them all.
 # Use `prerelease`, `patch`, `minor` or `major` to suit your needs 
@@ -112,7 +116,7 @@ pnpm version patch -w @waverlyai/atproto-dev-env --no-workspaces-update
 git diff
 
 # Commit, tag, push and publish to npm.
-waverly-scripts/push-and-publish.sh
+./waverly-scripts/push-and-publish.sh
 ```
 
 If you see any error running this script then you may have an unclean git repo. Reverse the version change, commit, and proceed again. Once this is done, check the npm repos linked above to make sure it worked.

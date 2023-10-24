@@ -83,6 +83,6 @@ for file in "${prefixes[@]}"; do
     pnpm --filter "$package" install --frozen-lockfile --quiet
     echo ""
     echo "Publishing package $package"
-    pnpm --filter "$package" publish --publish-branch waverly --access public
+    pnpm --filter "$package" publish --publish-branch waverly --access public --quiet
   fi
 done
