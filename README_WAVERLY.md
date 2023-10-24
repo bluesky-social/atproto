@@ -85,17 +85,37 @@ For now we support three npm package, which are light deviation from their equiv
 - [@waverlyai/atproto-pds](https://www.npmjs.com/package/@waverlyai/atproto-pds) ([@atproto/pds](https://www.npmjs.com/package/@atproto/pds))
 - [@waverlyai/atproto-dev-env](https://www.npmjs.com/package/@waverlyai/atproto-dev-env) ([@atproto/dev-env](https://www.npmjs.com/package/@atproto/dev-env))
 
-To publish any of these, you'll need to first commit and push your changes.
+To publish any of these:
 
 ```sh
+# First time only: make sure you have jq.
+brew install jq
+
+# Start from a clean, up-to-date, and fully committed git repo on the `waverly` branch.
+git checkout waverly
+git pull
+
 # Build everything
+make deps
 make build
 
-# Publish the packages
-(cd packages/api && pnpm --access public)
-(cd packages/pds && pnpm --access public)
-(cd packages/dev-env && pnpm --access public)
+# For each of the package you want to publish, run the corresponding line.
+# You do not need to publish them all.
+# Use `prerelease`, `patch`, `minor` or `major` to suit your needs 
+# These three lines are valid as of October 2023
+pnpm version patch -w @waverlyai/atproto-api --no-workspaces-update
+pnpm version prerelease -w @waverlyai/atproto-pds --no-workspaces-update
+pnpm version patch -w @waverlyai/atproto-dev-env --no-workspaces-update
+
+# Do a quick sanity check, only the version numbers in the package.json
+# of the three packages should have changed.
+git diff
+
+# Commit, tag, push and publish to npm.
+waverly-scripts/push-and-publish.sh
 ```
+
+If you see any error running this script then you may have an unclean git repo. Reverse the version change, commit, and proceed again. Once this is done, check the npm repos linked above to make sure it worked.
 
 ## Running our tests
 
