@@ -1,4 +1,8 @@
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  UpstreamFailureError,
+} from '@atproto/xrpc-server'
 import {
   ACKNOWLEDGE,
   ESCALATE,
@@ -84,7 +88,7 @@ export default function (server: Server, ctx: AppContext) {
       if (restored) {
         const { did, subjects } = restored
         const agent = await ctx.pdsAdminAgent(did)
-        await Promise.all(
+        const results = await Promise.allSettled(
           subjects.map((subject) =>
             retryHttp(() =>
               agent.api.com.atproto.admin.updateSubjectStatus({
@@ -96,6 +100,10 @@ export default function (server: Server, ctx: AppContext) {
             ),
           ),
         )
+        const hadFailure = results.some((r) => r.status === 'rejected')
+        if (hadFailure) {
+          throw new UpstreamFailureError('failed to revert action on PDS')
+        }
       }
 
       return {

@@ -1,6 +1,10 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  UpstreamFailureError,
+} from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
@@ -111,7 +115,7 @@ export default function (server: Server, ctx: AppContext) {
         const { did, subjects } = takenDown
         if (did && subjects.length > 0) {
           const agent = await ctx.pdsAdminAgent(did)
-          await Promise.all(
+          const results = await Promise.allSettled(
             subjects.map((subject) =>
               retryHttp(() =>
                 agent.api.com.atproto.admin.updateSubjectStatus({
@@ -124,6 +128,10 @@ export default function (server: Server, ctx: AppContext) {
               ),
             ),
           )
+          const hadFailure = results.some((r) => r.status === 'rejected')
+          if (hadFailure) {
+            throw new UpstreamFailureError('failed to apply action on PDS')
+          }
         }
       }
 
