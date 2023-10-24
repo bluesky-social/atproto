@@ -4,7 +4,7 @@ import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getSession({
-    auth: ctx.accessVerifier,
+    auth: ctx.authVerifier.access,
     handler: async ({ auth }) => {
       const did = auth.credentials.did
       const user = await ctx.services.account(ctx.db).getAccount(did)

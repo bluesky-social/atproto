@@ -8,7 +8,9 @@ get_container_id() {
     exit 1
   fi
 
+ # first line of jq normalizes for docker compose breaking change, see docker/compose#10958
   docker compose -f $compose_file ps --format json --status running \
+    | jq -sc '.[] | if type=="array" then .[] else . end' | jq -s \
     | jq -r '.[]? | select(.Service == "'${service}'") | .ID'
 }
 
