@@ -15,22 +15,12 @@ const run = async () => {
 [ created by Bluesky ]`)
 
   // For Waverly
-  let port = 2583
-  let hostname = 'localhost'
-  let defaultPublicUrl = 'https://bsky.public.url'
-  if (process.env.PUBLIC_URL) {
-    defaultPublicUrl = process.env.PUBLIC_URL
-    if (defaultPublicUrl !== 'LOCALHOST') {
-      const url = new URL(process.env.PUBLIC_URL)
-      port = Number(url.port)
-      hostname = url.hostname
-    }
-  }
+  const defaultPublicUrl = process.env.PUBLIC_URL || 'https://bsky.public.url'
 
   const network = await TestNetwork.create({
     pds: {
-      port,
-      hostname,
+      port: 2583,
+      hostname: 'localhost',
       dbPostgresSchema: 'pds',
     },
     bsky: {
