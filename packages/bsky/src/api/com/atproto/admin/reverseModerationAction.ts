@@ -6,6 +6,7 @@ import {
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { retryHttp } from '../../../../util/retry'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.reverseModerationAction({
@@ -85,12 +86,14 @@ export default function (server: Server, ctx: AppContext) {
         const agent = await ctx.pdsAdminAgent(did)
         await Promise.all(
           subjects.map((subject) =>
-            agent.api.com.atproto.admin.updateSubjectStatus({
-              subject,
-              takedown: {
-                applied: false,
-              },
-            }),
+            retryHttp(() =>
+              agent.api.com.atproto.admin.updateSubjectStatus({
+                subject,
+                takedown: {
+                  applied: false,
+                },
+              }),
+            ),
           ),
         )
       }

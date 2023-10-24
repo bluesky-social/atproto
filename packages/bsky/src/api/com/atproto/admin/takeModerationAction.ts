@@ -10,6 +10,7 @@ import {
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { getSubject, getAction } from '../moderation/util'
 import { TakedownSubjects } from '../../../../services/moderation'
+import { retryHttp } from '../../../../util/retry'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.takeModerationAction({
@@ -112,13 +113,15 @@ export default function (server: Server, ctx: AppContext) {
           const agent = await ctx.pdsAdminAgent(did)
           await Promise.all(
             subjects.map((subject) =>
-              agent.api.com.atproto.admin.updateSubjectStatus({
-                subject,
-                takedown: {
-                  applied: true,
-                  ref: result.id.toString(),
-                },
-              }),
+              retryHttp(() =>
+                agent.api.com.atproto.admin.updateSubjectStatus({
+                  subject,
+                  takedown: {
+                    applied: true,
+                    ref: result.id.toString(),
+                  },
+                }),
+              ),
             ),
           )
         }
