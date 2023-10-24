@@ -3,8 +3,13 @@ import BaseResolver from './base-resolver'
 import { DidCache } from '../types'
 import { PoorlyFormattedDidError, UnsupportedDidWebPathError } from '../errors'
 
-export const DOC_PATH = '/.well-known/did.json'
+const DIDWEB_WELLKNOWN_PATH = '/.well-known/did.json'
 
+/**
+ * Resolves did:web DIDs.
+ *
+ * Supports only top-level (domain) DIDs, not paths (with additional ":" segments in the DID). UnsupportedDidWebPathError will be thrown if path segments are detected.
+ */
 export class DidWebResolver extends BaseResolver {
   constructor(public timeout: number, public cache?: DidCache) {
     super(cache)
@@ -17,7 +22,7 @@ export class DidWebResolver extends BaseResolver {
     if (parts.length < 1) {
       throw new PoorlyFormattedDidError(did)
     } else if (parts.length === 1) {
-      path = parts[0] + DOC_PATH
+      path = parts[0] + DIDWEB_WELLKNOWN_PATH
     } else {
       // how we *would* resolve a did:web with path, if atproto supported it
       //path = parts.join('/') + '/did.json'

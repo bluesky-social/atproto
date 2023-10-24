@@ -9,6 +9,13 @@ export abstract class BaseResolver {
 
   abstract resolveNoCheck(did: string): Promise<unknown | null>
 
+  /** Throws if argument is not a valid DidDocument.
+   *
+   * Only checks type structure, does not parse internal fields.
+   *
+   * @param did - DID to verify against field in the document itself
+   * @param val - object to verify structure as a DidDocument
+   */
   validateDidDoc(did: string, val: unknown): DidDocument {
     if (!check.is(val, didDocument)) {
       throw new PoorlyFormattedDidDocumentError(did, val)
@@ -29,6 +36,12 @@ export abstract class BaseResolver {
     await this.cache?.refreshCache(did, () => this.resolveNoCache(did))
   }
 
+  /**
+   * Resolves DID, possibly from cached. Stale entries are refreshed; never returns a stale entry.
+   *
+   * @param forceRefresh - force update of cache
+   * @returns DID document if successful, null if successful not found (eg, HTTP 404), throws on resolution error
+   */
   async resolve(
     did: string,
     forceRefresh = false,
@@ -52,6 +65,7 @@ export abstract class BaseResolver {
     return got
   }
 
+  /** Variant of resolve() which throws if DID does not exist, instead of returning null */
   async ensureResolve(did: string, forceRefresh = false): Promise<DidDocument> {
     const result = await this.resolve(did, forceRefresh)
     if (result === null) {
@@ -68,6 +82,7 @@ export abstract class BaseResolver {
     return atprotoData.ensureAtpDocument(didDocument)
   }
 
+  /** Helper to do DID resolution and extract repo public key */
   async resolveAtprotoKey(did: string, forceRefresh = false): Promise<string> {
     if (did.startsWith('did:key:')) {
       return did
@@ -77,6 +92,7 @@ export abstract class BaseResolver {
     }
   }
 
+  /** Helper to do DID resolution, extract repo public key, and verify signature */
   async verifySignature(
     did: string,
     data: Uint8Array,

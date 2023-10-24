@@ -4,7 +4,19 @@ import { HandleResolverOpts } from '../types'
 const SUBDOMAIN = '_atproto'
 const PREFIX = 'did='
 
+/**
+ * Resolves a handle (domain name) to a DID.
+ *
+ * Calling code must validate handle/DID pariing against the DID document itself.
+ *
+ * @link https://atproto.com/specs/handle#handle-resolution
+ */
 export class HandleResolver {
+  /**
+   * Resolution process timeout in miliseconds.
+   *
+   * TODO: not actually implemented for either resolution method?
+   */
   public timeout: number
   private backupNameservers: string[] | undefined
   private backupNameserverIps: string[] | undefined
@@ -14,6 +26,11 @@ export class HandleResolver {
     this.backupNameservers = opts.backupNameservers
   }
 
+  /**
+   * Attempts DNS and HTTP resolution in parallel.
+   *
+   * Returns the DNS result first, HTTP if it fails or is not found, and falls back to DNS backup (if configured).
+   */
   async resolve(handle: string): Promise<string | undefined> {
     const dnsPromise = this.resolveDns(handle)
     const httpAbort = new AbortController()

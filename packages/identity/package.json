@@ -23,6 +23,7 @@
     "test": "jest",
     "test:log": "cat test.log | pino-pretty",
     "build": "node ./build.js",
+    "docs": "tsdoc --src=src/*,src/handle/*,src/did/* --dest=API.md",
     "postbuild": "tsc --build tsconfig.build.json",
     "update-main-to-dist": "node ../../update-main-to-dist.js packages/identity"
   },
@@ -37,6 +38,7 @@
     "@did-plc/server": "^0.0.1",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "get-port": "^6.1.2"
+    "get-port": "^6.1.2",
+    "tsdoc-markdown": "^0.0.4"
   }
 }
