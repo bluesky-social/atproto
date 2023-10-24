@@ -127,7 +127,7 @@ describe('account', () => {
     // next, pretend account was made 2 days in the past
     const twoDaysAgo = new Date(Date.now() - 2 * DAY).toISOString()
     await ctx.db.db
-      .updateTable('user_account')
+      .updateTable('account')
       .set({ createdAt: twoDaysAgo })
       .where('did', '=', account.did)
       .execute()
@@ -151,7 +151,7 @@ describe('account', () => {
     // again, pretend account was made 2 days ago
     const twoDaysAgo = new Date(Date.now() - 2 * DAY).toISOString()
     await ctx.db.db
-      .updateTable('user_account')
+      .updateTable('account')
       .set({ createdAt: twoDaysAgo })
       .where('did', '=', account.did)
       .execute()
@@ -181,7 +181,7 @@ describe('account', () => {
     // first, pretend account was made 2 days ago & get those two codes
     const twoDaysAgo = new Date(Date.now() - 2 * DAY).toISOString()
     await ctx.db.db
-      .updateTable('user_account')
+      .updateTable('account')
       .set({ createdAt: twoDaysAgo })
       .where('did', '=', account.did)
       .execute()
@@ -193,7 +193,7 @@ describe('account', () => {
     // then pretend account was made ever so slightly over 10 days ago
     const tenDaysAgo = new Date(Date.now() - 10.01 * DAY).toISOString()
     await ctx.db.db
-      .updateTable('user_account')
+      .updateTable('account')
       .set({ createdAt: tenDaysAgo })
       .where('did', '=', account.did)
       .execute()

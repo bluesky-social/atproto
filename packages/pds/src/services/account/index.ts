@@ -8,11 +8,7 @@ import * as scrypt from './scrypt'
 import { countAll, notSoftDeletedClause } from '../../db/util'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { getRandomToken } from '../../api/com/atproto/server/util'
-import {
-  ServiceDb,
-  UserAccountEntry,
-  EmailTokenPurpose,
-} from '../../service-db'
+import { ServiceDb, AccountEntry, EmailTokenPurpose } from '../../service-db'
 import { TimeCidKeyset } from '../../db/pagination'
 import { StatusAttr } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { AccountView } from '../../lexicon/types/com/atproto/admin/defs'
@@ -23,18 +19,18 @@ export class AccountService {
   async getAccount(
     handleOrDid: string,
     includeSoftDeleted = false,
-  ): Promise<UserAccountEntry | null> {
+  ): Promise<AccountEntry | null> {
     const { ref } = this.db.db.dynamic
     const result = await this.db.db
-      .selectFrom('user_account')
+      .selectFrom('account')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('user_account'))),
+        qb.where(notSoftDeletedClause(ref('account'))),
       )
       .where((qb) => {
         if (handleOrDid.startsWith('did:')) {
-          return qb.where('user_account.did', '=', handleOrDid)
+          return qb.where('account.did', '=', handleOrDid)
         } else {
-          return qb.where('user_account.handle', '=', handleOrDid)
+          return qb.where('account.handle', '=', handleOrDid)
         }
       })
       .selectAll()
@@ -45,11 +41,11 @@ export class AccountService {
   // Repo exists and is not taken-down
   async isRepoAvailable(did: string) {
     const found = await this.db.db
-      .selectFrom('user_account')
-      .innerJoin('repo_root', 'repo_root.did', 'user_account.did')
-      .where('user_account.did', '=', did)
-      .where('user_account.takedownId', 'is', null)
-      .select('user_account.did')
+      .selectFrom('account')
+      .innerJoin('repo_root', 'repo_root.did', 'account.did')
+      .where('account.did', '=', did)
+      .where('account.takedownId', 'is', null)
+      .select('account.did')
       .executeTakeFirst()
     return found !== undefined
   }
@@ -57,15 +53,15 @@ export class AccountService {
   async getAccountByEmail(
     email: string,
     includeSoftDeleted = false,
-  ): Promise<UserAccountEntry | null> {
+  ): Promise<AccountEntry | null> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
-      .selectFrom('user_account')
+      .selectFrom('account')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('user_account'))),
+        qb.where(notSoftDeletedClause(ref('account'))),
       )
       .where('email', '=', email.toLowerCase())
-      .selectAll('user_account')
+      .selectAll('account')
       .executeTakeFirst()
     return found || null
   }
@@ -83,9 +79,9 @@ export class AccountService {
     }
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
-      .selectFrom('user_account')
+      .selectFrom('account')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('user_account'))),
+        qb.where(notSoftDeletedClause(ref('account'))),
       )
       .where('handle', '=', handleOrDid)
       .select('did')
@@ -102,7 +98,7 @@ export class AccountService {
     this.db.assertTransaction()
     const { email, handle, did, passwordScrypt } = opts
     const registered = await this.db.db
-      .insertInto('user_account')
+      .insertInto('account')
       .values({
         email: email.toLowerCase(),
         did,
@@ -127,13 +123,13 @@ export class AccountService {
     handle: string,
   ): Promise<HandleSequenceToken> {
     const res = await this.db.db
-      .updateTable('user_account')
+      .updateTable('account')
       .set({ handle })
       .where('did', '=', did)
       .whereNotExists(
         // @NOTE see also condition in isHandleAvailable()
         this.db.db
-          .selectFrom('user_account')
+          .selectFrom('account')
           .where('handle', '=', handle)
           .selectAll(),
       )
@@ -162,7 +158,7 @@ export class AccountService {
   async getHandleDid(handle: string): Promise<string | null> {
     // @NOTE see also condition in updateHandle()
     const found = await this.db.db
-      .selectFrom('user_account')
+      .selectFrom('account')
       .where('handle', '=', handle)
       .selectAll()
       .executeTakeFirst()
@@ -171,7 +167,7 @@ export class AccountService {
 
   async updateEmail(did: string, email: string) {
     await this.db.db
-      .updateTable('user_account')
+      .updateTable('account')
       .set({ email: email.toLowerCase(), emailConfirmedAt: null })
       .where('did', '=', did)
       .executeTakeFirst()
@@ -180,7 +176,7 @@ export class AccountService {
   async updateUserPassword(did: string, password: string) {
     const passwordScrypt = await scrypt.genSaltAndHash(password)
     await this.db.db
-      .updateTable('user_account')
+      .updateTable('account')
       .set({ passwordScrypt })
       .where('did', '=', did)
       .execute()
@@ -228,7 +224,7 @@ export class AccountService {
 
   async verifyAccountPassword(did: string, password: string): Promise<boolean> {
     const found = await this.db.db
-      .selectFrom('user_account')
+      .selectFrom('account')
       .selectAll()
       .where('did', '=', did)
       .executeTakeFirst()
@@ -261,7 +257,7 @@ export class AccountService {
 
   async getAccountTakedownStatus(did: string): Promise<StatusAttr | null> {
     const res = await this.db.db
-      .selectFrom('user_account')
+      .selectFrom('account')
       .select('takedownId')
       .where('did', '=', did)
       .executeTakeFirst()
@@ -276,7 +272,7 @@ export class AccountService {
       ? takedown.ref ?? new Date().toISOString()
       : null
     await this.db.db
-      .updateTable('user_account')
+      .updateTable('account')
       .set({ takedownId })
       .where('did', '=', did)
       .executeTakeFirst()
@@ -292,22 +288,22 @@ export class AccountService {
       .where('did', '=', did)
       .execute()
     await this.db.db
-      .deleteFrom('user_account')
-      .where('user_account.did', '=', did)
+      .deleteFrom('account')
+      .where('account.did', '=', did)
       .execute()
   }
 
   async adminView(did: string): Promise<AccountView | null> {
     const accountQb = this.db.db
-      .selectFrom('user_account')
-      .where('user_account.did', '=', did)
+      .selectFrom('account')
+      .where('account.did', '=', did)
       .select([
-        'user_account.did',
-        'user_account.handle',
-        'user_account.email',
-        'user_account.invitesDisabled',
-        'user_account.inviteNote',
-        'user_account.createdAt as indexedAt',
+        'account.did',
+        'account.handle',
+        'account.email',
+        'account.invitesDisabled',
+        'account.inviteNote',
+        'account.createdAt as indexedAt',
       ])
 
     const [account, invites, invitedBy] = await Promise.all([
@@ -480,7 +476,7 @@ export class AccountService {
   async takedownActor(info: { takedownId: string; did: string }) {
     const { takedownId, did } = info
     await this.db.db
-      .updateTable('user_account')
+      .updateTable('account')
       .set({ takedownId })
       .where('did', '=', did)
       .execute()
@@ -488,7 +484,7 @@ export class AccountService {
 
   async reverseActorTakedown(info: { did: string }) {
     await this.db.db
-      .updateTable('user_account')
+      .updateTable('account')
       .set({ takedownId: null })
       .where('did', '=', info.did)
       .execute()

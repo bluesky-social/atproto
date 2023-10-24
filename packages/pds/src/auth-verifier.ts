@@ -115,9 +115,9 @@ export class AuthVerifier {
       AuthScope.AppPass,
     ])
     const found = await this.db.db
-      .selectFrom('user_account')
-      .where('user_account.did', '=', result.credentials.did)
-      .where('user_account.takedownId', 'is', null)
+      .selectFrom('account')
+      .where('account.did', '=', result.credentials.did)
+      .where('account.takedownId', 'is', null)
       .select('did')
       .executeTakeFirst()
     if (!found) {

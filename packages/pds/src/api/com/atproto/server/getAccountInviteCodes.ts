@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const [user, userCodes] = await Promise.all([
         ctx.db.db
-          .selectFrom('user_account')
+          .selectFrom('account')
           .where('did', '=', requester)
           .select(['invitesDisabled', 'createdAt'])
           .executeTakeFirstOrThrow(),

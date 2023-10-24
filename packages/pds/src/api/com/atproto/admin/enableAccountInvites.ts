@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
       }
       const { account, note } = input.body
       await ctx.db.db
-        .updateTable('user_account')
+        .updateTable('account')
         .where('did', '=', account)
         .set({ invitesDisabled: 0, inviteNote: note?.trim() || null })
         .execute()

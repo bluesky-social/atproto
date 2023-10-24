@@ -145,7 +145,7 @@ export class LocalViewer {
       .where('record.rkey', '=', 'self')
       .selectAll()
     const handleQuery = this.serviceDb.db
-      .selectFrom('user_account')
+      .selectFrom('account')
       .where('did', '=', this.did)
       .selectAll()
     const [profileRes, handleRes] = await Promise.all([

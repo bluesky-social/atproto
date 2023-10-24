@@ -230,7 +230,7 @@ const getDbContents = async (ctx: AppContext): Promise<DbContents> => {
     repoSeqs,
   ] = await Promise.all([
     db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
-    db.db.selectFrom('user_account').orderBy('did').selectAll().execute(),
+    db.db.selectFrom('account').orderBy('did').selectAll().execute(),
     db.db
       .selectFrom('app_password')
       .orderBy('did')

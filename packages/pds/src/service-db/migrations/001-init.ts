@@ -63,7 +63,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
-    .createTable('user_account')
+    .createTable('account')
     .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('handle', 'varchar')
     .addColumn('email', 'varchar', (col) => col.notNull())
@@ -75,20 +75,20 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('takedownId', 'varchar')
     .execute()
   await db.schema
-    .createIndex(`user_account_email_lower_idx`)
+    .createIndex(`account_email_lower_idx`)
     .unique()
-    .on('user_account')
+    .on('account')
     .expression(sql`lower("email")`)
     .execute()
   await db.schema
-    .createIndex(`user_account_handle_lower_idx`)
+    .createIndex(`account_handle_lower_idx`)
     .unique()
-    .on('user_account')
+    .on('account')
     .expression(sql`lower("handle")`)
     .execute()
   await db.schema
-    .createIndex('user_account_cursor_idx')
-    .on('user_account')
+    .createIndex('account_cursor_idx')
+    .on('account')
     .columns(['createdAt', 'did'])
     .execute()
 
@@ -108,7 +108,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('email_token').execute()
-  await db.schema.dropTable('user_account').execute()
+  await db.schema.dropTable('account').execute()
   await db.schema.dropTable('repo_root').execute()
   await db.schema.dropTable('refresh_token').execute()
   await db.schema.dropTable('invite_code_use').execute()
