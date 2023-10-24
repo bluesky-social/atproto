@@ -344,6 +344,13 @@ describe('utils', () => {
     expect(punctuation?.[0]).toEqual('!!!')
   })
 
+  it('works with special characters', () => {
+    // all these words mean squirrel
+    expect('#écureuil'.match(HASHTAG_REGEX)?.[0]).toEqual('#écureuil')
+    expect('#eichhörnchen'.match(HASHTAG_REGEX)?.[0]).toEqual('#eichhörnchen')
+    expect('#білка'.match(HASHTAG_REGEX)?.[0]).toEqual('#білка')
+  })
+
   it('can remove invalid characters', () => {
     expect('tag'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual('tag')
     expect('#tag'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual('tag')

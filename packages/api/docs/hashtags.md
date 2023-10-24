@@ -1,8 +1,13 @@
 # hashtags
 
-Bluesky supports both inline and outline tags on posts. We want both use cases
+Bluesky supports both inline and "outline" tags on posts. We want both use cases
 to adhere to the same rules to reduce confusion for users. Because of this, some
 syntaxes like trailing punctuation are not allowed.
+
+The regexes we use are otherwise very permissive. We match values using the
+Unicode Character Category `L` to capture letters from all languages, as well as
+integers `0-9`, underscores `_`, and hyphens `-`. Lastly, we aim to support all
+emoji.
 
 Rules:
 
