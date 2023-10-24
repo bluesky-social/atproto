@@ -348,10 +348,18 @@ describe('utils', () => {
     expect('tag'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual('tag')
     expect('#tag'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual('tag')
     expect('#tag!'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual('tag')
-    expect('#in,the,middle'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual('inthemiddle')
-    expect('multi_word'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual('multi_word')
-    expect('multi-word'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual('multi-word')
-    expect('#butter🦋fly'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual('butter🦋fly')
+    expect(
+      '#in,the,middle'.replace(HASHTAG_INVALID_CHARACTER_REGEX, ''),
+    ).toEqual('inthemiddle')
+    expect('multi_word'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual(
+      'multi_word',
+    )
+    expect('multi-word'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual(
+      'multi-word',
+    )
+    expect('#butter🦋fly'.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual(
+      'butter🦋fly',
+    )
   })
 })
 

@@ -5,7 +5,7 @@ import {
   HASHTAG_REGEX,
   TRAILING_PUNCTUATION_REGEX,
   LEADING_HASH_REGEX,
-} from './util'
+} from '../hashtags'
 
 export type Facet = AppBskyRichtextFacet.Main
 
