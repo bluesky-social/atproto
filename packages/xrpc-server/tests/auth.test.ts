@@ -199,9 +199,9 @@ describe('Auth', () => {
           }
         },
       )
+      await expect(tryVerify).resolves.toEqual('did:example:iss')
       expect(usedKeypair1).toBe(true)
       expect(usedKeypair2).toBe(true)
-      await expect(tryVerify).resolves.toEqual('did:example:iss')
     })
 
     it('interoperates with jwts signed by other libraries.', async () => {
