@@ -26,5 +26,5 @@ git checkout waverly
 git status
 # nothing to commit, working tree clean
 
-waverly-atp$ python deploy.py prod-test3 --force
+python deploy.py prod-test3 --force
 ```
