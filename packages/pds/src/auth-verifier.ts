@@ -213,8 +213,7 @@ export class AuthVerifier {
             'UntrustedIss',
           )
         }
-        const atprotoData = await this.idResolver.did.resolveAtprotoData(did)
-        return atprotoData.signingKey
+        return this.idResolver.did.resolveAtprotoKey(did)
       },
     )
     return {
