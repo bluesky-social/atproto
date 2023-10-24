@@ -45,6 +45,8 @@
     "@types/http-errors": "^2.0.1",
     "@types/ws": "^8.5.4",
     "get-port": "^6.1.2",
+    "jose": "^4.15.4",
+    "key-encoder": "^2.0.3",
     "multiformats": "^9.9.0"
   }
 }
