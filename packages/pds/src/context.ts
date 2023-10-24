@@ -16,7 +16,7 @@ import { BlobStore } from '@atproto/repo'
 import { Services, createServices } from './services'
 import { Sequencer } from './sequencer'
 import { BackgroundQueue } from './background'
-import DidSqlCache from './did-cache'
+import { DidSqliteCache } from './did-cache'
 import { Crawlers } from './crawlers'
 import { DiskBlobStore } from './disk-blobstore'
 import { getRedisClient } from './redis'
@@ -31,7 +31,7 @@ export type AppContextOptions = {
   localViewer: (did: string) => Promise<LocalViewer>
   mailer: ServerMailer
   moderationMailer: ModerationMailer
-  didCache: DidSqlCache
+  didCache: DidSqliteCache
   idResolver: IdResolver
   plcClient: plc.Client
   services: Services
@@ -41,7 +41,6 @@ export type AppContextOptions = {
   crawlers: Crawlers
   appViewAgent: AtpAgent
   authVerifier: AuthVerifier
-  repoSigningKey: crypto.Keypair
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
 }
@@ -53,7 +52,7 @@ export class AppContext {
   public localViewer: (did: string) => Promise<LocalViewer>
   public mailer: ServerMailer
   public moderationMailer: ModerationMailer
-  public didCache: DidSqlCache
+  public didCache: DidSqliteCache
   public idResolver: IdResolver
   public plcClient: plc.Client
   public services: Services
@@ -63,7 +62,6 @@ export class AppContext {
   public crawlers: Crawlers
   public appViewAgent: AtpAgent
   public authVerifier: AuthVerifier
-  public repoSigningKey: crypto.Keypair
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
 
@@ -84,7 +82,6 @@ export class AppContext {
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
     this.authVerifier = opts.authVerifier
-    this.repoSigningKey = opts.repoSigningKey
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
   }
@@ -119,11 +116,13 @@ export class AppContext {
 
     const moderationMailer = new ModerationMailer(modMailTransport, cfg)
 
-    const didCache = new DidSqlCache(
-      db,
+    const didCache = new DidSqliteCache(
+      path.join(cfg.db.directory, 'did_cache.sqlite'),
       cfg.identity.cacheStaleTTL,
       cfg.identity.cacheMaxTTL,
     )
+    await didCache.migrateOrThrow()
+
     const idResolver = new IdResolver({
       plcUrl: cfg.identity.plcUrl,
       didCache,
@@ -156,15 +155,6 @@ export class AppContext {
       adminServiceDid: cfg.bskyAppView.did,
     })
 
-    const repoSigningKey =
-      secrets.repoSigningKey.provider === 'kms'
-        ? await KmsKeypair.load({
-            keyId: secrets.repoSigningKey.keyId,
-          })
-        : await crypto.Secp256k1Keypair.import(
-            secrets.repoSigningKey.privateKeyHex,
-          )
-
     const plcRotationKey =
       secrets.plcRotationKey.provider === 'kms'
         ? await KmsKeypair.load({
@@ -175,7 +165,6 @@ export class AppContext {
           )
 
     const actorStore = new ActorStore({
-      repoSigningKey,
       blobstore,
       dbDirectory: cfg.db.directory,
       backgroundQueue,
@@ -184,7 +173,6 @@ export class AppContext {
     const localViewer = LocalViewer.creator({
       actorStore,
       serviceDb: db,
-      signingKey: repoSigningKey,
       appViewAgent,
       pdsHostname: cfg.service.hostname,
       appviewDid: cfg.bskyAppView.did,
@@ -210,7 +198,6 @@ export class AppContext {
       crawlers,
       appViewAgent,
       authVerifier,
-      repoSigningKey,
       plcRotationKey,
       cfg,
       ...(overrides ?? {}),
@@ -222,10 +209,11 @@ export class AppContext {
     if (!aud) {
       throw new Error('Could not find bsky appview did')
     }
+    const keypair = await this.actorStore.keypair(did)
     return createServiceAuthHeaders({
       iss: did,
       aud,
-      keypair: this.repoSigningKey,
+      keypair,
     })
   }
 }

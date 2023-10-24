@@ -1,6 +1,6 @@
 import util from 'util'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { cborToLexRecord } from '@atproto/repo'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
@@ -41,8 +41,8 @@ type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 export class LocalViewer {
   did: string
   actorDb: ActorDb
+  actorKey: Keypair
   serviceDb: ServiceDb
-  signingKey: Keypair
   pdsHostname: string
   appViewAgent?: AtpAgent
   appviewDid?: string
@@ -51,8 +51,8 @@ export class LocalViewer {
   constructor(params: {
     did: string
     actorDb: ActorDb
+    actorKey: Keypair
     serviceDb: ServiceDb
-    signingKey: Keypair
     pdsHostname: string
     appViewAgent?: AtpAgent
     appviewDid?: string
@@ -60,8 +60,8 @@ export class LocalViewer {
   }) {
     this.did = params.did
     this.actorDb = params.actorDb
+    this.actorKey = params.actorKey
     this.serviceDb = params.serviceDb
-    this.signingKey = params.signingKey
     this.pdsHostname = params.pdsHostname
     this.appViewAgent = params.appViewAgent
     this.appviewDid = params.appviewDid
@@ -71,7 +71,6 @@ export class LocalViewer {
   static creator(params: {
     actorStore: ActorStore
     serviceDb: ServiceDb
-    signingKey: Keypair
     pdsHostname: string
     appViewAgent?: AtpAgent
     appviewDid?: string
@@ -79,8 +78,11 @@ export class LocalViewer {
   }) {
     const { actorStore, ...rest } = params
     return async (did: string) => {
-      const actorDb = await actorStore.db(did)
-      return new LocalViewer({ did, actorDb, ...rest })
+      const [actorDb, actorKey] = await Promise.all([
+        actorStore.db(did),
+        actorStore.keypair(did),
+      ])
+      return new LocalViewer({ did, actorDb, actorKey, ...rest })
     }
   }
 
@@ -98,18 +100,18 @@ export class LocalViewer {
     return createServiceAuthHeaders({
       iss: did,
       aud: this.appviewDid,
-      keypair: this.signingKey,
+      keypair: this.actorKey,
     })
   }
 
   async getRecordsSinceRev(rev: string): Promise<LocalRecords> {
     const res = await this.actorDb.db
       .selectFrom('record')
-      .innerJoin('ipld_block', 'ipld_block.cid', 'record.cid')
+      .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
       .select([
-        'ipld_block.content',
+        'repo_block.content',
         'uri',
-        'ipld_block.cid',
+        'repo_block.cid',
         'record.indexedAt',
       ])
       .where('record.repoRev', '>', rev)
@@ -140,12 +142,12 @@ export class LocalViewer {
   async getProfileBasic(): Promise<ProfileViewBasic | null> {
     const profileQuery = this.actorDb.db
       .selectFrom('record')
-      .leftJoin('ipld_block', 'ipld_block.cid', 'record.cid')
+      .leftJoin('repo_block', 'repo_block.cid', 'record.cid')
       .where('record.collection', '=', ids.AppBskyActorProfile)
       .where('record.rkey', '=', 'self')
       .selectAll()
     const handleQuery = this.serviceDb.db
-      .selectFrom('did_handle')
+      .selectFrom('account')
       .where('did', '=', this.did)
       .selectAll()
     const [profileRes, handleRes] = await Promise.all([
@@ -158,7 +160,7 @@ export class LocalViewer {
       : null
     return {
       did: this.did,
-      handle: handleRes.handle,
+      handle: handleRes.handle ?? INVALID_HANDLE,
       displayName: record?.displayName,
       avatar: record?.avatar
         ? this.getImageUrl('avatar', record.avatar.ref.toString())
@@ -239,12 +241,14 @@ export class LocalViewer {
       const { uri, title, description, thumb } = embed.external
       return {
         $type: 'app.bsky.embed.external#view',
-        uri,
-        title,
-        description,
-        thumb: thumb
-          ? this.getImageUrl('feed_thumbnail', thumb.ref.toString())
-          : undefined,
+        external: {
+          uri,
+          title,
+          description,
+          thumb: thumb
+            ? this.getImageUrl('feed_thumbnail', thumb.ref.toString())
+            : undefined,
+        },
       }
     }
   }

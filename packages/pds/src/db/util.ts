@@ -11,14 +11,6 @@ import {
 } from 'kysely'
 import { DynamicReferenceBuilder } from 'kysely/dist/cjs/dynamic/dynamic-reference-builder'
 
-export const actorWhereClause = (actor: string) => {
-  if (actor.startsWith('did:')) {
-    return sql<0 | 1>`"did_handle"."did" = ${actor}`
-  } else {
-    return sql<0 | 1>`"did_handle"."handle" = ${actor}`
-  }
-}
-
 // Applies to repo_root or record table
 export const notSoftDeletedClause = (alias: DbRef) => {
   return sql`${alias}."takedownId" is null`

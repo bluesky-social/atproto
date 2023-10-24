@@ -39,6 +39,14 @@ type RoleOutput = {
   }
 }
 
+type AdminServiceOutput = {
+  credentials: {
+    type: 'service'
+    aud: string
+    iss: string
+  }
+}
+
 type AccessOutput = {
   credentials: {
     type: 'access'
@@ -107,9 +115,9 @@ export class AuthVerifier {
       AuthScope.AppPass,
     ])
     const found = await this.db.db
-      .selectFrom('user_account')
-      .where('user_account.did', '=', result.credentials.did)
-      .where('user_account.takedownId', 'is', null)
+      .selectFrom('account')
+      .where('account.did', '=', result.credentials.did)
+      .where('account.takedownId', 'is', null)
       .select('did')
       .executeTakeFirst()
     if (!found) {
@@ -189,27 +197,36 @@ export class AuthVerifier {
     }
   }
 
-  adminService = async (reqCtx: ReqCtx): Promise<RoleOutput> => {
+  adminService = async (reqCtx: ReqCtx): Promise<AdminServiceOutput> => {
     const jwtStr = bearerTokenFromReq(reqCtx.req)
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    await verifyServiceJwt(jwtStr, null, async (did: string) => {
-      if (did !== this.adminServiceDid) {
-        throw new AuthRequiredError(
-          'Untrusted issuer for admin actions',
-          'UntrustedIss',
-        )
-      }
-      const atprotoData = await this.idResolver.did.resolveAtprotoData(did)
-      return atprotoData.signingKey
-    })
+    const payload = await verifyServiceJwt(
+      jwtStr,
+      null,
+      async (did: string) => {
+        if (did !== this.adminServiceDid) {
+          throw new AuthRequiredError(
+            'Untrusted issuer for admin actions',
+            'UntrustedIss',
+          )
+        }
+        return this.idResolver.did.resolveAtprotoKey(did)
+      },
+    )
     return {
-      credentials: { type: 'role', admin: true, moderator: true, triage: true },
+      credentials: {
+        type: 'service',
+        aud: payload.aud,
+        iss: payload.iss,
+      },
     }
   }
 
-  roleOrAdminService = async (reqCtx: ReqCtx): Promise<RoleOutput> => {
+  roleOrAdminService = async (
+    reqCtx: ReqCtx,
+  ): Promise<RoleOutput | AdminServiceOutput> => {
     if (isBearerToken(reqCtx.req)) {
       return this.adminService(reqCtx)
     } else {
@@ -338,4 +355,19 @@ export const parseBasicAuth = (
   const [username, password] = parsed
   if (!username || !password) return null
   return { username, password }
+}
+
+export const ensureValidAdminAud = (
+  auth: RoleOutput | AdminServiceOutput,
+  subjectDid: string,
+) => {
+  if (
+    auth.credentials.type === 'service' &&
+    auth.credentials.aud !== subjectDid
+  ) {
+    throw new AuthRequiredError(
+      'jwt audience does not match account did',
+      'BadJwtAudience',
+    )
+  }
 }

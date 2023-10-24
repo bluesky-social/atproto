@@ -1,23 +1,6 @@
 import { ServerEnvironment } from './env'
 
 export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
-  let repoSigningKey: ServerSecrets['repoSigningKey']
-  if (env.repoSigningKeyKmsKeyId && env.repoSigningKeyK256PrivateKeyHex) {
-    throw new Error('Cannot set both kms & memory keys for repo signing key')
-  } else if (env.repoSigningKeyKmsKeyId) {
-    repoSigningKey = {
-      provider: 'kms',
-      keyId: env.repoSigningKeyKmsKeyId,
-    }
-  } else if (env.repoSigningKeyK256PrivateKeyHex) {
-    repoSigningKey = {
-      provider: 'memory',
-      privateKeyHex: env.repoSigningKeyK256PrivateKeyHex,
-    }
-  } else {
-    throw new Error('Must configure repo signing key')
-  }
-
   let plcRotationKey: ServerSecrets['plcRotationKey']
   if (env.plcRotationKeyKmsKeyId && env.plcRotationKeyK256PrivateKeyHex) {
     throw new Error('Cannot set both kms & memory keys for plc rotation key')
@@ -49,7 +32,6 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
     moderatorPassword: env.moderatorPassword ?? env.adminPassword,
     triagePassword:
       env.triagePassword ?? env.moderatorPassword ?? env.adminPassword,
-    repoSigningKey,
     plcRotationKey,
   }
 }
@@ -59,7 +41,6 @@ export type ServerSecrets = {
   adminPassword: string
   moderatorPassword: string
   triagePassword: string
-  repoSigningKey: SigningKeyKms | SigningKeyMemory
   plcRotationKey: SigningKeyKms | SigningKeyMemory
 }
 

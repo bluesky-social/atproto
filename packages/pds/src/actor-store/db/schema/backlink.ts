@@ -1,8 +1,7 @@
 export interface Backlink {
   uri: string
   path: string
-  linkToUri: string | null
-  linkToDid: string | null
+  linkTo: string
 }
 
 export const tableName = 'backlink'

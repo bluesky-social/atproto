@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
         subject = 'Message from Bluesky moderator',
       } = input.body
       const userInfo = await ctx.db.db
-        .selectFrom('user_account')
+        .selectFrom('account')
         .where('did', '=', recipientDid)
         .select('email')
         .executeTakeFirst()

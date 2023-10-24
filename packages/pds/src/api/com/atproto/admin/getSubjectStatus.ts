@@ -1,14 +1,15 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { OutputSchema } from '../../../../lexicon/types/com/atproto/admin/getSubjectStatus'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { ensureValidAdminAud } from '../../../../auth-verifier'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getSubjectStatus({
     auth: ctx.authVerifier.roleOrAdminService,
-    handler: async ({ params }) => {
+    handler: async ({ params, auth }) => {
       const { did, uri, blob } = params
       let body: OutputSchema | null = null
       if (blob) {
@@ -17,6 +18,7 @@ export default function (server: Server, ctx: AppContext) {
             'Must provide a did to request blob state',
           )
         }
+        ensureValidAdminAud(auth, did)
         const takedown = await ctx.actorStore.read(did, (store) =>
           store.repo.blob.getBlobTakedownStatus(CID.parse(blob)),
         )
@@ -32,6 +34,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       } else if (uri) {
         const parsedUri = new AtUri(uri)
+        ensureValidAdminAud(auth, parsedUri.hostname)
         const [takedown, cid] = await ctx.actorStore.read(
           parsedUri.hostname,
           (store) =>
@@ -51,6 +54,7 @@ export default function (server: Server, ctx: AppContext) {
           }
         }
       } else if (did) {
+        ensureValidAdminAud(auth, did)
         const takedown = await ctx.services
           .account(ctx.db)
           .getAccountTakedownStatus(did)

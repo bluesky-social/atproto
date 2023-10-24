@@ -1,4 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { AtprotoData } from '@atproto/identity'
+import { MINUTE } from '@atproto/common'
 import disposable from 'disposable-email'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import * as plc from '@did-plc/lib'
@@ -8,8 +11,6 @@ import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com
 import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
-import { AtprotoData } from '@atproto/identity'
-import { MINUTE } from '@atproto/common'
 import { ServiceDb } from '../../../../service-db'
 
 export default function (server: Server, ctx: AppContext) {
@@ -48,11 +49,20 @@ export default function (server: Server, ctx: AppContext) {
 
       // determine the did & any plc ops we need to send
       // if the provided did document is poorly setup, we throw
-      const { did, plcOp } = await getDidAndPlcOp(ctx, handle, input.body)
-
-      const commit = await ctx.actorStore.create(did, (actorTxn) => {
-        return actorTxn.repo.createRepo([])
-      })
+      const signingKey = await Secp256k1Keypair.create({ exportable: true })
+      const { did, plcOp } = await getDidAndPlcOp(
+        ctx,
+        handle,
+        input.body,
+        signingKey,
+      )
+      const commit = await ctx.actorStore.create(
+        did,
+        signingKey,
+        (actorTxn) => {
+          return actorTxn.repo.createRepo([])
+        },
+      )
 
       const now = new Date().toISOString()
       const passwordScrypt = await scrypt.genSaltAndHash(password)
@@ -121,6 +131,9 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       await ctx.sequencer.sequenceCommit(did, commit, [])
+      await ctx.services
+        .account(ctx.db)
+        .updateRepoRoot(did, commit.cid, commit.rev)
 
       return {
         encoding: 'application/json',
@@ -141,7 +154,7 @@ export const ensureCodeIsAvailable = async (
 ): Promise<void> => {
   const invite = await db.db
     .selectFrom('invite_code')
-    .leftJoin('user_account', 'user_account.did', 'invite_code.forUser')
+    .leftJoin('account', 'account.did', 'invite_code.forAccount')
     .where('takedownId', 'is', null)
     .selectAll('invite_code')
     .where('code', '=', inviteCode)
@@ -172,6 +185,7 @@ const getDidAndPlcOp = async (
   ctx: AppContext,
   handle: string,
   input: CreateAccountInput,
+  signingKey: Keypair,
 ): Promise<{
   did: string
   plcOp: plc.Operation | null
@@ -187,7 +201,7 @@ const getDidAndPlcOp = async (
       rotationKeys.unshift(input.recoveryKey)
     }
     const plcCreate = await plc.createOp({
-      signingKey: ctx.repoSigningKey.did(),
+      signingKey: signingKey.did(),
       rotationKeys,
       handle,
       pds: ctx.cfg.service.publicUrl,
@@ -221,7 +235,7 @@ const getDidAndPlcOp = async (
       'DID document pds endpoint does not match service endpoint',
       'IncompatibleDidDoc',
     )
-  } else if (atpData.signingKey !== ctx.repoSigningKey.did()) {
+  } else if (atpData.signingKey !== signingKey.did()) {
     throw new InvalidRequestError(
       'DID document signing key does not match service signing key',
       'IncompatibleDidDoc',

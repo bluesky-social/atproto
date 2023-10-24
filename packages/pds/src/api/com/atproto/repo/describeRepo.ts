@@ -2,6 +2,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as id from '@atproto/identity'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { INVALID_HANDLE } from '@atproto/syntax'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.describeRepo(async ({ params }) => {
@@ -29,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
     return {
       encoding: 'application/json',
       body: {
-        handle: account.handle,
+        handle: account.handle ?? INVALID_HANDLE,
         did: account.did,
         didDoc,
         collections,

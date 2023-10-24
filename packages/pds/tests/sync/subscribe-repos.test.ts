@@ -53,7 +53,8 @@ describe('repo subscribe repos', () => {
   const getRepo = async (did: string): Promise<repo.VerifiedRepo> => {
     const carRes = await agent.api.com.atproto.sync.getRepo({ did })
     const car = await repo.readCarWithRoot(carRes.data)
-    return repo.verifyRepo(car.blocks, car.root, did, ctx.repoSigningKey.did())
+    const signingKey = await network.pds.ctx.actorStore.keypair(did)
+    return repo.verifyRepo(car.blocks, car.root, did, signingKey.did())
   }
 
   const getHandleEvts = (frames: Frame[]): HandleEvt[] => {
@@ -137,11 +138,12 @@ describe('repo subscribe repos', () => {
     if (!lastCommit) {
       throw new Error('no last commit')
     }
+    const signingKey = await network.pds.ctx.actorStore.keypair(did)
     const fromStream = await repo.verifyRepo(
       allBlocks,
       lastCommit,
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     const fromRpcOps = fromRpc.creates
     const fromStreamOps = fromStream.creates

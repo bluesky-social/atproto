@@ -1,4 +1,4 @@
-import { Kysely, sql } from 'kysely'
+import { Kysely } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
@@ -9,7 +9,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
-    .createTable('ipld_block')
+    .createTable('repo_block')
     .addColumn('cid', 'varchar', (col) => col.primaryKey())
     .addColumn('repoRev', 'varchar', (col) => col.notNull())
     .addColumn('size', 'integer', (col) => col.notNull())
@@ -17,8 +17,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
-    .createIndex('ipld_block_repo_rev_idx')
-    .on('ipld_block')
+    .createIndex('repo_block_repo_rev_idx')
+    .on('repo_block')
     .columns(['repoRev', 'cid'])
     .execute()
 
@@ -66,41 +66,23 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
-    .createTable('repo_blob')
-    .addColumn('cid', 'varchar', (col) => col.notNull())
+    .createTable('record_blob')
+    .addColumn('blobCid', 'varchar', (col) => col.notNull())
     .addColumn('recordUri', 'varchar', (col) => col.notNull())
-    .addColumn('repoRev', 'varchar', (col) => col.notNull())
-    .addPrimaryKeyConstraint(`repo_blob_pkey`, ['cid', 'recordUri'])
-    .execute()
-
-  await db.schema
-    .createIndex('repo_blob_repo_rev_idx')
-    .on('repo_blob')
-    .column('repoRev')
+    .addPrimaryKeyConstraint(`record_blob_pkey`, ['blobCid', 'recordUri'])
     .execute()
 
   await db.schema
     .createTable('backlink')
     .addColumn('uri', 'varchar', (col) => col.notNull())
     .addColumn('path', 'varchar', (col) => col.notNull())
-    .addColumn('linkToUri', 'varchar')
-    .addColumn('linkToDid', 'varchar')
+    .addColumn('linkTo', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint('backlinks_pkey', ['uri', 'path'])
-    .addCheckConstraint(
-      'backlink_link_to_chk',
-      // Exactly one of linkToUri or linkToDid should be set
-      sql`("linkToUri" is null and "linkToDid" is not null) or ("linkToUri" is not null and "linkToDid" is null)`,
-    )
     .execute()
   await db.schema
-    .createIndex('backlink_path_to_uri_idx')
+    .createIndex('backlink_link_to_idx')
     .on('backlink')
-    .columns(['path', 'linkToUri'])
-    .execute()
-  await db.schema
-    .createIndex('backlink_path_to_did_idx')
-    .on('backlink')
-    .columns(['path', 'linkToDid'])
+    .columns(['path', 'linkTo'])
     .execute()
 
   await db.schema
@@ -114,9 +96,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('user_pref').execute()
   await db.schema.dropTable('backlink').execute()
-  await db.schema.dropTable('repo_blob').execute()
+  await db.schema.dropTable('record_blob').execute()
   await db.schema.dropTable('blob').execute()
   await db.schema.dropTable('record').execute()
-  await db.schema.dropTable('ipld_block').execute()
+  await db.schema.dropTable('repo_block').execute()
   await db.schema.dropTable('repo_root').execute()
 }

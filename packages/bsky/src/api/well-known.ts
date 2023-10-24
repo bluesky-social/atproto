@@ -12,6 +12,14 @@ export const createRouter = (ctx: AppContext): express.Router => {
     res.json({
       '@context': ['https://www.w3.org/ns/did/v1'],
       id: ctx.cfg.serverDid,
+      verificationMethod: [
+        {
+          id: `${ctx.cfg.serverDid}#atproto`,
+          type: 'Multikey',
+          controller: ctx.cfg.serverDid,
+          publicKeyMultibase: ctx.signingKey.did().replace('did:key:', ''),
+        },
+      ],
       service: [
         {
           id: '#bsky_notif',

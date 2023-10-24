@@ -1,6 +1,6 @@
 import { Generated, Selectable } from 'kysely'
 
-export interface UserAccount {
+export interface Account {
   did: string
   handle: string | null
   email: string
@@ -8,12 +8,11 @@ export interface UserAccount {
   createdAt: string
   emailConfirmedAt: string | null
   invitesDisabled: Generated<0 | 1>
-  inviteNote: string | null
   takedownId: string | null
 }
 
-export type UserAccountEntry = Selectable<UserAccount>
+export type AccountEntry = Selectable<Account>
 
-export const tableName = 'user_account'
+export const tableName = 'account'
 
-export type PartialDB = { [tableName]: UserAccount }
+export type PartialDB = { [tableName]: Account }

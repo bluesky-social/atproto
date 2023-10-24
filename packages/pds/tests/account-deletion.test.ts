@@ -11,7 +11,6 @@ import {
   RepoRoot,
   UserAccount,
   AppPassword,
-  DidHandle,
   EmailToken,
   RefreshToken,
 } from '../src/service-db'
@@ -141,9 +140,6 @@ describe('account deletion', () => {
     expect(updatedDbContents.repoRoots).toEqual(
       initialDbContents.repoRoots.filter((row) => row.did !== carol.did),
     )
-    expect(updatedDbContents.didHandles).toEqual(
-      initialDbContents.didHandles.filter((row) => row.did !== carol.did),
-    )
     expect(updatedDbContents.userAccounts).toEqual(
       initialDbContents.userAccounts.filter((row) => row.did !== carol.did),
     )
@@ -216,7 +212,6 @@ describe('account deletion', () => {
 
 type DbContents = {
   repoRoots: RepoRoot[]
-  didHandles: DidHandle[]
   userAccounts: Selectable<UserAccount>[]
   appPasswords: AppPassword[]
   emailTokens: EmailToken[]
@@ -228,7 +223,6 @@ const getDbContents = async (ctx: AppContext): Promise<DbContents> => {
   const { db, sequencer } = ctx
   const [
     repoRoots,
-    didHandles,
     userAccounts,
     appPasswords,
     emailTokens,
@@ -236,8 +230,7 @@ const getDbContents = async (ctx: AppContext): Promise<DbContents> => {
     repoSeqs,
   ] = await Promise.all([
     db.db.selectFrom('repo_root').orderBy('did').selectAll().execute(),
-    db.db.selectFrom('did_handle').orderBy('did').selectAll().execute(),
-    db.db.selectFrom('user_account').orderBy('did').selectAll().execute(),
+    db.db.selectFrom('account').orderBy('did').selectAll().execute(),
     db.db
       .selectFrom('app_password')
       .orderBy('did')
@@ -251,7 +244,6 @@ const getDbContents = async (ctx: AppContext): Promise<DbContents> => {
 
   return {
     repoRoots,
-    didHandles,
     userAccounts,
     appPasswords,
     emailTokens,

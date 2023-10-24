@@ -63,7 +63,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     if (!lastSeq) return
     while (Date.now() - start < timeout) {
       const partitionState = sub.partitions.get(0)
-      if (partitionState?.cursor === lastSeq) {
+      if (partitionState?.cursor >= lastSeq) {
         // has seen last seq, just need to wait for it to finish processing
         await sub.repoQueue.main.onIdle()
         return
@@ -80,10 +80,11 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async serviceHeaders(did: string, aud?: string) {
+    const keypair = await this.pds.ctx.actorStore.keypair(did)
     const jwt = await createServiceJwt({
       iss: did,
       aud: aud ?? this.bsky.ctx.cfg.serverDid,
-      keypair: this.pds.ctx.repoSigningKey,
+      keypair,
     })
     return { authorization: `Bearer ${jwt}` }
   }

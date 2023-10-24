@@ -1,5 +1,7 @@
 import path from 'path'
+import fs from 'fs/promises'
 import * as crypto from '@atproto/crypto'
+import { Keypair, ExportableKeypair } from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import { fileExists, isErrnoException, rmIfExists, wait } from '@atproto/common'
 import { ActorDb, getMigrator } from './db'
@@ -18,64 +20,70 @@ import DiskBlobStore from '../disk-blobstore'
 import { mkdir } from 'fs/promises'
 
 type ActorStoreResources = {
-  repoSigningKey: crypto.Keypair
+  dbDirectory: string
   blobstore: (did: string) => BlobStore
   backgroundQueue: BackgroundQueue
-  dbDirectory: string
 }
 
 export class ActorStore {
-  cache: LRUCache<string, ActorDb>
+  dbCache: LRUCache<string, ActorDb>
+  keyCache: LRUCache<string, Keypair>
 
   constructor(public resources: ActorStoreResources) {
-    this.cache = new LRUCache<string, ActorDb>({
-      max: 2000,
+    this.dbCache = new LRUCache<string, ActorDb>({
+      max: 30000,
       dispose: async (db) => {
         await db.close()
+      },
+      fetchMethod: async (did, _staleValue, { signal }) => {
+        const { dbLocation } = await this.getLocation(did)
+        const exists = await fileExists(dbLocation)
+        if (!exists) {
+          throw new InvalidRequestError('Repo not found', 'NotFound')
+        }
+
+        // if fetch is aborted then another handler opened the db first
+        // so we can close this handle and return `undefined`
+        return signal.aborted ? undefined : Database.sqlite(dbLocation)
+      },
+    })
+    this.keyCache = new LRUCache<string, Keypair>({
+      max: 30000,
+      fetchMethod: async (did) => {
+        const { keyLocation } = await this.getLocation(did)
+        const privKey = await fs.readFile(keyLocation)
+        return crypto.Secp256k1Keypair.import(privKey)
       },
     })
   }
 
-  private async getDbLocation(did: string) {
-    const { location } = await this.getDbPartitionAndLocation(did)
-    return location
-  }
-
-  private async getDbPartitionAndLocation(did: string) {
+  private async getLocation(did: string) {
     const didHash = await crypto.sha256Hex(did)
-    const partition = path.join(this.resources.dbDirectory, didHash.slice(0, 2))
-    const location = path.join(partition, didHash.slice(2))
-    return { partition, location }
+    const subdir = path.join(this.resources.dbDirectory, didHash.slice(0, 2))
+    const dbLocation = path.join(subdir, `${did}.sqlite`)
+    const keyLocation = path.join(subdir, `${did}.key`)
+    return { subdir, dbLocation, keyLocation }
   }
 
-  private async loadDbFile(
-    did: string,
-    shouldCreate = false,
-  ): Promise<ActorDb> {
-    const { partition, location } = await this.getDbPartitionAndLocation(did)
-    const exists = await fileExists(location)
-    if (!exists) {
-      if (shouldCreate) {
-        await mkdir(partition, { recursive: true })
-      } else {
-        throw new InvalidRequestError('Repo not found', 'NotFound')
-      }
+  async keypair(did: string): Promise<Keypair> {
+    const got = await this.keyCache.fetch(did)
+    if (!got) {
+      throw new InvalidRequestError('Keypair not found', 'NotFound')
     }
-    return Database.sqlite(location)
+    return got
   }
 
   async db(did: string): Promise<ActorDb> {
-    let got = this.cache.get(did)
+    const got = await this.dbCache.fetch(did)
     if (!got) {
-      got = await this.loadDbFile(did)
-      this.cache.set(did, got)
+      throw new InvalidRequestError('Repo not found', 'NotFound')
     }
     return got
   }
 
   async reader(did: string) {
-    const db = await this.db(did)
-    return createActorReader(did, db, this.resources)
+    const [db, keypair] = await Promise.all([this.db(did), this.keypair(did)])
+    return createActorReader(did, db, keypair, this.resources)
   }
 
   async read<T>(did: string, fn: ActorStoreReadFn<T>) {
@@ -84,20 +92,42 @@ export class ActorStore {
   }
 
   async transact<T>(did: string, fn: ActorStoreTransactFn<T>) {
-    const db = await this.db(did)
-    const result = await transactAndRetryOnLock(did, db, this.resources, fn)
+    const [db, keypair] = await Promise.all([this.db(did), this.keypair(did)])
+    const result = await transactAndRetryOnLock(
+      did,
+      db,
+      keypair,
+      this.resources,
+      fn,
+    )
     return result
   }
 
-  async create<T>(did: string, fn: ActorStoreTransactFn<T>) {
-    const db = await this.loadDbFile(did, true)
+  async create<T>(
+    did: string,
+    keypair: ExportableKeypair,
+    fn: ActorStoreTransactFn<T>,
+  ) {
+    const { subdir, dbLocation, keyLocation } = await this.getLocation(did)
+    // ensure subdir exists
+    await mkdir(subdir, { recursive: true })
+    const exists = await fileExists(dbLocation)
+    if (exists) {
+      throw new InvalidRequestError('Repo already exists', 'AlreadyExists')
+    }
+    const db: ActorDb = Database.sqlite(dbLocation)
     const migrator = getMigrator(db)
-    await migrator.migrateToLatestOrThrow()
+    const privKey = await keypair.export()
+    await Promise.all([
+      await migrator.migrateToLatestOrThrow(),
+      await fs.writeFile(keyLocation, privKey),
+    ])
+
     const result = await db.transaction((dbTxn) => {
-      const store = createActorTransactor(did, dbTxn, this.resources)
+      const store = createActorTransactor(did, dbTxn, keypair, this.resources)
       return fn(store)
     })
-    this.cache.set(did, db)
+    this.dbCache.set(did, db)
     return result
   }
 
@@ -112,41 +142,44 @@ export class ActorStore {
       await Promise.allSettled(cids.map((cid) => blobstore.delete(cid)))
     }
 
-    const got = this.cache.get(did)
-    this.cache.delete(did)
+    const got = this.dbCache.get(did)
+    this.dbCache.delete(did)
     if (got) {
       await got.close()
     }
 
-    const dbLocation = await this.getDbLocation(did)
+    const { dbLocation, keyLocation } = await this.getLocation(did)
     await rmIfExists(dbLocation)
     await rmIfExists(`${dbLocation}-wal`)
     await rmIfExists(`${dbLocation}-shm`)
+    await rmIfExists(keyLocation)
   }
 
   async close() {
     const promises: Promise<void>[] = []
-    for (const key of this.cache.keys()) {
-      const got = this.cache.get(key)
-      this.cache.delete(key)
+    for (const key of this.dbCache.keys()) {
+      const got = this.dbCache.get(key)
+      this.dbCache.delete(key)
       if (got) {
         promises.push(got.close())
       }
     }
     await Promise.all(promises)
+    this.keyCache.clear()
   }
 }
 
 const transactAndRetryOnLock = async <T>(
   did: string,
   db: ActorDb,
+  keypair: Keypair,
   resources: ActorStoreResources,
   fn: ActorStoreTransactFn<T>,
   retryNumber = 0,
 ) => {
   try {
     return await db.transaction((dbTxn) => {
-      const store = createActorTransactor(did, dbTxn, resources)
+      const store = createActorTransactor(did, dbTxn, keypair, resources)
       return fn(store)
     })
   } catch (err) {
@@ -158,7 +191,14 @@ const transactAndRetryOnLock = async <T>(
         )
       }
       await wait(Math.pow(2, retryNumber))
-      return transactAndRetryOnLock(did, db, resources, fn, retryNumber + 1)
+      return transactAndRetryOnLock(
+        did,
+        db,
+        keypair,
+        resources,
+        fn,
+        retryNumber + 1,
+      )
     }
     throw err
   }
@@ -167,19 +207,14 @@ const transactAndRetryOnLock = async <T>(
 const createActorTransactor = (
   did: string,
   db: ActorDb,
+  keypair: Keypair,
   resources: ActorStoreResources,
 ): ActorStoreTransactor => {
-  const { repoSigningKey, blobstore, backgroundQueue } = resources
+  const { blobstore, backgroundQueue } = resources
   const userBlobstore = blobstore(did)
   return {
     db,
-    repo: new RepoTransactor(
-      db,
-      did,
-      repoSigningKey,
-      userBlobstore,
-      backgroundQueue,
-    ),
+    repo: new RepoTransactor(db, did, keypair, userBlobstore, backgroundQueue),
     record: new RecordTransactor(db, userBlobstore),
     pref: new PreferenceTransactor(db),
   }
@@ -188,6 +223,7 @@ const createActorTransactor = (
 const createActorReader = (
   did: string,
   db: ActorDb,
+  keypair: Keypair,
   resources: ActorStoreResources,
 ): ActorStoreReader => {
   const { blobstore } = resources
@@ -197,10 +233,7 @@ const createActorReader = (
     record: new RecordReader(db),
     pref: new PreferenceReader(db),
     transact: async <T>(fn: ActorStoreTransactFn<T>): Promise<T> => {
-      return db.transaction((dbTxn) => {
-        const store = createActorTransactor(did, dbTxn, resources)
-        return fn(store)
-      })
+      return transactAndRetryOnLock(did, db, keypair, resources, fn)
     },
   }
 }

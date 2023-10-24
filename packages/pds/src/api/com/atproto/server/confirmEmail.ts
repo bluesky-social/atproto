@@ -24,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.db.transaction(async (dbTxn) => {
         await ctx.services.account(dbTxn).deleteEmailToken(did, 'confirm_email')
         await dbTxn.db
-          .updateTable('user_account')
+          .updateTable('account')
           .set({ emailConfirmedAt: new Date().toISOString() })
           .where('did', '=', did)
           .execute()
