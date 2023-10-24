@@ -1023,9 +1023,7 @@ describe('moderation', () => {
         )
 
       const res1 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
-        {
-          uri,
-        },
+        { uri },
         { headers: network.pds.adminAuthHeaders() },
       )
       expect(res1.data.takedown?.applied).toBe(true)
@@ -1034,9 +1032,7 @@ describe('moderation', () => {
       await reverse(action.id)
 
       const res2 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
-        {
-          uri,
-        },
+        { uri },
         { headers: network.pds.adminAuthHeaders() },
       )
       expect(res2.data.takedown?.applied).toBe(false)
