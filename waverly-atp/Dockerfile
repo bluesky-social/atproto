@@ -1,14 +1,15 @@
-FROM node:18-buster-slim as base-waverly-atp
+FROM node:18-buster-slim as waverly-atp
 
 COPY /*.json /
 COPY /*.js /
-COPY /yarn.lock /
+COPY /*.yaml /
 COPY /packages /packages
+COPY /services /services
 
-RUN yarn
-
-FROM base-waverly-atp as waverly-atp
+RUN npm install --global pnpm
+RUN pnpm install --frozen-lockfile
+RUN pnpm build
 
 WORKDIR /packages/dev-env
 
-CMD [ "yarn", "start" ]
+CMD [ "pnpm", "run", "start" ]
