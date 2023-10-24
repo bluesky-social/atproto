@@ -6,7 +6,7 @@ import { CodeDetail } from '../../../../services/account'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getAccountInviteCodes({
-    auth: ctx.accessVerifierNotAppPassword,
+    auth: ctx.authVerifier.accessNotAppPassword,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
       const { includeUsed, createAvailable } = params

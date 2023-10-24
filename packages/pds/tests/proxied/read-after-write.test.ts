@@ -4,6 +4,8 @@ import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import { ThreadViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { View as RecordEmbedView } from '../../src/lexicon/types/app/bsky/embed/record'
+import { View as ExternalEmbedView } from '../../src/lexicon/types/app/bsky/embed/external'
+import { View as ImagesEmbedView } from '../../src/lexicon/types/app/bsky/embed/images'
 
 describe('proxy read after write', () => {
   let network: TestNetwork
@@ -117,6 +119,90 @@ describe('proxy read after write', () => {
     expect(thread.replies?.length).toEqual(1)
     expect((thread.replies?.at(0) as ThreadViewPost).post.uri).toEqual(
       replyRef2.uriStr,
+    )
+  })
+
+  it('handles read after write on threads with record embeds', async () => {
+    const img = await sc.uploadFile(
+      alice,
+      'tests/sample-img/key-landscape-small.jpg',
+      'image/jpeg',
+    )
+    const replyRes1 = await agent.api.app.bsky.feed.post.create(
+      { repo: alice },
+      {
+        text: 'images test',
+        reply: {
+          root: sc.posts[alice][2].ref.raw,
+          parent: sc.posts[alice][2].ref.raw,
+        },
+        embed: {
+          $type: 'app.bsky.embed.images',
+          images: [
+            {
+              image: img.image,
+              alt: 'alt text',
+            },
+          ],
+        },
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
+    const replyRes2 = await agent.api.app.bsky.feed.post.create(
+      { repo: alice },
+      {
+        text: 'external test',
+        reply: {
+          root: sc.posts[alice][2].ref.raw,
+          parent: {
+            uri: replyRes1.uri,
+            cid: replyRes1.cid,
+          },
+        },
+        embed: {
+          $type: 'app.bsky.embed.external',
+          external: {
+            uri: 'https://example.com',
+            title: 'TestImage',
+            description: 'testLink',
+            thumb: img.image,
+          },
+        },
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
+
+    const res = await agent.api.app.bsky.feed.getPostThread(
+      { uri: sc.posts[alice][2].ref.uriStr },
+      { headers: { ...sc.getHeaders(alice) } },
+    )
+    const replies = res.data.thread.replies as ThreadViewPost[]
+    expect(replies.length).toBe(1)
+    expect(replies[0].post.uri).toEqual(replyRes1.uri)
+    const imgs = replies[0].post.embed as ImagesEmbedView
+    expect(imgs.images[0].fullsize).toEqual(
+      util.format(
+        network.pds.ctx.cfg.bskyAppView.cdnUrlPattern,
+        'feed_fullsize',
+        alice,
+        img.image.ref.toString(),
+      ),
+    )
+    expect(replies[0].replies?.length).toBe(1)
+    // @ts-ignore
+    expect(replies[0].replies[0].post.uri).toEqual(replyRes2.uri)
+    // @ts-ignore
+    const external = replies[0].replies[0].post.embed as ExternalEmbedView
+    expect(external.external.title).toEqual('TestImage')
+    expect(external.external.thumb).toEqual(
+      util.format(
+        network.pds.ctx.cfg.bskyAppView.cdnUrlPattern,
+        'feed_thumbnail',
+        alice,
+        img.image.ref.toString(),
+      ),
     )
   })
 

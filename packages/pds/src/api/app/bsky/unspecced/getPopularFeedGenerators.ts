@@ -5,7 +5,7 @@ import AppContext from '../../../../context'
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopularFeedGenerators({
-    auth: ctx.accessVerifier,
+    auth: ctx.authVerifier.access,
     handler: async (request) => {
       const { auth } = request
       const requester = auth.credentials.did

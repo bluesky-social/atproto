@@ -4,7 +4,7 @@ import { proxy } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getListFeed({
-    auth: ctx.accessVerifier,
+    auth: ctx.authVerifier.access,
     handler: async (request) => {
       const { auth } = request
       const requester = auth.credentials.did

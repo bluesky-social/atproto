@@ -5,7 +5,7 @@ import { authPassthru, mergeRepoViewPdsDetails } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRepo({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.role,
     handler: async ({ req, params, auth }) => {
       const access = auth.credentials
       const { db, services } = ctx

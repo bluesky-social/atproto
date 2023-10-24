@@ -2,7 +2,7 @@ import pino from 'pino'
 import pinoHttp from 'pino-http'
 import { subsystemLogger } from '@atproto/common'
 import * as jwt from 'jsonwebtoken'
-import { parseBasicAuth } from './auth'
+import { parseBasicAuth } from './auth-verifier'
 
 export const dbLogger = subsystemLogger('pds:db')
 export const readStickyLogger = subsystemLogger('pds:read-sticky')
@@ -16,6 +16,12 @@ export const httpLogger = subsystemLogger('pds')
 export const loggerMiddleware = pinoHttp({
   logger: httpLogger,
   serializers: {
+    err: (err) => {
+      return {
+        code: err?.code,
+        message: err?.message,
+      }
+    },
     req: (req) => {
       const serialized = pino.stdSerializers.req(req)
       const authHeader = serialized.headers.authorization || ''

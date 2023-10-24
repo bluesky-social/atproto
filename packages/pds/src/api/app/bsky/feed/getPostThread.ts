@@ -26,7 +26,7 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
-    auth: ctx.accessOrRoleVerifier,
+    auth: ctx.authVerifier.accessOrRole,
     handler: async (request) => {
       const { params, auth } = request
       const requester =

@@ -4,7 +4,7 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getFollows({
-    auth: ctx.accessOrRoleVerifier,
+    auth: ctx.authVerifier.accessOrRole,
     handler: async (request) => {
       const { auth } = request
       const requester =
