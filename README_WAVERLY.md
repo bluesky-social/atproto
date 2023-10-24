@@ -47,11 +47,11 @@ Once you've written, committed and pushed your code, go to the GitHub repo and s
 
 ## Running the dev environment
 
-To run our dev environment, from the main directory:
+To run our dev environment, first ensure you have nvm (install nvm by following the instructions [here](https://github.com/nvm-sh/nvm#installing-and-updating))
 
+Then, from the main directory:
 ```sh
 # One time setup
-brew install nvm
 nvm install 18
 nvm use 18
 npm install --global pnpm
