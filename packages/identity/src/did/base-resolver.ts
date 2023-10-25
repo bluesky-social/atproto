@@ -1,6 +1,12 @@
 import * as crypto from '@atproto/crypto'
 import { check } from '@atproto/common-web'
-import { DidCache, AtprotoData, DidDocument, didDocument } from '../types'
+import {
+  DidCache,
+  AtprotoData,
+  DidDocument,
+  didDocument,
+  CacheResult,
+} from '../types'
 import * as atprotoData from './atproto-data'
 import { DidNotFoundError, PoorlyFormattedDidDocumentError } from '../errors'
 
@@ -25,8 +31,12 @@ export abstract class BaseResolver {
     return this.validateDidDoc(did, got)
   }
 
-  async refreshCache(did: string): Promise<void> {
-    await this.cache?.refreshCache(did, () => this.resolveNoCache(did))
+  async refreshCache(did: string, prevResult?: CacheResult): Promise<void> {
+    await this.cache?.refreshCache(
+      did,
+      () => this.resolveNoCache(did),
+      prevResult,
+    )
   }
 
   async resolve(
@@ -36,7 +46,7 @@ export abstract class BaseResolver {
     if (this.cache && !forceRefresh) {
       const fromCache = await this.cache.checkCache(did)
       if (fromCache?.stale) {
-        await this.refreshCache(did)
+        await this.refreshCache(did, fromCache)
       }
       if (fromCache) {
         return fromCache.doc
