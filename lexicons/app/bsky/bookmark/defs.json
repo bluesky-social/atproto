@@ -1,7 +1,7 @@
 {
   "lexicon": 1,
   "id": "app.bsky.bookmark.defs",
-  "description": "A reference to a bookmark in the network.",
+  "description": "A reference for bookmarks on the network.",
   "defs": {
     "bookmark": {
       "type": "object",
