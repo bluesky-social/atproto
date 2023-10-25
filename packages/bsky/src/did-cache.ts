@@ -1,6 +1,7 @@
 import PQueue from 'p-queue'
 import { CacheResult, DidCache, DidDocument } from '@atproto/identity'
 import { PrimaryDatabase } from './db'
+import { excluded } from './db/util'
 import { dbLogger } from './logger'
 
 export class DidSqlCache implements DidCache {
@@ -21,7 +22,10 @@ export class DidSqlCache implements DidCache {
       .insertInto('did_cache')
       .values({ did, doc, updatedAt: Date.now() })
       .onConflict((oc) =>
-        oc.column('did').doUpdateSet({ doc, updatedAt: Date.now() }),
+        oc.column('did').doUpdateSet({
+          doc: excluded(this.db.db, 'doc'),
+          updatedAt: excluded(this.db.db, 'updatedAt'),
+        }),
       )
       .executeTakeFirst()
   }
