@@ -1,16 +1,16 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.actor.listBookmarks",
+  "id": "app.bsky.bookmark.get",
   "defs": {
     "main": {
       "type": "query",
-      "description": "List bookmarks by NSID",
+      "description": "Get a bookmark by URI",
       "parameters": {
         "type": "params",
         "properties": {
-          "nsid": {
+          "uri": {
             "type": "string",
-            "format": "nsid"
+            "format": "at-uri"
           }
         }
       },
@@ -18,14 +18,11 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["bookmarks"],
+          "required": ["bookmark"],
           "properties": {
-            "bookmarks": {
-              "type": "array",
-              "items": {
-                "type": "ref",
-                "ref": "app.bsky.actor.defs#bookmark"
-              }
+            "bookmark": {
+              "type": "ref",
+              "ref": "app.bsky.actor.defs#bookmark"
             }
           }
         }

@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.actor.deleteBookmark",
+  "id": "app.bsky.bookmark.delete",
   "defs": {
     "main": {
       "type": "procedure",
