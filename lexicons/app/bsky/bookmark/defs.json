@@ -1,0 +1,17 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.bookmark.defs",
+  "description": "A reference to a bookmark in the network.",
+  "defs": {
+    "bookmark": {
+      "type": "object",
+      "required": ["uri"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "at-uri"
+        }
+      }
+    }
+  }
+}

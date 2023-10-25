@@ -11,7 +11,14 @@
           "nsid": {
             "type": "string",
             "format": "nsid"
-          }
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
         }
       },
       "output": {
@@ -20,11 +27,12 @@
           "type": "object",
           "required": ["bookmarks"],
           "properties": {
+            "cursor": { "type": "string" },
             "bookmarks": {
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "app.bsky.actor.defs#bookmark"
+                "ref": "app.bsky.bookmark.defs#bookmark"
               }
             }
           }
@@ -33,4 +41,3 @@
     }
   }
 }
-

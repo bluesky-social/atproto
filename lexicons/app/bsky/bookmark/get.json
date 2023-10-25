@@ -22,7 +22,7 @@
           "properties": {
             "bookmark": {
               "type": "ref",
-              "ref": "app.bsky.actor.defs#bookmark"
+              "ref": "app.bsky.bookmark.defs#bookmark"
             }
           }
         }
