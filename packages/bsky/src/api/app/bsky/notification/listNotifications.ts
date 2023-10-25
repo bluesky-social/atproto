@@ -53,10 +53,6 @@ const skeleton = async (
   }
   let notifBuilder = db.db
     .selectFrom('notification as notif')
-    .innerJoin('record', 'record.uri', 'notif.recordUri')
-    .innerJoin('actor as author', 'author.did', 'notif.author')
-    .where(notSoftDeletedClause(ref('record')))
-    .where(notSoftDeletedClause(ref('author')))
     .where('notif.did', '=', viewer)
     .where((clause) =>
       clause
@@ -69,16 +65,12 @@ const skeleton = async (
         ),
     )
     .select([
+      'notif.author as authorDid',
       'notif.recordUri as uri',
       'notif.recordCid as cid',
-      'author.did as authorDid',
-      'author.handle as authorHandle',
-      'author.indexedAt as authorIndexedAt',
-      'author.takedownId as authorTakedownId',
       'notif.reason as reason',
       'notif.reasonSubject as reasonSubject',
       'notif.sortAt as indexedAt',
-      'record.json as recordJson',
     ])
 
   const keyset = new NotifsKeyset(ref('notif.sortAt'), ref('notif.recordCid'))
@@ -86,6 +78,7 @@ const skeleton = async (
     cursor,
     limit,
     keyset,
+    tryIndex: true,
   })
 
   const actorStateQuery = db.db
@@ -107,17 +100,18 @@ const skeleton = async (
 }
 
 const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { graphService, actorService, labelService } = ctx
+  const { graphService, actorService, labelService, db } = ctx
   const { params, notifs } = state
   const { viewer } = params
   const dids = notifs.map((notif) => notif.authorDid)
   const uris = notifs.map((notif) => notif.uri)
-  const [actors, labels, bam] = await Promise.all([
+  const [actors, records, labels, bam] = await Promise.all([
     actorService.views.profiles(dids, viewer),
+    getRecordMap(db, uris),
     labelService.getLabelsForUris(uris),
     graphService.getBlockAndMuteState(dids.map((did) => [viewer, did])),
   ])
-  return { ...state, actors, labels, bam }
+  return { ...state, actors, records, labels, bam }
 }
 
 const noBlockOrMutes = (state: HydrationState) => {
@@ -131,11 +125,11 @@ const noBlockOrMutes = (state: HydrationState) => {
 }
 
 const presentation = (state: HydrationState) => {
-  const { notifs, cursor, actors, labels, lastSeenNotifs } = state
+  const { notifs, cursor, actors, records, labels, lastSeenNotifs } = state
   const notifications = mapDefined(notifs, (notif) => {
     const author = actors[notif.authorDid]
-    if (!author) return undefined
-    const record = jsonStringToLex(notif.recordJson) as Record<string, unknown>
+    const record = records[notif.uri]
+    if (!author || !record) return undefined
     const recordLabels = labels[notif.uri] ?? []
     const recordSelfLabels = getSelfLabels({
       uri: notif.uri,
@@ -155,6 +149,24 @@ const presentation = (state: HydrationState) => {
     }
   })
   return { notifications, cursor }
+}
+
+const getRecordMap = async (
+  db: Database,
+  uris: string[],
+): Promise<RecordMap> => {
+  if (!uris.length) return {}
+  const { ref } = db.db.dynamic
+  const recordRows = await db.db
+    .selectFrom('record')
+    .select(['uri', 'json'])
+    .where('uri', 'in', uris)
+    .where(notSoftDeletedClause(ref('record')))
+    .execute()
+  return recordRows.reduce((acc, { uri, json }) => {
+    acc[uri] = jsonStringToLex(json) as Record<string, unknown>
+    return acc
+  }, {} as RecordMap)
 }
 
 type Context = {
@@ -178,20 +190,19 @@ type SkeletonState = {
 type HydrationState = SkeletonState & {
   bam: BlockAndMuteState
   actors: ActorInfoMap
+  records: RecordMap
   labels: Labels
 }
 
+type RecordMap = { [uri: string]: Record<string, unknown> }
+
 type NotifRow = {
-  indexedAt: string
-  cid: string
-  uri: string
   authorDid: string
-  authorHandle: string | null
-  authorIndexedAt: string
-  authorTakedownId: number | null
+  uri: string
+  cid: string
   reason: string
   reasonSubject: string | null
-  recordJson: string
+  indexedAt: string
 }
 
 class NotifsKeyset extends TimeCidKeyset<NotifRow> {

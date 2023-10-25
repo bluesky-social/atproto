@@ -1,6 +1,12 @@
 import * as crypto from '@atproto/crypto'
 import { check } from '@atproto/common-web'
-import { DidCache, AtprotoData, DidDocument, didDocument } from '../types'
+import {
+  DidCache,
+  AtprotoData,
+  DidDocument,
+  didDocument,
+  CacheResult,
+} from '../types'
 import * as atprotoData from './atproto-data'
 import { DidNotFoundError, PoorlyFormattedDidDocumentError } from '../errors'
 
@@ -25,20 +31,25 @@ export abstract class BaseResolver {
     return this.validateDidDoc(did, got)
   }
 
-  async refreshCache(did: string): Promise<void> {
-    await this.cache?.refreshCache(did, () => this.resolveNoCache(did))
+  async refreshCache(did: string, prevResult?: CacheResult): Promise<void> {
+    await this.cache?.refreshCache(
+      did,
+      () => this.resolveNoCache(did),
+      prevResult,
+    )
   }
 
   async resolve(
     did: string,
     forceRefresh = false,
   ): Promise<DidDocument | null> {
+    let fromCache: CacheResult | null = null
     if (this.cache && !forceRefresh) {
-      const fromCache = await this.cache.checkCache(did)
-      if (fromCache?.stale) {
-        await this.refreshCache(did)
-      }
-      if (fromCache) {
+      fromCache = await this.cache.checkCache(did)
+      if (fromCache && !fromCache.expired) {
+        if (fromCache?.stale) {
+          await this.refreshCache(did, fromCache)
+        }
         return fromCache.doc
       }
     }
@@ -48,7 +59,7 @@ export abstract class BaseResolver {
       await this.cache?.clearEntry(did)
       return null
     }
-    await this.cache?.cacheDid(did, got)
+    await this.cache?.cacheDid(did, got, fromCache ?? undefined)
     return got
   }
 
