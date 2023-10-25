@@ -30,14 +30,20 @@ export type CacheResult = {
   doc: DidDocument
   updatedAt: number
   stale: boolean
+  expired: boolean
 }
 
 export interface DidCache {
-  cacheDid(did: string, doc: DidDocument): Promise<void>
+  cacheDid(
+    did: string,
+    doc: DidDocument,
+    prevResult?: CacheResult,
+  ): Promise<void>
   checkCache(did: string): Promise<CacheResult | null>
   refreshCache(
     did: string,
     getDoc: () => Promise<DidDocument | null>,
+    prevResult?: CacheResult,
   ): Promise<void>
   clearEntry(did: string): Promise<void>
   clear(): Promise<void>

@@ -15,28 +15,42 @@ export class DidSqlCache implements DidCache {
     this.pQueue = new PQueue()
   }
 
-  async cacheDid(did: string, doc: DidDocument): Promise<void> {
-    await this.db.db
-      .insertInto('did_cache')
-      .values({ did, doc: JSON.stringify(doc), updatedAt: Date.now() })
-      .onConflict((oc) =>
-        oc.column('did').doUpdateSet({
-          doc: excluded(this.db.db, 'doc'),
-          updatedAt: excluded(this.db.db, 'updatedAt'),
-        }),
-      )
-      .executeTakeFirst()
+  async cacheDid(
+    did: string,
+    doc: DidDocument,
+    prevResult?: CacheResult,
+  ): Promise<void> {
+    if (prevResult) {
+      await this.db.db
+        .updateTable('did_cache')
+        .set({ doc: JSON.stringify(doc), updatedAt: Date.now() })
+        .where('did', '=', did)
+        .where('updatedAt', '=', prevResult.updatedAt)
+        .execute()
+    } else {
+      await this.db.db
+        .insertInto('did_cache')
+        .values({ did, doc: JSON.stringify(doc), updatedAt: Date.now() })
+        .onConflict((oc) =>
+          oc.column('did').doUpdateSet({
+            doc: excluded(this.db.db, 'doc'),
+            updatedAt: excluded(this.db.db, 'updatedAt'),
+          }),
+        )
+        .executeTakeFirst()
+    }
   }
 
   async refreshCache(
     did: string,
     getDoc: () => Promise<DidDocument | null>,
+    prevResult?: CacheResult,
   ): Promise<void> {
     this.pQueue?.add(async () => {
       try {
         const doc = await getDoc()
         if (doc) {
-          await this.cacheDid(did, doc)
+          await this.cacheDid(did, doc, prevResult)
         } else {
           await this.clearEntry(did)
         }
@@ -55,18 +69,14 @@ export class DidSqlCache implements DidCache {
     if (!res) return null
     const now = Date.now()
     const updatedAt = new Date(res.updatedAt).getTime()
-
     const expired = now > updatedAt + this.maxTTL
-    if (expired) {
-      return null
-    }
-
     const stale = now > updatedAt + this.staleTTL
     return {
       doc: JSON.parse(res.doc) as DidDocument,
       updatedAt,
       did,
       stale,
+      expired,
     }
   }
 
