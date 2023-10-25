@@ -3,8 +3,6 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { MINUTE } from '@atproto/common'
 
-const REASON_ACCT_DELETION = 'account_deletion'
-
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deleteAccount({
     rateLimit: {
@@ -13,25 +11,23 @@ export default function (server: Server, ctx: AppContext) {
     },
     handler: async ({ input }) => {
       const { did, password, token } = input.body
-      const validPass = await ctx.services
-        .account(ctx.db)
-        .verifyAccountPassword(did, password)
+      const validPass = await ctx.accountManager.verifyAccountPassword(
+        did,
+        password,
+      )
       if (!validPass) {
         throw new AuthRequiredError('Invalid did or password')
       }
 
-      const accountService = await ctx.services.account(ctx.db)
-      await accountService.assertValidToken(did, 'delete_account', token)
-      await accountService.updateAccountTakedownStatus(did, {
-        applied: true,
-        ref: REASON_ACCT_DELETION,
-      })
-      await Promise.all([
-        accountService.deleteAccount(did),
-        ctx.actorStore.destroy(did),
-        await ctx.sequencer.deleteAllForUser(did),
-      ])
+      await ctx.accountManager.assertValidEmailToken(
+        did,
+        'delete_account',
+        token,
+      )
+      await ctx.actorStore.destroy(did)
+      await ctx.accountManager.deleteAccount(did)
       await ctx.sequencer.sequenceTombstone(did)
+      await ctx.sequencer.deleteAllForUser(did)
     },
   })
 }

@@ -22,24 +22,22 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input }) => {
       const { password } = input.body
       const identifier = input.body.identifier.toLowerCase()
-      const authService = ctx.services.auth(ctx.db)
-      const actorService = ctx.services.account(ctx.db)
 
       const user = identifier.includes('@')
-        ? await actorService.getAccountByEmail(identifier, true)
-        : await actorService.getAccount(identifier, true)
+        ? await ctx.accountManager.getAccountByEmail(identifier, true)
+        : await ctx.accountManager.getAccount(identifier, true)
 
       if (!user) {
         throw new AuthRequiredError('Invalid identifier or password')
       }
 
       let appPasswordName: string | null = null
-      const validAccountPass = await actorService.verifyAccountPassword(
+      const validAccountPass = await ctx.accountManager.verifyAccountPassword(
         user.did,
         password,
       )
       if (!validAccountPass) {
-        appPasswordName = await actorService.verifyAppPassword(
+        appPasswordName = await ctx.accountManager.verifyAppPassword(
           user.did,
           password,
         )
@@ -55,7 +53,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const { access, refresh } = await authService.createSession(
+      const { access, refresh } = await ctx.accountManager.createSession(
         user.did,
         appPasswordName,
       )

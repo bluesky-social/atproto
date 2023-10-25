@@ -7,17 +7,18 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.accessCheckTakedown,
     handler: async ({ auth }) => {
       const did = auth.credentials.did
-      const user = await ctx.services.account(ctx.db).getAccount(did)
-      if (!user) {
-        throw new InvalidRequestError('user not found')
+      const account = await ctx.accountManager.getAccount(did)
+      if (!account) {
+        throw new InvalidRequestError('account not found')
       }
 
-      const tokenRequired = !!user.emailConfirmedAt
+      const tokenRequired = !!account.emailConfirmedAt
       if (tokenRequired) {
-        const token = await ctx.services
-          .account(ctx.db)
-          .createEmailToken(did, 'update_email')
-        await ctx.mailer.sendUpdateEmail({ token }, { to: user.email })
+        const token = await ctx.accountManager.createEmailToken(
+          did,
+          'update_email',
+        )
+        await ctx.mailer.sendUpdateEmail({ token }, { to: account.email })
       }
 
       return {

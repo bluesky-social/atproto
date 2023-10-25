@@ -14,6 +14,6 @@ export default function (server: Server, ctx: AppContext) {
       throw new Error('Unexpected missing refresh token id')
     }
 
-    await ctx.services.auth(ctx.db).revokeRefreshToken(id)
+    await ctx.accountManager.revokeRefreshToken(id)
   })
 }

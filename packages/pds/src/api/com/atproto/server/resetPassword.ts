@@ -13,16 +13,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input }) => {
       const { token, password } = input.body
 
-      const did = await ctx.services
-        .account(ctx.db)
-        .assertValidTokenAndFindDid('reset_password', token)
-
-      await ctx.db.transaction(async (dbTxn) => {
-        const accountService = ctx.services.account(dbTxn)
-        await accountService.updateUserPassword(did, password)
-        await accountService.deleteEmailToken(did, 'reset_password')
-        await ctx.services.auth(dbTxn).revokeRefreshTokensByDid(did)
-      })
+      await ctx.accountManager.resetPassword({ token, password })
     },
   })
 }

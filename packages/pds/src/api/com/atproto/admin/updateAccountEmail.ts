@@ -9,15 +9,15 @@ export default function (server: Server, ctx: AppContext) {
       if (!auth.credentials.admin) {
         throw new AuthRequiredError('Insufficient privileges')
       }
-      await ctx.db.transaction(async (dbTxn) => {
-        const accntService = ctx.services.account(dbTxn)
-        const account = await accntService.getAccount(input.body.account)
-        if (!account) {
-          throw new InvalidRequestError(
-            `Account does not exist: ${input.body.account}`,
-          )
-        }
-        await accntService.updateEmail(account.did, input.body.email)
+      const account = await ctx.accountManager.getAccount(input.body.account)
+      if (!account) {
+        throw new InvalidRequestError(
+          `Account does not exist: ${input.body.account}`,
+        )
+      }
+      await ctx.accountManager.updateEmail({
+        did: account.did,
+        email: input.body.email,
       })
     },
   })

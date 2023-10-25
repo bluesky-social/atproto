@@ -16,28 +16,6 @@ import { AccountView } from '../../lexicon/types/com/atproto/admin/defs'
 export class AccountService {
   constructor(public db: ServiceDb) {}
 
-  async getAccount(
-    handleOrDid: string,
-    includeSoftDeleted = false,
-  ): Promise<AccountEntry | null> {
-    const { ref } = this.db.db.dynamic
-    const result = await this.db.db
-      .selectFrom('account')
-      .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('account'))),
-      )
-      .where((qb) => {
-        if (handleOrDid.startsWith('did:')) {
-          return qb.where('account.did', '=', handleOrDid)
-        } else {
-          return qb.where('account.handle', '=', handleOrDid)
-        }
-      })
-      .selectAll()
-      .executeTakeFirst()
-    return result || null
-  }
-
   // Repo exists and is not taken-down
   async isRepoAvailable(did: string) {
     const found = await this.db.db
@@ -48,22 +26,6 @@ export class AccountService {
       .select('account.did')
       .executeTakeFirst()
     return found !== undefined
-  }
-
-  async getAccountByEmail(
-    email: string,
-    includeSoftDeleted = false,
-  ): Promise<AccountEntry | null> {
-    const { ref } = this.db.db.dynamic
-    const found = await this.db.db
-      .selectFrom('account')
-      .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('account'))),
-      )
-      .where('email', '=', email.toLowerCase())
-      .selectAll('account')
-      .executeTakeFirst()
-    return found || null
   }
 
   async getDidForActor(
@@ -116,63 +78,6 @@ export class AccountService {
     log.info({ handle, email, did }, 'registered user')
   }
 
-  // @NOTE should always be paired with a sequenceHandle().
-  // the token output from this method should be passed to sequenceHandle().
-  async updateHandle(
-    did: string,
-    handle: string,
-  ): Promise<HandleSequenceToken> {
-    const res = await this.db.db
-      .updateTable('account')
-      .set({ handle })
-      .where('did', '=', did)
-      .whereNotExists(
-        // @NOTE see also condition in isHandleAvailable()
-        this.db.db
-          .selectFrom('account')
-          .where('handle', '=', handle)
-          .selectAll(),
-      )
-      .executeTakeFirst()
-    if (res.numUpdatedRows < 1) {
-      throw new UserAlreadyExistsError()
-    }
-    return { did, handle }
-  }
-
-  async updateRepoRoot(did: string, cid: CID, rev: string) {
-    await this.db.db
-      .insertInto('repo_root')
-      .values({
-        did,
-        root: cid.toString(),
-        rev,
-        indexedAt: new Date().toISOString(),
-      })
-      .onConflict((oc) =>
-        oc.column('did').doUpdateSet({ root: cid.toString(), rev }),
-      )
-      .execute()
-  }
-
-  async getHandleDid(handle: string): Promise<string | null> {
-    // @NOTE see also condition in updateHandle()
-    const found = await this.db.db
-      .selectFrom('account')
-      .where('handle', '=', handle)
-      .selectAll()
-      .executeTakeFirst()
-    return found?.did ?? null
-  }
-
-  async updateEmail(did: string, email: string) {
-    await this.db.db
-      .updateTable('account')
-      .set({ email: email.toLowerCase(), emailConfirmedAt: null })
-      .where('did', '=', did)
-      .executeTakeFirst()
-  }
-
   async updateUserPassword(did: string, password: string) {
     const passwordScrypt = await scrypt.genSaltAndHash(password)
     await this.db.db
@@ -182,67 +87,12 @@ export class AccountService {
       .execute()
   }
 
-  async createAppPassword(did: string, name: string): Promise<AppPassword> {
-    // create an app password with format:
-    // 1234-abcd-5678-efgh
-    const str = randomStr(16, 'base32').slice(0, 16)
-    const chunks = [
-      str.slice(0, 4),
-      str.slice(4, 8),
-      str.slice(8, 12),
-      str.slice(12, 16),
-    ]
-    const password = chunks.join('-')
-    const passwordScrypt = await scrypt.hashAppPassword(did, password)
-    const got = await this.db.db
-      .insertInto('app_password')
-      .values({
-        did,
-        name,
-        passwordScrypt,
-        createdAt: new Date().toISOString(),
-      })
-      .returningAll()
-      .executeTakeFirst()
-    if (!got) {
-      throw new InvalidRequestError('could not create app-specific password')
-    }
-    return {
-      name,
-      password,
-      createdAt: got.createdAt,
-    }
-  }
-
   async deleteAppPassword(did: string, name: string) {
     await this.db.db
       .deleteFrom('app_password')
       .where('did', '=', did)
       .where('name', '=', name)
       .execute()
-  }
-
-  async verifyAccountPassword(did: string, password: string): Promise<boolean> {
-    const found = await this.db.db
-      .selectFrom('account')
-      .selectAll()
-      .where('did', '=', did)
-      .executeTakeFirst()
-    return found ? await scrypt.verify(password, found.passwordScrypt) : false
-  }
-
-  async verifyAppPassword(
-    did: string,
-    password: string,
-  ): Promise<string | null> {
-    const passwordScrypt = await scrypt.hashAppPassword(did, password)
-    const found = await this.db.db
-      .selectFrom('app_password')
-      .selectAll()
-      .where('did', '=', did)
-      .where('passwordScrypt', '=', passwordScrypt)
-      .executeTakeFirst()
-    return found?.name ?? null
   }
 
   async listAppPasswords(
@@ -402,22 +252,6 @@ export class AccountService {
       }
       return acc
     }, {} as Record<string, CodeDetail>)
-  }
-
-  async createEmailToken(
-    did: string,
-    purpose: EmailTokenPurpose,
-  ): Promise<string> {
-    const token = getRandomToken().toUpperCase()
-    const now = new Date().toISOString()
-    await this.db.db
-      .insertInto('email_token')
-      .values({ purpose, did, token, requestedAt: now })
-      .onConflict((oc) =>
-        oc.columns(['purpose', 'did']).doUpdateSet({ token, requestedAt: now }),
-      )
-      .execute()
-    return token
   }
 
   async deleteEmailToken(did: string, purpose: EmailTokenPurpose) {

@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.access,
     handler: async ({ auth }) => {
       const did = auth.credentials.did
-      const user = await ctx.services.account(ctx.db).getAccount(did)
+      const user = await ctx.accountManager.getAccount(did)
       if (!user) {
         throw new InvalidRequestError(
           `Could not find user info for account: ${did}`,

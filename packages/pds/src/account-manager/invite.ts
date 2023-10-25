@@ -1,0 +1,178 @@
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AccountDb, InviteCode } from './db'
+import { countAll } from '../db'
+import { chunkArray } from '@atproto/common'
+
+export const createInviteCodes = async (
+  db: AccountDb,
+  toCreate: { account: string; codes: string[] }[],
+  useCount: number,
+) => {
+  const now = new Date().toISOString()
+  const rows = toCreate.flatMap((account) =>
+    account.codes.map((code) => ({
+      code: code,
+      availableUses: useCount,
+      disabled: 0 as const,
+      forAccount: account.account,
+      createdBy: 'admin',
+      createdAt: now,
+    })),
+  )
+  await Promise.all(
+    chunkArray(rows, 50).map((chunk) =>
+      db.db.insertInto('invite_code').values(chunk).execute(),
+    ),
+  )
+}
+
+export const createAccountInviteCodes = async (
+  db: AccountDb,
+  forAccount: string,
+  codes: string[],
+  disabled: 0 | 1,
+): Promise<CodeDetail[]> => {
+  const now = new Date().toISOString()
+  const rows = codes.map(
+    (code) =>
+      ({
+        code,
+        availableUses: 1,
+        disabled,
+        forAccount,
+        createdBy: forAccount,
+        createdAt: now,
+      } as InviteCode),
+  )
+  await db.db.insertInto('invite_code').values(rows).execute()
+  return rows.map((row) => ({
+    ...row,
+    available: 1,
+    disabled: row.disabled === 1,
+    uses: [],
+  }))
+}
+
+export const recordInviteUse = async (
+  db: AccountDb,
+  opts: {
+    did: string
+    inviteCode: string | undefined
+    now: string
+  },
+) => {
+  if (!opts.inviteCode) return
+  await db.db
+    .insertInto('invite_code_use')
+    .values({
+      code: opts.inviteCode,
+      usedBy: opts.did,
+      usedAt: opts.now,
+    })
+    .execute()
+}
+
+export const ensureInviteIsAvailable = async (
+  db: AccountDb,
+  inviteCode: string,
+): Promise<void> => {
+  const invite = await db.db
+    .selectFrom('invite_code')
+    .leftJoin('account', 'account.did', 'invite_code.forAccount')
+    .where('takedownId', 'is', null)
+    .selectAll('invite_code')
+    .where('code', '=', inviteCode)
+    .executeTakeFirst()
+
+  if (!invite || invite.disabled) {
+    throw new InvalidRequestError(
+      'Provided invite code not available',
+      'InvalidInviteCode',
+    )
+  }
+
+  const uses = await db.db
+    .selectFrom('invite_code_use')
+    .select(countAll.as('count'))
+    .where('code', '=', inviteCode)
+    .executeTakeFirstOrThrow()
+
+  if (invite.availableUses <= uses.count) {
+    throw new InvalidRequestError(
+      'Provided invite code not available',
+      'InvalidInviteCode',
+    )
+  }
+}
+
+const selectInviteCodesQb = (db: AccountDb) => {
+  const ref = db.db.dynamic.ref
+  const builder = db.db
+    .selectFrom('invite_code')
+    .select([
+      'invite_code.code as code',
+      'invite_code.availableUses as available',
+      'invite_code.disabled as disabled',
+      'invite_code.forAccount as forAccount',
+      'invite_code.createdBy as createdBy',
+      'invite_code.createdAt as createdAt',
+      db.db
+        .selectFrom('invite_code_use')
+        .select(countAll.as('count'))
+        .whereRef('invite_code_use.code', '=', ref('invite_code.code'))
+        .as('uses'),
+    ])
+  return db.db.selectFrom(builder.as('codes')).selectAll()
+}
+
+export const getAccountInviteCodes = async (
+  db: AccountDb,
+  did: string,
+): Promise<CodeDetail[]> => {
+  const res = await selectInviteCodesQb(db)
+    .where('forAccount', '=', did)
+    .execute()
+  const codes = res.map((row) => row.code)
+  const uses = await getInviteCodesUses(db, codes)
+  return res.map((row) => ({
+    ...row,
+    uses: uses[row.code] ?? [],
+    disabled: row.disabled === 1,
+  }))
+}
+
+export const getInviteCodesUses = async (
+  db: AccountDb,
+  codes: string[],
+): Promise<Record<string, CodeUse[]>> => {
+  const uses: Record<string, CodeUse[]> = {}
+  if (codes.length > 0) {
+    const usesRes = await db.db
+      .selectFrom('invite_code_use')
+      .where('code', 'in', codes)
+      .orderBy('usedAt', 'desc')
+      .selectAll()
+      .execute()
+    for (const use of usesRes) {
+      const { code, usedBy, usedAt } = use
+      uses[code] ??= []
+      uses[code].push({ usedBy, usedAt })
+    }
+  }
+  return uses
+}
+
+export type CodeDetail = {
+  code: string
+  available: number
+  disabled: boolean
+  forAccount: string
+  createdBy: string
+  createdAt: string
+  uses: CodeUse[]
+}
+
+type CodeUse = {
+  usedBy: string
+  usedAt: string
+}

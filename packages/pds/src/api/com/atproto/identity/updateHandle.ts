@@ -1,13 +1,9 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { DAY, MINUTE } from '@atproto/common'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import {
-  HandleSequenceToken,
-  UserAlreadyExistsError,
-} from '../../../../services/account'
 import { httpLogger } from '../../../../logger'
-import { DAY, MINUTE } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
@@ -33,41 +29,19 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
-      const handleDid = await ctx.services.account(ctx.db).getHandleDid(handle)
+      const account = await ctx.accountManager.getAccount(handle)
 
-      let seqHandleTok: HandleSequenceToken
-      if (handleDid) {
-        if (handleDid !== requester) {
+      if (account) {
+        if (account.did !== requester) {
           throw new InvalidRequestError(`Handle already taken: ${handle}`)
         }
-        seqHandleTok = { did: requester, handle: handle }
       } else {
-        seqHandleTok = await ctx.db.transaction(async (dbTxn) => {
-          let tok: HandleSequenceToken
-          try {
-            tok = await ctx.services
-              .account(dbTxn)
-              .updateHandle(requester, handle)
-          } catch (err) {
-            if (err instanceof UserAlreadyExistsError) {
-              throw new InvalidRequestError(`Handle already taken: ${handle}`)
-            }
-            throw err
-          }
-          await ctx.plcClient.updateHandle(
-            requester,
-            ctx.plcRotationKey,
-            handle,
-          )
-          return tok
-        })
+        await ctx.plcClient.updateHandle(requester, ctx.plcRotationKey, handle)
+        await ctx.accountManager.updateHandle(requester, handle)
       }
 
       try {
-        await ctx.sequencer.sequenceHandleUpdate(
-          seqHandleTok.did,
-          seqHandleTok.handle,
-        )
+        await ctx.sequencer.sequenceHandleUpdate(requester, handle)
       } catch (err) {
         httpLogger.error(
           { err, did: requester, handle },
