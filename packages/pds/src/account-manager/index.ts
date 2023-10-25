@@ -134,9 +134,14 @@ export class AccountManager {
     const token = await auth.getRefreshToken(this.db, id)
     if (!token) return null
 
+    const now = new Date()
+
+    // take the chance to tidy all of a user's expired tokens
+    // does not need to be transactional since this is just best-effort
+    await auth.deleteExpiredRefreshTokens(this.db, token.did, now.toISOString())
+
     // Shorten the refresh token lifespan down from its
     // original expiration time to its revocation grace period.
-    const now = new Date()
     const prevExpiresAt = new Date(token.expiresAt)
     const REFRESH_GRACE_MS = 2 * HOUR
     const graceExpiresAt = new Date(now.getTime() + REFRESH_GRACE_MS)
@@ -159,10 +164,6 @@ export class AccountManager {
         token.appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
       jti: nextId,
     })
-
-    // take the chance to tidy all of a user's expired tokens
-    // does not need to be transactional since this is just best-effort
-    await auth.deleteExpiredRefreshTokens(this.db, token.did, now.toISOString())
 
     await this.db.transaction((dbTxn) =>
       Promise.all([

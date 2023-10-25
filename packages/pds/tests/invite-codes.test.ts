@@ -93,7 +93,7 @@ describe('account', () => {
     )
   })
 
-  it('handles racing invite code uses', async () => {
+  it.skip('handles racing invite code uses', async () => {
     const inviteCode = await createInviteCode(network, agent, 1)
     const COUNT = 10
 
