@@ -30,6 +30,7 @@ export type CacheResult = {
   doc: DidDocument
   updatedAt: number
   stale: boolean
+  expired: boolean
 }
 
 export interface DidCache {

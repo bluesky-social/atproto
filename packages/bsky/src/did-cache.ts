@@ -69,20 +69,17 @@ export class DidSqlCache implements DidCache {
       .selectAll()
       .executeTakeFirst()
     if (!res) return null
+
     const now = Date.now()
     const updatedAt = new Date(res.updatedAt).getTime()
-
     const expired = now > updatedAt + this.maxTTL
-    if (expired) {
-      return null
-    }
-
     const stale = now > updatedAt + this.staleTTL
     return {
       doc: res.doc,
       updatedAt,
       did,
       stale,
+      expired,
     }
   }
 

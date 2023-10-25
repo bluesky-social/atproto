@@ -43,12 +43,13 @@ export abstract class BaseResolver {
     did: string,
     forceRefresh = false,
   ): Promise<DidDocument | null> {
+    let fromCache: CacheResult | null = null
     if (this.cache && !forceRefresh) {
-      const fromCache = await this.cache.checkCache(did)
-      if (fromCache?.stale) {
-        await this.refreshCache(did, fromCache)
-      }
-      if (fromCache) {
+      fromCache = await this.cache.checkCache(did)
+      if (fromCache && !fromCache.expired) {
+        if (fromCache?.stale) {
+          await this.refreshCache(did, fromCache)
+        }
         return fromCache.doc
       }
     }
@@ -58,7 +59,7 @@ export abstract class BaseResolver {
       await this.cache?.clearEntry(did)
       return null
     }
-    await this.cache?.cacheDid(did, got)
+    await this.cache?.cacheDid(did, got, fromCache ?? undefined)
     return got
   }
 
