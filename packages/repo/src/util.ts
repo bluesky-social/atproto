@@ -2,7 +2,6 @@ import { CID } from 'multiformats/cid'
 import * as cbor from '@ipld/dag-cbor'
 import { CarReader } from '@ipld/car/reader'
 import { BlockWriter, CarWriter } from '@ipld/car/writer'
-import { Block as CarBlock } from '@ipld/car/api'
 import {
   streamToBuffer,
   verifyCidForBytes,
@@ -18,6 +17,7 @@ import { ipldToLex, lexToIpld, LexValue, RepoRecord } from '@atproto/lexicon'
 import * as crypto from '@atproto/crypto'
 import DataDiff from './data-diff'
 import {
+  CarBlock,
   Commit,
   LegacyV2Commit,
   RecordCreateDescript,

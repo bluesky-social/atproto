@@ -27,7 +27,6 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
   }
 
   async putBlock(cid: CID, block: Uint8Array, rev: string): Promise<void> {
-    this.db.assertTransaction()
     await this.db.db
       .insertInto('repo_block')
       .values({
@@ -42,7 +41,6 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
   }
 
   async putMany(toPut: BlockMap, rev: string): Promise<void> {
-    this.db.assertTransaction()
     const blocks: RepoBlock[] = []
     toPut.forEach((bytes, cid) => {
       blocks.push({
