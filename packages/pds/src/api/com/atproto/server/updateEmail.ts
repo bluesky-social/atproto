@@ -1,7 +1,8 @@
+import disposable from 'disposable-email'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import disposable from 'disposable-email'
+import { UserAlreadyExistsError } from '../../../../services/account'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.updateEmail({
@@ -38,7 +39,17 @@ export default function (server: Server, ctx: AppContext) {
           await accntSrvce.deleteEmailToken(did, 'update_email')
         }
         if (user.email !== email) {
-          await accntSrvce.updateEmail(did, email)
+          try {
+            await accntSrvce.updateEmail(did, email)
+          } catch (err) {
+            if (err instanceof UserAlreadyExistsError) {
+              throw new InvalidRequestError(
+                'This email address is already in use, please use a different email.',
+              )
+            } else {
+              throw err
+            }
+          }
         }
       })
     },
