@@ -22,7 +22,7 @@ export class DidSqlCache implements DidCache {
       .onConflict((oc) =>
         oc.column('did').doUpdateSet({
           doc: excluded(this.db.db, 'doc'),
-          updatedAt: Date.now(),
+          updatedAt: excluded(this.db.db, 'updatedAt'),
         }),
       )
       .executeTakeFirst()
