@@ -1,7 +1,7 @@
 import AtpAgent from '@atproto/api'
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
-import basicSeed from '../seeds/basic'
+import authorFeedSeed from '../seeds/author-feed'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
 import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
@@ -17,6 +17,7 @@ describe('pds author feed views', () => {
   let bob: string
   let carol: string
   let dan: string
+  let eve: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -24,12 +25,13 @@ describe('pds author feed views', () => {
     })
     agent = network.bsky.getClient()
     sc = network.getSeedClient()
-    await basicSeed(sc)
+    await authorFeedSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
+    eve = sc.dids.eve
   })
 
   afterAll(async () => {
@@ -296,6 +298,19 @@ describe('pds author feed views', () => {
           (isRecord(post.record) && !post.record.reply) ||
           (isRecord(post.record) && post.record.reply)
         )
+      }),
+    ).toBeTruthy()
+  })
+
+  it('posts_no_replies still includes self-replies', async () => {
+    const { data: eveFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: eve,
+      filter: 'posts_no_replies',
+    })
+
+    expect(
+      eveFeed.feed.every(({ post }) => {
+        return isRecord(post.record) && post.author.did === eve
       }),
     ).toBeTruthy()
   })

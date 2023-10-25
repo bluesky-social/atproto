@@ -178,7 +178,7 @@ Array [
           "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
-        "replyCount": 2,
+        "replyCount": 3,
         "repostCount": 1,
         "uri": "record(2)",
         "viewer": Object {},
@@ -395,7 +395,7 @@ Array [
         "createdAt": "1970-01-01T00:00:00.000000Z",
         "text": "again",
       },
-      "replyCount": 2,
+      "replyCount": 3,
       "repostCount": 1,
       "uri": "record(2)",
       "viewer": Object {},
@@ -590,7 +590,7 @@ Array [
           "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
-        "replyCount": 2,
+        "replyCount": 3,
         "repostCount": 1,
         "uri": "record(1)",
         "viewer": Object {
@@ -638,7 +638,7 @@ Array [
           "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
-        "replyCount": 2,
+        "replyCount": 3,
         "repostCount": 1,
         "uri": "record(1)",
         "viewer": Object {
@@ -961,7 +961,7 @@ Array [
           "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
-        "replyCount": 2,
+        "replyCount": 3,
         "repostCount": 1,
         "uri": "record(6)",
         "viewer": Object {
@@ -1009,7 +1009,7 @@ Array [
           "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
-        "replyCount": 2,
+        "replyCount": 3,
         "repostCount": 1,
         "uri": "record(6)",
         "viewer": Object {
@@ -1326,7 +1326,7 @@ Array [
           "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
-        "replyCount": 2,
+        "replyCount": 3,
         "repostCount": 1,
         "uri": "record(3)",
         "viewer": Object {
@@ -1376,7 +1376,7 @@ Array [
         "createdAt": "1970-01-01T00:00:00.000000Z",
         "text": "again",
       },
-      "replyCount": 2,
+      "replyCount": 3,
       "repostCount": 1,
       "uri": "record(3)",
       "viewer": Object {
@@ -1765,7 +1765,7 @@ Array [
           "createdAt": "1970-01-01T00:00:00.000000Z",
           "text": "again",
         },
-        "replyCount": 2,
+        "replyCount": 3,
         "repostCount": 1,
         "uri": "record(4)",
         "viewer": Object {
@@ -1987,7 +1987,7 @@ Array [
         "createdAt": "1970-01-01T00:00:00.000000Z",
         "text": "again",
       },
-      "replyCount": 2,
+      "replyCount": 3,
       "repostCount": 1,
       "uri": "record(4)",
       "viewer": Object {
