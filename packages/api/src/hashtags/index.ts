@@ -9,7 +9,7 @@ export const LEADING_NUMBER_REGEX = /^\d/
  * Matches an inline hashtag, and includes any trailing punctuation.
  */
 export const HASHTAG_REGEX =
-  /(?:^|\s)(#(?!#|\d|\*)[\p{L}\p{Emoji}\p{Emoji_Component}]{1}(?![\p{L}\p{Emoji}\p{Emoji_Component}\d_-]*[*#])[\p{L}\p{Emoji}\p{Emoji_Component}\d_-]*)/gu
+  /(?:^|\s)(#(?!#|\d|\*)[\p{L}\p{Emoji}\p{Emoji_Component}]{1}(?![\p{L}\p{Emoji}\p{Emoji_Component}\d_-]*[*#][\p{L}\p{Emoji}\p{Emoji_Component}\d_-])[\p{L}\p{Emoji}\p{Emoji_Component}\d_-]*)/gu
 
 /**
  * Matches an inline hashtag, and includes any trailing punctuation.
@@ -17,7 +17,7 @@ export const HASHTAG_REGEX =
  * This trailing punctuation must be removed before use.
  */
 export const HASHTAG_WITH_TRAILING_PUNCTUATION_REGEX =
-  /(?:^|\s)(#(?!#|\d|\*)[\p{L}\p{Emoji}\p{Emoji_Component}]{1}(?![\p{L}\p{Emoji}\p{Emoji_Component}\d_-]*[*#])[\p{L}\p{Emoji}\p{Emoji_Component}\d_-]*\p{P}*)/gu
+  /(?:^|\s)(#(?!#|\d|\*)[\p{L}\p{Emoji}\p{Emoji_Component}]{1}(?![\p{L}\p{Emoji}\p{Emoji_Component}\d_-]*[*#][\p{L}\p{Emoji}\p{Emoji_Component}\d_-])[\p{L}\p{Emoji}\p{Emoji_Component}\d_-]*[\p{P}*#]*)/gu
 
 /**
  * Matches any characters NOT allowed in a hashtag.
@@ -37,6 +37,7 @@ export const HASHTAG_INVALID_CHARACTER_REGEX =
  *   - removes trailing punctuation
  */
 export function sanitizeHashtag(hashtag: string) {
+  // TODO may need to limit utf8 bytes length here too
   return hashtag
     .replace(LEADING_HASH_REGEX, '')
     .replace(LEADING_NUMBER_REGEX, '')

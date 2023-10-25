@@ -88,6 +88,8 @@ describe('HASHTAG_WITH_TRAILING_PUNCTUATION_REGEX', () => {
       ['#1', undefined],
       ['#tag!', '#tag!'],
       ['test #tag?', ' #tag?'],
+      ['test #tag#', ' #tag#'], // # and * are matched by Emoji
+      ['test #tag*', ' #tag*'], // # and * are matched by Emoji
     ] as [string, string][]
   ).forEach(([input, output]: [string, string]) => {
     it(`${input} -> ${output}`, () => {
@@ -106,6 +108,8 @@ describe('TRAILING_PUNCTUATION_REGEX', () => {
       ['#1', undefined],
       ['#tag!', '!'],
       ['test #tag?', '?'],
+      ['test #tag#', '#'], // # and * are matched by Emoji
+      ['test #tag*', '*'], // # and * are matched by Emoji
     ] as [string, string][]
   ).forEach(([input, output]: [string, string]) => {
     it(`${input} -> ${output}`, () => {
@@ -122,6 +126,8 @@ describe('LEADING_PUNCTUATION_REGEX', () => {
       ['_tag', '_'],
       ['!tag', '!'],
       ['?tag', '?'],
+      ['#tag', '#'],
+      ['*tag', '*'],
     ] as [string, string][]
   ).forEach(([input, output]: [string, string]) => {
     it(`${input} -> ${output}`, () => {
@@ -200,6 +206,10 @@ describe('sanitizeHashtag', () => {
       ['-tag', 'tag'],
       ['#0x', 'x'],
       ['pun.ctu.ati.on', 'punctuation'],
+      ['##hashhash', 'hashhash'],
+      ['#hash#hash', 'hashhash'],
+      ['#*asterisk', 'asterisk'],
+      ['#aster*isk', 'asterisk'],
     ] as [string, string][]
   ).forEach(([input, output]: [string, string]) => {
     it(`${input} -> ${output}`, () => {
