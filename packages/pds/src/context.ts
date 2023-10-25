@@ -7,7 +7,6 @@ import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { Database } from './db'
 import { ServerConfig, ServerSecrets } from './config'
 import { AuthVerifier } from './auth-verifier'
 import { ServerMailer } from './mailer'
@@ -21,11 +20,9 @@ import { Crawlers } from './crawlers'
 import { DiskBlobStore } from './disk-blobstore'
 import { getRedisClient } from './redis'
 import { ActorStore } from './actor-store'
-import { ServiceDb } from './service-db'
 import { LocalViewer } from './read-after-write/viewer'
 
 export type AppContextOptions = {
-  // db: ServiceDb
   actorStore: ActorStore
   blobstore: (did: string) => BlobStore
   localViewer: (did: string) => Promise<LocalViewer>
@@ -46,7 +43,6 @@ export type AppContextOptions = {
 }
 
 export class AppContext {
-  // public db: ServiceDb
   public actorStore: ActorStore
   public blobstore: (did: string) => BlobStore
   public localViewer: (did: string) => Promise<LocalViewer>
@@ -91,9 +87,6 @@ export class AppContext {
     secrets: ServerSecrets,
     overrides?: Partial<AppContextOptions>,
   ): Promise<AppContext> {
-    const db: ServiceDb = Database.sqlite(
-      path.join(cfg.db.directory, 'service.sqlite'),
-    )
     const blobstore =
       cfg.blobstore.provider === 's3'
         ? S3BlobStore.creator({ bucket: cfg.blobstore.bucket })
@@ -147,7 +140,13 @@ export class AppContext {
 
     const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
 
-    const authVerifier = new AuthVerifier(db, idResolver, {
+    const accountManager = new AccountManager(
+      path.join(cfg.db.directory, 'service.sqlite'),
+      secrets.jwtSecret,
+    )
+    await accountManager.migrateOrThrow()
+
+    const authVerifier = new AuthVerifier(accountManager, idResolver, {
       jwtSecret: secrets.jwtSecret,
       adminPass: secrets.adminPassword,
       moderatorPass: secrets.moderatorPassword,
@@ -172,20 +171,14 @@ export class AppContext {
 
     const localViewer = LocalViewer.creator({
       actorStore,
-      serviceDb: db,
+      accountManager,
       appViewAgent,
       pdsHostname: cfg.service.hostname,
       appviewDid: cfg.bskyAppView.did,
       appviewCdnUrlPattern: cfg.bskyAppView.cdnUrlPattern,
     })
 
-    const accountManager = new AccountManager(
-      path.join(cfg.db.directory, 'service.sqlite'),
-      secrets.jwtSecret,
-    )
-
     return new AppContext({
-      // db,
       actorStore,
       blobstore,
       localViewer,

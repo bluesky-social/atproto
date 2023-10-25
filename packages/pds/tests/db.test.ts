@@ -1,15 +1,15 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { ServiceDb } from '../src/service-db'
+import { AccountDb } from '../src/account-manager/db'
 
 describe('db', () => {
   let network: TestNetworkNoAppView
-  let db: ServiceDb
+  let db: AccountDb
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'db',
     })
-    db = network.pds.ctx.db
+    db = network.pds.ctx.accountManager.db
   })
 
   afterAll(async () => {
@@ -97,7 +97,7 @@ describe('db', () => {
   })
 
   it('does not allow leaky transactions', async () => {
-    let leakedTx: ServiceDb | undefined
+    let leakedTx: AccountDb | undefined
 
     const tx = db.transaction(async (dbTxn) => {
       leakedTx = dbTxn

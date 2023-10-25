@@ -1,4 +1,4 @@
-import { AccountDb, AccountEntry, EmailTokenPurpose } from './db'
+import { AccountDb, AccountEntry, EmailTokenPurpose, getMigrator } from './db'
 import * as scrypt from './helpers/scrypt'
 import * as account from './helpers/account'
 import * as repo from './helpers/repo'
@@ -17,6 +17,10 @@ export class AccountManager {
 
   constructor(dbLocation: string, private jwtSecret: string) {
     this.db = Database.sqlite(dbLocation)
+  }
+
+  async migrateOrThrow() {
+    await getMigrator(this.db).migrateToLatestOrThrow()
   }
 
   async close() {
@@ -165,7 +169,7 @@ export class AccountManager {
         auth.addRefreshGracePeriod(dbTxn, {
           id,
           expiresAt: expiresAt.toISOString(),
-          nextId: token.nextId,
+          nextId,
         }),
         auth.storeRefreshToken(dbTxn, refresh.payload, token.appPasswordName),
       ]),

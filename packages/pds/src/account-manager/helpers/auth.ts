@@ -119,7 +119,7 @@ export const addRefreshGracePeriod = async (
   opts: {
     id: string
     expiresAt: string
-    nextId: string | null
+    nextId: string
   },
 ) => {
   await db.db

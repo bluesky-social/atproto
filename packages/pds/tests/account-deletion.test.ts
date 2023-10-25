@@ -9,11 +9,11 @@ import { ServerMailer } from '../src/mailer'
 import { BlobNotFoundError } from '@atproto/repo'
 import {
   RepoRoot,
-  UserAccount,
+  Account,
   AppPassword,
   EmailToken,
   RefreshToken,
-} from '../src/service-db'
+} from '../src/account-manager/db'
 import { fileExists } from '@atproto/common'
 import { AppContext } from '../src'
 import { RepoSeq } from '../src/sequencer/db'
@@ -212,7 +212,7 @@ describe('account deletion', () => {
 
 type DbContents = {
   repoRoots: RepoRoot[]
-  userAccounts: Selectable<UserAccount>[]
+  userAccounts: Selectable<Account>[]
   appPasswords: AppPassword[]
   emailTokens: EmailToken[]
   refreshTokens: RefreshToken[]
@@ -220,7 +220,8 @@ type DbContents = {
 }
 
 const getDbContents = async (ctx: AppContext): Promise<DbContents> => {
-  const { db, sequencer } = ctx
+  const { sequencer, accountManager } = ctx
+  const db = accountManager.db
   const [
     repoRoots,
     userAccounts,
