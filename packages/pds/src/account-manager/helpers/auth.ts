@@ -93,6 +93,50 @@ export const storeRefreshToken = async (
     .executeTakeFirst()
 }
 
+export const getRefreshToken = async (db: AccountDb, id: string) => {
+  return db.db
+    .selectFrom('refresh_token')
+    .where('id', '=', id)
+    .selectAll()
+    .executeTakeFirst()
+}
+
+export const deleteExpiredRefreshTokens = async (
+  db: AccountDb,
+  did: string,
+  now: string,
+) => {
+  await db.db
+    .deleteFrom('refresh_token')
+    .where('did', '=', did)
+    .where('expiresAt', '<=', now)
+    .returningAll()
+    .executeTakeFirst()
+}
+
+export const addRefreshGracePeriod = async (
+  db: AccountDb,
+  opts: {
+    id: string
+    expiresAt: string
+    nextId: string | null
+  },
+) => {
+  await db.db
+    .updateTable('refresh_token')
+    .where('id', '=', opts.id)
+    .set({ expiresAt: opts.expiresAt, nextId: opts.nextId })
+    .executeTakeFirst()
+}
+
+export const revokeRefreshToken = async (db: AccountDb, id: string) => {
+  const { numDeletedRows } = await db.db
+    .deleteFrom('refresh_token')
+    .where('id', '=', id)
+    .executeTakeFirst()
+  return numDeletedRows > 0
+}
+
 export const revokeRefreshTokensByDid = async (db: AccountDb, did: string) => {
   const { numDeletedRows } = await db.db
     .deleteFrom('refresh_token')

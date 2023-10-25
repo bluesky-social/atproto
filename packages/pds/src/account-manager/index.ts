@@ -10,17 +10,21 @@ import { AuthScope } from '../auth-verifier'
 import { HOUR } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
+import { Database } from '../db'
 
 export class AccountManager {
   db: AccountDb
 
-  constructor(dbLocation: string, private jwtSecret: string) {}
+  constructor(dbLocation: string, private jwtSecret: string) {
+    this.db = Database.sqlite(dbLocation)
+  }
 
   async close() {
     await this.db.close()
   }
 
-  // Account Info
+  // Account
+  // ----------
 
   async getAccount(
     handleOrDid: string,
@@ -82,13 +86,99 @@ export class AccountManager {
     return { access, refresh }
   }
 
+  // @NOTE should always be paired with a sequenceHandle().
+  // the token output from this method should be passed to sequenceHandle().
+  async updateHandle(did: string, handle: string) {
+    return account.updateHandle(this.db, did, handle)
+  }
+
+  async deleteAccount(did: string) {
+    return account.deleteAccount(this.db, did)
+  }
+
+  async takedownAccount(did: string, takedown: StatusAttr) {
+    await this.db.transaction((dbTxn) =>
+      Promise.all([
+        account.updateAccountTakedownStatus(dbTxn, did, takedown),
+        auth.revokeRefreshTokensByDid(dbTxn, did),
+      ]),
+    )
+  }
+
+  async getAccountTakedownStatus(did: string) {
+    return account.getAccountTakedownStatus(this.db, did)
+  }
+
   async updateRepoRoot(did: string, cid: CID, rev: string) {
     return repo.updateRoot(this.db, did, cid, rev)
   }
 
-  async ensureInviteIsAvailable(code: string) {
-    return invite.ensureInviteIsAvailable(this.db, code)
+  // Auth
+  // ----------
+
+  async createSession(did: string, appPasswordName: string | null) {
+    const { access, refresh } = auth.createTokens({
+      jwtSecret: this.jwtSecret,
+      did,
+      scope: appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
+    })
+    await auth.storeRefreshToken(this.db, refresh.payload, appPasswordName)
+    return { access, refresh }
   }
+
+  async rotateRefreshToken(id: string) {
+    const token = await auth.getRefreshToken(this.db, id)
+    if (!token) return null
+
+    // Shorten the refresh token lifespan down from its
+    // original expiration time to its revocation grace period.
+    const now = new Date()
+    const prevExpiresAt = new Date(token.expiresAt)
+    const REFRESH_GRACE_MS = 2 * HOUR
+    const graceExpiresAt = new Date(now.getTime() + REFRESH_GRACE_MS)
+
+    const expiresAt =
+      graceExpiresAt < prevExpiresAt ? graceExpiresAt : prevExpiresAt
+
+    if (expiresAt <= now) {
+      return null
+    }
+
+    // Determine the next refresh token id: upon refresh token
+    // reuse you always receive a refresh token with the same id.
+    const nextId = token.nextId ?? auth.getRefreshTokenId()
+
+    const { access, refresh } = auth.createTokens({
+      jwtSecret: this.jwtSecret,
+      did: token.did,
+      scope:
+        token.appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
+      jti: nextId,
+    })
+
+    // take the chance to tidy all of a user's expired tokens
+    // does not need to be transactional since this is just best-effort
+    await auth.deleteExpiredRefreshTokens(this.db, token.did, now.toISOString())
+
+    await this.db.transaction((dbTxn) =>
+      Promise.all([
+        auth.addRefreshGracePeriod(dbTxn, {
+          id,
+          expiresAt: expiresAt.toISOString(),
+          nextId: token.nextId,
+        }),
+        auth.storeRefreshToken(dbTxn, refresh.payload, token.appPasswordName),
+      ]),
+    )
+    return { access, refresh }
+  }
+
+  async revokeRefreshToken(id: string) {
+    return auth.revokeRefreshToken(this.db, id)
+  }
+
+  // Passwords
+  // ----------
 
   async createAppPassword(did: string, name: string) {
     return password.createAppPassword(this.db, did, name)
@@ -96,6 +186,36 @@ export class AccountManager {
 
   async listAppPasswords(did: string) {
     return password.listAppPasswords(this.db, did)
+  }
+
+  async verifyAccountPassword(
+    did: string,
+    passwordStr: string,
+  ): Promise<boolean> {
+    return password.verifyAccountPassword(this.db, did, passwordStr)
+  }
+
+  async verifyAppPassword(
+    did: string,
+    passwordStr: string,
+  ): Promise<string | null> {
+    return password.verifyAppPassword(this.db, did, passwordStr)
+  }
+
+  async revokeAppPassword(did: string, name: string) {
+    await this.db.transaction(async (dbTxn) =>
+      Promise.all([
+        password.deleteAppPassword(dbTxn, did, name),
+        auth.revokeAppPasswordRefreshToken(dbTxn, did, name),
+      ]),
+    )
+  }
+
+  // Invites
+  // ----------
+
+  async ensureInviteIsAvailable(code: string) {
+    return invite.ensureInviteIsAvailable(this.db, code)
   }
 
   async createInviteCodes(
@@ -125,16 +245,19 @@ export class AccountManager {
     return invite.getInviteCodesUses(this.db, codes)
   }
 
-  async createEmailToken(did: string, purpose: EmailTokenPurpose) {
-    return emailToken.createEmailToken(this.db, did, purpose)
-  }
-
   async setAccountInvitesDisabled(did: string, disabled: boolean) {
     return invite.setAccountInvitesDisabled(this.db, did, disabled)
   }
 
   async disableInviteCodes(opts: { codes: string[]; accounts: string[] }) {
     return invite.disableInviteCodes(this.db, opts)
+  }
+
+  // Email Tokens
+  // ----------
+
+  async createEmailToken(did: string, purpose: EmailTokenPurpose) {
+    return emailToken.createEmailToken(this.db, did, purpose)
   }
 
   async assertValidEmailToken(
@@ -157,77 +280,6 @@ export class AccountManager {
     )
   }
 
-  async resetPassword(opts: { password: string; token: string }) {
-    const did = await emailToken.assertValidTokenAndFindDid(
-      this.db,
-      'reset_password',
-      opts.token,
-    )
-    const passwordScrypt = await scrypt.genSaltAndHash(opts.password)
-    await this.db.transaction(async (dbTxn) =>
-      Promise.all([
-        password.updateUserPassword(dbTxn, { did, passwordScrypt }),
-        emailToken.deleteEmailToken(dbTxn, did, 'reset_password'),
-        auth.revokeRefreshTokensByDid(dbTxn, did),
-      ]),
-    )
-  }
-
-  async deleteAccount(did: string) {
-    return account.deleteAccount(this.db, did)
-  }
-
-  async takedownAccount(did: string, takedown: StatusAttr) {
-    await this.db.transaction((dbTxn) =>
-      Promise.all([
-        account.updateAccountTakedownStatus(dbTxn, did, takedown),
-        auth.revokeRefreshTokensByDid(dbTxn, did),
-      ]),
-    )
-  }
-
-  async getAccountTakedownStatus(did: string) {
-    return account.getAccountTakedownStatus(this.db, did)
-  }
-
-  async verifyAccountPassword(did: string, password: string): Promise<boolean> {
-    const found = await this.db.db
-      .selectFrom('account')
-      .selectAll()
-      .where('did', '=', did)
-      .executeTakeFirst()
-    return found ? await scrypt.verify(password, found.passwordScrypt) : false
-  }
-
-  async verifyAppPassword(
-    did: string,
-    password: string,
-  ): Promise<string | null> {
-    const passwordScrypt = await scrypt.hashAppPassword(did, password)
-    const found = await this.db.db
-      .selectFrom('app_password')
-      .selectAll()
-      .where('did', '=', did)
-      .where('passwordScrypt', '=', passwordScrypt)
-      .executeTakeFirst()
-    return found?.name ?? null
-  }
-
-  async revokeAppPassword(did: string, name: string) {
-    await this.db.transaction(async (dbTxn) =>
-      Promise.all([
-        password.deleteAppPassword(dbTxn, did, name),
-        auth.revokeAppPasswordRefreshToken(dbTxn, did, name),
-      ]),
-    )
-  }
-
-  // @NOTE should always be paired with a sequenceHandle().
-  // the token output from this method should be passed to sequenceHandle().
-  async updateHandle(did: string, handle: string) {
-    return account.updateHandle(this.db, did, handle)
-  }
-
   async updateEmail(opts: { did: string; email: string; token?: string }) {
     const { did, email, token } = opts
     if (token) {
@@ -242,84 +294,19 @@ export class AccountManager {
     }
   }
 
-  async createSession(did: string, appPasswordName: string | null) {
-    const { access, refresh } = auth.createTokens({
-      jwtSecret: this.jwtSecret,
-      did,
-      scope: appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
-    })
-    await auth.storeRefreshToken(this.db, refresh.payload, appPasswordName)
-    return { access, refresh }
-  }
-
-  // @TODO tidy this one
-  async rotateRefreshToken(id: string) {
-    const token = await this.db.db
-      .selectFrom('refresh_token')
-      .where('id', '=', id)
-      .selectAll()
-      .executeTakeFirst()
-    if (!token) return null
-
-    return this.db.transaction(async (dbTxn) => {
-      // take the chance to tidy all of a user's expired tokens
-      const now = new Date()
-      await dbTxn.db
-        .deleteFrom('refresh_token')
-        .where('did', '=', token.did)
-        .where('expiresAt', '<=', now.toISOString())
-        .returningAll()
-        .executeTakeFirst()
-
-      // Shorten the refresh token lifespan down from its
-      // original expiration time to its revocation grace period.
-      const prevExpiresAt = new Date(token.expiresAt)
-      const REFRESH_GRACE_MS = 2 * HOUR
-      const graceExpiresAt = new Date(now.getTime() + REFRESH_GRACE_MS)
-
-      const expiresAt =
-        graceExpiresAt < prevExpiresAt ? graceExpiresAt : prevExpiresAt
-
-      if (expiresAt <= now) {
-        return null
-      }
-
-      // Determine the next refresh token id: upon refresh token
-      // reuse you always receive a refresh token with the same id.
-      const nextId = token.nextId ?? auth.getRefreshTokenId()
-
-      // Update token w/ possibly-updated expiration time
-      // and next id, and tidy all of user's expired tokens.
-      await dbTxn.db
-        .updateTable('refresh_token')
-        .where('id', '=', id)
-        .set({ expiresAt: expiresAt.toISOString(), nextId })
-        .executeTakeFirst()
-
-      const { access, refresh } = auth.createTokens({
-        jwtSecret: this.jwtSecret,
-        did: token.did,
-
-        scope:
-          token.appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
-        jti: nextId,
-      })
-
-      await auth.storeRefreshToken(
-        dbTxn,
-        refresh.payload,
-        token.appPasswordName,
-      )
-
-      return { access, refresh }
-    })
-  }
-
-  async revokeRefreshToken(id: string) {
-    const { numDeletedRows } = await this.db.db
-      .deleteFrom('refresh_token')
-      .where('id', '=', id)
-      .executeTakeFirst()
-    return numDeletedRows > 0
+  async resetPassword(opts: { password: string; token: string }) {
+    const did = await emailToken.assertValidTokenAndFindDid(
+      this.db,
+      'reset_password',
+      opts.token,
+    )
+    const passwordScrypt = await scrypt.genSaltAndHash(opts.password)
+    await this.db.transaction(async (dbTxn) =>
+      Promise.all([
+        password.updateUserPassword(dbTxn, { did, passwordScrypt }),
+        emailToken.deleteEmailToken(dbTxn, did, 'reset_password'),
+        auth.revokeRefreshTokensByDid(dbTxn, did),
+      ]),
+    )
   }
 }

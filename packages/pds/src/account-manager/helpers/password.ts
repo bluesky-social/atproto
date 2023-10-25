@@ -4,6 +4,34 @@ import * as scrypt from './scrypt'
 import { AccountDb } from '../db'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 
+export const verifyAccountPassword = async (
+  db: AccountDb,
+  did: string,
+  password: string,
+): Promise<boolean> => {
+  const found = await db.db
+    .selectFrom('account')
+    .selectAll()
+    .where('did', '=', did)
+    .executeTakeFirst()
+  return found ? await scrypt.verify(password, found.passwordScrypt) : false
+}
+
+export const verifyAppPassword = async (
+  db: AccountDb,
+  did: string,
+  password: string,
+): Promise<string | null> => {
+  const passwordScrypt = await scrypt.hashAppPassword(did, password)
+  const found = await db.db
+    .selectFrom('app_password')
+    .selectAll()
+    .where('did', '=', did)
+    .where('passwordScrypt', '=', passwordScrypt)
+    .executeTakeFirst()
+  return found?.name ?? null
+}
+
 export const updateUserPassword = async (
   db: AccountDb,
   opts: {
