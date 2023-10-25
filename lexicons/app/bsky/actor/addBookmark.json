@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.actor.addBookmark",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Add a bookmark by URI",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri"],
+          "properties": {
+            "uri": { "type": "string", "format": "at-uri" }
+          }
+        }
+      }
+    }
+  }
+}

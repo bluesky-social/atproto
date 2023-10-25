@@ -1,0 +1,35 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.actor.listBookmarks",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List bookmarks by NSID",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "nsid": {
+            "type": "string",
+            "format": "nsid"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["bookmarks"],
+          "properties": {
+            "bookmarks": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.actor.defs#bookmark"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -195,6 +195,16 @@
           "description": "Show followed users at the top of all replies."
         }
       }
+    },
+    "bookmark": {
+      "type": "object",
+      "required": ["uri"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "at-uri"
+        }
+      }
     }
   }
 }

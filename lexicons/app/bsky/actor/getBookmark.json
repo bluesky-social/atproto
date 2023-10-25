@@ -1,0 +1,32 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.actor.getBookmark",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get a bookmark by URI",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "uri": {
+            "type": "string",
+            "format": "at-uri"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["bookmark"],
+          "properties": {
+            "bookmark": {
+              "type": "ref",
+              "ref": "app.bsky.actor.defs#bookmark"
+            }
+          }
+        }
+      }
+    }
+  }
+}

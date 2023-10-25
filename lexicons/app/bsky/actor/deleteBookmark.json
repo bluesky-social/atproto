@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.actor.deleteBookmark",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Delete a bookmark by URI",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri"],
+          "properties": {
+            "uri": { "type": "string", "format": "at-uri" }
+          }
+        }
+      }
+    }
+  }
+}
