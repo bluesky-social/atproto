@@ -9,7 +9,7 @@ export const LEADING_NUMBER_REGEX = /^\d/
  * Matches an inline hashtag, and includes any trailing punctuation.
  */
 export const HASHTAG_REGEX =
-  /(?:^|\s)(#[\p{L}\p{Emoji_Presentation}\p{Emoji_Modifier_Base}\p{Extended_Pictographic}]{1}[\p{L}\p{Emoji_Presentation}\p{Emoji_Modifier_Base}\p{Extended_Pictographic}\d_-]*)/gu
+  /(?:^|\s)(#(?!#|\d|\*)[\p{L}\p{Emoji}\p{Emoji_Component}]{1}(?![\p{L}\p{Emoji}\p{Emoji_Component}\d_-]*[*#])[\p{L}\p{Emoji}\p{Emoji_Component}\d_-]*)/gu
 
 /**
  * Matches an inline hashtag, and includes any trailing punctuation.
@@ -17,13 +17,15 @@ export const HASHTAG_REGEX =
  * This trailing punctuation must be removed before use.
  */
 export const HASHTAG_WITH_TRAILING_PUNCTUATION_REGEX =
-  /(?:^|\s)(#[\p{L}\p{Emoji_Presentation}\p{Emoji_Modifier_Base}\p{Extended_Pictographic}]{1}[\p{L}\p{Emoji_Presentation}\p{Emoji_Modifier_Base}\p{Extended_Pictographic}\d_-]*\p{P}*)/gu
+  /(?:^|\s)(#(?!#|\d|\*)[\p{L}\p{Emoji}\p{Emoji_Component}]{1}(?![\p{L}\p{Emoji}\p{Emoji_Component}\d_-]*[*#])[\p{L}\p{Emoji}\p{Emoji_Component}\d_-]*\p{P}*)/gu
 
 /**
- * Matches any characters NOT allowed in a hashtag
+ * Matches any characters NOT allowed in a hashtag.
  */
 export const HASHTAG_INVALID_CHARACTER_REGEX =
-  /[^\p{L}\p{Emoji_Presentation}\p{Emoji_Modifier_Base}\p{Extended_Pictographic}\d_-]/gu
+  // Both Emoji and Emoji_Component match * and #, so those are separately
+  // matched.
+  /(?:[^\p{L}\p{Emoji}\p{Emoji_Component}\d_-]|[*#])/gu
 
 /**
  * Sanitize a hashtag string.

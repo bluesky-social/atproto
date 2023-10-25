@@ -39,6 +39,7 @@ describe('HASHTAG_REGEX', () => {
       ['#tag', '#tag'],
       ['#1', undefined],
       ['#a1', '#a1'],
+      ['#_1', undefined],
       ['#_a', undefined],
       ['#-a', undefined],
       ['#a_', '#a_'],
@@ -46,14 +47,18 @@ describe('HASHTAG_REGEX', () => {
       ['test #tag', ' #tag'],
       ['test # tag', undefined],
       ['##hashhash', undefined],
+      ['#hash#hash', undefined],
+      ['#*asterisk', undefined],
+      ['#aster*isk', undefined],
       ['url.com/path#anchor', undefined],
       ['some #n0n3s@n5e!', ' #n0n3s'],
       ['works #with,punctuation', ' #with'],
       ['#🦋', '#🦋'],
       ['#👍🏿', '#👍🏿'],
+      ['#👩🏻‍✈️', '#👩🏻‍✈️'],
     ] as [string, string][]
   ).forEach(([input, output]: [string, string]) => {
-    it(input, () => {
+    it(`${input} -> ${output}`, () => {
       expect(input.match(HASHTAG_REGEX)?.[0]).toEqual(output)
     })
   })
@@ -69,7 +74,7 @@ describe('HASHTAG_REGEX', () => {
       ['#リス', '#リス'],
     ] as [string, string][]
   ).forEach(([input, output]: [string, string]) => {
-    it(input, () => {
+    it(`${input} -> ${output}`, () => {
       expect(input.match(HASHTAG_REGEX)?.[0]).toEqual(output)
     })
   })
@@ -85,7 +90,7 @@ describe('HASHTAG_WITH_TRAILING_PUNCTUATION_REGEX', () => {
       ['test #tag?', ' #tag?'],
     ] as [string, string][]
   ).forEach(([input, output]: [string, string]) => {
-    it(input, () => {
+    it(`${input} -> ${output}`, () => {
       expect(input.match(HASHTAG_WITH_TRAILING_PUNCTUATION_REGEX)?.[0]).toEqual(
         output,
       )
@@ -103,7 +108,7 @@ describe('TRAILING_PUNCTUATION_REGEX', () => {
       ['test #tag?', '?'],
     ] as [string, string][]
   ).forEach(([input, output]: [string, string]) => {
-    it(input, () => {
+    it(`${input} -> ${output}`, () => {
       expect(input.match(TRAILING_PUNCTUATION_REGEX)?.[0]).toEqual(output)
     })
   })
@@ -119,7 +124,7 @@ describe('LEADING_PUNCTUATION_REGEX', () => {
       ['?tag', '?'],
     ] as [string, string][]
   ).forEach(([input, output]: [string, string]) => {
-    it(input, () => {
+    it(`${input} -> ${output}`, () => {
       expect(input.match(LEADING_PUNCTUATION_REGEX)?.[0]).toEqual(output)
     })
   })
@@ -137,9 +142,12 @@ describe('HASHTAG_INVALID_CHARACTER_REGEX', () => {
       ['#butter🦋fly', 'butter🦋fly'],
       ['#👍🏿', '👍🏿'],
       ['pun.ctu.ati.on', 'punctuation'],
+      ['hash#hash', 'hashhash'],
+      ['*asterisk', 'asterisk'],
+      ['aster*isk', 'asterisk'],
     ] as [string, string][]
   ).forEach(([input, output]: [string, string]) => {
-    it(input, () => {
+    it(`${input} -> ${output}`, () => {
       expect(input.replace(HASHTAG_INVALID_CHARACTER_REGEX, '')).toEqual(output)
     })
   })
@@ -169,7 +177,7 @@ describe('validateHashtag', () => {
       ],
     ] as [string, boolean][]
   ).forEach(([input, valid]: [string, boolean]) => {
-    it(input, () => {
+    it(`${input} -> ${valid}`, () => {
       expect(validateHashtag(input)).toEqual(valid)
     })
   })
@@ -194,7 +202,7 @@ describe('sanitizeHashtag', () => {
       ['pun.ctu.ati.on', 'punctuation'],
     ] as [string, string][]
   ).forEach(([input, output]: [string, string]) => {
-    it(input, () => {
+    it(`${input} -> ${output}`, () => {
       expect(sanitizeHashtag(input)).toEqual(output)
     })
   })
