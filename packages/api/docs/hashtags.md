@@ -17,8 +17,19 @@ emoji.
 
 ## Sanitization
 
-You should sanitize a string before submitting it to the Bluesky API. This
-should include abiding by the rules listed above, as well as removing the
+Because the rules that dictate valid hashtags may need to change over time (due
+to new emojis being introduced, or due to poor initial specs) the decision was
+made to allow all characters in the hashtag rules, but then apply sanitization
+when reading and writing the tags. This ensures that changes to the "valid hashtag"
+rules will not break existing records.
+
+You should sanitize a hashtag string:
+
+- before saving it to a record,
+- before rendering the hashtag, and
+- before comparing hashtags to each other.
+
+This should include abiding by the rules listed above, as well as removing the
 leading `#` mark. We've provided a util for this purpose:
 
 ```typescript
