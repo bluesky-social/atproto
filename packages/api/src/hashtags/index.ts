@@ -11,6 +11,10 @@ export const LEADING_NUMBER_REGEX = /^\d/
 export const HASHTAG_REGEX =
   /(?:^|\s)(#(?!#|\d|\*)[\p{L}\p{Emoji}\p{Emoji_Component}]{1}(?![\p{L}\p{Emoji}\p{Emoji_Component}\d_-]*[*#][\p{L}\p{Emoji}\p{Emoji_Component}\d_-])[\p{L}\p{Emoji}\p{Emoji_Component}\d_-]*)/gu
 
+/***************************
+ * NOTE: keep these two in sync. They're exactly the same, except for matching punctuation characters at the end.
+ **************************/
+
 /**
  * Matches an inline hashtag, and includes any trailing punctuation.
  *
