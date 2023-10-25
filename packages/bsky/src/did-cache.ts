@@ -46,7 +46,7 @@ export class DidSqlCache implements DidCache {
   async refreshCache(
     did: string,
     getDoc: () => Promise<DidDocument | null>,
-    prevResult: CacheResult,
+    prevResult?: CacheResult,
   ): Promise<void> {
     this.pQueue?.add(async () => {
       try {
