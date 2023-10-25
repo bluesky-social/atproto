@@ -1,7 +1,7 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AccountDb, InviteCode } from './db'
-import { countAll } from '../db'
 import { chunkArray } from '@atproto/common'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AccountDb, InviteCode } from '../db'
+import { countAll } from '../../db'
 
 export const createInviteCodes = async (
   db: AccountDb,
@@ -105,7 +105,7 @@ export const ensureInviteIsAvailable = async (
   }
 }
 
-const selectInviteCodesQb = (db: AccountDb) => {
+export const selectInviteCodesQb = (db: AccountDb) => {
   const ref = db.db.dynamic.ref
   const builder = db.db
     .selectFrom('invite_code')
@@ -160,6 +160,65 @@ export const getInviteCodesUses = async (
     }
   }
   return uses
+}
+
+export const getInvitedByForAccounts = async (
+  db: AccountDb,
+  dids: string[],
+): Promise<Record<string, CodeDetail>> => {
+  if (dids.length < 1) return {}
+  const codeDetailsRes = await selectInviteCodesQb(db)
+    .where('code', 'in', (qb) =>
+      qb
+        .selectFrom('invite_code_use')
+        .where('usedBy', 'in', dids)
+        .select('code')
+        .distinct(),
+    )
+    .execute()
+  const uses = await getInviteCodesUses(
+    db,
+    codeDetailsRes.map((row) => row.code),
+  )
+  const codeDetails = codeDetailsRes.map((row) => ({
+    ...row,
+    uses: uses[row.code] ?? [],
+    disabled: row.disabled === 1,
+  }))
+  return codeDetails.reduce((acc, cur) => {
+    for (const use of cur.uses) {
+      acc[use.usedBy] = cur
+    }
+    return acc
+  }, {} as Record<string, CodeDetail>)
+}
+
+export const disableInviteCodes = async (
+  db: AccountDb,
+  opts: { codes: string[]; accounts: string[] },
+) => {
+  const { codes, accounts } = opts
+  if (codes.length === 0 && accounts.length === 0) return
+  let builder = db.db.updateTable('invite_code').set({ disabled: 1 })
+  if (codes.length > 0) {
+    builder = builder.where('code', 'in', codes)
+  }
+  if (accounts.length > 0) {
+    builder = builder.where('forAccount', 'in', accounts)
+  }
+  await builder.execute()
+}
+
+export const setAccountInvitesDisabled = async (
+  db: AccountDb,
+  did: string,
+  disabled: boolean,
+) => {
+  await db.db
+    .updateTable('account')
+    .where('did', '=', did)
+    .set({ invitesDisabled: disabled ? 1 : 0 })
+    .execute()
 }
 
 export type CodeDetail = {

@@ -7,8 +7,9 @@ import { notSoftDeletedClause } from '../../../../db/util'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listRepos(async ({ params }) => {
     const { limit, cursor } = params
-    const { ref } = ctx.db.db.dynamic
-    let builder = ctx.db.db
+    const db = ctx.accountManager.db
+    const { ref } = db.db.dynamic
+    let builder = db.db
       .selectFrom('account')
       .innerJoin('repo_root', 'repo_root.did', 'account.did')
       .where(notSoftDeletedClause(ref('account')))

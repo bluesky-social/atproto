@@ -1,5 +1,6 @@
-import { notSoftDeletedClause } from '../db'
-import { AccountDb, AccountEntry } from './db'
+import { notSoftDeletedClause } from '../../db'
+import { AccountDb, AccountEntry } from '../db'
+import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 
 export const getAccount = async (
   db: AccountDb,
@@ -121,4 +122,34 @@ export const setEmailConfirmedAt = async (
     .set({ emailConfirmedAt })
     .where('did', '=', did)
     .execute()
+}
+
+export const getAccountTakedownStatus = async (
+  db: AccountDb,
+  did: string,
+): Promise<StatusAttr | null> => {
+  const res = await db.db
+    .selectFrom('account')
+    .select('takedownId')
+    .where('did', '=', did)
+    .executeTakeFirst()
+  if (!res) return null
+  return res.takedownId
+    ? { applied: true, ref: res.takedownId }
+    : { applied: false }
+}
+
+export const updateAccountTakedownStatus = async (
+  db: AccountDb,
+  did: string,
+  takedown: StatusAttr,
+) => {
+  const takedownId = takedown.applied
+    ? takedown.ref ?? new Date().toISOString()
+    : null
+  await db.db
+    .updateTable('account')
+    .set({ takedownId })
+    .where('did', '=', did)
+    .executeTakeFirst()
 }

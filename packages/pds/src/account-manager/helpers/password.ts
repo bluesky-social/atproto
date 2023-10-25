@@ -1,8 +1,8 @@
 import { randomStr } from '@atproto/crypto'
-import * as scrypt from './scrypt'
-import { AppPassword } from '../lexicon/types/com/atproto/server/createAppPassword'
-import { AccountDb } from './db'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import * as scrypt from './scrypt'
+import { AccountDb } from '../db'
+import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 
 export const updateUserPassword = async (
   db: AccountDb,

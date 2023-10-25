@@ -1,19 +1,24 @@
 import { AccountDb, AccountEntry, EmailTokenPurpose } from './db'
-import * as scrypt from './scrypt'
-import * as account from './account'
-import * as repo from './repo'
-import * as auth from './auth'
-import * as invite from './invite'
-import * as password from './password'
-import * as emailToken from './email-token'
+import * as scrypt from './helpers/scrypt'
+import * as account from './helpers/account'
+import * as repo from './helpers/repo'
+import * as auth from './helpers/auth'
+import * as invite from './helpers/invite'
+import * as password from './helpers/password'
+import * as emailToken from './helpers/email-token'
 import { AuthScope } from '../auth-verifier'
 import { HOUR } from '@atproto/common'
 import { CID } from 'multiformats/cid'
+import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
 
 export class AccountManager {
   db: AccountDb
 
   constructor(dbLocation: string, private jwtSecret: string) {}
+
+  async close() {
+    await this.db.close()
+  }
 
   // Account Info
 
@@ -29,6 +34,20 @@ export class AccountManager {
     includeSoftDeleted = false,
   ): Promise<AccountEntry | null> {
     return account.getAccountByEmail(this.db, email, includeSoftDeleted)
+  }
+
+  // Repo exists and is not taken-down
+  async isRepoAvailable(did: string) {
+    const got = await this.getAccount(did)
+    return !!got
+  }
+
+  async getDidForActor(
+    handleOrDid: string,
+    includeSoftDeleted = false,
+  ): Promise<string | null> {
+    const got = await this.getAccount(handleOrDid, includeSoftDeleted)
+    return got?.did ?? null
   }
 
   async createAccount(opts: {
@@ -63,6 +82,10 @@ export class AccountManager {
     return { access, refresh }
   }
 
+  async updateRepoRoot(did: string, cid: CID, rev: string) {
+    return repo.updateRoot(this.db, did, cid, rev)
+  }
+
   async ensureInviteIsAvailable(code: string) {
     return invite.ensureInviteIsAvailable(this.db, code)
   }
@@ -94,8 +117,24 @@ export class AccountManager {
     return invite.getAccountInviteCodes(this.db, did)
   }
 
+  async getInvitedByForAccounts(dids: string[]) {
+    return invite.getInvitedByForAccounts(this.db, dids)
+  }
+
+  async getInviteCodesUses(codes: string[]) {
+    return invite.getInviteCodesUses(this.db, codes)
+  }
+
   async createEmailToken(did: string, purpose: EmailTokenPurpose) {
     return emailToken.createEmailToken(this.db, did, purpose)
+  }
+
+  async setAccountInvitesDisabled(did: string, disabled: boolean) {
+    return invite.setAccountInvitesDisabled(this.db, did, disabled)
+  }
+
+  async disableInviteCodes(opts: { codes: string[]; accounts: string[] }) {
+    return invite.disableInviteCodes(this.db, opts)
   }
 
   async assertValidEmailToken(
@@ -136,6 +175,19 @@ export class AccountManager {
 
   async deleteAccount(did: string) {
     return account.deleteAccount(this.db, did)
+  }
+
+  async takedownAccount(did: string, takedown: StatusAttr) {
+    await this.db.transaction((dbTxn) =>
+      Promise.all([
+        account.updateAccountTakedownStatus(dbTxn, did, takedown),
+        auth.revokeRefreshTokensByDid(dbTxn, did),
+      ]),
+    )
+  }
+
+  async getAccountTakedownStatus(did: string) {
+    return account.getAccountTakedownStatus(this.db, did)
   }
 
   async verifyAccountPassword(did: string, password: string): Promise<boolean> {

@@ -34,8 +34,8 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           did: user.did,
           handle: user.handle ?? INVALID_HANDLE,
-          accessJwt: res.access,
-          refreshJwt: res.refresh,
+          accessJwt: res.access.jwt,
+          refreshJwt: res.refresh.jwt,
         },
       }
     },

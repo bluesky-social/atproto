@@ -2,7 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { genInvCodes } from './util'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { CodeDetail } from '../../../../account-manager/invite'
+import { CodeDetail } from '../../../../account-manager/helpers/invite'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getAccountInviteCodes({

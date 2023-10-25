@@ -1,8 +1,8 @@
 import * as jwt from 'jsonwebtoken'
 import * as ui8 from 'uint8arrays'
 import * as crypto from '@atproto/crypto'
-import { AuthScope } from '../auth-verifier'
-import { AccountDb } from './db'
+import { AuthScope } from '../../auth-verifier'
+import { AccountDb } from '../db'
 
 export type AuthToken = {
   scope: AuthScope

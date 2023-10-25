@@ -15,19 +15,14 @@ export default function (server: Server, ctx: AppContext) {
         recipientDid,
         subject = 'Message from Bluesky moderator',
       } = input.body
-      const userInfo = await ctx.db.db
-        .selectFrom('account')
-        .where('did', '=', recipientDid)
-        .select('email')
-        .executeTakeFirst()
-
-      if (!userInfo) {
+      const account = await ctx.accountManager.getAccount(recipientDid)
+      if (!account) {
         throw new InvalidRequestError('Recipient not found')
       }
 
       await ctx.moderationMailer.send(
         { content },
-        { subject, to: userInfo.email },
+        { subject, to: account.email },
       )
       return {
         encoding: 'application/json',

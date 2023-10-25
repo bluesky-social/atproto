@@ -48,7 +48,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const tx = input.body
       const { repo, validate, swapCommit } = tx
-      const did = await ctx.services.account(ctx.db).getDidForActor(repo)
+      const did = await ctx.accountManager.getDidForActor(repo)
 
       if (!did) {
         throw new InvalidRequestError(`Could not find repo: ${repo}`)
@@ -120,9 +120,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       await ctx.sequencer.sequenceCommit(did, commit, writes)
-      await ctx.services
-        .account(ctx.db)
-        .updateRepoRoot(did, commit.cid, commit.rev)
+      await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
     },
   })
 }
