@@ -253,7 +253,7 @@ describe('detectFacets', () => {
         [],
         [],
       ],
-      ['its a #double#rainbow', ['double'], [{ byteStart: 6, byteEnd: 13 }]],
+      ['its a #double#rainbow', [], []],
       ['##hashash', [], []],
       ['bsky.app/profile#header', [], []],
       ['some #n0n3s@n5e!', ['n0n3s'], [{ byteStart: 5, byteEnd: 11 }]],
