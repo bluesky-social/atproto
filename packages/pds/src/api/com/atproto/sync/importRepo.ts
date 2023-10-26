@@ -1,6 +1,8 @@
 import { Readable } from 'stream'
+import assert from 'assert'
 import PQueue from 'p-queue'
 import axios from 'axios'
+import { CID } from 'multiformats/cid'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AsyncBuffer, TID } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
@@ -12,14 +14,12 @@ import {
   readCarStream,
   verifyIncomingCarBlocks,
 } from '@atproto/repo'
+import { BlobRef, LexValue } from '@atproto/lexicon'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { SqlRepoTransactor } from '../../../../actor-store/repo/sql-repo-transactor'
 import { RecordTransactor } from '../../../../actor-store/record/transactor'
-import { BlobRef, LexValue } from '@atproto/lexicon'
-import { CID } from 'multiformats/cid'
 import { BlobTransactor } from '../../../../actor-store/blob/transactor'
-import assert from 'assert'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.importRepo({
