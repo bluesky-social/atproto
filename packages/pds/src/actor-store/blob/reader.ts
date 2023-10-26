@@ -48,6 +48,7 @@ export class BlobReader {
       .selectFrom('record_blob')
       .select('blobCid')
       .orderBy('blobCid', 'asc')
+      .groupBy('blobCid')
       .limit(limit)
     if (since) {
       builder = builder

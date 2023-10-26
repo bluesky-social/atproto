@@ -3,6 +3,7 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
+import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.refreshSession({
@@ -22,10 +23,11 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const res = await ctx.accountManager.rotateRefreshToken(
-        auth.credentials.tokenId,
-      )
-      if (res === null) {
+      const [didDoc, rotated] = await Promise.all([
+        didDocForSession(ctx, user.did),
+        ctx.accountManager.rotateRefreshToken(auth.credentials.tokenId),
+      ])
+      if (rotated === null) {
         throw new InvalidRequestError('Token has been revoked', 'ExpiredToken')
       }
 
@@ -33,9 +35,10 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           did: user.did,
+          didDoc,
           handle: user.handle ?? INVALID_HANDLE,
-          accessJwt: res.access.jwt,
-          refreshJwt: res.refresh.jwt,
+          accessJwt: rotated.access.jwt,
+          refreshJwt: rotated.refresh.jwt,
         },
       }
     },
