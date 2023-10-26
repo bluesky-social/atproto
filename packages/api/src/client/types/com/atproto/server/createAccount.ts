@@ -16,6 +16,7 @@ export interface InputSchema {
   inviteCode?: string
   password: string
   recoveryKey?: string
+  plcOp?: Uint8Array
   [k: string]: unknown
 }
 
@@ -24,6 +25,7 @@ export interface OutputSchema {
   refreshJwt: string
   handle: string
   did: string
+  didDoc?: {}
   [k: string]: unknown
 }
 

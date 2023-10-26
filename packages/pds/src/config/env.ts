@@ -36,6 +36,7 @@ export const readEnv = (): ServerEnvironment => {
     recoveryDidKey: envStr('PDS_RECOVERY_DID_KEY'),
     serviceHandleDomains: envList('PDS_SERVICE_HANDLE_DOMAINS'),
     handleBackupNameservers: envList('PDS_HANDLE_BACKUP_NAMESERVERS'),
+    enableDidDocWithSession: envBool('PDS_ENABLE_DID_DOC_WITH_SESSION'),
 
     // invites
     inviteRequired: envBool('PDS_INVITE_REQUIRED'),
@@ -125,6 +126,7 @@ export type ServerEnvironment = {
   recoveryDidKey?: string
   serviceHandleDomains?: string[] // public hostname by default
   handleBackupNameservers?: string[]
+  enableDidDocWithSession?: boolean
 
   // invites
   inviteRequired?: boolean

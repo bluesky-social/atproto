@@ -110,6 +110,9 @@ importers:
       typed-emitter:
         specifier: ^2.1.0
         version: 2.1.0
+      zod:
+        specifier: ^3.21.4
+        version: 3.21.4
     devDependencies:
       '@atproto/dev-env':
         specifier: workspace:^
@@ -407,9 +410,6 @@ importers:
       axios:
         specifier: ^0.27.2
         version: 0.27.2
-      zod:
-        specifier: ^3.21.4
-        version: 3.21.4
     devDependencies:
       '@did-plc/lib':
         specifier: ^0.0.1
