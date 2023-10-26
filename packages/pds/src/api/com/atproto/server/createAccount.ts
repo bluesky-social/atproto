@@ -214,7 +214,7 @@ const getDidAndPlcOp = async (
 }> => {
   const pdsEndpoint = pds ? getPdsEndpoint(pds.host) : ctx.cfg.service.publicUrl
   const pdsSigningKey = pds
-    ? await getSigningKey(pds.host)
+    ? await reserveSigningKey(pds.host)
     : ctx.repoSigningKey.did()
 
   // if the user brings their own PLC op then we validate it then submit it to PLC on their behalf
@@ -333,9 +333,9 @@ const assignPds = async (ctx: AppContext) => {
   return pdses.at(idx)
 }
 
-const getSigningKey = async (host: string) => {
+const reserveSigningKey = async (host: string) => {
   const agent = new AtpAgent({ service: getPdsEndpoint(host) })
-  const result = await agent.com.atproto.server.getSigningKey()
+  const result = await agent.com.atproto.server.reserveSigningKey()
   return result.data.signingKey
 }
 

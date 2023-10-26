@@ -7,7 +7,7 @@ import createAccount from './createAccount'
 import createInviteCode from './createInviteCode'
 import createInviteCodes from './createInviteCodes'
 import getAccountInviteCodes from './getAccountInviteCodes'
-import getSigningKey from './getSigningKey'
+import reserveSigningKey from './reserveSigningKey'
 
 import requestDelete from './requestAccountDelete'
 import deleteAccount from './deleteAccount'
@@ -36,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
   createInviteCode(server, ctx)
   createInviteCodes(server, ctx)
   getAccountInviteCodes(server, ctx)
-  getSigningKey(server, ctx)
+  reserveSigningKey(server, ctx)
   requestDelete(server, ctx)
   deleteAccount(server, ctx)
   requestPasswordReset(server, ctx)

@@ -2811,29 +2811,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoServerGetSigningKey: {
-    lexicon: 1,
-    id: 'com.atproto.server.getSigningKey',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Get a repo signing key for account creation.',
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['signingKey'],
-            properties: {
-              signingKey: {
-                type: 'string',
-                description: 'Public signing key in the form of a did:key.',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   ComAtprotoServerListAppPasswords: {
     lexicon: 1,
     id: 'com.atproto.server.listAppPasswords',
@@ -7422,7 +7399,6 @@ export const ids = {
   ComAtprotoServerGetAccountInviteCodes:
     'com.atproto.server.getAccountInviteCodes',
   ComAtprotoServerGetSession: 'com.atproto.server.getSession',
-  ComAtprotoServerGetSigningKey: 'com.atproto.server.getSigningKey',
   ComAtprotoServerListAppPasswords: 'com.atproto.server.listAppPasswords',
   ComAtprotoServerRefreshSession: 'com.atproto.server.refreshSession',
   ComAtprotoServerRequestAccountDelete:
