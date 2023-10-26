@@ -4,10 +4,20 @@ import {
   getDid,
   getHandle,
   getPdsEndpoint,
+  getFeedGenEndpoint,
+  getNotifEndpoint,
   getSigningKey,
 } from '@atproto/common-web'
 
-export const parseKey = (doc: DidDocument): string | undefined => {
+export {
+  getDid,
+  getHandle,
+  getPdsEndpoint as getPds,
+  getFeedGenEndpoint as getFeedGen,
+  getNotifEndpoint as getNotif,
+}
+
+export const getKey = (doc: DidDocument): string | undefined => {
   const key = getSigningKey(doc)
   if (!key) return undefined
 
@@ -30,7 +40,7 @@ export const parseToAtprotoDocument = (
   const did = getDid(doc)
   return {
     did,
-    signingKey: parseKey(doc),
+    signingKey: getKey(doc),
     handle: getHandle(doc),
     pds: getPdsEndpoint(doc),
   }
