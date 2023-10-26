@@ -2,8 +2,7 @@ import PQueue from 'p-queue'
 import { CacheResult, DidCache, DidDocument } from '@atproto/identity'
 import { excluded } from '../db/util'
 import { didCacheLogger } from '../logger'
-import { DidCacheDb, getMigrator } from './db'
-import { Database } from '../db'
+import { DidCacheDb, getMigrator, getDb } from './db'
 
 export class DidSqliteCache implements DidCache {
   db: DidCacheDb
@@ -14,7 +13,7 @@ export class DidSqliteCache implements DidCache {
     public staleTTL: number,
     public maxTTL: number,
   ) {
-    this.db = Database.sqlite(dbLocation)
+    this.db = getDb(dbLocation)
     this.pQueue = new PQueue()
   }
 
