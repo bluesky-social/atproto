@@ -1,3 +1,4 @@
+import os from 'os'
 import path from 'path'
 import fs from 'fs/promises'
 import * as crypto from '@atproto/crypto'
@@ -22,11 +23,13 @@ type ActorStoreResources = {
   dbDirectory: string
   blobstore: (did: string) => BlobStore
   backgroundQueue: BackgroundQueue
+  reservedKeyDir?: string
 }
 
 export class ActorStore {
   dbCache: LRUCache<string, ActorDb>
   keyCache: LRUCache<string, Keypair>
+  reservedKeyDir: string
 
   constructor(public resources: ActorStoreResources) {
     this.dbCache = new LRUCache<string, ActorDb>({
@@ -54,6 +57,8 @@ export class ActorStore {
         return crypto.Secp256k1Keypair.import(privKey)
       },
     })
+    this.reservedKeyDir =
+      resources.reservedKeyDir ?? path.join(os.tmpdir(), 'reserved_keys')
   }
 
   private async getLocation(did: string) {
@@ -70,6 +75,15 @@ export class ActorStore {
       throw new InvalidRequestError('Keypair not found', 'NotFound')
     }
     return got
+  }
+
+  async reserveKeypair(): Promise<string> {
+    const keypair = await crypto.Secp256k1Keypair.create({ exportable: true })
+    const keyDid = keypair.did()
+    const keyLoc = path.join(this.reservedKeyDir, keyDid)
+    await mkdir(this.reservedKeyDir, { recursive: true })
+    await fs.writeFile(keyLoc, await keypair.export())
+    return keyDid
   }
 
   async db(did: string): Promise<ActorDb> {
