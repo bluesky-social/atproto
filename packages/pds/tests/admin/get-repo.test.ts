@@ -108,9 +108,8 @@ describe('pds admin get repo view', () => {
       { email: bobsAccount.email, token: verificationToken },
       {
         encoding: 'application/json',
-        headers: {
-          authorization: `Bearer ${bobsAccount.accessJwt}`,
-        },
+
+        headers: sc.getHeaders(sc.dids.bob),
       },
     )
     const { data: afterEmailVerification } =

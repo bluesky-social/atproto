@@ -21,6 +21,7 @@ import { AccountService } from '../account'
 import { RecordService } from '../record'
 import { ModerationReportRowWithHandle } from '.'
 import { ids } from '../../lexicon/lexicons'
+import { UserAccount } from '../../db/tables/user-account'
 
 export class ModerationViews {
   constructor(private db: Database) {}
@@ -180,8 +181,7 @@ export class ModerationViews {
           'in',
           results.map((r) => didFromUri(r.uri)),
         )
-        .selectAll('repo_root')
-        .selectAll('did_handle')
+        .selectAll(['repo_root', 'did_handle'])
         .execute(),
       this.db.db
         .selectFrom('repo_blob')
@@ -606,7 +606,10 @@ export class ModerationViews {
   }
 }
 
-type RepoResult = DidHandle & RepoRoot
+type RepoResult = DidHandle &
+  RepoRoot & {
+    emailConfirmedAt?: string | null
+  }
 
 type ActionResult = Selectable<ModerationAction>
 
