@@ -3,15 +3,14 @@ import fs from 'fs/promises'
 import * as crypto from '@atproto/crypto'
 import { Keypair, ExportableKeypair } from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
-import { fileExists, isErrnoException, rmIfExists, wait } from '@atproto/common'
-import { ActorDb, getMigrator } from './db'
+import { fileExists, rmIfExists } from '@atproto/common'
+import { ActorDb, getDb, getMigrator } from './db'
 import { BackgroundQueue } from '../background'
 import { RecordReader } from './record/reader'
 import { PreferenceReader } from './preference/reader'
 import { RepoReader } from './repo/reader'
 import { RepoTransactor } from './repo/transactor'
 import { PreferenceTransactor } from './preference/preference'
-import { Database } from '../db'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { RecordTransactor } from './record/transactor'
 import { CID } from 'multiformats/cid'
@@ -44,7 +43,7 @@ export class ActorStore {
 
         // if fetch is aborted then another handler opened the db first
         // so we can close this handle and return `undefined`
-        return signal.aborted ? undefined : Database.sqlite(dbLocation)
+        return signal.aborted ? undefined : getDb(dbLocation)
       },
     })
     this.keyCache = new LRUCache<string, Keypair>({
@@ -93,14 +92,10 @@ export class ActorStore {
 
   async transact<T>(did: string, fn: ActorStoreTransactFn<T>) {
     const [db, keypair] = await Promise.all([this.db(did), this.keypair(did)])
-    const result = await transactAndRetryOnLock(
-      did,
-      db,
-      keypair,
-      this.resources,
-      fn,
-    )
-    return result
+    return db.transaction((dbTxn) => {
+      const store = createActorTransactor(did, dbTxn, keypair, this.resources)
+      return fn(store)
+    })
   }
 
   async create<T>(
@@ -115,7 +110,7 @@ export class ActorStore {
     if (exists) {
       throw new InvalidRequestError('Repo already exists', 'AlreadyExists')
     }
-    const db: ActorDb = Database.sqlite(dbLocation)
+    const db: ActorDb = getDb(dbLocation)
     const migrator = getMigrator(db)
     const privKey = await keypair.export()
     await Promise.all([
@@ -169,41 +164,6 @@ export class ActorStore {
   }
 }
 
-const transactAndRetryOnLock = async <T>(
-  did: string,
-  db: ActorDb,
-  keypair: Keypair,
-  resources: ActorStoreResources,
-  fn: ActorStoreTransactFn<T>,
-  retryNumber = 0,
-) => {
-  try {
-    return await db.transaction((dbTxn) => {
-      const store = createActorTransactor(did, dbTxn, keypair, resources)
-      return fn(store)
-    })
-  } catch (err) {
-    if (isErrnoException(err) && err.code === 'SQLITE_BUSY') {
-      if (retryNumber > 10) {
-        throw new InvalidRequestError(
-          'Too many concurrent writes',
-          'ConcurrentWrite',
-        )
-      }
-      await wait(Math.pow(2, retryNumber))
-      return transactAndRetryOnLock(
-        did,
-        db,
-        keypair,
-        resources,
-        fn,
-        retryNumber + 1,
-      )
-    }
-    throw err
-  }
-}
-
 const createActorTransactor = (
   did: string,
   db: ActorDb,
@@ -233,7 +193,10 @@ const createActorReader = (
     record: new RecordReader(db),
     pref: new PreferenceReader(db),
     transact: async <T>(fn: ActorStoreTransactFn<T>): Promise<T> => {
-      return transactAndRetryOnLock(did, db, keypair, resources, fn)
+      return db.transaction((dbTxn) => {
+        const store = createActorTransactor(did, dbTxn, keypair, resources)
+        return fn(store)
+      })
     },
   }
 }

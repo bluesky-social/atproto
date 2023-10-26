@@ -11,15 +11,29 @@ import {
 } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 
+const DEFAULT_PRAGMAS = {
+  journal_mode: 'WAL',
+  busy_timeout: '5000',
+}
+
 export class Database<Schema> {
   destroyed = false
   commitHooks: CommitHook[] = []
 
   constructor(public db: Kysely<Schema>) {}
 
-  static sqlite<T>(location: string): Database<T> {
+  static sqlite<T>(
+    location: string,
+    opts?: { pragmas?: Record<string, string> },
+  ): Database<T> {
     const sqliteDb = new SqliteDB(location)
-    sqliteDb.pragma('journal_mode = WAL')
+    const pragmas = {
+      ...DEFAULT_PRAGMAS,
+      ...(opts?.pragmas ?? {}),
+    }
+    for (const pragma of Object.keys(pragmas)) {
+      sqliteDb.pragma(`${pragma} = ${pragmas[pragma]}`)
+    }
     const db = new Kysely<T>({
       dialect: new SqliteDialect({
         database: sqliteDb,
