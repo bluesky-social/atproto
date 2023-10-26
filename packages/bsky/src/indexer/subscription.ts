@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
-import { cborDecode, wait } from '@atproto/common'
+import { cborDecode, wait, handleAllSettledErrors } from '@atproto/common'
 import { DisconnectError } from '@atproto/xrpc-server'
 import {
   WriteOpAction,
@@ -343,23 +343,3 @@ type PreparedDelete = {
 }
 
 type PreparedWrite = PreparedCreate | PreparedUpdate | PreparedDelete
-
-function handleAllSettledErrors(results: PromiseSettledResult<unknown>[]) {
-  const errors = results.filter(isRejected).map((res) => res.reason)
-  if (errors.length === 0) {
-    return
-  }
-  if (errors.length === 1) {
-    throw errors[0]
-  }
-  throw new AggregateError(
-    errors,
-    'Multiple errors: ' + errors.map((err) => err?.message).join('\n'),
-  )
-}
-
-function isRejected(
-  result: PromiseSettledResult<unknown>,
-): result is PromiseRejectedResult {
-  return result.status === 'rejected'
-}

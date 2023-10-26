@@ -42,12 +42,10 @@ describe('auth', () => {
       headers: SeedClient.getHeaders(jwt),
     })
   }
-  const refreshSession = async (jwt) => {
+  const refreshSession = async (jwt: string) => {
     const { data } = await agent.api.com.atproto.server.refreshSession(
       undefined,
-      {
-        headers: SeedClient.getHeaders(jwt),
-      },
+      { headers: SeedClient.getHeaders(jwt) },
     )
     return data
   }
@@ -223,19 +221,18 @@ describe('auth', () => {
   })
 
   it('expired refresh token cannot be used to refresh a session.', async () => {
-    const { auth } = network.pds.ctx
+    const { services, db } = network.pds.ctx
     const account = await createAccount({
       handle: 'holga.test',
       email: 'holga@test.com',
       password: 'password',
     })
-    const refreshJwt = await auth.createRefreshToken({
-      did: account.did,
-      expiresIn: -1,
-    })
-    const refreshExpired = refreshSession(refreshJwt)
+    const refresh = await services
+      .auth(db)
+      .createRefreshToken({ did: account.did, expiresIn: -1 })
+    const refreshExpired = refreshSession(refresh)
     await expect(refreshExpired).rejects.toThrow('Token has expired')
-    await deleteSession(refreshJwt) // No problem revoking an expired token
+    await deleteSession(refresh) // No problem revoking an expired token
   })
 
   it('actor takedown disallows fresh session.', async () => {

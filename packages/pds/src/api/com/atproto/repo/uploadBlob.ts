@@ -10,7 +10,7 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.uploadBlob({
-    auth: ctx.accessVerifierCheckTakedown,
+    auth: ctx.authVerifier.accessCheckTakedown,
     handler: async ({ auth, input, req }) => {
       const proxied = await proxy(
         ctx,

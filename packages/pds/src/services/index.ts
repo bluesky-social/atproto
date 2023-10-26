@@ -10,11 +10,14 @@ import { ModerationService } from './moderation'
 import { BackgroundQueue } from '../background'
 import { Crawlers } from '../crawlers'
 import { LocalService } from './local'
+import { AuthKeys } from '../auth-verifier'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
   blobstore: BlobStore
   pdsHostname: string
+  authKeys: AuthKeys
+  identityDid: string
   appViewAgent?: AtpAgent
   appViewDid?: string
   appViewCdnUrlPattern?: string
@@ -25,6 +28,8 @@ export function createServices(resources: {
     repoSigningKey,
     blobstore,
     pdsHostname,
+    authKeys,
+    identityDid,
     appViewAgent,
     appViewDid,
     appViewCdnUrlPattern,
@@ -33,7 +38,7 @@ export function createServices(resources: {
   } = resources
   return {
     account: AccountService.creator(),
-    auth: AuthService.creator(),
+    auth: AuthService.creator(identityDid, authKeys),
     record: RecordService.creator(),
     repo: RepoService.creator(
       repoSigningKey,

@@ -7,7 +7,7 @@ import { authPassthru, proxy, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
-    auth: ctx.accessOrRoleVerifier,
+    auth: ctx.authVerifier.accessOrRole,
     handler: async ({ req, auth, params }) => {
       if (auth.credentials.type === 'access') {
         const proxied = await proxy(

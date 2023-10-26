@@ -7,7 +7,7 @@ import { handleReadAfterWrite } from '../util/read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfiles({
-    auth: ctx.accessVerifier,
+    auth: ctx.authVerifier.access,
     handler: async ({ auth, params, req }) => {
       const proxied = await proxy(
         ctx,

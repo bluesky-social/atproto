@@ -45,7 +45,6 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
   let jwtVerifyKey: ServerSecrets['jwtVerifyKey']
   if (env.jwtVerifyKeyK256PublicKeyHex) {
     jwtVerifyKey = {
-      provider: 'memory',
       publicKeyHex: env.jwtVerifyKeyK256PublicKeyHex,
     }
   }
@@ -74,7 +73,7 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
 export type ServerSecrets = {
   jwtSecret: string
   jwtSigningKey?: SigningKeyMemory
-  jwtVerifyKey?: VerifyKeyMemory
+  jwtVerifyKey?: VerifyKey
   adminPassword: string
   moderatorPassword: string
   triagePassword: string
@@ -92,7 +91,6 @@ export type SigningKeyMemory = {
   privateKeyHex: string
 }
 
-export type VerifyKeyMemory = {
-  provider: 'memory'
+export type VerifyKey = {
   publicKeyHex: string
 }

@@ -22,6 +22,9 @@ export default function (server: Server, ctx: AppContext) {
     },
     handler: async ({ input, req }) => {
       const { email, password, inviteCode } = input.body
+      if (input.body.plcOp) {
+        throw new InvalidRequestError('Unsupported input: "plcOp"')
+      }
 
       if (!ctx.cfg.service.isEntryway && !input.body.did && !input.body.plcOp) {
         throw new InvalidRequestError(
@@ -119,15 +122,13 @@ export default function (server: Server, ctx: AppContext) {
             .execute()
         }
 
-        const [accessJwt, refreshJwt] = await Promise.all([
-          ctx.auth.createAccessToken({ did, pdsDid: pds?.did }),
-          ctx.auth.createRefreshToken({
+        const { access, refresh } = await ctx.services
+          .auth(dbTxn)
+          .createSession({
             did,
-            identityDid: ctx.cfg.service.did,
-          }),
-        ])
-        const refreshPayload = ctx.auth.decodeRefreshToken(refreshJwt)
-        await ctx.services.auth(dbTxn).grantRefreshToken(refreshPayload, null)
+            pdsDid: pds?.did ?? null,
+            appPasswordName: null,
+          })
 
         if (!pds || isThisPds(ctx, pds.did)) {
           // Setup repo root
@@ -143,8 +144,8 @@ export default function (server: Server, ctx: AppContext) {
 
         return {
           did,
-          accessJwt,
-          refreshJwt,
+          accessJwt: access,
+          refreshJwt: refresh,
         }
       })
 

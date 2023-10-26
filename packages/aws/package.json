@@ -24,6 +24,7 @@
     "update-main-to-dist": "node ../../update-main-to-dist.js packages/aws"
   },
   "dependencies": {
+    "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@aws-sdk/client-cloudfront": "^3.261.0",

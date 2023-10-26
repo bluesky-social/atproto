@@ -343,10 +343,12 @@ describe('entryway', () => {
       handle: 'carol.test',
       password: 'test123',
     })
-    const outdatedAccessToken = await entryway.ctx.auth.createAccessToken({
-      did,
-      pdsDid: pds.ctx.cfg.service.did, // pretending that carol was previously on this pds
-    })
+    const outdatedAccessToken = await entryway.ctx.services
+      .auth(entryway.ctx.db)
+      .createAccessToken({
+        did,
+        pdsDid: pds.ctx.cfg.service.did, // pretending that carol was previously on this pds
+      })
     // attempt a write again on carol's previous pds with same creds
     const tryPutRecord = entrywayAgent.com.atproto.repo.putRecord(
       {

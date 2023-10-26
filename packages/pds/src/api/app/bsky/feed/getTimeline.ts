@@ -7,7 +7,7 @@ import { authPassthru, proxy, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
-    auth: ctx.accessVerifier,
+    auth: ctx.authVerifier.access,
     handler: async ({ params, auth, req }) => {
       const proxied = await proxy(
         ctx,

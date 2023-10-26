@@ -39,6 +39,7 @@ export function toKnownErr(e: any) {
 export interface Repo {
   did: string
   head: string
+  rev: string
   [k: string]: unknown
 }
 

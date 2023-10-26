@@ -1,24 +1,19 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
-import { AuthScope } from '../../../../auth'
+import { AuthScope } from '../../../../auth-verifier'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deleteSession(async ({ req }) => {
-    const token = ctx.auth.getToken(req)
-    if (!token) {
-      throw new AuthRequiredError()
-    }
-    const refreshToken = await ctx.auth.verifyToken(
-      token,
+    const result = await ctx.authVerifier.validateBearerToken(
+      req,
       [AuthScope.Refresh],
       { clockTolerance: Infinity }, // ignore expiration
     )
-
-    if (!refreshToken.jti) {
+    const id = result.payload.jti
+    if (!id) {
       throw new Error('Unexpected missing refresh token id')
     }
 
-    await ctx.services.auth(ctx.db).revokeRefreshToken(refreshToken.jti)
+    await ctx.services.auth(ctx.db).revokeRefreshToken(id)
   })
 }
