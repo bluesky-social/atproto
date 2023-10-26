@@ -11,12 +11,16 @@ export default function (server: Server, ctx: AppContext) {
       const event = await moderationService.getEventOrThrow(id)
       const [eventDetail, subjectStatus] = await Promise.all([
         moderationService.views.eventDetail(event),
-        moderationService.getSubjectStatuses({
-          limit: 1,
-          sortDirection: 'desc',
-          sortField: 'lastReportedAt',
-          subject: event.subjectUri ? event.subjectUri : event.subjectDid,
-        }),
+        moderationService
+          .getSubjectStatuses({
+            limit: 1,
+            sortDirection: 'desc',
+            sortField: 'lastReportedAt',
+            subject: event.subjectUri ? event.subjectUri : event.subjectDid,
+          })
+          .then((statuses) =>
+            moderationService.views.subjectStatus(statuses[0]),
+          ),
       ])
       return {
         encoding: 'application/json',

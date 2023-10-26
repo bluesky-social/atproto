@@ -49,6 +49,13 @@ export const getReasonType = (reasonType: ReportInput['reasonType']) => {
   throw new InvalidRequestError('Invalid reason type')
 }
 
+export const getEventType = (type: string) => {
+  if (eventTypes.has(type)) {
+    return type as ModerationEvent['action']
+  }
+  throw new InvalidRequestError('Invalid event type')
+}
+
 export const getReviewState = (reviewState?: string) => {
   if (!reviewState) return undefined
   if (reviewStates.has(reviewState)) {
@@ -66,4 +73,16 @@ const reasonTypes = new Set([
   REASONRUDE,
   REASONSEXUAL,
   REASONVIOLATION,
+])
+
+const eventTypes = new Set([
+  'com.atproto.admin.defs#modEventTakedown',
+  'com.atproto.admin.defs#modEventFlag',
+  'com.atproto.admin.defs#modEventAcknowledge',
+  'com.atproto.admin.defs#modEventEscalate',
+  'com.atproto.admin.defs#modEventComment',
+  'com.atproto.admin.defs#modEventLabel',
+  'com.atproto.admin.defs#modEventReport',
+  'com.atproto.admin.defs#modEventMute',
+  'com.atproto.admin.defs#modEventReverseTakedown',
 ])

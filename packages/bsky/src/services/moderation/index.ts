@@ -24,6 +24,7 @@ import {
   ReversibleModerationEvent,
   SubjectInfo,
 } from './types'
+import { ModerationEvent } from '../../db/tables/moderation'
 
 export class ModerationService {
   constructor(
@@ -60,9 +61,10 @@ export class ModerationService {
     subject?: string
     limit: number
     cursor?: string
+    type?: ModerationEvent['action']
     sortDirection?: 'asc' | 'desc'
   }): Promise<ModerationEventRowWithHandle[]> {
-    const { subject, limit, cursor, sortDirection = 'desc' } = opts
+    const { subject, limit, cursor, sortDirection = 'desc', type } = opts
     let builder = this.db.db
       .selectFrom('moderation_event')
       .leftJoin(
@@ -85,6 +87,9 @@ export class ModerationService {
           )
           .orWhere('subjectUri', '=', subject)
       })
+    }
+    if (type) {
+      builder = builder.where('action', '=', type)
     }
     if (cursor) {
       const cursorNumeric = parseInt(cursor, 10)

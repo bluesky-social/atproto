@@ -972,6 +972,9 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
+            type: {
+              type: 'string',
+            },
             sortDirection: {
               type: 'string',
               default: 'desc',

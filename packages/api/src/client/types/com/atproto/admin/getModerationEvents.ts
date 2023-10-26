@@ -9,6 +9,7 @@ import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
+  type?: string
   sortDirection?: 'asc' | 'desc'
   subject?: string
   limit?: number
