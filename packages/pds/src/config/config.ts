@@ -91,6 +91,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     recoveryDidKey: env.recoveryDidKey ?? null,
     serviceHandleDomains,
     handleBackupNameservers: env.handleBackupNameservers,
+    enableDidDocWithSession: !!env.enableDidDocWithSession,
   }
 
   // default to being required if left undefined
@@ -253,6 +254,7 @@ export type IdentityConfig = {
   recoveryDidKey: string | null
   serviceHandleDomains: string[]
   handleBackupNameservers?: string[]
+  enableDidDocWithSession: boolean
 }
 
 export type InvitesConfig =

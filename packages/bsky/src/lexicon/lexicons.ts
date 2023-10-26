@@ -2341,6 +2341,9 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+              didDoc: {
+                type: 'unknown',
+              },
             },
           },
         },
@@ -2565,6 +2568,9 @@ export const schemaDict = {
               did: {
                 type: 'string',
                 format: 'did',
+              },
+              didDoc: {
+                type: 'unknown',
               },
               email: {
                 type: 'string',
@@ -2881,6 +2887,9 @@ export const schemaDict = {
               did: {
                 type: 'string',
                 format: 'did',
+              },
+              didDoc: {
+                type: 'unknown',
               },
             },
           },

@@ -1,7 +1,9 @@
+import { MINUTE } from '@atproto/common'
+import { AtprotoData } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import * as plc from '@did-plc/lib'
 import disposable from 'disposable-email'
 import { normalizeAndValidateHandle } from '../../../../handle'
-import * as plc from '@did-plc/lib'
 import * as scrypt from '../../../../db/scrypt'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
@@ -9,8 +11,7 @@ import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
-import { AtprotoData } from '@atproto/identity'
-import { MINUTE } from '@atproto/common'
+import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -121,11 +122,14 @@ export default function (server: Server, ctx: AppContext) {
         }
       })
 
+      const didDoc = await didDocForSession(ctx, result.did, true)
+
       return {
         encoding: 'application/json',
         body: {
           handle,
           did: result.did,
+          didDoc,
           accessJwt: result.accessJwt,
           refreshJwt: result.refreshJwt,
         },
