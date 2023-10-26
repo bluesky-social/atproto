@@ -496,6 +496,18 @@ Object {
         "viewer": Object {
           "blockedBy": false,
           "blocking": "record(0)",
+          "blockingByList": Object {
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@jpeg",
+            "cid": "cids(0)",
+            "indexedAt": "1970-01-01T00:00:00.000Z",
+            "name": "alice blocks",
+            "purpose": "app.bsky.graph.defs#modlist",
+            "uri": "record(0)",
+            "viewer": Object {
+              "blocked": "record(1)",
+              "muted": false,
+            },
+          },
           "muted": false,
         },
       },
@@ -512,6 +524,18 @@ Object {
         "viewer": Object {
           "blockedBy": false,
           "blocking": "record(0)",
+          "blockingByList": Object {
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@jpeg",
+            "cid": "cids(0)",
+            "indexedAt": "1970-01-01T00:00:00.000Z",
+            "name": "alice blocks",
+            "purpose": "app.bsky.graph.defs#modlist",
+            "uri": "record(0)",
+            "viewer": Object {
+              "blocked": "record(1)",
+              "muted": false,
+            },
+          },
           "muted": false,
         },
       },

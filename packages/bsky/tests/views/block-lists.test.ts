@@ -192,6 +192,7 @@ describe('pds views with blocking from block lists', () => {
       { headers: await network.serviceHeaders(carol) },
     )
     expect(resCarol.data.viewer?.blocking).toBeUndefined()
+    expect(resCarol.data.viewer?.blockingByList).toBeUndefined()
     expect(resCarol.data.viewer?.blockedBy).toBe(true)
 
     const resDan = await agent.api.app.bsky.actor.getProfile(
@@ -199,6 +200,9 @@ describe('pds views with blocking from block lists', () => {
       { headers: await network.serviceHeaders(dan) },
     )
     expect(resDan.data.viewer?.blocking).toBeDefined()
+    expect(resDan.data.viewer?.blockingByList?.uri).toEqual(
+      resDan.data.viewer?.blocking,
+    )
     expect(resDan.data.viewer?.blockedBy).toBe(false)
   })
 
@@ -208,8 +212,10 @@ describe('pds views with blocking from block lists', () => {
       { headers: await network.serviceHeaders(carol) },
     )
     expect(resCarol.data.profiles[0].viewer?.blocking).toBeUndefined()
+    expect(resCarol.data.profiles[0].viewer?.blockingByList).toBeUndefined()
     expect(resCarol.data.profiles[0].viewer?.blockedBy).toBe(false)
     expect(resCarol.data.profiles[1].viewer?.blocking).toBeUndefined()
+    expect(resCarol.data.profiles[1].viewer?.blockingByList).toBeUndefined()
     expect(resCarol.data.profiles[1].viewer?.blockedBy).toBe(true)
 
     const resDan = await agent.api.app.bsky.actor.getProfiles(
@@ -217,8 +223,12 @@ describe('pds views with blocking from block lists', () => {
       { headers: await network.serviceHeaders(dan) },
     )
     expect(resDan.data.profiles[0].viewer?.blocking).toBeUndefined()
+    expect(resDan.data.profiles[0].viewer?.blockingByList).toBeUndefined()
     expect(resDan.data.profiles[0].viewer?.blockedBy).toBe(false)
     expect(resDan.data.profiles[1].viewer?.blocking).toBeDefined()
+    expect(resDan.data.profiles[1].viewer?.blockingByList?.uri).toEqual(
+      resDan.data.profiles[1].viewer?.blocking,
+    )
     expect(resDan.data.profiles[1].viewer?.blockedBy).toBe(false)
   })
 
