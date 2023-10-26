@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.server.getSigningKey",
+  "id": "com.atproto.server.reserveSigningKey",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Get a repo signing key for account creation.",
+      "description": "Reserve a repo signing key for account creation.",
       "output": {
         "encoding": "application/json",
         "schema": {

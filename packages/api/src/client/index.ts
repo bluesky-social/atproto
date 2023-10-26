@@ -53,13 +53,13 @@ import * as ComAtprotoServerDeleteSession from './types/com/atproto/server/delet
 import * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 import * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
-import * as ComAtprotoServerGetSigningKey from './types/com/atproto/server/getSigningKey'
 import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
 import * as ComAtprotoServerRequestEmailConfirmation from './types/com/atproto/server/requestEmailConfirmation'
 import * as ComAtprotoServerRequestEmailUpdate from './types/com/atproto/server/requestEmailUpdate'
 import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
+import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/reserveSigningKey'
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
@@ -187,13 +187,13 @@ export * as ComAtprotoServerDeleteSession from './types/com/atproto/server/delet
 export * as ComAtprotoServerDescribeServer from './types/com/atproto/server/describeServer'
 export * as ComAtprotoServerGetAccountInviteCodes from './types/com/atproto/server/getAccountInviteCodes'
 export * as ComAtprotoServerGetSession from './types/com/atproto/server/getSession'
-export * as ComAtprotoServerGetSigningKey from './types/com/atproto/server/getSigningKey'
 export * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 export * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 export * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
 export * as ComAtprotoServerRequestEmailConfirmation from './types/com/atproto/server/requestEmailConfirmation'
 export * as ComAtprotoServerRequestEmailUpdate from './types/com/atproto/server/requestEmailUpdate'
 export * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
+export * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/reserveSigningKey'
 export * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
 export * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
@@ -843,17 +843,6 @@ export class ServerNS {
       })
   }
 
-  getSigningKey(
-    data?: ComAtprotoServerGetSigningKey.InputSchema,
-    opts?: ComAtprotoServerGetSigningKey.CallOptions,
-  ): Promise<ComAtprotoServerGetSigningKey.Response> {
-    return this._service.xrpc
-      .call('com.atproto.server.getSigningKey', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoServerGetSigningKey.toKnownErr(e)
-      })
-  }
-
   listAppPasswords(
     params?: ComAtprotoServerListAppPasswords.QueryParams,
     opts?: ComAtprotoServerListAppPasswords.CallOptions,
@@ -917,6 +906,17 @@ export class ServerNS {
       .call('com.atproto.server.requestPasswordReset', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoServerRequestPasswordReset.toKnownErr(e)
+      })
+  }
+
+  reserveSigningKey(
+    data?: ComAtprotoServerReserveSigningKey.InputSchema,
+    opts?: ComAtprotoServerReserveSigningKey.CallOptions,
+  ): Promise<ComAtprotoServerReserveSigningKey.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.reserveSigningKey', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerReserveSigningKey.toKnownErr(e)
       })
   }
 
