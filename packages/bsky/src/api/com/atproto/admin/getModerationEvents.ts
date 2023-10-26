@@ -12,12 +12,14 @@ export default function (server: Server, ctx: AppContext) {
         cursor,
         sortDirection = 'desc',
         type,
+        createdBy,
       } = params
       const db = ctx.db.getPrimary()
       const moderationService = ctx.services.moderation(db)
       const results = await moderationService.getEvents({
         type: type ? getEventType(type) : undefined,
         subject,
+        createdBy,
         limit,
         cursor,
         sortDirection,

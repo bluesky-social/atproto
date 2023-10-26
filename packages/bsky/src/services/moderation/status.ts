@@ -181,13 +181,18 @@ export const getModerationSubjectStatus = async (
 }
 
 export const getStatusIdentifierFromSubject = (subject: string | AtUri) => {
-  if (typeof subject === 'string' && subject.startsWith('did:')) {
+  const isSubjectString = typeof subject === 'string'
+  if (isSubjectString && subject.startsWith('did:')) {
     return {
       did: subject,
     }
   }
 
-  const uri = typeof subject === 'string' ? new AtUri(subject) : subject
+  if (isSubjectString && !subject.startsWith('at://')) {
+    throw new Error('Subject is neither a did nor an at-uri')
+  }
+
+  const uri = isSubjectString ? new AtUri(subject) : subject
   return {
     did: uri.host,
     recordPath: `${uri.collection}/${uri.rkey}`,

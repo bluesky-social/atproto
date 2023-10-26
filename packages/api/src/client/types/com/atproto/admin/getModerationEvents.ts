@@ -10,6 +10,7 @@ import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   type?: string
+  createdBy?: string
   sortDirection?: 'asc' | 'desc'
   subject?: string
   limit?: number

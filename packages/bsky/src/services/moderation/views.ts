@@ -118,6 +118,7 @@ export class ModerationViews {
         id: res.id,
         event: {
           $type: res.action,
+          comment: res.comment ?? undefined,
         },
         subject:
           res.subjectType === 'com.atproto.admin.defs#repoRef'
@@ -172,22 +173,7 @@ export class ModerationViews {
       if (res.action === 'com.atproto.admin.defs#modEventReport') {
         eventView.event = {
           ...eventView.event,
-          comment: res.comment ?? undefined,
           reportType: res.meta?.reportType ?? undefined,
-        }
-      }
-
-      if (res.action === 'com.atproto.admin.defs#modEventReverseTakedown') {
-        eventView.event = {
-          ...eventView.event,
-          comment: res.comment ?? undefined,
-        }
-      }
-
-      if (res.action === 'com.atproto.admin.defs#modEventComment') {
-        eventView.event = {
-          ...eventView.event,
-          comment: res.comment ?? undefined,
         }
       }
 
@@ -485,7 +471,7 @@ export class ModerationViews {
           },
     }))
 
-    return Array.isArray(results)
+    return Array.isArray(result)
       ? decoratedSubjectStatuses
       : decoratedSubjectStatuses[0]
   }

@@ -975,6 +975,10 @@ export const schemaDict = {
             type: {
               type: 'string',
             },
+            createdBy: {
+              type: 'string',
+              format: 'did',
+            },
             sortDirection: {
               type: 'string',
               default: 'desc',

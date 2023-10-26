@@ -59,12 +59,20 @@ export class ModerationService {
 
   async getEvents(opts: {
     subject?: string
+    createdBy?: string
     limit: number
     cursor?: string
     type?: ModerationEvent['action']
     sortDirection?: 'asc' | 'desc'
   }): Promise<ModerationEventRowWithHandle[]> {
-    const { subject, limit, cursor, sortDirection = 'desc', type } = opts
+    const {
+      subject,
+      createdBy,
+      limit,
+      cursor,
+      sortDirection = 'desc',
+      type,
+    } = opts
     let builder = this.db.db
       .selectFrom('moderation_event')
       .leftJoin(
@@ -90,6 +98,9 @@ export class ModerationService {
     }
     if (type) {
       builder = builder.where('action', '=', type)
+    }
+    if (createdBy) {
+      builder = builder.where('createdBy', '=', createdBy)
     }
     if (cursor) {
       const cursorNumeric = parseInt(cursor, 10)
