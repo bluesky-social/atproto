@@ -1,4 +1,12 @@
-import { AccountDb, AccountEntry, EmailTokenPurpose, getMigrator } from './db'
+import { HOUR } from '@atproto/common'
+import { CID } from 'multiformats/cid'
+import {
+  AccountDb,
+  AccountEntry,
+  EmailTokenPurpose,
+  getDb,
+  getMigrator,
+} from './db'
 import * as scrypt from './helpers/scrypt'
 import * as account from './helpers/account'
 import * as repo from './helpers/repo'
@@ -7,16 +15,13 @@ import * as invite from './helpers/invite'
 import * as password from './helpers/password'
 import * as emailToken from './helpers/email-token'
 import { AuthScope } from '../auth-verifier'
-import { HOUR } from '@atproto/common'
-import { CID } from 'multiformats/cid'
 import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
-import { Database } from '../db'
 
 export class AccountManager {
   db: AccountDb
 
   constructor(dbLocation: string, private jwtSecret: string) {
-    this.db = Database.sqlite(dbLocation)
+    this.db = getDb(dbLocation)
   }
 
   async migrateOrThrow() {

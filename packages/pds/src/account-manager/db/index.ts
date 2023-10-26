@@ -6,6 +6,10 @@ export * from './schema'
 
 export type AccountDb = Database<DatabaseSchema>
 
+export const getDb = (location: string): AccountDb => {
+  return Database.sqlite(location)
+}
+
 export const getMigrator = (db: AccountDb) => {
   return new Migrator(db.db, migrations)
 }
