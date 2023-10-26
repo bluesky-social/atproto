@@ -198,15 +198,20 @@ export const disableInviteCodes = async (
   opts: { codes: string[]; accounts: string[] },
 ) => {
   const { codes, accounts } = opts
-  if (codes.length === 0 && accounts.length === 0) return
-  let builder = db.db.updateTable('invite_code').set({ disabled: 1 })
   if (codes.length > 0) {
-    builder = builder.where('code', 'in', codes)
+    await db.db
+      .updateTable('invite_code')
+      .set({ disabled: 1 })
+      .where('code', 'in', codes)
+      .execute()
   }
   if (accounts.length > 0) {
-    builder = builder.where('forAccount', 'in', accounts)
+    await db.db
+      .updateTable('invite_code')
+      .set({ disabled: 1 })
+      .where('forAccount', 'in', accounts)
+      .execute()
   }
-  await builder.execute()
 }
 
 export const setAccountInvitesDisabled = async (
