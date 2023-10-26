@@ -547,6 +547,31 @@ Key:
 </td>
 </tr>
 
+
+
+
+<tr>
+<td><strong>Mute/block: Blocking-by-list user</strong></td>
+<td>
+❌
+</td>
+<td>
+
+
+</td>
+<td>
+
+
+</td>
+<td>
+🚫
+
+</td>
+</tr>
+
+
+
+
 <tr>
 <td><strong>Mute/block: Blocked by user</strong></td>
 <td>
