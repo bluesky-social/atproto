@@ -3,7 +3,10 @@ import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
 import authorFeedSeed from '../seeds/author-feed'
 import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import { isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
+import {
+  isRecord,
+  isReplyRef,
+} from '../../src/lexicon/types/app/bsky/feed/post'
 import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
 
@@ -308,9 +311,12 @@ describe('pds author feed views', () => {
       filter: 'posts_no_replies',
     })
 
+    expect(eveFeed.feed.length).toEqual(7)
     expect(
-      eveFeed.feed.every(({ post }) => {
-        return isRecord(post.record) && post.author.did === eve
+      eveFeed.feed.some(({ post }) => {
+        return (
+          isRecord(post.record) && post.record.reply && post.author.did === eve
+        )
       }),
     ).toBeTruthy()
   })

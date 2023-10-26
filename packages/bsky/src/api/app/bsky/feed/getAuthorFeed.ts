@@ -106,7 +106,6 @@ export const skeleton = async (
       .orWhere((qb) =>
         qb
           .where('originatorDid', '=', actorDid)
-          .where('post.replyParent', 'is not', null)
           .whereExists((qb) =>
             qb
               .selectFrom('post as post_inner')
