@@ -22,9 +22,6 @@ export default function (server: Server, ctx: AppContext) {
     },
     handler: async ({ input, req }) => {
       const { email, password, inviteCode } = input.body
-      if (input.body.plcOp) {
-        throw new InvalidRequestError('Unsupported input: "plcOp"')
-      }
 
       if (!ctx.cfg.service.isEntryway && !input.body.did && !input.body.plcOp) {
         throw new InvalidRequestError(
