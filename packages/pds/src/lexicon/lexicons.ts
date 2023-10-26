@@ -3497,7 +3497,7 @@ export const schemaDict = {
           encoding: 'application/vnd.ipld.car',
         },
         output: {
-          encoding: 'application/vnd.ipld.car',
+          encoding: 'text/plain',
         },
       },
     },

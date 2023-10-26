@@ -3474,6 +3474,34 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSyncImportRepo: {
+    lexicon: 1,
+    id: 'com.atproto.sync.importRepo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Gets the did's repo, optionally catching up from a specific revision.",
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        input: {
+          encoding: 'application/vnd.ipld.car',
+        },
+        output: {
+          encoding: 'text/plain',
+        },
+      },
+    },
+  },
   ComAtprotoSyncListBlobs: {
     lexicon: 1,
     id: 'com.atproto.sync.listBlobs',
@@ -7589,6 +7617,7 @@ export const ids = {
   ComAtprotoSyncGetLatestCommit: 'com.atproto.sync.getLatestCommit',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
+  ComAtprotoSyncImportRepo: 'com.atproto.sync.importRepo',
   ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
   ComAtprotoSyncListRepos: 'com.atproto.sync.listRepos',
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
