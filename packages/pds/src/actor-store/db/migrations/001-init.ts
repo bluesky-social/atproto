@@ -86,7 +86,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
-    .createTable('user_pref')
+    .createTable('account_pref')
     .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
     .addColumn('name', 'varchar', (col) => col.notNull())
     .addColumn('valueJson', 'text', (col) => col.notNull())
@@ -94,7 +94,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropTable('user_pref').execute()
+  await db.schema.dropTable('account_pref').execute()
   await db.schema.dropTable('backlink').execute()
   await db.schema.dropTable('record_blob').execute()
   await db.schema.dropTable('blob').execute()

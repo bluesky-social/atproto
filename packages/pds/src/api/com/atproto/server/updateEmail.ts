@@ -14,33 +14,26 @@ export default function (server: Server, ctx: AppContext) {
           'This email address is not supported, please use a different email.',
         )
       }
-      const user = await ctx.services.account(ctx.db).getAccount(did)
-      if (!user) {
-        throw new InvalidRequestError('user not found')
+      const account = await ctx.accountManager.getAccount(did)
+      if (!account) {
+        throw new InvalidRequestError('account not found')
       }
-      // require valid token if user email is confirmed
-      if (user.emailConfirmedAt) {
+      // require valid token if account email is confirmed
+      if (account.emailConfirmedAt) {
         if (!token) {
           throw new InvalidRequestError(
             'confirmation token required',
             'TokenRequired',
           )
         }
-        await ctx.services
-          .account(ctx.db)
-          .assertValidToken(did, 'update_email', token)
+        await ctx.accountManager.assertValidEmailToken(
+          did,
+          'update_email',
+          token,
+        )
       }
 
-      await ctx.db.transaction(async (dbTxn) => {
-        const accntSrvce = ctx.services.account(dbTxn)
-
-        if (token) {
-          await accntSrvce.deleteEmailToken(did, 'update_email')
-        }
-        if (user.email !== email) {
-          await accntSrvce.updateEmail(did, email)
-        }
-      })
+      await ctx.accountManager.updateEmail({ did, email, token })
     },
   })
 }

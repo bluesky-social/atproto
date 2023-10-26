@@ -12,10 +12,15 @@ import {
   formatSeqHandleUpdate,
   formatSeqTombstone,
 } from './events'
-import { SequencerDb, getMigrator, RepoSeqEntry, RepoSeqInsert } from './db'
+import {
+  SequencerDb,
+  getMigrator,
+  RepoSeqEntry,
+  RepoSeqInsert,
+  getDb,
+} from './db'
 import { PreparedWrite } from '../repo'
 import { Crawlers } from '../crawlers'
-import { Database } from '../db'
 
 export * from './events'
 
@@ -33,7 +38,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     super()
     // note: this does not err when surpassed, just prints a warning to stderr
     this.setMaxListeners(100)
-    this.db = Database.sqlite(dbLocation)
+    this.db = getDb(dbLocation)
   }
 
   async start() {
@@ -201,7 +206,11 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async deleteAllForUser(did: string) {
-    await this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute()
+    await this.db.db
+      .deleteFrom('repo_seq')
+      .where('did', '=', did)
+      .where('eventType', '!=', 'tombstone')
+      .execute()
   }
 }
 

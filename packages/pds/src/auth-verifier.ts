@@ -7,7 +7,7 @@ import { IdResolver } from '@atproto/identity'
 import * as ui8 from 'uint8arrays'
 import express from 'express'
 import * as jwt from 'jsonwebtoken'
-import { ServiceDb } from './service-db'
+import { AccountManager } from './account-manager'
 
 type ReqCtx = {
   req: express.Request
@@ -89,7 +89,7 @@ export class AuthVerifier {
   public adminServiceDid: string
 
   constructor(
-    public db: ServiceDb,
+    public accountManager: AccountManager,
     public idResolver: IdResolver,
     opts: AuthVerifierOpts,
   ) {
@@ -114,12 +114,7 @@ export class AuthVerifier {
       AuthScope.Access,
       AuthScope.AppPass,
     ])
-    const found = await this.db.db
-      .selectFrom('account')
-      .where('account.did', '=', result.credentials.did)
-      .where('account.takedownId', 'is', null)
-      .select('did')
-      .executeTakeFirst()
+    const found = await this.accountManager.getAccount(result.credentials.did)
     if (!found) {
       throw new AuthRequiredError(
         'Account has been taken down',

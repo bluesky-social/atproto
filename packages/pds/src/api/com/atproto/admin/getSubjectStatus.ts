@@ -55,9 +55,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       } else if (did) {
         ensureValidAdminAud(auth, did)
-        const takedown = await ctx.services
-          .account(ctx.db)
-          .getAccountTakedownStatus(did)
+        const takedown = await ctx.accountManager.getAccountTakedownStatus(did)
         if (takedown) {
           body = {
             subject: {

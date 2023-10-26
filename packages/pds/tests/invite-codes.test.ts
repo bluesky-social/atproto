@@ -93,7 +93,9 @@ describe('account', () => {
     )
   })
 
-  it('handles racing invite code uses', async () => {
+  // @NOTE we don't do race prevention on the PDS sqlite architecture because it requires holding the transaction open for too long
+  // An entryway service may provide stronger guarantees
+  it.skip('handles racing invite code uses', async () => {
     const inviteCode = await createInviteCode(network, agent, 1)
     const COUNT = 10
 
@@ -126,7 +128,7 @@ describe('account', () => {
 
     // next, pretend account was made 2 days in the past
     const twoDaysAgo = new Date(Date.now() - 2 * DAY).toISOString()
-    await ctx.db.db
+    await ctx.accountManager.db.db
       .updateTable('account')
       .set({ createdAt: twoDaysAgo })
       .where('did', '=', account.did)
@@ -150,7 +152,7 @@ describe('account', () => {
 
     // again, pretend account was made 2 days ago
     const twoDaysAgo = new Date(Date.now() - 2 * DAY).toISOString()
-    await ctx.db.db
+    await ctx.accountManager.db.db
       .updateTable('account')
       .set({ createdAt: twoDaysAgo })
       .where('did', '=', account.did)
@@ -180,7 +182,7 @@ describe('account', () => {
 
     // first, pretend account was made 2 days ago & get those two codes
     const twoDaysAgo = new Date(Date.now() - 2 * DAY).toISOString()
-    await ctx.db.db
+    await ctx.accountManager.db.db
       .updateTable('account')
       .set({ createdAt: twoDaysAgo })
       .where('did', '=', account.did)
@@ -192,7 +194,7 @@ describe('account', () => {
 
     // then pretend account was made ever so slightly over 10 days ago
     const tenDaysAgo = new Date(Date.now() - 10.01 * DAY).toISOString()
-    await ctx.db.db
+    await ctx.accountManager.db.db
       .updateTable('account')
       .set({ createdAt: tenDaysAgo })
       .where('did', '=', account.did)
@@ -217,7 +219,10 @@ describe('account', () => {
       createdBy: account.did,
       createdAt: new Date(Date.now() - 5 * DAY).toISOString(),
     }))
-    await ctx.db.db.insertInto('invite_code').values(inviteRows).execute()
+    await ctx.accountManager.db.db
+      .insertInto('invite_code')
+      .values(inviteRows)
+      .execute()
     const res3 =
       await account.agent.api.com.atproto.server.getAccountInviteCodes({
         includeUsed: false,
@@ -225,7 +230,7 @@ describe('account', () => {
     expect(res3.data.codes.length).toBe(10)
 
     // no we use the codes which should still not allow them to generate anymore
-    await ctx.db.db
+    await ctx.accountManager.db.db
       .insertInto('invite_code_use')
       .values(
         inviteRows.map((row) => ({
@@ -295,7 +300,7 @@ describe('account', () => {
       },
     )
     expect(res.data.codes.length).toBe(3)
-    const fromDb = await ctx.db.db
+    const fromDb = await ctx.accountManager.db.db
       .selectFrom('invite_code')
       .selectAll()
       .where('forAccount', 'in', accounts)

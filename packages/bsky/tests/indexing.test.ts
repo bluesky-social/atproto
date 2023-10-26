@@ -498,7 +498,8 @@ describe('indexing', () => {
 
     it('skips invalid records.', async () => {
       const { db, services } = network.bsky.indexer.ctx
-      const { db: pdsDb, services: pdsServices } = network.pds.ctx
+      const { accountManager } = network.pds.ctx
+      // const { db: pdsDb, services: pdsServices } = network.pds.ctx
       // Create a good and a bad post record
       const writes = await Promise.all([
         pdsRepo.prepareCreate({
@@ -517,9 +518,11 @@ describe('indexing', () => {
         sc.dids.alice,
         (store) => store.repo.processWrites(writes),
       )
-      await pdsServices
-        .account(pdsDb)
-        .updateRepoRoot(sc.dids.alice, writeCommit.cid, writeCommit.rev)
+      await accountManager.updateRepoRoot(
+        sc.dids.alice,
+        writeCommit.cid,
+        writeCommit.rev,
+      )
       await network.pds.ctx.sequencer.sequenceCommit(
         sc.dids.alice,
         writeCommit,
@@ -655,12 +658,10 @@ describe('indexing', () => {
       await pdsAgent.api.com.atproto.server.requestAccountDelete(undefined, {
         headers: sc.getHeaders(alice),
       })
-      const { token } = await network.pds.ctx.db.db
-        .selectFrom('email_token')
-        .selectAll()
-        .where('purpose', '=', 'delete_account')
-        .where('did', '=', alice)
-        .executeTakeFirstOrThrow()
+      const token = await network.pds.ctx.accountManager.createEmailToken(
+        alice,
+        'delete_account',
+      )
       await pdsAgent.api.com.atproto.server.deleteAccount({
         token,
         did: alice,

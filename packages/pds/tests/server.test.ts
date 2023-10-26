@@ -137,7 +137,7 @@ describe('server', () => {
 
   // @TODO this is hanging for some unknown reason
   it.skip('healthcheck fails when database is unavailable.', async () => {
-    await network.pds.ctx.db.close()
+    await network.pds.ctx.accountManager.db.close()
     let error: AxiosError
     try {
       await axios.get(`${network.pds.url}/xrpc/_health`)

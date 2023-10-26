@@ -9,9 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.optionalAccessOrRole,
     handler: async ({ params, res, auth }) => {
       if (ctx.authVerifier.isUserOrAdmin(auth, params.did)) {
-        const available = await ctx.services
-          .account(ctx.db)
-          .isRepoAvailable(params.did)
+        const available = await ctx.accountManager.isRepoAvailable(params.did)
         if (!available) {
           throw new InvalidRequestError('Blob not found')
         }

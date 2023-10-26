@@ -7,13 +7,12 @@ import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { Database } from './db'
 import { ServerConfig, ServerSecrets } from './config'
 import { AuthVerifier } from './auth-verifier'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
-import { Services, createServices } from './services'
+import { AccountManager } from './account-manager'
 import { Sequencer } from './sequencer'
 import { BackgroundQueue } from './background'
 import { DidSqliteCache } from './did-cache'
@@ -21,11 +20,9 @@ import { Crawlers } from './crawlers'
 import { DiskBlobStore } from './disk-blobstore'
 import { getRedisClient } from './redis'
 import { ActorStore } from './actor-store'
-import { ServiceDb } from './service-db'
 import { LocalViewer } from './read-after-write/viewer'
 
 export type AppContextOptions = {
-  db: ServiceDb
   actorStore: ActorStore
   blobstore: (did: string) => BlobStore
   localViewer: (did: string) => Promise<LocalViewer>
@@ -34,7 +31,7 @@ export type AppContextOptions = {
   didCache: DidSqliteCache
   idResolver: IdResolver
   plcClient: plc.Client
-  services: Services
+  accountManager: AccountManager
   sequencer: Sequencer
   backgroundQueue: BackgroundQueue
   redisScratch?: Redis
@@ -46,7 +43,6 @@ export type AppContextOptions = {
 }
 
 export class AppContext {
-  public db: ServiceDb
   public actorStore: ActorStore
   public blobstore: (did: string) => BlobStore
   public localViewer: (did: string) => Promise<LocalViewer>
@@ -55,7 +51,7 @@ export class AppContext {
   public didCache: DidSqliteCache
   public idResolver: IdResolver
   public plcClient: plc.Client
-  public services: Services
+  public accountManager: AccountManager
   public sequencer: Sequencer
   public backgroundQueue: BackgroundQueue
   public redisScratch?: Redis
@@ -66,7 +62,7 @@ export class AppContext {
   public cfg: ServerConfig
 
   constructor(opts: AppContextOptions) {
-    this.db = opts.db
+    // this.db = opts.db
     this.actorStore = opts.actorStore
     this.blobstore = opts.blobstore
     this.localViewer = opts.localViewer
@@ -75,7 +71,7 @@ export class AppContext {
     this.didCache = opts.didCache
     this.idResolver = opts.idResolver
     this.plcClient = opts.plcClient
-    this.services = opts.services
+    this.accountManager = opts.accountManager
     this.sequencer = opts.sequencer
     this.backgroundQueue = opts.backgroundQueue
     this.redisScratch = opts.redisScratch
@@ -91,9 +87,6 @@ export class AppContext {
     secrets: ServerSecrets,
     overrides?: Partial<AppContextOptions>,
   ): Promise<AppContext> {
-    const db: ServiceDb = Database.sqlite(
-      path.join(cfg.db.directory, 'service.sqlite'),
-    )
     const blobstore =
       cfg.blobstore.provider === 's3'
         ? S3BlobStore.creator({ bucket: cfg.blobstore.bucket })
@@ -147,7 +140,13 @@ export class AppContext {
 
     const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
 
-    const authVerifier = new AuthVerifier(db, idResolver, {
+    const accountManager = new AccountManager(
+      path.join(cfg.db.directory, 'service.sqlite'),
+      secrets.jwtSecret,
+    )
+    await accountManager.migrateOrThrow()
+
+    const authVerifier = new AuthVerifier(accountManager, idResolver, {
       jwtSecret: secrets.jwtSecret,
       adminPass: secrets.adminPassword,
       moderatorPass: secrets.moderatorPassword,
@@ -172,17 +171,14 @@ export class AppContext {
 
     const localViewer = LocalViewer.creator({
       actorStore,
-      serviceDb: db,
+      accountManager,
       appViewAgent,
       pdsHostname: cfg.service.hostname,
       appviewDid: cfg.bskyAppView.did,
       appviewCdnUrlPattern: cfg.bskyAppView.cdnUrlPattern,
     })
 
-    const services = createServices(secrets.jwtSecret)
-
     return new AppContext({
-      db,
       actorStore,
       blobstore,
       localViewer,
@@ -191,7 +187,7 @@ export class AppContext {
       didCache,
       idResolver,
       plcClient,
-      services,
+      accountManager,
       sequencer,
       backgroundQueue,
       redisScratch,

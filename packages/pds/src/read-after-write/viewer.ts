@@ -33,8 +33,8 @@ import {
 } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 import { ActorStore } from '../actor-store'
 import { ActorDb } from '../actor-store/db'
-import { ServiceDb } from '../service-db'
 import { LocalRecords, RecordDescript } from './types'
+import { AccountManager } from '../account-manager'
 
 type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
@@ -42,7 +42,7 @@ export class LocalViewer {
   did: string
   actorDb: ActorDb
   actorKey: Keypair
-  serviceDb: ServiceDb
+  accountManager: AccountManager
   pdsHostname: string
   appViewAgent?: AtpAgent
   appviewDid?: string
@@ -52,7 +52,7 @@ export class LocalViewer {
     did: string
     actorDb: ActorDb
     actorKey: Keypair
-    serviceDb: ServiceDb
+    accountManager: AccountManager
     pdsHostname: string
     appViewAgent?: AtpAgent
     appviewDid?: string
@@ -61,7 +61,7 @@ export class LocalViewer {
     this.did = params.did
     this.actorDb = params.actorDb
     this.actorKey = params.actorKey
-    this.serviceDb = params.serviceDb
+    this.accountManager = params.accountManager
     this.pdsHostname = params.pdsHostname
     this.appViewAgent = params.appViewAgent
     this.appviewDid = params.appviewDid
@@ -70,7 +70,7 @@ export class LocalViewer {
 
   static creator(params: {
     actorStore: ActorStore
-    serviceDb: ServiceDb
+    accountManager: AccountManager
     pdsHostname: string
     appViewAgent?: AtpAgent
     appviewDid?: string
@@ -146,21 +146,17 @@ export class LocalViewer {
       .where('record.collection', '=', ids.AppBskyActorProfile)
       .where('record.rkey', '=', 'self')
       .selectAll()
-    const handleQuery = this.serviceDb.db
-      .selectFrom('account')
-      .where('did', '=', this.did)
-      .selectAll()
-    const [profileRes, handleRes] = await Promise.all([
+    const [profileRes, accountRes] = await Promise.all([
       profileQuery.executeTakeFirst(),
-      handleQuery.executeTakeFirst(),
+      this.accountManager.getAccount(this.did),
     ])
-    if (!handleRes) return null
+    if (!accountRes) return null
     const record = profileRes?.content
       ? (cborToLexRecord(profileRes.content) as ProfileRecord)
       : null
     return {
       did: this.did,
-      handle: handleRes.handle ?? INVALID_HANDLE,
+      handle: accountRes.handle ?? INVALID_HANDLE,
       displayName: record?.displayName,
       avatar: record?.avatar
         ? this.getImageUrl('avatar', record.avatar.ref.toString())

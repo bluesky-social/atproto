@@ -6,7 +6,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.getRecord(async ({ params }) => {
     const { repo, collection, rkey, cid } = params
-    const did = await ctx.services.account(ctx.db).getDidForActor(repo)
+    const did = await ctx.accountManager.getDidForActor(repo)
 
     // fetch from pds if available, if not then fetch from appview
     if (did) {

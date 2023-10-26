@@ -6,7 +6,7 @@ import { genInvCode } from './util'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createInviteCode({
     auth: ctx.authVerifier.role,
-    handler: async ({ input, req, auth }) => {
+    handler: async ({ input, auth }) => {
       if (!auth.credentials.admin) {
         throw new AuthRequiredError('Insufficient privileges')
       }
@@ -14,19 +14,10 @@ export default function (server: Server, ctx: AppContext) {
 
       const code = genInvCode(ctx.cfg)
 
-      await ctx.db.db
-        .insertInto('invite_code')
-        .values({
-          code: code,
-          availableUses: useCount,
-          disabled: 0,
-          forAccount,
-          createdBy: 'admin',
-          createdAt: new Date().toISOString(),
-        })
-        .execute()
-
-      req.log.info({ useCount, code, forAccount }, 'created invite code')
+      await ctx.accountManager.createInviteCodes(
+        [{ account: forAccount, codes: [code] }],
+        useCount,
+      )
 
       return {
         encoding: 'application/json',

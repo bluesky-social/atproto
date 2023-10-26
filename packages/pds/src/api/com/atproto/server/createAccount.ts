@@ -5,13 +5,9 @@ import { MINUTE } from '@atproto/common'
 import disposable from 'disposable-email'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import * as plc from '@did-plc/lib'
-import * as scrypt from '../../../../services/account/scrypt'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
-import { countAll } from '../../../../db/util'
-import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
-import { ServiceDb } from '../../../../service-db'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -44,7 +40,18 @@ export default function (server: Server, ctx: AppContext) {
 
       // check that the invite code still has uses
       if (ctx.cfg.invites.required && inviteCode) {
-        await ensureCodeIsAvailable(ctx.db, inviteCode)
+        await ctx.accountManager.ensureInviteIsAvailable(inviteCode)
+      }
+
+      // check that the handle and email are available
+      const [handleAccnt, emailAcct] = await Promise.all([
+        ctx.accountManager.getAccount(handle),
+        ctx.accountManager.getAccountByEmail(email),
+      ])
+      if (handleAccnt) {
+        throw new InvalidRequestError(`Handle already taken: ${handle}`)
+      } else if (emailAcct) {
+        throw new InvalidRequestError(`Email already taken: ${email}`)
       }
 
       // determine the did & any plc ops we need to send
@@ -56,6 +63,7 @@ export default function (server: Server, ctx: AppContext) {
         input.body,
         signingKey,
       )
+
       const commit = await ctx.actorStore.create(
         did,
         signingKey,
@@ -64,121 +72,41 @@ export default function (server: Server, ctx: AppContext) {
         },
       )
 
-      const now = new Date().toISOString()
-      const passwordScrypt = await scrypt.genSaltAndHash(password)
-
-      const result = await ctx.db.transaction(async (dbTxn) => {
-        const accountTxn = ctx.services.account(dbTxn)
-
-        await accountTxn.updateRepoRoot(did, commit.cid, commit.rev)
-
-        // it's a bit goofy that we run this logic twice,
-        // but we run it once for a sanity check before doing scrypt & plc ops
-        // & a second time for locking + integrity check
-        if (ctx.cfg.invites.required && inviteCode) {
-          await ensureCodeIsAvailable(dbTxn, inviteCode)
-        }
-
-        // Register user before going out to PLC to get a real did
+      // Generate a real did with PLC
+      if (plcOp) {
         try {
-          await accountTxn.registerUser({ email, handle, did, passwordScrypt })
+          await ctx.plcClient.sendOperation(did, plcOp)
         } catch (err) {
-          if (err instanceof UserAlreadyExistsError) {
-            const got = await accountTxn.getAccount(handle, true)
-            if (got) {
-              throw new InvalidRequestError(`Handle already taken: ${handle}`)
-            } else {
-              throw new InvalidRequestError(`Email already taken: ${email}`)
-            }
-          }
+          req.log.error(
+            { didKey: ctx.plcRotationKey.did(), handle },
+            'failed to create did:plc',
+          )
           throw err
         }
-
-        // Generate a real did with PLC
-        if (plcOp) {
-          try {
-            await ctx.plcClient.sendOperation(did, plcOp)
-          } catch (err) {
-            req.log.error(
-              { didKey: ctx.plcRotationKey.did(), handle },
-              'failed to create did:plc',
-            )
-            throw err
-          }
-        }
-
-        // insert invite code use
-        if (ctx.cfg.invites.required && inviteCode) {
-          await dbTxn.db
-            .insertInto('invite_code_use')
-            .values({
-              code: inviteCode,
-              usedBy: did,
-              usedAt: now,
-            })
-            .execute()
-        }
-
-        const { access, refresh } = await ctx.services
-          .auth(dbTxn)
-          .createSession(did, null)
-
-        return {
-          did,
-          accessJwt: access.jwt,
-          refreshJwt: refresh.jwt,
-        }
+      }
+      const { access, refresh } = await ctx.accountManager.createAccount({
+        did,
+        handle,
+        email,
+        password,
+        repoCid: commit.cid,
+        repoRev: commit.rev,
+        inviteCode,
       })
 
       await ctx.sequencer.sequenceCommit(did, commit, [])
-      await ctx.services
-        .account(ctx.db)
-        .updateRepoRoot(did, commit.cid, commit.rev)
 
       return {
         encoding: 'application/json',
         body: {
           handle,
-          did: result.did,
-          accessJwt: result.accessJwt,
-          refreshJwt: result.refreshJwt,
+          did: did,
+          accessJwt: access.jwt,
+          refreshJwt: refresh.jwt,
         },
       }
     },
   })
-}
-
-export const ensureCodeIsAvailable = async (
-  db: ServiceDb,
-  inviteCode: string,
-): Promise<void> => {
-  const invite = await db.db
-    .selectFrom('invite_code')
-    .leftJoin('account', 'account.did', 'invite_code.forAccount')
-    .where('takedownId', 'is', null)
-    .selectAll('invite_code')
-    .where('code', '=', inviteCode)
-    .executeTakeFirst()
-
-  if (!invite || invite.disabled) {
-    throw new InvalidRequestError(
-      'Provided invite code not available',
-      'InvalidInviteCode',
-    )
-  }
-
-  const uses = await db.db
-    .selectFrom('invite_code_use')
-    .select(countAll.as('count'))
-    .where('code', '=', inviteCode)
-    .executeTakeFirstOrThrow()
-
-  if (invite.availableUses <= uses.count) {
-    throw new InvalidRequestError(
-      'Provided invite code not available',
-      'InvalidInviteCode',
-    )
-  }
 }
 
 const getDidAndPlcOp = async (

@@ -246,7 +246,7 @@ describe.skip('pds admin invite views', () => {
   })
 
   it('creates codes in the background but disables them', async () => {
-    const res = await network.pds.ctx.db.db
+    const res = await network.pds.ctx.accountManager.db.db
       .selectFrom('invite_code')
       .where('forAccount', '=', carol)
       .selectAll()
