@@ -77,15 +77,6 @@ export class ActorStore {
     return got
   }
 
-  async reserveKeypair(): Promise<string> {
-    const keypair = await crypto.Secp256k1Keypair.create({ exportable: true })
-    const keyDid = keypair.did()
-    const keyLoc = path.join(this.reservedKeyDir, keyDid)
-    await mkdir(this.reservedKeyDir, { recursive: true })
-    await fs.writeFile(keyLoc, await keypair.export())
-    return keyDid
-  }
-
   async db(did: string): Promise<ActorDb> {
     const got = await this.dbCache.fetch(did)
     if (!got) {
@@ -162,6 +153,44 @@ export class ActorStore {
     await rmIfExists(`${dbLocation}-wal`)
     await rmIfExists(`${dbLocation}-shm`)
     await rmIfExists(keyLocation)
+  }
+
+  async reserveKeypair(): Promise<string> {
+    const keypair = await crypto.Secp256k1Keypair.create({ exportable: true })
+    const keyDid = keypair.did()
+    const keyLoc = path.join(this.reservedKeyDir, keyDid)
+    await mkdir(this.reservedKeyDir, { recursive: true })
+    await fs.writeFile(keyLoc, await keypair.export())
+    return keyDid
+  }
+
+  async getReservedKeypair(keyDid: string): Promise<ExportableKeypair> {
+    const keyLoc = path.join(this.reservedKeyDir, keyDid)
+    const privKey = await fs.readFile(keyLoc)
+    return crypto.Secp256k1Keypair.import(privKey, { exportable: true })
+  }
+
+  async clearReservedKeypair(keyDid: string) {
+    const keyLoc = path.join(this.reservedKeyDir, keyDid)
+    await rmIfExists(keyLoc)
+  }
+
+  async storePlcOp(did: string, op: Uint8Array) {
+    const { subdir } = await this.getLocation(did)
+    const opLoc = path.join(subdir, `did-op`)
+    await fs.writeFile(opLoc, op)
+  }
+
+  async getPlcOp(did: string): Promise<Uint8Array> {
+    const { subdir } = await this.getLocation(did)
+    const opLoc = path.join(subdir, `did-op`)
+    return await fs.readFile(opLoc)
+  }
+
+  async clearPlcOp(did: string) {
+    const { subdir } = await this.getLocation(did)
+    const opLoc = path.join(subdir, `did-op`)
+    await rmIfExists(opLoc)
   }
 
   async close() {
