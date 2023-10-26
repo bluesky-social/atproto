@@ -1,4 +1,4 @@
-import * as userPref from './user-pref'
+import * as accountPref from './account-pref'
 import * as repoRoot from './repo-root'
 import * as record from './record'
 import * as backlink from './backlink'
@@ -6,7 +6,7 @@ import * as repoBlock from './repo-block'
 import * as blob from './blob'
 import * as recordBlob from './record-blob'
 
-export type DatabaseSchema = userPref.PartialDB &
+export type DatabaseSchema = accountPref.PartialDB &
   repoRoot.PartialDB &
   record.PartialDB &
   backlink.PartialDB &
@@ -14,7 +14,7 @@ export type DatabaseSchema = userPref.PartialDB &
   blob.PartialDB &
   recordBlob.PartialDB
 
-export type { UserPref } from './user-pref'
+export type { AccountPref } from './account-pref'
 export type { RepoRoot } from './repo-root'
 export type { Record } from './record'
 export type { Backlink } from './backlink'
