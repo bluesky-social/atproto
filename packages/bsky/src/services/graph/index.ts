@@ -274,6 +274,9 @@ export class BlockAndMuteState {
     items.forEach((item) => this.add(item))
   }
   add(item: BlockAndMuteInfo) {
+    if (item.source === item.target) {
+      return // we do not respect self-blocks or self-mutes
+    }
     if (item.blocking) {
       const map = this.blockIdx.get(item.source) ?? new Map()
       map.set(item.target, item.blocking)

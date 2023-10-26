@@ -84,6 +84,15 @@ describe('pds views with blocking from block lists', () => {
       },
       sc.getHeaders(alice),
     )
+    await pdsAgent.api.app.bsky.graph.listitem.create(
+      { repo: alice },
+      {
+        subject: sc.dids.dan,
+        list: list.uri,
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
     await network.processAll()
   })
 
@@ -230,6 +239,16 @@ describe('pds views with blocking from block lists', () => {
       resDan.data.profiles[1].viewer?.blocking,
     )
     expect(resDan.data.profiles[1].viewer?.blockedBy).toBe(false)
+  })
+
+  it('ignores self-blocks', async () => {
+    const res = await agent.api.app.bsky.actor.getProfile(
+      { actor: dan }, // dan subscribes to list that contains himself
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(res.data.viewer?.blocking).toBeUndefined()
+    expect(res.data.viewer?.blockingByList).toBeUndefined()
+    expect(res.data.viewer?.blockedBy).toBe(false)
   })
 
   it('does not return notifs for blocked accounts', async () => {
