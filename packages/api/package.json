@@ -36,7 +36,8 @@
     "@atproto/xrpc": "workspace:^",
     "multiformats": "^9.9.0",
     "tlds": "^1.234.0",
-    "typed-emitter": "^2.1.0"
+    "typed-emitter": "^2.1.0",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@atproto/lex-cli": "workspace:^",

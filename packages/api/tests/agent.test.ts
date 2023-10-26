@@ -13,6 +13,9 @@ describe('agent', () => {
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'api_agent',
+      pds: {
+        enableDidDocWithSession: true,
+      },
     })
   })
 

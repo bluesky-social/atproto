@@ -2447,6 +2447,9 @@ export const schemaDict = {
               recoveryKey: {
                 type: 'string',
               },
+              plcOp: {
+                type: 'bytes',
+              },
             },
           },
         },
@@ -2469,6 +2472,9 @@ export const schemaDict = {
               did: {
                 type: 'string',
                 format: 'did',
+              },
+              didDoc: {
+                type: 'unknown',
               },
             },
           },
@@ -2694,6 +2700,9 @@ export const schemaDict = {
               did: {
                 type: 'string',
                 format: 'did',
+              },
+              didDoc: {
+                type: 'unknown',
               },
               email: {
                 type: 'string',
@@ -3011,6 +3020,9 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+              didDoc: {
+                type: 'unknown',
+              },
             },
           },
         },
@@ -3080,6 +3092,29 @@ export const schemaDict = {
             properties: {
               email: {
                 type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerReserveSigningKey: {
+    lexicon: 1,
+    id: 'com.atproto.server.reserveSigningKey',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Reserve a repo signing key for account creation.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['signingKey'],
+            properties: {
+              signingKey: {
+                type: 'string',
+                description: 'Public signing key in the form of a did:key.',
               },
             },
           },
@@ -7516,6 +7551,7 @@ export const ids = {
   ComAtprotoServerRequestEmailUpdate: 'com.atproto.server.requestEmailUpdate',
   ComAtprotoServerRequestPasswordReset:
     'com.atproto.server.requestPasswordReset',
+  ComAtprotoServerReserveSigningKey: 'com.atproto.server.reserveSigningKey',
   ComAtprotoServerResetPassword: 'com.atproto.server.resetPassword',
   ComAtprotoServerRevokeAppPassword: 'com.atproto.server.revokeAppPassword',
   ComAtprotoServerUpdateEmail: 'com.atproto.server.updateEmail',

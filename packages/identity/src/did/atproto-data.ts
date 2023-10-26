@@ -1,71 +1,37 @@
 import * as crypto from '@atproto/crypto'
 import { DidDocument, AtprotoData } from '../types'
+import {
+  getDid,
+  getHandle,
+  getPdsEndpoint,
+  getFeedGenEndpoint,
+  getNotifEndpoint,
+  getSigningKey,
+} from '@atproto/common-web'
 
-export const getDid = (doc: DidDocument): string => {
-  const id = doc.id
-  if (typeof id !== 'string') {
-    throw new Error('No `id` on document')
-  }
-  return id
+export {
+  getDid,
+  getHandle,
+  getPdsEndpoint as getPds,
+  getFeedGenEndpoint as getFeedGen,
+  getNotifEndpoint as getNotif,
 }
 
 export const getKey = (doc: DidDocument): string | undefined => {
-  const did = getDid(doc)
-  let keys = doc.verificationMethod
-  if (!keys) return undefined
-  if (typeof keys !== 'object') return undefined
-  if (!Array.isArray(keys)) {
-    keys = [keys]
-  }
-  const found = keys.find(
-    (key) => key.id === '#atproto' || key.id === `${did}#atproto`,
-  )
-  if (!found) return undefined
+  const key = getSigningKey(doc)
+  if (!key) return undefined
 
-  // @TODO support jwk
-  // should we be surfacing errors here or returning undefined?
-  if (!found.publicKeyMultibase) return undefined
-  const keyBytes = crypto.multibaseToBytes(found.publicKeyMultibase)
+  const keyBytes = crypto.multibaseToBytes(key.publicKeyMultibase)
   let didKey: string | undefined = undefined
-  if (found.type === 'EcdsaSecp256r1VerificationKey2019') {
+  if (key.type === 'EcdsaSecp256r1VerificationKey2019') {
     didKey = crypto.formatDidKey(crypto.P256_JWT_ALG, keyBytes)
-  } else if (found.type === 'EcdsaSecp256k1VerificationKey2019') {
+  } else if (key.type === 'EcdsaSecp256k1VerificationKey2019') {
     didKey = crypto.formatDidKey(crypto.SECP256K1_JWT_ALG, keyBytes)
-  } else if (found.type === 'Multikey') {
-    const parsed = crypto.parseMultikey(found.publicKeyMultibase)
+  } else if (key.type === 'Multikey') {
+    const parsed = crypto.parseMultikey(key.publicKeyMultibase)
     didKey = crypto.formatDidKey(parsed.jwtAlg, parsed.keyBytes)
   }
   return didKey
-}
-
-export const getHandle = (doc: DidDocument): string | undefined => {
-  const aka = doc.alsoKnownAs
-  if (!aka) return undefined
-  const found = aka.find((name) => name.startsWith('at://'))
-  if (!found) return undefined
-  // strip off at:// prefix
-  return found.slice(5)
-}
-
-export const getPds = (doc: DidDocument): string | undefined => {
-  return getServiceEndpoint(doc, {
-    id: '#atproto_pds',
-    type: 'AtprotoPersonalDataServer',
-  })
-}
-
-export const getFeedGen = (doc: DidDocument): string | undefined => {
-  return getServiceEndpoint(doc, {
-    id: '#bsky_fg',
-    type: 'BskyFeedGenerator',
-  })
-}
-
-export const getNotif = (doc: DidDocument): string | undefined => {
-  return getServiceEndpoint(doc, {
-    id: '#bsky_notif',
-    type: 'BskyNotificationService',
-  })
 }
 
 export const parseToAtprotoDocument = (
@@ -76,7 +42,7 @@ export const parseToAtprotoDocument = (
     did,
     signingKey: getKey(doc),
     handle: getHandle(doc),
-    pds: getPds(doc),
+    pds: getPdsEndpoint(doc),
   }
 }
 
@@ -95,40 +61,4 @@ export const ensureAtpDocument = (doc: DidDocument): AtprotoData => {
     throw new Error(`Could not parse pds from doc: ${doc}`)
   }
   return { did, signingKey, handle, pds }
-}
-
-// Check protocol and hostname to prevent potential SSRF
-const validateUrl = (url: string) => {
-  const { hostname, protocol } = new URL(url)
-  if (!['http:', 'https:'].includes(protocol)) {
-    throw new Error('Invalid pds protocol')
-  }
-  if (!hostname) {
-    throw new Error('Invalid pds hostname')
-  }
-}
-
-const getServiceEndpoint = (
-  doc: DidDocument,
-  opts: { id: string; type: string },
-) => {
-  const did = getDid(doc)
-  let services = doc.service
-  if (!services) return undefined
-  if (typeof services !== 'object') return undefined
-  if (!Array.isArray(services)) {
-    services = [services]
-  }
-  const found = services.find(
-    (service) => service.id === opts.id || service.id === `${did}${opts.id}`,
-  )
-  if (!found) return undefined
-  if (found.type !== opts.type) {
-    return undefined
-  }
-  if (typeof found.serviceEndpoint !== 'string') {
-    return undefined
-  }
-  validateUrl(found.serviceEndpoint)
-  return found.serviceEndpoint
 }
