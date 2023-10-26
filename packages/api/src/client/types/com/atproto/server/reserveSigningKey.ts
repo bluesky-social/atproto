@@ -12,11 +12,8 @@ export interface QueryParams {}
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  accessJwt: string
-  refreshJwt: string
-  handle: string
-  did: string
-  didDoc?: {}
+  /** Public signing key in the form of a did:key. */
+  signingKey: string
   [k: string]: unknown
 }
 
@@ -31,15 +28,8 @@ export interface Response {
   data: OutputSchema
 }
 
-export class AccountTakedownError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers)
-  }
-}
-
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'AccountTakedown') return new AccountTakedownError(e)
   }
   return e
 }

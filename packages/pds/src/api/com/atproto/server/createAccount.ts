@@ -1,13 +1,14 @@
+import { MINUTE } from '@atproto/common'
+import { AtprotoData } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { AtprotoData } from '@atproto/identity'
-import { MINUTE } from '@atproto/common'
 import disposable from 'disposable-email'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import * as plc from '@did-plc/lib'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
 import AppContext from '../../../../context'
+import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -17,6 +18,9 @@ export default function (server: Server, ctx: AppContext) {
     },
     handler: async ({ input, req }) => {
       const { email, password, inviteCode } = input.body
+      if (input.body.plcOp) {
+        throw new InvalidRequestError('Unsupported input: "plcOp"')
+      }
 
       if (ctx.cfg.invites.required && !inviteCode) {
         throw new InvalidRequestError(
@@ -96,11 +100,14 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.sequencer.sequenceCommit(did, commit, [])
 
+      const didDoc = await didDocForSession(ctx, did, true)
+
       return {
         encoding: 'application/json',
         body: {
           handle,
           did: did,
+          didDoc,
           accessJwt: access.jwt,
           refreshJwt: refresh.jwt,
         },
