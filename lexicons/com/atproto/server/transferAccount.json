@@ -1,0 +1,46 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.temp.transferAccount",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Transfer an account.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["handle", "email", "did", "passwordScrypt", "plcOp"],
+          "properties": {
+            "email": { "type": "string" },
+            "handle": { "type": "string", "format": "handle" },
+            "did": { "type": "string", "format": "did" },
+            "passwordScrypt": { "type": "string" },
+            "plcOp": { "type": "bytes" }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["accessJwt", "refreshJwt", "handle", "did"],
+          "properties": {
+            "accessJwt": { "type": "string" },
+            "refreshJwt": { "type": "string" },
+            "handle": { "type": "string", "format": "handle" },
+            "did": { "type": "string", "format": "did" }
+          }
+        }
+      },
+      "errors": [
+        { "name": "InvalidHandle" },
+        { "name": "InvalidPassword" },
+        { "name": "InvalidInviteCode" },
+        { "name": "HandleNotAvailable" },
+        { "name": "UnsupportedDomain" },
+        { "name": "UnresolvableDid" },
+        { "name": "IncompatibleDidDoc" }
+      ]
+    }
+  }
+}

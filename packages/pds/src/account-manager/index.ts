@@ -70,20 +70,31 @@ export class AccountManager {
     password: string
     repoCid: CID
     repoRev: string
-    inviteCode: string | undefined
+    inviteCode?: string
   }) {
-    const { did, handle, email, password, repoCid, repoRev, inviteCode } = opts
+    const passwordScrypt = await scrypt.genSaltAndHash(opts.password)
+    const auth = await this.registerAccount({ ...opts, passwordScrypt })
+    await repo.updateRoot(this.db, opts.did, opts.repoCid, opts.repoRev)
+    return auth
+  }
+
+  async registerAccount(opts: {
+    did: string
+    handle: string
+    email: string
+    passwordScrypt: string
+    inviteCode?: string
+  }) {
+    const { did, handle, email, passwordScrypt, inviteCode } = opts
     const { access, refresh } = auth.createTokens({
       jwtSecret: this.jwtSecret,
       did,
       scope: AuthScope.Access,
     })
-    const passwordScrypt = await scrypt.genSaltAndHash(password)
     const now = new Date().toISOString()
     await this.db.transaction((dbTxn) =>
       Promise.all([
         account.registerAccount(dbTxn, { did, handle, email, passwordScrypt }),
-        repo.updateRoot(dbTxn, did, repoCid, repoRev),
         invite.recordInviteUse(dbTxn, {
           did,
           inviteCode,

@@ -3239,6 +3239,88 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoTempTransferAccount: {
+    lexicon: 1,
+    id: 'com.atproto.temp.transferAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Transfer an account.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle', 'email', 'did', 'passwordScrypt', 'plcOp'],
+            properties: {
+              email: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              passwordScrypt: {
+                type: 'string',
+              },
+              plcOp: {
+                type: 'bytes',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
+            properties: {
+              accessJwt: {
+                type: 'string',
+              },
+              refreshJwt: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidHandle',
+          },
+          {
+            name: 'InvalidPassword',
+          },
+          {
+            name: 'InvalidInviteCode',
+          },
+          {
+            name: 'HandleNotAvailable',
+          },
+          {
+            name: 'UnsupportedDomain',
+          },
+          {
+            name: 'UnresolvableDid',
+          },
+          {
+            name: 'IncompatibleDidDoc',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoServerUpdateEmail: {
     lexicon: 1,
     id: 'com.atproto.server.updateEmail',
@@ -7645,6 +7727,7 @@ export const ids = {
   ComAtprotoServerReserveSigningKey: 'com.atproto.server.reserveSigningKey',
   ComAtprotoServerResetPassword: 'com.atproto.server.resetPassword',
   ComAtprotoServerRevokeAppPassword: 'com.atproto.server.revokeAppPassword',
+  ComAtprotoTempTransferAccount: 'com.atproto.temp.transferAccount',
   ComAtprotoServerUpdateEmail: 'com.atproto.server.updateEmail',
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',

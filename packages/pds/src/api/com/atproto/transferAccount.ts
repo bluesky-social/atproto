@@ -1,19 +1,16 @@
 import { ensureAtpDocument } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import disposable from 'disposable-email'
-import { normalizeAndValidateHandle } from '../../../../handle'
+import { normalizeAndValidateHandle } from '../../../handle'
 import * as plc from '@did-plc/lib'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
+import { Server } from '../../../lexicon'
+import AppContext from '../../../context'
 import { cborDecode, check, cidForCbor } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.createAccount({
+  server.com.atproto.temp.transferAccount({
     handler: async ({ input }) => {
-      const { email, password, inviteCode, did, plcOp } = input.body
-      if (!did || !plcOp) {
-        throw new Error()
-      }
+      const { email, passwordScrypt, did, plcOp } = input.body
 
       // normalize & ensure valid handle
       const handle = await normalizeAndValidateHandle({
@@ -42,24 +39,17 @@ export default function (server: Server, ctx: AppContext) {
       const signingDidKey = await verifyDidAndPlcOp(ctx, did, handle, plcOp)
       const signingKey = await ctx.actorStore.getReservedKeypair(signingDidKey)
 
-      const commit = await ctx.actorStore.create(
-        did,
-        signingKey,
-        (actorTxn) => {
-          return actorTxn.repo.createRepo([])
-        },
-      )
+      await ctx.actorStore.create(did, signingKey, (actorTxn) => {
+        return actorTxn.repo.createRepo([])
+      })
       await ctx.actorStore.storePlcOp(did, plcOp)
       await ctx.actorStore.clearReservedKeypair(signingDidKey)
 
-      const { access, refresh } = await ctx.accountManager.createAccount({
+      const { access, refresh } = await ctx.accountManager.registerAccount({
         did,
         handle,
         email,
-        password,
-        repoCid: commit.cid,
-        repoRev: commit.rev,
-        inviteCode,
+        passwordScrypt,
       })
 
       return {
@@ -88,7 +78,7 @@ const verifyDidAndPlcOp = async (
   await plc.assureValidOp(plcOp)
   const prev = await ctx.plcClient.getLastOp(did)
   if (!prev || prev.type === 'plc_tombstone') {
-    throw new Error('')
+    throw new Error('invalid prev')
   }
   const prevCid = await cidForCbor(prev)
   if (plcOp.prev?.toString() !== prevCid.toString()) {

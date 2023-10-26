@@ -62,6 +62,7 @@ import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/serve
 import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/reserveSigningKey'
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
+import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
@@ -175,6 +176,7 @@ export class AtprotoNS {
   moderation: ModerationNS
   repo: RepoNS
   server: ServerNS
+  temp: TempNS
   sync: SyncNS
 
   constructor(server: Server) {
@@ -185,6 +187,7 @@ export class AtprotoNS {
     this.moderation = new ModerationNS(server)
     this.repo = new RepoNS(server)
     this.server = new ServerNS(server)
+    this.temp = new TempNS(server)
     this.sync = new SyncNS(server)
   }
 }
@@ -827,6 +830,25 @@ export class ServerNS {
     >,
   ) {
     const nsid = 'com.atproto.server.updateEmail' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class TempNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  transferAccount<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempTransferAccount.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempTransferAccount.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.transferAccount' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

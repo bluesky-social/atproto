@@ -65,6 +65,7 @@ import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/serve
 import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/reserveSigningKey'
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
+import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
@@ -203,6 +204,7 @@ export * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/serve
 export * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/reserveSigningKey'
 export * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
+export * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 export * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
@@ -350,6 +352,7 @@ export class AtprotoNS {
   moderation: ModerationNS
   repo: RepoNS
   server: ServerNS
+  temp: TempNS
   sync: SyncNS
 
   constructor(service: AtpServiceClient) {
@@ -360,6 +363,7 @@ export class AtprotoNS {
     this.moderation = new ModerationNS(service)
     this.repo = new RepoNS(service)
     this.server = new ServerNS(service)
+    this.temp = new TempNS(service)
     this.sync = new SyncNS(service)
   }
 }
@@ -991,6 +995,25 @@ export class ServerNS {
       .call('com.atproto.server.updateEmail', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoServerUpdateEmail.toKnownErr(e)
+      })
+  }
+}
+
+export class TempNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  transferAccount(
+    data?: ComAtprotoTempTransferAccount.InputSchema,
+    opts?: ComAtprotoTempTransferAccount.CallOptions,
+  ): Promise<ComAtprotoTempTransferAccount.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.transferAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoTempTransferAccount.toKnownErr(e)
       })
   }
 }
