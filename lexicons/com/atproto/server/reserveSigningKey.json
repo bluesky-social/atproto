@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.server.reserveSigningKey",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Reserve a repo signing key for account creation.",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["signingKey"],
+          "properties": {
+            "signingKey": {
+              "type": "string",
+              "description": "Public signing key in the form of a did:key."
+            }
+          }
+        }
+      }
+    }
+  }
+}

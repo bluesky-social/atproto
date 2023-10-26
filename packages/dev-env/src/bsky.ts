@@ -81,7 +81,7 @@ export class TestBsky {
     })
     // indexer
     const ns = cfg.dbPostgresSchema
-      ? await randomIntFromSeed(cfg.dbPostgresSchema, 10000)
+      ? await randomIntFromSeed(cfg.dbPostgresSchema, 1000000)
       : undefined
     const indexerCfg = new bsky.IndexerConfig({
       version: '0.0.0',
@@ -200,7 +200,7 @@ export async function getIngester(
   opts: { name: string } & Partial<bsky.IngesterConfigValues>,
 ) {
   const { name, ...config } = opts
-  const ns = name ? await randomIntFromSeed(name, 10000) : undefined
+  const ns = name ? await randomIntFromSeed(name, 1000000) : undefined
   const cfg = new bsky.IngesterConfig({
     version: '0.0.0',
     redisHost: process.env.REDIS_HOST || '',
@@ -234,7 +234,7 @@ export async function getIndexers(
   },
 ): Promise<BskyIndexers> {
   const { name, ...config } = opts
-  const ns = name ? await randomIntFromSeed(name, 10000) : undefined
+  const ns = name ? await randomIntFromSeed(name, 1000000) : undefined
   const baseCfg: bsky.IndexerConfigValues = {
     version: '0.0.0',
     didCacheStaleTTL: HOUR,
