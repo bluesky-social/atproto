@@ -333,7 +333,8 @@ export class AtpAgent {
    */
   private _updateApiEndpoint(didDoc: unknown) {
     if (isValidDidDoc(didDoc)) {
-      this.pdsUrl = getPdsEndpoint(didDoc)
+      const endpoint = getPdsEndpoint(didDoc)
+      this.pdsUrl = endpoint ? new URL(endpoint) : undefined
     }
     this.api.xrpc.uri = this.pdsUrl || this.service
   }

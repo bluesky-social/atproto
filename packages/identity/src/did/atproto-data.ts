@@ -32,7 +32,7 @@ export const parseToAtprotoDocument = (
     did,
     signingKey: parseKey(doc),
     handle: getHandle(doc),
-    pds: getPdsEndpoint(doc)?.toString(),
+    pds: getPdsEndpoint(doc),
   }
 }
 

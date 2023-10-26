@@ -45,21 +45,21 @@ export const getSigningKey = (
   }
 }
 
-export const getPdsEndpoint = (doc: DidDocument): URL | undefined => {
+export const getPdsEndpoint = (doc: DidDocument): string | undefined => {
   return getServiceEndpoint(doc, {
     id: '#atproto_pds',
     type: 'AtprotoPersonalDataServer',
   })
 }
 
-export const getFeedGenEndpoint = (doc: DidDocument): URL | undefined => {
+export const getFeedGenEndpoint = (doc: DidDocument): string | undefined => {
   return getServiceEndpoint(doc, {
     id: '#bsky_fg',
     type: 'BskyFeedGenerator',
   })
 }
 
-export const getNotifEndpoint = (doc: DidDocument): URL | undefined => {
+export const getNotifEndpoint = (doc: DidDocument): string | undefined => {
   return getServiceEndpoint(doc, {
     id: '#bsky_notif',
     type: 'BskyNotificationService',
@@ -91,7 +91,7 @@ export const getServiceEndpoint = (
 }
 
 // Check protocol and hostname to prevent potential SSRF
-const validateUrl = (urlStr: string): URL | undefined => {
+const validateUrl = (urlStr: string): string | undefined => {
   let url
   try {
     url = new URL(urlStr)
@@ -103,7 +103,7 @@ const validateUrl = (urlStr: string): URL | undefined => {
   } else if (!url.hostname) {
     return undefined
   } else {
-    return url
+    return urlStr
   }
 }
 
