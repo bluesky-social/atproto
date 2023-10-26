@@ -547,9 +547,6 @@ Key:
 </td>
 </tr>
 
-
-
-
 <tr>
 <td><strong>Mute/block: Blocking-by-list user</strong></td>
 <td>
@@ -557,10 +554,8 @@ Key:
 </td>
 <td>
 
-
 </td>
 <td>
-
 
 </td>
 <td>
@@ -568,9 +563,6 @@ Key:
 
 </td>
 </tr>
-
-
-
 
 <tr>
 <td><strong>Mute/block: Blocked by user</strong></td>
