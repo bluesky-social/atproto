@@ -16,7 +16,8 @@
             "did": { "type": "string", "format": "did" },
             "inviteCode": { "type": "string" },
             "password": { "type": "string" },
-            "recoveryKey": { "type": "string" }
+            "recoveryKey": { "type": "string" },
+            "plcOp": { "type": "bytes" }
           }
         }
       },
