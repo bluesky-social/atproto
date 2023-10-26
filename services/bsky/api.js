@@ -103,7 +103,7 @@ const main = async () => {
     schema: env.dbPostgresSchema,
     poolSize: 2,
   })
-  const viewMaintainer = new ViewMaintainer(migrateDb)
+  const viewMaintainer = new ViewMaintainer(migrateDb, 1800)
   const viewMaintainerRunning = viewMaintainer.run()
 
   const periodicModerationActionReversal = new PeriodicModerationActionReversal(
