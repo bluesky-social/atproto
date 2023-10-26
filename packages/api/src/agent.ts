@@ -1,5 +1,6 @@
 import { ErrorResponseBody, errorResponseBody } from '@atproto/xrpc'
 import { defaultFetchHandler } from '@atproto/xrpc'
+import { isValidDidDoc, getPdsEndpoint } from '@atproto/common-web'
 import {
   AtpBaseClient,
   AtpServiceClient,
@@ -29,6 +30,11 @@ export class AtpAgent {
   service: URL
   api: AtpServiceClient
   session?: AtpSessionData
+
+  /**
+   * The PDS URL, driven by the did doc. May be undefined.
+   */
+  pdsUrl: URL | undefined
 
   private _baseClient: AtpBaseClient
   private _persistSession?: AtpPersistSessionHandler
@@ -97,6 +103,7 @@ export class AtpAgent {
         email: opts.email,
         emailConfirmed: false,
       }
+      this._updateApiEndpoint(res.data.didDoc)
       return res
     } catch (e) {
       this.session = undefined
@@ -129,6 +136,7 @@ export class AtpAgent {
         email: res.data.email,
         emailConfirmed: res.data.emailConfirmed,
       }
+      this._updateApiEndpoint(res.data.didDoc)
       return res
     } catch (e) {
       this.session = undefined
@@ -253,7 +261,7 @@ export class AtpAgent {
     }
 
     // send the refresh request
-    const url = new URL(this.service.origin)
+    const url = new URL((this.pdsUrl || this.service).origin)
     url.pathname = `/xrpc/${REFRESH_SESSION}`
     const res = await AtpAgent.fetch(
       url.toString(),
@@ -277,6 +285,7 @@ export class AtpAgent {
         handle: res.body.handle,
         did: res.body.did,
       }
+      this._updateApiEndpoint(res.body.didDoc)
       this._persistSession?.('update', this.session)
     }
     // else: other failures should be ignored - the issue will
@@ -311,6 +320,24 @@ export class AtpAgent {
    */
   createModerationReport: typeof this.api.com.atproto.moderation.createReport =
     (data, opts) => this.api.com.atproto.moderation.createReport(data, opts)
+
+  /**
+   * Helper to update the pds endpoint dynamically.
+   *
+   * The session methods (create, resume, refresh) may respond with the user's
+   * did document which contains the user's canonical PDS endpoint. That endpoint
+   * may differ from the endpoint used to contact the server. We capture that
+   * PDS endpoint and update the client to use that given endpoint for future
+   * requests. (This helps ensure smooth migrations between PDSes, especially
+   * when the PDSes are operated by a single org.)
+   */
+  private _updateApiEndpoint(didDoc: unknown) {
+    if (isValidDidDoc(didDoc)) {
+      const endpoint = getPdsEndpoint(didDoc)
+      this.pdsUrl = endpoint ? new URL(endpoint) : undefined
+    }
+    this.api.xrpc.uri = this.pdsUrl || this.service
+  }
 }
 
 function isErrorObject(v: unknown): v is ErrorResponseBody {

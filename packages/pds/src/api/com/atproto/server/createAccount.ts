@@ -1,7 +1,7 @@
+import { MINUTE } from '@atproto/common'
+import { AtprotoData } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { AtprotoData } from '@atproto/identity'
-import { MINUTE } from '@atproto/common'
 import disposable from 'disposable-email'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import * as plc from '@did-plc/lib'
@@ -12,6 +12,7 @@ import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
 import { ServiceDb } from '../../../../service-db'
+import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -21,6 +22,9 @@ export default function (server: Server, ctx: AppContext) {
     },
     handler: async ({ input, req }) => {
       const { email, password, inviteCode } = input.body
+      if (input.body.plcOp) {
+        throw new InvalidRequestError('Unsupported input: "plcOp"')
+      }
 
       if (ctx.cfg.invites.required && !inviteCode) {
         throw new InvalidRequestError(
@@ -135,11 +139,14 @@ export default function (server: Server, ctx: AppContext) {
         .account(ctx.db)
         .updateRepoRoot(did, commit.cid, commit.rev)
 
+      const didDoc = await didDocForSession(ctx, result.did, true)
+
       return {
         encoding: 'application/json',
         body: {
           handle,
           did: result.did,
+          didDoc,
           accessJwt: result.accessJwt,
           refreshJwt: result.refreshJwt,
         },

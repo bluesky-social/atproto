@@ -16,7 +16,8 @@
             "did": { "type": "string", "format": "did" },
             "inviteCode": { "type": "string" },
             "password": { "type": "string" },
-            "recoveryKey": { "type": "string" }
+            "recoveryKey": { "type": "string" },
+            "plcOp": { "type": "bytes" }
           }
         }
       },
@@ -29,7 +30,8 @@
             "accessJwt": { "type": "string" },
             "refreshJwt": { "type": "string" },
             "handle": { "type": "string", "format": "handle" },
-            "did": { "type": "string", "format": "did" }
+            "did": { "type": "string", "format": "did" },
+            "didDoc": { "type": "unknown" }
           }
         }
       },

@@ -22,6 +22,7 @@ export interface OutputSchema {
   refreshJwt: string
   handle: string
   did: string
+  didDoc?: {}
   email?: string
   emailConfirmed?: boolean
   [k: string]: unknown

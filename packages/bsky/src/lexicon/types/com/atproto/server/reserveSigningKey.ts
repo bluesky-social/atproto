@@ -10,28 +10,15 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {}
 
-export interface InputSchema {
-  /** Handle or other identifier supported by the server for the authenticating user. */
-  identifier: string
-  password: string
-  [k: string]: unknown
-}
+export type InputSchema = undefined
 
 export interface OutputSchema {
-  accessJwt: string
-  refreshJwt: string
-  handle: string
-  did: string
-  didDoc?: {}
-  email?: string
-  emailConfirmed?: boolean
+  /** Public signing key in the form of a did:key. */
+  signingKey: string
   [k: string]: unknown
 }
 
-export interface HandlerInput {
-  encoding: 'application/json'
-  body: InputSchema
-}
+export type HandlerInput = undefined
 
 export interface HandlerSuccess {
   encoding: 'application/json'
@@ -42,7 +29,6 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'AccountTakedown'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
