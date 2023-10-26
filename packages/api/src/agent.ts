@@ -1,5 +1,6 @@
 import { ErrorResponseBody, errorResponseBody } from '@atproto/xrpc'
 import { defaultFetchHandler } from '@atproto/xrpc'
+import { isValidDidDoc, getPdsEndpoint } from '@atproto/common-web'
 import {
   AtpBaseClient,
   AtpServiceClient,
@@ -18,7 +19,6 @@ import {
   AtpPersistSessionHandler,
   AtpAgentOpts,
 } from './types'
-import { getPdsEndpoint } from './did/did-doc'
 
 const REFRESH_SESSION = 'com.atproto.server.refreshSession'
 
@@ -332,7 +332,9 @@ export class AtpAgent {
    * when the PDSes are operated by a single org.)
    */
   private _updateApiEndpoint(didDoc: unknown) {
-    this.pdsUrl = getPdsEndpoint(didDoc)
+    if (isValidDidDoc(didDoc)) {
+      this.pdsUrl = getPdsEndpoint(didDoc)
+    }
     this.api.xrpc.uri = this.pdsUrl || this.service
   }
 }
