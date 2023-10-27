@@ -88,14 +88,9 @@ export const blocksToCarFile = (
   return streamToBuffer(carStream)
 }
 
-export const readCarStream = (stream: AsyncIterable<Uint8Array>) => {
-  return CarReader.fromIterable(stream)
-}
-
-export const readCar = async (
-  bytes: Uint8Array,
+export const carToBlocks = async (
+  car: CarReader,
 ): Promise<{ roots: CID[]; blocks: BlockMap }> => {
-  const car = await CarReader.fromBytes(bytes)
   const roots = await car.getRoots()
   const blocks = new BlockMap()
   for await (const block of verifyIncomingCarBlocks(car.blocks())) {
@@ -105,6 +100,18 @@ export const readCar = async (
     roots,
     blocks,
   }
+}
+
+export const readCar = async (
+  bytes: Uint8Array,
+): Promise<{ roots: CID[]; blocks: BlockMap }> => {
+  const car = await CarReader.fromBytes(bytes)
+  return carToBlocks(car)
+}
+
+export const readCarStream = async (stream: AsyncIterable<Uint8Array>) => {
+  const car = await CarReader.fromIterable(stream)
+  return carToBlocks(car)
 }
 
 export const readCarWithRoot = async (

@@ -6,62 +6,19 @@ import { CID } from 'multiformats/cid'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AsyncBuffer, TID, cborDecode } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
-import {
-  BlockMap,
-  Repo,
-  WriteOpAction,
-  readCarStream,
-  verifyIncomingCarBlocks,
-} from '@atproto/repo'
+import { Repo, WriteOpAction, readCarStream, verifyDiff } from '@atproto/repo'
 import { BlobRef, LexValue } from '@atproto/lexicon'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { SqlRepoTransactor } from '../../../../actor-store/repo/sql-repo-transactor'
-import { RecordTransactor } from '../../../../actor-store/record/transactor'
-import { BlobTransactor } from '../../../../actor-store/blob/transactor'
+import { ActorStoreTransactor } from '../../../../actor-store'
+import { AtprotoData } from '@atproto/identity'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.importRepo({
     handler: async ({ params, input }) => {
       const { did } = params
-      const car = await readCarStream(input.body)
-      const roots = await car.getRoots()
-      if (roots.length !== 1) {
-        throw new InvalidRequestError('expected one root')
-      }
-      const prevCommitCid = roots[0]
-
-      const [db, keypair] = await Promise.all([
-        ctx.actorStore.db(did),
-        ctx.actorStore.keypair(did),
-      ])
-      // clear old repo blocks
-      await db.db.deleteFrom('repo_block').execute()
-      const now = new Date().toISOString()
-      const repoTransactor = new SqlRepoTransactor(db, now)
-
-      const rev = TID.nextStr()
-      let blocks = new BlockMap()
-      let count = 0
-      const blockQueue = new PQueue()
-      for await (const block of verifyIncomingCarBlocks(car.blocks())) {
-        blocks.set(block.cid, block.bytes)
-        count++
-        if (count % 100 === 0) {
-          blockQueue.add(async () => {
-            await repoTransactor.putMany(blocks, rev)
-          })
-          blocks = new BlockMap()
-        }
-      }
-      await repoTransactor.putMany(blocks, rev)
-
-      let repo = await Repo.load(repoTransactor, prevCommitCid)
-      repo = await repo.resignCommit(rev, keypair)
-
       const outBuffer = new AsyncBuffer<string>()
-      outBuffer.push(`read ${count} blocks\n`)
-      processRepo(ctx, outBuffer, repo, now)
+      processImport(ctx, did, input.body, outBuffer)
 
       return {
         encoding: 'text/plain',
@@ -71,89 +28,138 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const processRepo = async (
+const processImport = async (
   ctx: AppContext,
+  did: string,
+  incomingCar: AsyncIterable<Uint8Array>,
   outBuffer: AsyncBuffer<string>,
-  repo: Repo,
-  now: string,
 ) => {
-  outBuffer.push('finished reading car\n')
-  const did = repo.did
-  const db = await ctx.actorStore.db(did)
-  const recordTransactor = new RecordTransactor(db, ctx.blobstore(did))
+  await ctx.actorStore.transact(did, async (actorStore) => {
+    const blobRefs = await importRepo(actorStore, incomingCar, outBuffer)
+    const didData = await ctx.idResolver.did.resolveAtprotoData(did)
+    await importBlobs(actorStore, didData, blobRefs, outBuffer)
+  })
+  const plcOp = await ctx.actorStore.getPlcOp(did)
+  await ctx.plcClient.sendOperation(did, cborDecode(plcOp))
+  outBuffer.push(`submitted plc op\n`)
+  await ctx.actorStore.clearPlcOp(did)
+  outBuffer.close()
+}
 
+const importRepo = async (
+  actorStore: ActorStoreTransactor,
+  incomingCar: AsyncIterable<Uint8Array>,
+  outBuffer: AsyncBuffer<string>,
+) => {
+  const now = new Date().toISOString()
+  const rev = TID.nextStr()
+  const did = actorStore.repo.did
+  const { roots, blocks } = await readCarStream(incomingCar)
+  if (roots.length !== 1) {
+    throw new InvalidRequestError('expected one root')
+  }
+  outBuffer.push(`read ${blocks.size} blocks\n`)
+  const currRoot = await actorStore.db.db
+    .selectFrom('repo_root')
+    .selectAll()
+    .executeTakeFirst()
+  const currRepo = currRoot
+    ? await Repo.load(actorStore.repo.storage, CID.parse(currRoot.cid))
+    : null
+  const diff = await verifyDiff(currRepo, blocks, roots[0])
+  outBuffer.push(`diffed repo and found ${diff.writes.length} writes\n`)
+  diff.commit.rev = rev
+  await actorStore.repo.storage.applyCommit(diff.commit, currRepo === null)
   const recordQueue = new PQueue({ concurrency: 50 })
   let blobRefs: BlobRef[] = []
   let count = 0
-  for await (const entry of repo.walkRecords()) {
-    const uri = AtUri.make(did, entry.collection, entry.rkey)
+  for (const write of diff.writes) {
     recordQueue.add(async () => {
-      const recordBlobs = findBlobRefs(entry.record)
-      const indexRecord = recordTransactor.indexRecord(
-        uri,
-        entry.cid,
-        entry.record,
-        WriteOpAction.Create,
-        repo.commit.rev,
-        now,
-      )
-      const blobValues = recordBlobs.map((cid) => ({
-        recordUri: uri.toString(),
-        blobCid: cid.toString(),
-      }))
-      const indexRecordBlobs =
-        blobValues.length > 0
-          ? db.db.insertInto('record_blob').values(blobValues).execute()
-          : Promise.resolve()
-      blobRefs = blobRefs.concat(recordBlobs)
-      await Promise.all([indexRecord, indexRecordBlobs])
+      const uri = AtUri.make(did, write.collection, write.rkey)
+      if (write.action === WriteOpAction.Delete) {
+        await actorStore.record.deleteRecord(uri)
+      } else {
+        const indexRecord = actorStore.record.indexRecord(
+          uri,
+          write.cid,
+          write.record,
+          write.action,
+          rev,
+          now,
+        )
+        const recordBlobs = findBlobRefs(write.record)
+        blobRefs = blobRefs.concat(recordBlobs)
+        const blobValues = recordBlobs.map((cid) => ({
+          recordUri: uri.toString(),
+          blobCid: cid.toString(),
+        }))
+        const indexRecordBlobs =
+          blobValues.length > 0
+            ? actorStore.db.db
+                .insertInto('record_blob')
+                .values(blobValues)
+                .execute()
+            : Promise.resolve()
+        await Promise.all([indexRecord, indexRecordBlobs])
+      }
       count++
       if (count % 50 === 0) {
-        outBuffer.push(`indexed ${count} records\n`)
+        outBuffer.push(`indexed ${count}/${diff.writes.length} writes\n`)
       }
     })
   }
+  outBuffer.push(`indexed ${count}/${diff.writes.length} writes\n`)
   await recordQueue.onIdle()
-  outBuffer.push(`finished indexing ${count} records\n`)
-  outBuffer.push(`importing ${blobRefs.length} blobs\n`)
+  return blobRefs
+}
 
-  const blobstore = ctx.blobstore(did)
-  const blobTransactor = new BlobTransactor(db, blobstore, ctx.backgroundQueue)
-  const didData = await ctx.idResolver.did.resolveAtprotoData(did)
+const importBlobs = async (
+  actorStore: ActorStoreTransactor,
+  didData: AtprotoData,
+  blobRefs: BlobRef[],
+  outBuffer: AsyncBuffer<string>,
+) => {
   let blobCount = 0
   const blobQueue = new PQueue({ concurrency: 10 })
+  outBuffer.push(`fetching ${blobRefs.length} blobs\n`)
+  const endpoint = `${didData.pds}/xrpc/com.atproto.sync.getBlob`
   for (const ref of blobRefs) {
     blobQueue.add(async () => {
-      const res = await axios.get(
-        `${didData.pds}/xrpc/com.atproto.sync.getBlob`,
-        {
-          params: { did, cid: ref.ref.toString() },
-          decompress: true,
-          responseType: 'stream',
-          timeout: 5000,
-        },
-      )
-      const mimeType = res.headers['content-type'] ?? 'application/octet-stream'
-      const importedRef = await blobTransactor.addUntetheredBlob(
-        mimeType,
-        res.data,
-      )
-      assert(ref.ref.equals(importedRef.ref))
-      blobTransactor.verifyBlobAndMakePermanent({
-        mimeType: ref.mimeType,
-        cid: ref.ref,
-        constraints: {},
-      })
-      blobCount++
-      outBuffer.push(`imported ${blobCount}/${blobRefs.length} blobs\n`)
+      try {
+        await importBlob(actorStore, endpoint, ref)
+        blobCount++
+        outBuffer.push(`imported ${blobCount}/${blobRefs.length} blobs\n`)
+      } catch (err) {
+        outBuffer.push(`failed to import blob: ${ref.ref.toString()}`)
+      }
     })
   }
   await blobQueue.onIdle()
   outBuffer.push(`finished importing all blobs\n`)
-  outBuffer.close()
-  const plcOp = await ctx.actorStore.getPlcOp(did)
-  await ctx.plcClient.sendOperation(did, cborDecode(plcOp))
-  await ctx.actorStore.clearPlcOp(did)
+}
+
+const importBlob = async (
+  actorStore: ActorStoreTransactor,
+  endpoint: string,
+  blob: BlobRef,
+) => {
+  const res = await axios.get(endpoint, {
+    params: { did: actorStore.repo.did, cid: blob.ref.toString() },
+    decompress: true,
+    responseType: 'stream',
+    timeout: 5000,
+  })
+  const mimeType = res.headers['content-type'] ?? 'application/octet-stream'
+  const importedRef = await actorStore.repo.blob.addUntetheredBlob(
+    mimeType,
+    res.data,
+  )
+  assert(blob.ref.equals(importedRef.ref))
+  await actorStore.repo.blob.verifyBlobAndMakePermanent({
+    mimeType: blob.mimeType,
+    cid: blob.ref,
+    constraints: {},
+  })
 }
 
 const findBlobRefs = (val: LexValue): BlobRef[] => {

@@ -124,6 +124,7 @@ export class AsyncBuffer<T> {
 
   close() {
     this.closed = true
+    this.resolve()
   }
 }
 
