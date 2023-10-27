@@ -5,6 +5,7 @@ import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { didDocForSession } from './util'
+import { authPassthru, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createSession({
@@ -20,7 +21,16 @@ export default function (server: Server, ctx: AppContext) {
         calcKey: ({ input, req }) => `${input.body.identifier}-${req.ip}`,
       },
     ],
-    handler: async ({ input }) => {
+    handler: async ({ input, req }) => {
+      if (ctx.entrywayAgent) {
+        return resultPassthru(
+          await ctx.entrywayAgent.com.atproto.server.createSession(
+            input.body,
+            authPassthru(req, true),
+          ),
+        )
+      }
+
       const { password } = input.body
       const identifier = input.body.identifier.toLowerCase()
 
