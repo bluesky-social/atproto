@@ -39,14 +39,13 @@ describe('entryway', () => {
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
     })
     pds = await TestPds.create({
+      // @NOTE plc rotation key and recovery key intentionally not matching entryway
       isEntryway: false,
       dbPostgresUrl: process.env.DB_POSTGRES_URL,
       dbPostgresSchema: 'multi_pds_account_pds',
       didPlcUrl: plc.url,
-      recoveryDidKey: recoveryKey,
       jwtVerifyKeyK256PublicKeyHex: jwtVerifyPub,
       jwtSigningKeyK256PrivateKeyHex: undefined, // no private key material on pds for jwts
-      plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
     })
     const pdsRow = await entryway.ctx.db.db
       .insertInto('pds')
@@ -72,7 +71,7 @@ describe('entryway', () => {
   it('assigns user to a pds.', async () => {
     await entryway.ctx.db.db.updateTable('pds').set({ weight: 1 }).execute()
     const {
-      data: { did },
+      data: { did, ...initialSession },
     } = await entrywayAgent.api.com.atproto.server.createAccount({
       email: 'alice@test.com',
       handle: 'alice.test',
@@ -81,25 +80,8 @@ describe('entryway', () => {
     alice = did
     await entryway.ctx.db.db.updateTable('pds').set({ weight: 0 }).execute()
 
-    // @TODO move these steps into account creation process
-    await entryway.ctx.services.repo(entryway.ctx.db).deleteRepo(did)
-    await plc
-      .getClient()
-      .updatePds(did, pds.ctx.plcRotationKey, pds.ctx.cfg.service.publicUrl)
-    await plc
-      .getClient()
-      .updateAtprotoKey(
-        did,
-        pds.ctx.plcRotationKey,
-        pds.ctx.repoSigningKey.did(),
-      )
-
-    await pdsAgent.api.com.atproto.server.createAccount({
-      did,
-      email: 'alice@test.com',
-      handle: 'alice.test',
-      password: 'test123',
-    })
+    const token = jose.decodeJwt(initialSession.accessJwt)
+    expect(token.aud).toBe(pds.ctx.cfg.service.did)
 
     const entrywayAccount = await entryway.ctx.services
       .account(entryway.ctx.db)
@@ -118,6 +100,19 @@ describe('entryway', () => {
     expect(pdsAccount.pdsId).toBe(null)
     expect(pdsAccount.pdsDid).toBe(null)
     expect(pdsAccount.root).not.toBe(null)
+
+    const plcClient = plc.getClient()
+    const doc = await plcClient.getDocumentData(alice)
+    expect(doc.did).toBe(alice)
+    expect(doc.alsoKnownAs).toEqual(['at://alice.test'])
+    expect(doc.services['atproto_pds'].endpoint).toBe(
+      pds.ctx.cfg.service.publicUrl,
+    )
+    expect(doc.verificationMethods.atproto).toBe(pds.ctx.repoSigningKey.did())
+    expect(doc.rotationKeys).toEqual([
+      entryway.ctx.cfg.identity.recoveryDidKey,
+      entryway.ctx.plcRotationKey.did(),
+    ])
   })
 
   it('creates a session that auths across services.', async () => {
@@ -127,7 +122,9 @@ describe('entryway', () => {
         password: 'test123',
       })
     accessToken = session.accessJwt
+    const tokenBody = jose.decodeJwt(accessToken)
     const tokenHeader = jose.decodeProtectedHeader(accessToken)
+    expect(tokenBody.aud).toBe(pds.ctx.cfg.service.did)
     expect(tokenHeader.alg).toBe('ES256K') // asymmetric, from the jwt key and not the secret
     const { data: entrywayResult } =
       await entrywayAgent.api.com.atproto.server.getSession(
@@ -150,7 +147,7 @@ describe('entryway', () => {
           repo: alice,
           collection: ids.AppBskyActorProfile,
           rkey: 'self',
-          record: { displayName: 'Alice' },
+          record: { displayName: 'Alice 1' },
         },
         {
           headers: SeedClient.getHeaders(accessToken),
@@ -169,7 +166,7 @@ describe('entryway', () => {
           repo: alice,
           collection: ids.AppBskyActorProfile,
           rkey: 'self',
-          record: { displayName: 'Alice!' },
+          record: { displayName: 'Alice 2' },
         },
         {
           headers: SeedClient.getHeaders(accessToken),
@@ -214,7 +211,7 @@ describe('entryway', () => {
         repo: alice,
         collection: ids.AppBskyActorProfile,
         rkey: 'self',
-        record: { displayName: 'Alice', avatar: blob },
+        record: { displayName: 'Alice 3', avatar: blob },
       },
       {
         headers: SeedClient.getHeaders(accessToken),
@@ -234,7 +231,7 @@ describe('entryway', () => {
         repo: alice,
         collection: ids.AppBskyActorProfile,
         rkey: 'self',
-        record: { displayName: 'Alice' },
+        record: { displayName: 'Alice 4' },
       },
       {
         headers: SeedClient.getHeaders(accessToken),
@@ -245,9 +242,9 @@ describe('entryway', () => {
       repo: alice,
       collection: ids.AppBskyActorProfile,
     })
-    expect(results.records.map((record) => record.uri)).toContain(
-      profileRef.uri,
-    )
+    expect(results.records.map((record) => [record.uri, record.cid])).toEqual([
+      [profileRef.uri, profileRef.cid],
+    ])
   })
 
   it('initiates token refresh when account moves off of entryway.', async () => {
@@ -273,16 +270,17 @@ describe('entryway', () => {
     )
     // now move bob to a separate pds
     await entryway.ctx.services.repo(entryway.ctx.db).deleteRepo(did)
-    await plc
-      .getClient()
-      .updatePds(did, pds.ctx.plcRotationKey, pds.ctx.cfg.service.publicUrl)
-    await plc
-      .getClient()
-      .updateAtprotoKey(
-        did,
-        pds.ctx.plcRotationKey,
-        pds.ctx.repoSigningKey.did(),
-      )
+    const plcClient = plc.getClient()
+    await plcClient.updatePds(
+      did,
+      entryway.ctx.plcRotationKey,
+      pds.ctx.cfg.service.publicUrl,
+    )
+    await plcClient.updateAtprotoKey(
+      did,
+      entryway.ctx.plcRotationKey,
+      pds.ctx.repoSigningKey.did(),
+    )
     await entryway.ctx.db.db
       .updateTable('user_account')
       .set({ pdsId })
