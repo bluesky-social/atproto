@@ -20,7 +20,13 @@ export function decideAccount(
       acc.addMuted(subject.viewer?.muted)
     }
   }
-  acc.addBlocking(subject.viewer?.blocking)
+  if (subject.viewer?.blocking) {
+    if (subject.viewer?.blockingByList) {
+      acc.addBlockingByList(subject.viewer?.blockingByList)
+    } else {
+      acc.addBlocking(subject.viewer?.blocking)
+    }
+  }
   acc.addBlockedBy(subject.viewer?.blockedBy)
 
   for (const label of filterAccountLabels(subject.labels)) {

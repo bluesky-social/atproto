@@ -3827,6 +3827,10 @@ export const schemaDict = {
             type: 'string',
             format: 'at-uri',
           },
+          blockingByList: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listViewBasic',
+          },
           following: {
             type: 'string',
             format: 'at-uri',
