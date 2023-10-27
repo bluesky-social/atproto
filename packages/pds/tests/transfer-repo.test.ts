@@ -28,7 +28,10 @@ describe('transfer repo', () => {
       password: 'alice-pass',
     })
     did = sc.dids.alice
-    await sc.post(did, 'blah')
+    for (let i = 0; i < 50; i++) {
+      const post = await sc.post(did, 'blah')
+      await sc.like(did, post.ref)
+    }
     const img = await sc.uploadFile(
       did,
       'tests/sample-img/key-landscape-small.jpg',
@@ -109,10 +112,18 @@ describe('transfer repo', () => {
       },
     )
 
-    const listRecords = await transferAgent.api.com.atproto.repo.listRecords({
+    const listPosts = await transferAgent.api.com.atproto.repo.listRecords({
       repo: did,
       collection: 'app.bsky.feed.post',
+      limit: 100,
     })
-    expect(listRecords.data.records.length).toBe(3)
+    const listLikes = await transferAgent.api.com.atproto.repo.listRecords({
+      repo: did,
+      collection: 'app.bsky.feed.like',
+      limit: 100,
+    })
+
+    expect(listPosts.data.records.length).toBe(52)
+    expect(listLikes.data.records.length).toBe(50)
   })
 })

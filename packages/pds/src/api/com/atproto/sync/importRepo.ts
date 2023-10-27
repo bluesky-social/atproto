@@ -43,24 +43,24 @@ export default function (server: Server, ctx: AppContext) {
       const rev = TID.nextStr()
       let blocks = new BlockMap()
       let count = 0
-      let prevPromise = Promise.resolve()
+      const blockQueue = new PQueue()
       for await (const block of verifyIncomingCarBlocks(car.blocks())) {
         blocks.set(block.cid, block.bytes)
         count++
-        if (count >= 100) {
-          await prevPromise
-          prevPromise = repoTransactor.putMany(blocks, rev)
+        if (count % 100 === 0) {
+          blockQueue.add(async () => {
+            await repoTransactor.putMany(blocks, rev)
+          })
           blocks = new BlockMap()
-          count = 0
         }
       }
-      await prevPromise
       await repoTransactor.putMany(blocks, rev)
 
       let repo = await Repo.load(repoTransactor, prevCommitCid)
       repo = await repo.resignCommit(rev, keypair)
 
       const outBuffer = new AsyncBuffer<string>()
+      outBuffer.push(`read ${count} blocks\n`)
       processRepo(ctx, outBuffer, repo, now)
 
       return {
