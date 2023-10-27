@@ -1,5 +1,19 @@
 # @atproto/api
 
+## 0.6.21
+
+### Patch Changes
+
+- [#1779](https://github.com/bluesky-social/atproto/pull/1779) [`9c98a5ba`](https://github.com/bluesky-social/atproto/commit/9c98a5baaf503b02238a6afe4f6e2b79c5181693) Thanks [@pfrazee](https://github.com/pfrazee)! - modlist helpers added to bsky-agent, add blockingByList to viewer state lexicon
+
+- [`35d108ce`](https://github.com/bluesky-social/atproto/commit/35d108ce94866ce1b3d147cd0620a0ba1c4ebcd7) Thanks [@devinivy](https://github.com/devinivy)! - Allow pds to serve did doc with credentials, API client to respect PDS listed in the did doc.
+
+- Updated dependencies [[`35d108ce`](https://github.com/bluesky-social/atproto/commit/35d108ce94866ce1b3d147cd0620a0ba1c4ebcd7)]:
+  - @atproto/common-web@0.2.2
+  - @atproto/lexicon@0.2.3
+  - @atproto/syntax@0.1.3
+  - @atproto/xrpc@0.3.3
+
 ## 0.6.20
 
 ### Patch Changes
