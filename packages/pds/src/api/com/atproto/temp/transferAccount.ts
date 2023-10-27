@@ -1,10 +1,10 @@
 import { ensureAtpDocument } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import disposable from 'disposable-email'
-import { normalizeAndValidateHandle } from '../../../handle'
+import { normalizeAndValidateHandle } from '../../../../handle'
 import * as plc from '@did-plc/lib'
-import { Server } from '../../../lexicon'
-import AppContext from '../../../context'
+import { Server } from '../../../../lexicon'
+import AppContext from '../../../../context'
 import { cborDecode, check, cidForCbor } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {

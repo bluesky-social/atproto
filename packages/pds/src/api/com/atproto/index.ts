@@ -6,7 +6,7 @@ import moderation from './moderation'
 import repo from './repo'
 import serverMethods from './server'
 import sync from './sync'
-import transferAccount from './transferAccount'
+import temp from './temp'
 
 export default function (server: Server, ctx: AppContext) {
   admin(server, ctx)
@@ -15,5 +15,5 @@ export default function (server: Server, ctx: AppContext) {
   repo(server, ctx)
   serverMethods(server, ctx)
   sync(server, ctx)
-  transferAccount(server, ctx)
+  temp(server, ctx)
 }

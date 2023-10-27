@@ -86,7 +86,7 @@ describe('transfer repo', () => {
 
     const repo = await origAgent.api.com.atproto.sync.getRepo({ did })
     const res = await axios.post(
-      `${transferPds.url}/xrpc/com.atproto.sync.importRepo`,
+      `${transferPds.url}/xrpc/com.atproto.temp.importRepo`,
       repo.data,
       {
         params: { did },

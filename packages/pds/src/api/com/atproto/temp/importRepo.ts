@@ -21,7 +21,7 @@ import { RecordTransactor } from '../../../../actor-store/record/transactor'
 import { BlobTransactor } from '../../../../actor-store/blob/transactor'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.sync.importRepo({
+  server.com.atproto.temp.importRepo({
     handler: async ({ params, input }) => {
       const { did } = params
       const car = await readCarStream(input.body)

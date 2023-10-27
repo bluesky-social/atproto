@@ -71,7 +71,7 @@ import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
-import * as ComAtprotoSyncImportRepo from './types/com/atproto/sync/importRepo'
+import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
@@ -851,6 +851,17 @@ export class TempNS {
     const nsid = 'com.atproto.temp.transferAccount' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
+
+  importRepo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempImportRepo.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempImportRepo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.importRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
 }
 
 export class SyncNS {
@@ -934,17 +945,6 @@ export class SyncNS {
     >,
   ) {
     const nsid = 'com.atproto.sync.getRepo' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  importRepo<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoSyncImportRepo.Handler<ExtractAuth<AV>>,
-      ComAtprotoSyncImportRepo.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.sync.importRepo' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

@@ -5,7 +5,6 @@ import getBlocks from './getBlocks'
 import getLatestCommit from './getLatestCommit'
 import getRecord from './getRecord'
 import getRepo from './getRepo'
-import importRepo from './importRepo'
 import subscribeRepos from './subscribeRepos'
 import listBlobs from './listBlobs'
 import listRepos from './listRepos'
@@ -18,7 +17,6 @@ export default function (server: Server, ctx: AppContext) {
   getLatestCommit(server, ctx)
   getRecord(server, ctx)
   getRepo(server, ctx)
-  importRepo(server, ctx)
   subscribeRepos(server, ctx)
   listBlobs(server, ctx)
   listRepos(server, ctx)

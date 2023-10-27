@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.sync.importRepo",
+  "id": "com.atproto.temp.importRepo",
   "defs": {
     "main": {
       "type": "procedure",

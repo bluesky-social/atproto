@@ -3591,9 +3591,9 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoSyncImportRepo: {
+  ComAtprotoTempImportRepo: {
     lexicon: 1,
-    id: 'com.atproto.sync.importRepo',
+    id: 'com.atproto.temp.importRepo',
     defs: {
       main: {
         type: 'procedure',
@@ -7736,7 +7736,7 @@ export const ids = {
   ComAtprotoSyncGetLatestCommit: 'com.atproto.sync.getLatestCommit',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
-  ComAtprotoSyncImportRepo: 'com.atproto.sync.importRepo',
+  ComAtprotoTempImportRepo: 'com.atproto.temp.importRepo',
   ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
   ComAtprotoSyncListRepos: 'com.atproto.sync.listRepos',
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
