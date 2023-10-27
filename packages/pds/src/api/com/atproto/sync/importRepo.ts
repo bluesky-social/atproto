@@ -4,9 +4,8 @@ import PQueue from 'p-queue'
 import axios from 'axios'
 import { CID } from 'multiformats/cid'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AsyncBuffer, TID } from '@atproto/common'
+import { AsyncBuffer, TID, cborDecode } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
-import { Secp256k1Keypair } from '@atproto/crypto'
 import {
   BlockMap,
   Repo,
@@ -32,9 +31,12 @@ export default function (server: Server, ctx: AppContext) {
       }
       const prevCommitCid = roots[0]
 
-      const keypair = await Secp256k1Keypair.create({ exportable: true })
-      await ctx.actorStore.create(did, keypair, async () => {})
-      const db = await ctx.actorStore.db(did)
+      const [db, keypair] = await Promise.all([
+        ctx.actorStore.db(did),
+        ctx.actorStore.keypair(did),
+      ])
+      // clear old repo blocks
+      await db.db.deleteFrom('repo_block').execute()
       const now = new Date().toISOString()
       const repoTransactor = new SqlRepoTransactor(db, now)
 
@@ -75,7 +77,7 @@ const processRepo = async (
   repo: Repo,
   now: string,
 ) => {
-  outBuffer.push('finished reading car')
+  outBuffer.push('finished reading car\n')
   const did = repo.did
   const db = await ctx.actorStore.db(did)
   const recordTransactor = new RecordTransactor(db, ctx.blobstore(did))
@@ -107,12 +109,13 @@ const processRepo = async (
       await Promise.all([indexRecord, indexRecordBlobs])
       count++
       if (count % 50 === 0) {
-        outBuffer.push(`indexed ${count} records`)
+        outBuffer.push(`indexed ${count} records\n`)
       }
     })
   }
   await recordQueue.onIdle()
-  outBuffer.push(`importing ${blobRefs.length} blobs`)
+  outBuffer.push(`finished indexing ${count} records\n`)
+  outBuffer.push(`importing ${blobRefs.length} blobs\n`)
 
   const blobstore = ctx.blobstore(did)
   const blobTransactor = new BlobTransactor(db, blobstore, ctx.backgroundQueue)
@@ -142,11 +145,15 @@ const processRepo = async (
         constraints: {},
       })
       blobCount++
-      outBuffer.push(`imported ${blobCount}/${blobRefs.length} blobs`)
+      outBuffer.push(`imported ${blobCount}/${blobRefs.length} blobs\n`)
     })
   }
   await blobQueue.onIdle()
-  outBuffer.push(`finished importing all blobs`)
+  outBuffer.push(`finished importing all blobs\n`)
+  outBuffer.close()
+  const plcOp = await ctx.actorStore.getPlcOp(did)
+  await ctx.plcClient.sendOperation(did, cborDecode(plcOp))
+  await ctx.actorStore.clearPlcOp(did)
 }
 
 const findBlobRefs = (val: LexValue): BlobRef[] => {

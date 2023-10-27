@@ -19,7 +19,6 @@ export class RecordTransactor extends RecordReader {
     repoRev: string,
     timestamp?: string,
   ) {
-    this.db.assertTransaction()
     log.debug({ uri }, 'indexing record')
     const record = {
       uri: uri.toString(),
@@ -63,7 +62,6 @@ export class RecordTransactor extends RecordReader {
   }
 
   async deleteRecord(uri: AtUri) {
-    this.db.assertTransaction()
     log.debug({ uri }, 'deleting indexed record')
     const deleteQuery = this.db.db
       .deleteFrom('record')

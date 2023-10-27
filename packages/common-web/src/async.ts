@@ -72,6 +72,7 @@ export class AsyncBuffer<T> {
   private buffer: T[] = []
   private promise: Promise<void>
   private resolve: () => void
+  private closed = false
 
   constructor(public maxSize?: number) {
     // Initializing to satisfy types/build, immediately reset by resetPromise()
@@ -104,6 +105,9 @@ export class AsyncBuffer<T> {
 
   async *events(): AsyncGenerator<T> {
     while (true) {
+      if (this.closed && this.buffer.length === 0) {
+        return
+      }
       await this.promise
       if (this.maxSize && this.size > this.maxSize) {
         throw new AsyncBufferFullError(this.maxSize)
@@ -116,6 +120,10 @@ export class AsyncBuffer<T> {
         this.resetPromise()
       }
     }
+  }
+
+  close() {
+    this.closed = true
   }
 }
 
