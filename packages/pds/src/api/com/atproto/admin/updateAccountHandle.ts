@@ -3,14 +3,16 @@ import { normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { httpLogger } from '../../../../logger'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateAccountHandle({
     auth: ctx.authVerifier.role,
-    handler: async ({ input, auth }) => {
+    handler: async ({ input, auth, req }) => {
       if (!auth.credentials.admin) {
         throw new AuthRequiredError('Insufficient privileges')
       }
+
       const { did } = input.body
       const handle = await normalizeAndValidateHandle({
         ctx,
@@ -19,16 +21,23 @@ export default function (server: Server, ctx: AppContext) {
         allowReserved: true,
       })
 
-      // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
-      const account = await ctx.accountManager.getAccount(handle)
-
-      if (account) {
-        if (account.did !== did) {
-          throw new InvalidRequestError(`Handle already taken: ${handle}`)
-        }
+      if (ctx.entrywayAgent) {
+        await ctx.entrywayAgent.com.atproto.admin.updateAccountHandle(
+          input.body,
+          authPassthru(req, true),
+        )
       } else {
-        await ctx.plcClient.updateHandle(did, ctx.plcRotationKey, handle)
-        await ctx.accountManager.updateHandle(did, handle)
+        // Pessimistic check to handle spam: also enforced by updateHandle() and the db.
+        const account = await ctx.accountManager.getAccount(handle)
+
+        if (account) {
+          if (account.did !== did) {
+            throw new InvalidRequestError(`Handle already taken: ${handle}`)
+          }
+        } else {
+          await ctx.plcClient.updateHandle(did, ctx.plcRotationKey, handle)
+          await ctx.accountManager.updateHandle(did, handle)
+        }
       }
 
       try {

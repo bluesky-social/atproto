@@ -18,6 +18,7 @@ export default function (server: Server, ctx: AppContext) {
       if (!account) {
         throw new InvalidRequestError('Account not found', 'NotFound')
       }
+      const managesOwnInvites = !ctx.cfg.identity.entrywayUrl
       return {
         encoding: 'application/json',
         body: {
@@ -25,9 +26,11 @@ export default function (server: Server, ctx: AppContext) {
           handle: account.handle ?? INVALID_HANDLE,
           email: account.email,
           indexedAt: account.createdAt,
-          invitedBy: invitedBy[params.did],
-          invites,
-          invitesDisabled: account.invitesDisabled === 1,
+          invitedBy: managesOwnInvites ? invitedBy[params.did] : undefined,
+          invites: managesOwnInvites ? invites : undefined,
+          invitesDisabled: managesOwnInvites
+            ? account.invitesDisabled === 1
+            : undefined,
         },
       }
     },
