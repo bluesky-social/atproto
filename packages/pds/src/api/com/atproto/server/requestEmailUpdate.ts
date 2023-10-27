@@ -11,6 +11,9 @@ export default function (server: Server, ctx: AppContext) {
       if (!account) {
         throw new InvalidRequestError('account not found')
       }
+      if (!account.email) {
+        throw new InvalidRequestError('account does not have an email address')
+      }
 
       const tokenRequired = !!account.emailConfirmedAt
       if (tokenRequired) {

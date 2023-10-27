@@ -30,6 +30,10 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      if (!account.email) {
+        throw new InvalidRequestError('account does not have an email address')
+      }
+
       await ctx.moderationMailer.send(
         { content },
         { subject, to: account.email },

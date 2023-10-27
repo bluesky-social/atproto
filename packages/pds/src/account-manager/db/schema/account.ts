@@ -3,7 +3,7 @@ import { Generated, Selectable } from 'kysely'
 export interface Account {
   did: string
   handle: string | null
-  email: string
+  email: string | null // no email necessary when using entryway
   passwordScrypt: string
   createdAt: string
   emailConfirmedAt: string | null

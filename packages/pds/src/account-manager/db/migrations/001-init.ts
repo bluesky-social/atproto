@@ -66,7 +66,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createTable('account')
     .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('handle', 'varchar')
-    .addColumn('email', 'varchar', (col) => col.notNull())
+    .addColumn('email', 'varchar')
     .addColumn('passwordScrypt', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('emailConfirmedAt', 'varchar')
