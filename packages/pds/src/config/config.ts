@@ -74,6 +74,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     serviceHandleDomains,
     handleBackupNameservers: env.handleBackupNameservers,
     enableDidDocWithSession: !!env.enableDidDocWithSession,
+    entrywayUrl: env.entrywayUrl,
   }
 
   // default to being required if left undefined
@@ -220,6 +221,7 @@ export type IdentityConfig = {
   serviceHandleDomains: string[]
   handleBackupNameservers?: string[]
   enableDidDocWithSession: boolean
+  entrywayUrl?: string
 }
 
 export type InvitesConfig =

@@ -29,6 +29,7 @@ export const readEnv = (): ServerEnvironment => {
     serviceHandleDomains: envList('PDS_SERVICE_HANDLE_DOMAINS'),
     handleBackupNameservers: envList('PDS_HANDLE_BACKUP_NAMESERVERS'),
     enableDidDocWithSession: envBool('PDS_ENABLE_DID_DOC_WITH_SESSION'),
+    entrywayUrl: envStr('PDS_ENTRYWAY_URL'),
 
     // invites
     inviteRequired: envBool('PDS_INVITE_REQUIRED'),
@@ -104,6 +105,7 @@ export type ServerEnvironment = {
   serviceHandleDomains?: string[] // public hostname by default
   handleBackupNameservers?: string[]
   enableDidDocWithSession?: boolean
+  entrywayUrl?: string
 
   // invites
   inviteRequired?: boolean

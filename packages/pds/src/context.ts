@@ -37,6 +37,7 @@ export type AppContextOptions = {
   redisScratch?: Redis
   crawlers: Crawlers
   appViewAgent: AtpAgent
+  entrywayAgent?: AtpAgent
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
@@ -57,6 +58,7 @@ export class AppContext {
   public redisScratch?: Redis
   public crawlers: Crawlers
   public appViewAgent: AtpAgent
+  public entrywayAgent: AtpAgent | undefined
   public authVerifier: AuthVerifier
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
@@ -77,6 +79,7 @@ export class AppContext {
     this.redisScratch = opts.redisScratch
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
+    this.entrywayAgent = opts.entrywayAgent
     this.authVerifier = opts.authVerifier
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
@@ -140,6 +143,10 @@ export class AppContext {
 
     const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
 
+    const entrywayAgent = cfg.identity.entrywayUrl
+      ? new AtpAgent({ service: cfg.identity.entrywayUrl })
+      : undefined
+
     const accountManager = new AccountManager(
       path.join(cfg.db.directory, 'service.sqlite'),
       secrets.jwtSecret,
@@ -193,6 +200,7 @@ export class AppContext {
       redisScratch,
       crawlers,
       appViewAgent,
+      entrywayAgent,
       authVerifier,
       plcRotationKey,
       cfg,
