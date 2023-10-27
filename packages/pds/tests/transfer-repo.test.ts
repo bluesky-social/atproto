@@ -2,13 +2,7 @@ import axios from 'axios'
 import { TestNetworkNoAppView, SeedClient, TestPds } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import * as plc from '@did-plc/lib'
-import { TID, cborEncode } from '@atproto/common'
-import { Keypair, randomStr } from '@atproto/crypto'
-import * as repo from '@atproto/repo'
-import { MemoryBlockstore } from '@atproto/repo'
-import { AtUri } from '@atproto/syntax'
-import { CID } from 'multiformats/cid'
-import assert from 'assert'
+import { cborEncode } from '@atproto/common'
 
 describe('transfer repo', () => {
   let network: TestNetworkNoAppView
