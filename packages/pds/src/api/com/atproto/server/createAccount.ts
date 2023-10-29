@@ -88,7 +88,7 @@ export default function (server: Server, ctx: AppContext) {
           throw err
         }
       }
-      const { access, refresh } = await ctx.accountManager.createAccount({
+      const { accessJwt, refreshJwt } = await ctx.accountManager.createAccount({
         did,
         handle,
         email,
@@ -108,8 +108,8 @@ export default function (server: Server, ctx: AppContext) {
           handle,
           did: did,
           didDoc,
-          accessJwt: access.jwt,
-          refreshJwt: refresh.jwt,
+          accessJwt,
+          refreshJwt,
         },
       }
     },

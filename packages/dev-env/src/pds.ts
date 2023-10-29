@@ -4,6 +4,7 @@ import fs from 'node:fs/promises'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as pds from '@atproto/pds'
+import { createSecretKeyObject } from '@atproto/pds/src/auth-verifier'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { AtpAgent } from '@atproto/api'
 import { PdsConfig } from './types'
@@ -87,8 +88,8 @@ export class TestPds {
     }
   }
 
-  jwtSecret() {
-    return JWT_SECRET
+  jwtSecretKey() {
+    return createSecretKeyObject(JWT_SECRET)
   }
 
   async processAll() {

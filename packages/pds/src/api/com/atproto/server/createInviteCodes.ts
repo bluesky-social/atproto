@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
       if (!auth.credentials.admin) {
         throw new AuthRequiredError('Insufficient privileges')
       }
-      if (ctx.cfg.identity.entrywayUrl) {
+      if (ctx.cfg.entryway) {
         throw new InvalidRequestError(
           'Account invites are managed by the entryway service',
         )

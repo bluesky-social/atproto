@@ -8,7 +8,11 @@ import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { ServerConfig, ServerSecrets } from './config'
-import { AuthVerifier } from './auth-verifier'
+import {
+  AuthVerifier,
+  createPublicKeyObject,
+  createSecretKeyObject,
+} from './auth-verifier'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
@@ -143,18 +147,23 @@ export class AppContext {
 
     const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
 
-    const entrywayAgent = cfg.identity.entrywayUrl
-      ? new AtpAgent({ service: cfg.identity.entrywayUrl })
+    const entrywayAgent = cfg.entryway
+      ? new AtpAgent({ service: cfg.entryway.url })
       : undefined
 
+    const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
     const accountManager = new AccountManager(
       path.join(cfg.db.directory, 'service.sqlite'),
-      secrets.jwtSecret,
+      jwtSecretKey,
     )
     await accountManager.migrateOrThrow()
 
+    const jwtKey = cfg.entryway
+      ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
+      : jwtSecretKey
+
     const authVerifier = new AuthVerifier(accountManager, idResolver, {
-      jwtSecret: secrets.jwtSecret,
+      jwtKey, // @TODO support multiple keys?
       adminPass: secrets.adminPassword,
       moderatorPass: secrets.moderatorPassword,
       triagePass: secrets.triagePassword,

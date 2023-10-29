@@ -1,3 +1,4 @@
+import { KeyObject } from 'node:crypto'
 import { HOUR } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import {
@@ -20,7 +21,7 @@ import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
 export class AccountManager {
   db: AccountDb
 
-  constructor(dbLocation: string, private jwtSecret: string) {
+  constructor(dbLocation: string, private jwtKey: KeyObject) {
     this.db = getDb(dbLocation)
   }
 
@@ -73,11 +74,12 @@ export class AccountManager {
     inviteCode: string | undefined
   }) {
     const { did, handle, email, password, repoCid, repoRev, inviteCode } = opts
-    const { access, refresh } = auth.createTokens({
-      jwtSecret: this.jwtSecret,
+    const { accessJwt, refreshJwt } = await auth.createTokens({
+      jwtKey: this.jwtKey,
       did,
       scope: AuthScope.Access,
     })
+    const refreshPayload = auth.decodeRefreshToken(refreshJwt)
     const passwordScrypt = await scrypt.genSaltAndHash(password)
     const now = new Date().toISOString()
     await this.db.transaction((dbTxn) =>
@@ -89,10 +91,10 @@ export class AccountManager {
           inviteCode,
           now,
         }),
-        auth.storeRefreshToken(dbTxn, refresh.payload, null),
+        auth.storeRefreshToken(dbTxn, refreshPayload, null),
       ]),
     )
-    return { access, refresh }
+    return { accessJwt, refreshJwt }
   }
 
   // @NOTE should always be paired with a sequenceHandle().
@@ -126,13 +128,14 @@ export class AccountManager {
   // ----------
 
   async createSession(did: string, appPasswordName: string | null) {
-    const { access, refresh } = auth.createTokens({
-      jwtSecret: this.jwtSecret,
+    const { accessJwt, refreshJwt } = await auth.createTokens({
+      jwtKey: this.jwtKey,
       did,
       scope: appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
     })
-    await auth.storeRefreshToken(this.db, refresh.payload, appPasswordName)
-    return { access, refresh }
+    const refreshPayload = auth.decodeRefreshToken(refreshJwt)
+    await auth.storeRefreshToken(this.db, refreshPayload, appPasswordName)
+    return { accessJwt, refreshJwt }
   }
 
   async rotateRefreshToken(id: string) {
@@ -162,13 +165,15 @@ export class AccountManager {
     // reuse you always receive a refresh token with the same id.
     const nextId = token.nextId ?? auth.getRefreshTokenId()
 
-    const { access, refresh } = auth.createTokens({
-      jwtSecret: this.jwtSecret,
+    const { accessJwt, refreshJwt } = await auth.createTokens({
+      jwtKey: this.jwtKey,
       did: token.did,
       scope:
         token.appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
       jti: nextId,
     })
+
+    const refreshPayload = auth.decodeRefreshToken(refreshJwt)
 
     await this.db.transaction((dbTxn) =>
       Promise.all([
@@ -177,10 +182,10 @@ export class AccountManager {
           expiresAt: expiresAt.toISOString(),
           nextId,
         }),
-        auth.storeRefreshToken(dbTxn, refresh.payload, token.appPasswordName),
+        auth.storeRefreshToken(dbTxn, refreshPayload, token.appPasswordName),
       ]),
     )
-    return { access, refresh }
+    return { accessJwt, refreshJwt }
   }
 
   async revokeRefreshToken(id: string) {

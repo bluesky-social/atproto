@@ -18,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
       if (!account) {
         throw new InvalidRequestError('Account not found', 'NotFound')
       }
-      const managesOwnInvites = !ctx.cfg.identity.entrywayUrl
+      const managesOwnInvites = !ctx.cfg.entryway
       return {
         encoding: 'application/json',
         body: {

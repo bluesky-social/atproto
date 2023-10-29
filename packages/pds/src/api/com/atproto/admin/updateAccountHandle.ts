@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
           throw new InvalidRequestError(`Handle already taken: ${handle}`)
         }
       } else {
-        if (ctx.cfg.identity.entrywayUrl) {
+        if (ctx.cfg.entryway) {
           // the pds defers to the entryway for updating the handle in the user's did doc.
           // here was just check that the handle is already bidirectionally confirmed.
           // @TODO if handle is taken according to this PDS, should we force-update?

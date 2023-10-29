@@ -64,7 +64,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const [{ access, refresh }, didDoc] = await Promise.all([
+      const [{ accessJwt, refreshJwt }, didDoc] = await Promise.all([
         ctx.accountManager.createSession(user.did, appPasswordName),
         didDocForSession(ctx, user.did),
       ])
@@ -77,8 +77,8 @@ export default function (server: Server, ctx: AppContext) {
           handle: user.handle ?? INVALID_HANDLE,
           email: user.email ?? undefined,
           emailConfirmed: !!user.emailConfirmedAt,
-          accessJwt: access.jwt,
-          refreshJwt: refresh.jwt,
+          accessJwt,
+          refreshJwt,
         },
       }
     },
