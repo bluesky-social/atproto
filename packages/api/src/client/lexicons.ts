@@ -2341,6 +2341,9 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+              didDoc: {
+                type: 'unknown',
+              },
             },
           },
         },
@@ -2565,6 +2568,9 @@ export const schemaDict = {
               did: {
                 type: 'string',
                 format: 'did',
+              },
+              didDoc: {
+                type: 'unknown',
               },
               email: {
                 type: 'string',
@@ -2881,6 +2887,9 @@ export const schemaDict = {
               did: {
                 type: 'string',
                 format: 'did',
+              },
+              didDoc: {
+                type: 'unknown',
               },
             },
           },
@@ -3817,6 +3826,10 @@ export const schemaDict = {
           blocking: {
             type: 'string',
             format: 'at-uri',
+          },
+          blockingByList: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listViewBasic',
           },
           following: {
             type: 'string',

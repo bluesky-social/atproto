@@ -1,9 +1,9 @@
-import disposable from 'disposable-email'
-import AtpAgent from '@atproto/api'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { MINUTE, cborDecode, cborEncode, check } from '@atproto/common'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
+import { InvalidRequestError } from '@atproto/xrpc-server'
+import AtpAgent from '@atproto/api'
 import * as plc from '@did-plc/lib'
+import disposable from 'disposable-email'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import * as scrypt from '../../../../db/scrypt'
 import { Server } from '../../../../lexicon'
@@ -13,6 +13,7 @@ import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
 import { getPdsEndpoint, isThisPds } from '../../../proxy'
+import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -146,11 +147,14 @@ export default function (server: Server, ctx: AppContext) {
         }
       })
 
+      const didDoc = await didDocForSession(ctx, result.did, true)
+
       return {
         encoding: 'application/json',
         body: {
           handle,
           did: result.did,
+          didDoc,
           accessJwt: result.accessJwt,
           refreshJwt: result.refreshJwt,
         },

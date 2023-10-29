@@ -1,4 +1,5 @@
 import { AppBskyGraphDefs } from '../client/index'
+import { AtUri } from '@atproto/syntax'
 import {
   Label,
   LabelPreference,
@@ -23,6 +24,18 @@ export class ModerationCauseAccumulator {
       this.causes.push({
         type: 'blocking',
         source: { type: 'user' },
+        priority: 3,
+      })
+    }
+  }
+
+  addBlockingByList(
+    blockingByList: AppBskyGraphDefs.ListViewBasic | undefined,
+  ) {
+    if (blockingByList) {
+      this.causes.push({
+        type: 'blocking',
+        source: { type: 'list', list: blockingByList },
         priority: 3,
       })
     }
