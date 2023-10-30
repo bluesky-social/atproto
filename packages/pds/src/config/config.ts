@@ -61,7 +61,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     if (env.blobstoreS3Endpoint) {
       blobstoreCfg.endpoint = env.blobstoreS3Endpoint
     }
-    if (env.blobstoreS3ForcePathStyle !== void 0) {
+    if (env.blobstoreS3ForcePathStyle !== undefined) {
       blobstoreCfg.forcePathStyle = env.blobstoreS3ForcePathStyle
     }
   } else if (env.blobstoreDiskLocation) {
