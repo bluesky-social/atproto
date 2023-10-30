@@ -44,7 +44,7 @@ export class AccountService {
       .selectFrom('account')
       .innerJoin('repo_root', 'repo_root.did', 'account.did')
       .where('account.did', '=', did)
-      .where('account.takedownId', 'is', null)
+      .where('account.takedownRef', 'is', null)
       .select('account.did')
       .executeTakeFirst()
     return found !== undefined
@@ -258,22 +258,22 @@ export class AccountService {
   async getAccountTakedownStatus(did: string): Promise<StatusAttr | null> {
     const res = await this.db.db
       .selectFrom('account')
-      .select('takedownId')
+      .select('takedownRef')
       .where('did', '=', did)
       .executeTakeFirst()
     if (!res) return null
-    return res.takedownId
-      ? { applied: true, ref: res.takedownId }
+    return res.takedownRef
+      ? { applied: true, ref: res.takedownRef }
       : { applied: false }
   }
 
   async updateAccountTakedownStatus(did: string, takedown: StatusAttr) {
-    const takedownId = takedown.applied
+    const takedownRef = takedown.applied
       ? takedown.ref ?? new Date().toISOString()
       : null
     await this.db.db
       .updateTable('account')
-      .set({ takedownId })
+      .set({ takedownRef })
       .where('did', '=', did)
       .executeTakeFirst()
   }
@@ -471,11 +471,11 @@ export class AccountService {
     return res.did
   }
 
-  async takedownActor(info: { takedownId: string; did: string }) {
-    const { takedownId, did } = info
+  async takedownActor(info: { takedownRef: string; did: string }) {
+    const { takedownRef, did } = info
     await this.db.db
       .updateTable('account')
-      .set({ takedownId })
+      .set({ takedownRef })
       .where('did', '=', did)
       .execute()
   }
@@ -483,7 +483,7 @@ export class AccountService {
   async reverseActorTakedown(info: { did: string }) {
     await this.db.db
       .updateTable('account')
-      .set({ takedownId: null })
+      .set({ takedownRef: null })
       .where('did', '=', info.did)
       .execute()
   }

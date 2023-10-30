@@ -9,7 +9,7 @@ import { ServerMailer } from '../src/mailer'
 import { BlobNotFoundError } from '@atproto/repo'
 import {
   RepoRoot,
-  UserAccount,
+  Account,
   AppPassword,
   EmailToken,
   RefreshToken,
@@ -212,7 +212,7 @@ describe('account deletion', () => {
 
 type DbContents = {
   repoRoots: RepoRoot[]
-  userAccounts: Selectable<UserAccount>[]
+  userAccounts: Selectable<Account>[]
   appPasswords: AppPassword[]
   emailTokens: EmailToken[]
   refreshTokens: RefreshToken[]

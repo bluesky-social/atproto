@@ -97,9 +97,9 @@ describe('takedowner', () => {
     const recordPds = await actorDb.db
       .selectFrom('record')
       .where('uri', '=', post.ref.uriStr)
-      .select('takedownId')
+      .select('takedownRef')
       .executeTakeFirst()
-    expect(recordPds?.takedownId).toEqual(modAction.id.toString())
+    expect(recordPds?.takedownRef).toEqual(modAction.id.toString())
 
     expect(testInvalidator.invalidated.length).toBe(1)
     expect(testInvalidator.invalidated[0].subject).toBe(
@@ -140,9 +140,9 @@ describe('takedowner', () => {
     const recordPds = await actorDb.db
       .selectFrom('record')
       .where('uri', '=', res.data.uri)
-      .select('takedownId')
+      .select('takedownRef')
       .executeTakeFirst()
-    expect(recordPds?.takedownId).toEqual(modAction.id.toString())
+    expect(recordPds?.takedownRef).toEqual(modAction.id.toString())
 
     expect(testInvalidator.invalidated.length).toBe(2)
     expect(testInvalidator.invalidated[1].subject).toBe(

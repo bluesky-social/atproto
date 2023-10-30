@@ -71,7 +71,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('emailConfirmedAt', 'varchar')
     .addColumn('invitesDisabled', 'int2', (col) => col.notNull().defaultTo(0))
-    .addColumn('takedownId', 'varchar')
+    .addColumn('takedownRef', 'varchar')
     .execute()
   await db.schema
     .createIndex(`account_email_lower_idx`)

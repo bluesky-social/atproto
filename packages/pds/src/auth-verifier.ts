@@ -117,7 +117,7 @@ export class AuthVerifier {
     const found = await this.db.db
       .selectFrom('account')
       .where('account.did', '=', result.credentials.did)
-      .where('account.takedownId', 'is', null)
+      .where('account.takedownRef', 'is', null)
       .select('did')
       .executeTakeFirst()
     if (!found) {

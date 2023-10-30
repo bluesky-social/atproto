@@ -162,7 +162,7 @@ export const ensureCodeIsAvailable = async (
   const invite = await db.db
     .selectFrom('invite_code')
     .leftJoin('account', 'account.did', 'invite_code.forAccount')
-    .where('takedownId', 'is', null)
+    .where('takedownRef', 'is', null)
     .selectAll('invite_code')
     .where('code', '=', inviteCode)
     .executeTakeFirst()

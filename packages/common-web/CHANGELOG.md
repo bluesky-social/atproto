@@ -1,5 +1,11 @@
 # @atproto/common-web
 
+## 0.2.2
+
+### Patch Changes
+
+- [`35d108ce`](https://github.com/bluesky-social/atproto/commit/35d108ce94866ce1b3d147cd0620a0ba1c4ebcd7) Thanks [@devinivy](https://github.com/devinivy)! - Allow pds to serve did doc with credentials, API client to respect PDS listed in the did doc.
+
 ## 0.2.1
 
 ### Patch Changes

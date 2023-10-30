@@ -6,7 +6,7 @@ export interface Record {
   rkey: string
   repoRev: string
   indexedAt: string
-  takedownId: string | null
+  takedownRef: string | null
 }
 
 export const tableName = 'record'

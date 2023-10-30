@@ -8,7 +8,7 @@ export interface Account {
   createdAt: string
   emailConfirmedAt: string | null
   invitesDisabled: Generated<0 | 1>
-  takedownId: string | null
+  takedownRef: string | null
 }
 
 export type AccountEntry = Selectable<Account>
