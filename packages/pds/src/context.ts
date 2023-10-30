@@ -108,6 +108,7 @@ export class AppContext {
             region: cfg.blobstore.region,
             endpoint: cfg.blobstore.endpoint,
             forcePathStyle: cfg.blobstore.forcePathStyle,
+            credentials: cfg.blobstore.credentials,
           })
         : await DiskBlobStore.create(
             cfg.blobstore.location,
