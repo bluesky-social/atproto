@@ -17,7 +17,7 @@ export const proxy = async <T>(
     return null // skip proxying
   }
   const accountService = ctx.services.account(ctx.db)
-  const pds = pdsDid && (await accountService.getPds(pdsDid))
+  const pds = pdsDid && (await accountService.getPds(pdsDid, { cached: true }))
   if (!pds) {
     throw new UpstreamFailureError('unknown pds')
   }
