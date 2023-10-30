@@ -78,6 +78,7 @@
     "@atproto/bsky": "workspace:^",
     "@atproto/dev-env": "workspace:^",
     "@atproto/lex-cli": "workspace:^",
+    "@atproto/pds-entryway": "npm:@atproto/pds@0.3.0-entryway.0",
     "@did-plc/server": "^0.0.1",
     "@types/cors": "^2.8.12",
     "@types/disposable-email": "^0.2.0",
