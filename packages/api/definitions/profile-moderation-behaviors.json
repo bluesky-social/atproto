@@ -2,43 +2,57 @@
   "users": {
     "self": {
       "blocking": false,
+      "blockingByList": false,
       "blockedBy": false,
       "muted": false,
       "mutedByList": false
     },
     "alice": {
       "blocking": false,
+      "blockingByList": false,
       "blockedBy": false,
       "muted": false,
       "mutedByList": false
     },
     "bob": {
       "blocking": true,
+      "blockingByList": false,
       "blockedBy": false,
       "muted": false,
       "mutedByList": false
     },
     "carla": {
       "blocking": false,
+      "blockingByList": false,
       "blockedBy": true,
       "muted": false,
       "mutedByList": false
     },
     "dan": {
       "blocking": false,
+      "blockingByList": false,
       "blockedBy": false,
       "muted": true,
       "mutedByList": false
     },
     "elise": {
       "blocking": false,
+      "blockingByList": false,
       "blockedBy": false,
       "muted": false,
       "mutedByList": true
     },
     "fern": {
       "blocking": true,
+      "blockingByList": false,
       "blockedBy": true,
+      "muted": false,
+      "mutedByList": false
+    },
+    "georgia": {
+      "blocking": false,
+      "blockingByList": true,
+      "blockedBy": false,
       "muted": false,
       "mutedByList": false
     }
@@ -373,6 +387,17 @@
       "labels": {},
       "behaviors": {
         "account": { "cause": "blocking", "filter": true },
+        "avatar": { "blur": true, "noOverride": true }
+      }
+    },
+
+    "Mute/block: Blocking-by-list user": {
+      "cfg": "none",
+      "subject": "profile",
+      "author": "georgia",
+      "labels": {},
+      "behaviors": {
+        "account": { "cause": "blocking-by-list", "filter": true },
         "avatar": { "blur": true, "noOverride": true }
       }
     },

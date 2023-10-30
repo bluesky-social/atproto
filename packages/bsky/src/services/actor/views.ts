@@ -137,10 +137,13 @@ export class ActorViews {
       ),
     ])
     const listUris = mapDefined(profiles, ({ did }) => {
-      const list = viewer && bam.muteList([viewer, did])
-      if (!list) return
-      return list
-    })
+      const muteList = viewer && bam.muteList([viewer, did])
+      const blockList = viewer && bam.blockList([viewer, did])
+      const lists: string[] = []
+      if (muteList) lists.push(muteList)
+      if (blockList) lists.push(blockList)
+      return lists
+    }).flat()
     const lists = await this.services.graph.getListViews(listUris, viewer)
     return { profilesDetailed: toMapByDid(profiles), labels, bam, lists }
   }
@@ -168,6 +171,11 @@ export class ActorViews {
         mutedByListUri && lists[mutedByListUri]
           ? this.services.graph.formatListViewBasic(lists[mutedByListUri])
           : undefined
+      const blockingByListUri = viewer && bam.blockList([viewer, did])
+      const blockingByList =
+        blockingByListUri && lists[blockingByListUri]
+          ? this.services.graph.formatListViewBasic(lists[blockingByListUri])
+          : undefined
       const actorLabels = labels[did] ?? []
       const selfLabels = getSelfLabels({
         uri: prof.profileUri,
@@ -194,6 +202,7 @@ export class ActorViews {
               mutedByList,
               blockedBy: !!bam.blockedBy([viewer, did]),
               blocking: bam.blocking([viewer, did]) ?? undefined,
+              blockingByList,
               following:
                 prof?.viewerFollowing && !bam.block([viewer, did])
                   ? prof.viewerFollowing
@@ -265,10 +274,13 @@ export class ActorViews {
       ),
     ])
     const listUris = mapDefined(profiles, ({ did }) => {
-      const list = viewer && bam.muteList([viewer, did])
-      if (!list) return
-      return list
-    })
+      const muteList = viewer && bam.muteList([viewer, did])
+      const blockList = viewer && bam.blockList([viewer, did])
+      const lists: string[] = []
+      if (muteList) lists.push(muteList)
+      if (blockList) lists.push(blockList)
+      return lists
+    }).flat()
     const lists = await this.services.graph.getListViews(listUris, viewer)
     return { profiles: toMapByDid(profiles), labels, bam, lists }
   }
@@ -298,6 +310,11 @@ export class ActorViews {
         mutedByListUri && lists[mutedByListUri]
           ? this.services.graph.formatListViewBasic(lists[mutedByListUri])
           : undefined
+      const blockingByListUri = viewer && bam.blockList([viewer, did])
+      const blockingByList =
+        blockingByListUri && lists[blockingByListUri]
+          ? this.services.graph.formatListViewBasic(lists[blockingByListUri])
+          : undefined
       const actorLabels = labels[did] ?? []
       const selfLabels = getSelfLabels({
         uri: prof.profileUri,
@@ -320,6 +337,7 @@ export class ActorViews {
               mutedByList,
               blockedBy: !!bam.blockedBy([viewer, did]),
               blocking: bam.blocking([viewer, did]) ?? undefined,
+              blockingByList,
               following:
                 prof?.viewerFollowing && !bam.block([viewer, did])
                   ? prof.viewerFollowing
