@@ -1,4 +1,4 @@
-import { sql } from 'kysely'
+import { Selectable, sql } from 'kysely'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { MINUTE, lessThanAgoMs } from '@atproto/common'
@@ -15,12 +15,13 @@ import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPas
 import { EmailTokenPurpose } from '../../db/tables/email-token'
 import { getRandomToken } from '../../api/com/atproto/server/util'
 import { OptionalJoin } from '../../db/types'
+import { Pds } from '../../db/tables/pds'
 
 export class AccountService {
-  constructor(public db: Database) {}
+  constructor(public db: Database, private pdsCache: PdsCache) {}
 
-  static creator() {
-    return (db: Database) => new AccountService(db)
+  static creator(pdsCache: PdsCache) {
+    return (db: Database) => new AccountService(db, pdsCache)
   }
 
   // @TODO decouple account from repo_root, move takedownId.
@@ -601,13 +602,18 @@ export class AccountService {
     }
   }
 
-  // @TODO cache w/ in-mem lookup
-  async getPds(pdsDid: string) {
-    return await this.db.db
+  // @NOTE cached due to heavy usage in proxy logic
+  async getPds(pdsDid: string, opts?: { cached: boolean }) {
+    if (opts?.cached && this.pdsCache.has(pdsDid)) {
+      return this.pdsCache.get(pdsDid)
+    }
+    const pds = await this.db.db
       .selectFrom('pds')
       .where('did', '=', pdsDid)
       .selectAll()
       .executeTakeFirst()
+    if (pds) this.pdsCache.set(pdsDid, pds)
+    return pds
   }
 }
 
@@ -648,3 +654,5 @@ export type HandleSequenceToken = { did: string; handle: string }
 type AccountInfo = UserAccountEntry &
   DidHandle &
   OptionalJoin<RepoRoot> & { pdsDid: string | null }
+
+export class PdsCache extends Map<string, Selectable<Pds>> {}
