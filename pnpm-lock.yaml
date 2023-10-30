@@ -331,6 +331,10 @@ importers:
       uint8arrays:
         specifier: 3.0.0
         version: 3.0.0
+    devDependencies:
+      '@atproto/common':
+        specifier: workspace:^
+        version: link:../common
 
   packages/dev-env:
     dependencies:

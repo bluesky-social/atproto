@@ -2,11 +2,11 @@ import fs from 'node:fs'
 import * as uint8arrays from 'uint8arrays'
 import { secp256k1 as nobleK256 } from '@noble/curves/secp256k1'
 import { p256 as nobleP256 } from '@noble/curves/p256'
+import { cborEncode } from '@atproto/common'
 import EcdsaKeypair from '../src/p256/keypair'
 import Secp256k1Keypair from '../src/secp256k1/keypair'
 import * as p256 from '../src/p256/operations'
 import * as secp from '../src/secp256k1/operations'
-import { cborEncode } from '@atproto/common'
 import {
   bytesToMultibase,
   multibaseToBytes,

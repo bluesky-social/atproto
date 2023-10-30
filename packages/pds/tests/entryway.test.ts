@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import AtpAgent from '@atproto/api'
@@ -23,7 +24,7 @@ describe('entryway', () => {
       entrywayJwtVerifyKeyK256PublicKeyHex: getPublicHex(jwtSigningKey),
       entrywayPlcRotationKeyK256PublicKeyHex: getPublicHex(plcRotationKey),
       adminPassword: 'admin-pass',
-      serviceHandleDomains: ['.test'], // @TODO
+      serviceHandleDomains: [],
       didPlcUrl: plc.url,
       serviceDid: 'did:example:pds',
       inviteRequired: false,
@@ -125,8 +126,10 @@ const moveAccountToPds = async (
   services: { entryway: pdsEntryway.PDS; plc: TestPlc },
 ) => {
   const { entryway, plc } = services
-  const plcClient = plc.getClient()
-  const doc = await plcClient.getDocumentData(did)
+  const account = await entryway.ctx.services
+    .account(entryway.ctx.db)
+    .getAccount(did)
+  assert(account)
   const signingKey = await Secp256k1Keypair.create({ exportable: true })
   const commit = await pds.ctx.actorStore.create(
     did,
@@ -138,12 +141,13 @@ const moveAccountToPds = async (
   await pds.ctx.accountManager.createAccount({
     did,
     email: `${did}@email.invalid`,
-    handle: doc.alsoKnownAs[0].replace('at://', ''),
+    handle: account.handle,
     password: randomStr(8, 'base32'),
     repoCid: commit.cid,
     repoRev: commit.rev,
     inviteCode: undefined,
   })
+  const plcClient = plc.getClient()
   await plcClient.updatePds(
     did,
     entryway.ctx.plcRotationKey,
