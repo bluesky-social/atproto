@@ -151,7 +151,7 @@ export const ensureCodeIsAvailable = async (
       qb
         .selectFrom('repo_root')
         .selectAll()
-        .where('takedownId', 'is not', null)
+        .where('takedownRef', 'is not', null)
         .whereRef('did', '=', ref('invite_code.forUser')),
     )
     .where('code', '=', inviteCode)

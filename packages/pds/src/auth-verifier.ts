@@ -118,7 +118,7 @@ export class AuthVerifier {
       .selectFrom('user_account')
       .innerJoin('repo_root', 'repo_root.did', 'user_account.did')
       .where('user_account.did', '=', result.credentials.did)
-      .where('repo_root.takedownId', 'is', null)
+      .where('repo_root.takedownRef', 'is', null)
       .select('user_account.did')
       .executeTakeFirst()
     if (!found) {

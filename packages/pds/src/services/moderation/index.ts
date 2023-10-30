@@ -21,11 +21,11 @@ export class ModerationService {
   ): Promise<StatusResponse<RepoRef> | null> {
     const res = await this.db.db
       .selectFrom('repo_root')
-      .select('takedownId')
+      .select('takedownRef')
       .where('did', '=', did)
       .executeTakeFirst()
     if (!res) return null
-    const state = takedownIdToStatus(res.takedownId ?? null)
+    const state = takedownRefToStatus(res.takedownRef ?? null)
     return {
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
@@ -40,11 +40,11 @@ export class ModerationService {
   ): Promise<StatusResponse<StrongRef> | null> {
     const res = await this.db.db
       .selectFrom('record')
-      .select(['takedownId', 'cid'])
+      .select(['takedownRef', 'cid'])
       .where('uri', '=', uri.toString())
       .executeTakeFirst()
     if (!res) return null
-    const state = takedownIdToStatus(res.takedownId ?? null)
+    const state = takedownRefToStatus(res.takedownRef ?? null)
     return {
       subject: {
         $type: 'com.atproto.repo.strongRef',
@@ -61,12 +61,12 @@ export class ModerationService {
   ): Promise<StatusResponse<RepoBlobRef> | null> {
     const res = await this.db.db
       .selectFrom('repo_blob')
-      .select('takedownId')
+      .select('takedownRef')
       .where('did', '=', did)
       .where('cid', '=', cid.toString())
       .executeTakeFirst()
     if (!res) return null
-    const state = takedownIdToStatus(res.takedownId ?? null)
+    const state = takedownRefToStatus(res.takedownRef ?? null)
     return {
       subject: {
         $type: 'com.atproto.admin.defs#repoBlobRef',
@@ -78,28 +78,28 @@ export class ModerationService {
   }
 
   async updateRepoTakedownState(did: string, takedown: StatusAttr) {
-    const takedownId = statusToTakedownId(takedown)
+    const takedownRef = statusTotakedownRef(takedown)
     await this.db.db
       .updateTable('repo_root')
-      .set({ takedownId })
+      .set({ takedownRef })
       .where('did', '=', did)
       .execute()
   }
 
   async updateRecordTakedownState(uri: AtUri, takedown: StatusAttr) {
-    const takedownId = statusToTakedownId(takedown)
+    const takedownRef = statusTotakedownRef(takedown)
     await this.db.db
       .updateTable('record')
-      .set({ takedownId })
+      .set({ takedownRef })
       .where('uri', '=', uri.toString())
       .execute()
   }
 
   async updateBlobTakedownState(did: string, blob: CID, takedown: StatusAttr) {
-    const takedownId = statusToTakedownId(takedown)
+    const takedownRef = statusTotakedownRef(takedown)
     await this.db.db
       .updateTable('repo_blob')
-      .set({ takedownId })
+      .set({ takedownRef })
       .where('did', '=', did)
       .where('cid', '=', blob.toString())
       .execute()
@@ -116,10 +116,10 @@ type StatusResponse<T> = {
   takedown: StatusAttr
 }
 
-const takedownIdToStatus = (id: string | null): StatusAttr => {
+const takedownRefToStatus = (id: string | null): StatusAttr => {
   return id === null ? { applied: false } : { applied: true, ref: id }
 }
 
-const statusToTakedownId = (state: StatusAttr): string | null => {
+const statusTotakedownRef = (state: StatusAttr): string | null => {
   return state.applied ? state.ref ?? new Date().toISOString() : null
 }

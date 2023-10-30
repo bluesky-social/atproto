@@ -61,7 +61,7 @@ export class AccountService {
     const found = await this.db.db
       .selectFrom('repo_root')
       .where('did', '=', did)
-      .where('takedownId', 'is', null)
+      .where('takedownRef', 'is', null)
       .select('did')
       .executeTakeFirst()
     return found !== undefined
