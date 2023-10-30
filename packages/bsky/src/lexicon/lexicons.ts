@@ -1632,6 +1632,8 @@ export const schemaDict = {
               },
               reason: {
                 type: 'string',
+                maxGraphemes: 2000,
+                maxLength: 20000,
               },
               subject: {
                 type: 'union',
