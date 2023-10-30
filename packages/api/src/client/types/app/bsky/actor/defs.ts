@@ -87,6 +87,7 @@ export interface ViewerState {
   mutedByList?: AppBskyGraphDefs.ListViewBasic
   blockedBy?: boolean
   blocking?: string
+  blockingByList?: AppBskyGraphDefs.ListViewBasic
   following?: string
   followedBy?: string
   [k: string]: unknown

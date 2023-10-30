@@ -4,7 +4,7 @@ export interface Actor {
   did: string
   handle: string | null
   createdAt: string
-  takedownId: string | null
+  takedownRef: string | null
 }
 
 export type ActorEntry = Selectable<Actor>
