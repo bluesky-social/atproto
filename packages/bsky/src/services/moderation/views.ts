@@ -1,4 +1,4 @@
-import { Selectable, sql } from 'kysely'
+import { WhereInterface, sql } from 'kysely'
 import { ArrayEl } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { INVALID_HANDLE } from '@atproto/syntax'
@@ -6,7 +6,6 @@ import { BlobRef, jsonStringToLex } from '@atproto/lexicon'
 import { Database } from '../../db'
 import { Actor } from '../../db/tables/actor'
 import { Record as RecordRow } from '../../db/tables/record'
-import { ModerationEvent } from '../../db/tables/moderation'
 import {
   ModEventView,
   RepoView,
@@ -22,7 +21,6 @@ import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/mo
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import {
   ModerationEventRowWithHandle,
-  ModerationSubjectStatusRow,
   ModerationSubjectStatusRowWithHandle,
 } from './types'
 import { getSelfLabels } from '../label'
@@ -39,7 +37,7 @@ export class ModerationViews {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
-    const [info, actionResults] = await Promise.all([
+    const [info, subjectStatuses] = await Promise.all([
       await this.db.db
         .selectFrom('actor')
         .leftJoin('profile', 'profile.creator', 'actor.did')
@@ -55,30 +53,21 @@ export class ModerationViews {
         )
         .select(['actor.did as did', 'profile_record.json as profileJson'])
         .execute(),
-      this.db.db
-        .selectFrom('moderation_event')
-        .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
-        .where(
-          'subjectDid',
-          'in',
-          results.map((r) => r.did),
-        )
-        .select(['id', 'action', 'durationInHours', 'subjectDid'])
-        .execute(),
+      this.getSubjectStatus(results.map((r) => ({ did: r.did }))),
     ])
 
     const infoByDid = info.reduce(
       (acc, cur) => Object.assign(acc, { [cur.did]: cur }),
       {} as Record<string, ArrayEl<typeof info>>,
     )
-    const actionByDid = actionResults.reduce(
-      (acc, cur) => Object.assign(acc, { [cur.subjectDid ?? '']: cur }),
-      {} as Record<string, ArrayEl<typeof actionResults>>,
+    const subjectStatusByDid = subjectStatuses.reduce(
+      (acc, cur) =>
+        Object.assign(acc, { [cur.did ?? '']: this.subjectStatus(cur) }),
+      {} as Record<string, ArrayEl<typeof subjectStatuses>>,
     )
 
     const views = results.map((r) => {
       const { profileJson } = infoByDid[r.did] ?? {}
-      const action = actionByDid[r.did]
       const relatedRecords: object[] = []
       if (profileJson) {
         relatedRecords.push(
@@ -92,13 +81,7 @@ export class ModerationViews {
         relatedRecords,
         indexedAt: r.indexedAt,
         moderation: {
-          currentAction: action
-            ? {
-                id: action.id,
-                action: action.action,
-                durationInHours: action.durationInHours ?? undefined,
-              }
-            : undefined,
+          subjectStatus: subjectStatusByDid[r.did] ?? undefined,
         },
       }
     })
@@ -202,8 +185,10 @@ export class ModerationViews {
   }
 
   async repoDetail(result: RepoResult): Promise<RepoViewDetail> {
-    const repo = await this.repo(result)
-    const labels = await this.labels(repo.did)
+    const [repo, labels] = await Promise.all([
+      this.repo(result),
+      this.labels(result.did),
+    ])
 
     return {
       ...repo,
@@ -222,7 +207,7 @@ export class ModerationViews {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
-    const [repoResults, actionResults] = await Promise.all([
+    const [repoResults, subjectStatuses] = await Promise.all([
       this.db.db
         .selectFrom('actor')
         .where(
@@ -232,16 +217,7 @@ export class ModerationViews {
         )
         .selectAll()
         .execute(),
-      this.db.db
-        .selectFrom('moderation_event')
-        .where('subjectType', '=', 'com.atproto.repo.strongRef')
-        .where(
-          'subjectUri',
-          'in',
-          results.map((r) => r.uri),
-        )
-        .select(['id', 'action', 'durationInHours', 'subjectUri'])
-        .execute(),
+      this.getSubjectStatus(results.map((r) => didAndRecordPathFromUri(r.uri))),
     ])
     const repos = await this.repo(repoResults)
 
@@ -249,14 +225,16 @@ export class ModerationViews {
       (acc, cur) => Object.assign(acc, { [cur.did]: cur }),
       {} as Record<string, ArrayEl<typeof repos>>,
     )
-    const actionByUri = actionResults.reduce(
-      (acc, cur) => Object.assign(acc, { [cur.subjectUri ?? '']: cur }),
-      {} as Record<string, ArrayEl<typeof actionResults>>,
+    const subjectStatusByUri = subjectStatuses.reduce(
+      (acc, cur) =>
+        Object.assign(acc, { [`${cur.did}/${cur.recordPath}` ?? '']: cur }),
+      {} as Record<string, ArrayEl<typeof subjectStatuses>>,
     )
 
     const views = results.map((res) => {
       const repo = reposByDid[didFromUri(res.uri)]
-      const action = actionByUri[res.uri]
+      const { did, recordPath } = didAndRecordPathFromUri(res.uri)
+      const subjectStatus = subjectStatusByUri[`${did}/${recordPath}`]
       if (!repo) throw new Error(`Record repo is missing: ${res.uri}`)
       const value = jsonStringToLex(res.json) as Record<string, unknown>
       return {
@@ -267,13 +245,7 @@ export class ModerationViews {
         indexedAt: res.indexedAt,
         repo,
         moderation: {
-          currentAction: action
-            ? {
-                id: action.id,
-                action: action.action,
-                durationInHours: action.durationInHours ?? undefined,
-              }
-            : undefined,
+          subjectStatus,
         },
       }
     })
@@ -426,17 +398,58 @@ export class ModerationViews {
       neg: l.neg,
     }))
   }
-  subjectStatus(
-    result: ModerationSubjectStatusRowWithHandle,
-  ): Promise<SubjectStatusView>
+
+  async getSubjectStatus(
+    subject:
+      | { did: string; recordPath?: string }
+      | { did: string; recordPath?: string }[],
+  ): Promise<ModerationSubjectStatusRowWithHandle[]> {
+    const subjectFilters = Array.isArray(subject) ? subject : [subject]
+    const filterForSubject =
+      ({ did, recordPath }: { did: string; recordPath?: string }) =>
+      // TODO: Fix the typing here?
+      (clause: any) => {
+        clause = clause.where('moderation_subject_status.did', '=', did)
+        if (recordPath) {
+          clause = clause.where(
+            'moderation_subject_status.recordPath',
+            '=',
+            recordPath,
+          )
+        }
+        return clause
+      }
+
+    const builder = this.db.db
+      .selectFrom('moderation_subject_status')
+      .leftJoin('actor', 'actor.did', 'moderation_subject_status.did')
+      .where((clause) => {
+        subjectFilters.forEach(({ did, recordPath }, i) => {
+          const applySubjectFilter = filterForSubject({ did, recordPath })
+          if (i === 0) {
+            clause = clause.where(applySubjectFilter)
+          } else {
+            clause = clause.orWhere(applySubjectFilter)
+          }
+        })
+
+        return clause
+      })
+      .selectAll('moderation_subject_status')
+      .select('actor.handle as handle')
+
+    return builder.execute()
+  }
+
+  subjectStatus(result: ModerationSubjectStatusRowWithHandle): SubjectStatusView
   subjectStatus(
     result: ModerationSubjectStatusRowWithHandle[],
-  ): Promise<SubjectStatusView[]>
-  async subjectStatus(
+  ): SubjectStatusView[]
+  subjectStatus(
     result:
       | ModerationSubjectStatusRowWithHandle
       | ModerationSubjectStatusRowWithHandle[],
-  ): Promise<SubjectStatusView | SubjectStatusView[]> {
+  ): SubjectStatusView | SubjectStatusView[] {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
@@ -494,6 +507,11 @@ type SubjectView = ModEventViewDetail['subject'] & ReportViewDetail['subject']
 
 function didFromUri(uri: string) {
   return new AtUri(uri).host
+}
+
+function didAndRecordPathFromUri(uri: string) {
+  const atUri = new AtUri(uri)
+  return { did: atUri.host, recordPath: `${atUri.collection}/${atUri.rkey}` }
 }
 
 function findBlobRefs(value: unknown, refs: BlobRef[] = []) {

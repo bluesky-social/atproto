@@ -41,9 +41,7 @@ export default function (server: Server, ctx: AppContext) {
           limit,
           cursor,
         })
-        const subjectStatuses = await moderationService.views.subjectStatus(
-          results,
-        )
+        const subjectStatuses = moderationService.views.subjectStatus(results)
         const newCursor = results.at(-1)?.id.toString() ?? undefined
         return {
           encoding: 'application/json',

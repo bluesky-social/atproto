@@ -336,7 +336,7 @@
     "moderation": {
       "type": "object",
       "properties": {
-        "status": { "type": "ref", "ref": "#subjectStatusView" }
+        "subjectStatus": { "type": "ref", "ref": "#subjectStatusView" }
       }
     },
     "moderationDetail": {
