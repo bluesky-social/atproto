@@ -1,7 +1,6 @@
 import { MINUTE, cborDecode, cborEncode, check } from '@atproto/common'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import AtpAgent from '@atproto/api'
 import * as plc from '@did-plc/lib'
 import disposable from 'disposable-email'
 import { normalizeAndValidateHandle } from '../../../../handle'
@@ -12,8 +11,9 @@ import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
-import { getPdsEndpoint, isThisPds } from '../../../proxy'
+import { isThisPds } from '../../../proxy'
 import { didDocForSession } from './util'
+import { getPdsEndpoint } from '../../../../pds-agents'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -132,7 +132,7 @@ export default function (server: Server, ctx: AppContext) {
           // Setup repo root
           await repoTxn.createRepo(did, [], now)
         } else {
-          const agent = new AtpAgent({ service: getPdsEndpoint(pds.host) })
+          const agent = ctx.pdsAgents.get(pds.host)
           await agent.com.atproto.server.createAccount({
             ...input.body,
             did,
@@ -215,7 +215,7 @@ const getDidAndPlcOp = async (
 }> => {
   const pdsEndpoint = pds ? getPdsEndpoint(pds.host) : ctx.cfg.service.publicUrl
   const pdsSigningKey = pds
-    ? await reserveSigningKey(pds.host)
+    ? await reserveSigningKey(ctx, pds.host)
     : ctx.repoSigningKey.did()
 
   // if the user brings their own PLC op then we validate it then submit it to PLC on their behalf
@@ -334,8 +334,8 @@ const assignPds = async (ctx: AppContext) => {
   return pdses.at(idx)
 }
 
-const reserveSigningKey = async (host: string) => {
-  const agent = new AtpAgent({ service: getPdsEndpoint(host) })
+const reserveSigningKey = async (ctx: AppContext, host: string) => {
+  const agent = ctx.pdsAgents.get(host)
   const result = await agent.com.atproto.server.reserveSigningKey()
   return result.data.signingKey
 }

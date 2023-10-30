@@ -20,6 +20,7 @@ import { Crawlers } from './crawlers'
 import { DiskBlobStore } from './storage'
 import { getRedisClient } from './redis'
 import { RuntimeFlags } from './runtime-flags'
+import { PdsAgents } from './pds-agents'
 
 export type AppContextOptions = {
   db: Database
@@ -38,6 +39,7 @@ export type AppContextOptions = {
   crawlers: Crawlers
   appViewAgent: AtpAgent
   authVerifier: AuthVerifier
+  pdsAgents: PdsAgents
   repoSigningKey: crypto.Keypair
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
@@ -60,6 +62,7 @@ export class AppContext {
   public crawlers: Crawlers
   public appViewAgent: AtpAgent
   public authVerifier: AuthVerifier
+  public pdsAgents: PdsAgents
   public repoSigningKey: crypto.Keypair
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
@@ -81,6 +84,7 @@ export class AppContext {
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
     this.authVerifier = opts.authVerifier
+    this.pdsAgents = opts.pdsAgents
     this.repoSigningKey = opts.repoSigningKey
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
@@ -191,6 +195,8 @@ export class AppContext {
       crawlers,
     })
 
+    const pdsAgents = new PdsAgents()
+
     return new AppContext({
       db,
       blobstore,
@@ -210,6 +216,7 @@ export class AppContext {
       authVerifier,
       repoSigningKey,
       plcRotationKey,
+      pdsAgents,
       cfg,
       ...(overrides ?? {}),
     })
