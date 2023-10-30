@@ -70,7 +70,7 @@ describe('notif service proxy', () => {
       notifDid,
       async () => network.pds.ctx.repoSigningKey.did(),
     )
-    expect(auth).toEqual(sc.dids.bob)
+    expect(auth.iss).toEqual(sc.dids.bob)
   })
 })
 

@@ -1,7 +1,6 @@
 import * as jwt from 'jsonwebtoken'
 import AtpAgent from '@atproto/api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import * as CreateSession from '@atproto/api/src/client/types/com/atproto/server/createSession'
 import * as RefreshSession from '@atproto/api/src/client/types/com/atproto/server/refreshSession'
 
@@ -243,15 +242,13 @@ describe('auth', () => {
       email: 'iris@test.com',
       password: 'password',
     })
-    await agent.api.com.atproto.admin.takeModerationAction(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        action: TAKEDOWN,
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: account.did,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: { applied: true },
       },
       {
         encoding: 'application/json',
@@ -269,15 +266,13 @@ describe('auth', () => {
       email: 'jared@test.com',
       password: 'password',
     })
-    await agent.api.com.atproto.admin.takeModerationAction(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        action: TAKEDOWN,
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: account.did,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: { applied: true },
       },
       {
         encoding: 'application/json',

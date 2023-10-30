@@ -19,7 +19,7 @@ describe('proxies view requests', () => {
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()
-    await basicSeed(sc)
+    await basicSeed(sc, { addModLabels: true })
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol

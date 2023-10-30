@@ -167,20 +167,8 @@ describe('pds admin invite views', () => {
     expect(combined).toEqual(full.data.codes)
   })
 
-  it('filters admin.searchRepos by invitedBy', async () => {
-    const searchView = await agent.api.com.atproto.admin.searchRepos(
-      { invitedBy: alice },
-      { headers: network.pds.adminAuthHeaders() },
-    )
-    expect(searchView.data.repos.length).toBe(2)
-    expect(searchView.data.repos[0].invitedBy?.available).toBe(1)
-    expect(searchView.data.repos[0].invitedBy?.uses.length).toBe(1)
-    expect(searchView.data.repos[1].invitedBy?.available).toBe(1)
-    expect(searchView.data.repos[1].invitedBy?.uses.length).toBe(1)
-  })
-
-  it('hydrates invites into admin.getRepo', async () => {
-    const aliceView = await agent.api.com.atproto.admin.getRepo(
+  it('hydrates invites into admin.getAccountInfo', async () => {
+    const aliceView = await agent.api.com.atproto.admin.getAccountInfo(
       { did: alice },
       { headers: network.pds.adminAuthHeaders() },
     )
@@ -221,7 +209,7 @@ describe('pds admin invite views', () => {
       { encoding: 'application/json', headers: network.pds.adminAuthHeaders() },
     )
 
-    const repoRes = await agent.api.com.atproto.admin.getRepo(
+    const repoRes = await agent.api.com.atproto.admin.getAccountInfo(
       { did: carol },
       { headers: network.pds.adminAuthHeaders() },
     )
@@ -243,7 +231,7 @@ describe('pds admin invite views', () => {
       { encoding: 'application/json', headers: network.pds.adminAuthHeaders() },
     )
 
-    const afterEnable = await agent.api.com.atproto.admin.getRepo(
+    const afterEnable = await agent.api.com.atproto.admin.getAccountInfo(
       { did: carol },
       { headers: network.pds.adminAuthHeaders() },
     )
@@ -255,7 +243,7 @@ describe('pds admin invite views', () => {
       { encoding: 'application/json', headers: network.pds.adminAuthHeaders() },
     )
 
-    const afterDisable = await agent.api.com.atproto.admin.getRepo(
+    const afterDisable = await agent.api.com.atproto.admin.getAccountInfo(
       { did: carol },
       { headers: network.pds.adminAuthHeaders() },
     )
@@ -290,7 +278,7 @@ describe('pds admin invite views', () => {
       { encoding: 'application/json', headers: network.pds.adminAuthHeaders() },
     )
 
-    const repoRes = await agent.api.com.atproto.admin.getRepo(
+    const repoRes = await agent.api.com.atproto.admin.getAccountInfo(
       { did: carol },
       { headers: network.pds.adminAuthHeaders() },
     )

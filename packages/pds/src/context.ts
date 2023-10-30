@@ -151,11 +151,12 @@ export class AppContext {
 
     const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
 
-    const authVerifier = new AuthVerifier(db, {
+    const authVerifier = new AuthVerifier(db, idResolver, {
       jwtSecret: secrets.jwtSecret,
       adminPass: secrets.adminPassword,
       moderatorPass: secrets.moderatorPassword,
       triagePass: secrets.triagePassword,
+      adminServiceDid: cfg.bskyAppView.did,
     })
 
     const repoSigningKey =

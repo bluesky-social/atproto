@@ -62,3 +62,11 @@ export const ensureAtpDocument = (doc: DidDocument): AtprotoData => {
   }
   return { did, signingKey, handle, pds }
 }
+
+export const ensureAtprotoKey = (doc: DidDocument): string => {
+  const { signingKey } = parseToAtprotoDocument(doc)
+  if (!signingKey) {
+    throw new Error(`Could not parse signingKey from doc: ${doc}`)
+  }
+  return signingKey
+}

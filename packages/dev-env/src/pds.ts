@@ -7,10 +7,7 @@ import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { AtpAgent } from '@atproto/api'
 import { PdsConfig } from './types'
 import { uniqueLockId } from './util'
-
-const ADMIN_PASSWORD = 'admin-pass'
-const MOD_PASSWORD = 'mod-pass'
-const TRIAGE_PASSWORD = 'triage-pass'
+import { ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD } from './const'
 
 export class TestPds {
   constructor(

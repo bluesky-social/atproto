@@ -1,4 +1,4 @@
-import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
+import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import {
@@ -12,13 +12,13 @@ import {
 import { forSnapshot } from '../_util'
 import basicSeed from '../seeds/basic'
 
-describe('pds admin get record view', () => {
-  let network: TestNetworkNoAppView
+describe('admin get record view', () => {
+  let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
-    network = await TestNetworkNoAppView.create({
+    network = await TestNetwork.create({
       dbPostgresSchema: 'views_admin_get_record',
     })
     agent = network.pds.getClient()

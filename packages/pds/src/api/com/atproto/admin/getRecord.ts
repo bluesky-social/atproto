@@ -1,57 +1,19 @@
-import { AtUri } from '@atproto/syntax'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru, mergeRepoViewPdsDetails } from './util'
+import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRecord({
     auth: ctx.authVerifier.role,
-    handler: async ({ req, params, auth }) => {
-      const access = auth.credentials
-      const { db, services } = ctx
-      const { uri, cid } = params
-      const result = await services
-        .record(db)
-        .getRecord(new AtUri(uri), cid ?? null, true)
-      const recordDetail =
-        result &&
-        (await services.moderation(db).views.recordDetail(result, {
-          includeEmails: access.moderator,
-        }))
-
-      if (ctx.cfg.bskyAppView.proxyModeration) {
-        try {
-          const { data: recordDetailAppview } =
-            await ctx.appViewAgent.com.atproto.admin.getRecord(
-              params,
-              authPassthru(req),
-            )
-          if (recordDetail) {
-            recordDetailAppview.repo = mergeRepoViewPdsDetails(
-              recordDetailAppview.repo,
-              recordDetail.repo,
-            )
-          }
-          return {
-            encoding: 'application/json',
-            body: recordDetailAppview,
-          }
-        } catch (err) {
-          if (err && err['error'] === 'RecordNotFound') {
-            throw new InvalidRequestError('Record not found', 'RecordNotFound')
-          } else {
-            throw err
-          }
-        }
-      }
-
-      if (!recordDetail) {
-        throw new InvalidRequestError('Record not found', 'RecordNotFound')
-      }
+    handler: async ({ req, params }) => {
+      const { data: recordDetailAppview } =
+        await ctx.appViewAgent.com.atproto.admin.getRecord(
+          params,
+          authPassthru(req),
+        )
       return {
         encoding: 'application/json',
-        body: recordDetail,
+        body: recordDetailAppview,
       }
     },
   })
