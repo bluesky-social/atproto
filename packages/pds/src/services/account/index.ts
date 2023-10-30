@@ -84,10 +84,10 @@ export class AccountService {
         qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .where('email', '=', email.toLowerCase())
-      .select(['pds.did as pdsDid'])
-      .selectAll('user_account')
+      .selectAll('repo_root') // first so that its possibly-null vals don't shadow other cols
       .selectAll('did_handle')
-      .selectAll('repo_root')
+      .selectAll('user_account')
+      .select(['pds.did as pdsDid'])
       .executeTakeFirst()
     return found || null
   }
