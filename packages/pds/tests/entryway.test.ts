@@ -14,6 +14,8 @@ describe('entryway', () => {
   let entryway: pdsEntryway.PDS
   let pdsAgent: AtpAgent
   let entrywayAgent: AtpAgent
+  let alice: string
+  let accessToken: string
 
   beforeAll(async () => {
     const jwtSigningKey = await Secp256k1Keypair.create({ exportable: true })
@@ -77,16 +79,62 @@ describe('entryway', () => {
       identifier: 'alice@test.com',
       password: 'test123',
     })
-    // can get session on either service
+    alice = did
+    accessToken = accessJwt
+  })
+
+  it('auths with both services.', async () => {
     const entrywaySession =
       await entrywayAgent.api.com.atproto.server.getSession(undefined, {
-        headers: SeedClient.getHeaders(accessJwt),
+        headers: SeedClient.getHeaders(accessToken),
       })
     const pdsSession = await pdsAgent.api.com.atproto.server.getSession(
       undefined,
-      { headers: SeedClient.getHeaders(accessJwt) },
+      { headers: SeedClient.getHeaders(accessToken) },
     )
-    expect(entrywaySession).toEqual(pdsSession)
+    expect(entrywaySession.data).toEqual(pdsSession.data)
+  })
+
+  it('updates handle from pds.', async () => {
+    await pdsAgent.api.com.atproto.identity.updateHandle(
+      { handle: 'alice2.test' },
+      {
+        headers: SeedClient.getHeaders(accessToken),
+        encoding: 'application/json',
+      },
+    )
+    const doc = await pds.ctx.idResolver.did.resolve(alice)
+    const handleToDid = await pds.ctx.idResolver.handle.resolve('alice2.test')
+    const accountFromPds = await pds.ctx.accountManager.getAccount(alice)
+    const accountFromEntryway = await entryway.ctx.services
+      .account(entryway.ctx.db)
+      .getAccount(alice)
+    expect(doc?.alsoKnownAs).toEqual(['at://alice2.test'])
+    expect(handleToDid).toEqual(alice)
+    expect(accountFromPds?.handle).toEqual('alice2.test')
+    expect(accountFromEntryway?.handle).toEqual('alice2.test')
+  })
+
+  it('updates handle from entryway.', async () => {
+    await entrywayAgent.api.com.atproto.identity.updateHandle(
+      { handle: 'alice3.test' },
+      {
+        headers: SeedClient.getHeaders(accessToken),
+        encoding: 'application/json',
+      },
+    )
+    const doc = await entryway.ctx.idResolver.did.resolve(alice)
+    const handleToDid = await entryway.ctx.idResolver.handle.resolve(
+      'alice3.test',
+    )
+    const accountFromPds = await pds.ctx.accountManager.getAccount(alice)
+    const accountFromEntryway = await entryway.ctx.services
+      .account(entryway.ctx.db)
+      .getAccount(alice)
+    expect(doc?.alsoKnownAs).toEqual(['at://alice3.test'])
+    expect(handleToDid).toEqual(alice)
+    expect(accountFromPds?.handle).toEqual('alice3.test')
+    expect(accountFromEntryway?.handle).toEqual('alice3.test')
   })
 })
 
