@@ -21,7 +21,6 @@ import { AccountService } from '../account'
 import { RecordService } from '../record'
 import { ModerationReportRowWithHandle } from '.'
 import { ids } from '../../lexicon/lexicons'
-import { UserAccount } from '../../db/tables/user-account'
 
 export class ModerationViews {
   constructor(private db: Database) {}
