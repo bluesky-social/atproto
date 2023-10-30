@@ -1,15 +1,10 @@
 import { KeyObject } from 'node:crypto'
 import { HOUR } from '@atproto/common'
 import { CID } from 'multiformats/cid'
-import {
-  AccountDb,
-  AccountEntry,
-  EmailTokenPurpose,
-  getDb,
-  getMigrator,
-} from './db'
+import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
 import * as scrypt from './helpers/scrypt'
 import * as account from './helpers/account'
+import { ActorAccount } from './helpers/account'
 import * as repo from './helpers/repo'
 import * as auth from './helpers/auth'
 import * as invite from './helpers/invite'
@@ -39,14 +34,14 @@ export class AccountManager {
   async getAccount(
     handleOrDid: string,
     includeSoftDeleted = false,
-  ): Promise<AccountEntry | null> {
+  ): Promise<ActorAccount | null> {
     return account.getAccount(this.db, handleOrDid, includeSoftDeleted)
   }
 
   async getAccountByEmail(
     email: string,
     includeSoftDeleted = false,
-  ): Promise<AccountEntry | null> {
+  ): Promise<ActorAccount | null> {
     return account.getAccountByEmail(this.db, email, includeSoftDeleted)
   }
 
@@ -84,7 +79,8 @@ export class AccountManager {
     const now = new Date().toISOString()
     await this.db.transaction((dbTxn) =>
       Promise.all([
-        account.registerAccount(dbTxn, { did, handle, email, passwordScrypt }),
+        account.registerActor(dbTxn, { did, handle }),
+        account.registerAccount(dbTxn, { did, email, passwordScrypt }),
         repo.updateRoot(dbTxn, did, repoCid, repoRev),
         invite.recordInviteUse(dbTxn, {
           did,

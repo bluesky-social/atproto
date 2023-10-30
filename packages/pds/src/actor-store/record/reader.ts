@@ -85,7 +85,7 @@ export class RecordReader {
     cid: string
     value: object
     indexedAt: string
-    takedownId: string | null
+    takedownRef: string | null
   } | null> {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
@@ -106,7 +106,7 @@ export class RecordReader {
       cid: record.cid,
       value: cborToLexRecord(record.content),
       indexedAt: record.indexedAt,
-      takedownId: record.takedownId ? record.takedownId.toString() : null,
+      takedownRef: record.takedownRef ? record.takedownRef.toString() : null,
     }
   }
 
@@ -133,12 +133,12 @@ export class RecordReader {
   async getRecordTakedownStatus(uri: AtUri): Promise<StatusAttr | null> {
     const res = await this.db.db
       .selectFrom('record')
-      .select('takedownId')
+      .select('takedownRef')
       .where('uri', '=', uri.toString())
       .executeTakeFirst()
     if (!res) return null
-    return res.takedownId
-      ? { applied: true, ref: res.takedownId }
+    return res.takedownRef
+      ? { applied: true, ref: res.takedownRef }
       : { applied: false }
   }
 

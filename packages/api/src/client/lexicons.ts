@@ -1826,6 +1826,8 @@ export const schemaDict = {
               },
               reason: {
                 type: 'string',
+                maxGraphemes: 2000,
+                maxLength: 20000,
               },
               subject: {
                 type: 'union',
@@ -4020,6 +4022,10 @@ export const schemaDict = {
           blocking: {
             type: 'string',
             format: 'at-uri',
+          },
+          blockingByList: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listViewBasic',
           },
           following: {
             type: 'string',

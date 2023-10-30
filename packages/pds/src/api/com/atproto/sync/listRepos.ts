@@ -10,19 +10,16 @@ export default function (server: Server, ctx: AppContext) {
     const db = ctx.accountManager.db
     const { ref } = db.db.dynamic
     let builder = db.db
-      .selectFrom('account')
-      .innerJoin('repo_root', 'repo_root.did', 'account.did')
-      .where(notSoftDeletedClause(ref('account')))
+      .selectFrom('actor')
+      .innerJoin('repo_root', 'repo_root.did', 'actor.did')
+      .where(notSoftDeletedClause(ref('actor')))
       .select([
-        'account.did as did',
+        'actor.did as did',
         'repo_root.root as head',
         'repo_root.rev as rev',
-        'account.createdAt as createdAt',
+        'actor.createdAt as createdAt',
       ])
-    const keyset = new TimeDidKeyset(
-      ref('account.createdAt'),
-      ref('account.did'),
-    )
+    const keyset = new TimeDidKeyset(ref('actor.createdAt'), ref('actor.did'))
     builder = paginate(builder, {
       limit,
       cursor,

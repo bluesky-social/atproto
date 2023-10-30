@@ -84,12 +84,12 @@ export class BlobTransactor extends BlobReader {
   }
 
   async updateBlobTakedownStatus(blob: CID, takedown: StatusAttr) {
-    const takedownId = takedown.applied
+    const takedownRef = takedown.applied
       ? takedown.ref ?? new Date().toISOString()
       : null
     await this.db.db
       .updateTable('blob')
-      .set({ takedownId })
+      .set({ takedownRef })
       .where('cid', '=', blob.toString())
       .executeTakeFirst()
     if (takedown.applied) {
@@ -158,7 +158,7 @@ export class BlobTransactor extends BlobReader {
       .selectFrom('blob')
       .selectAll()
       .where('cid', '=', blob.cid.toString())
-      .where('takedownId', 'is', null)
+      .where('takedownRef', 'is', null)
       .executeTakeFirst()
     if (!found) {
       throw new InvalidRequestError(
