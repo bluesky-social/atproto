@@ -62,7 +62,6 @@ import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/serve
 import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/reserveSigningKey'
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
-import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
@@ -71,12 +70,13 @@ import * as ComAtprotoSyncGetHead from './types/com/atproto/sync/getHead'
 import * as ComAtprotoSyncGetLatestCommit from './types/com/atproto/sync/getLatestCommit'
 import * as ComAtprotoSyncGetRecord from './types/com/atproto/sync/getRecord'
 import * as ComAtprotoSyncGetRepo from './types/com/atproto/sync/getRepo'
-import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 import * as ComAtprotoSyncListBlobs from './types/com/atproto/sync/listBlobs'
 import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
+import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
@@ -176,8 +176,8 @@ export class AtprotoNS {
   moderation: ModerationNS
   repo: RepoNS
   server: ServerNS
-  temp: TempNS
   sync: SyncNS
+  temp: TempNS
 
   constructor(server: Server) {
     this._server = server
@@ -187,8 +187,8 @@ export class AtprotoNS {
     this.moderation = new ModerationNS(server)
     this.repo = new RepoNS(server)
     this.server = new ServerNS(server)
-    this.temp = new TempNS(server)
     this.sync = new SyncNS(server)
+    this.temp = new TempNS(server)
   }
 }
 
@@ -834,36 +834,6 @@ export class ServerNS {
   }
 }
 
-export class TempNS {
-  _server: Server
-
-  constructor(server: Server) {
-    this._server = server
-  }
-
-  transferAccount<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoTempTransferAccount.Handler<ExtractAuth<AV>>,
-      ComAtprotoTempTransferAccount.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.temp.transferAccount' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  importRepo<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoTempImportRepo.Handler<ExtractAuth<AV>>,
-      ComAtprotoTempImportRepo.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.temp.importRepo' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-}
-
 export class SyncNS {
   _server: Server
 
@@ -1001,6 +971,36 @@ export class SyncNS {
   ) {
     const nsid = 'com.atproto.sync.subscribeRepos' // @ts-ignore
     return this._server.xrpc.streamMethod(nsid, cfg)
+  }
+}
+
+export class TempNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  importRepo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempImportRepo.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempImportRepo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.importRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  transferAccount<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempTransferAccount.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempTransferAccount.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.transferAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 

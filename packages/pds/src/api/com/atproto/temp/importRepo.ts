@@ -18,7 +18,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, input }) => {
       const { did } = params
       const outBuffer = new AsyncBuffer<string>()
-      processImport(ctx, did, input.body, outBuffer)
+      processImport(ctx, did, input.body, outBuffer).catch((err) =>
+        outBuffer.throw(err),
+      )
 
       return {
         encoding: 'text/plain',

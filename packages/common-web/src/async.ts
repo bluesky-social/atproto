@@ -73,6 +73,7 @@ export class AsyncBuffer<T> {
   private promise: Promise<void>
   private resolve: () => void
   private closed = false
+  private toThrow: unknown | undefined
 
   constructor(public maxSize?: number) {
     // Initializing to satisfy types/build, immediately reset by resetPromise()
@@ -109,6 +110,9 @@ export class AsyncBuffer<T> {
         return
       }
       await this.promise
+      if (this.toThrow) {
+        throw this.toThrow
+      }
       if (this.maxSize && this.size > this.maxSize) {
         throw new AsyncBufferFullError(this.maxSize)
       }
@@ -120,6 +124,11 @@ export class AsyncBuffer<T> {
         this.resetPromise()
       }
     }
+  }
+
+  throw(err: unknown) {
+    this.toThrow = err
+    this.resolve()
   }
 
   close() {

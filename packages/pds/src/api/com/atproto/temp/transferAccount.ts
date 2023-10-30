@@ -1,6 +1,5 @@
 import { ensureAtpDocument } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import disposable from 'disposable-email'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import * as plc from '@did-plc/lib'
 import { Server } from '../../../../lexicon'
@@ -10,8 +9,7 @@ import { cborDecode, check, cidForCbor } from '@atproto/common'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.transferAccount({
     handler: async ({ input }) => {
-      const { email, passwordScrypt, did, plcOp } = input.body
-
+      const { did, plcOp } = input.body
       // normalize & ensure valid handle
       const handle = await normalizeAndValidateHandle({
         ctx,
@@ -19,21 +17,10 @@ export default function (server: Server, ctx: AppContext) {
         did: input.body.did,
       })
 
-      if (!disposable.validate(email)) {
-        throw new InvalidRequestError(
-          'This email address is not supported, please use a different email.',
-        )
-      }
-
       // check that the handle and email are available
-      const [handleAccnt, emailAcct] = await Promise.all([
-        ctx.accountManager.getAccount(handle),
-        ctx.accountManager.getAccountByEmail(email),
-      ])
+      const handleAccnt = await ctx.accountManager.getAccount(handle)
       if (handleAccnt) {
         throw new InvalidRequestError(`Handle already taken: ${handle}`)
-      } else if (emailAcct) {
-        throw new InvalidRequestError(`Email already taken: ${email}`)
       }
 
       const signingDidKey = await verifyDidAndPlcOp(ctx, did, handle, plcOp)

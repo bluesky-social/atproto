@@ -3239,88 +3239,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoTempTransferAccount: {
-    lexicon: 1,
-    id: 'com.atproto.temp.transferAccount',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Transfer an account.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['handle', 'email', 'did', 'passwordScrypt', 'plcOp'],
-            properties: {
-              email: {
-                type: 'string',
-              },
-              handle: {
-                type: 'string',
-                format: 'handle',
-              },
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-              passwordScrypt: {
-                type: 'string',
-              },
-              plcOp: {
-                type: 'bytes',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
-            properties: {
-              accessJwt: {
-                type: 'string',
-              },
-              refreshJwt: {
-                type: 'string',
-              },
-              handle: {
-                type: 'string',
-                format: 'handle',
-              },
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidHandle',
-          },
-          {
-            name: 'InvalidPassword',
-          },
-          {
-            name: 'InvalidInviteCode',
-          },
-          {
-            name: 'HandleNotAvailable',
-          },
-          {
-            name: 'UnsupportedDomain',
-          },
-          {
-            name: 'UnresolvableDid',
-          },
-          {
-            name: 'IncompatibleDidDoc',
-          },
-        ],
-      },
-    },
-  },
   ComAtprotoServerUpdateEmail: {
     lexicon: 1,
     id: 'com.atproto.server.updateEmail',
@@ -3587,34 +3505,6 @@ export const schemaDict = {
         },
         output: {
           encoding: 'application/vnd.ipld.car',
-        },
-      },
-    },
-  },
-  ComAtprotoTempImportRepo: {
-    lexicon: 1,
-    id: 'com.atproto.temp.importRepo',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          "Gets the did's repo, optionally catching up from a specific revision.",
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        input: {
-          encoding: 'application/vnd.ipld.car',
-        },
-        output: {
-          encoding: 'text/plain',
         },
       },
     },
@@ -3977,6 +3867,110 @@ export const schemaDict = {
             type: 'cid-link',
           },
         },
+      },
+    },
+  },
+  ComAtprotoTempImportRepo: {
+    lexicon: 1,
+    id: 'com.atproto.temp.importRepo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Gets the did's repo, optionally catching up from a specific revision.",
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        input: {
+          encoding: 'application/vnd.ipld.car',
+        },
+        output: {
+          encoding: 'text/plain',
+        },
+      },
+    },
+  },
+  ComAtprotoTempTransferAccount: {
+    lexicon: 1,
+    id: 'com.atproto.temp.transferAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Transfer an account.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle', 'did', 'plcOp'],
+            properties: {
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              plcOp: {
+                type: 'bytes',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
+            properties: {
+              accessJwt: {
+                type: 'string',
+              },
+              refreshJwt: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidHandle',
+          },
+          {
+            name: 'InvalidPassword',
+          },
+          {
+            name: 'InvalidInviteCode',
+          },
+          {
+            name: 'HandleNotAvailable',
+          },
+          {
+            name: 'UnsupportedDomain',
+          },
+          {
+            name: 'UnresolvableDid',
+          },
+          {
+            name: 'IncompatibleDidDoc',
+          },
+        ],
       },
     },
   },
@@ -7727,7 +7721,6 @@ export const ids = {
   ComAtprotoServerReserveSigningKey: 'com.atproto.server.reserveSigningKey',
   ComAtprotoServerResetPassword: 'com.atproto.server.resetPassword',
   ComAtprotoServerRevokeAppPassword: 'com.atproto.server.revokeAppPassword',
-  ComAtprotoTempTransferAccount: 'com.atproto.temp.transferAccount',
   ComAtprotoServerUpdateEmail: 'com.atproto.server.updateEmail',
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',
@@ -7736,12 +7729,13 @@ export const ids = {
   ComAtprotoSyncGetLatestCommit: 'com.atproto.sync.getLatestCommit',
   ComAtprotoSyncGetRecord: 'com.atproto.sync.getRecord',
   ComAtprotoSyncGetRepo: 'com.atproto.sync.getRepo',
-  ComAtprotoTempImportRepo: 'com.atproto.temp.importRepo',
   ComAtprotoSyncListBlobs: 'com.atproto.sync.listBlobs',
   ComAtprotoSyncListRepos: 'com.atproto.sync.listRepos',
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
+  ComAtprotoTempImportRepo: 'com.atproto.temp.importRepo',
+  ComAtprotoTempTransferAccount: 'com.atproto.temp.transferAccount',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
