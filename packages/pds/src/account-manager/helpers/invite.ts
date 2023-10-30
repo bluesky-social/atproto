@@ -78,7 +78,7 @@ export const ensureInviteIsAvailable = async (
 ): Promise<void> => {
   const invite = await db.db
     .selectFrom('invite_code')
-    .leftJoin('account', 'account.did', 'invite_code.forAccount')
+    .leftJoin('actor', 'actor.did', 'invite_code.forAccount')
     .where('takedownId', 'is', null)
     .selectAll('invite_code')
     .where('code', '=', inviteCode)

@@ -7,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
 
     const account = await ctx.accountManager.getAccountByEmail(email)
 
-    if (account) {
+    if (account?.email) {
       const token = await ctx.accountManager.createEmailToken(
         account.did,
         'reset_password',

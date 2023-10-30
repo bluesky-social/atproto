@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth }) => {
       const did = auth.credentials.did
       const acccount = await ctx.accountManager.getAccount(did)
-      if (!acccount) {
+      if (!acccount?.email) {
         throw new InvalidRequestError('acccount not found')
       }
       const token = await ctx.accountManager.createEmailToken(

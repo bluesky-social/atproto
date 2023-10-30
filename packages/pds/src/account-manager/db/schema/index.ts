@@ -1,3 +1,4 @@
+import * as actor from './actor'
 import * as account from './account'
 import * as repoRoot from './repo-root'
 import * as refreshToken from './refresh-token'
@@ -7,6 +8,7 @@ import * as emailToken from './email-token'
 import * as appMigration from './app-migration'
 
 export type DatabaseSchema = appMigration.PartialDB &
+  actor.PartialDB &
   account.PartialDB &
   refreshToken.PartialDB &
   appPassword.PartialDB &
@@ -14,6 +16,7 @@ export type DatabaseSchema = appMigration.PartialDB &
   inviteCode.PartialDB &
   emailToken.PartialDB
 
+export type { Actor, ActorEntry } from './actor'
 export type { Account, AccountEntry } from './account'
 export type { RepoRoot } from './repo-root'
 export type { RefreshToken } from './refresh-token'
