@@ -103,7 +103,12 @@ export class AppContext {
           })
     const blobstore =
       cfg.blobstore.provider === 's3'
-        ? new S3BlobStore({ bucket: cfg.blobstore.bucket })
+        ? new S3BlobStore({
+            bucket: cfg.blobstore.bucket,
+            region: cfg.blobstore.region,
+            endpoint: cfg.blobstore.endpoint,
+            forcePathStyle: cfg.blobstore.forcePathStyle,
+          })
         : await DiskBlobStore.create(
             cfg.blobstore.location,
             cfg.blobstore.tempLocation,

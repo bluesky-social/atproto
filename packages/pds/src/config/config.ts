@@ -55,6 +55,15 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   }
   if (env.blobstoreS3Bucket) {
     blobstoreCfg = { provider: 's3', bucket: env.blobstoreS3Bucket }
+    if (env.blobstoreS3Region) {
+      blobstoreCfg.region = env.blobstoreS3Region
+    }
+    if (env.blobstoreS3Endpoint) {
+      blobstoreCfg.endpoint = env.blobstoreS3Endpoint
+    }
+    if (env.blobstoreS3ForcePathStyle !== undefined) {
+      blobstoreCfg.forcePathStyle = env.blobstoreS3ForcePathStyle
+    }
   } else if (env.blobstoreDiskLocation) {
     blobstoreCfg = {
       provider: 'disk',
@@ -238,6 +247,9 @@ export type PostgresConfig = {
 export type S3BlobstoreConfig = {
   provider: 's3'
   bucket: string
+  region?: string
+  endpoint?: string
+  forcePathStyle?: boolean
 }
 
 export type DiskBlobstoreConfig = {
