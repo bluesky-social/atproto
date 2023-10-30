@@ -491,20 +491,43 @@ Object {
     Object {
       "subject": Object {
         "did": "user(2)",
-        "handle": "carol.test",
+        "handle": "dan.test",
         "labels": Array [],
         "viewer": Object {
           "blockedBy": false,
-          "blocking": "record(0)",
           "muted": false,
         },
       },
     },
     Object {
       "subject": Object {
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
-        "description": "hi im bob label_me",
         "did": "user(3)",
+        "handle": "carol.test",
+        "labels": Array [],
+        "viewer": Object {
+          "blockedBy": false,
+          "blocking": "record(0)",
+          "blockingByList": Object {
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@jpeg",
+            "cid": "cids(0)",
+            "indexedAt": "1970-01-01T00:00:00.000Z",
+            "name": "alice blocks",
+            "purpose": "app.bsky.graph.defs#modlist",
+            "uri": "record(0)",
+            "viewer": Object {
+              "blocked": "record(1)",
+              "muted": false,
+            },
+          },
+          "muted": false,
+        },
+      },
+    },
+    Object {
+      "subject": Object {
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
+        "description": "hi im bob label_me",
+        "did": "user(4)",
         "displayName": "bobby",
         "handle": "bob.test",
         "indexedAt": "1970-01-01T00:00:00.000Z",
@@ -512,6 +535,18 @@ Object {
         "viewer": Object {
           "blockedBy": false,
           "blocking": "record(0)",
+          "blockingByList": Object {
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@jpeg",
+            "cid": "cids(0)",
+            "indexedAt": "1970-01-01T00:00:00.000Z",
+            "name": "alice blocks",
+            "purpose": "app.bsky.graph.defs#modlist",
+            "uri": "record(0)",
+            "viewer": Object {
+              "blocked": "record(1)",
+              "muted": false,
+            },
+          },
           "muted": false,
         },
       },

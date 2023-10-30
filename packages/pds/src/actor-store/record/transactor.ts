@@ -97,12 +97,12 @@ export class RecordTransactor extends RecordReader {
   }
 
   async updateRecordTakedownStatus(uri: AtUri, takedown: StatusAttr) {
-    const takedownId = takedown.applied
+    const takedownRef = takedown.applied
       ? takedown.ref ?? new Date().toISOString()
       : null
     await this.db.db
       .updateTable('record')
-      .set({ takedownId })
+      .set({ takedownRef })
       .where('uri', '=', uri.toString())
       .executeTakeFirst()
   }

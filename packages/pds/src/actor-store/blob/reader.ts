@@ -65,12 +65,12 @@ export class BlobReader {
   async getBlobTakedownStatus(cid: CID): Promise<StatusAttr | null> {
     const res = await this.db.db
       .selectFrom('blob')
-      .select('takedownId')
+      .select('takedownRef')
       .where('cid', '=', cid.toString())
       .executeTakeFirst()
     if (!res) return null
-    return res.takedownId
-      ? { applied: true, ref: res.takedownId }
+    return res.takedownRef
+      ? { applied: true, ref: res.takedownRef }
       : { applied: false }
   }
 }

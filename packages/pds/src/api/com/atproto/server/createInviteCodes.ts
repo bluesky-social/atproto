@@ -1,4 +1,4 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { genInvCodes } from './util'
@@ -11,6 +11,12 @@ export default function (server: Server, ctx: AppContext) {
       if (!auth.credentials.admin) {
         throw new AuthRequiredError('Insufficient privileges')
       }
+      if (ctx.cfg.entryway) {
+        throw new InvalidRequestError(
+          'Account invites are managed by the entryway service',
+        )
+      }
+
       const { codeCount, useCount } = input.body
 
       const forAccounts = input.body.forAccounts ?? ['admin']

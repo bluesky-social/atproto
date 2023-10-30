@@ -1,6 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru } from './util'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.reverseModerationAction({
@@ -11,7 +11,6 @@ export default function (server: Server, ctx: AppContext) {
           input.body,
           authPassthru(req, true),
         )
-
       return {
         encoding: 'application/json',
         body: result,

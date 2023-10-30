@@ -91,6 +91,10 @@ await agent.searchActors(params, opts)
 await agent.searchActorsTypeahead(params, opts)
 await agent.mute(did)
 await agent.unmute(did)
+await agent.muteModList(listUri)
+await agent.unmuteModList(listUri)
+await agent.blockModList(listUri)
+await agent.unblockModList(listUri)
 
 // Notifications
 await agent.listNotifications(params, opts)

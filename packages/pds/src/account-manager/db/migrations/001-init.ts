@@ -67,7 +67,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('handle', 'varchar')
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
-    .addColumn('takedownId', 'varchar')
+    .addColumn('takedownRef', 'varchar')
     .execute()
   await db.schema
     .createIndex(`actor_handle_lower_idx`)

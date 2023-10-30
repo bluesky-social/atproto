@@ -3,6 +3,7 @@ import { AppBskyFeedGetPostThread } from '@atproto/api'
 import { Headers } from '@atproto/xrpc'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { authPassthru } from '../../../proxy'
 import {
   ThreadViewPost,
   isThreadViewPost,
@@ -20,7 +21,6 @@ import {
   LocalRecords,
   RecordDescript,
 } from '../../../../read-after-write'
-import { authPassthru } from '../../../com/atproto/admin/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({

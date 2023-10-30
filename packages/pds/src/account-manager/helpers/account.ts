@@ -161,12 +161,12 @@ export const getAccountTakedownStatus = async (
 ): Promise<StatusAttr | null> => {
   const res = await db.db
     .selectFrom('actor')
-    .select('takedownId')
+    .select('takedownRef')
     .where('did', '=', did)
     .executeTakeFirst()
   if (!res) return null
-  return res.takedownId
-    ? { applied: true, ref: res.takedownId }
+  return res.takedownRef
+    ? { applied: true, ref: res.takedownRef }
     : { applied: false }
 }
 
@@ -175,12 +175,12 @@ export const updateAccountTakedownStatus = async (
   did: string,
   takedown: StatusAttr,
 ) => {
-  const takedownId = takedown.applied
+  const takedownRef = takedown.applied
     ? takedown.ref ?? new Date().toISOString()
     : null
   await db.db
     .updateTable('actor')
-    .set({ takedownId })
+    .set({ takedownRef })
     .where('did', '=', did)
     .executeTakeFirst()
 }

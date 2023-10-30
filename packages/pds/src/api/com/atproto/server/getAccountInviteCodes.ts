@@ -1,13 +1,23 @@
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { genInvCodes } from './util'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { CodeDetail } from '../../../../account-manager/helpers/invite'
+import { authPassthru, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getAccountInviteCodes({
     auth: ctx.authVerifier.accessNotAppPassword,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
+      if (ctx.entrywayAgent) {
+        return resultPassthru(
+          await ctx.entrywayAgent.com.atproto.server.getAccountInviteCodes(
+            params,
+            authPassthru(req),
+          ),
+        )
+      }
+
       const requester = auth.credentials.did
       const { includeUsed, createAvailable } = params
 

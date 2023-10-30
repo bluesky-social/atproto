@@ -30,6 +30,15 @@ export const readEnv = (): ServerEnvironment => {
     handleBackupNameservers: envList('PDS_HANDLE_BACKUP_NAMESERVERS'),
     enableDidDocWithSession: envBool('PDS_ENABLE_DID_DOC_WITH_SESSION'),
 
+    // entryway
+    entrywayUrl: envStr('PDS_ENTRYWAY_URL'),
+    entrywayJwtVerifyKeyK256PublicKeyHex: envStr(
+      'PDS_ENTRYWAY_JWT_VERIFY_KEY_K256_PUBLIC_KEY_HEX',
+    ),
+    entrywayPlcRotationKeyK256PublicKeyHex: envStr(
+      'PDS_ENTRYWAY_PLC_ROTATION_KEY_K256_PUBLIC_KEY_HEX',
+    ),
+
     // invites
     inviteRequired: envBool('PDS_INVITE_REQUIRED'),
     inviteInterval: envInt('PDS_INVITE_INTERVAL'),
@@ -104,6 +113,11 @@ export type ServerEnvironment = {
   serviceHandleDomains?: string[] // public hostname by default
   handleBackupNameservers?: string[]
   enableDidDocWithSession?: boolean
+
+  // entryway
+  entrywayUrl?: string
+  entrywayJwtVerifyKeyK256PublicKeyHex?: string
+  entrywayPlcRotationKeyK256PublicKeyHex?: string
 
   // invites
   inviteRequired?: boolean

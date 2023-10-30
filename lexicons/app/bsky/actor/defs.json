@@ -86,6 +86,10 @@
         },
         "blockedBy": { "type": "boolean" },
         "blocking": { "type": "string", "format": "at-uri" },
+        "blockingByList": {
+          "type": "ref",
+          "ref": "app.bsky.graph.defs#listViewBasic"
+        },
         "following": { "type": "string", "format": "at-uri" },
         "followedBy": { "type": "string", "format": "at-uri" }
       }

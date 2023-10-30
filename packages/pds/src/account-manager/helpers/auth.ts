@@ -1,4 +1,6 @@
-import * as jwt from 'jsonwebtoken'
+import assert from 'node:assert'
+import { KeyObject } from 'node:crypto'
+import * as jose from 'jose'
 import * as ui8 from 'uint8arrays'
 import * as crypto from '@atproto/crypto'
 import { AuthScope } from '../../auth-verifier'
@@ -10,70 +12,61 @@ export type AuthToken = {
   exp: number
 }
 
-export type RefreshToken = AuthToken & { jti: string }
+export type RefreshToken = AuthToken & { scope: AuthScope.Refresh; jti: string }
 
-export const createTokens = (opts: {
+export const createTokens = async (opts: {
   did: string
-  jwtSecret: string
+  jwtKey: KeyObject
   scope?: AuthScope
   jti?: string
   expiresIn?: string | number
 }) => {
-  const { did, jwtSecret, scope, jti, expiresIn } = opts
-  const access = createAccessToken({ did, jwtSecret, scope, expiresIn })
-  const refresh = createRefreshToken({ did, jwtSecret, jti, expiresIn })
-  return { access, refresh }
+  const { did, jwtKey, scope, jti, expiresIn } = opts
+  const [accessJwt, refreshJwt] = await Promise.all([
+    createAccessToken({ did, jwtKey, scope, expiresIn }),
+    createRefreshToken({ did, jwtKey, jti, expiresIn }),
+  ])
+  return { accessJwt, refreshJwt }
 }
 
 export const createAccessToken = (opts: {
   did: string
-  jwtSecret: string
+  jwtKey: KeyObject
   scope?: AuthScope
   expiresIn?: string | number
-}) => {
-  const {
-    did,
-    jwtSecret,
-    scope = AuthScope.Access,
-    expiresIn = '120mins',
-  } = opts
-  const payload = {
-    scope,
-    sub: did,
-  }
-  return {
-    payload: payload as AuthToken, // exp set by sign()
-    jwt: jwt.sign(payload, jwtSecret, {
-      expiresIn: expiresIn,
-      mutatePayload: true,
-    }),
-  }
+}): Promise<string> => {
+  const { did, jwtKey, scope = AuthScope.Access, expiresIn = '120mins' } = opts
+  // @TODO set alg header?
+  const signer = new jose.SignJWT({ scope })
+    .setProtectedHeader({ alg: 'HS256' }) // only symmetric keys supported
+    .setSubject(did)
+    .setIssuedAt()
+    .setExpirationTime(expiresIn)
+  return signer.sign(jwtKey)
 }
 
 export const createRefreshToken = (opts: {
   did: string
-  jwtSecret: string
+  jwtKey: KeyObject
   jti?: string
   expiresIn?: string | number
-}) => {
-  const {
-    did,
-    jwtSecret,
-    jti = getRefreshTokenId(),
-    expiresIn = '90days',
-  } = opts
-  const payload = {
-    scope: AuthScope.Refresh,
-    sub: did,
-    jti,
-  }
-  return {
-    payload: payload as RefreshToken, // exp set by sign()
-    jwt: jwt.sign(payload, jwtSecret, {
-      expiresIn: expiresIn,
-      mutatePayload: true,
-    }),
-  }
+}): Promise<string> => {
+  const { did, jwtKey, jti = getRefreshTokenId(), expiresIn = '90days' } = opts
+  // @TODO set alg header? audience?
+  const signer = new jose.SignJWT({ scope: AuthScope.Refresh })
+    .setProtectedHeader({ alg: 'HS256' }) // only symmetric keys supported
+    .setSubject(did)
+    .setJti(jti)
+    .setIssuedAt()
+    .setExpirationTime(expiresIn)
+  return signer.sign(jwtKey)
+}
+
+// @NOTE unsafe for verification, should only be used w/ direct output from createRefreshToken() or createTokens()
+export const decodeRefreshToken = (jwt: string) => {
+  const token = jose.decodeJwt(jwt)
+  assert.ok(token.scope === AuthScope.Refresh, 'not a refresh token')
+  return token as RefreshToken
 }
 
 export const storeRefreshToken = async (

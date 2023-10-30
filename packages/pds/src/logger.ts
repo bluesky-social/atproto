@@ -1,7 +1,7 @@
 import pino from 'pino'
 import pinoHttp from 'pino-http'
 import { subsystemLogger } from '@atproto/common'
-import * as jwt from 'jsonwebtoken'
+import * as jose from 'jose'
 import { parseBasicAuth } from './auth-verifier'
 
 export const dbLogger = subsystemLogger('pds:db')
@@ -29,7 +29,7 @@ export const loggerMiddleware = pinoHttp({
       let auth: string | undefined = undefined
       if (authHeader.startsWith('Bearer ')) {
         const token = authHeader.slice('Bearer '.length)
-        const sub = jwt.decode(token)?.sub
+        const { sub } = jose.decodeJwt(token)
         if (sub) {
           auth = 'Bearer ' + sub
         } else {

@@ -267,26 +267,42 @@ export type RelationshipPair = [didA: string, didB: string]
 export class BlockAndMuteState {
   hasIdx = new Map<string, Set<string>>() // did -> did
   blockIdx = new Map<string, Map<string, string>>() // did -> did -> block uri
+  blockListIdx = new Map<string, Map<string, string>>() // did -> did -> list uri
   muteIdx = new Map<string, Set<string>>() // did -> did
   muteListIdx = new Map<string, Map<string, string>>() // did -> did -> list uri
   constructor(items: BlockAndMuteInfo[] = []) {
     items.forEach((item) => this.add(item))
   }
   add(item: BlockAndMuteInfo) {
-    const blocking = item.blocking || item.blockingViaList // block or list uri
-    if (blocking) {
+    if (item.source === item.target) {
+      return // we do not respect self-blocks or self-mutes
+    }
+    if (item.blocking) {
       const map = this.blockIdx.get(item.source) ?? new Map()
-      map.set(item.target, blocking)
+      map.set(item.target, item.blocking)
       if (!this.blockIdx.has(item.source)) {
         this.blockIdx.set(item.source, map)
       }
     }
-    const blockedBy = item.blockedBy || item.blockedByViaList // block or list uri
-    if (blockedBy) {
+    if (item.blockingViaList) {
+      const map = this.blockListIdx.get(item.source) ?? new Map()
+      map.set(item.target, item.blockingViaList)
+      if (!this.blockListIdx.has(item.source)) {
+        this.blockListIdx.set(item.source, map)
+      }
+    }
+    if (item.blockedBy) {
       const map = this.blockIdx.get(item.target) ?? new Map()
-      map.set(item.source, blockedBy)
+      map.set(item.source, item.blockedBy)
       if (!this.blockIdx.has(item.target)) {
         this.blockIdx.set(item.target, map)
+      }
+    }
+    if (item.blockedByViaList) {
+      const map = this.blockListIdx.get(item.target) ?? new Map()
+      map.set(item.source, item.blockedByViaList)
+      if (!this.blockListIdx.has(item.target)) {
+        this.blockListIdx.set(item.target, map)
       }
     }
     if (item.muting) {
@@ -314,7 +330,7 @@ export class BlockAndMuteState {
   }
   // block or list uri
   blocking(pair: RelationshipPair): string | null {
-    return this.blockIdx.get(pair[0])?.get(pair[1]) ?? null
+    return this.blockIdx.get(pair[0])?.get(pair[1]) ?? this.blockList(pair)
   }
   // block or list uri
   blockedBy(pair: RelationshipPair): string | null {
@@ -324,6 +340,9 @@ export class BlockAndMuteState {
     return !!this.muteIdx.get(pair[0])?.has(pair[1]) || !!this.muteList(pair)
   }
   // list uri
+  blockList(pair: RelationshipPair): string | null {
+    return this.blockListIdx.get(pair[0])?.get(pair[1]) ?? null
+  }
   muteList(pair: RelationshipPair): string | null {
     return this.muteListIdx.get(pair[0])?.get(pair[1]) ?? null
   }
