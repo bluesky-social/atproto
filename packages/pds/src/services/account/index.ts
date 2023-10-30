@@ -615,6 +615,15 @@ export class AccountService {
     if (pds) this.pdsCache.set(pdsDid, pds)
     return pds
   }
+
+  async getPdses(opts?: { cached: boolean }) {
+    if (opts?.cached && this.pdsCache.hasAll()) {
+      return this.pdsCache.getAll() ?? []
+    }
+    const pdses = await this.db.db.selectFrom('pds').selectAll().execute()
+    this.pdsCache.setAll(pdses)
+    return pdses
+  }
 }
 
 export type UserPreference = Record<string, unknown> & { $type: string }
@@ -655,4 +664,29 @@ type AccountInfo = UserAccountEntry &
   DidHandle &
   OptionalJoin<RepoRoot> & { pdsDid: string | null }
 
-export class PdsCache extends Map<string, Selectable<Pds>> {}
+export class PdsCache {
+  private all: PdsResult[] | undefined
+  private individual: Map<string, PdsResult>
+  get(did: string) {
+    return this.individual.get(did)
+  }
+  has(did: string) {
+    return this.individual.has(did)
+  }
+  set(did: string, pds: PdsResult) {
+    return this.individual.set(did, pds)
+  }
+  getAll() {
+    return this.all
+  }
+  hasAll() {
+    return this.all !== undefined
+  }
+  setAll(pdses: PdsResult[]) {
+    this.all = pdses
+    this.individual.clear()
+    pdses.forEach((pds) => this.individual.set(pds.did, pds))
+  }
+}
+
+type PdsResult = Selectable<Pds>
