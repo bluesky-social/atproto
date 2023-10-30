@@ -17,17 +17,17 @@ import {
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { ModerationAction } from '../../db/tables/moderation'
-import { AccountService } from '../account'
+import { AccountService, PdsCache } from '../account'
 import { RecordService } from '../record'
 import { ModerationReportRowWithHandle } from '.'
 import { ids } from '../../lexicon/lexicons'
 import { OptionalJoin } from '../../db/types'
 
 export class ModerationViews {
-  constructor(private db: Database) {}
+  constructor(private db: Database, private pdsCache: PdsCache) {}
 
   services = {
-    account: AccountService.creator(),
+    account: AccountService.creator(this.pdsCache),
     record: RecordService.creator(),
   }
 

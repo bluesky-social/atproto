@@ -54,7 +54,7 @@ export function createServices(resources: {
       appViewDid,
       appViewCdnUrlPattern,
     ),
-    moderation: ModerationService.creator(blobstore),
+    moderation: ModerationService.creator(blobstore, pdsCache),
   }
 }
 

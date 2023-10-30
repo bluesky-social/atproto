@@ -10,15 +10,20 @@ import { ModerationViews } from './views'
 import SqlRepoStorage from '../../sql-repo-storage'
 import { TAKEDOWN } from '../../lexicon/types/com/atproto/admin/defs'
 import { addHoursToDate } from '../../util/date'
+import { PdsCache } from '../account'
 
 export class ModerationService {
-  constructor(public db: Database, public blobstore: BlobStore) {}
+  constructor(
+    public db: Database,
+    public blobstore: BlobStore,
+    public pdsCache: PdsCache,
+  ) {}
 
-  static creator(blobstore: BlobStore) {
-    return (db: Database) => new ModerationService(db, blobstore)
+  static creator(blobstore: BlobStore, pdsCache: PdsCache) {
+    return (db: Database) => new ModerationService(db, blobstore, pdsCache)
   }
 
-  views = new ModerationViews(this.db)
+  views = new ModerationViews(this.db, this.pdsCache)
 
   services = {
     record: RecordService.creator(),
