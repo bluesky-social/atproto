@@ -74,7 +74,7 @@ describe('entryway', () => {
     const {
       data: { accessJwt },
     } = await entrywayAgent.api.com.atproto.server.createSession({
-      identifier: 'alice.test',
+      identifier: 'alice@test.com',
       password: 'test123',
     })
     // can get session on either service
