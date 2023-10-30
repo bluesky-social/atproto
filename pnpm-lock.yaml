@@ -620,9 +620,6 @@ importers:
       '@types/express-serve-static-core':
         specifier: ^4.17.36
         version: 4.17.36
-      '@types/jsonwebtoken':
-        specifier: ^8.5.9
-        version: 8.5.9
       '@types/nodemailer':
         specifier: ^6.4.6
         version: 6.4.6
@@ -638,6 +635,9 @@ importers:
       axios:
         specifier: ^0.27.2
         version: 0.27.2
+      get-port:
+        specifier: ^6.1.2
+        version: 6.1.2
       ws:
         specifier: ^8.12.0
         version: 8.12.0
@@ -5439,12 +5439,6 @@ packages:
 
   /@types/json-schema@7.0.12:
     resolution: {integrity: sha512-Hr5Jfhc9eYOQNPYO5WLDq/n4jqijdHNlDXjuAQkkt+mWdQR+XJToOHrsD4cPaMXpn6KO7y2+wM8AZEs8VpBLVA==}
-    dev: true
-
-  /@types/jsonwebtoken@8.5.9:
-    resolution: {integrity: sha512-272FMnFGzAVMGtu9tkr29hRL6bZj4Zs1KZNeHLnKqAvp06tAIcarTMwOh8/8bz4FmKRcMxZhZNeUAQsNLoiPhg==}
-    dependencies:
-      '@types/node': 18.17.8
     dev: true
 
   /@types/mime@1.3.2:

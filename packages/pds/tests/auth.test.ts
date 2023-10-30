@@ -1,4 +1,4 @@
-import * as jwt from 'jsonwebtoken'
+import * as jose from 'jose'
 import AtpAgent from '@atproto/api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import * as CreateSession from '@atproto/api/src/client/types/com/atproto/server/createSession'
@@ -157,9 +157,9 @@ describe('auth', () => {
     const refresh1 = await refreshSession(account.refreshJwt)
     const refresh2 = await refreshSession(account.refreshJwt)
 
-    const token0 = jwt.decode(account.refreshJwt, { json: true })
-    const token1 = jwt.decode(refresh1.refreshJwt, { json: true })
-    const token2 = jwt.decode(refresh2.refreshJwt, { json: true })
+    const token0 = jose.decodeJwt(account.refreshJwt)
+    const token1 = jose.decodeJwt(refresh1.refreshJwt)
+    const token2 = jose.decodeJwt(refresh2.refreshJwt)
 
     expect(typeof token1?.jti).toEqual('string')
     expect(token1?.jti).toEqual(token2?.jti)
@@ -175,7 +175,7 @@ describe('auth', () => {
       password: 'password',
     })
     await refreshSession(account.refreshJwt)
-    const token = jwt.decode(account.refreshJwt, { json: true })
+    const token = jose.decodeJwt(account.refreshJwt)
 
     // Update expiration (i.e. grace period) to end immediately
     const refreshUpdated = await db.db

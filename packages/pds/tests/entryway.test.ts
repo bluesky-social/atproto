@@ -6,6 +6,7 @@ import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { SeedClient, TestPds, TestPlc, mockResolvers } from '@atproto/dev-env'
 import * as pdsEntryway from '@atproto/pds-entryway'
 import * as ui8 from 'uint8arrays'
+import getPort from 'get-port'
 
 describe('entryway', () => {
   let plc: TestPlc
@@ -17,10 +18,10 @@ describe('entryway', () => {
   beforeAll(async () => {
     const jwtSigningKey = await Secp256k1Keypair.create({ exportable: true })
     const plcRotationKey = await Secp256k1Keypair.create({ exportable: true })
+    const entrywayPort = await getPort()
     plc = await TestPlc.create({})
     pds = await TestPds.create({
-      port: plc.port + 1,
-      entrywayUrl: `http://localhost:${plc.port + 2}`,
+      entrywayUrl: `http://localhost:${entrywayPort}`,
       entrywayJwtVerifyKeyK256PublicKeyHex: getPublicHex(jwtSigningKey),
       entrywayPlcRotationKeyK256PublicKeyHex: getPublicHex(plcRotationKey),
       adminPassword: 'admin-pass',
@@ -31,7 +32,7 @@ describe('entryway', () => {
     })
     entryway = await createEntryway({
       dbPostgresSchema: 'entryway',
-      port: plc.port + 2,
+      port: entrywayPort,
       adminPassword: 'admin-pass',
       jwtSigningKeyK256PrivateKeyHex: await getPrivateHex(jwtSigningKey),
       plcRotationKeyK256PrivateKeyHex: await getPrivateHex(plcRotationKey),
