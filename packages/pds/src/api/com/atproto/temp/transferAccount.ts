@@ -35,8 +35,6 @@ export default function (server: Server, ctx: AppContext) {
       const { access, refresh } = await ctx.accountManager.registerAccount({
         did,
         handle,
-        email,
-        passwordScrypt,
       })
 
       return {

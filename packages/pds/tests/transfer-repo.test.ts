@@ -47,11 +47,6 @@ describe('transfer repo', () => {
 
   it('transfers', async () => {
     const account = sc.accounts[did]
-    const passRes = await network.pds.ctx.accountManager.db.db
-      .selectFrom('account')
-      .select('passwordScrypt')
-      .where('did', '=', did)
-      .executeTakeFirst()
     const signingKeyRes =
       await transferAgent.api.com.atproto.server.reserveSigningKey()
     const signingKey = signingKeyRes.data.signingKey
@@ -76,13 +71,16 @@ describe('transfer repo', () => {
         },
       }),
     )
-    await transferAgent.api.com.atproto.temp.transferAccount({
-      did,
-      handle: account.handle,
-      email: account.email,
-      passwordScrypt: passRes?.passwordScrypt ?? '',
-      plcOp: cborEncode(plcOp),
-    })
+    const transferRes =
+      await transferAgent.api.com.atproto.temp.transferAccount({
+        did,
+        handle: account.handle,
+        plcOp: cborEncode(plcOp),
+      })
+    transferAgent.api.setHeader(
+      'authorization',
+      `Bearer ${transferRes.data.accessJwt}`,
+    )
 
     const repo = await origAgent.api.com.atproto.sync.getRepo({ did })
     const res = await axios.post(
@@ -99,10 +97,10 @@ describe('transfer repo', () => {
       console.log(log.toString())
     }
 
-    await transferAgent.login({
-      identifier: account.handle,
-      password: account.password,
-    })
+    // await transferAgent.login({
+    //   identifier: account.handle,
+    //   password: account.password,
+    // })
 
     await transferAgent.api.app.bsky.feed.post.create(
       { repo: did },

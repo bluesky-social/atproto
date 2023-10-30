@@ -76,8 +76,8 @@ export class AccountManager {
   async registerAccount(opts: {
     did: string
     handle: string
-    email: string
-    passwordScrypt: string
+    email?: string
+    passwordScrypt?: string
     inviteCode?: string
   }) {
     const { did, handle, email, passwordScrypt, inviteCode } = opts
@@ -90,7 +90,9 @@ export class AccountManager {
     await this.db.transaction((dbTxn) =>
       Promise.all([
         account.registerActor(dbTxn, { did, handle }),
-        account.registerAccount(dbTxn, { did, email, passwordScrypt }),
+        email && passwordScrypt
+          ? account.registerAccount(dbTxn, { did, email, passwordScrypt })
+          : Promise.resolve(),
         invite.recordInviteUse(dbTxn, {
           did,
           inviteCode,

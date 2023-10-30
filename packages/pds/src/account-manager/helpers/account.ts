@@ -28,8 +28,8 @@ export const getAccount = async (
         return qb.where('actor.handle', '=', handleOrDid)
       }
     })
-    .selectAll('actor')
     .selectAll('account')
+    .selectAll('actor')
     .executeTakeFirst()
   return result || null
 }
@@ -47,8 +47,8 @@ export const getAccountByEmail = async (
       qb.where(notSoftDeletedClause(ref('actor'))),
     )
     .where('email', '=', email.toLowerCase())
-    .selectAll('actor')
     .selectAll('account')
+    .selectAll('actor')
     .executeTakeFirst()
   return found || null
 }

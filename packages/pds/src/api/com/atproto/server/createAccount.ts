@@ -99,6 +99,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       await ctx.sequencer.sequenceCommit(did, commit, [])
+      await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
 
       const didDoc = await didDocForSession(ctx, did, true)
 
