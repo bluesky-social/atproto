@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           handle: user.handle ?? INVALID_HANDLE,
           did: user.did,
-          email: user.email,
+          email: user.email ?? undefined,
           emailConfirmed: !!user.emailConfirmedAt,
         },
       }

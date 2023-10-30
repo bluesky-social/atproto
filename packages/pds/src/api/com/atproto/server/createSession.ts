@@ -65,7 +65,7 @@ export default function (server: Server, ctx: AppContext) {
           did: user.did,
           didDoc,
           handle: user.handle ?? INVALID_HANDLE,
-          email: user.email,
+          email: user.email ?? undefined,
           emailConfirmed: !!user.emailConfirmedAt,
           accessJwt: access.jwt,
           refreshJwt: refresh.jwt,

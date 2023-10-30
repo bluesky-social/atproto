@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
           created = await ctx.accountManager.createAccountInviteCodes(
             requester,
             codes,
-            account.invitesDisabled,
+            account.invitesDisabled ?? 0,
           )
         }
       }

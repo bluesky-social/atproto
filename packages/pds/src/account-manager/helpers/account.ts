@@ -1,26 +1,35 @@
 import { notSoftDeletedClause } from '../../db'
-import { AccountDb, AccountEntry } from '../db'
+import { AccountDb, ActorEntry } from '../db'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
+
+export type ActorAccount = ActorEntry & {
+  email: string | null
+  passwordScrypt: string | null
+  emailConfirmedAt: string | null
+  invitesDisabled: 0 | 1 | null
+}
 
 export const getAccount = async (
   db: AccountDb,
   handleOrDid: string,
   includeSoftDeleted = false,
-): Promise<AccountEntry | null> => {
+): Promise<ActorAccount | null> => {
   const { ref } = db.db.dynamic
   const result = await db.db
-    .selectFrom('account')
+    .selectFrom('actor')
+    .leftJoin('account', 'actor.did', 'account.did')
     .if(!includeSoftDeleted, (qb) =>
-      qb.where(notSoftDeletedClause(ref('account'))),
+      qb.where(notSoftDeletedClause(ref('actor'))),
     )
     .where((qb) => {
       if (handleOrDid.startsWith('did:')) {
-        return qb.where('account.did', '=', handleOrDid)
+        return qb.where('actor.did', '=', handleOrDid)
       } else {
-        return qb.where('account.handle', '=', handleOrDid)
+        return qb.where('actor.handle', '=', handleOrDid)
       }
     })
-    .selectAll()
+    .selectAll('actor')
+    .selectAll('account')
     .executeTakeFirst()
   return result || null
 }
@@ -29,44 +38,65 @@ export const getAccountByEmail = async (
   db: AccountDb,
   email: string,
   includeSoftDeleted = false,
-): Promise<AccountEntry | null> => {
+): Promise<ActorAccount | null> => {
   const { ref } = db.db.dynamic
   const found = await db.db
-    .selectFrom('account')
+    .selectFrom('actor')
+    .leftJoin('account', 'account.did', 'actor.did')
     .if(!includeSoftDeleted, (qb) =>
-      qb.where(notSoftDeletedClause(ref('account'))),
+      qb.where(notSoftDeletedClause(ref('actor'))),
     )
     .where('email', '=', email.toLowerCase())
+    .selectAll('actor')
     .selectAll('account')
     .executeTakeFirst()
   return found || null
+}
+
+export const registerActor = async (
+  db: AccountDb,
+  opts: {
+    did: string
+    handle: string
+  },
+) => {
+  const { did, handle } = opts
+  const registered = await db.db
+    .insertInto('actor')
+    .values({
+      did,
+      handle,
+      createdAt: new Date().toISOString(),
+    })
+    .onConflict((oc) => oc.doNothing())
+    .returning('did')
+    .executeTakeFirst()
+  if (!registered) {
+    throw new Error('actor already exists')
+  }
 }
 
 export const registerAccount = async (
   db: AccountDb,
   opts: {
     did: string
-    handle: string
     email: string
     passwordScrypt: string
   },
 ) => {
-  const { did, handle, email, passwordScrypt } = opts
+  const { did, email, passwordScrypt } = opts
   const registered = await db.db
     .insertInto('account')
     .values({
-      email: email.toLowerCase(),
       did,
-      handle,
+      email: email.toLowerCase(),
       passwordScrypt,
-      createdAt: new Date().toISOString(),
     })
     .onConflict((oc) => oc.doNothing())
     .returning('did')
     .executeTakeFirst()
-
   if (!registered) {
-    throw new Error('user already exists')
+    throw new Error('account already exists')
   }
 }
 
@@ -80,6 +110,7 @@ export const deleteAccount = async (
   await db.db.deleteFrom('email_token').where('did', '=', did).execute()
   await db.db.deleteFrom('refresh_token').where('did', '=', did).execute()
   await db.db.deleteFrom('account').where('account.did', '=', did).execute()
+  await db.db.deleteFrom('actor').where('actor.did', '=', did).execute()
 }
 
 export const updateHandle = async (
@@ -88,11 +119,11 @@ export const updateHandle = async (
   handle: string,
 ) => {
   const res = await db.db
-    .updateTable('account')
+    .updateTable('actor')
     .set({ handle })
     .where('did', '=', did)
     .whereNotExists(
-      db.db.selectFrom('account').where('handle', '=', handle).selectAll(),
+      db.db.selectFrom('actor').where('handle', '=', handle).selectAll(),
     )
     .executeTakeFirst()
   if (res.numUpdatedRows < 1) {
@@ -129,7 +160,7 @@ export const getAccountTakedownStatus = async (
   did: string,
 ): Promise<StatusAttr | null> => {
   const res = await db.db
-    .selectFrom('account')
+    .selectFrom('actor')
     .select('takedownId')
     .where('did', '=', did)
     .executeTakeFirst()
@@ -148,7 +179,7 @@ export const updateAccountTakedownStatus = async (
     ? takedown.ref ?? new Date().toISOString()
     : null
   await db.db
-    .updateTable('account')
+    .updateTable('actor')
     .set({ takedownId })
     .where('did', '=', did)
     .executeTakeFirst()
