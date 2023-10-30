@@ -4,7 +4,6 @@ require('dd-trace/init') // Only works with commonjs
 
 // Tracer code above must come before anything else
 const { CloudfrontInvalidator, BunnyInvalidator } = require('@atproto/aws')
-const { Secp256k1Keypair } = require('@atproto/crypto')
 const {
   IndexerConfig,
   BskyIndexer,
@@ -26,8 +25,6 @@ const main = async () => {
     dbPostgresUrl: env.dbPostgresUrl,
     dbPostgresSchema: env.dbPostgresSchema,
   })
-
-  const signingKey = await Secp256k1Keypair.import(env.serviceSigningKey)
 
   // configure zero, one, or both image invalidators
   let imgInvalidator
@@ -68,7 +65,6 @@ const main = async () => {
   )
   const indexer = BskyIndexer.create({
     db,
-    signingKey,
     redis,
     cfg,
     imgInvalidator,
@@ -101,7 +97,6 @@ const getEnv = () => ({
   dbPoolSize: maybeParseInt(process.env.DB_POOL_SIZE),
   dbPoolMaxUses: maybeParseInt(process.env.DB_POOL_MAX_USES),
   dbPoolIdleTimeoutMs: maybeParseInt(process.env.DB_POOL_IDLE_TIMEOUT_MS),
-  serviceSigningKey: process.env.SERVICE_SIGNING_KEY,
   bunnyAccessKey: process.env.BUNNY_ACCESS_KEY,
   cfDistributionId: process.env.CF_DISTRIBUTION_ID,
   imgUriEndpoint: process.env.IMG_URI_ENDPOINT,

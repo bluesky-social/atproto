@@ -18,6 +18,7 @@ const {
   CloudfrontInvalidator,
   MultiImageInvalidator,
 } = require('@atproto/aws')
+const { Secp256k1Keypair } = require('@atproto/crypto')
 const {
   DatabaseCoordinator,
   PrimaryDatabase,
@@ -64,6 +65,8 @@ const main = async () => {
     blobCacheLocation: env.blobCacheLocation,
   })
 
+  const signingKey = await Secp256k1Keypair.import(env.serviceSigningKey)
+
   // configure zero, one, or both image invalidators
   let imgInvalidator
   const bunnyInvalidator = env.bunnyAccessKey
@@ -93,6 +96,7 @@ const main = async () => {
   const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const bsky = BskyAppView.create({
     db,
+    signingKey,
     config: cfg,
     imgInvalidator,
     algos,
@@ -146,6 +150,7 @@ const getEnv = () => ({
   dbPoolSize: maybeParseInt(process.env.DB_POOL_SIZE),
   dbPoolMaxUses: maybeParseInt(process.env.DB_POOL_MAX_USES),
   dbPoolIdleTimeoutMs: maybeParseInt(process.env.DB_POOL_IDLE_TIMEOUT_MS),
+  serviceSigningKey: process.env.SERVICE_SIGNING_KEY,
   publicUrl: process.env.PUBLIC_URL,
   didPlcUrl: process.env.DID_PLC_URL,
   imgUriSalt: process.env.IMG_URI_SALT,
