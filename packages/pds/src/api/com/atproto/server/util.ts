@@ -1,3 +1,4 @@
+import { getPdsEndpoint } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { DidDocument } from '@atproto/identity'
 import { ServerConfig } from '../../../../config'
@@ -26,7 +27,6 @@ export const getRandomToken = () => {
   return token.slice(0, 5) + '-' + token.slice(5, 10)
 }
 
-// @TODO once supporting multiple pdses, validate pds in did doc based on allow-list.
 export const didDocForSession = async (
   ctx: AppContext,
   did: string,
@@ -34,8 +34,15 @@ export const didDocForSession = async (
 ): Promise<DidDocument | undefined> => {
   if (!ctx.cfg.identity.enableDidDocWithSession) return
   try {
-    const didDoc = await ctx.idResolver.did.resolve(did, forceRefresh)
-    return didDoc ?? undefined
+    const [didDoc, pdses] = await Promise.all([
+      ctx.idResolver.did.resolve(did, forceRefresh),
+      ctx.services.account(ctx.db).getPdses({ cached: true }),
+    ])
+    if (!didDoc) return
+    const pdsEndpoint = getPdsEndpoint(didDoc)
+    const pdsHost = pdsEndpoint && new URL(pdsEndpoint).host
+    if (!pdses.some((pds) => pds.host === pdsHost)) return
+    return didDoc
   } catch (err) {
     dbLogger.warn({ err, did }, 'failed to resolve did doc')
   }

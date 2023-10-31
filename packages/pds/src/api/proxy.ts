@@ -17,14 +17,12 @@ export const proxy = async <T>(
     return null // skip proxying
   }
   const accountService = ctx.services.account(ctx.db)
-  const pds = pdsDid && (await accountService.getPds(pdsDid))
+  const pds = pdsDid && (await accountService.getPds(pdsDid, { cached: true }))
   if (!pds) {
     throw new UpstreamFailureError('unknown pds')
   }
-  // @TODO reuse agents
-  const agent = new AtpAgent({ service: getPdsEndpoint(pds.host) })
   try {
-    return await fn(agent)
+    return await fn(ctx.pdsAgents.get(pds.host))
   } catch (err) {
     // @TODO may need to pass through special lexicon errors
     if (
@@ -40,14 +38,6 @@ export const proxy = async <T>(
     }
     throw err
   }
-}
-
-export const getPdsEndpoint = (host: string) => {
-  const service = new URL(`https://${host}`)
-  if (service.hostname === 'localhost') {
-    service.protocol = 'http:'
-  }
-  return service.origin
 }
 
 export const isThisPds = (
