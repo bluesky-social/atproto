@@ -93,8 +93,14 @@ export class AppContext {
     const db: ServiceDb = Database.sqlite(cfg.db.serviceDbLoc)
     const blobstore =
       cfg.blobstore.provider === 's3'
-        ? S3BlobStore.creator({ bucket: cfg.blobstore.bucket })
-        : DiskBlobStore.creator(
+        ? new S3BlobStore({
+            bucket: cfg.blobstore.bucket,
+            region: cfg.blobstore.region,
+            endpoint: cfg.blobstore.endpoint,
+            forcePathStyle: cfg.blobstore.forcePathStyle,
+            credentials: cfg.blobstore.credentials,
+          })
+        : await DiskBlobStore.create(
             cfg.blobstore.location,
             cfg.blobstore.tempLocation,
           )
