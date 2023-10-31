@@ -3,6 +3,9 @@ import { Server } from '../../../../lexicon'
 import resolveModerationReports from './resolveModerationReports'
 import reverseModerationAction from './reverseModerationAction'
 import takeModerationAction from './takeModerationAction'
+import updateSubjectStatus from './updateSubjectStatus'
+import getSubjectStatus from './getSubjectStatus'
+import getAccountInfo from './getAccountInfo'
 import searchRepos from './searchRepos'
 import getRecord from './getRecord'
 import getRepo from './getRepo'
@@ -22,6 +25,9 @@ export default function (server: Server, ctx: AppContext) {
   resolveModerationReports(server, ctx)
   reverseModerationAction(server, ctx)
   takeModerationAction(server, ctx)
+  updateSubjectStatus(server, ctx)
+  getSubjectStatus(server, ctx)
+  getAccountInfo(server, ctx)
   searchRepos(server, ctx)
   getRecord(server, ctx)
   getRepo(server, ctx)

@@ -9,7 +9,9 @@ import {
   AuthRequiredError,
   ForbiddenError,
   InvalidRequestError,
+  verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
+import { IdResolver } from '@atproto/identity'
 import * as ui8 from 'uint8arrays'
 import express from 'express'
 import * as jose from 'jose'
@@ -45,6 +47,14 @@ type RoleOutput = {
     admin: boolean
     moderator: boolean
     triage: boolean
+  }
+}
+
+type AdminServiceOutput = {
+  credentials: {
+    type: 'service'
+    aud: string
+    iss: string
   }
 }
 
@@ -84,27 +94,33 @@ type ValidatedBearer = {
   audience: string | undefined
 }
 
+export type AuthVerifierOpts = {
+  authKeys: AuthKeys
+  adminPass: string
+  moderatorPass: string
+  triagePass: string
+  adminServiceDid: string
+}
+
 export class AuthVerifier {
   private _signingSecret: KeyObject
   private _verifyKey?: KeyObject
   private _adminPass: string
-  private _moderatorPass?: string
-  private _triagePass?: string
+  private _moderatorPass: string
+  private _triagePass: string
+  private _adminServiceDid: string
 
   constructor(
     public db: Database,
-    opts: {
-      authKeys: AuthKeys
-      adminPass: string
-      moderatorPass?: string
-      triagePass?: string
-    },
+    public idResolver: IdResolver,
+    opts: AuthVerifierOpts,
   ) {
     this._signingSecret = opts.authKeys.signingSecret
     this._verifyKey = opts.authKeys.verifyKey
     this._adminPass = opts.adminPass
     this._moderatorPass = opts.moderatorPass
     this._triagePass = opts.triagePass
+    this._adminServiceDid = opts.adminServiceDid
   }
 
   // verifiers (arrow fns to preserve scope)
@@ -125,8 +141,7 @@ export class AuthVerifier {
       .selectFrom('user_account')
       .leftJoin('pds', 'pds.id', 'user_account.pdsId')
       .where('user_account.did', '=', result.credentials.did)
-      .where('user_account.takedownId', 'is', null)
-      .select(['user_account.did', 'pds.did as pdsDid', 'takedownId'])
+      .select(['user_account.did', 'pds.did as pdsDid', 'takedownRef'])
       .executeTakeFirst()
     if (!found) {
       // will be turned into ExpiredToken for the client if proxied by entryway
@@ -210,6 +225,43 @@ export class AuthVerifier {
       } else {
         throw new AuthRequiredError()
       }
+    }
+  }
+
+  adminService = async (reqCtx: ReqCtx): Promise<AdminServiceOutput> => {
+    const jwtStr = bearerTokenFromReq(reqCtx.req)
+    if (!jwtStr) {
+      throw new AuthRequiredError('missing jwt', 'MissingJwt')
+    }
+    const payload = await verifyServiceJwt(
+      jwtStr,
+      null,
+      async (did, forceRefresh) => {
+        if (did !== this._adminServiceDid) {
+          throw new AuthRequiredError(
+            'Untrusted issuer for admin actions',
+            'UntrustedIss',
+          )
+        }
+        return this.idResolver.did.resolveAtprotoKey(did, forceRefresh)
+      },
+    )
+    return {
+      credentials: {
+        type: 'service',
+        aud: payload.aud,
+        iss: payload.iss,
+      },
+    }
+  }
+
+  roleOrAdminService = async (
+    reqCtx: ReqCtx,
+  ): Promise<RoleOutput | AdminServiceOutput> => {
+    if (isBearerToken(reqCtx.req)) {
+      return this.adminService(reqCtx)
+    } else {
+      return this.role(reqCtx)
     }
   }
 
@@ -400,6 +452,21 @@ export const parseBasicAuth = (
   const [username, password] = parsed
   if (!username || !password) return null
   return { username, password }
+}
+
+export const ensureValidAdminAud = (
+  auth: RoleOutput | AdminServiceOutput,
+  subjectDid: string,
+) => {
+  if (
+    auth.credentials.type === 'service' &&
+    auth.credentials.aud !== subjectDid
+  ) {
+    throw new AuthRequiredError(
+      'jwt audience does not match account did',
+      'BadJwtAudience',
+    )
+  }
 }
 
 const authScopes = new Set(Object.values(AuthScope))

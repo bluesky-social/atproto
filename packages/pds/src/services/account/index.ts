@@ -2,20 +2,22 @@ import { Selectable, sql } from 'kysely'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { MINUTE, lessThanAgoMs } from '@atproto/common'
+import { INVALID_HANDLE } from '@atproto/syntax'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import * as scrypt from '../../db/scrypt'
 import { UserAccountEntry } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
+import { Pds } from '../../db/tables/pds'
+import { OptionalJoin } from '../../db/types'
 import { countAll, notSoftDeletedClause } from '../../db/util'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { EmailTokenPurpose } from '../../db/tables/email-token'
 import { getRandomToken } from '../../api/com/atproto/server/util'
-import { OptionalJoin } from '../../db/types'
-import { Pds } from '../../db/tables/pds'
+import { AccountView } from '../../lexicon/types/com/atproto/admin/defs'
 
 export class AccountService {
   constructor(public db: Database, private pdsCache: PdsCache) {}
@@ -65,7 +67,7 @@ export class AccountService {
       .selectFrom('user_account')
       .innerJoin('repo_root', 'repo_root.did', 'user_account.did')
       .where('user_account.did', '=', did)
-      .where('user_account.takedownId', 'is', null)
+      .where('user_account.takedownRef', 'is', null)
       .select('user_account.did')
       .executeTakeFirst()
     return found !== undefined
@@ -387,6 +389,38 @@ export class AccountService {
     await this.db.transaction(async (txn) => {
       await sequencer.sequenceEvt(txn, seqEvt)
     })
+  }
+
+  async adminView(did: string): Promise<AccountView | null> {
+    const accountQb = this.db.db
+      .selectFrom('did_handle')
+      .innerJoin('user_account', 'user_account.did', 'did_handle.did')
+      .where('did_handle.did', '=', did)
+      .select([
+        'did_handle.did',
+        'did_handle.handle',
+        'user_account.email',
+        'user_account.invitesDisabled',
+        'user_account.inviteNote',
+        'user_account.createdAt as indexedAt',
+      ])
+
+    const [account, invites, invitedBy] = await Promise.all([
+      accountQb.executeTakeFirst(),
+      this.getAccountInviteCodes(did),
+      this.getInvitedByForAccounts([did]),
+    ])
+
+    if (!account) return null
+
+    return {
+      ...account,
+      handle: account?.handle ?? INVALID_HANDLE,
+      invitesDisabled: account.invitesDisabled === 1,
+      inviteNote: account.inviteNote ?? undefined,
+      invites,
+      invitedBy: invitedBy[did],
+    }
   }
 
   selectInviteCodesQb() {

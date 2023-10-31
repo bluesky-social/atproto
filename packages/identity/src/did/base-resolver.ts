@@ -83,8 +83,8 @@ export abstract class BaseResolver {
     if (did.startsWith('did:key:')) {
       return did
     } else {
-      const data = await this.resolveAtprotoData(did, forceRefresh)
-      return data.signingKey
+      const didDocument = await this.ensureResolve(did, forceRefresh)
+      return atprotoData.ensureAtprotoKey(didDocument)
     }
   }
 

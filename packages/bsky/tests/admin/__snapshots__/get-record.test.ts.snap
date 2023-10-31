@@ -1,18 +1,28 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds admin get record view gets a record by uri and cid. 1`] = `
+exports[`admin get record view gets a record by uri and cid. 1`] = `
 Object {
   "blobCids": Array [],
   "blobs": Array [],
   "cid": "cids(0)",
   "indexedAt": "1970-01-01T00:00:00.000Z",
+  "labels": Array [
+    Object {
+      "cid": "cids(0)",
+      "cts": "1970-01-01T00:00:00.000Z",
+      "neg": false,
+      "src": "user(0)",
+      "uri": "record(0)",
+      "val": "self-label",
+    },
+  ],
   "moderation": Object {
     "actions": Array [
       Object {
         "action": "com.atproto.admin.defs#takedown",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "createdBy": "did:example:admin",
-        "id": 3,
+        "id": 2,
         "reason": "X",
         "resolvedReportIds": Array [],
         "subject": Object {
@@ -26,7 +36,7 @@ Object {
         "action": "com.atproto.admin.defs#acknowledge",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "createdBy": "did:example:admin",
-        "id": 2,
+        "id": 1,
         "reason": "X",
         "resolvedReportIds": Array [],
         "reversal": Object {
@@ -44,7 +54,7 @@ Object {
     ],
     "currentAction": Object {
       "action": "com.atproto.admin.defs#takedown",
-      "id": 3,
+      "id": 2,
     },
     "reports": Array [
       Object {
@@ -127,19 +137,29 @@ Object {
 }
 `;
 
-exports[`pds admin get record view gets a record by uri, even when taken down. 1`] = `
+exports[`admin get record view gets a record by uri, even when taken down. 1`] = `
 Object {
   "blobCids": Array [],
   "blobs": Array [],
   "cid": "cids(0)",
   "indexedAt": "1970-01-01T00:00:00.000Z",
+  "labels": Array [
+    Object {
+      "cid": "cids(0)",
+      "cts": "1970-01-01T00:00:00.000Z",
+      "neg": false,
+      "src": "user(0)",
+      "uri": "record(0)",
+      "val": "self-label",
+    },
+  ],
   "moderation": Object {
     "actions": Array [
       Object {
         "action": "com.atproto.admin.defs#takedown",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "createdBy": "did:example:admin",
-        "id": 3,
+        "id": 2,
         "reason": "X",
         "resolvedReportIds": Array [],
         "subject": Object {
@@ -153,7 +173,7 @@ Object {
         "action": "com.atproto.admin.defs#acknowledge",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "createdBy": "did:example:admin",
-        "id": 2,
+        "id": 1,
         "reason": "X",
         "resolvedReportIds": Array [],
         "reversal": Object {
@@ -171,7 +191,7 @@ Object {
     ],
     "currentAction": Object {
       "action": "com.atproto.admin.defs#takedown",
-      "id": 3,
+      "id": 2,
     },
     "reports": Array [
       Object {

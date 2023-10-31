@@ -107,7 +107,13 @@ export class AppContext {
           })
     const blobstore =
       cfg.blobstore.provider === 's3'
-        ? new S3BlobStore({ bucket: cfg.blobstore.bucket })
+        ? new S3BlobStore({
+            bucket: cfg.blobstore.bucket,
+            region: cfg.blobstore.region,
+            endpoint: cfg.blobstore.endpoint,
+            forcePathStyle: cfg.blobstore.forcePathStyle,
+            credentials: cfg.blobstore.credentials,
+          })
         : await DiskBlobStore.create(
             cfg.blobstore.location,
             cfg.blobstore.tempLocation,
@@ -157,11 +163,12 @@ export class AppContext {
 
     const authKeys = await getAuthKeys(secrets)
 
-    const authVerifier = new AuthVerifier(db, {
+    const authVerifier = new AuthVerifier(db, idResolver, {
       authKeys,
       adminPass: secrets.adminPassword,
       moderatorPass: secrets.moderatorPassword,
       triagePass: secrets.triagePassword,
+      adminServiceDid: cfg.bskyAppView.did,
     })
 
     const repoSigningKey =

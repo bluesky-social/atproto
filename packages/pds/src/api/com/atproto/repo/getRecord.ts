@@ -3,6 +3,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { isThisPds, resultPassthru } from '../../../proxy'
+import { softDeleted } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.getRecord(async ({ params }) => {
@@ -17,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
 
     const uri = AtUri.make(account.did, collection, rkey)
     const record = await ctx.services.record(ctx.db).getRecord(uri, cid || null)
-    if (!record || record.takedownId !== null) {
+    if (!record || softDeleted(record)) {
       throw new InvalidRequestError(`Could not locate record: ${uri}`)
     }
 
