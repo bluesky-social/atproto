@@ -6,6 +6,7 @@ import { ModerationViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
 import { ImageInvalidator } from '../../image/invalidator'
 import {
+  isModEventComment,
   isModEventLabel,
   isModEventMute,
   isModEventReport,
@@ -200,10 +201,14 @@ export class ModerationService {
         ? event.negateLabelVals.join(' ')
         : undefined
 
-    const meta: Record<string, string> = {}
+    const meta: Record<string, string | boolean> = {}
 
     if (isModEventReport(event)) {
       meta.reportType = event.reportType
+    }
+
+    if (isModEventComment(event) && event.persistNote) {
+      meta.persistNote = event.persistNote
     }
 
     const actionResult = await this.db.db

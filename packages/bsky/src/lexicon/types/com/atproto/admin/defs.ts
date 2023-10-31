@@ -324,7 +324,7 @@ export function validateRecordViewNotFound(v: unknown): ValidationResult {
 }
 
 export interface Moderation {
-  status?: SubjectStatusView
+  subjectStatus?: SubjectStatusView
   [k: string]: unknown
 }
 
@@ -477,6 +477,8 @@ export function validateModEventReverseTakedown(v: unknown): ValidationResult {
 /** Add a comment to a subject */
 export interface ModEventComment {
   comment: string
+  /** Make the comment a persistent note on the subject */
+  persistNote?: boolean
   /** Reference a previous event by id on the subject */
   refEventId?: number
   [k: string]: unknown

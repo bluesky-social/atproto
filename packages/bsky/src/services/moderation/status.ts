@@ -11,7 +11,7 @@ import {
   REVIEWCLOSED,
   REVIEWESCALATED,
 } from '../../lexicon/types/com/atproto/admin/defs'
-import { ModerationSubjectStatusRow } from './types'
+import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 import { HOUR } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { sql } from 'kysely'
@@ -64,6 +64,9 @@ const getSubjectStatusForModerationEvent = ({
         lastReviewedBy: createdBy,
         reviewState: REVIEWCLOSED,
         lastReviewedAt: new Date().toISOString(),
+        suspendUntil: durationInHours
+          ? new Date(Date.now() + durationInHours * HOUR).toISOString()
+          : null,
       }
     case 'com.atproto.admin.defs#modEventMute':
       return {
@@ -75,6 +78,11 @@ const getSubjectStatusForModerationEvent = ({
           Date.now() + (durationInHours || 24) * HOUR,
         ).toISOString(),
       }
+    case 'com.atproto.admin.defs#modEventComment':
+      return {
+        lastReviewedBy: createdBy,
+        lastReviewedAt: new Date().toISOString(),
+      }
     default:
       return null
   }
@@ -85,21 +93,18 @@ const getSubjectStatusForModerationEvent = ({
 // If the action event does not affect the status, it will do nothing
 export const adjustModerationSubjectStatus = async (
   db: PrimaryDatabase,
-  moderationEvent: Pick<
-    ModerationEvent,
-    | 'action'
-    | 'subjectType'
-    | 'subjectDid'
-    | 'subjectUri'
-    | 'subjectCid'
-    | 'durationInHours'
-    | 'refEventId'
-    | 'createdBy'
-  >,
+  moderationEvent: ModerationEventRow,
   blobCids?: CID[],
 ) => {
-  const { action, subjectDid, subjectUri, subjectCid, createdBy } =
-    moderationEvent
+  const {
+    action,
+    subjectDid,
+    subjectUri,
+    subjectCid,
+    createdBy,
+    meta,
+    comment,
+  } = moderationEvent
 
   const subjectStatus = getSubjectStatusForModerationEvent({
     action,
@@ -118,7 +123,10 @@ export const adjustModerationSubjectStatus = async (
   // Set these because we don't want to override them if they're already set
   const defaultData = {
     note: null,
-    reviewState: null,
+    // Defaulting reviewState to open for any event may not be the desired behavior.
+    // For instance, if a subject never had any event and we just want to leave a comment to keep an eye on it
+    // that shouldn't mean we want to review the subject
+    reviewState: REVIEWOPEN,
     recordCid: subjectCid || null,
   }
   const newStatus = {
@@ -139,6 +147,14 @@ export const adjustModerationSubjectStatus = async (
   ) {
     newStatus.takendown = false
     subjectStatus.takendown = false
+  }
+
+  if (
+    action === 'com.atproto.admin.defs#modEventComment' &&
+    meta?.persistNote
+  ) {
+    newStatus.note = comment
+    subjectStatus.note = comment
   }
 
   const insertQuery = db.db

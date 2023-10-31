@@ -514,7 +514,7 @@ export const schemaDict = {
       moderation: {
         type: 'object',
         properties: {
-          status: {
+          subjectStatus: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#subjectStatusView',
           },
@@ -644,6 +644,10 @@ export const schemaDict = {
         properties: {
           comment: {
             type: 'string',
+          },
+          persistNote: {
+            type: 'boolean',
+            description: 'Make the comment a persistent note on the subject',
           },
           refEventId: {
             type: 'integer',

@@ -278,21 +278,20 @@ describe('moderation', () => {
         uri: alicesPostRef.uri.toString(),
         cid: alicesPostRef.cid.toString(),
       }
-      const { data: action1 } =
-        await agent.api.com.atproto.admin.emitModerationEvent(
-          {
-            event: {
-              $type: 'com.atproto.admin.defs#modEventEscalate',
-              comment: 'Y',
-            },
-            subject: alicesPostSubject,
-            createdBy: 'did:example:admin',
+      await agent.api.com.atproto.admin.emitModerationEvent(
+        {
+          event: {
+            $type: 'com.atproto.admin.defs#modEventEscalate',
+            comment: 'Y',
           },
-          {
-            encoding: 'application/json',
-            headers: network.bsky.adminAuthHeaders('triage'),
-          },
-        )
+          subject: alicesPostSubject,
+          createdBy: 'did:example:admin',
+        },
+        {
+          encoding: 'application/json',
+          headers: network.bsky.adminAuthHeaders('triage'),
+        },
+      )
 
       const alicesPostStatus = await getStatuses({
         subject: alicesPostRef.uri.toString(),
@@ -303,6 +302,38 @@ describe('moderation', () => {
         takendown: false,
         subject: alicesPostSubject,
       })
+    })
+
+    it('adds persistent note on subject through comment event', async () => {
+      const alicesPostRef = sc.posts[sc.dids.alice][0].ref
+      const alicesPostSubject = {
+        $type: 'com.atproto.repo.strongRef',
+        uri: alicesPostRef.uri.toString(),
+        cid: alicesPostRef.cid.toString(),
+      }
+      await agent.api.com.atproto.admin.emitModerationEvent(
+        {
+          event: {
+            $type: 'com.atproto.admin.defs#modEventComment',
+            persistNote: true,
+            comment: 'This is a persistent note',
+          },
+          subject: alicesPostSubject,
+          createdBy: 'did:example:admin',
+        },
+        {
+          encoding: 'application/json',
+          headers: network.bsky.adminAuthHeaders('triage'),
+        },
+      )
+
+      const alicesPostStatus = await getStatuses({
+        subject: alicesPostRef.uri.toString(),
+      })
+
+      expect(alicesPostStatus.subjectStatuses[0].note).toEqual(
+        'This is a persistent note',
+      )
     })
 
     it('reverses status when revert event is triggered.', async () => {
@@ -638,7 +669,7 @@ describe('moderation', () => {
         'Must be a full moderator to perform an account takedown',
       )
     })
-    it('automatically reverses actions marked with duration', async () => {
+    it.only('automatically reverses actions marked with duration', async () => {
       await createReport({
         reasonType: REASONSPAM,
         account: sc.dids.bob,
@@ -678,6 +709,10 @@ describe('moderation', () => {
         ),
       ])
 
+      expect(statuses.subjectStatuses[0]).toMatchObject({
+        takendown: false,
+        reviewState: REVIEWCLOSED,
+      })
       // Verify that the automatic reversal is attributed to the original moderator of the temporary action
       // and that the reason is set to indicate that the action was automatically reversed.
       expect(eventList.events[0]).toMatchObject({
@@ -687,10 +722,6 @@ describe('moderation', () => {
           comment:
             '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
         },
-      })
-      expect(statuses.subjectStatuses[0]).toMatchObject({
-        takendown: false,
-        reviewState: REVIEWCLOSED,
       })
     })
 

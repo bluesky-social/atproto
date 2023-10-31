@@ -63,7 +63,7 @@ export class ModerationViews {
     const subjectStatusByDid = subjectStatuses.reduce(
       (acc, cur) =>
         Object.assign(acc, { [cur.did ?? '']: this.subjectStatus(cur) }),
-      {} as Record<string, ArrayEl<typeof subjectStatuses>>,
+      {},
     )
 
     const views = results.map((r) => {
@@ -228,7 +228,7 @@ export class ModerationViews {
     const subjectStatusByUri = subjectStatuses.reduce(
       (acc, cur) =>
         Object.assign(acc, { [`${cur.did}/${cur.recordPath}` ?? '']: cur }),
-      {} as Record<string, ArrayEl<typeof subjectStatuses>>,
+      {},
     )
 
     const views = results.map((res) => {
@@ -365,7 +365,7 @@ export class ModerationViews {
       .executeTakeFirst()
     const statusByCid = (modStatusResults?.blobCids || [])?.reduce(
       (acc, cur) => Object.assign(acc, { [cur]: cur }),
-      {} as Record<string, ArrayEl<typeof modStatusResults>>,
+      {},
     )
     // Intentionally missing details field, since we don't have any on appview.
     // We also don't know when the blob was created, so we use a canned creation time.

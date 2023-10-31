@@ -52,6 +52,7 @@ export class PeriodicModerationEventReversal {
     const subjectsDueForReversal =
       await moderationService.getSubjectsDueForReversal()
 
+    console.log(...subjectsDueForReversal, 'subs')
     // We shouldn't have too many actions due for reversal at any given time, so running in parallel is probably fine
     // Internally, each reversal runs within its own transaction
     await Promise.all(subjectsDueForReversal.map(this.revertState.bind(this)))
