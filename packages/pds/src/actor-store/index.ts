@@ -142,7 +142,7 @@ export class ActorStore {
       const blobRows = await db.db.selectFrom('blob').select('cid').execute()
       const cids = blobRows.map((row) => CID.parse(row.cid))
       await Promise.allSettled(
-        chunkArray(cids, 100).map((chunk) => blobstore.deleteMany(chunk)),
+        chunkArray(cids, 500).map((chunk) => blobstore.deleteMany(chunk)),
       )
     }
 
