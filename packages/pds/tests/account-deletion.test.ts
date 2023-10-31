@@ -1,6 +1,5 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { once, EventEmitter } from 'events'
-import path from 'path'
 import { Selectable } from 'kysely'
 import Mail from 'nodemailer/lib/mailer'
 import AtpAgent from '@atproto/api'
@@ -165,12 +164,12 @@ describe('account deletion', () => {
   })
 
   it('deletes the users actor store', async () => {
-    const sqliteDir = network.pds.ctx.cfg.db.directory
-    const dbExists = await fileExists(path.join(sqliteDir, carol.did))
+    const carolLoc = await network.pds.ctx.actorStore.getLocation(carol.did)
+    const dbExists = await fileExists(carolLoc.dbLocation)
     expect(dbExists).toBe(false)
-    const walExists = await fileExists(path.join(sqliteDir, `${carol.did}-wal`))
+    const walExists = await fileExists(`${carolLoc.dbLocation}-wal`)
     expect(walExists).toBe(false)
-    const shmExists = await fileExists(path.join(sqliteDir, `${carol.did}-shm`))
+    const shmExists = await fileExists(`${carolLoc.dbLocation}-shm`)
     expect(shmExists).toBe(false)
   })
 

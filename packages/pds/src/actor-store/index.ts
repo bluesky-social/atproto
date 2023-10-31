@@ -59,7 +59,7 @@ export class ActorStore {
     })
   }
 
-  private async getLocation(did: string) {
+  async getLocation(did: string) {
     const didHash = await crypto.sha256Hex(did)
     const directory = path.join(this.cfg.directory, didHash.slice(0, 2), did)
     const dbLocation = path.join(directory, `store.sqlite`)
@@ -146,6 +146,7 @@ export class ActorStore {
 
     const got = this.dbCache.get(did)
     this.dbCache.delete(did)
+    this.keyCache.delete(did)
     if (got) {
       await got.close()
     }
@@ -163,7 +164,7 @@ export class ActorStore {
         promises.push(got.close())
       }
     }
-    await Promise.all(promises)
+    await Promise.allSettled(promises)
     this.keyCache.clear()
   }
 }
