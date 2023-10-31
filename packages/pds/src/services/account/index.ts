@@ -666,7 +666,7 @@ type AccountInfo = UserAccountEntry &
 
 export class PdsCache {
   private all: PdsResult[] | undefined
-  private individual: Map<string, PdsResult>
+  private individual = new Map<string, PdsResult>()
   get(did: string) {
     return this.individual.get(did)
   }
