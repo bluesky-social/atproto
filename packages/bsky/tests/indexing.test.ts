@@ -655,9 +655,6 @@ describe('indexing', () => {
       )
       await expect(getProfileBefore).resolves.toBeDefined()
       // Delete account on pds
-      await pdsAgent.api.com.atproto.server.requestAccountDelete(undefined, {
-        headers: sc.getHeaders(alice),
-      })
       const token = await network.pds.ctx.accountManager.createEmailToken(
         alice,
         'delete_account',

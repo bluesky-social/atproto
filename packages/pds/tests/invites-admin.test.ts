@@ -2,7 +2,7 @@ import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
 
-describe.skip('pds admin invite views', () => {
+describe('pds admin invite views', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient

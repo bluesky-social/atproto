@@ -30,7 +30,6 @@ export default function (server: Server, ctx: AppContext) {
       }
       const carIter = repo.getRecords(storage, commit, [{ collection, rkey }])
       const carStream = byteIterableToStream(carIter)
-      carStream.on('close', actorDb.close)
       return {
         encoding: 'application/vnd.ipld.car',
         body: carStream,

@@ -1,4 +1,3 @@
-import path from 'path'
 import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
@@ -68,7 +67,6 @@ export class AppContext {
   public cfg: ServerConfig
 
   constructor(opts: AppContextOptions) {
-    // this.db = opts.db
     this.actorStore = opts.actorStore
     this.blobstore = opts.blobstore
     this.localViewer = opts.localViewer
@@ -96,7 +94,13 @@ export class AppContext {
   ): Promise<AppContext> {
     const blobstore =
       cfg.blobstore.provider === 's3'
-        ? S3BlobStore.creator({ bucket: cfg.blobstore.bucket })
+        ? S3BlobStore.creator({
+            bucket: cfg.blobstore.bucket,
+            region: cfg.blobstore.region,
+            endpoint: cfg.blobstore.endpoint,
+            forcePathStyle: cfg.blobstore.forcePathStyle,
+            credentials: cfg.blobstore.credentials,
+          })
         : DiskBlobStore.creator(
             cfg.blobstore.location,
             cfg.blobstore.tempLocation,
@@ -117,7 +121,7 @@ export class AppContext {
     const moderationMailer = new ModerationMailer(modMailTransport, cfg)
 
     const didCache = new DidSqliteCache(
-      path.join(cfg.db.directory, 'did_cache.sqlite'),
+      cfg.db.didCacheDbLoc,
       cfg.identity.cacheStaleTTL,
       cfg.identity.cacheMaxTTL,
     )
@@ -137,10 +141,7 @@ export class AppContext {
       cfg.crawlers,
       backgroundQueue,
     )
-    const sequencer = new Sequencer(
-      path.join(cfg.db.directory, 'repo_seq.sqlite'),
-      crawlers,
-    )
+    const sequencer = new Sequencer(cfg.db.sequencerDbLoc, crawlers)
     const redisScratch = cfg.redis
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
@@ -152,10 +153,7 @@ export class AppContext {
       : undefined
 
     const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
-    const accountManager = new AccountManager(
-      path.join(cfg.db.directory, 'service.sqlite'),
-      jwtSecretKey,
-    )
+    const accountManager = new AccountManager(cfg.db.accountDbLoc, jwtSecretKey)
     await accountManager.migrateOrThrow()
 
     const jwtKey = cfg.entryway
@@ -179,9 +177,8 @@ export class AppContext {
             secrets.plcRotationKey.privateKeyHex,
           )
 
-    const actorStore = new ActorStore({
+    const actorStore = new ActorStore(cfg.actorStore, {
       blobstore,
-      dbDirectory: cfg.db.directory,
       backgroundQueue,
     })
 

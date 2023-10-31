@@ -4,7 +4,7 @@ import fs from 'fs/promises'
 import * as crypto from '@atproto/crypto'
 import { Keypair, ExportableKeypair } from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
-import { fileExists, rmIfExists } from '@atproto/common'
+import { chunkArray, fileExists, rmIfExists } from '@atproto/common'
 import { ActorDb, getDb, getMigrator } from './db'
 import { BackgroundQueue } from '../background'
 import { RecordReader } from './record/reader'
@@ -18,9 +18,9 @@ import { CID } from 'multiformats/cid'
 import { LRUCache } from 'lru-cache'
 import DiskBlobStore from '../disk-blobstore'
 import { mkdir } from 'fs/promises'
+import { ActorStoreConfig } from '../config'
 
 type ActorStoreResources = {
-  dbDirectory: string
   blobstore: (did: string) => BlobStore
   backgroundQueue: BackgroundQueue
   reservedKeyDir?: string
@@ -31,9 +31,12 @@ export class ActorStore {
   keyCache: LRUCache<string, Keypair>
   reservedKeyDir: string
 
-  constructor(public resources: ActorStoreResources) {
+  constructor(
+    public cfg: ActorStoreConfig,
+    public resources: ActorStoreResources,
+  ) {
     this.dbCache = new LRUCache<string, ActorDb>({
-      max: 30000,
+      max: cfg.cacheSize,
       dispose: async (db) => {
         await db.close()
       },
@@ -50,7 +53,7 @@ export class ActorStore {
       },
     })
     this.keyCache = new LRUCache<string, Keypair>({
-      max: 30000,
+      max: cfg.cacheSize,
       fetchMethod: async (did) => {
         const { keyLocation } = await this.getLocation(did)
         const privKey = await fs.readFile(keyLocation)
@@ -61,12 +64,12 @@ export class ActorStore {
       resources.reservedKeyDir ?? path.join(os.tmpdir(), 'reserved_keys')
   }
 
-  private async getLocation(did: string) {
+  async getLocation(did: string) {
     const didHash = await crypto.sha256Hex(did)
-    const subdir = path.join(this.resources.dbDirectory, didHash.slice(0, 2))
-    const dbLocation = path.join(subdir, `${did}.sqlite`)
-    const keyLocation = path.join(subdir, `${did}.key`)
-    return { subdir, dbLocation, keyLocation }
+    const directory = path.join(this.cfg.directory, didHash.slice(0, 2), did)
+    const dbLocation = path.join(directory, `store.sqlite`)
+    const keyLocation = path.join(directory, `key`)
+    return { directory, dbLocation, keyLocation }
   }
 
   async keypair(did: string): Promise<Keypair> {
@@ -108,27 +111,31 @@ export class ActorStore {
     keypair: ExportableKeypair,
     fn: ActorStoreTransactFn<T>,
   ) {
-    const { subdir, dbLocation, keyLocation } = await this.getLocation(did)
+    const { directory, dbLocation, keyLocation } = await this.getLocation(did)
     // ensure subdir exists
-    await mkdir(subdir, { recursive: true })
+    await mkdir(directory, { recursive: true })
     const exists = await fileExists(dbLocation)
     if (exists) {
       throw new InvalidRequestError('Repo already exists', 'AlreadyExists')
     }
-    const db: ActorDb = getDb(dbLocation)
-    const migrator = getMigrator(db)
     const privKey = await keypair.export()
-    await Promise.all([
-      await migrator.migrateToLatestOrThrow(),
-      await fs.writeFile(keyLocation, privKey),
-    ])
+    await fs.writeFile(keyLocation, privKey)
 
-    const result = await db.transaction((dbTxn) => {
-      const store = createActorTransactor(did, dbTxn, keypair, this.resources)
-      return fn(store)
-    })
-    this.dbCache.set(did, db)
-    return result
+    const db: ActorDb = getDb(dbLocation)
+    try {
+      const migrator = getMigrator(db)
+      await migrator.migrateToLatestOrThrow()
+
+      const result = await db.transaction((dbTxn) => {
+        const store = createActorTransactor(did, dbTxn, keypair, this.resources)
+        return fn(store)
+      })
+      this.dbCache.set(did, db)
+      return result
+    } catch (err) {
+      await db.close()
+      throw err
+    }
   }
 
   async destroy(did: string) {
@@ -139,20 +146,20 @@ export class ActorStore {
       const db = await this.db(did)
       const blobRows = await db.db.selectFrom('blob').select('cid').execute()
       const cids = blobRows.map((row) => CID.parse(row.cid))
-      await Promise.allSettled(cids.map((cid) => blobstore.delete(cid)))
+      await Promise.allSettled(
+        chunkArray(cids, 500).map((chunk) => blobstore.deleteMany(chunk)),
+      )
     }
 
     const got = this.dbCache.get(did)
     this.dbCache.delete(did)
+    this.keyCache.delete(did)
     if (got) {
       await got.close()
     }
 
-    const { dbLocation, keyLocation } = await this.getLocation(did)
-    await rmIfExists(dbLocation)
-    await rmIfExists(`${dbLocation}-wal`)
-    await rmIfExists(`${dbLocation}-shm`)
-    await rmIfExists(keyLocation)
+    const { directory } = await this.getLocation(did)
+    await rmIfExists(directory, true)
   }
 
   async reserveKeypair(): Promise<string> {
@@ -202,7 +209,7 @@ export class ActorStore {
         promises.push(got.close())
       }
     }
-    await Promise.all(promises)
+    await Promise.allSettled(promises)
     this.keyCache.clear()
   }
 }

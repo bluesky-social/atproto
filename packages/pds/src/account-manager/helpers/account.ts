@@ -4,9 +4,27 @@ import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 
 export type ActorAccount = ActorEntry & {
   email: string | null
-  passwordScrypt: string | null
   emailConfirmedAt: string | null
   invitesDisabled: 0 | 1 | null
+}
+
+const selectAccountQB = (db: AccountDb, includeSoftDeleted: boolean) => {
+  const { ref } = db.db.dynamic
+  return db.db
+    .selectFrom('actor')
+    .leftJoin('account', 'actor.did', 'account.did')
+    .if(!includeSoftDeleted, (qb) =>
+      qb.where(notSoftDeletedClause(ref('actor'))),
+    )
+    .select([
+      'actor.did',
+      'actor.handle',
+      'actor.createdAt',
+      'actor.takedownRef',
+      'account.email',
+      'account.emailConfirmedAt',
+      'account.invitesDisabled',
+    ])
 }
 
 export const getAccount = async (
@@ -14,13 +32,7 @@ export const getAccount = async (
   handleOrDid: string,
   includeSoftDeleted = false,
 ): Promise<ActorAccount | null> => {
-  const { ref } = db.db.dynamic
-  const result = await db.db
-    .selectFrom('actor')
-    .leftJoin('account', 'actor.did', 'account.did')
-    .if(!includeSoftDeleted, (qb) =>
-      qb.where(notSoftDeletedClause(ref('actor'))),
-    )
+  const found = await selectAccountQB(db, includeSoftDeleted)
     .where((qb) => {
       if (handleOrDid.startsWith('did:')) {
         return qb.where('actor.did', '=', handleOrDid)
@@ -28,10 +40,8 @@ export const getAccount = async (
         return qb.where('actor.handle', '=', handleOrDid)
       }
     })
-    .selectAll('account')
-    .selectAll('actor')
     .executeTakeFirst()
-  return result || null
+  return found || null
 }
 
 export const getAccountByEmail = async (
@@ -39,16 +49,8 @@ export const getAccountByEmail = async (
   email: string,
   includeSoftDeleted = false,
 ): Promise<ActorAccount | null> => {
-  const { ref } = db.db.dynamic
-  const found = await db.db
-    .selectFrom('actor')
-    .leftJoin('account', 'account.did', 'actor.did')
-    .if(!includeSoftDeleted, (qb) =>
-      qb.where(notSoftDeletedClause(ref('actor'))),
-    )
+  const found = await selectAccountQB(db, includeSoftDeleted)
     .where('email', '=', email.toLowerCase())
-    .selectAll('account')
-    .selectAll('actor')
     .executeTakeFirst()
   return found || null
 }

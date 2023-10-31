@@ -31,12 +31,12 @@ export class TestPds {
     const url = `http://localhost:${port}`
 
     const blobstoreLoc = path.join(os.tmpdir(), randomStr(8, 'base32'))
-    const dbDirLoc = path.join(os.tmpdir(), randomStr(8, 'base32'))
-    await fs.mkdir(dbDirLoc, { recursive: true })
+    const dataDirectory = path.join(os.tmpdir(), randomStr(8, 'base32'))
+    await fs.mkdir(dataDirectory, { recursive: true })
 
     const env: pds.ServerEnvironment = {
       port,
-      dbSqliteDirectory: dbDirLoc,
+      dataDirectory: dataDirectory,
       blobstoreDiskLocation: blobstoreLoc,
       recoveryDidKey: recoveryKey,
       adminPassword: ADMIN_PASSWORD,

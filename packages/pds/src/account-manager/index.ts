@@ -183,17 +183,23 @@ export class AccountManager {
     })
 
     const refreshPayload = auth.decodeRefreshToken(refreshJwt)
-
-    await this.db.transaction((dbTxn) =>
-      Promise.all([
-        auth.addRefreshGracePeriod(dbTxn, {
-          id,
-          expiresAt: expiresAt.toISOString(),
-          nextId,
-        }),
-        auth.storeRefreshToken(dbTxn, refreshPayload, token.appPasswordName),
-      ]),
-    )
+    try {
+      await this.db.transaction((dbTxn) =>
+        Promise.all([
+          auth.addRefreshGracePeriod(dbTxn, {
+            id,
+            expiresAt: expiresAt.toISOString(),
+            nextId,
+          }),
+          auth.storeRefreshToken(dbTxn, refreshPayload, token.appPasswordName),
+        ]),
+      )
+    } catch (err) {
+      if (err instanceof auth.ConcurrentRefreshError) {
+        return this.rotateRefreshToken(id)
+      }
+      throw err
+    }
     return { accessJwt, refreshJwt }
   }
 

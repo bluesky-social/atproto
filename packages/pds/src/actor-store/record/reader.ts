@@ -167,7 +167,7 @@ export class RecordReader {
       .execute()
   }
 
-  // @NOTE this logic a placeholder until we allow users to specify these constraints themselves.
+  // @NOTE this logic is a placeholder until we allow users to specify these constraints themselves.
   // Ensures that we don't end-up with duplicate likes, reposts, and follows from race conditions.
 
   async getBacklinkConflicts(uri: AtUri, record: unknown): Promise<AtUri[]> {

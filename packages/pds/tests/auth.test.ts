@@ -148,6 +148,31 @@ describe('auth', () => {
     )
   })
 
+  it('handles racing refreshes', async () => {
+    const email = 'dan@test.com'
+    const account = await createAccount({
+      handle: 'dan.test',
+      password: 'password',
+      email,
+    })
+    const tokenIdPromises: Promise<string>[] = []
+    const doRefresh = async () => {
+      const res = await refreshSession(account.refreshJwt)
+      const decoded = jwt.decode(res.refreshJwt, { json: true })
+      if (!decoded?.jti) {
+        throw new Error('undefined jti on refresh token')
+      }
+      return decoded.jti
+    }
+    for (let i = 0; i < 10; i++) {
+      tokenIdPromises.push(doRefresh())
+    }
+    const tokenIds = await Promise.all(tokenIdPromises)
+    for (let i = 0; i < 10; i++) {
+      expect(tokenIds[i]).toEqual(tokenIds[0])
+    }
+  })
+
   it('refresh token provides new token with same id on multiple uses during grace period.', async () => {
     const account = await createAccount({
       handle: 'eve.test',
