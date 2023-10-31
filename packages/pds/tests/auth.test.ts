@@ -158,7 +158,7 @@ describe('auth', () => {
     const tokenIdPromises: Promise<string>[] = []
     const doRefresh = async () => {
       const res = await refreshSession(account.refreshJwt)
-      const decoded = jwt.decode(res.refreshJwt, { json: true })
+      const decoded = jose.decodeJwt(res.refreshJwt)
       if (!decoded?.jti) {
         throw new Error('undefined jti on refresh token')
       }
