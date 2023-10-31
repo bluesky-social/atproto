@@ -199,7 +199,10 @@ describe('Auth', () => {
           }
         },
       )
-      await expect(tryVerify).resolves.toEqual('did:example:iss')
+      await expect(tryVerify).resolves.toMatchObject({
+        aud: 'did:example:aud',
+        iss: 'did:example:iss',
+      })
       expect(usedKeypair1).toBe(true)
       expect(usedKeypair2).toBe(true)
     })
@@ -207,11 +210,12 @@ describe('Auth', () => {
     it('interoperates with jwts signed by other libraries.', async () => {
       const keypair = await Secp256k1Keypair.create({ exportable: true })
       const signingKey = await createPrivateKeyObject(keypair)
-      const jwt = await new jose.SignJWT({
+      const payload = {
         aud: 'did:example:aud',
         iss: 'did:example:iss',
         exp: Math.floor((Date.now() + MINUTE) / 1000),
-      })
+      }
+      const jwt = await new jose.SignJWT(payload)
         .setProtectedHeader({ typ: 'JWT', alg: keypair.jwtAlg })
         .sign(signingKey)
       const tryVerify = xrpcServer.verifyJwt(
@@ -221,7 +225,7 @@ describe('Auth', () => {
           return keypair.did()
         },
       )
-      await expect(tryVerify).resolves.toEqual('did:example:iss')
+      await expect(tryVerify).resolves.toEqual(payload)
     })
   })
 })
