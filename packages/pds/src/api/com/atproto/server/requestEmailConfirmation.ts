@@ -11,15 +11,10 @@ export default function (server: Server, ctx: AppContext) {
       if (!user) {
         throw new InvalidRequestError('user not found')
       }
-      try {
-        const token = await ctx.services
-          .account(ctx.db)
-          .createEmailToken(did, 'confirm_email')
-        await ctx.mailer.sendConfirmEmail({ token }, { to: user.email })
-      } catch (err) {
-        console.log(err)
-        throw err
-      }
+      const token = await ctx.services
+        .account(ctx.db)
+        .createEmailToken(did, 'confirm_email')
+      await ctx.mailer.sendConfirmEmail({ token }, { to: user.email })
     },
   })
 }
