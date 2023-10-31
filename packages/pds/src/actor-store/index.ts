@@ -113,20 +113,24 @@ export class ActorStore {
     if (exists) {
       throw new InvalidRequestError('Repo already exists', 'AlreadyExists')
     }
-    const db: ActorDb = getDb(dbLocation)
-    const migrator = getMigrator(db)
     const privKey = await keypair.export()
-    await Promise.all([
-      await migrator.migrateToLatestOrThrow(),
-      await fs.writeFile(keyLocation, privKey),
-    ])
+    await fs.writeFile(keyLocation, privKey)
 
-    const result = await db.transaction((dbTxn) => {
-      const store = createActorTransactor(did, dbTxn, keypair, this.resources)
-      return fn(store)
-    })
-    this.dbCache.set(did, db)
-    return result
+    const db: ActorDb = getDb(dbLocation)
+    try {
+      const migrator = getMigrator(db)
+      await migrator.migrateToLatestOrThrow()
+
+      const result = await db.transaction((dbTxn) => {
+        const store = createActorTransactor(did, dbTxn, keypair, this.resources)
+        return fn(store)
+      })
+      this.dbCache.set(did, db)
+      return result
+    } catch (err) {
+      await db.close()
+      throw err
+    }
   }
 
   async destroy(did: string) {
