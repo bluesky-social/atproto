@@ -54,7 +54,7 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
       this.cache.addMap(toPut)
     })
     await Promise.all(
-      chunkArray(blocks, 500).map((batch) =>
+      chunkArray(blocks, 50).map((batch) =>
         this.db.db
           .insertInto('repo_block')
           .values(batch)
