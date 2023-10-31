@@ -132,6 +132,10 @@ export class DiskBlobStore implements BlobStore {
     await rmIfExists(this.getStoredPath(cid))
   }
 
+  async deleteMany(cids: CID[]): Promise<void> {
+    await Promise.all(cids.map((cid) => this.delete(cid)))
+  }
+
   async deleteAll(): Promise<void> {
     await rmIfExists(this.location, true)
   }
