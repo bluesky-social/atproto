@@ -61,7 +61,6 @@ export class AppContext {
   public cfg: ServerConfig
 
   constructor(opts: AppContextOptions) {
-    // this.db = opts.db
     this.actorStore = opts.actorStore
     this.blobstore = opts.blobstore
     this.localViewer = opts.localViewer
