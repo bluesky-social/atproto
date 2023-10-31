@@ -12,15 +12,21 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { ActorStoreTransactor } from '../../../../actor-store'
 import { AtprotoData } from '@atproto/identity'
+import { Secp256k1Keypair } from '@atproto/crypto'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.importRepo({
-    handler: async ({ params, input }) => {
+    handler: async ({ params, input, req }) => {
       const { did } = params
       const outBuffer = new AsyncBuffer<string>()
-      processImport(ctx, did, input.body, outBuffer).catch((err) =>
-        outBuffer.throw(err),
-      )
+      processImport(ctx, did, input.body, outBuffer).catch(async (err) => {
+        try {
+          await ctx.actorStore.destroy(did)
+        } catch (err) {
+          req.log.error({ did, err }, 'failed to clean up actor store')
+        }
+        outBuffer.throw(err)
+      })
 
       return {
         encoding: 'text/plain',
@@ -36,9 +42,14 @@ const processImport = async (
   incomingCar: AsyncIterable<Uint8Array>,
   outBuffer: AsyncBuffer<string>,
 ) => {
+  const didData = await ctx.idResolver.did.resolveAtprotoData(did)
+  const alreadyExists = await ctx.actorStore.exists(did)
+  if (!alreadyExists) {
+    const keypair = await Secp256k1Keypair.create({ exportable: true })
+    await ctx.actorStore.create(did, keypair, async () => {})
+  }
   await ctx.actorStore.transact(did, async (actorStore) => {
     const blobRefs = await importRepo(actorStore, incomingCar, outBuffer)
-    const didData = await ctx.idResolver.did.resolveAtprotoData(did)
     await importBlobs(actorStore, didData, blobRefs, outBuffer)
   })
   outBuffer.close()

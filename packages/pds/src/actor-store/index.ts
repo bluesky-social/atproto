@@ -72,6 +72,11 @@ export class ActorStore {
     return { directory, dbLocation, keyLocation }
   }
 
+  async exists(did: string): Promise<boolean> {
+    const location = await this.getLocation(did)
+    return await fileExists(location.dbLocation)
+  }
+
   async keypair(did: string): Promise<Keypair> {
     const got = await this.keyCache.fetch(did)
     if (!got) {
@@ -183,20 +188,20 @@ export class ActorStore {
   }
 
   async storePlcOp(did: string, op: Uint8Array) {
-    const { subdir } = await this.getLocation(did)
-    const opLoc = path.join(subdir, `did-op`)
+    const { directory } = await this.getLocation(did)
+    const opLoc = path.join(directory, `did-op`)
     await fs.writeFile(opLoc, op)
   }
 
   async getPlcOp(did: string): Promise<Uint8Array> {
-    const { subdir } = await this.getLocation(did)
-    const opLoc = path.join(subdir, `did-op`)
+    const { directory } = await this.getLocation(did)
+    const opLoc = path.join(directory, `did-op`)
     return await fs.readFile(opLoc)
   }
 
   async clearPlcOp(did: string) {
-    const { subdir } = await this.getLocation(did)
-    const opLoc = path.join(subdir, `did-op`)
+    const { directory } = await this.getLocation(did)
+    const opLoc = path.join(directory, `did-op`)
     await rmIfExists(opLoc)
   }
 

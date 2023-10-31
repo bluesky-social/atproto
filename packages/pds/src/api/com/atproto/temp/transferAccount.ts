@@ -1,35 +1,17 @@
 import { ensureAtpDocument } from '@atproto/identity'
-import { InvalidRequestError } from '@atproto/xrpc-server'
-import { normalizeAndValidateHandle } from '../../../../handle'
 import * as plc from '@did-plc/lib'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { cborDecode, check, cidForCbor } from '@atproto/common'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.transferAccount({
     handler: async ({ input }) => {
-      const { did, plcOp } = input.body
-      // normalize & ensure valid handle
-      const handle = await normalizeAndValidateHandle({
-        ctx,
-        handle: input.body.handle,
-        did: input.body.did,
-      })
+      const { did, plcOp, handle } = input.body
 
-      // check that the handle and email are available
-      const handleAccnt = await ctx.accountManager.getAccount(handle)
-      if (handleAccnt) {
-        throw new InvalidRequestError(`Handle already taken: ${handle}`)
-      }
-
-      const signingDidKey = await verifyDidAndPlcOp(ctx, did, handle, plcOp)
-      const signingKey = await ctx.actorStore.getReservedKeypair(signingDidKey)
-
-      await ctx.actorStore.create(did, signingKey, (actorTxn) => {
-        return actorTxn.repo.createRepo([])
-      })
-      await ctx.actorStore.clearReservedKeypair(signingDidKey)
+      const signingKey = await ctx.actorStore.keypair(did)
+      await verifyDidAndPlcOp(ctx, did, handle, signingKey.did(), plcOp)
 
       const { accessJwt, refreshJwt } =
         await ctx.accountManager.registerAccount({
@@ -54,31 +36,46 @@ const verifyDidAndPlcOp = async (
   ctx: AppContext,
   did: string,
   handle: string,
+  signingKey: string,
   plcOpBytes: Uint8Array,
 ) => {
   const plcOp = cborDecode(plcOpBytes)
   if (!check.is(plcOp, plc.def.operation)) {
-    throw new Error('')
+    throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
   }
   await plc.assureValidOp(plcOp)
   const prev = await ctx.plcClient.getLastOp(did)
   if (!prev || prev.type === 'plc_tombstone') {
-    throw new Error('invalid prev')
+    throw new InvalidRequestError(
+      'no accessible prev for did',
+      'IncompatibleDidDoc',
+    )
   }
   const prevCid = await cidForCbor(prev)
   if (plcOp.prev?.toString() !== prevCid.toString()) {
-    throw new Error('mismatched prevs')
+    throw new InvalidRequestError(
+      'invalid prev on plc operation',
+      'IncompatibleDidDoc',
+    )
   }
   const normalizedPrev = plc.normalizeOp(prev)
   await plc.assureValidSig(normalizedPrev.rotationKeys, plcOp)
   const doc = plc.formatDidDoc({ did, ...plcOp })
   const data = ensureAtpDocument(doc)
   if (handle !== data.handle) {
-    throw new Error('mismatched handle')
-  } else if (!plcOp.rotationKeys.includes(ctx.plcRotationKey.did())) {
-    throw new Error('does not include plc rotation key')
+    throw new InvalidRequestError(
+      'invalid handle on plc operation',
+      'IncompatibleDidDoc',
+    )
   } else if (data.pds !== ctx.cfg.service.publicUrl) {
-    throw new Error('service does not match')
+    throw new InvalidRequestError(
+      'invalid service on plc operation',
+      'IncompatibleDidDoc',
+    )
+  } else if (data.signingKey !== signingKey) {
+    throw new InvalidRequestError(
+      'invalid signing key on plc operation',
+      'IncompatibleDidDoc',
+    )
   }
-  return data.signingKey
 }
