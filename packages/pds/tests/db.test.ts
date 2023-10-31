@@ -22,7 +22,7 @@ describe('db', () => {
         .insertInto('repo_root')
         .values({
           did: 'x',
-          root: 'x',
+          cid: 'x',
           rev: 'x',
           indexedAt: 'bad-date',
         })
@@ -44,7 +44,7 @@ describe('db', () => {
 
     expect(row).toEqual({
       did: 'x',
-      root: 'x',
+      cid: 'x',
       rev: 'x',
       indexedAt: 'bad-date',
     })
@@ -56,7 +56,7 @@ describe('db', () => {
         .insertInto('repo_root')
         .values({
           did: 'y',
-          root: 'y',
+          cid: 'y',
           rev: 'y',
           indexedAt: 'bad-date',
         })
@@ -103,7 +103,7 @@ describe('db', () => {
       leakedTx = dbTxn
       await dbTxn.db
         .insertInto('repo_root')
-        .values({ root: 'a', did: 'a', rev: 'a', indexedAt: 'bad-date' })
+        .values({ cid: 'a', did: 'a', rev: 'a', indexedAt: 'bad-date' })
         .execute()
       throw new Error('test tx failed')
     })
@@ -111,7 +111,7 @@ describe('db', () => {
 
     const attempt = leakedTx?.db
       .insertInto('repo_root')
-      .values({ root: 'b', did: 'b', rev: 'b', indexedAt: 'bad-date' })
+      .values({ cid: 'b', did: 'b', rev: 'b', indexedAt: 'bad-date' })
       .execute()
     await expect(attempt).rejects.toThrow('tx already failed')
 
@@ -135,7 +135,7 @@ describe('db', () => {
           const query = dbTxn.db
             .insertInto('repo_root')
             .values({
-              root: name,
+              cid: name,
               did: name,
               rev: name,
               indexedAt: 'bad-date',
