@@ -14,10 +14,10 @@ export const authVerifier =
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    const did = await verifyJwt(
+    const payload = await verifyJwt(
       jwtStr,
       opts.aud,
-      async (did: string, forceRefresh: boolean) => {
+      async (did, forceRefresh) => {
         const atprotoData = await idResolver.did.resolveAtprotoData(
           did,
           forceRefresh,
@@ -25,7 +25,7 @@ export const authVerifier =
         return atprotoData.signingKey
       },
     )
-    return { credentials: { did }, artifacts: { aud: opts.aud } }
+    return { credentials: { did: payload.iss }, artifacts: { aud: opts.aud } }
   }
 
 export const authOptionalVerifier =

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds admin get repo view gets a repo by did, even when taken down. 1`] = `
+exports[`admin get repo view gets a repo by did, even when taken down. 1`] = `
 Object {
   "did": "user(0)",
   "email": "alice@test.com",
@@ -8,13 +8,14 @@ Object {
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "invites": Array [],
   "invitesDisabled": false,
+  "labels": Array [],
   "moderation": Object {
     "actions": Array [
       Object {
         "action": "com.atproto.admin.defs#takedown",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "createdBy": "did:example:admin",
-        "id": 3,
+        "id": 2,
         "reason": "X",
         "resolvedReportIds": Array [],
         "subject": Object {
@@ -27,7 +28,7 @@ Object {
         "action": "com.atproto.admin.defs#acknowledge",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "createdBy": "did:example:admin",
-        "id": 2,
+        "id": 1,
         "reason": "X",
         "resolvedReportIds": Array [],
         "reversal": Object {
@@ -44,7 +45,7 @@ Object {
     ],
     "currentAction": Object {
       "action": "com.atproto.admin.defs#takedown",
-      "id": 3,
+      "id": 2,
     },
     "reports": Array [
       Object {

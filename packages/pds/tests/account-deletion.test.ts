@@ -14,7 +14,6 @@ import { RepoBlob } from '../src/db/tables/repo-blob'
 import { Blob } from '../src/db/tables/blob'
 import { Record } from '../src/db/tables/record'
 import { RepoSeq } from '../src/db/tables/repo-seq'
-import { ACKNOWLEDGE } from '../src/lexicon/types/com/atproto/admin/defs'
 
 describe('account deletion', () => {
   let network: TestNetworkNoAppView
@@ -105,16 +104,14 @@ describe('account deletion', () => {
   })
 
   it('deletes account with a valid token & password', async () => {
-    // Perform account deletion, including when there's an existing mod action on the account
-    await agent.api.com.atproto.admin.takeModerationAction(
+    // Perform account deletion, including when there's an existing takedown on the account
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        action: ACKNOWLEDGE,
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: carol.did,
         },
-        createdBy: 'did:example:admin',
-        reason: 'X',
+        takedown: { applied: true },
       },
       {
         encoding: 'application/json',

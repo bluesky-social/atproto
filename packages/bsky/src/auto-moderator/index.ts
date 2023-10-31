@@ -271,6 +271,7 @@ export class AutoModerator {
         await modSrvc.takedownRecord({
           takedownId: action.id,
           uri: uri,
+          cid: recordCid,
           blobCids: takedownCids,
         })
       })

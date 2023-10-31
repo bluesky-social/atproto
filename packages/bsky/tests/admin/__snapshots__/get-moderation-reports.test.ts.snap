@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pds admin get moderation reports view gets all moderation reports actioned by a certain moderator. 1`] = `
+exports[`admin get moderation reports view gets all moderation reports actioned by a certain moderator. 1`] = `
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -8,7 +8,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(0)",
     "resolvedByActionIds": Array [
-      2,
+      1,
     ],
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -20,7 +20,7 @@ Array [
 ]
 `;
 
-exports[`pds admin get moderation reports view gets all moderation reports actioned by a certain moderator. 2`] = `
+exports[`admin get moderation reports view gets all moderation reports actioned by a certain moderator. 2`] = `
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -28,7 +28,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(0)",
     "resolvedByActionIds": Array [
-      4,
+      3,
     ],
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -40,7 +40,7 @@ Array [
 ]
 `;
 
-exports[`pds admin get moderation reports view gets all moderation reports by active resolution action type. 1`] = `
+exports[`admin get moderation reports view gets all moderation reports by active resolution action type. 1`] = `
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -48,7 +48,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(0)",
     "resolvedByActionIds": Array [
-      4,
+      3,
     ],
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -60,7 +60,7 @@ Array [
 ]
 `;
 
-exports[`pds admin get moderation reports view gets all moderation reports for a record. 1`] = `
+exports[`admin get moderation reports view gets all moderation reports for a record. 1`] = `
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -68,7 +68,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(0)",
     "resolvedByActionIds": Array [
-      2,
+      1,
     ],
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -80,7 +80,7 @@ Array [
 ]
 `;
 
-exports[`pds admin get moderation reports view gets all moderation reports for a repo. 1`] = `
+exports[`admin get moderation reports view gets all moderation reports for a repo. 1`] = `
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -88,7 +88,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(0)",
     "resolvedByActionIds": Array [
-      6,
+      5,
     ],
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
@@ -115,7 +115,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(0)",
     "resolvedByActionIds": Array [
-      2,
+      1,
     ],
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -127,7 +127,7 @@ Array [
 ]
 `;
 
-exports[`pds admin get moderation reports view gets all moderation reports. 1`] = `
+exports[`admin get moderation reports view gets all moderation reports. 1`] = `
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -147,7 +147,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(1)",
     "resolvedByActionIds": Array [
-      6,
+      5,
     ],
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
@@ -174,7 +174,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(1)",
     "resolvedByActionIds": Array [
-      4,
+      3,
     ],
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -202,7 +202,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(1)",
     "resolvedByActionIds": Array [
-      2,
+      1,
     ],
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -214,7 +214,7 @@ Array [
 ]
 `;
 
-exports[`pds admin get moderation reports view gets all resolved/unresolved moderation reports. 1`] = `
+exports[`admin get moderation reports view gets all resolved/unresolved moderation reports. 1`] = `
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -222,7 +222,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(0)",
     "resolvedByActionIds": Array [
-      6,
+      5,
     ],
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
@@ -236,7 +236,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(0)",
     "resolvedByActionIds": Array [
-      4,
+      3,
     ],
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -251,7 +251,7 @@ Array [
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(0)",
     "resolvedByActionIds": Array [
-      2,
+      1,
     ],
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
@@ -263,7 +263,7 @@ Array [
 ]
 `;
 
-exports[`pds admin get moderation reports view gets all resolved/unresolved moderation reports. 2`] = `
+exports[`admin get moderation reports view gets all resolved/unresolved moderation reports. 2`] = `
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",

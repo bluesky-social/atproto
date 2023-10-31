@@ -18,7 +18,6 @@ describe('pds posts views', () => {
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.processAll()
   })
 
   afterAll(async () => {
@@ -98,7 +97,6 @@ describe('pds posts views', () => {
     )
 
     await network.processAll()
-    await network.bsky.processAll()
 
     const { data } = await agent.api.app.bsky.feed.getPosts({ uris: [uri] })
 

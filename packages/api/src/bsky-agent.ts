@@ -258,6 +258,49 @@ export class BskyAgent extends AtpAgent {
     return this.api.app.bsky.graph.unmuteActor({ actor })
   }
 
+  async muteModList(uri: string) {
+    return this.api.app.bsky.graph.muteActorList({
+      list: uri,
+    })
+  }
+
+  async unmuteModList(uri: string) {
+    return this.api.app.bsky.graph.unmuteActorList({
+      list: uri,
+    })
+  }
+
+  async blockModList(uri: string) {
+    if (!this.session) {
+      throw new Error('Not logged in')
+    }
+    return await this.api.app.bsky.graph.listblock.create(
+      { repo: this.session.did },
+      {
+        subject: uri,
+        createdAt: new Date().toISOString(),
+      },
+    )
+  }
+
+  async unblockModList(uri: string) {
+    if (!this.session) {
+      throw new Error('Not logged in')
+    }
+    const listInfo = await this.api.app.bsky.graph.getList({
+      list: uri,
+      limit: 1,
+    })
+    if (!listInfo.data.list.viewer?.blocked) {
+      return
+    }
+    const { rkey } = new AtUri(listInfo.data.list.viewer.blocked)
+    return await this.api.app.bsky.graph.listblock.delete({
+      repo: this.session.did,
+      rkey,
+    })
+  }
+
   async updateSeenNotifications(seenAt?: string) {
     seenAt = seenAt || new Date().toISOString()
     return this.api.app.bsky.notification.updateSeen({

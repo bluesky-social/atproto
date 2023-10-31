@@ -10,6 +10,24 @@ import * as ComAtprotoModerationDefs from '../moderation/defs'
 import * as ComAtprotoServerDefs from '../server/defs'
 import * as ComAtprotoLabelDefs from '../label/defs'
 
+export interface StatusAttr {
+  applied: boolean
+  ref?: string
+  [k: string]: unknown
+}
+
+export function isStatusAttr(v: unknown): v is StatusAttr {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#statusAttr'
+  )
+}
+
+export function validateStatusAttr(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#statusAttr', v)
+}
+
 export interface ActionView {
   id: number
   action: ActionType
@@ -238,6 +256,30 @@ export function validateRepoViewDetail(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#repoViewDetail', v)
 }
 
+export interface AccountView {
+  did: string
+  handle: string
+  email?: string
+  indexedAt: string
+  invitedBy?: ComAtprotoServerDefs.InviteCode
+  invites?: ComAtprotoServerDefs.InviteCode[]
+  invitesDisabled?: boolean
+  inviteNote?: string
+  [k: string]: unknown
+}
+
+export function isAccountView(v: unknown): v is AccountView {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#accountView'
+  )
+}
+
+export function validateAccountView(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#accountView', v)
+}
+
 export interface RepoViewNotFound {
   did: string
   [k: string]: unknown
@@ -270,6 +312,25 @@ export function isRepoRef(v: unknown): v is RepoRef {
 
 export function validateRepoRef(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#repoRef', v)
+}
+
+export interface RepoBlobRef {
+  did: string
+  cid: string
+  recordUri?: string
+  [k: string]: unknown
+}
+
+export function isRepoBlobRef(v: unknown): v is RepoBlobRef {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#repoBlobRef'
+  )
+}
+
+export function validateRepoBlobRef(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#repoBlobRef', v)
 }
 
 export interface RecordView {
