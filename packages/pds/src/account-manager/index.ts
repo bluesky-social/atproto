@@ -166,16 +166,23 @@ export class AccountManager {
       jti: nextId,
     })
 
-    await this.db.transaction((dbTxn) =>
-      Promise.all([
-        auth.addRefreshGracePeriod(dbTxn, {
-          id,
-          expiresAt: expiresAt.toISOString(),
-          nextId,
-        }),
-        auth.storeRefreshToken(dbTxn, refresh.payload, token.appPasswordName),
-      ]),
-    )
+    try {
+      await this.db.transaction((dbTxn) =>
+        Promise.all([
+          auth.addRefreshGracePeriod(dbTxn, {
+            id,
+            expiresAt: expiresAt.toISOString(),
+            nextId,
+          }),
+          auth.storeRefreshToken(dbTxn, refresh.payload, token.appPasswordName),
+        ]),
+      )
+    } catch (err) {
+      if (err instanceof auth.ConcurrentRefreshError) {
+        return this.rotateRefreshToken(id)
+      }
+      throw err
+    }
     return { access, refresh }
   }
 
