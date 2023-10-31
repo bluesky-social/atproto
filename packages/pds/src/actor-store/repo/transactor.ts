@@ -35,7 +35,7 @@ export class RepoTransactor extends RepoReader {
     this.blob = new BlobTransactor(db, blobstore, backgroundQueue)
     this.record = new RecordTransactor(db, blobstore)
     this.now = now ?? new Date().toISOString()
-    this.storage = new SqlRepoTransactor(db, this.now)
+    this.storage = new SqlRepoTransactor(db, this.did, this.now)
   }
 
   async createRepo(writes: PreparedCreate[]): Promise<CommitData> {

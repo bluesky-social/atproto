@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       .where(notSoftDeletedClause(ref('account')))
       .select([
         'account.did as did',
-        'repo_root.root as head',
+        'repo_root.cid as head',
         'repo_root.rev as rev',
         'account.createdAt as createdAt',
       ])

@@ -8,7 +8,7 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
   cache: BlockMap = new BlockMap()
   now: string
 
-  constructor(public db: ActorDb, now?: string) {
+  constructor(public db: ActorDb, public did: string, now?: string) {
     super(db)
     this.now = now ?? new Date().toISOString()
   }
@@ -86,6 +86,7 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
       await this.db.db
         .insertInto('repo_root')
         .values({
+          did: this.did,
           cid: cid.toString(),
           rev: rev,
           indexedAt: this.now,

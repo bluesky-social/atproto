@@ -145,12 +145,12 @@ export class AccountService {
       .insertInto('repo_root')
       .values({
         did,
-        root: cid.toString(),
+        cid: cid.toString(),
         rev,
         indexedAt: new Date().toISOString(),
       })
       .onConflict((oc) =>
-        oc.column('did').doUpdateSet({ root: cid.toString(), rev }),
+        oc.column('did').doUpdateSet({ cid: cid.toString(), rev }),
       )
       .execute()
   }
