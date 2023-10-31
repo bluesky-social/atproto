@@ -17,9 +17,9 @@ import { CID } from 'multiformats/cid'
 import { LRUCache } from 'lru-cache'
 import DiskBlobStore from '../disk-blobstore'
 import { mkdir } from 'fs/promises'
+import { ActorStoreConfig } from '../config'
 
 type ActorStoreResources = {
-  dbDirectory: string
   blobstore: (did: string) => BlobStore
   backgroundQueue: BackgroundQueue
 }
@@ -28,9 +28,12 @@ export class ActorStore {
   dbCache: LRUCache<string, ActorDb>
   keyCache: LRUCache<string, Keypair>
 
-  constructor(public resources: ActorStoreResources) {
+  constructor(
+    public cfg: ActorStoreConfig,
+    public resources: ActorStoreResources,
+  ) {
     this.dbCache = new LRUCache<string, ActorDb>({
-      max: 30000,
+      max: cfg.cacheSize,
       dispose: async (db) => {
         await db.close()
       },
@@ -47,7 +50,7 @@ export class ActorStore {
       },
     })
     this.keyCache = new LRUCache<string, Keypair>({
-      max: 30000,
+      max: cfg.cacheSize,
       fetchMethod: async (did) => {
         const { keyLocation } = await this.getLocation(did)
         const privKey = await fs.readFile(keyLocation)
@@ -58,7 +61,7 @@ export class ActorStore {
 
   private async getLocation(did: string) {
     const didHash = await crypto.sha256Hex(did)
-    const subdir = path.join(this.resources.dbDirectory, didHash.slice(0, 2))
+    const subdir = path.join(this.cfg.directory, didHash.slice(0, 2))
     const dbLocation = path.join(subdir, `${did}.sqlite`)
     const keyLocation = path.join(subdir, `${did}.key`)
     return { subdir, dbLocation, keyLocation }

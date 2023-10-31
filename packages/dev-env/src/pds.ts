@@ -31,7 +31,10 @@ export class TestPds {
 
     const env: pds.ServerEnvironment = {
       port,
-      dbSqliteDirectory: dbDirLoc,
+      serviceDbLocation: path.join(dbDirLoc, 'service.sqlite'),
+      sequencerDbLocation: path.join(dbDirLoc, 'sequencer.sqlite'),
+      didCacheDbLocation: path.join(dbDirLoc, 'did_cache.sqlite'),
+      actorStoreDirectory: path.join(dbDirLoc, 'actors'),
       blobstoreDiskLocation: blobstoreLoc,
       recoveryDidKey: recoveryKey,
       adminPassword: ADMIN_PASSWORD,

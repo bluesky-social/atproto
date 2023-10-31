@@ -24,11 +24,15 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     termsOfServiceUrl: env.termsOfServiceUrl,
   }
 
-  if (!env.dbSqliteDirectory) {
-    throw new Error('Must configure a sqlite directory')
-  }
   const dbCfg: ServerConfig['db'] = {
-    directory: env.dbSqliteDirectory,
+    serviceDbLoc: env.serviceDbLocation ?? 'service.sqlite',
+    sequencerDbLoc: env.sequencerDbLocation ?? 'sequencer.sqlite',
+    didCacheDbLoc: env.didCacheDbLocation ?? 'did_cache.sqlite',
+  }
+
+  const actorStoreCfg: ServerConfig['actorStore'] = {
+    directory: env.actorStoreDirectory ?? 'actors',
+    cacheSize: env.actorStoreCacheSize ?? 100,
   }
 
   let blobstoreCfg: ServerConfig['blobstore']
@@ -158,6 +162,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   return {
     service: serviceCfg,
     db: dbCfg,
+    actorStore: actorStoreCfg,
     blobstore: blobstoreCfg,
     identity: identityCfg,
     invites: invitesCfg,
@@ -174,6 +179,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 export type ServerConfig = {
   service: ServiceConfig
   db: DatabaseConfig
+  actorStore: ActorStoreConfig
   blobstore: S3BlobstoreConfig | DiskBlobstoreConfig
   identity: IdentityConfig
   invites: InvitesConfig
@@ -197,7 +203,14 @@ export type ServiceConfig = {
 }
 
 export type DatabaseConfig = {
+  serviceDbLoc: string
+  sequencerDbLoc: string
+  didCacheDbLoc: string
+}
+
+export type ActorStoreConfig = {
   directory: string
+  cacheSize: number
 }
 
 export type S3BlobstoreConfig = {

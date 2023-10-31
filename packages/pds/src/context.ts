@@ -1,4 +1,3 @@
-import path from 'path'
 import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
@@ -91,9 +90,7 @@ export class AppContext {
     secrets: ServerSecrets,
     overrides?: Partial<AppContextOptions>,
   ): Promise<AppContext> {
-    const db: ServiceDb = Database.sqlite(
-      path.join(cfg.db.directory, 'service.sqlite'),
-    )
+    const db: ServiceDb = Database.sqlite(cfg.db.serviceDbLoc)
     const blobstore =
       cfg.blobstore.provider === 's3'
         ? S3BlobStore.creator({ bucket: cfg.blobstore.bucket })
@@ -117,7 +114,7 @@ export class AppContext {
     const moderationMailer = new ModerationMailer(modMailTransport, cfg)
 
     const didCache = new DidSqliteCache(
-      path.join(cfg.db.directory, 'did_cache.sqlite'),
+      cfg.db.didCacheDbLoc,
       cfg.identity.cacheStaleTTL,
       cfg.identity.cacheMaxTTL,
     )
@@ -137,10 +134,7 @@ export class AppContext {
       cfg.crawlers,
       backgroundQueue,
     )
-    const sequencer = new Sequencer(
-      path.join(cfg.db.directory, 'repo_seq.sqlite'),
-      crawlers,
-    )
+    const sequencer = new Sequencer(cfg.db.sequencerDbLoc, crawlers)
     const redisScratch = cfg.redis
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
@@ -164,9 +158,8 @@ export class AppContext {
             secrets.plcRotationKey.privateKeyHex,
           )
 
-    const actorStore = new ActorStore({
+    const actorStore = new ActorStore(cfg.actorStore, {
       blobstore,
-      dbDirectory: cfg.db.directory,
       backgroundQueue,
     })
 

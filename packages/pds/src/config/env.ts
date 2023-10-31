@@ -11,7 +11,13 @@ export const readEnv = (): ServerEnvironment => {
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
 
     // database
-    dbSqliteDirectory: envStr('PDS_DB_SQLITE_DIRECTORY'),
+    serviceDbLocation: envStr('PDS_SERVICE_DB_LOCATION'),
+    sequencerDbLocation: envStr('PDS_SEQUENCER_DB_LOCATION'),
+    didCacheDbLocation: envStr('PDS_DID_CACHE_DB_LOCATION'),
+
+    // actor store
+    actorStoreDirectory: envStr('PDS_ACTOR_STORE_DIRECTORY'),
+    actorStoreCacheSize: envInt('PDS_ACTOR_STORE_CACHE_SIZE'),
 
     // blobstore: one required
     // s3
@@ -88,7 +94,13 @@ export type ServerEnvironment = {
   termsOfServiceUrl?: string
 
   // database
-  dbSqliteDirectory?: string
+  serviceDbLocation?: string
+  sequencerDbLocation?: string
+  didCacheDbLocation?: string
+
+  // actor store
+  actorStoreDirectory?: string
+  actorStoreCacheSize?: number
 
   // blobstore: one required
   blobstoreS3Bucket?: string
