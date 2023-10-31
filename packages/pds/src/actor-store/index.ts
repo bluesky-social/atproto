@@ -61,10 +61,10 @@ export class ActorStore {
 
   private async getLocation(did: string) {
     const didHash = await crypto.sha256Hex(did)
-    const subdir = path.join(this.cfg.directory, didHash.slice(0, 2))
-    const dbLocation = path.join(subdir, `${did}.sqlite`)
-    const keyLocation = path.join(subdir, `${did}.key`)
-    return { subdir, dbLocation, keyLocation }
+    const directory = path.join(this.cfg.directory, didHash.slice(0, 2), did)
+    const dbLocation = path.join(directory, `store.sqlite`)
+    const keyLocation = path.join(directory, `key`)
+    return { directory, dbLocation, keyLocation }
   }
 
   async keypair(did: string): Promise<Keypair> {
@@ -106,9 +106,9 @@ export class ActorStore {
     keypair: ExportableKeypair,
     fn: ActorStoreTransactFn<T>,
   ) {
-    const { subdir, dbLocation, keyLocation } = await this.getLocation(did)
+    const { directory, dbLocation, keyLocation } = await this.getLocation(did)
     // ensure subdir exists
-    await mkdir(subdir, { recursive: true })
+    await mkdir(directory, { recursive: true })
     const exists = await fileExists(dbLocation)
     if (exists) {
       throw new InvalidRequestError('Repo already exists', 'AlreadyExists')
@@ -146,11 +146,8 @@ export class ActorStore {
       await got.close()
     }
 
-    const { dbLocation, keyLocation } = await this.getLocation(did)
-    await rmIfExists(dbLocation)
-    await rmIfExists(`${dbLocation}-wal`)
-    await rmIfExists(`${dbLocation}-shm`)
-    await rmIfExists(keyLocation)
+    const { directory } = await this.getLocation(did)
+    await rmIfExists(directory, true)
   }
 
   async close() {
