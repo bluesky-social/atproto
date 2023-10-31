@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import os from 'node:os'
 import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
