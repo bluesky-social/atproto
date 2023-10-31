@@ -41,6 +41,7 @@ export interface BlobStore {
   hasTemp(key: string): Promise<boolean>
   hasStored(cid: CID): Promise<boolean>
   delete(cid: CID): Promise<void>
+  deleteMany(cid: CID[]): Promise<void>
 }
 
 export class BlobNotFoundError extends Error {}

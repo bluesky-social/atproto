@@ -3,13 +3,13 @@ import {
   DynamicModule,
   Kysely,
   RawBuilder,
+  ReferenceExpression,
   SelectQueryBuilder,
   sql,
   SqliteAdapter,
   SqliteIntrospector,
   SqliteQueryCompiler,
 } from 'kysely'
-import { DynamicReferenceBuilder } from 'kysely/dist/cjs/dynamic/dynamic-reference-builder'
 
 // Applies to repo_root or record table
 export const notSoftDeletedClause = (alias: DbRef) => {
@@ -47,7 +47,7 @@ export const dummyDialect = {
   },
 }
 
-export type Ref = DynamicReferenceBuilder<any>
+export type Ref = ReferenceExpression<any, any>
 
 export type DbRef = RawBuilder | ReturnType<DynamicModule['ref']>
 

@@ -14,6 +14,7 @@ import SqliteDB from 'better-sqlite3'
 const DEFAULT_PRAGMAS = {
   journal_mode: 'WAL',
   busy_timeout: '5000',
+  strict: 'ON',
 }
 
 export class Database<Schema> {

@@ -115,11 +115,19 @@ export const addRefreshGracePeriod = async (
     nextId: string
   },
 ) => {
-  await db.db
+  const { id, expiresAt, nextId } = opts
+  const res = await db.db
     .updateTable('refresh_token')
-    .where('id', '=', opts.id)
-    .set({ expiresAt: opts.expiresAt, nextId: opts.nextId })
+    .where('id', '=', id)
+    .where((inner) =>
+      inner.where('nextId', 'is', null).orWhere('nextId', '=', nextId),
+    )
+    .set({ expiresAt, nextId })
+    .returningAll()
     .executeTakeFirst()
+  if (!res) {
+    throw new ConcurrentRefreshError()
+  }
 }
 
 export const revokeRefreshToken = async (db: AccountDb, id: string) => {
@@ -154,3 +162,5 @@ export const revokeAppPasswordRefreshToken = async (
 export const getRefreshTokenId = () => {
   return ui8.toString(crypto.randomBytes(32), 'base64')
 }
+
+export class ConcurrentRefreshError extends Error {}

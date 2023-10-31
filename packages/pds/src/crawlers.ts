@@ -23,7 +23,7 @@ export class Crawlers {
       return
     }
 
-    await this.backgroundQueue.add(async () => {
+    this.backgroundQueue.add(async () => {
       await Promise.all(
         this.agents.map(async (agent) => {
           try {
