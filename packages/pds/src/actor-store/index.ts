@@ -3,7 +3,7 @@ import fs from 'fs/promises'
 import * as crypto from '@atproto/crypto'
 import { Keypair, ExportableKeypair } from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
-import { fileExists, rmIfExists } from '@atproto/common'
+import { chunkArray, fileExists, rmIfExists } from '@atproto/common'
 import { ActorDb, getDb, getMigrator } from './db'
 import { BackgroundQueue } from '../background'
 import { RecordReader } from './record/reader'
@@ -141,7 +141,9 @@ export class ActorStore {
       const db = await this.db(did)
       const blobRows = await db.db.selectFrom('blob').select('cid').execute()
       const cids = blobRows.map((row) => CID.parse(row.cid))
-      await Promise.allSettled(cids.map((cid) => blobstore.delete(cid)))
+      await Promise.allSettled(
+        chunkArray(cids, 100).map((chunk) => blobstore.deleteMany(chunk)),
+      )
     }
 
     const got = this.dbCache.get(did)

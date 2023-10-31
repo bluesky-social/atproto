@@ -128,6 +128,11 @@ export class S3BlobStore implements BlobStore {
     await this.deleteKey(this.getStoredPath(cid))
   }
 
+  async deleteMany(cids: CID[]): Promise<void> {
+    const keys = cids.map((cid) => this.getStoredPath(cid))
+    await this.deleteManyKeys(keys)
+  }
+
   async hasStored(cid: CID): Promise<boolean> {
     return this.hasKey(this.getStoredPath(cid))
   }
@@ -152,6 +157,15 @@ export class S3BlobStore implements BlobStore {
     await this.client.deleteObject({
       Bucket: this.bucket,
       Key: key,
+    })
+  }
+
+  private async deleteManyKeys(keys: string[]) {
+    await this.client.deleteObjects({
+      Bucket: this.bucket,
+      Delete: {
+        Objects: keys.map((k) => ({ Key: k })),
+      },
     })
   }
 
