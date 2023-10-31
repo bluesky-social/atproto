@@ -26,15 +26,12 @@ export class TestPds {
     const url = `http://localhost:${port}`
 
     const blobstoreLoc = path.join(os.tmpdir(), randomStr(8, 'base32'))
-    const dbDirLoc = path.join(os.tmpdir(), randomStr(8, 'base32'))
-    await fs.mkdir(dbDirLoc, { recursive: true })
+    const dataDirectory = path.join(os.tmpdir(), randomStr(8, 'base32'))
+    await fs.mkdir(dataDirectory, { recursive: true })
 
     const env: pds.ServerEnvironment = {
       port,
-      serviceDbLocation: path.join(dbDirLoc, 'service.sqlite'),
-      sequencerDbLocation: path.join(dbDirLoc, 'sequencer.sqlite'),
-      didCacheDbLocation: path.join(dbDirLoc, 'did_cache.sqlite'),
-      actorStoreDirectory: path.join(dbDirLoc, 'actors'),
+      dataDirectory: dataDirectory,
       blobstoreDiskLocation: blobstoreLoc,
       recoveryDidKey: recoveryKey,
       adminPassword: ADMIN_PASSWORD,

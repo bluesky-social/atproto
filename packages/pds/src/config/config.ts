@@ -24,14 +24,18 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     termsOfServiceUrl: env.termsOfServiceUrl,
   }
 
+  const dbLoc = (name: string) => {
+    return env.dataDirectory ? path.join(env.dataDirectory, name) : name
+  }
+
   const dbCfg: ServerConfig['db'] = {
-    serviceDbLoc: env.serviceDbLocation ?? 'service.sqlite',
-    sequencerDbLoc: env.sequencerDbLocation ?? 'sequencer.sqlite',
-    didCacheDbLoc: env.didCacheDbLocation ?? 'did_cache.sqlite',
+    serviceDbLoc: env.serviceDbLocation ?? dbLoc('service.sqlite'),
+    sequencerDbLoc: env.sequencerDbLocation ?? dbLoc('sequencer.sqlite'),
+    didCacheDbLoc: env.didCacheDbLocation ?? dbLoc('did_cache.sqlite'),
   }
 
   const actorStoreCfg: ServerConfig['actorStore'] = {
-    directory: env.actorStoreDirectory ?? 'actors',
+    directory: env.actorStoreDirectory ?? dbLoc('actors'),
     cacheSize: env.actorStoreCacheSize ?? 100,
   }
 
