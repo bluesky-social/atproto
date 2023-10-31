@@ -290,6 +290,17 @@ export class AuthVerifier {
     return { status: Invalid, admin: false, moderator: false, triage: false }
   }
 
+  createAdminRoleHeaders = () => {
+    return {
+      authorization:
+        'Basic ' +
+        ui8.toString(
+          ui8.fromString(`admin:${this._adminPass}`, 'utf8'),
+          'base64pad',
+        ),
+    }
+  }
+
   isUserOrAdmin(
     auth: AccessOutput | RoleOutput | NullOutput,
     did: string,

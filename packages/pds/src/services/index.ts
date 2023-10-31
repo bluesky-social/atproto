@@ -2,7 +2,7 @@ import { AtpAgent } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import Database from '../db'
-import { AccountService } from './account'
+import { AccountService, PdsCache } from './account'
 import { AuthService } from './auth'
 import { RecordService } from './record'
 import { RepoService } from './repo'
@@ -36,8 +36,9 @@ export function createServices(resources: {
     backgroundQueue,
     crawlers,
   } = resources
+  const pdsCache = new PdsCache()
   return {
-    account: AccountService.creator(),
+    account: AccountService.creator(pdsCache),
     auth: AuthService.creator(identityDid, authKeys),
     record: RecordService.creator(),
     repo: RepoService.creator(
@@ -53,7 +54,7 @@ export function createServices(resources: {
       appViewDid,
       appViewCdnUrlPattern,
     ),
-    moderation: ModerationService.creator(blobstore),
+    moderation: ModerationService.creator(blobstore, pdsCache),
   }
 }
 
