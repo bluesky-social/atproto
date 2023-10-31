@@ -366,16 +366,10 @@ describe('repo subscribe repos', () => {
 
     await randomPost(baddie3)
     await sc.updateHandle(baddie3, 'baddie3-update.test')
-
-    await agent.api.com.atproto.server.requestAccountDelete(undefined, {
-      headers: sc.getHeaders(baddie3),
-    })
-    const { token } = await network.pds.ctx.accountManager.db.db
-      .selectFrom('email_token')
-      .selectAll()
-      .where('purpose', '=', 'delete_account')
-      .where('did', '=', baddie3)
-      .executeTakeFirstOrThrow()
+    const token = await network.pds.ctx.accountManager.createEmailToken(
+      baddie3,
+      'delete_account',
+    )
     await agent.api.com.atproto.server.deleteAccount({
       token,
       did: baddie3,
