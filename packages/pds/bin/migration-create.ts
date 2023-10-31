@@ -13,7 +13,6 @@ export async function main() {
       'Must pass a migration name consisting of lowercase digits, numbers, and dashes.',
     )
   }
-  console.log(name)
   const filename = `${prefix}-${name}`
   const dir = path.join(__dirname, '..', 'src', 'db', 'migrations')
 

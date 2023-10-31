@@ -11,11 +11,23 @@ export const readEnv = (): ServerEnvironment => {
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
 
     // database
-    dbSqliteDirectory: envStr('PDS_DB_SQLITE_DIRECTORY'),
+    dataDirectory: envStr('PDS_DATA_DIRECTORY'),
+    accountDbLocation: envStr('PDS_ACCOUNT_DB_LOCATION'),
+    sequencerDbLocation: envStr('PDS_SEQUENCER_DB_LOCATION'),
+    didCacheDbLocation: envStr('PDS_DID_CACHE_DB_LOCATION'),
+
+    // actor store
+    actorStoreDirectory: envStr('PDS_ACTOR_STORE_DIRECTORY'),
+    actorStoreCacheSize: envInt('PDS_ACTOR_STORE_CACHE_SIZE'),
 
     // blobstore: one required
     // s3
     blobstoreS3Bucket: envStr('PDS_BLOBSTORE_S3_BUCKET'),
+    blobstoreS3Region: envStr('PDS_BLOBSTORE_S3_REGION'),
+    blobstoreS3Endpoint: envStr('PDS_BLOBSTORE_S3_ENDPOINT'),
+    blobstoreS3ForcePathStyle: envBool('PDS_BLOBSTORE_S3_FORCE_PATH_STYLE'),
+    blobstoreS3AccessKeyId: envStr('PDS_BLOBSTORE_S3_ACCESS_KEY_ID'),
+    blobstoreS3SecretAccessKey: envStr('PDS_BLOBSTORE_S3_SECRET_ACCESS_KEY'),
     // disk
     blobstoreDiskLocation: envStr('PDS_BLOBSTORE_DISK_LOCATION'),
     blobstoreDiskTmpLocation: envStr('PDS_BLOBSTORE_DISK_TMP_LOCATION'),
@@ -88,12 +100,26 @@ export type ServerEnvironment = {
   termsOfServiceUrl?: string
 
   // database
-  dbSqliteDirectory?: string
+  dataDirectory?: string
+  accountDbLocation?: string
+  sequencerDbLocation?: string
+  didCacheDbLocation?: string
+
+  // actor store
+  actorStoreDirectory?: string
+  actorStoreCacheSize?: number
 
   // blobstore: one required
   blobstoreS3Bucket?: string
   blobstoreDiskLocation?: string
   blobstoreDiskTmpLocation?: string
+
+  // -- optional s3 parameters
+  blobstoreS3Region?: string
+  blobstoreS3Endpoint?: string
+  blobstoreS3ForcePathStyle?: boolean
+  blobstoreS3AccessKeyId?: string
+  blobstoreS3SecretAccessKey?: string
 
   // identity
   didPlcUrl?: string

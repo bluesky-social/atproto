@@ -1,6 +1,6 @@
 export interface RepoRoot {
   did: string
-  root: string
+  cid: string
   rev: string
   indexedAt: string
 }

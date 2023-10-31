@@ -6,7 +6,7 @@ import AppContext from '../src/context'
 import { PreparedWrite, prepareCreate } from '../src/repo'
 import { Keypair } from '@atproto/crypto'
 
-describe('crud operations', () => {
+describe('races', () => {
   let network: TestNetworkNoAppView
   let ctx: AppContext
   let agent: AtpAgent

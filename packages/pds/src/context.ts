@@ -1,4 +1,3 @@
-import path from 'path'
 import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
@@ -89,7 +88,13 @@ export class AppContext {
   ): Promise<AppContext> {
     const blobstore =
       cfg.blobstore.provider === 's3'
-        ? S3BlobStore.creator({ bucket: cfg.blobstore.bucket })
+        ? S3BlobStore.creator({
+            bucket: cfg.blobstore.bucket,
+            region: cfg.blobstore.region,
+            endpoint: cfg.blobstore.endpoint,
+            forcePathStyle: cfg.blobstore.forcePathStyle,
+            credentials: cfg.blobstore.credentials,
+          })
         : DiskBlobStore.creator(
             cfg.blobstore.location,
             cfg.blobstore.tempLocation,
@@ -110,7 +115,7 @@ export class AppContext {
     const moderationMailer = new ModerationMailer(modMailTransport, cfg)
 
     const didCache = new DidSqliteCache(
-      path.join(cfg.db.directory, 'did_cache.sqlite'),
+      cfg.db.didCacheDbLoc,
       cfg.identity.cacheStaleTTL,
       cfg.identity.cacheMaxTTL,
     )
@@ -130,10 +135,7 @@ export class AppContext {
       cfg.crawlers,
       backgroundQueue,
     )
-    const sequencer = new Sequencer(
-      path.join(cfg.db.directory, 'repo_seq.sqlite'),
-      crawlers,
-    )
+    const sequencer = new Sequencer(cfg.db.sequencerDbLoc, crawlers)
     const redisScratch = cfg.redis
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
@@ -141,7 +143,7 @@ export class AppContext {
     const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
 
     const accountManager = new AccountManager(
-      path.join(cfg.db.directory, 'service.sqlite'),
+      cfg.db.accountDbLoc,
       secrets.jwtSecret,
     )
     await accountManager.migrateOrThrow()
@@ -163,9 +165,8 @@ export class AppContext {
             secrets.plcRotationKey.privateKeyHex,
           )
 
-    const actorStore = new ActorStore({
+    const actorStore = new ActorStore(cfg.actorStore, {
       blobstore,
-      dbDirectory: cfg.db.directory,
       backgroundQueue,
     })
 

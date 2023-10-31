@@ -43,9 +43,7 @@ describe('file uploads', () => {
   it('handles client abort', async () => {
     const abortController = new AbortController()
     const _putTemp = DiskBlobStore.prototype.putTemp
-    // const _putTemp = network.pds.ctx.blobstore.putTemp
     DiskBlobStore.prototype.putTemp = function (...args) {
-      // network.pds.ctx.blobstore.putTemp = function (...args) {
       // Abort just as processing blob in packages/pds/src/services/repo/blobs.ts
       process.nextTick(() => abortController.abort())
       return _putTemp.call(this, ...args)

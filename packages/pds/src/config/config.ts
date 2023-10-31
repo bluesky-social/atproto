@@ -24,11 +24,19 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     termsOfServiceUrl: env.termsOfServiceUrl,
   }
 
-  if (!env.dbSqliteDirectory) {
-    throw new Error('Must configure a sqlite directory')
+  const dbLoc = (name: string) => {
+    return env.dataDirectory ? path.join(env.dataDirectory, name) : name
   }
+
   const dbCfg: ServerConfig['db'] = {
-    directory: env.dbSqliteDirectory,
+    accountDbLoc: env.accountDbLocation ?? dbLoc('account.sqlite'),
+    sequencerDbLoc: env.sequencerDbLocation ?? dbLoc('sequencer.sqlite'),
+    didCacheDbLoc: env.didCacheDbLocation ?? dbLoc('did_cache.sqlite'),
+  }
+
+  const actorStoreCfg: ServerConfig['actorStore'] = {
+    directory: env.actorStoreDirectory ?? dbLoc('actors'),
+    cacheSize: env.actorStoreCacheSize ?? 100,
   }
 
   let blobstoreCfg: ServerConfig['blobstore']
@@ -36,7 +44,24 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     throw new Error('Cannot set both S3 and disk blobstore env vars')
   }
   if (env.blobstoreS3Bucket) {
-    blobstoreCfg = { provider: 's3', bucket: env.blobstoreS3Bucket }
+    blobstoreCfg = {
+      provider: 's3',
+      bucket: env.blobstoreS3Bucket,
+      region: env.blobstoreS3Region,
+      endpoint: env.blobstoreS3Endpoint,
+      forcePathStyle: env.blobstoreS3ForcePathStyle,
+    }
+    if (env.blobstoreS3AccessKeyId || env.blobstoreS3SecretAccessKey) {
+      if (!env.blobstoreS3AccessKeyId || !env.blobstoreS3SecretAccessKey) {
+        throw new Error(
+          'Must specify both S3 access key id and secret access key blobstore env vars',
+        )
+      }
+      blobstoreCfg.credentials = {
+        accessKeyId: env.blobstoreS3AccessKeyId,
+        secretAccessKey: env.blobstoreS3SecretAccessKey,
+      }
+    }
   } else if (env.blobstoreDiskLocation) {
     blobstoreCfg = {
       provider: 'disk',
@@ -158,6 +183,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   return {
     service: serviceCfg,
     db: dbCfg,
+    actorStore: actorStoreCfg,
     blobstore: blobstoreCfg,
     identity: identityCfg,
     invites: invitesCfg,
@@ -174,6 +200,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 export type ServerConfig = {
   service: ServiceConfig
   db: DatabaseConfig
+  actorStore: ActorStoreConfig
   blobstore: S3BlobstoreConfig | DiskBlobstoreConfig
   identity: IdentityConfig
   invites: InvitesConfig
@@ -197,12 +224,26 @@ export type ServiceConfig = {
 }
 
 export type DatabaseConfig = {
+  accountDbLoc: string
+  sequencerDbLoc: string
+  didCacheDbLoc: string
+}
+
+export type ActorStoreConfig = {
   directory: string
+  cacheSize: number
 }
 
 export type S3BlobstoreConfig = {
   provider: 's3'
   bucket: string
+  region?: string
+  endpoint?: string
+  forcePathStyle?: boolean
+  credentials?: {
+    accessKeyId: string
+    secretAccessKey: string
+  }
 }
 
 export type DiskBlobstoreConfig = {
