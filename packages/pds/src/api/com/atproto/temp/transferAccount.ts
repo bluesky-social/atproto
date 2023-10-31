@@ -29,21 +29,21 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.actorStore.create(did, signingKey, (actorTxn) => {
         return actorTxn.repo.createRepo([])
       })
-      await ctx.actorStore.storePlcOp(did, plcOp)
       await ctx.actorStore.clearReservedKeypair(signingDidKey)
 
-      const { access, refresh } = await ctx.accountManager.registerAccount({
-        did,
-        handle,
-      })
+      const { accessJwt, refreshJwt } =
+        await ctx.accountManager.registerAccount({
+          did,
+          handle,
+        })
 
       return {
         encoding: 'application/json',
         body: {
           handle,
           did: did,
-          accessJwt: access.jwt,
-          refreshJwt: refresh.jwt,
+          accessJwt: accessJwt,
+          refreshJwt: refreshJwt,
         },
       }
     },

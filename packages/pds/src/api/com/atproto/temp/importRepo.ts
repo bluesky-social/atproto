@@ -4,7 +4,7 @@ import PQueue from 'p-queue'
 import axios from 'axios'
 import { CID } from 'multiformats/cid'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AsyncBuffer, TID, cborDecode } from '@atproto/common'
+import { AsyncBuffer, TID } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { Repo, WriteOpAction, readCarStream, verifyDiff } from '@atproto/repo'
 import { BlobRef, LexValue } from '@atproto/lexicon'
@@ -41,10 +41,6 @@ const processImport = async (
     const didData = await ctx.idResolver.did.resolveAtprotoData(did)
     await importBlobs(actorStore, didData, blobRefs, outBuffer)
   })
-  const plcOp = await ctx.actorStore.getPlcOp(did)
-  await ctx.plcClient.sendOperation(did, cborDecode(plcOp))
-  outBuffer.push(`submitted plc op\n`)
-  await ctx.actorStore.clearPlcOp(did)
   outBuffer.close()
 }
 
