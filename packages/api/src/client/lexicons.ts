@@ -2512,7 +2512,7 @@ export const schemaDict = {
                 type: 'string',
               },
               plcOp: {
-                type: 'bytes',
+                type: 'unknown',
               },
             },
           },
