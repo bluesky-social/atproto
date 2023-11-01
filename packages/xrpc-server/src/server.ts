@@ -5,6 +5,7 @@ import express, {
   RequestHandler,
 } from 'express'
 import {
+  LexiconDoc,
   Lexicons,
   lexToJson,
   LexXrpcProcedure,
@@ -45,7 +46,7 @@ import {
 import log from './logger'
 import { consumeMany } from './rate-limiter'
 
-export function createServer(lexicons?: unknown[], options?: Options) {
+export function createServer(lexicons?: LexiconDoc[], options?: Options) {
   return new Server(lexicons, options)
 }
 
@@ -60,7 +61,7 @@ export class Server {
   sharedRateLimiters: Record<string, RateLimiterI>
   routeRateLimiterFns: Record<string, RateLimiterConsume[]>
 
-  constructor(lexicons?: unknown[], opts?: Options) {
+  constructor(lexicons?: LexiconDoc[], opts?: Options) {
     if (lexicons) {
       this.addLexicons(lexicons)
     }
@@ -140,11 +141,11 @@ export class Server {
   // schemas
   // =
 
-  addLexicon(doc: unknown) {
+  addLexicon(doc: LexiconDoc) {
     this.lex.add(doc)
   }
 
-  addLexicons(docs: unknown[]) {
+  addLexicons(docs: LexiconDoc[]) {
     for (const doc of docs) {
       this.addLexicon(doc)
     }
