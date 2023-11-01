@@ -11,6 +11,7 @@ import {
   isModEventMute,
   isModEventReport,
   isModEventTakedown,
+  isModEventEmail,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { addHoursToDate } from '../../util/date'
 import {
@@ -209,6 +210,10 @@ export class ModerationService {
 
     if (isModEventComment(event) && event.persistNote) {
       meta.persistNote = event.persistNote
+    }
+
+    if (isModEventEmail(event)) {
+      meta.subject = event.subject
     }
 
     const actionResult = await this.db.db

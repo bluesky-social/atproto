@@ -13,6 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       const {
         content,
         recipientDid,
+        senderDid,
         subject = 'Message from Bluesky moderator',
       } = input.body
       const userInfo = await ctx.db.db
@@ -29,6 +30,17 @@ export default function (server: Server, ctx: AppContext) {
         { content },
         { subject, to: userInfo.email },
       )
+      await ctx.appViewAgent.api.com.atproto.admin.emitModerationEvent({
+        event: {
+          $type: 'com.atproto.admin.defs#modEventEmail',
+          subject,
+        },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: recipientDid,
+        },
+        createdBy: senderDid,
+      })
       return {
         encoding: 'application/json',
         body: { sent: true },

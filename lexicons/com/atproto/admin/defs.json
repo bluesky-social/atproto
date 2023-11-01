@@ -25,7 +25,8 @@
             "#modEventFlag",
             "#modEventAcknowledge",
             "#modEventEscalate",
-            "#modEventMute"
+            "#modEventMute",
+            "#modEventEmail"
           ]
         },
         "subject": {
@@ -509,6 +510,17 @@
         "comment": {
           "type": "string",
           "description": "Describe reasoning behind the reversal."
+        }
+      }
+    },
+    "modEventEmail": {
+      "type": "object",
+      "description": "Keep a log of outgoing email to a user",
+      "required": ["subject"],
+      "properties": {
+        "subject": {
+          "type": "string",
+          "description": "The subject line of the email sent to the user."
         }
       }
     }

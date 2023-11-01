@@ -34,6 +34,7 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#modEventAcknowledge',
               'lex:com.atproto.admin.defs#modEventEscalate',
               'lex:com.atproto.admin.defs#modEventMute',
+              'lex:com.atproto.admin.defs#modEventEmail',
             ],
           },
           subject: {
@@ -738,6 +739,17 @@ export const schemaDict = {
           },
         },
       },
+      modEventEmail: {
+        type: 'object',
+        description: 'Keep a log of outgoing email to a user',
+        required: ['subject'],
+        properties: {
+          subject: {
+            type: 'string',
+            description: 'The subject line of the email sent to the user.',
+          },
+        },
+      },
     },
   },
   ComAtprotoAdminDisableAccountInvites: {
@@ -826,6 +838,7 @@ export const schemaDict = {
                   'lex:com.atproto.admin.defs#modEventMute',
                   'lex:com.atproto.admin.defs#modEventReverseTakedown',
                   'lex:com.atproto.admin.defs#modEventUnmute',
+                  'lex:com.atproto.admin.defs#modEventEmail',
                 ],
               },
               subject: {
@@ -1360,7 +1373,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['recipientDid', 'content'],
+            required: ['recipientDid', 'content', 'senderDid'],
             properties: {
               recipientDid: {
                 type: 'string',
@@ -1371,6 +1384,10 @@ export const schemaDict = {
               },
               subject: {
                 type: 'string',
+              },
+              senderDid: {
+                type: 'string',
+                format: 'did',
               },
             },
           },

@@ -22,6 +22,7 @@ export interface ModEventView {
     | ModEventAcknowledge
     | ModEventEscalate
     | ModEventMute
+    | ModEventEmail
     | { $type: string; [k: string]: unknown }
   subject:
     | RepoRef
@@ -623,4 +624,23 @@ export function isModEventUnmute(v: unknown): v is ModEventUnmute {
 
 export function validateModEventUnmute(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#modEventUnmute', v)
+}
+
+/** Keep a log of outgoing email to a user */
+export interface ModEventEmail {
+  /** The subject line of the email sent to the user. */
+  subject: string
+  [k: string]: unknown
+}
+
+export function isModEventEmail(v: unknown): v is ModEventEmail {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#modEventEmail'
+  )
+}
+
+export function validateModEventEmail(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventEmail', v)
 }

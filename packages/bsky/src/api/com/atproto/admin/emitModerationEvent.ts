@@ -72,7 +72,6 @@ export default function (server: Server, ctx: AppContext) {
         const moderationTxn = ctx.services.moderation(dbTxn)
         const labelTxn = ctx.services.label(dbTxn)
 
-        console.log(2)
         const result = await moderationTxn.logEvent({
           event,
           subject: subjectInfo,
@@ -80,7 +79,6 @@ export default function (server: Server, ctx: AppContext) {
           createdBy,
         })
 
-        console.log(3, JSON.stringify(result, null, 2))
         if (
           result.subjectType === 'com.atproto.admin.defs#repoRef' &&
           result.subjectDid

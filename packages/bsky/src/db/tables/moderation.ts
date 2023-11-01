@@ -21,6 +21,7 @@ export interface ModerationEvent {
     | 'com.atproto.admin.defs#modEventReport'
     | 'com.atproto.admin.defs#modEventMute'
     | 'com.atproto.admin.defs#modEventReverseTakedown'
+    | 'com.atproto.admin.defs#modEventEmail'
   subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
   subjectUri: string | null
