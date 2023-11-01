@@ -32,7 +32,7 @@ describe('transfer repo', () => {
     pds = await TestPds.create({
       entrywayUrl: `http://localhost:${entrywayPort}`,
       entrywayJwtVerifyKeyK256PublicKeyHex: getPublicHex(jwtSigningKey),
-      entrywayPlcRotationKeyK256PublicKeyHex: getPublicHex(plcRotationKey),
+      entrywayPlcRotationKey: plcRotationKey.did(),
       adminPassword: 'admin-pass',
       serviceHandleDomains: [],
       didPlcUrl: plc.url,

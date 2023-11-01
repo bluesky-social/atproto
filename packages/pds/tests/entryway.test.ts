@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import AtpAgent from '@atproto/api'
@@ -49,7 +48,7 @@ describe('entryway', () => {
       .values({
         did: pds.ctx.cfg.service.did,
         host: new URL(pds.ctx.cfg.service.publicUrl).host,
-        weight: 0,
+        weight: 1,
       })
       .execute()
     pdsAgent = pds.getClient()
@@ -65,22 +64,17 @@ describe('entryway', () => {
   })
 
   it('creates account.', async () => {
-    const {
-      data: { did },
-    } = await entrywayAgent.api.com.atproto.server.createAccount({
+    const res = await entrywayAgent.api.com.atproto.server.createAccount({
       email: 'alice@test.com',
       handle: 'alice.test',
       password: 'test123',
     })
-    await moveAccountToPds(did, pds, { entryway, plc })
-    const {
-      data: { accessJwt },
-    } = await entrywayAgent.api.com.atproto.server.createSession({
-      identifier: 'alice@test.com',
-      password: 'test123',
-    })
-    alice = did
-    accessToken = accessJwt
+    alice = res.data.did
+    accessToken = res.data.accessJwt
+
+    const account = await pds.ctx.accountManager.getAccount(alice)
+    expect(account?.did).toEqual(alice)
+    expect(account?.handle).toEqual('alice.test')
   })
 
   it('auths with both services.', async () => {
@@ -166,53 +160,6 @@ const createEntryway = async (
   await server.ctx.db.migrateToLatestOrThrow()
   await server.start()
   return server
-}
-
-// @TODO temporary helper while createAccount flow isn't complete w/ reserveSigningKey
-const moveAccountToPds = async (
-  did: string,
-  pds: TestPds,
-  services: { entryway: pdsEntryway.PDS; plc: TestPlc },
-) => {
-  const { entryway, plc } = services
-  const account = await entryway.ctx.services
-    .account(entryway.ctx.db)
-    .getAccount(did)
-  assert(account)
-  const signingKey = await Secp256k1Keypair.create({ exportable: true })
-  const commit = await pds.ctx.actorStore.create(
-    did,
-    signingKey,
-    (actorTxn) => {
-      return actorTxn.repo.createRepo([])
-    },
-  )
-  await pds.ctx.accountManager.createAccount({
-    did,
-    email: `${did}@email.invalid`,
-    handle: account.handle,
-    password: randomStr(8, 'base32'),
-    repoCid: commit.cid,
-    repoRev: commit.rev,
-    inviteCode: undefined,
-  })
-  const plcClient = plc.getClient()
-  await plcClient.updatePds(
-    did,
-    entryway.ctx.plcRotationKey,
-    pds.ctx.cfg.service.publicUrl,
-  )
-  await plcClient.updateAtprotoKey(
-    did,
-    entryway.ctx.plcRotationKey,
-    signingKey.did(),
-  )
-  await entryway.ctx.services.repo(entryway.ctx.db).deleteRepo(did)
-  await entryway.ctx.db.db
-    .updateTable('user_account')
-    .set({ pdsId: entryway.ctx.db.db.selectFrom('pds').select('id').limit(1) })
-    .where('did', '=', did)
-    .execute()
 }
 
 const getPublicHex = (key: Secp256k1Keypair) => {
