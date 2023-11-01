@@ -16,7 +16,7 @@ export interface InputSchema {
   inviteCode?: string
   password: string
   recoveryKey?: string
-  plcOp?: Uint8Array
+  plcOp?: {}
   [k: string]: unknown
 }
 

@@ -1,6 +1,6 @@
 import fs from 'fs'
 import { join } from 'path'
-import { lexiconDoc, LexiconDoc } from '@atproto/lexicon'
+import { parseLexiconDoc, LexiconDoc } from '@atproto/lexicon'
 import { ZodError, ZodFormattedError } from 'zod'
 import chalk from 'chalk'
 import { GeneratedAPI, FileDiff } from './types'
@@ -41,8 +41,7 @@ export function readLexicon(path: string): LexiconDoc {
     typeof (obj as LexiconDoc).lexicon === 'number'
   ) {
     try {
-      lexiconDoc.parse(obj)
-      return obj as LexiconDoc
+      return parseLexiconDoc(obj)
     } catch (e) {
       console.error(`Invalid lexicon`, path)
       if (e instanceof ZodError) {
