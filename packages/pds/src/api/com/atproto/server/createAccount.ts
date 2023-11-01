@@ -68,39 +68,46 @@ export default function (server: Server, ctx: AppContext) {
         signingKey,
       )
 
-      const commit = await ctx.actorStore.create(
-        did,
-        signingKey,
-        (actorTxn) => {
-          return actorTxn.repo.createRepo([])
-        },
-      )
+      let didDoc
+      let creds
+      try {
+        const commit = await ctx.actorStore.create(
+          did,
+          signingKey,
+          (actorTxn) => {
+            return actorTxn.repo.createRepo([])
+          },
+        )
 
-      // Generate a real did with PLC
-      if (plcOp) {
-        try {
-          await ctx.plcClient.sendOperation(did, plcOp)
-        } catch (err) {
-          req.log.error(
-            { didKey: ctx.plcRotationKey.did(), handle },
-            'failed to create did:plc',
-          )
-          throw err
+        // Generate a real did with PLC
+        if (plcOp) {
+          try {
+            await ctx.plcClient.sendOperation(did, plcOp)
+          } catch (err) {
+            req.log.error(
+              { didKey: ctx.plcRotationKey.did(), handle },
+              'failed to create did:plc',
+            )
+            throw err
+          }
         }
+
+        creds = await ctx.accountManager.createAccount({
+          did,
+          handle,
+          email,
+          password,
+          repoCid: commit.cid,
+          repoRev: commit.rev,
+          inviteCode,
+        })
+
+        await ctx.sequencer.sequenceCommit(did, commit, [])
+        didDoc = await didDocForSession(ctx, did, true)
+      } catch (err) {
+        await ctx.actorStore.destroy(did)
+        throw err
       }
-      const { access, refresh } = await ctx.accountManager.createAccount({
-        did,
-        handle,
-        email,
-        password,
-        repoCid: commit.cid,
-        repoRev: commit.rev,
-        inviteCode,
-      })
-
-      await ctx.sequencer.sequenceCommit(did, commit, [])
-
-      const didDoc = await didDocForSession(ctx, did, true)
 
       return {
         encoding: 'application/json',
@@ -108,8 +115,8 @@ export default function (server: Server, ctx: AppContext) {
           handle,
           did: did,
           didDoc,
-          accessJwt: access.jwt,
-          refreshJwt: refresh.jwt,
+          accessJwt: creds.access.jwt,
+          refreshJwt: creds.refresh.jwt,
         },
       }
     },
