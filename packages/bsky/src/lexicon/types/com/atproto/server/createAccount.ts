@@ -11,11 +11,11 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
-  email: string
+  email?: string
   handle: string
   did?: string
   inviteCode?: string
-  password: string
+  password?: string
   recoveryKey?: string
   plcOp?: {}
   [k: string]: unknown
