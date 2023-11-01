@@ -4,10 +4,8 @@ import * as refreshToken from './refresh-token'
 import * as appPassword from './app-password'
 import * as inviteCode from './invite-code'
 import * as emailToken from './email-token'
-import * as appMigration from './app-migration'
 
-export type DatabaseSchema = appMigration.PartialDB &
-  account.PartialDB &
+export type DatabaseSchema = account.PartialDB &
   refreshToken.PartialDB &
   appPassword.PartialDB &
   repoRoot.PartialDB &
@@ -20,4 +18,3 @@ export type { RefreshToken } from './refresh-token'
 export type { AppPassword } from './app-password'
 export type { InviteCode, InviteCodeUse } from './invite-code'
 export type { EmailToken, EmailTokenPurpose } from './email-token'
-export type { AppMigration } from './app-migration'

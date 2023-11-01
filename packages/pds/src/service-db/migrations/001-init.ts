@@ -2,13 +2,6 @@ import { Kysely, sql } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
-    .createTable('app_migration')
-    .addColumn('id', 'varchar', (col) => col.primaryKey())
-    .addColumn('success', 'int2', (col) => col.notNull().defaultTo(0))
-    .addColumn('completedAt', 'varchar', (col) => col)
-    .execute()
-
-  await db.schema
     .createTable('app_password')
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('name', 'varchar', (col) => col.notNull())
@@ -113,5 +106,4 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('invite_code_use').execute()
   await db.schema.dropTable('invite_code').execute()
   await db.schema.dropTable('app_password').execute()
-  await db.schema.dropTable('app_migration').execute()
 }
