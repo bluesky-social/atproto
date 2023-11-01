@@ -32,6 +32,7 @@ export { DiskBlobStore } from './disk-blobstore'
 export { AppContext } from './context'
 export { httpLogger } from './logger'
 
+// @NOTE added to get a PR diff
 export class PDS {
   public ctx: AppContext
   public app: express.Application
