@@ -44,19 +44,21 @@ export class Lexicons {
    * Add a lexicon doc.
    */
   add(doc: unknown): void {
-    try {
-      lexiconDoc.parse(doc)
-    } catch (e) {
-      if (e instanceof ZodError) {
-        throw new LexiconDocMalformedError(
-          `Failed to parse schema definition ${
-            (doc as Record<string, string>).id
-          }`,
-          doc,
-          e.issues,
-        )
-      } else {
-        throw e
+    if (process.env.NODE_ENV !== 'production') {
+      try {
+        lexiconDoc.parse(doc)
+      } catch (e) {
+        if (e instanceof ZodError) {
+          throw new LexiconDocMalformedError(
+            `Failed to parse schema definition ${
+              (doc as Record<string, string>).id
+            }`,
+            doc,
+            e.issues,
+          )
+        } else {
+          throw e
+        }
       }
     }
     const validatedDoc = doc as LexiconDoc
