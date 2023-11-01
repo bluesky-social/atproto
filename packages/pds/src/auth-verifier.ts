@@ -1,6 +1,7 @@
 import { KeyObject, createPublicKey, createSecretKey } from 'node:crypto'
 import {
   AuthRequiredError,
+  ForbiddenError,
   InvalidRequestError,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
@@ -10,6 +11,7 @@ import express from 'express'
 import * as jose from 'jose'
 import KeyEncoder from 'key-encoder'
 import { AccountManager } from './account-manager'
+import { softDeleted } from './db'
 
 type ReqCtx = {
   req: express.Request
@@ -121,6 +123,10 @@ export class AuthVerifier {
     ])
     const found = await this.accountManager.getAccount(result.credentials.did)
     if (!found) {
+      // will be turned into ExpiredToken for the client if proxied by entryway
+      throw new ForbiddenError('Account not found', 'AccountNotFound')
+    }
+    if (softDeleted(found)) {
       throw new AuthRequiredError(
         'Account has been taken down',
         'AccountTakedown',
