@@ -9,7 +9,11 @@ import { CID } from 'multiformats/cid'
 
 export interface QueryParams {}
 
-export type InputSchema = undefined
+export interface InputSchema {
+  /** The did to reserve a new did:key for */
+  did?: string
+  [k: string]: unknown
+}
 
 export interface OutputSchema {
   /** Public signing key in the form of a did:key. */
@@ -20,6 +24,7 @@ export interface OutputSchema {
 export interface CallOptions {
   headers?: Headers
   qp?: QueryParams
+  encoding: 'application/json'
 }
 
 export interface Response {

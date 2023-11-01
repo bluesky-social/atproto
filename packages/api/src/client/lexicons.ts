@@ -2489,7 +2489,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['handle', 'email', 'password'],
+            required: ['handle'],
             properties: {
               email: {
                 type: 'string',
@@ -3170,6 +3170,18 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description: 'Reserve a repo signing key for account creation.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              did: {
+                type: 'string',
+                description: 'The did to reserve a new did:key for',
+              },
+            },
+          },
+        },
         output: {
           encoding: 'application/json',
           schema: {
