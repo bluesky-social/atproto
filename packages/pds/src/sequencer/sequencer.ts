@@ -169,16 +169,21 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
         this.emit('events', evts)
         this.lastSeen = evts.at(-1)?.seq ?? this.lastSeen
       } else {
-        this.triesWithNoResults++
-        // when no results, exponential backoff on pulling, with a max of a second wait
-        const waitTime = Math.min(Math.pow(2, this.triesWithNoResults), SECOND)
-        await wait(waitTime)
+        await this.exponentialBackoff()
       }
       this.pollPromise = this.pollDb()
     } catch (err) {
       log.error({ err, lastSeen: this.lastSeen }, 'sequencer failed to poll db')
+      await this.exponentialBackoff()
       this.pollPromise = this.pollDb()
     }
+  }
+
+  // when no results, exponential backoff on pulling, with a max of a second wait
+  private async exponentialBackoff(): Promise<void> {
+    this.triesWithNoResults++
+    const waitTime = Math.min(Math.pow(2, this.triesWithNoResults), SECOND)
+    await wait(waitTime)
   }
 
   async sequenceEvt(evt: RepoSeqInsert) {

@@ -89,8 +89,11 @@ export class AccountManager {
     })
     const refreshPayload = auth.decodeRefreshToken(refreshJwt)
     const now = new Date().toISOString()
-    await this.db.transaction((dbTxn) =>
-      Promise.all([
+    await this.db.transaction(async (dbTxn) => {
+      if (inviteCode) {
+        await invite.ensureInviteIsAvailable(dbTxn, inviteCode)
+      }
+      await Promise.all([
         account.registerActor(dbTxn, { did, handle }),
         email && passwordScrypt
           ? account.registerAccount(dbTxn, { did, email, passwordScrypt })
@@ -101,8 +104,8 @@ export class AccountManager {
           now,
         }),
         auth.storeRefreshToken(dbTxn, refreshPayload, null),
-      ]),
-    )
+      ])
+    })
     return { accessJwt, refreshJwt }
   }
 
@@ -258,9 +261,16 @@ export class AccountManager {
   async createAccountInviteCodes(
     forAccount: string,
     codes: string[],
+    expectedTotal: number,
     disabled: 0 | 1,
   ) {
-    return invite.createAccountInviteCodes(this.db, forAccount, codes, disabled)
+    return invite.createAccountInviteCodes(
+      this.db,
+      forAccount,
+      codes,
+      expectedTotal,
+      disabled,
+    )
   }
 
   async getAccountInvitesCodes(did: string) {

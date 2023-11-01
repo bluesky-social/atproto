@@ -36,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
         ctx.cfg.invites.required &&
         ctx.cfg.invites.interval !== null
       ) {
-        const { toCreate } = calculateCodesToCreate({
+        const { toCreate, total } = calculateCodesToCreate({
           did: requester,
           userCreatedAt: new Date(account.createdAt).getTime(),
           codes: userCodes,
@@ -48,6 +48,7 @@ export default function (server: Server, ctx: AppContext) {
           created = await ctx.accountManager.createAccountInviteCodes(
             requester,
             codes,
+            total,
             account.invitesDisabled ?? 0,
           )
         }
