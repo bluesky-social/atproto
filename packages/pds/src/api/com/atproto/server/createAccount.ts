@@ -1,5 +1,6 @@
 import { MINUTE, check } from '@atproto/common'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
+import { XRPCError } from '@atproto/xrpc'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as plc from '@did-plc/lib'
 import disposable from 'disposable-email'
@@ -141,9 +142,10 @@ export default function (server: Server, ctx: AppContext) {
         } else {
           const agent = ctx.pdsAgents.get(pds.host)
           await agent.com.atproto.server.createAccount({
-            ...input.body,
             did,
             plcOp: plcOp ?? undefined,
+            handle: input.body.handle,
+            recoveryKey: input.body.recoveryKey,
           })
         }
 
@@ -342,9 +344,16 @@ const assignPds = async (ctx: AppContext) => {
 }
 
 const reserveSigningKey = async (ctx: AppContext, host: string) => {
-  const agent = ctx.pdsAgents.get(host)
-  const result = await agent.com.atproto.server.reserveSigningKey()
-  return result.data.signingKey
+  try {
+    const agent = ctx.pdsAgents.get(host)
+    const result = await agent.com.atproto.server.reserveSigningKey({})
+    return result.data.signingKey
+  } catch (err) {
+    if (err instanceof XRPCError) {
+      throw new InvalidRequestError('failed to reserve signing key')
+    }
+    throw err
+  }
 }
 
 const randomIndexByWeight = (weights) => {
