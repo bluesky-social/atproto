@@ -2,7 +2,7 @@ import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { isThisPds, resultPassthru } from '../../../proxy'
+import { proxy, resultPassthru } from '../../../proxy'
 import { softDeleted } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -11,9 +11,17 @@ export default function (server: Server, ctx: AppContext) {
     const account = await ctx.services.account(ctx.db).getAccount(repo)
 
     // fetch from pds if available, if not then fetch from appview
-    if (!account || !isThisPds(ctx, account.pdsDid)) {
+    if (!account) {
       const res = await ctx.appViewAgent.api.com.atproto.repo.getRecord(params)
       return resultPassthru(res)
+    }
+
+    const proxied = await proxy(ctx, account.pdsDid, async (agent) => {
+      const result = await agent.api.com.atproto.repo.getRecord(params)
+      return resultPassthru(result)
+    })
+    if (proxied !== null) {
+      return proxied
     }
 
     const uri = AtUri.make(account.did, collection, rkey)

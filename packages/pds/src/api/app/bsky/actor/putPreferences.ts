@@ -2,12 +2,26 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { UserPreference } from '../../../../services/account'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { authPassthru, proxy } from '../../../proxy'
 
-// @TODO may need to proxy to pds
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.putPreferences({
     auth: ctx.authVerifier.accessCheckTakedown,
-    handler: async ({ auth, input }) => {
+    handler: async ({ auth, input, req }) => {
+      const proxied = await proxy(
+        ctx,
+        auth.credentials.audience,
+        async (agent) => {
+          await agent.api.app.bsky.actor.putPreferences(
+            input.body,
+            authPassthru(req, true),
+          )
+        },
+      )
+      if (proxied !== null) {
+        return proxied
+      }
+
       const { preferences } = input.body
       const requester = auth.credentials.did
       const { services, db } = ctx
