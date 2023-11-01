@@ -2,7 +2,7 @@ import { ensureAtpDocument } from '@atproto/identity'
 import * as plc from '@did-plc/lib'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { cborDecode, check, cidForCbor } from '@atproto/common'
+import { check, cidForCbor } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
