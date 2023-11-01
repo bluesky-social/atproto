@@ -1,4 +1,4 @@
-import { MINUTE, cborDecode, cborEncode, check } from '@atproto/common'
+import { MINUTE, check } from '@atproto/common'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as plc from '@did-plc/lib'
@@ -136,7 +136,7 @@ export default function (server: Server, ctx: AppContext) {
           await agent.com.atproto.server.createAccount({
             ...input.body,
             did,
-            plcOp: plcOp ? cborEncode(plcOp) : undefined,
+            plcOp: plcOp ?? undefined,
           })
         }
 
@@ -223,7 +223,7 @@ const getDidAndPlcOp = async (
     let atpData: AtprotoData
     let plcOp: plc.Operation
     try {
-      plcOp = check.assure(plc.def.operation, cborDecode(input.plcOp))
+      plcOp = check.assure(plc.def.operation, input.plcOp)
       const did = await plc.didForCreateOp(plcOp)
       const docData = await plc.assureValidCreationOp(did, plcOp)
       const doc = plc.formatDidDoc(docData)
