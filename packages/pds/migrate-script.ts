@@ -101,6 +101,11 @@ const migrateRepo = async (
       .where('did', '=', did)
       .set({ pdsId: pds.id })
       .execute()
+    await ctx.db.db
+      .updateTable('repo_root')
+      .where('did', '=', did)
+      .set({ did: `migrated-${did}` })
+      .execute()
   } catch (err) {
     console.error()
   } finally {
