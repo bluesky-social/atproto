@@ -62,26 +62,17 @@ export class AccountManager {
   async createAccount(opts: {
     did: string
     handle: string
-    email: string
-    password: string
+    email?: string
+    password?: string
     repoCid: CID
     repoRev: string
     inviteCode?: string
   }) {
-    const passwordScrypt = await scrypt.genSaltAndHash(opts.password)
-    const auth = await this.registerAccount({ ...opts, passwordScrypt })
-    await repo.updateRoot(this.db, opts.did, opts.repoCid, opts.repoRev)
-    return auth
-  }
+    const { did, handle, email, password, repoCid, repoRev, inviteCode } = opts
+    const passwordScrypt = password
+      ? await scrypt.genSaltAndHash(password)
+      : undefined
 
-  async registerAccount(opts: {
-    did: string
-    handle: string
-    email?: string
-    passwordScrypt?: string
-    inviteCode?: string
-  }) {
-    const { did, handle, email, passwordScrypt, inviteCode } = opts
     const { accessJwt, refreshJwt } = await auth.createTokens({
       jwtKey: this.jwtKey,
       did,
@@ -104,6 +95,7 @@ export class AccountManager {
           now,
         }),
         auth.storeRefreshToken(dbTxn, refreshPayload, null),
+        repo.updateRoot(this.db, did, repoCid, repoRev),
       ])
     })
     return { accessJwt, refreshJwt }

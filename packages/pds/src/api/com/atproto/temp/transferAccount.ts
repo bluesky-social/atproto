@@ -11,6 +11,10 @@ export default function (server: Server, ctx: AppContext) {
       const { did, handle } = input.body
 
       const signingKey = await ctx.actorStore.keypair(did)
+      const currRoot = await ctx.actorStore.read(did, (store) =>
+        store.repo.storage.getRootDetailed(),
+      )
+
       const plcOp = await verifyDidAndPlcOp(
         ctx,
         did,
@@ -21,11 +25,12 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.plcClient.sendOperation(did, plcOp)
 
-      const { accessJwt, refreshJwt } =
-        await ctx.accountManager.registerAccount({
-          did,
-          handle,
-        })
+      const { accessJwt, refreshJwt } = await ctx.accountManager.createAccount({
+        did,
+        handle,
+        repoCid: currRoot.cid,
+        repoRev: currRoot.rev,
+      })
 
       return {
         encoding: 'application/json',
