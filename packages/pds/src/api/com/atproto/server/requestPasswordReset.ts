@@ -12,7 +12,7 @@ export default function (server: Server, ctx: AppContext) {
         .account(ctx.db)
         .createEmailToken(user.did, 'reset_password')
       await ctx.mailer.sendResetPassword(
-        { handle: user.handle, token },
+        { identifier: user.handle ?? user.email, token },
         { to: user.email },
       )
     }

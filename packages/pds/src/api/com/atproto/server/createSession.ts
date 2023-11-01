@@ -1,4 +1,5 @@
 import { DAY, MINUTE } from '@atproto/common'
+import { INVALID_HANDLE } from '@atproto/syntax'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
@@ -65,7 +66,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           did: user.did,
           didDoc,
-          handle: user.handle,
+          handle: user.handle ?? INVALID_HANDLE,
           email: user.email,
           emailConfirmed: !!user.emailConfirmedAt,
           accessJwt: access.jwt,

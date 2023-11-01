@@ -36,6 +36,7 @@ describe('views with thread gating', () => {
       { post: post.ref.uriStr, createdAt: iso(), allow: [] },
       sc.getHeaders(sc.dids.carol),
     )
+    await network.processAll()
     await sc.reply(sc.dids.alice, post.ref, post.ref, 'empty rules reply')
     await network.processAll()
     const {
@@ -78,6 +79,7 @@ describe('views with thread gating', () => {
       },
       sc.getHeaders(sc.dids.carol),
     )
+    await network.processAll()
     await sc.reply(
       sc.dids.alice,
       post.ref,
@@ -125,6 +127,7 @@ describe('views with thread gating', () => {
       },
       sc.getHeaders(sc.dids.carol),
     )
+    await network.processAll()
     // carol only follows alice
     await sc.reply(
       sc.dids.dan,
@@ -213,6 +216,7 @@ describe('views with thread gating', () => {
       },
       sc.getHeaders(sc.dids.carol),
     )
+    await network.processAll()
     //
     await sc.reply(sc.dids.bob, post.ref, post.ref, 'list rule reply disallow')
     const aliceReply = await sc.reply(
@@ -277,6 +281,7 @@ describe('views with thread gating', () => {
       },
       sc.getHeaders(sc.dids.carol),
     )
+    await network.processAll()
     await sc.reply(
       sc.dids.alice,
       post.ref,
@@ -317,6 +322,7 @@ describe('views with thread gating', () => {
       },
       sc.getHeaders(sc.dids.carol),
     )
+    await network.processAll()
     // carol only follows alice, and the post mentions dan.
     await sc.reply(sc.dids.bob, post.ref, post.ref, 'multi rule reply disallow')
     const aliceReply = await sc.reply(
@@ -372,6 +378,7 @@ describe('views with thread gating', () => {
       { post: post.ref.uriStr, createdAt: iso() },
       sc.getHeaders(sc.dids.carol),
     )
+    await network.processAll()
     const aliceReply = await sc.reply(
       sc.dids.alice,
       post.ref,
@@ -406,6 +413,7 @@ describe('views with thread gating', () => {
       },
       sc.getHeaders(sc.dids.carol),
     )
+    await network.processAll()
     // carol only follows alice
     const orphanedReply = await sc.reply(
       sc.dids.alice,
@@ -465,6 +473,7 @@ describe('views with thread gating', () => {
       { post: post.ref.uriStr, createdAt: iso(), allow: [] },
       sc.getHeaders(sc.dids.carol),
     )
+    await network.processAll()
     const selfReply = await sc.reply(
       sc.dids.carol,
       post.ref,
@@ -498,6 +507,7 @@ describe('views with thread gating', () => {
       },
       sc.getHeaders(sc.dids.carol),
     )
+    await network.processAll()
     // carol only follows alice
     const badReply = await sc.reply(
       sc.dids.dan,
@@ -541,6 +551,7 @@ describe('views with thread gating', () => {
       { post: postB.ref.uriStr, createdAt: iso(), allow: [] },
       sc.getHeaders(sc.dids.carol),
     )
+    await network.processAll()
     await sc.reply(sc.dids.alice, postA.ref, postA.ref, 'ungated reply')
     await sc.reply(sc.dids.alice, postB.ref, postB.ref, 'ungated reply')
     await network.processAll()

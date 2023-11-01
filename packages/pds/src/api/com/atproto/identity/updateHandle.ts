@@ -64,9 +64,10 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       try {
-        await ctx.db.transaction(async (dbTxn) => {
-          await ctx.services.account(dbTxn).sequenceHandle(seqHandleTok)
-        })
+        await ctx.sequencer.sequenceHandleUpdate(
+          seqHandleTok.did,
+          seqHandleTok.handle,
+        )
       } catch (err) {
         httpLogger.error(
           { err, did: requester, handle },

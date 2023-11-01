@@ -1,10 +1,12 @@
+import stream from 'stream'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { byteIterableToStream } from '@atproto/common'
 import { Server } from '../../../../lexicon'
-import SqlRepoStorage, {
-  RepoRootNotFoundError,
-} from '../../../../sql-repo-storage'
 import AppContext from '../../../../context'
+import {
+  RepoRootNotFoundError,
+  SqlRepoReader,
+} from '../../../../actor-store/repo/sql-repo-reader'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRepo({
@@ -21,21 +23,31 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const storage = new SqlRepoStorage(ctx.db, did)
-      let carStream: AsyncIterable<Uint8Array>
-      try {
-        carStream = await storage.getCarStream(since)
-      } catch (err) {
-        if (err instanceof RepoRootNotFoundError) {
-          throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
-        }
-        throw err
-      }
+      const carStream = await getCarStream(ctx, did, since)
 
       return {
         encoding: 'application/vnd.ipld.car',
-        body: byteIterableToStream(carStream),
+        body: carStream,
       }
     },
   })
+}
+
+export const getCarStream = async (
+  ctx: AppContext,
+  did: string,
+  since?: string,
+): Promise<stream.Readable> => {
+  const actorDb = await ctx.actorStore.db(did)
+  const storage = new SqlRepoReader(actorDb)
+  let carIter: AsyncIterable<Uint8Array>
+  try {
+    carIter = await storage.getCarStream(since)
+  } catch (err) {
+    if (err instanceof RepoRootNotFoundError) {
+      throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
+    }
+    throw err
+  }
+  return byteIterableToStream(carIter)
 }

@@ -1,16 +1,17 @@
 import { MINUTE } from '@atproto/common'
 import { AtprotoData } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as plc from '@did-plc/lib'
+import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import disposable from 'disposable-email'
 import { normalizeAndValidateHandle } from '../../../../handle'
-import * as scrypt from '../../../../db/scrypt'
+import * as plc from '@did-plc/lib'
+import * as scrypt from '../../../../services/account/scrypt'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
 import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
-import Database from '../../../../db'
+import { ServiceDb } from '../../../../service-db'
 import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -52,28 +53,42 @@ export default function (server: Server, ctx: AppContext) {
 
       // determine the did & any plc ops we need to send
       // if the provided did document is poorly setup, we throw
-      const { did, plcOp } = await getDidAndPlcOp(ctx, handle, input.body)
+      const signingKey = await Secp256k1Keypair.create({ exportable: true })
+      const { did, plcOp } = await getDidAndPlcOp(
+        ctx,
+        handle,
+        input.body,
+        signingKey,
+      )
+      const commit = await ctx.actorStore.create(
+        did,
+        signingKey,
+        (actorTxn) => {
+          return actorTxn.repo.createRepo([])
+        },
+      )
 
       const now = new Date().toISOString()
       const passwordScrypt = await scrypt.genSaltAndHash(password)
 
       const result = await ctx.db.transaction(async (dbTxn) => {
-        const actorTxn = ctx.services.account(dbTxn)
-        const repoTxn = ctx.services.repo(dbTxn)
+        const accountTxn = ctx.services.account(dbTxn)
+
+        await accountTxn.updateRepoRoot(did, commit.cid, commit.rev)
 
         // it's a bit goofy that we run this logic twice,
         // but we run it once for a sanity check before doing scrypt & plc ops
         // & a second time for locking + integrity check
         if (ctx.cfg.invites.required && inviteCode) {
-          await ensureCodeIsAvailable(dbTxn, inviteCode, true)
+          await ensureCodeIsAvailable(dbTxn, inviteCode)
         }
 
         // Register user before going out to PLC to get a real did
         try {
-          await actorTxn.registerUser({ email, handle, did, passwordScrypt })
+          await accountTxn.registerUser({ email, handle, did, passwordScrypt })
         } catch (err) {
           if (err instanceof UserAlreadyExistsError) {
-            const got = await actorTxn.getAccount(handle, true)
+            const got = await accountTxn.getAccount(handle, true)
             if (got) {
               throw new InvalidRequestError(`Handle already taken: ${handle}`)
             } else {
@@ -112,15 +127,17 @@ export default function (server: Server, ctx: AppContext) {
           .auth(dbTxn)
           .createSession(did, null)
 
-        // Setup repo root
-        await repoTxn.createRepo(did, [], now)
-
         return {
           did,
           accessJwt: access.jwt,
           refreshJwt: refresh.jwt,
         }
       })
+
+      await ctx.sequencer.sequenceCommit(did, commit, [])
+      await ctx.services
+        .account(ctx.db)
+        .updateRepoRoot(did, commit.cid, commit.rev)
 
       const didDoc = await didDocForSession(ctx, result.did, true)
 
@@ -139,23 +156,15 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 export const ensureCodeIsAvailable = async (
-  db: Database,
+  db: ServiceDb,
   inviteCode: string,
-  withLock = false,
 ): Promise<void> => {
-  const { ref } = db.db.dynamic
   const invite = await db.db
     .selectFrom('invite_code')
-    .selectAll()
-    .whereNotExists((qb) =>
-      qb
-        .selectFrom('repo_root')
-        .selectAll()
-        .where('takedownRef', 'is not', null)
-        .whereRef('did', '=', ref('invite_code.forUser')),
-    )
+    .leftJoin('account', 'account.did', 'invite_code.forAccount')
+    .where('takedownRef', 'is', null)
+    .selectAll('invite_code')
     .where('code', '=', inviteCode)
-    .if(withLock && db.dialect === 'pg', (qb) => qb.forUpdate().skipLocked())
     .executeTakeFirst()
 
   if (!invite || invite.disabled) {
@@ -183,6 +192,7 @@ const getDidAndPlcOp = async (
   ctx: AppContext,
   handle: string,
   input: CreateAccountInput,
+  signingKey: Keypair,
 ): Promise<{
   did: string
   plcOp: plc.Operation | null
@@ -198,7 +208,7 @@ const getDidAndPlcOp = async (
       rotationKeys.unshift(input.recoveryKey)
     }
     const plcCreate = await plc.createOp({
-      signingKey: ctx.repoSigningKey.did(),
+      signingKey: signingKey.did(),
       rotationKeys,
       handle,
       pds: ctx.cfg.service.publicUrl,
@@ -232,7 +242,7 @@ const getDidAndPlcOp = async (
       'DID document pds endpoint does not match service endpoint',
       'IncompatibleDidDoc',
     )
-  } else if (atpData.signingKey !== ctx.repoSigningKey.did()) {
+  } else if (atpData.signingKey !== signingKey.did()) {
     throw new InvalidRequestError(
       'DID document signing key does not match service signing key',
       'IncompatibleDidDoc',

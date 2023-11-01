@@ -4,14 +4,14 @@ import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { CommitData, readCarWithRoot, verifyRepo } from '@atproto/repo'
 import AppContext from '../src/context'
 import { PreparedWrite, prepareCreate } from '../src/repo'
-import SqlRepoStorage from '../src/sql-repo-storage'
-import { ConcurrentWriteError } from '../src/services/repo'
+import { Keypair } from '@atproto/crypto'
 
-describe('crud operations', () => {
+describe('races', () => {
   let network: TestNetworkNoAppView
   let ctx: AppContext
   let agent: AtpAgent
   let did: string
+  let signingKey: Keypair
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -25,6 +25,7 @@ describe('crud operations', () => {
       password: 'alice-pass',
     })
     did = agent.session?.did || ''
+    signingKey = await network.pds.ctx.actorStore.keypair(did)
   })
 
   afterAll(async () => {
@@ -41,10 +42,9 @@ describe('crud operations', () => {
       },
       validate: true,
     })
-    const storage = new SqlRepoStorage(ctx.db, did)
-    const commit = await ctx.services
-      .repo(ctx.db)
-      .formatCommit(storage, did, [write])
+    const commit = await ctx.actorStore.transact(did, (store) =>
+      store.repo.formatCommit([write]),
+    )
     return { write, commit }
   }
 
@@ -55,22 +55,10 @@ describe('crud operations', () => {
     waitMs: number,
   ) => {
     const now = new Date().toISOString()
-    await ctx.db.transaction(async (dbTxn) => {
-      const storage = new SqlRepoStorage(dbTxn, did, now)
-      const locked = await storage.lockRepo()
-      if (!locked) {
-        throw new ConcurrentWriteError()
-      }
+    await ctx.actorStore.transact(did, async (store) => {
+      await store.repo.storage.applyCommit(commitData)
       await wait(waitMs)
-      const srvc = ctx.services.repo(dbTxn)
-      await Promise.all([
-        // persist the commit to repo storage
-        storage.applyCommit(commitData),
-        // & send to indexing
-        srvc.indexWrites(writes, now),
-        // do any other processing needed after write
-        srvc.afterWriteProcessing(did, commitData, writes),
-      ])
+      await store.repo.indexWrites(writes, now)
     })
   }
 
@@ -94,7 +82,7 @@ describe('crud operations', () => {
       car.blocks,
       car.root,
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     expect(verified.creates.length).toBe(2)
     expect(verified.creates[0].cid.equals(write.cid)).toBeTruthy()

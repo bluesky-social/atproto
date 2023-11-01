@@ -1,57 +1,39 @@
-import { sql } from 'kysely'
+import { CID } from 'multiformats/cid'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { MINUTE, lessThanAgoMs } from '@atproto/common'
-import { dbLogger as log } from '../../logger'
-import Database from '../../db'
-import * as scrypt from '../../db/scrypt'
-import { UserAccountEntry } from '../../db/tables/user-account'
-import { DidHandle } from '../../db/tables/did-handle'
-import { RepoRoot } from '../../db/tables/repo-root'
-import { countAll, notSoftDeletedClause } from '../../db/util'
-import { paginate, TimeCidKeyset } from '../../db/pagination'
-import * as sequencer from '../../sequencer'
-import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
-import { EmailTokenPurpose } from '../../db/tables/email-token'
-import { getRandomToken } from '../../api/com/atproto/server/util'
-import { AccountView } from '../../lexicon/types/com/atproto/admin/defs'
 import { INVALID_HANDLE } from '@atproto/syntax'
+import { dbLogger as log } from '../../logger'
+import * as scrypt from './scrypt'
+import { countAll, notSoftDeletedClause } from '../../db/util'
+import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
+import { getRandomToken } from '../../api/com/atproto/server/util'
+import { ServiceDb, AccountEntry, EmailTokenPurpose } from '../../service-db'
+import { TimeCidKeyset } from '../../db/pagination'
+import { StatusAttr } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { AccountView } from '../../lexicon/types/com/atproto/admin/defs'
 
 export class AccountService {
-  constructor(public db: Database) {}
-
-  static creator() {
-    return (db: Database) => new AccountService(db)
-  }
+  constructor(public db: ServiceDb) {}
 
   async getAccount(
     handleOrDid: string,
     includeSoftDeleted = false,
-  ): Promise<(UserAccountEntry & DidHandle & RepoRoot) | null> {
+  ): Promise<AccountEntry | null> {
     const { ref } = this.db.db.dynamic
     const result = await this.db.db
-      .selectFrom('user_account')
-      .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .selectFrom('account')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('account'))),
       )
       .where((qb) => {
         if (handleOrDid.startsWith('did:')) {
-          return qb.where('did_handle.did', '=', handleOrDid)
+          return qb.where('account.did', '=', handleOrDid)
         } else {
-          // lower() is a little hack to avoid using the handle trgm index here, which is slow. not sure why it was preferring
-          // the handle trgm index over the handle unique index. in any case, we end-up using did_handle_handle_lower_idx instead, which is fast.
-          return qb.where(
-            sql`lower(${ref('did_handle.handle')})`,
-            '=',
-            handleOrDid,
-          )
+          return qb.where('account.handle', '=', handleOrDid)
         }
       })
-      .selectAll('user_account')
-      .selectAll('did_handle')
-      .selectAll('repo_root')
+      .selectAll()
       .executeTakeFirst()
     return result || null
   }
@@ -59,10 +41,11 @@ export class AccountService {
   // Repo exists and is not taken-down
   async isRepoAvailable(did: string) {
     const found = await this.db.db
-      .selectFrom('repo_root')
-      .where('did', '=', did)
-      .where('takedownRef', 'is', null)
-      .select('did')
+      .selectFrom('account')
+      .innerJoin('repo_root', 'repo_root.did', 'account.did')
+      .where('account.did', '=', did)
+      .where('account.takedownRef', 'is', null)
+      .select('account.did')
       .executeTakeFirst()
     return found !== undefined
   }
@@ -70,19 +53,15 @@ export class AccountService {
   async getAccountByEmail(
     email: string,
     includeSoftDeleted = false,
-  ): Promise<(UserAccountEntry & DidHandle & RepoRoot) | null> {
+  ): Promise<AccountEntry | null> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
-      .selectFrom('user_account')
-      .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .selectFrom('account')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('account'))),
       )
       .where('email', '=', email.toLowerCase())
-      .selectAll('user_account')
-      .selectAll('did_handle')
-      .selectAll('repo_root')
+      .selectAll('account')
       .executeTakeFirst()
     return found || null
   }
@@ -100,13 +79,12 @@ export class AccountService {
     }
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
-      .selectFrom('did_handle')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .selectFrom('account')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('account'))),
       )
       .where('handle', '=', handleOrDid)
-      .select('did_handle.did')
+      .select('did')
       .executeTakeFirst()
     return found ? found.did : null
   }
@@ -119,30 +97,20 @@ export class AccountService {
   }) {
     this.db.assertTransaction()
     const { email, handle, did, passwordScrypt } = opts
-    log.debug({ handle, email }, 'registering user')
-    const registerUserAccnt = this.db.db
-      .insertInto('user_account')
+    const registered = await this.db.db
+      .insertInto('account')
       .values({
         email: email.toLowerCase(),
         did,
+        handle,
         passwordScrypt,
         createdAt: new Date().toISOString(),
       })
       .onConflict((oc) => oc.doNothing())
       .returning('did')
       .executeTakeFirst()
-    const registerDidHandle = this.db.db
-      .insertInto('did_handle')
-      .values({ did, handle })
-      .onConflict((oc) => oc.doNothing())
-      .returning('handle')
-      .executeTakeFirst()
 
-    const [res1, res2] = await Promise.all([
-      registerUserAccnt,
-      registerDidHandle,
-    ])
-    if (!res1 || !res2) {
+    if (!registered) {
       throw new UserAlreadyExistsError()
     }
     log.info({ handle, email, did }, 'registered user')
@@ -155,13 +123,13 @@ export class AccountService {
     handle: string,
   ): Promise<HandleSequenceToken> {
     const res = await this.db.db
-      .updateTable('did_handle')
+      .updateTable('account')
       .set({ handle })
       .where('did', '=', did)
       .whereNotExists(
         // @NOTE see also condition in isHandleAvailable()
         this.db.db
-          .selectFrom('did_handle')
+          .selectFrom('account')
           .where('handle', '=', handle)
           .selectAll(),
       )
@@ -172,16 +140,25 @@ export class AccountService {
     return { did, handle }
   }
 
-  async sequenceHandle(tok: HandleSequenceToken) {
-    this.db.assertTransaction()
-    const seqEvt = await sequencer.formatSeqHandleUpdate(tok.did, tok.handle)
-    await sequencer.sequenceEvt(this.db, seqEvt)
+  async updateRepoRoot(did: string, cid: CID, rev: string) {
+    await this.db.db
+      .insertInto('repo_root')
+      .values({
+        did,
+        cid: cid.toString(),
+        rev,
+        indexedAt: new Date().toISOString(),
+      })
+      .onConflict((oc) =>
+        oc.column('did').doUpdateSet({ cid: cid.toString(), rev }),
+      )
+      .execute()
   }
 
   async getHandleDid(handle: string): Promise<string | null> {
     // @NOTE see also condition in updateHandle()
     const found = await this.db.db
-      .selectFrom('did_handle')
+      .selectFrom('account')
       .where('handle', '=', handle)
       .selectAll()
       .executeTakeFirst()
@@ -190,7 +167,7 @@ export class AccountService {
 
   async updateEmail(did: string, email: string) {
     await this.db.db
-      .updateTable('user_account')
+      .updateTable('account')
       .set({ email: email.toLowerCase(), emailConfirmedAt: null })
       .where('did', '=', did)
       .executeTakeFirst()
@@ -199,7 +176,7 @@ export class AccountService {
   async updateUserPassword(did: string, password: string) {
     const passwordScrypt = await scrypt.genSaltAndHash(password)
     await this.db.db
-      .updateTable('user_account')
+      .updateTable('account')
       .set({ passwordScrypt })
       .where('did', '=', did)
       .execute()
@@ -247,7 +224,7 @@ export class AccountService {
 
   async verifyAccountPassword(did: string, password: string): Promise<boolean> {
     const found = await this.db.db
-      .selectFrom('user_account')
+      .selectFrom('account')
       .selectAll()
       .where('did', '=', did)
       .executeTakeFirst()
@@ -278,118 +255,54 @@ export class AccountService {
       .execute()
   }
 
-  async search(opts: {
-    query: string
-    limit: number
-    cursor?: string
-    includeSoftDeleted?: boolean
-  }): Promise<(RepoRoot & DidHandle)[]> {
-    const { query, limit, cursor, includeSoftDeleted } = opts
-    const { ref } = this.db.db.dynamic
-
-    const builder = this.db.db
-      .selectFrom('did_handle')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
-      .innerJoin('user_account', 'user_account.did', 'did_handle.did')
-      .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
-      )
-      .where((qb) => {
-        // sqlite doesn't support "ilike", but performs "like" case-insensitively
-        const likeOp = this.db.dialect === 'pg' ? 'ilike' : 'like'
-        if (query.includes('@')) {
-          return qb.where('user_account.email', likeOp, `%${query}%`)
-        }
-        if (query.startsWith('did:')) {
-          return qb.where('did_handle.did', '=', query)
-        }
-        return qb.where('did_handle.handle', likeOp, `${query}%`)
-      })
-      .selectAll(['did_handle', 'repo_root'])
-
-    const keyset = new ListKeyset(
-      ref('repo_root.indexedAt'),
-      ref('did_handle.handle'),
-    )
-
-    return await paginate(builder, {
-      limit,
-      cursor,
-      keyset,
-    }).execute()
+  async getAccountTakedownStatus(did: string): Promise<StatusAttr | null> {
+    const res = await this.db.db
+      .selectFrom('account')
+      .select('takedownRef')
+      .where('did', '=', did)
+      .executeTakeFirst()
+    if (!res) return null
+    return res.takedownRef
+      ? { applied: true, ref: res.takedownRef }
+      : { applied: false }
   }
 
-  async list(opts: {
-    limit: number
-    cursor?: string
-    includeSoftDeleted?: boolean
-    invitedBy?: string
-  }): Promise<(RepoRoot & DidHandle)[]> {
-    const { limit, cursor, includeSoftDeleted, invitedBy } = opts
-    const { ref } = this.db.db.dynamic
-
-    let builder = this.db.db
-      .selectFrom('repo_root')
-      .innerJoin('did_handle', 'did_handle.did', 'repo_root.did')
-      .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
-      )
-      .selectAll('did_handle')
-      .selectAll('repo_root')
-
-    if (invitedBy) {
-      builder = builder
-        .innerJoin(
-          'invite_code_use as code_use',
-          'code_use.usedBy',
-          'did_handle.did',
-        )
-        .innerJoin('invite_code', 'invite_code.code', 'code_use.code')
-        .where('invite_code.forUser', '=', invitedBy)
-    }
-
-    const keyset = new ListKeyset(ref('indexedAt'), ref('handle'))
-
-    return await paginate(builder, {
-      limit,
-      cursor,
-      keyset,
-    }).execute()
+  async updateAccountTakedownStatus(did: string, takedown: StatusAttr) {
+    const takedownRef = takedown.applied
+      ? takedown.ref ?? new Date().toISOString()
+      : null
+    await this.db.db
+      .updateTable('account')
+      .set({ takedownRef })
+      .where('did', '=', did)
+      .executeTakeFirst()
   }
 
   async deleteAccount(did: string): Promise<void> {
     // Not done in transaction because it would be too long, prone to contention.
     // Also, this can safely be run multiple times if it fails.
+    await this.db.db.deleteFrom('repo_root').where('did', '=', did).execute()
+    await this.db.db.deleteFrom('email_token').where('did', '=', did).execute()
     await this.db.db
       .deleteFrom('refresh_token')
       .where('did', '=', did)
       .execute()
     await this.db.db
-      .deleteFrom('user_account')
-      .where('user_account.did', '=', did)
+      .deleteFrom('account')
+      .where('account.did', '=', did)
       .execute()
-    await this.db.db
-      .deleteFrom('did_handle')
-      .where('did_handle.did', '=', did)
-      .execute()
-    const seqEvt = await sequencer.formatSeqTombstone(did)
-    await this.db.transaction(async (txn) => {
-      await sequencer.sequenceEvt(txn, seqEvt)
-    })
   }
 
   async adminView(did: string): Promise<AccountView | null> {
     const accountQb = this.db.db
-      .selectFrom('did_handle')
-      .innerJoin('user_account', 'user_account.did', 'did_handle.did')
-      .where('did_handle.did', '=', did)
+      .selectFrom('account')
+      .where('account.did', '=', did)
       .select([
-        'did_handle.did',
-        'did_handle.handle',
-        'user_account.email',
-        'user_account.invitesDisabled',
-        'user_account.inviteNote',
-        'user_account.createdAt as indexedAt',
+        'account.did',
+        'account.handle',
+        'account.email',
+        'account.invitesDisabled',
+        'account.createdAt as indexedAt',
       ])
 
     const [account, invites, invitedBy] = await Promise.all([
@@ -404,7 +317,6 @@ export class AccountService {
       ...account,
       handle: account?.handle ?? INVALID_HANDLE,
       invitesDisabled: account.invitesDisabled === 1,
-      inviteNote: account.inviteNote ?? undefined,
       invites,
       invitedBy: invitedBy[did],
     }
@@ -418,7 +330,7 @@ export class AccountService {
         'invite_code.code as code',
         'invite_code.availableUses as available',
         'invite_code.disabled as disabled',
-        'invite_code.forUser as forAccount',
+        'invite_code.forAccount as forAccount',
         'invite_code.createdBy as createdBy',
         'invite_code.createdAt as createdAt',
         this.db.db
@@ -438,6 +350,7 @@ export class AccountService {
       const usesRes = await this.db.db
         .selectFrom('invite_code_use')
         .where('code', 'in', codes)
+        .orderBy('usedAt', 'desc')
         .selectAll()
         .execute()
       for (const use of usesRes) {
@@ -496,13 +409,12 @@ export class AccountService {
     purpose: EmailTokenPurpose,
   ): Promise<string> {
     const token = getRandomToken().toUpperCase()
+    const now = new Date().toISOString()
     await this.db.db
       .insertInto('email_token')
-      .values({ purpose, did, token, requestedAt: new Date() })
+      .values({ purpose, did, token, requestedAt: now })
       .onConflict((oc) =>
-        oc
-          .columns(['purpose', 'did'])
-          .doUpdateSet({ token, requestedAt: new Date() }),
+        oc.columns(['purpose', 'did']).doUpdateSet({ token, requestedAt: now }),
       )
       .execute()
     return token
@@ -532,7 +444,7 @@ export class AccountService {
     if (!res) {
       throw new InvalidRequestError('Token is invalid', 'InvalidToken')
     }
-    const expired = !lessThanAgoMs(res.requestedAt, expirationLen)
+    const expired = !lessThanAgoMs(new Date(res.requestedAt), expirationLen)
     if (expired) {
       throw new InvalidRequestError('Token is expired', 'ExpiredToken')
     }
@@ -552,79 +464,30 @@ export class AccountService {
     if (!res) {
       throw new InvalidRequestError('Token is invalid', 'InvalidToken')
     }
-    const expired = !lessThanAgoMs(res.requestedAt, expirationLen)
+    const expired = !lessThanAgoMs(new Date(res.requestedAt), expirationLen)
     if (expired) {
       throw new InvalidRequestError('Token is expired', 'ExpiredToken')
     }
     return res.did
   }
 
-  async getPreferences(
-    did: string,
-    namespace?: string,
-  ): Promise<UserPreference[]> {
-    const prefsRes = await this.db.db
-      .selectFrom('user_pref')
+  async takedownActor(info: { takedownRef: string; did: string }) {
+    const { takedownRef, did } = info
+    await this.db.db
+      .updateTable('account')
+      .set({ takedownRef })
       .where('did', '=', did)
-      .orderBy('id')
-      .selectAll()
       .execute()
-    return prefsRes
-      .filter((pref) => !namespace || matchNamespace(namespace, pref.name))
-      .map((pref) => JSON.parse(pref.valueJson))
   }
 
-  async putPreferences(
-    did: string,
-    values: UserPreference[],
-    namespace: string,
-  ): Promise<void> {
-    this.db.assertTransaction()
-    if (!values.every((value) => matchNamespace(namespace, value.$type))) {
-      throw new InvalidRequestError(
-        `Some preferences are not in the ${namespace} namespace`,
-      )
-    }
-    // short-held row lock to prevent races
-    if (this.db.dialect === 'pg') {
-      await this.db.db
-        .selectFrom('user_account')
-        .selectAll()
-        .forUpdate()
-        .where('did', '=', did)
-        .executeTakeFirst()
-    }
-    // get all current prefs for user and prep new pref rows
-    const allPrefs = await this.db.db
-      .selectFrom('user_pref')
-      .where('did', '=', did)
-      .select(['id', 'name'])
+  async reverseActorTakedown(info: { did: string }) {
+    await this.db.db
+      .updateTable('account')
+      .set({ takedownRef: null })
+      .where('did', '=', info.did)
       .execute()
-    const putPrefs = values.map((value) => {
-      return {
-        did,
-        name: value.$type,
-        valueJson: JSON.stringify(value),
-      }
-    })
-    const allPrefIdsInNamespace = allPrefs
-      .filter((pref) => matchNamespace(namespace, pref.name))
-      .map((pref) => pref.id)
-    // replace all prefs in given namespace
-    if (allPrefIdsInNamespace.length) {
-      await this.db.db
-        .deleteFrom('user_pref')
-        .where('did', '=', did)
-        .where('id', 'in', allPrefIdsInNamespace)
-        .execute()
-    }
-    if (putPrefs.length) {
-      await this.db.db.insertInto('user_pref').values(putPrefs).execute()
-    }
   }
 }
-
-export type UserPreference = Record<string, unknown> & { $type: string }
 
 export type CodeDetail = {
   code: string
@@ -650,10 +513,6 @@ export class ListKeyset extends TimeCidKeyset<{
   labelResult(result: { indexedAt: string; handle: string }) {
     return { primary: result.indexedAt, secondary: result.handle }
   }
-}
-
-const matchNamespace = (namespace: string, fullname: string) => {
-  return fullname === namespace || fullname.startsWith(`${namespace}.`)
 }
 
 export type HandleSequenceToken = { did: string; handle: string }

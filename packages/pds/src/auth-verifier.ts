@@ -7,7 +7,7 @@ import { IdResolver } from '@atproto/identity'
 import * as ui8 from 'uint8arrays'
 import express from 'express'
 import * as jwt from 'jsonwebtoken'
-import Database from './db'
+import { ServiceDb } from './service-db'
 
 type ReqCtx = {
   req: express.Request
@@ -89,7 +89,7 @@ export class AuthVerifier {
   public adminServiceDid: string
 
   constructor(
-    public db: Database,
+    public db: ServiceDb,
     public idResolver: IdResolver,
     opts: AuthVerifierOpts,
   ) {
@@ -115,11 +115,10 @@ export class AuthVerifier {
       AuthScope.AppPass,
     ])
     const found = await this.db.db
-      .selectFrom('user_account')
-      .innerJoin('repo_root', 'repo_root.did', 'user_account.did')
-      .where('user_account.did', '=', result.credentials.did)
-      .where('repo_root.takedownRef', 'is', null)
-      .select('user_account.did')
+      .selectFrom('account')
+      .where('account.did', '=', result.credentials.did)
+      .where('account.takedownRef', 'is', null)
+      .select('did')
       .executeTakeFirst()
     if (!found) {
       throw new AuthRequiredError(

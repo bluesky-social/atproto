@@ -17,28 +17,15 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      let builder = ctx.db.db
-        .selectFrom('repo_blob')
-        .where('did', '=', did)
-        .select('cid')
-        .orderBy('cid', 'asc')
-        .groupBy('cid')
-        .limit(limit)
-      if (since) {
-        builder = builder.where('repoRev', '>', since)
-      }
-
-      if (cursor) {
-        builder = builder.where('cid', '>', cursor)
-      }
-
-      const res = await builder.execute()
+      const blobCids = await ctx.actorStore.read(did, (store) =>
+        store.repo.blob.listBlobs({ since, limit, cursor }),
+      )
 
       return {
         encoding: 'application/json',
         body: {
-          cursor: res.at(-1)?.cid,
-          cids: res.map((row) => row.cid),
+          cursor: blobCids.at(-1),
+          cids: blobCids,
         },
       }
     },

@@ -3,7 +3,6 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { byteIterableToStream } from '@atproto/common'
 import { blocksToCarStream } from '@atproto/repo'
 import { Server } from '../../../../lexicon'
-import SqlRepoStorage from '../../../../sql-repo-storage'
 import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
@@ -22,8 +21,9 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const cids = params.cids.map((c) => CID.parse(c))
-      const storage = new SqlRepoStorage(ctx.db, did)
-      const got = await storage.getBlocks(cids)
+      const got = await ctx.actorStore.read(did, (store) =>
+        store.repo.storage.getBlocks(cids),
+      )
       if (got.missing.length > 0) {
         const missingStr = got.missing.map((c) => c.toString())
         throw new InvalidRequestError(`Could not find cids: ${missingStr}`)

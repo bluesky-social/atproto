@@ -23,24 +23,27 @@ export default function (server: Server, ctx: AppContext) {
 
       const { subject, takedown } = input.body
       if (takedown) {
-        const modSrvc = ctx.services.moderation(ctx.db)
-        const authSrvc = ctx.services.auth(ctx.db)
         if (isRepoRef(subject)) {
           ensureValidAdminAud(auth, subject.did)
           await Promise.all([
-            modSrvc.updateRepoTakedownState(subject.did, takedown),
-            authSrvc.revokeRefreshTokensByDid(subject.did),
+            ctx.services
+              .account(ctx.db)
+              .updateAccountTakedownStatus(subject.did, takedown),
+            ctx.services.auth(ctx.db).revokeRefreshTokensByDid(subject.did),
           ])
         } else if (isStrongRef(subject)) {
           const uri = new AtUri(subject.uri)
           ensureValidAdminAud(auth, uri.hostname)
-          await modSrvc.updateRecordTakedownState(uri, takedown)
+          await ctx.actorStore.transact(uri.hostname, (store) =>
+            store.record.updateRecordTakedownStatus(uri, takedown),
+          )
         } else if (isRepoBlobRef(subject)) {
           ensureValidAdminAud(auth, subject.did)
-          await modSrvc.updateBlobTakedownState(
-            subject.did,
-            CID.parse(subject.cid),
-            takedown,
+          await ctx.actorStore.transact(subject.did, (store) =>
+            store.repo.blob.updateBlobTakedownStatus(
+              CID.parse(subject.cid),
+              takedown,
+            ),
           )
         } else {
           throw new InvalidRequestError('Invalid subject')

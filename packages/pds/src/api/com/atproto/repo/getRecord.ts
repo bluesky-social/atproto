@@ -11,9 +11,9 @@ export default function (server: Server, ctx: AppContext) {
     // fetch from pds if available, if not then fetch from appview
     if (did) {
       const uri = AtUri.make(did, collection, rkey)
-      const record = await ctx.services
-        .record(ctx.db)
-        .getRecord(uri, cid || null)
+      const record = await ctx.actorStore.read(did, (store) =>
+        store.record.getRecord(uri, cid ?? null),
+      )
       if (!record || record.takedownRef !== null) {
         throw new InvalidRequestError(`Could not locate record: ${uri}`)
       }

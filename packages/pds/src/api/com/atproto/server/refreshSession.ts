@@ -1,3 +1,4 @@
+import { INVALID_HANDLE } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
@@ -39,7 +40,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           did: user.did,
           didDoc,
-          handle: user.handle,
+          handle: user.handle ?? INVALID_HANDLE,
           accessJwt: rotated.access.jwt,
           refreshJwt: rotated.refresh.jwt,
         },

@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
       durationMs: 5 * MINUTE,
       points: 50,
     },
-    handler: async ({ input, req }) => {
+    handler: async ({ input }) => {
       const { did, password, token } = input.body
       const validPass = await ctx.services
         .account(ctx.db)
@@ -20,34 +20,18 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError('Invalid did or password')
       }
 
-      await ctx.services
-        .account(ctx.db)
-        .assertValidToken(did, 'delete_account', token)
-
-      await ctx.db.transaction(async (dbTxn) => {
-        const accountService = ctx.services.account(dbTxn)
-        const moderationTxn = ctx.services.moderation(dbTxn)
-        const currState = await moderationTxn.getRepoTakedownState(did)
-        // Do not disturb an existing takedown, continue with account deletion
-        if (currState?.takedown.applied !== true) {
-          await moderationTxn.updateRepoTakedownState(did, {
-            applied: true,
-            ref: REASON_ACCT_DELETION,
-          })
-        }
-        await accountService.deleteEmailToken(did, 'delete_account')
+      const accountService = await ctx.services.account(ctx.db)
+      await accountService.assertValidToken(did, 'delete_account', token)
+      await accountService.updateAccountTakedownStatus(did, {
+        applied: true,
+        ref: REASON_ACCT_DELETION,
       })
-
-      ctx.backgroundQueue.add(async (db) => {
-        try {
-          // In the background perform the hard account deletion work
-          await ctx.services.record(db).deleteForActor(did)
-          await ctx.services.repo(db).deleteRepo(did)
-          await ctx.services.account(db).deleteAccount(did)
-        } catch (err) {
-          req.log.error({ did, err }, 'account deletion failed')
-        }
-      })
+      await Promise.all([
+        accountService.deleteAccount(did),
+        ctx.actorStore.destroy(did),
+        await ctx.sequencer.deleteAllForUser(did),
+      ])
+      await ctx.sequencer.sequenceTombstone(did)
     },
   })
 }

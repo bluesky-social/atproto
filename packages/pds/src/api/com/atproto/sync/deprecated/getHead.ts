@@ -1,6 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../../lexicon'
-import SqlRepoStorage from '../../../../../sql-repo-storage'
 import AppContext from '../../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
@@ -20,8 +19,9 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
       }
-      const storage = new SqlRepoStorage(ctx.db, did)
-      const root = await storage.getRoot()
+      const root = await ctx.actorStore.read(did, (store) =>
+        store.repo.storage.getRoot(),
+      )
       if (root === null) {
         throw new InvalidRequestError(
           `Could not find root for DID: ${did}`,

@@ -1,22 +1,15 @@
 import {
   DummyDriver,
   DynamicModule,
+  Kysely,
   RawBuilder,
+  ReferenceExpression,
   SelectQueryBuilder,
   sql,
   SqliteAdapter,
   SqliteIntrospector,
   SqliteQueryCompiler,
 } from 'kysely'
-import DatabaseSchema from './database-schema'
-
-export const actorWhereClause = (actor: string) => {
-  if (actor.startsWith('did:')) {
-    return sql<0 | 1>`"did_handle"."did" = ${actor}`
-  } else {
-    return sql<0 | 1>`"did_handle"."handle" = ${actor}`
-  }
-}
 
 // Applies to repo_root or record table
 export const notSoftDeletedClause = (alias: DbRef) => {
@@ -30,7 +23,7 @@ export const softDeleted = (repoOrRecord: { takedownRef: string | null }) => {
 export const countAll = sql<number>`count(*)`
 
 // For use with doUpdateSet()
-export const excluded = <T>(db: DatabaseSchema, col) => {
+export const excluded = <T, S>(db: Kysely<S>, col) => {
   return sql<T>`${db.dynamic.ref(`excluded.${col}`)}`
 }
 
@@ -53,6 +46,8 @@ export const dummyDialect = {
     return new SqliteQueryCompiler()
   },
 }
+
+export type Ref = ReferenceExpression<any, any>
 
 export type DbRef = RawBuilder | ReturnType<DynamicModule['ref']>
 

@@ -25,7 +25,8 @@ export const createRouter = (ctx: AppContext): express.Router => {
       await sql`select 1`.execute(ctx.db.db)
     } catch (err) {
       req.log.error(err, 'failed health check')
-      return res.status(503).send({ version, error: 'Service Unavailable' })
+      res.status(503).send({ version, error: 'Service Unavailable' })
+      return
     }
     res.send({ version })
   })

@@ -3,8 +3,8 @@ import { AuthRequiredError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { genInvCodes } from './util'
-import { InviteCode } from '../../../../db/tables/invite-code'
 import { AccountCodes } from '../../../../lexicon/types/com/atproto/server/createInviteCodes'
+import { InviteCode } from '../../../../service-db'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createInviteCodes({
@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
             code: code,
             availableUses: useCount,
             disabled: 0 as const,
-            forUser: account,
+            forAccount: account,
             createdBy: 'admin',
             createdAt: new Date().toISOString(),
           })

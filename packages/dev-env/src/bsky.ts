@@ -306,7 +306,6 @@ export async function processAll(
   network: TestNetworkNoAppView,
   ingester: bsky.BskyIngester,
 ) {
-  assert(network.pds.ctx.sequencerLeader, 'sequencer leader does not exist')
   await network.pds.processAll()
   await ingestAll(network, ingester)
   // eslint-disable-next-line no-constant-condition
@@ -326,25 +325,17 @@ export async function ingestAll(
   network: TestNetworkNoAppView,
   ingester: bsky.BskyIngester,
 ) {
-  assert(network.pds.ctx.sequencerLeader, 'sequencer leader does not exist')
-  const pdsDb = network.pds.ctx.db.db
+  const sequencer = network.pds.ctx.sequencer
   await network.pds.processAll()
   // eslint-disable-next-line no-constant-condition
   while (true) {
     await wait(50)
-    // check sequencer
-    const sequencerCaughtUp = await network.pds.ctx.sequencerLeader.isCaughtUp()
-    if (!sequencerCaughtUp) continue
     // check ingester
-    const [ingesterCursor, { lastSeq }] = await Promise.all([
+    const [ingesterCursor, curr] = await Promise.all([
       ingester.sub.getCursor(),
-      pdsDb
-        .selectFrom('repo_seq')
-        .where('seq', 'is not', null)
-        .select(pdsDb.fn.max('repo_seq.seq').as('lastSeq'))
-        .executeTakeFirstOrThrow(),
+      sequencer.curr(),
     ])
-    const ingesterCaughtUp = ingesterCursor === lastSeq
+    const ingesterCaughtUp = curr !== null && ingesterCursor === curr
     if (ingesterCaughtUp) return
   }
 }

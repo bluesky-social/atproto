@@ -10,16 +10,15 @@ export const readEnv = (): ServerEnvironment => {
     privacyPolicyUrl: envStr('PDS_PRIVACY_POLICY_URL'),
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
 
-    // db: one required
-    // sqlite
-    dbSqliteLocation: envStr('PDS_DB_SQLITE_LOCATION'),
-    // postgres
-    dbPostgresUrl: envStr('PDS_DB_POSTGRES_URL'),
-    dbPostgresMigrationUrl: envStr('PDS_DB_POSTGRES_MIGRATION_URL'),
-    dbPostgresSchema: envStr('PDS_DB_POSTGRES_SCHEMA'),
-    dbPostgresPoolSize: envInt('PDS_DB_POSTGRES_POOL_SIZE'),
-    dbPostgresPoolMaxUses: envInt('PDS_DB_POSTGRES_POOL_MAX_USES'),
-    dbPostgresPoolIdleTimeoutMs: envInt('PDS_DB_POSTGRES_POOL_IDLE_TIMEOUT_MS'),
+    // database
+    dataDirectory: envStr('PDS_DATA_DIRECTORY'),
+    serviceDbLocation: envStr('PDS_SERVICE_DB_LOCATION'),
+    sequencerDbLocation: envStr('PDS_SEQUENCER_DB_LOCATION'),
+    didCacheDbLocation: envStr('PDS_DID_CACHE_DB_LOCATION'),
+
+    // actor store
+    actorStoreDirectory: envStr('PDS_ACTOR_STORE_DIRECTORY'),
+    actorStoreCacheSize: envInt('PDS_ACTOR_STORE_CACHE_SIZE'),
 
     // blobstore: one required
     // s3
@@ -57,8 +56,6 @@ export const readEnv = (): ServerEnvironment => {
     // subscription
     maxSubscriptionBuffer: envInt('PDS_MAX_SUBSCRIPTION_BUFFER'),
     repoBackfillLimitMs: envInt('PDS_REPO_BACKFILL_LIMIT_MS'),
-    sequencerLeaderEnabled: envBool('PDS_SEQUENCER_LEADER_ENABLED'),
-    sequencerLeaderLockId: envInt('PDS_SEQUENCER_LEADER_LOCK_ID'),
 
     // appview
     bskyAppViewUrl: envStr('PDS_BSKY_APP_VIEW_URL'),
@@ -84,13 +81,6 @@ export const readEnv = (): ServerEnvironment => {
     moderatorPassword: envStr('PDS_MODERATOR_PASSWORD'),
     triagePassword: envStr('PDS_TRIAGE_PASSWORD'),
 
-    // keys: only one of each required
-    // kms
-    repoSigningKeyKmsKeyId: envStr('PDS_REPO_SIGNING_KEY_KMS_KEY_ID'),
-    // memory
-    repoSigningKeyK256PrivateKeyHex: envStr(
-      'PDS_REPO_SIGNING_KEY_K256_PRIVATE_KEY_HEX',
-    ),
     // kms
     plcRotationKeyKmsKeyId: envStr('PDS_PLC_ROTATION_KEY_KMS_KEY_ID'),
     // memory
@@ -109,14 +99,15 @@ export type ServerEnvironment = {
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
 
-  // db: one required
-  dbSqliteLocation?: string
-  dbPostgresUrl?: string
-  dbPostgresMigrationUrl?: string
-  dbPostgresSchema?: string
-  dbPostgresPoolSize?: number
-  dbPostgresPoolMaxUses?: number
-  dbPostgresPoolIdleTimeoutMs?: number
+  // database
+  dataDirectory?: string
+  serviceDbLocation?: string
+  sequencerDbLocation?: string
+  didCacheDbLocation?: string
+
+  // actor store
+  actorStoreDirectory?: string
+  actorStoreCacheSize?: number
 
   // blobstore: one required
   blobstoreS3Bucket?: string
@@ -154,8 +145,6 @@ export type ServerEnvironment = {
   // subscription
   maxSubscriptionBuffer?: number
   repoBackfillLimitMs?: number
-  sequencerLeaderEnabled?: boolean
-  sequencerLeaderLockId?: number
 
   // appview
   bskyAppViewUrl?: string
@@ -182,8 +171,6 @@ export type ServerEnvironment = {
   triagePassword?: string
 
   // keys
-  repoSigningKeyKmsKeyId?: string
-  repoSigningKeyK256PrivateKeyHex?: string
   plcRotationKeyKmsKeyId?: string
   plcRotationKeyK256PrivateKeyHex?: string
 }

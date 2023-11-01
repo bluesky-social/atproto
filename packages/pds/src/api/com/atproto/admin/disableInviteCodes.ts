@@ -24,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.db.db
           .updateTable('invite_code')
           .set({ disabled: 1 })
-          .where('forUser', 'in', accounts)
+          .where('forAccount', 'in', accounts)
           .execute()
       }
     },

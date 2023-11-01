@@ -5,11 +5,12 @@ import * as jwt from 'jsonwebtoken'
 import { parseBasicAuth } from './auth-verifier'
 
 export const dbLogger = subsystemLogger('pds:db')
+export const didCacheLogger = subsystemLogger('pds:did-cache')
 export const readStickyLogger = subsystemLogger('pds:read-sticky')
 export const redisLogger = subsystemLogger('pds:redis')
 export const seqLogger = subsystemLogger('pds:sequencer')
 export const mailerLogger = subsystemLogger('pds:mailer')
-export const labelerLogger = subsystemLogger('pds:labler')
+export const labelerLogger = subsystemLogger('pds:labeler')
 export const crawlerLogger = subsystemLogger('pds:crawler')
 export const httpLogger = subsystemLogger('pds')
 

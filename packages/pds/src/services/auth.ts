@@ -2,7 +2,7 @@ import * as jwt from 'jsonwebtoken'
 import * as ui8 from 'uint8arrays'
 import * as crypto from '@atproto/crypto'
 import { HOUR } from '@atproto/common'
-import Database from '../db'
+import { ServiceDb } from '../service-db'
 import { AuthScope } from '../auth-verifier'
 
 const REFRESH_GRACE_MS = 2 * HOUR
@@ -16,10 +16,10 @@ export type AuthToken = {
 export type RefreshToken = AuthToken & { jti: string }
 
 export class AuthService {
-  constructor(public db: Database, private _secret: string) {}
+  constructor(public db: ServiceDb, private _secret: string) {}
 
   static creator(jwtSecret: string) {
-    return (db: Database) => new AuthService(db, jwtSecret)
+    return (db: ServiceDb) => new AuthService(db, jwtSecret)
   }
 
   createAccessToken(opts: {
@@ -91,7 +91,6 @@ export class AuthService {
     this.db.assertTransaction()
     const token = await this.db.db
       .selectFrom('refresh_token')
-      .if(this.db.dialect !== 'sqlite', (qb) => qb.forUpdate())
       .where('id', '=', id)
       .selectAll()
       .executeTakeFirst()

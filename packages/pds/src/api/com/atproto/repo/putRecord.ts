@@ -11,7 +11,7 @@ import {
   PreparedCreate,
   PreparedUpdate,
 } from '../../../../repo'
-import { ConcurrentWriteError } from '../../../../services/repo'
+import { CommitData } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
@@ -57,48 +57,52 @@ export default function (server: Server, ctx: AppContext) {
       const swapRecordCid =
         typeof swapRecord === 'string' ? CID.parse(swapRecord) : swapRecord
 
-      const current = await ctx.services
-        .record(ctx.db)
-        .getRecord(uri, null, true)
-      const writeInfo = {
+      const { commit, write } = await ctx.actorStore.transact(
         did,
-        collection,
-        rkey,
-        record,
-        swapCid: swapRecordCid,
-        validate,
-      }
+        async (actorTxn) => {
+          const current = await actorTxn.record.getRecord(uri, null, true)
+          const writeInfo = {
+            did,
+            collection,
+            rkey,
+            record,
+            swapCid: swapRecordCid,
+            validate,
+          }
 
-      let write: PreparedCreate | PreparedUpdate
-      try {
-        write = current
-          ? await prepareUpdate(writeInfo)
-          : await prepareCreate(writeInfo)
-      } catch (err) {
-        if (err instanceof InvalidRecordError) {
-          throw new InvalidRequestError(err.message)
-        }
-        throw err
-      }
+          let write: PreparedCreate | PreparedUpdate
+          try {
+            write = current
+              ? await prepareUpdate(writeInfo)
+              : await prepareCreate(writeInfo)
+          } catch (err) {
+            if (err instanceof InvalidRecordError) {
+              throw new InvalidRequestError(err.message)
+            }
+            throw err
+          }
 
-      const writes = [write]
+          let commit: CommitData
+          try {
+            commit = await actorTxn.repo.processWrites([write], swapCommitCid)
+          } catch (err) {
+            if (
+              err instanceof BadCommitSwapError ||
+              err instanceof BadRecordSwapError
+            ) {
+              throw new InvalidRequestError(err.message, 'InvalidSwap')
+            } else {
+              throw err
+            }
+          }
+          return { commit, write }
+        },
+      )
 
-      try {
-        await ctx.services
-          .repo(ctx.db)
-          .processWrites({ did, writes, swapCommitCid }, 10)
-      } catch (err) {
-        if (
-          err instanceof BadCommitSwapError ||
-          err instanceof BadRecordSwapError
-        ) {
-          throw new InvalidRequestError(err.message, 'InvalidSwap')
-        } else if (err instanceof ConcurrentWriteError) {
-          throw new InvalidRequestError(err.message, 'ConcurrentWrites')
-        } else {
-          throw err
-        }
-      }
+      await ctx.sequencer.sequenceCommit(did, commit, [write])
+      await ctx.services
+        .account(ctx.db)
+        .updateRepoRoot(did, commit.cid, commit.rev)
 
       return {
         encoding: 'application/json',

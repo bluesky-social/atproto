@@ -179,9 +179,9 @@ describe('crud operations', () => {
     })
     const uploaded = uploadedRes.data.blob
     // Expect blobstore not to have image yet
-    await expect(ctx.blobstore.getBytes(uploaded.ref)).rejects.toThrow(
-      BlobNotFoundError,
-    )
+    await expect(
+      ctx.blobstore(alice.did).getBytes(uploaded.ref),
+    ).rejects.toThrow(BlobNotFoundError)
     // Associate image with post, image should be placed in blobstore
     const res = await aliceAgent.api.app.bsky.feed.post.create(
       { repo: alice.did },
@@ -205,7 +205,7 @@ describe('crud operations', () => {
     expect(images.length).toEqual(1)
     expect(uploaded.ref.equals(images[0].image.ref)).toBeTruthy()
     // Ensure that the uploaded image is now in the blobstore, i.e. doesn't throw BlobNotFoundError
-    await ctx.blobstore.getBytes(uploaded.ref)
+    await ctx.blobstore(alice.did).getBytes(uploaded.ref)
     // Cleanup
     await aliceAgent.api.app.bsky.feed.post.delete({
       rkey: postUri.rkey,

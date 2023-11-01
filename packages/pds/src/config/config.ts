@@ -24,29 +24,19 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     termsOfServiceUrl: env.termsOfServiceUrl,
   }
 
-  let dbCfg: ServerConfig['db']
-  if (env.dbSqliteLocation && env.dbPostgresUrl) {
-    throw new Error('Cannot set both sqlite & postgres db env vars')
+  const dbLoc = (name: string) => {
+    return env.dataDirectory ? path.join(env.dataDirectory, name) : name
   }
-  if (env.dbSqliteLocation) {
-    dbCfg = {
-      dialect: 'sqlite',
-      location: env.dbSqliteLocation,
-    }
-  } else if (env.dbPostgresUrl) {
-    dbCfg = {
-      dialect: 'pg',
-      url: env.dbPostgresUrl,
-      migrationUrl: env.dbPostgresMigrationUrl ?? env.dbPostgresUrl,
-      schema: env.dbPostgresSchema,
-      pool: {
-        idleTimeoutMs: env.dbPostgresPoolIdleTimeoutMs ?? 10000,
-        maxUses: env.dbPostgresPoolMaxUses ?? Infinity,
-        size: env.dbPostgresPoolSize ?? 10,
-      },
-    }
-  } else {
-    throw new Error('Must configure either sqlite or postgres db')
+
+  const dbCfg: ServerConfig['db'] = {
+    serviceDbLoc: env.serviceDbLocation ?? dbLoc('service.sqlite'),
+    sequencerDbLoc: env.sequencerDbLocation ?? dbLoc('sequencer.sqlite'),
+    didCacheDbLoc: env.didCacheDbLocation ?? dbLoc('did_cache.sqlite'),
+  }
+
+  const actorStoreCfg: ServerConfig['actorStore'] = {
+    directory: env.actorStoreDirectory ?? dbLoc('actors'),
+    cacheSize: env.actorStoreCacheSize ?? 100,
   }
 
   let blobstoreCfg: ServerConfig['blobstore']
@@ -156,8 +146,6 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const subscriptionCfg: ServerConfig['subscription'] = {
     maxBuffer: env.maxSubscriptionBuffer ?? 500,
     repoBackfillLimitMs: env.repoBackfillLimitMs ?? DAY,
-    sequencerLeaderEnabled: env.sequencerLeaderEnabled ?? true,
-    sequencerLeaderLockId: env.sequencerLeaderLockId ?? 1100,
   }
 
   if (!env.bskyAppViewUrl) {
@@ -195,6 +183,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   return {
     service: serviceCfg,
     db: dbCfg,
+    actorStore: actorStoreCfg,
     blobstore: blobstoreCfg,
     identity: identityCfg,
     invites: invitesCfg,
@@ -210,7 +199,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 
 export type ServerConfig = {
   service: ServiceConfig
-  db: SqliteConfig | PostgresConfig
+  db: DatabaseConfig
+  actorStore: ActorStoreConfig
   blobstore: S3BlobstoreConfig | DiskBlobstoreConfig
   identity: IdentityConfig
   invites: InvitesConfig
@@ -233,23 +223,15 @@ export type ServiceConfig = {
   termsOfServiceUrl?: string
 }
 
-export type SqliteConfig = {
-  dialect: 'sqlite'
-  location: string
+export type DatabaseConfig = {
+  serviceDbLoc: string
+  sequencerDbLoc: string
+  didCacheDbLoc: string
 }
 
-export type PostgresPoolConfig = {
-  size: number
-  maxUses: number
-  idleTimeoutMs: number
-}
-
-export type PostgresConfig = {
-  dialect: 'pg'
-  url: string
-  migrationUrl: string
-  pool: PostgresPoolConfig
-  schema?: string
+export type ActorStoreConfig = {
+  directory: string
+  cacheSize: number
 }
 
 export type S3BlobstoreConfig = {
@@ -299,8 +281,6 @@ export type EmailConfig = {
 export type SubscriptionConfig = {
   maxBuffer: number
   repoBackfillLimitMs: number
-  sequencerLeaderEnabled: boolean
-  sequencerLeaderLockId: number
 }
 
 export type RedisScratchConfig = {

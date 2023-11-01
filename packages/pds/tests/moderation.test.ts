@@ -212,18 +212,20 @@ describe('moderation', () => {
     })
 
     it('removes blob from the store', async () => {
-      const tryGetBytes = network.pds.ctx.blobstore.getBytes(blobRef.image.ref)
+      const tryGetBytes = network.pds.ctx
+        .blobstore(blobSubject.did)
+        .getBytes(blobRef.image.ref)
       await expect(tryGetBytes).rejects.toThrow(BlobNotFoundError)
     })
 
     it('prevents blob from being referenced again.', async () => {
       const uploaded = await sc.uploadFile(
-        sc.dids.alice,
+        sc.dids.carol,
         'tests/sample-img/key-alt.jpg',
         'image/jpeg',
       )
       expect(uploaded.image.ref.equals(blobRef.image.ref)).toBeTruthy()
-      const referenceBlob = sc.post(sc.dids.alice, 'pic', [], [blobRef])
+      const referenceBlob = sc.post(sc.dids.carol, 'pic', [], [blobRef])
       await expect(referenceBlob).rejects.toThrow('Could not find blob:')
     })
 
@@ -248,7 +250,7 @@ describe('moderation', () => {
       )
 
       // Can post and reference blob
-      const post = await sc.post(sc.dids.alice, 'pic', [], [blobRef])
+      const post = await sc.post(sc.dids.carol, 'pic', [], [blobRef])
       expect(post.images[0].image.ref.equals(blobRef.image.ref)).toBeTruthy()
 
       // Can fetch through image server
