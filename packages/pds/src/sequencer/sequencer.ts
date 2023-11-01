@@ -211,7 +211,11 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async deleteAllForUser(did: string) {
-    await this.db.db.deleteFrom('repo_seq').where('did', '=', did).execute()
+    await this.db.db
+      .deleteFrom('repo_seq')
+      .where('did', '=', did)
+      .where('eventType', '!=', 'tombstone')
+      .execute()
   }
 }
 

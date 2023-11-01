@@ -9,9 +9,7 @@ export default function (server: Server, ctx: AppContext) {
       const { did, since, limit, cursor } = params
       // takedown check for anyone other than an admin or the user
       if (!ctx.authVerifier.isUserOrAdmin(auth, did)) {
-        const available = await ctx.services
-          .account(ctx.db)
-          .isRepoAvailable(did)
+        const available = await ctx.accountManager.isRepoAvailable(did)
         if (!available) {
           throw new InvalidRequestError(`Could not find root for DID: ${did}`)
         }

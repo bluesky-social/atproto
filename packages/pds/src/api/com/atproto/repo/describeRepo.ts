@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.describeRepo(async ({ params }) => {
     const { repo } = params
 
-    const account = await ctx.services.account(ctx.db).getAccount(repo)
+    const account = await ctx.accountManager.getAccount(repo)
     if (account === null) {
       throw new InvalidRequestError(`Could not find user: ${repo}`)
     }

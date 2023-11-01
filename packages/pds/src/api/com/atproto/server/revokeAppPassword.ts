@@ -7,12 +7,8 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
       const { name } = input.body
-      await ctx.db.transaction(async (dbTxn) => {
-        await ctx.services.account(dbTxn).deleteAppPassword(requester, name)
-        await ctx.services
-          .auth(dbTxn)
-          .revokeAppPasswordRefreshToken(requester, name)
-      })
+
+      await ctx.accountManager.revokeAppPassword(requester, name)
     },
   })
 }

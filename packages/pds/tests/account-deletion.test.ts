@@ -12,7 +12,7 @@ import {
   AppPassword,
   EmailToken,
   RefreshToken,
-} from '../src/service-db'
+} from '../src/account-manager/db'
 import { fileExists } from '@atproto/common'
 import { AppContext } from '../src'
 import { RepoSeq } from '../src/sequencer/db'
@@ -219,7 +219,8 @@ type DbContents = {
 }
 
 const getDbContents = async (ctx: AppContext): Promise<DbContents> => {
-  const { db, sequencer } = ctx
+  const { sequencer, accountManager } = ctx
+  const db = accountManager.db
   const [
     repoRoots,
     userAccounts,

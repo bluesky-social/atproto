@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
       reverse = false,
     } = params
 
-    const did = await ctx.services.account(ctx.db).getDidForActor(repo)
+    const did = await ctx.accountManager.getDidForActor(repo)
     if (!did) {
       throw new InvalidRequestError(`Could not find repo: ${repo}`)
     }

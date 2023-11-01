@@ -4,11 +4,15 @@ import fs from 'node:fs/promises'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as pds from '@atproto/pds'
-import { getMigrator } from '@atproto/pds/src/service-db'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { AtpAgent } from '@atproto/api'
 import { PdsConfig } from './types'
-import { ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD } from './const'
+import {
+  ADMIN_PASSWORD,
+  JWT_SECRET,
+  MOD_PASSWORD,
+  TRIAGE_PASSWORD,
+} from './const'
 
 export class TestPds {
   constructor(
@@ -37,7 +41,7 @@ export class TestPds {
       adminPassword: ADMIN_PASSWORD,
       moderatorPassword: MOD_PASSWORD,
       triagePassword: TRIAGE_PASSWORD,
-      jwtSecret: 'jwt-secret',
+      jwtSecret: JWT_SECRET,
       serviceHandleDomains: ['.test'],
       bskyAppViewUrl: 'https://appview.invalid',
       bskyAppViewDid: 'did:example:invalid',
@@ -50,11 +54,6 @@ export class TestPds {
     const secrets = pds.envToSecrets(env)
 
     const server = await pds.PDS.create(cfg, secrets)
-
-    // Separate migration db on postgres in case migration changes some
-    // connection state that we need in the tests, e.g. "alter database ... set ..."
-    const migrator = getMigrator(server.ctx.db)
-    await migrator.migrateToLatestOrThrow()
 
     await server.start()
 
@@ -86,6 +85,10 @@ export class TestPds {
     return {
       authorization: this.adminAuth(role),
     }
+  }
+
+  jwtSecret() {
+    return JWT_SECRET
   }
 
   async processAll() {

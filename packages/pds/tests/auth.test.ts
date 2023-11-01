@@ -3,6 +3,7 @@ import AtpAgent from '@atproto/api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import * as CreateSession from '@atproto/api/src/client/types/com/atproto/server/createSession'
 import * as RefreshSession from '@atproto/api/src/client/types/com/atproto/server/refreshSession'
+import { createRefreshToken } from '../src/account-manager/helpers/auth'
 
 describe('auth', () => {
   let network: TestNetworkNoAppView
@@ -149,6 +150,31 @@ describe('auth', () => {
     )
   })
 
+  it('handles racing refreshes', async () => {
+    const email = 'dan@test.com'
+    const account = await createAccount({
+      handle: 'dan.test',
+      password: 'password',
+      email,
+    })
+    const tokenIdPromises: Promise<string>[] = []
+    const doRefresh = async () => {
+      const res = await refreshSession(account.refreshJwt)
+      const decoded = jwt.decode(res.refreshJwt, { json: true })
+      if (!decoded?.jti) {
+        throw new Error('undefined jti on refresh token')
+      }
+      return decoded.jti
+    }
+    for (let i = 0; i < 10; i++) {
+      tokenIdPromises.push(doRefresh())
+    }
+    const tokenIds = await Promise.all(tokenIdPromises)
+    for (let i = 0; i < 10; i++) {
+      expect(tokenIds[i]).toEqual(tokenIds[0])
+    }
+  })
+
   it('refresh token provides new token with same id on multiple uses during grace period.', async () => {
     const account = await createAccount({
       handle: 'eve.test',
@@ -169,7 +195,7 @@ describe('auth', () => {
   })
 
   it('refresh token is revoked after grace period completes.', async () => {
-    const { db } = network.pds.ctx
+    const { db } = network.pds.ctx.accountManager
     const account = await createAccount({
       handle: 'evan.test',
       email: 'evan@test.com',
@@ -222,15 +248,16 @@ describe('auth', () => {
   })
 
   it('expired refresh token cannot be used to refresh a session.', async () => {
-    const { services, db } = network.pds.ctx
     const account = await createAccount({
       handle: 'holga.test',
       email: 'holga@test.com',
       password: 'password',
     })
-    const refresh = services
-      .auth(db)
-      .createRefreshToken({ did: account.did, expiresIn: -1 })
+    const refresh = createRefreshToken({
+      jwtSecret: network.pds.jwtSecret(),
+      did: account.did,
+      expiresIn: -1,
+    })
     const refreshExpired = refreshSession(refresh.jwt)
     await expect(refreshExpired).rejects.toThrow('Token has expired')
     await deleteSession(refresh.jwt) // No problem revoking an expired token

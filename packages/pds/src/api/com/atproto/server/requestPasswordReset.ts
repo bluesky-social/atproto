@@ -5,15 +5,16 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.requestPasswordReset(async ({ input }) => {
     const email = input.body.email.toLowerCase()
 
-    const user = await ctx.services.account(ctx.db).getAccountByEmail(email)
+    const account = await ctx.accountManager.getAccountByEmail(email)
 
-    if (user) {
-      const token = await ctx.services
-        .account(ctx.db)
-        .createEmailToken(user.did, 'reset_password')
+    if (account?.email) {
+      const token = await ctx.accountManager.createEmailToken(
+        account.did,
+        'reset_password',
+      )
       await ctx.mailer.sendResetPassword(
-        { identifier: user.handle ?? user.email, token },
-        { to: user.email },
+        { identifier: account.handle ?? account.email, token },
+        { to: account.email },
       )
     }
   })

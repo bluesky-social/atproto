@@ -25,12 +25,7 @@ export default function (server: Server, ctx: AppContext) {
       if (takedown) {
         if (isRepoRef(subject)) {
           ensureValidAdminAud(auth, subject.did)
-          await Promise.all([
-            ctx.services
-              .account(ctx.db)
-              .updateAccountTakedownStatus(subject.did, takedown),
-            ctx.services.auth(ctx.db).revokeRefreshTokensByDid(subject.did),
-          ])
+          await ctx.accountManager.takedownAccount(subject.did, takedown)
         } else if (isStrongRef(subject)) {
           const uri = new AtUri(subject.uri)
           ensureValidAdminAud(auth, uri.hostname)

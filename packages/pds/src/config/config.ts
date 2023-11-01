@@ -29,7 +29,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   }
 
   const dbCfg: ServerConfig['db'] = {
-    serviceDbLoc: env.serviceDbLocation ?? dbLoc('service.sqlite'),
+    accountDbLoc: env.accountDbLocation ?? dbLoc('account.sqlite'),
     sequencerDbLoc: env.sequencerDbLocation ?? dbLoc('sequencer.sqlite'),
     didCacheDbLoc: env.didCacheDbLocation ?? dbLoc('did_cache.sqlite'),
   }
@@ -224,7 +224,7 @@ export type ServiceConfig = {
 }
 
 export type DatabaseConfig = {
-  serviceDbLoc: string
+  accountDbLoc: string
   sequencerDbLoc: string
   didCacheDbLoc: string
 }

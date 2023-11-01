@@ -13,20 +13,7 @@ export default function (server: Server, ctx: AppContext) {
       if (accounts.includes('admin')) {
         throw new InvalidRequestError('cannot disable admin invite codes')
       }
-      if (codes.length > 0) {
-        await ctx.db.db
-          .updateTable('invite_code')
-          .set({ disabled: 1 })
-          .where('code', 'in', codes)
-          .execute()
-      }
-      if (accounts.length > 0) {
-        await ctx.db.db
-          .updateTable('invite_code')
-          .set({ disabled: 1 })
-          .where('forAccount', 'in', accounts)
-          .execute()
-      }
+      await ctx.accountManager.disableInviteCodes({ codes, accounts })
     },
   })
 }

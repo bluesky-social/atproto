@@ -12,7 +12,7 @@ export const readEnv = (): ServerEnvironment => {
 
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),
-    serviceDbLocation: envStr('PDS_SERVICE_DB_LOCATION'),
+    accountDbLocation: envStr('PDS_ACCOUNT_DB_LOCATION'),
     sequencerDbLocation: envStr('PDS_SEQUENCER_DB_LOCATION'),
     didCacheDbLocation: envStr('PDS_DID_CACHE_DB_LOCATION'),
 
@@ -101,7 +101,7 @@ export type ServerEnvironment = {
 
   // database
   dataDirectory?: string
-  serviceDbLocation?: string
+  accountDbLocation?: string
   sequencerDbLocation?: string
   didCacheDbLocation?: string
 

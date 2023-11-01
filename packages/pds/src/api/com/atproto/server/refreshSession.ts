@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.refresh,
     handler: async ({ auth }) => {
       const did = auth.credentials.did
-      const user = await ctx.services.account(ctx.db).getAccount(did, true)
+      const user = await ctx.accountManager.getAccount(did, true)
       if (!user) {
         throw new InvalidRequestError(
           `Could not find user info for account: ${did}`,
@@ -25,11 +25,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const [didDoc, rotated] = await Promise.all([
         didDocForSession(ctx, user.did),
-        ctx.db.transaction((dbTxn) => {
-          return ctx.services
-            .auth(dbTxn)
-            .rotateRefreshToken(auth.credentials.tokenId)
-        }),
+        ctx.accountManager.rotateRefreshToken(auth.credentials.tokenId),
       ])
       if (rotated === null) {
         throw new InvalidRequestError('Token has been revoked', 'ExpiredToken')

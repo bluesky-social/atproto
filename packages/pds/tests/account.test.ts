@@ -6,7 +6,6 @@ import { TestNetworkNoAppView } from '@atproto/dev-env'
 import Mail from 'nodemailer/lib/mailer'
 import { AppContext } from '../src'
 import { ServerMailer } from '../src/mailer'
-import { ServiceDb } from '../src/service-db'
 
 const email = 'alice@test.com'
 const handle = 'alice.test'
@@ -19,7 +18,6 @@ describe('account', () => {
   let ctx: AppContext
   let agent: AtpAgent
   let mailer: ServerMailer
-  let db: ServiceDb
   let idResolver: IdResolver
   const mailCatcher = new EventEmitter()
   let _origSendMail
@@ -33,7 +31,6 @@ describe('account', () => {
       },
     })
     mailer = network.pds.ctx.mailer
-    db = network.pds.ctx.db
     ctx = network.pds.ctx
     idResolver = network.pds.ctx.idResolver
     agent = network.pds.getClient()
@@ -246,7 +243,7 @@ describe('account', () => {
       },
     )
 
-    const accnt = await ctx.services.account(ctx.db).getAccount(handle)
+    const accnt = await ctx.accountManager.getAccount(handle)
     expect(accnt?.email).toBe('alice-new@test.com')
 
     await agent.api.com.atproto.admin.updateAccountEmail(
@@ -260,7 +257,7 @@ describe('account', () => {
       },
     )
 
-    const accnt2 = await ctx.services.account(ctx.db).getAccount(handle)
+    const accnt2 = await ctx.accountManager.getAccount(handle)
     expect(accnt2?.email).toBe(email)
   })
 
@@ -526,7 +523,7 @@ describe('account', () => {
   it('allows only unexpired password reset tokens', async () => {
     await agent.api.com.atproto.server.requestPasswordReset({ email })
 
-    const res = await db.db
+    const res = await ctx.accountManager.db.db
       .updateTable('email_token')
       .where('purpose', '=', 'reset_password')
       .where('did', '=', did)

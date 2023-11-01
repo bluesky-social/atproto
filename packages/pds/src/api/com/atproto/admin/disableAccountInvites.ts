@@ -10,11 +10,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError('Insufficient privileges')
       }
       const { account } = input.body
-      await ctx.db.db
-        .updateTable('account')
-        .where('did', '=', account)
-        .set({ invitesDisabled: 1 })
-        .execute()
+      await ctx.accountManager.setAccountInvitesDisabled(account, true)
     },
   })
 }

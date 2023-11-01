@@ -56,32 +56,37 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
-    .createTable('account')
+    .createTable('actor')
     .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('handle', 'varchar')
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addColumn('takedownRef', 'varchar')
+    .execute()
+  await db.schema
+    .createIndex(`actor_handle_lower_idx`)
+    .unique()
+    .on('actor')
+    .expression(sql`lower("handle")`)
+    .execute()
+  await db.schema
+    .createIndex('actor_cursor_idx')
+    .on('actor')
+    .columns(['createdAt', 'did'])
+    .execute()
+
+  await db.schema
+    .createTable('account')
+    .addColumn('did', 'varchar', (col) => col.primaryKey())
     .addColumn('email', 'varchar', (col) => col.notNull())
     .addColumn('passwordScrypt', 'varchar', (col) => col.notNull())
-    .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('emailConfirmedAt', 'varchar')
     .addColumn('invitesDisabled', 'int2', (col) => col.notNull().defaultTo(0))
-    .addColumn('takedownRef', 'varchar')
     .execute()
   await db.schema
     .createIndex(`account_email_lower_idx`)
     .unique()
     .on('account')
     .expression(sql`lower("email")`)
-    .execute()
-  await db.schema
-    .createIndex(`account_handle_lower_idx`)
-    .unique()
-    .on('account')
-    .expression(sql`lower("handle")`)
-    .execute()
-  await db.schema
-    .createIndex('account_cursor_idx')
-    .on('account')
-    .columns(['createdAt', 'did'])
     .execute()
 
   await db.schema
@@ -101,6 +106,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('email_token').execute()
   await db.schema.dropTable('account').execute()
+  await db.schema.dropTable('actor').execute()
   await db.schema.dropTable('repo_root').execute()
   await db.schema.dropTable('refresh_token').execute()
   await db.schema.dropTable('invite_code_use').execute()
