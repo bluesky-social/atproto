@@ -130,8 +130,6 @@ const validateInputsForEntrywayPds = async (
     signingKey,
     plcOp,
   }
-
-  // const { did, plcOp } = input.plcOp ? await validatePlcOp(ctx, handle, )
 }
 
 const validateInputsForLocalPds = async (
@@ -289,77 +287,3 @@ const validateAtprotoData = async (
     )
   }
 }
-
-// const getDidAndPlcOp = async (
-//   ctx: AppContext,
-//   handle: string,
-//   input: CreateAccountInput,
-//   signingKey: Keypair,
-// ): Promise<{
-//   did: string
-//   plcOp: plc.Operation | null
-// }> => {
-//   // if the user is not bringing a DID, then we format a create op for PLC
-//   // but we don't send until we ensure the username & email are available
-//   if (!input.did) {
-//     const rotationKeys = [ctx.plcRotationKey.did()]
-//     if (ctx.cfg.identity.recoveryDidKey) {
-//       rotationKeys.unshift(ctx.cfg.identity.recoveryDidKey)
-//     }
-//     if (input.recoveryKey) {
-//       rotationKeys.unshift(input.recoveryKey)
-//     }
-//     const plcCreate = await plc.createOp({
-//       signingKey: signingKey.did(),
-//       rotationKeys,
-//       handle,
-//       pds: ctx.cfg.service.publicUrl,
-//       signer: ctx.plcRotationKey,
-//     })
-//     return {
-//       did: plcCreate.did,
-//       plcOp: plcCreate.op,
-//     }
-//   }
-
-//   // if the user is bringing their own did:
-//   // resolve the user's did doc data, including rotationKeys if did:plc
-//   // determine if we have the capability to make changes to their DID
-//   let atpData: AtprotoData
-//   try {
-//     atpData = await ctx.idResolver.did.resolveAtprotoData(input.did)
-//   } catch (err) {
-//     throw new InvalidRequestError(
-//       `could not resolve valid DID document :${input.did}`,
-//       'UnresolvableDid',
-//     )
-//   }
-//   if (atpData.handle !== handle) {
-//     throw new InvalidRequestError(
-//       'provided handle does not match DID document handle',
-//       'IncompatibleDidDoc',
-//     )
-//   } else if (atpData.pds !== ctx.cfg.service.publicUrl) {
-//     throw new InvalidRequestError(
-//       'DID document pds endpoint does not match service endpoint',
-//       'IncompatibleDidDoc',
-//     )
-//   } else if (atpData.signingKey !== signingKey.did()) {
-//     throw new InvalidRequestError(
-//       'DID document signing key does not match service signing key',
-//       'IncompatibleDidDoc',
-//     )
-//   }
-
-//   if (input.did.startsWith('did:plc')) {
-//     const data = await ctx.plcClient.getDocumentData(input.did)
-//     if (!data.rotationKeys.includes(ctx.plcRotationKey.did())) {
-//       throw new InvalidRequestError(
-//         'PLC DID does not include service rotation key',
-//         'IncompatibleDidDoc',
-//       )
-//     }
-//   }
-
-//   return { did: input.did, plcOp: null }
-// }
