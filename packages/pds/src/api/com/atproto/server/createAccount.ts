@@ -1,7 +1,7 @@
-import { DidDocument, MINUTE } from '@atproto/common'
-import { AtprotoData } from '@atproto/identity'
+import { DidDocument, MINUTE, cborDecode, check } from '@atproto/common'
+import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import disposable from 'disposable-email'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import * as plc from '@did-plc/lib'
@@ -17,56 +17,10 @@ export default function (server: Server, ctx: AppContext) {
       points: 100,
     },
     handler: async ({ input, req }) => {
-      const { email, password, inviteCode } = input.body
-      if (input.body.plcOp) {
-        throw new InvalidRequestError('Unsupported input: "plcOp"')
-      }
-
-      if (ctx.cfg.invites.required && !inviteCode) {
-        throw new InvalidRequestError(
-          'No invite code provided',
-          'InvalidInviteCode',
-        )
-      }
-
-      if (!disposable.validate(email)) {
-        throw new InvalidRequestError(
-          'This email address is not supported, please use a different email.',
-        )
-      }
-
-      // normalize & ensure valid handle
-      const handle = await normalizeAndValidateHandle({
-        ctx,
-        handle: input.body.handle,
-        did: input.body.did,
-      })
-
-      // check that the invite code still has uses
-      if (ctx.cfg.invites.required && inviteCode) {
-        await ctx.accountManager.ensureInviteIsAvailable(inviteCode)
-      }
-
-      // check that the handle and email are available
-      const [handleAccnt, emailAcct] = await Promise.all([
-        ctx.accountManager.getAccount(handle),
-        ctx.accountManager.getAccountByEmail(email),
-      ])
-      if (handleAccnt) {
-        throw new InvalidRequestError(`Handle already taken: ${handle}`)
-      } else if (emailAcct) {
-        throw new InvalidRequestError(`Email already taken: ${email}`)
-      }
-
-      // determine the did & any plc ops we need to send
-      // if the provided did document is poorly setup, we throw
-      const signingKey = await Secp256k1Keypair.create({ exportable: true })
-      const { did, plcOp } = await getDidAndPlcOp(
-        ctx,
-        handle,
-        input.body,
-        signingKey,
-      )
+      const { did, handle, email, password, inviteCode, signingKey, plcOp } =
+        ctx.entrywayAgent
+          ? await validateInputsForEntrywayPds(ctx, input.body)
+          : await validateInputsForLocalPds(ctx, input.body)
 
       let didDoc: DidDocument | undefined
       let creds: { accessJwt: string; refreshJwt: string }
@@ -78,6 +32,7 @@ export default function (server: Server, ctx: AppContext) {
             return actorTxn.repo.createRepo([])
           },
         )
+        await ctx.actorStore.clearReservedKeypair(signingKey.did(), did)
 
         // Generate a real did with PLC
         if (plcOp) {
@@ -124,7 +79,119 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const getDidAndPlcOp = async (
+const validateInputsForEntrywayPds = async (
+  ctx: AppContext,
+  input: CreateAccountInput,
+) => {
+  const { did, handle } = input
+  if (!did || !input.plcOp) {
+    throw new InvalidRequestError(
+      'non-entryway pds requires bringing a DID and plcOp',
+    )
+  }
+  const plcOp = cborDecode(input.plcOp)
+  if (!check.is(plcOp, plc.def.operation)) {
+    throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
+  }
+  const plcRotationKey = ctx.cfg.entryway?.plcRotationKey
+  if (!plcRotationKey || !plcOp.rotationKeys.includes(plcRotationKey)) {
+    throw new InvalidRequestError(
+      'PLC DID does not include service rotation key',
+      'IncompatibleDidDoc',
+    )
+  }
+  await plc.assureValidOp(plcOp)
+  const doc = plc.formatDidDoc({ did, ...plcOp })
+  const data = ensureAtpDocument(doc)
+
+  let signingKey: ExportableKeypair | undefined
+  if (input.did) {
+    signingKey = await ctx.actorStore.getReservedKeypair(input.did)
+  }
+  if (!signingKey) {
+    signingKey = await ctx.actorStore.getReservedKeypair(data.signingKey)
+  }
+  if (!signingKey) {
+    throw new InvalidRequestError('reserved signing key does not exist')
+  }
+
+  validateAtprotoData(data, {
+    handle,
+    pds: ctx.cfg.service.publicUrl,
+    signingKey: signingKey.did(),
+  })
+
+  return {
+    did,
+    handle,
+    email: undefined,
+    password: undefined,
+    inviteCode: undefined,
+    signingKey,
+    plcOp,
+  }
+
+  // const { did, plcOp } = input.plcOp ? await validatePlcOp(ctx, handle, )
+}
+
+const validateInputsForLocalPds = async (
+  ctx: AppContext,
+  input: CreateAccountInput,
+) => {
+  const { email, password, inviteCode } = input
+  if (input.plcOp) {
+    throw new InvalidRequestError('Unsupported input: "plcOp"')
+  }
+
+  if (ctx.cfg.invites.required && !inviteCode) {
+    throw new InvalidRequestError(
+      'No invite code provided',
+      'InvalidInviteCode',
+    )
+  }
+
+  if (!email) {
+    throw new InvalidRequestError('Email is required')
+  } else if (!disposable.validate(email)) {
+    throw new InvalidRequestError(
+      'This email address is not supported, please use a different email.',
+    )
+  }
+
+  // normalize & ensure valid handle
+  const handle = await normalizeAndValidateHandle({
+    ctx,
+    handle: input.handle,
+    did: input.did,
+  })
+
+  // check that the invite code still has uses
+  if (ctx.cfg.invites.required && inviteCode) {
+    await ctx.accountManager.ensureInviteIsAvailable(inviteCode)
+  }
+
+  // check that the handle and email are available
+  const [handleAccnt, emailAcct] = await Promise.all([
+    ctx.accountManager.getAccount(handle),
+    ctx.accountManager.getAccountByEmail(email),
+  ])
+  if (handleAccnt) {
+    throw new InvalidRequestError(`Handle already taken: ${handle}`)
+  } else if (emailAcct) {
+    throw new InvalidRequestError(`Email already taken: ${email}`)
+  }
+
+  // determine the did & any plc ops we need to send
+  // if the provided did document is poorly setup, we throw
+  const signingKey = await Secp256k1Keypair.create({ exportable: true })
+  const { did, plcOp } = input.did
+    ? await validateExistingDid(ctx, handle, input.did, signingKey)
+    : await createDidAndPlcOp(ctx, handle, input, signingKey)
+
+  return { did, handle, email, password, inviteCode, signingKey, plcOp }
+}
+
+const createDidAndPlcOp = async (
   ctx: AppContext,
   handle: string,
   input: CreateAccountInput,
@@ -134,59 +201,55 @@ const getDidAndPlcOp = async (
   plcOp: plc.Operation | null
 }> => {
   // if the user is not bringing a DID, then we format a create op for PLC
-  // but we don't send until we ensure the username & email are available
-  if (!input.did) {
-    const rotationKeys = [ctx.plcRotationKey.did()]
-    if (ctx.cfg.identity.recoveryDidKey) {
-      rotationKeys.unshift(ctx.cfg.identity.recoveryDidKey)
-    }
-    if (input.recoveryKey) {
-      rotationKeys.unshift(input.recoveryKey)
-    }
-    const plcCreate = await plc.createOp({
-      signingKey: signingKey.did(),
-      rotationKeys,
-      handle,
-      pds: ctx.cfg.service.publicUrl,
-      signer: ctx.plcRotationKey,
-    })
-    return {
-      did: plcCreate.did,
-      plcOp: plcCreate.op,
-    }
+  const rotationKeys = [ctx.plcRotationKey.did()]
+  if (ctx.cfg.identity.recoveryDidKey) {
+    rotationKeys.unshift(ctx.cfg.identity.recoveryDidKey)
   }
+  if (input.recoveryKey) {
+    rotationKeys.unshift(input.recoveryKey)
+  }
+  const plcCreate = await plc.createOp({
+    signingKey: signingKey.did(),
+    rotationKeys,
+    handle,
+    pds: ctx.cfg.service.publicUrl,
+    signer: ctx.plcRotationKey,
+  })
+  return {
+    did: plcCreate.did,
+    plcOp: plcCreate.op,
+  }
+}
 
+const validateExistingDid = async (
+  ctx: AppContext,
+  handle: string,
+  did: string,
+  signingKey: Keypair,
+): Promise<{
+  did: string
+  plcOp: plc.Operation | null
+}> => {
   // if the user is bringing their own did:
   // resolve the user's did doc data, including rotationKeys if did:plc
   // determine if we have the capability to make changes to their DID
   let atpData: AtprotoData
   try {
-    atpData = await ctx.idResolver.did.resolveAtprotoData(input.did)
+    atpData = await ctx.idResolver.did.resolveAtprotoData(did)
   } catch (err) {
     throw new InvalidRequestError(
-      `could not resolve valid DID document :${input.did}`,
+      `could not resolve valid DID document :${did}`,
       'UnresolvableDid',
     )
   }
-  if (atpData.handle !== handle) {
-    throw new InvalidRequestError(
-      'provided handle does not match DID document handle',
-      'IncompatibleDidDoc',
-    )
-  } else if (atpData.pds !== ctx.cfg.service.publicUrl) {
-    throw new InvalidRequestError(
-      'DID document pds endpoint does not match service endpoint',
-      'IncompatibleDidDoc',
-    )
-  } else if (atpData.signingKey !== signingKey.did()) {
-    throw new InvalidRequestError(
-      'DID document signing key does not match service signing key',
-      'IncompatibleDidDoc',
-    )
-  }
+  validateAtprotoData(atpData, {
+    handle,
+    pds: ctx.cfg.service.publicUrl,
+    signingKey: signingKey.did(),
+  })
 
-  if (input.did.startsWith('did:plc')) {
-    const data = await ctx.plcClient.getDocumentData(input.did)
+  if (did.startsWith('did:plc')) {
+    const data = await ctx.plcClient.getDocumentData(did)
     if (!data.rotationKeys.includes(ctx.plcRotationKey.did())) {
       throw new InvalidRequestError(
         'PLC DID does not include service rotation key',
@@ -195,5 +258,108 @@ const getDidAndPlcOp = async (
     }
   }
 
-  return { did: input.did, plcOp: null }
+  return { did: did, plcOp: null }
 }
+
+const validateAtprotoData = async (
+  data: AtprotoData,
+  expected: {
+    handle: string
+    pds: string
+    signingKey: string
+  },
+) => {
+  // if the user is bringing their own did:
+  // resolve the user's did doc data, including rotationKeys if did:plc
+  // determine if we have the capability to make changes to their DID
+  if (data.handle !== expected.handle) {
+    throw new InvalidRequestError(
+      'provided handle does not match DID document handle',
+      'IncompatibleDidDoc',
+    )
+  } else if (data.pds !== expected.pds) {
+    throw new InvalidRequestError(
+      'DID document pds endpoint does not match service endpoint',
+      'IncompatibleDidDoc',
+    )
+  } else if (data.signingKey !== expected.signingKey) {
+    throw new InvalidRequestError(
+      'DID document signing key does not match service signing key',
+      'IncompatibleDidDoc',
+    )
+  }
+}
+
+// const getDidAndPlcOp = async (
+//   ctx: AppContext,
+//   handle: string,
+//   input: CreateAccountInput,
+//   signingKey: Keypair,
+// ): Promise<{
+//   did: string
+//   plcOp: plc.Operation | null
+// }> => {
+//   // if the user is not bringing a DID, then we format a create op for PLC
+//   // but we don't send until we ensure the username & email are available
+//   if (!input.did) {
+//     const rotationKeys = [ctx.plcRotationKey.did()]
+//     if (ctx.cfg.identity.recoveryDidKey) {
+//       rotationKeys.unshift(ctx.cfg.identity.recoveryDidKey)
+//     }
+//     if (input.recoveryKey) {
+//       rotationKeys.unshift(input.recoveryKey)
+//     }
+//     const plcCreate = await plc.createOp({
+//       signingKey: signingKey.did(),
+//       rotationKeys,
+//       handle,
+//       pds: ctx.cfg.service.publicUrl,
+//       signer: ctx.plcRotationKey,
+//     })
+//     return {
+//       did: plcCreate.did,
+//       plcOp: plcCreate.op,
+//     }
+//   }
+
+//   // if the user is bringing their own did:
+//   // resolve the user's did doc data, including rotationKeys if did:plc
+//   // determine if we have the capability to make changes to their DID
+//   let atpData: AtprotoData
+//   try {
+//     atpData = await ctx.idResolver.did.resolveAtprotoData(input.did)
+//   } catch (err) {
+//     throw new InvalidRequestError(
+//       `could not resolve valid DID document :${input.did}`,
+//       'UnresolvableDid',
+//     )
+//   }
+//   if (atpData.handle !== handle) {
+//     throw new InvalidRequestError(
+//       'provided handle does not match DID document handle',
+//       'IncompatibleDidDoc',
+//     )
+//   } else if (atpData.pds !== ctx.cfg.service.publicUrl) {
+//     throw new InvalidRequestError(
+//       'DID document pds endpoint does not match service endpoint',
+//       'IncompatibleDidDoc',
+//     )
+//   } else if (atpData.signingKey !== signingKey.did()) {
+//     throw new InvalidRequestError(
+//       'DID document signing key does not match service signing key',
+//       'IncompatibleDidDoc',
+//     )
+//   }
+
+//   if (input.did.startsWith('did:plc')) {
+//     const data = await ctx.plcClient.getDocumentData(input.did)
+//     if (!data.rotationKeys.includes(ctx.plcRotationKey.did())) {
+//       throw new InvalidRequestError(
+//         'PLC DID does not include service rotation key',
+//         'IncompatibleDidDoc',
+//       )
+//     }
+//   }
+
+//   return { did: input.did, plcOp: null }
+// }

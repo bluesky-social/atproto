@@ -105,14 +105,13 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   let entrywayCfg: ServerConfig['entryway'] = null
   if (env.entrywayUrl) {
     assert(
-      env.entrywayJwtVerifyKeyK256PublicKeyHex &&
-        env.entrywayPlcRotationKeyK256PublicKeyHex,
+      env.entrywayJwtVerifyKeyK256PublicKeyHex && env.entrywayPlcRotationKey,
       'if entryway url is configured, must include all required entryway configuration',
     )
     entrywayCfg = {
       url: env.entrywayUrl,
       jwtPublicKeyHex: env.entrywayJwtVerifyKeyK256PublicKeyHex,
-      plcRotationPublicKeyHex: env.entrywayPlcRotationKeyK256PublicKeyHex,
+      plcRotationKey: env.entrywayPlcRotationKey,
     }
   }
 
@@ -283,7 +282,7 @@ export type IdentityConfig = {
 export type EntrywayConfig = {
   url: string
   jwtPublicKeyHex: string
-  plcRotationPublicKeyHex: string
+  plcRotationKey: string
 }
 
 export type InvitesConfig =

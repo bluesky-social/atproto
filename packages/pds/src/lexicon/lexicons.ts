@@ -2489,7 +2489,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['handle', 'email', 'password'],
+            required: ['handle'],
             properties: {
               email: {
                 type: 'string',
