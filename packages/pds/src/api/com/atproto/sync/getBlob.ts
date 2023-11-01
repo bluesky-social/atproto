@@ -5,6 +5,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { notSoftDeletedClause } from '../../../../db/util'
 import { BlobNotFoundError } from '@atproto/repo'
 
+// @TODO entryway proxy
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlob({
     auth: ctx.authVerifier.optionalAccessOrRole,
