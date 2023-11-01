@@ -4,7 +4,12 @@ import fs from 'fs/promises'
 import * as crypto from '@atproto/crypto'
 import { Keypair, ExportableKeypair } from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
-import { chunkArray, fileExists, rmIfExists } from '@atproto/common'
+import {
+  chunkArray,
+  fileExists,
+  readIfExists,
+  rmIfExists,
+} from '@atproto/common'
 import { ActorDb, getDb, getMigrator } from './db'
 import { BackgroundQueue } from '../background'
 import { RecordReader } from './record/reader'
@@ -167,24 +172,34 @@ export class ActorStore {
     await rmIfExists(directory, true)
   }
 
-  async reserveKeypair(): Promise<string> {
+  async reserveKeypair(did?: string): Promise<string> {
+    let keyLoc: string | undefined
+    if (did) {
+      keyLoc = path.join(this.reservedKeyDir, did)
+      const maybeKey = await loadKey(keyLoc)
+      if (maybeKey) {
+        return maybeKey.did()
+      }
+    }
     const keypair = await crypto.Secp256k1Keypair.create({ exportable: true })
     const keyDid = keypair.did()
-    const keyLoc = path.join(this.reservedKeyDir, keyDid)
+    keyLoc = keyLoc ?? path.join(this.reservedKeyDir, keyDid)
     await mkdir(this.reservedKeyDir, { recursive: true })
     await fs.writeFile(keyLoc, await keypair.export())
     return keyDid
   }
 
-  async getReservedKeypair(keyDid: string): Promise<ExportableKeypair> {
-    const keyLoc = path.join(this.reservedKeyDir, keyDid)
-    const privKey = await fs.readFile(keyLoc)
-    return crypto.Secp256k1Keypair.import(privKey, { exportable: true })
+  async getReservedKeypair(
+    signingKeyOrDid: string,
+  ): Promise<ExportableKeypair | undefined> {
+    return loadKey(path.join(this.reservedKeyDir, signingKeyOrDid))
   }
 
-  async clearReservedKeypair(keyDid: string) {
-    const keyLoc = path.join(this.reservedKeyDir, keyDid)
-    await rmIfExists(keyLoc)
+  async clearReservedKeypair(keyDid: string, did?: string) {
+    await rmIfExists(path.join(this.reservedKeyDir, keyDid))
+    if (did) {
+      await rmIfExists(path.join(this.reservedKeyDir, did))
+    }
   }
 
   async storePlcOp(did: string, op: Uint8Array) {
@@ -217,6 +232,12 @@ export class ActorStore {
     await Promise.allSettled(promises)
     this.keyCache.clear()
   }
+}
+
+const loadKey = async (loc: string): Promise<ExportableKeypair | undefined> => {
+  const privKey = await readIfExists(loc)
+  if (!privKey) return undefined
+  return crypto.Secp256k1Keypair.import(privKey, { exportable: true })
 }
 
 const createActorTransactor = (

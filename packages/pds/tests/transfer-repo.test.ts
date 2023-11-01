@@ -89,8 +89,25 @@ describe('transfer repo', () => {
 
   it('transfers', async () => {
     const signingKeyRes =
-      await pdsAgent.api.com.atproto.server.reserveSigningKey()
+      await pdsAgent.api.com.atproto.server.reserveSigningKey({ did })
     const signingKey = signingKeyRes.data.signingKey
+
+    const repo = await entrywayAgent.api.com.atproto.sync.getRepo({ did })
+    const res = await axios.post(
+      `${pds.url}/xrpc/com.atproto.temp.importRepo`,
+      repo.data,
+      {
+        params: { did },
+        headers: { 'content-type': 'application/vnd.ipld.car' },
+        decompress: true,
+        responseType: 'stream',
+      },
+    )
+
+    for await (const log of res.data) {
+      console.log(log.toString())
+    }
+
     const lastOp = await pds.ctx.plcClient.getLastOp(did)
     if (!lastOp || lastOp.type === 'plc_tombstone') {
       throw new Error('could not find last plc op')
@@ -117,22 +134,6 @@ describe('transfer repo', () => {
       handle: accountDetail.handle,
       plcOp: cborEncode(plcOp),
     })
-
-    const repo = await entrywayAgent.api.com.atproto.sync.getRepo({ did })
-    const res = await axios.post(
-      `${pds.url}/xrpc/com.atproto.temp.importRepo`,
-      repo.data,
-      {
-        params: { did },
-        headers: { 'content-type': 'application/vnd.ipld.car' },
-        decompress: true,
-        responseType: 'stream',
-      },
-    )
-    await entryway.ctx.plcClient.sendOperation(did, plcOp)
-    for await (const log of res.data) {
-      console.log(log.toString())
-    }
 
     await entryway.ctx.db.db
       .updateTable('user_account')

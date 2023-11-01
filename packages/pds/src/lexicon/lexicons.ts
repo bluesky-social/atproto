@@ -1826,6 +1826,8 @@ export const schemaDict = {
               },
               reason: {
                 type: 'string',
+                maxGraphemes: 2000,
+                maxLength: 20000,
               },
               subject: {
                 type: 'union',
@@ -3168,6 +3170,19 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description: 'Reserve a repo signing key for account creation.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              did: {
+                type: 'string',
+                description:
+                  'The did that the signign key is being reserved for.',
+              },
+            },
+          },
+        },
         output: {
           encoding: 'application/json',
           schema: {

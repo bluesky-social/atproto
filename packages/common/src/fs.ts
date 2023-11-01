@@ -14,6 +14,19 @@ export const fileExists = async (location: string): Promise<boolean> => {
   }
 }
 
+export const readIfExists = async (
+  filepath: string,
+): Promise<Uint8Array | undefined> => {
+  try {
+    return await fs.readFile(filepath)
+  } catch (err) {
+    if (isErrnoException(err) && err.code === 'ENOENT') {
+      return
+    }
+    throw err
+  }
+}
+
 export const rmIfExists = async (
   filepath: string,
   recursive = false,
@@ -22,7 +35,6 @@ export const rmIfExists = async (
     await fs.rm(filepath, { recursive })
   } catch (err) {
     if (isErrnoException(err) && err.code === 'ENOENT') {
-      // if blob not found, then it's already been deleted & we can just return
       return
     }
     throw err

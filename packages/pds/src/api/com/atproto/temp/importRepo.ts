@@ -12,7 +12,6 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { ActorStoreTransactor } from '../../../../actor-store'
 import { AtprotoData } from '@atproto/identity'
-import { Secp256k1Keypair } from '@atproto/crypto'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.importRepo({
@@ -45,7 +44,10 @@ const processImport = async (
   const didData = await ctx.idResolver.did.resolveAtprotoData(did)
   const alreadyExists = await ctx.actorStore.exists(did)
   if (!alreadyExists) {
-    const keypair = await Secp256k1Keypair.create({ exportable: true })
+    const keypair = await ctx.actorStore.getReservedKeypair(did)
+    if (!keypair) {
+      throw new InvalidRequestError('No signing key reserved')
+    }
     await ctx.actorStore.create(did, keypair, async () => {})
   }
   await ctx.actorStore.transact(did, async (actorStore) => {

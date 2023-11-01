@@ -8,10 +8,18 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.transferAccount({
     handler: async ({ input }) => {
-      const { did, plcOp, handle } = input.body
+      const { did, handle } = input.body
 
       const signingKey = await ctx.actorStore.keypair(did)
-      await verifyDidAndPlcOp(ctx, did, handle, signingKey.did(), plcOp)
+      const plcOp = await verifyDidAndPlcOp(
+        ctx,
+        did,
+        handle,
+        signingKey.did(),
+        input.body.plcOp,
+      )
+
+      await ctx.plcClient.sendOperation(did, plcOp)
 
       const { accessJwt, refreshJwt } =
         await ctx.accountManager.registerAccount({
@@ -38,7 +46,7 @@ const verifyDidAndPlcOp = async (
   handle: string,
   signingKey: string,
   plcOpBytes: Uint8Array,
-) => {
+): Promise<plc.Operation> => {
   const plcOp = cborDecode(plcOpBytes)
   if (!check.is(plcOp, plc.def.operation)) {
     throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
@@ -78,4 +86,5 @@ const verifyDidAndPlcOp = async (
       'IncompatibleDidDoc',
     )
   }
+  return plcOp
 }
