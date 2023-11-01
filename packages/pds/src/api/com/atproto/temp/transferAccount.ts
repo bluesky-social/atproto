@@ -50,9 +50,8 @@ const verifyDidAndPlcOp = async (
   did: string,
   handle: string,
   signingKey: string,
-  plcOpBytes: Uint8Array,
+  plcOp: unknown,
 ): Promise<plc.Operation> => {
-  const plcOp = cborDecode(plcOpBytes)
   if (!check.is(plcOp, plc.def.operation)) {
     throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
   }

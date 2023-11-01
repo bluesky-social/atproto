@@ -13,7 +13,7 @@ export interface QueryParams {}
 export interface InputSchema {
   handle: string
   did: string
-  plcOp: Uint8Array
+  plcOp: {}
   [k: string]: unknown
 }
 

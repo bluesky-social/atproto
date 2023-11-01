@@ -5,7 +5,6 @@ import * as ui8 from 'uint8arrays'
 import { SeedClient, TestPds, TestPlc, mockResolvers } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import * as pdsEntryway from '@atproto/pds-entryway'
-import { cborEncode } from '@atproto/common'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import * as plcLib from '@did-plc/lib'
 import getPort from 'get-port'
@@ -132,7 +131,7 @@ describe('transfer repo', () => {
     await pdsAgent.api.com.atproto.temp.transferAccount({
       did,
       handle: accountDetail.handle,
-      plcOp: cborEncode(plcOp),
+      plcOp,
     })
 
     await entryway.ctx.db.db
