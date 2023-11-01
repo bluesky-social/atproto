@@ -75,8 +75,11 @@ export class AccountManager {
     })
     const passwordScrypt = await scrypt.genSaltAndHash(password)
     const now = new Date().toISOString()
-    await this.db.transaction((dbTxn) =>
-      Promise.all([
+    await this.db.transaction(async (dbTxn) => {
+      if (inviteCode) {
+        await invite.ensureInviteIsAvailable(dbTxn, inviteCode)
+      }
+      await Promise.all([
         account.registerActor(dbTxn, { did, handle }),
         account.registerAccount(dbTxn, { did, email, passwordScrypt }),
         repo.updateRoot(dbTxn, did, repoCid, repoRev),
@@ -86,8 +89,8 @@ export class AccountManager {
           now,
         }),
         auth.storeRefreshToken(dbTxn, refresh.payload, null),
-      ]),
-    )
+      ])
+    })
     return { access, refresh }
   }
 

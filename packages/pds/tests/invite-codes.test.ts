@@ -95,7 +95,7 @@ describe('account', () => {
 
   // @NOTE we don't do race prevention on the PDS sqlite architecture because it requires holding the transaction open for too long
   // An entryway service may provide stronger guarantees
-  it.skip('handles racing invite code uses', async () => {
+  it('handles racing invite code uses', async () => {
     const inviteCode = await createInviteCode(network, agent, 1)
     const COUNT = 10
 
