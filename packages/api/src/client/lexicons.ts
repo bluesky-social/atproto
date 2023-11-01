@@ -2512,7 +2512,7 @@ export const schemaDict = {
                 type: 'string',
               },
               plcOp: {
-                type: 'bytes',
+                type: 'unknown',
               },
             },
           },
@@ -3177,8 +3177,7 @@ export const schemaDict = {
             properties: {
               did: {
                 type: 'string',
-                description:
-                  'The did that the signign key is being reserved for.',
+                description: 'The did to reserve a new did:key for',
               },
             },
           },

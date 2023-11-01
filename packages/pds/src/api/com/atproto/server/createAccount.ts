@@ -1,4 +1,4 @@
-import { DidDocument, MINUTE, cborDecode, check } from '@atproto/common'
+import { DidDocument, MINUTE, check } from '@atproto/common'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
@@ -83,13 +83,12 @@ const validateInputsForEntrywayPds = async (
   ctx: AppContext,
   input: CreateAccountInput,
 ) => {
-  const { did, handle } = input
+  const { did, handle, plcOp } = input
   if (!did || !input.plcOp) {
     throw new InvalidRequestError(
       'non-entryway pds requires bringing a DID and plcOp',
     )
   }
-  const plcOp = cborDecode(input.plcOp)
   if (!check.is(plcOp, plc.def.operation)) {
     throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
   }
