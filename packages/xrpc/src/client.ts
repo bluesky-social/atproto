@@ -1,4 +1,4 @@
-import { Lexicons, ValidationError } from '@atproto/lexicon'
+import { LexiconDoc, Lexicons, ValidationError } from '@atproto/lexicon'
 import {
   getMethodSchemaHTTPMethod,
   constructMethodCallUri,
@@ -46,11 +46,11 @@ export class Client {
   // schemas
   // =
 
-  addLexicon(doc: unknown) {
+  addLexicon(doc: LexiconDoc) {
     this.lex.add(doc)
   }
 
-  addLexicons(docs: unknown[]) {
+  addLexicons(docs: LexiconDoc[]) {
     for (const doc of docs) {
       this.addLexicon(doc)
     }
