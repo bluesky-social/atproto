@@ -1,4 +1,3 @@
-import os from 'os'
 import path from 'path'
 import fs from 'fs/promises'
 import * as crypto from '@atproto/crypto'
@@ -65,8 +64,7 @@ export class ActorStore {
         return crypto.Secp256k1Keypair.import(privKey)
       },
     })
-    this.reservedKeyDir =
-      resources.reservedKeyDir ?? path.join(os.tmpdir(), 'reserved_keys')
+    this.reservedKeyDir = path.join(cfg.directory, 'reserved_keys')
   }
 
   async getLocation(did: string) {
