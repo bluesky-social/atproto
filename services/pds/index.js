@@ -18,7 +18,6 @@ const {
   envToSecrets,
   readEnv,
   httpLogger,
-  PeriodicModerationActionReversal,
 } = require('@atproto/pds')
 const pkg = require('@atproto/pds/package.json')
 
@@ -28,16 +27,6 @@ const main = async () => {
   const cfg = envToCfg(env)
   const secrets = envToSecrets(env)
   const pds = await PDS.create(cfg, secrets)
-
-  // If the PDS is configured to proxy moderation, this will be running on appview instead of pds.
-  // Also don't run this on the sequencer leader, which may not be configured regarding moderation proxying at all.
-  const periodicModerationActionReversal =
-    pds.ctx.cfg.bskyAppView.proxyModeration ||
-    pds.ctx.cfg.sequencerLeaderEnabled
-      ? null
-      : new PeriodicModerationActionReversal(pds.ctx)
-  const periodicModerationActionReversalRunning =
-    periodicModerationActionReversal?.run()
 
   await pds.start()
 
