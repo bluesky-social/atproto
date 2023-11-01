@@ -3934,7 +3934,7 @@ export const schemaDict = {
                 format: 'did',
               },
               plcOp: {
-                type: 'bytes',
+                type: 'unknown',
               },
             },
           },

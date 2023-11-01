@@ -95,7 +95,7 @@ export class AccountManager {
           now,
         }),
         auth.storeRefreshToken(dbTxn, refreshPayload, null),
-        repo.updateRoot(this.db, did, repoCid, repoRev),
+        repo.updateRoot(dbTxn, did, repoCid, repoRev),
       ])
     })
     return { accessJwt, refreshJwt }
