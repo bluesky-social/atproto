@@ -83,7 +83,11 @@ export type AuthVerifierOpts = {
   adminPass: string
   moderatorPass: string
   triagePass: string
-  adminServiceDid: string
+  dids: {
+    pds: string
+    entryway?: string
+    admin: string
+  }
 }
 
 export class AuthVerifier {
@@ -91,7 +95,7 @@ export class AuthVerifier {
   private _adminPass: string
   private _moderatorPass: string
   private _triagePass: string
-  public adminServiceDid: string
+  public dids: AuthVerifierOpts['dids']
 
   constructor(
     public accountManager: AccountManager,
@@ -102,7 +106,7 @@ export class AuthVerifier {
     this._adminPass = opts.adminPass
     this._moderatorPass = opts.moderatorPass
     this._triagePass = opts.triagePass
-    this.adminServiceDid = opts.adminServiceDid
+    this.dids = opts.dids
   }
 
   // verifiers (arrow fns to preserve scope)
@@ -135,7 +139,10 @@ export class AuthVerifier {
 
   refresh = async (ctx: ReqCtx): Promise<RefreshOutput> => {
     const { did, scope, token, audience, payload } =
-      await this.validateBearerToken(ctx.req, [AuthScope.Refresh])
+      await this.validateBearerToken(ctx.req, [AuthScope.Refresh], {
+        // when using entryway, proxying refresh credentials
+        audience: this.dids.entryway ? this.dids.entryway : this.dids.pds,
+      })
     if (!payload.jti) {
       throw new AuthRequiredError(
         'Unexpected missing refresh token id',
@@ -205,14 +212,14 @@ export class AuthVerifier {
     const payload = await verifyServiceJwt(
       jwtStr,
       null,
-      async (did: string) => {
-        if (did !== this.adminServiceDid) {
+      async (did, forceRefresh) => {
+        if (did !== this.dids.admin) {
           throw new AuthRequiredError(
             'Untrusted issuer for admin actions',
             'UntrustedIss',
           )
         }
-        return this.idResolver.did.resolveAtprotoKey(did)
+        return this.idResolver.did.resolveAtprotoKey(did, forceRefresh)
       },
     )
     return {
@@ -273,6 +280,7 @@ export class AuthVerifier {
     const { did, scope, token, audience } = await this.validateBearerToken(
       req,
       scopes,
+      { audience: this.dids.pds },
     )
     return {
       credentials: {
