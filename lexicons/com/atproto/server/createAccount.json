@@ -9,7 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["handle", "email", "password"],
+          "required": ["handle"],
           "properties": {
             "email": { "type": "string" },
             "handle": { "type": "string", "format": "handle" },
@@ -17,7 +17,7 @@
             "inviteCode": { "type": "string" },
             "password": { "type": "string" },
             "recoveryKey": { "type": "string" },
-            "plcOp": { "type": "bytes" }
+            "plcOp": { "type": "unknown" }
           }
         }
       },

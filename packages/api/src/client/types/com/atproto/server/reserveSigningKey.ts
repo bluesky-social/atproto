@@ -10,7 +10,7 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {}
 
 export interface InputSchema {
-  /** The did that the signign key is being reserved for. */
+  /** The did to reserve a new did:key for */
   did?: string
   [k: string]: unknown
 }
