@@ -1,4 +1,4 @@
-import { MINUTE } from '@atproto/common'
+import { DidDocument, MINUTE } from '@atproto/common'
 import { AtprotoData } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
@@ -68,39 +68,46 @@ export default function (server: Server, ctx: AppContext) {
         signingKey,
       )
 
-      const commit = await ctx.actorStore.create(
-        did,
-        signingKey,
-        (actorTxn) => {
-          return actorTxn.repo.createRepo([])
-        },
-      )
+      let didDoc: DidDocument | undefined
+      let creds: { accessJwt: string; refreshJwt: string }
+      try {
+        const commit = await ctx.actorStore.create(
+          did,
+          signingKey,
+          (actorTxn) => {
+            return actorTxn.repo.createRepo([])
+          },
+        )
 
-      // Generate a real did with PLC
-      if (plcOp) {
-        try {
-          await ctx.plcClient.sendOperation(did, plcOp)
-        } catch (err) {
-          req.log.error(
-            { didKey: ctx.plcRotationKey.did(), handle },
-            'failed to create did:plc',
-          )
-          throw err
+        // Generate a real did with PLC
+        if (plcOp) {
+          try {
+            await ctx.plcClient.sendOperation(did, plcOp)
+          } catch (err) {
+            req.log.error(
+              { didKey: ctx.plcRotationKey.did(), handle },
+              'failed to create did:plc',
+            )
+            throw err
+          }
         }
+
+        creds = await ctx.accountManager.createAccount({
+          did,
+          handle,
+          email,
+          password,
+          repoCid: commit.cid,
+          repoRev: commit.rev,
+          inviteCode,
+        })
+
+        await ctx.sequencer.sequenceCommit(did, commit, [])
+        didDoc = await didDocForSession(ctx, did, true)
+      } catch (err) {
+        await ctx.actorStore.destroy(did)
+        throw err
       }
-      const { accessJwt, refreshJwt } = await ctx.accountManager.createAccount({
-        did,
-        handle,
-        email,
-        password,
-        repoCid: commit.cid,
-        repoRev: commit.rev,
-        inviteCode,
-      })
-
-      await ctx.sequencer.sequenceCommit(did, commit, [])
-
-      const didDoc = await didDocForSession(ctx, did, true)
 
       return {
         encoding: 'application/json',
@@ -108,8 +115,8 @@ export default function (server: Server, ctx: AppContext) {
           handle,
           did: did,
           didDoc,
-          accessJwt,
-          refreshJwt,
+          accessJwt: creds.accessJwt,
+          refreshJwt: creds.refreshJwt,
         },
       }
     },

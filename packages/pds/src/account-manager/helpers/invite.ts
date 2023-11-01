@@ -30,6 +30,7 @@ export const createAccountInviteCodes = async (
   db: AccountDb,
   forAccount: string,
   codes: string[],
+  expectedTotal: number,
   disabled: 0 | 1,
 ): Promise<CodeDetail[]> => {
   const now = new Date().toISOString()
@@ -45,6 +46,20 @@ export const createAccountInviteCodes = async (
       } as InviteCode),
   )
   await db.db.insertInto('invite_code').values(rows).execute()
+
+  const finalRoutineInviteCodes = await db.db
+    .selectFrom('invite_code')
+    .where('forAccount', '=', forAccount)
+    .where('createdBy', '!=', 'admin') // dont count admin-gifted codes aginast the user
+    .selectAll()
+    .execute()
+  if (finalRoutineInviteCodes.length > expectedTotal) {
+    throw new InvalidRequestError(
+      'attempted to create additional codes in another request',
+      'DuplicateCreate',
+    )
+  }
+
   return rows.map((row) => ({
     ...row,
     available: 1,

@@ -747,6 +747,12 @@ importers:
       get-port:
         specifier: ^6.1.2
         version: 6.1.2
+      jose:
+        specifier: ^4.15.4
+        version: 4.15.4
+      key-encoder:
+        specifier: ^2.0.3
+        version: 2.0.3
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0

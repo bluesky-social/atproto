@@ -57,6 +57,45 @@ describe('signatures', () => {
       }
     }
   })
+
+  it('verifies high-s signatures with explicit option', async () => {
+    const highSVectors = vectors.filter((vec) => vec.tags.includes('high-s'))
+    expect(highSVectors.length).toBeGreaterThanOrEqual(2)
+    for (const vector of highSVectors) {
+      const messageBytes = uint8arrays.fromString(
+        vector.messageBase64,
+        'base64',
+      )
+      const signatureBytes = uint8arrays.fromString(
+        vector.signatureBase64,
+        'base64',
+      )
+      const keyBytes = multibaseToBytes(vector.publicKeyMultibase)
+      const didKey = parseDidKey(vector.publicKeyDid)
+      expect(uint8arrays.equals(keyBytes, didKey.keyBytes))
+      if (vector.algorithm === P256_JWT_ALG) {
+        const verified = await p256.verifySig(
+          keyBytes,
+          messageBytes,
+          signatureBytes,
+          { lowS: false },
+        )
+        expect(verified).toEqual(true)
+        expect(vector.validSignature).toEqual(false) // otherwise would fail per low-s requirement
+      } else if (vector.algorithm === SECP256K1_JWT_ALG) {
+        const verified = await secp.verifySig(
+          keyBytes,
+          messageBytes,
+          signatureBytes,
+          { lowS: false },
+        )
+        expect(verified).toEqual(true)
+        expect(vector.validSignature).toEqual(false) // otherwise would fail per low-s requirement
+      } else {
+        throw new Error('Unsupported test vector')
+      }
+    }
+  })
 })
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -79,6 +118,7 @@ async function generateTestVectors(): Promise<TestVector[]> {
         'base64',
       ),
       validSignature: true,
+      tags: [],
     },
     {
       messageBase64,
@@ -93,6 +133,7 @@ async function generateTestVectors(): Promise<TestVector[]> {
         'base64',
       ),
       validSignature: true,
+      tags: [],
     },
     // these vectors test to ensure we don't allow high-s signatures
     {
@@ -109,6 +150,7 @@ async function generateTestVectors(): Promise<TestVector[]> {
         P256_JWT_ALG,
       ),
       validSignature: false,
+      tags: ['high-s'],
     },
     {
       messageBase64,
@@ -124,6 +166,7 @@ async function generateTestVectors(): Promise<TestVector[]> {
         SECP256K1_JWT_ALG,
       ),
       validSignature: false,
+      tags: ['high-s'],
     },
   ]
 }
@@ -159,4 +202,5 @@ type TestVector = {
   messageBase64: string
   signatureBase64: string
   validSignature: boolean
+  tags: string[]
 }
