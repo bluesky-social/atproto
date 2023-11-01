@@ -28,5 +28,8 @@
     "@noble/curves": "^1.1.0",
     "@noble/hashes": "^1.3.1",
     "uint8arrays": "3.0.0"
+  },
+  "devDependencies": {
+    "@atproto/common": "workspace:^"
   }
 }

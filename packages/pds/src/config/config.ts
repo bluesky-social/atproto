@@ -1,5 +1,6 @@
 import os from 'node:os'
 import path from 'node:path'
+import assert from 'node:assert'
 import { DAY, HOUR, SECOND } from '@atproto/common'
 import { ServerEnvironment } from './env'
 
@@ -101,6 +102,20 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     enableDidDocWithSession: !!env.enableDidDocWithSession,
   }
 
+  let entrywayCfg: ServerConfig['entryway'] = null
+  if (env.entrywayUrl) {
+    assert(
+      env.entrywayJwtVerifyKeyK256PublicKeyHex &&
+        env.entrywayPlcRotationKeyK256PublicKeyHex,
+      'if entryway url is configured, must include all required entryway configuration',
+    )
+    entrywayCfg = {
+      url: env.entrywayUrl,
+      jwtPublicKeyHex: env.entrywayJwtVerifyKeyK256PublicKeyHex,
+      plcRotationPublicKeyHex: env.entrywayPlcRotationKeyK256PublicKeyHex,
+    }
+  }
+
   // default to being required if left undefined
   const invitesCfg: ServerConfig['invites'] =
     env.inviteRequired === false
@@ -186,6 +201,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     actorStore: actorStoreCfg,
     blobstore: blobstoreCfg,
     identity: identityCfg,
+    entryway: entrywayCfg,
     invites: invitesCfg,
     email: emailCfg,
     moderationEmail: moderationEmailCfg,
@@ -203,6 +219,7 @@ export type ServerConfig = {
   actorStore: ActorStoreConfig
   blobstore: S3BlobstoreConfig | DiskBlobstoreConfig
   identity: IdentityConfig
+  entryway: EntrywayConfig | null
   invites: InvitesConfig
   email: EmailConfig | null
   moderationEmail: EmailConfig | null
@@ -261,6 +278,12 @@ export type IdentityConfig = {
   serviceHandleDomains: string[]
   handleBackupNameservers?: string[]
   enableDidDocWithSession: boolean
+}
+
+export type EntrywayConfig = {
+  url: string
+  jwtPublicKeyHex: string
+  plcRotationPublicKeyHex: string
 }
 
 export type InvitesConfig =

@@ -1,4 +1,4 @@
-import * as jwt from 'jsonwebtoken'
+import * as jose from 'jose'
 import AtpAgent from '@atproto/api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import * as CreateSession from '@atproto/api/src/client/types/com/atproto/server/createSession'
@@ -42,12 +42,10 @@ describe('auth', () => {
       headers: SeedClient.getHeaders(jwt),
     })
   }
-  const refreshSession = async (jwt) => {
+  const refreshSession = async (jwt: string) => {
     const { data } = await agent.api.com.atproto.server.refreshSession(
       undefined,
-      {
-        headers: SeedClient.getHeaders(jwt),
-      },
+      { headers: SeedClient.getHeaders(jwt) },
     )
     return data
   }
@@ -160,7 +158,7 @@ describe('auth', () => {
     const tokenIdPromises: Promise<string>[] = []
     const doRefresh = async () => {
       const res = await refreshSession(account.refreshJwt)
-      const decoded = jwt.decode(res.refreshJwt, { json: true })
+      const decoded = jose.decodeJwt(res.refreshJwt)
       if (!decoded?.jti) {
         throw new Error('undefined jti on refresh token')
       }
@@ -184,9 +182,9 @@ describe('auth', () => {
     const refresh1 = await refreshSession(account.refreshJwt)
     const refresh2 = await refreshSession(account.refreshJwt)
 
-    const token0 = jwt.decode(account.refreshJwt, { json: true })
-    const token1 = jwt.decode(refresh1.refreshJwt, { json: true })
-    const token2 = jwt.decode(refresh2.refreshJwt, { json: true })
+    const token0 = jose.decodeJwt(account.refreshJwt)
+    const token1 = jose.decodeJwt(refresh1.refreshJwt)
+    const token2 = jose.decodeJwt(refresh2.refreshJwt)
 
     expect(typeof token1?.jti).toEqual('string')
     expect(token1?.jti).toEqual(token2?.jti)
@@ -202,7 +200,7 @@ describe('auth', () => {
       password: 'password',
     })
     await refreshSession(account.refreshJwt)
-    const token = jwt.decode(account.refreshJwt, { json: true })
+    const token = jose.decodeJwt(account.refreshJwt)
 
     // Update expiration (i.e. grace period) to end immediately
     const refreshUpdated = await db.db
@@ -253,14 +251,14 @@ describe('auth', () => {
       email: 'holga@test.com',
       password: 'password',
     })
-    const refresh = createRefreshToken({
-      jwtSecret: network.pds.jwtSecret(),
+    const refreshJwt = await createRefreshToken({
+      jwtKey: network.pds.jwtSecretKey(),
       did: account.did,
       expiresIn: -1,
     })
-    const refreshExpired = refreshSession(refresh.jwt)
+    const refreshExpired = refreshSession(refreshJwt)
     await expect(refreshExpired).rejects.toThrow('Token has expired')
-    await deleteSession(refresh.jwt) // No problem revoking an expired token
+    await deleteSession(refreshJwt) // No problem revoking an expired token
   })
 
   it('actor takedown disallows fresh session.', async () => {

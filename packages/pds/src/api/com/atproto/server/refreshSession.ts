@@ -4,11 +4,12 @@ import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { didDocForSession } from './util'
+import { authPassthru, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.refreshSession({
     auth: ctx.authVerifier.refresh,
-    handler: async ({ auth }) => {
+    handler: async ({ auth, req }) => {
       const did = auth.credentials.did
       const user = await ctx.accountManager.getAccount(did, true)
       if (!user) {
@@ -20,6 +21,15 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError(
           'Account has been taken down',
           'AccountTakedown',
+        )
+      }
+
+      if (ctx.entrywayAgent) {
+        return resultPassthru(
+          await ctx.entrywayAgent.com.atproto.server.refreshSession(
+            undefined,
+            authPassthru(req),
+          ),
         )
       }
 
@@ -37,8 +47,8 @@ export default function (server: Server, ctx: AppContext) {
           did: user.did,
           didDoc,
           handle: user.handle ?? INVALID_HANDLE,
-          accessJwt: rotated.access.jwt,
-          refreshJwt: rotated.refresh.jwt,
+          accessJwt: rotated.accessJwt,
+          refreshJwt: rotated.refreshJwt,
         },
       }
     },

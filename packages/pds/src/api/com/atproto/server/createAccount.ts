@@ -1,4 +1,4 @@
-import { MINUTE } from '@atproto/common'
+import { DidDocument, MINUTE } from '@atproto/common'
 import { AtprotoData } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
@@ -68,8 +68,8 @@ export default function (server: Server, ctx: AppContext) {
         signingKey,
       )
 
-      let didDoc
-      let creds
+      let didDoc: DidDocument | undefined
+      let creds: { accessJwt: string; refreshJwt: string }
       try {
         const commit = await ctx.actorStore.create(
           did,
@@ -115,8 +115,8 @@ export default function (server: Server, ctx: AppContext) {
           handle,
           did: did,
           didDoc,
-          accessJwt: creds.access.jwt,
-          refreshJwt: creds.refresh.jwt,
+          accessJwt: creds.accessJwt,
+          refreshJwt: creds.refreshJwt,
         },
       }
     },

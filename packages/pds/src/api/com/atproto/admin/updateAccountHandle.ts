@@ -11,6 +11,7 @@ export default function (server: Server, ctx: AppContext) {
       if (!auth.credentials.admin) {
         throw new AuthRequiredError('Insufficient privileges')
       }
+
       const { did } = input.body
       const handle = await normalizeAndValidateHandle({
         ctx,
@@ -27,7 +28,19 @@ export default function (server: Server, ctx: AppContext) {
           throw new InvalidRequestError(`Handle already taken: ${handle}`)
         }
       } else {
-        await ctx.plcClient.updateHandle(did, ctx.plcRotationKey, handle)
+        if (ctx.cfg.entryway) {
+          // the pds defers to the entryway for updating the handle in the user's did doc.
+          // here was just check that the handle is already bidirectionally confirmed.
+          // @TODO if handle is taken according to this PDS, should we force-update?
+          const doc = await ctx.idResolver.did
+            .resolveAtprotoData(did, true)
+            .catch(() => undefined)
+          if (doc?.handle !== handle) {
+            throw new InvalidRequestError('Handle does not match DID doc')
+          }
+        } else {
+          await ctx.plcClient.updateHandle(did, ctx.plcRotationKey, handle)
+        }
         await ctx.accountManager.updateHandle(did, handle)
       }
 

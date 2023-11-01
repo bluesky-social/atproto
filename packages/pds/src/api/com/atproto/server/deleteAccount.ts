@@ -3,6 +3,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { MINUTE } from '@atproto/common'
 
+// @TODO create a similar admin endpoint to support entryway usage
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deleteAccount({
     rateLimit: {

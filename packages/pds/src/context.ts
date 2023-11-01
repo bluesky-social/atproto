@@ -7,7 +7,11 @@ import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { ServerConfig, ServerSecrets } from './config'
-import { AuthVerifier } from './auth-verifier'
+import {
+  AuthVerifier,
+  createPublicKeyObject,
+  createSecretKeyObject,
+} from './auth-verifier'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
@@ -36,6 +40,7 @@ export type AppContextOptions = {
   redisScratch?: Redis
   crawlers: Crawlers
   appViewAgent: AtpAgent
+  entrywayAgent?: AtpAgent
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
@@ -56,6 +61,7 @@ export class AppContext {
   public redisScratch?: Redis
   public crawlers: Crawlers
   public appViewAgent: AtpAgent
+  public entrywayAgent: AtpAgent | undefined
   public authVerifier: AuthVerifier
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
@@ -75,6 +81,7 @@ export class AppContext {
     this.redisScratch = opts.redisScratch
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
+    this.entrywayAgent = opts.entrywayAgent
     this.authVerifier = opts.authVerifier
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
@@ -141,14 +148,20 @@ export class AppContext {
 
     const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
 
-    const accountManager = new AccountManager(
-      cfg.db.accountDbLoc,
-      secrets.jwtSecret,
-    )
+    const entrywayAgent = cfg.entryway
+      ? new AtpAgent({ service: cfg.entryway.url })
+      : undefined
+
+    const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
+    const accountManager = new AccountManager(cfg.db.accountDbLoc, jwtSecretKey)
     await accountManager.migrateOrThrow()
 
+    const jwtKey = cfg.entryway
+      ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
+      : jwtSecretKey
+
     const authVerifier = new AuthVerifier(accountManager, idResolver, {
-      jwtSecret: secrets.jwtSecret,
+      jwtKey, // @TODO support multiple keys?
       adminPass: secrets.adminPassword,
       moderatorPass: secrets.moderatorPassword,
       triagePass: secrets.triagePassword,
@@ -193,6 +206,7 @@ export class AppContext {
       redisScratch,
       crawlers,
       appViewAgent,
+      entrywayAgent,
       authVerifier,
       plcRotationKey,
       cfg,
