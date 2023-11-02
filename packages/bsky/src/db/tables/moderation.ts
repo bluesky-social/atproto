@@ -6,7 +6,6 @@ import {
 } from '../../lexicon/types/com/atproto/admin/defs'
 
 export const eventTableName = 'moderation_event'
-export const actionSubjectBlobTableName = 'moderation_action_subject_blob'
 export const subjectStatusTableName = 'moderation_subject_status'
 
 export interface ModerationEvent {

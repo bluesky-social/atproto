@@ -112,6 +112,7 @@ export const adjustModerationSubjectStatus = async (
     durationInHours: moderationEvent.durationInHours,
   })
 
+  // If there are no subjectStatus that means there are no side-effect of the incoming event
   if (!subjectStatus) {
     return null
   }
@@ -133,13 +134,7 @@ export const adjustModerationSubjectStatus = async (
     ...defaultData,
     ...subjectStatus,
     ...identifier,
-    createdAt: now,
-    updatedAt: now,
-    blobCids: blobCids?.length
-      ? sql<string[]>`${JSON.stringify(blobCids.map((c) => c.toString()))}`
-      : null,
-    // TODO: fix this?
-  } as ModerationSubjectStatusRow
+  }
 
   if (
     action === 'com.atproto.admin.defs#modEventReverseTakedown' &&
@@ -159,7 +154,16 @@ export const adjustModerationSubjectStatus = async (
 
   const insertQuery = db.db
     .insertInto('moderation_subject_status')
-    .values(newStatus)
+    .values({
+      ...identifier,
+      ...newStatus,
+      createdAt: now,
+      updatedAt: now,
+      blobCids: blobCids?.length
+        ? sql<string[]>`${JSON.stringify(blobCids.map((c) => c.toString()))}`
+        : null,
+      // TODO: Need to get the types right here.
+    } as ModerationSubjectStatusRow)
     .onConflict((oc) =>
       oc.constraint('moderation_status_unique_idx').doUpdateSet({
         ...subjectStatus,
@@ -196,11 +200,14 @@ export const getModerationSubjectStatus = async (
   return builder.executeTakeFirst()
 }
 
-export const getStatusIdentifierFromSubject = (subject: string | AtUri) => {
+export const getStatusIdentifierFromSubject = (
+  subject: string | AtUri,
+): { did: string; recordPath: string | null } => {
   const isSubjectString = typeof subject === 'string'
   if (isSubjectString && subject.startsWith('did:')) {
     return {
       did: subject,
+      recordPath: null,
     }
   }
 

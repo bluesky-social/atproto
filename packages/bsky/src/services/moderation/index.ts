@@ -219,15 +219,15 @@ export class ModerationService {
     const actionResult = await this.db.db
       .insertInto('moderation_event')
       .values({
-        // TODO: WHYYY?
-        // @ts-ignore
-        action: event.$type,
-        comment: event.comment,
+        comment: event.comment ? `${event.comment}` : null,
+        action: event.$type as ModerationEvent['action'],
         createdAt: createdAt.toISOString(),
         createdBy,
         createLabelVals,
         negateLabelVals,
-        durationInHours: event.durationInHours,
+        durationInHours: event.durationInHours
+          ? Number(event.durationInHours)
+          : null,
         meta,
         expiresAt:
           (isModEventTakedown(event) || isModEventMute(event)) &&
