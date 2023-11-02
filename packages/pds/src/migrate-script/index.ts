@@ -34,7 +34,7 @@ export const runScript = async () => {
   }))
   const todo = await db
     .selectFrom('status')
-    .where('status.phase', '=', 0)
+    .where('status.phase', '<', 7)
     .where('failed', '!=', 1)
     .selectAll()
     .execute()
@@ -68,6 +68,7 @@ const migrateRepo = async (
   status: Status,
   adminToken: string,
 ) => {
+  console.log(`reserve (${status.did}, ${status.phase})`)
   if (status.phase < TransferPhase.reservedKey) {
     const signingKey = await reserveSigningKey(pds, status.did)
     status.signingKey = signingKey
@@ -75,6 +76,7 @@ const migrateRepo = async (
     await updateStatus(db, status)
   }
 
+  console.log(`import (${status.did}, ${status.phase})`)
   if (status.phase < TransferPhase.initImport) {
     const importedRev = await doImport(ctx, db, pds, status.did)
     if (importedRev) {
@@ -84,6 +86,7 @@ const migrateRepo = async (
     await updateStatus(db, status)
   }
 
+  console.log(`transfer (${status.did}, ${status.phase})`)
   if (status.phase < TransferPhase.transferred) {
     const importedRev = await lockAndTransfer(ctx, db, pds, status)
     status.importedRev = importedRev
@@ -91,6 +94,7 @@ const migrateRepo = async (
     await updateStatus(db, status)
   }
 
+  console.log(`prefs (${status.did}, ${status.phase})`)
   if (status.phase < TransferPhase.preferences) {
     try {
       await transferPreferences(ctx, pds, status.did)
@@ -105,6 +109,7 @@ const migrateRepo = async (
     }
   }
 
+  console.log(`takedowns (${status.did}, ${status.phase})`)
   if (status.phase < TransferPhase.takedowns) {
     await transferTakedowns(ctx, db, pds, status.did, adminToken)
     status.phase = TransferPhase.completed
