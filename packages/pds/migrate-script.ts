@@ -24,11 +24,13 @@ const run = async () => {
     'base64pad',
   )
 
-  const didsFile = await fs.readFile('dids.txt')
-  const dids = didsFile
-    .toString()
-    .split('\n')
-    .map((did) => did.trim())
+  const allDids = await readDidFile('all-dids.txt')
+  const succeeded = await readDidFile('succeeded.txt')
+  const failed = await readDidFile('failed.txt')
+
+  const todoDids = allDids.filter(
+    (did) => succeeded.indexOf(did) < 0 && failed.indexOf(did) < 0,
+  )
 
   const pdsRes = await ctx.db.db.selectFrom('pds').selectAll().execute()
   const pdsInfos = pdsRes.map((row) => ({
@@ -37,6 +39,16 @@ const run = async () => {
     url: `https://${row.host}`,
     agent: new AtpAgent({ service: `https://${row.host}` }),
   }))
+  let pdsCounter = 0
+  for (const did of todoDids) {
+    const pdsInfo = pdsInfos[pdsCounter % pdsInfos.length]
+    try {
+      await migrateRepo(ctx, pdsInfo, did, adminToken)
+    } catch (err) {
+      console.error(`failed to migrate: ${did}`, err)
+    }
+    pdsCounter++
+  }
 }
 
 const migrateRepo = async (
@@ -45,6 +57,12 @@ const migrateRepo = async (
   did: string,
   adminToken: string,
 ) => {
+  // verify not migrated yet
+  const checkAccount = await getUserAccount(ctx, did)
+  if (checkAccount.pdsId !== null) {
+    console.log(`account already migrated: ${did} -> ${checkAccount.pdsId}`)
+    return
+  }
   const signingKeyRes =
     await pds.agent.api.com.atproto.server.reserveSigningKey({ did })
   const signingKey = signingKeyRes.data.signingKey
@@ -59,7 +77,7 @@ const migrateRepo = async (
       await defer.complete
     })
     .catch((err) => {
-      console.error('error in repo lock tx', err)
+      console.error(`error in repo lock tx for did: ${did}`, err)
     })
 
   try {
@@ -106,8 +124,6 @@ const migrateRepo = async (
       .where('did', '=', did)
       .set({ did: `migrated-${did}` })
       .execute()
-  } catch (err) {
-    console.error()
   } finally {
     defer.resolve()
   }
@@ -141,7 +157,7 @@ const doImport = async (
   )
 
   for await (const log of importRes.data) {
-    console.log(log.toString())
+    console.log(`import update for ${did}: `, log.toString())
   }
   return root.rev
 }
@@ -260,4 +276,12 @@ const getUserAccount = async (ctx: AppContext, did: string) => {
     throw new Error(`could not find account: ${did}`)
   }
   return accountRes
+}
+
+const readDidFile = async (name: string): Promise<string[]> => {
+  const contents = await fs.readFile(name)
+  return contents
+    .toString()
+    .split('\n')
+    .map((did) => did.trim())
 }
