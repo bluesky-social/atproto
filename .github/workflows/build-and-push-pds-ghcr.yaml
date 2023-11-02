@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - pds-v2-migrate-script
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
