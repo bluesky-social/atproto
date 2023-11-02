@@ -121,8 +121,17 @@ const migrateRepo = async (
       plcOp,
     })
 
-    await transferPreferences(ctx, pds, did)
-    await transferTakedowns(ctx, pds, did, adminToken)
+    try {
+      await transferPreferences(ctx, pds, did)
+    } catch (err) {
+      console.error(`failed to transfer preferences: ${did}`, err)
+    }
+
+    try {
+      await transferTakedowns(ctx, pds, did, adminToken)
+    } catch (err) {
+      console.error(`failed to transfer takedowns: ${did}`, err)
+    }
 
     await ctx.db.db
       .updateTable('user_account')
@@ -214,8 +223,9 @@ const transferTakedowns = async (
       .where('takedownRef', 'is not', null)
       .execute(),
   ])
+  const promises: Promise<unknown>[] = []
   if (accountRes.takedownRef) {
-    await pds.agent.com.atproto.admin.updateSubjectStatus(
+    const promise = pds.agent.com.atproto.admin.updateSubjectStatus(
       {
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
@@ -231,11 +241,12 @@ const transferTakedowns = async (
         encoding: 'application/json',
       },
     )
+    promises.push(promise)
   }
 
   for (const takendownRecord of takendownRecords) {
     if (!takendownRecord.takedownRef) continue
-    await pds.agent.com.atproto.admin.updateSubjectStatus(
+    const promise = pds.agent.com.atproto.admin.updateSubjectStatus(
       {
         subject: {
           $type: 'com.atproto.repo.strongRef',
@@ -252,11 +263,12 @@ const transferTakedowns = async (
         encoding: 'application/json',
       },
     )
+    promises.push(promise)
   }
 
   for (const takendownBlob of takendownBlobs) {
     if (!takendownBlob.takedownRef) continue
-    await pds.agent.com.atproto.admin.updateSubjectStatus(
+    const promise = pds.agent.com.atproto.admin.updateSubjectStatus(
       {
         subject: {
           $type: 'com.atproto.admin.defs#repoBlobRef',
@@ -274,6 +286,14 @@ const transferTakedowns = async (
         encoding: 'application/json',
       },
     )
+    promises.push(promise)
+  }
+
+  const results = await Promise.allSettled(promises)
+  for (const res of results) {
+    if (res.status === 'rejected') {
+      console.error(`failed to apply takedown for did ${did}: `, res.reason)
+    }
   }
 }
 
