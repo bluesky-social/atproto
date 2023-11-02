@@ -8,11 +8,11 @@ TypeScript library for implementing [atproto](https://atproto.com) HTTP API serv
 ## Usage
 
 ```typescript
+import { LexiconDoc } from '@atproto/lexicon'
 import * as xrpc from '@atproto/xrpc-server'
 import express from 'express'
 
-// create xrpc server
-const server = xrpc.createServer([
+const lexicons: LexiconDoc[] = [
   {
     lexicon: 1,
     id: 'io.example.ping',
@@ -29,7 +29,10 @@ const server = xrpc.createServer([
       },
     },
   },
-])
+]
+
+// create xrpc server
+const server = xrpc.createServer(lexicons)
 
 function ping(ctx: {
   auth: xrpc.HandlerAuth | undefined

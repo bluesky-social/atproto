@@ -8,9 +8,10 @@ TypeScript client library for talking to [atproto](https://atproto.com) services
 ## Usage
 
 ```typescript
+import { LexiconDoc } from '@atproto/lexicon'
 import xrpc from '@atproto/xrpc'
 
-xrpc.addLexicon({
+const pingLexicon: LexiconDoc = {
   lexicon: 1,
   id: 'io.example.ping',
   defs: {
@@ -31,7 +32,8 @@ xrpc.addLexicon({
       },
     },
   },
-})
+}
+xrpc.addLexicon(pingLexicon)
 
 const res1 = await xrpc.call('https://example.com', 'io.example.ping', {
   message: 'hello world',
@@ -44,7 +46,7 @@ const res2 = await xrpc
 res2.encoding // => 'application/json'
 res2.body // => {message: 'hello world'}
 
-xrpc.addLexicon({
+const writeJsonLexicon: LexiconDoc = {
   lexicon: 1,
   id: 'io.example.writeJsonFile',
   defs: {
@@ -60,7 +62,8 @@ xrpc.addLexicon({
       },
     },
   },
-})
+}
+xrpc.addLexicon(writeJsonLexicon)
 
 const res3 = await xrpc.service('https://example.com').call(
   'io.example.writeJsonFile',
