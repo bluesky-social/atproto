@@ -109,6 +109,7 @@ const importRepo = async (
             ? actorStore.db.db
                 .insertInto('record_blob')
                 .values(blobValues)
+                .onConflict((oc) => oc.doNothing())
                 .execute()
             : Promise.resolve()
         await Promise.all([indexRecord, indexRecordBlobs])
