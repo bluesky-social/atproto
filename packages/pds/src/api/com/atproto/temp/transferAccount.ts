@@ -4,6 +4,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { check, cidForCbor } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { BlockMap, CidSet } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.transferAccount({
@@ -36,6 +37,19 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.accountManager.deleteAccount(did)
         throw err
       }
+
+      await ctx.sequencer.sequenceCommit(
+        did,
+        {
+          cid: currRoot.cid,
+          rev: currRoot.rev,
+          since: null,
+          prev: null,
+          newBlocks: new BlockMap(),
+          removedCids: new CidSet(),
+        },
+        [],
+      )
 
       return {
         encoding: 'application/json',
