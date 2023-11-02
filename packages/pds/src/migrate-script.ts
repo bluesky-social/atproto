@@ -64,6 +64,7 @@ const migrateRepo = async (
     console.log(`account already migrated: ${did} -> ${checkAccount.pdsId}`)
     return
   }
+  console.log(`migrating ${did} to pds ${pds.id}`)
   const signingKeyRes =
     await pds.agent.api.com.atproto.server.reserveSigningKey({ did })
   const signingKey = signingKeyRes.data.signingKey
@@ -125,6 +126,8 @@ const migrateRepo = async (
       .where('did', '=', did)
       .set({ did: `migrated-${did}` })
       .execute()
+
+    console.log(`finished migrating ${did} to ${pds.id}`)
   } finally {
     defer.resolve()
   }
