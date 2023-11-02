@@ -27,10 +27,18 @@ export const runScript = async () => {
 
   const allDids = await readDidFile('all-dids.txt')
   const succeeded = await readDidFile('succeeded.txt')
+  const succeededMap = succeeded.reduce((acc, cur) => {
+    acc[cur] = true
+    return acc
+  }, {} as Record<string, boolean>)
   const failed = await readDidFile('failed.txt')
+  const failedMap = failed.reduce((acc, cur) => {
+    acc[cur] = true
+    return acc
+  }, {} as Record<string, boolean>)
 
   const todoDids = allDids.filter(
-    (did) => succeeded.indexOf(did) < 0 && failed.indexOf(did) < 0,
+    (did) => !succeededMap[did] && !failedMap[did],
   )
 
   const pdsRes = await ctx.db.db.selectFrom('pds').selectAll().execute()
