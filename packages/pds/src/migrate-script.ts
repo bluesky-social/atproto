@@ -282,7 +282,7 @@ const getUserAccount = async (ctx: AppContext, did: string) => {
     .selectFrom('did_handle')
     .innerJoin('user_account', 'user_account.did', 'did_handle.did')
     .selectAll()
-    .where('did', '=', did)
+    .where('did_handle.did', '=', did)
     .executeTakeFirst()
   if (!accountRes) {
     throw new Error(`could not find account: ${did}`)
