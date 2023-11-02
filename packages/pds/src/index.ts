@@ -31,6 +31,7 @@ export { Database } from './db'
 export { DiskBlobStore, MemoryBlobStore } from './storage'
 export { AppContext } from './context'
 export { httpLogger } from './logger'
+export { runScript } from './migrate-script'
 
 export class PDS {
   public ctx: AppContext

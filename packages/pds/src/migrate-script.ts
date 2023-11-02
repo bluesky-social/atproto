@@ -25,13 +25,13 @@ export const runScript = async () => {
     'base64pad',
   )
 
-  const allDids = await readDidFile('all-dids.txt')
-  const succeeded = await readDidFile('succeeded.txt')
+  const allDids = await readDidFile('/data/all-dids.txt')
+  const succeeded = await readDidFile('/data/succeeded.txt')
   const succeededMap = succeeded.reduce((acc, cur) => {
     acc[cur] = true
     return acc
   }, {} as Record<string, boolean>)
-  const failed = await readDidFile('failed.txt')
+  const failed = await readDidFile('/data/failed.txt')
   const failedMap = failed.reduce((acc, cur) => {
     acc[cur] = true
     return acc
