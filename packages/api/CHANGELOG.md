@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.6.23
+
+### Patch Changes
+
+- [#1806](https://github.com/bluesky-social/atproto/pull/1806) [`772736a0`](https://github.com/bluesky-social/atproto/commit/772736a01081f39504e1b19a1b3687783bb78f07) Thanks [@devinivy](https://github.com/devinivy)! - respect pds endpoint during session resumption
+
 ## 0.6.22
 
 ### Patch Changes
