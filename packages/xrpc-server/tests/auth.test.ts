@@ -6,6 +6,7 @@ import KeyEncoder from 'key-encoder'
 import * as ui8 from 'uint8arrays'
 import { MINUTE } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
+import { LexiconDoc } from '@atproto/lexicon'
 import xrpc, { ServiceClient, XRPCError } from '@atproto/xrpc'
 import * as xrpcServer from '../src'
 import {
@@ -15,7 +16,7 @@ import {
   basicAuthHeaders,
 } from './_util'
 
-const LEXICONS = [
+const LEXICONS: LexiconDoc[] = [
   {
     lexicon: 1,
     id: 'io.example.authTest',
