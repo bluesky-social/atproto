@@ -86,4 +86,5 @@ const eventTypes = new Set([
   'com.atproto.admin.defs#modEventMute',
   'com.atproto.admin.defs#modEventUnmute',
   'com.atproto.admin.defs#modEventReverseTakedown',
+  'com.atproto.admin.defs#modEventEmail',
 ])

@@ -1,11 +1,12 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.sendEmail({
     auth: ctx.roleVerifier,
-    handler: async ({ input, auth }) => {
+    handler: async ({ req, input, auth }) => {
       if (!auth.credentials.admin && !auth.credentials.moderator) {
         throw new AuthRequiredError('Insufficient privileges')
       }
@@ -30,17 +31,20 @@ export default function (server: Server, ctx: AppContext) {
         { content },
         { subject, to: userInfo.email },
       )
-      await ctx.appViewAgent.api.com.atproto.admin.emitModerationEvent({
-        event: {
-          $type: 'com.atproto.admin.defs#modEventEmail',
-          subject,
+      await ctx.appViewAgent.api.com.atproto.admin.emitModerationEvent(
+        {
+          event: {
+            $type: 'com.atproto.admin.defs#modEventEmail',
+            subject,
+          },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: recipientDid,
+          },
+          createdBy: senderDid,
         },
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: recipientDid,
-        },
-        createdBy: senderDid,
-      })
+        { ...authPassthru(req), encoding: 'application/json' },
+      )
       return {
         encoding: 'application/json',
         body: { sent: true },
