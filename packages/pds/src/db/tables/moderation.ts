@@ -37,8 +37,7 @@ export interface ModerationAction {
   durationInHours: number | null
   expiresAt: string | null
   refEventId: number | null
-  // TODO: better types here?
-  meta: Record<string, string> | null
+  meta: Record<string, string | boolean> | null
 }
 
 export interface ModerationActionSubjectBlob {
