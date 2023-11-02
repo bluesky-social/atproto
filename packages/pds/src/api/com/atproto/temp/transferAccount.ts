@@ -23,14 +23,19 @@ export default function (server: Server, ctx: AppContext) {
         input.body.plcOp,
       )
 
-      await ctx.plcClient.sendOperation(did, plcOp)
-
       const { accessJwt, refreshJwt } = await ctx.accountManager.createAccount({
         did,
         handle,
         repoCid: currRoot.cid,
         repoRev: currRoot.rev,
       })
+
+      try {
+        await ctx.plcClient.sendOperation(did, plcOp)
+      } catch (err) {
+        await ctx.accountManager.deleteAccount(did)
+        throw err
+      }
 
       return {
         encoding: 'application/json',
