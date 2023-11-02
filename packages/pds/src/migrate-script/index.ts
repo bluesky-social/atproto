@@ -165,11 +165,13 @@ const doImport = async (
   )
 
   for await (const log of importRes.data) {
-    const lines = log.split('\n')
-    for (const line of lines) {
-      if (line.indexOf('failed to import blob') > 0) {
-        const cid = line.split(':')[1].trim()
-        await logFailedBlob(db, did, cid)
+    if (typeof log === 'string') {
+      const lines = log.split('\n')
+      for (const line of lines) {
+        if (line.indexOf('failed to import blob') > 0) {
+          const cid = line.split(':')[1].trim()
+          await logFailedBlob(db, did, cid)
+        }
       }
     }
     console.log(`import update for ${did}: `, log.toString())
