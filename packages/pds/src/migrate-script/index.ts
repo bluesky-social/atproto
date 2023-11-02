@@ -16,7 +16,7 @@ type PdsInfo = {
 }
 
 export const runScript = async () => {
-  const db = await getDb('migrate.db')
+  const db = await getDb('/data/migrate.db')
   const env = readEnv()
   const cfg = envToCfg(env)
   const secrets = envToSecrets(env)
