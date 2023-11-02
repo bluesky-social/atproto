@@ -85,9 +85,9 @@ export default function (server: Server, ctx: AppContext) {
         return { result, restored }
       })
 
-      if (restored) {
-        const { did, subjects } = restored
-        const agent = await ctx.pdsAdminAgent(did)
+      if (restored && ctx.moderationPushAgent) {
+        const agent = ctx.moderationPushAgent
+        const { subjects } = restored
         const results = await Promise.allSettled(
           subjects.map((subject) =>
             retryHttp(() =>
