@@ -5,7 +5,6 @@ import { randomStr } from '@atproto/crypto'
 import * as repo from '@atproto/repo'
 import { MemoryBlockstore } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { CID } from 'multiformats/cid'
 import { AppContext } from '../../src'
 
@@ -204,7 +203,7 @@ describe('repo sync', () => {
   describe('repo takedown', () => {
     beforeAll(async () => {
       await sc.emitModerationEvent({
-        action: TAKEDOWN,
+        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did,

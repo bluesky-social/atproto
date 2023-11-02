@@ -4,7 +4,6 @@ import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { AppContext } from '../src'
 import { DAY } from '@atproto/common'
 import { genInvCodes } from '../src/api/com/atproto/server/util'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
 describe('account', () => {
   let network: TestNetworkNoAppView
@@ -53,7 +52,7 @@ describe('account', () => {
     const { data: takedownAction } =
       await agent.api.com.atproto.admin.emitModerationEvent(
         {
-          action: TAKEDOWN,
+          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
             did: account.did,

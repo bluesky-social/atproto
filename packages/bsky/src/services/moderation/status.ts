@@ -202,12 +202,12 @@ export const getModerationSubjectStatus = async (
 
 export const getStatusIdentifierFromSubject = (
   subject: string | AtUri,
-): { did: string; recordPath: string | null } => {
+): { did: string; recordPath: string } => {
   const isSubjectString = typeof subject === 'string'
   if (isSubjectString && subject.startsWith('did:')) {
     return {
       did: subject,
-      recordPath: null,
+      recordPath: '',
     }
   }
 

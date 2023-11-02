@@ -37,7 +37,7 @@ describe('fuzzy matcher', () => {
   const getAllReports = () => {
     return network.bsky.ctx.db
       .getPrimary()
-      .db.selectFrom('moderation_report')
+      .db.selectFrom('moderation_event')
       .selectAll()
       .orderBy('id', 'asc')
       .execute()

@@ -13,7 +13,6 @@ import { defaultFetchHandler } from '@atproto/xrpc'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { paginateAll } from './_util'
 import AppContext from '../src/context'
-import { TAKEDOWN } from '../src/lexicon/types/com/atproto/admin/defs'
 import { ids } from '../src/lexicon/lexicons'
 
 const alice = {
@@ -1157,7 +1156,7 @@ describe('crud operations', () => {
     const { data: action } =
       await agent.api.com.atproto.admin.emitModerationEvent(
         {
-          action: TAKEDOWN,
+          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
           subject: {
             $type: 'com.atproto.repo.strongRef',
             uri: created.uri,
@@ -1203,7 +1202,7 @@ describe('crud operations', () => {
     const { data: action } =
       await agent.api.com.atproto.admin.emitModerationEvent(
         {
-          action: TAKEDOWN,
+          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
             did: alice.did,

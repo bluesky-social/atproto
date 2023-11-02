@@ -669,7 +669,7 @@ describe('moderation', () => {
         'Must be a full moderator to perform an account takedown',
       )
     })
-    it.only('automatically reverses actions marked with duration', async () => {
+    it('automatically reverses actions marked with duration', async () => {
       await createReport({
         reasonType: REASONSPAM,
         account: sc.dids.bob,

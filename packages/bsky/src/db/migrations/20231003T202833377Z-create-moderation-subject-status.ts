@@ -15,6 +15,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('createdBy', 'varchar', (col) => col.notNull())
     .addColumn('reversedAt', 'varchar')
     .addColumn('reversedBy', 'varchar')
+    .addColumn('durationInHours', 'integer')
+    .addColumn('expiresAt', 'varchar')
     .addColumn('reversedReason', 'text')
     .addColumn('createLabelVals', 'varchar')
     .addColumn('negateLabelVals', 'varchar')
@@ -49,9 +51,65 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('updatedAt', 'varchar', (col) => col.notNull())
     .addUniqueConstraint('moderation_status_unique_idx', ['did', 'recordPath'])
     .execute()
+
+  // Move foreign keys from moderation_action to moderation_event
+  await db.schema
+    .alterTable('record')
+    .dropConstraint('record_takedown_id_fkey')
+    .execute()
+  await db.schema
+    .alterTable('actor')
+    .dropConstraint('actor_takedown_id_fkey')
+    .execute()
+  await db.schema
+    .alterTable('actor')
+    .addForeignKeyConstraint(
+      'actor_takedown_id_fkey',
+      ['takedownId'],
+      'moderation_event',
+      ['id'],
+    )
+    .execute()
+  await db.schema
+    .alterTable('record')
+    .addForeignKeyConstraint(
+      'record_takedown_id_fkey',
+      ['takedownId'],
+      'moderation_event',
+      ['id'],
+    )
+    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('moderation_event').execute()
   await db.schema.dropTable('moderation_subject_status').execute()
+
+  // Revert foreign key constraints
+  await db.schema
+    .alterTable('record')
+    .dropConstraint('record_takedown_id_fkey')
+    .execute()
+  await db.schema
+    .alterTable('actor')
+    .dropConstraint('actor_takedown_id_fkey')
+    .execute()
+  await db.schema
+    .alterTable('actor')
+    .addForeignKeyConstraint(
+      'actor_takedown_id_fkey',
+      ['takedownId'],
+      'moderation_action',
+      ['id'],
+    )
+    .execute()
+  await db.schema
+    .alterTable('record')
+    .addForeignKeyConstraint(
+      'record_takedown_id_fkey',
+      ['takedownId'],
+      'moderation_action',
+      ['id'],
+    )
+    .execute()
 }

@@ -1,6 +1,5 @@
 import AtpAgent from '@atproto/api'
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { forSnapshot, paginateAll } from '../_util'
 import basicSeed from '../seeds/basic'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
@@ -237,7 +236,7 @@ describe('notification views', () => {
       [postRef1, postRef2].map((postRef) =>
         agent.api.com.atproto.admin.emitModerationEvent(
           {
-            action: TAKEDOWN,
+            event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
             subject: {
               $type: 'com.atproto.repo.strongRef',
               uri: postRef.uriStr,
@@ -270,10 +269,15 @@ describe('notification views', () => {
 
     // Cleanup
     await Promise.all(
-      actionResults.map((result) =>
-        agent.api.com.atproto.admin.reverseModerationEvent(
+      [postRef1, postRef2].map((postRef) =>
+        agent.api.com.atproto.admin.emitModerationEvent(
           {
-            id: result.data.id,
+            event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+            subject: {
+              $type: 'com.atproto.repo.strongRef',
+              uri: postRef.uriStr,
+              cid: postRef.cidStr,
+            },
             createdBy: 'did:example:admin',
             reason: 'Y',
           },

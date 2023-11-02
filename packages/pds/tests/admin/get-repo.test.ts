@@ -1,10 +1,6 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import {
-  ACKNOWLEDGE,
-  TAKEDOWN,
-} from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import {
   REASONOTHER,
   REASONSPAM,
 } from '../../src/lexicon/types/com/atproto/moderation/defs'
@@ -30,8 +26,8 @@ describe('pds admin get repo view', () => {
   })
 
   beforeAll(async () => {
-    const acknowledge = await sc.emitModerationEvent({
-      action: ACKNOWLEDGE,
+    await sc.emitModerationEvent({
+      event: { $type: 'com.atproto.admin.defs#modEventAcknowledge' },
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
@@ -54,9 +50,8 @@ describe('pds admin get repo view', () => {
         did: sc.dids.alice,
       },
     })
-    await sc.reverseModerationAction({ id: acknowledge.id })
     await sc.emitModerationEvent({
-      action: TAKEDOWN,
+      event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,

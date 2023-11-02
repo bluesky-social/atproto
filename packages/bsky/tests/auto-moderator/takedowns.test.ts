@@ -78,14 +78,19 @@ describe('takedowner', () => {
     await network.processAll()
     await autoMod.processAll()
     const modAction = await ctx.db.db
-      .selectFrom('moderation_event')
-      .where('subjectUri', '=', post.ref.uriStr)
-      .select(['action', 'id'])
+      .selectFrom('moderation_subject_status')
+      .where('did', '=', alice)
+      .where(
+        'recordPath',
+        '=',
+        `${post.ref.uri.collection}/${post.ref.uri.rkey}}`,
+      )
+      .select(['takendown', 'id'])
       .executeTakeFirst()
     if (!modAction) {
       throw new Error('expected mod action')
     }
-    expect(modAction.action).toEqual('com.atproto.admin.defs#takedown')
+    expect(modAction.takendown).toEqual(true)
     const record = await ctx.db.db
       .selectFrom('record')
       .where('uri', '=', post.ref.uriStr)
@@ -120,14 +125,15 @@ describe('takedowner', () => {
     )
     await network.processAll()
     const modAction = await ctx.db.db
-      .selectFrom('moderation_event')
-      .where('subjectUri', '=', res.data.uri)
-      .select(['action', 'id'])
+      .selectFrom('moderation_subject_status')
+      .where('did', '=', alice)
+      .where('recordPath', '=', `${ids.AppBskyActorProfile}/self`)
+      .select(['takendown', 'id'])
       .executeTakeFirst()
     if (!modAction) {
       throw new Error('expected mod action')
     }
-    expect(modAction.action).toEqual('com.atproto.admin.defs#takedown')
+    expect(modAction.takendown).toEqual(true)
     const record = await ctx.db.db
       .selectFrom('record')
       .where('uri', '=', res.data.uri)

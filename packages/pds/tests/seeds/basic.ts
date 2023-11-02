@@ -130,7 +130,7 @@ export default async (sc: SeedClient, invite?: { code: string }) => {
 
   await sc.agent.com.atproto.admin.emitModerationEvent(
     {
-      action: FLAG,
+      event: { $type: 'com.atproto.admin.defs#modEventFlag' },
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: dan,

@@ -38,9 +38,9 @@ export interface ModerationEvent {
 export interface ModerationSubjectStatus {
   id: Generated<number>
   did: string
+  recordPath: string
   recordCid: string | null
   blobCids: string[] | null
-  recordPath: string | null
   reviewState: typeof REVIEWCLOSED | typeof REVIEWOPEN | typeof REVIEWESCALATED
   createdAt: string
   updatedAt: string

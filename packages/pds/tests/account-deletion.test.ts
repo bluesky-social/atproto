@@ -108,7 +108,7 @@ describe('account deletion', () => {
     // Perform account deletion, including when there's an existing mod action on the account
     await agent.api.com.atproto.admin.emitModerationEvent(
       {
-        action: ACKNOWLEDGE,
+        event: { $type: 'com.atproto.admin.defs#modEventAcknowledge' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: carol.did,

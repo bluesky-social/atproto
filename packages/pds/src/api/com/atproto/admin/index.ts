@@ -6,8 +6,6 @@ import getRecord from './getRecord'
 import getRepo from './getRepo'
 import getModerationEvent from './getModerationEvent'
 import getModerationEvents from './getModerationEvents'
-import getModerationReport from './getModerationReport'
-import getModerationReports from './getModerationReports'
 import enableAccountInvites from './enableAccountInvites'
 import disableAccountInvites from './disableAccountInvites'
 import disableInviteCodes from './disableInviteCodes'
@@ -15,6 +13,7 @@ import getInviteCodes from './getInviteCodes'
 import updateAccountHandle from './updateAccountHandle'
 import updateAccountEmail from './updateAccountEmail'
 import sendEmail from './sendEmail'
+import getModerationStatuses from './getModerationStatuses'
 
 export default function (server: Server, ctx: AppContext) {
   emitModerationEvent(server, ctx)
@@ -23,8 +22,7 @@ export default function (server: Server, ctx: AppContext) {
   getRepo(server, ctx)
   getModerationEvent(server, ctx)
   getModerationEvents(server, ctx)
-  getModerationReport(server, ctx)
-  getModerationReports(server, ctx)
+  getModerationStatuses(server, ctx)
   enableAccountInvites(server, ctx)
   disableAccountInvites(server, ctx)
   disableInviteCodes(server, ctx)

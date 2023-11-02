@@ -61,7 +61,6 @@ export class AutoModerator {
         'moderation service not properly configured',
       )
     }
-
     this.imgLabeler = hiveApiKey ? new HiveLabeler(hiveApiKey, ctx) : undefined
     this.textLabeler = new KeywordLabeler(ctx.cfg.labelerKeywords)
     if (abyssEndpoint && abyssPassword) {
@@ -157,18 +156,22 @@ export class AutoModerator {
     if (!this.textFlagger) return
     const matches = this.textFlagger.getMatches(text)
     if (matches.length < 1) return
-    if (!this.services.moderation) {
-      log.error(
-        { subject, text, matches },
-        'no moderation service setup to flag record text',
-      )
-      return
-    }
-    await this.services.moderation(this.ctx.db).report({
-      reasonType: REASONOTHER,
-      reason: `Automatically flagged for possible slurs: ${matches.join(', ')}`,
-      subject,
-      reportedBy: this.ctx.cfg.labelerDid,
+    await this.ctx.db.transaction(async (dbTxn) => {
+      if (!this.services.moderation) {
+        log.error(
+          { subject, text, matches },
+          'no moderation service setup to flag record text',
+        )
+        return
+      }
+      return this.services.moderation(dbTxn).report({
+        reasonType: REASONOTHER,
+        reason: `Automatically flagged for possible slurs: ${matches.join(
+          ', ',
+        )}`,
+        subject,
+        reportedBy: this.ctx.cfg.labelerDid,
+      })
     })
   }
 
