@@ -165,6 +165,7 @@ export class AtpAgent {
       this.session.email = res.data.email
       this.session.handle = res.data.handle
       this.session.emailConfirmed = res.data.emailConfirmed
+      this._updateApiEndpoint(res.data.didDoc)
       return res
     } catch (e) {
       this.session = undefined

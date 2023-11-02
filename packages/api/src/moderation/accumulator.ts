@@ -1,5 +1,4 @@
 import { AppBskyGraphDefs } from '../client/index'
-import { AtUri } from '@atproto/syntax'
 import {
   Label,
   LabelPreference,
