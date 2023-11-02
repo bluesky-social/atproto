@@ -54,6 +54,7 @@ export const runScript = async () => {
         .updateTable('status')
         .set({ failed: 1 })
         .where('did', '=', status.did)
+        .execute()
       console.error(`failed to migrate: ${status.did}`, err)
     }
     pdsCounter++
@@ -103,6 +104,7 @@ const migrateRepo = async (
         .insertInto('failed_pref')
         .values({ did: status.did })
         .onConflict((oc) => oc.doNothing())
+        .execute()
     } finally {
       status.phase = TransferPhase.preferences
       await updateStatus(db, status)
