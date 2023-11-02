@@ -142,7 +142,7 @@ const importBlobs = async (
         blobCount++
         outBuffer.push(`imported ${blobCount}/${blobRefs.length} blobs\n`)
       } catch (err) {
-        outBuffer.push(`failed to import blob: ${ref.ref.toString()}`)
+        outBuffer.push(`failed to import blob: ${ref.ref.toString()}\n`)
       }
     })
   }
