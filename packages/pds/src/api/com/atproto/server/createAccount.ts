@@ -21,7 +21,11 @@ export default function (server: Server, ctx: AppContext) {
     },
     handler: async ({ input, req }) => {
       const { email, password, inviteCode } = input.body
-      if (input.body.plcOp) {
+      if (!email) {
+        throw new InvalidRequestError('Missing input: "email"')
+      } else if (!password) {
+        throw new InvalidRequestError('Missing input: "password"')
+      } else if (input.body.plcOp) {
         throw new InvalidRequestError('Unsupported input: "plcOp"')
       }
 

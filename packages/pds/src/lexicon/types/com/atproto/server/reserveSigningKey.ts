@@ -10,7 +10,11 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 
 export interface QueryParams {}
 
-export type InputSchema = undefined
+export interface InputSchema {
+  /** The did to reserve a new did:key for */
+  did?: string
+  [k: string]: unknown
+}
 
 export interface OutputSchema {
   /** Public signing key in the form of a did:key. */
@@ -18,7 +22,10 @@ export interface OutputSchema {
   [k: string]: unknown
 }
 
-export type HandlerInput = undefined
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
 
 export interface HandlerSuccess {
   encoding: 'application/json'

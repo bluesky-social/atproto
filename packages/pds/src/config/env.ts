@@ -27,6 +27,8 @@ export const readEnv = (): ServerEnvironment => {
     blobstoreS3Region: envStr('PDS_BLOBSTORE_S3_REGION'),
     blobstoreS3Endpoint: envStr('PDS_BLOBSTORE_S3_ENDPOINT'),
     blobstoreS3ForcePathStyle: envBool('PDS_BLOBSTORE_S3_FORCE_PATH_STYLE'),
+    blobstoreS3AccessKeyId: envStr('PDS_BLOBSTORE_S3_ACCESS_KEY_ID'),
+    blobstoreS3SecretAccessKey: envStr('PDS_BLOBSTORE_S3_SECRET_ACCESS_KEY'),
     // disk
     blobstoreDiskLocation: envStr('PDS_BLOBSTORE_DISK_LOCATION'),
     blobstoreDiskTmpLocation: envStr('PDS_BLOBSTORE_DISK_TMP_LOCATION'),
@@ -125,6 +127,8 @@ export type ServerEnvironment = {
   blobstoreS3Region?: string
   blobstoreS3Endpoint?: string
   blobstoreS3ForcePathStyle?: boolean
+  blobstoreS3AccessKeyId?: string
+  blobstoreS3SecretAccessKey?: string
 
   // identity
   didPlcUrl?: string
