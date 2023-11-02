@@ -3,9 +3,10 @@ import axios from 'axios'
 import * as ui8 from 'uint8arrays'
 import AtpAgent from '@atproto/api'
 import * as plcLib from '@did-plc/lib'
-import { AppContext, envToCfg, envToSecrets, readEnv } from './src'
-import SqlRepoStorage from './src/sql-repo-storage'
+import SqlRepoStorage from './sql-repo-storage'
 import { createDeferrable } from '@atproto/common'
+import { envToCfg, envToSecrets, readEnv } from './config'
+import AppContext from './context'
 
 type PdsInfo = {
   id: number
@@ -14,7 +15,7 @@ type PdsInfo = {
   agent: AtpAgent
 }
 
-const run = async () => {
+export const runScript = async () => {
   const env = readEnv()
   const cfg = envToCfg(env)
   const secrets = envToSecrets(env)
