@@ -480,8 +480,6 @@ export interface ModEventComment {
   comment: string
   /** Make the comment a persistent note on the subject */
   persistNote?: boolean
-  /** Reference a previous event by id on the subject */
-  refEventId?: number
   [k: string]: unknown
 }
 

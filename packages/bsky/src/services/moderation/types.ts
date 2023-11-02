@@ -24,7 +24,7 @@ export type SubjectInfo =
 export type ModerationEventRow = Selectable<ModerationEvent>
 export type ReversibleModerationEvent = Pick<
   ModerationEventRow,
-  'createdBy' | 'comment' | 'action' | 'refEventId'
+  'createdBy' | 'comment' | 'action'
 > & {
   createdAt?: Date
   subject: { did: string } | { uri: AtUri; cid: CID }

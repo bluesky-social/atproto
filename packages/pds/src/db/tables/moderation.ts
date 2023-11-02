@@ -36,7 +36,6 @@ export interface ModerationAction {
   createdBy: string
   durationInHours: number | null
   expiresAt: string | null
-  refEventId: number | null
   meta: Record<string, string | boolean> | null
 }
 

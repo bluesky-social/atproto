@@ -2,25 +2,22 @@ import { Kysely } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
-    .alterTable('moderation_action')
-    .renameColumn('reason', 'comment')
-    .execute()
-  await db.schema
-    .alterTable('moderation_action')
-    .alterColumn('comment')
-    .dropNotNull()
-    .execute()
-  await db.schema
-    .alterTable('moderation_action')
-    .addColumn('refEventId', 'integer')
-    .execute()
-  await db.schema
-    .alterTable('moderation_action')
+    .createTable('moderation_event')
+    .addColumn('id', 'serial', (col) => col.primaryKey())
+    .addColumn('action', 'varchar', (col) => col.notNull())
+    .addColumn('subjectType', 'varchar', (col) => col.notNull())
+    .addColumn('subjectDid', 'varchar', (col) => col.notNull())
+    .addColumn('subjectUri', 'varchar')
+    .addColumn('subjectCid', 'varchar')
+    .addColumn('comment', 'text')
     .addColumn('meta', 'jsonb')
-    .execute()
-  await db.schema
-    .alterTable('moderation_action')
-    .renameTo('moderation_event')
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .addColumn('createdBy', 'varchar', (col) => col.notNull())
+    .addColumn('reversedAt', 'varchar')
+    .addColumn('reversedBy', 'varchar')
+    .addColumn('reversedReason', 'text')
+    .addColumn('createLabelVals', 'varchar')
+    .addColumn('negateLabelVals', 'varchar')
     .execute()
   await db.schema
     .createTable('moderation_subject_status')
@@ -55,23 +52,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema
-    .alterTable('moderation_event')
-    .renameTo('moderation_action')
-    .execute()
-  await db.schema
-    .alterTable('moderation_action')
-    .renameColumn('comment', 'reason')
-    .execute()
-  await db.schema
-    .alterTable('moderation_action')
-    .alterColumn('reason')
-    .setNotNull()
-    .execute()
-  await db.schema.alterTable('moderation_action').dropColumn('meta').execute()
-  await db.schema
-    .alterTable('moderation_action')
-    .dropColumn('refEventId')
-    .execute()
+  await db.schema.dropTable('moderation_event').execute()
   await db.schema.dropTable('moderation_subject_status').execute()
 }

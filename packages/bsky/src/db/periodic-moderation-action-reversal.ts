@@ -24,7 +24,6 @@ export class PeriodicModerationEventReversal {
         await moderationTxn.getLastReversibleEventForSubject(eventRow)
       if (originalEvent) {
         await moderationTxn.revertState({
-          refEventId: originalEvent.id,
           action: originalEvent.action,
           createdBy: originalEvent.createdBy,
           comment:

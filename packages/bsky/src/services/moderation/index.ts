@@ -228,7 +228,6 @@ export class ModerationService {
         createLabelVals,
         negateLabelVals,
         durationInHours: event.durationInHours,
-        refEventId: event.refEventId,
         meta,
         expiresAt:
           (isModEventTakedown(event) || isModEventMute(event)) &&

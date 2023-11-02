@@ -650,10 +650,6 @@ export const schemaDict = {
             type: 'boolean',
             description: 'Make the comment a persistent note on the subject',
           },
-          refEventId: {
-            type: 'integer',
-            description: 'Reference a previous event by id on the subject',
-          },
         },
       },
       modEventReport: {

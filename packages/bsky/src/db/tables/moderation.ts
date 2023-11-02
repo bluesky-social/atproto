@@ -33,9 +33,7 @@ export interface ModerationEvent {
   createdBy: string
   durationInHours: number | null
   expiresAt: string | null
-  refEventId: number | null
-  // TODO: better types here?
-  meta: Record<string, string> | null
+  meta: Record<string, string | boolean> | null
 }
 
 export interface ModerationSubjectStatus {
