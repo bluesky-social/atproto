@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lexicon",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "license": "MIT",
   "description": "atproto Lexicon schema language library",
   "keywords": [
