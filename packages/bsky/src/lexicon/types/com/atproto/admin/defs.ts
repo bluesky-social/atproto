@@ -138,9 +138,12 @@ export interface SubjectStatusView {
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
   subjectRepoHandle?: string
+  /** Timestamp referencing when the last update was made to the moderation status of the subject */
   updatedAt: string
+  /** Timestamp referencing the first moderation status impacting event was emitted on the subject */
   createdAt: string
   reviewState: SubjectReviewState
+  /** Sticky note on the subject. */
   note?: string
   muteUntil?: string
   lastReviewedBy?: string
@@ -498,8 +501,6 @@ export const REVIEWCLOSED = 'com.atproto.admin.defs#reviewClosed'
 export interface ModEventTakedown {
   /** Indicates how long the takedown should be in effect before automatically expiring. */
   durationInHours?: number
-  /** Indicates at what time the subject's takedown will be/was reverted. */
-  expiresAt?: string
   [k: string]: unknown
 }
 
@@ -649,8 +650,6 @@ export function validateModEventEscalate(v: unknown): ValidationResult {
 export interface ModEventMute {
   /** Indicates how long the subject should remain muted. */
   durationInHours: number
-  /** Indicates at what time the subject will be unmuted. */
-  expiresAt?: string
   [k: string]: unknown
 }
 

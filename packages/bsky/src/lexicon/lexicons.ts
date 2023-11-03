@@ -203,10 +203,14 @@ export const schemaDict = {
           updatedAt: {
             type: 'string',
             format: 'datetime',
+            description:
+              'Timestamp referencing when the last update was made to the moderation status of the subject',
           },
           createdAt: {
             type: 'string',
             format: 'datetime',
+            description:
+              'Timestamp referencing the first moderation status impacting event was emitted on the subject',
           },
           reviewState: {
             type: 'ref',
@@ -214,6 +218,7 @@ export const schemaDict = {
           },
           note: {
             type: 'string',
+            description: 'Sticky note on the subject.',
           },
           muteUntil: {
             type: 'string',
@@ -688,12 +693,6 @@ export const schemaDict = {
             description:
               'Indicates how long the takedown should be in effect before automatically expiring.',
           },
-          expiresAt: {
-            type: 'string',
-            format: 'datetime',
-            description:
-              "Indicates at what time the subject's takedown will be/was reverted.",
-          },
         },
       },
       modEventReverseTakedown: {
@@ -785,11 +784,6 @@ export const schemaDict = {
           durationInHours: {
             type: 'integer',
             description: 'Indicates how long the subject should remain muted.',
-          },
-          expiresAt: {
-            type: 'string',
-            format: 'datetime',
-            description: 'Indicates at what time the subject will be unmuted.',
           },
         },
       },
