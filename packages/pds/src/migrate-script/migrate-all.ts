@@ -45,6 +45,8 @@ export const runScript = async () => {
     .selectAll()
     .execute()
   let pdsCounter = 0
+  let completed = 0
+  let failed = 0
   for (const status of todo) {
     let pdsId = status.pdsId
     if (!pdsId) {
@@ -57,14 +59,17 @@ export const runScript = async () => {
     }
     try {
       await migrateRepo(ctx, db, pdsInfo, status, adminToken)
-      console.log(`completed migrating: ${status.did}`)
+      completed++
     } catch (err) {
       await db
         .updateTable('status')
         .set({ failed: 1 })
         .where('did', '=', status.did)
         .execute()
-      console.error(`failed to migrate: ${status.did}`, err)
+      failed++
+    }
+    if (completed % 5 === 0) {
+      console.log(`completed: ${completed}, failed: ${failed}`)
     }
   }
   console.log('DONE WITH ALL')
@@ -167,17 +172,16 @@ const doImport = async (
     },
   )
 
+  let logOutput = ''
   for await (const log of importRes.data) {
-    if (typeof log === 'string') {
-      const lines = log.split('\n')
-      for (const line of lines) {
-        if (line.includes('failed to import blob')) {
-          const cid = line.split(':')[1].trim()
-          await logFailedBlob(db, did, cid)
-        }
-      }
+    logOutput += log
+  }
+  const lines = logOutput.split('\n')
+  for (const line of lines) {
+    if (line.includes('failed to import blob')) {
+      const cid = line.split(':')[1].trim()
+      await logFailedBlob(db, did, cid)
     }
-    console.log(`import update for ${did}: `, log.toString())
   }
   return root.rev
 }
