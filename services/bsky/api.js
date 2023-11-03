@@ -13,7 +13,12 @@ require('dd-trace') // Only works with commonjs
 // Tracer code above must come before anything else
 const path = require('path')
 const assert = require('assert')
-const { CloudfrontInvalidator } = require('@atproto/aws')
+const {
+  BunnyInvalidator,
+  CloudfrontInvalidator,
+  MultiImageInvalidator,
+} = require('@atproto/aws')
+const { Secp256k1Keypair } = require('@atproto/crypto')
 const {
   DatabaseCoordinator,
   PrimaryDatabase,
@@ -59,17 +64,41 @@ const main = async () => {
     imgUriEndpoint: env.imgUriEndpoint,
     blobCacheLocation: env.blobCacheLocation,
   })
+
+  const signingKey = await Secp256k1Keypair.import(env.serviceSigningKey)
+
+  // configure zero, one, or both image invalidators
+  let imgInvalidator
+  const bunnyInvalidator = env.bunnyAccessKey
+    ? new BunnyInvalidator({
+        accessKey: env.bunnyAccessKey,
+        urlPrefix: cfg.imgUriEndpoint,
+      })
+    : undefined
   const cfInvalidator = env.cfDistributionId
     ? new CloudfrontInvalidator({
         distributionId: env.cfDistributionId,
         pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
       })
     : undefined
+
+  if (bunnyInvalidator && imgInvalidator) {
+    imgInvalidator = new MultiImageInvalidator([
+      bunnyInvalidator,
+      imgInvalidator,
+    ])
+  } else if (bunnyInvalidator) {
+    imgInvalidator = bunnyInvalidator
+  } else if (cfInvalidator) {
+    imgInvalidator = cfInvalidator
+  }
+
   const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const bsky = BskyAppView.create({
     db,
+    signingKey,
     config: cfg,
-    imgInvalidator: cfInvalidator,
+    imgInvalidator,
     algos,
   })
   // separate db needed for more permissions
@@ -78,7 +107,7 @@ const main = async () => {
     schema: env.dbPostgresSchema,
     poolSize: 2,
   })
-  const viewMaintainer = new ViewMaintainer(migrateDb)
+  const viewMaintainer = new ViewMaintainer(migrateDb, 1800)
   const viewMaintainerRunning = viewMaintainer.run()
 
   const periodicModerationActionReversal = new PeriodicModerationActionReversal(
@@ -121,12 +150,14 @@ const getEnv = () => ({
   dbPoolSize: maybeParseInt(process.env.DB_POOL_SIZE),
   dbPoolMaxUses: maybeParseInt(process.env.DB_POOL_MAX_USES),
   dbPoolIdleTimeoutMs: maybeParseInt(process.env.DB_POOL_IDLE_TIMEOUT_MS),
+  serviceSigningKey: process.env.SERVICE_SIGNING_KEY,
   publicUrl: process.env.PUBLIC_URL,
   didPlcUrl: process.env.DID_PLC_URL,
   imgUriSalt: process.env.IMG_URI_SALT,
   imgUriKey: process.env.IMG_URI_KEY,
   imgUriEndpoint: process.env.IMG_URI_ENDPOINT,
   blobCacheLocation: process.env.BLOB_CACHE_LOC,
+  bunnyAccessKey: process.env.BUNNY_ACCESS_KEY,
   cfDistributionId: process.env.CF_DISTRIBUTION_ID,
   feedPublisherDid: process.env.FEED_PUBLISHER_DID,
 })

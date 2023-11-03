@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       const record = await ctx.services
         .record(ctx.db)
         .getRecord(uri, cid || null)
-      if (!record || record.takedownId !== null) {
+      if (!record || record.takedownRef !== null) {
         throw new InvalidRequestError(`Could not locate record: ${uri}`)
       }
       return {

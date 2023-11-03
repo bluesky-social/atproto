@@ -13,18 +13,19 @@ import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
+import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
 import * as ComAtprotoAdminGetModerationEvents from './types/com/atproto/admin/getModerationEvents'
-import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
-import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
 import * as ComAtprotoAdminGetModerationStatuses from './types/com/atproto/admin/getModerationStatuses'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
+import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
+import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels'
@@ -55,6 +56,7 @@ import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/serve
 import * as ComAtprotoServerRequestEmailConfirmation from './types/com/atproto/server/requestEmailConfirmation'
 import * as ComAtprotoServerRequestEmailUpdate from './types/com/atproto/server/requestEmailUpdate'
 import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
+import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/reserveSigningKey'
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
@@ -233,6 +235,17 @@ export class AdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getAccountInfo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminGetAccountInfo.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminGetAccountInfo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.getAccountInfo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getInviteCodes<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -266,28 +279,6 @@ export class AdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getModerationReport<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminGetModerationReport.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminGetModerationReport.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.getModerationReport' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getModerationReports<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminGetModerationReports.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminGetModerationReports.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.getModerationReports' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getModerationStatuses<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -318,6 +309,17 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.getRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSubjectStatus<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminGetSubjectStatus.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminGetSubjectStatus.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.getSubjectStatus' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -362,6 +364,17 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.updateAccountHandle' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateSubjectStatus<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminUpdateSubjectStatus.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminUpdateSubjectStatus.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.updateSubjectStatus' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
@@ -732,6 +745,17 @@ export class ServerNS {
     >,
   ) {
     const nsid = 'com.atproto.server.requestPasswordReset' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  reserveSigningKey<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoServerReserveSigningKey.Handler<ExtractAuth<AV>>,
+      ComAtprotoServerReserveSigningKey.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.server.reserveSigningKey' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

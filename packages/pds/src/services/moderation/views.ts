@@ -19,7 +19,6 @@ import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/mo
 import { ModerationAction } from '../../db/tables/moderation'
 import { AccountService } from '../account'
 import { RecordService } from '../record'
-import { ModerationActionRowWithHandle } from '.'
 import { ids } from '../../lexicon/lexicons'
 import { REASONOTHER } from '../../lexicon/types/com/atproto/moderation/defs'
 
@@ -359,113 +358,6 @@ export class ModerationViews {
     }
   }
 
-  report(result: ReportResult): Promise<ReportView>
-  report(result: ReportResult[]): Promise<ReportView[]>
-  async report(
-    result: ReportResult | ReportResult[],
-  ): Promise<ReportView | ReportView[]> {
-    const results = Array.isArray(result) ? result : [result]
-    if (results.length === 0) return []
-
-    const resolutions = await this.db.db
-      .selectFrom('moderation_report_resolution')
-      .select(['actionId as id', 'reportId'])
-      .where(
-        'reportId',
-        'in',
-        results.map((r) => r.id),
-      )
-      .orderBy('id', 'desc')
-      .execute()
-
-    const actionIdsByReportId = resolutions.reduce((acc, cur) => {
-      acc[cur.reportId] ??= []
-      acc[cur.reportId].push(cur.id)
-      return acc
-    }, {} as Record<string, number[]>)
-
-    const views: ReportView[] = results.map((res) => {
-      const decoratedView: ReportView = {
-        id: res.id,
-        createdAt: res.createdAt,
-        reasonType: res.meta?.reportType || REASONOTHER,
-        reason: res.comment ?? undefined,
-        reportedBy: res.createdBy,
-        subject:
-          res.subjectType === 'com.atproto.admin.defs#repoRef'
-            ? {
-                $type: 'com.atproto.admin.defs#repoRef',
-                did: res.subjectDid,
-              }
-            : {
-                $type: 'com.atproto.repo.strongRef',
-                uri: res.subjectUri,
-                cid: res.subjectCid,
-              },
-        resolvedByActionIds: actionIdsByReportId[res.id] ?? [],
-      }
-
-      if (res.handle) {
-        decoratedView.subjectRepoHandle = res.handle
-      }
-
-      return decoratedView
-    })
-
-    return Array.isArray(result) ? views : views[0]
-  }
-
-  reportPublic(report: ReportResult): ReportOutput {
-    return {
-      id: report.id,
-      createdAt: report.createdAt,
-      // Ideally, we would never have a report entry that does not have a reasonType but at the schema level
-      // we are not guarantying that so in whatever case, if we end up with such entries, default to 'other'
-      reasonType: report.meta?.reportType || REASONOTHER,
-      reason: report.comment ?? undefined,
-      reportedBy: report.createdBy,
-      subject:
-        report.subjectType === 'com.atproto.admin.defs#repoRef'
-          ? {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: report.subjectDid,
-            }
-          : {
-              $type: 'com.atproto.repo.strongRef',
-              uri: report.subjectUri,
-              cid: report.subjectCid,
-            },
-    }
-  }
-
-  async reportDetail(
-    result: ReportResult,
-    opts: ModViewOptions,
-  ): Promise<ReportViewDetail> {
-    const report = await this.report(result)
-    const actionResults = report.resolvedByActionIds.length
-      ? await this.db.db
-          .selectFrom('moderation_action')
-          .where('id', 'in', report.resolvedByActionIds)
-          .orderBy('id', 'desc')
-          .selectAll()
-          .execute()
-      : []
-    const [subject, resolvedByActions] = await Promise.all([
-      this.subject(result, opts),
-      this.action(actionResults),
-    ])
-    return {
-      id: report.id,
-      createdAt: report.createdAt,
-      reasonType: report.reasonType,
-      reason: report.reason ?? undefined,
-      reportedBy: report.reportedBy,
-      subject,
-      resolvedByActions,
-    }
-  }
-
   // Partial view for subjects
 
   async subject(
@@ -564,18 +456,15 @@ type RepoResult = DidHandle & RepoRoot
 
 type EventResult = Selectable<ModerationAction>
 
-type ReportResult = ModerationActionRowWithHandle
-
 type RecordResult = {
   uri: string
   cid: string
   value: object
   indexedAt: string
-  takedownId: number | null
 }
 
 type SubjectResult = Pick<
-  EventResult & ReportResult,
+  EventResult,
   'id' | 'subjectType' | 'subjectDid' | 'subjectUri' | 'subjectCid'
 >
 

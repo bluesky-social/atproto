@@ -3,12 +3,11 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { notSoftDeletedClause } from '../../../../db/util'
-import { isUserOrAdmin } from '../../../../auth'
 import { BlobNotFoundError } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlob({
-    auth: ctx.optionalAccessOrRoleVerifier,
+    auth: ctx.authVerifier.optionalAccessOrRole,
     handler: async ({ params, res, auth }) => {
       const { ref } = ctx.db.db.dynamic
       const found = await ctx.db.db
@@ -23,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
         .where('blob.cid', '=', params.cid)
         .where('blob.creator', '=', params.did)
         .where(notSoftDeletedClause(ref('repo_blob')))
-        .if(!isUserOrAdmin(auth, params.did), (qb) =>
+        .if(!ctx.authVerifier.isUserOrAdmin(auth, params.did), (qb) =>
           // takedown check for anyone other than an admin or the user
           qb.where(notSoftDeletedClause(ref('repo_root'))),
         )

@@ -60,49 +60,27 @@ describe('email confirmation', () => {
     expect(session.data.emailConfirmed).toEqual(false)
   })
 
-  it('disallows email update when unverified', async () => {
+  it('allows email update without token when unverified', async () => {
     const res = await agent.api.com.atproto.server.requestEmailUpdate(
       undefined,
       { headers: sc.getHeaders(alice.did) },
     )
     expect(res.data.tokenRequired).toBe(false)
 
-    const attempt = agent.api.com.atproto.server.updateEmail(
+    await agent.api.com.atproto.server.updateEmail(
       {
         email: 'new-alice@example.com',
       },
       { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
     )
-    await expect(attempt).rejects.toThrow()
     const session = await agent.api.com.atproto.server.getSession(
       {},
       { headers: sc.getHeaders(alice.did) },
     )
-    expect(session.data.email).toEqual(alice.email)
+    expect(session.data.email).toEqual('new-alice@example.com')
     expect(session.data.emailConfirmed).toEqual(false)
+    alice.email = session.data.email
   })
-
-  // it('allows email update without token when unverified', async () => {
-  //   const res = await agent.api.com.atproto.server.requestEmailUpdate(
-  //     undefined,
-  //     { headers: sc.getHeaders(alice.did) },
-  //   )
-  //   expect(res.data.tokenRequired).toBe(false)
-
-  //   await agent.api.com.atproto.server.updateEmail(
-  //     {
-  //       email: 'new-alice@example.com',
-  //     },
-  //     { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
-  //   )
-  //   const session = await agent.api.com.atproto.server.getSession(
-  //     {},
-  //     { headers: sc.getHeaders(alice.did) },
-  //   )
-  //   expect(session.data.email).toEqual('new-alice@example.com')
-  //   expect(session.data.emailConfirmed).toEqual(false)
-  //   alice.email = session.data.email
-  // })
 
   let confirmToken
 

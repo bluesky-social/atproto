@@ -49,22 +49,20 @@ describe('account', () => {
     // assign an invite code to the user
     const code = await createInviteCode(network, agent, 1, account.did)
     // takedown the user's account
-    const { data: takedownAction } =
-      await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: account.did,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+    const subject = {
+      $type: 'com.atproto.admin.defs#repoRef',
+      did: account.did,
+    }
+    await agent.api.com.atproto.admin.updateSubjectStatus(
+      {
+        subject,
+        takedown: { applied: true },
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
     // attempt to create account with the previously generated invite code
     const promise = createAccountWithInvite(agent, code)
     await expect(promise).rejects.toThrow(
@@ -72,11 +70,10 @@ describe('account', () => {
     )
 
     // double check that reversing the takedown action makes the invite code valid again
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        id: takedownAction.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        subject,
+        takedown: { applied: false },
       },
       {
         encoding: 'application/json',

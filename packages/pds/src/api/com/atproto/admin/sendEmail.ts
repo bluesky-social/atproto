@@ -5,7 +5,7 @@ import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.sendEmail({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.role,
     handler: async ({ req, input, auth }) => {
       if (!auth.credentials.admin && !auth.credentials.moderator) {
         throw new AuthRequiredError('Insufficient privileges')

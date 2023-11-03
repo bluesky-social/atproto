@@ -32,7 +32,7 @@ const ratelimitPoints = ({ input }: { input: HandlerInput }) => {
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.applyWrites({
-    auth: ctx.accessVerifierCheckTakedown,
+    auth: ctx.authVerifier.accessCheckTakedown,
     rateLimit: [
       {
         name: 'repo-write-hour',

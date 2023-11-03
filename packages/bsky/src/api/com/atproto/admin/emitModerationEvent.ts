@@ -106,6 +106,8 @@ export default function (server: Server, ctx: AppContext) {
             await moderationTxn.takedownRecord({
               takedownId: result.id,
               uri: new AtUri(result.subjectUri),
+              // TODO: I think this will always be available for strongRefs?
+              cid: CID.parse(result.subjectCid as string),
               blobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
             })
           }

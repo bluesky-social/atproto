@@ -218,19 +218,19 @@ describe('auth', () => {
       password: 'password',
     })
     const refreshWithAccess = refreshSession(account.accessJwt)
-    await expect(refreshWithAccess).rejects.toThrow(
-      'Token could not be verified',
-    )
+    await expect(refreshWithAccess).rejects.toThrow('Bad token scope')
   })
 
   it('expired refresh token cannot be used to refresh a session.', async () => {
-    const { auth } = network.pds.ctx
+    const { services, db } = network.pds.ctx
     const account = await createAccount({
       handle: 'holga.test',
       email: 'holga@test.com',
       password: 'password',
     })
-    const refresh = auth.createRefreshToken({ did: account.did, expiresIn: -1 })
+    const refresh = services
+      .auth(db)
+      .createRefreshToken({ did: account.did, expiresIn: -1 })
     const refreshExpired = refreshSession(refresh.jwt)
     await expect(refreshExpired).rejects.toThrow('Token has expired')
     await deleteSession(refresh.jwt) // No problem revoking an expired token
@@ -242,15 +242,13 @@ describe('auth', () => {
       email: 'iris@test.com',
       password: 'password',
     })
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: account.did,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: { applied: true },
       },
       {
         encoding: 'application/json',
@@ -268,15 +266,13 @@ describe('auth', () => {
       email: 'jared@test.com',
       password: 'password',
     })
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: account.did,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: { applied: true },
       },
       {
         encoding: 'application/json',

@@ -1,4 +1,4 @@
-import { WhereInterface, sql } from 'kysely'
+import { sql } from 'kysely'
 import { ArrayEl } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { INVALID_HANDLE } from '@atproto/syntax'
@@ -308,7 +308,9 @@ export class ModerationViews {
       createdAt: report.createdAt,
       // Ideally, we would never have a report entry that does not have a reasonType but at the schema level
       // we are not guarantying that so in whatever case, if we end up with such entries, default to 'other'
-      reasonType: report.meta?.reportType || REASONOTHER,
+      reasonType: report.meta?.reportType
+        ? (report.meta?.reportType as string)
+        : REASONOTHER,
       reason: report.comment ?? undefined,
       reportedBy: report.createdBy,
       subject:

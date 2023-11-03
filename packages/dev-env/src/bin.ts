@@ -19,6 +19,7 @@ const run = async () => {
       port: 2583,
       hostname: 'localhost',
       dbPostgresSchema: 'pds',
+      enableDidDocWithSession: true,
     },
     bsky: {
       dbPostgresSchema: 'bsky',

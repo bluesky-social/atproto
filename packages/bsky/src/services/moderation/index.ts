@@ -4,6 +4,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { PrimaryDatabase } from '../../db'
 import { ModerationViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
+import { Main as StrongRef } from '../../lexicon/types/com/atproto/repo/strongRef'
 import { ImageInvalidator } from '../../image/invalidator'
 import {
   isModEventComment,
@@ -12,6 +13,8 @@ import {
   isModEventReport,
   isModEventTakedown,
   isModEventEmail,
+  RepoRef,
+  RepoBlobRef,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { addHoursToDate } from '../../util/date'
 import {
@@ -302,9 +305,12 @@ export class ModerationService {
     createdBy,
     createdAt,
     comment,
-    subject,
     action,
-  }: ReversibleModerationEvent) {
+    subject,
+  }: ReversibleModerationEvent): Promise<{
+    result: ModerationEventRow
+    restored?: TakedownSubjects
+  }> {
     const isRevertingTakedown =
       action === 'com.atproto.admin.defs#modEventTakedown'
     this.db.assertTransaction()
@@ -320,8 +326,10 @@ export class ModerationService {
       subject,
     })
 
+    let restored: TakedownSubjects | undefined
+
     if (!isRevertingTakedown) {
-      return result
+      return { result, restored }
     }
 
     if (
@@ -331,27 +339,76 @@ export class ModerationService {
       await this.reverseTakedownRepo({
         did: result.subjectDid,
       })
+      restored = {
+        did: result.subjectDid,
+        subjects: [
+          {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: result.subjectDid,
+          },
+        ],
+      }
     }
 
     if (
       result.subjectType === 'com.atproto.repo.strongRef' &&
       result.subjectUri
     ) {
+      const uri = new AtUri(result.subjectUri)
       await this.reverseTakedownRecord({
-        uri: new AtUri(result.subjectUri),
+        uri,
       })
+      const did = uri.hostname
+      // TODO: MOD_EVENT This bit needs testing
+      const subjectStatus = await this.db.db
+        .selectFrom('moderation_subject_status')
+        .where('did', '=', uri.host)
+        .where('recordPath', '=', `${uri.collection}/${uri.rkey}`)
+        .select('blobCids')
+        .executeTakeFirst()
+      const blobCids = subjectStatus?.blobCids || []
+      restored = {
+        did,
+        subjects: [
+          {
+            $type: 'com.atproto.repo.strongRef',
+            uri: result.subjectUri,
+            cid: result.subjectCid ?? '',
+          },
+          ...blobCids.map((cid) => ({
+            $type: 'com.atproto.admin.defs#repoBlobRef',
+            did,
+            cid,
+            recordUri: result.subjectUri,
+          })),
+        ],
+      }
     }
 
-    return result
+    return { result, restored }
   }
 
-  async takedownRepo(info: { takedownId: number; did: string }) {
+  async takedownRepo(info: {
+    takedownId: number
+    did: string
+  }): Promise<TakedownSubjects> {
+    const { takedownId, did } = info
     await this.db.db
       .updateTable('actor')
-      .set({ takedownId: info.takedownId })
-      .where('did', '=', info.did)
+      .set({ takedownId })
+      .where('did', '=', did)
       .where('takedownId', 'is', null)
       .executeTakeFirst()
+
+    return {
+      did,
+      subjects: [
+        {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did,
+        },
+      ],
+    }
   }
 
   async reverseTakedownRepo(info: { did: string }) {
@@ -365,25 +422,44 @@ export class ModerationService {
   async takedownRecord(info: {
     takedownId: number
     uri: AtUri
+    cid: CID
     blobCids?: CID[]
-  }) {
+  }): Promise<TakedownSubjects> {
+    const { takedownId, uri, cid, blobCids } = info
+    const did = uri.hostname
     this.db.assertTransaction()
     await this.db.db
       .updateTable('record')
-      .set({ takedownId: info.takedownId })
-      .where('uri', '=', info.uri.toString())
+      .set({ takedownId })
+      .where('uri', '=', uri.toString())
       .where('takedownId', 'is', null)
       .executeTakeFirst()
-    if (info.blobCids) {
+    if (blobCids) {
       await Promise.all(
-        info.blobCids.map(async (cid) => {
+        blobCids.map(async (cid) => {
           const paths = ImageUriBuilder.presets.map((id) => {
-            const uri = this.imgUriBuilder.getPresetUri(id, info.uri.host, cid)
-            return uri.replace(this.imgUriBuilder.endpoint, '')
+            const imgUri = this.imgUriBuilder.getPresetUri(id, uri.host, cid)
+            return imgUri.replace(this.imgUriBuilder.endpoint, '')
           })
           await this.imgInvalidator.invalidate(cid.toString(), paths)
         }),
       )
+    }
+    return {
+      did,
+      subjects: [
+        {
+          $type: 'com.atproto.repo.strongRef',
+          uri: uri.toString(),
+          cid: cid.toString(),
+        },
+        ...(blobCids || []).map((cid) => ({
+          $type: 'com.atproto.admin.defs#repoBlobRef',
+          did,
+          cid: cid.toString(),
+          recordUri: uri.toString(),
+        })),
+      ],
     }
   }
 
@@ -546,4 +622,9 @@ export class ModerationService {
 
     return !!result?.takendown
   }
+}
+
+export type TakedownSubjects = {
+  did: string
+  subjects: (RepoRef | RepoBlobRef | StrongRef)[]
 }
