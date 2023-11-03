@@ -174,7 +174,7 @@ const importBlob = async (
   })
 }
 
-const findBlobRefs = (val: LexValue): BlobRef[] => {
+export const findBlobRefs = (val: LexValue): BlobRef[] => {
   // walk arrays
   if (Array.isArray(val)) {
     return val.flatMap((item) => findBlobRefs(item))
