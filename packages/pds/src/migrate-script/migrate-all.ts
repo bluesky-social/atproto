@@ -1,3 +1,5 @@
+import assert from 'node:assert'
+import dotenv from 'dotenv'
 import axios from 'axios'
 import * as ui8 from 'uint8arrays'
 import AtpAgent from '@atproto/api'
@@ -8,6 +10,8 @@ import { envToCfg, envToSecrets, readEnv } from '../config'
 import AppContext from '../context'
 import { FailedTakedown, MigrateDb, Status, TransferPhase, getDb } from './db'
 
+dotenv.config()
+
 type PdsInfo = {
   id: number
   did: string
@@ -16,7 +20,7 @@ type PdsInfo = {
 }
 
 export const runScript = async () => {
-  const db = await getDb('/data/migrate.db')
+  const db = getDb()
   const env = readEnv()
   const cfg = envToCfg(env)
   const secrets = envToSecrets(env)
@@ -36,16 +40,21 @@ export const runScript = async () => {
     .selectFrom('status')
     .where('status.phase', '<', 7)
     .where('failed', '!=', 1)
+    .orderBy('phase', 'desc')
+    .orderBy('did')
     .selectAll()
     .execute()
   let pdsCounter = 0
   for (const status of todo) {
     let pdsId = status.pdsId
     if (!pdsId) {
-      pdsId = pdsCounter % pdsInfos.length
+      pdsId = pdsInfos[pdsCounter % pdsInfos.length].id
       pdsCounter++
     }
-    const pdsInfo = pdsInfos[pdsId]
+    const pdsInfo = pdsInfos.find((info) => info.id === pdsId)
+    if (!pdsInfo) {
+      throw new Error(`could not find pds with id: ${pdsId}`)
+    }
     try {
       await migrateRepo(ctx, db, pdsInfo, status, adminToken)
       console.log(`completed migrating: ${status.did}`)
@@ -57,7 +66,6 @@ export const runScript = async () => {
         .execute()
       console.error(`failed to migrate: ${status.did}`, err)
     }
-    pdsCounter++
   }
   console.log('DONE WITH ALL')
 }
@@ -69,7 +77,6 @@ const migrateRepo = async (
   status: Status,
   adminToken: string,
 ) => {
-  console.log(`reserve (${status.did}, ${status.phase})`)
   if (status.phase < TransferPhase.reservedKey) {
     const signingKey = await reserveSigningKey(pds, status.did)
     status.signingKey = signingKey
@@ -77,7 +84,6 @@ const migrateRepo = async (
     await updateStatus(db, status)
   }
 
-  console.log(`import (${status.did}, ${status.phase})`)
   if (status.phase < TransferPhase.initImport) {
     const importedRev = await doImport(ctx, db, pds, status.did)
     if (importedRev) {
@@ -87,15 +93,13 @@ const migrateRepo = async (
     await updateStatus(db, status)
   }
 
-  console.log(`transfer (${status.did}, ${status.phase})`)
-  if (status.phase < TransferPhase.transferred) {
+  if (status.phase < TransferPhase.transferredPds) {
     const importedRev = await lockAndTransfer(ctx, db, pds, status)
     status.importedRev = importedRev
-    status.phase = TransferPhase.transferred
+    status.phase = TransferPhase.transferredEntryway
     await updateStatus(db, status)
   }
 
-  console.log(`prefs (${status.did}, ${status.phase})`)
   if (status.phase < TransferPhase.preferences) {
     try {
       await transferPreferences(ctx, pds, status.did)
@@ -111,7 +115,6 @@ const migrateRepo = async (
     }
   }
 
-  console.log(`takedowns (${status.did}, ${status.phase})`)
   if (status.phase < TransferPhase.takedowns) {
     await transferTakedowns(ctx, db, pds, status.did, adminToken)
     status.phase = TransferPhase.completed
@@ -168,7 +171,7 @@ const doImport = async (
     if (typeof log === 'string') {
       const lines = log.split('\n')
       for (const line of lines) {
-        if (line.indexOf('failed to import blob') > 0) {
+        if (line.includes('failed to import blob')) {
           const cid = line.split(':')[1].trim()
           await logFailedBlob(db, did, cid)
         }
@@ -185,16 +188,22 @@ const lockAndTransfer = async (
   pds: PdsInfo,
   status: Status,
 ) => {
-  const defer = createDeferrable()
+  const repoLockedDefer = createDeferrable()
+  const transferDefer = createDeferrable()
+  let txFinished = false
   ctx.db
     .transaction(async (dbTxn) => {
       const storage = new SqlRepoStorage(dbTxn, status.did)
       await storage.lockRepo()
-      await defer.complete
+      repoLockedDefer.resolve()
+      await transferDefer.complete
     })
     .catch((err) => {
       console.error(`error in repo lock tx for did: ${status.did}`, err)
+      txFinished = true
     })
+
+  await repoLockedDefer.complete
 
   let importedRev
   try {
@@ -231,7 +240,7 @@ const lockAndTransfer = async (
         }
       },
     )
-
+    assert(!txFinished)
     const accountRes = await getUserAccount(ctx, status.did)
     await axios.post(`${pds.url}/xrpc/com.atproto.temp.transferAccount`, {
       did: status.did,
@@ -239,21 +248,27 @@ const lockAndTransfer = async (
       plcOp,
     })
 
-    defer.resolve()
+    status.phase = TransferPhase.transferredPds
+    await updateStatus(db, status)
 
-    await ctx.db.db
-      .updateTable('user_account')
-      .where('did', '=', status.did)
-      .set({ pdsId: pds.id })
-      .execute()
-    await ctx.db.db
-      .updateTable('repo_root')
-      .where('did', '=', status.did)
-      .set({ did: `migrated-${status.did}` })
-      .execute()
+    transferDefer.resolve()
+
+    await ctx.db.transaction(async (dbTxn) => {
+      await dbTxn.db
+        .updateTable('user_account')
+        .where('did', '=', status.did)
+        .set({ pdsId: pds.id })
+        .execute()
+      await dbTxn.db
+        .updateTable('repo_root')
+        .where('did', '=', status.did)
+        .set({ did: `migrated-${status.did}` })
+        .execute()
+    })
+
     return importedRev
   } finally {
-    defer.resolve()
+    transferDefer.resolve()
   }
 }
 

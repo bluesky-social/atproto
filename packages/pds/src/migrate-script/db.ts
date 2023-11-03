@@ -1,19 +1,17 @@
-import { Kysely, MigrationProvider, Migrator, SqliteDialect } from 'kysely'
+import { Kysely, MigrationProvider, SqliteDialect } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 
-export const getDb = async (loc: string): Promise<MigrateDb> => {
-  const db = new Kysely<Schema>({
+const LOCATION = 'migrate.db'
+
+export const getDb = (): MigrateDb => {
+  return new Kysely<Schema>({
     dialect: new SqliteDialect({
-      database: new SqliteDB(loc),
+      database: new SqliteDB(LOCATION),
     }),
   })
-  const migrator = new Migrator({ db, provider: dbMigrationProvider })
-  const { error } = await migrator.migrateToLatest()
-  if (error) throw error
-  return db
 }
 
-const dbMigrationProvider: MigrationProvider = {
+export const dbMigrationProvider: MigrationProvider = {
   async getMigrations() {
     return {
       '1': {
@@ -23,8 +21,10 @@ const dbMigrationProvider: MigrationProvider = {
             .addColumn('did', 'varchar', (col) => col.primaryKey())
             .addColumn('pdsId', 'integer')
             .addColumn('signingKey', 'varchar')
-            .addColumn('phase', 'integer')
-            .addColumn('importedRev', 'varchar')
+            .addColumn('phase', 'integer', (col) => col.notNull().defaultTo(0))
+            .addColumn('importedRev', 'varchar', (col) =>
+              col.notNull().defaultTo(0),
+            )
             .addColumn('failed', 'integer')
             .execute()
           await db.schema
@@ -64,7 +64,8 @@ export enum TransferPhase {
   notStarted = 0,
   reservedKey = 1,
   initImport = 2,
-  transferred = 4,
+  transferredPds = 3,
+  transferredEntryway = 4,
   preferences = 5,
   takedowns = 6,
   completed = 7,
