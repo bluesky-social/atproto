@@ -225,13 +225,53 @@ describe('entryway', () => {
     expect(Buffer.compare(file, bytes)).toBe(0)
   })
 
+  it('redirects blob uploads to pds.', async () => {
+    const file = await fs.readFile('tests/sample-img/key-portrait-small.jpg')
+    const {
+      data: { blob },
+    } = await entrywayAgent.api.com.atproto.repo.uploadBlob(file, {
+      encoding: 'image/jpeg',
+      headers: SeedClient.getHeaders(accessToken),
+    })
+    await entrywayAgent.com.atproto.repo.putRecord(
+      {
+        repo: alice,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+        record: { displayName: 'Alice 4', avatar: blob },
+      },
+      {
+        headers: SeedClient.getHeaders(accessToken),
+        encoding: 'application/json',
+      },
+    )
+    // check with fetch to confirm redirect
+    const url = new URL(
+      '/xrpc/com.atproto.sync.getBlob',
+      entrywayAgent.service.origin,
+    )
+    url.searchParams.set('did', alice)
+    url.searchParams.set('cid', blob.ref.toString())
+    const fetchResult = await fetch(url)
+    expect(fetchResult.redirected).toBe(true)
+    const fetchBlob = await fetchResult.blob()
+    const fetchBytes = Buffer.from(await fetchBlob.arrayBuffer())
+    expect(Buffer.compare(file, fetchBytes)).toBe(0)
+    // check with atp agent to ensure our client handles the redirect
+    const { data: bytes } = await entrywayAgent.com.atproto.sync.getBlob({
+      did: alice,
+      cid: blob.ref.toString(),
+    })
+    expect(Buffer.compare(file, bytes)).toBe(0)
+  })
+
   it('proxies repo reads to pds.', async () => {
     const { data: profileRef } = await entrywayAgent.com.atproto.repo.putRecord(
       {
         repo: alice,
         collection: ids.AppBskyActorProfile,
         rkey: 'self',
-        record: { displayName: 'Alice 4' },
+        record: { displayName: 'Alice 5' },
       },
       {
         headers: SeedClient.getHeaders(accessToken),
