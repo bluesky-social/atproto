@@ -99,15 +99,7 @@ Object {
     Object {
       "did": "user(2)",
       "handle": "dan.test",
-      "labels": Array [
-        Object {
-          "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
-          "src": "did:example:labeler",
-          "uri": "user(2)",
-          "val": "repo-action-label",
-        },
-      ],
+      "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
         "muted": false,
@@ -179,15 +171,7 @@ Array [
   Object {
     "did": "user(5)",
     "handle": "dan.test",
-    "labels": Array [
-      Object {
-        "cts": "1970-01-01T00:00:00.000Z",
-        "neg": false,
-        "src": "did:example:labeler",
-        "uri": "user(5)",
-        "val": "repo-action-label",
-      },
-    ],
+    "labels": Array [],
     "viewer": Object {
       "blockedBy": false,
       "following": "record(5)",
@@ -1036,15 +1020,7 @@ Object {
             "author": Object {
               "did": "user(4)",
               "handle": "dan.test",
-              "labels": Array [
-                Object {
-                  "cts": "1970-01-01T00:00:00.000Z",
-                  "neg": false,
-                  "src": "did:example:labeler",
-                  "uri": "user(4)",
-                  "val": "repo-action-label",
-                },
-              ],
+              "labels": Array [],
               "viewer": Object {
                 "blockedBy": false,
                 "following": "record(8)",
@@ -1588,15 +1564,7 @@ Object {
         "by": Object {
           "did": "user(2)",
           "handle": "dan.test",
-          "labels": Array [
-            Object {
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "did:example:labeler",
-              "uri": "user(2)",
-              "val": "repo-action-label",
-            },
-          ],
+          "labels": Array [],
           "viewer": Object {
             "blockedBy": false,
             "following": "record(4)",
@@ -1783,15 +1751,7 @@ Object {
         "by": Object {
           "did": "user(2)",
           "handle": "dan.test",
-          "labels": Array [
-            Object {
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "did:example:labeler",
-              "uri": "user(2)",
-              "val": "repo-action-label",
-            },
-          ],
+          "labels": Array [],
           "viewer": Object {
             "blockedBy": false,
             "following": "record(4)",
@@ -1806,15 +1766,7 @@ Object {
         "author": Object {
           "did": "user(2)",
           "handle": "dan.test",
-          "labels": Array [
-            Object {
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "did:example:labeler",
-              "uri": "user(2)",
-              "val": "repo-action-label",
-            },
-          ],
+          "labels": Array [],
           "viewer": Object {
             "blockedBy": false,
             "following": "record(4)",
@@ -2507,15 +2459,7 @@ Object {
             "author": Object {
               "did": "user(2)",
               "handle": "dan.test",
-              "labels": Array [
-                Object {
-                  "cts": "1970-01-01T00:00:00.000Z",
-                  "neg": false,
-                  "src": "did:example:labeler",
-                  "uri": "user(2)",
-                  "val": "repo-action-label",
-                },
-              ],
+              "labels": Array [],
               "viewer": Object {
                 "blockedBy": false,
                 "following": "record(4)",
@@ -2728,15 +2672,7 @@ Object {
         "author": Object {
           "did": "user(2)",
           "handle": "dan.test",
-          "labels": Array [
-            Object {
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "did:example:labeler",
-              "uri": "user(2)",
-              "val": "repo-action-label",
-            },
-          ],
+          "labels": Array [],
           "viewer": Object {
             "blockedBy": false,
             "following": "record(4)",
@@ -2897,15 +2833,7 @@ Object {
         "author": Object {
           "did": "user(2)",
           "handle": "dan.test",
-          "labels": Array [
-            Object {
-              "cts": "1970-01-01T00:00:00.000Z",
-              "neg": false,
-              "src": "did:example:labeler",
-              "uri": "user(2)",
-              "val": "repo-action-label",
-            },
-          ],
+          "labels": Array [],
           "viewer": Object {
             "blockedBy": false,
             "following": "record(4)",
@@ -3182,15 +3110,7 @@ Object {
     Object {
       "did": "user(0)",
       "handle": "dan.test",
-      "labels": Array [
-        Object {
-          "cts": "1970-01-01T00:00:00.000Z",
-          "neg": false,
-          "src": "did:example:labeler",
-          "uri": "user(0)",
-          "val": "repo-action-label",
-        },
-      ],
+      "labels": Array [],
       "viewer": Object {
         "blockedBy": false,
         "following": "record(0)",

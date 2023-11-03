@@ -137,24 +137,16 @@ describe('proxies admin requests', () => {
     expect(forSnapshot(actionB)).toMatchSnapshot()
   })
 
-  it('fetches report details.', async () => {
+  it('fetches moderation events.', async () => {
     const { data: result } =
-      await agent.api.com.atproto.admin.getModerationReport(
-        { id: 1 },
+      await agent.api.com.atproto.admin.getModerationEvents(
+        {
+          subject: sc.posts[sc.dids.bob][1].ref.uriStr,
+        },
         { headers: network.pds.adminAuthHeaders() },
       )
     expect(forSnapshot(result)).toMatchSnapshot()
   })
-
-  it('fetches a list of reports.', async () => {
-    const { data: result } =
-      await agent.api.com.atproto.admin.getModerationReports(
-        { reverse: true },
-        { headers: network.pds.adminAuthHeaders() },
-      )
-    expect(forSnapshot(result)).toMatchSnapshot()
-  })
-
   it('fetches repo details.', async () => {
     const { data: result } = await agent.api.com.atproto.admin.getRepo(
       { did: sc.dids.eve },
@@ -199,11 +191,6 @@ describe('proxies admin requests', () => {
   })
 
   it('passes through errors.', async () => {
-    const tryGetReport = agent.api.com.atproto.admin.getModerationReport(
-      { id: 1000 },
-      { headers: network.pds.adminAuthHeaders() },
-    )
-    await expect(tryGetReport).rejects.toThrow('Report not found')
     const tryGetRepo = agent.api.com.atproto.admin.getRepo(
       { did: 'did:does:not:exist' },
       { headers: network.pds.adminAuthHeaders() },
