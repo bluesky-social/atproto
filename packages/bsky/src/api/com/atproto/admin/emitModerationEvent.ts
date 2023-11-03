@@ -147,7 +147,7 @@ export default function (server: Server, ctx: AppContext) {
                   ...blobCids.map((cid) => ({
                     $type: 'com.atproto.admin.defs#repoBlobRef',
                     did: result.subjectDid,
-                    cid,
+                    cid: cid.toString(),
                     recordUri: result.subjectUri,
                   })),
                 ],

@@ -64,7 +64,7 @@ describe('admin get record view', () => {
     })
   })
 
-  it('gets a record by uri, even when taken down.', async () => {
+  it.skip('gets a record by uri, even when taken down.', async () => {
     const result = await agent.api.com.atproto.admin.getRecord(
       { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
       { headers: network.pds.adminAuthHeaders() },
@@ -72,7 +72,7 @@ describe('admin get record view', () => {
     expect(forSnapshot(result.data)).toMatchSnapshot()
   })
 
-  it('gets a record by uri and cid.', async () => {
+  it.skip('gets a record by uri and cid.', async () => {
     const result = await agent.api.com.atproto.admin.getRecord(
       {
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,

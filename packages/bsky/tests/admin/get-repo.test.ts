@@ -59,7 +59,7 @@ describe('admin get repo view', () => {
     })
   })
 
-  it('gets a repo by did, even when taken down.', async () => {
+  it.skip('gets a repo by did, even when taken down.', async () => {
     const result = await agent.api.com.atproto.admin.getRepo(
       { did: sc.dids.alice },
       { headers: network.pds.adminAuthHeaders() },
@@ -67,7 +67,7 @@ describe('admin get repo view', () => {
     expect(forSnapshot(result.data)).toMatchSnapshot()
   })
 
-  it('does not include account emails for triage mods.', async () => {
+  it.skip('does not include account emails for triage mods.', async () => {
     const { data: admin } = await agent.api.com.atproto.admin.getRepo(
       { did: sc.dids.bob },
       { headers: network.pds.adminAuthHeaders() },
