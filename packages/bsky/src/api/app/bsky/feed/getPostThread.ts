@@ -256,11 +256,9 @@ const getThreadData = async (
       .execute(),
   ])
   // prevent self-referential loops
-  const includedPosts = new Set<string>()
+  const includedPosts = new Set<string>([uri])
   const parentsByUri = parents.reduce((acc, parent) => {
-    if (includedPosts.has(parent.postUri)) return acc
-    includedPosts.add(parent.postUri)
-    return Object.assign(acc, { [parent.postUri]: parent })
+    return Object.assign(acc, { [parent.uri]: parent })
   }, {} as Record<string, FeedRow>)
   const childrenByParentUri = children.reduce((acc, child) => {
     if (!child.replyParent) return acc
@@ -275,7 +273,12 @@ const getThreadData = async (
   return {
     post,
     parent: post.replyParent
-      ? getParentData(parentsByUri, post.replyParent, parentHeight)
+      ? getParentData(
+          parentsByUri,
+          includedPosts,
+          post.replyParent,
+          parentHeight,
+        )
       : undefined,
     replies: getChildrenData(childrenByParentUri, uri, depth),
   }
@@ -283,16 +286,19 @@ const getThreadData = async (
 
 const getParentData = (
   postsByUri: Record<string, FeedRow>,
+  includedPosts: Set<string>,
   uri: string,
   depth: number,
 ): PostThread | ParentNotFoundError | undefined => {
   if (depth < 1) return undefined
+  if (includedPosts.has(uri)) return undefined
+  includedPosts.add(uri)
   const post = postsByUri[uri]
   if (!post) return new ParentNotFoundError(uri)
   return {
     post,
     parent: post.replyParent
-      ? getParentData(postsByUri, post.replyParent, depth - 1)
+      ? getParentData(postsByUri, includedPosts, post.replyParent, depth - 1)
       : undefined,
     replies: [],
   }
