@@ -257,8 +257,8 @@ const getThreadData = async (
   ])
   // prevent self-referential loops
   const includedPosts = new Set<string>([uri])
-  const parentsByUri = parents.reduce((acc, parent) => {
-    return Object.assign(acc, { [parent.uri]: parent })
+  const parentsByUri = parents.reduce((acc, post) => {
+    return Object.assign(acc, { [post.uri]: post })
   }, {} as Record<string, FeedRow>)
   const childrenByParentUri = children.reduce((acc, child) => {
     if (!child.replyParent) return acc
