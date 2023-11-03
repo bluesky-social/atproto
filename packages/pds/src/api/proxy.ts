@@ -1,3 +1,4 @@
+import { Readable } from 'node:stream'
 import * as express from 'express'
 import AtpAgent from '@atproto/api'
 import { Headers, XRPCError } from '@atproto/xrpc'
@@ -38,6 +39,14 @@ export const proxy = async <T>(
     }
     throw err
   }
+}
+
+export const getStreamingRequestInit = (body: Readable): RequestInit => {
+  const reqInit: RequestInit & { duplex: string } = {
+    body: Readable.toWeb(body),
+    duplex: 'half',
+  }
+  return reqInit
 }
 
 export const isThisPds = (
