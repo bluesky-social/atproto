@@ -523,6 +523,9 @@ importers:
       disposable-email:
         specifier: ^0.2.3
         version: 0.2.3
+      dotenv:
+        specifier: ^16.0.3
+        version: 16.0.3
       express:
         specifier: ^4.17.2
         version: 4.18.2

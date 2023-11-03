@@ -1,4 +1,5 @@
 import fs from 'fs/promises'
+import dotenv from 'dotenv'
 import { BlobStore, Repo } from '@atproto/repo'
 import { ActorStoreTransactor } from '../actor-store'
 import { SqlRepoTransactor } from '../actor-store/repo/sql-repo-transactor'
@@ -7,6 +8,8 @@ import AppContext from '../context'
 import { findBlobRefs } from '../api/com/atproto/temp/importRepo'
 import { BlobRef } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
+
+dotenv.config()
 
 const MISSING_IN_STORE = 'store.txt'
 const MISSING_IN_TABLE = 'table.txt'
