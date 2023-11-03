@@ -52,7 +52,9 @@ const fixRepoBlobs = async (
       recordUri: uri.toString(),
       blobCid: ref.ref.toString(),
     }))
-    await store.db.db.insertInto('record_blob').values(toInsert).execute()
+    if (toInsert.length > 0) {
+      await store.db.db.insertInto('record_blob').values(toInsert).execute()
+    }
     blobRefs = blobRefs.concat(recordRefs)
   }
   const blobstore = ctx.blobstore(did)
