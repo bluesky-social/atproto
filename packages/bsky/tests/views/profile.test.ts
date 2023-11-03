@@ -210,7 +210,7 @@ describe('pds profile views', () => {
     // Cleanup
     await agent.api.com.atproto.admin.emitModerationEvent(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: alice,

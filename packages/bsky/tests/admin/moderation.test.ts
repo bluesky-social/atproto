@@ -8,18 +8,17 @@ import { AtUri } from '@atproto/syntax'
 import { forSnapshot } from '../_util'
 import basicSeed from '../seeds/basic'
 import {
+  REASONMISLEADING,
+  REASONOTHER,
+  REASONSPAM,
+} from '../../src/lexicon/types/com/atproto/moderation/defs'
+import {
   ModEventLabel,
   ModEventTakedown,
   REVIEWCLOSED,
   REVIEWESCALATED,
-  REVIEWOPEN,
-} from '../src/lexicon/types/com/atproto/admin/defs'
-import {
-  REASONMISLEADING,
-  REASONOTHER,
-  REASONSPAM,
-} from '../src/lexicon/types/com/atproto/moderation/defs'
-import { PeriodicModerationEventReversal } from '../src'
+} from '../../src/lexicon/types/com/atproto/admin/defs'
+import { PeriodicModerationEventReversal } from '../../src'
 
 type BaseCreateReportParams =
   | { account: string }

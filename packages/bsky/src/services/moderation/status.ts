@@ -133,7 +133,6 @@ export const adjustModerationSubjectStatus = async (
   const newStatus = {
     ...defaultData,
     ...subjectStatus,
-    ...identifier,
   }
 
   if (

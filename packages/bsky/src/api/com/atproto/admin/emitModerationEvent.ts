@@ -1,6 +1,10 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  UpstreamFailureError,
+} from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { getSubject } from '../moderation/util'
@@ -10,6 +14,8 @@ import {
   isModEventReverseTakedown,
   isModEventTakedown,
 } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { TakedownSubjects } from '../../../../services/moderation'
+import { retryHttp } from '../../../../util/retry'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.emitModerationEvent({
@@ -68,79 +74,138 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const moderationAction = await db.transaction(async (dbTxn) => {
-        const moderationTxn = ctx.services.moderation(dbTxn)
-        const labelTxn = ctx.services.label(dbTxn)
+      const { result: moderationEvent, takenDown } = await db.transaction(
+        async (dbTxn) => {
+          const moderationTxn = ctx.services.moderation(dbTxn)
+          const labelTxn = ctx.services.label(dbTxn)
 
-        const result = await moderationTxn.logEvent({
-          event,
-          subject: subjectInfo,
-          subjectBlobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
-          createdBy,
-        })
+          const result = await moderationTxn.logEvent({
+            event,
+            subject: subjectInfo,
+            subjectBlobCids:
+              subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
+            createdBy,
+          })
 
-        if (
-          result.subjectType === 'com.atproto.admin.defs#repoRef' &&
-          result.subjectDid
-        ) {
-          // No credentials to revoke on appview
-          if (isTakedownEvent) {
-            await moderationTxn.takedownRepo({
-              takedownId: result.id,
-              did: result.subjectDid,
-            })
+          let takenDown: TakedownSubjects | undefined
+
+          if (
+            result.subjectType === 'com.atproto.admin.defs#repoRef' &&
+            result.subjectDid
+          ) {
+            // No credentials to revoke on appview
+            if (isTakedownEvent) {
+              takenDown = await moderationTxn.takedownRepo({
+                takedownId: result.id,
+                did: result.subjectDid,
+              })
+            }
+
+            if (isReverseTakedownEvent) {
+              await moderationTxn.reverseTakedownRepo({
+                did: result.subjectDid,
+              })
+              takenDown = {
+                subjects: [
+                  {
+                    $type: 'com.atproto.admin.defs#repoRef',
+                    did: result.subjectDid,
+                  },
+                ],
+                did: result.subjectDid,
+              }
+            }
           }
 
-          if (isReverseTakedownEvent) {
-            await moderationTxn.reverseTakedownRepo({
-              did: result.subjectDid,
-            })
-          }
-        }
+          if (
+            result.subjectType === 'com.atproto.repo.strongRef' &&
+            result.subjectUri
+          ) {
+            const blobCids = subjectBlobCids?.map((cid) => CID.parse(cid)) ?? []
+            if (isTakedownEvent) {
+              takenDown = await moderationTxn.takedownRecord({
+                takedownId: result.id,
+                uri: new AtUri(result.subjectUri),
+                // TODO: I think this will always be available for strongRefs?
+                cid: CID.parse(result.subjectCid as string),
+                blobCids,
+              })
+            }
 
-        if (
-          result.subjectType === 'com.atproto.repo.strongRef' &&
-          result.subjectUri
-        ) {
-          if (isTakedownEvent) {
-            await moderationTxn.takedownRecord({
-              takedownId: result.id,
-              uri: new AtUri(result.subjectUri),
-              // TODO: I think this will always be available for strongRefs?
-              cid: CID.parse(result.subjectCid as string),
-              blobCids: subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
-            })
+            if (isReverseTakedownEvent) {
+              await moderationTxn.reverseTakedownRecord({
+                uri: new AtUri(result.subjectUri),
+              })
+              takenDown = {
+                did: result.subjectDid,
+                subjects: [
+                  {
+                    $type: 'com.atproto.repo.strongRef',
+                    uri: result.subjectUri,
+                    cid: result.subjectCid ?? '',
+                  },
+                  ...blobCids.map((cid) => ({
+                    $type: 'com.atproto.admin.defs#repoBlobRef',
+                    did: result.subjectDid,
+                    cid,
+                    recordUri: result.subjectUri,
+                  })),
+                ],
+              }
+            }
           }
 
-          if (isReverseTakedownEvent) {
-            await moderationTxn.reverseTakedownRecord({
-              uri: new AtUri(result.subjectUri),
-            })
+          if (isLabelEvent) {
+            await labelTxn.formatAndCreate(
+              ctx.cfg.labelerDid,
+              result.subjectUri ?? result.subjectDid,
+              result.subjectCid,
+              {
+                create: result.createLabelVals?.length
+                  ? result.createLabelVals.split(' ')
+                  : undefined,
+                negate: result.negateLabelVals?.length
+                  ? result.negateLabelVals.split(' ')
+                  : undefined,
+              },
+            )
           }
-        }
 
-        if (isLabelEvent) {
-          await labelTxn.formatAndCreate(
-            ctx.cfg.labelerDid,
-            result.subjectUri ?? result.subjectDid,
-            result.subjectCid,
-            {
-              create: result.createLabelVals?.length
-                ? result.createLabelVals.split(' ')
-                : undefined,
-              negate: result.negateLabelVals?.length
-                ? result.negateLabelVals.split(' ')
-                : undefined,
-            },
+          return { result, takenDown }
+        },
+      )
+
+      if (takenDown) {
+        const { did, subjects } = takenDown
+        if (did && subjects.length > 0) {
+          const agent = await ctx.pdsAdminAgent(did)
+          const results = await Promise.allSettled(
+            subjects.map((subject) =>
+              retryHttp(() =>
+                agent.api.com.atproto.admin.updateSubjectStatus({
+                  subject,
+                  takedown: isTakedownEvent
+                    ? {
+                        applied: true,
+                        ref: moderationEvent.id.toString(),
+                      }
+                    : {
+                        applied: false,
+                      },
+                }),
+              ),
+            ),
           )
+          const hadFailure = results.some((r) => r.status === 'rejected')
+          if (hadFailure) {
+            throw new UpstreamFailureError('failed to apply action on PDS')
+          }
         }
-
-        return result
-      })
+      }
 
       return {
         encoding: 'application/json',
-        body: await moderationService.views.event(moderationAction),
+        body: await moderationService.views.event(moderationEvent),
       }
     },
   })

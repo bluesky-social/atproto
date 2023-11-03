@@ -173,7 +173,7 @@ describe('pds author feed views', () => {
         event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
-          subject: alice,
+          did: alice,
         },
         createdBy: 'did:example:admin',
         reason: 'Y',
