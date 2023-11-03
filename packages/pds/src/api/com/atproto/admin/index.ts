@@ -8,7 +8,7 @@ import searchRepos from './searchRepos'
 import getRecord from './getRecord'
 import getRepo from './getRepo'
 import getModerationEvent from './getModerationEvent'
-import getModerationEvents from './getModerationEvents'
+import queryModerationEvents from './queryModerationEvents'
 import enableAccountInvites from './enableAccountInvites'
 import disableAccountInvites from './disableAccountInvites'
 import disableInviteCodes from './disableInviteCodes'
@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
   getRecord(server, ctx)
   getRepo(server, ctx)
   getModerationEvent(server, ctx)
-  getModerationEvents(server, ctx)
+  queryModerationEvents(server, ctx)
   getModerationStatuses(server, ctx)
   enableAccountInvites(server, ctx)
   disableAccountInvites(server, ctx)

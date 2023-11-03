@@ -806,9 +806,9 @@ export const schemaDict = {
       modEventEmail: {
         type: 'object',
         description: 'Keep a log of outgoing email to a user',
-        required: ['subject'],
+        required: ['subjectLine'],
         properties: {
-          subject: {
+          subjectLine: {
             type: 'string',
             description: 'The subject line of the email sent to the user.',
           },
@@ -1070,64 +1070,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminGetModerationEvents: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getModerationEvents',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'List moderation events related to a subject.',
-        parameters: {
-          type: 'params',
-          properties: {
-            type: {
-              type: 'string',
-            },
-            createdBy: {
-              type: 'string',
-              format: 'did',
-            },
-            sortDirection: {
-              type: 'string',
-              default: 'desc',
-              enum: ['asc', 'desc'],
-            },
-            subject: {
-              type: 'string',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['events'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              events: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.admin.defs#modEventView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   ComAtprotoAdminGetModerationStatuses: {
     lexicon: 1,
     id: 'com.atproto.admin.getModerationStatuses',
@@ -1343,6 +1285,64 @@ export const schemaDict = {
               takedown: {
                 type: 'ref',
                 ref: 'lex:com.atproto.admin.defs#statusAttr',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminQueryModerationEvents: {
+    lexicon: 1,
+    id: 'com.atproto.admin.queryModerationEvents',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List moderation events related to a subject.',
+        parameters: {
+          type: 'params',
+          properties: {
+            type: {
+              type: 'string',
+            },
+            createdBy: {
+              type: 'string',
+              format: 'did',
+            },
+            sortDirection: {
+              type: 'string',
+              default: 'desc',
+              enum: ['asc', 'desc'],
+            },
+            subject: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['events'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              events: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.defs#modEventView',
+                },
               },
             },
           },
@@ -7614,12 +7614,13 @@ export const ids = {
   ComAtprotoAdminGetAccountInfo: 'com.atproto.admin.getAccountInfo',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
   ComAtprotoAdminGetModerationEvent: 'com.atproto.admin.getModerationEvent',
-  ComAtprotoAdminGetModerationEvents: 'com.atproto.admin.getModerationEvents',
   ComAtprotoAdminGetModerationStatuses:
     'com.atproto.admin.getModerationStatuses',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
   ComAtprotoAdminGetSubjectStatus: 'com.atproto.admin.getSubjectStatus',
+  ComAtprotoAdminQueryModerationEvents:
+    'com.atproto.admin.queryModerationEvents',
   ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',
   ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',

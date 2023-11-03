@@ -139,7 +139,7 @@ describe('proxies admin requests', () => {
 
   it('fetches moderation events.', async () => {
     const { data: result } =
-      await agent.api.com.atproto.admin.getModerationEvents(
+      await agent.api.com.atproto.admin.queryModerationEvents(
         {
           subject: sc.posts[sc.dids.bob][1].ref.uriStr,
         },
@@ -175,7 +175,7 @@ describe('proxies admin requests', () => {
 
   it('fetches a list of actions.', async () => {
     const { data: result } =
-      await agent.api.com.atproto.admin.getModerationEvents(
+      await agent.api.com.atproto.admin.queryModerationEvents(
         { subject: sc.dids.bob },
         { headers: network.pds.adminAuthHeaders() },
       )

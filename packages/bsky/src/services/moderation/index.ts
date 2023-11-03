@@ -216,7 +216,7 @@ export class ModerationService {
     }
 
     if (isModEventEmail(event)) {
-      meta.subject = event.subject
+      meta.subjectLine = event.subjectLine
     }
 
     const actionResult = await this.db.db

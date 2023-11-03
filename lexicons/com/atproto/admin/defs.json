@@ -552,9 +552,9 @@
     "modEventEmail": {
       "type": "object",
       "description": "Keep a log of outgoing email to a user",
-      "required": ["subject"],
+      "required": ["subjectLine"],
       "properties": {
-        "subject": {
+        "subjectLine": {
           "type": "string",
           "description": "The subject line of the email sent to the user."
         }

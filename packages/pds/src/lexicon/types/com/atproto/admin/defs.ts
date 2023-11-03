@@ -688,7 +688,7 @@ export function validateModEventUnmute(v: unknown): ValidationResult {
 /** Keep a log of outgoing email to a user */
 export interface ModEventEmail {
   /** The subject line of the email sent to the user. */
-  subject: string
+  subjectLine: string
   [k: string]: unknown
 }
 

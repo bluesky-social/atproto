@@ -746,7 +746,7 @@ describe('moderation', () => {
       await periodicReversal.findAndRevertDueActions()
 
       const [{ data: eventList }, { data: statuses }] = await Promise.all([
-        agent.api.com.atproto.admin.getModerationEvents(
+        agent.api.com.atproto.admin.queryModerationEvents(
           { subject: sc.dids.bob },
           { headers: network.bsky.adminAuthHeaders('moderator') },
         ),
