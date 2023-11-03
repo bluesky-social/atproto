@@ -258,8 +258,8 @@ const getThreadData = async (
   // prevent self-referential loops
   const includedPosts = new Set<string>([uri])
   const parentsByUri = parents.reduce((acc, parent) => {
-    if (includedPosts.has(parent.postUri)) return acc
-    includedPosts.add(parent.postUri)
+    if (includedPosts.has(parent.uri)) return acc
+    includedPosts.add(parent.uri)
     return Object.assign(acc, { [parent.postUri]: parent })
   }, {} as Record<string, FeedRow>)
   const childrenByParentUri = children.reduce((acc, child) => {
