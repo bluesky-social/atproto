@@ -1,8 +1,6 @@
 import {
   LexiconDoc,
   LexRecord,
-  LexXrpcProcedure,
-  LexXrpcQuery,
   LexUserType,
   LexiconDefNotFoundError,
   InvalidLexiconError,
@@ -10,7 +8,6 @@ import {
   ValidationError,
   isObj,
   hasProp,
-  LexXrpcSubscription,
 } from './types'
 import {
   assertValidRecord,
@@ -91,7 +88,14 @@ export class Lexicons {
   /**
    * Get a def, throw if not found. Throws on not found.
    */
-  getDefOrThrow(uri: string, types?: string[]): LexUserType {
+  getDefOrThrow<T extends LexUserType['type'] = LexUserType['type']>(
+    uri: string,
+    types?: readonly T[],
+  ): Extract<LexUserType, { type: T }>
+  getDefOrThrow(
+    uri: string,
+    types?: readonly LexUserType['type'][],
+  ): LexUserType {
     const def = this.getDef(uri)
     if (!def) {
       throw new LexiconDefNotFoundError(`Lexicon not found: ${uri}`)
@@ -154,11 +158,7 @@ export class Lexicons {
       'procedure',
       'subscription',
     ])
-    return assertValidXrpcParams(
-      this,
-      def as LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription,
-      value,
-    )
+    return assertValidXrpcParams(this, def, value)
   }
 
   /**
@@ -167,7 +167,7 @@ export class Lexicons {
   assertValidXrpcInput(lexUri: string, value: unknown) {
     lexUri = toLexUri(lexUri)
     const def = this.getDefOrThrow(lexUri, ['procedure'])
-    return assertValidXrpcInput(this, def as LexXrpcProcedure, value)
+    return assertValidXrpcInput(this, def, value)
   }
 
   /**
@@ -176,11 +176,7 @@ export class Lexicons {
   assertValidXrpcOutput(lexUri: string, value: unknown) {
     lexUri = toLexUri(lexUri)
     const def = this.getDefOrThrow(lexUri, ['query', 'procedure'])
-    return assertValidXrpcOutput(
-      this,
-      def as LexXrpcProcedure | LexXrpcQuery,
-      value,
-    )
+    return assertValidXrpcOutput(this, def, value)
   }
 
   /**
@@ -189,7 +185,7 @@ export class Lexicons {
   assertValidXrpcMessage<T = unknown>(lexUri: string, value: unknown): T {
     lexUri = toLexUri(lexUri)
     const def = this.getDefOrThrow(lexUri, ['subscription'])
-    return assertValidXrpcMessage(this, def as LexXrpcSubscription, value) as T
+    return assertValidXrpcMessage(this, def, value) as T
   }
 
   /**
