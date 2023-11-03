@@ -265,6 +265,7 @@ export interface AccountView {
   invitedBy?: ComAtprotoServerDefs.InviteCode
   invites?: ComAtprotoServerDefs.InviteCode[]
   invitesDisabled?: boolean
+  emailConfirmedAt?: string
   inviteNote?: string
   [k: string]: unknown
 }

@@ -31,6 +31,7 @@ export const addAccountInfoToRepoViewDetail = (
     invitesDisabled: accountInfo.invitesDisabled,
     inviteNote: accountInfo.inviteNote,
     invites: accountInfo.invites,
+    emailConfirmedAt: accountInfo.emailConfirmedAt,
   }
 }
 

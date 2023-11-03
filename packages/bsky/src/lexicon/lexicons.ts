@@ -473,6 +473,10 @@ export const schemaDict = {
           invitesDisabled: {
             type: 'boolean',
           },
+          emailConfirmedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
           inviteNote: {
             type: 'string',
           },

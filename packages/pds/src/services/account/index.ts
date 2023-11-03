@@ -387,6 +387,7 @@ export class AccountService {
         'did_handle.did',
         'did_handle.handle',
         'user_account.email',
+        'user_account.emailConfirmedAt',
         'user_account.invitesDisabled',
         'user_account.inviteNote',
         'user_account.createdAt as indexedAt',
@@ -405,6 +406,7 @@ export class AccountService {
       handle: account?.handle ?? INVALID_HANDLE,
       invitesDisabled: account.invitesDisabled === 1,
       inviteNote: account.inviteNote ?? undefined,
+      emailConfirmedAt: account.emailConfirmedAt ?? undefined,
       invites,
       invitedBy: invitedBy[did],
     }
