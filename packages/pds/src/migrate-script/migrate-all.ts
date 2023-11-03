@@ -430,3 +430,5 @@ const getUserAccount = async (ctx: AppContext, did: string) => {
   }
   return accountRes
 }
+
+runScript()
