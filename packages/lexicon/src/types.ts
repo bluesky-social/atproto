@@ -415,16 +415,9 @@ export function isDiscriminatedObject(
   return discriminatedObject.safeParse(value).success
 }
 
-export class LexiconDocMalformedError extends Error {
-  constructor(
-    message: string,
-    public schemaDef: unknown,
-    public issues?: z.ZodIssue[],
-  ) {
-    super(message)
-    this.schemaDef = schemaDef
-    this.issues = issues
-  }
+export function parseLexiconDoc(v: unknown): LexiconDoc {
+  lexiconDoc.parse(v)
+  return v as LexiconDoc
 }
 
 export type ValidationResult =

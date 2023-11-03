@@ -8,9 +8,10 @@ TypeScript client library for talking to [atproto](https://atproto.com) services
 ## Usage
 
 ```typescript
+import { LexiconDoc } from '@atproto/lexicon'
 import xrpc from '@atproto/xrpc'
 
-xrpc.addLexicon({
+const pingLexicon: LexiconDoc = {
   lexicon: 1,
   id: 'io.example.ping',
   defs: {
@@ -31,7 +32,8 @@ xrpc.addLexicon({
       },
     },
   },
-})
+}
+xrpc.addLexicon(pingLexicon)
 
 const res1 = await xrpc.call('https://example.com', 'io.example.ping', {
   message: 'hello world',
@@ -44,7 +46,7 @@ const res2 = await xrpc
 res2.encoding // => 'application/json'
 res2.body // => {message: 'hello world'}
 
-xrpc.addLexicon({
+const writeJsonLexicon: LexiconDoc = {
   lexicon: 1,
   id: 'io.example.writeJsonFile',
   defs: {
@@ -60,7 +62,8 @@ xrpc.addLexicon({
       },
     },
   },
-})
+}
+xrpc.addLexicon(writeJsonLexicon)
 
 const res3 = await xrpc.service('https://example.com').call(
   'io.example.writeJsonFile',
@@ -71,4 +74,9 @@ const res3 = await xrpc.service('https://example.com').call(
 
 ## License
 
-MIT
+This project is dual-licensed under MIT and Apache 2.0 terms:
+
+- MIT license ([LICENSE-MIT.txt](https://github.com/bluesky-social/atproto/blob/main/LICENSE-MIT.txt) or http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0, ([LICENSE-APACHE.txt](https://github.com/bluesky-social/atproto/blob/main/LICENSE-APACHE.txt) or http://www.apache.org/licenses/LICENSE-2.0)
+
+Downstream projects and end users may chose either license individually, or both together, at their discretion. The motivation for this dual-licensing is the additional software patent assurance provided by Apache 2.0.

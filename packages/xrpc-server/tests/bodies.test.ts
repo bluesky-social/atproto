@@ -2,6 +2,7 @@ import * as http from 'http'
 import { Readable } from 'stream'
 import { gzipSync } from 'zlib'
 import getPort from 'get-port'
+import { LexiconDoc } from '@atproto/lexicon'
 import xrpc, { ServiceClient } from '@atproto/xrpc'
 import { bytesToStream, cidForCbor } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
@@ -9,7 +10,7 @@ import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
 import logger from '../src/logger'
 
-const LEXICONS = [
+const LEXICONS: LexiconDoc[] = [
   {
     lexicon: 1,
     id: 'io.example.validationTest',

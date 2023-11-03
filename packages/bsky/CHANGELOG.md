@@ -1,5 +1,41 @@
 # @atproto/bsky
 
+## 0.0.14
+
+### Patch Changes
+
+- Updated dependencies [[`772736a0`](https://github.com/bluesky-social/atproto/commit/772736a01081f39504e1b19a1b3687783bb78f07)]:
+  - @atproto/api@0.6.23
+
+## 0.0.13
+
+### Patch Changes
+
+- [#1788](https://github.com/bluesky-social/atproto/pull/1788) [`84e2d4d2`](https://github.com/bluesky-social/atproto/commit/84e2d4d2b6694f344d80c18672c78b650189d423) Thanks [@bnewbold](https://github.com/bnewbold)! - update license to "MIT or Apache2"
+
+- Updated dependencies [[`ce49743d`](https://github.com/bluesky-social/atproto/commit/ce49743d7f8800d33116b88001d7b512553c2c89), [`84e2d4d2`](https://github.com/bluesky-social/atproto/commit/84e2d4d2b6694f344d80c18672c78b650189d423)]:
+  - @atproto/lexicon@0.3.0
+  - @atproto/xrpc-server@0.4.0
+  - @atproto/identity@0.3.1
+  - @atproto/common@0.3.3
+  - @atproto/crypto@0.2.3
+  - @atproto/syntax@0.1.4
+  - @atproto/repo@0.3.4
+  - @atproto/api@0.6.22
+
+## 0.0.12
+
+### Patch Changes
+
+- Updated dependencies [[`9c98a5ba`](https://github.com/bluesky-social/atproto/commit/9c98a5baaf503b02238a6afe4f6e2b79c5181693), [`bb039d8e`](https://github.com/bluesky-social/atproto/commit/bb039d8e4ce5b7f70c4f3e86d1327e210ef24dc3), [`35d108ce`](https://github.com/bluesky-social/atproto/commit/35d108ce94866ce1b3d147cd0620a0ba1c4ebcd7)]:
+  - @atproto/api@0.6.21
+  - @atproto/identity@0.3.0
+  - @atproto/repo@0.3.3
+  - @atproto/common@0.3.2
+  - @atproto/lexicon@0.2.3
+  - @atproto/syntax@0.1.3
+  - @atproto/xrpc-server@0.3.3
+
 ## 0.0.11
 
 ### Patch Changes

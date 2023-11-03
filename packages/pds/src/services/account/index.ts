@@ -14,6 +14,8 @@ import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { EmailTokenPurpose } from '../../db/tables/email-token'
 import { getRandomToken } from '../../api/com/atproto/server/util'
+import { AccountView } from '../../lexicon/types/com/atproto/admin/defs'
+import { INVALID_HANDLE } from '@atproto/syntax'
 
 export class AccountService {
   constructor(public db: Database) {}
@@ -59,7 +61,7 @@ export class AccountService {
     const found = await this.db.db
       .selectFrom('repo_root')
       .where('did', '=', did)
-      .where('takedownId', 'is', null)
+      .where('takedownRef', 'is', null)
       .select('did')
       .executeTakeFirst()
     return found !== undefined
@@ -374,6 +376,38 @@ export class AccountService {
     await this.db.transaction(async (txn) => {
       await sequencer.sequenceEvt(txn, seqEvt)
     })
+  }
+
+  async adminView(did: string): Promise<AccountView | null> {
+    const accountQb = this.db.db
+      .selectFrom('did_handle')
+      .innerJoin('user_account', 'user_account.did', 'did_handle.did')
+      .where('did_handle.did', '=', did)
+      .select([
+        'did_handle.did',
+        'did_handle.handle',
+        'user_account.email',
+        'user_account.invitesDisabled',
+        'user_account.inviteNote',
+        'user_account.createdAt as indexedAt',
+      ])
+
+    const [account, invites, invitedBy] = await Promise.all([
+      accountQb.executeTakeFirst(),
+      this.getAccountInviteCodes(did),
+      this.getInvitedByForAccounts([did]),
+    ])
+
+    if (!account) return null
+
+    return {
+      ...account,
+      handle: account?.handle ?? INVALID_HANDLE,
+      invitesDisabled: account.invitesDisabled === 1,
+      inviteNote: account.inviteNote ?? undefined,
+      invites,
+      invitedBy: invitedBy[did],
+    }
   }
 
   selectInviteCodesQb() {

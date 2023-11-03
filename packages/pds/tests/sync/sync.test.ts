@@ -5,7 +5,6 @@ import { randomStr } from '@atproto/crypto'
 import * as repo from '@atproto/repo'
 import { MemoryBlockstore } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { CID } from 'multiformats/cid'
 import { AppContext } from '../../src'
 
@@ -34,7 +33,6 @@ describe('repo sync', () => {
       password: 'alice-pass',
     })
     did = sc.dids.alice
-    agent.api.setHeader('authorization', `Bearer ${sc.accounts[did].accessJwt}`)
   })
 
   afterAll(async () => {
@@ -83,11 +81,7 @@ describe('repo sync', () => {
     // delete two that are already sync & two that have not been
     for (let i = 0; i < DEL_COUNT; i++) {
       const uri = uris[i * 5]
-      await agent.api.app.bsky.feed.post.delete({
-        repo: did,
-        collection: uri.collection,
-        rkey: uri.rkey,
-      })
+      await sc.deletePost(did, uri)
       delete repoData[uri.collection][uri.rkey]
     }
 
@@ -203,14 +197,19 @@ describe('repo sync', () => {
 
   describe('repo takedown', () => {
     beforeAll(async () => {
-      await sc.takeModerationAction({
-        action: TAKEDOWN,
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did,
+      await agent.api.com.atproto.admin.updateSubjectStatus(
+        {
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did,
+          },
+          takedown: { applied: true },
         },
-      })
-      agent.api.xrpc.unsetHeader('authorization')
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
     })
 
     it('does not sync repo unauthed', async () => {

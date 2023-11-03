@@ -25,6 +25,10 @@ expect.extend({
       if (actual.cause.source.type === 'list') {
         cause = 'muted-by-list'
       }
+    } else if (actual.cause?.type === 'blocking') {
+      if (actual.cause.source.type === 'list') {
+        cause = 'blocking-by-list'
+      }
     }
     if (!expected) {
       if (!ignoreCause && actual.cause) {
@@ -153,8 +157,12 @@ export class ModerationBehaviorSuiteRunner {
           ? m.listViewBasic({ name: 'Fake List' })
           : undefined,
         blockedBy: def.blockedBy,
-        blocking: def.blocking
-          ? 'at://did:web:self.test/app.bsky.graph.block/fake'
+        blocking:
+          def.blocking || def.blockingByList
+            ? 'at://did:web:self.test/app.bsky.graph.block/fake'
+            : undefined,
+        blockingByList: def.blockingByList
+          ? m.listViewBasic({ name: 'Fake List' })
           : undefined,
       }),
     })

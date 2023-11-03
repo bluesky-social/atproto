@@ -16,5 +16,10 @@ export type DidKeyPlugin = {
     did: string,
     msg: Uint8Array,
     data: Uint8Array,
+    opts?: VerifyOptions,
   ) => Promise<boolean>
+}
+
+export type VerifyOptions = {
+  lowS?: boolean
 }

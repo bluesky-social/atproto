@@ -1,6 +1,6 @@
 {
   "name": "@atproto/dev-env",
-  "version": "0.2.11",
+  "version": "0.2.14",
   "license": "MIT",
   "description": "Local development environment helper for atproto development",
   "keywords": [
@@ -36,6 +36,7 @@
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.1",
     "@did-plc/server": "^0.0.1",
+    "axios": "^0.27.2",
     "better-sqlite3": "^7.6.2",
     "chalk": "^5.0.1",
     "dotenv": "^16.0.3",

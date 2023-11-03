@@ -3,8 +3,11 @@ import { ids } from '../../src/lexicon/lexicons'
 import { FLAG } from '../../src/lexicon/types/com/atproto/admin/defs'
 import usersSeed from './users'
 
-export default async (sc: SeedClient, invite?: { code: string }) => {
-  await usersSeed(sc, invite)
+export default async (
+  sc: SeedClient,
+  opts?: { inviteCode?: string; addModLabels?: boolean },
+) => {
+  await usersSeed(sc, opts)
 
   const alice = sc.dids.alice
   const bob = sc.dids.bob
@@ -128,22 +131,24 @@ export default async (sc: SeedClient, invite?: { code: string }) => {
   await sc.repost(dan, sc.posts[alice][1].ref)
   await sc.repost(dan, alicesReplyToBob.ref)
 
-  await sc.agent.com.atproto.admin.takeModerationAction(
-    {
-      action: FLAG,
-      subject: {
-        $type: 'com.atproto.admin.defs#repoRef',
-        did: dan,
+  if (opts?.addModLabels) {
+    await sc.agent.com.atproto.admin.takeModerationAction(
+      {
+        action: FLAG,
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: dan,
+        },
+        createdBy: 'did:example:admin',
+        reason: 'test',
+        createLabelVals: ['repo-action-label'],
       },
-      createdBy: 'did:example:admin',
-      reason: 'test',
-      createLabelVals: ['repo-action-label'],
-    },
-    {
-      encoding: 'application/json',
-      headers: sc.adminAuthHeaders(),
-    },
-  )
+      {
+        encoding: 'application/json',
+        headers: sc.adminAuthHeaders(),
+      },
+    )
+  }
 
   return sc
 }
