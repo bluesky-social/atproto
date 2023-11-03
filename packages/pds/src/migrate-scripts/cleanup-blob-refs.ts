@@ -17,12 +17,14 @@ const MISSING_IN_TABLE = 'table.txt'
 const run = async () => {
   const env = readEnv()
   const cfg = envToCfg(env)
+  console.log('db cfg: ', cfg.db)
   const secrets = envToSecrets(env)
   const ctx = await AppContext.fromConfig(cfg, secrets)
   const dids = await ctx.accountManager.db.db
     .selectFrom('actor')
     .selectAll()
     .execute()
+  console.log('dids: ', dids.length)
   let count = 0
   for (const row of dids) {
     await ctx.actorStore.transact(row.did, async (store) => {
