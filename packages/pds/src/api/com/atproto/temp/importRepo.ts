@@ -102,7 +102,7 @@ const importRepo = async (
         blobRefs = blobRefs.concat(recordBlobs)
         const blobValues = recordBlobs.map((cid) => ({
           recordUri: uri.toString(),
-          blobCid: cid.toString(),
+          blobCid: cid.ref.toString(),
         }))
         const indexRecordBlobs =
           blobValues.length > 0
