@@ -9,8 +9,10 @@ import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
+  /** The type of event (fully qualified string in the format of com.atproto.admin#modEvent<name>) to filter by. If not specified, all events are returned. */
   type?: string
   createdBy?: string
+  /** Sort direction for the events. Defaults to descending order of created at timestamp. */
   sortDirection?: 'asc' | 'desc'
   subject?: string
   limit?: number

@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.admin.getModerationStatuses",
+  "id": "com.atproto.admin.queryModerationStatuses",
   "defs": {
     "main": {
       "type": "query",

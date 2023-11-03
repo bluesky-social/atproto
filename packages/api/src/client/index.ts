@@ -15,11 +15,11 @@ import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/
 import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
-import * as ComAtprotoAdminGetModerationStatuses from './types/com/atproto/admin/getModerationStatuses'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
 import * as ComAtprotoAdminQueryModerationEvents from './types/com/atproto/admin/queryModerationEvents'
+import * as ComAtprotoAdminQueryModerationStatuses from './types/com/atproto/admin/queryModerationStatuses'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
@@ -149,11 +149,11 @@ export * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/
 export * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 export * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 export * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
-export * as ComAtprotoAdminGetModerationStatuses from './types/com/atproto/admin/getModerationStatuses'
 export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 export * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
 export * as ComAtprotoAdminQueryModerationEvents from './types/com/atproto/admin/queryModerationEvents'
+export * as ComAtprotoAdminQueryModerationStatuses from './types/com/atproto/admin/queryModerationStatuses'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
@@ -439,17 +439,6 @@ export class AdminNS {
       })
   }
 
-  getModerationStatuses(
-    params?: ComAtprotoAdminGetModerationStatuses.QueryParams,
-    opts?: ComAtprotoAdminGetModerationStatuses.CallOptions,
-  ): Promise<ComAtprotoAdminGetModerationStatuses.Response> {
-    return this._service.xrpc
-      .call('com.atproto.admin.getModerationStatuses', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoAdminGetModerationStatuses.toKnownErr(e)
-      })
-  }
-
   getRecord(
     params?: ComAtprotoAdminGetRecord.QueryParams,
     opts?: ComAtprotoAdminGetRecord.CallOptions,
@@ -491,6 +480,22 @@ export class AdminNS {
       .call('com.atproto.admin.queryModerationEvents', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoAdminQueryModerationEvents.toKnownErr(e)
+      })
+  }
+
+  queryModerationStatuses(
+    params?: ComAtprotoAdminQueryModerationStatuses.QueryParams,
+    opts?: ComAtprotoAdminQueryModerationStatuses.CallOptions,
+  ): Promise<ComAtprotoAdminQueryModerationStatuses.Response> {
+    return this._service.xrpc
+      .call(
+        'com.atproto.admin.queryModerationStatuses',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw ComAtprotoAdminQueryModerationStatuses.toKnownErr(e)
       })
   }
 

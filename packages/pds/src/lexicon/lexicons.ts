@@ -1070,111 +1070,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminGetModerationStatuses: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getModerationStatuses',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'View moderation statuses of subjects (record or repo).',
-        parameters: {
-          type: 'params',
-          properties: {
-            subject: {
-              type: 'string',
-            },
-            note: {
-              type: 'string',
-              description: 'Search subjects by keyword from notes',
-            },
-            reportedAfter: {
-              type: 'string',
-              format: 'datetime',
-              description: 'Search subjects reported after a given timestamp',
-            },
-            reportedBefore: {
-              type: 'string',
-              format: 'datetime',
-              description: 'Search subjects reported before a given timestamp',
-            },
-            reviewedAfter: {
-              type: 'string',
-              format: 'datetime',
-              description: 'Search subjects reviewed after a given timestamp',
-            },
-            reviewedBefore: {
-              type: 'string',
-              format: 'datetime',
-              description: 'Search subjects reviewed before a given timestamp',
-            },
-            includeMuted: {
-              type: 'boolean',
-              description:
-                "By default, we don't include muted subjects in the results. Set this to true to include them.",
-            },
-            reviewState: {
-              type: 'string',
-              description: 'Specify when fetching subjects in a certain state',
-            },
-            ignoreSubjects: {
-              type: 'array',
-              items: {
-                type: 'string',
-              },
-            },
-            lastReviewedBy: {
-              type: 'string',
-              format: 'did',
-              description:
-                'Get all subject statuses that were reviewed by a specific moderator',
-            },
-            sortField: {
-              type: 'string',
-              default: 'lastReportedAt',
-              enum: ['lastReviewedAt', 'lastReportedAt'],
-            },
-            sortDirection: {
-              type: 'string',
-              default: 'desc',
-              enum: ['asc', 'desc'],
-            },
-            takendown: {
-              type: 'boolean',
-              description: 'Get subjects that were taken down',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['subjectStatuses'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              subjectStatuses: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.admin.defs#subjectStatusView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   ComAtprotoAdminGetRecord: {
     lexicon: 1,
     id: 'com.atproto.admin.getRecord',
@@ -1304,6 +1199,8 @@ export const schemaDict = {
           properties: {
             type: {
               type: 'string',
+              description:
+                'The type of event (fully qualified string in the format of com.atproto.admin#modEvent<name>) to filter by. If not specified, all events are returned.',
             },
             createdBy: {
               type: 'string',
@@ -1313,6 +1210,8 @@ export const schemaDict = {
               type: 'string',
               default: 'desc',
               enum: ['asc', 'desc'],
+              description:
+                'Sort direction for the events. Defaults to descending order of created at timestamp.',
             },
             subject: {
               type: 'string',
@@ -1342,6 +1241,111 @@ export const schemaDict = {
                 items: {
                   type: 'ref',
                   ref: 'lex:com.atproto.admin.defs#modEventView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminQueryModerationStatuses: {
+    lexicon: 1,
+    id: 'com.atproto.admin.queryModerationStatuses',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'View moderation statuses of subjects (record or repo).',
+        parameters: {
+          type: 'params',
+          properties: {
+            subject: {
+              type: 'string',
+            },
+            note: {
+              type: 'string',
+              description: 'Search subjects by keyword from notes',
+            },
+            reportedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reported after a given timestamp',
+            },
+            reportedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reported before a given timestamp',
+            },
+            reviewedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reviewed after a given timestamp',
+            },
+            reviewedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reviewed before a given timestamp',
+            },
+            includeMuted: {
+              type: 'boolean',
+              description:
+                "By default, we don't include muted subjects in the results. Set this to true to include them.",
+            },
+            reviewState: {
+              type: 'string',
+              description: 'Specify when fetching subjects in a certain state',
+            },
+            ignoreSubjects: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
+            lastReviewedBy: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Get all subject statuses that were reviewed by a specific moderator',
+            },
+            sortField: {
+              type: 'string',
+              default: 'lastReportedAt',
+              enum: ['lastReviewedAt', 'lastReportedAt'],
+            },
+            sortDirection: {
+              type: 'string',
+              default: 'desc',
+              enum: ['asc', 'desc'],
+            },
+            takendown: {
+              type: 'boolean',
+              description: 'Get subjects that were taken down',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subjectStatuses'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              subjectStatuses: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.defs#subjectStatusView',
                 },
               },
             },
@@ -7614,13 +7618,13 @@ export const ids = {
   ComAtprotoAdminGetAccountInfo: 'com.atproto.admin.getAccountInfo',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
   ComAtprotoAdminGetModerationEvent: 'com.atproto.admin.getModerationEvent',
-  ComAtprotoAdminGetModerationStatuses:
-    'com.atproto.admin.getModerationStatuses',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
   ComAtprotoAdminGetSubjectStatus: 'com.atproto.admin.getSubjectStatus',
   ComAtprotoAdminQueryModerationEvents:
     'com.atproto.admin.queryModerationEvents',
+  ComAtprotoAdminQueryModerationStatuses:
+    'com.atproto.admin.queryModerationStatuses',
   ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',
   ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',

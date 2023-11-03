@@ -121,7 +121,7 @@ describe('moderation', () => {
   const getStatuses = async (
     params: ComAtprotoAdminGetModerationStatuses.QueryParams,
   ) => {
-    const { data } = await agent.api.com.atproto.admin.getModerationStatuses(
+    const { data } = await agent.api.com.atproto.admin.queryModerationStatuses(
       params,
       { headers: network.bsky.adminAuthHeaders() },
     )
@@ -730,7 +730,7 @@ describe('moderation', () => {
       })
 
       const { data: statusesAfterTakedown } =
-        await agent.api.com.atproto.admin.getModerationStatuses(
+        await agent.api.com.atproto.admin.queryModerationStatuses(
           { subject: sc.dids.bob },
           { headers: network.bsky.adminAuthHeaders('moderator') },
         )
@@ -750,7 +750,7 @@ describe('moderation', () => {
           { subject: sc.dids.bob },
           { headers: network.bsky.adminAuthHeaders('moderator') },
         ),
-        agent.api.com.atproto.admin.getModerationStatuses(
+        agent.api.com.atproto.admin.queryModerationStatuses(
           { subject: sc.dids.bob },
           { headers: network.bsky.adminAuthHeaders('moderator') },
         ),

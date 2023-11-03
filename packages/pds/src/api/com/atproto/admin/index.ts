@@ -16,7 +16,7 @@ import getInviteCodes from './getInviteCodes'
 import updateAccountHandle from './updateAccountHandle'
 import updateAccountEmail from './updateAccountEmail'
 import sendEmail from './sendEmail'
-import getModerationStatuses from './getModerationStatuses'
+import queryModerationStatuses from './queryModerationStatuses'
 
 export default function (server: Server, ctx: AppContext) {
   emitModerationEvent(server, ctx)
@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
   getRepo(server, ctx)
   getModerationEvent(server, ctx)
   queryModerationEvents(server, ctx)
-  getModerationStatuses(server, ctx)
+  queryModerationStatuses(server, ctx)
   enableAccountInvites(server, ctx)
   disableAccountInvites(server, ctx)
   disableInviteCodes(server, ctx)
