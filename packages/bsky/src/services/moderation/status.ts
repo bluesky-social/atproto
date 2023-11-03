@@ -143,10 +143,7 @@ export const adjustModerationSubjectStatus = async (
     subjectStatus.takendown = false
   }
 
-  if (
-    action === 'com.atproto.admin.defs#modEventComment' &&
-    meta?.persistNote
-  ) {
+  if (action === 'com.atproto.admin.defs#modEventComment' && meta?.sticky) {
     newStatus.note = comment
     subjectStatus.note = comment
   }

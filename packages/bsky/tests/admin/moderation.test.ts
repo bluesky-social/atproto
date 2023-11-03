@@ -314,7 +314,7 @@ describe('moderation', () => {
         {
           event: {
             $type: 'com.atproto.admin.defs#modEventComment',
-            persistNote: true,
+            sticky: true,
             comment: 'This is a persistent note',
           },
           subject: alicesPostSubject,

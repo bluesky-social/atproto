@@ -169,9 +169,9 @@ export class ModerationViews {
 
       if (
         res.action === 'com.atproto.admin.defs#modEventComment' &&
-        res.meta?.persistNote
+        res.meta?.sticky
       ) {
-        eventView.event.persistNote = true
+        eventView.event.sticky = true
       }
 
       return eventView

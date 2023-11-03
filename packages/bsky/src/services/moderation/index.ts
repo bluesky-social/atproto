@@ -211,8 +211,8 @@ export class ModerationService {
       meta.reportType = event.reportType
     }
 
-    if (isModEventComment(event) && event.persistNote) {
-      meta.persistNote = event.persistNote
+    if (isModEventComment(event) && event.sticky) {
+      meta.sticky = event.sticky
     }
 
     if (isModEventEmail(event)) {

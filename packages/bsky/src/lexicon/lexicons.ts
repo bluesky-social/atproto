@@ -714,7 +714,7 @@ export const schemaDict = {
           comment: {
             type: 'string',
           },
-          persistNote: {
+          sticky: {
             type: 'boolean',
             description: 'Make the comment a persistent note on the subject',
           },

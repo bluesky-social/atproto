@@ -540,7 +540,7 @@ export function validateModEventReverseTakedown(v: unknown): ValidationResult {
 export interface ModEventComment {
   comment: string
   /** Make the comment a persistent note on the subject */
-  persistNote?: boolean
+  sticky?: boolean
   [k: string]: unknown
 }
 
