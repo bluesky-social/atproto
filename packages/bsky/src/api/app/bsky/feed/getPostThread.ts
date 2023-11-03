@@ -256,8 +256,7 @@ const getThreadData = async (
       .execute(),
   ])
   // prevent self-referential loops
-  const includedPosts = new Set<string>()
-  includedPosts.add(uri)
+  const includedPosts = new Set<string>([uri])
   const parentsByUri = parents.reduce((acc, parent) => {
     if (includedPosts.has(parent.postUri)) return acc
     includedPosts.add(parent.postUri)
