@@ -62,7 +62,7 @@ export const runScript = async () => {
       completed++
     } catch (err) {
       // @ts-ignore
-      console.log(err[message])
+      console.log(err?.message)
       await db
         .updateTable('status')
         .set({ failed: 1 })
