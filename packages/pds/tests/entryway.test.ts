@@ -12,8 +12,7 @@ import {
 } from '@atproto/dev-env'
 import { ids } from '@atproto/api/src/client/lexicons'
 
-// @TODO temporarily skipping while createAccount inputs settle
-describe.skip('entryway', () => {
+describe('entryway', () => {
   let plc: TestPlc
   let entryway: TestPds
   let entrywayAgent: AtpAgent
