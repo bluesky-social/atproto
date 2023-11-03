@@ -39,7 +39,7 @@ export const runScript = async () => {
   const todo = await db
     .selectFrom('status')
     .where('status.phase', '<', 7)
-    .where('failed', '!=', 1)
+    // .where('failed', '!=', 1)
     .orderBy('phase', 'desc')
     .orderBy('did')
     .selectAll()
@@ -61,6 +61,8 @@ export const runScript = async () => {
       await migrateRepo(ctx, db, pdsInfo, status, adminToken)
       completed++
     } catch (err) {
+      // @ts-ignore
+      console.log(err[message])
       await db
         .updateTable('status')
         .set({ failed: 1 })
