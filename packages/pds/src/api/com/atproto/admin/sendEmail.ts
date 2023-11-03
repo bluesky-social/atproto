@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         {
           event: {
             $type: 'com.atproto.admin.defs#modEventEmail',
-            subject,
+            subjectLine: subject,
           },
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
