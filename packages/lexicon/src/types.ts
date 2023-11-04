@@ -400,10 +400,10 @@ export function isObj(obj: unknown): obj is Record<string, unknown> {
   return obj !== null && typeof obj === 'object'
 }
 
-export function hasProp<K extends PropertyKey>(
-  data: object,
+export function hasProp<O extends object, K extends PropertyKey>(
+  data: O,
   prop: K,
-): data is Record<K, unknown> {
+): data is O & Record<K, unknown> {
   return prop in data
 }
 
