@@ -11,6 +11,7 @@ import {
   mockNetworkUtilities,
 } from '@atproto/dev-env'
 import { ids } from '@atproto/api/src/client/lexicons'
+import { getPdsEndpoint, isValidDidDoc } from '@atproto/common'
 
 describe('entryway', () => {
   let plc: TestPlc
@@ -20,6 +21,7 @@ describe('entryway', () => {
   let pdsAgent: AtpAgent
   let alice: string
   let accessToken: string
+  let refreshToken: string
   let pdsId: number
 
   beforeAll(async () => {
@@ -37,6 +39,7 @@ describe('entryway', () => {
       recoveryDidKey: recoveryKey,
       jwtSigningKeyK256PrivateKeyHex: jwtSigningPriv,
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
+      enableDidDocWithSession: true,
     })
     pds = await TestPds.create({
       // @NOTE plc rotation key and recovery key intentionally not matching entryway
@@ -80,6 +83,10 @@ describe('entryway', () => {
     alice = did
     await entryway.ctx.db.db.updateTable('pds').set({ weight: 0 }).execute()
 
+    assert(isValidDidDoc(initialSession.didDoc))
+    expect(initialSession.didDoc.id).toBe(alice)
+    expect(getPdsEndpoint(initialSession.didDoc)).toBe(pds.url)
+
     const token = jose.decodeJwt(initialSession.accessJwt)
     expect(token.aud).toBe(pds.ctx.cfg.service.did)
 
@@ -121,11 +128,66 @@ describe('entryway', () => {
         identifier: alice,
         password: 'test123',
       })
+
     accessToken = session.accessJwt
+    refreshToken = session.refreshJwt
+    assert(isValidDidDoc(session.didDoc))
+    expect(session.didDoc.id).toBe(alice)
+    expect(getPdsEndpoint(session.didDoc)).toBe(pds.url)
+
     const tokenBody = jose.decodeJwt(accessToken)
     const tokenHeader = jose.decodeProtectedHeader(accessToken)
     expect(tokenBody.aud).toBe(pds.ctx.cfg.service.did)
     expect(tokenHeader.alg).toBe('ES256K') // asymmetric, from the jwt key and not the secret
+
+    const { data: entrywayResult } =
+      await entrywayAgent.api.com.atproto.server.getSession(
+        {},
+        { headers: SeedClient.getHeaders(accessToken) },
+      )
+    const { data: pdsResult } =
+      await pdsAgent.api.com.atproto.server.getSession(
+        {},
+        { headers: SeedClient.getHeaders(accessToken) },
+      )
+    assert(isValidDidDoc(entrywayResult.didDoc))
+    expect(entrywayResult.didDoc.id).toBe(alice)
+    expect(getPdsEndpoint(entrywayResult.didDoc)).toBe(pds.url)
+    expect(entrywayResult.did).toBe(alice)
+    expect(pdsResult.did).toBe(alice)
+  })
+
+  it('refreshes a session on entryway that auths across services.', async () => {
+    const { data: entrywaySession } =
+      await entrywayAgent.api.com.atproto.server.refreshSession(undefined, {
+        headers: SeedClient.getHeaders(refreshToken),
+      })
+    accessToken = entrywaySession.accessJwt
+    refreshToken = entrywaySession.refreshJwt
+    assert(isValidDidDoc(entrywaySession.didDoc))
+    expect(entrywaySession.didDoc.id).toBe(alice)
+    expect(getPdsEndpoint(entrywaySession.didDoc)).toBe(pds.url)
+    const { data: entrywayResult } =
+      await entrywayAgent.api.com.atproto.server.getSession(
+        {},
+        { headers: SeedClient.getHeaders(accessToken) },
+      )
+    const { data: pdsResult } =
+      await pdsAgent.api.com.atproto.server.getSession(
+        {},
+        { headers: SeedClient.getHeaders(accessToken) },
+      )
+    expect(entrywayResult.did).toBe(alice)
+    expect(pdsResult.did).toBe(alice)
+  })
+
+  it('refreshes a session on pds that auths across services.', async () => {
+    const { data: pdsSession } =
+      await entrywayAgent.api.com.atproto.server.refreshSession(undefined, {
+        headers: SeedClient.getHeaders(refreshToken),
+      })
+    accessToken = pdsSession.accessJwt
+    refreshToken = pdsSession.refreshJwt
     const { data: entrywayResult } =
       await entrywayAgent.api.com.atproto.server.getSession(
         {},
