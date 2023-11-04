@@ -135,7 +135,7 @@ export class Lexicons {
     if (!hasProp(value, '$type') || typeof value.$type !== 'string') {
       throw new ValidationError(`Record/$type must be a string`)
     }
-    const $type = (value as Record<string, string>).$type || ''
+    const { $type } = value
     if (toLexUri($type) !== lexUri) {
       throw new ValidationError(
         `Invalid $type: must be ${lexUri}, got ${$type}`,
