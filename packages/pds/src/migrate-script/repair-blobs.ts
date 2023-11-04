@@ -100,3 +100,5 @@ const repairBlob = async (
     }
   }
 }
+
+runScript()
