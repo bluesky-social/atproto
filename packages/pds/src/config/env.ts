@@ -44,6 +44,7 @@ export const readEnv = (): ServerEnvironment => {
 
     // entryway
     entrywayUrl: envStr('PDS_ENTRYWAY_URL'),
+    entrywayDid: envStr('PDS_ENTRYWAY_DID'),
     entrywayJwtVerifyKeyK256PublicKeyHex: envStr(
       'PDS_ENTRYWAY_JWT_VERIFY_KEY_K256_PUBLIC_KEY_HEX',
     ),
@@ -142,6 +143,7 @@ export type ServerEnvironment = {
 
   // entryway
   entrywayUrl?: string
+  entrywayDid?: string
   entrywayJwtVerifyKeyK256PublicKeyHex?: string
   entrywayPlcRotationKeyK256PublicKeyHex?: string
 

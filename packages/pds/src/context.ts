@@ -153,7 +153,11 @@ export class AppContext {
       : undefined
 
     const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
-    const accountManager = new AccountManager(cfg.db.accountDbLoc, jwtSecretKey)
+    const accountManager = new AccountManager(
+      cfg.db.accountDbLoc,
+      jwtSecretKey,
+      cfg.service.did,
+    )
     await accountManager.migrateOrThrow()
 
     const jwtKey = cfg.entryway
@@ -165,7 +169,11 @@ export class AppContext {
       adminPass: secrets.adminPassword,
       moderatorPass: secrets.moderatorPassword,
       triagePass: secrets.triagePassword,
-      adminServiceDid: cfg.bskyAppView.did,
+      dids: {
+        pds: cfg.service.did,
+        entryway: cfg.entryway?.did,
+        admin: cfg.bskyAppView.did,
+      },
     })
 
     const plcRotationKey =
