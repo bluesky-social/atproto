@@ -48,14 +48,13 @@ export const runScript = async () => {
   let completed = 0
   let failed = 0
   for (const status of todo) {
-    let pdsId = status.pdsId
-    if (!pdsId) {
-      pdsId = pdsInfos[pdsCounter % pdsInfos.length].id
+    if (!status.pdsId) {
+      status.pdsId = pdsInfos[pdsCounter % pdsInfos.length].id
       pdsCounter++
     }
-    const pdsInfo = pdsInfos.find((info) => info.id === pdsId)
+    const pdsInfo = pdsInfos.find((info) => info.id === status.pdsId)
     if (!pdsInfo) {
-      throw new Error(`could not find pds with id: ${pdsId}`)
+      throw new Error(`could not find pds with id: ${status.pdsId}`)
     }
     try {
       await migrateRepo(ctx, db, pdsInfo, status, adminToken)
