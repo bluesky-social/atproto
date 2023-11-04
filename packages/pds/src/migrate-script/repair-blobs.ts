@@ -44,7 +44,11 @@ export const runScript = async () => {
     if (!pdsInfo) {
       throw new Error(`could not find pds with id: ${blob.pdsId}`)
     }
-    await repairBlob(ctx, db, pdsInfo, blob.did, blob.cid, adminToken)
+    try {
+      await repairBlob(ctx, db, pdsInfo, blob.did, blob.cid, adminToken)
+    } catch (err) {
+      console.log(err)
+    }
     count++
     console.log(`${count}/${failed.length}`)
   }
@@ -66,24 +70,20 @@ const repairBlob = async (
     .executeTakeFirst()
   if (!blob) return
   const blobStream = await ctx.blobstore.getStream(CID.parse(blob.cid))
-  try {
-    await axios.post(`${pds.url}/xrpc/com.atproto.temp.pushBlob`, blobStream, {
-      params: { did },
-      headers: {
-        'content-type': blob.mimeType,
-        authorization: `Basic ${adminToken}`,
-      },
-      decompress: true,
-      responseType: 'stream',
-    })
-    await db
-      .deleteFrom('failed_blob')
-      .where('did', '=', did)
-      .where('cid', '=', blob.cid)
-      .execute()
-  } catch (err) {
-    console.log('failed: ', err)
-  }
+  await axios.post(`${pds.url}/xrpc/com.atproto.temp.pushBlob`, blobStream, {
+    params: { did },
+    headers: {
+      'content-type': blob.mimeType,
+      authorization: `Basic ${adminToken}`,
+    },
+    decompress: true,
+    responseType: 'stream',
+  })
+  await db
+    .deleteFrom('failed_blob')
+    .where('did', '=', did)
+    .where('cid', '=', blob.cid)
+    .execute()
 }
 
 runScript()
