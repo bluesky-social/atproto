@@ -3912,6 +3912,31 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoTempPushBlob: {
+    lexicon: 1,
+    id: 'com.atproto.temp.pushBlob',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Gets the did's repo, optionally catching up from a specific revision.",
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        input: {
+          encoding: '*/*',
+        },
+      },
+    },
+  },
   ComAtprotoTempTransferAccount: {
     lexicon: 1,
     id: 'com.atproto.temp.transferAccount',
@@ -7753,6 +7778,7 @@ export const ids = {
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
   ComAtprotoTempImportRepo: 'com.atproto.temp.importRepo',
+  ComAtprotoTempPushBlob: 'com.atproto.temp.pushBlob',
   ComAtprotoTempTransferAccount: 'com.atproto.temp.transferAccount',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
