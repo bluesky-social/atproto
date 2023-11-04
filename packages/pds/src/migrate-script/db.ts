@@ -22,10 +22,8 @@ export const dbMigrationProvider: MigrationProvider = {
             .addColumn('pdsId', 'integer')
             .addColumn('signingKey', 'varchar')
             .addColumn('phase', 'integer', (col) => col.notNull().defaultTo(0))
-            .addColumn('importedRev', 'varchar', (col) =>
-              col.notNull().defaultTo(0),
-            )
-            .addColumn('failed', 'integer')
+            .addColumn('importedRev', 'varchar')
+            .addColumn('failed', 'integer', (col) => col.notNull().defaultTo(0))
             .execute()
           await db.schema
             .createTable('failed_pref')
