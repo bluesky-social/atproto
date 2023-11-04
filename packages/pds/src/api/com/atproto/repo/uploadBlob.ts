@@ -1,11 +1,10 @@
-import { streamToBytes } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
   authPassthru,
   ensureThisPds,
+  getStreamingRequestInit,
   proxy,
-  resultPassthru,
 } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
@@ -16,14 +15,18 @@ export default function (server: Server, ctx: AppContext) {
         ctx,
         auth.credentials.audience,
         async (agent) => {
-          const result = await agent.api.com.atproto.repo.uploadBlob(
-            await streamToBytes(input.body), // @TODO proxy streaming
-            {
-              ...authPassthru(req),
-              encoding: input.encoding,
-            },
-          )
-          return resultPassthru(result)
+          const reqInit = getStreamingRequestInit(input.body)
+          reqInit.method = req.method
+          reqInit.headers = {
+            ...authPassthru(req)?.headers,
+            'content-type':
+              req.headers['content-type'] || 'application/octet-stream',
+          }
+          const res = await fetch(`${agent.service.origin}${req.path}`, reqInit)
+          return {
+            encoding: 'application/json' as const,
+            body: await res.json(),
+          }
         },
       )
       if (proxied !== null) {

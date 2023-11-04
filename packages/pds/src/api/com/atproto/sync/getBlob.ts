@@ -2,23 +2,42 @@ import { CID } from 'multiformats/cid'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { notSoftDeletedClause } from '../../../../db/util'
+import { notSoftDeletedClause, softDeleted } from '../../../../db/util'
 import { BlobNotFoundError } from '@atproto/repo'
+import { isThisPds } from '../../../proxy'
+import { getPdsEndpoint } from '../../../../pds-agents'
 
 // @TODO entryway proxy
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlob({
     auth: ctx.authVerifier.optionalAccessOrRole,
-    handler: async ({ params, res, auth }) => {
+    handler: async ({ params, auth, req, res }) => {
       const { ref } = ctx.db.db.dynamic
       const { did } = params
 
-      if (!ctx.authVerifier.isUserOrAdmin(auth, params.did)) {
-        const available = await ctx.services
-          .account(ctx.db)
-          .isRepoAvailable(did)
-        if (!available) {
+      const accountService = ctx.services.account(ctx.db)
+      const account = await accountService.getAccount(did, true)
+
+      if (
+        !account ||
+        (softDeleted(account) &&
+          !ctx.authVerifier.isUserOrAdmin(auth, params.did))
+      ) {
+        throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
+      }
+
+      if (account.pdsDid && !isThisPds(ctx, account.pdsDid)) {
+        const pds = await accountService.getPds(account.pdsDid, {
+          cached: true,
+        })
+        if (!pds) {
           throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
+        }
+        res.setHeader('location', getPdsEndpoint(pds.host) + req.url)
+        return {
+          status: 302,
+          error: 'Redirecting',
+          message: 'Redirecting to new blob location',
         }
       }
 

@@ -1,4 +1,6 @@
+import assert from 'node:assert'
 import { MINUTE, check } from '@atproto/common'
+import { randomStr } from '@atproto/crypto'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { XRPCError } from '@atproto/xrpc'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -12,9 +14,9 @@ import { countAll } from '../../../../db/util'
 import { UserAlreadyExistsError } from '../../../../services/account'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
-import { isThisPds } from '../../../proxy'
 import { didDocForSession } from './util'
 import { getPdsEndpoint } from '../../../../pds-agents'
+import { isThisPds } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -23,50 +25,17 @@ export default function (server: Server, ctx: AppContext) {
       points: 100,
     },
     handler: async ({ input, req }) => {
-      const { email, password, inviteCode } = input.body
-      if (!ctx.cfg.service.isEntryway && !input.body.did && !input.body.plcOp) {
-        throw new InvalidRequestError(
-          'non-entryway pds requires bringing a DID or PLC operation',
-        )
-      }
-
-      if (!email) {
-        throw new InvalidRequestError('Missing input: "email"')
-      } else if (!password) {
-        throw new InvalidRequestError('Missing input: "password"')
-      } else if (input.body.plcOp) {
-        throw new InvalidRequestError('Unsupported input: "plcOp"')
-      }
-
-      if (ctx.cfg.invites.required && !inviteCode) {
-        throw new InvalidRequestError(
-          'No invite code provided',
-          'InvalidInviteCode',
-        )
-      }
-
-      if (!disposable.validate(email)) {
-        throw new InvalidRequestError(
-          'This email address is not supported, please use a different email.',
-        )
-      }
-
-      // normalize & ensure valid handle
-      const handle = await normalizeAndValidateHandle({
-        ctx,
-        handle: input.body.handle,
-        did: input.body.did,
-      })
-
-      // check that the invite code still has uses
-      if (ctx.cfg.invites.required && inviteCode) {
-        await ensureCodeIsAvailable(ctx.db, inviteCode)
-      }
-
-      // determine the did & any plc ops we need to send
-      // if the provided did document is poorly setup, we throw
-      const pds = await assignPds(ctx)
-      const { did, plcOp } = await getDidAndPlcOp(ctx, pds, handle, input.body)
+      const {
+        did,
+        handle,
+        email,
+        password,
+        inviteCode,
+        plcOp,
+        pds: entrywayAssignedPds,
+      } = isInputForPdsViaEntryway(ctx, input.body)
+        ? await validateInputsForPdsViaEntryway(ctx, input.body)
+        : await validateInputsForPdsViaUser(ctx, input.body)
 
       const now = new Date().toISOString()
       const passwordScrypt = await scrypt.genSaltAndHash(password)
@@ -88,7 +57,7 @@ export default function (server: Server, ctx: AppContext) {
             email,
             handle,
             did,
-            pdsId: pds?.id,
+            pdsId: entrywayAssignedPds?.id,
             passwordScrypt,
           })
         } catch (err) {
@@ -104,7 +73,7 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         // Generate a real did with PLC
-        if (plcOp && isThisPds(ctx, pds?.did)) {
+        if (plcOp && !entrywayAssignedPds) {
           try {
             await ctx.plcClient.sendOperation(did, plcOp)
           } catch (err) {
@@ -132,21 +101,21 @@ export default function (server: Server, ctx: AppContext) {
           .auth(dbTxn)
           .createSession({
             did,
-            pdsDid: pds?.did ?? null,
+            pdsDid: entrywayAssignedPds?.did ?? null,
             appPasswordName: null,
           })
 
-        if (!pds || isThisPds(ctx, pds.did)) {
-          // Setup repo root
-          await repoTxn.createRepo(did, [], now)
-        } else {
-          const agent = ctx.pdsAgents.get(pds.host)
+        if (entrywayAssignedPds) {
+          const agent = ctx.pdsAgents.get(entrywayAssignedPds.host)
           await agent.com.atproto.server.createAccount({
             did,
             plcOp: plcOp ?? undefined,
             handle: input.body.handle,
             recoveryKey: input.body.recoveryKey,
           })
+        } else {
+          // Setup repo root
+          await repoTxn.createRepo(did, [], now)
         }
 
         return {
@@ -170,6 +139,129 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+const isInputForPdsViaEntryway = (
+  ctx: AppContext,
+  input: CreateAccountInput,
+) => {
+  // detects case where pds is being contacted by an entryway.
+  // this case is just for testing purposes.
+  return (
+    !ctx.cfg.service.isEntryway &&
+    input.did &&
+    input.plcOp &&
+    !input.email &&
+    !input.password
+  )
+}
+
+const validateInputsForPdsViaEntryway = async (
+  ctx: AppContext,
+  input: CreateAccountInput,
+) => {
+  // @NOTE non-entryway codepath, just for testing purposes.
+  assert(!ctx.cfg.service.isEntryway)
+  const { did, handle, plcOp } = input
+  if (!did || !input.plcOp) {
+    throw new InvalidRequestError(
+      'non-entryway pds requires bringing a DID and plcOp',
+    )
+  }
+  if (!check.is(plcOp, plc.def.operation)) {
+    throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
+  }
+
+  await plc.assureValidOp(plcOp)
+  const doc = plc.formatDidDoc({ did, ...plcOp })
+  const data = ensureAtpDocument(doc)
+
+  // @NOTE a real pds behaind an entryway would typically check that the doc includes entryway's rotation key
+  validateAtprotoData(data, {
+    handle,
+    pds: ctx.cfg.service.publicUrl,
+    signingKey: ctx.repoSigningKey.did(),
+  })
+
+  return {
+    did,
+    handle,
+    // @NOTE a real pds behaind an entryway would not keep an email or password
+    email: `${did}@email.invalid`,
+    password: randomStr(16, 'hex'),
+    inviteCode: undefined,
+    plcOp,
+    pds: undefined,
+  }
+}
+
+const validateInputsForPdsViaUser = async (
+  ctx: AppContext,
+  input: CreateAccountInput,
+) => {
+  const { email, password, inviteCode } = input
+  if (input.plcOp) {
+    throw new InvalidRequestError('Unsupported input: "plcOp"')
+  }
+
+  if (ctx.cfg.invites.required && !inviteCode) {
+    throw new InvalidRequestError(
+      'No invite code provided',
+      'InvalidInviteCode',
+    )
+  }
+
+  if (!email) {
+    throw new InvalidRequestError('Email is required')
+  } else if (!disposable.validate(email)) {
+    throw new InvalidRequestError(
+      'This email address is not supported, please use a different email.',
+    )
+  }
+
+  if (!password) {
+    throw new InvalidRequestError('Password is required')
+  }
+
+  // normalize & ensure valid handle
+  const handle = await normalizeAndValidateHandle({
+    ctx,
+    handle: input.handle,
+    did: input.did,
+  })
+
+  // check that the invite code still has uses
+  if (ctx.cfg.invites.required && inviteCode) {
+    await ensureCodeIsAvailable(ctx.db, inviteCode)
+  }
+
+  // determine the did & any plc ops we need to send
+  // if the provided did document is poorly setup, we throw
+  const pds = await assignPds(ctx)
+  const pdsEndpoint = pds ? getPdsEndpoint(pds.host) : ctx.cfg.service.publicUrl
+  const pdsSigningKey = pds
+    ? await reserveSigningKey(ctx, pds.host)
+    : ctx.repoSigningKey.did()
+
+  const { did, plcOp } = input.did
+    ? await validateExistingDid(
+        ctx,
+        handle,
+        input.did,
+        pdsEndpoint,
+        pdsSigningKey,
+      )
+    : await createDidAndPlcOp(ctx, handle, input, pdsEndpoint, pdsSigningKey)
+
+  return {
+    did,
+    handle,
+    email,
+    password,
+    inviteCode,
+    plcOp,
+    pds,
+  }
 }
 
 export const ensureCodeIsAvailable = async (
@@ -213,116 +305,67 @@ export const ensureCodeIsAvailable = async (
   }
 }
 
-const getDidAndPlcOp = async (
+const createDidAndPlcOp = async (
   ctx: AppContext,
-  pds: { host: string } | undefined,
   handle: string,
   input: CreateAccountInput,
+  pdsEndpoint: string,
+  signingDidKey: string,
 ): Promise<{
   did: string
   plcOp: plc.Operation | null
 }> => {
-  const pdsEndpoint = pds ? getPdsEndpoint(pds.host) : ctx.cfg.service.publicUrl
-  const pdsSigningKey = pds
-    ? await reserveSigningKey(ctx, pds.host)
-    : ctx.repoSigningKey.did()
-
-  // if the user brings their own PLC op then we validate it then submit it to PLC on their behalf
-  if (input.plcOp) {
-    let atpData: AtprotoData
-    let plcOp: plc.Operation
-    try {
-      plcOp = check.assure(plc.def.operation, input.plcOp)
-      const did = await plc.didForCreateOp(plcOp)
-      const docData = await plc.assureValidCreationOp(did, plcOp)
-      const doc = plc.formatDidDoc(docData)
-      atpData = ensureAtpDocument(doc)
-    } catch (err) {
-      throw new InvalidRequestError(
-        'could not validate PLC creation operation',
-        'InvalidPlcOp',
-      )
-    }
-    if (input.did && input.did !== atpData.did) {
-      throw new InvalidRequestError(
-        'the DID does not match the PLC creation operation',
-        'IncompatiblePlcOp',
-      )
-    }
-    if (atpData.handle !== handle) {
-      throw new InvalidRequestError(
-        'provided handle does not match PLC operation handle',
-        'IncompatiblePlcOp',
-      )
-    } else if (atpData.pds !== pdsEndpoint) {
-      throw new InvalidRequestError(
-        'PLC operation pds endpoint does not match service endpoint',
-        'IncompatiblePlcOp',
-      )
-    } else if (atpData.signingKey !== pdsSigningKey) {
-      throw new InvalidRequestError(
-        'PLC operation signing key does not match service signing key',
-        'IncompatiblePlcOp',
-      )
-    }
-    return { did: atpData.did, plcOp }
-  }
-
   // if the user is not bringing a DID, then we format a create op for PLC
-  // but we don't send until we ensure the username & email are available
-  if (!input.did) {
-    const rotationKeys = [ctx.plcRotationKey.did()]
-    if (ctx.cfg.identity.recoveryDidKey) {
-      rotationKeys.unshift(ctx.cfg.identity.recoveryDidKey)
-    }
-    if (input.recoveryKey) {
-      rotationKeys.unshift(input.recoveryKey)
-    }
-    const plcCreate = await plc.createOp({
-      signingKey: pdsSigningKey,
-      rotationKeys,
-      handle,
-      pds: pdsEndpoint,
-      signer: ctx.plcRotationKey,
-    })
-    return {
-      did: plcCreate.did,
-      plcOp: plcCreate.op,
-    }
+  const rotationKeys = [ctx.plcRotationKey.did()]
+  if (ctx.cfg.identity.recoveryDidKey) {
+    rotationKeys.unshift(ctx.cfg.identity.recoveryDidKey)
   }
+  if (input.recoveryKey) {
+    rotationKeys.unshift(input.recoveryKey)
+  }
+  const plcCreate = await plc.createOp({
+    signingKey: signingDidKey,
+    rotationKeys,
+    handle,
+    pds: pdsEndpoint,
+    signer: ctx.plcRotationKey,
+  })
+  return {
+    did: plcCreate.did,
+    plcOp: plcCreate.op,
+  }
+}
 
+const validateExistingDid = async (
+  ctx: AppContext,
+  handle: string,
+  did: string,
+  pdsEndpoint: string,
+  signingDidKey: string,
+): Promise<{
+  did: string
+  plcOp: plc.Operation | null
+}> => {
   // if the user is bringing their own did:
   // resolve the user's did doc data, including rotationKeys if did:plc
   // determine if we have the capability to make changes to their DID
   let atpData: AtprotoData
   try {
-    atpData = await ctx.idResolver.did.resolveAtprotoData(input.did)
+    atpData = await ctx.idResolver.did.resolveAtprotoData(did)
   } catch (err) {
     throw new InvalidRequestError(
-      `could not resolve valid DID document: ${input.did}`,
+      `could not resolve valid DID document: ${did}`,
       'UnresolvableDid',
     )
   }
-  if (atpData.handle !== handle) {
-    throw new InvalidRequestError(
-      'provided handle does not match DID document handle',
-      'IncompatibleDidDoc',
-    )
-  } else if (atpData.pds !== pdsEndpoint) {
-    throw new InvalidRequestError(
-      'DID document pds endpoint does not match service endpoint',
-      'IncompatibleDidDoc',
-    )
-  } else if (atpData.signingKey !== pdsSigningKey) {
-    throw new InvalidRequestError(
-      'DID document signing key does not match service signing key',
-      'IncompatibleDidDoc',
-    )
-  }
+  validateAtprotoData(atpData, {
+    handle,
+    pds: pdsEndpoint,
+    signingKey: signingDidKey,
+  })
 
-  // non-entryway pds doesn't require matching plc rotation key, will be handled by its entryway
-  if (input.did.startsWith('did:plc') && ctx.cfg.service.isEntryway) {
-    const data = await ctx.plcClient.getDocumentData(input.did)
+  if (did.startsWith('did:plc') && ctx.cfg.service.isEntryway) {
+    const data = await ctx.plcClient.getDocumentData(did)
     if (!data.rotationKeys.includes(ctx.plcRotationKey.did())) {
       throw new InvalidRequestError(
         'PLC DID does not include service rotation key',
@@ -331,16 +374,48 @@ const getDidAndPlcOp = async (
     }
   }
 
-  return { did: input.did, plcOp: null }
+  return { did, plcOp: null }
+}
+
+const validateAtprotoData = (
+  data: AtprotoData,
+  expected: {
+    handle: string
+    pds: string
+    signingKey: string
+  },
+) => {
+  // if the user is bringing their own did:
+  // resolve the user's did doc data, including rotationKeys if did:plc
+  // determine if we have the capability to make changes to their DID
+  if (data.handle !== expected.handle) {
+    throw new InvalidRequestError(
+      'provided handle does not match DID document handle',
+      'IncompatibleDidDoc',
+    )
+  } else if (data.pds !== expected.pds) {
+    throw new InvalidRequestError(
+      'DID document pds endpoint does not match service endpoint',
+      'IncompatibleDidDoc',
+    )
+  } else if (data.signingKey !== expected.signingKey) {
+    throw new InvalidRequestError(
+      'DID document signing key does not match service signing key',
+      'IncompatibleDidDoc',
+    )
+  }
 }
 
 // @TODO this implementation is a stub
 const assignPds = async (ctx: AppContext) => {
   if (!ctx.cfg.service.isEntryway) return
-  const pdses = await ctx.db.db.selectFrom('pds').selectAll().execute()
+  const accountService = ctx.services.account(ctx.db)
+  const pdses = await accountService.getPdses()
   const idx = randomIndexByWeight(pdses.map((pds) => pds.weight))
   if (idx === -1) return
-  return pdses.at(idx)
+  const pds = pdses.at(idx)
+  if (isThisPds(ctx, pds?.did)) return
+  return pds
 }
 
 const reserveSigningKey = async (ctx: AppContext, host: string) => {

@@ -11,9 +11,9 @@ import {
   mockNetworkUtilities,
 } from '@atproto/dev-env'
 import { ids } from '@atproto/api/src/client/lexicons'
+import { getPdsEndpoint, isValidDidDoc } from '@atproto/common'
 
-// @TODO temporarily skipping while createAccount inputs settle
-describe.skip('entryway', () => {
+describe('entryway', () => {
   let plc: TestPlc
   let entryway: TestPds
   let entrywayAgent: AtpAgent
@@ -21,6 +21,7 @@ describe.skip('entryway', () => {
   let pdsAgent: AtpAgent
   let alice: string
   let accessToken: string
+  let refreshToken: string
   let pdsId: number
 
   beforeAll(async () => {
@@ -38,6 +39,7 @@ describe.skip('entryway', () => {
       recoveryDidKey: recoveryKey,
       jwtSigningKeyK256PrivateKeyHex: jwtSigningPriv,
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
+      enableDidDocWithSession: true,
     })
     pds = await TestPds.create({
       // @NOTE plc rotation key and recovery key intentionally not matching entryway
@@ -81,6 +83,10 @@ describe.skip('entryway', () => {
     alice = did
     await entryway.ctx.db.db.updateTable('pds').set({ weight: 0 }).execute()
 
+    assert(isValidDidDoc(initialSession.didDoc))
+    expect(initialSession.didDoc.id).toBe(alice)
+    expect(getPdsEndpoint(initialSession.didDoc)).toBe(pds.url)
+
     const token = jose.decodeJwt(initialSession.accessJwt)
     expect(token.aud).toBe(pds.ctx.cfg.service.did)
 
@@ -122,11 +128,66 @@ describe.skip('entryway', () => {
         identifier: alice,
         password: 'test123',
       })
+
     accessToken = session.accessJwt
+    refreshToken = session.refreshJwt
+    assert(isValidDidDoc(session.didDoc))
+    expect(session.didDoc.id).toBe(alice)
+    expect(getPdsEndpoint(session.didDoc)).toBe(pds.url)
+
     const tokenBody = jose.decodeJwt(accessToken)
     const tokenHeader = jose.decodeProtectedHeader(accessToken)
     expect(tokenBody.aud).toBe(pds.ctx.cfg.service.did)
     expect(tokenHeader.alg).toBe('ES256K') // asymmetric, from the jwt key and not the secret
+
+    const { data: entrywayResult } =
+      await entrywayAgent.api.com.atproto.server.getSession(
+        {},
+        { headers: SeedClient.getHeaders(accessToken) },
+      )
+    const { data: pdsResult } =
+      await pdsAgent.api.com.atproto.server.getSession(
+        {},
+        { headers: SeedClient.getHeaders(accessToken) },
+      )
+    assert(isValidDidDoc(entrywayResult.didDoc))
+    expect(entrywayResult.didDoc.id).toBe(alice)
+    expect(getPdsEndpoint(entrywayResult.didDoc)).toBe(pds.url)
+    expect(entrywayResult.did).toBe(alice)
+    expect(pdsResult.did).toBe(alice)
+  })
+
+  it('refreshes a session on entryway that auths across services.', async () => {
+    const { data: entrywaySession } =
+      await entrywayAgent.api.com.atproto.server.refreshSession(undefined, {
+        headers: SeedClient.getHeaders(refreshToken),
+      })
+    accessToken = entrywaySession.accessJwt
+    refreshToken = entrywaySession.refreshJwt
+    assert(isValidDidDoc(entrywaySession.didDoc))
+    expect(entrywaySession.didDoc.id).toBe(alice)
+    expect(getPdsEndpoint(entrywaySession.didDoc)).toBe(pds.url)
+    const { data: entrywayResult } =
+      await entrywayAgent.api.com.atproto.server.getSession(
+        {},
+        { headers: SeedClient.getHeaders(accessToken) },
+      )
+    const { data: pdsResult } =
+      await pdsAgent.api.com.atproto.server.getSession(
+        {},
+        { headers: SeedClient.getHeaders(accessToken) },
+      )
+    expect(entrywayResult.did).toBe(alice)
+    expect(pdsResult.did).toBe(alice)
+  })
+
+  it('refreshes a session on pds that auths across services.', async () => {
+    const { data: pdsSession } =
+      await entrywayAgent.api.com.atproto.server.refreshSession(undefined, {
+        headers: SeedClient.getHeaders(refreshToken),
+      })
+    accessToken = pdsSession.accessJwt
+    refreshToken = pdsSession.refreshJwt
     const { data: entrywayResult } =
       await entrywayAgent.api.com.atproto.server.getSession(
         {},
@@ -226,13 +287,53 @@ describe.skip('entryway', () => {
     expect(Buffer.compare(file, bytes)).toBe(0)
   })
 
+  it('redirects blob uploads to pds.', async () => {
+    const file = await fs.readFile('tests/sample-img/key-portrait-small.jpg')
+    const {
+      data: { blob },
+    } = await entrywayAgent.api.com.atproto.repo.uploadBlob(file, {
+      encoding: 'image/jpeg',
+      headers: SeedClient.getHeaders(accessToken),
+    })
+    await entrywayAgent.com.atproto.repo.putRecord(
+      {
+        repo: alice,
+        collection: ids.AppBskyActorProfile,
+        rkey: 'self',
+        record: { displayName: 'Alice 4', avatar: blob },
+      },
+      {
+        headers: SeedClient.getHeaders(accessToken),
+        encoding: 'application/json',
+      },
+    )
+    // check with fetch to confirm redirect
+    const url = new URL(
+      '/xrpc/com.atproto.sync.getBlob',
+      entrywayAgent.service.origin,
+    )
+    url.searchParams.set('did', alice)
+    url.searchParams.set('cid', blob.ref.toString())
+    const fetchResult = await fetch(url)
+    expect(fetchResult.redirected).toBe(true)
+    const fetchBlob = await fetchResult.blob()
+    const fetchBytes = Buffer.from(await fetchBlob.arrayBuffer())
+    expect(Buffer.compare(file, fetchBytes)).toBe(0)
+    // check with atp agent to ensure our client handles the redirect
+    const { data: bytes } = await entrywayAgent.com.atproto.sync.getBlob({
+      did: alice,
+      cid: blob.ref.toString(),
+    })
+    expect(Buffer.compare(file, bytes)).toBe(0)
+  })
+
   it('proxies repo reads to pds.', async () => {
     const { data: profileRef } = await entrywayAgent.com.atproto.repo.putRecord(
       {
         repo: alice,
         collection: ids.AppBskyActorProfile,
         rkey: 'self',
-        record: { displayName: 'Alice 4' },
+        record: { displayName: 'Alice 5' },
       },
       {
         headers: SeedClient.getHeaders(accessToken),
