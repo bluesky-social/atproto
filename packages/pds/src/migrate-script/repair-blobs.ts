@@ -59,45 +59,30 @@ const repairBlob = async (
   cid: string,
   adminToken: string,
 ) => {
-  const failed = await db
-    .selectFrom('failed_blob')
-    .where('did', '=', did)
-    .selectAll()
-    .execute()
-  if (failed.length === 0) return
-  const blobs = await ctx.db.db
+  const blob = await ctx.db.db
     .selectFrom('blob')
-    .where(
-      'cid',
-      'in',
-      failed.map((b) => b.cid),
-    )
+    .where('cid', '=', cid)
     .selectAll()
-    .execute()
-  for (const blob of blobs) {
-    const blobStream = await ctx.blobstore.getStream(CID.parse(blob.cid))
-    try {
-      await axios.post(
-        `${pds.url}/xrpc/com.atproto.temp.pushBlob`,
-        blobStream,
-        {
-          params: { did },
-          headers: {
-            'content-type': blob.mimeType,
-            authorization: `Basic ${adminToken}`,
-          },
-          decompress: true,
-          responseType: 'stream',
-        },
-      )
-      await db
-        .deleteFrom('failed_blob')
-        .where('did', '=', did)
-        .where('cid', '=', blob.cid)
-        .execute()
-    } catch (err) {
-      console.log('failed: ', err)
-    }
+    .executeTakeFirst()
+  if (!blob) return
+  const blobStream = await ctx.blobstore.getStream(CID.parse(blob.cid))
+  try {
+    await axios.post(`${pds.url}/xrpc/com.atproto.temp.pushBlob`, blobStream, {
+      params: { did },
+      headers: {
+        'content-type': blob.mimeType,
+        authorization: `Basic ${adminToken}`,
+      },
+      decompress: true,
+      responseType: 'stream',
+    })
+    await db
+      .deleteFrom('failed_blob')
+      .where('did', '=', did)
+      .where('cid', '=', blob.cid)
+      .execute()
+  } catch (err) {
+    console.log('failed: ', err)
   }
 }
 
