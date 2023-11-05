@@ -26,6 +26,7 @@ import { MountedAlgos } from './feed-gen/types'
 import { LabelCache } from './label-cache'
 import { NotificationServer } from './notifications'
 import { AtpAgent } from '@atproto/api'
+import { Keypair } from '@atproto/crypto'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
@@ -54,10 +55,11 @@ export class BskyAppView {
   static create(opts: {
     db: DatabaseCoordinator
     config: ServerConfig
+    signingKey: Keypair
     imgInvalidator?: ImageInvalidator
     algos?: MountedAlgos
   }): BskyAppView {
-    const { db, config, algos = {} } = opts
+    const { db, config, signingKey, algos = {} } = opts
     let maybeImgInvalidator = opts.imgInvalidator
     const app = express()
     app.use(cors())
@@ -116,6 +118,7 @@ export class BskyAppView {
       cfg: config,
       services,
       imgUriBuilder,
+      signingKey,
       idResolver,
       didCache,
       labelCache,

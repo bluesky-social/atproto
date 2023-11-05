@@ -28,6 +28,18 @@ export class ModerationCauseAccumulator {
     }
   }
 
+  addBlockingByList(
+    blockingByList: AppBskyGraphDefs.ListViewBasic | undefined,
+  ) {
+    if (blockingByList) {
+      this.causes.push({
+        type: 'blocking',
+        source: { type: 'list', list: blockingByList },
+        priority: 3,
+      })
+    }
+  }
+
   addBlockedBy(blockedBy: boolean | undefined) {
     if (blockedBy) {
       this.causes.push({

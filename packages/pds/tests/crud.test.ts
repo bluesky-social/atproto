@@ -13,7 +13,6 @@ import { defaultFetchHandler } from '@atproto/xrpc'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { paginateAll } from './_util'
 import AppContext from '../src/context'
-import { TAKEDOWN } from '../src/lexicon/types/com/atproto/admin/defs'
 import { ids } from '../src/lexicon/lexicons'
 
 const alice = {
@@ -1154,23 +1153,21 @@ describe('crud operations', () => {
     const posts = await agent.api.app.bsky.feed.post.list({ repo: alice.did })
     expect(posts.records.map((r) => r.uri)).toContain(post.uri)
 
-    const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: created.uri,
-            cid: created.cid,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: network.pds.adminAuth() },
-        },
-      )
+    const subject = {
+      $type: 'com.atproto.repo.strongRef',
+      uri: created.uri,
+      cid: created.cid,
+    }
+    await agent.api.com.atproto.admin.updateSubjectStatus(
+      {
+        subject,
+        takedown: { applied: true },
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: network.pds.adminAuth() },
+      },
+    )
 
     const postTakedownPromise = agent.api.app.bsky.feed.post.get({
       repo: alice.did,
@@ -1183,11 +1180,10 @@ describe('crud operations', () => {
     expect(postsTakedown.records.map((r) => r.uri)).not.toContain(post.uri)
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        id: action.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        subject,
+        takedown: { applied: false },
       },
       {
         encoding: 'application/json',
@@ -1200,22 +1196,21 @@ describe('crud operations', () => {
     const posts = await agent.api.app.bsky.feed.post.list({ repo: alice.did })
     expect(posts.records.length).toBeGreaterThan(0)
 
-    const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: alice.did,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: network.pds.adminAuth() },
-        },
-      )
+    const subject = {
+      $type: 'com.atproto.admin.defs#repoRef',
+      did: alice.did,
+    }
+
+    await agent.api.com.atproto.admin.updateSubjectStatus(
+      {
+        subject,
+        takedown: { applied: true },
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: network.pds.adminAuth() },
+      },
+    )
 
     const tryListPosts = agent.api.app.bsky.feed.post.list({
       repo: alice.did,
@@ -1223,11 +1218,10 @@ describe('crud operations', () => {
     await expect(tryListPosts).rejects.toThrow(/Could not find repo/)
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        id: action.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        subject,
+        takedown: { applied: false },
       },
       {
         encoding: 'application/json',

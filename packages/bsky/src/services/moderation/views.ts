@@ -211,6 +211,7 @@ export class ModerationViews {
         .selectFrom('moderation_report')
         .where('subjectType', '=', 'com.atproto.repo.strongRef')
         .where('subjectUri', '=', result.uri)
+        .leftJoin('actor', 'actor.did', 'moderation_report.subjectDid')
         .orderBy('id', 'desc')
         .selectAll()
         .execute(),

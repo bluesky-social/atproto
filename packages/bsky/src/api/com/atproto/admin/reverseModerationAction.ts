@@ -1,4 +1,8 @@
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  UpstreamFailureError,
+} from '@atproto/xrpc-server'
 import {
   ACKNOWLEDGE,
   ESCALATE,
@@ -6,6 +10,7 @@ import {
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { retryHttp } from '../../../../util/retry'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.reverseModerationAction({
@@ -16,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
       const moderationService = ctx.services.moderation(db)
       const { id, createdBy, reason } = input.body
 
-      const moderationAction = await db.transaction(async (dbTxn) => {
+      const { result, restored } = await db.transaction(async (dbTxn) => {
         const moderationTxn = ctx.services.moderation(dbTxn)
         const labelTxn = ctx.services.label(dbTxn)
         const now = new Date()
@@ -53,7 +58,7 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        const result = await moderationTxn.revertAction({
+        const { result, restored } = await moderationTxn.revertAction({
           id,
           createdAt: now,
           createdBy,
@@ -77,12 +82,33 @@ export default function (server: Server, ctx: AppContext) {
           { create, negate },
         )
 
-        return result
+        return { result, restored }
       })
+
+      if (restored) {
+        const { did, subjects } = restored
+        const agent = await ctx.pdsAdminAgent(did)
+        const results = await Promise.allSettled(
+          subjects.map((subject) =>
+            retryHttp(() =>
+              agent.api.com.atproto.admin.updateSubjectStatus({
+                subject,
+                takedown: {
+                  applied: false,
+                },
+              }),
+            ),
+          ),
+        )
+        const hadFailure = results.some((r) => r.status === 'rejected')
+        if (hadFailure) {
+          throw new UpstreamFailureError('failed to revert action on PDS')
+        }
+      }
 
       return {
         encoding: 'application/json',
-        body: await moderationService.views.action(moderationAction),
+        body: await moderationService.views.action(result),
       }
     },
   })

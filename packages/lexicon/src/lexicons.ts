@@ -1,12 +1,9 @@
-import { ZodError } from 'zod'
 import {
   LexiconDoc,
-  lexiconDoc,
   LexRecord,
   LexXrpcProcedure,
   LexXrpcQuery,
   LexUserType,
-  LexiconDocMalformedError,
   LexiconDefNotFoundError,
   InvalidLexiconError,
   ValidationResult,
@@ -32,7 +29,7 @@ export class Lexicons {
   docs: Map<string, LexiconDoc> = new Map()
   defs: Map<string, LexUserType> = new Map()
 
-  constructor(docs?: unknown[]) {
+  constructor(docs?: LexiconDoc[]) {
     if (docs?.length) {
       for (const doc of docs) {
         this.add(doc)
@@ -43,24 +40,8 @@ export class Lexicons {
   /**
    * Add a lexicon doc.
    */
-  add(doc: unknown): void {
-    try {
-      lexiconDoc.parse(doc)
-    } catch (e) {
-      if (e instanceof ZodError) {
-        throw new LexiconDocMalformedError(
-          `Failed to parse schema definition ${
-            (doc as Record<string, string>).id
-          }`,
-          doc,
-          e.issues,
-        )
-      } else {
-        throw e
-      }
-    }
-    const validatedDoc = doc as LexiconDoc
-    const uri = toLexUri(validatedDoc.id)
+  add(doc: LexiconDoc): void {
+    const uri = toLexUri(doc.id)
     if (this.docs.has(uri)) {
       throw new Error(`${uri} has already been registered`)
     }
@@ -68,10 +49,10 @@ export class Lexicons {
     // WARNING
     // mutates the object
     // -prf
-    resolveRefUris(validatedDoc, uri)
+    resolveRefUris(doc, uri)
 
-    this.docs.set(uri, validatedDoc)
-    for (const [defUri, def] of iterDefs(validatedDoc)) {
+    this.docs.set(uri, doc)
+    for (const [defUri, def] of iterDefs(doc)) {
       this.defs.set(defUri, def)
     }
   }

@@ -32,6 +32,7 @@ export interface ModerationBehaviors {
     string,
     {
       blocking: boolean
+      blockingByList: boolean
       blockedBy: boolean
       muted: boolean
       mutedByList: boolean
