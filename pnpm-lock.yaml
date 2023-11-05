@@ -691,9 +691,6 @@ importers:
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
-      axios:
-        specifier: ^0.27.2
-        version: 0.27.2
       cbor-x:
         specifier: ^1.5.1
         version: 1.5.1
@@ -712,6 +709,9 @@ importers:
       uint8arrays:
         specifier: 3.0.0
         version: 3.0.0
+      undici:
+        specifier: ^5.27.2
+        version: 5.27.2
       ws:
         specifier: ^8.12.0
         version: 8.12.0
@@ -4628,6 +4628,11 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
+
+  /@fastify/busboy@2.0.0:
+    resolution: {integrity: sha512-JUFJad5lv7jxj926GPgymrWQxxjPYuJNiNjNMzqT+HiuP6Vl3dk5xzG+8sTX96np0ZAluvaMzPsjhHZ5rNuNQQ==}
+    engines: {node: '>=14'}
+    dev: false
 
   /@fastify/deepmerge@1.3.0:
     resolution: {integrity: sha512-J8TOSBq3SoZbDhM9+R/u77hP93gz/rajSA+K2kGyijPpORPWUXHUpTaleoj+92As0S9uPRP7Oi8IqMf0u+ro6A==}
@@ -10988,6 +10993,13 @@ packages:
       has-symbols: 1.0.3
       which-boxed-primitive: 1.0.2
     dev: true
+
+  /undici@5.27.2:
+    resolution: {integrity: sha512-iS857PdOEy/y3wlM3yRp+6SNQQ6xU0mmZcwRSriqk+et/cwWAtwmIGf6WkoDN2EK/AMdCO/dfXzIwi+rFMrjjQ==}
+    engines: {node: '>=14.0'}
+    dependencies:
+      '@fastify/busboy': 2.0.0
+    dev: false
 
   /unicode-canonical-property-names-ecmascript@2.0.0:
     resolution: {integrity: sha512-yY5PpDlfVIU5+y/BSCxAJRBIS1Zc2dDG3Ujq+sR0U+JjUevW2JhocOF+soROYDSaAezOzOKuyyixhD6mBknSmQ==}

@@ -1,17 +1,18 @@
+import assert from 'node:assert'
 import * as http from 'http'
 import getPort from 'get-port'
 import { wait } from '@atproto/common'
 import xrpc, { ServiceClient } from '@atproto/xrpc'
+import { cidForCbor } from '@atproto/common'
+import { XRPCError } from '@atproto/xrpc'
+import { LexiconDoc } from '@atproto/lexicon'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
 import { Readable } from 'stream'
 import { randomBytes } from 'crypto'
 import { gzipSync } from 'zlib'
-import { cidForCbor } from '@atproto/common'
-import { XRPCError } from '@atproto/xrpc'
-import assert from 'assert'
 
-const LEXICONS = [
+const LEXICONS: LexiconDoc[] = [
   {
     lexicon: 1,
     id: 'io.example.params',

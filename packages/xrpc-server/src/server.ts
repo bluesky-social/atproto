@@ -264,12 +264,7 @@ export class Server {
 
         if (isHandlerPassthru(outputUnvalidated)) {
           const { passthru } = outputUnvalidated
-          assert.ok(
-            passthru.statusCode && passthru.statusMessage,
-            'Missing status: passthru response must originate from a ClientRequest.',
-          )
           res.statusCode = passthru.statusCode
-          res.statusMessage = passthru.statusMessage
           if (!res.headersSent) {
             const hopByHop = getHopByHopHeaders(passthru.headers.connection)
             for (const [name, value] of Object.entries(passthru.headers)) {
@@ -278,7 +273,7 @@ export class Server {
               }
             }
           }
-          return pipePassthru(passthru, req, res, next)
+          return pipePassthru(passthru.body, req, res, next)
         }
 
         if (isHandlerError(outputUnvalidated)) {

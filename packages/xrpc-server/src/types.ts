@@ -1,3 +1,4 @@
+import { Readable } from 'node:stream'
 import { IncomingMessage } from 'http'
 import express from 'express'
 import { isHttpError } from 'http-errors'
@@ -53,7 +54,13 @@ export const handlerError = zod.object({
 })
 export type HandlerError = zod.infer<typeof handlerError>
 
-export type HandlerPassthru = { passthru: IncomingMessage }
+export type HandlerPassthru = {
+  passthru: {
+    body: Readable
+    statusCode: number
+    headers: Record<string, string | string[] | undefined>
+  }
+}
 
 export type HandlerOutput = HandlerSuccess | HandlerError | HandlerPassthru
 
@@ -214,9 +221,11 @@ export function isHandlerError(v: unknown): v is HandlerError {
 
 export function isHandlerPassthru(v: unknown): v is HandlerPassthru {
   return (
-    typeof v === 'object' &&
-    v !== null &&
-    v['passthru'] instanceof IncomingMessage
+    !!v?.['passthru'] &&
+    v['passthru']['body'] instanceof Readable &&
+    typeof v['passthru']['statusCode'] === 'number' &&
+    typeof v['passthru']['headers'] === 'object' &&
+    v['passthru']['headers'] !== null
   )
 }
 

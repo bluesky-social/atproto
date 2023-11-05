@@ -1,5 +1,5 @@
 import assert from 'assert'
-import axios, { AxiosError } from 'axios'
+import undici, { Dispatcher } from 'undici'
 import { IncomingMessage } from 'http'
 import { Readable, Transform } from 'stream'
 import { createDeflate, createGunzip } from 'zlib'
@@ -328,31 +328,40 @@ export async function proxy(
     }
   }
   try {
-    const result = await axios.request({
-      responseType: 'stream',
-      method: ctx.req.method,
-      baseURL: host,
-      url: ctx.req.url,
+    const url = new URL(ctx.req.url ?? '', host)
+    const result = await undici.request(url, {
+      method: ctx.req.method?.toUpperCase() as
+        | Dispatcher.HttpMethod
+        | undefined,
       headers,
-      data: payload,
-      validateStatus: (status) => status < 500,
-      timeout: opts?.timeout,
-      decompress: false,
+      body: payload,
+      bodyTimeout: opts?.timeout,
+      headersTimeout: opts?.timeout,
     })
-    return { passthru: result.data }
+    if (result.statusCode >= 500) {
+      throw new UpstreamFailureError()
+    }
+    return { passthru: result }
   } catch (err) {
-    if (err instanceof AxiosError) {
-      if (err.code === 'ECONNABORTED') {
+    if (err instanceof undici.errors.UndiciError) {
+      if (
+        err?.['code'] === 'UND_ERR_CONNECT_TIMEOUT' ||
+        err?.['code'] === 'UND_ERR_HEADERS_TIMEOUT' ||
+        err?.['code'] === 'UND_ERR_BODY_TIMEOUT'
+      ) {
         throw new UpstreamTimeoutError()
       } else {
         throw new UpstreamFailureError()
       }
+    } else if (err?.['code'] === 'ECONNREFUSED') {
+      throw new UpstreamFailureError()
+    } else {
+      throw err
     }
-    throw err
   }
 }
 
-export function getHopByHopHeaders(connectionHeader?: string) {
+export function getHopByHopHeaders(connectionHeader: string | string[] = '') {
   const hopByHop = new Set([
     'connection',
     'keep-alive',
@@ -363,7 +372,11 @@ export function getHopByHopHeaders(connectionHeader?: string) {
     'transfer-encoding',
     'upgrade',
   ])
-  const additional = (connectionHeader ?? '').split(/\s*,\s*/)
+  const connectionHeaderStr =
+    typeof connectionHeader === 'string'
+      ? connectionHeader
+      : connectionHeader.join(',')
+  const additional = connectionHeaderStr.split(/\s*,\s*/)
   additional.forEach((header) => hopByHop.add(header.toLowerCase()))
   return hopByHop
 }
