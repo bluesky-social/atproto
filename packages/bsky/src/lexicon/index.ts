@@ -9,6 +9,7 @@ import {
   StreamAuthVerifier,
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
+import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
@@ -193,6 +194,17 @@ export class AdminNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  deleteAccount<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminDeleteAccount.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminDeleteAccount.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.deleteAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   disableAccountInvites<AV extends AuthVerifier>(
