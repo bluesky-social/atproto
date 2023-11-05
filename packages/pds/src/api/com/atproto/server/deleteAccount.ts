@@ -3,7 +3,6 @@ import { AuthRequiredError, UpstreamFailureError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { isThisPds } from '../../../proxy'
-import * as sequencer from '../../../../sequencer'
 
 const REASON_ACCT_DELETION = 'account_deletion'
 
@@ -57,7 +56,7 @@ export default function (server: Server, ctx: AppContext) {
             if (!pds) {
               throw new UpstreamFailureError('unknown pds')
             }
-            // both entryway and pds behind it need to clean-up account state.
+            // both entryway and pds behind it need to clean-up account state, then pds sequences tombstone.
             // the long flow is: pds(server.deleteAccount) -> entryway(server.deleteAccount) -> pds(admin.deleteAccount)
             const agent = ctx.pdsAgents.get(pds.host)
             await agent.com.atproto.admin.deleteAccount(
@@ -68,10 +67,7 @@ export default function (server: Server, ctx: AppContext) {
               },
             )
           } else {
-            const seqEvt = await sequencer.formatSeqTombstone(did)
-            await db.transaction(async (txn) => {
-              await sequencer.sequenceEvt(txn, seqEvt)
-            })
+            await accountService.sequenceTombstone(did)
           }
         } catch (err) {
           req.log.error({ did, err }, 'account deletion failed')

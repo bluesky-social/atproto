@@ -351,6 +351,7 @@ describe('repo subscribe repos', () => {
       await ctx.services.record(db).deleteForActor(did)
       await ctx.services.repo(db).deleteRepo(did)
       await ctx.services.account(db).deleteAccount(did)
+      await ctx.services.account(db).sequenceTombstone(did)
     }
 
     const ws = new WebSocket(
@@ -381,6 +382,7 @@ describe('repo subscribe repos', () => {
     await ctx.services.record(db).deleteForActor(baddie3)
     await ctx.services.repo(db).deleteRepo(baddie3)
     await ctx.services.account(db).deleteAccount(baddie3)
+    await ctx.services.account(db).sequenceTombstone(baddie3)
 
     const ws = new WebSocket(
       `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,

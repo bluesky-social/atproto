@@ -387,6 +387,13 @@ export class AccountService {
       .execute()
   }
 
+  async sequenceTombstone(did: string): Promise<void> {
+    const seqEvt = await sequencer.formatSeqTombstone(did)
+    await this.db.transaction(async (txn) => {
+      await sequencer.sequenceEvt(txn, seqEvt)
+    })
+  }
+
   async adminView(did: string): Promise<AccountView | null> {
     const accountQb = this.db.db
       .selectFrom('did_handle')
