@@ -1,11 +1,12 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
+import { MINUTE } from '@atproto/common'
+import { AuthRequiredError, UpstreamFailureError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { MINUTE } from '@atproto/common'
+import { isThisPds } from '../../../proxy'
+import * as sequencer from '../../../../sequencer'
 
 const REASON_ACCT_DELETION = 'account_deletion'
 
-// @TODO negotiate account deletions between pds and entryway
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deleteAccount({
     rateLimit: {
@@ -40,11 +41,38 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       ctx.backgroundQueue.add(async (db) => {
+        // in the background perform the hard account deletion work
         try {
-          // In the background perform the hard account deletion work
-          await ctx.services.record(db).deleteForActor(did)
-          await ctx.services.repo(db).deleteRepo(did)
-          await ctx.services.account(db).deleteAccount(did)
+          const recordService = ctx.services.record(db)
+          const repoService = ctx.services.repo(db)
+          const accountService = ctx.services.account(db)
+          const account = await accountService.getAccount(did, true)
+          const pdsDid = account?.pdsDid
+          await recordService.deleteForActor(did)
+          await repoService.deleteRepo(did)
+          await accountService.deleteAccount(did)
+          // propagate to pds behind entryway, or sequence tombstone on this pds
+          if (ctx.cfg.service.isEntryway && pdsDid && !isThisPds(ctx, pdsDid)) {
+            const pds = await accountService.getPds(pdsDid, { cached: true })
+            if (!pds) {
+              throw new UpstreamFailureError('unknown pds')
+            }
+            // both entryway and pds behind it need to clean-up account state.
+            // the long flow is: pds(server.deleteAccount) -> entryway(server.deleteAccount) -> pds(admin.deleteAccount)
+            const agent = ctx.pdsAgents.get(pds.host)
+            await agent.com.atproto.admin.deleteAccount(
+              { did },
+              {
+                encoding: 'application/json',
+                headers: ctx.authVerifier.createAdminRoleHeaders(),
+              },
+            )
+          } else {
+            const seqEvt = await sequencer.formatSeqTombstone(did)
+            await db.transaction(async (txn) => {
+              await sequencer.sequenceEvt(txn, seqEvt)
+            })
+          }
         } catch (err) {
           req.log.error({ did, err }, 'account deletion failed')
         }

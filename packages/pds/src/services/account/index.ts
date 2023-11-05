@@ -385,10 +385,6 @@ export class AccountService {
       .deleteFrom('did_handle')
       .where('did_handle.did', '=', did)
       .execute()
-    const seqEvt = await sequencer.formatSeqTombstone(did)
-    await this.db.transaction(async (txn) => {
-      await sequencer.sequenceEvt(txn, seqEvt)
-    })
   }
 
   async adminView(did: string): Promise<AccountView | null> {
