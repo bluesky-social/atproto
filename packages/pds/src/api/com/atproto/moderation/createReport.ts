@@ -1,6 +1,11 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru, proxy, resultPassthru } from '../../../proxy'
+import {
+  authPassthru,
+  ensureThisPds,
+  proxy,
+  resultPassthru,
+} from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
@@ -20,6 +25,8 @@ export default function (server: Server, ctx: AppContext) {
       if (proxied !== null) {
         return proxied
       }
+
+      ensureThisPds(ctx, auth.credentials.pdsDid)
 
       const requester = auth.credentials.did
       const { data: result } =
