@@ -111,10 +111,10 @@ export default function (server: Server, ctx: AppContext) {
         return { result, takenDown }
       })
 
-      if (takenDown) {
+      if (takenDown && ctx.moderationPushAgent) {
+        const agent = ctx.moderationPushAgent
         const { did, subjects } = takenDown
         if (did && subjects.length > 0) {
-          const agent = await ctx.pdsAdminAgent(did)
           const results = await Promise.allSettled(
             subjects.map((subject) =>
               retryHttp(() =>
