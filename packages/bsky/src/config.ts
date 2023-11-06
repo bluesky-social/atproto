@@ -23,7 +23,7 @@ export interface ServerConfigValues {
   adminPassword: string
   moderatorPassword?: string
   triagePassword?: string
-  moderationActionReverseUrl?: string
+  moderationPushUrl?: string
 }
 
 export class ServerConfig {
@@ -78,8 +78,8 @@ export class ServerConfig {
     const moderatorPassword = process.env.MODERATOR_PASSWORD || undefined
     const triagePassword = process.env.TRIAGE_PASSWORD || undefined
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
-    const moderationActionReverseUrl =
-      overrides?.moderationActionReverseUrl ||
+    const moderationPushUrl =
+      overrides?.moderationPushUrl ||
       process.env.MODERATION_PUSH_URL ||
       undefined
     return new ServerConfig({
@@ -104,7 +104,7 @@ export class ServerConfig {
       adminPassword,
       moderatorPassword,
       triagePassword,
-      moderationActionReverseUrl,
+      moderationPushUrl,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -206,8 +206,8 @@ export class ServerConfig {
     return this.cfg.triagePassword
   }
 
-  get moderationActionReverseUrl() {
-    return this.cfg.moderationActionReverseUrl
+  get moderationPushUrl() {
+    return this.cfg.moderationPushUrl
   }
 }
 

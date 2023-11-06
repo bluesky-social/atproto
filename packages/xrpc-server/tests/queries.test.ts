@@ -1,10 +1,11 @@
 import * as http from 'http'
 import getPort from 'get-port'
+import { LexiconDoc } from '@atproto/lexicon'
 import xrpc, { ServiceClient } from '@atproto/xrpc'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
 
-const LEXICONS = [
+const LEXICONS: LexiconDoc[] = [
   {
     lexicon: 1,
     id: 'io.example.pingOne',

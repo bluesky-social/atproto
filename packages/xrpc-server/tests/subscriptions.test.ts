@@ -2,6 +2,7 @@ import * as http from 'http'
 import { WebSocket, WebSocketServer, createWebSocketStream } from 'ws'
 import getPort from 'get-port'
 import { wait } from '@atproto/common'
+import { LexiconDoc } from '@atproto/lexicon'
 import { byFrame, MessageFrame, ErrorFrame, Frame, Subscription } from '../src'
 import {
   createServer,
@@ -11,7 +12,7 @@ import {
 } from './_util'
 import * as xrpcServer from '../src'
 
-const LEXICONS = [
+const LEXICONS: LexiconDoc[] = [
   {
     lexicon: 1,
     id: 'io.example.streamOne',
