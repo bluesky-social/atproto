@@ -28,15 +28,19 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     return env.dataDirectory ? path.join(env.dataDirectory, name) : name
   }
 
+  const disableWalAutoCheckpoint = env.disableWalAutoCheckpoint ?? false
+
   const dbCfg: ServerConfig['db'] = {
     accountDbLoc: env.accountDbLocation ?? dbLoc('account.sqlite'),
     sequencerDbLoc: env.sequencerDbLocation ?? dbLoc('sequencer.sqlite'),
     didCacheDbLoc: env.didCacheDbLocation ?? dbLoc('did_cache.sqlite'),
+    disableWalAutoCheckpoint,
   }
 
   const actorStoreCfg: ServerConfig['actorStore'] = {
     directory: env.actorStoreDirectory ?? dbLoc('actors'),
     cacheSize: env.actorStoreCacheSize ?? 100,
+    disableWalAutoCheckpoint,
   }
 
   let blobstoreCfg: ServerConfig['blobstore']
@@ -103,11 +107,14 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   let entrywayCfg: ServerConfig['entryway'] = null
   if (env.entrywayUrl) {
     assert(
-      env.entrywayJwtVerifyKeyK256PublicKeyHex && env.entrywayPlcRotationKey,
+      env.entrywayJwtVerifyKeyK256PublicKeyHex &&
+        env.entrywayPlcRotationKey &&
+        env.entrywayDid,
       'if entryway url is configured, must include all required entryway configuration',
     )
     entrywayCfg = {
       url: env.entrywayUrl,
+      did: env.entrywayDid,
       jwtPublicKeyHex: env.entrywayJwtVerifyKeyK256PublicKeyHex,
       plcRotationKey: env.entrywayPlcRotationKey,
     }
@@ -241,11 +248,13 @@ export type DatabaseConfig = {
   accountDbLoc: string
   sequencerDbLoc: string
   didCacheDbLoc: string
+  disableWalAutoCheckpoint: boolean
 }
 
 export type ActorStoreConfig = {
   directory: string
   cacheSize: number
+  disableWalAutoCheckpoint: boolean
 }
 
 export type S3BlobstoreConfig = {
@@ -279,6 +288,7 @@ export type IdentityConfig = {
 
 export type EntrywayConfig = {
   url: string
+  did: string
   jwtPublicKeyHex: string
   plcRotationKey: string
 }

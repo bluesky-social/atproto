@@ -23,6 +23,7 @@ describe('entryway', () => {
     plc = await TestPlc.create({})
     pds = await TestPds.create({
       entrywayUrl: `http://localhost:${entrywayPort}`,
+      entrywayDid: 'did:example:entryway',
       entrywayJwtVerifyKeyK256PublicKeyHex: getPublicHex(jwtSigningKey),
       entrywayPlcRotationKey: plcRotationKey.did(),
       adminPassword: 'admin-pass',

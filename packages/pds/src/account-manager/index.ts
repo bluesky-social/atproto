@@ -16,8 +16,13 @@ import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
 export class AccountManager {
   db: AccountDb
 
-  constructor(dbLocation: string, private jwtKey: KeyObject) {
-    this.db = getDb(dbLocation)
+  constructor(
+    dbLocation: string,
+    private jwtKey: KeyObject,
+    private serviceDid: string,
+    disableWalAutoCheckpoint = false,
+  ) {
+    this.db = getDb(dbLocation, disableWalAutoCheckpoint)
   }
 
   async migrateOrThrow() {
@@ -74,8 +79,9 @@ export class AccountManager {
       : undefined
 
     const { accessJwt, refreshJwt } = await auth.createTokens({
-      jwtKey: this.jwtKey,
       did,
+      jwtKey: this.jwtKey,
+      serviceDid: this.serviceDid,
       scope: AuthScope.Access,
     })
     const refreshPayload = auth.decodeRefreshToken(refreshJwt)
@@ -133,8 +139,9 @@ export class AccountManager {
 
   async createSession(did: string, appPasswordName: string | null) {
     const { accessJwt, refreshJwt } = await auth.createTokens({
-      jwtKey: this.jwtKey,
       did,
+      jwtKey: this.jwtKey,
+      serviceDid: this.serviceDid,
       scope: appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
     })
     const refreshPayload = auth.decodeRefreshToken(refreshJwt)
@@ -170,8 +177,9 @@ export class AccountManager {
     const nextId = token.nextId ?? auth.getRefreshTokenId()
 
     const { accessJwt, refreshJwt } = await auth.createTokens({
-      jwtKey: this.jwtKey,
       did: token.did,
+      jwtKey: this.jwtKey,
+      serviceDid: this.serviceDid,
       scope:
         token.appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
       jti: nextId,
