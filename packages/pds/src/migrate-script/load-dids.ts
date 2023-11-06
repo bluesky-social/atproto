@@ -12,6 +12,7 @@ const run = async () => {
       phase: 0,
       failed: 0 as const,
     }))
+    .filter((row) => row.did.length > 2)
   await db
     .insertInto('status')
     .values(dids)
