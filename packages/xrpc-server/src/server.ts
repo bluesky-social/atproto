@@ -44,6 +44,7 @@ import {
   validateOutput,
 } from './util'
 import log from './logger'
+import { withTiming } from './timing'
 import { consumeMany } from './rate-limiter'
 
 export function createServer(lexicons?: LexiconDoc[], options?: Options) {
@@ -170,10 +171,17 @@ export class Server {
       middleware.push(this.middleware.text)
     }
     this.setupRouteRateLimits(nsid, config)
+    const handler = config.timing
+      ? withTiming(config.handler, {
+          constantExceeded: (info, _ctx) =>
+            log.warn(info, `${nsid} took too long`),
+          ...config.timing,
+        })
+      : config.handler
     this.routes[verb](
       `/xrpc/${nsid}`,
       ...middleware,
-      this.createHandler(nsid, def, config.handler),
+      this.createHandler(nsid, def, handler),
     )
   }
 

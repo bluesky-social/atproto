@@ -65,7 +65,7 @@ export type XRPCReqContext = {
 
 export type XRPCHandler = (
   ctx: XRPCReqContext,
-) => Promise<HandlerOutput> | HandlerOutput | undefined
+) => Promise<HandlerOutput | undefined> | HandlerOutput | undefined
 
 export type XRPCStreamHandler = (ctx: {
   auth: HandlerAuth | undefined
@@ -143,9 +143,14 @@ export type RateLimiterStatus = {
   isFirstInDuration: boolean
 }
 
+export type HandlerTimingOpts = {
+  constant?: number
+}
+
 export type XRPCHandlerConfig = {
   rateLimit?: HandlerRateLimitOpts | HandlerRateLimitOpts[]
   auth?: AuthVerifier
+  timing?: HandlerTimingOpts
   handler: XRPCHandler
 }
 
