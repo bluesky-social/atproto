@@ -3007,6 +3007,9 @@ export const schemaDict = {
               emailConfirmed: {
                 type: 'boolean',
               },
+              didDoc: {
+                type: 'unknown',
+              },
             },
           },
         },
