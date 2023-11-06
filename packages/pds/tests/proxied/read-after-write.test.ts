@@ -192,6 +192,7 @@ describe('proxy read after write', () => {
       ),
     )
     expect(imgs.images[0].aspectRatio).toEqual({ height: 2, width: 1 })
+    expect(imgs.images[0].alt).toBe('alt text')
     expect(replies[0].replies?.length).toBe(1)
     // @ts-ignore
     expect(replies[0].replies[0].post.uri).toEqual(replyRes2.uri)
