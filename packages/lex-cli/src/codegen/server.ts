@@ -210,6 +210,13 @@ const indexTs = (
     })
 
     file.addTypeAlias({
+      name: 'HandlerTimingOpts',
+      type: `{
+        constant?: number
+      }`,
+    })
+
+    file.addTypeAlias({
       name: 'ConfigOf',
       typeParameters: [
         { name: 'Auth' },
@@ -220,6 +227,7 @@ const indexTs = (
         | Handler
         | {
           auth?: Auth
+          timing?: HandlerTimingOpts
           rateLimit?: HandlerRateLimitOpts<ReqCtx> | HandlerRateLimitOpts<ReqCtx>[]
           handler: Handler
         }`,
