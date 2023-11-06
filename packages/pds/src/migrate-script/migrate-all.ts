@@ -9,6 +9,7 @@ import { createDeferrable } from '@atproto/common'
 import { envToCfg, envToSecrets, readEnv } from '../config'
 import AppContext from '../context'
 import { FailedTakedown, MigrateDb, Status, TransferPhase, getDb } from './db'
+import PQueue from 'p-queue'
 
 dotenv.config()
 
@@ -47,6 +48,7 @@ export const runScript = async () => {
   let pdsCounter = 0
   let completed = 0
   let failed = 0
+  const migrateQueue = new PQueue({ concurrency: 20 })
   for (const status of todo) {
     if (!status.pdsId) {
       status.pdsId = pdsInfos[pdsCounter % pdsInfos.length].id
@@ -56,23 +58,26 @@ export const runScript = async () => {
     if (!pdsInfo) {
       throw new Error(`could not find pds with id: ${status.pdsId}`)
     }
-    try {
-      await migrateRepo(ctx, db, pdsInfo, status, adminToken)
-      completed++
-    } catch (err) {
-      // @ts-ignore
-      console.log(err?.message)
-      await db
-        .updateTable('status')
-        .set({ failed: 1 })
-        .where('did', '=', status.did)
-        .execute()
-      failed++
-    }
-    if (completed % 5 === 0) {
-      console.log(`completed: ${completed}, failed: ${failed}`)
-    }
+    migrateQueue.add(async () => {
+      try {
+        await migrateRepo(ctx, db, pdsInfo, status, adminToken)
+        completed++
+      } catch (err) {
+        // @ts-ignore
+        console.log(err?.message)
+        await db
+          .updateTable('status')
+          .set({ failed: 1 })
+          .where('did', '=', status.did)
+          .execute()
+        failed++
+      }
+      if (completed % 5 === 0) {
+        console.log(`completed: ${completed}, failed: ${failed}`)
+      }
+    })
   }
+  await migrateQueue.onIdle()
   console.log('DONE WITH ALL')
 }
 
