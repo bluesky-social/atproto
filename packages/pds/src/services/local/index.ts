@@ -220,6 +220,7 @@ export class LocalService {
           did,
           img.image.ref.toString(),
         ),
+        aspectRatio: img.aspectRatio,
         alt: img.alt,
       }))
       return {
