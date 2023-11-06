@@ -252,8 +252,9 @@ describe('auth', () => {
       password: 'password',
     })
     const refreshJwt = await createRefreshToken({
-      jwtKey: network.pds.jwtSecretKey(),
       did: account.did,
+      jwtKey: network.pds.jwtSecretKey(),
+      serviceDid: network.pds.ctx.cfg.service.did,
       expiresIn: -1,
     })
     const refreshExpired = refreshSession(refreshJwt)

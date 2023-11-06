@@ -5,8 +5,14 @@ export * from './schema'
 
 export type ActorDb = Database<DatabaseSchema>
 
-export const getDb = (location: string): ActorDb => {
-  return Database.sqlite(location)
+export const getDb = (
+  location: string,
+  disableWalAutoCheckpoint = false,
+): ActorDb => {
+  const pragmas: Record<string, string> = disableWalAutoCheckpoint
+    ? { wal_autocheckpoint: '0' }
+    : {}
+  return Database.sqlite(location, { pragmas })
 }
 
 export const getMigrator = (db: Database<DatabaseSchema>) => {

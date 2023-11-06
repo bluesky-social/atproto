@@ -12,6 +12,7 @@ export const readEnv = (): ServerEnvironment => {
 
     // database
     dataDirectory: envStr('PDS_DATA_DIRECTORY'),
+    disableWalAutoCheckpoint: envBool('PDS_SQLITE_DISABLE_WAL_AUTO_CHECKPOINT'),
     accountDbLocation: envStr('PDS_ACCOUNT_DB_LOCATION'),
     sequencerDbLocation: envStr('PDS_SEQUENCER_DB_LOCATION'),
     didCacheDbLocation: envStr('PDS_DID_CACHE_DB_LOCATION'),
@@ -44,6 +45,7 @@ export const readEnv = (): ServerEnvironment => {
 
     // entryway
     entrywayUrl: envStr('PDS_ENTRYWAY_URL'),
+    entrywayDid: envStr('PDS_ENTRYWAY_DID'),
     entrywayJwtVerifyKeyK256PublicKeyHex: envStr(
       'PDS_ENTRYWAY_JWT_VERIFY_KEY_K256_PUBLIC_KEY_HEX',
     ),
@@ -110,6 +112,7 @@ export type ServerEnvironment = {
 
   // database
   dataDirectory?: string
+  disableWalAutoCheckpoint?: boolean
   accountDbLocation?: string
   sequencerDbLocation?: string
   didCacheDbLocation?: string
@@ -142,6 +145,7 @@ export type ServerEnvironment = {
 
   // entryway
   entrywayUrl?: string
+  entrywayDid?: string
   entrywayJwtVerifyKeyK256PublicKeyHex?: string
   entrywayPlcRotationKeyK256PublicKeyHex?: string
 
