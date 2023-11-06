@@ -175,6 +175,7 @@ const doImport = async (
 
   let logOutput = ''
   for await (const log of importRes.data) {
+    console.log(log)
     logOutput += log
   }
   const lines = logOutput.split('\n')
