@@ -29,15 +29,19 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     return env.dataDirectory ? path.join(env.dataDirectory, name) : name
   }
 
+  const disableWalAutoCheckpoint = env.disableWalAutoCheckpoint ?? false
+
   const dbCfg: ServerConfig['db'] = {
     accountDbLoc: env.accountDbLocation ?? dbLoc('account.sqlite'),
     sequencerDbLoc: env.sequencerDbLocation ?? dbLoc('sequencer.sqlite'),
     didCacheDbLoc: env.didCacheDbLocation ?? dbLoc('did_cache.sqlite'),
+    disableWalAutoCheckpoint,
   }
 
   const actorStoreCfg: ServerConfig['actorStore'] = {
     directory: env.actorStoreDirectory ?? dbLoc('actors'),
     cacheSize: env.actorStoreCacheSize ?? 100,
+    disableWalAutoCheckpoint,
   }
 
   let blobstoreCfg: ServerConfig['blobstore']
@@ -246,11 +250,13 @@ export type DatabaseConfig = {
   accountDbLoc: string
   sequencerDbLoc: string
   didCacheDbLoc: string
+  disableWalAutoCheckpoint: boolean
 }
 
 export type ActorStoreConfig = {
   directory: string
   cacheSize: number
+  disableWalAutoCheckpoint: boolean
 }
 
 export type S3BlobstoreConfig = {

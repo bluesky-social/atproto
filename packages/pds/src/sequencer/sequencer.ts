@@ -34,11 +34,12 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     dbLocation: string,
     public crawlers: Crawlers,
     public lastSeen = 0,
+    disableWalAutoCheckpoint = false,
   ) {
     super()
     // note: this does not err when surpassed, just prints a warning to stderr
     this.setMaxListeners(100)
-    this.db = getDb(dbLocation)
+    this.db = getDb(dbLocation, disableWalAutoCheckpoint)
   }
 
   async start() {

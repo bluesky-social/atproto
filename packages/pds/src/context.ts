@@ -124,6 +124,7 @@ export class AppContext {
       cfg.db.didCacheDbLoc,
       cfg.identity.cacheStaleTTL,
       cfg.identity.cacheMaxTTL,
+      cfg.db.disableWalAutoCheckpoint,
     )
     await didCache.migrateOrThrow()
 
@@ -141,7 +142,12 @@ export class AppContext {
       cfg.crawlers,
       backgroundQueue,
     )
-    const sequencer = new Sequencer(cfg.db.sequencerDbLoc, crawlers)
+    const sequencer = new Sequencer(
+      cfg.db.sequencerDbLoc,
+      crawlers,
+      undefined,
+      cfg.db.disableWalAutoCheckpoint,
+    )
     const redisScratch = cfg.redis
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
@@ -157,6 +163,7 @@ export class AppContext {
       cfg.db.accountDbLoc,
       jwtSecretKey,
       cfg.service.did,
+      cfg.db.disableWalAutoCheckpoint,
     )
     await accountManager.migrateOrThrow()
 

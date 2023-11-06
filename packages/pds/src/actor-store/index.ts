@@ -46,7 +46,9 @@ export class ActorStore {
 
         // if fetch is aborted then another handler opened the db first
         // so we can close this handle and return `undefined`
-        return signal.aborted ? undefined : getDb(dbLocation)
+        return signal.aborted
+          ? undefined
+          : getDb(dbLocation, cfg.disableWalAutoCheckpoint)
       },
     })
     this.keyCache = new LRUCache<string, Keypair>({
@@ -116,7 +118,7 @@ export class ActorStore {
     const privKey = await keypair.export()
     await fs.writeFile(keyLocation, privKey)
 
-    const db: ActorDb = getDb(dbLocation)
+    const db: ActorDb = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
     try {
       const migrator = getMigrator(db)
       await migrator.migrateToLatestOrThrow()

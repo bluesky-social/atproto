@@ -20,8 +20,9 @@ export class AccountManager {
     dbLocation: string,
     private jwtKey: KeyObject,
     private serviceDid: string,
+    disableWalAutoCheckpoint = false,
   ) {
-    this.db = getDb(dbLocation)
+    this.db = getDb(dbLocation, disableWalAutoCheckpoint)
   }
 
   async migrateOrThrow() {
