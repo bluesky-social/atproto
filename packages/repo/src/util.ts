@@ -2,7 +2,6 @@ import { CID } from 'multiformats/cid'
 import * as cbor from '@ipld/dag-cbor'
 import { CarReader } from '@ipld/car/reader'
 import { BlockWriter, CarWriter } from '@ipld/car/writer'
-import { Block as CarBlock } from '@ipld/car/api'
 import {
   streamToBuffer,
   verifyCidForBytes,
@@ -18,6 +17,7 @@ import { ipldToLex, lexToIpld, LexValue, RepoRecord } from '@atproto/lexicon'
 import * as crypto from '@atproto/crypto'
 import DataDiff from './data-diff'
 import {
+  CarBlock,
   Commit,
   LegacyV2Commit,
   RecordCreateDescript,
@@ -88,10 +88,9 @@ export const blocksToCarFile = (
   return streamToBuffer(carStream)
 }
 
-export const readCar = async (
-  bytes: Uint8Array,
+export const carToBlocks = async (
+  car: CarReader,
 ): Promise<{ roots: CID[]; blocks: BlockMap }> => {
-  const car = await CarReader.fromBytes(bytes)
   const roots = await car.getRoots()
   const blocks = new BlockMap()
   for await (const block of verifyIncomingCarBlocks(car.blocks())) {
@@ -101,6 +100,18 @@ export const readCar = async (
     roots,
     blocks,
   }
+}
+
+export const readCar = async (
+  bytes: Uint8Array,
+): Promise<{ roots: CID[]; blocks: BlockMap }> => {
+  const car = await CarReader.fromBytes(bytes)
+  return carToBlocks(car)
+}
+
+export const readCarStream = async (stream: AsyncIterable<Uint8Array>) => {
+  const car = await CarReader.fromIterable(stream)
+  return carToBlocks(car)
 }
 
 export const readCarWithRoot = async (

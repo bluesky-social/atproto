@@ -75,6 +75,8 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
+import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
@@ -175,6 +177,7 @@ export class AtprotoNS {
   repo: RepoNS
   server: ServerNS
   sync: SyncNS
+  temp: TempNS
 
   constructor(server: Server) {
     this._server = server
@@ -185,6 +188,7 @@ export class AtprotoNS {
     this.repo = new RepoNS(server)
     this.server = new ServerNS(server)
     this.sync = new SyncNS(server)
+    this.temp = new TempNS(server)
   }
 }
 
@@ -967,6 +971,36 @@ export class SyncNS {
   ) {
     const nsid = 'com.atproto.sync.subscribeRepos' // @ts-ignore
     return this._server.xrpc.streamMethod(nsid, cfg)
+  }
+}
+
+export class TempNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  importRepo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempImportRepo.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempImportRepo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.importRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  transferAccount<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempTransferAccount.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempTransferAccount.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.transferAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 

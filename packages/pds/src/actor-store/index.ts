@@ -1,9 +1,15 @@
+import os from 'os'
 import path from 'path'
 import fs from 'fs/promises'
 import * as crypto from '@atproto/crypto'
 import { Keypair, ExportableKeypair } from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
-import { chunkArray, fileExists, rmIfExists } from '@atproto/common'
+import {
+  chunkArray,
+  fileExists,
+  readIfExists,
+  rmIfExists,
+} from '@atproto/common'
 import { ActorDb, getDb, getMigrator } from './db'
 import { BackgroundQueue } from '../background'
 import { RecordReader } from './record/reader'
@@ -22,11 +28,13 @@ import { ActorStoreConfig } from '../config'
 type ActorStoreResources = {
   blobstore: (did: string) => BlobStore
   backgroundQueue: BackgroundQueue
+  reservedKeyDir?: string
 }
 
 export class ActorStore {
   dbCache: LRUCache<string, ActorDb>
   keyCache: LRUCache<string, Keypair>
+  reservedKeyDir: string
 
   constructor(
     public cfg: ActorStoreConfig,
@@ -59,6 +67,8 @@ export class ActorStore {
         return crypto.Secp256k1Keypair.import(privKey)
       },
     })
+    this.reservedKeyDir =
+      resources.reservedKeyDir ?? path.join(os.tmpdir(), 'reserved_keys')
   }
 
   async getLocation(did: string) {
@@ -67,6 +77,11 @@ export class ActorStore {
     const dbLocation = path.join(directory, `store.sqlite`)
     const keyLocation = path.join(directory, `key`)
     return { directory, dbLocation, keyLocation }
+  }
+
+  async exists(did: string): Promise<boolean> {
+    const location = await this.getLocation(did)
+    return await fileExists(location.dbLocation)
   }
 
   async keypair(did: string): Promise<Keypair> {
@@ -159,6 +174,54 @@ export class ActorStore {
     await rmIfExists(directory, true)
   }
 
+  async reserveKeypair(did?: string): Promise<string> {
+    let keyLoc: string | undefined
+    if (did) {
+      keyLoc = path.join(this.reservedKeyDir, did)
+      const maybeKey = await loadKey(keyLoc)
+      if (maybeKey) {
+        return maybeKey.did()
+      }
+    }
+    const keypair = await crypto.Secp256k1Keypair.create({ exportable: true })
+    const keyDid = keypair.did()
+    keyLoc = keyLoc ?? path.join(this.reservedKeyDir, keyDid)
+    await mkdir(this.reservedKeyDir, { recursive: true })
+    await fs.writeFile(keyLoc, await keypair.export())
+    return keyDid
+  }
+
+  async getReservedKeypair(
+    signingKeyOrDid: string,
+  ): Promise<ExportableKeypair | undefined> {
+    return loadKey(path.join(this.reservedKeyDir, signingKeyOrDid))
+  }
+
+  async clearReservedKeypair(keyDid: string, did?: string) {
+    await rmIfExists(path.join(this.reservedKeyDir, keyDid))
+    if (did) {
+      await rmIfExists(path.join(this.reservedKeyDir, did))
+    }
+  }
+
+  async storePlcOp(did: string, op: Uint8Array) {
+    const { directory } = await this.getLocation(did)
+    const opLoc = path.join(directory, `did-op`)
+    await fs.writeFile(opLoc, op)
+  }
+
+  async getPlcOp(did: string): Promise<Uint8Array> {
+    const { directory } = await this.getLocation(did)
+    const opLoc = path.join(directory, `did-op`)
+    return await fs.readFile(opLoc)
+  }
+
+  async clearPlcOp(did: string) {
+    const { directory } = await this.getLocation(did)
+    const opLoc = path.join(directory, `did-op`)
+    await rmIfExists(opLoc)
+  }
+
   async close() {
     const promises: Promise<void>[] = []
     for (const key of this.dbCache.keys()) {
@@ -171,6 +234,12 @@ export class ActorStore {
     await Promise.allSettled(promises)
     this.keyCache.clear()
   }
+}
+
+const loadKey = async (loc: string): Promise<ExportableKeypair | undefined> => {
+  const privKey = await readIfExists(loc)
+  if (!privKey) return undefined
+  return crypto.Secp256k1Keypair.import(privKey, { exportable: true })
 }
 
 const createActorTransactor = (

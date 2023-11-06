@@ -67,13 +67,17 @@ export class AccountManager {
   async createAccount(opts: {
     did: string
     handle: string
-    email: string
-    password: string
+    email?: string
+    password?: string
     repoCid: CID
     repoRev: string
-    inviteCode: string | undefined
+    inviteCode?: string
   }) {
     const { did, handle, email, password, repoCid, repoRev, inviteCode } = opts
+    const passwordScrypt = password
+      ? await scrypt.genSaltAndHash(password)
+      : undefined
+
     const { accessJwt, refreshJwt } = await auth.createTokens({
       did,
       jwtKey: this.jwtKey,
@@ -81,7 +85,6 @@ export class AccountManager {
       scope: AuthScope.Access,
     })
     const refreshPayload = auth.decodeRefreshToken(refreshJwt)
-    const passwordScrypt = await scrypt.genSaltAndHash(password)
     const now = new Date().toISOString()
     await this.db.transaction(async (dbTxn) => {
       if (inviteCode) {
@@ -89,14 +92,16 @@ export class AccountManager {
       }
       await Promise.all([
         account.registerActor(dbTxn, { did, handle }),
-        account.registerAccount(dbTxn, { did, email, passwordScrypt }),
-        repo.updateRoot(dbTxn, did, repoCid, repoRev),
+        email && passwordScrypt
+          ? account.registerAccount(dbTxn, { did, email, passwordScrypt })
+          : Promise.resolve(),
         invite.recordInviteUse(dbTxn, {
           did,
           inviteCode,
           now,
         }),
         auth.storeRefreshToken(dbTxn, refreshPayload, null),
+        repo.updateRoot(dbTxn, did, repoCid, repoRev),
       ])
     })
     return { accessJwt, refreshJwt }

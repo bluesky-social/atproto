@@ -78,6 +78,8 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
+import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -215,6 +217,8 @@ export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+export * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
+export * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 export * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -349,6 +353,7 @@ export class AtprotoNS {
   repo: RepoNS
   server: ServerNS
   sync: SyncNS
+  temp: TempNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -359,6 +364,7 @@ export class AtprotoNS {
     this.repo = new RepoNS(service)
     this.server = new ServerNS(service)
     this.sync = new SyncNS(service)
+    this.temp = new TempNS(service)
   }
 }
 
@@ -1118,6 +1124,36 @@ export class SyncNS {
       .call('com.atproto.sync.requestCrawl', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoSyncRequestCrawl.toKnownErr(e)
+      })
+  }
+}
+
+export class TempNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  importRepo(
+    data?: ComAtprotoTempImportRepo.InputSchema,
+    opts?: ComAtprotoTempImportRepo.CallOptions,
+  ): Promise<ComAtprotoTempImportRepo.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.importRepo', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoTempImportRepo.toKnownErr(e)
+      })
+  }
+
+  transferAccount(
+    data?: ComAtprotoTempTransferAccount.InputSchema,
+    opts?: ComAtprotoTempTransferAccount.CallOptions,
+  ): Promise<ComAtprotoTempTransferAccount.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.transferAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoTempTransferAccount.toKnownErr(e)
       })
   }
 }

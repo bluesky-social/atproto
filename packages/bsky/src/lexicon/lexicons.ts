@@ -3887,6 +3887,110 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoTempImportRepo: {
+    lexicon: 1,
+    id: 'com.atproto.temp.importRepo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Gets the did's repo, optionally catching up from a specific revision.",
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        input: {
+          encoding: 'application/vnd.ipld.car',
+        },
+        output: {
+          encoding: 'text/plain',
+        },
+      },
+    },
+  },
+  ComAtprotoTempTransferAccount: {
+    lexicon: 1,
+    id: 'com.atproto.temp.transferAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Transfer an account.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle', 'did', 'plcOp'],
+            properties: {
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              plcOp: {
+                type: 'unknown',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
+            properties: {
+              accessJwt: {
+                type: 'string',
+              },
+              refreshJwt: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidHandle',
+          },
+          {
+            name: 'InvalidPassword',
+          },
+          {
+            name: 'InvalidInviteCode',
+          },
+          {
+            name: 'HandleNotAvailable',
+          },
+          {
+            name: 'UnsupportedDomain',
+          },
+          {
+            name: 'UnresolvableDid',
+          },
+          {
+            name: 'IncompatibleDidDoc',
+          },
+        ],
+      },
+    },
+  },
   AppBskyActorDefs: {
     lexicon: 1,
     id: 'app.bsky.actor.defs',
@@ -7651,6 +7755,8 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
+  ComAtprotoTempImportRepo: 'com.atproto.temp.importRepo',
+  ComAtprotoTempTransferAccount: 'com.atproto.temp.transferAccount',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
