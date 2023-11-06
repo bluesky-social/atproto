@@ -1,3 +1,4 @@
+import assert from 'assert'
 import { defaultFetchHandler } from '@atproto/xrpc'
 import {
   AtpAgent,
@@ -6,6 +7,7 @@ import {
   AtpSessionData,
 } from '..'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { getPdsEndpoint, isValidDidDoc } from '@atproto/common-web'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView
@@ -46,16 +48,19 @@ describe('agent', () => {
     expect(agent.session?.did).toEqual(res.data.did)
     expect(agent.session?.email).toEqual('user1@test.com')
     expect(agent.session?.emailConfirmed).toEqual(false)
+    assert(isValidDidDoc(res.data.didDoc))
+    expect(agent.api.xrpc.uri.origin).toEqual(getPdsEndpoint(res.data.didDoc))
 
     const { data: sessionInfo } = await agent.api.com.atproto.server.getSession(
       {},
     )
-    expect(sessionInfo).toEqual({
+    expect(sessionInfo).toMatchObject({
       did: res.data.did,
       handle: res.data.handle,
       email: 'user1@test.com',
       emailConfirmed: false,
     })
+    expect(isValidDidDoc(sessionInfo.didDoc)).toBe(true)
 
     expect(events.length).toEqual(1)
     expect(events[0]).toEqual('create')
@@ -93,15 +98,18 @@ describe('agent', () => {
     expect(agent2.session?.did).toEqual(res1.data.did)
     expect(agent2.session?.email).toEqual('user2@test.com')
     expect(agent2.session?.emailConfirmed).toEqual(false)
+    assert(isValidDidDoc(res1.data.didDoc))
+    expect(agent2.api.xrpc.uri.origin).toEqual(getPdsEndpoint(res1.data.didDoc))
 
     const { data: sessionInfo } =
       await agent2.api.com.atproto.server.getSession({})
-    expect(sessionInfo).toEqual({
+    expect(sessionInfo).toMatchObject({
       did: res1.data.did,
       handle: res1.data.handle,
       email,
       emailConfirmed: false,
     })
+    expect(isValidDidDoc(sessionInfo.didDoc)).toBe(true)
 
     expect(events.length).toEqual(2)
     expect(events[0]).toEqual('create')
@@ -136,15 +144,18 @@ describe('agent', () => {
     expect(agent2.hasSession).toEqual(true)
     expect(agent2.session?.handle).toEqual(res1.data.handle)
     expect(agent2.session?.did).toEqual(res1.data.did)
+    assert(isValidDidDoc(res1.data.didDoc))
+    expect(agent2.api.xrpc.uri.origin).toEqual(getPdsEndpoint(res1.data.didDoc))
 
     const { data: sessionInfo } =
       await agent2.api.com.atproto.server.getSession({})
-    expect(sessionInfo).toEqual({
+    expect(sessionInfo).toMatchObject({
       did: res1.data.did,
       handle: res1.data.handle,
       email: res1.data.email,
       emailConfirmed: false,
     })
+    expect(isValidDidDoc(sessionInfo.didDoc)).toBe(true)
 
     expect(events.length).toEqual(2)
     expect(events[0]).toEqual('create')

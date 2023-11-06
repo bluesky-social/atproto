@@ -40,6 +40,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
       dbPrimaryPostgresUrl: dbPostgresUrl,
       redisHost,
+      moderationPushUrl: `http://admin:${ADMIN_PASSWORD}@localhost:${pdsPort}`,
       ...params.bsky,
     })
     const pds = await TestPds.create({

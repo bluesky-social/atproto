@@ -1,11 +1,12 @@
 import * as http from 'http'
+import { LexiconDoc } from '@atproto/lexicon'
 import xrpc, { ServiceClient } from '@atproto/xrpc'
 import { CID } from 'multiformats/cid'
 import getPort from 'get-port'
 import { createServer, closeServer } from './_util'
 import * as xrpcServer from '../src'
 
-const LEXICONS = [
+const LEXICONS: LexiconDoc[] = [
   {
     lexicon: 1,
     id: 'io.example.ipld',
