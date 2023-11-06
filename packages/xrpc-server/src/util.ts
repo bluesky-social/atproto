@@ -19,8 +19,8 @@ import {
   handlerSuccess,
   InvalidRequestError,
   InternalServerError,
-  Options,
   XRPCError,
+  RouteOpts,
 } from './types'
 
 export function decodeQueryParams(
@@ -82,7 +82,7 @@ export function validateInput(
   nsid: string,
   def: LexXrpcProcedure | LexXrpcQuery,
   req: express.Request,
-  opts: Options,
+  opts: RouteOpts,
   lexicons: Lexicons,
 ): HandlerInput | undefined {
   // request expectation
@@ -139,7 +139,7 @@ export function validateInput(
   if (req.readableEnded) {
     body = req.body
   } else {
-    body = decodeBodyStream(req, opts.payload?.blobLimit)
+    body = decodeBodyStream(req, opts.blobLimit)
   }
 
   return {
