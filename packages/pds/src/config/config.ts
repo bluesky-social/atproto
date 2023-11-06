@@ -1,4 +1,3 @@
-import os from 'node:os'
 import path from 'node:path'
 import assert from 'node:assert'
 import { DAY, HOUR, SECOND } from '@atproto/common'
@@ -71,8 +70,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     blobstoreCfg = {
       provider: 'disk',
       location: env.blobstoreDiskLocation,
-      tempLocation:
-        env.blobstoreDiskTmpLocation ?? path.join(os.tmpdir(), 'pds/blobs'),
+      tempLocation: env.blobstoreDiskTmpLocation,
     }
   } else {
     throw new Error('Must configure either S3 or disk blobstore')
@@ -110,7 +108,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   if (env.entrywayUrl) {
     assert(
       env.entrywayJwtVerifyKeyK256PublicKeyHex &&
-        env.entrywayPlcRotationKeyK256PublicKeyHex &&
+        env.entrywayPlcRotationKey &&
         env.entrywayDid,
       'if entryway url is configured, must include all required entryway configuration',
     )
@@ -118,7 +116,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       url: env.entrywayUrl,
       did: env.entrywayDid,
       jwtPublicKeyHex: env.entrywayJwtVerifyKeyK256PublicKeyHex,
-      plcRotationPublicKeyHex: env.entrywayPlcRotationKeyK256PublicKeyHex,
+      plcRotationKey: env.entrywayPlcRotationKey,
     }
   }
 
@@ -274,7 +272,7 @@ export type S3BlobstoreConfig = {
 export type DiskBlobstoreConfig = {
   provider: 'disk'
   location: string
-  tempLocation: string
+  tempLocation?: string
 }
 
 export type IdentityConfig = {
@@ -292,7 +290,7 @@ export type EntrywayConfig = {
   url: string
   did: string
   jwtPublicKeyHex: string
-  plcRotationPublicKeyHex: string
+  plcRotationKey: string
 }
 
 export type InvitesConfig =

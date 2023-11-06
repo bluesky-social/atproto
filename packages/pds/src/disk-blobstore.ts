@@ -1,7 +1,6 @@
 import fs from 'fs/promises'
 import fsSync from 'fs'
 import stream from 'stream'
-import os from 'os'
 import path from 'path'
 import { CID } from 'multiformats/cid'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
@@ -23,7 +22,7 @@ export class DiskBlobStore implements BlobStore {
     quarantineLocation?: string,
   ) {
     return (did: string) => {
-      const tmp = tmpLocation || path.join(os.tmpdir(), 'atproto/blobs')
+      const tmp = tmpLocation || path.join(location, 'tempt')
       const quarantine = quarantineLocation || path.join(location, 'quarantine')
       return new DiskBlobStore(did, location, tmp, quarantine)
     }

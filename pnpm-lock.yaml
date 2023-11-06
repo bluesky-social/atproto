@@ -603,8 +603,8 @@ importers:
         specifier: workspace:^
         version: link:../lex-cli
       '@atproto/pds-entryway':
-        specifier: npm:@atproto/pds@0.3.0-entryway.1
-        version: /@atproto/pds@0.3.0-entryway.1
+        specifier: npm:@atproto/pds@0.3.0-entryway.2
+        version: /@atproto/pds@0.3.0-entryway.2
       '@did-plc/server':
         specifier: ^0.0.1
         version: 0.0.1
@@ -816,8 +816,8 @@ packages:
       one-webcrypto: 1.0.3
       uint8arrays: 3.0.0
 
-  /@atproto/pds@0.3.0-entryway.1:
-    resolution: {integrity: sha512-cF9EZLqfuBxp/kBB/o4Ve0A8doCU5ZG2R+61YtOp+12NYoftg+z20fsk893hoqHKqYgu9xaVQlZF3h2txsT3xg==}
+  /@atproto/pds@0.3.0-entryway.2:
+    resolution: {integrity: sha512-nj3cOgPBiX0PLMG8Wn6Vy9mpRa891nGDXiOURoeSzQPSJMkWlk/4SlfYEFSrGSHlBnkUNd1fKE3NsJMMQJ/Utg==}
     hasBin: true
     dependencies:
       '@atproto/api': link:packages/api

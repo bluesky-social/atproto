@@ -102,13 +102,14 @@ const importRepo = async (
         blobRefs = blobRefs.concat(recordBlobs)
         const blobValues = recordBlobs.map((cid) => ({
           recordUri: uri.toString(),
-          blobCid: cid.toString(),
+          blobCid: cid.ref.toString(),
         }))
         const indexRecordBlobs =
           blobValues.length > 0
             ? actorStore.db.db
                 .insertInto('record_blob')
                 .values(blobValues)
+                .onConflict((oc) => oc.doNothing())
                 .execute()
             : Promise.resolve()
         await Promise.all([indexRecord, indexRecordBlobs])
@@ -141,7 +142,7 @@ const importBlobs = async (
         blobCount++
         outBuffer.push(`imported ${blobCount}/${blobRefs.length} blobs\n`)
       } catch (err) {
-        outBuffer.push(`failed to import blob: ${ref.ref.toString()}`)
+        outBuffer.push(`failed to import blob: ${ref.ref.toString()}\n`)
       }
     })
   }

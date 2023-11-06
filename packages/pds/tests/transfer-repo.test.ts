@@ -33,7 +33,7 @@ describe('transfer repo', () => {
       entrywayUrl: `http://localhost:${entrywayPort}`,
       entrywayDid: 'did:example:entryway',
       entrywayJwtVerifyKeyK256PublicKeyHex: getPublicHex(jwtSigningKey),
-      entrywayPlcRotationKeyK256PublicKeyHex: getPublicHex(plcRotationKey),
+      entrywayPlcRotationKey: plcRotationKey.did(),
       adminPassword: 'admin-pass',
       serviceHandleDomains: [],
       didPlcUrl: plc.url,

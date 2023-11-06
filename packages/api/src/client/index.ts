@@ -79,6 +79,7 @@ import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
+import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
 import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
@@ -218,6 +219,7 @@ export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 export * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
+export * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
 export * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 export * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
@@ -1143,6 +1145,17 @@ export class TempNS {
       .call('com.atproto.temp.importRepo', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoTempImportRepo.toKnownErr(e)
+      })
+  }
+
+  pushBlob(
+    data?: ComAtprotoTempPushBlob.InputSchema,
+    opts?: ComAtprotoTempPushBlob.CallOptions,
+  ): Promise<ComAtprotoTempPushBlob.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.pushBlob', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoTempPushBlob.toKnownErr(e)
       })
   }
 

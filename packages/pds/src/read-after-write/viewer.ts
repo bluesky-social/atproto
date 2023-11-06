@@ -115,6 +115,7 @@ export class LocalViewer {
         'record.indexedAt',
       ])
       .where('record.repoRev', '>', rev)
+      .limit(10)
       .orderBy('record.repoRev', 'asc')
       .execute()
     return res.reduce(
