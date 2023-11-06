@@ -124,6 +124,7 @@ export class AppContext {
       cfg.db.didCacheDbLoc,
       cfg.identity.cacheStaleTTL,
       cfg.identity.cacheMaxTTL,
+      cfg.db.disableWalAutoCheckpoint,
     )
     await didCache.migrateOrThrow()
 
@@ -141,7 +142,12 @@ export class AppContext {
       cfg.crawlers,
       backgroundQueue,
     )
-    const sequencer = new Sequencer(cfg.db.sequencerDbLoc, crawlers)
+    const sequencer = new Sequencer(
+      cfg.db.sequencerDbLoc,
+      crawlers,
+      undefined,
+      cfg.db.disableWalAutoCheckpoint,
+    )
     const redisScratch = cfg.redis
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
@@ -153,7 +159,12 @@ export class AppContext {
       : undefined
 
     const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
-    const accountManager = new AccountManager(cfg.db.accountDbLoc, jwtSecretKey)
+    const accountManager = new AccountManager(
+      cfg.db.accountDbLoc,
+      jwtSecretKey,
+      cfg.service.did,
+      cfg.db.disableWalAutoCheckpoint,
+    )
     await accountManager.migrateOrThrow()
 
     const jwtKey = cfg.entryway
@@ -165,7 +176,11 @@ export class AppContext {
       adminPass: secrets.adminPassword,
       moderatorPass: secrets.moderatorPassword,
       triagePass: secrets.triagePassword,
-      adminServiceDid: cfg.bskyAppView.did,
+      dids: {
+        pds: cfg.service.did,
+        entryway: cfg.entryway?.did,
+        admin: cfg.bskyAppView.did,
+      },
     })
 
     const plcRotationKey =

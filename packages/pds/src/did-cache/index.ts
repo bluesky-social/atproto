@@ -12,8 +12,9 @@ export class DidSqliteCache implements DidCache {
     dbLocation: string,
     public staleTTL: number,
     public maxTTL: number,
+    disableWalAutoCheckpoint = false,
   ) {
-    this.db = getDb(dbLocation)
+    this.db = getDb(dbLocation, disableWalAutoCheckpoint)
     this.pQueue = new PQueue()
   }
 

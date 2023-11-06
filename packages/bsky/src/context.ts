@@ -15,6 +15,7 @@ import { LabelCache } from './label-cache'
 import { NotificationServer } from './notifications'
 
 export class AppContext {
+  public moderationPushAgent: AtpAgent | undefined
   constructor(
     private opts: {
       db: DatabaseCoordinator
@@ -30,7 +31,16 @@ export class AppContext {
       algos: MountedAlgos
       notifServer: NotificationServer
     },
-  ) {}
+  ) {
+    if (opts.cfg.moderationPushUrl) {
+      const url = new URL(opts.cfg.moderationPushUrl)
+      this.moderationPushAgent = new AtpAgent({ service: url.origin })
+      this.moderationPushAgent.api.setHeader(
+        'authorization',
+        auth.buildBasicAuth(url.username, url.password),
+      )
+    }
+  }
 
   get db(): DatabaseCoordinator {
     return this.opts.db
@@ -105,14 +115,6 @@ export class AppContext {
       aud,
       keypair: this.signingKey,
     })
-  }
-
-  async pdsAdminAgent(did: string): Promise<AtpAgent> {
-    const data = await this.idResolver.did.resolveAtprotoData(did)
-    const agent = new AtpAgent({ service: data.pds })
-    const jwt = await this.serviceAuthJwt(did)
-    agent.api.setHeader('authorization', `Bearer ${jwt}`)
-    return agent
   }
 
   get backgroundQueue(): BackgroundQueue {

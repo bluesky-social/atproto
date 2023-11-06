@@ -2,31 +2,23 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import stream from 'stream'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
-export interface QueryParams {}
-
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  handle: string
+export interface QueryParams {
+  /** The DID of the repo. */
   did: string
-  email?: string
-  emailConfirmed?: boolean
-  didDoc?: {}
-  [k: string]: unknown
 }
 
-export type HandlerInput = undefined
+export type InputSchema = string | Uint8Array
 
-export interface HandlerSuccess {
-  encoding: 'application/json'
-  body: OutputSchema
-  headers?: { [key: string]: string }
+export interface HandlerInput {
+  encoding: '*/*'
+  body: stream.Readable
 }
 
 export interface HandlerError {
@@ -34,7 +26,7 @@ export interface HandlerError {
   message?: string
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type HandlerOutput = HandlerError | void
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

@@ -7,27 +7,22 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
-export interface QueryParams {}
-
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  handle: string
+export interface QueryParams {
+  /** The DID of the repo. */
   did: string
-  email?: string
-  emailConfirmed?: boolean
-  didDoc?: {}
-  [k: string]: unknown
 }
+
+export type InputSchema = string | Uint8Array
 
 export interface CallOptions {
   headers?: Headers
+  qp?: QueryParams
+  encoding: string
 }
 
 export interface Response {
   success: boolean
   headers: Headers
-  data: OutputSchema
 }
 
 export function toKnownErr(e: any) {

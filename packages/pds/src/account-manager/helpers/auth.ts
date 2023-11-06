@@ -17,14 +17,15 @@ export type RefreshToken = AuthToken & { scope: AuthScope.Refresh; jti: string }
 export const createTokens = async (opts: {
   did: string
   jwtKey: KeyObject
+  serviceDid: string
   scope?: AuthScope
   jti?: string
   expiresIn?: string | number
 }) => {
-  const { did, jwtKey, scope, jti, expiresIn } = opts
+  const { did, jwtKey, serviceDid, scope, jti, expiresIn } = opts
   const [accessJwt, refreshJwt] = await Promise.all([
-    createAccessToken({ did, jwtKey, scope, expiresIn }),
-    createRefreshToken({ did, jwtKey, jti, expiresIn }),
+    createAccessToken({ did, jwtKey, serviceDid, scope, expiresIn }),
+    createRefreshToken({ did, jwtKey, serviceDid, jti, expiresIn }),
   ])
   return { accessJwt, refreshJwt }
 }
@@ -32,13 +33,20 @@ export const createTokens = async (opts: {
 export const createAccessToken = (opts: {
   did: string
   jwtKey: KeyObject
+  serviceDid: string
   scope?: AuthScope
   expiresIn?: string | number
 }): Promise<string> => {
-  const { did, jwtKey, scope = AuthScope.Access, expiresIn = '120mins' } = opts
-  // @TODO set alg header?
+  const {
+    did,
+    jwtKey,
+    serviceDid,
+    scope = AuthScope.Access,
+    expiresIn = '120mins',
+  } = opts
   const signer = new jose.SignJWT({ scope })
     .setProtectedHeader({ alg: 'HS256' }) // only symmetric keys supported
+    .setAudience(serviceDid)
     .setSubject(did)
     .setIssuedAt()
     .setExpirationTime(expiresIn)
@@ -48,13 +56,20 @@ export const createAccessToken = (opts: {
 export const createRefreshToken = (opts: {
   did: string
   jwtKey: KeyObject
+  serviceDid: string
   jti?: string
   expiresIn?: string | number
 }): Promise<string> => {
-  const { did, jwtKey, jti = getRefreshTokenId(), expiresIn = '90days' } = opts
-  // @TODO set alg header? audience?
+  const {
+    did,
+    jwtKey,
+    serviceDid,
+    jti = getRefreshTokenId(),
+    expiresIn = '90days',
+  } = opts
   const signer = new jose.SignJWT({ scope: AuthScope.Refresh })
     .setProtectedHeader({ alg: 'HS256' }) // only symmetric keys supported
+    .setAudience(serviceDid)
     .setSubject(did)
     .setJti(jti)
     .setIssuedAt()
