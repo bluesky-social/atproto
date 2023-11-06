@@ -248,11 +248,9 @@ export class Server {
         }
 
         // handle rate limits
-        if (consumeRateLimit) {
-          const result = await consumeRateLimit(reqCtx)
-          if (result instanceof RateLimitExceededError) {
-            return next(result)
-          }
+        const result = await consumeRateLimit(reqCtx)
+        if (result instanceof RateLimitExceededError) {
+          return next(result)
         }
 
         // run the handler
