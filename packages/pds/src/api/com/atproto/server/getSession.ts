@@ -8,11 +8,14 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.access,
     handler: async ({ auth }) => {
       const did = auth.credentials.did
-      const [user, didDoc] = await Promise.all([
+      const [account, didDoc] = await Promise.all([
         ctx.services.account(ctx.db).getAccount(did),
-        didDocForSession(ctx, did),
+        didDocForSession(ctx, {
+          did,
+          pdsDid: auth.credentials.audience ?? null,
+        }),
       ])
-      if (!user) {
+      if (!account) {
         throw new InvalidRequestError(
           `Could not find user info for account: ${did}`,
         )
@@ -20,11 +23,11 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: {
-          handle: user.handle,
-          did: user.did,
+          handle: account.handle,
+          did: account.did,
           didDoc,
-          email: user.email,
-          emailConfirmed: !!user.emailConfirmedAt,
+          email: account.email,
+          emailConfirmed: !!account.emailConfirmedAt,
         },
       }
     },

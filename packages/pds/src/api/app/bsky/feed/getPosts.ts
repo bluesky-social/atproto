@@ -1,6 +1,11 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru, proxy, resultPassthru } from '../../../proxy'
+import {
+  authPassthru,
+  proxy,
+  proxyAppView,
+  resultPassthru,
+} from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPosts({
@@ -22,9 +27,11 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const requester = auth.credentials.did
-      const res = await ctx.appViewAgent.api.app.bsky.feed.getPosts(
-        params,
-        await ctx.serviceAuthHeaders(requester),
+      const res = await proxyAppView(ctx, async (agent) =>
+        agent.api.app.bsky.feed.getPosts(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        ),
       )
       return {
         encoding: 'application/json',

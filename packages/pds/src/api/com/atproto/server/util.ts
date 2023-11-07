@@ -29,21 +29,33 @@ export const getRandomToken = () => {
 
 export const didDocForSession = async (
   ctx: AppContext,
-  did: string,
-  forceRefresh?: boolean,
+  account: { did: string; pdsDid: string | null },
 ): Promise<DidDocument | undefined> => {
-  if (!ctx.cfg.identity.enableDidDocWithSession) return
-  try {
-    const [didDoc, pdses] = await Promise.all([
-      ctx.idResolver.did.resolve(did, forceRefresh),
-      ctx.services.account(ctx.db).getPdses({ cached: true }),
-    ])
-    if (!didDoc) return
-    const pdsEndpoint = getPdsEndpoint(didDoc)
-    const pdsHost = pdsEndpoint && new URL(pdsEndpoint).host
-    if (!pdses.some((pds) => pds.host === pdsHost)) return
-    return didDoc
-  } catch (err) {
-    dbLogger.warn({ err, did }, 'failed to resolve did doc')
+  if (!ctx.cfg.identity.enableDidDocWithSession || account.pdsDid === null) {
+    return
   }
+  try {
+    const [didDoc, pds] = await Promise.all([
+      ctx.idResolver.did.resolve(account.did),
+      ctx.services.account(ctx.db).getPds(account.pdsDid, { cached: true }),
+    ])
+    if (!didDoc || !pds) return
+    if (getPdsHost(didDoc) === pds.host) {
+      return didDoc
+    }
+    // no pds match, try again with fresh did doc
+    const freshDidDoc = await ctx.idResolver.did.resolve(account.did, true)
+    if (!freshDidDoc) return
+    if (getPdsHost(freshDidDoc) === pds.host) {
+      return didDoc
+    }
+  } catch (err) {
+    dbLogger.warn({ err, did: account.did }, 'failed to resolve did doc')
+  }
+}
+
+const getPdsHost = (didDoc: DidDocument) => {
+  const pdsEndpoint = getPdsEndpoint(didDoc)
+  if (!pdsEndpoint) return
+  return new URL(pdsEndpoint).host
 }

@@ -4,7 +4,12 @@ import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getAuthorF
 import { handleReadAfterWrite } from '../util/read-after-write'
 import { LocalRecords } from '../../../../services/local'
 import { isReasonRepost } from '../../../../lexicon/types/app/bsky/feed/defs'
-import { authPassthru, proxy, resultPassthru } from '../../../proxy'
+import {
+  authPassthru,
+  proxy,
+  proxyAppView,
+  resultPassthru,
+} from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
@@ -29,9 +34,13 @@ export default function (server: Server, ctx: AppContext) {
 
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null
-      const res = await ctx.appViewAgent.api.app.bsky.feed.getAuthorFeed(
-        params,
-        requester ? await ctx.serviceAuthHeaders(requester) : authPassthru(req),
+      const res = await proxyAppView(ctx, async (agent) =>
+        agent.api.app.bsky.feed.getAuthorFeed(
+          params,
+          requester
+            ? await ctx.serviceAuthHeaders(requester)
+            : authPassthru(req),
+        ),
       )
       if (requester) {
         return await handleReadAfterWrite(ctx, requester, res, getAuthorMunge)

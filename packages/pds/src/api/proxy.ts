@@ -25,7 +25,6 @@ export const proxy = async <T>(
   try {
     return await fn(ctx.pdsAgents.get(pds.host))
   } catch (err) {
-    // @TODO may need to pass through special lexicon errors
     if (
       err instanceof XRPCError &&
       err.status === 403 &&
@@ -34,6 +33,28 @@ export const proxy = async <T>(
       // instruct client to refresh token during potential account migration
       throw new InvalidRequestError(
         'Token audience is out of date',
+        'ExpiredToken',
+      )
+    }
+    throw err
+  }
+}
+
+export const proxyAppView = async <T>(
+  ctx: AppContext,
+  fn: (agent: AtpAgent) => Promise<T>,
+): Promise<T> => {
+  try {
+    return await fn(ctx.appViewAgent)
+  } catch (err) {
+    if (
+      err instanceof XRPCError &&
+      err.status === 401 &&
+      err.error === 'BadJwtSignature'
+    ) {
+      // instruct client to refresh token during potential account migration
+      throw new InvalidRequestError(
+        'Service token issuer is out of date',
         'ExpiredToken',
       )
     }

@@ -1,6 +1,11 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru, proxy, resultPassthru } from '../../../proxy'
+import {
+  authPassthru,
+  proxy,
+  proxyAppView,
+  resultPassthru,
+} from '../../../proxy'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
@@ -26,9 +31,11 @@ export default function (server: Server, ctx: AppContext) {
       const HOT_CLASSIC_URI =
         'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/hot-classic'
       const HOT_CLASSIC_DID = 'did:plc:5fllqkujj6kqp5izd5jg7gox'
-      const res = await ctx.appViewAgent.api.app.bsky.feed.getFeed(
-        { feed: HOT_CLASSIC_URI, limit: params.limit, cursor: params.cursor },
-        await ctx.serviceAuthHeaders(requester, HOT_CLASSIC_DID),
+      const res = await proxyAppView(ctx, async (agent) =>
+        agent.api.app.bsky.feed.getFeed(
+          { feed: HOT_CLASSIC_URI, limit: params.limit, cursor: params.cursor },
+          await ctx.serviceAuthHeaders(requester, HOT_CLASSIC_DID),
+        ),
       )
       return {
         encoding: 'application/json',
