@@ -93,20 +93,15 @@ describe('transfer repo', () => {
     const signingKey = signingKeyRes.data.signingKey
 
     const repo = await entrywayAgent.api.com.atproto.sync.getRepo({ did })
-    const res = await axios.post(
-      `${pds.url}/xrpc/com.atproto.temp.importRepo`,
-      repo.data,
-      {
-        params: { did },
-        headers: { 'content-type': 'application/vnd.ipld.car' },
-        decompress: true,
-        responseType: 'stream',
+    await axios.post(`${pds.url}/xrpc/com.atproto.temp.importRepo`, repo.data, {
+      params: { did },
+      headers: {
+        'content-type': 'application/vnd.ipld.car',
+        ...pds.adminAuthHeaders('admin'),
       },
-    )
-
-    for await (const log of res.data) {
-      console.log(log.toString())
-    }
+      decompress: true,
+      responseType: 'stream',
+    })
 
     const lastOp = await pds.ctx.plcClient.getLastOp(did)
     if (!lastOp || lastOp.type === 'plc_tombstone') {
@@ -129,11 +124,14 @@ describe('transfer repo', () => {
         },
       }),
     )
-    await pdsAgent.api.com.atproto.temp.transferAccount({
-      did,
-      handle: accountDetail.handle,
-      plcOp,
-    })
+    await pdsAgent.api.com.atproto.temp.transferAccount(
+      {
+        did,
+        handle: accountDetail.handle,
+        plcOp,
+      },
+      { headers: pds.adminAuthHeaders('admin'), encoding: 'application/json' },
+    )
 
     await entryway.ctx.db.db
       .updateTable('user_account')
