@@ -2,7 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { UserPreference } from '../../../../services/account'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { authPassthru, proxy } from '../../../proxy'
+import { authPassthru, ensureThisPds, proxy } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.putPreferences({
@@ -21,6 +21,8 @@ export default function (server: Server, ctx: AppContext) {
       if (proxied !== null) {
         return proxied
       }
+
+      ensureThisPds(ctx, auth.credentials.pdsDid)
 
       const { preferences } = input.body
       const requester = auth.credentials.did

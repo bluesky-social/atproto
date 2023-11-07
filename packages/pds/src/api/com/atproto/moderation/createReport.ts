@@ -2,6 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
   authPassthru,
+  ensureThisPds,
   proxy,
   proxyAppView,
   resultPassthru,
@@ -25,6 +26,8 @@ export default function (server: Server, ctx: AppContext) {
       if (proxied !== null) {
         return proxied
       }
+
+      ensureThisPds(ctx, auth.credentials.pdsDid)
 
       const requester = auth.credentials.did
       const { data: result } = await proxyAppView(ctx, async (agent) =>

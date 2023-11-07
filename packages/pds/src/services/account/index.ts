@@ -385,6 +385,9 @@ export class AccountService {
       .deleteFrom('did_handle')
       .where('did_handle.did', '=', did)
       .execute()
+  }
+
+  async sequenceTombstone(did: string): Promise<void> {
     const seqEvt = await sequencer.formatSeqTombstone(did)
     await this.db.transaction(async (txn) => {
       await sequencer.sequenceEvt(txn, seqEvt)
