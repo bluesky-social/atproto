@@ -16,7 +16,7 @@ import { AtprotoData } from '@atproto/identity'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.importRepo({
     opts: {
-      blobLimit: 5 * 1024 * 1024, // 5GB
+      blobLimit: 5 * 1024 * 1024 * 1024, // 5GB
     },
     handler: async ({ params, input, req }) => {
       const { did } = params
