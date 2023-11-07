@@ -68,6 +68,11 @@ export const runScript = async () => {
     migrateQueue.add(async () => {
       try {
         await migrateRepo(ctx, db, pdsInfo, status, adminHeaders)
+        await db
+          .updateTable('status')
+          .set({ failed: 0, err: null })
+          .where('did', '=', status.did)
+          .execute()
         completed++
       } catch (err) {
         // @ts-ignore
