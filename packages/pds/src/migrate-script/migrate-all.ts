@@ -192,7 +192,7 @@ const doImport = async (
     carStream,
     {
       params: { did },
-      headers: { 'content-type': 'application/vnd.ipld.car' },
+      headers: { 'content-type': 'application/vnd.ipld.car', ...adminHeaders },
       decompress: true,
       responseType: 'stream',
       maxBodyLength: Infinity,
