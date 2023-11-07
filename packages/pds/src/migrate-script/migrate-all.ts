@@ -176,6 +176,8 @@ const doImport = async (
       headers: { 'content-type': 'application/vnd.ipld.car' },
       decompress: true,
       responseType: 'stream',
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
     },
   )
 
