@@ -118,6 +118,18 @@ export class LocalViewer {
       .limit(10)
       .orderBy('record.repoRev', 'asc')
       .execute()
+    // sanity check to ensure that the clock received is not before _all_ local records (for instance in case of account migration)
+    if (res.length > 1) {
+      const sanityCheckRes = await this.actorDb.db
+        .selectFrom('record')
+        .selectAll()
+        .where('record.repoRev', '<=', rev)
+        .limit(1)
+        .executeTakeFirst()
+      if (!sanityCheckRes) {
+        return { profile: null, posts: [] }
+      }
+    }
     return res.reduce(
       (acc, cur) => {
         const descript = {
