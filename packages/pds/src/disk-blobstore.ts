@@ -99,22 +99,27 @@ export class DiskBlobStore implements BlobStore {
 
   async quarantine(cid: CID): Promise<void> {
     await this.ensureQuarantine()
-    await fs.rename(this.getStoredPath(cid), this.getQuarantinePath(cid))
+    try {
+      await fs.rename(this.getStoredPath(cid), this.getQuarantinePath(cid))
+    } catch (err) {
+      throw translateErr(err)
+    }
   }
 
   async unquarantine(cid: CID): Promise<void> {
     await this.ensureDir()
-    await fs.rename(this.getQuarantinePath(cid), this.getStoredPath(cid))
+    try {
+      await fs.rename(this.getQuarantinePath(cid), this.getStoredPath(cid))
+    } catch (err) {
+      throw translateErr(err)
+    }
   }
 
   async getBytes(cid: CID): Promise<Uint8Array> {
     try {
       return await fs.readFile(this.getStoredPath(cid))
     } catch (err) {
-      if (isErrnoException(err) && err.code === 'ENOENT') {
-        throw new BlobNotFoundError()
-      }
-      throw err
+      throw translateErr(err)
     }
   }
 
@@ -138,6 +143,13 @@ export class DiskBlobStore implements BlobStore {
   async deleteAll(): Promise<void> {
     await rmIfExists(this.location, true)
   }
+}
+
+const translateErr = (err: unknown): BlobNotFoundError | unknown => {
+  if (isErrnoException(err) && err.code === 'ENOENT') {
+    return new BlobNotFoundError()
+  }
+  return err
 }
 
 export default DiskBlobStore
