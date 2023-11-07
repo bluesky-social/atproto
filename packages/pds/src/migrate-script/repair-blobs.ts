@@ -69,7 +69,21 @@ const repairBlob = async (
     .selectAll()
     .executeTakeFirst()
   if (!blob) return
-  const blobStream = await ctx.blobstore.getStream(CID.parse(blob.cid))
+  let blobStream
+  try {
+    blobStream = await ctx.blobstore.getStream(CID.parse(blob.cid))
+  } catch (err) {
+    const hasTakedown = await ctx.db.db
+      .selectFrom('repo_blob')
+      .where('did', '=', did)
+      .where('cid', '=', cid)
+      .where('takedownRef', 'is not', null)
+      .executeTakeFirst()
+    if (hasTakedown) {
+      return
+    }
+    throw err
+  }
   await axios.post(`${pds.url}/xrpc/com.atproto.temp.pushBlob`, blobStream, {
     params: { did },
     headers: {
