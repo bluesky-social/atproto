@@ -20,6 +20,10 @@ type PdsInfo = {
   agent: AtpAgent
 }
 
+type AdminHeaders = {
+  authorization: string
+}
+
 export const runScript = async () => {
   const db = getDb()
   const env = readEnv()
@@ -30,6 +34,9 @@ export const runScript = async () => {
     ui8.fromString(`admin:${secrets.adminPassword}`, 'utf8'),
     'base64pad',
   )
+  const adminHeaders: AdminHeaders = {
+    authorization: `Basic: ${adminToken}`,
+  }
   const pdsRes = await ctx.db.db.selectFrom('pds').selectAll().execute()
   const pdsInfos = pdsRes.map((row) => ({
     id: row.id,
@@ -60,7 +67,7 @@ export const runScript = async () => {
     }
     migrateQueue.add(async () => {
       try {
-        await migrateRepo(ctx, db, pdsInfo, status, adminToken)
+        await migrateRepo(ctx, db, pdsInfo, status, adminHeaders)
         completed++
       } catch (err) {
         // @ts-ignore
@@ -87,7 +94,7 @@ const migrateRepo = async (
   db: MigrateDb,
   pds: PdsInfo,
   status: Status,
-  adminToken: string,
+  adminHeaders: AdminHeaders,
 ) => {
   if (status.phase < TransferPhase.reservedKey) {
     const signingKey = await reserveSigningKey(pds, status.did)
@@ -97,7 +104,7 @@ const migrateRepo = async (
   }
 
   if (status.phase < TransferPhase.initImport) {
-    const importedRev = await doImport(ctx, db, pds, status.did)
+    const importedRev = await doImport(ctx, db, pds, status.did, adminHeaders)
     if (importedRev) {
       status.importedRev = importedRev
     }
@@ -106,7 +113,13 @@ const migrateRepo = async (
   }
 
   if (status.phase < TransferPhase.transferredPds) {
-    const importedRev = await lockAndTransfer(ctx, db, pds, status)
+    const importedRev = await lockAndTransfer(
+      ctx,
+      db,
+      pds,
+      status,
+      adminHeaders,
+    )
     status.importedRev = importedRev
     status.phase = TransferPhase.transferredEntryway
     await updateStatus(db, status)
@@ -128,7 +141,7 @@ const migrateRepo = async (
   }
 
   if (status.phase < TransferPhase.takedowns) {
-    await transferTakedowns(ctx, db, pds, status.did, adminToken)
+    await transferTakedowns(ctx, db, pds, status.did, adminHeaders)
     status.phase = TransferPhase.completed
     await updateStatus(db, status)
   }
@@ -156,6 +169,7 @@ const doImport = async (
   db: MigrateDb,
   pds: PdsInfo,
   did: string,
+  adminHeaders: AdminHeaders,
   since?: string,
 ) => {
   const storage = new SqlRepoStorage(ctx.db, did)
@@ -201,6 +215,7 @@ const lockAndTransfer = async (
   db: MigrateDb,
   pds: PdsInfo,
   status: Status,
+  adminHeaders: AdminHeaders,
 ) => {
   const repoLockedDefer = createDeferrable()
   const transferDefer = createDeferrable()
@@ -226,6 +241,7 @@ const lockAndTransfer = async (
       db,
       pds,
       status.did,
+      adminHeaders,
       status.importedRev ?? undefined,
     )
 
@@ -256,11 +272,15 @@ const lockAndTransfer = async (
     )
     assert(!txFinished)
     const accountRes = await getUserAccount(ctx, status.did)
-    await axios.post(`${pds.url}/xrpc/com.atproto.temp.transferAccount`, {
-      did: status.did,
-      handle: accountRes.handle,
-      plcOp,
-    })
+    await axios.post(
+      `${pds.url}/xrpc/com.atproto.temp.transferAccount`,
+      {
+        did: status.did,
+        handle: accountRes.handle,
+        plcOp,
+      },
+      { headers: adminHeaders },
+    )
 
     status.phase = TransferPhase.transferredPds
     await updateStatus(db, status)
@@ -326,7 +346,7 @@ const transferTakedowns = async (
   db: MigrateDb,
   pds: PdsInfo,
   did: string,
-  adminToken: string,
+  adminHeaders: AdminHeaders,
 ) => {
   const [accountRes, takendownRecords, takendownBlobs] = await Promise.all([
     getUserAccount(ctx, did),
@@ -358,7 +378,7 @@ const transferTakedowns = async (
           },
         },
         {
-          headers: { authorization: `Basic ${adminToken}` },
+          headers: adminHeaders,
           encoding: 'application/json',
         },
       )
@@ -384,7 +404,7 @@ const transferTakedowns = async (
           },
         },
         {
-          headers: { authorization: `Basic ${adminToken}` },
+          headers: adminHeaders,
           encoding: 'application/json',
         },
       )
@@ -416,7 +436,7 @@ const transferTakedowns = async (
           },
         },
         {
-          headers: { authorization: `Basic ${adminToken}` },
+          headers: adminHeaders,
           encoding: 'application/json',
         },
       )
