@@ -35,7 +35,7 @@ export const runScript = async () => {
     'base64pad',
   )
   const adminHeaders: AdminHeaders = {
-    authorization: `Basic: ${adminToken}`,
+    authorization: `Basic ${adminToken}`,
   }
   const pdsRes = await ctx.db.db.selectFrom('pds').selectAll().execute()
   const pdsInfos = pdsRes.map((row) => ({
