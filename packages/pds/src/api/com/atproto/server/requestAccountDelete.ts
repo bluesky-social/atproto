@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, req }) => {
       const did = auth.credentials.did
       const account = await ctx.accountManager.getAccount(did)
-      if (!account?.email) {
+      if (!account) {
         throw new InvalidRequestError('account not found')
       }
 
