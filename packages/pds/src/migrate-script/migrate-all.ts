@@ -64,10 +64,11 @@ export const runScript = async () => {
         completed++
       } catch (err) {
         // @ts-ignore
-        console.log(err?.message)
+        const errmsg: string = err?.message ?? null
+        console.log(errmsg)
         await db
           .updateTable('status')
-          .set({ failed: 1 })
+          .set({ failed: 1, err: errmsg })
           .where('did', '=', status.did)
           .execute()
         failed++
@@ -359,8 +360,8 @@ const transferTakedowns = async (
           encoding: 'application/json',
         },
       )
-      .catch(async () => {
-        await logFailedTakedown(db, { did })
+      .catch(async (err) => {
+        await logFailedTakedown(db, { did, err: err?.message })
       })
     promises.push(promise)
   }
@@ -385,11 +386,12 @@ const transferTakedowns = async (
           encoding: 'application/json',
         },
       )
-      .catch(async () => {
+      .catch(async (err) => {
         await logFailedTakedown(db, {
           did,
           recordUri: takendownRecord.uri,
           recordCid: takendownRecord.cid,
+          err: err?.message,
         })
       })
     promises.push(promise)
@@ -416,10 +418,11 @@ const transferTakedowns = async (
           encoding: 'application/json',
         },
       )
-      .catch(async () => {
+      .catch(async (err) => {
         await logFailedTakedown(db, {
           did,
           blobCid: takendownBlob.cid,
+          err: err?.message,
         })
       })
 

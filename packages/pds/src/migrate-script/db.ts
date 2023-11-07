@@ -45,6 +45,27 @@ export const dbMigrationProvider: MigrationProvider = {
         },
         async down() {},
       },
+      '2': {
+        async up(db: Kysely<unknown>) {
+          await db.schema
+            .alterTable('status')
+            .addColumn('err', 'varchar')
+            .execute()
+          await db.schema
+            .alterTable('failed_pref')
+            .addColumn('err', 'varchar')
+            .execute()
+          await db.schema
+            .alterTable('failed_blob')
+            .addColumn('err', 'varchar')
+            .execute()
+          await db.schema
+            .alterTable('failed_takedown')
+            .addColumn('err', 'varchar')
+            .execute()
+        },
+        async down() {},
+      },
     }
   },
 }
@@ -76,15 +97,18 @@ export type Status = {
   phase: TransferPhase
   importedRev: string | null
   failed: 0 | 1
+  err: string | null
 }
 
 export type FailedPreference = {
   did: string
+  err: string | null
 }
 
 export type FailedBlob = {
   did: string
   cid: string
+  err: string | null
 }
 
 export type FailedTakedown = {
@@ -92,4 +116,5 @@ export type FailedTakedown = {
   blobCid?: string
   recordUri?: string
   recordCid?: string
+  err: string | null
 }
