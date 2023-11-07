@@ -8,6 +8,7 @@ import { BlockMap, CidSet } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.transferAccount({
+    auth: ctx.authVerifier.role,
     handler: async ({ input }) => {
       const { did, handle } = input.body
 
