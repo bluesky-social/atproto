@@ -187,7 +187,7 @@ export class S3BlobStore implements BlobStore {
 }
 
 const handleErr = (err: unknown) => {
-  if (err && typeof err === 'object' && err['Code'] === 'NoSuchKey') {
+  if (err?.['Code'] === 'NoSuchKey') {
     throw new BlobNotFoundError()
   } else {
     throw err
