@@ -170,15 +170,27 @@ export class S3BlobStore implements BlobStore {
   }
 
   private async move(keys: { from: string; to: string }) {
-    await this.client.copyObject({
-      Bucket: this.bucket,
-      CopySource: `${this.bucket}/${keys.from}`,
-      Key: keys.to,
-    })
-    await this.client.deleteObject({
-      Bucket: this.bucket,
-      Key: keys.from,
-    })
+    try {
+      await this.client.copyObject({
+        Bucket: this.bucket,
+        CopySource: `${this.bucket}/${keys.from}`,
+        Key: keys.to,
+      })
+      await this.client.deleteObject({
+        Bucket: this.bucket,
+        Key: keys.from,
+      })
+    } catch (err) {
+      handleErr(err)
+    }
+  }
+}
+
+const handleErr = (err: unknown) => {
+  if (err?.['Code'] === 'NoSuchKey') {
+    throw new BlobNotFoundError()
+  } else {
+    throw err
   }
 }
 

@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import { CID } from 'multiformats/cid'
 import bytes from 'bytes'
 import { fromStream as fileTypeFromStream } from 'file-type'
-import { BlobStore, WriteOpAction } from '@atproto/repo'
+import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { cloneStream, sha256RawToCid, streamSize } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -92,10 +92,16 @@ export class BlobTransactor extends BlobReader {
       .set({ takedownRef })
       .where('cid', '=', blob.toString())
       .executeTakeFirst()
-    if (takedown.applied) {
-      await this.blobstore.quarantine(blob)
-    } else {
-      await this.blobstore.unquarantine(blob)
+    try {
+      if (takedown.applied) {
+        await this.blobstore.quarantine(blob)
+      } else {
+        await this.blobstore.unquarantine(blob)
+      }
+    } catch (err) {
+      if (!(err instanceof BlobNotFoundError)) {
+        throw err
+      }
     }
   }
 
