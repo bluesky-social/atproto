@@ -4,7 +4,7 @@ import { getNotif } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AtpAgent } from '@atproto/api'
 import { getDidDoc } from '../util/resolver'
-import { authPassthru, proxy } from '../../../proxy'
+import { authPassthru, proxy, proxyAppView } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.registerPush({
@@ -32,12 +32,11 @@ export default function (server: Server, ctx: AppContext) {
       const authHeaders = await ctx.serviceAuthHeaders(did, serviceDid)
 
       if (ctx.cfg.bskyAppView.did === serviceDid) {
-        await ctx.appViewAgent.api.app.bsky.notification.registerPush(
-          input.body,
-          {
+        await proxyAppView(ctx, async (agent) =>
+          agent.api.app.bsky.notification.registerPush(input.body, {
             ...authHeaders,
             encoding: 'application/json',
-          },
+          }),
         )
         return
       }

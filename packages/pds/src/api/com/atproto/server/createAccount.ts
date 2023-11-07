@@ -120,12 +120,13 @@ export default function (server: Server, ctx: AppContext) {
 
         return {
           did,
+          pdsDid: entrywayAssignedPds?.did ?? null,
           accessJwt: access,
           refreshJwt: refresh,
         }
       })
 
-      const didDoc = await didDocForSession(ctx, result.did, true)
+      const didDoc = await didDocForSession(ctx, result)
 
       return {
         encoding: 'application/json',

@@ -61,7 +61,7 @@ export default function (server: Server, ctx: AppContext) {
           pdsDid: user.pdsDid,
           appPasswordName,
         }),
-        didDocForSession(ctx, user.did),
+        didDocForSession(ctx, user),
       ])
 
       return {
