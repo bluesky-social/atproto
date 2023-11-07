@@ -3,7 +3,12 @@ import AppContext from '../../../../context'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getTimeline'
 import { handleReadAfterWrite } from '../util/read-after-write'
 import { LocalRecords } from '../../../../services/local'
-import { authPassthru, proxy, resultPassthru } from '../../../proxy'
+import {
+  authPassthru,
+  proxy,
+  proxyAppView,
+  resultPassthru,
+} from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
@@ -25,9 +30,11 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const requester = auth.credentials.did
-      const res = await ctx.appViewAgent.api.app.bsky.feed.getTimeline(
-        params,
-        await ctx.serviceAuthHeaders(requester),
+      const res = await proxyAppView(ctx, async (agent) =>
+        agent.api.app.bsky.feed.getTimeline(
+          params,
+          await ctx.serviceAuthHeaders(requester),
+        ),
       )
       return await handleReadAfterWrite(ctx, requester, res, getTimelineMunge)
     },
