@@ -710,6 +710,29 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminDeleteAccount: {
+    lexicon: 1,
+    id: 'com.atproto.admin.deleteAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Delete a user account as an administrator.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminDisableAccountInvites: {
     lexicon: 1,
     id: 'com.atproto.admin.disableAccountInvites',
@@ -7703,6 +7726,7 @@ export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
+  ComAtprotoAdminDeleteAccount: 'com.atproto.admin.deleteAccount',
   ComAtprotoAdminDisableAccountInvites:
     'com.atproto.admin.disableAccountInvites',
   ComAtprotoAdminDisableInviteCodes: 'com.atproto.admin.disableInviteCodes',
