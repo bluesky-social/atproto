@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const [didDoc, rotated] = await Promise.all([
-        didDocForSession(ctx, user.did),
+        didDocForSession(ctx, user),
         ctx.db.transaction((dbTxn) => {
           return ctx.services.auth(dbTxn).rotateRefreshToken({
             id: auth.credentials.tokenId,
