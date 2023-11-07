@@ -119,7 +119,7 @@ export class LocalViewer {
       .orderBy('record.repoRev', 'asc')
       .execute()
     // sanity check to ensure that the clock received is not before _all_ local records (for instance in case of account migration)
-    if (res.length > 1) {
+    if (res.length > 0) {
       const sanityCheckRes = await this.actorDb.db
         .selectFrom('record')
         .selectAll()
