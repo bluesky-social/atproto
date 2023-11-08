@@ -110,6 +110,12 @@ const migrateRepo = async (
       adminHeaders,
     )
     status.importedRev = importedRev
+    status.phase = TransferPhase.transferredPds
+    await updateStatus(db, status)
+  }
+
+  if (status.phase < TransferPhase.transferredEntryway) {
+    await updatePdsOnEntryway(ctx, pds, status.did)
     status.phase = TransferPhase.transferredEntryway
     await updateStatus(db, status)
   }
@@ -271,28 +277,29 @@ const lockAndTransfer = async (
       { headers: adminHeaders },
     )
 
-    status.phase = TransferPhase.transferredPds
-    await updateStatus(db, status)
-
-    transferDefer.resolve()
-
-    await ctx.db.transaction(async (dbTxn) => {
-      await dbTxn.db
-        .updateTable('user_account')
-        .where('did', '=', status.did)
-        .set({ pdsId: pds.id })
-        .execute()
-      await dbTxn.db
-        .updateTable('repo_root')
-        .where('did', '=', status.did)
-        .set({ did: `migrated-${status.did}` })
-        .execute()
-    })
-
     return importedRev
   } finally {
     transferDefer.resolve()
   }
+}
+
+const updatePdsOnEntryway = async (
+  ctx: AppContext,
+  pds: PdsInfo,
+  did: string,
+) => {
+  await ctx.db.transaction(async (dbTxn) => {
+    await dbTxn.db
+      .updateTable('user_account')
+      .where('did', '=', did)
+      .set({ pdsId: pds.id })
+      .execute()
+    await dbTxn.db
+      .updateTable('repo_root')
+      .where('did', '=', did)
+      .set({ did: `migrated-${did}` })
+      .execute()
+  })
 }
 
 const transferPreferences = async (
