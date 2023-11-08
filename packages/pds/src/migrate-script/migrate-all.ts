@@ -198,7 +198,6 @@ const doImport = async (
   for (const line of lines) {
     if (line.includes('failed to import blob')) {
       const cid = line.split(':')[1].trim()
-      console.log(`failed blob: ${did} ${cid}`)
       await logFailedBlob(db, did, cid)
     }
   }
@@ -466,7 +465,7 @@ const repairFailedBlobs = async (
     try {
       await repairBlob(ctx, db, pds, did, blob.cid, adminHeaders)
     } catch {
-      // noop
+      console.log(`failed blob: ${did} ${blob.cid}`)
     }
   }
 }
