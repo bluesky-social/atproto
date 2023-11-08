@@ -83,10 +83,6 @@
             "#recordViewNotFound"
           ]
         },
-        "subjectStatus": {
-          "type": "ref",
-          "ref": "com.atproto.admin.defs#subjectStatusView"
-        },
         "subjectBlobs": {
           "type": "array",
           "items": { "type": "ref", "ref": "#blobView" }

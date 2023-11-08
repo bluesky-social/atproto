@@ -85,7 +85,6 @@ export interface ModEventViewDetail {
     | RecordView
     | RecordViewNotFound
     | { $type: string; [k: string]: unknown }
-  subjectStatus?: SubjectStatusView
   subjectBlobs: BlobView[]
   createdBy: string
   createdAt: string

@@ -233,7 +233,9 @@ export class ModerationViews {
     )
     const subjectStatusByUri = subjectStatuses.reduce(
       (acc, cur) =>
-        Object.assign(acc, { [`${cur.did}/${cur.recordPath}` ?? '']: cur }),
+        Object.assign(acc, {
+          [`${cur.did}/${cur.recordPath}` ?? '']: this.subjectStatus(cur),
+        }),
       {},
     )
 
@@ -417,14 +419,9 @@ export class ModerationViews {
       ({ did, recordPath }: { did: string; recordPath?: string }) =>
       // TODO: Fix the typing here?
       (clause: any) => {
-        clause = clause.where('moderation_subject_status.did', '=', did)
-        if (recordPath) {
-          clause = clause.where(
-            'moderation_subject_status.recordPath',
-            '=',
-            recordPath,
-          )
-        }
+        clause = clause
+          .where('moderation_subject_status.did', '=', did)
+          .where('moderation_subject_status.recordPath', '=', recordPath || '')
         return clause
       }
 

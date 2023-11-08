@@ -67,7 +67,8 @@ export class ModerationService {
     createdBy?: string
     limit: number
     cursor?: string
-    type?: ModerationEvent['action']
+    includeAllUserRecords: boolean
+    types: ModerationEvent['action'][]
     sortDirection?: 'asc' | 'desc'
   }): Promise<ModerationEventRowWithHandle[]> {
     const {
@@ -75,8 +76,9 @@ export class ModerationService {
       createdBy,
       limit,
       cursor,
+      includeAllUserRecords,
       sortDirection = 'desc',
-      type,
+      types,
     } = opts
     let builder = this.db.db
       .selectFrom('moderation_event')
@@ -92,6 +94,15 @@ export class ModerationService {
       )
     if (subject) {
       builder = builder.where((qb) => {
+        if (includeAllUserRecords) {
+          // If subject is an at-uri, we need to extract the DID from the at-uri
+          // otherwise, subject is probably a DID already
+          if (subject.startsWith('at://')) {
+            const uri = new AtUri(subject)
+            return qb.where('subjectDid', '=', uri.hostname)
+          }
+          return qb.where('subjectDid', '=', subject)
+        }
         return qb
           .where((subQb) =>
             subQb
@@ -101,8 +112,14 @@ export class ModerationService {
           .orWhere('subjectUri', '=', subject)
       })
     }
-    if (type) {
-      builder = builder.where('action', '=', type)
+    if (types.length) {
+      builder = builder.where((qb) => {
+        if (types.length === 1) {
+          return qb.where('action', '=', types[0])
+        }
+
+        return qb.where('action', 'in', types)
+      })
     }
     if (createdBy) {
       builder = builder.where('createdBy', '=', createdBy)

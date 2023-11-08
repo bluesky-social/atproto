@@ -1,7 +1,7 @@
 import { TestNetwork, ImageRef, RecordRef, SeedClient } from '@atproto/dev-env'
 import AtpAgent, {
   ComAtprotoAdminEmitModerationEvent,
-  ComAtprotoAdminGetModerationStatuses,
+  ComAtprotoAdminQueryModerationStatuses,
   ComAtprotoModerationCreateReport,
 } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
@@ -119,7 +119,7 @@ describe('moderation', () => {
     )
 
   const getStatuses = async (
-    params: ComAtprotoAdminGetModerationStatuses.QueryParams,
+    params: ComAtprotoAdminQueryModerationStatuses.QueryParams,
   ) => {
     const { data } = await agent.api.com.atproto.admin.queryModerationStatuses(
       params,

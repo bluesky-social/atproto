@@ -115,10 +115,6 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#recordViewNotFound',
             ],
           },
-          subjectStatus: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#subjectStatusView',
-          },
           subjectBlobs: {
             type: 'array',
             items: {
@@ -1191,10 +1187,13 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            type: {
-              type: 'string',
+            types: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
               description:
-                'The type of event (fully qualified string in the format of com.atproto.admin#modEvent<name>) to filter by. If not specified, all events are returned.',
+                'The types of events (fully qualified string in the format of com.atproto.admin#modEvent<name>) to filter by. If not specified, all events are returned.',
             },
             createdBy: {
               type: 'string',
@@ -1209,6 +1208,12 @@ export const schemaDict = {
             },
             subject: {
               type: 'string',
+            },
+            includeAllUserRecords: {
+              type: 'boolean',
+              default: false,
+              description:
+                'If true, events on all record types (posts, lists, profile etc.) owned by the did are returned',
             },
             limit: {
               type: 'integer',

@@ -11,18 +11,20 @@ export default function (server: Server, ctx: AppContext) {
         limit = 50,
         cursor,
         sortDirection = 'desc',
-        type,
+        types,
+        includeAllUserRecords = false,
         createdBy,
       } = params
       const db = ctx.db.getPrimary()
       const moderationService = ctx.services.moderation(db)
       const results = await moderationService.getEvents({
-        type: type ? getEventType(type) : undefined,
+        types: types?.length ? types.map(getEventType) : [],
         subject,
         createdBy,
         limit,
         cursor,
         sortDirection,
+        includeAllUserRecords,
       })
       return {
         encoding: 'application/json',
