@@ -30,10 +30,11 @@ describe('file uploads', () => {
     await sc.createAccount('bob', users.bob)
     alice = sc.dids.alice
     bob = sc.dids.bob
-    aliceDb = await network.pds.ctx.actorStore.db(alice)
+    aliceDb = await network.pds.ctx.actorStore.openDb(alice)
   })
 
   afterAll(async () => {
+    aliceDb.close()
     await network.close()
   })
 
