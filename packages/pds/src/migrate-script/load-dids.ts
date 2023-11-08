@@ -15,7 +15,7 @@ const run = async () => {
     }))
     .filter((row) => row.did.length > 2)
   await Promise.all(
-    chunkArray(dids, 500).map((chunk) =>
+    chunkArray(dids, 50).map((chunk) =>
       db
         .insertInto('status')
         .values(chunk)
