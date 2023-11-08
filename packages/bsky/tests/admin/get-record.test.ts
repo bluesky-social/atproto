@@ -20,6 +20,7 @@ describe('admin get record view', () => {
     agent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
+    await network.processAll()
   })
 
   afterAll(async () => {
@@ -64,7 +65,7 @@ describe('admin get record view', () => {
     })
   })
 
-  it.skip('gets a record by uri, even when taken down.', async () => {
+  it('gets a record by uri, even when taken down.', async () => {
     const result = await agent.api.com.atproto.admin.getRecord(
       { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
       { headers: network.pds.adminAuthHeaders() },
@@ -72,7 +73,7 @@ describe('admin get record view', () => {
     expect(forSnapshot(result.data)).toMatchSnapshot()
   })
 
-  it.skip('gets a record by uri and cid.', async () => {
+  it('gets a record by uri and cid.', async () => {
     const result = await agent.api.com.atproto.admin.getRecord(
       {
         uri: sc.posts[sc.dids.alice][0].ref.uriStr,

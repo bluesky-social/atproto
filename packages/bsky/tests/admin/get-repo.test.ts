@@ -19,6 +19,7 @@ describe('admin get repo view', () => {
     agent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
+    await network.processAll()
   })
 
   afterAll(async () => {
@@ -59,7 +60,7 @@ describe('admin get repo view', () => {
     })
   })
 
-  it.skip('gets a repo by did, even when taken down.', async () => {
+  it('gets a repo by did, even when taken down.', async () => {
     const result = await agent.api.com.atproto.admin.getRepo(
       { did: sc.dids.alice },
       { headers: network.pds.adminAuthHeaders() },
@@ -67,7 +68,7 @@ describe('admin get repo view', () => {
     expect(forSnapshot(result.data)).toMatchSnapshot()
   })
 
-  it.skip('does not include account emails for triage mods.', async () => {
+  it('does not include account emails for triage mods.', async () => {
     const { data: admin } = await agent.api.com.atproto.admin.getRepo(
       { did: sc.dids.bob },
       { headers: network.pds.adminAuthHeaders() },
