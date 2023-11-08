@@ -1,20 +1,12 @@
 import dotenv from 'dotenv'
-import axios from 'axios'
 import * as ui8 from 'uint8arrays'
 import AtpAgent from '@atproto/api'
 import { envToCfg, envToSecrets, readEnv } from '../config'
 import AppContext from '../context'
-import { MigrateDb, getDb } from './db'
-import { CID } from 'multiformats/cid'
+import { getDb } from './db'
+import { repairBlob } from './util'
 
 dotenv.config()
-
-type PdsInfo = {
-  id: number
-  did: string
-  url: string
-  agent: AtpAgent
-}
 
 export const runScript = async () => {
   const db = getDb()
@@ -53,51 +45,6 @@ export const runScript = async () => {
     console.log(`${count}/${failed.length}`)
   }
   console.log('DONE WITH ALL')
-}
-
-const repairBlob = async (
-  ctx: AppContext,
-  db: MigrateDb,
-  pds: PdsInfo,
-  did: string,
-  cid: string,
-  adminToken: string,
-) => {
-  const blob = await ctx.db.db
-    .selectFrom('blob')
-    .where('cid', '=', cid)
-    .selectAll()
-    .executeTakeFirst()
-  if (!blob) return
-  let blobStream
-  try {
-    blobStream = await ctx.blobstore.getStream(CID.parse(blob.cid))
-  } catch (err) {
-    const hasTakedown = await ctx.db.db
-      .selectFrom('repo_blob')
-      .where('did', '=', did)
-      .where('cid', '=', cid)
-      .where('takedownRef', 'is not', null)
-      .executeTakeFirst()
-    if (hasTakedown) {
-      return
-    }
-    throw err
-  }
-  await axios.post(`${pds.url}/xrpc/com.atproto.temp.pushBlob`, blobStream, {
-    params: { did },
-    headers: {
-      'content-type': blob.mimeType,
-      authorization: `Basic ${adminToken}`,
-    },
-    decompress: true,
-    responseType: 'stream',
-  })
-  await db
-    .deleteFrom('failed_blob')
-    .where('did', '=', did)
-    .where('cid', '=', blob.cid)
-    .execute()
 }
 
 runScript()

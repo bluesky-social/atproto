@@ -1,0 +1,62 @@
+import axios from 'axios'
+import AtpAgent from '@atproto/api'
+import AppContext from '../context'
+import { MigrateDb } from './db'
+import { CID } from 'multiformats/cid'
+
+export type PdsInfo = {
+  id: number
+  did: string
+  url: string
+  agent: AtpAgent
+}
+
+export type AdminHeaders = {
+  authorization: string
+}
+
+export const repairBlob = async (
+  ctx: AppContext,
+  db: MigrateDb,
+  pds: PdsInfo,
+  did: string,
+  cid: string,
+  adminToken: string,
+) => {
+  const blob = await ctx.db.db
+    .selectFrom('blob')
+    .where('cid', '=', cid)
+    .where('creator', '=', did)
+    .selectAll()
+    .executeTakeFirst()
+  if (!blob) return
+  let blobStream
+  try {
+    blobStream = await ctx.blobstore.getStream(CID.parse(blob.cid))
+  } catch (err) {
+    const hasTakedown = await ctx.db.db
+      .selectFrom('repo_blob')
+      .where('did', '=', did)
+      .where('cid', '=', cid)
+      .where('takedownRef', 'is not', null)
+      .executeTakeFirst()
+    if (hasTakedown) {
+      return
+    }
+    throw err
+  }
+  await axios.post(`${pds.url}/xrpc/com.atproto.temp.pushBlob`, blobStream, {
+    params: { did },
+    headers: {
+      'content-type': blob.mimeType,
+      authorization: `Basic ${adminToken}`,
+    },
+    decompress: true,
+    responseType: 'stream',
+  })
+  await db
+    .deleteFrom('failed_blob')
+    .where('did', '=', did)
+    .where('cid', '=', blob.cid)
+    .execute()
+}

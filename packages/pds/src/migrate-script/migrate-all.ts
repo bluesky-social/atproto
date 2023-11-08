@@ -10,21 +10,11 @@ import { envToCfg, envToSecrets, readEnv } from '../config'
 import AppContext from '../context'
 import { FailedTakedown, MigrateDb, Status, TransferPhase, getDb } from './db'
 import PQueue from 'p-queue'
+import { AdminHeaders, PdsInfo } from './util'
 
 dotenv.config()
-
-type PdsInfo = {
-  id: number
-  did: string
-  url: string
-  agent: AtpAgent
-}
-
-type AdminHeaders = {
-  authorization: string
-}
-
 export const runScript = async () => {
+  console.log('starting')
   const db = getDb()
   const env = readEnv()
   const cfg = envToCfg(env)
@@ -47,7 +37,6 @@ export const runScript = async () => {
   const todo = await db
     .selectFrom('status')
     .where('status.phase', '<', 7)
-    // .where('failed', '!=', 1)
     .orderBy('phase', 'desc')
     .orderBy('did')
     .selectAll()
@@ -55,6 +44,7 @@ export const runScript = async () => {
   let pdsCounter = 0
   let completed = 0
   let failed = 0
+  console.log('migrating: ', todo.length)
   const migrateQueue = new PQueue({ concurrency: 40 })
   for (const status of todo) {
     if (!status.pdsId) {
