@@ -28,7 +28,7 @@ export const runScript = async () => {
     .selectAll()
     .execute()
   let count = 0
-  const blobQueue = new PQueue({ concurrency: 20 })
+  const blobQueue = new PQueue({ concurrency: 1 })
   for (const blob of failed) {
     const pdsInfo = pdsInfos.find((info) => info.id === blob.pdsId)
     if (!pdsInfo) {
