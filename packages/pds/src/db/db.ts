@@ -11,6 +11,7 @@ import {
 } from 'kysely'
 import SqliteDB from 'better-sqlite3'
 import { retry } from '@atproto/common'
+import { dbLogger } from '../logger'
 
 const DEFAULT_PRAGMAS = {
   journal_mode: 'WAL',
@@ -98,10 +99,12 @@ export class Database<Schema> {
     assert(!this.isTransaction, 'Cannot be in a transaction')
   }
 
-  async close(): Promise<void> {
+  close(): void {
     if (this.destroyed) return
-    await this.db.destroy()
-    this.destroyed = true
+    this.db
+      .destroy()
+      .then(() => (this.destroyed = true))
+      .catch((err) => dbLogger.error({ err }, 'error closing db'))
   }
 }
 

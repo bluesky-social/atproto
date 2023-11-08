@@ -35,11 +35,12 @@ export default function (server: Server, ctx: AppContext) {
         const carIter = repo.getRecords(storage, commit, [{ collection, rkey }])
         carStream = byteIterableToStream(carIter)
       } catch (err) {
-        await actorDb.close()
+        actorDb.close()
         throw err
       }
-      carStream.on('error', actorDb.close)
-      carStream.on('close', actorDb.close)
+      const closeDb = () => actorDb.close()
+      carStream.on('error', closeDb)
+      carStream.on('close', closeDb)
 
       return {
         encoding: 'application/vnd.ipld.car',

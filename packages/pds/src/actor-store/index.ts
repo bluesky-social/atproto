@@ -69,13 +69,14 @@ export class ActorStore {
   }
 
   async read<T>(did: string, fn: ActorStoreReadFn<T>) {
-    const keypair = await this.keypair(did)
     const db = await this.openDb(did)
     try {
-      const reader = createActorReader(did, db, keypair, this.resources)
+      const reader = createActorReader(did, db, this.resources, () =>
+        this.keypair(did),
+      )
       return await fn(reader)
     } finally {
-      await db.close()
+      db.close()
     }
   }
 
@@ -88,7 +89,7 @@ export class ActorStore {
         return fn(store)
       })
     } finally {
-      await db.close()
+      db.close()
     }
   }
 
@@ -108,7 +109,7 @@ export class ActorStore {
       const migrator = getMigrator(db)
       await migrator.migrateToLatestOrThrow()
     } finally {
-      await db.close()
+      db.close()
     }
   }
 
@@ -205,8 +206,8 @@ const createActorTransactor = (
 const createActorReader = (
   did: string,
   db: ActorDb,
-  keypair: Keypair,
   resources: ActorStoreResources,
+  getKeypair: () => Promise<Keypair>,
 ): ActorStoreReader => {
   const { blobstore } = resources
   return {
@@ -216,6 +217,7 @@ const createActorReader = (
     record: new RecordReader(db),
     pref: new PreferenceReader(db),
     transact: async <T>(fn: ActorStoreTransactFn<T>): Promise<T> => {
+      const keypair = await getKeypair()
       return db.transaction((dbTxn) => {
         const store = createActorTransactor(did, dbTxn, keypair, resources)
         return fn(store)
