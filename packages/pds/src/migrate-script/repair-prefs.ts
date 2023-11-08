@@ -33,6 +33,7 @@ export const runScript = async () => {
     }
     try {
       await transferPreferences(ctx, pdsInfo, pref.did)
+      await db.deleteFrom('failed_pref').where('did', '=', pref.did).execute()
     } catch (err) {
       console.log(err)
     }
