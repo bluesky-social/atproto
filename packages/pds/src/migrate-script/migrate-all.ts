@@ -9,7 +9,13 @@ import { envToCfg, envToSecrets, readEnv } from '../config'
 import AppContext from '../context'
 import { FailedTakedown, MigrateDb, Status, TransferPhase, getDb } from './db'
 import PQueue from 'p-queue'
-import { AdminHeaders, PdsInfo, makeAdminHeaders, repairBlob } from './util'
+import {
+  AdminHeaders,
+  PdsInfo,
+  makeAdminHeaders,
+  repairBlob,
+  transferPreferences,
+} from './util'
 
 dotenv.config()
 export const runScript = async () => {
@@ -308,25 +314,6 @@ const updatePdsOnEntryway = async (
       .set({ did: `migrated-${did}` })
       .execute()
   })
-}
-
-const transferPreferences = async (
-  ctx: AppContext,
-  pds: PdsInfo,
-  did: string,
-) => {
-  const accessToken = await ctx.services
-    .auth(ctx.db)
-    .createAccessToken({ did: did, pdsDid: pds.did })
-
-  const prefs = await ctx.services.account(ctx.db).getPreferences(did)
-  await pds.agent.api.app.bsky.actor.putPreferences(
-    { preferences: prefs },
-    {
-      headers: { authorization: `Bearer ${accessToken}` },
-      encoding: 'application/json',
-    },
-  )
 }
 
 const logFailedBlob = async (db: MigrateDb, did: string, cid: string) => {

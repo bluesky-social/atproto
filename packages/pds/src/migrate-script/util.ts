@@ -27,6 +27,25 @@ export const makeAdminHeaders = (secrets: ServerSecrets): AdminHeaders => {
   }
 }
 
+export const transferPreferences = async (
+  ctx: AppContext,
+  pds: PdsInfo,
+  did: string,
+) => {
+  const accessToken = await ctx.services
+    .auth(ctx.db)
+    .createAccessToken({ did: did, pdsDid: pds.did })
+
+  const prefs = await ctx.services.account(ctx.db).getPreferences(did)
+  await pds.agent.api.app.bsky.actor.putPreferences(
+    { preferences: prefs },
+    {
+      headers: { authorization: `Bearer ${accessToken}` },
+      encoding: 'application/json',
+    },
+  )
+}
+
 export const repairBlob = async (
   ctx: AppContext,
   db: MigrateDb,
