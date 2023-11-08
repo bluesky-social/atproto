@@ -4,6 +4,7 @@ import * as crypto from '@atproto/crypto'
 import { Keypair, ExportableKeypair } from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import {
+  MINUTE,
   chunkArray,
   fileExists,
   readIfExists,
@@ -19,7 +20,7 @@ import { PreferenceTransactor } from './preference/transactor'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { RecordTransactor } from './record/transactor'
 import { CID } from 'multiformats/cid'
-import { LRUCache } from 'lru-cache'
+import TTLCache from '@isaacs/ttlcache'
 import DiskBlobStore from '../disk-blobstore'
 import { mkdir } from 'fs/promises'
 import { ActorStoreConfig } from '../config'
@@ -31,42 +32,58 @@ type ActorStoreResources = {
 }
 
 export class ActorStore {
-  dbCache: LRUCache<string, ActorDb>
-  keyCache: LRUCache<string, Keypair>
+  dbCache: TTLCache<string, ActorDb>
+  keyCache: TTLCache<string, Keypair>
   reservedKeyDir: string
 
   constructor(
     public cfg: ActorStoreConfig,
     public resources: ActorStoreResources,
   ) {
-    this.dbCache = new LRUCache<string, ActorDb>({
+    this.dbCache = new TTLCache<string, ActorDb>({
+      ttl: MINUTE,
       max: cfg.cacheSize,
+      updateAgeOnGet: true,
+      checkAgeOnGet: false,
       dispose: async (db) => {
         await db.close()
       },
-      fetchMethod: async (did, _staleValue, { signal }) => {
-        const { dbLocation } = await this.getLocation(did)
-        const exists = await fileExists(dbLocation)
-        if (!exists) {
-          throw new InvalidRequestError('Repo not found', 'NotFound')
-        }
-
-        // if fetch is aborted then another handler opened the db first
-        // so we can close this handle and return `undefined`
-        return signal.aborted
-          ? undefined
-          : getDb(dbLocation, cfg.disableWalAutoCheckpoint)
-      },
     })
-    this.keyCache = new LRUCache<string, Keypair>({
+    this.keyCache = new TTLCache<string, Keypair>({
+      ttl: MINUTE,
       max: cfg.cacheSize,
-      fetchMethod: async (did) => {
-        const { keyLocation } = await this.getLocation(did)
-        const privKey = await fs.readFile(keyLocation)
-        return crypto.Secp256k1Keypair.import(privKey)
-      },
+      updateAgeOnGet: true,
+      checkAgeOnGet: false,
     })
     this.reservedKeyDir = path.join(cfg.directory, 'reserved_keys')
+  }
+
+  private async fetchCacheKey(did: string) {
+    const got = this.keyCache.get(did)
+    if (got) return got
+    const { keyLocation } = await this.getLocation(did)
+    const privKey = await fs.readFile(keyLocation)
+    const keypair = await crypto.Secp256k1Keypair.import(privKey)
+    this.keyCache.set(did, keypair)
+    return keypair
+  }
+
+  private async fetchCacheDb(did: string) {
+    const got = this.dbCache.get(did)
+    if (got) return got
+
+    const { dbLocation } = await this.getLocation(did)
+    const exists = await fileExists(dbLocation)
+    if (!exists) {
+      throw new InvalidRequestError('Repo not found', 'NotFound')
+    }
+
+    const try2 = this.dbCache.get(did)
+    if (try2) return try2
+
+    const db = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
+    this.dbCache.set(did, db)
+    return db
   }
 
   async getLocation(did: string) {
@@ -83,7 +100,7 @@ export class ActorStore {
   }
 
   async keypair(did: string): Promise<Keypair> {
-    const got = await this.keyCache.fetch(did)
+    const got = await this.fetchCacheKey(did)
     if (!got) {
       throw new InvalidRequestError('Keypair not found', 'NotFound')
     }
@@ -91,7 +108,7 @@ export class ActorStore {
   }
 
   async db(did: string): Promise<ActorDb> {
-    const got = await this.dbCache.fetch(did)
+    const got = await this.fetchCacheDb(did)
     if (!got) {
       throw new InvalidRequestError('Repo not found', 'NotFound')
     }

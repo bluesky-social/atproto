@@ -508,6 +508,9 @@ importers:
       '@did-plc/lib':
         specifier: ^0.0.1
         version: 0.0.1
+      '@isaacs/ttlcache':
+        specifier: ^1.4.1
+        version: 1.4.1
       better-sqlite3:
         specifier: ^7.6.2
         version: 7.6.2
@@ -556,9 +559,6 @@ importers:
       kysely:
         specifier: ^0.22.0
         version: 0.22.0
-      lru-cache:
-        specifier: ^10.0.1
-        version: 10.0.1
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0
@@ -8950,11 +8950,6 @@ packages:
 
   /long@5.2.3:
     resolution: {integrity: sha512-lcHwpNoggQTObv5apGNCTdJrO69eHOZMi4BNC+rTLER8iHAqGrUVeLh/irVIM7zTw2bOXA8T6uNPeujwOLg/2Q==}
-    dev: false
-
-  /lru-cache@10.0.1:
-    resolution: {integrity: sha512-IJ4uwUTi2qCccrioU6g9g/5rvvVl13bsdczUUcqbciD9iLr095yj8DQKdObriEvuNSx325N1rV1O0sJFszx75g==}
-    engines: {node: 14 || >=16.14}
     dev: false
 
   /lru-cache@4.1.5:
