@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - pds-v2
+      - pds-v2-sqlite-instrumentation
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
