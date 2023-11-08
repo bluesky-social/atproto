@@ -27,6 +27,40 @@ export const makeAdminHeaders = (secrets: ServerSecrets): AdminHeaders => {
   }
 }
 
+export const repairFailedPrefs = async (
+  ctx: AppContext,
+  db: MigrateDb,
+  pds: PdsInfo,
+  did: string,
+) => {
+  const hasFailure = await db
+    .selectFrom('failed_pref')
+    .selectAll()
+    .where('did', '=', did)
+    .executeTakeFirst()
+  if (hasFailure) {
+    await repairPrefs(ctx, db, pds, did)
+  }
+}
+
+export const repairPrefs = async (
+  ctx: AppContext,
+  db: MigrateDb,
+  pds: PdsInfo,
+  did: string,
+) => {
+  const hasFailure = await db
+    .selectFrom('failed_pref')
+    .selectAll()
+    .where('did', '=', did)
+    .executeTakeFirst()
+  if (!hasFailure) {
+    return
+  }
+  await transferPreferences(ctx, pds, did)
+  await db.deleteFrom('failed_pref').where('did', '=', did).execute()
+}
+
 export const transferPreferences = async (
   ctx: AppContext,
   pds: PdsInfo,

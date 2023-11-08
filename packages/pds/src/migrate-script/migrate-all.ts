@@ -14,6 +14,7 @@ import {
   PdsInfo,
   makeAdminHeaders,
   repairBlob,
+  repairFailedPrefs,
   transferPreferences,
 } from './util'
 
@@ -73,6 +74,7 @@ export const runScript = async () => {
           .execute()
         completed++
         await repairFailedBlobs(ctx, db, pdsInfo, status.did, adminHeaders)
+        await repairFailedPrefs(ctx, db, pdsInfo, status.did)
       } catch (err) {
         // @ts-ignore
         const errmsg: string = err?.message ?? null

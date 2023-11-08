@@ -3,7 +3,7 @@ import AtpAgent from '@atproto/api'
 import { envToCfg, envToSecrets, readEnv } from '../config'
 import AppContext from '../context'
 import { getDb } from './db'
-import { transferPreferences } from './util'
+import { repairPrefs } from './util'
 
 dotenv.config()
 
@@ -32,8 +32,7 @@ export const runScript = async () => {
       throw new Error(`could not find pds with id: ${pref.pdsId}`)
     }
     try {
-      await transferPreferences(ctx, pdsInfo, pref.did)
-      await db.deleteFrom('failed_pref').where('did', '=', pref.did).execute()
+      await repairPrefs(ctx, db, pdsInfo, pref.did)
     } catch (err) {
       console.log(err)
     }
