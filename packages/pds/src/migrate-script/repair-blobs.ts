@@ -1,5 +1,4 @@
 import dotenv from 'dotenv'
-import PQueue from 'p-queue'
 import AtpAgent from '@atproto/api'
 import { envToCfg, envToSecrets, readEnv } from '../config'
 import AppContext from '../context'
@@ -28,24 +27,20 @@ export const runScript = async () => {
     .selectAll()
     .execute()
   let count = 0
-  const blobQueue = new PQueue({ concurrency: 1 })
   for (const blob of failed) {
     const pdsInfo = pdsInfos.find((info) => info.id === blob.pdsId)
     if (!pdsInfo) {
       throw new Error(`could not find pds with id: ${blob.pdsId}`)
     }
-    blobQueue.add(async () => {
-      try {
-        await repairBlob(ctx, db, pdsInfo, blob.did, blob.cid, adminHeaders)
-      } catch (err) {
-        console.log(err?.['message'])
-        console.log(err?.['code'])
-      }
-      count++
-      console.log(`${count}/${failed.length}`)
-    })
+    try {
+      await repairBlob(ctx, db, pdsInfo, blob.did, blob.cid, adminHeaders)
+    } catch (err) {
+      console.log(err?.['message'])
+      console.log(err?.['code'])
+    }
+    count++
+    console.log(`${count}/${failed.length}`)
   }
-  await blobQueue.onIdle()
   console.log('DONE WITH ALL')
 }
 
