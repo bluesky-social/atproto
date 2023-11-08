@@ -38,7 +38,8 @@ export const runScript = async () => {
       try {
         await repairBlob(ctx, db, pdsInfo, blob.did, blob.cid, adminHeaders)
       } catch (err) {
-        console.log(err)
+        console.log(err?.['message'])
+        console.log(err?.['code'])
       }
       count++
       console.log(`${count}/${failed.length}`)
