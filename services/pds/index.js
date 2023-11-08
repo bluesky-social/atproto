@@ -1,14 +1,28 @@
 'use strict' /* eslint-disable */
 
-require('dd-trace') // Only works with commonjs
+const { registerInstrumentations } = require('@opentelemetry/instrumentation')
+
+const {
+  BetterSqlite3Instrumentation,
+} = require('opentelemetry-plugin-better-sqlite3')
+
+const { TracerProvider } = require('dd-trace') // Only works with commonjs
   .init({ logInjection: true })
-  .tracer.use('express', {
+  .use('express', {
     hooks: {
       request: (span, req) => {
         maintainXrpcResource(span, req)
       },
     },
   })
+
+const tracer = new TracerProvider()
+tracer.register()
+
+registerInstrumentations({
+  tracerProvider: tracer,
+  instrumentations: [new BetterSqlite3Instrumentation()],
+})
 
 // Tracer code above must come before anything else
 const path = require('path')
