@@ -1,9 +1,9 @@
 import AtpAgent from '@atproto/api'
 import { wait } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { CommitData, readCarWithRoot, verifyRepo } from '@atproto/repo'
+import { readCarWithRoot, verifyRepo } from '@atproto/repo'
 import AppContext from '../src/context'
-import { PreparedWrite, prepareCreate } from '../src/repo'
+import { PreparedCreate, prepareCreate } from '../src/repo'
 import { Keypair } from '@atproto/crypto'
 
 describe('races', () => {
@@ -32,7 +32,22 @@ describe('races', () => {
     await network.close()
   })
 
-  const formatWrite = async () => {
+  const processCommitWithWait = async (
+    did: string,
+    write: PreparedCreate,
+    waitMs: number,
+  ) => {
+    const now = new Date().toISOString()
+    return ctx.actorStore.transact(did, async (store) => {
+      const commitData = await store.repo.formatCommit([write])
+      await store.repo.storage.applyCommit(commitData)
+      await wait(waitMs)
+      await store.repo.indexWrites([write], now)
+      return write
+    })
+  }
+
+  it('handles races in record routes', async () => {
     const write = await prepareCreate({
       did,
       collection: 'app.bsky.feed.post',
@@ -42,29 +57,8 @@ describe('races', () => {
       },
       validate: true,
     })
-    const commit = await ctx.actorStore.transact(did, (store) =>
-      store.repo.formatCommit([write]),
-    )
-    return { write, commit }
-  }
 
-  const processCommitWithWait = async (
-    did: string,
-    writes: PreparedWrite[],
-    commitData: CommitData,
-    waitMs: number,
-  ) => {
-    const now = new Date().toISOString()
-    await ctx.actorStore.transact(did, async (store) => {
-      await store.repo.storage.applyCommit(commitData)
-      await wait(waitMs)
-      await store.repo.indexWrites(writes, now)
-    })
-  }
-
-  it('handles races in record routes', async () => {
-    const { write, commit } = await formatWrite()
-    const processPromise = processCommitWithWait(did, [write], commit, 500)
+    const processPromise = processCommitWithWait(did, write, 500)
 
     const createdPost = await agent.api.app.bsky.feed.post.create(
       { repo: did },
@@ -85,7 +79,7 @@ describe('races', () => {
       signingKey.did(),
     )
     expect(verified.creates.length).toBe(2)
-    expect(verified.creates[0].cid.equals(write.cid)).toBeTruthy()
+    expect(verified.creates[0].cid.toString()).toEqual(write.cid.toString())
     expect(verified.creates[1].cid.toString()).toEqual(
       createdPost.cid.toString(),
     )

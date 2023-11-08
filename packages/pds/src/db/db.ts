@@ -10,12 +10,15 @@ import {
   UnknownRow,
 } from 'kysely'
 import SqliteDB from 'better-sqlite3'
+import { retry } from '@atproto/common'
 
 const DEFAULT_PRAGMAS = {
   journal_mode: 'WAL',
   busy_timeout: '5000',
   strict: 'ON',
 }
+
+const RETRY_ERRORS = new Set(['SQLITE_BUSY', 'SQLITE_BUSY_SNAPSHOT'])
 
 export class Database<Schema> {
   destroyed = false
@@ -43,7 +46,9 @@ export class Database<Schema> {
     return new Database(db)
   }
 
-  async transaction<T>(fn: (db: Database<Schema>) => Promise<T>): Promise<T> {
+  async transactionNoRetry<T>(
+    fn: (db: Database<Schema>) => Promise<T>,
+  ): Promise<T> {
     this.assertNotTransaction()
     const leakyTxPlugin = new LeakyTxPlugin()
     const { hooks, txRes } = await this.db
@@ -64,6 +69,16 @@ export class Database<Schema> {
       })
     hooks.map((hook) => hook())
     return txRes
+  }
+
+  async transaction<T>(fn: (db: Database<Schema>) => Promise<T>): Promise<T> {
+    return retry(() => this.transactionNoRetry(fn), {
+      retryable: (err) =>
+        typeof err?.['code'] === 'string' && RETRY_ERRORS.has(err['code']),
+      maxRetries: 5,
+      backoffMultiplier: 50,
+      backoffMax: 2000,
+    })
   }
 
   onCommit(fn: () => void) {
