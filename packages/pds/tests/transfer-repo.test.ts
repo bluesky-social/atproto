@@ -41,7 +41,7 @@ describe('transfer repo', () => {
       inviteRequired: false,
     })
     entryway = await createEntryway({
-      dbPostgresSchema: 'entryway',
+      dbPostgresSchema: 'transfer-repo',
       port: entrywayPort,
       adminPassword: 'admin-pass',
       jwtSigningKeyK256PrivateKeyHex: await getPrivateHex(jwtSigningKey),
