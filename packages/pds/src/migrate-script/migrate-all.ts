@@ -37,8 +37,17 @@ export const runScript = async () => {
   let pdsCounter = 0
   let completed = 0
   let failed = 0
+
   console.log('migrating: ', todo.length)
+
   const migrateQueue = new PQueue({ concurrency: 40 })
+  process.on('SIGINT', async () => {
+    migrateQueue.clear()
+    console.log(`waiting on ${migrateQueue.pending} to finish`)
+    await migrateQueue.onIdle()
+    process.exit(0)
+  })
+
   for (const status of todo) {
     if (!status.pdsId) {
       status.pdsId = pdsInfos[pdsCounter % pdsInfos.length].id
