@@ -1,5 +1,6 @@
 import fs from 'fs/promises'
 import { getDb } from './db'
+import { chunkArray } from '@atproto/common'
 
 const run = async () => {
   const db = getDb()
@@ -13,6 +14,15 @@ const run = async () => {
       failed: 0 as const,
     }))
     .filter((row) => row.did.length > 2)
+  await Promise.all(
+    chunkArray(dids, 500).map((chunk) =>
+      db
+        .insertInto('status')
+        .values(chunk)
+        .onConflict((oc) => oc.doNothing())
+        .execute(),
+    ),
+  )
   await db
     .insertInto('status')
     .values(dids)
