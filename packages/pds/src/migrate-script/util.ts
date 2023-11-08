@@ -27,6 +27,14 @@ export const makeAdminHeaders = (secrets: ServerSecrets): AdminHeaders => {
   }
 }
 
+export const retryOnce = async (fn: () => Promise<unknown>) => {
+  try {
+    await fn()
+  } catch {
+    await fn()
+  }
+}
+
 export const repairFailedPrefs = async (
   ctx: AppContext,
   db: MigrateDb,

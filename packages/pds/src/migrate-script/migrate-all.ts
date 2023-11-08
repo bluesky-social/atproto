@@ -15,6 +15,7 @@ import {
   makeAdminHeaders,
   repairBlob,
   repairFailedPrefs,
+  retryOnce,
   transferPreferences,
 } from './util'
 
@@ -66,7 +67,9 @@ export const runScript = async () => {
     }
     migrateQueue.add(async () => {
       try {
-        await migrateRepo(ctx, db, pdsInfo, status, adminHeaders)
+        await retryOnce(() =>
+          migrateRepo(ctx, db, pdsInfo, status, adminHeaders),
+        )
         await db
           .updateTable('status')
           .set({ failed: 0, err: null })
