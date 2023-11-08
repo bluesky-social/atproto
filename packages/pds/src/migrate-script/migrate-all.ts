@@ -1,7 +1,6 @@
 import assert from 'node:assert'
 import dotenv from 'dotenv'
 import axios from 'axios'
-import * as ui8 from 'uint8arrays'
 import AtpAgent from '@atproto/api'
 import * as plcLib from '@did-plc/lib'
 import SqlRepoStorage from '../sql-repo-storage'
@@ -10,7 +9,7 @@ import { envToCfg, envToSecrets, readEnv } from '../config'
 import AppContext from '../context'
 import { FailedTakedown, MigrateDb, Status, TransferPhase, getDb } from './db'
 import PQueue from 'p-queue'
-import { AdminHeaders, PdsInfo } from './util'
+import { AdminHeaders, PdsInfo, makeAdminHeaders, repairBlob } from './util'
 
 dotenv.config()
 export const runScript = async () => {
@@ -20,13 +19,7 @@ export const runScript = async () => {
   const cfg = envToCfg(env)
   const secrets = envToSecrets(env)
   const ctx = await AppContext.fromConfig(cfg, secrets)
-  const adminToken = ui8.toString(
-    ui8.fromString(`admin:${secrets.adminPassword}`, 'utf8'),
-    'base64pad',
-  )
-  const adminHeaders: AdminHeaders = {
-    authorization: `Basic ${adminToken}`,
-  }
+  const adminHeaders = makeAdminHeaders(secrets)
   const pdsRes = await ctx.db.db.selectFrom('pds').selectAll().execute()
   const pdsInfos = pdsRes.map((row) => ({
     id: row.id,
@@ -64,6 +57,7 @@ export const runScript = async () => {
           .where('did', '=', status.did)
           .execute()
         completed++
+        await repairFailedBlobs(ctx, db, pdsInfo, status.did, adminHeaders)
       } catch (err) {
         // @ts-ignore
         const errmsg: string = err?.message ?? null
@@ -447,6 +441,27 @@ const transferTakedowns = async (
   }
 
   await Promise.all(promises)
+}
+
+const repairFailedBlobs = async (
+  ctx: AppContext,
+  db: MigrateDb,
+  pds: PdsInfo,
+  did: string,
+  adminHeaders: AdminHeaders,
+) => {
+  const failedBlobs = await db
+    .selectFrom('failed_blob')
+    .where('did', '=', did)
+    .selectAll()
+    .execute()
+  for (const blob of failedBlobs) {
+    try {
+      await repairBlob(ctx, db, pds, did, blob.cid, adminHeaders)
+    } catch {
+      // noop
+    }
+  }
 }
 
 const getUserAccount = async (ctx: AppContext, did: string) => {

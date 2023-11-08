@@ -1,8 +1,10 @@
 import axios from 'axios'
+import * as ui8 from 'uint8arrays'
 import AtpAgent from '@atproto/api'
 import AppContext from '../context'
 import { MigrateDb } from './db'
 import { CID } from 'multiformats/cid'
+import { ServerSecrets } from '../config'
 
 export type PdsInfo = {
   id: number
@@ -15,13 +17,23 @@ export type AdminHeaders = {
   authorization: string
 }
 
+export const makeAdminHeaders = (secrets: ServerSecrets): AdminHeaders => {
+  const adminToken = ui8.toString(
+    ui8.fromString(`admin:${secrets.adminPassword}`, 'utf8'),
+    'base64pad',
+  )
+  return {
+    authorization: `Basic ${adminToken}`,
+  }
+}
+
 export const repairBlob = async (
   ctx: AppContext,
   db: MigrateDb,
   pds: PdsInfo,
   did: string,
   cid: string,
-  adminToken: string,
+  adminHeaders: AdminHeaders,
 ) => {
   const blob = await ctx.db.db
     .selectFrom('blob')
@@ -49,7 +61,7 @@ export const repairBlob = async (
     params: { did },
     headers: {
       'content-type': blob.mimeType,
-      authorization: `Basic ${adminToken}`,
+      ...adminHeaders,
     },
     decompress: true,
     responseType: 'stream',

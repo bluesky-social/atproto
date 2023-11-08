@@ -1,10 +1,9 @@
 import dotenv from 'dotenv'
-import * as ui8 from 'uint8arrays'
 import AtpAgent from '@atproto/api'
 import { envToCfg, envToSecrets, readEnv } from '../config'
 import AppContext from '../context'
 import { getDb } from './db'
-import { repairBlob } from './util'
+import { makeAdminHeaders, repairBlob } from './util'
 
 dotenv.config()
 
@@ -14,10 +13,7 @@ export const runScript = async () => {
   const cfg = envToCfg(env)
   const secrets = envToSecrets(env)
   const ctx = await AppContext.fromConfig(cfg, secrets)
-  const adminToken = ui8.toString(
-    ui8.fromString(`admin:${secrets.adminPassword}`, 'utf8'),
-    'base64pad',
-  )
+  const adminHeaders = makeAdminHeaders(secrets)
   const pdsRes = await ctx.db.db.selectFrom('pds').selectAll().execute()
   const pdsInfos = pdsRes.map((row) => ({
     id: row.id,
@@ -37,7 +33,7 @@ export const runScript = async () => {
       throw new Error(`could not find pds with id: ${blob.pdsId}`)
     }
     try {
-      await repairBlob(ctx, db, pdsInfo, blob.did, blob.cid, adminToken)
+      await repairBlob(ctx, db, pdsInfo, blob.did, blob.cid, adminHeaders)
     } catch (err) {
       console.log(err)
     }
