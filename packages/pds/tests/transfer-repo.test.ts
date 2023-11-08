@@ -93,15 +93,23 @@ describe('transfer repo', () => {
     const signingKey = signingKeyRes.data.signingKey
 
     const repo = await entrywayAgent.api.com.atproto.sync.getRepo({ did })
-    await axios.post(`${pds.url}/xrpc/com.atproto.temp.importRepo`, repo.data, {
-      params: { did },
-      headers: {
-        'content-type': 'application/vnd.ipld.car',
-        ...pds.adminAuthHeaders('admin'),
+    const importRes = await axios.post(
+      `${pds.url}/xrpc/com.atproto.temp.importRepo`,
+      repo.data,
+      {
+        params: { did },
+        headers: {
+          'content-type': 'application/vnd.ipld.car',
+          ...pds.adminAuthHeaders('admin'),
+        },
+        decompress: true,
+        responseType: 'stream',
       },
-      decompress: true,
-      responseType: 'stream',
-    })
+    )
+
+    for await (const _log of importRes.data) {
+      // noop just wait till import is finished
+    }
 
     const lastOp = await pds.ctx.plcClient.getLastOp(did)
     if (!lastOp || lastOp.type === 'plc_tombstone') {
