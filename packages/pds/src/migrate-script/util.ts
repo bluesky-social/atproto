@@ -54,6 +54,21 @@ export const repairBlob = async (
   cid: string,
   adminHeaders: AdminHeaders,
 ) => {
+  await repairBlobInternal(ctx, pds, did, cid, adminHeaders)
+  await db
+    .deleteFrom('failed_blob')
+    .where('did', '=', did)
+    .where('cid', '=', cid)
+    .execute()
+}
+
+export const repairBlobInternal = async (
+  ctx: AppContext,
+  pds: PdsInfo,
+  did: string,
+  cid: string,
+  adminHeaders: AdminHeaders,
+) => {
   const blob = await ctx.db.db
     .selectFrom('blob')
     .where('cid', '=', cid)
@@ -65,13 +80,7 @@ export const repairBlob = async (
   try {
     blobStream = await ctx.blobstore.getStream(CID.parse(blob.cid))
   } catch (err) {
-    const hasTakedown = await ctx.db.db
-      .selectFrom('repo_blob')
-      .where('did', '=', did)
-      .where('cid', '=', cid)
-      .where('takedownRef', 'is not', null)
-      .executeTakeFirst()
-    if (hasTakedown) {
+    if (err?.['Code'] === 'NoSuchKey') {
       return
     }
     throw err
@@ -85,9 +94,4 @@ export const repairBlob = async (
     decompress: true,
     responseType: 'stream',
   })
-  await db
-    .deleteFrom('failed_blob')
-    .where('did', '=', did)
-    .where('cid', '=', blob.cid)
-    .execute()
 }
