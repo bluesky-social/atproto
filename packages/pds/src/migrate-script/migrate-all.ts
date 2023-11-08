@@ -55,7 +55,7 @@ export const runScript = async () => {
   let pdsCounter = 0
   let completed = 0
   let failed = 0
-  const migrateQueue = new PQueue({ concurrency: 20 })
+  const migrateQueue = new PQueue({ concurrency: 40 })
   for (const status of todo) {
     if (!status.pdsId) {
       status.pdsId = pdsInfos[pdsCounter % pdsInfos.length].id
