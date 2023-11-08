@@ -23,11 +23,6 @@ const run = async () => {
         .execute(),
     ),
   )
-  await db
-    .insertInto('status')
-    .values(dids)
-    .onConflict((oc) => oc.doNothing())
-    .execute()
 }
 
 run()
