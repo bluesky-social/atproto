@@ -1,40 +1,25 @@
 import assert from 'node:assert'
-import dotenv from 'dotenv'
 import axios from 'axios'
-import AtpAgent from '@atproto/api'
 import * as plcLib from '@did-plc/lib'
 import SqlRepoStorage from '../sql-repo-storage'
 import { createDeferrable } from '@atproto/common'
-import { envToCfg, envToSecrets, readEnv } from '../config'
 import AppContext from '../context'
-import { FailedTakedown, MigrateDb, Status, TransferPhase, getDb } from './db'
+import { FailedTakedown, MigrateDb, Status, TransferPhase } from './db'
 import PQueue from 'p-queue'
 import {
   AdminHeaders,
   PdsInfo,
-  makeAdminHeaders,
+  getPds,
   repairBlob,
   repairFailedPrefs,
   retryOnce,
+  setupEnv,
   transferPreferences,
 } from './util'
 
-dotenv.config()
 export const runScript = async () => {
   console.log('starting')
-  const db = getDb()
-  const env = readEnv()
-  const cfg = envToCfg(env)
-  const secrets = envToSecrets(env)
-  const ctx = await AppContext.fromConfig(cfg, secrets)
-  const adminHeaders = makeAdminHeaders(secrets)
-  const pdsRes = await ctx.db.db.selectFrom('pds').selectAll().execute()
-  const pdsInfos = pdsRes.map((row) => ({
-    id: row.id,
-    did: row.did,
-    url: `https://${row.host}`,
-    agent: new AtpAgent({ service: `https://${row.host}` }),
-  }))
+  const { db, ctx, adminHeaders, pdsInfos } = await setupEnv()
   const todo = await db
     .selectFrom('status')
     .where('status.phase', '<', 7)
@@ -61,10 +46,7 @@ export const runScript = async () => {
       status.pdsId = pdsInfos[pdsCounter % pdsInfos.length].id
       pdsCounter++
     }
-    const pdsInfo = pdsInfos.find((info) => info.id === status.pdsId)
-    if (!pdsInfo) {
-      throw new Error(`could not find pds with id: ${status.pdsId}`)
-    }
+    const pdsInfo = getPds(pdsInfos, status.pdsId)
     migrateQueue.add(async () => {
       try {
         await retryOnce(() =>

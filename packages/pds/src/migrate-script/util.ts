@@ -1,10 +1,11 @@
+import dotenv from 'dotenv'
 import axios from 'axios'
 import * as ui8 from 'uint8arrays'
 import AtpAgent from '@atproto/api'
 import AppContext from '../context'
-import { MigrateDb } from './db'
+import { MigrateDb, getDb } from './db'
 import { CID } from 'multiformats/cid'
-import { ServerSecrets } from '../config'
+import { ServerSecrets, envToCfg, envToSecrets, readEnv } from '../config'
 
 export type PdsInfo = {
   id: number
@@ -15,6 +16,32 @@ export type PdsInfo = {
 
 export type AdminHeaders = {
   authorization: string
+}
+
+export const setupEnv = async () => {
+  dotenv.config()
+  const db = getDb()
+  const env = readEnv()
+  const cfg = envToCfg(env)
+  const secrets = envToSecrets(env)
+  const ctx = await AppContext.fromConfig(cfg, secrets)
+  const adminHeaders = makeAdminHeaders(secrets)
+  const pdsRes = await ctx.db.db.selectFrom('pds').selectAll().execute()
+  const pdsInfos = pdsRes.map((row) => ({
+    id: row.id,
+    did: row.did,
+    url: `https://${row.host}`,
+    agent: new AtpAgent({ service: `https://${row.host}` }),
+  }))
+  return { db, ctx, adminHeaders, pdsInfos }
+}
+
+export const getPds = (infos: PdsInfo[], id: number | null): PdsInfo => {
+  const pdsInfo = infos.find((info) => info.id === id)
+  if (!pdsInfo) {
+    throw new Error(`could not find pds with id: ${id}`)
+  }
+  return pdsInfo
 }
 
 export const makeAdminHeaders = (secrets: ServerSecrets): AdminHeaders => {
