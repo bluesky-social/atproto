@@ -1,6 +1,5 @@
 import stream from 'stream'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { byteIterableToStream } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import {
@@ -36,16 +35,19 @@ export const getCarStream = async (
   did: string,
   since?: string,
 ): Promise<stream.Readable> => {
-  const actorDb = await ctx.actorStore.db(did)
-  const storage = new SqlRepoReader(actorDb)
-  let carIter: AsyncIterable<Uint8Array>
+  const actorDb = await ctx.actorStore.openDb(did)
+  let carStream: stream.Readable
   try {
-    carIter = await storage.getCarStream(since)
+    const storage = new SqlRepoReader(actorDb)
+    carStream = await storage.getCarStream(since)
   } catch (err) {
+    await actorDb.close()
     if (err instanceof RepoRootNotFoundError) {
       throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
     }
     throw err
   }
-  return byteIterableToStream(carIter)
+  carStream.on('error', actorDb.close)
+  carStream.on('close', actorDb.close)
+  return carStream
 }

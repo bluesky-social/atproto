@@ -25,14 +25,11 @@ export default function (server: Server, ctx: AppContext) {
       let didDoc: DidDocument | undefined
       let creds: { accessJwt: string; refreshJwt: string }
       try {
-        const commit = await ctx.actorStore.create(
-          did,
-          signingKey,
-          (actorTxn) => {
-            return actorTxn.repo.createRepo([])
-          },
-        )
+        await ctx.actorStore.create(did, signingKey)
         await ctx.actorStore.clearReservedKeypair(signingKey.did(), did)
+        const commit = await ctx.actorStore.transact(did, (actorTxn) =>
+          actorTxn.repo.createRepo([]),
+        )
 
         // Generate a real did with PLC
         if (plcOp) {

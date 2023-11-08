@@ -52,7 +52,7 @@ const processImport = async (
     if (!keypair) {
       throw new InvalidRequestError('No signing key reserved')
     }
-    await ctx.actorStore.create(did, keypair, async () => {})
+    await ctx.actorStore.create(did, keypair)
   }
   await ctx.actorStore.transact(did, async (actorStore) => {
     const blobRefs = await importRepo(actorStore, incomingCar, outBuffer)

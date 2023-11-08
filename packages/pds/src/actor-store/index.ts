@@ -194,6 +194,7 @@ const createActorTransactor = (
   const { blobstore, backgroundQueue } = resources
   const userBlobstore = blobstore(did)
   return {
+    did,
     db,
     repo: new RepoTransactor(db, did, keypair, userBlobstore, backgroundQueue),
     record: new RecordTransactor(db, userBlobstore),
@@ -209,6 +210,7 @@ const createActorReader = (
 ): ActorStoreReader => {
   const { blobstore } = resources
   return {
+    did,
     db,
     repo: new RepoReader(db, blobstore(did)),
     record: new RecordReader(db),
@@ -226,6 +228,7 @@ export type ActorStoreReadFn<T> = (fn: ActorStoreReader) => Promise<T>
 export type ActorStoreTransactFn<T> = (fn: ActorStoreTransactor) => Promise<T>
 
 export type ActorStoreReader = {
+  did: string
   db: ActorDb
   repo: RepoReader
   record: RecordReader
@@ -234,6 +237,7 @@ export type ActorStoreReader = {
 }
 
 export type ActorStoreTransactor = {
+  did: string
   db: ActorDb
   repo: RepoTransactor
   record: RecordTransactor
