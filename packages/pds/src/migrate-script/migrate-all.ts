@@ -176,14 +176,18 @@ const doImport = async (
   adminHeaders: AdminHeaders,
   since?: string,
 ) => {
-  const storage = new SqlRepoStorage(ctx.db, did)
-  const root = await storage.getRootDetailed()
-  if (!root) {
-    throw new Error(`repo not found: ${did}`)
-  }
-  if (since && root.rev === since) {
+  const revRes = await ctx.db.db
+    .selectFrom('ipld_block')
+    .select('repoRev')
+    .where('creator', '=', did)
+    .orderBy('repoRev', 'desc')
+    .limit(1)
+    .executeTakeFirst()
+  const repoRev = revRes?.repoRev
+  if (since && repoRev === since) {
     return
   }
+  const storage = new SqlRepoStorage(ctx.db, did)
   const carStream = await storage.getCarStream(since)
 
   const importRes = await axios.post(
@@ -210,7 +214,7 @@ const doImport = async (
       await logFailedBlob(db, did, cid)
     }
   }
-  return root.rev
+  return repoRev
 }
 
 const lockAndTransfer = async (
