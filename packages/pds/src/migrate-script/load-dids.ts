@@ -3,20 +3,31 @@ import { setupEnv } from './util'
 
 const run = async () => {
   const amount = parseInt(process.argv[2])
+  const pdsId = parseInt(process.argv[3])
   console.log(`loading next ${amount} dids`)
   const { db, ctx } = await setupEnv()
+
+  const lastDidInDb = await db
+    .selectFrom('status')
+    .select('did')
+    .orderBy('did', 'desc')
+    .limit(1)
+    .executeTakeFirst()
+
+  const lastDid = lastDidInDb?.did ?? ''
 
   const didsRes = await ctx.db.db
     .selectFrom('user_account')
     .select('did')
     .where('pdsId', 'is', null)
+    .where('did', '>', lastDid)
     .orderBy('did', 'asc')
     .limit(amount)
     .execute()
-  const dids = didsRes.map((row, i) => ({
+  const dids = didsRes.map((row) => ({
     did: row.did,
     phase: 0,
-    pdsId: (i % 2) + 1,
+    pdsId,
     failed: 0 as const,
   }))
 
