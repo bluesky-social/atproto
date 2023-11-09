@@ -23,11 +23,12 @@ export const verifySig = async (
   sig: Uint8Array,
   opts?: VerifyOptions,
 ): Promise<boolean> => {
+  const allowMalleable = opts?.allowMalleableSig ?? false
   const msgHash = await sha256(data)
   // parse as compact sig to prevent signature malleability
   // library supports sigs in 2 different formats: https://github.com/paulmillr/noble-curves/issues/99
-  const parsedSig = k256.Signature.fromCompact(sig)
+  const parsedSig = allowMalleable ? sig : k256.Signature.fromCompact(sig)
   return k256.verify(parsedSig, msgHash, publicKey, {
-    lowS: opts?.lowS ?? true,
+    lowS: !allowMalleable,
   })
 }

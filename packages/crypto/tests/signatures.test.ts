@@ -78,7 +78,7 @@ describe('signatures', () => {
           keyBytes,
           messageBytes,
           signatureBytes,
-          { lowS: false },
+          { allowMalleableSig: true },
         )
         expect(verified).toEqual(true)
         expect(vector.validSignature).toEqual(false) // otherwise would fail per low-s requirement
@@ -87,7 +87,7 @@ describe('signatures', () => {
           keyBytes,
           messageBytes,
           signatureBytes,
-          { lowS: false },
+          { allowMalleableSig: true },
         )
         expect(verified).toEqual(true)
         expect(vector.validSignature).toEqual(false) // otherwise would fail per low-s requirement
