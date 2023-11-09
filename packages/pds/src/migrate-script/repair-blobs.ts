@@ -36,6 +36,7 @@ export const runScript = async () => {
       }
     })
   }
+  await blobQueue.onIdle()
   console.log('DONE WITH ALL')
 }
 
