@@ -4,9 +4,11 @@ import SqliteDB from 'better-sqlite3'
 const LOCATION = 'migrate.db'
 
 export const getDb = (): MigrateDb => {
+  const sqliteDb = new SqliteDB(LOCATION)
+  sqliteDb.pragma('busy_timeout = 5000')
   return new Kysely<Schema>({
     dialect: new SqliteDialect({
-      database: new SqliteDB(LOCATION),
+      database: sqliteDb,
     }),
   })
 }

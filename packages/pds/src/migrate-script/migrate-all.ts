@@ -20,21 +20,27 @@ import {
 export const runScript = async () => {
   console.log('starting')
   const { db, ctx, adminHeaders, pdsInfos } = await setupEnv()
+
+  const pdsIdArg = process.argv[2]
+  const pdsId = pdsIdArg ? parseInt(pdsIdArg) : null
+
   const todo = await db
     .selectFrom('status')
     .where('status.phase', '<', 7)
     .where('failed', '=', 0)
+    .if(pdsId !== null, (qb) => qb.where('pdsId', '=', pdsId))
     .orderBy('phase', 'desc')
     .orderBy('did')
     .selectAll()
     .execute()
+
   let pdsCounter = 0
   let completed = 0
   let failed = 0
 
   console.log('migrating: ', todo.length)
 
-  const migrateQueue = new PQueue({ concurrency: 150 })
+  const migrateQueue = new PQueue({ concurrency: 100 })
   process.on('SIGINT', async () => {
     migrateQueue.clear()
     console.log(`waiting on ${migrateQueue.pending} to finish`)
