@@ -67,8 +67,12 @@ export const runScript = async () => {
           .where('did', '=', status.did)
           .execute()
         completed++
-        await repairFailedBlobs(ctx, db, pdsInfo, status.did, adminHeaders)
-        await repairFailedPrefs(ctx, db, pdsInfo, status.did)
+        await repairFailedPrefs(ctx, db, pdsInfo, status.did).catch(() =>
+          console.log('failed to repair prefs: ', status.did),
+        )
+        repairFailedBlobs(ctx, db, pdsInfo, status.did, adminHeaders).catch(
+          () => console.log('failed to repair blobs: ', status.did),
+        )
       } catch (err) {
         // @ts-ignore
         const errmsg: string = err?.message ?? null
