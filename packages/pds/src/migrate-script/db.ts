@@ -5,6 +5,7 @@ const LOCATION = 'migrate.db'
 
 export const getDb = (): MigrateDb => {
   const sqliteDb = new SqliteDB(LOCATION)
+  sqliteDb.pragma('journal_mode = WAL')
   sqliteDb.pragma('busy_timeout = 5000')
   return new Kysely<Schema>({
     dialect: new SqliteDialect({
