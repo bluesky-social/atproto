@@ -148,6 +148,7 @@ export const adjustModerationSubjectStatus = async (
     subjectStatus.note = comment
   }
 
+  db.assertTransaction()
   const insertQuery = db.db
     .insertInto('moderation_subject_status')
     .values({
