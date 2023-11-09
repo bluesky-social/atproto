@@ -7,20 +7,10 @@ const run = async () => {
   console.log(`loading next ${amount} dids`)
   const { db, ctx } = await setupEnv()
 
-  const lastDidInDb = await db
-    .selectFrom('status')
-    .select('did')
-    .orderBy('did', 'desc')
-    .limit(1)
-    .executeTakeFirst()
-
-  const lastDid = lastDidInDb?.did ?? ''
-
   const didsRes = await ctx.db.db
     .selectFrom('user_account')
     .select('did')
     .where('pdsId', 'is', null)
-    .where('did', '>', lastDid)
     .orderBy('did', 'asc')
     .limit(amount)
     .execute()
