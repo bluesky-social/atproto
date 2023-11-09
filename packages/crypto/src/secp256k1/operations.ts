@@ -24,7 +24,10 @@ export const verifySig = async (
   opts?: VerifyOptions,
 ): Promise<boolean> => {
   const msgHash = await sha256(data)
-  return k256.verify(sig, msgHash, publicKey, {
+  // parse as compact sig to prevent signature malleability
+  // library supports sigs in 2 different formats: https://github.com/paulmillr/noble-curves/issues/99
+  const parsedSig = k256.Signature.fromCompact(sig)
+  return k256.verify(parsedSig, msgHash, publicKey, {
     lowS: opts?.lowS ?? true,
   })
 }
