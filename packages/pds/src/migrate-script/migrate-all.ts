@@ -4,17 +4,19 @@ import * as plcLib from '@did-plc/lib'
 import SqlRepoStorage from '../sql-repo-storage'
 import { createDeferrable } from '@atproto/common'
 import AppContext from '../context'
-import { FailedTakedown, MigrateDb, Status, TransferPhase } from './db'
+import { MigrateDb, Status, TransferPhase } from './db'
 import PQueue from 'p-queue'
 import {
   AdminHeaders,
   PdsInfo,
   getPds,
+  getUserAccount,
   repairBlob,
   repairFailedPrefs,
   retryOnce,
   setupEnv,
   transferPreferences,
+  transferTakedowns,
 } from './util'
 
 export const runScript = async () => {
@@ -322,127 +324,6 @@ const logFailedBlob = async (db: MigrateDb, did: string, cid: string) => {
     .execute()
 }
 
-const logFailedTakedown = async (db: MigrateDb, takedown: FailedTakedown) => {
-  await db
-    .insertInto('failed_takedown')
-    .values(takedown)
-    .onConflict((oc) => oc.doNothing())
-    .execute()
-}
-
-const transferTakedowns = async (
-  ctx: AppContext,
-  db: MigrateDb,
-  pds: PdsInfo,
-  did: string,
-  adminHeaders: AdminHeaders,
-) => {
-  const [accountRes, takendownRecords, takendownBlobs] = await Promise.all([
-    getUserAccount(ctx, did),
-    ctx.db.db
-      .selectFrom('record')
-      .selectAll()
-      .where('did', '=', did)
-      .where('takedownRef', 'is not', null)
-      .execute(),
-    ctx.db.db
-      .selectFrom('repo_blob')
-      .selectAll()
-      .where('did', '=', did)
-      .where('takedownRef', 'is not', null)
-      .execute(),
-  ])
-  const promises: Promise<unknown>[] = []
-  if (accountRes.takedownRef) {
-    const promise = pds.agent.com.atproto.admin
-      .updateSubjectStatus(
-        {
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did,
-          },
-          takedown: {
-            applied: true,
-            ref: accountRes.takedownRef,
-          },
-        },
-        {
-          headers: adminHeaders,
-          encoding: 'application/json',
-        },
-      )
-      .catch(async (err) => {
-        await logFailedTakedown(db, { did, err: err?.message })
-      })
-    promises.push(promise)
-  }
-
-  for (const takendownRecord of takendownRecords) {
-    if (!takendownRecord.takedownRef) continue
-    const promise = pds.agent.com.atproto.admin
-      .updateSubjectStatus(
-        {
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: takendownRecord.uri,
-            cid: takendownRecord.cid,
-          },
-          takedown: {
-            applied: true,
-            ref: takendownRecord.takedownRef,
-          },
-        },
-        {
-          headers: adminHeaders,
-          encoding: 'application/json',
-        },
-      )
-      .catch(async (err) => {
-        await logFailedTakedown(db, {
-          did,
-          recordUri: takendownRecord.uri,
-          recordCid: takendownRecord.cid,
-          err: err?.message,
-        })
-      })
-    promises.push(promise)
-  }
-
-  for (const takendownBlob of takendownBlobs) {
-    if (!takendownBlob.takedownRef) continue
-    const promise = pds.agent.com.atproto.admin
-      .updateSubjectStatus(
-        {
-          subject: {
-            $type: 'com.atproto.admin.defs#repoBlobRef',
-            did,
-            cid: takendownBlob.cid,
-            recordUri: takendownBlob.recordUri,
-          },
-          takedown: {
-            applied: true,
-            ref: takendownBlob.takedownRef,
-          },
-        },
-        {
-          headers: adminHeaders,
-          encoding: 'application/json',
-        },
-      )
-      .catch(async (err) => {
-        await logFailedTakedown(db, {
-          did,
-          blobCid: takendownBlob.cid,
-          err: err?.message,
-        })
-      })
-
-    promises.push(promise)
-  }
-
-  await Promise.all(promises)
-}
-
 const repairFailedBlobs = async (
   ctx: AppContext,
   db: MigrateDb,
@@ -462,19 +343,6 @@ const repairFailedBlobs = async (
       console.log(`failed blob: ${did} ${blob.cid}`)
     }
   }
-}
-
-const getUserAccount = async (ctx: AppContext, did: string) => {
-  const accountRes = await ctx.db.db
-    .selectFrom('did_handle')
-    .innerJoin('user_account', 'user_account.did', 'did_handle.did')
-    .selectAll()
-    .where('did_handle.did', '=', did)
-    .executeTakeFirst()
-  if (!accountRes) {
-    throw new Error(`could not find account: ${did}`)
-  }
-  return accountRes
 }
 
 runScript()
