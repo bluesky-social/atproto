@@ -40,7 +40,7 @@ export const runScript = async () => {
 
   console.log('migrating: ', todo.length)
 
-  const migrateQueue = new PQueue({ concurrency: 100 })
+  const migrateQueue = new PQueue({ concurrency: 80 })
   process.on('SIGINT', async () => {
     migrateQueue.clear()
     console.log(`waiting on ${migrateQueue.pending} to finish`)
