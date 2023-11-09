@@ -23,6 +23,7 @@ export const runScript = async () => {
   const todo = await db
     .selectFrom('status')
     .where('status.phase', '<', 7)
+    .where('failed', '=', 0)
     .orderBy('phase', 'desc')
     .orderBy('did')
     .selectAll()
@@ -33,7 +34,7 @@ export const runScript = async () => {
 
   console.log('migrating: ', todo.length)
 
-  const migrateQueue = new PQueue({ concurrency: 80 })
+  const migrateQueue = new PQueue({ concurrency: 150 })
   process.on('SIGINT', async () => {
     migrateQueue.clear()
     console.log(`waiting on ${migrateQueue.pending} to finish`)

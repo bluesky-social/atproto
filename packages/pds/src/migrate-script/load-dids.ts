@@ -13,13 +13,12 @@ const run = async () => {
     .orderBy('did', 'asc')
     .limit(amount)
     .execute()
-  const dids = didsRes
-    .map((row) => ({
-      did: row.did,
-      phase: 0,
-      failed: 0 as const,
-    }))
-    .filter((row) => row.did.length > 2)
+  const dids = didsRes.map((row, i) => ({
+    did: row.did,
+    phase: 0,
+    pdsId: (i % 2) + 1,
+    failed: 0 as const,
+  }))
 
   await Promise.all(
     chunkArray(dids, 50).map((chunk) =>
