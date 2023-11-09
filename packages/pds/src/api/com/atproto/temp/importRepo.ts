@@ -159,6 +159,14 @@ const importBlob = async (
   endpoint: string,
   blob: BlobRef,
 ) => {
+  const hasBlob = await actorStore.db.db
+    .selectFrom('blob')
+    .selectAll()
+    .where('cid', '=', blob.ref.toString())
+    .executeTakeFirst()
+  if (hasBlob) {
+    return
+  }
   const res = await axios.get(endpoint, {
     params: { did: actorStore.repo.did, cid: blob.ref.toString() },
     decompress: true,
