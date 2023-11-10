@@ -20,7 +20,7 @@ export const runScript = async () => {
     acc[cur.did].push({ did: cur.did, cid: cur.cid, pdsId: cur.pdsId ?? -1 })
     return acc
   }, {} as Record<string, FailedBlob[]>)
-  const blobQueue = new PQueue({ concurrency: 20 })
+  const blobQueue = new PQueue({ concurrency: 40 })
   for (const did of Object.keys(failedByDid)) {
     const failedBlobs = failedByDid[did] ?? []
     blobQueue.add(async () => {

@@ -23,15 +23,12 @@ export const runScript = async () => {
   console.log('starting')
   const { db, ctx, adminHeaders, pdsInfos } = await setupEnv()
 
-  // const pdsIdArg = process.argv[2]
-  // const pdsId = pdsIdArg ? parseInt(pdsIdArg) : null
-  const pdsId = parseInt(process.argv[2])
+  const pdsIds = process.argv[2].split(',').map((id) => parseInt(id))
 
   const todo = await db
     .selectFrom('status')
     .where('status.phase', '<', 7)
-    .where('failed', '=', 0)
-    .if(pdsId !== null, (qb) => qb.where('pdsId', '=', pdsId))
+    .where('pdsId', 'in', pdsIds)
     .orderBy('phase', 'desc')
     .orderBy('did')
     .selectAll()
