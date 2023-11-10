@@ -71,10 +71,13 @@ const skeleton = async (
   const rest = suggestions.filter((row) => row.order !== 1 && row.order !== 2)
   const limited = firstTwo.concat(shuffle(rest)).slice(0, params.limit)
 
-  const cursor = limited
-    .map((row) => row.order.toString())
-    .concat(alreadyIncluded.map((id) => id.toString()))
-    .join(':')
+  const cursor =
+    limited.length > 0
+      ? limited
+          .map((row) => row.order.toString())
+          .concat(alreadyIncluded.map((id) => id.toString()))
+          .join(':')
+      : undefined
 
   return { params, suggestions: limited, cursor }
 }
