@@ -23,8 +23,9 @@ export const runScript = async () => {
   console.log('starting')
   const { db, ctx, adminHeaders, pdsInfos } = await setupEnv()
 
-  const pdsIdArg = process.argv[2]
-  const pdsId = pdsIdArg ? parseInt(pdsIdArg) : null
+  // const pdsIdArg = process.argv[2]
+  // const pdsId = pdsIdArg ? parseInt(pdsIdArg) : null
+  const pdsId = parseInt(process.argv[2])
 
   const todo = await db
     .selectFrom('status')
