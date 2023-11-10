@@ -9,6 +9,7 @@ import PQueue from 'p-queue'
 import {
   AdminHeaders,
   PdsInfo,
+  checkBorked,
   getPds,
   getUserAccount,
   repairBlob,
@@ -81,6 +82,9 @@ export const runScript = async () => {
           .where('did', '=', status.did)
           .execute()
         failed++
+
+        // check if the did is caught in a bad state where migration failed but plc got updated
+        await checkBorked(ctx, status.did)
       }
       if (completed % 5 === 0) {
         console.log(`completed: ${completed}, failed: ${failed}`)

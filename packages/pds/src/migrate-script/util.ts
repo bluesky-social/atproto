@@ -1,3 +1,4 @@
+import fs from 'fs/promises'
 import dotenv from 'dotenv'
 import axios from 'axios'
 import * as ui8 from 'uint8arrays'
@@ -297,4 +298,16 @@ const logFailedTakedown = async (db: MigrateDb, takedown: FailedTakedown) => {
     .values(takedown)
     .onConflict((oc) => oc.doNothing())
     .execute()
+}
+
+export const checkBorked = async (ctx: AppContext, did: string) => {
+  try {
+    const data = await ctx.plcClient.getDocumentData(did)
+    const endpoint = data.services['atproto_pds'].endpoint
+    if (endpoint !== 'https://bsky.social') {
+      await fs.appendFile('borked_dids.tx', `${did}\n`)
+    }
+  } catch {
+    // noop
+  }
 }
