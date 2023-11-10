@@ -132,6 +132,7 @@ export class AsyncBuffer<T> {
 
   throw(err: unknown) {
     this.toThrow = err
+    this.closed = true
     this.resolve()
   }
 
