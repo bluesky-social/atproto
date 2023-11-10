@@ -4,7 +4,7 @@ import PQueue from 'p-queue'
 import axios from 'axios'
 import { CID } from 'multiformats/cid'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AsyncBuffer, TID } from '@atproto/common'
+import { AsyncBuffer, TID, wait } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { Repo, WriteOpAction, readCarStream, verifyDiff } from '@atproto/repo'
 import { BlobRef, LexValue } from '@atproto/lexicon'
@@ -22,6 +22,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, input, req }) => {
       const { did } = params
       const outBuffer = new AsyncBuffer<string>()
+      sendTicks(outBuffer).catch((err) => {
+        req.log.error({ err }, 'failed to send ticks')
+      })
       processImport(ctx, did, input.body, outBuffer).catch(async (err) => {
         try {
           await ctx.actorStore.destroy(did)
@@ -37,6 +40,13 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+const sendTicks = async (outBuffer: AsyncBuffer<string>) => {
+  while (!outBuffer.isClosed) {
+    outBuffer.push('tick\n')
+    await wait(1000)
+  }
 }
 
 const processImport = async (
