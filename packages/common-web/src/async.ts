@@ -90,6 +90,10 @@ export class AsyncBuffer<T> {
     return this.buffer.length
   }
 
+  get isClosed(): boolean {
+    return this.closed
+  }
+
   resetPromise() {
     this.promise = new Promise<void>((r) => (this.resolve = r))
   }
@@ -128,6 +132,7 @@ export class AsyncBuffer<T> {
 
   throw(err: unknown) {
     this.toThrow = err
+    this.closed = true
     this.resolve()
   }
 
