@@ -121,6 +121,24 @@ export const adjustModerationSubjectStatus = async (
   // If subjectUri exists, it's not a repoRef so pass along the uri to get identifier back
   const identifier = getStatusIdentifierFromSubject(subjectUri || subjectDid)
 
+  db.assertTransaction()
+
+  const currentStatus = await db.db
+    .selectFrom('moderation_subject_status')
+    .where('did', '=', identifier.did)
+    .where('recordPath', '=', identifier.recordPath)
+    .selectAll()
+    .executeTakeFirst()
+
+  if (
+    currentStatus?.reviewState === REVIEWESCALATED &&
+    subjectStatus.reviewState === REVIEWOPEN
+  ) {
+    // If the current status is escalated and the incoming event is to open the review
+    // We want to keep the status as escalated
+    subjectStatus.reviewState = REVIEWESCALATED
+  }
+
   // Set these because we don't want to override them if they're already set
   const defaultData = {
     note: null,
@@ -148,7 +166,6 @@ export const adjustModerationSubjectStatus = async (
     subjectStatus.note = comment
   }
 
-  db.assertTransaction()
   const insertQuery = db.db
     .insertInto('moderation_subject_status')
     .values({
