@@ -42,12 +42,12 @@ const skeleton = async (
   ctx: Context,
 ): Promise<SkeletonState> => {
   const { db } = ctx
-  const { limit, cursor, viewer } = params
+  const { viewer } = params
+  const alreadyIncluded = parseCursor(params.cursor)
   const { ref } = db.db.dynamic
-  let suggestionsQb = db.db
+  const suggestions = await db.db
     .selectFrom('suggested_follow')
     .innerJoin('actor', 'actor.did', 'suggested_follow.did')
-    .innerJoin('profile_agg', 'profile_agg.did', 'actor.did')
     .where(notSoftDeletedClause(ref('actor')))
     .where('suggested_follow.did', '!=', viewer ?? '')
     .whereNotExists((qb) =>
@@ -57,27 +57,26 @@ const skeleton = async (
         .where('creator', '=', viewer ?? '')
         .whereRef('subjectDid', '=', ref('actor.did')),
     )
+    .if(alreadyIncluded.length > 0, (qb) =>
+      qb.where('suggested_follow.order', 'not in', alreadyIncluded),
+    )
     .selectAll()
-    .select('profile_agg.postsCount as postsCount')
-    .limit(limit)
     .orderBy('suggested_follow.order', 'asc')
+    .execute()
 
-  if (cursor) {
-    const cursorRow = await db.db
-      .selectFrom('suggested_follow')
-      .where('did', '=', cursor)
-      .selectAll()
-      .executeTakeFirst()
-    if (cursorRow) {
-      suggestionsQb = suggestionsQb.where(
-        'suggested_follow.order',
-        '>',
-        cursorRow.order,
-      )
-    }
-  }
-  const suggestions = await suggestionsQb.execute()
-  return { params, suggestions, cursor: suggestions.at(-1)?.did }
+  // always include first two
+  const firstTwo = suggestions.filter(
+    (row) => row.order === 1 || row.order === 2,
+  )
+  const rest = suggestions.filter((row) => row.order !== 1 && row.order !== 2)
+  const limited = firstTwo.concat(shuffle(rest)).slice(0, params.limit)
+
+  const cursor = limited
+    .map((row) => row.order.toString())
+    .concat(alreadyIncluded.map((id) => id.toString()))
+    .join(':')
+
+  return { params, suggestions: limited, cursor }
 }
 
 const hydration = async (state: SkeletonState, ctx: Context) => {
@@ -108,6 +107,24 @@ const presentation = (state: HydrationState) => {
   const { suggestions, actors, cursor } = state
   const suggestedActors = mapDefined(suggestions, (sug) => actors[sug.did])
   return { actors: suggestedActors, cursor }
+}
+
+const parseCursor = (cursor?: string): number[] => {
+  if (!cursor) {
+    return []
+  }
+  try {
+    return cursor.split(':').map((id) => parseInt(id))
+  } catch {
+    return []
+  }
+}
+
+const shuffle = <T>(arr: T[]): T[] => {
+  return arr
+    .map((value) => ({ value, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ value }) => value)
 }
 
 type Context = {
