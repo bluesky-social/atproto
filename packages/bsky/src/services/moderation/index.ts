@@ -30,6 +30,7 @@ import {
   SubjectInfo,
 } from './types'
 import { ModerationEvent } from '../../db/tables/moderation'
+import { Cursor, GenericKeyset, paginate } from '../../db/pagination'
 
 export class ModerationService {
   constructor(
@@ -608,20 +609,31 @@ export class ModerationService {
 
     builder = builder.orderBy(sortField, sortDirection)
 
-    if (cursor) {
-      const cursorNumeric = parseInt(cursor, 10)
-      if (isNaN(cursorNumeric)) {
-        throw new InvalidRequestError('Malformed cursor')
-      }
-      builder = builder.where('id', '<', cursorNumeric)
-    }
+    const { ref } = this.db.db.dynamic
+    const keyset = new ListKeyset(
+      ref(`moderation_subject_status.${sortField}`),
+      ref('moderation_subject_status.did'),
+    )
+    const paginatedBuilder = paginate(builder, {
+      limit,
+      cursor,
+      keyset,
+      direction: sortDirection,
+      tryIndex: true,
+    })
 
-    const results = await builder
-      .limit(limit)
+    console.log(
+      paginatedBuilder
+        .select('actor.handle as handle')
+        .selectAll('moderation_subject_status')
+        .compile(),
+    )
+    const results = await paginatedBuilder
       .select('actor.handle as handle')
       .selectAll('moderation_subject_status')
       .execute()
-    return results
+
+    return { statuses: results, cursor: keyset.packFromResult(results) }
   }
 
   async isSubjectTakendown(
@@ -644,4 +656,47 @@ export class ModerationService {
 export type TakedownSubjects = {
   did: string
   subjects: (RepoRef | RepoBlobRef | StrongRef)[]
+}
+
+type KeysetParam =
+  | {
+      lastReviewedAt: string | null
+      did: string
+    }
+  | {
+      lastReportedAt: string | null
+      did: string
+    }
+
+export class ListKeyset extends GenericKeyset<KeysetParam, Cursor> {
+  labelResult(result: KeysetParam): Cursor
+  labelResult(result: KeysetParam) {
+    return {
+      primary:
+        'lastReportedAt' in result
+          ? result.lastReportedAt
+            ? new Date(result.lastReportedAt).toString()
+            : ''
+          : result.lastReviewedAt
+          ? new Date(result.lastReviewedAt).toString()
+          : '',
+      secondary: result.did,
+    }
+  }
+  labeledResultToCursor(labeled: Cursor) {
+    return {
+      primary: labeled.primary
+        ? new Date(labeled.primary).getTime().toString()
+        : '',
+      secondary: labeled.secondary,
+    }
+  }
+  cursorToLabeledResult(cursor: Cursor) {
+    return {
+      primary: cursor.primary
+        ? new Date(parseInt(cursor.primary, 10)).toISOString()
+        : '',
+      secondary: cursor.secondary,
+    }
+  }
 }
