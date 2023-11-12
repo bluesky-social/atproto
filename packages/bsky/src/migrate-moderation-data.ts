@@ -123,6 +123,7 @@ const createEvents = async (db: PrimaryDatabase) => {
 }
 
 const setReportedAtTimestamp = async (db: PrimaryDatabase) => {
+  console.log('Initiating lastReportedAt timestamp sync')
   const didUpdate = await sql`
     UPDATE moderation_subject_status
     SET "lastReportedAt" = reports."createdAt"
@@ -189,7 +190,6 @@ const createStatusFromActions = async (db: PrimaryDatabase) => {
         .selectAll()
       const events = (await eventsQuery.execute()) as ModerationActionRow[]
 
-      // TODO: Figure out how to handle blob cids here
       for (const event of events) {
         // Remap action to event data type
         const actionParts = event.action.split('#')
@@ -217,6 +217,24 @@ const createStatusFromActions = async (db: PrimaryDatabase) => {
   console.log(`Created ${totalStatuses} statuses`)
 }
 
+const syncBlobCids = async (db: PrimaryDatabase) => {
+  console.log('Initiating blob cid sync')
+  const results = await sql`
+    UPDATE moderation_subject_status
+    SET "blobCids" = blob_action."cids"
+    FROM (
+        SELECT moderation_action."subjectUri", moderation_action."subjectDid", jsonb_agg(moderation_action_subject_blob."cid") as cids
+        FROM moderation_action_subject_blob
+            JOIN moderation_action
+                ON moderation_action.id = moderation_action_subject_blob."actionId"
+          WHERE moderation_action."reversedAt" is NULL
+          GROUP by moderation_action."subjectUri", moderation_action."subjectDid"
+    ) as blob_action
+    WHERE did = "subjectDid" AND position("recordPath" IN "subjectUri") > 0
+  `.execute(db.db)
+  console.log(`Updated blob cids on ${results.numUpdatedOrDeletedRows} rows`)
+}
+
 async function main() {
   const env = getEnv()
   const db = new DatabaseCoordinator({
@@ -237,6 +255,9 @@ async function main() {
   await createEvents(primaryDb)
   await createStatusFromActions(primaryDb)
   await setReportedAtTimestamp(primaryDb)
+  await syncBlobCids(primaryDb)
+
+  console.log('Migration complete!')
 }
 
 main()
