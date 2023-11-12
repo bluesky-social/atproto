@@ -23,7 +23,7 @@
             "enum": ["asc", "desc"],
             "description": "Sort direction for the events. Defaults to descending order of created at timestamp."
           },
-          "subject": { "type": "string" },
+          "subject": { "type": "string", "format": "uri" },
           "includeAllUserRecords": {
             "type": "boolean",
             "default": false,

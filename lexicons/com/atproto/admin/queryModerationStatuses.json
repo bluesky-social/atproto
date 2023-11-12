@@ -8,7 +8,7 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "subject": { "type": "string" },
+          "subject": { "type": "string", "format": "uri" },
           "note": {
             "type": "string",
             "description": "Search subjects by keyword from notes"
@@ -41,7 +41,10 @@
             "type": "string",
             "description": "Specify when fetching subjects in a certain state"
           },
-          "ignoreSubjects": { "type": "array", "items": { "type": "string" } },
+          "ignoreSubjects": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" }
+          },
           "lastReviewedBy": {
             "type": "string",
             "format": "did",

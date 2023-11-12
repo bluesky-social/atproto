@@ -1,6 +1,11 @@
 import { sql } from 'kysely'
 import { DatabaseCoordinator, PrimaryDatabase } from './index'
 import { adjustModerationSubjectStatus } from './services/moderation/status'
+import { ModerationEventRow } from './services/moderation/types'
+
+type ModerationActionRow = Omit<ModerationEventRow, 'comment' | 'meta'> & {
+  reason: string | null
+}
 
 const getEnv = () => ({
   DB_URL:
@@ -81,7 +86,9 @@ const createEvents = async (db: PrimaryDatabase) => {
         // @ts-ignore
         .select([
           ...commonColumns,
-          sql`CONCAT('com.atproto.admin.defs#modEvent', UPPER(SUBSTRING(SPLIT_PART(action, '#', 2) FROM 1 FOR 1)), SUBSTRING(SPLIT_PART(action, '#', 2) FROM 2))`.as('action'),
+          sql`CONCAT('com.atproto.admin.defs#modEvent', UPPER(SUBSTRING(SPLIT_PART(action, '#', 2) FROM 1 FOR 1)), SUBSTRING(SPLIT_PART(action, '#', 2) FROM 2))`.as(
+            'action',
+          ),
           'createLabelVals',
           'negateLabelVals',
           'createdBy',
@@ -115,10 +122,50 @@ const createEvents = async (db: PrimaryDatabase) => {
   return
 }
 
-const createStatusFromEvents = async (db: PrimaryDatabase) => {
+const setReportedAtTimestamp = async (db: PrimaryDatabase) => {
+  const didUpdate = await sql`
+    UPDATE moderation_subject_status
+    SET "lastReportedAt" = reports."createdAt"
+    FROM (
+      select "subjectDid", "subjectUri", MAX("createdAt") as "createdAt"
+      from moderation_report
+      where "subjectUri" is null
+      group by "subjectDid", "subjectUri"
+    ) as reports
+    WHERE reports."subjectDid" = moderation_subject_status."did"
+      AND "recordPath"=''
+  `.execute(db.db)
+
+  console.log(
+    `Updated lastReportedAt for ${didUpdate.numUpdatedOrDeletedRows} did subject`,
+  )
+
+  const contentUpdate = await sql`
+    UPDATE moderation_subject_status
+    SET "lastReportedAt" = reports."createdAt"
+    FROM (
+      select "subjectDid", "subjectUri", MAX("createdAt") as "createdAt"
+      from moderation_report
+      where "subjectUri" is not null
+      group by "subjectDid", "subjectUri"
+    ) as reports
+    WHERE reports."subjectDid" = moderation_subject_status."did"
+      AND "recordPath" is not null
+      AND POSITION(moderation_subject_status."recordPath" IN reports."subjectUri") > 0
+  `.execute(db.db)
+
+  console.log(
+    `Updated lastReportedAt for ${contentUpdate.numUpdatedOrDeletedRows} subject with uri`,
+  )
+}
+
+const createStatusFromActions = async (db: PrimaryDatabase) => {
   const allEvents = await db.db
-    .selectFrom('moderation_event')
-    .where('action', '!=', 'com.atproto.admin.defs#modEventReport')
+    // @ts-ignore
+    .selectFrom('moderation_action')
+    // @ts-ignore
+    .where('reversedAt', 'is', null)
+    // @ts-ignore
     .select((eb) => eb.fn.count<number>('id').as('count'))
     .executeTakeFirstOrThrow()
 
@@ -132,15 +179,30 @@ const createStatusFromEvents = async (db: PrimaryDatabase) => {
     let lastProcessedId = 0
     do {
       const eventsQuery = tx.db
-        .selectFrom('moderation_event')
+        // @ts-ignore
+        .selectFrom('moderation_action')
+        // @ts-ignore
+        .where('reversedAt', 'is', null)
+        // @ts-ignore
         .where('id', '>', lastProcessedId)
         .limit(chunkSize)
         .selectAll()
-      const events = await eventsQuery.execute()
+      const events = (await eventsQuery.execute()) as ModerationActionRow[]
 
       // TODO: Figure out how to handle blob cids here
       for (const event of events) {
-        await adjustModerationSubjectStatus(tx, event)
+        // Remap action to event data type
+        const actionParts = event.action.split('#')
+        await adjustModerationSubjectStatus(tx, {
+          ...event,
+          action: `${actionParts[0]}#modEvent${actionParts[1]
+            .charAt(0)
+            .toUpperCase()}${actionParts[1].slice(
+            1,
+          )}` as ModerationEventRow['action'],
+          comment: event.reason,
+          meta: null,
+        })
       }
 
       console.log(`Processed events chunk ${currentChunk} of ${totalChunks}`)
@@ -173,7 +235,8 @@ async function main() {
 
   console.log(`Migrating ${totalEntries} rows of actions and reports`)
   await createEvents(primaryDb)
-  await createStatusFromEvents(primaryDb)
+  await createStatusFromActions(primaryDb)
+  await setReportedAtTimestamp(primaryDb)
 }
 
 main()
