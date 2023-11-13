@@ -160,6 +160,11 @@ export async function defaultFetchHandler(
       body: httpResponseBodyParse(res.headers.get('content-type'), resBody),
     }
   } catch (e) {
+    console.error(
+      'defaultFetchHandler',
+      { method: httpMethod, uri: httpUri },
+      e,
+    )
     throw new XRPCError(ResponseType.Unknown, String(e))
   }
 }
