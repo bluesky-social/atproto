@@ -231,6 +231,7 @@ export interface RepoViewDetail {
   invites?: ComAtprotoServerDefs.InviteCode[]
   invitesDisabled?: boolean
   inviteNote?: string
+  emailConfirmedAt?: string
   [k: string]: unknown
 }
 
@@ -254,6 +255,7 @@ export interface AccountView {
   invitedBy?: ComAtprotoServerDefs.InviteCode
   invites?: ComAtprotoServerDefs.InviteCode[]
   invitesDisabled?: boolean
+  emailConfirmedAt?: string
   inviteNote?: string
   [k: string]: unknown
 }
