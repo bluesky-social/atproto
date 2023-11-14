@@ -19,10 +19,12 @@ import { sql } from 'kysely'
 const getSubjectStatusForModerationEvent = ({
   action,
   createdBy,
+  createdAt,
   durationInHours,
 }: {
   action: string
   createdBy: string
+  createdAt: string
   durationInHours: number | null
 }): Partial<ModerationSubjectStatusRow> | null => {
   switch (action) {
@@ -30,18 +32,18 @@ const getSubjectStatusForModerationEvent = ({
       return {
         lastReviewedBy: createdBy,
         reviewState: REVIEWCLOSED,
-        lastReviewedAt: new Date().toISOString(),
+        lastReviewedAt: createdAt,
       }
     case 'com.atproto.admin.defs#modEventReport':
       return {
         reviewState: REVIEWOPEN,
-        lastReportedAt: new Date().toISOString(),
+        lastReportedAt: createdAt,
       }
     case 'com.atproto.admin.defs#modEventEscalate':
       return {
         lastReviewedBy: createdBy,
         reviewState: REVIEWESCALATED,
-        lastReviewedAt: new Date().toISOString(),
+        lastReviewedAt: createdAt,
       }
     case 'com.atproto.admin.defs#modEventReverseTakedown':
       return {
@@ -49,21 +51,21 @@ const getSubjectStatusForModerationEvent = ({
         reviewState: REVIEWCLOSED,
         takendown: false,
         suspendUntil: null,
-        lastReviewedAt: new Date().toISOString(),
+        lastReviewedAt: createdAt,
       }
     case 'com.atproto.admin.defs#modEventUnmute':
       return {
         lastReviewedBy: createdBy,
         muteUntil: null,
         reviewState: REVIEWOPEN,
-        lastReviewedAt: new Date().toISOString(),
+        lastReviewedAt: createdAt,
       }
     case 'com.atproto.admin.defs#modEventTakedown':
       return {
         takendown: true,
         lastReviewedBy: createdBy,
         reviewState: REVIEWCLOSED,
-        lastReviewedAt: new Date().toISOString(),
+        lastReviewedAt: createdAt,
         suspendUntil: durationInHours
           ? new Date(Date.now() + durationInHours * HOUR).toISOString()
           : null,
@@ -72,7 +74,7 @@ const getSubjectStatusForModerationEvent = ({
       return {
         lastReviewedBy: createdBy,
         reviewState: REVIEWOPEN,
-        lastReviewedAt: new Date().toISOString(),
+        lastReviewedAt: createdAt,
         // By default, mute for 24hrs
         muteUntil: new Date(
           Date.now() + (durationInHours || 24) * HOUR,
@@ -81,7 +83,7 @@ const getSubjectStatusForModerationEvent = ({
     case 'com.atproto.admin.defs#modEventComment':
       return {
         lastReviewedBy: createdBy,
-        lastReviewedAt: new Date().toISOString(),
+        lastReviewedAt: createdAt,
       }
     default:
       return null
@@ -104,11 +106,13 @@ export const adjustModerationSubjectStatus = async (
     createdBy,
     meta,
     comment,
+    createdAt,
   } = moderationEvent
 
   const subjectStatus = getSubjectStatusForModerationEvent({
     action,
     createdBy,
+    createdAt,
     durationInHours: moderationEvent.durationInHours,
   })
 

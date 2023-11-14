@@ -31,6 +31,7 @@ import {
 } from './types'
 import { ModerationEvent } from '../../db/tables/moderation'
 import { Cursor, GenericKeyset, paginate } from '../../db/pagination'
+import { DynamicModule, sql } from 'kysely'
 
 export class ModerationService {
   constructor(
@@ -607,12 +608,10 @@ export class ModerationService {
       )
     }
 
-    builder = builder.orderBy(sortField, sortDirection)
-
     const { ref } = this.db.db.dynamic
     const keyset = new ListKeyset(
       ref(`moderation_subject_status.${sortField}`),
-      ref('moderation_subject_status.did'),
+      ref('moderation_subject_status.id'),
     )
     const paginatedBuilder = paginate(builder, {
       limit,
@@ -620,14 +619,9 @@ export class ModerationService {
       keyset,
       direction: sortDirection,
       tryIndex: true,
+      nullsLast: true,
     })
 
-    console.log(
-      paginatedBuilder
-        .select('actor.handle as handle')
-        .selectAll('moderation_subject_status')
-        .compile(),
-    )
     const results = await paginatedBuilder
       .select('actor.handle as handle')
       .selectAll('moderation_subject_status')
@@ -658,36 +652,31 @@ export type TakedownSubjects = {
   subjects: (RepoRef | RepoBlobRef | StrongRef)[]
 }
 
-type KeysetParam =
-  | {
-      lastReviewedAt: string | null
-      did: string
-    }
-  | {
-      lastReportedAt: string | null
-      did: string
-    }
+type KeysetParam = {
+  lastReviewedAt: string | null
+  lastReportedAt: string | null
+  id: number
+}
 
 export class ListKeyset extends GenericKeyset<KeysetParam, Cursor> {
   labelResult(result: KeysetParam): Cursor
   labelResult(result: KeysetParam) {
+    const primaryField = (
+      this.primary as ReturnType<DynamicModule['ref']>
+    ).dynamicReference.includes('lastReviewedAt')
+      ? 'lastReviewedAt'
+      : 'lastReportedAt'
+
     return {
-      primary:
-        'lastReportedAt' in result
-          ? result.lastReportedAt
-            ? new Date(result.lastReportedAt).toString()
-            : ''
-          : result.lastReviewedAt
-          ? new Date(result.lastReviewedAt).toString()
-          : '',
-      secondary: result.did,
+      primary: result[primaryField]
+        ? new Date(`${result[primaryField]}`).getTime().toString()
+        : '',
+      secondary: result.id.toString(),
     }
   }
   labeledResultToCursor(labeled: Cursor) {
     return {
-      primary: labeled.primary
-        ? new Date(labeled.primary).getTime().toString()
-        : '',
+      primary: labeled.primary,
       secondary: labeled.secondary,
     }
   }
@@ -697,6 +686,31 @@ export class ListKeyset extends GenericKeyset<KeysetParam, Cursor> {
         ? new Date(parseInt(cursor.primary, 10)).toISOString()
         : '',
       secondary: cursor.secondary,
+    }
+  }
+  unpackCursor(cursorStr?: string): Cursor | undefined {
+    if (!cursorStr) return
+    const result = cursorStr.split('::')
+    const [primary, secondary, ...others] = result
+    if (!secondary || others.length > 0) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+    return {
+      primary,
+      secondary,
+    }
+  }
+  // This is specifically built to handle nullable columns as primary sorting column
+  getSql(labeled?: Cursor, direction?: 'asc' | 'desc') {
+    if (labeled === undefined) return
+    if (direction === 'asc') {
+      return !labeled.primary
+        ? sql`(${this.primary} IS NULL AND ${this.secondary} > ${labeled.secondary})`
+        : sql`((${this.primary}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}) OR (${this.primary} is null))`
+    } else {
+      return !labeled.primary
+        ? sql`(${this.primary} IS NULL AND ${this.secondary} < ${labeled.secondary})`
+        : sql`((${this.primary}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}) OR (${this.primary} is null))`
     }
   }
 }

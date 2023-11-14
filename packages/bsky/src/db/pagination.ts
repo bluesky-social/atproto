@@ -117,13 +117,36 @@ export const paginate = <
     direction?: 'asc' | 'desc'
     keyset: K
     tryIndex?: boolean
+    // By default, pg does nullsFirst
+    nullsLast?: boolean
   },
 ): QB => {
-  const { limit, cursor, keyset, direction = 'desc', tryIndex } = opts
+  const {
+    limit,
+    cursor,
+    keyset,
+    direction = 'desc',
+    tryIndex,
+    nullsLast,
+  } = opts
   const keysetSql = keyset.getSql(keyset.unpack(cursor), direction, tryIndex)
   return qb
     .if(!!limit, (q) => q.limit(limit as number))
-    .orderBy(keyset.primary, direction)
-    .orderBy(keyset.secondary, direction)
+    .if(!nullsLast, (q) =>
+      q.orderBy(keyset.primary, direction).orderBy(keyset.secondary, direction),
+    )
+    .if(!!nullsLast, (q) =>
+      q
+        .orderBy(
+          direction === 'asc'
+            ? sql`${keyset.primary} asc nulls last`
+            : sql`${keyset.primary} desc nulls last`,
+        )
+        .orderBy(
+          direction === 'asc'
+            ? sql`${keyset.secondary} asc nulls last`
+            : sql`${keyset.secondary} desc nulls last`,
+        ),
+    )
     .if(!!keysetSql, (qb) => (keysetSql ? qb.where(keysetSql) : qb)) as QB
 }
