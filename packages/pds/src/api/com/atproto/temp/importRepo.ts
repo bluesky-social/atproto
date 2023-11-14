@@ -26,6 +26,7 @@ export default function (server: Server, ctx: AppContext) {
         req.log.error({ err }, 'failed to send ticks')
       })
       processImport(ctx, did, input.body, outBuffer).catch(async (err) => {
+        req.log.error({ did, err }, 'failed import')
         try {
           await ctx.actorStore.destroy(did)
         } catch (err) {
