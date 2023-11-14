@@ -29,7 +29,6 @@ import {
   WriteOpAction,
 } from './types'
 import BlockMap from './block-map'
-import * as parse from './parse'
 import { Keypair } from '@atproto/crypto'
 import { Readable } from 'stream'
 
@@ -130,30 +129,25 @@ export const readCarWithRoot = async (
 
 export const diffToWriteDescripts = (
   diff: DataDiff,
-  blocks: BlockMap,
 ): Promise<RecordWriteDescript[]> => {
   return Promise.all([
     ...diff.addList().map(async (add) => {
       const { collection, rkey } = parseDataKey(add.key)
-      const value = await parse.getAndParseRecord(blocks, add.cid)
       return {
         action: WriteOpAction.Create,
         collection,
         rkey,
         cid: add.cid,
-        record: value.record,
       } as RecordCreateDescript
     }),
     ...diff.updateList().map(async (upd) => {
       const { collection, rkey } = parseDataKey(upd.key)
-      const value = await parse.getAndParseRecord(blocks, upd.cid)
       return {
         action: WriteOpAction.Update,
         collection,
         rkey,
         cid: upd.cid,
         prev: upd.prev,
-        record: value.record,
       } as RecordUpdateDescript
     }),
     ...diff.deleteList().map((del) => {
