@@ -42,7 +42,10 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (params: Params, ctx: Context) => {
+const skeleton = async (
+  params: Params,
+  ctx: Context,
+): Promise<SkeletonState> => {
   const res = await ctx.searchAgent.api.app.bsky.unspecced.searchPostsSkeleton(
     params,
   )
@@ -53,7 +56,10 @@ const skeleton = async (params: Params, ctx: Context) => {
   }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
+const hydration = async (
+  state: SkeletonState,
+  ctx: Context,
+): Promise<HydrationState> => {
   const { feedService } = ctx
   const { params, postUris } = state
   const uris = new Set<string>(postUris)
@@ -66,7 +72,7 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
   return { ...state, ...hydrated }
 }
 
-const noBlocks = (state: HydrationState) => {
+const noBlocks = (state: HydrationState): HydrationState => {
   const { viewer } = state.params
   state.postUris = state.postUris.filter((uri) => {
     const post = state.posts[uri]
