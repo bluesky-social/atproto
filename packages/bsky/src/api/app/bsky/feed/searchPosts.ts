@@ -1,13 +1,14 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/searchPosts'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import AtpAgent from '@atproto/api'
+import { AtUri } from '@atproto/syntax'
+import { mapDefined } from '@atproto/common'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/searchPosts'
 import { Database } from '../../../../db'
 import { FeedHydrationState, FeedService } from '../../../../services/feed'
 import { ActorService } from '../../../../services/actor'
-import { AtUri } from '@atproto/syntax'
 import { createPipeline } from '../../../../pipeline'
-import AtpAgent from '@atproto/api'
 
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
@@ -78,14 +79,14 @@ const noBlocks = (state: HydrationState) => {
 const presentation = (state: HydrationState, ctx: Context) => {
   const { feedService, actorService } = ctx
   const { postUris, profiles, params } = state
-  const SKIP = []
   const actors = actorService.views.profileBasicPresentation(
     Object.keys(profiles),
     state,
     { viewer: params.viewer },
   )
-  const postViews = postUris.flatMap((uri) => {
-    const postView = feedService.views.formatPostView(
+
+  const postViews = mapDefined(postUris, (uri) =>
+    feedService.views.formatPostView(
       uri,
       actors,
       state.posts,
@@ -93,9 +94,8 @@ const presentation = (state: HydrationState, ctx: Context) => {
       state.embeds,
       state.labels,
       state.lists,
-    )
-    return postView ?? SKIP
-  })
+    ),
+  )
   return { posts: postViews }
 }
 
