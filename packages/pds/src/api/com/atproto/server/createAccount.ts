@@ -3,7 +3,10 @@ import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import disposable from 'disposable-email'
-import { normalizeAndValidateHandle } from '../../../../handle'
+import {
+  baseNormalizeAndValidate,
+  normalizeAndValidateHandle,
+} from '../../../../handle'
 import * as plc from '@did-plc/lib'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
@@ -80,7 +83,8 @@ const validateInputsForEntrywayPds = async (
   ctx: AppContext,
   input: CreateAccountInput,
 ) => {
-  const { did, handle, plcOp } = input
+  const { did, plcOp } = input
+  const handle = baseNormalizeAndValidate(input.handle)
   if (!did || !input.plcOp) {
     throw new InvalidRequestError(
       'non-entryway pds requires bringing a DID and plcOp',
@@ -255,7 +259,7 @@ const validateExistingDid = async (
   return { did: did, plcOp: null }
 }
 
-const validateAtprotoData = async (
+const validateAtprotoData = (
   data: AtprotoData,
   expected: {
     handle: string
