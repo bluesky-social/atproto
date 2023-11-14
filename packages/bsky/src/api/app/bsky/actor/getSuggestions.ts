@@ -71,6 +71,7 @@ const skeleton = async (
   const rest = suggestions.filter((row) => row.order !== 1 && row.order !== 2)
   const limited = firstTwo.concat(shuffle(rest)).slice(0, params.limit)
 
+  // if the result set ends up getting larger, consider using a seed included in the cursor for for the randomized shuffle
   const cursor =
     limited.length > 0
       ? limited
@@ -117,7 +118,10 @@ const parseCursor = (cursor?: string): number[] => {
     return []
   }
   try {
-    return cursor.split(':').map((id) => parseInt(id))
+    return cursor
+      .split(':')
+      .map((id) => parseInt(id, 10))
+      .filter((id) => !isNaN(id))
   } catch {
     return []
   }

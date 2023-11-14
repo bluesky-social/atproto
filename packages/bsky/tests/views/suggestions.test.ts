@@ -83,8 +83,6 @@ describe('pds user search views', () => {
     expect(result3.data.cursor).toBeUndefined()
   })
 
-  return
-
   it('fetches suggestions unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.actor.getSuggestions(
       {},
