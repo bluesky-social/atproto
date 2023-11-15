@@ -71,7 +71,7 @@ describe('moderation-events', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_moderation',
+      dbPostgresSchema: 'bsky_moderation_events',
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
