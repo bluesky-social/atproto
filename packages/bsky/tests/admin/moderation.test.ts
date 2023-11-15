@@ -867,6 +867,16 @@ describe('moderation', () => {
       })
     })
 
+    it('sets blobCids in moderation status', async () => {
+      const { subjectStatuses } = await getStatuses({
+        subject: post.ref.uriStr,
+      })
+
+      expect(subjectStatuses[0].subjectBlobCids).toEqual([
+        blob.image.ref.toString(),
+      ])
+    })
+
     it('prevents resolution of blob', async () => {
       const blobPath = `/blob/${sc.dids.carol}/${blob.image.ref.toString()}`
       const resolveBlob = await fetch(`${network.bsky.url}${blobPath}`)

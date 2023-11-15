@@ -170,6 +170,14 @@ export const adjustModerationSubjectStatus = async (
     subjectStatus.note = comment
   }
 
+  if (blobCids?.length) {
+    const newBlobCids = sql<string[]>`${JSON.stringify(
+      blobCids.map((c) => c.toString()),
+    )}` as unknown as ModerationSubjectStatusRow['blobCids']
+    newStatus.blobCids = newBlobCids
+    subjectStatus.blobCids = newBlobCids
+  }
+
   const insertQuery = db.db
     .insertInto('moderation_subject_status')
     .values({
@@ -177,17 +185,12 @@ export const adjustModerationSubjectStatus = async (
       ...newStatus,
       createdAt: now,
       updatedAt: now,
-      blobCids: blobCids?.length
-        ? sql<string[]>`${JSON.stringify(blobCids.map((c) => c.toString()))}`
-        : null,
       // TODO: Need to get the types right here.
     } as ModerationSubjectStatusRow)
     .onConflict((oc) =>
       oc.constraint('moderation_status_unique_idx').doUpdateSet({
         ...subjectStatus,
         updatedAt: now,
-        // TODO: This may result in unnecessary updates
-        blobCids: newStatus.blobCids,
       }),
     )
 

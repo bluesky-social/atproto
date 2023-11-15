@@ -193,6 +193,13 @@ export const schemaDict = {
               'lex:com.atproto.repo.strongRef',
             ],
           },
+          subjectBlobCids: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'cid',
+            },
+          },
           subjectRepoHandle: {
             type: 'string',
           },
@@ -1216,6 +1223,7 @@ export const schemaDict = {
             },
             subject: {
               type: 'string',
+              format: 'uri',
             },
             includeAllUserRecords: {
               type: 'boolean',
@@ -1268,6 +1276,7 @@ export const schemaDict = {
           properties: {
             subject: {
               type: 'string',
+              format: 'uri',
             },
             note: {
               type: 'string',
@@ -1306,6 +1315,7 @@ export const schemaDict = {
               type: 'array',
               items: {
                 type: 'string',
+                format: 'uri',
               },
             },
             lastReviewedBy: {

@@ -136,6 +136,7 @@ export interface SubjectStatusView {
     | RepoRef
     | ComAtprotoRepoStrongRef.Main
     | { $type: string; [k: string]: unknown }
+  subjectBlobCids?: string[]
   subjectRepoHandle?: string
   /** Timestamp referencing when the last update was made to the moderation status of the subject */
   updatedAt: string

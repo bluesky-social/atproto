@@ -130,6 +130,10 @@
           "type": "union",
           "refs": ["#repoRef", "com.atproto.repo.strongRef"]
         },
+        "subjectBlobCids": {
+          "type": "array",
+          "items": { "type": "string", "format": "cid" }
+        },
         "subjectRepoHandle": { "type": "string" },
         "updatedAt": {
           "type": "string",

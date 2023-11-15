@@ -472,6 +472,7 @@ export class ModerationViews {
       suspendUntil: subjectStatus.suspendUntil ?? undefined,
       takendown: subjectStatus.takendown ?? undefined,
       subjectRepoHandle: subjectStatus.handle ?? undefined,
+      subjectBlobCids: subjectStatus.blobCids || [],
       subject: !subjectStatus.recordPath
         ? {
             $type: 'com.atproto.admin.defs#repoRef',

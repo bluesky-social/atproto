@@ -83,7 +83,6 @@ export async function resolveBlob(
   db: Database,
   idResolver: IdResolver,
 ) {
-  const { ref } = db.db.dynamic
   const cidStr = cid.toString()
 
   const [{ pds }, takedown] = await Promise.all([
@@ -91,7 +90,7 @@ export async function resolveBlob(
     db.db
       .selectFrom('moderation_subject_status')
       .select('id')
-      .where(sql<string>`${ref('blobCids')} @> ${JSON.stringify([cidStr])}`)
+      .where('blobCids', '@>', sql`CAST(${JSON.stringify([cidStr])} AS JSONB)`)
       .where('takendown', 'is', true)
       .executeTakeFirst(),
   ])
