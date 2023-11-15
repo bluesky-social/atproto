@@ -3901,7 +3901,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Find labels relevant to the provided URI patterns.',
+        description:
+          'Fetch all labels from a labeler created after a certain date.',
         parameters: {
           type: 'params',
           properties: {
