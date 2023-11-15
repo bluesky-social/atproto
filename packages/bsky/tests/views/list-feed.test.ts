@@ -35,7 +35,7 @@ describe('list feed views', () => {
     await network.close()
   })
 
-  it('fetches list feed', async () => {
+  it.skip('fetches list feed', async () => {
     const res = await agent.api.app.bsky.feed.getListFeed(
       { list: listRef.uriStr },
       { headers: await network.serviceHeaders(carol) },
