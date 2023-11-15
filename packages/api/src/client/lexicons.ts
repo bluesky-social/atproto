@@ -434,6 +434,10 @@ export const schemaDict = {
           inviteNote: {
             type: 'string',
           },
+          emailConfirmedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
         },
       },
       accountView: {
@@ -468,6 +472,10 @@ export const schemaDict = {
           },
           invitesDisabled: {
             type: 'boolean',
+          },
+          emailConfirmedAt: {
+            type: 'string',
+            format: 'datetime',
           },
           inviteNote: {
             type: 'string',

@@ -91,6 +91,39 @@ describe('admin get repo view', () => {
     expect(triage).toEqual({ ...admin, email: undefined })
   })
 
+  it('includes emailConfirmedAt timestamp', async () => {
+    const { data: beforeEmailVerification } =
+      await agent.api.com.atproto.admin.getRepo(
+        { did: sc.dids.bob },
+        { headers: network.pds.adminAuthHeaders() },
+      )
+
+    expect(beforeEmailVerification.emailConfirmedAt).toBeUndefined()
+    const timestampBeforeVerification = Date.now()
+    const bobsAccount = sc.accounts[sc.dids.bob]
+    const verificationToken = await network.pds.ctx.services
+      .account(network.pds.ctx.db)
+      .createEmailToken(sc.dids.bob, 'confirm_email')
+    await agent.api.com.atproto.server.confirmEmail(
+      { email: bobsAccount.email, token: verificationToken },
+      {
+        encoding: 'application/json',
+
+        headers: sc.getHeaders(sc.dids.bob),
+      },
+    )
+    const { data: afterEmailVerification } =
+      await agent.api.com.atproto.admin.getRepo(
+        { did: sc.dids.bob },
+        { headers: network.pds.adminAuthHeaders() },
+      )
+
+    expect(afterEmailVerification.emailConfirmedAt).toBeTruthy()
+    expect(
+      new Date(afterEmailVerification.emailConfirmedAt as string).getTime(),
+    ).toBeGreaterThan(timestampBeforeVerification)
+  })
+
   it('fails when repo does not exist.', async () => {
     const promise = agent.api.com.atproto.admin.getRepo(
       { did: 'did:plc:doesnotexist' },
