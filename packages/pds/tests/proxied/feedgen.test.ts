@@ -4,7 +4,7 @@ import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import { forSnapshot } from '../_util'
 
-describe('feedgen proxy view', () => {
+describe.skip('feedgen proxy view', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient

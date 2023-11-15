@@ -164,16 +164,16 @@ describe('proxies admin requests', () => {
     expect(forSnapshot(result)).toMatchSnapshot()
   })
 
-  it('fetches action details.', async () => {
+  it('fetches event details.', async () => {
     const { data: result } =
       await agent.api.com.atproto.admin.getModerationEvent(
-        { id: 3 },
+        { id: 2 },
         { headers: network.pds.adminAuthHeaders() },
       )
     expect(forSnapshot(result)).toMatchSnapshot()
   })
 
-  it('fetches a list of actions.', async () => {
+  it('fetches a list of events.', async () => {
     const { data: result } =
       await agent.api.com.atproto.admin.queryModerationEvents(
         { subject: sc.dids.bob },
