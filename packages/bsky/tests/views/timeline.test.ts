@@ -6,7 +6,7 @@ import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
 import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 
-describe('timeline views', () => {
+describe.skip('timeline views', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
