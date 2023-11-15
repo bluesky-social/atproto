@@ -46,9 +46,11 @@ const skeleton = async (
   params: Params,
   ctx: Context,
 ): Promise<SkeletonState> => {
-  const res = await ctx.searchAgent.api.app.bsky.unspecced.searchPostsSkeleton(
-    params,
-  )
+  const res = await ctx.searchAgent.api.app.bsky.unspecced.searchPostsSkeleton({
+    q: params.q,
+    cursor: params.cursor,
+    limit: params.limit,
+  })
   return {
     params,
     postUris: res.data.posts.map((a) => a.uri),
