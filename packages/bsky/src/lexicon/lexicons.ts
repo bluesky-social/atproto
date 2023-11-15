@@ -3895,6 +3895,46 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoTempFetchLabels: {
+    lexicon: 1,
+    id: 'com.atproto.temp.fetchLabels',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Find labels relevant to the provided URI patterns.',
+        parameters: {
+          type: 'params',
+          properties: {
+            since: {
+              type: 'integer',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 250,
+              default: 50,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['labels'],
+            properties: {
+              labels: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.label.defs#label',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyActorDefs: {
     lexicon: 1,
     id: 'app.bsky.actor.defs',
@@ -7659,6 +7699,7 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
+  ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
