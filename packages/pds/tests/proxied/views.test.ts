@@ -72,7 +72,7 @@ describe('proxies view requests', () => {
     expect(forSnapshot(res.data)).toMatchSnapshot()
   })
 
-  it.skip('actor.getSuggestions', async () => {
+  it('actor.getSuggestions', async () => {
     // mock some suggestions
     const suggestions = [
       { did: sc.dids.bob, order: 1 },
@@ -195,7 +195,7 @@ describe('proxies view requests', () => {
     expect([...pt1.data.feed, ...pt2.data.feed]).toEqual(res.data.feed)
   })
 
-  it.skip('feed.getListFeed', async () => {
+  it('feed.getListFeed', async () => {
     const list = Object.values(sc.lists[alice])[0].ref.uriStr
     const res = await agent.api.app.bsky.feed.getListFeed(
       {
@@ -421,7 +421,7 @@ describe('proxies view requests', () => {
     await network.processAll()
   })
 
-  it.skip('graph.getFollows', async () => {
+  it('graph.getFollows', async () => {
     const res = await agent.api.app.bsky.graph.getFollows(
       { actor: bob },
       {
@@ -450,7 +450,7 @@ describe('proxies view requests', () => {
     expect([...pt1.data.follows, ...pt2.data.follows]).toEqual(res.data.follows)
   })
 
-  it.skip('graph.getFollowers', async () => {
+  it('graph.getFollowers', async () => {
     const res = await agent.api.app.bsky.graph.getFollowers(
       { actor: bob },
       {

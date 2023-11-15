@@ -133,14 +133,16 @@ export default async (
   if (opts?.addModLabels) {
     await sc.agent.com.atproto.admin.emitModerationEvent(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventFlag' },
+        event: {
+          createLabelVals: ['repo-action-label'],
+          negateLabelVals: [],
+          $type: 'com.atproto.admin.defs#modEventLabel',
+        },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: dan,
         },
         createdBy: 'did:example:admin',
-        reason: 'test',
-        createLabelVals: ['repo-action-label'],
       },
       {
         encoding: 'application/json',
