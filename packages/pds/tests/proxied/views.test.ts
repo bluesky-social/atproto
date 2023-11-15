@@ -306,7 +306,7 @@ describe('proxies view requests', () => {
     expect(forSnapshot(res.data)).toMatchSnapshot()
   })
 
-  it.skip('feed.getTimeline', async () => {
+  it('feed.getTimeline', async () => {
     const res = await agent.api.app.bsky.feed.getTimeline(
       {},
       {
