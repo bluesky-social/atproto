@@ -114,7 +114,7 @@ Object {
       },
     },
   ],
-  "cursor": "user(2)",
+  "cursor": "1:3",
 }
 `;
 
