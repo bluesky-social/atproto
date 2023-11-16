@@ -53,6 +53,7 @@ import getModerationReport from './com/atproto/admin/getModerationReport'
 import getModerationReports from './com/atproto/admin/getModerationReports'
 import resolveHandle from './com/atproto/identity/resolveHandle'
 import getRecord from './com/atproto/repo/getRecord'
+import fetchLabels from './com/atproto/temp/fetchLabels'
 
 export * as health from './health'
 
@@ -116,5 +117,6 @@ export default function (server: Server, ctx: AppContext) {
   getModerationReports(server, ctx)
   resolveHandle(server, ctx)
   getRecord(server, ctx)
+  fetchLabels(server, ctx)
   return server
 }
