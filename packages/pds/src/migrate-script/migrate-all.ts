@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import https from 'node:https'
 import axios from 'axios'
 import * as plcLib from '@did-plc/lib'
 import SqlRepoStorage from '../sql-repo-storage'
@@ -19,6 +20,11 @@ import {
   transferPreferences,
   transferTakedowns,
 } from './util'
+
+const httpClient = axios.create({
+  timeout: 0, //optional
+  httpsAgent: new https.Agent({ keepAlive: true }),
+})
 
 export const runScript = async () => {
   console.log('starting')
@@ -198,7 +204,7 @@ const doImport = async (
   const storage = new SqlRepoStorage(ctx.db, did)
   const carStream = await storage.getCarStream(since)
 
-  const importRes = await axios.post(
+  const importRes = await httpClient.post(
     `${pds.url}/xrpc/com.atproto.temp.importRepo`,
     carStream,
     {
@@ -287,7 +293,7 @@ const lockAndTransfer = async (
     )
     assert(!txFinished)
     const accountRes = await getUserAccount(ctx, status.did)
-    await axios.post(
+    await httpClient.post(
       `${pds.url}/xrpc/com.atproto.temp.transferAccount`,
       {
         did: status.did,
