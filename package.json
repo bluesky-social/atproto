@@ -9,8 +9,9 @@
     "node": ">=18"
   },
   "scripts": {
+    "prepare": "is-ci || husky install",
     "lint:fix": "pnpm lint --fix",
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "eslint .",
     "verify": "prettier --check . && pnpm lint",
     "format": "prettier --write .",
     "build": "pnpm -r --stream build",
@@ -41,7 +42,10 @@
     "eslint": "^8.24.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.3",
+    "is-ci": "^3.0.1",
     "jest": "^28.1.2",
+    "lint-staged": "^14.0.1",
     "node-gyp": "^9.3.1",
     "pino-pretty": "^9.1.0",
     "prettier": "^2.7.1",
@@ -49,9 +53,10 @@
     "ts-node": "^10.8.2",
     "typescript": "^4.8.4"
   },
-  "workspaces": {
-    "packages": [
-      "packages/*"
+  "lint-staged": {
+    "*": [
+      "prettier --write",
+      "eslint"
     ]
   }
 }

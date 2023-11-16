@@ -21,7 +21,7 @@
     "jest.config.js",
     "babel.config.js",
     "build.js",
-    "update-pkg.js"
+    "update-main-to-dist.js"
   ],
   "rules": {
     "no-var": "error",

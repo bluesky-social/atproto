@@ -8,3 +8,6 @@ pnpm-lock.yaml
 .pnpm*
 .changeset
 *.d.ts
+.husky
+.eslintignore
+.prettierignore
