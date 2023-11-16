@@ -152,7 +152,7 @@
         "birthDate": {
           "type": "string",
           "format": "datetime",
-          "description": "The birth date of account owner"
+          "description": "The birth date of account owner."
         }
       }
     },
