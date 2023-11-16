@@ -16,7 +16,25 @@ Object {
       "val": "self-label",
     },
   ],
-  "moderation": Object {},
+  "moderation": Object {
+    "subjectStatus": Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "id": 1,
+      "lastReportedAt": "1970-01-01T00:00:00.000Z",
+      "lastReviewedAt": "1970-01-01T00:00:00.000Z",
+      "lastReviewedBy": "did:example:admin",
+      "reviewState": "com.atproto.admin.defs#reviewClosed",
+      "subject": Object {
+        "$type": "com.atproto.repo.strongRef",
+        "cid": "cids(0)",
+        "uri": "record(0)",
+      },
+      "subjectBlobCids": Array [],
+      "subjectRepoHandle": "alice.test",
+      "takendown": true,
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+  },
   "repo": Object {
     "did": "user(0)",
     "email": "alice@test.com",
@@ -84,7 +102,25 @@ Object {
       "val": "self-label",
     },
   ],
-  "moderation": Object {},
+  "moderation": Object {
+    "subjectStatus": Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "id": 1,
+      "lastReportedAt": "1970-01-01T00:00:00.000Z",
+      "lastReviewedAt": "1970-01-01T00:00:00.000Z",
+      "lastReviewedBy": "did:example:admin",
+      "reviewState": "com.atproto.admin.defs#reviewClosed",
+      "subject": Object {
+        "$type": "com.atproto.repo.strongRef",
+        "cid": "cids(0)",
+        "uri": "record(0)",
+      },
+      "subjectBlobCids": Array [],
+      "subjectRepoHandle": "alice.test",
+      "takendown": true,
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+  },
   "repo": Object {
     "did": "user(0)",
     "email": "alice@test.com",

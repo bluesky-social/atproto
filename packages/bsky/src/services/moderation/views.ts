@@ -264,21 +264,14 @@ export class ModerationViews {
   async recordDetail(result: RecordResult): Promise<RecordViewDetail> {
     const [record, subjectStatusResult] = await Promise.all([
       this.record(result),
-      this.db.db
-        .selectFrom('moderation_subject_status')
-        .leftJoin('actor', 'actor.did', 'moderation_subject_status.did')
-        // TODO: We need to build the path manually here, right?
-        .where('recordPath', '=', result.uri)
-        .orderBy('id', 'desc')
-        .select('actor.handle as handle')
-        .selectAll('moderation_subject_status')
-        .executeTakeFirst(),
+      this.getSubjectStatus(didAndRecordPathFromUri(result.uri)),
     ])
+
     const [blobs, labels, subjectStatus] = await Promise.all([
       this.blob(findBlobRefs(record.value)),
       this.labels(record.uri),
-      subjectStatusResult
-        ? this.subjectStatus(subjectStatusResult)
+      subjectStatusResult?.length
+        ? this.subjectStatus(subjectStatusResult[0])
         : Promise.resolve(undefined),
     ])
     const selfLabels = getSelfLabels({
