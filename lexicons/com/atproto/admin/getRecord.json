@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "View details about a record.",
+      "description": "Get details about a record.",
       "parameters": {
         "type": "params",
         "required": ["uri"],

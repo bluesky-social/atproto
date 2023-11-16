@@ -30,7 +30,7 @@
             "validate": {
               "type": "boolean",
               "default": true,
-              "description": "Validate the record?"
+              "description": "Flag for validating the record."
             },
             "record": {
               "type": "unknown",
@@ -39,12 +39,12 @@
             "swapRecord": {
               "type": "string",
               "format": "cid",
-              "description": "Compare and swap with the previous record by cid."
+              "description": "Compare and swap with the previous record by CID."
             },
             "swapCommit": {
               "type": "string",
               "format": "cid",
-              "description": "Compare and swap with the previous commit by cid."
+              "description": "Compare and swap with the previous commit by CID."
             }
           }
         }

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Notify a crawling service of a recent update. Often when a long break between updates causes the connection with the crawling service to break.",
+      "description": "Notify a crawling service of a recent update; often when a long break between updates causes the connection with the crawling service to break.",
       "input": {
         "encoding": "application/json",
         "schema": {

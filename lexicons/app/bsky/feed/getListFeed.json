@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "A view of a recent posts from actors in a list",
+      "description": "Get a view of a recent posts from actors in a list.",
       "parameters": {
         "type": "params",
         "required": ["list"],
