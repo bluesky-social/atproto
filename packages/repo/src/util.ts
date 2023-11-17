@@ -149,7 +149,13 @@ export const diffToWriteDescripts = (
   return Promise.all([
     ...diff.addList().map(async (add) => {
       const { collection, rkey } = parseDataKey(add.key)
-      const value = await parse.getAndParseRecord(blocks, add.cid)
+      let value
+      try {
+        value = await parse.getAndParseRecord(blocks, add.cid)
+      } catch (err) {
+        logger.error({ collection, rkey }, 'pds-v2-debug failed to parse value')
+        throw err
+      }
       return {
         action: WriteOpAction.Create,
         collection,
@@ -160,7 +166,13 @@ export const diffToWriteDescripts = (
     }),
     ...diff.updateList().map(async (upd) => {
       const { collection, rkey } = parseDataKey(upd.key)
-      const value = await parse.getAndParseRecord(blocks, upd.cid)
+      let value
+      try {
+        value = await parse.getAndParseRecord(blocks, upd.cid)
+      } catch (err) {
+        logger.error({ collection, rkey }, 'pds-v2-debug failed to parse value')
+        throw err
+      }
       return {
         action: WriteOpAction.Update,
         collection,
