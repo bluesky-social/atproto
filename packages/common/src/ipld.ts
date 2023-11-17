@@ -54,6 +54,7 @@ export const verifyCidForBytes = async (cid: CID, bytes: Uint8Array) => {
       { err, code: cid.code },
       'pds-v2-debug could not format cid',
     )
+    throw err
   }
   if (!cid.equals(expected)) {
     throw new Error(

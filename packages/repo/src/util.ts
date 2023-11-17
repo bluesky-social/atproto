@@ -97,6 +97,7 @@ export const carToBlocks = async (
     roots = await car.getRoots()
   } catch (err) {
     logger.error({ err }, 'pds-v2-debug failed to read roots')
+    throw err
   }
   const blocks = new BlockMap()
   let count = 0
@@ -107,6 +108,7 @@ export const carToBlocks = async (
     }
   } catch (err) {
     logger.error({ count, err }, 'pds-v2-debug failed to read block')
+    throw err
   }
   return {
     roots,
