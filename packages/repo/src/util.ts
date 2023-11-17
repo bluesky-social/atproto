@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import * as cbor from '@ipld/dag-cbor'
-import { CarReader } from '@ipld/car/reader'
+import { CarBlockIterator } from '@ipld/car'
 import { BlockWriter, CarWriter } from '@ipld/car/writer'
 import {
   streamToBuffer,
@@ -11,6 +11,7 @@ import {
   cidForCbor,
   byteIterableToStream,
   TID,
+  wait,
 } from '@atproto/common'
 import { ipldToLex, lexToIpld, LexValue, RepoRecord } from '@atproto/lexicon'
 
@@ -90,7 +91,7 @@ export const blocksToCarFile = (
 }
 
 export const carToBlocks = async (
-  car: CarReader,
+  car: CarBlockIterator,
 ): Promise<{ roots: CID[]; blocks: BlockMap }> => {
   let roots
   try {
@@ -100,15 +101,15 @@ export const carToBlocks = async (
     throw err
   }
   const blocks = new BlockMap()
-  let count = 0
-  try {
-    for await (const block of car.blocks()) {
-      count++
+  if (car._iterable) {
+    let count = 0
+    for await (const block of car._iterable) {
       blocks.set(block.cid, block.bytes)
+      count++
+      if (count % 10000 === 0) {
+        await wait(1)
+      }
     }
-  } catch (err) {
-    logger.error({ count, err }, 'pds-v2-debug failed to read block')
-    throw err
   }
   return {
     roots,
@@ -119,12 +120,12 @@ export const carToBlocks = async (
 export const readCar = async (
   bytes: Uint8Array,
 ): Promise<{ roots: CID[]; blocks: BlockMap }> => {
-  const car = await CarReader.fromBytes(bytes)
+  const car = await CarBlockIterator.fromBytes(bytes)
   return carToBlocks(car)
 }
 
 export const readCarStream = async (stream: AsyncIterable<Uint8Array>) => {
-  const car = await CarReader.fromIterable(stream)
+  const car = await CarBlockIterator.fromIterable(stream)
   return carToBlocks(car)
 }
 
