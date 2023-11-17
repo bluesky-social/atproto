@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - pds-v2-debug
+      - pds-v2-logging
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
