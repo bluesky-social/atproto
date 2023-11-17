@@ -658,7 +658,7 @@ importers:
         version: link:../syntax
       '@ipld/car':
         specifier: ^3.2.3
-        version: 3.2.3
+        version: 3.2.4
       '@ipld/dag-cbor':
         specifier: ^7.0.0
         version: 7.0.3
@@ -4765,8 +4765,8 @@ packages:
   /@ioredis/commands@1.2.0:
     resolution: {integrity: sha512-Sx1pU8EM64o2BrqNpEO1CNLtKQwyhuXuqyfH7oGKCk+1a33d2r5saW8zNwm3j6BTExtjrv2BxTgzzkMwts6vGg==}
 
-  /@ipld/car@3.2.3:
-    resolution: {integrity: sha512-pXE5mFJlXzJVaBwqAJKGlKqMmxq8H2SLEWBJgkeBDPBIN8ZbscPc3I9itkSQSlS/s6Fgx35Ri3LDTDtodQjCCQ==}
+  /@ipld/car@3.2.4:
+    resolution: {integrity: sha512-rezKd+jk8AsTGOoJKqzfjLJ3WVft7NZNH95f0pfPbicROvzTyvHCNy567HzSUd6gRXZ9im29z5ZEv9Hw49jSYw==}
     dependencies:
       '@ipld/dag-cbor': 7.0.3
       multiformats: 9.9.0
