@@ -1,12 +1,13 @@
 import { Readable } from 'stream'
 import assert from 'assert'
+import * as ui8 from 'uint8arrays'
 import PQueue from 'p-queue'
 import axios from 'axios'
 import { CID } from 'multiformats/cid'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AsyncBuffer, TID, wait } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
-import { Repo, WriteOpAction, readCarStream, verifyDiff } from '@atproto/repo'
+import { Repo, WriteOpAction, readCar, verifyDiff } from '@atproto/repo'
 import { BlobRef, LexValue } from '@atproto/lexicon'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
@@ -72,6 +73,16 @@ const processImport = async (
   outBuffer.close()
 }
 
+const readStreamToBytes = async (
+  stream: AsyncIterable<Uint8Array>,
+): Promise<Uint8Array> => {
+  const chunks: Uint8Array[] = []
+  for await (const chunk of stream) {
+    chunks.push(chunk)
+  }
+  return ui8.concat(chunks)
+}
+
 const importRepo = async (
   actorStore: ActorStoreTransactor,
   incomingCar: AsyncIterable<Uint8Array>,
@@ -80,7 +91,9 @@ const importRepo = async (
   const now = new Date().toISOString()
   const rev = TID.nextStr()
   const did = actorStore.repo.did
-  const { roots, blocks } = await readCarStream(incomingCar)
+
+  const carBytes = await readStreamToBytes(incomingCar)
+  const { roots, blocks } = await readCar(carBytes)
   if (roots.length !== 1) {
     throw new InvalidRequestError('expected one root')
   }
