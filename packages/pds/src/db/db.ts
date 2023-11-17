@@ -10,16 +10,13 @@ import {
   UnknownRow,
 } from 'kysely'
 import SqliteDB from 'better-sqlite3'
-import { retry } from '@atproto/common'
 import { dbLogger } from '../logger'
+import { retrySqlite } from './util'
 
 const DEFAULT_PRAGMAS = {
   journal_mode: 'WAL',
-  busy_timeout: '5000',
   strict: 'ON',
 }
-
-const RETRY_ERRORS = new Set(['SQLITE_BUSY', 'SQLITE_BUSY_SNAPSHOT'])
 
 export class Database<Schema> {
   destroyed = false
@@ -31,7 +28,9 @@ export class Database<Schema> {
     location: string,
     opts?: { pragmas?: Record<string, string> },
   ): Database<T> {
-    const sqliteDb = new SqliteDB(location)
+    const sqliteDb = new SqliteDB(location, {
+      timeout: 0, // handled by application
+    })
     const pragmas = {
       ...DEFAULT_PRAGMAS,
       ...(opts?.pragmas ?? {}),
@@ -73,13 +72,7 @@ export class Database<Schema> {
   }
 
   async transaction<T>(fn: (db: Database<Schema>) => Promise<T>): Promise<T> {
-    return retry(() => this.transactionNoRetry(fn), {
-      retryable: (err) =>
-        typeof err?.['code'] === 'string' && RETRY_ERRORS.has(err['code']),
-      maxRetries: 5,
-      backoffMultiplier: 50,
-      backoffMax: 2000,
-    })
+    return retrySqlite(() => this.transactionNoRetry(fn))
   }
 
   onCommit(fn: () => void) {
