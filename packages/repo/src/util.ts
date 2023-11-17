@@ -1,6 +1,7 @@
+import { setImmediate } from 'node:timers/promises'
 import { CID } from 'multiformats/cid'
 import * as cbor from '@ipld/dag-cbor'
-import { CarReader } from '@ipld/car/reader'
+import { CarBlockIterator } from '@ipld/car'
 import { BlockWriter, CarWriter } from '@ipld/car/writer'
 import {
   streamToBuffer,
@@ -89,12 +90,16 @@ export const blocksToCarFile = (
 }
 
 export const carToBlocks = async (
-  car: CarReader,
+  car: CarBlockIterator,
 ): Promise<{ roots: CID[]; blocks: BlockMap }> => {
   const roots = await car.getRoots()
   const blocks = new BlockMap()
-  for await (const block of verifyIncomingCarBlocks(car.blocks())) {
-    blocks.set(block.cid, block.bytes)
+  if (car._iterable) {
+    for await (const block of verifyIncomingCarBlocks(car._iterable)) {
+      blocks.set(block.cid, block.bytes)
+      // break up otherwise "synchronous" work in car parsing
+      await setImmediate()
+    }
   }
   return {
     roots,
@@ -105,12 +110,12 @@ export const carToBlocks = async (
 export const readCar = async (
   bytes: Uint8Array,
 ): Promise<{ roots: CID[]; blocks: BlockMap }> => {
-  const car = await CarReader.fromBytes(bytes)
+  const car = await CarBlockIterator.fromBytes(bytes)
   return carToBlocks(car)
 }
 
 export const readCarStream = async (stream: AsyncIterable<Uint8Array>) => {
-  const car = await CarReader.fromIterable(stream)
+  const car = await CarBlockIterator.fromIterable(stream)
   return carToBlocks(car)
 }
 
