@@ -94,12 +94,10 @@ export const carToBlocks = async (
 ): Promise<{ roots: CID[]; blocks: BlockMap }> => {
   const roots = await car.getRoots()
   const blocks = new BlockMap()
-  if (car._iterable) {
-    for await (const block of verifyIncomingCarBlocks(car._iterable)) {
-      blocks.set(block.cid, block.bytes)
-      // break up otherwise "synchronous" work in car parsing
-      await setImmediate()
-    }
+  for await (const block of verifyIncomingCarBlocks(car)) {
+    blocks.set(block.cid, block.bytes)
+    // break up otherwise "synchronous" work in car parsing
+    await setImmediate()
   }
   return {
     roots,
