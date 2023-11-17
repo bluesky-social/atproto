@@ -6,8 +6,14 @@ import { CID } from 'multiformats/cid'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AsyncBuffer, TID, wait } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
-import { Repo, WriteOpAction, readCarStream, verifyDiff } from '@atproto/repo'
-import { BlobRef, LexValue } from '@atproto/lexicon'
+import {
+  Repo,
+  WriteOpAction,
+  getAndParseRecord,
+  readCarStream,
+  verifyDiff,
+} from '@atproto/repo'
+import { BlobRef, LexValue, RepoRecord } from '@atproto/lexicon'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { ActorStoreTransactor } from '../../../../actor-store'
@@ -106,15 +112,22 @@ const importRepo = async (
       if (write.action === WriteOpAction.Delete) {
         await actorStore.record.deleteRecord(uri)
       } else {
+        let parsedRecord: RepoRecord | null
+        try {
+          const parsed = await getAndParseRecord(blocks, write.cid)
+          parsedRecord = parsed.record
+        } catch {
+          parsedRecord = null
+        }
         const indexRecord = actorStore.record.indexRecord(
           uri,
           write.cid,
-          write.record,
+          parsedRecord,
           write.action,
           rev,
           now,
         )
-        const recordBlobs = findBlobRefs(write.record)
+        const recordBlobs = findBlobRefs(parsedRecord)
         blobRefs = blobRefs.concat(recordBlobs)
         const blobValues = recordBlobs.map((cid) => ({
           recordUri: uri.toString(),

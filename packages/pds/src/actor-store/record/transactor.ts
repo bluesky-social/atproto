@@ -5,6 +5,7 @@ import { dbLogger as log } from '../../logger'
 import { ActorDb, Backlink } from '../db'
 import { RecordReader, getBacklinks } from './reader'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
+import { RepoRecord } from '@atproto/lexicon'
 
 export class RecordTransactor extends RecordReader {
   constructor(public db: ActorDb, public blobstore: BlobStore) {
@@ -14,13 +15,13 @@ export class RecordTransactor extends RecordReader {
   async indexRecord(
     uri: AtUri,
     cid: CID,
-    obj: unknown,
+    record: RepoRecord | null,
     action: WriteOpAction.Create | WriteOpAction.Update = WriteOpAction.Create,
     repoRev: string,
     timestamp?: string,
   ) {
     log.debug({ uri }, 'indexing record')
-    const record = {
+    const row = {
       uri: uri.toString(),
       cid: cid.toString(),
       collection: uri.collection,
@@ -30,33 +31,35 @@ export class RecordTransactor extends RecordReader {
     }
     if (!uri.hostname.startsWith('did:')) {
       throw new Error('Expected indexed URI to contain DID')
-    } else if (record.collection.length < 1) {
+    } else if (row.collection.length < 1) {
       throw new Error('Expected indexed URI to contain a collection')
-    } else if (record.rkey.length < 1) {
+    } else if (row.rkey.length < 1) {
       throw new Error('Expected indexed URI to contain a record key')
     }
 
     // Track current version of record
     await this.db.db
       .insertInto('record')
-      .values(record)
+      .values(row)
       .onConflict((oc) =>
         oc.column('uri').doUpdateSet({
-          cid: record.cid,
+          cid: row.cid,
           repoRev: repoRev,
-          indexedAt: record.indexedAt,
+          indexedAt: row.indexedAt,
         }),
       )
       .execute()
 
-    // Maintain backlinks
-    const backlinks = getBacklinks(uri, obj)
-    if (action === WriteOpAction.Update) {
-      // On update just recreate backlinks from scratch for the record, so we can clear out
-      // the old ones. E.g. for weird cases like updating a follow to be for a different did.
-      await this.removeBacklinksByUri(uri)
+    if (record !== null) {
+      // Maintain backlinks
+      const backlinks = getBacklinks(uri, record)
+      if (action === WriteOpAction.Update) {
+        // On update just recreate backlinks from scratch for the record, so we can clear out
+        // the old ones. E.g. for weird cases like updating a follow to be for a different did.
+        await this.removeBacklinksByUri(uri)
+      }
+      await this.addBacklinks(backlinks)
     }
-    await this.addBacklinks(backlinks)
 
     log.info({ uri }, 'indexed record')
   }
