@@ -102,7 +102,7 @@ export const carToBlocks = async (
   const blocks = new BlockMap()
   let count = 0
   try {
-    for await (const block of verifyIncomingCarBlocks(car.blocks())) {
+    for await (const block of car.blocks()) {
       count++
       blocks.set(block.cid, block.bytes)
     }
