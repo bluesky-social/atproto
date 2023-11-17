@@ -7,6 +7,7 @@ import * as rawCodec from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
 import * as mf from 'multiformats'
 import * as cborCodec from '@ipld/dag-cbor'
+import { rootLogger } from './logger'
 
 export const cborEncode = cborCodec.encode
 export const cborDecode = cborCodec.decode
@@ -45,7 +46,15 @@ export const cborBytesToRecord = (
 
 export const verifyCidForBytes = async (cid: CID, bytes: Uint8Array) => {
   const digest = await sha256.digest(bytes)
-  const expected = CID.createV1(cid.code, digest)
+  let expected
+  try {
+    expected = CID.createV1(cid.code, digest)
+  } catch (err) {
+    rootLogger.error(
+      { err, code: cid.code },
+      'pds-v2-debug could not format cid',
+    )
+  }
   if (!cid.equals(expected)) {
     throw new Error(
       `Not a valid CID for bytes. Expected: ${expected.toString()} Got: ${cid.toString()}`,

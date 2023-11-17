@@ -16,7 +16,7 @@ const config = {
   level,
 }
 
-const rootLogger = process.env.LOG_DESTINATION
+export const rootLogger = process.env.LOG_DESTINATION
   ? pino(config, pino.destination(process.env.LOG_DESTINATION))
   : pino(config)
 

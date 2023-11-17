@@ -32,6 +32,7 @@ import BlockMap from './block-map'
 import * as parse from './parse'
 import { Keypair } from '@atproto/crypto'
 import { Readable } from 'stream'
+import logger from './logger'
 
 export async function* verifyIncomingCarBlocks(
   car: AsyncIterable<CarBlock>,
@@ -91,10 +92,21 @@ export const blocksToCarFile = (
 export const carToBlocks = async (
   car: CarReader,
 ): Promise<{ roots: CID[]; blocks: BlockMap }> => {
-  const roots = await car.getRoots()
+  let roots
+  try {
+    roots = await car.getRoots()
+  } catch (err) {
+    logger.error({ err }, 'pds-v2-debug failed to read roots')
+  }
   const blocks = new BlockMap()
-  for await (const block of verifyIncomingCarBlocks(car.blocks())) {
-    blocks.set(block.cid, block.bytes)
+  let count = 0
+  try {
+    for await (const block of verifyIncomingCarBlocks(car.blocks())) {
+      count++
+      blocks.set(block.cid, block.bytes)
+    }
+  } catch (err) {
+    logger.error({ count, err }, 'pds-v2-debug failed to read block')
   }
   return {
     roots,
