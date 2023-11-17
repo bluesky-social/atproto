@@ -650,6 +650,7 @@ export function validateModEventEscalate(v: unknown): ValidationResult {
 
 /** Mute incoming reports on a subject */
 export interface ModEventMute {
+  comment?: string
   /** Indicates how long the subject should remain muted. */
   durationInHours: number
   [k: string]: unknown

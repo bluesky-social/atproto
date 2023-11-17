@@ -792,6 +792,9 @@ export const schemaDict = {
         description: 'Mute incoming reports on a subject',
         required: ['durationInHours'],
         properties: {
+          comment: {
+            type: 'string',
+          },
           durationInHours: {
             type: 'integer',
             description: 'Indicates how long the subject should remain muted.',
