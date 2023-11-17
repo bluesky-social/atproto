@@ -104,6 +104,7 @@ const importRepo = async (
     .selectFrom('repo_root')
     .selectAll()
     .executeTakeFirst()
+  log.info({ did, currRoot }, 'pds-v2-debug db currRoot')
   const currRepo = currRoot
     ? await Repo.load(actorStore.repo.storage, CID.parse(currRoot.cid))
     : null
