@@ -86,6 +86,7 @@ const importRepo = async (
   const now = new Date().toISOString()
   const rev = TID.nextStr()
   const did = actorStore.repo.did
+
   const { roots, blocks } = await readCarStream(incomingCar)
   if (roots.length !== 1) {
     throw new InvalidRequestError('expected one root')
