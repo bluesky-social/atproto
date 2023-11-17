@@ -13,6 +13,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { ActorStoreTransactor } from '../../../../actor-store'
 import { AtprotoData } from '@atproto/identity'
+import { httpLogger as log } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.importRepo({
@@ -97,6 +98,7 @@ const importRepo = async (
   if (roots.length !== 1) {
     throw new InvalidRequestError('expected one root')
   }
+  log.info({ did }, 'pds-v2-debug finished reading car')
   outBuffer.push(`read ${blocks.size} blocks\n`)
   const currRoot = await actorStore.db.db
     .selectFrom('repo_root')
@@ -105,6 +107,7 @@ const importRepo = async (
   const currRepo = currRoot
     ? await Repo.load(actorStore.repo.storage, CID.parse(currRoot.cid))
     : null
+  log.info({ did }, 'pds-v2-debug loaded curr repo')
   const diff = await verifyDiff(currRepo, blocks, roots[0])
   outBuffer.push(`diffed repo and found ${diff.writes.length} writes\n`)
   diff.commit.rev = rev
