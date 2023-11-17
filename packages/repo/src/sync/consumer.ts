@@ -8,6 +8,7 @@ import { def } from '../types'
 import { MST } from '../mst'
 import { cidForCbor } from '@atproto/common'
 import BlockMap from '../block-map'
+import logger from '../logger'
 
 export const verifyRepoCar = async (
   carBytes: Uint8Array,
@@ -60,13 +61,16 @@ export const verifyDiff = async (
     signingKey,
   )
   const diff = await DataDiff.of(updated.data, repo?.data ?? null)
+  logger.error('pds-v2-debug finished diff')
   const writes = await util.diffToWriteDescripts(diff, updateBlocks)
+  logger.error('pds-v2-debug finished diff to write descripts')
   const newBlocks = diff.newMstBlocks
   const leaves = updateBlocks.getMany(diff.newLeafCids.toList())
   if (leaves.missing.length > 0) {
     throw new Error(`missing leaf blocks: ${leaves.missing}`)
   }
   newBlocks.addMap(leaves.blocks)
+  logger.error('pds-v2-debug added map')
   const removedCids = diff.removedCids
   const commitCid = await newBlocks.add(updated.commit)
   // ensure the commit cid actually changed

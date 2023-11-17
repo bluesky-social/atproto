@@ -110,9 +110,11 @@ const importRepo = async (
     : null
   log.info({ did }, 'pds-v2-debug loaded curr repo')
   const diff = await verifyDiff(currRepo, blocks, roots[0])
+  log.info({ did }, 'pds-v2-debug finished diff')
   outBuffer.push(`diffed repo and found ${diff.writes.length} writes\n`)
   diff.commit.rev = rev
   await actorStore.repo.storage.applyCommit(diff.commit, currRepo === null)
+  log.info({ did }, 'pds-v2-debug applied commit')
   const recordQueue = new PQueue({ concurrency: 50 })
   let blobRefs: BlobRef[] = []
   let count = 0
