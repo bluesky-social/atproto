@@ -1,4 +1,5 @@
 import { CID } from 'multiformats/cid'
+import { setImmediate } from 'node:timers/promises'
 import * as cbor from '@ipld/dag-cbor'
 import { CarBlockIterator } from '@ipld/car'
 import { BlockWriter, CarWriter } from '@ipld/car/writer'
@@ -11,7 +12,6 @@ import {
   cidForCbor,
   byteIterableToStream,
   TID,
-  wait,
 } from '@atproto/common'
 import { ipldToLex, lexToIpld, LexValue, RepoRecord } from '@atproto/lexicon'
 
@@ -102,13 +102,10 @@ export const carToBlocks = async (
   }
   const blocks = new BlockMap()
   if (car._iterable) {
-    let count = 0
     for await (const block of car._iterable) {
       blocks.set(block.cid, block.bytes)
-      count++
-      if (count % 10000 === 0) {
-        await wait(1)
-      }
+      // break up otherwise "synchronous" work
+      await setImmediate()
     }
   }
   return {
