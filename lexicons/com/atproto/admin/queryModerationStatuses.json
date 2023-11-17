@@ -9,9 +9,9 @@
         "type": "params",
         "properties": {
           "subject": { "type": "string", "format": "uri" },
-          "note": {
+          "comment": {
             "type": "string",
-            "description": "Search subjects by keyword from notes"
+            "description": "Search subjects by keyword from comments"
           },
           "reportedAfter": {
             "type": "string",

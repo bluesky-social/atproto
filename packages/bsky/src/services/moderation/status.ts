@@ -145,7 +145,7 @@ export const adjustModerationSubjectStatus = async (
 
   // Set these because we don't want to override them if they're already set
   const defaultData = {
-    note: null,
+    comment: null,
     // Defaulting reviewState to open for any event may not be the desired behavior.
     // For instance, if a subject never had any event and we just want to leave a comment to keep an eye on it
     // that shouldn't mean we want to review the subject
@@ -166,8 +166,8 @@ export const adjustModerationSubjectStatus = async (
   }
 
   if (action === 'com.atproto.admin.defs#modEventComment' && meta?.sticky) {
-    newStatus.note = comment
-    subjectStatus.note = comment
+    newStatus.comment = comment
+    subjectStatus.comment = comment
   }
 
   if (blobCids?.length) {

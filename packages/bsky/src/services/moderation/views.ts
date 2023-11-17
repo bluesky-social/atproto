@@ -456,8 +456,7 @@ export class ModerationViews {
       reviewState: subjectStatus.reviewState,
       createdAt: subjectStatus.createdAt,
       updatedAt: subjectStatus.updatedAt,
-      // TODO: not a fan of this TS BS but gotta move on now
-      note: subjectStatus.note ?? undefined,
+      comment: subjectStatus.comment ?? undefined,
       lastReviewedBy: subjectStatus.lastReviewedBy ?? undefined,
       lastReviewedAt: subjectStatus.lastReviewedAt ?? undefined,
       lastReportedAt: subjectStatus.lastReportedAt ?? undefined,

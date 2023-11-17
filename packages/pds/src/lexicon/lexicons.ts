@@ -219,9 +219,9 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#subjectReviewState',
           },
-          note: {
+          comment: {
             type: 'string',
-            description: 'Sticky note on the subject.',
+            description: 'Sticky comment on the subject.',
           },
           muteUntil: {
             type: 'string',
@@ -726,7 +726,7 @@ export const schemaDict = {
           },
           sticky: {
             type: 'boolean',
-            description: 'Make the comment a persistent note on the subject',
+            description: 'Make the comment persistent on the subject',
           },
         },
       },
@@ -1278,9 +1278,9 @@ export const schemaDict = {
               type: 'string',
               format: 'uri',
             },
-            note: {
+            comment: {
               type: 'string',
-              description: 'Search subjects by keyword from notes',
+              description: 'Search subjects by keyword from comments',
             },
             reportedAfter: {
               type: 'string',

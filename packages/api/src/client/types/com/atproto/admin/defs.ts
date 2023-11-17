@@ -143,8 +143,8 @@ export interface SubjectStatusView {
   /** Timestamp referencing the first moderation status impacting event was emitted on the subject */
   createdAt: string
   reviewState: SubjectReviewState
-  /** Sticky note on the subject. */
-  note?: string
+  /** Sticky comment on the subject. */
+  comment?: string
   muteUntil?: string
   lastReviewedBy?: string
   lastReviewedAt?: string
@@ -542,7 +542,7 @@ export function validateModEventReverseTakedown(v: unknown): ValidationResult {
 /** Add a comment to a subject */
 export interface ModEventComment {
   comment: string
-  /** Make the comment a persistent note on the subject */
+  /** Make the comment persistent on the subject */
   sticky?: boolean
   [k: string]: unknown
 }

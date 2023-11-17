@@ -50,7 +50,7 @@ export interface ModerationSubjectStatus {
   muteUntil: string | null
   suspendUntil: string | null
   takendown: boolean
-  note: string | null
+  comment: string | null
 }
 
 export type PartialDB = {

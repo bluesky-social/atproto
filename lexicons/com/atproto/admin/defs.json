@@ -149,9 +149,9 @@
           "type": "ref",
           "ref": "#subjectReviewState"
         },
-        "note": {
+        "comment": {
           "type": "string",
-          "description": "Sticky note on the subject."
+          "description": "Sticky comment on the subject."
         },
         "muteUntil": {
           "type": "string",
@@ -478,7 +478,7 @@
         },
         "sticky": {
           "type": "boolean",
-          "description": "Make the comment a persistent note on the subject"
+          "description": "Make the comment persistent on the subject"
         }
       }
     },

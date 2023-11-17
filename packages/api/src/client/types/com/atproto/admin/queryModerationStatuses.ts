@@ -10,8 +10,8 @@ import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
   subject?: string
-  /** Search subjects by keyword from notes */
-  note?: string
+  /** Search subjects by keyword from comments */
+  comment?: string
   /** Search subjects reported after a given timestamp */
   reportedAfter?: string
   /** Search subjects reported before a given timestamp */

@@ -170,7 +170,7 @@ const createStatusFromActions = async (db: PrimaryDatabase) => {
     .select((eb) => eb.fn.count<number>('id').as('count'))
     .executeTakeFirstOrThrow()
 
-  const chunkSize = 10
+  const chunkSize = 2500
   const totalChunks = Math.ceil(allEvents.count / chunkSize)
 
   console.log(`Processing ${allEvents.count} actions in ${totalChunks} chunks`)
@@ -252,11 +252,13 @@ async function main() {
   const totalEntries = counts.actionsCount + counts.reportsCount
 
   console.log(`Migrating ${totalEntries} rows of actions and reports`)
+  const startedAt = Date.now()
   await createEvents(primaryDb)
   await createStatusFromActions(primaryDb)
   await setReportedAtTimestamp(primaryDb)
   await syncBlobCids(primaryDb)
 
+  console.log(`Time spent: ${(Date.now() - startedAt) / 1000 / 60} minutes`)
   console.log('Migration complete!')
 }
 

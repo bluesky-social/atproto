@@ -34,7 +34,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
     // human review team state
     .addColumn('reviewState', 'varchar', (col) => col.notNull())
-    .addColumn('note', 'varchar')
+    .addColumn('comment', 'varchar')
     .addColumn('muteUntil', 'varchar')
     .addColumn('lastReviewedAt', 'varchar')
     .addColumn('lastReviewedBy', 'varchar')

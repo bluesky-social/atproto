@@ -303,7 +303,7 @@ describe('moderation', () => {
       })
     })
 
-    it('adds persistent note on subject through comment event', async () => {
+    it('adds persistent comment on subject through comment event', async () => {
       const alicesPostRef = sc.posts[sc.dids.alice][0].ref
       const alicesPostSubject = {
         $type: 'com.atproto.repo.strongRef',
@@ -330,7 +330,7 @@ describe('moderation', () => {
         subject: alicesPostRef.uri.toString(),
       })
 
-      expect(alicesPostStatus.subjectStatuses[0].note).toEqual(
+      expect(alicesPostStatus.subjectStatuses[0].comment).toEqual(
         'This is a persistent note',
       )
     })
