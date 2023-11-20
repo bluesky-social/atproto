@@ -15,7 +15,6 @@ import {
   httpClient,
   repairBlob,
   repairFailedPrefs,
-  retryOnce,
   setupEnv,
   transferPreferences,
   transferTakedowns,
@@ -58,9 +57,7 @@ export const runScript = async () => {
     const pdsInfo = getPds(pdsInfos, status.pdsId)
     migrateQueue.add(async () => {
       try {
-        await retryOnce(() =>
-          migrateRepo(ctx, db, pdsInfo, status, adminHeaders),
-        )
+        await migrateRepo(ctx, db, pdsInfo, status, adminHeaders)
         await db
           .updateTable('status')
           .set({ failed: 0, err: null })
@@ -76,7 +73,7 @@ export const runScript = async () => {
       } catch (err) {
         // @ts-ignore
         const errmsg: string = err?.message ?? null
-        console.log(errmsg)
+        console.log(err)
         await db
           .updateTable('status')
           .set({ failed: 1, err: errmsg })
@@ -87,9 +84,7 @@ export const runScript = async () => {
         // check if the did is caught in a bad state where migration failed but plc got updated
         await checkBorked(ctx, status.did)
       }
-      if (completed % 5 === 0) {
-        console.log(`completed: ${completed}, failed: ${failed}`)
-      }
+      console.log(`completed: ${completed}, failed: ${failed}`)
     })
   }
   await migrateQueue.onIdle()

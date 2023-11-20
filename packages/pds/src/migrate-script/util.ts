@@ -62,14 +62,6 @@ export const makeAdminHeaders = (secrets: ServerSecrets): AdminHeaders => {
   }
 }
 
-export const retryOnce = async (fn: () => Promise<unknown>) => {
-  try {
-    await fn()
-  } catch {
-    await fn()
-  }
-}
-
 export const doImport = async (
   ctx: AppContext,
   db: MigrateDb,
@@ -108,6 +100,7 @@ export const doImport = async (
   let logOutput = ''
   for await (const log of importRes.data) {
     logOutput += log.toString()
+    console.log(`${did}: ${log.toString()}`)
   }
   const lines = logOutput.split('\n')
   for (const line of lines) {
