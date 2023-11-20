@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Fetch a list of lists that belong to an actor",
+      "description": "Get a list of lists that belong to an actor.",
       "parameters": {
         "type": "params",
         "required": ["actor"],

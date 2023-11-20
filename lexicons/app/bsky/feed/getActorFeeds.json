@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Retrieve a list of feeds created by a given actor",
+      "description": "Get a list of feeds created by the actor.",
       "parameters": {
         "type": "params",
         "required": ["actor"],

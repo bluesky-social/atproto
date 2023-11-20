@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
-      "description": "A block.",
+      "description": "A declaration of a block.",
       "key": "tid",
       "record": {
         "type": "object",

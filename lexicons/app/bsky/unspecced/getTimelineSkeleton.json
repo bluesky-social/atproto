@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "A skeleton of a timeline - UNSPECCED & WILL GO AWAY SOON",
+      "description": "DEPRECATED: a skeleton of a timeline. Unspecced and will be unavailable soon.",
       "parameters": {
         "type": "params",
         "properties": {

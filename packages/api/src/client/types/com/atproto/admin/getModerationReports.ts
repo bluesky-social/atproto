@@ -11,9 +11,9 @@ import * as ComAtprotoAdminDefs from './defs'
 export interface QueryParams {
   subject?: string
   ignoreSubjects?: string[]
-  /** Get all reports that were actioned by a specific moderator */
+  /** Get all reports that were actioned by a specific moderator. */
   actionedBy?: string
-  /** Filter reports made by one or more DIDs */
+  /** Filter reports made by one or more DIDs. */
   reporters?: string[]
   resolved?: boolean
   actionType?:
@@ -24,7 +24,7 @@ export interface QueryParams {
     | (string & {})
   limit?: number
   cursor?: string
-  /** Reverse the order of the returned records? when true, returns reports in chronological order */
+  /** Reverse the order of the returned records. When true, returns reports in chronological order. */
   reverse?: boolean
 }
 

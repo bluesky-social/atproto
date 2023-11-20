@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List moderation actions related to a subject.",
+      "description": "Get a list of moderation actions related to a subject.",
       "parameters": {
         "type": "params",
         "properties": {

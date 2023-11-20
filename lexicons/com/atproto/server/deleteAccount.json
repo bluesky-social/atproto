@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Delete a user account with a token and password.",
+      "description": "Delete an actor's account with a token and password.",
       "input": {
         "encoding": "application/json",
         "schema": {

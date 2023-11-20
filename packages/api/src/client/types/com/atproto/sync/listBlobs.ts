@@ -10,7 +10,7 @@ import { CID } from 'multiformats/cid'
 export interface QueryParams {
   /** The DID of the repo. */
   did: string
-  /** Optional revision of the repo to list blobs since */
+  /** Optional revision of the repo to list blobs since. */
   since?: string
   limit?: number
   cursor?: string
