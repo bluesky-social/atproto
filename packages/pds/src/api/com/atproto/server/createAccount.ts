@@ -3,7 +3,10 @@ import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import disposable from 'disposable-email'
-import { normalizeAndValidateHandle } from '../../../../handle'
+import {
+  baseNormalizeAndValidate,
+  normalizeAndValidateHandle,
+} from '../../../../handle'
 import * as plc from '@did-plc/lib'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
@@ -24,15 +27,11 @@ export default function (server: Server, ctx: AppContext) {
 
       let didDoc: DidDocument | undefined
       let creds: { accessJwt: string; refreshJwt: string }
+      await ctx.actorStore.create(did, signingKey)
       try {
-        const commit = await ctx.actorStore.create(
-          did,
-          signingKey,
-          (actorTxn) => {
-            return actorTxn.repo.createRepo([])
-          },
+        const commit = await ctx.actorStore.transact(did, (actorTxn) =>
+          actorTxn.repo.createRepo([]),
         )
-        await ctx.actorStore.clearReservedKeypair(signingKey.did(), did)
 
         // Generate a real did with PLC
         if (plcOp) {
@@ -60,7 +59,9 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.sequencer.sequenceCommit(did, commit, [])
         await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
         didDoc = await didDocForSession(ctx, did, true)
+        await ctx.actorStore.clearReservedKeypair(signingKey.did(), did)
       } catch (err) {
+        // this will only be reached if the actor store _did not_ exist before
         await ctx.actorStore.destroy(did)
         throw err
       }
@@ -83,7 +84,8 @@ const validateInputsForEntrywayPds = async (
   ctx: AppContext,
   input: CreateAccountInput,
 ) => {
-  const { did, handle, plcOp } = input
+  const { did, plcOp } = input
+  const handle = baseNormalizeAndValidate(input.handle)
   if (!did || !input.plcOp) {
     throw new InvalidRequestError(
       'non-entryway pds requires bringing a DID and plcOp',
@@ -258,7 +260,7 @@ const validateExistingDid = async (
   return { did: did, plcOp: null }
 }
 
-const validateAtprotoData = async (
+const validateAtprotoData = (
   data: AtprotoData,
   expected: {
     handle: string

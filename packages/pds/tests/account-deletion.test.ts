@@ -207,6 +207,50 @@ describe('account deletion', () => {
       password: eve.password,
     })
   })
+
+  it('can be performed by an administrator.', async () => {
+    const ferris = await sc.createAccount('ferris', {
+      handle: 'ferris.test',
+      email: 'ferris@test.com',
+      password: 'ferris-test',
+    })
+
+    const tryUnauthed = agent.api.com.atproto.admin.deleteAccount({
+      did: ferris.did,
+    })
+    await expect(tryUnauthed).rejects.toThrow('Authentication Required')
+
+    const tryAsModerator = agent.api.com.atproto.admin.deleteAccount(
+      { did: ferris.did },
+      {
+        headers: network.pds.adminAuthHeaders('moderator'),
+        encoding: 'application/json',
+      },
+    )
+    await expect(tryAsModerator).rejects.toThrow(
+      'Must be an admin to delete an account',
+    )
+
+    const { data: acct } = await agent.api.com.atproto.admin.getAccountInfo(
+      { did: ferris.did },
+      { headers: network.pds.adminAuthHeaders('admin') },
+    )
+    expect(acct.did).toBe(ferris.did)
+
+    await agent.api.com.atproto.admin.deleteAccount(
+      { did: ferris.did },
+      {
+        headers: network.pds.adminAuthHeaders('admin'),
+        encoding: 'application/json',
+      },
+    )
+
+    const tryGetAccountInfo = agent.api.com.atproto.admin.getAccountInfo(
+      { did: ferris.did },
+      { headers: network.pds.adminAuthHeaders('admin') },
+    )
+    await expect(tryGetAccountInfo).rejects.toThrow('Account not found')
+  })
 })
 
 type DbContents = {

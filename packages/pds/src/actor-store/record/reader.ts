@@ -6,6 +6,7 @@ import { notSoftDeletedClause } from '../../db/util'
 import { ids } from '../../lexicon/lexicons'
 import { ActorDb, Backlink } from '../db'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
+import { RepoRecord } from '@atproto/lexicon'
 
 export class RecordReader {
   constructor(public db: ActorDb) {}
@@ -170,7 +171,7 @@ export class RecordReader {
   // @NOTE this logic is a placeholder until we allow users to specify these constraints themselves.
   // Ensures that we don't end-up with duplicate likes, reposts, and follows from race conditions.
 
-  async getBacklinkConflicts(uri: AtUri, record: unknown): Promise<AtUri[]> {
+  async getBacklinkConflicts(uri: AtUri, record: RepoRecord): Promise<AtUri[]> {
     const recordBacklinks = getBacklinks(uri, record)
     const conflicts = await Promise.all(
       recordBacklinks.map((backlink) =>
@@ -190,7 +191,7 @@ export class RecordReader {
 // @NOTE in the future this can be replaced with a more generic routine that pulls backlinks based on lex docs.
 // For now we just want to ensure we're tracking links from follows, blocks, likes, and reposts.
 
-export const getBacklinks = (uri: AtUri, record: unknown): Backlink[] => {
+export const getBacklinks = (uri: AtUri, record: RepoRecord): Backlink[] => {
   if (
     record?.['$type'] === ids.AppBskyGraphFollow ||
     record?.['$type'] === ids.AppBskyGraphBlock
@@ -217,7 +218,7 @@ export const getBacklinks = (uri: AtUri, record: unknown): Backlink[] => {
     record?.['$type'] === ids.AppBskyFeedRepost
   ) {
     const subject = record['subject']
-    if (typeof subject['uri'] !== 'string') {
+    if (typeof subject?.['uri'] !== 'string') {
       return []
     }
     try {
@@ -229,7 +230,7 @@ export const getBacklinks = (uri: AtUri, record: unknown): Backlink[] => {
       {
         uri: uri.toString(),
         path: 'subject.uri',
-        linkTo: subject.uri,
+        linkTo: subject['uri'],
       },
     ]
   }

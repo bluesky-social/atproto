@@ -4,10 +4,16 @@ import PQueue from 'p-queue'
 import axios from 'axios'
 import { CID } from 'multiformats/cid'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AsyncBuffer, TID } from '@atproto/common'
+import { AsyncBuffer, TID, wait } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
-import { Repo, WriteOpAction, readCarStream, verifyDiff } from '@atproto/repo'
-import { BlobRef, LexValue } from '@atproto/lexicon'
+import {
+  Repo,
+  WriteOpAction,
+  getAndParseRecord,
+  readCarStream,
+  verifyDiff,
+} from '@atproto/repo'
+import { BlobRef, LexValue, RepoRecord } from '@atproto/lexicon'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { ActorStoreTransactor } from '../../../../actor-store'
@@ -15,10 +21,18 @@ import { AtprotoData } from '@atproto/identity'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.importRepo({
+    opts: {
+      blobLimit: 5 * 1024 * 1024 * 1024, // 5GB
+    },
+    auth: ctx.authVerifier.role,
     handler: async ({ params, input, req }) => {
       const { did } = params
       const outBuffer = new AsyncBuffer<string>()
+      sendTicks(outBuffer).catch((err) => {
+        req.log.error({ err }, 'failed to send ticks')
+      })
       processImport(ctx, did, input.body, outBuffer).catch(async (err) => {
+        req.log.error({ did, err }, 'failed import')
         try {
           await ctx.actorStore.destroy(did)
         } catch (err) {
@@ -35,6 +49,13 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
+const sendTicks = async (outBuffer: AsyncBuffer<string>) => {
+  while (!outBuffer.isClosed) {
+    outBuffer.push('tick\n')
+    await wait(1000)
+  }
+}
+
 const processImport = async (
   ctx: AppContext,
   did: string,
@@ -48,7 +69,7 @@ const processImport = async (
     if (!keypair) {
       throw new InvalidRequestError('No signing key reserved')
     }
-    await ctx.actorStore.create(did, keypair, async () => {})
+    await ctx.actorStore.create(did, keypair)
   }
   await ctx.actorStore.transact(did, async (actorStore) => {
     const blobRefs = await importRepo(actorStore, incomingCar, outBuffer)
@@ -65,6 +86,7 @@ const importRepo = async (
   const now = new Date().toISOString()
   const rev = TID.nextStr()
   const did = actorStore.repo.did
+
   const { roots, blocks } = await readCarStream(incomingCar)
   if (roots.length !== 1) {
     throw new InvalidRequestError('expected one root')
@@ -77,7 +99,14 @@ const importRepo = async (
   const currRepo = currRoot
     ? await Repo.load(actorStore.repo.storage, CID.parse(currRoot.cid))
     : null
-  const diff = await verifyDiff(currRepo, blocks, roots[0])
+  const diff = await verifyDiff(
+    currRepo,
+    blocks,
+    roots[0],
+    undefined,
+    undefined,
+    { ensureLeaves: false },
+  )
   outBuffer.push(`diffed repo and found ${diff.writes.length} writes\n`)
   diff.commit.rev = rev
   await actorStore.repo.storage.applyCommit(diff.commit, currRepo === null)
@@ -90,15 +119,22 @@ const importRepo = async (
       if (write.action === WriteOpAction.Delete) {
         await actorStore.record.deleteRecord(uri)
       } else {
+        let parsedRecord: RepoRecord | null
+        try {
+          const parsed = await getAndParseRecord(blocks, write.cid)
+          parsedRecord = parsed.record
+        } catch {
+          parsedRecord = null
+        }
         const indexRecord = actorStore.record.indexRecord(
           uri,
           write.cid,
-          write.record,
+          parsedRecord,
           write.action,
           rev,
           now,
         )
-        const recordBlobs = findBlobRefs(write.record)
+        const recordBlobs = findBlobRefs(parsedRecord)
         blobRefs = blobRefs.concat(recordBlobs)
         const blobValues = recordBlobs.map((cid) => ({
           recordUri: uri.toString(),
@@ -155,6 +191,14 @@ const importBlob = async (
   endpoint: string,
   blob: BlobRef,
 ) => {
+  const hasBlob = await actorStore.db.db
+    .selectFrom('blob')
+    .selectAll()
+    .where('cid', '=', blob.ref.toString())
+    .executeTakeFirst()
+  if (hasBlob) {
+    return
+  }
   const res = await axios.get(endpoint, {
     params: { did: actorStore.repo.did, cid: blob.ref.toString() },
     decompress: true,

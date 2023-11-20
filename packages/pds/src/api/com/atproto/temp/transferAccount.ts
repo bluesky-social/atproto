@@ -8,6 +8,7 @@ import { BlockMap, CidSet } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.transferAccount({
+    auth: ctx.authVerifier.role,
     handler: async ({ input }) => {
       const { did, handle } = input.body
 
@@ -16,13 +17,15 @@ export default function (server: Server, ctx: AppContext) {
         store.repo.storage.getRootDetailed(),
       )
 
-      const plcOp = await verifyDidAndPlcOp(
-        ctx,
-        did,
-        handle,
-        signingKey.did(),
-        input.body.plcOp,
-      )
+      const plcOp = did.startsWith('did:plc')
+        ? await verifyDidAndPlcOp(
+            ctx,
+            did,
+            handle,
+            signingKey.did(),
+            input.body.plcOp,
+          )
+        : null
 
       const { accessJwt, refreshJwt } = await ctx.accountManager.createAccount({
         did,
@@ -31,11 +34,13 @@ export default function (server: Server, ctx: AppContext) {
         repoRev: currRoot.rev,
       })
 
-      try {
-        await ctx.plcClient.sendOperation(did, plcOp)
-      } catch (err) {
-        await ctx.accountManager.deleteAccount(did)
-        throw err
+      if (plcOp) {
+        try {
+          await ctx.plcClient.sendOperation(did, plcOp)
+        } catch (err) {
+          await ctx.accountManager.deleteAccount(did)
+          throw err
+        }
       }
 
       await ctx.sequencer.sequenceCommit(

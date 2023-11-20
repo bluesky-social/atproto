@@ -26,6 +26,7 @@ export default function (server: Server, ctx: AppContext) {
           handle: account.handle ?? INVALID_HANDLE,
           email: account.email ?? undefined,
           indexedAt: account.createdAt,
+          emailConfirmedAt: account.emailConfirmedAt ?? undefined,
           invitedBy: managesOwnInvites ? invitedBy[params.did] : undefined,
           invites: managesOwnInvites ? invites : undefined,
           invitesDisabled: managesOwnInvites

@@ -96,16 +96,25 @@ export type RecordDeleteOp = {
 
 export type RecordWriteOp = RecordCreateOp | RecordUpdateOp | RecordDeleteOp
 
-export type RecordCreateDescript = RecordCreateOp & {
+export type RecordCreateDescript = {
+  action: WriteOpAction.Create
+  collection: string
+  rkey: string
   cid: CID
 }
 
-export type RecordUpdateDescript = RecordUpdateOp & {
+export type RecordUpdateDescript = {
+  action: WriteOpAction.Update
+  collection: string
+  rkey: string
   prev: CID
   cid: CID
 }
 
-export type RecordDeleteDescript = RecordDeleteOp & {
+export type RecordDeleteDescript = {
+  action: WriteOpAction.Delete
+  collection: string
+  rkey: string
   cid: CID
 }
 

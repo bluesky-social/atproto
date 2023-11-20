@@ -13,6 +13,7 @@ import getLikes from './app/bsky/feed/getLikes'
 import getListFeed from './app/bsky/feed/getListFeed'
 import getPostThread from './app/bsky/feed/getPostThread'
 import getPosts from './app/bsky/feed/getPosts'
+import searchPosts from './app/bsky/feed/searchPosts'
 import getActorLikes from './app/bsky/feed/getActorLikes'
 import getProfile from './app/bsky/actor/getProfile'
 import getProfiles from './app/bsky/actor/getProfiles'
@@ -74,6 +75,7 @@ export default function (server: Server, ctx: AppContext) {
   getListFeed(server, ctx)
   getPostThread(server, ctx)
   getPosts(server, ctx)
+  searchPosts(server, ctx)
   getActorLikes(server, ctx)
   getProfile(server, ctx)
   getProfiles(server, ctx)

@@ -31,8 +31,7 @@ import {
   Main as EmbedRecordWithMedia,
   isMain as isEmbedRecordWithMedia,
 } from '../lexicon/types/app/bsky/embed/recordWithMedia'
-import { ActorStore } from '../actor-store'
-import { ActorDb } from '../actor-store/db'
+import { ActorStoreReader } from '../actor-store'
 import { LocalRecords, RecordDescript } from './types'
 import { AccountManager } from '../account-manager'
 
@@ -40,7 +39,7 @@ type CommonSignedUris = 'avatar' | 'banner' | 'feed_thumbnail' | 'feed_fullsize'
 
 export class LocalViewer {
   did: string
-  actorDb: ActorDb
+  actorStore: ActorStoreReader
   actorKey: Keypair
   accountManager: AccountManager
   pdsHostname: string
@@ -49,8 +48,7 @@ export class LocalViewer {
   appviewCdnUrlPattern?: string
 
   constructor(params: {
-    did: string
-    actorDb: ActorDb
+    actorStore: ActorStoreReader
     actorKey: Keypair
     accountManager: AccountManager
     pdsHostname: string
@@ -58,8 +56,8 @@ export class LocalViewer {
     appviewDid?: string
     appviewCdnUrlPattern?: string
   }) {
-    this.did = params.did
-    this.actorDb = params.actorDb
+    this.did = params.actorStore.did
+    this.actorStore = params.actorStore
     this.actorKey = params.actorKey
     this.accountManager = params.accountManager
     this.pdsHostname = params.pdsHostname
@@ -69,20 +67,14 @@ export class LocalViewer {
   }
 
   static creator(params: {
-    actorStore: ActorStore
     accountManager: AccountManager
     pdsHostname: string
     appViewAgent?: AtpAgent
     appviewDid?: string
     appviewCdnUrlPattern?: string
   }) {
-    const { actorStore, ...rest } = params
-    return async (did: string) => {
-      const [actorDb, actorKey] = await Promise.all([
-        actorStore.db(did),
-        actorStore.keypair(did),
-      ])
-      return new LocalViewer({ did, actorDb, actorKey, ...rest })
+    return (actorStore: ActorStoreReader, actorKey: Keypair) => {
+      return new LocalViewer({ ...params, actorStore, actorKey })
     }
   }
 
@@ -105,7 +97,7 @@ export class LocalViewer {
   }
 
   async getRecordsSinceRev(rev: string): Promise<LocalRecords> {
-    const res = await this.actorDb.db
+    const res = await this.actorStore.db.db
       .selectFrom('record')
       .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
       .select([
@@ -118,6 +110,18 @@ export class LocalViewer {
       .limit(10)
       .orderBy('record.repoRev', 'asc')
       .execute()
+    // sanity check to ensure that the clock received is not before _all_ local records (for instance in case of account migration)
+    if (res.length > 0) {
+      const sanityCheckRes = await this.actorStore.db.db
+        .selectFrom('record')
+        .selectAll()
+        .where('record.repoRev', '<=', rev)
+        .limit(1)
+        .executeTakeFirst()
+      if (!sanityCheckRes) {
+        return { profile: null, posts: [] }
+      }
+    }
     return res.reduce(
       (acc, cur) => {
         const descript = {
@@ -141,7 +145,7 @@ export class LocalViewer {
   }
 
   async getProfileBasic(): Promise<ProfileViewBasic | null> {
-    const profileQuery = this.actorDb.db
+    const profileQuery = this.actorStore.db.db
       .selectFrom('record')
       .leftJoin('repo_block', 'repo_block.cid', 'record.cid')
       .where('record.collection', '=', ids.AppBskyActorProfile)

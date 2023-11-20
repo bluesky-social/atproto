@@ -90,6 +90,10 @@ export class AsyncBuffer<T> {
     return this.buffer.length
   }
 
+  get isClosed(): boolean {
+    return this.closed
+  }
+
   resetPromise() {
     this.promise = new Promise<void>((r) => (this.resolve = r))
   }
@@ -107,7 +111,11 @@ export class AsyncBuffer<T> {
   async *events(): AsyncGenerator<T> {
     while (true) {
       if (this.closed && this.buffer.length === 0) {
-        return
+        if (this.toThrow) {
+          throw this.toThrow
+        } else {
+          return
+        }
       }
       await this.promise
       if (this.toThrow) {
@@ -128,6 +136,7 @@ export class AsyncBuffer<T> {
 
   throw(err: unknown) {
     this.toThrow = err
+    this.closed = true
     this.resolve()
   }
 

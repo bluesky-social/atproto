@@ -20,6 +20,7 @@ import getInviteCodes from './getInviteCodes'
 import updateAccountHandle from './updateAccountHandle'
 import updateAccountEmail from './updateAccountEmail'
 import sendEmail from './sendEmail'
+import deleteAccount from './deleteAccount'
 
 export default function (server: Server, ctx: AppContext) {
   resolveModerationReports(server, ctx)
@@ -42,4 +43,5 @@ export default function (server: Server, ctx: AppContext) {
   updateAccountHandle(server, ctx)
   updateAccountEmail(server, ctx)
   sendEmail(server, ctx)
+  deleteAccount(server, ctx)
 }

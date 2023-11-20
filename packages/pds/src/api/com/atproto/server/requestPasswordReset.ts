@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
 
     const account = await ctx.accountManager.getAccountByEmail(email)
 
-    if (account) {
+    if (!account?.email) {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.server.requestPasswordReset(
           input.body,
@@ -17,17 +17,16 @@ export default function (server: Server, ctx: AppContext) {
         )
         return
       }
-      if (!account.email) {
-        throw new InvalidRequestError('account does not have an email address')
-      }
-      const token = await ctx.accountManager.createEmailToken(
-        account.did,
-        'reset_password',
-      )
-      await ctx.mailer.sendResetPassword(
-        { identifier: account.handle ?? account.email, token },
-        { to: account.email },
-      )
+      throw new InvalidRequestError('account does not have an email address')
     }
+
+    const token = await ctx.accountManager.createEmailToken(
+      account.did,
+      'reset_password',
+    )
+    await ctx.mailer.sendResetPassword(
+      { identifier: account.handle ?? account.email, token },
+      { to: account.email },
+    )
   })
 }

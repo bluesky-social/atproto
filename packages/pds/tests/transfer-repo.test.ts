@@ -41,7 +41,7 @@ describe('transfer repo', () => {
       inviteRequired: false,
     })
     entryway = await createEntryway({
-      dbPostgresSchema: 'entryway',
+      dbPostgresSchema: 'transfer_repo',
       port: entrywayPort,
       adminPassword: 'admin-pass',
       jwtSigningKeyK256PrivateKeyHex: await getPrivateHex(jwtSigningKey),
@@ -93,19 +93,22 @@ describe('transfer repo', () => {
     const signingKey = signingKeyRes.data.signingKey
 
     const repo = await entrywayAgent.api.com.atproto.sync.getRepo({ did })
-    const res = await axios.post(
+    const importRes = await axios.post(
       `${pds.url}/xrpc/com.atproto.temp.importRepo`,
       repo.data,
       {
         params: { did },
-        headers: { 'content-type': 'application/vnd.ipld.car' },
+        headers: {
+          'content-type': 'application/vnd.ipld.car',
+          ...pds.adminAuthHeaders('admin'),
+        },
         decompress: true,
         responseType: 'stream',
       },
     )
 
-    for await (const log of res.data) {
-      console.log(log.toString())
+    for await (const _log of importRes.data) {
+      // noop just wait till import is finished
     }
 
     const lastOp = await pds.ctx.plcClient.getLastOp(did)
@@ -129,11 +132,14 @@ describe('transfer repo', () => {
         },
       }),
     )
-    await pdsAgent.api.com.atproto.temp.transferAccount({
-      did,
-      handle: accountDetail.handle,
-      plcOp,
-    })
+    await pdsAgent.api.com.atproto.temp.transferAccount(
+      {
+        did,
+        handle: accountDetail.handle,
+        plcOp,
+      },
+      { headers: pds.adminAuthHeaders('admin'), encoding: 'application/json' },
+    )
 
     await entryway.ctx.db.db
       .updateTable('user_account')

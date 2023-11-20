@@ -56,14 +56,17 @@ export default function (server: Server, ctx: AppContext) {
       } catch (err) {
         if (err instanceof AppBskyFeedGetPostThread.NotFoundError) {
           const headers = err.headers
-          const store = await ctx.localViewer(requester)
-          const local = await readAfterWriteNotFound(
-            ctx,
-            store,
-            params,
-            requester,
-            headers,
-          )
+          const keypair = await ctx.actorStore.keypair(requester)
+          const local = await ctx.actorStore.read(requester, (store) => {
+            const localViewer = ctx.localViewer(store, keypair)
+            return readAfterWriteNotFound(
+              ctx,
+              localViewer,
+              params,
+              requester,
+              headers,
+            )
+          })
           if (local === null) {
             throw err
           } else {

@@ -143,7 +143,12 @@ export type RateLimiterStatus = {
   isFirstInDuration: boolean
 }
 
+export type RouteOpts = {
+  blobLimit?: number
+}
+
 export type XRPCHandlerConfig = {
+  opts?: RouteOpts
   rateLimit?: HandlerRateLimitOpts | HandlerRateLimitOpts[]
   auth?: AuthVerifier
   handler: XRPCHandler

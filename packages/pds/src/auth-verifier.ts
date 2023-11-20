@@ -195,15 +195,15 @@ export class AuthVerifier {
       return await this.access(ctx)
     } else {
       const creds = this.parseRoleCreds(ctx.req)
-      if (creds.status === RoleStatus.Missing) {
-        return { credentials: null }
-      } else if (creds.admin) {
+      if (creds.status === RoleStatus.Valid) {
         return {
           credentials: {
             ...creds,
             type: 'role',
           },
         }
+      } else if (creds.status === RoleStatus.Missing) {
+        return { credentials: null }
       } else {
         throw new AuthRequiredError()
       }
