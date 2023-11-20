@@ -23,8 +23,9 @@ export const verifyRepo = async (
   head: CID,
   did?: string,
   signingKey?: string,
+  opts?: { ensureLeaves?: boolean },
 ): Promise<VerifiedRepo> => {
-  const diff = await verifyDiff(null, blocks, head, did, signingKey)
+  const diff = await verifyDiff(null, blocks, head, did, signingKey, opts)
   const creates = util.ensureCreates(diff.writes)
   return {
     creates,
@@ -37,9 +38,10 @@ export const verifyDiffCar = async (
   carBytes: Uint8Array,
   did?: string,
   signingKey?: string,
+  opts?: { ensureLeaves?: boolean },
 ): Promise<VerifiedDiff> => {
   const car = await util.readCarWithRoot(carBytes)
-  return verifyDiff(repo, car.blocks, car.root, did, signingKey)
+  return verifyDiff(repo, car.blocks, car.root, did, signingKey, opts)
 }
 
 export const verifyDiff = async (
