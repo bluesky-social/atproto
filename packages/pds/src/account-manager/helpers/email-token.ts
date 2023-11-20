@@ -10,13 +10,14 @@ export const createEmailToken = async (
 ): Promise<string> => {
   const token = getRandomToken().toUpperCase()
   const now = new Date().toISOString()
-  await db.db
-    .insertInto('email_token')
-    .values({ purpose, did, token, requestedAt: now })
-    .onConflict((oc) =>
-      oc.columns(['purpose', 'did']).doUpdateSet({ token, requestedAt: now }),
-    )
-    .execute()
+  await db.executeWithRetry(
+    db.db
+      .insertInto('email_token')
+      .values({ purpose, did, token, requestedAt: now })
+      .onConflict((oc) =>
+        oc.columns(['purpose', 'did']).doUpdateSet({ token, requestedAt: now }),
+      ),
+  )
   return token
 }
 
@@ -25,11 +26,12 @@ export const deleteEmailToken = async (
   did: string,
   purpose: EmailTokenPurpose,
 ) => {
-  await db.db
-    .deleteFrom('email_token')
-    .where('did', '=', did)
-    .where('purpose', '=', purpose)
-    .executeTakeFirst()
+  await db.executeWithRetry(
+    db.db
+      .deleteFrom('email_token')
+      .where('did', '=', did)
+      .where('purpose', '=', purpose),
+  )
 }
 
 export const assertValidToken = async (

@@ -89,16 +89,18 @@ export const storeRefreshToken = async (
   payload: RefreshToken,
   appPasswordName: string | null,
 ) => {
-  return db.db
-    .insertInto('refresh_token')
-    .values({
-      id: payload.jti,
-      did: payload.sub,
-      appPasswordName,
-      expiresAt: new Date(payload.exp * 1000).toISOString(),
-    })
-    .onConflict((oc) => oc.doNothing()) // E.g. when re-granting during a refresh grace period
-    .executeTakeFirst()
+  const [result] = await db.executeWithRetry(
+    db.db
+      .insertInto('refresh_token')
+      .values({
+        id: payload.jti,
+        did: payload.sub,
+        appPasswordName,
+        expiresAt: new Date(payload.exp * 1000).toISOString(),
+      })
+      .onConflict((oc) => oc.doNothing()), // E.g. when re-granting during a refresh grace period
+  )
+  return result
 }
 
 export const getRefreshToken = async (db: AccountDb, id: string) => {
@@ -114,12 +116,12 @@ export const deleteExpiredRefreshTokens = async (
   did: string,
   now: string,
 ) => {
-  await db.db
-    .deleteFrom('refresh_token')
-    .where('did', '=', did)
-    .where('expiresAt', '<=', now)
-    .returningAll()
-    .executeTakeFirst()
+  await db.executeWithRetry(
+    db.db
+      .deleteFrom('refresh_token')
+      .where('did', '=', did)
+      .where('expiresAt', '<=', now),
+  )
 }
 
 export const addRefreshGracePeriod = async (
@@ -131,33 +133,32 @@ export const addRefreshGracePeriod = async (
   },
 ) => {
   const { id, expiresAt, nextId } = opts
-  const res = await db.db
-    .updateTable('refresh_token')
-    .where('id', '=', id)
-    .where((inner) =>
-      inner.where('nextId', 'is', null).orWhere('nextId', '=', nextId),
-    )
-    .set({ expiresAt, nextId })
-    .returningAll()
-    .executeTakeFirst()
+  const [res] = await db.executeWithRetry(
+    db.db
+      .updateTable('refresh_token')
+      .where('id', '=', id)
+      .where((inner) =>
+        inner.where('nextId', 'is', null).orWhere('nextId', '=', nextId),
+      )
+      .set({ expiresAt, nextId })
+      .returningAll(),
+  )
   if (!res) {
     throw new ConcurrentRefreshError()
   }
 }
 
 export const revokeRefreshToken = async (db: AccountDb, id: string) => {
-  const { numDeletedRows } = await db.db
-    .deleteFrom('refresh_token')
-    .where('id', '=', id)
-    .executeTakeFirst()
+  const [{ numDeletedRows }] = await db.executeWithRetry(
+    db.db.deleteFrom('refresh_token').where('id', '=', id),
+  )
   return numDeletedRows > 0
 }
 
 export const revokeRefreshTokensByDid = async (db: AccountDb, did: string) => {
-  const { numDeletedRows } = await db.db
-    .deleteFrom('refresh_token')
-    .where('did', '=', did)
-    .executeTakeFirst()
+  const [{ numDeletedRows }] = await db.executeWithRetry(
+    db.db.deleteFrom('refresh_token').where('did', '=', did),
+  )
   return numDeletedRows > 0
 }
 
@@ -166,11 +167,13 @@ export const revokeAppPasswordRefreshToken = async (
   did: string,
   appPassName: string,
 ) => {
-  const { numDeletedRows } = await db.db
-    .deleteFrom('refresh_token')
-    .where('did', '=', did)
-    .where('appPasswordName', '=', appPassName)
-    .executeTakeFirst()
+  const [{ numDeletedRows }] = await db.executeWithRetry(
+    db.db
+      .deleteFrom('refresh_token')
+      .where('did', '=', did)
+      .where('appPasswordName', '=', appPassName),
+  )
+
   return numDeletedRows > 0
 }
 

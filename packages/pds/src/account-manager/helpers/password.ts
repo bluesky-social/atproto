@@ -39,11 +39,12 @@ export const updateUserPassword = async (
     passwordScrypt: string
   },
 ) => {
-  await db.db
-    .updateTable('account')
-    .set({ passwordScrypt: opts.passwordScrypt })
-    .where('did', '=', opts.did)
-    .execute()
+  await db.executeWithRetry(
+    db.db
+      .updateTable('account')
+      .set({ passwordScrypt: opts.passwordScrypt })
+      .where('did', '=', opts.did),
+  )
 }
 
 export const createAppPassword = async (
@@ -62,16 +63,17 @@ export const createAppPassword = async (
   ]
   const password = chunks.join('-')
   const passwordScrypt = await scrypt.hashAppPassword(did, password)
-  const got = await db.db
-    .insertInto('app_password')
-    .values({
-      did,
-      name,
-      passwordScrypt,
-      createdAt: new Date().toISOString(),
-    })
-    .returningAll()
-    .executeTakeFirst()
+  const [got] = await db.executeWithRetry(
+    db.db
+      .insertInto('app_password')
+      .values({
+        did,
+        name,
+        passwordScrypt,
+        createdAt: new Date().toISOString(),
+      })
+      .returningAll(),
+  )
   if (!got) {
     throw new InvalidRequestError('could not create app-specific password')
   }
@@ -98,9 +100,10 @@ export const deleteAppPassword = async (
   did: string,
   name: string,
 ) => {
-  await db.db
-    .deleteFrom('app_password')
-    .where('did', '=', did)
-    .where('name', '=', name)
-    .execute()
+  await db.executeWithRetry(
+    db.db
+      .deleteFrom('app_password')
+      .where('did', '=', did)
+      .where('name', '=', name),
+  )
 }

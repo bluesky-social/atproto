@@ -79,6 +79,14 @@ export class Database<Schema> {
     return retrySqlite(() => this.transactionNoRetry(fn))
   }
 
+  async executeWithRetry<T>(query: { execute: () => Promise<T> }) {
+    if (this.isTransaction) {
+      // transaction() ensures retry on entire transaction, no need to retry individual statements.
+      return query.execute()
+    }
+    return retrySqlite(() => query.execute())
+  }
+
   onCommit(fn: () => void) {
     this.assertTransaction()
     this.commitHooks.push(fn)

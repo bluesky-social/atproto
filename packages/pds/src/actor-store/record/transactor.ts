@@ -74,12 +74,6 @@ export class RecordTransactor extends RecordReader {
     log.info({ uri }, 'deleted indexed record')
   }
 
-  async deleteForActor(_did: string) {
-    // Not done in transaction because it would be too long, prone to contention.
-    // Also, this can safely be run multiple times if it fails.
-    await this.db.db.deleteFrom('record').execute()
-  }
-
   async removeBacklinksByUri(uri: AtUri) {
     await this.db.db
       .deleteFrom('backlink')
