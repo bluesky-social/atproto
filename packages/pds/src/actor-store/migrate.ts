@@ -2,10 +2,10 @@ import { sql } from 'kysely'
 import AppContext from '../context'
 import PQueue from 'p-queue'
 
-export const forEachActorStore = async (
+export const forEachActorStore = async <T>(
   ctx: AppContext,
   opts: { concurrency?: number },
-  fn: (ctx: AppContext, did: string) => Promise<string>,
+  fn: (ctx: AppContext, did: string) => Promise<T>,
 ) => {
   const { concurrency = 1 } = opts
 
