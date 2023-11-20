@@ -229,7 +229,7 @@ describe('moderation', () => {
       await expect(referenceBlob).rejects.toThrow('Could not find blob:')
     })
 
-    it('prevents image blob from being served, even when cached.', async () => {
+    it('prevents image blob from being served.', async () => {
       const attempt = agent.api.com.atproto.sync.getBlob({
         did: sc.dids.carol,
         cid: blobRef.image.ref.toString(),
@@ -260,6 +260,63 @@ describe('moderation', () => {
       })
 
       expect(res.data.byteLength).toBeGreaterThan(9000)
+    })
+
+    it('prevents blobs of takendown accounts from being served.', async () => {
+      await agent.api.com.atproto.admin.updateSubjectStatus(
+        {
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.carol,
+          },
+          takedown: { applied: true },
+        },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
+      const blobParams = {
+        did: sc.dids.carol,
+        cid: blobRef.image.ref.toString(),
+      }
+      // public, disallow
+      const attempt1 = agent.api.com.atproto.sync.getBlob(blobParams)
+      await expect(attempt1).rejects.toThrow('Blob not found')
+      // logged-in, disallow
+      const attempt2 = agent.api.com.atproto.sync.getBlob(blobParams, {
+        headers: sc.getHeaders(sc.dids.bob),
+      })
+      await expect(attempt2).rejects.toThrow('Blob not found')
+      // non-admin role, disallow
+      const attempt3 = agent.api.com.atproto.sync.getBlob(blobParams, {
+        headers: network.pds.adminAuthHeaders('moderator'),
+      })
+      await expect(attempt3).rejects.toThrow('Blob not found')
+      // logged-in as account, allow
+      const res1 = await agent.api.com.atproto.sync.getBlob(blobParams, {
+        headers: sc.getHeaders(sc.dids.carol),
+      })
+      expect(res1.data.byteLength).toBeGreaterThan(9000)
+      // admin role, allow
+      const res2 = await agent.api.com.atproto.sync.getBlob(blobParams, {
+        headers: network.pds.adminAuthHeaders('admin'),
+      })
+      expect(res2.data.byteLength).toBeGreaterThan(9000)
+      // revert takedown
+      await agent.api.com.atproto.admin.updateSubjectStatus(
+        {
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.carol,
+          },
+          takedown: { applied: false },
+        },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
     })
   })
 
