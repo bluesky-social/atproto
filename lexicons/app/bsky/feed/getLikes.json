@@ -4,6 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
+      "description": "Get the list of likes.",
       "parameters": {
         "type": "params",
         "required": ["uri"],

@@ -13,7 +13,7 @@ export interface QueryParams {}
 export interface InputSchema {
   /** The handle or DID of the repo. */
   repo: string
-  /** Validate the records? */
+  /** Flag for validating the records. */
   validate: boolean
   writes: (Create | Update | Delete)[]
   swapCommit?: string

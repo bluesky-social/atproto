@@ -4,6 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
+      "description": "A declaration of a profile.",
       "key": "literal:self",
       "record": {
         "type": "object",

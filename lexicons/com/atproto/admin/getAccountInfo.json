@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "View details about an account.",
+      "description": "Get details about an account.",
       "parameters": {
         "type": "params",
         "required": ["did"],

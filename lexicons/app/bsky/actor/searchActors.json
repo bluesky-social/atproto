@@ -10,11 +10,11 @@
         "properties": {
           "term": {
             "type": "string",
-            "description": "DEPRECATED: use 'q' instead"
+            "description": "DEPRECATED: use 'q' instead."
           },
           "q": {
             "type": "string",
-            "description": "search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended"
+            "description": "Search query string. Syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended."
           },
           "limit": {
             "type": "integer",
