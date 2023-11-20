@@ -18,6 +18,8 @@ const run = async () => {
   const secrets = envToSecrets(env)
   const ctx = await AppContext.fromConfig(cfg, secrets)
 
+  let count = 0
+
   await forEachActorStore(
     ctx,
     { concurrency: 100 },
@@ -38,6 +40,10 @@ const run = async () => {
         )
         await ctx.sequencer.sequenceCommit(did, commit, [])
       }
+      count++
+      if (count % 100 === 0) {
+        console.log(count)
+      }
     },
   )
 }
@@ -45,12 +51,18 @@ const run = async () => {
 const trackMissingBlobs = async (store: ActorStoreReader) => {
   const missingBlobs = await store.db.db
     .selectFrom('record_blob')
+    .whereNotExists((qb) =>
+      qb
+        .selectFrom('blob')
+        .where('blob.cid', '=', 'record_blob.cid')
+        .select('cid'),
+    )
     .leftJoin('blob', 'blob.cid', 'record_blob.blobCid')
     .where('blob.cid', 'is', null)
-    .select('cid')
+    .select('record_blob.blobCid')
     .execute()
   for (const blob of missingBlobs) {
-    await fs.appendFile(MISSING_BLOB_FILE, `${store.did} ${blob.cid}\n`)
+    await fs.appendFile(MISSING_BLOB_FILE, `${store.did} ${blob.blobCid}\n`)
   }
 }
 
