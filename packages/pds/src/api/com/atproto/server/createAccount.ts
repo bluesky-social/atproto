@@ -27,9 +27,8 @@ export default function (server: Server, ctx: AppContext) {
 
       let didDoc: DidDocument | undefined
       let creds: { accessJwt: string; refreshJwt: string }
+      await ctx.actorStore.create(did, signingKey)
       try {
-        await ctx.actorStore.create(did, signingKey)
-        await ctx.actorStore.clearReservedKeypair(signingKey.did(), did)
         const commit = await ctx.actorStore.transact(did, (actorTxn) =>
           actorTxn.repo.createRepo([]),
         )
@@ -60,7 +59,9 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.sequencer.sequenceCommit(did, commit, [])
         await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
         didDoc = await didDocForSession(ctx, did, true)
+        await ctx.actorStore.clearReservedKeypair(signingKey.did(), did)
       } catch (err) {
+        // this will only be reached if the actor store _did not_ exist before
         await ctx.actorStore.destroy(did)
         throw err
       }

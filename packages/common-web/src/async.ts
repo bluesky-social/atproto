@@ -111,7 +111,11 @@ export class AsyncBuffer<T> {
   async *events(): AsyncGenerator<T> {
     while (true) {
       if (this.closed && this.buffer.length === 0) {
-        return
+        if (this.toThrow) {
+          throw this.toThrow
+        } else {
+          return
+        }
       }
       await this.promise
       if (this.toThrow) {
