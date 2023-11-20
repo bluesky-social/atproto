@@ -1,5 +1,6 @@
 import assert from 'assert'
 import {
+  sql,
   Kysely,
   SqliteDialect,
   KyselyPlugin,
@@ -14,8 +15,7 @@ import { dbLogger } from '../logger'
 import { retrySqlite } from './util'
 
 const DEFAULT_PRAGMAS = {
-  journal_mode: 'WAL',
-  strict: 'ON',
+  strict: 'ON', // @TODO strictness should live on table defs instead
 }
 
 export class Database<Schema> {
@@ -44,6 +44,10 @@ export class Database<Schema> {
       }),
     })
     return new Database(db)
+  }
+
+  async ensureWal() {
+    await sql`PRAGMA journal_mode = WAL`.execute(this.db)
   }
 
   async transactionNoRetry<T>(

@@ -116,6 +116,7 @@ export class DidSqliteCache implements DidCache {
   }
 
   async migrateOrThrow() {
+    await this.db.ensureWal()
     await getMigrator(this.db).migrateToLatestOrThrow()
   }
 

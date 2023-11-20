@@ -26,6 +26,7 @@ export class AccountManager {
   }
 
   async migrateOrThrow() {
+    await this.db.ensureWal()
     await getMigrator(this.db).migrateToLatestOrThrow()
   }
 

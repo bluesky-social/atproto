@@ -43,6 +43,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async start() {
+    await this.db.ensureWal()
     const migrator = getMigrator(this.db)
     await migrator.migrateToLatestOrThrow()
     const curr = await this.curr()

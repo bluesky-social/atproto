@@ -106,6 +106,7 @@ export class ActorStore {
 
     const db: ActorDb = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
     try {
+      await db.ensureWal()
       const migrator = getMigrator(db)
       await migrator.migrateToLatestOrThrow()
     } finally {
