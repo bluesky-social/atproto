@@ -69,6 +69,16 @@ export const dbMigrationProvider: MigrationProvider = {
         },
         async down() {},
       },
+      '3': {
+        async up(db: Kysely<unknown>) {
+          await db.schema
+            .createTable('failed_import')
+            .addColumn('did', 'varchar', (col) => col.primaryKey())
+            .addColumn('err', 'varchar')
+            .execute()
+        },
+        async down() {},
+      },
     }
   },
 }
@@ -80,6 +90,7 @@ type Schema = {
   failed_pref: FailedPreference
   failed_blob: FailedBlob
   failed_takedown: FailedTakedown
+  failed_import: FailedImport
 }
 
 export enum TransferPhase {
@@ -119,5 +130,10 @@ export type FailedTakedown = {
   blobCid?: string
   recordUri?: string
   recordCid?: string
+  err: string | null
+}
+
+export type FailedImport = {
+  did: string
   err: string | null
 }

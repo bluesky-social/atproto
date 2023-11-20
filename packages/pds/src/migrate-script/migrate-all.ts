@@ -1,6 +1,4 @@
 import assert from 'node:assert'
-import https from 'node:https'
-import axios from 'axios'
 import * as plcLib from '@did-plc/lib'
 import SqlRepoStorage from '../sql-repo-storage'
 import { createDeferrable } from '@atproto/common'
@@ -11,8 +9,10 @@ import {
   AdminHeaders,
   PdsInfo,
   checkBorked,
+  doImport,
   getPds,
   getUserAccount,
+  httpClient,
   repairBlob,
   repairFailedPrefs,
   retryOnce,
@@ -20,11 +20,6 @@ import {
   transferPreferences,
   transferTakedowns,
 } from './util'
-
-const httpClient = axios.create({
-  timeout: 0, //optional
-  httpsAgent: new https.Agent({ keepAlive: true }),
-})
 
 export const runScript = async () => {
   console.log('starting')
@@ -182,55 +177,6 @@ const reserveSigningKey = async (
   return signingKeyRes.data.signingKey
 }
 
-const doImport = async (
-  ctx: AppContext,
-  db: MigrateDb,
-  pds: PdsInfo,
-  did: string,
-  adminHeaders: AdminHeaders,
-  since?: string,
-) => {
-  const revRes = await ctx.db.db
-    .selectFrom('ipld_block')
-    .select('repoRev')
-    .where('creator', '=', did)
-    .orderBy('repoRev', 'desc')
-    .limit(1)
-    .executeTakeFirst()
-  const repoRev = revRes?.repoRev
-  if (since && repoRev === since) {
-    return
-  }
-  const storage = new SqlRepoStorage(ctx.db, did)
-  const carStream = await storage.getCarStream(since)
-
-  const importRes = await httpClient.post(
-    `${pds.url}/xrpc/com.atproto.temp.importRepo`,
-    carStream,
-    {
-      params: { did },
-      headers: { 'content-type': 'application/vnd.ipld.car', ...adminHeaders },
-      decompress: true,
-      responseType: 'stream',
-      maxBodyLength: Infinity,
-      maxContentLength: Infinity,
-    },
-  )
-
-  let logOutput = ''
-  for await (const log of importRes.data) {
-    logOutput += log.toString()
-  }
-  const lines = logOutput.split('\n')
-  for (const line of lines) {
-    if (line.includes('failed to import blob')) {
-      const cid = line.split(':')[1].trim()
-      await logFailedBlob(db, did, cid)
-    }
-  }
-  return repoRev
-}
-
 const lockAndTransfer = async (
   ctx: AppContext,
   db: MigrateDb,
@@ -331,14 +277,6 @@ const updatePdsOnEntryway = async (
       .set({ did: `migrated-${did}` })
       .execute()
   })
-}
-
-const logFailedBlob = async (db: MigrateDb, did: string, cid: string) => {
-  await db
-    .insertInto('failed_blob')
-    .values({ did, cid })
-    .onConflict((oc) => oc.doNothing())
-    .execute()
 }
 
 const repairFailedBlobs = async (
