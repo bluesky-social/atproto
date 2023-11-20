@@ -112,6 +112,7 @@ const createEvents = async (db: PrimaryDatabase) => {
               sql`NULL`.as('durationInHours'),
               sql`NULL`.as('expiresAt'),
               sql`json_build_object('reportType', "reasonType")`.as('meta'),
+              sql`id`.as('legacyRefId'),
             ]),
         )
         .orderBy('createdAt', 'asc'),
