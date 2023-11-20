@@ -266,31 +266,36 @@ const lockAndTransfer = async (
       status.importedRev ?? undefined,
     )
 
-    const lastOp = await ctx.plcClient.getLastOp(status.did)
-    if (!lastOp || lastOp.type === 'plc_tombstone') {
-      throw new Error('could not find last plc op')
-    }
-    const plcOp = await plcLib.createUpdateOp(
-      lastOp,
-      ctx.plcRotationKey,
-      (normalized) => {
-        if (!status.signingKey) {
-          throw new Error('no reserved signing key')
-        }
-        return {
-          ...normalized,
-          verificationMethods: {
-            atproto: status.signingKey,
-          },
-          services: {
-            atproto_pds: {
-              type: 'AtprotoPersonalDataServer',
-              endpoint: pds.url,
+    let plcOp
+    if (status.did.startsWith('did:web')) {
+      plcOp = {}
+    } else {
+      const lastOp = await ctx.plcClient.getLastOp(status.did)
+      if (!lastOp || lastOp.type === 'plc_tombstone') {
+        throw new Error('could not find last plc op')
+      }
+      plcOp = await plcLib.createUpdateOp(
+        lastOp,
+        ctx.plcRotationKey,
+        (normalized) => {
+          if (!status.signingKey) {
+            throw new Error('no reserved signing key')
+          }
+          return {
+            ...normalized,
+            verificationMethods: {
+              atproto: status.signingKey,
             },
-          },
-        }
-      },
-    )
+            services: {
+              atproto_pds: {
+                type: 'AtprotoPersonalDataServer',
+                endpoint: pds.url,
+              },
+            },
+          }
+        },
+      )
+    }
     assert(!txFinished)
     const accountRes = await getUserAccount(ctx, status.did)
     await httpClient.post(
