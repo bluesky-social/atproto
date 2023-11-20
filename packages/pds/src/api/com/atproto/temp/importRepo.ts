@@ -99,7 +99,14 @@ const importRepo = async (
   const currRepo = currRoot
     ? await Repo.load(actorStore.repo.storage, CID.parse(currRoot.cid))
     : null
-  const diff = await verifyDiff(currRepo, blocks, roots[0])
+  const diff = await verifyDiff(
+    currRepo,
+    blocks,
+    roots[0],
+    undefined,
+    undefined,
+    { ensureLeaves: false },
+  )
   outBuffer.push(`diffed repo and found ${diff.writes.length} writes\n`)
   diff.commit.rev = rev
   await actorStore.repo.storage.applyCommit(diff.commit, currRepo === null)

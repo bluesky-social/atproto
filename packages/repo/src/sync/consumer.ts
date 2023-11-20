@@ -48,7 +48,9 @@ export const verifyDiff = async (
   updateRoot: CID,
   did?: string,
   signingKey?: string,
+  opts?: { ensureLeaves?: boolean },
 ): Promise<VerifiedDiff> => {
+  const { ensureLeaves = true } = opts ?? {}
   const stagedStorage = new MemoryBlockstore(updateBlocks)
   const updateStorage = repo
     ? new SyncStorage(stagedStorage, repo.storage)
@@ -63,7 +65,7 @@ export const verifyDiff = async (
   const writes = await util.diffToWriteDescripts(diff)
   const newBlocks = diff.newMstBlocks
   const leaves = updateBlocks.getMany(diff.newLeafCids.toList())
-  if (leaves.missing.length > 0) {
+  if (leaves.missing.length > 0 && ensureLeaves) {
     throw new Error(`missing leaf blocks: ${leaves.missing}`)
   }
   newBlocks.addMap(leaves.blocks)
