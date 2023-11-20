@@ -43,7 +43,7 @@
     "express": "^4.18.2",
     "get-port": "^6.1.2",
     "multiformats": "^9.9.0",
-    "sharp": "^0.31.2",
+    "sharp": "^0.32.6",
     "uint8arrays": "3.0.0"
   },
   "devDependencies": {

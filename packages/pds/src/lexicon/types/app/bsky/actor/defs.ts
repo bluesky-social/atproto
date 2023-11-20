@@ -169,7 +169,7 @@ export function validateSavedFeedsPref(v: unknown): ValidationResult {
 }
 
 export interface PersonalDetailsPref {
-  /** The birth date of the owner of the account. */
+  /** The birth date of account owner. */
   birthDate?: string
   [k: string]: unknown
 }
@@ -215,7 +215,7 @@ export function validateFeedViewPref(v: unknown): ValidationResult {
 }
 
 export interface ThreadViewPref {
-  /** Sorting mode. */
+  /** Sorting mode for threads. */
   sort?: 'oldest' | 'newest' | 'most-likes' | 'random' | (string & {})
   /** Show followed users at the top of all replies. */
   prioritizeFollowedUsers?: boolean

@@ -152,7 +152,7 @@
         "birthDate": {
           "type": "string",
           "format": "datetime",
-          "description": "The birth date of the owner of the account."
+          "description": "The birth date of account owner."
         }
       }
     },
@@ -191,7 +191,7 @@
       "properties": {
         "sort": {
           "type": "string",
-          "description": "Sorting mode.",
+          "description": "Sorting mode for threads.",
           "knownValues": ["oldest", "newest", "most-likes", "random"]
         },
         "prioritizeFollowedUsers": {

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Sets the private preferences attached to the account.",
+      "description": "Set the private preferences attached to the account.",
       "input": {
         "encoding": "application/json",
         "schema": {

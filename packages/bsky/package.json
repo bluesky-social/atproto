@@ -55,7 +55,7 @@
     "pg": "^8.10.0",
     "pino": "^8.15.0",
     "pino-http": "^8.2.1",
-    "sharp": "^0.31.2",
+    "sharp": "^0.32.6",
     "typed-emitter": "^2.1.0",
     "uint8arrays": "3.0.0"
   },
@@ -71,7 +71,6 @@
     "@types/express-serve-static-core": "^4.17.36",
     "@types/pg": "^8.6.6",
     "@types/qs": "^6.9.7",
-    "@types/sharp": "^0.31.0",
     "axios": "^0.27.2"
   }
 }

@@ -27,7 +27,7 @@
         "action": { "type": "ref", "ref": "#actionType" },
         "durationInHours": {
           "type": "integer",
-          "description": "Indicates how long this action was meant to be in effect before automatically expiring."
+          "description": "Indicates how long this action is meant to be in effect before automatically expiring."
         },
         "subject": {
           "type": "union",
@@ -60,7 +60,7 @@
         "action": { "type": "ref", "ref": "#actionType" },
         "durationInHours": {
           "type": "integer",
-          "description": "Indicates how long this action was meant to be in effect before automatically expiring."
+          "description": "Indicates how long this action is meant to be in effect before automatically expiring."
         },
         "subject": {
           "type": "union",
@@ -95,7 +95,7 @@
         "action": { "type": "ref", "ref": "#actionType" },
         "durationInHours": {
           "type": "integer",
-          "description": "Indicates how long this action was meant to be in effect before automatically expiring."
+          "description": "Indicates how long this action is meant to be in effect before automatically expiring."
         }
       }
     },

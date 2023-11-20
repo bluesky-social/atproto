@@ -31,7 +31,7 @@ export function validateStatusAttr(v: unknown): ValidationResult {
 export interface ActionView {
   id: number
   action: ActionType
-  /** Indicates how long this action was meant to be in effect before automatically expiring. */
+  /** Indicates how long this action is meant to be in effect before automatically expiring. */
   durationInHours?: number
   subject:
     | RepoRef
@@ -63,7 +63,7 @@ export function validateActionView(v: unknown): ValidationResult {
 export interface ActionViewDetail {
   id: number
   action: ActionType
-  /** Indicates how long this action was meant to be in effect before automatically expiring. */
+  /** Indicates how long this action is meant to be in effect before automatically expiring. */
   durationInHours?: number
   subject:
     | RepoView
@@ -97,7 +97,7 @@ export function validateActionViewDetail(v: unknown): ValidationResult {
 export interface ActionViewCurrent {
   id: number
   action: ActionType
-  /** Indicates how long this action was meant to be in effect before automatically expiring. */
+  /** Indicates how long this action is meant to be in effect before automatically expiring. */
   durationInHours?: number
   [k: string]: unknown
 }

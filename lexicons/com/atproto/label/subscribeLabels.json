@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "subscription",
-      "description": "Subscribe to label updates",
+      "description": "Subscribe to label updates.",
       "parameters": {
         "type": "params",
         "properties": {

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Fetch the service-specific the admin status of a subject (account, record, or blob)",
+      "description": "Get the service-specific admin status of a subject (account, record, or blob).",
       "parameters": {
         "type": "params",
         "properties": {

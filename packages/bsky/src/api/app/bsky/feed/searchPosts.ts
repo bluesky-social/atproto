@@ -46,13 +46,16 @@ const skeleton = async (
   params: Params,
   ctx: Context,
 ): Promise<SkeletonState> => {
-  const res = await ctx.searchAgent.api.app.bsky.unspecced.searchPostsSkeleton(
-    params,
-  )
+  const res = await ctx.searchAgent.api.app.bsky.unspecced.searchPostsSkeleton({
+    q: params.q,
+    cursor: params.cursor,
+    limit: params.limit,
+  })
   return {
     params,
     postUris: res.data.posts.map((a) => a.uri),
     cursor: res.data.cursor,
+    hitsTotal: res.data.hitsTotal,
   }
 }
 
@@ -102,7 +105,7 @@ const presentation = (state: HydrationState, ctx: Context) => {
       state.lists,
     ),
   )
-  return { posts: postViews }
+  return { posts: postViews, cursor: state.cursor, hitsTotal: state.hitsTotal }
 }
 
 type Context = {
@@ -117,6 +120,7 @@ type Params = QueryParams & { viewer: string | null }
 type SkeletonState = {
   params: Params
   postUris: string[]
+  hitsTotal?: number
   cursor?: string
 }
 
