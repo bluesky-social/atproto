@@ -42,7 +42,6 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#modEventComment',
               'lex:com.atproto.admin.defs#modEventReport',
               'lex:com.atproto.admin.defs#modEventLabel',
-              'lex:com.atproto.admin.defs#modEventFlag',
               'lex:com.atproto.admin.defs#modEventAcknowledge',
               'lex:com.atproto.admin.defs#modEventEscalate',
               'lex:com.atproto.admin.defs#modEventMute',
@@ -100,7 +99,6 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#modEventComment',
               'lex:com.atproto.admin.defs#modEventReport',
               'lex:com.atproto.admin.defs#modEventLabel',
-              'lex:com.atproto.admin.defs#modEventFlag',
               'lex:com.atproto.admin.defs#modEventAcknowledge',
               'lex:com.atproto.admin.defs#modEventEscalate',
               'lex:com.atproto.admin.defs#modEventMute',
@@ -763,14 +761,6 @@ export const schemaDict = {
           },
         },
       },
-      modEventFlag: {
-        type: 'object',
-        properties: {
-          comment: {
-            type: 'string',
-          },
-        },
-      },
       modEventAcknowledge: {
         type: 'object',
         properties: {
@@ -901,7 +891,6 @@ export const schemaDict = {
                 type: 'union',
                 refs: [
                   'lex:com.atproto.admin.defs#modEventTakedown',
-                  'lex:com.atproto.admin.defs#modEventFlag',
                   'lex:com.atproto.admin.defs#modEventAcknowledge',
                   'lex:com.atproto.admin.defs#modEventEscalate',
                   'lex:com.atproto.admin.defs#modEventComment',

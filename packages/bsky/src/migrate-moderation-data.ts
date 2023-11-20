@@ -78,6 +78,7 @@ const createEvents = async (db: PrimaryDatabase) => {
       'durationInHours',
       'expiresAt',
       'meta',
+      'legacyRefId',
     ])
     .expression((eb) =>
       eb
@@ -95,6 +96,7 @@ const createEvents = async (db: PrimaryDatabase) => {
           'durationInHours',
           'expiresAt',
           sql`NULL`.as('meta'),
+          sql`id`.as('legacyRefId'),
         ])
         .unionAll(
           eb
@@ -217,6 +219,16 @@ const createStatusFromActions = async (db: PrimaryDatabase) => {
   console.log(`Created ${totalStatuses} statuses`)
 }
 
+const remapFlagToAcknlowedge = async (db: PrimaryDatabase) => {
+  console.log('Initiating flag to ack remap')
+  const results = await sql`
+    UPDATE moderation_event
+    SET "action" = 'com.atproto.admin.defs#modEventAcknowledge'
+    WHERE action = 'com.atproto.admin.defs#modEventFlag'
+  `.execute(db.db)
+  console.log(`Remapped ${results.numUpdatedOrDeletedRows} flag actions to ack`)
+}
+
 const syncBlobCids = async (db: PrimaryDatabase) => {
   console.log('Initiating blob cid sync')
   const results = await sql`
@@ -254,6 +266,8 @@ async function main() {
   console.log(`Migrating ${totalEntries} rows of actions and reports`)
   const startedAt = Date.now()
   await createEvents(primaryDb)
+  // Important to run this before creation statuses from actions to ensure that we are not attempting to map flag actions
+  await remapFlagToAcknlowedge(primaryDb)
   await createStatusFromActions(primaryDb)
   await setReportedAtTimestamp(primaryDb)
   await syncBlobCids(primaryDb)

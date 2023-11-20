@@ -142,7 +142,7 @@ Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
       "createdBy": "did:example:admin",
       "event": Object {
-        "$type": "com.atproto.admin.defs#modEventFlag",
+        "$type": "com.atproto.admin.defs#modEventAcknowledge",
       },
       "id": 4,
       "subject": Object {
@@ -164,7 +164,24 @@ Object {
   "cid": "cids(0)",
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "labels": Array [],
-  "moderation": Object {},
+  "moderation": Object {
+    "subjectStatus": Object {
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "id": 3,
+      "lastReviewedAt": "1970-01-01T00:00:00.000Z",
+      "lastReviewedBy": "did:example:admin",
+      "reviewState": "com.atproto.admin.defs#reviewClosed",
+      "subject": Object {
+        "$type": "com.atproto.repo.strongRef",
+        "cid": "cids(0)",
+        "uri": "record(0)",
+      },
+      "subjectBlobCids": Array [],
+      "subjectRepoHandle": "bob.test",
+      "takendown": false,
+      "updatedAt": "1970-01-01T00:00:00.000Z",
+    },
+  },
   "repo": Object {
     "did": "user(0)",
     "email": "bob@test.com",
@@ -310,7 +327,7 @@ Object {
   "createdAt": "1970-01-01T00:00:00.000Z",
   "createdBy": "did:example:admin",
   "event": Object {
-    "$type": "com.atproto.admin.defs#modEventFlag",
+    "$type": "com.atproto.admin.defs#modEventAcknowledge",
   },
   "id": 4,
   "subject": Object {

@@ -36,7 +36,6 @@ export interface ModEventView {
     | ModEventComment
     | ModEventReport
     | ModEventLabel
-    | ModEventFlag
     | ModEventAcknowledge
     | ModEventEscalate
     | ModEventMute
@@ -74,7 +73,6 @@ export interface ModEventViewDetail {
     | ModEventComment
     | ModEventReport
     | ModEventLabel
-    | ModEventFlag
     | ModEventAcknowledge
     | ModEventEscalate
     | ModEventMute
@@ -595,23 +593,6 @@ export function isModEventLabel(v: unknown): v is ModEventLabel {
 
 export function validateModEventLabel(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#modEventLabel', v)
-}
-
-export interface ModEventFlag {
-  comment?: string
-  [k: string]: unknown
-}
-
-export function isModEventFlag(v: unknown): v is ModEventFlag {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'com.atproto.admin.defs#modEventFlag'
-  )
-}
-
-export function validateModEventFlag(v: unknown): ValidationResult {
-  return lexicons.validate('com.atproto.admin.defs#modEventFlag', v)
 }
 
 export interface ModEventAcknowledge {

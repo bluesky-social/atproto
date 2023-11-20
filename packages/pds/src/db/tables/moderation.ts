@@ -17,7 +17,6 @@ export interface ModerationAction {
   id: Generated<number>
   action:
     | 'com.atproto.admin.defs#modEventTakedown'
-    | 'com.atproto.admin.defs#modEventFlag'
     | 'com.atproto.admin.defs#modEventAcknowledge'
     | 'com.atproto.admin.defs#modEventEscalate'
     | 'com.atproto.admin.defs#modEventComment'

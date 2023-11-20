@@ -15,7 +15,6 @@ export interface QueryParams {}
 export interface InputSchema {
   event:
     | ComAtprotoAdminDefs.ModEventTakedown
-    | ComAtprotoAdminDefs.ModEventFlag
     | ComAtprotoAdminDefs.ModEventAcknowledge
     | ComAtprotoAdminDefs.ModEventEscalate
     | ComAtprotoAdminDefs.ModEventComment

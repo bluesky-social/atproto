@@ -20,6 +20,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('reversedReason', 'text')
     .addColumn('createLabelVals', 'varchar')
     .addColumn('negateLabelVals', 'varchar')
+    .addColumn('legacyRefId', 'integer')
     .execute()
   await db.schema
     .createTable('moderation_subject_status')

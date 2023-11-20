@@ -30,7 +30,6 @@
             "#modEventComment",
             "#modEventReport",
             "#modEventLabel",
-            "#modEventFlag",
             "#modEventAcknowledge",
             "#modEventEscalate",
             "#modEventMute",
@@ -68,7 +67,6 @@
             "#modEventComment",
             "#modEventReport",
             "#modEventLabel",
-            "#modEventFlag",
             "#modEventAcknowledge",
             "#modEventEscalate",
             "#modEventMute"
@@ -509,12 +507,6 @@
           "type": "array",
           "items": { "type": "string" }
         }
-      }
-    },
-    "modEventFlag": {
-      "type": "object",
-      "properties": {
-        "comment": { "type": "string" }
       }
     },
     "modEventAcknowledge": {

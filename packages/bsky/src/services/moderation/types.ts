@@ -40,7 +40,6 @@ export type ModerationSubjectStatusRowWithHandle =
 
 export type ModEventType =
   | ComAtprotoAdminDefs.ModEventTakedown
-  | ComAtprotoAdminDefs.ModEventFlag
   | ComAtprotoAdminDefs.ModEventAcknowledge
   | ComAtprotoAdminDefs.ModEventEscalate
   | ComAtprotoAdminDefs.ModEventComment

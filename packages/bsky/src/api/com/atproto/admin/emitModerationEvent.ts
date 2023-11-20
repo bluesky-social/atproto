@@ -9,7 +9,6 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { getSubject } from '../moderation/util'
 import {
-  isModEventFlag,
   isModEventLabel,
   isModEventReverseTakedown,
   isModEventTakedown,
@@ -38,10 +37,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
       // if less than moderator access then can only take ack and escalation actions
-      if (
-        !access.moderator &&
-        (isModEventFlag(event) || isTakedownEvent || isReverseTakedownEvent)
-      ) {
+      if (!access.moderator && (isTakedownEvent || isReverseTakedownEvent)) {
         throw new AuthRequiredError(
           'Must be a full moderator to take this type of action',
         )

@@ -103,7 +103,7 @@ describe('proxies admin requests', () => {
     const { data: actionA } =
       await agent.api.com.atproto.admin.emitModerationEvent(
         {
-          event: { $type: 'com.atproto.admin.defs#modEventFlag' },
+          event: { $type: 'com.atproto.admin.defs#modEventAcknowledge' },
           subject: {
             $type: 'com.atproto.repo.strongRef',
             uri: post.ref.uriStr,

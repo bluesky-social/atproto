@@ -12,7 +12,6 @@ export interface ModerationEvent {
   id: Generated<number>
   action:
     | 'com.atproto.admin.defs#modEventTakedown'
-    | 'com.atproto.admin.defs#modEventFlag'
     | 'com.atproto.admin.defs#modEventAcknowledge'
     | 'com.atproto.admin.defs#modEventEscalate'
     | 'com.atproto.admin.defs#modEventComment'
@@ -33,6 +32,7 @@ export interface ModerationEvent {
   durationInHours: number | null
   expiresAt: string | null
   meta: Record<string, string | boolean> | null
+  legacyRefId: number | null
 }
 
 export interface ModerationSubjectStatus {
