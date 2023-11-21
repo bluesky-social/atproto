@@ -9,8 +9,8 @@ import { TID } from '@atproto/common'
 
 dotenv.config()
 
-const MISSING_BLOB_FILE = '/data/missing-blobs.txt'
-const MISSING_ACTOR_FILE = '/data/missing-actor.txt'
+const MISSING_BLOB_FILE = '/atproto/missing-blobs.txt'
+const MISSING_ACTOR_FILE = '/atproto/missing-actor.txt'
 
 const run = async () => {
   const env = readEnv()
