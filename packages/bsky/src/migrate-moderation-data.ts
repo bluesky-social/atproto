@@ -11,7 +11,7 @@ const getEnv = () => ({
   DB_URL:
     process.env.MODERATION_MIGRATION_DB_URL ||
     'postgresql://pg:password@127.0.0.1:5433/postgres',
-  DB_POOL_SIZE: Number(process.env.MODERATION_MIGRATION_DB_URL) || 10,
+  DB_POOL_SIZE: Number(process.env.MODERATION_MIGRATION_DB_POOL_SIZE) || 10,
   DB_SCHEMA: process.env.MODERATION_MIGRATION_DB_SCHEMA || 'bsky',
 })
 
@@ -179,8 +179,9 @@ const createStatusFromActions = async (db: PrimaryDatabase) => {
   console.log(`Processing ${allEvents.count} actions in ${totalChunks} chunks`)
 
   await db.transaction(async (tx) => {
+    // This is not used for pagination but only for logging purposes
     let currentChunk = 1
-    let lastProcessedId = 0
+    let lastProcessedId: undefined | number = 0
     do {
       const eventsQuery = tx.db
         // @ts-ignore
@@ -198,7 +199,7 @@ const createStatusFromActions = async (db: PrimaryDatabase) => {
         const actionParts = event.action.split('#')
         await adjustModerationSubjectStatus(tx, {
           ...event,
-          action: `${actionParts[0]}#modEvent${actionParts[1]
+          action: `com.atproto.admin.defs#modEvent${actionParts[1]
             .charAt(0)
             .toUpperCase()}${actionParts[1].slice(
             1,
@@ -209,9 +210,9 @@ const createStatusFromActions = async (db: PrimaryDatabase) => {
       }
 
       console.log(`Processed events chunk ${currentChunk} of ${totalChunks}`)
-      lastProcessedId = events.at(-1)?.id ?? 0
+      lastProcessedId = events.at(-1)?.id
       currentChunk++
-    } while (currentChunk < totalChunks)
+    } while (lastProcessedId !== undefined)
   })
 
   console.log(`Events migration complete!`)
@@ -248,7 +249,7 @@ const syncBlobCids = async (db: PrimaryDatabase) => {
   console.log(`Updated blob cids on ${results.numUpdatedOrDeletedRows} rows`)
 }
 
-async function main() {
+export async function MigrateModerationData() {
   const env = getEnv()
   const db = new DatabaseCoordinator({
     schema: env.DB_SCHEMA,
@@ -276,5 +277,3 @@ async function main() {
   console.log(`Time spent: ${(Date.now() - startedAt) / 1000 / 60} minutes`)
   console.log('Migration complete!')
 }
-
-main()

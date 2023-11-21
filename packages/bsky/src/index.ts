@@ -39,6 +39,7 @@ export { AppContext } from './context'
 export { makeAlgos } from './feed-gen'
 export * from './indexer'
 export * from './ingester'
+export { MigrateModerationData } from './migrate-moderation-data'
 
 export class BskyAppView {
   public ctx: AppContext
