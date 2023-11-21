@@ -4,7 +4,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.confirmEmail({
-    auth: ctx.accessVerifierCheckTakedown,
+    auth: ctx.authVerifier.accessCheckTakedown,
     handler: async ({ auth, input }) => {
       const did = auth.credentials.did
       const { token, email } = input.body

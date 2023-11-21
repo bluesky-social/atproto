@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Request an email with a code to confirm ownership of email"
+      "description": "Request an email with a code to confirm ownership of email."
     }
   }
 }

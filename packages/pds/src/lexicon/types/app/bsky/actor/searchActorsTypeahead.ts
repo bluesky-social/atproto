@@ -10,9 +10,9 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 import * as AppBskyActorDefs from './defs'
 
 export interface QueryParams {
-  /** DEPRECATED: use 'q' instead */
+  /** DEPRECATED: use 'q' instead. */
   term?: string
-  /** search query prefix; not a full query string */
+  /** Search query prefix; not a full query string. */
   q?: string
   limit: number
 }

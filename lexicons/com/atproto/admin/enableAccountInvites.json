@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Re-enable an accounts ability to receive invite codes",
+      "description": "Re-enable an account's ability to receive invite codes.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -14,7 +14,7 @@
             "account": { "type": "string", "format": "did" },
             "note": {
               "type": "string",
-              "description": "Additionally add a note describing why the invites were enabled"
+              "description": "Optional reason for enabled invites."
             }
           }
         }

@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { lexiconDoc, Lexicons } from '../src/index'
+import { LexiconDoc, Lexicons, parseLexiconDoc } from '../src/index'
 import LexiconDocs from './_scaffolds/lexicons'
 
 describe('Lexicons collection', () => {
@@ -97,7 +97,7 @@ describe('General validation', () => {
       },
     }
     expect(() => {
-      lexiconDoc.parse(schema)
+      parseLexiconDoc(schema)
     }).toThrow('Required field \\"foo\\" not defined')
   })
   it('fails when unknown fields are present', () => {
@@ -113,11 +113,11 @@ describe('General validation', () => {
     }
 
     expect(() => {
-      lexiconDoc.parse(schema)
+      parseLexiconDoc(schema)
     }).toThrow("Unrecognized key(s) in object: 'foo'")
   })
   it('fails lexicon parsing when uri is invalid', () => {
-    const schema = {
+    const schema: LexiconDoc = {
       lexicon: 1,
       id: 'com.example.invalidUri',
       defs: {
@@ -135,7 +135,7 @@ describe('General validation', () => {
     }).toThrow('Uri can only have one hash segment')
   })
   it('fails validation when ref uri has multiple hash segments', () => {
-    const schema = {
+    const schema: LexiconDoc = {
       lexicon: 1,
       id: 'com.example.invalidUri',
       defs: {
@@ -168,7 +168,7 @@ describe('General validation', () => {
     }).toThrow('Uri can only have one hash segment')
   })
   it('union handles both implicit and explicit #main', () => {
-    const schemas = [
+    const schemas: LexiconDoc[] = [
       {
         lexicon: 1,
         id: 'com.example.implicitMain',

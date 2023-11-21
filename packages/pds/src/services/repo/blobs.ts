@@ -162,7 +162,7 @@ export class RepoBlobs {
         this.db.db
           .selectFrom('repo_blob')
           .selectAll()
-          .where('takedownId', 'is not', null)
+          .where('takedownRef', 'is not', null)
           .whereRef('cid', '=', ref('blob.cid')),
       )
       .executeTakeFirst()

@@ -135,6 +135,7 @@ export const mock = {
     mutedByList,
     blockedBy,
     blocking,
+    blockingByList,
     following,
     followedBy,
   }: {
@@ -142,6 +143,7 @@ export const mock = {
     mutedByList?: AppBskyGraphDefs.ListViewBasic
     blockedBy?: boolean
     blocking?: string
+    blockingByList?: AppBskyGraphDefs.ListViewBasic
     following?: string
     followedBy?: string
   }): AppBskyActorDefs.ViewerState {
@@ -150,6 +152,7 @@ export const mock = {
       mutedByList,
       blockedBy,
       blocking,
+      blockingByList,
       following,
       followedBy,
     }

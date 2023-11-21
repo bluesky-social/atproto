@@ -3,7 +3,6 @@ import { Leader } from './leader'
 import { dbLogger } from '../logger'
 import AppContext from '../context'
 import AtpAgent from '@atproto/api'
-import { buildBasicAuth } from '../auth'
 import { LabelService } from '../services/label'
 import { ModerationActionRow } from '../services/moderation'
 
@@ -18,14 +17,7 @@ export class PeriodicModerationActionReversal {
   pushAgent?: AtpAgent
 
   constructor(private appContext: AppContext) {
-    if (appContext.cfg.moderationActionReverseUrl) {
-      const url = new URL(appContext.cfg.moderationActionReverseUrl)
-      this.pushAgent = new AtpAgent({ service: url.origin })
-      this.pushAgent.api.setHeader(
-        'authorization',
-        buildBasicAuth(url.username, url.password),
-      )
-    }
+    this.pushAgent = appContext.moderationPushAgent
   }
 
   // invert label creation & negations

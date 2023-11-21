@@ -164,7 +164,7 @@ export class RecordService {
     cid: string
     value: object
     indexedAt: string
-    takedownId: number | null
+    takedownRef: string | null
   } | null> {
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
@@ -189,7 +189,7 @@ export class RecordService {
       cid: record.cid,
       value: cborToLexRecord(record.content),
       indexedAt: record.indexedAt,
-      takedownId: record.takedownId,
+      takedownRef: record.takedownRef ? record.takedownRef.toString() : null,
     }
   }
 

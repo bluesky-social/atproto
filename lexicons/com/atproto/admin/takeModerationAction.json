@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Take a moderation action on a repo.",
+      "description": "Take a moderation action on an actor.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -41,7 +41,7 @@
             "reason": { "type": "string" },
             "durationInHours": {
               "type": "integer",
-              "description": "Indicates how long this action was meant to be in effect before automatically expiring."
+              "description": "Indicates how long this action is meant to be in effect before automatically expiring."
             },
             "createdBy": { "type": "string", "format": "did" }
           }

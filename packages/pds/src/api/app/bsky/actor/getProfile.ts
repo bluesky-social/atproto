@@ -7,7 +7,7 @@ import { LocalRecords } from '../../../../services/local'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
-    auth: ctx.accessOrRoleVerifier,
+    auth: ctx.authVerifier.accessOrRole,
     handler: async ({ req, auth, params }) => {
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null

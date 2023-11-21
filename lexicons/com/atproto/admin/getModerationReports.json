@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List moderation reports related to a subject.",
+      "description": "Get moderation reports related to a subject.",
       "parameters": {
         "type": "params",
         "properties": {
@@ -13,12 +13,12 @@
           "actionedBy": {
             "type": "string",
             "format": "did",
-            "description": "Get all reports that were actioned by a specific moderator"
+            "description": "Get all reports that were actioned by a specific moderator."
           },
           "reporters": {
             "type": "array",
             "items": { "type": "string" },
-            "description": "Filter reports made by one or more DIDs"
+            "description": "Filter reports made by one or more DIDs."
           },
           "resolved": { "type": "boolean" },
           "actionType": {
@@ -39,7 +39,7 @@
           "cursor": { "type": "string" },
           "reverse": {
             "type": "boolean",
-            "description": "Reverse the order of the returned records? when true, returns reports in chronological order"
+            "description": "Reverse the order of the returned records. When true, returns reports in chronological order."
           }
         }
       },

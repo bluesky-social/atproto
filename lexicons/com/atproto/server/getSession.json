@@ -14,7 +14,8 @@
             "handle": { "type": "string", "format": "handle" },
             "did": { "type": "string", "format": "did" },
             "email": { "type": "string" },
-            "emailConfirmed": { "type": "boolean" }
+            "emailConfirmed": { "type": "boolean" },
+            "didDoc": { "type": "unknown" }
           }
         }
       }

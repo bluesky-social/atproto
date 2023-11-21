@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Gets the did's repo, optionally catching up from a specific revision.",
+      "description": "Gets the DID's repo, optionally catching up from a specific revision.",
       "parameters": {
         "type": "params",
         "required": ["did"],

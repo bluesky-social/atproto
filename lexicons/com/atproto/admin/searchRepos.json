@@ -13,7 +13,6 @@
             "description": "DEPRECATED: use 'q' instead"
           },
           "q": { "type": "string" },
-          "invitedBy": { "type": "string" },
           "limit": {
             "type": "integer",
             "minimum": 1,

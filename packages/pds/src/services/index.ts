@@ -15,6 +15,7 @@ export function createServices(resources: {
   repoSigningKey: crypto.Keypair
   blobstore: BlobStore
   pdsHostname: string
+  jwtSecret: string
   appViewAgent?: AtpAgent
   appViewDid?: string
   appViewCdnUrlPattern?: string
@@ -25,6 +26,7 @@ export function createServices(resources: {
     repoSigningKey,
     blobstore,
     pdsHostname,
+    jwtSecret,
     appViewAgent,
     appViewDid,
     appViewCdnUrlPattern,
@@ -33,7 +35,7 @@ export function createServices(resources: {
   } = resources
   return {
     account: AccountService.creator(),
-    auth: AuthService.creator(),
+    auth: AuthService.creator(jwtSecret),
     record: RecordService.creator(),
     repo: RepoService.creator(
       repoSigningKey,

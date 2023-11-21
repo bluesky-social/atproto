@@ -1,17 +1,77 @@
+import * as jwt from 'jsonwebtoken'
+import * as ui8 from 'uint8arrays'
+import * as crypto from '@atproto/crypto'
 import { HOUR } from '@atproto/common'
 import Database from '../db'
-import { RefreshToken, getRefreshTokenId } from '../auth'
+import { AuthScope } from '../auth-verifier'
 
 const REFRESH_GRACE_MS = 2 * HOUR
 
-export class AuthService {
-  constructor(public db: Database) {}
+export type AuthToken = {
+  scope: AuthScope
+  sub: string
+  exp: number
+}
 
-  static creator() {
-    return (db: Database) => new AuthService(db)
+export type RefreshToken = AuthToken & { jti: string }
+
+export class AuthService {
+  constructor(public db: Database, private _secret: string) {}
+
+  static creator(jwtSecret: string) {
+    return (db: Database) => new AuthService(db, jwtSecret)
   }
 
-  async grantRefreshToken(
+  createAccessToken(opts: {
+    did: string
+    scope?: AuthScope
+    expiresIn?: string | number
+  }) {
+    const { did, scope = AuthScope.Access, expiresIn = '120mins' } = opts
+    const payload = {
+      scope,
+      sub: did,
+    }
+    return {
+      payload: payload as AuthToken, // exp set by sign()
+      jwt: jwt.sign(payload, this._secret, {
+        expiresIn: expiresIn,
+        mutatePayload: true,
+      }),
+    }
+  }
+
+  createRefreshToken(opts: {
+    did: string
+    jti?: string
+    expiresIn?: string | number
+  }) {
+    const { did, jti = getRefreshTokenId(), expiresIn = '90days' } = opts
+    const payload = {
+      scope: AuthScope.Refresh,
+      sub: did,
+      jti,
+    }
+    return {
+      payload: payload as RefreshToken, // exp set by sign()
+      jwt: jwt.sign(payload, this._secret, {
+        expiresIn: expiresIn,
+        mutatePayload: true,
+      }),
+    }
+  }
+
+  async createSession(did: string, appPasswordName: string | null) {
+    const access = this.createAccessToken({
+      did,
+      scope: appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
+    })
+    const refresh = this.createRefreshToken({ did })
+    await this.storeRefreshToken(refresh.payload, appPasswordName)
+    return { access, refresh }
+  }
+
+  async storeRefreshToken(
     payload: RefreshToken,
     appPasswordName: string | null,
   ) {
@@ -27,9 +87,7 @@ export class AuthService {
       .executeTakeFirst()
   }
 
-  async rotateRefreshToken(
-    id: string,
-  ): Promise<{ nextId: string; appPassName: string | null } | null> {
+  async rotateRefreshToken(id: string) {
     this.db.assertTransaction()
     const token = await this.db.db
       .selectFrom('refresh_token')
@@ -39,29 +97,8 @@ export class AuthService {
       .executeTakeFirst()
     if (!token) return null
 
-    // Shorten the refresh token lifespan down from its
-    // original expiration time to its revocation grace period.
-
+    // take the chance to tidy all of a user's expired tokens
     const now = new Date()
-    const prevExpiresAt = new Date(token.expiresAt)
-    const graceExpiresAt = new Date(now.getTime() + REFRESH_GRACE_MS)
-
-    const expiresAt =
-      graceExpiresAt < prevExpiresAt ? graceExpiresAt : prevExpiresAt
-    const expired = expiresAt <= now
-
-    // Determine the next refresh token id: upon refresh token
-    // reuse you always receive a refresh token with the same id.
-    const nextId = token.nextId ?? getRefreshTokenId()
-
-    // Update token w/ possibly-updated expiration time
-    // and next id, and tidy all of user's expired tokens.
-
-    await this.db.db
-      .updateTable('refresh_token')
-      .where('id', '=', id)
-      .set({ expiresAt: expiresAt.toISOString(), nextId })
-      .executeTakeFirst()
     await this.db.db
       .deleteFrom('refresh_token')
       .where('did', '=', token.did)
@@ -69,7 +106,42 @@ export class AuthService {
       .returningAll()
       .executeTakeFirst()
 
-    return expired ? null : { nextId, appPassName: token.appPasswordName }
+    // Shorten the refresh token lifespan down from its
+    // original expiration time to its revocation grace period.
+    const prevExpiresAt = new Date(token.expiresAt)
+    const graceExpiresAt = new Date(now.getTime() + REFRESH_GRACE_MS)
+
+    const expiresAt =
+      graceExpiresAt < prevExpiresAt ? graceExpiresAt : prevExpiresAt
+
+    if (expiresAt <= now) {
+      return null
+    }
+
+    // Determine the next refresh token id: upon refresh token
+    // reuse you always receive a refresh token with the same id.
+    const nextId = token.nextId ?? getRefreshTokenId()
+
+    // Update token w/ possibly-updated expiration time
+    // and next id, and tidy all of user's expired tokens.
+    await this.db.db
+      .updateTable('refresh_token')
+      .where('id', '=', id)
+      .set({ expiresAt: expiresAt.toISOString(), nextId })
+      .executeTakeFirst()
+
+    const refresh = this.createRefreshToken({
+      did: token.did,
+      jti: nextId,
+    })
+    const access = this.createAccessToken({
+      did: token.did,
+      scope:
+        token.appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
+    })
+    await this.storeRefreshToken(refresh.payload, token.appPasswordName)
+
+    return { access, refresh }
   }
 
   async revokeRefreshToken(id: string) {
@@ -96,4 +168,8 @@ export class AuthService {
       .executeTakeFirst()
     return numDeletedRows > 0
   }
+}
+
+const getRefreshTokenId = () => {
+  return ui8.toString(crypto.randomBytes(32), 'base64')
 }

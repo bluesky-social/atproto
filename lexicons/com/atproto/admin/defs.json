@@ -2,6 +2,14 @@
   "lexicon": 1,
   "id": "com.atproto.admin.defs",
   "defs": {
+    "statusAttr": {
+      "type": "object",
+      "required": ["applied"],
+      "properties": {
+        "applied": { "type": "boolean" },
+        "ref": { "type": "string" }
+      }
+    },
     "actionView": {
       "type": "object",
       "required": [
@@ -19,7 +27,7 @@
         "action": { "type": "ref", "ref": "#actionType" },
         "durationInHours": {
           "type": "integer",
-          "description": "Indicates how long this action was meant to be in effect before automatically expiring."
+          "description": "Indicates how long this action is meant to be in effect before automatically expiring."
         },
         "subject": {
           "type": "union",
@@ -52,7 +60,7 @@
         "action": { "type": "ref", "ref": "#actionType" },
         "durationInHours": {
           "type": "integer",
-          "description": "Indicates how long this action was meant to be in effect before automatically expiring."
+          "description": "Indicates how long this action is meant to be in effect before automatically expiring."
         },
         "subject": {
           "type": "union",
@@ -87,7 +95,7 @@
         "action": { "type": "ref", "ref": "#actionType" },
         "durationInHours": {
           "type": "integer",
-          "description": "Indicates how long this action was meant to be in effect before automatically expiring."
+          "description": "Indicates how long this action is meant to be in effect before automatically expiring."
         }
       }
     },
@@ -240,6 +248,31 @@
           }
         },
         "invitesDisabled": { "type": "boolean" },
+        "inviteNote": { "type": "string" },
+        "emailConfirmedAt": { "type": "string", "format": "datetime" }
+      }
+    },
+    "accountView": {
+      "type": "object",
+      "required": ["did", "handle", "indexedAt"],
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "handle": { "type": "string", "format": "handle" },
+        "email": { "type": "string" },
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "invitedBy": {
+          "type": "ref",
+          "ref": "com.atproto.server.defs#inviteCode"
+        },
+        "invites": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "com.atproto.server.defs#inviteCode"
+          }
+        },
+        "invitesDisabled": { "type": "boolean" },
+        "emailConfirmedAt": { "type": "string", "format": "datetime" },
         "inviteNote": { "type": "string" }
       }
     },
@@ -255,6 +288,15 @@
       "required": ["did"],
       "properties": {
         "did": { "type": "string", "format": "did" }
+      }
+    },
+    "repoBlobRef": {
+      "type": "object",
+      "required": ["did", "cid"],
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "cid": { "type": "string", "format": "cid" },
+        "recordUri": { "type": "string", "format": "at-uri" }
       }
     },
     "recordView": {

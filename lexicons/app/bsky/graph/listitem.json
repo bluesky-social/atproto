@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
-      "description": "An item under a declared list of actors",
+      "description": "An item under a declared list of actors.",
       "key": "tid",
       "record": {
         "type": "object",
