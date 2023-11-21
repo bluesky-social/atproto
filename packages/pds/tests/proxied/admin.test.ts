@@ -145,7 +145,7 @@ describe('proxies admin requests', () => {
         },
         { headers: network.pds.adminAuthHeaders() },
       )
-    expect(forSnapshot(result)).toMatchSnapshot()
+    expect(forSnapshot(result.events)).toMatchSnapshot()
   })
   it('fetches repo details.', async () => {
     const { data: result } = await agent.api.com.atproto.admin.getRepo(

@@ -28,7 +28,7 @@ Array [
 
 exports[`proxies admin requests fetches a list of events. 1`] = `
 Object {
-  "cursor": "1700610726087::2",
+  "cursor": "1700610911354::2",
   "events": Array [
     Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
@@ -135,26 +135,23 @@ Object {
 `;
 
 exports[`proxies admin requests fetches moderation events. 1`] = `
-Object {
-  "cursor": "1700610726107::4",
-  "events": Array [
-    Object {
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "createdBy": "did:example:admin",
-      "event": Object {
-        "$type": "com.atproto.admin.defs#modEventAcknowledge",
-      },
-      "id": 4,
-      "subject": Object {
-        "$type": "com.atproto.repo.strongRef",
-        "cid": "cids(0)",
-        "uri": "record(0)",
-      },
-      "subjectBlobCids": Array [],
-      "subjectHandle": "bob.test",
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "did:example:admin",
+    "event": Object {
+      "$type": "com.atproto.admin.defs#modEventAcknowledge",
     },
-  ],
-}
+    "id": 4,
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(0)",
+      "uri": "record(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "bob.test",
+  },
+]
 `;
 
 exports[`proxies admin requests fetches record details. 1`] = `
