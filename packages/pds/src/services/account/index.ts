@@ -8,7 +8,11 @@ import * as scrypt from '../../db/scrypt'
 import { UserAccountEntry } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
-import { countAll, notSoftDeletedClause } from '../../db/util'
+import {
+  countAll,
+  isErrUniqueViolation,
+  notSoftDeletedClause,
+} from '../../db/util'
 import { paginate, TimeCidKeyset } from '../../db/pagination'
 import * as sequencer from '../../sequencer'
 import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
@@ -189,11 +193,19 @@ export class AccountService {
   }
 
   async updateEmail(did: string, email: string) {
-    await this.db.db
-      .updateTable('user_account')
-      .set({ email: email.toLowerCase(), emailConfirmedAt: null })
-      .where('did', '=', did)
-      .executeTakeFirst()
+    try {
+      await this.db.db
+        .updateTable('user_account')
+        .set({ email: email.toLowerCase(), emailConfirmedAt: null })
+        .where('did', '=', did)
+        .executeTakeFirst()
+    } catch (err) {
+      if (isErrUniqueViolation(err)) {
+        throw new UserAlreadyExistsError()
+      } else {
+        throw err
+      }
+    }
   }
 
   async updateUserPassword(did: string, password: string) {
