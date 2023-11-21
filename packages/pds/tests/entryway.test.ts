@@ -3,7 +3,9 @@ import fs from 'node:fs/promises'
 import * as ui8 from 'uint8arrays'
 import * as jose from 'jose'
 import AtpAgent from '@atproto/api'
+import { XRPCError } from '@atproto/xrpc'
 import { Secp256k1Keypair } from '@atproto/crypto'
+import { getPdsEndpoint, isValidDidDoc } from '@atproto/common'
 import {
   SeedClient,
   TestPds,
@@ -11,7 +13,6 @@ import {
   mockNetworkUtilities,
 } from '@atproto/dev-env'
 import { ids } from '@atproto/api/src/client/lexicons'
-import { getPdsEndpoint, isValidDidDoc } from '@atproto/common'
 
 describe('entryway', () => {
   let plc: TestPlc
@@ -491,5 +492,126 @@ describe('entryway', () => {
       rkey: 'self',
     })
     expect(profile.value['displayName']).toEqual('Carol!')
+  })
+
+  describe('agent sessions', () => {
+    let dan: string
+
+    it('updates service url on account creation based on did doc.', async () => {
+      await entryway.ctx.db.db.updateTable('pds').set({ weight: 1 }).execute()
+      const agent = new AtpAgent({ service: entryway.url })
+      const { data: session } = await agent.createAccount({
+        email: 'dan@test.com',
+        handle: 'dan.test',
+        password: 'test123',
+      })
+      dan = session.did
+      await entryway.ctx.db.db.updateTable('pds').set({ weight: 0 }).execute()
+      expect(session.handle).toBe('dan.test')
+      assert(isValidDidDoc(session.didDoc))
+      expect(session.didDoc.alsoKnownAs).toEqual(['at://dan.test'])
+      expect(getPdsEndpoint(session.didDoc)).toBe(pds.url)
+      expect(agent.api.xrpc.uri.origin).toBe(pds.url)
+    })
+
+    it('updates service url on session creation, resumption based on did doc.', async () => {
+      // creation
+      const agent1 = new AtpAgent({ service: entryway.url })
+      expect(agent1.api.xrpc.uri.origin).toBe(entryway.url)
+      const { data: session } = await agent1.login({
+        identifier: 'dan.test',
+        password: 'test123',
+      })
+      assert(agent1.session)
+      const agentSession = agent1.session
+      expect(session.handle).toBe('dan.test')
+      assert(isValidDidDoc(session.didDoc))
+      expect(session.didDoc.alsoKnownAs).toEqual(['at://dan.test'])
+      expect(getPdsEndpoint(session.didDoc)).toBe(pds.url)
+      expect(agent1.api.xrpc.uri.origin).toBe(pds.url)
+      // resumption
+      const agent2 = new AtpAgent({ service: entryway.url })
+      expect(agent2.api.xrpc.uri.origin).toBe(entryway.url)
+      const { data: resumedSession } = await agent2.resumeSession(agentSession)
+      expect(resumedSession.handle).toBe('dan.test')
+      assert(isValidDidDoc(resumedSession.didDoc))
+      expect(resumedSession.didDoc.alsoKnownAs).toEqual(['at://dan.test'])
+      expect(getPdsEndpoint(resumedSession.didDoc)).toBe(pds.url)
+      expect(agent2.api.xrpc.uri.origin).toBe(pds.url)
+    })
+
+    it('updates service url on session refresh based on did doc.', async () => {
+      const agent = new AtpAgent({ service: entryway.url })
+      const authService = entryway.ctx.services.auth(entryway.ctx.db)
+      const { refresh: refreshToken } = await authService.createSession({
+        did: dan,
+        pdsDid: pds.ctx.cfg.service.did,
+        appPasswordName: null,
+      })
+      const expiredAccessToken = await authService.createAccessToken({
+        did: dan,
+        pdsDid: pds.ctx.cfg.service.did,
+        expiresIn: -1,
+      })
+      agent.session = {
+        did: dan,
+        handle: 'dan.test',
+        accessJwt: expiredAccessToken,
+        refreshJwt: refreshToken,
+      }
+      expect(agent.api.xrpc.uri.origin).toBe(entryway.url)
+      // since access token is expired, will cause a refresh flow
+      await agent.com.atproto.server.getAccountInviteCodes()
+      expect(agent.api.xrpc.uri.origin).toBe(pds.url)
+      expect(agent.session).toBeDefined()
+      expect(agent.session.accessJwt).not.toBe(expiredAccessToken)
+      expect(agent.session.refreshJwt).not.toBe(refreshToken)
+    })
+
+    it('initiates token refresh when pds sees unknown user.', async () => {
+      const { data: session } =
+        await entrywayAgent.api.com.atproto.server.createAccount({
+          email: 'eve@test.com',
+          handle: 'eve.test',
+          password: 'test123',
+        })
+      const authService = entryway.ctx.services.auth(entryway.ctx.db)
+      const tokens = await authService.createSession({
+        did: session.did,
+        pdsDid: pds.ctx.cfg.service.did, // not eve's pds
+        appPasswordName: null,
+      })
+      const attempt = (agent: AtpAgent) =>
+        agent.api.app.bsky.actor.putPreferences(
+          { preferences: [] },
+          {
+            headers: SeedClient.getHeaders(tokens.access),
+            encoding: 'application/json',
+          },
+        )
+      const pdsDirectErr = await attempt(pdsAgent).catch((err) => err)
+      const entrywayProxyErr = await attempt(entrywayAgent).catch((err) => err)
+      assert(pdsDirectErr instanceof XRPCError)
+      assert(entrywayProxyErr instanceof XRPCError)
+      expect(pdsDirectErr.status).toBe(403)
+      expect(pdsDirectErr.error).toBe('AccountNotFound')
+      expect(entrywayProxyErr.status).toBe(400)
+      expect(entrywayProxyErr.error).toBe('ExpiredToken')
+      // refresh handled by agent
+      const agent = new AtpAgent({ service: entryway.url })
+      agent.session = {
+        did: session.did,
+        handle: session.handle,
+        accessJwt: tokens.access,
+        refreshJwt: tokens.refresh,
+      }
+      expect(agent.api.xrpc.uri.origin).toBe(entryway.url)
+      // since entryway serves an expiration error, will cause a refresh flow
+      await agent.api.app.bsky.actor.putPreferences({ preferences: [] })
+      expect(agent.api.xrpc.uri.origin).toBe(entryway.url)
+      expect(agent.session).toBeDefined()
+      expect(agent.session.accessJwt).not.toBe(tokens.access)
+      expect(agent.session.refreshJwt).not.toBe(tokens.refresh)
+    })
   })
 })
