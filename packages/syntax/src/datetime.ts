@@ -7,6 +7,9 @@ export const ensureValidDatetime = (dtStr: string): void => {
   if (isNaN(date.getTime())) {
     throw new InvalidDatetimeError('datetime did not parse as ISO 8601')
   }
+  if (date.toISOString().startsWith('-')) {
+    throw new InvalidDatetimeError('datetime normalized to a negative time')
+  }
   // regex and other checks for RFC-3339
   if (
     !/^[0-9]{4}-[01][0-9]-[0-3][0-9]T[0-2][0-9]:[0-6][0-9]:[0-6][0-9](.[0-9]{1,20})?(Z|([+-][0-2][0-9]:[0-5][0-9]))$/.test(
