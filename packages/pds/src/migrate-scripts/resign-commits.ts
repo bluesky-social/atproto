@@ -14,7 +14,8 @@ const run = async () => {
   const secrets = envToSecrets(env)
   const ctx = await AppContext.fromConfig(cfg, secrets)
 
-  let count = 0
+  let total = 0
+  let resigned = 0
 
   await forEachActorStore(
     ctx,
@@ -33,10 +34,12 @@ const run = async () => {
           resignCommit(store),
         )
         await ctx.sequencer.sequenceCommit(did, commit, [])
+        resigned++
       }
-      count++
-      if (count % 100 === 0) {
-        console.log(count)
+      total++
+      if (total % 100 === 0) {
+        console.log('Total: ', total)
+        console.log('Resigned: ', resignCommit)
       }
     },
   )
@@ -44,7 +47,7 @@ const run = async () => {
 
 const checkNeedsCommit = async (store: ActorStoreReader): Promise<boolean> => {
   const revs = await store.db.db
-    .selectFrom('record')
+    .selectFrom('repo_block')
     .select('repoRev')
     .distinct()
     .limit(2)
