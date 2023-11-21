@@ -41,18 +41,15 @@ import registerPush from './app/bsky/notification/registerPush'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
 import getTimelineSkeleton from './app/bsky/unspecced/getTimelineSkeleton'
 import createReport from './com/atproto/moderation/createReport'
-import resolveModerationReports from './com/atproto/admin/resolveModerationReports'
-import reverseModerationAction from './com/atproto/admin/reverseModerationAction'
-import takeModerationAction from './com/atproto/admin/takeModerationAction'
+import emitModerationEvent from './com/atproto/admin/emitModerationEvent'
 import searchRepos from './com/atproto/admin/searchRepos'
 import adminGetRecord from './com/atproto/admin/getRecord'
 import getRepo from './com/atproto/admin/getRepo'
-import getModerationAction from './com/atproto/admin/getModerationAction'
-import getModerationActions from './com/atproto/admin/getModerationActions'
-import getModerationReport from './com/atproto/admin/getModerationReport'
-import getModerationReports from './com/atproto/admin/getModerationReports'
+import queryModerationStatuses from './com/atproto/admin/queryModerationStatuses'
 import resolveHandle from './com/atproto/identity/resolveHandle'
 import getRecord from './com/atproto/repo/getRecord'
+import queryModerationEvents from './com/atproto/admin/queryModerationEvents'
+import getModerationEvent from './com/atproto/admin/getModerationEvent'
 import fetchLabels from './com/atproto/temp/fetchLabels'
 
 export * as health from './health'
@@ -105,16 +102,13 @@ export default function (server: Server, ctx: AppContext) {
   getTimelineSkeleton(server, ctx)
   // com.atproto
   createReport(server, ctx)
-  resolveModerationReports(server, ctx)
-  reverseModerationAction(server, ctx)
-  takeModerationAction(server, ctx)
+  emitModerationEvent(server, ctx)
   searchRepos(server, ctx)
   adminGetRecord(server, ctx)
   getRepo(server, ctx)
-  getModerationAction(server, ctx)
-  getModerationActions(server, ctx)
-  getModerationReport(server, ctx)
-  getModerationReports(server, ctx)
+  getModerationEvent(server, ctx)
+  queryModerationEvents(server, ctx)
+  queryModerationStatuses(server, ctx)
   resolveHandle(server, ctx)
   getRecord(server, ctx)
   fetchLabels(server, ctx)

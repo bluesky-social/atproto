@@ -1,0 +1,54 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.admin.emitModerationEvent",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Take a moderation action on an actor.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["event", "subject", "createdBy"],
+          "properties": {
+            "event": {
+              "type": "union",
+              "refs": [
+                "com.atproto.admin.defs#modEventTakedown",
+                "com.atproto.admin.defs#modEventAcknowledge",
+                "com.atproto.admin.defs#modEventEscalate",
+                "com.atproto.admin.defs#modEventComment",
+                "com.atproto.admin.defs#modEventLabel",
+                "com.atproto.admin.defs#modEventReport",
+                "com.atproto.admin.defs#modEventMute",
+                "com.atproto.admin.defs#modEventReverseTakedown",
+                "com.atproto.admin.defs#modEventUnmute",
+                "com.atproto.admin.defs#modEventEmail"
+              ]
+            },
+            "subject": {
+              "type": "union",
+              "refs": [
+                "com.atproto.admin.defs#repoRef",
+                "com.atproto.repo.strongRef"
+              ]
+            },
+            "subjectBlobCids": {
+              "type": "array",
+              "items": { "type": "string", "format": "cid" }
+            },
+            "createdBy": { "type": "string", "format": "did" }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "com.atproto.admin.defs#modEventView"
+        }
+      },
+      "errors": [{ "name": "SubjectHasAction" }]
+    }
+  }
+}

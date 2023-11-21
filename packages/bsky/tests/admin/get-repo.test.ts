@@ -1,10 +1,6 @@
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import {
-  ACKNOWLEDGE,
-  TAKEDOWN,
-} from '@atproto/api/src/client/types/com/atproto/admin/defs'
-import {
   REASONOTHER,
   REASONSPAM,
 } from '../../src/lexicon/types/com/atproto/moderation/defs'
@@ -23,6 +19,7 @@ describe('admin get repo view', () => {
     agent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
+    await network.processAll()
   })
 
   afterAll(async () => {
@@ -30,8 +27,8 @@ describe('admin get repo view', () => {
   })
 
   beforeAll(async () => {
-    const acknowledge = await sc.takeModerationAction({
-      action: ACKNOWLEDGE,
+    await sc.emitModerationEvent({
+      event: { $type: 'com.atproto.admin.defs#modEventAcknowledge' },
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
@@ -54,9 +51,8 @@ describe('admin get repo view', () => {
         did: sc.dids.alice,
       },
     })
-    await sc.reverseModerationAction({ id: acknowledge.id })
-    await sc.takeModerationAction({
-      action: TAKEDOWN,
+    await sc.emitModerationEvent({
+      event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids.alice,
