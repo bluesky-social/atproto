@@ -1,3 +1,4 @@
+import { isValidISODateString } from 'iso-datestring-validator'
 import { CID } from 'multiformats/cid'
 import { ValidationResult, ValidationError } from '../types'
 import {
@@ -5,13 +6,14 @@ import {
   ensureValidHandle,
   ensureValidNsid,
   ensureValidAtUri,
-  ensureValidDatetime,
 } from '@atproto/syntax'
 import { validateLanguage } from '@atproto/common-web'
 
 export function datetime(path: string, value: string): ValidationResult {
   try {
-    ensureValidDatetime(value)
+    if (!isValidISODateString(value)) {
+      throw new Error()
+    }
   } catch {
     return {
       success: false,
