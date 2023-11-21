@@ -4,7 +4,7 @@ import { forEachActorStore } from '../actor-store/migrate'
 import { envToCfg, envToSecrets, readEnv } from '../config'
 import { ActorStoreReader, ActorStoreTransactor } from '../actor-store'
 import { CommitData, Repo } from '@atproto/repo'
-import { TID } from '@atproto/common'
+import { TID, wait } from '@atproto/common'
 
 dotenv.config()
 
@@ -35,6 +35,7 @@ const run = async () => {
         )
         await ctx.sequencer.sequenceCommit(did, commit, [])
         resigned++
+        await wait(10)
       }
       total++
       if (total % 100 === 0) {
