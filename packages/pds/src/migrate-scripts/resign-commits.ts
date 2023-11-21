@@ -35,7 +35,7 @@ const run = async () => {
         )
         await ctx.sequencer.sequenceCommit(did, commit, [])
         resigned++
-        await wait(10)
+        await wait(100)
       }
       total++
       if (total % 100 === 0) {
