@@ -179,7 +179,7 @@ describe('proxies admin requests', () => {
         { subject: sc.dids.bob },
         { headers: network.pds.adminAuthHeaders() },
       )
-    expect(forSnapshot(result)).toMatchSnapshot()
+    expect(forSnapshot(result.events)).toMatchSnapshot()
   })
 
   it('searches repos.', async () => {
