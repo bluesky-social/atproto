@@ -30,8 +30,8 @@ import {
   SubjectInfo,
 } from './types'
 import { ModerationEvent } from '../../db/tables/moderation'
-import { Cursor, GenericKeyset, paginate } from '../../db/pagination'
-import { DynamicModule, sql } from 'kysely'
+import { paginate } from '../../db/pagination'
+import { StatusKeyset, TimeIdKeyset } from './pagination'
 
 export class ModerationService {
   constructor(
@@ -72,7 +72,7 @@ export class ModerationService {
     includeAllUserRecords: boolean
     types: ModerationEvent['action'][]
     sortDirection?: 'asc' | 'desc'
-  }): Promise<ModerationEventRowWithHandle[]> {
+  }): Promise<{ cursor?: string; events: ModerationEventRowWithHandle[] }> {
     const {
       subject,
       createdBy,
@@ -126,26 +126,29 @@ export class ModerationService {
     if (createdBy) {
       builder = builder.where('createdBy', '=', createdBy)
     }
-    if (cursor) {
-      const cursorNumeric = parseInt(cursor, 10)
-      if (isNaN(cursorNumeric)) {
-        throw new InvalidRequestError('Malformed cursor')
-      }
-      builder = builder.where(
-        'id',
-        sortDirection === 'asc' ? '>' : '<',
-        cursorNumeric,
-      )
-    }
-    return await builder
+
+    const { ref } = this.db.db.dynamic
+    const keyset = new TimeIdKeyset(
+      ref(`moderation_event.createdAt`),
+      ref('moderation_event.id'),
+    )
+    const paginatedBuilder = paginate(builder, {
+      limit,
+      cursor,
+      keyset,
+      direction: sortDirection,
+      tryIndex: true,
+    })
+
+    const result = await paginatedBuilder
       .selectAll(['moderation_event'])
       .select([
         'subjectActor.handle as subjectHandle',
         'creatorActor.handle as creatorHandle',
       ])
-      .orderBy('id', sortDirection)
-      .limit(limit)
       .execute()
+
+    return { cursor: keyset.packFromResult(result), events: result }
   }
 
   async getReport(id: number): Promise<ModerationEventRow | undefined> {
@@ -609,7 +612,7 @@ export class ModerationService {
     }
 
     const { ref } = this.db.db.dynamic
-    const keyset = new ListKeyset(
+    const keyset = new StatusKeyset(
       ref(`moderation_subject_status.${sortField}`),
       ref('moderation_subject_status.id'),
     )
@@ -650,67 +653,4 @@ export class ModerationService {
 export type TakedownSubjects = {
   did: string
   subjects: (RepoRef | RepoBlobRef | StrongRef)[]
-}
-
-type KeysetParam = {
-  lastReviewedAt: string | null
-  lastReportedAt: string | null
-  id: number
-}
-
-export class ListKeyset extends GenericKeyset<KeysetParam, Cursor> {
-  labelResult(result: KeysetParam): Cursor
-  labelResult(result: KeysetParam) {
-    const primaryField = (
-      this.primary as ReturnType<DynamicModule['ref']>
-    ).dynamicReference.includes('lastReviewedAt')
-      ? 'lastReviewedAt'
-      : 'lastReportedAt'
-
-    return {
-      primary: result[primaryField]
-        ? new Date(`${result[primaryField]}`).getTime().toString()
-        : '',
-      secondary: result.id.toString(),
-    }
-  }
-  labeledResultToCursor(labeled: Cursor) {
-    return {
-      primary: labeled.primary,
-      secondary: labeled.secondary,
-    }
-  }
-  cursorToLabeledResult(cursor: Cursor) {
-    return {
-      primary: cursor.primary
-        ? new Date(parseInt(cursor.primary, 10)).toISOString()
-        : '',
-      secondary: cursor.secondary,
-    }
-  }
-  unpackCursor(cursorStr?: string): Cursor | undefined {
-    if (!cursorStr) return
-    const result = cursorStr.split('::')
-    const [primary, secondary, ...others] = result
-    if (!secondary || others.length > 0) {
-      throw new InvalidRequestError('Malformed cursor')
-    }
-    return {
-      primary,
-      secondary,
-    }
-  }
-  // This is specifically built to handle nullable columns as primary sorting column
-  getSql(labeled?: Cursor, direction?: 'asc' | 'desc') {
-    if (labeled === undefined) return
-    if (direction === 'asc') {
-      return !labeled.primary
-        ? sql`(${this.primary} IS NULL AND ${this.secondary} > ${labeled.secondary})`
-        : sql`((${this.primary}, ${this.secondary}) > (${labeled.primary}, ${labeled.secondary}) OR (${this.primary} is null))`
-    } else {
-      return !labeled.primary
-        ? sql`(${this.primary} IS NULL AND ${this.secondary} < ${labeled.secondary})`
-        : sql`((${this.primary}, ${this.secondary}) < (${labeled.primary}, ${labeled.secondary}) OR (${this.primary} is null))`
-    }
-  }
 }
