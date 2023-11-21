@@ -65,3 +65,4 @@
 
 # ISO-8601, but normalizes to a negative time
 0000-01-01T00:00:00+01:00
+-000001-12-31T23:00:00.000Z

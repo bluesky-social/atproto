@@ -95,6 +95,15 @@ describe('normalization', () => {
     expect(() => normalizeDatetime('1999-19-39T23:20:50.123Z')).toThrow(
       InvalidDatetimeError,
     )
+    expect(() => normalizeDatetime('-000001-12-31T23:00:00.000Z')).toThrow(
+      InvalidDatetimeError,
+    )
+    expect(() => normalizeDatetime('0000-01-01T00:00:00+01:00')).toThrow(
+      InvalidDatetimeError,
+    )
+    expect(() => normalizeDatetime('0001-01-01T00:00:00+01:00')).toThrow(
+      InvalidDatetimeError,
+    )
   })
 
   it('normalizes datetimes always', () => {
@@ -102,5 +111,8 @@ describe('normalization', () => {
       '1985-04-12T23:20:50.000Z',
     )
     expect(normalizeDatetimeAlways('blah')).toEqual('1970-01-01T00:00:00.000Z')
+    expect(normalizeDatetimeAlways('0000-01-01T00:00:00+01:00')).toEqual(
+      '1970-01-01T00:00:00.000Z',
+    )
   })
 })

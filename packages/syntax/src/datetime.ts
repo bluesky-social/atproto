@@ -26,6 +26,9 @@ export const ensureValidDatetime = (dtStr: string): void => {
       'datetime can not use "-00:00" for UTC timezone',
     )
   }
+  if (dtStr.startsWith('000')) {
+    throw new InvalidDatetimeError('datetime so close to year zero not allowed')
+  }
 }
 
 /* Same logic as ensureValidDatetime(), but returns a boolean instead of throwing an exception.
