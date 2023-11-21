@@ -22,24 +22,21 @@ const run = async () => {
 
   await forEachActorStore(
     ctx,
-    { concurrency: 10 },
+    { concurrency: 500 },
     async (ctx: AppContext, did: string) => {
-      let needsCommit: boolean
       try {
-        needsCommit = await ctx.actorStore.read(did, async (store) => {
+        await ctx.actorStore.read(did, async (store) => {
           await trackMissingBlobs(store)
-          return checkNeedsCommit(store)
         })
       } catch (err) {
         await fs.appendFile(MISSING_ACTOR_FILE, `${did}\n`)
-        needsCommit = false
       }
-      if (needsCommit) {
-        const commit = await ctx.actorStore.transact(did, async (store) =>
-          resignCommit(store),
-        )
-        await ctx.sequencer.sequenceCommit(did, commit, [])
-      }
+      // if (needsCommit) {
+      //   const commit = await ctx.actorStore.transact(did, async (store) =>
+      //     resignCommit(store),
+      //   )
+      //   await ctx.sequencer.sequenceCommit(did, commit, [])
+      // }
       count++
       if (count % 100 === 0) {
         console.log(count)
