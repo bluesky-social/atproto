@@ -1,5 +1,6 @@
 import { p256 } from '@noble/curves/p256'
 import { sha256 } from '@noble/hashes/sha256'
+import * as ui8 from 'uint8arrays'
 import { P256_JWT_ALG } from '../const'
 import { parseDidKey } from '../did'
 import { VerifyOptions } from '../types'
@@ -23,8 +24,23 @@ export const verifySig = async (
   sig: Uint8Array,
   opts?: VerifyOptions,
 ): Promise<boolean> => {
+  const allowMalleable = opts?.allowMalleableSig ?? false
   const msgHash = await sha256(data)
+  // parse as compact sig to prevent signature malleability
+  // library supports sigs in 2 different formats: https://github.com/paulmillr/noble-curves/issues/99
+  if (!allowMalleable && !isCompactFormat(sig)) {
+    return false
+  }
   return p256.verify(sig, msgHash, publicKey, {
-    lowS: opts?.lowS ?? true,
+    lowS: !allowMalleable,
   })
+}
+
+export const isCompactFormat = (sig: Uint8Array) => {
+  try {
+    const parsed = p256.Signature.fromCompact(sig)
+    return ui8.equals(parsed.toCompactRawBytes(), sig)
+  } catch {
+    return false
+  }
 }
