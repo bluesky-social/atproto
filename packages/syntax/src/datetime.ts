@@ -58,15 +58,20 @@ export const isValidDatetime = (dtStr: string): boolean => {
  */
 export const normalizeDatetime = (dtStr: string): string => {
   if (isValidDatetime(dtStr)) {
-    const date = new Date(dtStr)
-    return date.toISOString()
+    const outStr = new Date(dtStr).toISOString()
+    if (isValidDatetime(outStr)) {
+      return outStr
+    }
   }
 
   // check if this permissive datetime is missing a timezone
   if (!/.*(([+-]\d\d:?\d\d)|[a-zA-Z])$/.test(dtStr)) {
     const date = new Date(dtStr + 'Z')
     if (!isNaN(date.getTime())) {
-      return date.toISOString()
+      const tzStr = date.toISOString()
+      if (isValidDatetime(tzStr)) {
+        return tzStr
+      }
     }
   }
 
@@ -77,7 +82,14 @@ export const normalizeDatetime = (dtStr: string): string => {
       'datetime did not parse as any timestamp format',
     )
   }
-  return date.toISOString()
+  const isoStr = date.toISOString()
+  if (isValidDatetime(isoStr)) {
+    return isoStr
+  } else {
+    throw new InvalidDatetimeError(
+      'datetime normalized to invalid timestamp string',
+    )
+  }
 }
 
 /* Variant of normalizeDatetime() which always returns a valid datetime strings.
