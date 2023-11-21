@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Send email to a user's primary email address",
+      "description": "Send email to a user's account email address.",
       "input": {
         "encoding": "application/json",
         "schema": {

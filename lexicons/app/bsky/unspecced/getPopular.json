@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "DEPRECATED: will be removed soon, please find a feed generator alternative",
+      "description": "DEPRECATED: will be removed soon. Use a feed generator alternative.",
       "parameters": {
         "type": "params",
         "properties": {

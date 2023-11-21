@@ -54,11 +54,11 @@
     },
     "modlist": {
       "type": "token",
-      "description": "A list of actors to apply an aggregate moderation action (mute/block) on"
+      "description": "A list of actors to apply an aggregate moderation action (mute/block) on."
     },
     "curatelist": {
       "type": "token",
-      "description": "A list of actors used for curation purposes such as list feeds or interaction gating"
+      "description": "A list of actors used for curation purposes such as list feeds or interaction gating."
     },
     "listViewerState": {
       "type": "object",

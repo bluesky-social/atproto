@@ -16,9 +16,9 @@ export interface InputSchema {
   collection: string
   /** The key of the record. */
   rkey: string
-  /** Compare and swap with the previous record by cid. */
+  /** Compare and swap with the previous record by CID. */
   swapRecord?: string
-  /** Compare and swap with the previous commit by cid. */
+  /** Compare and swap with the previous commit by CID. */
   swapCommit?: string
   [k: string]: unknown
 }

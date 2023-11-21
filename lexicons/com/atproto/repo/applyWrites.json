@@ -19,7 +19,7 @@
             "validate": {
               "type": "boolean",
               "default": true,
-              "description": "Validate the records?"
+              "description": "Flag for validating the records."
             },
             "writes": {
               "type": "array",

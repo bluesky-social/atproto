@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Gets blocks from a given repo.",
+      "description": "Get blocks from a given repo.",
       "parameters": {
         "type": "params",
         "required": ["did", "cids"],

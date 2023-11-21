@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Update the service-specific admin status of a subject (account, record, or blob)",
+      "description": "Update the service-specific admin status of a subject (account, record, or blob).",
       "input": {
         "encoding": "application/json",
         "schema": {
