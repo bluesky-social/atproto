@@ -19,7 +19,7 @@ const run = async () => {
 
   await forEachActorStore(
     ctx,
-    { concurrency: 10 },
+    { concurrency: 1 },
     async (ctx: AppContext, did: string) => {
       let needsCommit: boolean
       try {
