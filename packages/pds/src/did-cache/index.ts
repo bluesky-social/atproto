@@ -25,23 +25,25 @@ export class DidSqliteCache implements DidCache {
   ): Promise<void> {
     try {
       if (prevResult) {
-        await this.db.db
-          .updateTable('did_doc')
-          .set({ doc: JSON.stringify(doc), updatedAt: Date.now() })
-          .where('did', '=', did)
-          .where('updatedAt', '=', prevResult.updatedAt)
-          .execute()
+        await this.db.executeWithRetry(
+          this.db.db
+            .updateTable('did_doc')
+            .set({ doc: JSON.stringify(doc), updatedAt: Date.now() })
+            .where('did', '=', did)
+            .where('updatedAt', '=', prevResult.updatedAt),
+        )
       } else {
-        await this.db.db
-          .insertInto('did_doc')
-          .values({ did, doc: JSON.stringify(doc), updatedAt: Date.now() })
-          .onConflict((oc) =>
-            oc.column('did').doUpdateSet({
-              doc: excluded(this.db.db, 'doc'),
-              updatedAt: excluded(this.db.db, 'updatedAt'),
-            }),
-          )
-          .executeTakeFirst()
+        await this.db.executeWithRetry(
+          this.db.db
+            .insertInto('did_doc')
+            .values({ did, doc: JSON.stringify(doc), updatedAt: Date.now() })
+            .onConflict((oc) =>
+              oc.column('did').doUpdateSet({
+                doc: excluded(this.db.db, 'doc'),
+                updatedAt: excluded(this.db.db, 'updatedAt'),
+              }),
+            ),
+        )
       }
     } catch (err) {
       didCacheLogger.error({ did, doc, err }, 'failed to cache did')
@@ -98,10 +100,9 @@ export class DidSqliteCache implements DidCache {
 
   async clearEntry(did: string): Promise<void> {
     try {
-      await this.db.db
-        .deleteFrom('did_doc')
-        .where('did', '=', did)
-        .executeTakeFirst()
+      await this.db.executeWithRetry(
+        this.db.db.deleteFrom('did_doc').where('did', '=', did),
+      )
     } catch (err) {
       didCacheLogger.error({ did, err }, 'clearing did cache entry failed')
     }
@@ -116,6 +117,7 @@ export class DidSqliteCache implements DidCache {
   }
 
   async migrateOrThrow() {
+    await this.db.ensureWal()
     await getMigrator(this.db).migrateToLatestOrThrow()
   }
 

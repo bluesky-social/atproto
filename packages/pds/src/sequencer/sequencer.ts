@@ -43,6 +43,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async start() {
+    await this.db.ensureWal()
     const migrator = getMigrator(this.db)
     await migrator.migrateToLatestOrThrow()
     const curr = await this.curr()
@@ -188,7 +189,9 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async sequenceEvt(evt: RepoSeqInsert) {
-    await this.db.db.insertInto('repo_seq').values(evt).execute()
+    await this.db.executeWithRetry(
+      this.db.db.insertInto('repo_seq').values(evt),
+    )
     this.crawlers.notifyOfUpdate()
   }
 
@@ -212,11 +215,12 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async deleteAllForUser(did: string) {
-    await this.db.db
-      .deleteFrom('repo_seq')
-      .where('did', '=', did)
-      .where('eventType', '!=', 'tombstone')
-      .execute()
+    await this.db.executeWithRetry(
+      this.db.db
+        .deleteFrom('repo_seq')
+        .where('did', '=', did)
+        .where('eventType', '!=', 'tombstone'),
+    )
   }
 }
 

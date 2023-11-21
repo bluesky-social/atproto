@@ -7,16 +7,18 @@ export const updateRoot = async (
   cid: CID,
   rev: string,
 ) => {
-  await db.db
-    .insertInto('repo_root')
-    .values({
-      did,
-      cid: cid.toString(),
-      rev,
-      indexedAt: new Date().toISOString(),
-    })
-    .onConflict((oc) =>
-      oc.column('did').doUpdateSet({ cid: cid.toString(), rev }),
-    )
-    .execute()
+  // @TODO balance risk of a race in the case of a long retry
+  await db.executeWithRetry(
+    db.db
+      .insertInto('repo_root')
+      .values({
+        did,
+        cid: cid.toString(),
+        rev,
+        indexedAt: new Date().toISOString(),
+      })
+      .onConflict((oc) =>
+        oc.column('did').doUpdateSet({ cid: cid.toString(), rev }),
+      ),
+  )
 }

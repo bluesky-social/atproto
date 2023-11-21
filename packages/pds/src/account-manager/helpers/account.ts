@@ -63,16 +63,17 @@ export const registerActor = async (
   },
 ) => {
   const { did, handle } = opts
-  const registered = await db.db
-    .insertInto('actor')
-    .values({
-      did,
-      handle,
-      createdAt: new Date().toISOString(),
-    })
-    .onConflict((oc) => oc.doNothing())
-    .returning('did')
-    .executeTakeFirst()
+  const [registered] = await db.executeWithRetry(
+    db.db
+      .insertInto('actor')
+      .values({
+        did,
+        handle,
+        createdAt: new Date().toISOString(),
+      })
+      .onConflict((oc) => oc.doNothing())
+      .returning('did'),
+  )
   if (!registered) {
     throw new Error('actor already exists')
   }
@@ -87,16 +88,17 @@ export const registerAccount = async (
   },
 ) => {
   const { did, email, passwordScrypt } = opts
-  const registered = await db.db
-    .insertInto('account')
-    .values({
-      did,
-      email: email.toLowerCase(),
-      passwordScrypt,
-    })
-    .onConflict((oc) => oc.doNothing())
-    .returning('did')
-    .executeTakeFirst()
+  const [registered] = await db.executeWithRetry(
+    db.db
+      .insertInto('account')
+      .values({
+        did,
+        email: email.toLowerCase(),
+        passwordScrypt,
+      })
+      .onConflict((oc) => oc.doNothing())
+      .returning('did'),
+  )
   if (!registered) {
     throw new Error('account already exists')
   }
@@ -108,11 +110,21 @@ export const deleteAccount = async (
 ): Promise<void> => {
   // Not done in transaction because it would be too long, prone to contention.
   // Also, this can safely be run multiple times if it fails.
-  await db.db.deleteFrom('repo_root').where('did', '=', did).execute()
-  await db.db.deleteFrom('email_token').where('did', '=', did).execute()
-  await db.db.deleteFrom('refresh_token').where('did', '=', did).execute()
-  await db.db.deleteFrom('account').where('account.did', '=', did).execute()
-  await db.db.deleteFrom('actor').where('actor.did', '=', did).execute()
+  await db.executeWithRetry(
+    db.db.deleteFrom('repo_root').where('did', '=', did),
+  )
+  await db.executeWithRetry(
+    db.db.deleteFrom('email_token').where('did', '=', did),
+  )
+  await db.executeWithRetry(
+    db.db.deleteFrom('refresh_token').where('did', '=', did),
+  )
+  await db.executeWithRetry(
+    db.db.deleteFrom('account').where('account.did', '=', did),
+  )
+  await db.executeWithRetry(
+    db.db.deleteFrom('actor').where('actor.did', '=', did),
+  )
 }
 
 export const updateHandle = async (
@@ -120,14 +132,15 @@ export const updateHandle = async (
   did: string,
   handle: string,
 ) => {
-  const res = await db.db
-    .updateTable('actor')
-    .set({ handle })
-    .where('did', '=', did)
-    .whereNotExists(
-      db.db.selectFrom('actor').where('handle', '=', handle).selectAll(),
-    )
-    .executeTakeFirst()
+  const [res] = await db.executeWithRetry(
+    db.db
+      .updateTable('actor')
+      .set({ handle })
+      .where('did', '=', did)
+      .whereNotExists(
+        db.db.selectFrom('actor').where('handle', '=', handle).selectAll(),
+      ),
+  )
   if (res.numUpdatedRows < 1) {
     throw new Error('user already exists')
   }
@@ -138,11 +151,12 @@ export const updateEmail = async (
   did: string,
   email: string,
 ) => {
-  await db.db
-    .updateTable('account')
-    .set({ email: email.toLowerCase(), emailConfirmedAt: null })
-    .where('did', '=', did)
-    .executeTakeFirst()
+  await db.executeWithRetry(
+    db.db
+      .updateTable('account')
+      .set({ email: email.toLowerCase(), emailConfirmedAt: null })
+      .where('did', '=', did),
+  )
 }
 
 export const setEmailConfirmedAt = async (
@@ -150,11 +164,12 @@ export const setEmailConfirmedAt = async (
   did: string,
   emailConfirmedAt: string,
 ) => {
-  await db.db
-    .updateTable('account')
-    .set({ emailConfirmedAt })
-    .where('did', '=', did)
-    .execute()
+  await db.executeWithRetry(
+    db.db
+      .updateTable('account')
+      .set({ emailConfirmedAt })
+      .where('did', '=', did),
+  )
 }
 
 export const getAccountTakedownStatus = async (
@@ -180,9 +195,7 @@ export const updateAccountTakedownStatus = async (
   const takedownRef = takedown.applied
     ? takedown.ref ?? new Date().toISOString()
     : null
-  await db.db
-    .updateTable('actor')
-    .set({ takedownRef })
-    .where('did', '=', did)
-    .executeTakeFirst()
+  await db.executeWithRetry(
+    db.db.updateTable('actor').set({ takedownRef }).where('did', '=', did),
+  )
 }

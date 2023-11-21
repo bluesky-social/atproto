@@ -21,7 +21,7 @@ export const createInviteCodes = async (
   )
   await Promise.all(
     chunkArray(rows, 50).map((chunk) =>
-      db.db.insertInto('invite_code').values(chunk).execute(),
+      db.executeWithRetry(db.db.insertInto('invite_code').values(chunk)),
     ),
   )
 }
@@ -45,7 +45,7 @@ export const createAccountInviteCodes = async (
         createdAt: now,
       } as InviteCode),
   )
-  await db.db.insertInto('invite_code').values(rows).execute()
+  await db.executeWithRetry(db.db.insertInto('invite_code').values(rows))
 
   const finalRoutineInviteCodes = await db.db
     .selectFrom('invite_code')
@@ -77,14 +77,13 @@ export const recordInviteUse = async (
   },
 ) => {
   if (!opts.inviteCode) return
-  await db.db
-    .insertInto('invite_code_use')
-    .values({
+  await db.executeWithRetry(
+    db.db.insertInto('invite_code_use').values({
       code: opts.inviteCode,
       usedBy: opts.did,
       usedAt: opts.now,
-    })
-    .execute()
+    }),
+  )
 }
 
 export const ensureInviteIsAvailable = async (
@@ -214,18 +213,20 @@ export const disableInviteCodes = async (
 ) => {
   const { codes, accounts } = opts
   if (codes.length > 0) {
-    await db.db
-      .updateTable('invite_code')
-      .set({ disabled: 1 })
-      .where('code', 'in', codes)
-      .execute()
+    await db.executeWithRetry(
+      db.db
+        .updateTable('invite_code')
+        .set({ disabled: 1 })
+        .where('code', 'in', codes),
+    )
   }
   if (accounts.length > 0) {
-    await db.db
-      .updateTable('invite_code')
-      .set({ disabled: 1 })
-      .where('forAccount', 'in', accounts)
-      .execute()
+    await db.executeWithRetry(
+      db.db
+        .updateTable('invite_code')
+        .set({ disabled: 1 })
+        .where('forAccount', 'in', accounts),
+    )
   }
 }
 
@@ -234,11 +235,12 @@ export const setAccountInvitesDisabled = async (
   did: string,
   disabled: boolean,
 ) => {
-  await db.db
-    .updateTable('account')
-    .where('did', '=', did)
-    .set({ invitesDisabled: disabled ? 1 : 0 })
-    .execute()
+  await db.executeWithRetry(
+    db.db
+      .updateTable('account')
+      .where('did', '=', did)
+      .set({ invitesDisabled: disabled ? 1 : 0 }),
+  )
 }
 
 export type CodeDetail = {
