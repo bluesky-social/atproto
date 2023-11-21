@@ -218,10 +218,13 @@ const importBlob = async (
   })
 }
 
-const findBlobRefs = (val: LexValue): BlobRef[] => {
+export const findBlobRefs = (val: LexValue, layer = 0): BlobRef[] => {
+  if (layer > 10) {
+    return []
+  }
   // walk arrays
   if (Array.isArray(val)) {
-    return val.flatMap((item) => findBlobRefs(item))
+    return val.flatMap((item) => findBlobRefs(item, layer + 1))
   }
   // objects
   if (val && typeof val === 'object') {
@@ -233,7 +236,7 @@ const findBlobRefs = (val: LexValue): BlobRef[] => {
     if (CID.asCID(val) || val instanceof Uint8Array) {
       return []
     }
-    return Object.values(val).flatMap((item) => findBlobRefs(item))
+    return Object.values(val).flatMap((item) => findBlobRefs(item, layer + 1))
   }
   // pass through
   return []
