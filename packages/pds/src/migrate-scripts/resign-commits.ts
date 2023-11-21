@@ -39,7 +39,7 @@ const run = async () => {
       total++
       if (total % 100 === 0) {
         console.log('Total: ', total)
-        console.log('Resigned: ', resignCommit)
+        console.log('Resigned: ', resigned)
       }
     },
   )
