@@ -22,7 +22,7 @@ const run = async () => {
 
   await forEachActorStore(
     ctx,
-    { concurrency: 100 },
+    { concurrency: 10 },
     async (ctx: AppContext, did: string) => {
       let needsCommit: boolean
       try {
@@ -68,7 +68,7 @@ const trackMissingBlobs = async (store: ActorStoreReader) => {
 
 const checkNeedsCommit = async (store: ActorStoreReader): Promise<boolean> => {
   const revs = await store.db.db
-    .selectFrom('repo_block')
+    .selectFrom('record')
     .select('repoRev')
     .distinct()
     .limit(2)
