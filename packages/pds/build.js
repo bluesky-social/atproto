@@ -6,7 +6,7 @@ const buildShallow =
 
 require('esbuild').build({
   logLevel: 'info',
-  entryPoints: ['src/index.ts', 'src/db/index.ts', 'src/migrate-scripts/verify-all.ts'],
+  entryPoints: ['src/index.ts', 'src/db/index.ts'],
   bundle: true,
   sourcemap: true,
   outdir: 'dist',
