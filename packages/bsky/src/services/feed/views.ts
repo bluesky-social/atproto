@@ -247,6 +247,9 @@ export class FeedViews {
     lists: ListInfoMap,
     viewer: string,
   ): boolean {
+    if (posts[uri]?.violatesThreadGate) {
+      return false
+    }
     const rootUriStr = posts[uri]?.record?.['reply']?.['root']?.['uri'] ?? uri
     const gateInfo = threadgates[rootUriStr]
     if (!gateInfo) {

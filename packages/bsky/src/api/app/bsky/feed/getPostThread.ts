@@ -1,4 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import {
   BlockedPost,
@@ -207,6 +208,7 @@ const getRelevantIds = (
   if (thread.post.replyRoot) {
     // ensure root is included for checking interactions
     uris.add(thread.post.replyRoot)
+    dids.add(new AtUri(thread.post.replyRoot).hostname)
   }
   return { dids, uris }
 }
