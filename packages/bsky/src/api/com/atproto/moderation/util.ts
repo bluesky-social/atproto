@@ -11,13 +11,13 @@ import {
   REASONSEXUAL,
   REASONVIOLATION,
 } from '../../../../lexicon/types/com/atproto/moderation/defs'
-import { ModerationEvent } from '../../../../db/tables/moderation'
-import { ModerationSubjectStatusRow } from '../../../../services/moderation/types'
 import {
   REVIEWCLOSED,
   REVIEWESCALATED,
   REVIEWOPEN,
-} from '@atproto/api/src/client/types/com/atproto/admin/defs'
+} from '../../../../lexicon/types/com/atproto/admin/defs'
+import { ModerationEvent } from '../../../../db/tables/moderation'
+import { ModerationSubjectStatusRow } from '../../../../services/moderation/types'
 
 type SubjectInput = ReportInput['subject'] | ActionInput['subject']
 

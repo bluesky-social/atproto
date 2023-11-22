@@ -12,7 +12,7 @@ import {
   isModEventLabel,
   isModEventReverseTakedown,
   isModEventTakedown,
-} from '@atproto/api/src/client/types/com/atproto/admin/defs'
+} from '../../../../lexicon/types/com/atproto/admin/defs'
 import { TakedownSubjects } from '../../../../services/moderation'
 import { retryHttp } from '../../../../util/retry'
 
