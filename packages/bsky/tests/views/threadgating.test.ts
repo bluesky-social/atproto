@@ -29,6 +29,19 @@ describe('views with thread gating', () => {
     await network.close()
   })
 
+  // check that canReply state is applied correctly in a simple method like getPosts
+  const checkCanReplyForUser = async (
+    uri: string,
+    user: string,
+    canReply: boolean,
+  ) => {
+    const res = await agent.api.app.bsky.feed.getPosts(
+      { uris: [uri] },
+      { headers: await network.serviceHeaders(user) },
+    )
+    expect(res.data.posts[0].viewer?.canReply).toBe(canReply)
+  }
+
   it('applies gate for empty rules.', async () => {
     const post = await sc.post(sc.dids.carol, 'empty rules')
     await pdsAgent.api.app.bsky.feed.threadgate.create(
@@ -48,6 +61,7 @@ describe('views with thread gating', () => {
     expect(forSnapshot(thread.post.threadgate)).toMatchSnapshot()
     expect(thread.post.viewer).toEqual({ canReply: false })
     expect(thread.replies?.length).toEqual(0)
+    await checkCanReplyForUser(post.ref.uriStr, sc.dids.alice, false)
   })
 
   it('applies gate for mention rule.', async () => {
@@ -99,6 +113,7 @@ describe('views with thread gating', () => {
     )
     assert(isThreadViewPost(aliceThread))
     expect(aliceThread.post.viewer).toEqual({ canReply: false })
+    await checkCanReplyForUser(post.ref.uriStr, sc.dids.alice, false)
     const {
       data: { thread: danThread },
     } = await agent.api.app.bsky.feed.getPostThread(
@@ -108,6 +123,7 @@ describe('views with thread gating', () => {
     assert(isThreadViewPost(danThread))
     expect(forSnapshot(danThread.post.threadgate)).toMatchSnapshot()
     expect(danThread.post.viewer).toEqual({ canReply: true })
+    await checkCanReplyForUser(post.ref.uriStr, sc.dids.dan, true)
     const [reply, ...otherReplies] = danThread.replies ?? []
     assert(isThreadViewPost(reply))
     expect(otherReplies.length).toEqual(0)
@@ -147,6 +163,7 @@ describe('views with thread gating', () => {
     )
     assert(isThreadViewPost(danThread))
     expect(danThread.post.viewer).toEqual({ canReply: false })
+    await checkCanReplyForUser(post.ref.uriStr, sc.dids.dan, false)
     const {
       data: { thread: aliceThread },
     } = await agent.api.app.bsky.feed.getPostThread(
@@ -156,6 +173,7 @@ describe('views with thread gating', () => {
     assert(isThreadViewPost(aliceThread))
     expect(forSnapshot(aliceThread.post.threadgate)).toMatchSnapshot()
     expect(aliceThread.post.viewer).toEqual({ canReply: true })
+    await checkCanReplyForUser(post.ref.uriStr, sc.dids.alice, true)
     const [reply, ...otherReplies] = aliceThread.replies ?? []
     assert(isThreadViewPost(reply))
     expect(otherReplies.length).toEqual(0)
@@ -236,6 +254,7 @@ describe('views with thread gating', () => {
     )
     assert(isThreadViewPost(bobThread))
     expect(bobThread.post.viewer).toEqual({ canReply: false })
+    await checkCanReplyForUser(post.ref.uriStr, sc.dids.bob, false)
     const {
       data: { thread: aliceThread },
     } = await agent.api.app.bsky.feed.getPostThread(
@@ -244,6 +263,7 @@ describe('views with thread gating', () => {
     )
     assert(isThreadViewPost(aliceThread))
     expect(aliceThread.post.viewer).toEqual({ canReply: true })
+    await checkCanReplyForUser(post.ref.uriStr, sc.dids.alice, true)
     const {
       data: { thread: danThread },
     } = await agent.api.app.bsky.feed.getPostThread(
@@ -253,6 +273,7 @@ describe('views with thread gating', () => {
     assert(isThreadViewPost(danThread))
     expect(forSnapshot(danThread.post.threadgate)).toMatchSnapshot()
     expect(danThread.post.viewer).toEqual({ canReply: true })
+    await checkCanReplyForUser(post.ref.uriStr, sc.dids.dan, true)
     const [reply1, reply2, ...otherReplies] = aliceThread.replies ?? []
     assert(isThreadViewPost(reply1))
     assert(isThreadViewPost(reply2))
@@ -294,6 +315,7 @@ describe('views with thread gating', () => {
     expect(forSnapshot(thread.post.threadgate)).toMatchSnapshot()
     expect(thread.post.viewer).toEqual({ canReply: false })
     expect(thread.replies?.length).toEqual(0)
+    await checkCanReplyForUser(post.ref.uriStr, sc.dids.alice, false)
   })
 
   it('applies gate for multiple rules.', async () => {
@@ -340,6 +362,7 @@ describe('views with thread gating', () => {
     )
     assert(isThreadViewPost(bobThread))
     expect(bobThread.post.viewer).toEqual({ canReply: false })
+    await checkCanReplyForUser(post.ref.uriStr, sc.dids.bob, false)
     const {
       data: { thread: aliceThread },
     } = await agent.api.app.bsky.feed.getPostThread(
@@ -348,6 +371,7 @@ describe('views with thread gating', () => {
     )
     assert(isThreadViewPost(aliceThread))
     expect(aliceThread.post.viewer).toEqual({ canReply: true })
+    await checkCanReplyForUser(post.ref.uriStr, sc.dids.alice, true)
     const {
       data: { thread: danThread },
     } = await agent.api.app.bsky.feed.getPostThread(
@@ -357,6 +381,7 @@ describe('views with thread gating', () => {
     assert(isThreadViewPost(danThread))
     expect(forSnapshot(danThread.post.threadgate)).toMatchSnapshot()
     expect(danThread.post.viewer).toEqual({ canReply: true })
+    await checkCanReplyForUser(post.ref.uriStr, sc.dids.dan, true)
     const [reply1, reply2, ...otherReplies] = aliceThread.replies ?? []
     assert(isThreadViewPost(reply1))
     assert(isThreadViewPost(reply2))
@@ -388,6 +413,7 @@ describe('views with thread gating', () => {
     assert(isThreadViewPost(thread))
     expect(forSnapshot(thread.post.threadgate)).toMatchSnapshot()
     expect(thread.post.viewer).toEqual({ canReply: true })
+    await checkCanReplyForUser(post.ref.uriStr, sc.dids.alice, true)
     const [reply, ...otherReplies] = thread.replies ?? []
     assert(isThreadViewPost(reply))
     expect(otherReplies.length).toEqual(0)
@@ -439,6 +465,7 @@ describe('views with thread gating', () => {
     )
     assert(isThreadViewPost(danThread))
     expect(danThread.post.viewer).toEqual({ canReply: false })
+    await checkCanReplyForUser(orphanedReply.ref.uriStr, sc.dids.dan, false)
     const {
       data: { thread: aliceThread },
     } = await agent.api.app.bsky.feed.getPostThread(
@@ -452,6 +479,7 @@ describe('views with thread gating', () => {
     )
     expect(aliceThread.post.threadgate).toMatchSnapshot()
     expect(aliceThread.post.viewer).toEqual({ canReply: true })
+    await checkCanReplyForUser(orphanedReply.ref.uriStr, sc.dids.alice, true)
     const [reply, ...otherReplies] = aliceThread.replies ?? []
     assert(isThreadViewPost(reply))
     expect(otherReplies.length).toEqual(0)
@@ -481,6 +509,7 @@ describe('views with thread gating', () => {
     assert(isThreadViewPost(thread))
     expect(forSnapshot(thread.post.threadgate)).toMatchSnapshot()
     expect(thread.post.viewer).toEqual({ canReply: true })
+    await checkCanReplyForUser(post.ref.uriStr, sc.dids.carol, true)
     const [reply, ...otherReplies] = thread.replies ?? []
     assert(isThreadViewPost(reply))
     expect(otherReplies.length).toEqual(0)
@@ -520,6 +549,7 @@ describe('views with thread gating', () => {
     expect(thread.replies).toBeUndefined()
     expect(thread.parent).toBeUndefined()
     expect(thread.post.threadgate).toBeUndefined()
+    await checkCanReplyForUser(badReply.ref.uriStr, sc.dids.alice, false)
     // check feed view
     const {
       data: { feed },
@@ -554,6 +584,7 @@ describe('views with thread gating', () => {
     expect(threadA.post.threadgate).toBeUndefined()
     expect(threadA.post.viewer).toEqual({ canReply: true })
     expect(threadA.replies?.length).toEqual(1)
+    await checkCanReplyForUser(postA.ref.uriStr, sc.dids.alice, true)
     const {
       data: { thread: threadB },
     } = await agent.api.app.bsky.feed.getPostThread(
@@ -563,6 +594,7 @@ describe('views with thread gating', () => {
     assert(isThreadViewPost(threadB))
     expect(threadB.post.threadgate).toBeUndefined()
     expect(threadB.post.viewer).toEqual({ canReply: true })
+    await checkCanReplyForUser(postB.ref.uriStr, sc.dids.alice, true)
     expect(threadB.replies?.length).toEqual(1)
   })
 })
