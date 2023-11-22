@@ -65,7 +65,7 @@ const presentation = (state: HydrationState, ctx: Context) => {
   const actors = actorService.views.profileBasicPresentation(
     Object.keys(profiles),
     state,
-    { viewer: params.viewer },
+    params.viewer,
   )
   const postViews = postUris.flatMap((uri) => {
     const postView = feedService.views.formatPostView(
@@ -76,6 +76,7 @@ const presentation = (state: HydrationState, ctx: Context) => {
       state.embeds,
       state.labels,
       state.lists,
+      params.viewer,
     )
     return postView ?? SKIP
   })

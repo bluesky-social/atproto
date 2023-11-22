@@ -91,7 +91,7 @@ const presentation = (state: HydrationState, ctx: Context) => {
   const actors = actorService.views.profileBasicPresentation(
     Object.keys(profiles),
     state,
-    { viewer: params.viewer },
+    params.viewer,
   )
 
   const postViews = mapDefined(postUris, (uri) =>
@@ -103,6 +103,7 @@ const presentation = (state: HydrationState, ctx: Context) => {
       state.embeds,
       state.labels,
       state.lists,
+      params.viewer,
     ),
   )
   return { posts: postViews, cursor: state.cursor, hitsTotal: state.hitsTotal }

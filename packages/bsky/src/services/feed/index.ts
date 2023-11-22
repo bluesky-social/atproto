@@ -399,7 +399,7 @@ export class FeedService {
     const actorInfos = this.services.actor.views.profileBasicPresentation(
       [...nestedDids],
       feedState,
-      { viewer },
+      viewer,
     )
     const recordEmbedViews: RecordEmbedViewRecordMap = {}
     for (const uri of nestedUris) {
@@ -423,6 +423,7 @@ export class FeedService {
           feedState.embeds,
           feedState.labels,
           feedState.lists,
+          viewer,
         )
         recordEmbedViews[uri] = this.views.getRecordEmbedView(
           uri,
