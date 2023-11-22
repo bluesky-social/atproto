@@ -27,58 +27,55 @@ Array [
 `;
 
 exports[`proxies admin requests fetches a list of events. 1`] = `
-Object {
-  "cursor": "2",
-  "events": Array [
-    Object {
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "createdBy": "did:example:admin",
-      "event": Object {
-        "$type": "com.atproto.admin.defs#modEventAcknowledge",
-      },
-      "id": 5,
-      "subject": Object {
-        "$type": "com.atproto.admin.defs#repoRef",
-        "did": "user(0)",
-      },
-      "subjectBlobCids": Array [],
-      "subjectHandle": "bob.test",
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "did:example:admin",
+    "event": Object {
+      "$type": "com.atproto.admin.defs#modEventAcknowledge",
     },
-    Object {
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "createdBy": "user(1)",
-      "creatorHandle": "carol.test",
-      "event": Object {
-        "$type": "com.atproto.admin.defs#modEventReport",
-        "comment": "impersonation",
-        "reportType": "com.atproto.moderation.defs#reasonOther",
-      },
-      "id": 3,
-      "subject": Object {
-        "$type": "com.atproto.admin.defs#repoRef",
-        "did": "user(0)",
-      },
-      "subjectBlobCids": Array [],
-      "subjectHandle": "bob.test",
+    "id": 5,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(0)",
     },
-    Object {
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "createdBy": "user(2)",
-      "creatorHandle": "alice.test",
-      "event": Object {
-        "$type": "com.atproto.admin.defs#modEventReport",
-        "reportType": "com.atproto.moderation.defs#reasonSpam",
-      },
-      "id": 2,
-      "subject": Object {
-        "$type": "com.atproto.admin.defs#repoRef",
-        "did": "user(0)",
-      },
-      "subjectBlobCids": Array [],
-      "subjectHandle": "bob.test",
+    "subjectBlobCids": Array [],
+    "subjectHandle": "bob.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(1)",
+    "creatorHandle": "carol.test",
+    "event": Object {
+      "$type": "com.atproto.admin.defs#modEventReport",
+      "comment": "impersonation",
+      "reportType": "com.atproto.moderation.defs#reasonOther",
     },
-  ],
-}
+    "id": 3,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "bob.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(2)",
+    "creatorHandle": "alice.test",
+    "event": Object {
+      "$type": "com.atproto.admin.defs#modEventReport",
+      "reportType": "com.atproto.moderation.defs#reasonSpam",
+    },
+    "id": 2,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "bob.test",
+  },
+]
 `;
 
 exports[`proxies admin requests fetches event details. 1`] = `
@@ -135,26 +132,23 @@ Object {
 `;
 
 exports[`proxies admin requests fetches moderation events. 1`] = `
-Object {
-  "cursor": "4",
-  "events": Array [
-    Object {
-      "createdAt": "1970-01-01T00:00:00.000Z",
-      "createdBy": "did:example:admin",
-      "event": Object {
-        "$type": "com.atproto.admin.defs#modEventAcknowledge",
-      },
-      "id": 4,
-      "subject": Object {
-        "$type": "com.atproto.repo.strongRef",
-        "cid": "cids(0)",
-        "uri": "record(0)",
-      },
-      "subjectBlobCids": Array [],
-      "subjectHandle": "bob.test",
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "did:example:admin",
+    "event": Object {
+      "$type": "com.atproto.admin.defs#modEventAcknowledge",
     },
-  ],
-}
+    "id": 4,
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(0)",
+      "uri": "record(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "bob.test",
+  },
+]
 `;
 
 exports[`proxies admin requests fetches record details. 1`] = `

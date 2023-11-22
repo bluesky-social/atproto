@@ -53,6 +53,13 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addUniqueConstraint('moderation_status_unique_idx', ['did', 'recordPath'])
     .execute()
 
+  await db.schema
+    .createIndex('moderation_subject_status_blob_cids_idx')
+    .on('moderation_subject_status')
+    .using('gin')
+    .column('blobCids')
+    .execute()
+
   // Move foreign keys from moderation_action to moderation_event
   await db.schema
     .alterTable('record')

@@ -1,5 +1,5 @@
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
-import AtpAgent from '@atproto/api'
+import AtpAgent, { ComAtprotoAdminDefs } from '@atproto/api'
 import { forSnapshot } from '../_util'
 import basicSeed from '../seeds/basic'
 import {
@@ -162,6 +162,45 @@ describe('moderation-events', () => {
       expect(forPost.data.events.map(({ id }) => id).sort()).toEqual(
         forAccount.data.events.map(({ id }) => id).sort(),
       )
+    })
+
+    it('returns paginated list of events with cursor', async () => {
+      const allEvents = await queryModerationEvents({
+        subject: sc.dids.bob,
+        includeAllUserRecords: true,
+      })
+
+      const getPaginatedEvents = async (
+        sortDirection: 'asc' | 'desc' = 'desc',
+      ) => {
+        let defaultCursor: undefined | string = undefined
+        const events: ComAtprotoAdminDefs.ModEventView[] = []
+        let count = 0
+        do {
+          // get 1 event at a time and check we get all events
+          const { data } = await queryModerationEvents({
+            limit: 1,
+            subject: sc.dids.bob,
+            includeAllUserRecords: true,
+            cursor: defaultCursor,
+            sortDirection,
+          })
+          events.push(...data.events)
+          defaultCursor = data.cursor
+          count++
+          // The count is a circuit breaker to prevent infinite loop in case of failing test
+        } while (defaultCursor && count < 10)
+
+        return events
+      }
+
+      const defaultEvents = await getPaginatedEvents()
+      const reversedEvents = await getPaginatedEvents('asc')
+
+      expect(allEvents.data.events.length).toEqual(4)
+      expect(defaultEvents.length).toEqual(allEvents.data.events.length)
+      expect(reversedEvents.length).toEqual(allEvents.data.events.length)
+      expect(reversedEvents[0].id).toEqual(defaultEvents[3].id)
     })
   })
 

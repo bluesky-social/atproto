@@ -11,7 +11,7 @@ const getEnv = () => ({
   DB_URL:
     process.env.MODERATION_MIGRATION_DB_URL ||
     'postgresql://pg:password@127.0.0.1:5433/postgres',
-  DB_POOL_SIZE: Number(process.env.MODERATION_MIGRATION_DB_URL) || 10,
+  DB_POOL_SIZE: Number(process.env.MODERATION_MIGRATION_DB_POOL_SIZE) || 10,
   DB_SCHEMA: process.env.MODERATION_MIGRATION_DB_SCHEMA || 'bsky',
 })
 
@@ -53,7 +53,7 @@ const countStatuses = async (db: PrimaryDatabase) => {
 }
 
 const createEvents = async (db: PrimaryDatabase) => {
-  const commonColumns = [
+  const commonColumnsToSelect = [
     'subjectDid',
     'subjectUri',
     'subjectType',
@@ -61,24 +61,26 @@ const createEvents = async (db: PrimaryDatabase) => {
     sql`reason`.as('comment'),
     'createdAt',
   ]
+  const commonColumnsToInsert = [
+    'subjectDid',
+    'subjectUri',
+    'subjectType',
+    'subjectCid',
+    'comment',
+    'createdAt',
+    'action',
+    'createdBy',
+  ] as const
 
-  const insertQuery = db.db
+  await db.db
     .insertInto('moderation_event')
     .columns([
-      'subjectDid',
-      'subjectUri',
-      'subjectType',
-      'subjectCid',
-      'comment',
-      'createdAt',
-      'action',
+      'id',
+      ...commonColumnsToInsert,
       'createLabelVals',
       'negateLabelVals',
-      'createdBy',
       'durationInHours',
       'expiresAt',
-      'meta',
-      'legacyRefId',
     ])
     .expression((eb) =>
       eb
@@ -86,41 +88,49 @@ const createEvents = async (db: PrimaryDatabase) => {
         .selectFrom('moderation_action')
         // @ts-ignore
         .select([
-          ...commonColumns,
+          'id',
+          ...commonColumnsToSelect,
           sql`CONCAT('com.atproto.admin.defs#modEvent', UPPER(SUBSTRING(SPLIT_PART(action, '#', 2) FROM 1 FOR 1)), SUBSTRING(SPLIT_PART(action, '#', 2) FROM 2))`.as(
             'action',
           ),
+          'createdBy',
           'createLabelVals',
           'negateLabelVals',
-          'createdBy',
           'durationInHours',
           'expiresAt',
-          sql`NULL`.as('meta'),
-          sql`id`.as('legacyRefId'),
         ])
-        .unionAll(
-          eb
-            // @ts-ignore
-            .selectFrom('moderation_report')
-            // @ts-ignore
-            .select([
-              ...commonColumns,
-              sql`'com.atproto.admin.defs#modEventReport'`.as('action'),
-              sql`NULL`.as('createLabelVals'),
-              sql`NULL`.as('negateLabelVals'),
-              sql`"reportedByDid"`.as('createdBy'),
-              sql`NULL`.as('durationInHours'),
-              sql`NULL`.as('expiresAt'),
-              sql`json_build_object('reportType', "reasonType")`.as('meta'),
-              sql`id`.as('legacyRefId'),
-            ]),
-        )
-        .orderBy('createdAt', 'asc'),
+        .orderBy('id', 'asc'),
     )
+    .execute()
 
-  await insertQuery.execute()
+  const totalActions = await countEvents(db)
+  console.log(`Created ${totalActions} events from actions`)
+
+  await sql`SELECT setval(pg_get_serial_sequence('moderation_event', 'id'), (select max(id) from moderation_event))`.execute(
+    db.db,
+  )
+  console.log('Reset the id sequence for moderation_event')
+
+  await db.db
+    .insertInto('moderation_event')
+    .columns([...commonColumnsToInsert, 'meta', 'legacyRefId'])
+    .expression((eb) =>
+      eb
+        // @ts-ignore
+        .selectFrom('moderation_report')
+        // @ts-ignore
+        .select([
+          ...commonColumnsToSelect,
+          sql`'com.atproto.admin.defs#modEventReport'`.as('action'),
+          sql`"reportedByDid"`.as('createdBy'),
+          sql`json_build_object('reportType', "reasonType")`.as('meta'),
+          sql`id`.as('legacyRefId'),
+        ]),
+    )
+    .execute()
+
   const totalEvents = await countEvents(db)
-  console.log(`Created ${totalEvents} events`)
+  console.log(`Created ${totalEvents - totalActions} events from reports`)
 
   return
 }
@@ -179,8 +189,9 @@ const createStatusFromActions = async (db: PrimaryDatabase) => {
   console.log(`Processing ${allEvents.count} actions in ${totalChunks} chunks`)
 
   await db.transaction(async (tx) => {
+    // This is not used for pagination but only for logging purposes
     let currentChunk = 1
-    let lastProcessedId = 0
+    let lastProcessedId: undefined | number = 0
     do {
       const eventsQuery = tx.db
         // @ts-ignore
@@ -198,7 +209,7 @@ const createStatusFromActions = async (db: PrimaryDatabase) => {
         const actionParts = event.action.split('#')
         await adjustModerationSubjectStatus(tx, {
           ...event,
-          action: `${actionParts[0]}#modEvent${actionParts[1]
+          action: `com.atproto.admin.defs#modEvent${actionParts[1]
             .charAt(0)
             .toUpperCase()}${actionParts[1].slice(
             1,
@@ -209,9 +220,9 @@ const createStatusFromActions = async (db: PrimaryDatabase) => {
       }
 
       console.log(`Processed events chunk ${currentChunk} of ${totalChunks}`)
-      lastProcessedId = events.at(-1)?.id ?? 0
+      lastProcessedId = events.at(-1)?.id
       currentChunk++
-    } while (currentChunk < totalChunks)
+    } while (lastProcessedId !== undefined)
   })
 
   console.log(`Events migration complete!`)
@@ -248,7 +259,7 @@ const syncBlobCids = async (db: PrimaryDatabase) => {
   console.log(`Updated blob cids on ${results.numUpdatedOrDeletedRows} rows`)
 }
 
-async function main() {
+export async function MigrateModerationData() {
   const env = getEnv()
   const db = new DatabaseCoordinator({
     schema: env.DB_SCHEMA,
@@ -276,5 +287,3 @@ async function main() {
   console.log(`Time spent: ${(Date.now() - startedAt) / 1000 / 60} minutes`)
   console.log('Migration complete!')
 }
-
-main()
