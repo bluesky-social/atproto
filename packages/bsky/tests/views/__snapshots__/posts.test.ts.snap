@@ -60,7 +60,9 @@ Array [
     "replyCount": 0,
     "repostCount": 0,
     "uri": "record(0)",
-    "viewer": Object {},
+    "viewer": Object {
+      "canReply": true,
+    },
   },
   Object {
     "author": Object {
@@ -103,7 +105,9 @@ Array [
     "replyCount": 2,
     "repostCount": 1,
     "uri": "record(2)",
-    "viewer": Object {},
+    "viewer": Object {
+      "canReply": true,
+    },
   },
   Object {
     "author": Object {
@@ -135,7 +139,9 @@ Array [
     "replyCount": 0,
     "repostCount": 0,
     "uri": "record(3)",
-    "viewer": Object {},
+    "viewer": Object {
+      "canReply": true,
+    },
   },
   Object {
     "author": Object {
@@ -248,6 +254,7 @@ Array [
     "repostCount": 0,
     "uri": "record(6)",
     "viewer": Object {
+      "canReply": true,
       "like": "record(9)",
     },
   },
@@ -408,7 +415,9 @@ Array [
     "replyCount": 0,
     "repostCount": 1,
     "uri": "record(10)",
-    "viewer": Object {},
+    "viewer": Object {
+      "canReply": true,
+    },
   },
   Object {
     "author": Object {
@@ -461,7 +470,9 @@ Array [
     "replyCount": 0,
     "repostCount": 1,
     "uri": "record(12)",
-    "viewer": Object {},
+    "viewer": Object {
+      "canReply": true,
+    },
   },
 ]
 `;

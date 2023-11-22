@@ -51,6 +51,7 @@ Object {
         "repostCount": 1,
         "uri": "record(4)",
         "viewer": Object {
+          "canReply": true,
           "like": "record(7)",
         },
       },
@@ -133,7 +134,9 @@ Object {
       "replyCount": 1,
       "repostCount": 0,
       "uri": "record(5)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "replies": Array [],
   },
@@ -191,13 +194,11 @@ Object {
     "repostCount": 2,
     "uri": "record(0)",
     "viewer": Object {
+      "canReply": true,
       "repost": "record(6)",
     },
   },
   "replies": Array [],
-  "viewer": Object {
-    "canReply": true,
-  },
 }
 `;
 
@@ -248,6 +249,7 @@ Object {
     "repostCount": 1,
     "uri": "record(0)",
     "viewer": Object {
+      "canReply": true,
       "like": "record(4)",
     },
   },
@@ -287,7 +289,9 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
       "replies": Array [],
     },
@@ -370,7 +374,9 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(7)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
       "replies": Array [
         Object {
@@ -429,6 +435,7 @@ Object {
             "repostCount": 2,
             "uri": "record(8)",
             "viewer": Object {
+              "canReply": true,
               "repost": "record(9)",
             },
           },
@@ -437,9 +444,6 @@ Object {
       ],
     },
   ],
-  "viewer": Object {
-    "canReply": true,
-  },
 }
 `;
 
@@ -490,6 +494,7 @@ Object {
     "repostCount": 1,
     "uri": "record(0)",
     "viewer": Object {
+      "canReply": true,
       "like": "record(4)",
     },
   },
@@ -529,7 +534,9 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
     },
     Object {
@@ -611,13 +618,12 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(7)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
     },
   ],
-  "viewer": Object {
-    "canReply": true,
-  },
 }
 `;
 
@@ -667,7 +673,9 @@ Object {
     "replyCount": 1,
     "repostCount": 0,
     "uri": "record(0)",
-    "viewer": Object {},
+    "viewer": Object {
+      "canReply": true,
+    },
   },
   "replies": Array [
     Object {
@@ -706,7 +714,9 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(4)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
       "replies": Array [
         Object {
@@ -764,16 +774,15 @@ Object {
             "replyCount": 0,
             "repostCount": 0,
             "uri": "record(5)",
-            "viewer": Object {},
+            "viewer": Object {
+              "canReply": true,
+            },
           },
           "replies": Array [],
         },
       ],
     },
   ],
-  "viewer": Object {
-    "canReply": true,
-  },
 }
 `;
 
@@ -823,12 +832,11 @@ Object {
     "replyCount": 0,
     "repostCount": 0,
     "uri": "record(0)",
-    "viewer": Object {},
+    "viewer": Object {
+      "canReply": true,
+    },
   },
   "replies": Array [],
-  "viewer": Object {
-    "canReply": true,
-  },
 }
 `;
 
@@ -893,12 +901,11 @@ Object {
     "replyCount": 0,
     "repostCount": 0,
     "uri": "record(0)",
-    "viewer": Object {},
+    "viewer": Object {
+      "canReply": true,
+    },
   },
   "replies": Array [],
-  "viewer": Object {
-    "canReply": true,
-  },
 }
 `;
 
@@ -964,13 +971,11 @@ Object {
     "repostCount": 2,
     "uri": "record(0)",
     "viewer": Object {
+      "canReply": true,
       "repost": "record(6)",
     },
   },
   "replies": Array [],
-  "viewer": Object {
-    "canReply": true,
-  },
 }
 `;
 
@@ -1036,13 +1041,11 @@ Object {
     "repostCount": 2,
     "uri": "record(0)",
     "viewer": Object {
+      "canReply": true,
       "repost": "record(6)",
     },
   },
   "replies": Array [],
-  "viewer": Object {
-    "canReply": true,
-  },
 }
 `;
 
@@ -1093,6 +1096,7 @@ Object {
     "repostCount": 1,
     "uri": "record(0)",
     "viewer": Object {
+      "canReply": true,
       "like": "record(4)",
     },
   },
@@ -1176,7 +1180,9 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
       "replies": Array [
         Object {
@@ -1235,6 +1241,7 @@ Object {
             "repostCount": 2,
             "uri": "record(6)",
             "viewer": Object {
+              "canReply": true,
               "repost": "record(7)",
             },
           },
@@ -1243,9 +1250,6 @@ Object {
       ],
     },
   ],
-  "viewer": Object {
-    "canReply": true,
-  },
 }
 `;
 
@@ -1296,6 +1300,7 @@ Object {
     "repostCount": 1,
     "uri": "record(0)",
     "viewer": Object {
+      "canReply": true,
       "like": "record(4)",
     },
   },
@@ -1379,13 +1384,12 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
       "replies": Array [],
     },
   ],
-  "viewer": Object {
-    "canReply": true,
-  },
 }
 `;

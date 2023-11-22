@@ -54,7 +54,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(0)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
@@ -113,7 +115,9 @@ Array [
       "replyCount": 2,
       "repostCount": 1,
       "uri": "record(2)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
@@ -182,7 +186,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(0)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -299,7 +305,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(5)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -344,7 +352,9 @@ Array [
       "replyCount": 2,
       "repostCount": 1,
       "uri": "record(2)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -400,7 +410,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(6)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -427,7 +439,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(8)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -489,7 +503,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(9)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
 ]
@@ -549,7 +565,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(0)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
@@ -608,7 +626,9 @@ Array [
       "replyCount": 2,
       "repostCount": 1,
       "uri": "record(2)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
@@ -677,7 +697,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(0)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -715,7 +737,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(5)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reply": Object {
       "parent": Object {
@@ -760,7 +784,9 @@ Array [
         "replyCount": 2,
         "repostCount": 1,
         "uri": "record(2)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
       "root": Object {
         "$type": "app.bsky.feed.defs#postView",
@@ -804,7 +830,9 @@ Array [
         "replyCount": 2,
         "repostCount": 1,
         "uri": "record(2)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
     },
   },
@@ -874,7 +902,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(8)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -904,7 +934,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(10)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -949,7 +981,9 @@ Array [
       "replyCount": 2,
       "repostCount": 1,
       "uri": "record(2)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -976,7 +1010,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(13)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -1109,6 +1145,7 @@ Array [
       "repostCount": 0,
       "uri": "record(14)",
       "viewer": Object {
+        "canReply": true,
         "like": "record(16)",
       },
     },
@@ -1153,7 +1190,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(15)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -1215,7 +1254,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(17)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
 ]
@@ -1275,7 +1316,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(0)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
@@ -1372,7 +1415,9 @@ Array [
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(3)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
       "root": Object {
         "$type": "app.bsky.feed.defs#postView",
@@ -1416,7 +1461,9 @@ Array [
         "replyCount": 2,
         "repostCount": 1,
         "uri": "record(2)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
     },
   },
@@ -1462,7 +1509,9 @@ Array [
       "replyCount": 2,
       "repostCount": 1,
       "uri": "record(2)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
@@ -1655,7 +1704,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(7)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
@@ -1725,7 +1776,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(0)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reply": Object {
       "parent": Object {
@@ -1808,7 +1861,9 @@ Array [
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(3)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
       "root": Object {
         "$type": "app.bsky.feed.defs#postView",
@@ -1852,7 +1907,9 @@ Array [
         "replyCount": 2,
         "repostCount": 1,
         "uri": "record(2)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
     },
   },
@@ -1891,7 +1948,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(12)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reply": Object {
       "parent": Object {
@@ -1936,7 +1995,9 @@ Array [
         "replyCount": 2,
         "repostCount": 1,
         "uri": "record(2)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
       "root": Object {
         "$type": "app.bsky.feed.defs#postView",
@@ -1980,7 +2041,9 @@ Array [
         "replyCount": 2,
         "repostCount": 1,
         "uri": "record(2)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
     },
   },
@@ -2064,7 +2127,9 @@ Array [
       "replyCount": 1,
       "repostCount": 0,
       "uri": "record(3)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reply": Object {
       "parent": Object {
@@ -2109,7 +2174,9 @@ Array [
         "replyCount": 2,
         "repostCount": 1,
         "uri": "record(2)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
       "root": Object {
         "$type": "app.bsky.feed.defs#postView",
@@ -2153,7 +2220,9 @@ Array [
         "replyCount": 2,
         "repostCount": 1,
         "uri": "record(2)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
     },
   },
@@ -2334,7 +2403,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(13)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -2364,7 +2435,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(14)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -2409,7 +2482,9 @@ Array [
       "replyCount": 2,
       "repostCount": 1,
       "uri": "record(2)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -2588,7 +2663,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(7)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -2615,7 +2692,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(15)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -2748,6 +2827,7 @@ Array [
       "repostCount": 0,
       "uri": "record(8)",
       "viewer": Object {
+        "canReply": true,
         "like": "record(16)",
       },
     },
@@ -2792,7 +2872,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(11)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -2854,7 +2936,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(17)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
 ]
@@ -3035,7 +3119,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(0)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reason": Object {
       "$type": "app.bsky.feed.defs#reasonRepost",
@@ -3106,7 +3192,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(5)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reply": Object {
       "parent": Object {
@@ -3187,7 +3275,9 @@ Array [
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(10)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
       "root": Object {
         "$type": "app.bsky.feed.defs#postView",
@@ -3234,6 +3324,7 @@ Array [
         "repostCount": 1,
         "uri": "record(9)",
         "viewer": Object {
+          "canReply": true,
           "like": "record(11)",
         },
       },
@@ -3273,7 +3364,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(12)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reply": Object {
       "parent": Object {
@@ -3321,6 +3414,7 @@ Array [
         "repostCount": 1,
         "uri": "record(9)",
         "viewer": Object {
+          "canReply": true,
           "like": "record(11)",
         },
       },
@@ -3369,6 +3463,7 @@ Array [
         "repostCount": 1,
         "uri": "record(9)",
         "viewer": Object {
+          "canReply": true,
           "like": "record(11)",
         },
       },
@@ -3452,7 +3547,9 @@ Array [
       "replyCount": 1,
       "repostCount": 0,
       "uri": "record(10)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reply": Object {
       "parent": Object {
@@ -3500,6 +3597,7 @@ Array [
         "repostCount": 1,
         "uri": "record(9)",
         "viewer": Object {
+          "canReply": true,
           "like": "record(11)",
         },
       },
@@ -3548,6 +3646,7 @@ Array [
         "repostCount": 1,
         "uri": "record(9)",
         "viewer": Object {
+          "canReply": true,
           "like": "record(11)",
         },
       },
@@ -3732,6 +3831,7 @@ Array [
       "repostCount": 0,
       "uri": "record(13)",
       "viewer": Object {
+        "canReply": true,
         "like": "record(14)",
       },
     },
@@ -3761,7 +3861,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(15)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -3809,6 +3911,7 @@ Array [
       "repostCount": 1,
       "uri": "record(9)",
       "viewer": Object {
+        "canReply": true,
         "like": "record(11)",
       },
     },
@@ -3940,6 +4043,7 @@ Array [
       "repostCount": 0,
       "uri": "record(2)",
       "viewer": Object {
+        "canReply": true,
         "like": "record(16)",
       },
     },
@@ -3982,7 +4086,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(4)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -4046,7 +4152,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(17)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
 ]
@@ -4227,6 +4335,7 @@ Array [
       "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {
+        "canReply": true,
         "repost": "record(4)",
       },
     },
@@ -4298,7 +4407,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(5)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reply": Object {
       "parent": Object {
@@ -4380,7 +4491,9 @@ Array [
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(10)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
       "root": Object {
         "$type": "app.bsky.feed.defs#postView",
@@ -4427,6 +4540,7 @@ Array [
         "repostCount": 1,
         "uri": "record(9)",
         "viewer": Object {
+          "canReply": true,
           "like": "record(11)",
         },
       },
@@ -4465,7 +4579,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(12)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reply": Object {
       "parent": Object {
@@ -4513,6 +4629,7 @@ Array [
         "repostCount": 1,
         "uri": "record(9)",
         "viewer": Object {
+          "canReply": true,
           "like": "record(11)",
         },
       },
@@ -4561,6 +4678,7 @@ Array [
         "repostCount": 1,
         "uri": "record(9)",
         "viewer": Object {
+          "canReply": true,
           "like": "record(11)",
         },
       },
@@ -4743,6 +4861,7 @@ Array [
       "repostCount": 0,
       "uri": "record(13)",
       "viewer": Object {
+        "canReply": true,
         "like": "record(14)",
       },
     },
@@ -4792,6 +4911,7 @@ Array [
       "repostCount": 1,
       "uri": "record(9)",
       "viewer": Object {
+        "canReply": true,
         "like": "record(11)",
       },
     },
@@ -4922,7 +5042,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(1)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -4986,7 +5108,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(15)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
 ]
@@ -5048,6 +5172,7 @@ Array [
       "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {
+        "canReply": true,
         "repost": "record(5)",
       },
     },
@@ -5144,7 +5269,9 @@ Array [
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(4)",
-        "viewer": Object {},
+        "viewer": Object {
+          "canReply": true,
+        },
       },
       "root": Object {
         "$type": "app.bsky.feed.defs#postView",
@@ -5190,6 +5317,7 @@ Array [
         "repostCount": 1,
         "uri": "record(3)",
         "viewer": Object {
+          "canReply": true,
           "like": "record(7)",
           "repost": "record(6)",
         },
@@ -5240,6 +5368,7 @@ Array [
       "repostCount": 1,
       "uri": "record(3)",
       "viewer": Object {
+        "canReply": true,
         "like": "record(7)",
         "repost": "record(6)",
       },
@@ -5337,7 +5466,9 @@ Array [
       "replyCount": 1,
       "repostCount": 0,
       "uri": "record(4)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
     "reply": Object {
       "parent": Object {
@@ -5384,6 +5515,7 @@ Array [
         "repostCount": 1,
         "uri": "record(3)",
         "viewer": Object {
+          "canReply": true,
           "like": "record(7)",
           "repost": "record(6)",
         },
@@ -5432,6 +5564,7 @@ Array [
         "repostCount": 1,
         "uri": "record(3)",
         "viewer": Object {
+          "canReply": true,
           "like": "record(7)",
           "repost": "record(6)",
         },
@@ -5464,7 +5597,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(9)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -5639,7 +5774,9 @@ Array [
       "replyCount": 0,
       "repostCount": 1,
       "uri": "record(10)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -5665,7 +5802,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(13)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
   Object {
@@ -5707,7 +5846,9 @@ Array [
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(12)",
-      "viewer": Object {},
+      "viewer": Object {
+        "canReply": true,
+      },
     },
   },
 ]
