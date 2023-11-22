@@ -697,6 +697,9 @@ export const schemaDict = {
         type: 'object',
         description: 'Take down a subject permanently or temporarily',
         properties: {
+          comment: {
+            type: 'string',
+          },
           durationInHours: {
             type: 'integer',
             description:
@@ -747,6 +750,9 @@ export const schemaDict = {
         description: 'Apply/Negate labels on a subject',
         required: ['createLabelVals', 'negateLabelVals'],
         properties: {
+          comment: {
+            type: 'string',
+          },
           createLabelVals: {
             type: 'array',
             items: {

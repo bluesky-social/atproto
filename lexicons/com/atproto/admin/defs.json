@@ -450,6 +450,9 @@
       "type": "object",
       "description": "Take down a subject permanently or temporarily",
       "properties": {
+        "comment": {
+          "type": "string"
+        },
         "durationInHours": {
           "type": "integer",
           "description": "Indicates how long the takedown should be in effect before automatically expiring."
@@ -499,6 +502,9 @@
       "description": "Apply/Negate labels on a subject",
       "required": ["createLabelVals", "negateLabelVals"],
       "properties": {
+        "comment": {
+          "type": "string"
+        },
         "createLabelVals": {
           "type": "array",
           "items": { "type": "string" }
