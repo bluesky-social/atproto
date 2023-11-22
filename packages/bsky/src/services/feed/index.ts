@@ -44,6 +44,7 @@ import {
 import { FeedViews } from './views'
 import { LabelCache } from '../../label-cache'
 import { threadgateToPostUri, postToThreadgateUri } from './util'
+import { mapDefined } from '@atproto/common'
 
 export * from './types'
 
@@ -203,6 +204,11 @@ export class FeedService {
     return feedItems.reduce((acc, item) => {
       return Object.assign(acc, { [item.uri]: item })
     }, {} as Record<string, FeedRow>)
+  }
+
+  async postUrisToFeedItems(uris: string[]): Promise<FeedRow[]> {
+    const feedItems = await this.getFeedItems(uris)
+    return mapDefined(uris, (uri) => feedItems[uri])
   }
 
   feedItemRefs(items: FeedRow[]) {
