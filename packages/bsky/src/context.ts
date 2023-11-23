@@ -94,6 +94,10 @@ export class AppContext {
     return auth.authVerifier(this.idResolver, { aud: null })
   }
 
+  get authOptionalVerifierAnyAudience() {
+    return auth.authOptionalVerifier(this.idResolver, { aud: null })
+  }
+
   get authOptionalVerifier() {
     return auth.authOptionalVerifier(this.idResolver, {
       aud: this.cfg.serverDid,
