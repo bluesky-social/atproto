@@ -5,21 +5,32 @@ import logger from './logger'
 export class NotificationsDaemon {
   ac = new AbortController()
   running: Promise<void> | undefined
+  count = 0
+  lastDid: string | null = null
+
   constructor(private ctx: DaemonContext) {}
 
-  run() {
+  run(opts?: RunOptions) {
     if (this.running) return
-    this.running = this.tidyNotifications()
+    this.count = 0
+    this.lastDid = null
+    this.ac = new AbortController()
+    this.running = this.tidyNotifications({
+      ...opts,
+      forever: opts?.forever !== false, // run forever by default
+    })
       .catch((err) => logger.error({ err }, 'notifications daemon failed'))
       .finally(() => (this.running = undefined))
   }
 
-  private async tidyNotifications() {
+  private async tidyNotifications(opts: RunOptions) {
     const actorService = this.ctx.services.actor(this.ctx.db)
-    for await (const { did } of actorService.all({ forever: true })) {
+    for await (const { did } of actorService.all(opts)) {
       if (this.ac.signal.aborted) return
       try {
         await tidyNotifications(this.ctx.db, did)
+        this.count++
+        this.lastDid = did
       } catch (err) {
         logger.warn({ err, did }, 'failed to tidy notifications for actor')
       }
@@ -31,3 +42,5 @@ export class NotificationsDaemon {
     await this.running
   }
 }
+
+type RunOptions = { forever?: boolean; batchSize?: number }

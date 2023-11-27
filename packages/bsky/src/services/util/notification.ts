@@ -2,14 +2,15 @@ import { sql } from 'kysely'
 import { countAll } from '../../db/util'
 import { PrimaryDatabase } from '../../db'
 
+// @TODO decide thresholds
+// i.e. 30 days before the last time the user checked their notifs
+export const BEFORE_LAST_SEEN_DAYS = 30
+// i.e. 180 days before the latest unread notification
+export const BEFORE_LATEST_UNREAD_DAYS = 30
+// don't consider culling unreads until they hit this threshold, and then enforce beforeLatestUnreadThresholdDays
+export const UNREAD_KEPT_COUNT = 500
+
 export const tidyNotifications = async (db: PrimaryDatabase, did: string) => {
-  // @TODO decide thresholds
-  // i.e. 30 days before the last time the user checked their notifs
-  const beforeLastSeenThresholdDays = 30
-  // i.e. 180 days before the latest unread notification
-  const beforeLatestUnreadThresholdDays = 180
-  // don't consider culling unreads until they hit this threshold, and then enforce beforeLatestUnreadThresholdDays
-  const unreadKeptThresholdCount = 500
   const stats = await db.db
     .selectFrom('notification')
     .select([
@@ -30,13 +31,13 @@ export const tidyNotifications = async (db: PrimaryDatabase, did: string) => {
   if (readStats) {
     readCutoffAt = addDays(
       new Date(readStats.lastSeenAt),
-      -beforeLastSeenThresholdDays,
+      -BEFORE_LAST_SEEN_DAYS,
     )
   }
-  if (unreadStats && unreadStats.count > unreadKeptThresholdCount) {
+  if (unreadStats && unreadStats.count > UNREAD_KEPT_COUNT) {
     unreadCutoffAt = addDays(
       new Date(unreadStats.latestAt),
-      -beforeLatestUnreadThresholdDays,
+      -BEFORE_LATEST_UNREAD_DAYS,
     )
   }
   // take most recent of read/unread cutoffs

@@ -6,6 +6,7 @@ import { createServices } from './services'
 import { ImageUriBuilder } from '../image/uri'
 import { LabelCache } from '../label-cache'
 import { NotificationsDaemon } from './notifications'
+import logger from './logger'
 
 export { DaemonConfig } from './config'
 export type { DaemonConfigValues } from './config'
@@ -14,6 +15,7 @@ export class BskyDaemon {
   public ctx: DaemonContext
   public notifications: NotificationsDaemon
   private dbStatsInterval: NodeJS.Timer
+  private notifStatsInterval: NodeJS.Timer
 
   constructor(opts: {
     ctx: DaemonContext
@@ -54,6 +56,15 @@ export class BskyDaemon {
         'db pool stats',
       )
     }, 10000)
+    this.notifStatsInterval = setInterval(() => {
+      logger.info(
+        {
+          count: this.notifications.count,
+          lastDid: this.notifications.lastDid,
+        },
+        'notifications daemon stats',
+      )
+    }, 10000)
     return this
   }
 
@@ -61,6 +72,7 @@ export class BskyDaemon {
     await this.notifications.destroy()
     await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
+    clearInterval(this.notifStatsInterval)
   }
 }
 
