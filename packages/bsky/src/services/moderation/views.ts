@@ -367,7 +367,7 @@ export class ModerationViews {
       .selectAll()
       .executeTakeFirst()
     const statusByCid = (modStatusResults?.blobCids || [])?.reduce(
-      (acc, cur) => Object.assign(acc, { [cur]: cur }),
+      (acc, cur) => Object.assign(acc, { [cur]: modStatusResults }),
       {},
     )
     // Intentionally missing details field, since we don't have any on appview.
@@ -375,14 +375,16 @@ export class ModerationViews {
     const unknownTime = new Date(0).toISOString()
     return blobs.map((blob) => {
       const cid = blob.ref.toString()
-      const status = statusByCid[cid]
+      const subjectStatus = statusByCid[cid]
+        ? this.subjectStatus(statusByCid[cid])
+        : undefined
       return {
         cid,
         mimeType: blob.mimeType,
         size: blob.size,
         createdAt: unknownTime,
         moderation: {
-          status,
+          subjectStatus,
         },
       }
     })
