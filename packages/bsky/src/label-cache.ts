@@ -1,19 +1,18 @@
-import { PrimaryDatabase } from './db'
-import { Cache } from './cache'
-import { Redis } from 'ioredis'
+import { Database } from './db'
+import { Cache, CacheOptions } from './cache'
 import { Label } from './lexicon/types/com/atproto/label/defs'
 
 export class LabelCache extends Cache<Label[]> {
-  constructor(
-    public db: PrimaryDatabase,
-    public redis: Redis,
-    public staleTTL: number,
-    public maxTTL: number,
-  ) {
-    super(redis, staleTTL, maxTTL)
+  constructor(public db: Database, opts: CacheOptions) {
+    super(opts)
   }
 
-  async fetchMany(subjects: string[]): Promise<Record<string, Label[]>> {
+  async fetchImpl(key: string): Promise<Label[] | null> {
+    const res = await this.fetchManyImpl([key])
+    return res[key]
+  }
+
+  async fetchManyImpl(subjects: string[]): Promise<Record<string, Label[]>> {
     if (subjects.length < 0) {
       return {}
     }

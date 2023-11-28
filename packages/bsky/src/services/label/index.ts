@@ -73,18 +73,9 @@ export class LabelService {
     },
   ): Promise<Labels> {
     if (subjects.length < 1) return {}
-    const res = opts?.skipCache
-      ? await this.cache.fetchAndCacheMany(subjects)
-      : this.cache.forSubjects(subjects, opts?.includeNeg)
-    return res.reduce((acc, cur) => {
-      acc[cur.uri] ??= []
-      acc[cur.uri].push({
-        ...cur,
-        cid: cur.cid === '' ? undefined : cur.cid,
-        neg: cur.neg,
-      })
-      return acc
-    }, {} as Labels)
+    const res = await this.cache.getMany(subjects, opts)
+    // @TODO add includeNeg
+    return res
   }
 
   // gets labels for any record. when did is present, combine labels for both did & profile record.

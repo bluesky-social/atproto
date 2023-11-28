@@ -102,7 +102,12 @@ export class BskyAppView {
     }
 
     const backgroundQueue = new BackgroundQueue(db.getPrimary())
-    const labelCache = new LabelCache(db.getPrimary())
+    const labelCache = new LabelCache(db.getPrimary(), {
+      redisHost: config.redisScratchHost,
+      redisPassword: config.redisScratchPassword,
+      staleTTL: 10000, // @TODO move to cfg
+      maxTTL: 60000,
+    })
     const notifServer = new NotificationServer(db.getPrimary())
     const searchAgent = config.searchEndpoint
       ? new AtpAgent({ service: config.searchEndpoint })
@@ -185,7 +190,6 @@ export class BskyAppView {
         'background queue stats',
       )
     }, 10000)
-    this.ctx.labelCache.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -197,7 +201,7 @@ export class BskyAppView {
   }
 
   async destroy(opts?: { skipDb: boolean }): Promise<void> {
-    this.ctx.labelCache.stop()
+    await this.ctx.labelCache.close()
     await this.ctx.didCache.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
