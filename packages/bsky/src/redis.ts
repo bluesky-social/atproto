@@ -154,7 +154,7 @@ export type RedisOptions = (
   namespace?: string
 }
 
-function addressParts(
+export function addressParts(
   addr: string,
   defaultPort = 6379,
 ): { host: string; port: number } {

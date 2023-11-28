@@ -140,6 +140,7 @@ export class BskyIndexer {
     if (this.closeServer) await this.closeServer()
     await this.sub.destroy()
     clearInterval(this.subStatsInterval)
+    await this.ctx.didCache.destroy()
     if (!opts?.skipRedis) await this.ctx.redis.destroy()
     if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)

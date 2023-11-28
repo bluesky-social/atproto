@@ -1,14 +1,14 @@
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import userSeed from './seeds/users'
 import { IdResolver } from '@atproto/identity'
-import DidSqlCache from '../src/did-cache'
+import DidRedisCache from '../src/did-cache'
 import { wait } from '@atproto/common'
 
 describe('did cache', () => {
   let network: TestNetwork
   let sc: SeedClient
   let idResolver: IdResolver
-  let didCache: DidSqlCache
+  let didCache: DidRedisCache
 
   let alice: string
   let bob: string
@@ -32,7 +32,7 @@ describe('did cache', () => {
 
   afterAll(async () => {
     await network.close()
-  })
+  }, 180000)
 
   it('caches dids on lookup', async () => {
     await didCache.processAll()
@@ -50,7 +50,12 @@ describe('did cache', () => {
   })
 
   it('clears cache and repopulates', async () => {
-    await idResolver.did.cache?.clear()
+    await Promise.all([
+      idResolver.did.cache?.clearEntry(alice),
+      idResolver.did.cache?.clearEntry(bob),
+      idResolver.did.cache?.clearEntry(carol),
+      idResolver.did.cache?.clearEntry(dan),
+    ])
     const docsCleared = await Promise.all([
       idResolver.did.cache?.checkCache(alice),
       idResolver.did.cache?.checkCache(bob),
@@ -81,7 +86,12 @@ describe('did cache', () => {
   })
 
   it('accurately reports expired dids & refreshes the cache', async () => {
-    const didCache = new DidSqlCache(network.bsky.ctx.db.getPrimary(), 1, 60000)
+    const didCache = new DidRedisCache({
+      redisHost: network.bsky.ctx.cfg.redisScratchHost,
+      redisPassword: network.bsky.ctx.cfg.redisScratchPassword,
+      staleTTL: 1,
+      maxTTL: 60000,
+    })
     const shortCacheResolver = new IdResolver({
       plcUrl: network.bsky.ctx.cfg.didPlcUrl,
       didCache,
@@ -110,7 +120,12 @@ describe('did cache', () => {
   })
 
   it('does not return expired dids & refreshes the cache', async () => {
-    const didCache = new DidSqlCache(network.bsky.ctx.db.getPrimary(), 0, 1)
+    const didCache = new DidRedisCache({
+      redisHost: network.bsky.ctx.cfg.redisScratchHost,
+      redisPassword: network.bsky.ctx.cfg.redisScratchPassword,
+      staleTTL: 0,
+      maxTTL: 1,
+    })
     const shortExpireResolver = new IdResolver({
       plcUrl: network.bsky.ctx.cfg.didPlcUrl,
       didCache,
@@ -125,5 +140,6 @@ describe('did cache', () => {
     // see that the resolver does not return expired value & instead force refreshes
     const staleGet = await shortExpireResolver.did.resolve(alice)
     expect(staleGet?.id).toEqual(alice)
+    await didCache.destroy()
   })
 })

@@ -1,7 +1,8 @@
 import PQueue from 'p-queue'
 import { CacheResult, DidCache, DidDocument } from '@atproto/identity'
-import { dbLogger } from './logger'
+import { cacheLogger as log } from './logger'
 import { Redis } from 'ioredis'
+import { addressParts } from './redis'
 
 type CacheItem = {
   val: DidDocument
@@ -22,10 +23,13 @@ export class DidRedisCache implements DidCache {
   public pQueue: PQueue | null //null during teardown
 
   constructor(opts: CacheOptions) {
+    const redisAddr = addressParts(opts.redisHost)
     this.redis = new Redis({
-      host: opts.redisHost,
+      ...redisAddr,
       password: opts.redisPassword,
-      keyPrefix: 'did-doc',
+    })
+    this.redis.on('error', (err) => {
+      log.error({ host: opts.redisHost, err }, 'redis error')
     })
     this.staleTTL = opts.staleTTL
     this.maxTTL = opts.maxTTL
@@ -57,7 +61,7 @@ export class DidRedisCache implements DidCache {
           await this.clearEntry(did)
         }
       } catch (err) {
-        dbLogger.error({ did, err }, 'refreshing did cache failed')
+        log.error({ did, err }, 'refreshing did cache failed')
       }
     })
   }
@@ -96,6 +100,7 @@ export class DidRedisCache implements DidCache {
     pQueue?.pause()
     pQueue?.clear()
     await pQueue?.onIdle()
+    await this.redis.quit()
   }
 }
 
