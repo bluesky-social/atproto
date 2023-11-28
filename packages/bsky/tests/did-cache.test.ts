@@ -35,7 +35,7 @@ describe('did cache', () => {
 
   afterAll(async () => {
     await network.close()
-  }, 180000)
+  })
 
   it('caches dids on lookup', async () => {
     await didCache.processAll()
