@@ -91,7 +91,7 @@ const presentation = (state: HydrationState, ctx: Context) => {
   const actors = actorService.views.profilePresentation(
     Object.keys(profileState.profiles),
     profileState,
-    { viewer: params.viewer },
+    params.viewer,
   )
   const creator = actors[list.creator]
   if (!creator) {

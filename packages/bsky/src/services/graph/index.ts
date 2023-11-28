@@ -91,6 +91,12 @@ export class GraphService {
           .whereRef('list_block.subjectUri', '=', ref('list.uri'))
           .select('list_block.uri')
           .as('viewerListBlockUri'),
+        this.db.db
+          .selectFrom('list_item')
+          .whereRef('list_item.listUri', '=', ref('list.uri'))
+          .where('list_item.subjectDid', '=', viewer ?? '')
+          .select('list_item.uri')
+          .as('viewerInList'),
       ])
   }
 

@@ -6,27 +6,21 @@ import {
   NotFoundPost,
   ThreadViewPost,
   isNotFoundPost,
-  isThreadViewPost,
 } from '../../../../lexicon/types/app/bsky/feed/defs'
-import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
-import { Record as ThreadgateRecord } from '../../../../lexicon/types/app/bsky/feed/threadgate'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import AppContext from '../../../../context'
 import {
   FeedService,
   FeedRow,
   FeedHydrationState,
-  PostInfo,
 } from '../../../../services/feed'
 import {
   getAncestorsAndSelfQb,
   getDescendentsQb,
 } from '../../../../services/util/post'
 import { Database } from '../../../../db'
-import DatabaseSchema from '../../../../db/database-schema'
 import { setRepoRev } from '../../../util'
 import { ActorInfoMap, ActorService } from '../../../../services/actor'
-import { violatesThreadGate } from '../../../../services/feed/util'
 import { createPipeline, noRules } from '../../../../pipeline'
 
 export default function (server: Server, ctx: AppContext) {
@@ -80,21 +74,7 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
   } = state
   const relevant = getRelevantIds(threadData)
   const hydrated = await feedService.feedHydration({ ...relevant, viewer })
-  // check root reply interaction rules
-  const anchorPostUri = threadData.post.postUri
-  const rootUri = threadData.post.replyRoot || anchorPostUri
-  const anchor = hydrated.posts[anchorPostUri]
-  const root = hydrated.posts[rootUri]
-  const gate = hydrated.threadgates[rootUri]?.record
-  const viewerCanReply = await checkViewerCanReply(
-    ctx.db.db,
-    anchor ?? null,
-    viewer,
-    new AtUri(rootUri).host,
-    (root?.record ?? null) as PostRecord | null,
-    gate ?? null,
-  )
-  return { ...state, ...hydrated, viewerCanReply }
+  return { ...state, ...hydrated }
 }
 
 const presentation = (state: HydrationState, ctx: Context) => {
@@ -103,15 +83,18 @@ const presentation = (state: HydrationState, ctx: Context) => {
   const actors = actorService.views.profileBasicPresentation(
     Object.keys(profiles),
     state,
-    { viewer: params.viewer },
+    params.viewer,
   )
-  const thread = composeThread(state.threadData, actors, state, ctx)
+  const thread = composeThread(
+    state.threadData,
+    actors,
+    state,
+    ctx,
+    params.viewer,
+  )
   if (isNotFoundPost(thread)) {
     // @TODO technically this could be returned as a NotFoundPost based on lexicon
     throw new InvalidRequestError(`Post not found: ${params.uri}`, 'NotFound')
-  }
-  if (isThreadViewPost(thread) && params.viewer) {
-    thread.viewer = { canReply: state.viewerCanReply }
   }
   return { thread }
 }
@@ -121,6 +104,7 @@ const composeThread = (
   actors: ActorInfoMap,
   state: HydrationState,
   ctx: Context,
+  viewer: string | null,
 ) => {
   const { feedService } = ctx
   const { posts, threadgates, embeds, blocks, labels, lists } = state
@@ -133,6 +117,7 @@ const composeThread = (
     embeds,
     labels,
     lists,
+    viewer,
   )
 
   // replies that are invalid due to reply-gating:
@@ -179,14 +164,14 @@ const composeThread = (
         notFound: true,
       }
     } else {
-      parent = composeThread(threadData.parent, actors, state, ctx)
+      parent = composeThread(threadData.parent, actors, state, ctx, viewer)
     }
   }
 
   let replies: (ThreadViewPost | NotFoundPost | BlockedPost)[] | undefined
   if (threadData.replies && !badReply) {
     replies = threadData.replies.flatMap((reply) => {
-      const thread = composeThread(reply, actors, state, ctx)
+      const thread = composeThread(reply, actors, state, ctx, viewer)
       // e.g. don't bother including #postNotFound reply placeholders for takedowns. either way matches api contract.
       const skip = []
       return isNotFoundPost(thread) ? skip : thread
@@ -223,6 +208,7 @@ const getRelevantIds = (
   if (thread.post.replyRoot) {
     // ensure root is included for checking interactions
     uris.add(thread.post.replyRoot)
+    dids.add(new AtUri(thread.post.replyRoot).hostname)
   }
   return { dids, uris }
 }
@@ -317,28 +303,6 @@ const getChildrenData = (
   }))
 }
 
-const checkViewerCanReply = async (
-  db: DatabaseSchema,
-  anchor: PostInfo | null,
-  viewer: string | null,
-  owner: string,
-  root: PostRecord | null,
-  threadgate: ThreadgateRecord | null,
-) => {
-  if (!viewer) return false
-  // @TODO re-enable invalidReplyRoot check
-  // if (anchor?.invalidReplyRoot || anchor?.violatesThreadGate) return false
-  if (anchor?.violatesThreadGate) return false
-  const viewerViolatesThreadGate = await violatesThreadGate(
-    db,
-    viewer,
-    owner,
-    root,
-    threadgate,
-  )
-  return !viewerViolatesThreadGate
-}
-
 class ParentNotFoundError extends Error {
   constructor(public uri: string) {
     super(`Parent not found: ${uri}`)
@@ -364,7 +328,4 @@ type SkeletonState = {
   threadData: PostThread
 }
 
-type HydrationState = SkeletonState &
-  FeedHydrationState & {
-    viewerCanReply: boolean
-  }
+type HydrationState = SkeletonState & FeedHydrationState
