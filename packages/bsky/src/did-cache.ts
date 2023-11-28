@@ -37,7 +37,11 @@ export class DidRedisCache implements DidCache {
       val: doc,
       updatedAt: Date.now(),
     })
-    await this.redis.set(did, item)
+    await this.redis
+      .multi({ pipeline: true })
+      .set(did, item)
+      .pexpire(did, this.maxTTL)
+      .exec()
   }
 
   async refreshCache(
