@@ -113,6 +113,7 @@ const insertFn = async (
       obj.reply,
     )
     if (invalidReplyRoot || violatesThreadGate) {
+      Object.assign(insertedPost, { invalidReplyRoot, violatesThreadGate })
       await db
         .updateTable('post')
         .where('uri', '=', post.uri)
@@ -243,6 +244,7 @@ const notifsForInsert = (obj: IndexedPost) => {
   }
 
   for (const ancestor of obj.ancestors ?? []) {
+    if (obj.post.violatesThreadGate) continue // don't notify thread when post violates threadgate
     if (ancestor.uri === obj.post.uri) continue // no need to notify for own post
     if (ancestor.height < REPLY_NOTIF_DEPTH) {
       const ancestorUri = new AtUri(ancestor.uri)
@@ -261,6 +263,7 @@ const notifsForInsert = (obj: IndexedPost) => {
   // descendents indicate out-of-order indexing: need to notify
   // the current post and upwards.
   for (const descendent of obj.descendents ?? []) {
+    if (obj.post.violatesThreadGate) continue // don't notify thread when post violates threadgate
     for (const ancestor of obj.ancestors ?? []) {
       const totalHeight = descendent.depth + ancestor.height
       if (totalHeight < REPLY_NOTIF_DEPTH) {
