@@ -241,7 +241,7 @@ export class ModerationService {
       meta.subjectLine = event.subjectLine
     }
 
-    const actionResult = await this.db.db
+    const modEvent = await this.db.db
       .insertInto('moderation_event')
       .values({
         comment: event.comment ? `${event.comment}` : null,
@@ -264,9 +264,9 @@ export class ModerationService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    await adjustModerationSubjectStatus(this.db, actionResult, subjectBlobCids)
+    await adjustModerationSubjectStatus(this.db, modEvent, subjectBlobCids)
 
-    return actionResult
+    return modEvent
   }
 
   async getLastReversibleEventForSubject({
