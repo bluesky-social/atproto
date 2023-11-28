@@ -15,6 +15,7 @@ import { NotificationServer } from '../notifications'
 import { CloseFn, createServer, startServer } from './server'
 import { ImageUriBuilder } from '../image/uri'
 import { ImageInvalidator } from '../image/invalidator'
+import { RedisCache } from '../cache/redis'
 
 export { IndexerConfig } from './config'
 export type { IndexerConfigValues } from './config'
@@ -44,9 +45,11 @@ export class BskyIndexer {
     imgInvalidator?: ImageInvalidator
   }): BskyIndexer {
     const { db, redis, cfg } = opts
-    const didCache = new DidRedisCache({
-      redisHost: cfg.redisScratchHost,
-      redisPassword: cfg.redisScratchPassword,
+    const redisCache = new RedisCache(
+      cfg.redisScratchHost,
+      cfg.redisScratchPassword,
+    )
+    const didCache = new DidRedisCache(redisCache, {
       staleTTL: cfg.didCacheStaleTTL,
       maxTTL: cfg.didCacheMaxTTL,
     })
@@ -86,6 +89,7 @@ export class BskyIndexer {
       services,
       idResolver,
       didCache,
+      redisCache,
       backgroundQueue,
       autoMod,
     })
@@ -141,6 +145,7 @@ export class BskyIndexer {
     await this.sub.destroy()
     clearInterval(this.subStatsInterval)
     await this.ctx.didCache.destroy()
+    await this.ctx.redisCache.close()
     if (!opts?.skipRedis) await this.ctx.redis.destroy()
     if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)

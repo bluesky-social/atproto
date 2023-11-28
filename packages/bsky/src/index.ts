@@ -66,12 +66,16 @@ export class BskyAppView {
     app.use(loggerMiddleware)
     app.use(compression())
 
-    const didCache = new DidRedisCache({
-      redisHost: config.redisScratchHost,
-      redisPassword: config.redisScratchPassword,
+    const redisCache = new RedisCache(
+      config.redisScratchHost,
+      config.redisScratchPassword,
+    )
+
+    const didCache = new DidRedisCache(redisCache, {
       staleTTL: config.didCacheStaleTTL,
       maxTTL: config.didCacheMaxTTL,
     })
+
     const idResolver = new IdResolver({
       plcUrl: config.didPlcUrl,
       didCache,
@@ -102,10 +106,6 @@ export class BskyAppView {
     }
 
     const backgroundQueue = new BackgroundQueue(db.getPrimary())
-    const redisCache = new RedisCache(
-      config.redisScratchHost,
-      config.redisScratchPassword,
-    )
 
     const notifServer = new NotificationServer(db.getPrimary())
     const searchAgent = config.searchEndpoint
