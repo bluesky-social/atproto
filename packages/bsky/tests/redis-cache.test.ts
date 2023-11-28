@@ -152,7 +152,7 @@ describe('redis cache', () => {
     const cache = new ReadThroughCache<string>(redisCache, {
       staleTTL: 0,
       maxTTL: 1,
-      namespace: 'test3',
+      namespace: 'test4',
       fetchMethod: async () => {
         hits++
         return val
