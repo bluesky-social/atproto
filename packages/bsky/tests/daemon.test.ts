@@ -47,13 +47,12 @@ describe('daemon', () => {
           setLastSeen(daemon.ctx.db, { did }),
           createNotifications(daemon.ctx.db, {
             did,
-            daysAgo: 180,
+            daysAgo: 2 * BEFORE_LAST_SEEN_DAYS,
             count: 1,
           }),
         ])
       }
-      const beforeCount = await countNotifications(db)
-      expect(beforeCount).toBe(actors.length)
+      await expect(countNotifications(db)).resolves.toBe(actors.length)
       await runNotifsOnce(daemon.notifications)
       await expect(countNotifications(db)).resolves.toBe(0)
     })
