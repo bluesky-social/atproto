@@ -92,9 +92,7 @@ Object {
   "replyCount": 0,
   "repostCount": 0,
   "uri": "record(0)",
-  "viewer": Object {
-    "canReply": true,
-  },
+  "viewer": Object {},
 }
 `;
 
@@ -144,7 +142,6 @@ Object {
     "repostCount": 1,
     "uri": "record(0)",
     "viewer": Object {
-      "canReply": true,
       "like": "record(4)",
       "repost": "record(3)",
     },
@@ -197,9 +194,7 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {
-          "canReply": true,
-        },
+        "viewer": Object {},
       },
     },
     Object {
@@ -293,9 +288,7 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(9)",
-        "viewer": Object {
-          "canReply": true,
-        },
+        "viewer": Object {},
       },
     },
   ],

@@ -22,13 +22,7 @@ import {
   ViewRecord,
 } from '../../lexicon/types/app/bsky/embed/record'
 import { Record as PostRecord } from '../../lexicon/types/app/bsky/feed/post'
-import {
-  Record as GateRecord,
-  isFollowingRule,
-  isListRule,
-  isMentionRule,
-} from '../../lexicon/types/app/bsky/feed/threadgate'
-import { isMention } from '../../lexicon/types/app/bsky/richtext/facet'
+import { isListRule } from '../../lexicon/types/app/bsky/feed/threadgate'
 import {
   PostEmbedViews,
   FeedGenInfo,
@@ -47,6 +41,7 @@ import { LabelCache } from '../../label-cache'
 import { ActorInfoMap, ActorService } from '../actor'
 import { ListInfoMap, GraphService } from '../graph'
 import { AtUri } from '@atproto/syntax'
+import { parseThreadGate } from './util'
 
 export class FeedViews {
   constructor(
@@ -219,16 +214,14 @@ export class FeedViews {
         ? {
             repost: post.requesterRepost ?? undefined,
             like: post.requesterLike ?? undefined,
-            canReply: viewer
-              ? this.userCanReply(
-                  uri,
-                  actors,
-                  posts,
-                  threadgates,
-                  lists,
-                  viewer,
-                )
-              : undefined,
+            blockedByGate: this.userBlockedByGate(
+              uri,
+              actors,
+              posts,
+              threadgates,
+              lists,
+              viewer,
+            ),
           }
         : undefined,
       labels: [...postLabels, ...postSelfLabels],
@@ -239,63 +232,48 @@ export class FeedViews {
     }
   }
 
-  userCanReply(
+  userBlockedByGate(
     uri: string,
     actors: ActorInfoMap,
     posts: PostInfoMap,
     threadgates: ThreadgateInfoMap,
     lists: ListInfoMap,
-    viewer: string,
-  ): boolean {
-    if (posts[uri]?.violatesThreadGate) {
+    viewer: string | null,
+  ): boolean | undefined {
+    if (viewer === null) {
+      return undefined
+    } else if (posts[uri]?.violatesThreadGate) {
+      return true
+    }
+
+    const rootUriStr: string =
+      posts[uri]?.record?.['reply']?.['root']?.['uri'] ?? uri
+    const gate = threadgates[rootUriStr]?.record
+    if (!gate) {
+      return undefined
+    }
+    const rootPost = posts[rootUriStr]?.record as PostRecord | undefined
+    const ownerDid = new AtUri(rootUriStr).hostname
+
+    const {
+      canReply,
+      allowFollowing,
+      allowListUris = [],
+    } = parseThreadGate(viewer, ownerDid, rootPost ?? null, gate ?? null)
+
+    if (canReply) {
       return false
     }
-    const rootUriStr = posts[uri]?.record?.['reply']?.['root']?.['uri'] ?? uri
-    const gateInfo = threadgates[rootUriStr]
-    if (!gateInfo) {
-      return true
+    if (allowFollowing && actors[ownerDid]?.viewer?.followedBy) {
+      return false
     }
-    const rootUri = new AtUri(rootUriStr)
-    if (viewer === rootUri.hostname) {
-      return true
-    }
-    const gate = gateInfo.record as GateRecord
-    if (!gate.allow) {
-      return true
-    }
-
-    const allowMentions = gate.allow.find(isMentionRule)
-    const allowFollowing = gate.allow.find(isFollowingRule)
-    const allowListUris = gate.allow
-      ?.filter(isListRule)
-      .map((item) => item.list)
-
-    // check mentions first since it's quick and synchronous
-    if (allowMentions) {
-      const rootPost = posts[rootUriStr]?.record as PostRecord
-      const isMentioned = rootPost?.facets?.some((facet) => {
-        return facet.features.some(
-          (item) => isMention(item) && item.did === viewer,
-        )
-      })
-      if (isMentioned) {
-        return true
-      }
-    }
-
-    const threadOwner = actors[rootUri.hostname]
-    if (allowFollowing && threadOwner?.viewer?.followedBy) {
-      return true
-    }
-
     for (const listUri of allowListUris) {
       const list = lists[listUri]
       if (list?.viewerInList) {
-        return true
+        return false
       }
     }
-
-    return false
+    return true
   }
 
   formatMaybePostView(

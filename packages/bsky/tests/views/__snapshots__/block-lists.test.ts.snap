@@ -124,9 +124,7 @@ Object {
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(0)",
-      "viewer": Object {
-        "canReply": true,
-      },
+      "viewer": Object {},
     },
   },
 }
@@ -200,9 +198,7 @@ Object {
       "replyCount": 0,
       "repostCount": 0,
       "uri": "record(0)",
-      "viewer": Object {
-        "canReply": true,
-      },
+      "viewer": Object {},
     },
     "replies": Array [],
   },
@@ -256,7 +252,6 @@ Object {
       "repostCount": 1,
       "uri": "record(0)",
       "viewer": Object {
-        "canReply": true,
         "like": "record(4)",
         "repost": "record(3)",
       },

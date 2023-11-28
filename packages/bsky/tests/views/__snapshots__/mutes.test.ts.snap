@@ -142,9 +142,7 @@ Object {
     "replyCount": 2,
     "repostCount": 1,
     "uri": "record(0)",
-    "viewer": Object {
-      "canReply": true,
-    },
+    "viewer": Object {},
   },
   "replies": Array [
     Object {
@@ -183,9 +181,7 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "uri": "record(2)",
-        "viewer": Object {
-          "canReply": true,
-        },
+        "viewer": Object {},
       },
     },
     Object {
@@ -269,9 +265,7 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {
-          "canReply": true,
-        },
+        "viewer": Object {},
       },
     },
   ],

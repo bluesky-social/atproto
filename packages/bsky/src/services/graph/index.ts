@@ -94,7 +94,6 @@ export class GraphService {
         this.db.db
           .selectFrom('list_item')
           .whereRef('list_item.listUri', '=', ref('list.uri'))
-          .whereRef('list_item.creator', '=', ref('list.creator'))
           .where('list_item.subjectDid', '=', viewer ?? '')
           .select('list_item.uri')
           .as('viewerInList'),

@@ -420,7 +420,7 @@ async function validateReply(
   const violatesThreadGate = await feedutil.violatesThreadGate(
     db,
     creator,
-    new AtUri(reply.root.uri).host,
+    new AtUri(reply.root.uri).hostname,
     replyRefs.root?.record ?? null,
     replyRefs.gate?.record ?? null,
   )

@@ -51,7 +51,6 @@ Object {
         "repostCount": 1,
         "uri": "record(4)",
         "viewer": Object {
-          "canReply": true,
           "like": "record(7)",
         },
       },
@@ -134,9 +133,7 @@ Object {
       "replyCount": 1,
       "repostCount": 0,
       "uri": "record(5)",
-      "viewer": Object {
-        "canReply": true,
-      },
+      "viewer": Object {},
     },
     "replies": Array [],
   },
@@ -194,7 +191,6 @@ Object {
     "repostCount": 2,
     "uri": "record(0)",
     "viewer": Object {
-      "canReply": true,
       "repost": "record(6)",
     },
   },
@@ -249,7 +245,6 @@ Object {
     "repostCount": 1,
     "uri": "record(0)",
     "viewer": Object {
-      "canReply": true,
       "like": "record(4)",
     },
   },
@@ -289,9 +284,7 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {
-          "canReply": true,
-        },
+        "viewer": Object {},
       },
       "replies": Array [],
     },
@@ -374,9 +367,7 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(7)",
-        "viewer": Object {
-          "canReply": true,
-        },
+        "viewer": Object {},
       },
       "replies": Array [
         Object {
@@ -435,7 +426,6 @@ Object {
             "repostCount": 2,
             "uri": "record(8)",
             "viewer": Object {
-              "canReply": true,
               "repost": "record(9)",
             },
           },
@@ -494,7 +484,6 @@ Object {
     "repostCount": 1,
     "uri": "record(0)",
     "viewer": Object {
-      "canReply": true,
       "like": "record(4)",
     },
   },
@@ -534,9 +523,7 @@ Object {
         "replyCount": 0,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {
-          "canReply": true,
-        },
+        "viewer": Object {},
       },
     },
     Object {
@@ -618,9 +605,7 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(7)",
-        "viewer": Object {
-          "canReply": true,
-        },
+        "viewer": Object {},
       },
     },
   ],
@@ -673,9 +658,7 @@ Object {
     "replyCount": 1,
     "repostCount": 0,
     "uri": "record(0)",
-    "viewer": Object {
-      "canReply": true,
-    },
+    "viewer": Object {},
   },
   "replies": Array [
     Object {
@@ -714,9 +697,7 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(4)",
-        "viewer": Object {
-          "canReply": true,
-        },
+        "viewer": Object {},
       },
       "replies": Array [
         Object {
@@ -774,9 +755,7 @@ Object {
             "replyCount": 0,
             "repostCount": 0,
             "uri": "record(5)",
-            "viewer": Object {
-              "canReply": true,
-            },
+            "viewer": Object {},
           },
           "replies": Array [],
         },
@@ -832,9 +811,7 @@ Object {
     "replyCount": 0,
     "repostCount": 0,
     "uri": "record(0)",
-    "viewer": Object {
-      "canReply": true,
-    },
+    "viewer": Object {},
   },
   "replies": Array [],
 }
@@ -901,9 +878,7 @@ Object {
     "replyCount": 0,
     "repostCount": 0,
     "uri": "record(0)",
-    "viewer": Object {
-      "canReply": true,
-    },
+    "viewer": Object {},
   },
   "replies": Array [],
 }
@@ -971,7 +946,6 @@ Object {
     "repostCount": 2,
     "uri": "record(0)",
     "viewer": Object {
-      "canReply": true,
       "repost": "record(6)",
     },
   },
@@ -1041,7 +1015,6 @@ Object {
     "repostCount": 2,
     "uri": "record(0)",
     "viewer": Object {
-      "canReply": true,
       "repost": "record(6)",
     },
   },
@@ -1096,7 +1069,6 @@ Object {
     "repostCount": 1,
     "uri": "record(0)",
     "viewer": Object {
-      "canReply": true,
       "like": "record(4)",
     },
   },
@@ -1180,9 +1152,7 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {
-          "canReply": true,
-        },
+        "viewer": Object {},
       },
       "replies": Array [
         Object {
@@ -1241,7 +1211,6 @@ Object {
             "repostCount": 2,
             "uri": "record(6)",
             "viewer": Object {
-              "canReply": true,
               "repost": "record(7)",
             },
           },
@@ -1300,7 +1269,6 @@ Object {
     "repostCount": 1,
     "uri": "record(0)",
     "viewer": Object {
-      "canReply": true,
       "like": "record(4)",
     },
   },
@@ -1384,9 +1352,7 @@ Object {
         "replyCount": 1,
         "repostCount": 0,
         "uri": "record(5)",
-        "viewer": Object {
-          "canReply": true,
-        },
+        "viewer": Object {},
       },
       "replies": Array [],
     },
