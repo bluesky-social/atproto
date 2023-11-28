@@ -4,15 +4,37 @@ import { toSimplifiedISOSafe } from '@atproto/common'
 import { Database } from '../../db'
 import { Label, isSelfLabels } from '../../lexicon/types/com/atproto/label/defs'
 import { ids } from '../../lexicon/lexicons'
-import { LabelCache } from '../../label-cache'
+import { RedisCache } from '../../cache/redis'
+import { ReadThroughCache } from '../../cache/read-through'
 
 export type Labels = Record<string, Label[]>
 
-export class LabelService {
-  constructor(public db: Database, public cache: LabelCache) {}
+export type LabelCacheOpts = {
+  cache: RedisCache
+  staleTTL: number
+  maxTTL: number
+}
 
-  static creator(cache: LabelCache) {
-    return (db: Database) => new LabelService(db, cache)
+export class LabelService {
+  public cache: ReadThroughCache<Label[]> | null
+
+  constructor(public db: Database, cacheOpts: LabelCacheOpts | null) {
+    if (cacheOpts) {
+      this.cache = new ReadThroughCache(cacheOpts.cache, {
+        ...cacheOpts,
+        namespace: 'label',
+        fetchMethod: async (subject: string) => {
+          const res = await fetchLabelsForSubjects(db, [subject])
+          return res[subject] ?? null
+        },
+        fetchManyMethod: (subjects: string[]) =>
+          fetchLabelsForSubjects(db, subjects),
+      })
+    }
+  }
+
+  static creator(cacheOpts: LabelCacheOpts | null) {
+    return (db: Database) => new LabelService(db, cacheOpts)
   }
 
   async formatAndCreate(
@@ -73,7 +95,9 @@ export class LabelService {
     },
   ): Promise<Labels> {
     if (subjects.length < 1) return {}
-    const res = await this.cache.getMany(subjects, opts)
+    const res = this.cache
+      ? await this.cache.getMany(subjects, opts)
+      : fetchLabelsForSubjects(this.db, subjects)
     // @TODO add includeNeg
     return res
   }
@@ -156,4 +180,27 @@ export function getSelfLabels(details: {
   return record.labels.values.map(({ val }) => {
     return { src, uri, cid, val, cts, neg: false }
   })
+}
+
+const fetchLabelsForSubjects = async (
+  db: Database,
+  subjects: string[],
+): Promise<Record<string, Label[]>> => {
+  if (subjects.length < 0) {
+    return {}
+  }
+  const res = await db.db
+    .selectFrom('label')
+    .where('label.uri', 'in', subjects)
+    .selectAll()
+    .execute()
+  return res.reduce((acc, cur) => {
+    acc[cur.uri] ??= []
+    acc[cur.uri].push({
+      ...cur,
+      cid: cur.cid === '' ? undefined : cur.cid,
+      neg: cur.neg,
+    })
+    return acc
+  }, {} as Record<string, Label[]>)
 }

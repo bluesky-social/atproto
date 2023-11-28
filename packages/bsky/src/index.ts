@@ -23,10 +23,10 @@ import {
 } from './image/invalidator'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
-import { LabelCache } from './label-cache'
 import { NotificationServer } from './notifications'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
+import { RedisCache } from './cache/redis'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
@@ -102,12 +102,11 @@ export class BskyAppView {
     }
 
     const backgroundQueue = new BackgroundQueue(db.getPrimary())
-    const labelCache = new LabelCache(db.getPrimary(), {
-      redisHost: config.redisScratchHost,
-      redisPassword: config.redisScratchPassword,
-      staleTTL: 10000, // @TODO move to cfg
-      maxTTL: 60000,
-    })
+    const redisCache = new RedisCache(
+      config.redisScratchHost,
+      config.redisScratchPassword,
+    )
+
     const notifServer = new NotificationServer(db.getPrimary())
     const searchAgent = config.searchEndpoint
       ? new AtpAgent({ service: config.searchEndpoint })
@@ -116,7 +115,11 @@ export class BskyAppView {
     const services = createServices({
       imgUriBuilder,
       imgInvalidator,
-      labelCache,
+      labelCacheOpts: {
+        cache: redisCache,
+        staleTTL: 5000,
+        maxTTL: 60000,
+      },
     })
 
     const ctx = new AppContext({
@@ -127,7 +130,7 @@ export class BskyAppView {
       signingKey,
       idResolver,
       didCache,
-      labelCache,
+      redisCache,
       backgroundQueue,
       searchAgent,
       algos,
@@ -201,7 +204,7 @@ export class BskyAppView {
   }
 
   async destroy(opts?: { skipDb: boolean }): Promise<void> {
-    await this.ctx.labelCache.close()
+    await this.ctx.redisCache.close()
     await this.ctx.didCache.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()

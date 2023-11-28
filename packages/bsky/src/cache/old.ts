@@ -1,14 +1,14 @@
 import { Redis } from 'ioredis'
 import PQueue from 'p-queue'
-import { addressParts } from './redis'
-import { cacheLogger as log } from './logger'
+import { addressParts } from '../redis'
+import { cacheLogger as log } from '../logger'
 
-type CacheItem<T> = {
+export type CacheItem<T> = {
   val: T | null
   updatedAt: number
 }
 
-type CacheResult<T> = {
+export type CacheResult<T> = {
   val: T | null
   updatedAt: number
   stale: boolean

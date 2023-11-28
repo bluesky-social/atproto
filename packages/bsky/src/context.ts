@@ -11,8 +11,8 @@ import * as auth from './auth'
 import DidRedisCache from './did-cache'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
-import { LabelCache } from './label-cache'
 import { NotificationServer } from './notifications'
+import { RedisCache } from './cache/redis'
 
 export class AppContext {
   public moderationPushAgent: AtpAgent | undefined
@@ -25,7 +25,7 @@ export class AppContext {
       signingKey: Keypair
       idResolver: IdResolver
       didCache: DidRedisCache
-      labelCache: LabelCache
+      redisCache: RedisCache
       backgroundQueue: BackgroundQueue
       searchAgent?: AtpAgent
       algos: MountedAlgos
@@ -74,8 +74,8 @@ export class AppContext {
     return this.opts.didCache
   }
 
-  get labelCache(): LabelCache {
-    return this.opts.labelCache
+  get redisCache(): RedisCache {
+    return this.opts.redisCache
   }
 
   get notifServer(): NotificationServer {
