@@ -1,90 +1,35 @@
-import { wait } from '@atproto/common'
 import { PrimaryDatabase } from './db'
-import { Label } from './db/tables/label'
-import { labelerLogger as log } from './logger'
+import { Cache } from './cache'
+import { Redis } from 'ioredis'
+import { Label } from './lexicon/types/com/atproto/label/defs'
 
-export class LabelCache {
-  bySubject: Record<string, Label[]> = {}
-  latestLabel = ''
-  refreshes = 0
-
-  destroyed = false
-
-  constructor(public db: PrimaryDatabase) {}
-
-  start() {
-    this.poll()
+export class LabelCache extends Cache<Label[]> {
+  constructor(
+    public db: PrimaryDatabase,
+    public redis: Redis,
+    public staleTTL: number,
+    public maxTTL: number,
+  ) {
+    super(redis, staleTTL, maxTTL)
   }
 
-  async fullRefresh() {
-    const allLabels = await this.db.db.selectFrom('label').selectAll().execute()
-    this.wipeCache()
-    this.processLabels(allLabels)
-  }
-
-  async partialRefresh() {
-    const labels = await this.db.db
+  async fetchMany(subjects: string[]): Promise<Record<string, Label[]>> {
+    if (subjects.length < 0) {
+      return {}
+    }
+    const res = await this.db.db
       .selectFrom('label')
+      .where('label.uri', 'in', subjects)
       .selectAll()
-      .where('cts', '>', this.latestLabel)
       .execute()
-    this.processLabels(labels)
-  }
-
-  async poll() {
-    try {
-      if (this.destroyed) return
-      if (this.refreshes >= 120) {
-        await this.fullRefresh()
-        this.refreshes = 0
-      } else {
-        await this.partialRefresh()
-        this.refreshes++
-      }
-    } catch (err) {
-      log.error(
-        { err, latestLabel: this.latestLabel, refreshes: this.refreshes },
-        'label cache failed to refresh',
-      )
-    }
-    await wait(500)
-    this.poll()
-  }
-
-  processLabels(labels: Label[]) {
-    for (const label of labels) {
-      if (label.cts > this.latestLabel) {
-        this.latestLabel = label.cts
-      }
-      this.bySubject[label.uri] ??= []
-      this.bySubject[label.uri].push(label)
-    }
-  }
-
-  wipeCache() {
-    this.bySubject = {}
-  }
-
-  stop() {
-    this.destroyed = true
-  }
-
-  forSubject(subject: string, includeNeg = false): Label[] {
-    const labels = this.bySubject[subject] ?? []
-    return includeNeg ? labels : labels.filter((l) => l.neg === false)
-  }
-
-  forSubjects(subjects: string[], includeNeg?: boolean): Label[] {
-    let labels: Label[] = []
-    const alreadyAdded = new Set<string>()
-    for (const subject of subjects) {
-      if (alreadyAdded.has(subject)) {
-        continue
-      }
-      const subLabels = this.forSubject(subject, includeNeg)
-      labels = [...labels, ...subLabels]
-      alreadyAdded.add(subject)
-    }
-    return labels
+    return res.reduce((acc, cur) => {
+      acc[cur.uri] ??= []
+      acc[cur.uri].push({
+        ...cur,
+        cid: cur.cid === '' ? undefined : cur.cid,
+        neg: cur.neg,
+      })
+      return acc
+    }, {} as Record<string, Label[]>)
   }
 }

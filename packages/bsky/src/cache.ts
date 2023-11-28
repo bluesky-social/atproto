@@ -1,0 +1,121 @@
+import { Redis } from 'ioredis'
+
+type CacheItem<T> = {
+  val: T | null
+  updatedAt: number
+}
+
+type CacheResult<T> = {
+  val: T | null
+  updatedAt: number
+  stale: boolean
+  expired: boolean
+}
+
+export abstract class Cache<T> {
+  constructor(
+    public redis: Redis,
+    public staleTTL: number,
+    public maxTTL: number,
+  ) {}
+
+  abstract fetchMany(keys: string[]): Promise<Record<string, T | null>>
+
+  async fetch(key: string): Promise<T | null> {
+    const fetched = await this.fetchMany([key])
+    return fetched[key] ?? null
+  }
+
+  async fetchAndCacheMany(keys: string[]): Promise<Record<string, T>> {
+    const fetched = await this.fetchMany(keys)
+    this.setMany(fetched).catch(() => {})
+    return removeNulls(fetched)
+  }
+
+  async fetchAndCache(key: string): Promise<T | null> {
+    const fetched = await this.fetch(key)
+    this.set(key, fetched).catch(() => {})
+    return fetched
+  }
+
+  parseCacheResult(got: string | null): CacheResult<T> | null {
+    if (!got) return null
+    const { val, updatedAt } = JSON.parse(got) as CacheItem<T>
+    const now = Date.now()
+    const expired = now > updatedAt + this.maxTTL
+    const stale = now > updatedAt + this.staleTTL
+    return {
+      val,
+      updatedAt,
+      expired,
+      stale,
+    }
+  }
+
+  async get(key: string): Promise<T | null> {
+    const got = await this.redis.get(key)
+    const cached = this.parseCacheResult(got)
+    if (!cached || cached.expired) {
+      return this.fetchAndCache(key)
+    }
+    if (cached.stale) {
+      this.fetchAndCache(key).catch(() => {})
+    }
+    return cached.val
+  }
+
+  async getMany(keys: string[]): Promise<Record<string, T>> {
+    const got = await this.redis.mget(...keys)
+    const cached = got.map((val) => this.parseCacheResult(val))
+    const stale: string[] = []
+    const toFetch: string[] = []
+    const results: Record<string, T> = {}
+    for (let i = 0; i < keys.length; i++) {
+      const val = cached[i]
+      if (!val || val.expired) {
+        toFetch.push(keys[i])
+      } else if (val.stale) {
+        stale.push(keys[i])
+      } else if (val.val) {
+        results[keys[i]] = val.val
+      }
+    }
+    const fetched = await this.fetchAndCacheMany(toFetch)
+    this.fetchAndCacheMany(stale).catch(() => {})
+    return {
+      ...results,
+      ...fetched,
+    }
+  }
+
+  async set(key: string, val: T | null) {
+    return this.setMany({ [key]: val })
+  }
+
+  async setMany(vals: Record<string, T | null>) {
+    const toSet: string[] = []
+    let builder = this.redis.multi({ pipeline: true })
+    for (const key of Object.keys(vals)) {
+      toSet.push(key)
+      const val = JSON.stringify({
+        val: vals[key],
+        updatedAt: Date.now(),
+      })
+      builder = builder.set(key, val).pexpire(key, this.maxTTL)
+    }
+    await builder.exec()
+  }
+
+  async clearEntry(key: string) {
+    await this.redis.del(key)
+  }
+}
+
+const removeNulls = <T>(obj: Record<string, T | null>): Record<string, T> => {
+  return Object.entries(obj).reduce((acc, [key, val]) => {
+    if (val !== null) {
+      acc[key] = val
+    }
+    return acc
+  }, {} as Record<string, T>)
+}

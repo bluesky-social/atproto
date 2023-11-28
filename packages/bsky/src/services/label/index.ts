@@ -9,9 +9,9 @@ import { LabelCache } from '../../label-cache'
 export type Labels = Record<string, Label[]>
 
 export class LabelService {
-  constructor(public db: Database, public cache: LabelCache | null) {}
+  constructor(public db: Database, public cache: LabelCache) {}
 
-  static creator(cache: LabelCache | null) {
+  static creator(cache: LabelCache) {
     return (db: Database) => new LabelService(db, cache)
   }
 
@@ -73,15 +73,9 @@ export class LabelService {
     },
   ): Promise<Labels> {
     if (subjects.length < 1) return {}
-    const res =
-      this.cache === null || opts?.skipCache
-        ? await this.db.db
-            .selectFrom('label')
-            .where('label.uri', 'in', subjects)
-            .if(!opts?.includeNeg, (qb) => qb.where('neg', '=', false))
-            .selectAll()
-            .execute()
-        : this.cache.forSubjects(subjects, opts?.includeNeg)
+    const res = opts?.skipCache
+      ? await this.cache.fetchAndCacheMany(subjects)
+      : this.cache.forSubjects(subjects, opts?.includeNeg)
     return res.reduce((acc, cur) => {
       acc[cur.uri] ??= []
       acc[cur.uri].push({
