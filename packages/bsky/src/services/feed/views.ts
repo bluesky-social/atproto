@@ -214,7 +214,7 @@ export class FeedViews {
         ? {
             repost: post.requesterRepost ?? undefined,
             like: post.requesterLike ?? undefined,
-            blockedByGate: this.userBlockedByGate(
+            excludedByGate: this.userExcludedByGate(
               uri,
               actors,
               posts,
@@ -232,7 +232,7 @@ export class FeedViews {
     }
   }
 
-  userBlockedByGate(
+  userExcludedByGate(
     uri: string,
     actors: ActorInfoMap,
     posts: PostInfoMap,

@@ -4892,7 +4892,7 @@ export const schemaDict = {
             type: 'string',
             format: 'at-uri',
           },
-          blockedByGate: {
+          excludedByGate: {
             type: 'boolean',
           },
         },

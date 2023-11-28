@@ -39,7 +39,7 @@
       "properties": {
         "repost": { "type": "string", "format": "at-uri" },
         "like": { "type": "string", "format": "at-uri" },
-        "blockedByGate": { "type": "boolean" }
+        "excludedByGate": { "type": "boolean" }
       }
     },
     "feedViewPost": {

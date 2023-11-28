@@ -48,7 +48,7 @@ export function validatePostView(v: unknown): ValidationResult {
 export interface ViewerState {
   repost?: string
   like?: string
-  blockedByGate?: boolean
+  excludedByGate?: boolean
   [k: string]: unknown
 }
 
