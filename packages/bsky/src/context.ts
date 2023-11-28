@@ -8,7 +8,7 @@ import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import * as auth from './auth'
-import DidSqlCache from './did-cache'
+import DidRedisCache from './did-cache'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
 import { LabelCache } from './label-cache'
@@ -24,7 +24,7 @@ export class AppContext {
       services: Services
       signingKey: Keypair
       idResolver: IdResolver
-      didCache: DidSqlCache
+      didCache: DidRedisCache
       labelCache: LabelCache
       backgroundQueue: BackgroundQueue
       searchAgent?: AtpAgent
@@ -70,7 +70,7 @@ export class AppContext {
     return this.opts.idResolver
   }
 
-  get didCache(): DidSqlCache {
+  get didCache(): DidRedisCache {
     return this.opts.didCache
   }
 

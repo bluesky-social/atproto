@@ -5,6 +5,8 @@ export interface IndexerConfigValues {
   version: string
   dbPostgresUrl: string
   dbPostgresSchema?: string
+  redisScratchHost: string
+  redisScratchPassword?: string
   redisHost?: string // either set redis host, or both sentinel name and hosts
   redisSentinelName?: string
   redisSentinelHosts?: string[]
@@ -41,6 +43,11 @@ export class IndexerConfig {
       overrides?.dbPostgresUrl || process.env.DB_PRIMARY_POSTGRES_URL
     const dbPostgresSchema =
       overrides?.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
+    const redisScratchHost =
+      overrides?.redisScratchHost || process.env.REDIS_SCRATCH_HOST
+    assert(redisScratchHost)
+    const redisScratchPassword =
+      overrides?.redisScratchPassword || process.env.REDIS_SCRATCH_PASSWORD
     const redisHost =
       overrides?.redisHost || process.env.REDIS_HOST || undefined
     const redisSentinelName =
@@ -103,6 +110,8 @@ export class IndexerConfig {
       version,
       dbPostgresUrl,
       dbPostgresSchema,
+      redisScratchHost,
+      redisScratchPassword,
       redisHost,
       redisSentinelName,
       redisSentinelHosts,
@@ -142,6 +151,14 @@ export class IndexerConfig {
 
   get dbPostgresSchema() {
     return this.cfg.dbPostgresSchema
+  }
+
+  get redisScratchHost() {
+    return this.cfg.redisScratchHost
+  }
+
+  get redisScratchPassword() {
+    return this.cfg.redisScratchPassword
   }
 
   get redisHost() {

@@ -42,6 +42,7 @@ export class TestBsky {
       serverDid,
       didCacheStaleTTL: HOUR,
       didCacheMaxTTL: DAY,
+      redisScratchHost: cfg.redisHost,
       ...cfg,
       // Each test suite gets its own lock id for the repo subscription
       adminPassword: ADMIN_PASSWORD,
@@ -90,6 +91,7 @@ export class TestBsky {
       didCacheStaleTTL: HOUR,
       didCacheMaxTTL: DAY,
       labelerDid: 'did:example:labeler',
+      redisScratchHost: cfg.redisHost,
       redisHost: cfg.redisHost,
       dbPostgresUrl: cfg.dbPrimaryPostgresUrl,
       dbPostgresSchema: cfg.dbPostgresSchema,
@@ -243,6 +245,7 @@ export async function getIndexers(
     didCacheMaxTTL: DAY,
     labelerDid: 'did:example:labeler',
     labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
+    redisScratchHost: process.env.REDIS_HOST || '',
     redisHost: process.env.REDIS_HOST || '',
     dbPostgresUrl: process.env.DB_POSTGRES_URL || '',
     dbPostgresSchema: `appview_${name}`,

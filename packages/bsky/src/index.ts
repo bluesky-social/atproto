@@ -16,7 +16,7 @@ import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
 import AppContext from './context'
-import DidSqlCache from './did-cache'
+import DidRedisCache from './did-cache'
 import {
   ImageInvalidator,
   ImageProcessingServerInvalidator,
@@ -66,11 +66,12 @@ export class BskyAppView {
     app.use(loggerMiddleware)
     app.use(compression())
 
-    const didCache = new DidSqlCache(
-      db.getPrimary(),
-      config.didCacheStaleTTL,
-      config.didCacheMaxTTL,
-    )
+    const didCache = new DidRedisCache({
+      redisHost: config.redisScratchHost,
+      redisPassword: config.redisScratchPassword,
+      staleTTL: config.didCacheStaleTTL,
+      maxTTL: config.didCacheMaxTTL,
+    })
     const idResolver = new IdResolver({
       plcUrl: config.didPlcUrl,
       didCache,

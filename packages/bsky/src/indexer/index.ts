@@ -2,7 +2,7 @@ import express from 'express'
 import { IdResolver } from '@atproto/identity'
 import { BackgroundQueue } from '../background'
 import { PrimaryDatabase } from '../db'
-import DidSqlCache from '../did-cache'
+import DidRedisCache from '../did-cache'
 import log from './logger'
 import { dbLogger } from '../logger'
 import { IndexerConfig } from './config'
@@ -44,11 +44,12 @@ export class BskyIndexer {
     imgInvalidator?: ImageInvalidator
   }): BskyIndexer {
     const { db, redis, cfg } = opts
-    const didCache = new DidSqlCache(
-      db,
-      cfg.didCacheStaleTTL,
-      cfg.didCacheMaxTTL,
-    )
+    const didCache = new DidRedisCache({
+      redisHost: cfg.redisScratchHost,
+      redisPassword: cfg.redisScratchPassword,
+      staleTTL: cfg.didCacheStaleTTL,
+      maxTTL: cfg.didCacheMaxTTL,
+    })
     const idResolver = new IdResolver({
       plcUrl: cfg.didPlcUrl,
       didCache,
