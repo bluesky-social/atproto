@@ -19,7 +19,7 @@ export class ReadThroughCache<T> {
     const got = await Promise.all(keys.map((k) => this.opts.fetchMethod(k)))
     const result: Record<string, T | null> = {}
     for (let i = 0; i < keys.length; i++) {
-      result[keys[i]] = got[i]
+      result[keys[i]] = got[i] ?? null
     }
     return result
   }
