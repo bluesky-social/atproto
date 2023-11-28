@@ -97,9 +97,17 @@ export class LabelService {
     if (subjects.length < 1) return {}
     const res = this.cache
       ? await this.cache.getMany(subjects, opts)
-      : fetchLabelsForSubjects(this.db, subjects)
-    // @TODO add includeNeg
-    return res
+      : await fetchLabelsForSubjects(this.db, subjects)
+
+    if (opts?.includeNeg) {
+      return res
+    }
+
+    const noNegs: Labels = {}
+    for (const [key, val] of Object.entries(res)) {
+      noNegs[key] = val.filter((label) => !label.neg)
+    }
+    return noNegs
   }
 
   // gets labels for any record. when did is present, combine labels for both did & profile record.
