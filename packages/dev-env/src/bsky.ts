@@ -146,8 +146,6 @@ export class TestBsky {
     await indexer.start()
     await server.start()
 
-    // we refresh label cache by hand in `processAll` instead of on a timer
-    server.ctx.labelCache.stop()
     return new TestBsky(url, port, server, indexer, ingester)
   }
 
@@ -186,7 +184,6 @@ export class TestBsky {
     await Promise.all([
       this.ctx.backgroundQueue.processAll(),
       this.indexer.ctx.backgroundQueue.processAll(),
-      this.ctx.labelCache.fullRefresh(),
     ])
   }
 
