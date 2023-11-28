@@ -38,7 +38,8 @@
       "type": "object",
       "properties": {
         "repost": { "type": "string", "format": "at-uri" },
-        "like": { "type": "string", "format": "at-uri" }
+        "like": { "type": "string", "format": "at-uri" },
+        "replyDisabled": { "type": "boolean" }
       }
     },
     "feedViewPost": {
@@ -87,8 +88,7 @@
             "type": "union",
             "refs": ["#threadViewPost", "#notFoundPost", "#blockedPost"]
           }
-        },
-        "viewer": { "type": "ref", "ref": "#viewerThreadState" }
+        }
       }
     },
     "notFoundPost": {
@@ -114,12 +114,6 @@
       "properties": {
         "did": { "type": "string", "format": "did" },
         "viewer": { "type": "ref", "ref": "app.bsky.actor.defs#viewerState" }
-      }
-    },
-    "viewerThreadState": {
-      "type": "object",
-      "properties": {
-        "canReply": { "type": "boolean" }
       }
     },
     "generatorView": {

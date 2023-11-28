@@ -17,6 +17,9 @@ import {
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import basicSeed from './seeds/basic'
 import { forSnapshot, paginateAll } from './_util'
+import { AuthRequiredError } from '@atproto/xrpc-server'
+import assert from 'assert'
+import { XRPCError } from '@atproto/xrpc'
 
 describe('feed generation', () => {
   let network: TestNetwork
@@ -33,6 +36,7 @@ describe('feed generation', () => {
   let feedUriBadPagination: string
   let feedUriPrime: string // Taken-down
   let feedUriPrimeRef: RecordRef
+  let feedUriNeedsAuth: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -52,11 +56,17 @@ describe('feed generation', () => {
     )
     const evenUri = AtUri.make(alice, 'app.bsky.feed.generator', 'even')
     const primeUri = AtUri.make(alice, 'app.bsky.feed.generator', 'prime')
+    const needsAuthUri = AtUri.make(
+      alice,
+      'app.bsky.feed.generator',
+      'needs-auth',
+    )
     gen = await network.createFeedGen({
       [allUri.toString()]: feedGenHandler('all'),
       [evenUri.toString()]: feedGenHandler('even'),
       [feedUriBadPagination.toString()]: feedGenHandler('bad-pagination'),
       [primeUri.toString()]: feedGenHandler('prime'),
+      [needsAuthUri.toString()]: feedGenHandler('needs-auth'),
     })
 
     const feedSuggestions = [
@@ -137,6 +147,16 @@ describe('feed generation', () => {
       },
       sc.getHeaders(alice),
     )
+    const needsAuth = await pdsAgent.api.app.bsky.feed.generator.create(
+      { repo: alice, rkey: 'needs-auth' },
+      {
+        did: gen.did,
+        displayName: 'Needs Auth',
+        description: 'Provides all feed candidates when authed',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
     await network.processAll()
     await agent.api.com.atproto.admin.takeModerationAction(
       {
@@ -161,6 +181,7 @@ describe('feed generation', () => {
     feedUriBadPagination = badPagination.uri
     feedUriPrime = prime.uri
     feedUriPrimeRef = new RecordRef(prime.uri, prime.cid)
+    feedUriNeedsAuth = needsAuth.uri
   })
 
   it('feed gen records can be updated', async () => {
@@ -198,11 +219,12 @@ describe('feed generation', () => {
 
     const paginatedAll: GeneratorView[] = results(await paginateAll(paginator))
 
-    expect(paginatedAll.length).toEqual(4)
+    expect(paginatedAll.length).toEqual(5)
     expect(paginatedAll[0].uri).toEqual(feedUriOdd)
-    expect(paginatedAll[1].uri).toEqual(feedUriBadPagination)
-    expect(paginatedAll[2].uri).toEqual(feedUriEven)
-    expect(paginatedAll[3].uri).toEqual(feedUriAll)
+    expect(paginatedAll[1].uri).toEqual(feedUriNeedsAuth)
+    expect(paginatedAll[2].uri).toEqual(feedUriBadPagination)
+    expect(paginatedAll[3].uri).toEqual(feedUriEven)
+    expect(paginatedAll[4].uri).toEqual(feedUriAll)
     expect(paginatedAll.map((fg) => fg.uri)).not.toContain(feedUriPrime) // taken-down
     expect(forSnapshot(paginatedAll)).toMatchSnapshot()
   })
@@ -348,7 +370,9 @@ describe('feed generation', () => {
           {},
           { headers: await network.serviceHeaders(sc.dids.bob) },
         )
-      expect(resEven.data.feeds.map((f) => f.likeCount)).toEqual([2, 0, 0, 0])
+      expect(resEven.data.feeds.map((f) => f.likeCount)).toEqual([
+        2, 0, 0, 0, 0,
+      ])
       expect(resEven.data.feeds.map((f) => f.uri)).not.toContain(feedUriPrime) // taken-down
     })
 
@@ -381,6 +405,16 @@ describe('feed generation', () => {
         { feed: feedUriEven },
         { headers: await network.serviceHeaders(alice, gen.did) },
       )
+      expect(feed.data.feed.map((item) => item.post.uri)).toEqual([
+        sc.posts[sc.dids.alice][0].ref.uriStr,
+        sc.posts[sc.dids.carol][0].ref.uriStr,
+        sc.replies[sc.dids.carol][0].ref.uriStr,
+      ])
+      expect(forSnapshot(feed.data.feed)).toMatchSnapshot()
+    })
+
+    it('resolves basic feed contents without auth.', async () => {
+      const feed = await agent.api.app.bsky.feed.getFeed({ feed: feedUriEven })
       expect(feed.data.feed.map((item) => item.post.uri)).toEqual([
         sc.posts[sc.dids.alice][0].ref.uriStr,
         sc.posts[sc.dids.carol][0].ref.uriStr,
@@ -461,6 +495,16 @@ describe('feed generation', () => {
       expect(feed.data['$auth']?.['iss']).toEqual(alice)
     })
 
+    it('passes through auth error from feed.', async () => {
+      const tryGetFeed = agent.api.app.bsky.feed.getFeed({
+        feed: feedUriNeedsAuth,
+      })
+      const err = await tryGetFeed.catch((err) => err)
+      assert(err instanceof XRPCError)
+      expect(err.status).toBe(401)
+      expect(err.message).toBe('This feed requires auth')
+    })
+
     it('provides timing info in server-timing header.', async () => {
       const result = await agent.api.app.bsky.feed.getFeed(
         { feed: feedUriEven },
@@ -482,8 +526,13 @@ describe('feed generation', () => {
   })
 
   const feedGenHandler =
-    (feedName: 'even' | 'all' | 'prime' | 'bad-pagination'): SkeletonHandler =>
+    (
+      feedName: 'even' | 'all' | 'prime' | 'bad-pagination' | 'needs-auth',
+    ): SkeletonHandler =>
     async ({ req, params }) => {
+      if (feedName === 'needs-auth' && !req.headers.authorization) {
+        throw new AuthRequiredError('This feed requires auth')
+      }
       const { limit, cursor } = params
       const candidates: SkeletonFeedPost[] = [
         { post: sc.posts[sc.dids.alice][0].ref.uriStr },

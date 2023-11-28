@@ -11,7 +11,7 @@ const NO_WHATS_HOT_LABELS: NotEmptyArray<string> = ['!no-promote']
 const handler: AlgoHandler = async (
   ctx: AppContext,
   params: SkeletonParams,
-  _viewer: string,
+  _viewer: string | null,
 ): Promise<AlgoResponse> => {
   const { limit = 50, cursor } = params
   const db = ctx.db.getReplica('feed')

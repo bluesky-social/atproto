@@ -71,7 +71,7 @@ export const verifyJwt = async (
   const sigBytes = ui8.fromString(sig, 'base64url')
   const verifySignatureWithKey = (key: string) => {
     return crypto.verifySignature(key, msgBytes, sigBytes, {
-      lowS: false,
+      allowMalleableSig: true,
     })
   }
 

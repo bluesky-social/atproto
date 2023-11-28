@@ -126,9 +126,6 @@ Object {
       "uri": "record(0)",
       "viewer": Object {},
     },
-    "viewer": Object {
-      "canReply": true,
-    },
   },
 }
 `;
@@ -204,9 +201,6 @@ Object {
       "viewer": Object {},
     },
     "replies": Array [],
-    "viewer": Object {
-      "canReply": true,
-    },
   },
 }
 `;
@@ -359,9 +353,6 @@ Object {
         },
       },
     ],
-    "viewer": Object {
-      "canReply": true,
-    },
   },
 }
 `;

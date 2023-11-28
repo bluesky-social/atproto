@@ -33,7 +33,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.feed.getFeed({
-    auth: ctx.authVerifierAnyAudience,
+    auth: ctx.authOptionalVerifierAnyAudience,
     handler: async ({ params, auth, req }) => {
       const db = ctx.db.getReplica()
       const feedService = ctx.services.feed(db)
@@ -98,22 +98,22 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
 
 const noBlocksOrMutes = (state: HydrationState) => {
   const { viewer } = state.params
-  state.feedItems = state.feedItems.filter(
-    (item) =>
+  state.feedItems = state.feedItems.filter((item) => {
+    if (!viewer) return true
+    return (
       !state.bam.block([viewer, item.postAuthorDid]) &&
       !state.bam.block([viewer, item.originatorDid]) &&
       !state.bam.mute([viewer, item.postAuthorDid]) &&
-      !state.bam.mute([viewer, item.originatorDid]),
-  )
+      !state.bam.mute([viewer, item.originatorDid])
+    )
+  })
   return state
 }
 
 const presentation = (state: HydrationState, ctx: Context) => {
   const { feedService } = ctx
   const { feedItems, cursor, passthrough, params } = state
-  const feed = feedService.views.formatFeed(feedItems, state, {
-    viewer: params.viewer,
-  })
+  const feed = feedService.views.formatFeed(feedItems, state, params.viewer)
   return {
     feed,
     cursor,
@@ -130,7 +130,7 @@ type Context = {
   authorization?: string
 }
 
-type Params = GetFeedParams & { viewer: string }
+type Params = GetFeedParams & { viewer: string | null }
 
 type SkeletonState = {
   params: Params
