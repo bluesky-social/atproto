@@ -4952,6 +4952,9 @@ export const schemaDict = {
             type: 'string',
             format: 'at-uri',
           },
+          replyDisabled: {
+            type: 'boolean',
+          },
         },
       },
       feedViewPost: {
@@ -5035,10 +5038,6 @@ export const schemaDict = {
               ],
             },
           },
-          viewer: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#viewerThreadState',
-          },
         },
       },
       notFoundPost: {
@@ -5084,14 +5083,6 @@ export const schemaDict = {
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#viewerState',
-          },
-        },
-      },
-      viewerThreadState: {
-        type: 'object',
-        properties: {
-          canReply: {
-            type: 'boolean',
           },
         },
       },

@@ -28,14 +28,18 @@ export const authVerifier =
     return { credentials: { did: payload.iss }, artifacts: { aud: opts.aud } }
   }
 
-export const authOptionalVerifier =
-  (idResolver: IdResolver, opts: { aud: string | null }) =>
-  async (reqCtx: { req: express.Request; res: express.Response }) => {
+export const authOptionalVerifier = (
+  idResolver: IdResolver,
+  opts: { aud: string | null },
+) => {
+  const verify = authVerifier(idResolver, opts)
+  return async (reqCtx: { req: express.Request; res: express.Response }) => {
     if (!reqCtx.req.headers.authorization) {
       return { credentials: { did: null } }
     }
-    return authVerifier(idResolver, opts)(reqCtx)
+    return verify(reqCtx)
   }
+}
 
 export const authOptionalAccessOrRoleVerifier = (
   idResolver: IdResolver,

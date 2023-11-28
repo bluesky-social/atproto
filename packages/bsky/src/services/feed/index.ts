@@ -44,6 +44,7 @@ import {
 import { FeedViews } from './views'
 import { LabelCache } from '../../label-cache'
 import { threadgateToPostUri, postToThreadgateUri } from './util'
+import { mapDefined } from '@atproto/common'
 
 export * from './types'
 
@@ -203,6 +204,11 @@ export class FeedService {
     return feedItems.reduce((acc, item) => {
       return Object.assign(acc, { [item.uri]: item })
     }, {} as Record<string, FeedRow>)
+  }
+
+  async postUrisToFeedItems(uris: string[]): Promise<FeedRow[]> {
+    const feedItems = await this.getFeedItems(uris)
+    return mapDefined(uris, (uri) => feedItems[uri])
   }
 
   feedItemRefs(items: FeedRow[]) {
@@ -399,7 +405,7 @@ export class FeedService {
     const actorInfos = this.services.actor.views.profileBasicPresentation(
       [...nestedDids],
       feedState,
-      { viewer },
+      viewer,
     )
     const recordEmbedViews: RecordEmbedViewRecordMap = {}
     for (const uri of nestedUris) {
@@ -423,6 +429,7 @@ export class FeedService {
           feedState.embeds,
           feedState.labels,
           feedState.lists,
+          viewer,
         )
         recordEmbedViews[uri] = this.views.getRecordEmbedView(
           uri,
