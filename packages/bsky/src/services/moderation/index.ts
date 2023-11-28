@@ -341,7 +341,7 @@ export class ModerationService {
         $type: isRevertingTakedown
           ? 'com.atproto.admin.defs#modEventReverseTakedown'
           : 'com.atproto.admin.defs#modEventUnmute',
-        comment,
+        comment: comment ?? undefined,
       },
       createdAt,
       createdBy,
@@ -513,7 +513,7 @@ export class ModerationService {
       event: {
         $type: 'com.atproto.admin.defs#modEventReport',
         reportType: reasonType,
-        comment: reason || null,
+        comment: reason,
       },
       createdBy: reportedBy,
       subject,

@@ -499,6 +499,7 @@ export const REVIEWCLOSED = 'com.atproto.admin.defs#reviewClosed'
 
 /** Take down a subject permanently or temporarily */
 export interface ModEventTakedown {
+  comment?: string
   /** Indicates how long the takedown should be in effect before automatically expiring. */
   durationInHours?: number
   [k: string]: unknown
@@ -578,6 +579,7 @@ export function validateModEventReport(v: unknown): ValidationResult {
 
 /** Apply/Negate labels on a subject */
 export interface ModEventLabel {
+  comment?: string
   createLabelVals: string[]
   negateLabelVals: string[]
   [k: string]: unknown
