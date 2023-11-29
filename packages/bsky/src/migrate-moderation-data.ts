@@ -43,6 +43,16 @@ const countEvents = async (db: PrimaryDatabase) => {
   return events.count
 }
 
+const getLatestReportLegacyRefId = async (db: PrimaryDatabase) => {
+  const events = await db.db
+    .selectFrom('moderation_event')
+    .select((eb) => eb.fn.max('legacyRefId').as('latestLegacyRefId'))
+    .where('action', '=', 'com.atproto.admin.defs#modEventReport')
+    .executeTakeFirstOrThrow()
+
+  return events.latestLegacyRefId
+}
+
 const countStatuses = async (db: PrimaryDatabase) => {
   const events = await db.db
     .selectFrom('moderation_subject_status')
@@ -75,7 +85,7 @@ const createEvents = async (
     'createdBy',
   ] as const
 
-  let totalActions = 0
+  let totalActions: number
   if (!opts?.onlyReportsAboveId) {
     await db.db
       .insertInto('moderation_event')
@@ -115,6 +125,8 @@ const createEvents = async (
       db.db,
     )
     console.log('Reset the id sequence for moderation_event')
+  } else {
+    totalActions = await countEvents(db)
   }
 
   await db.db
@@ -297,9 +309,17 @@ export async function MigrateModerationData() {
       `Found ${existingEventsCount} existing events. Migrating ${counts.reportsCount} reports only, ignoring actions`,
     )
     const reportMigrationStartedAt = Date.now()
-    // TODO: Make sure to set the appropriate last report id to ensure continuity before running the script
-    await createEvents(primaryDb, { onlyReportsAboveId: 1000000 })
-    await setReportedAtTimestamp(primaryDb)
+    const latestReportLegacyRefId = await getLatestReportLegacyRefId(primaryDb)
+
+    if (latestReportLegacyRefId) {
+      await createEvents(primaryDb, {
+        onlyReportsAboveId: latestReportLegacyRefId,
+      })
+      await setReportedAtTimestamp(primaryDb)
+    } else {
+      console.log('No reports have been migrated into events yet, bailing.')
+    }
+
     console.log(
       `Time spent: ${(Date.now() - reportMigrationStartedAt) / 1000} seconds`,
     )
