@@ -15,6 +15,7 @@ export class RedisCache {
     this.driver = new Redis({
       ...redisAddr,
       password,
+      commandTimeout: 50,
     })
     this.driver.on('error', (err) => {
       log.error({ host, err }, 'redis error')

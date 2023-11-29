@@ -44,7 +44,13 @@ export class ReadThroughCache<T> {
     if (opts?.skipCache) {
       return this.fetchAndCache(key)
     }
-    const cached = await this.redisCache.get<T>(key, this.opts.namespace)
+    let cached: CacheItem<T> | null
+    try {
+      cached = await this.redisCache.get<T>(key, this.opts.namespace)
+    } catch (err) {
+      cached = null
+      log.warn({ key, err }, 'failed to fetch value from cache')
+    }
     if (!cached || this.isExpired(cached)) {
       return this.fetchAndCache(key)
     }
@@ -63,7 +69,14 @@ export class ReadThroughCache<T> {
     if (opts?.skipCache) {
       return this.fetchAndCacheMany(keys)
     }
-    const cached = await this.redisCache.getMany<T>(keys, this.opts.namespace)
+    let cached: Record<string, CacheItem<T>>
+    try {
+      cached = await this.redisCache.getMany<T>(keys, this.opts.namespace)
+    } catch (err) {
+      cached = {}
+      log.warn({ keys, err }, 'failed to fetch values from cache')
+    }
+
     const stale: string[] = []
     const toFetch: string[] = []
     const results: Record<string, T> = {}
