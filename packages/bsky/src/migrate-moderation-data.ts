@@ -309,6 +309,39 @@ const syncBlobCids = async (db: PrimaryDatabase) => {
   console.log(`Updated blob cids on ${results.numUpdatedOrDeletedRows} rows`)
 }
 
+export async function migrateUnresolvedReports(db: PrimaryDatabase) {
+  const { ref } = db.db.dynamic
+  const reports = (await db.db
+    // @ts-ignore
+    .selectFrom('moderation_report')
+    .whereNotExists((qb) =>
+      qb
+        .selectFrom('moderation_report_resolution')
+        .selectAll()
+        // @ts-ignore
+        .whereRef('reportId', '=', ref('moderation_report.id')),
+    )
+    // @ts-ignore
+    .select((eb) => eb.fn.min<number>('id').as('firstUnresolvedReportId'))
+    .executeTakeFirstOrThrow()) as { firstUnresolvedReportId: number }
+
+  if (!reports.firstUnresolvedReportId) {
+    console.log('No unresolved reports to migrate')
+    return
+  }
+
+  console.log(
+    `Migrating unresolved reports from id ${reports.firstUnresolvedReportId}`,
+  )
+
+  await createEvents(db, {
+    onlyReportsAboveId: reports.firstUnresolvedReportId,
+  })
+  await processNewReports(db, reports.firstUnresolvedReportId)
+  await setReportedAtTimestamp(db)
+  console.log(`Migrated all unresolved reports`)
+}
+
 export async function MigrateModerationData() {
   const env = getEnv()
   const db = new DatabaseCoordinator({
@@ -362,6 +395,7 @@ export async function MigrateModerationData() {
   await createStatusFromActions(primaryDb)
   await setReportedAtTimestamp(primaryDb)
   await syncBlobCids(primaryDb)
+  await migrateUnresolvedReports(primaryDb)
 
   console.log(`Time spent: ${(Date.now() - startedAt) / 1000 / 60} minutes`)
   console.log('Migration complete!')
