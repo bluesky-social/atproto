@@ -62,6 +62,31 @@ const countStatuses = async (db: PrimaryDatabase) => {
   return events.count
 }
 
+const processNewReports = async (
+  db: PrimaryDatabase,
+  latestReportLegacyRefId: number,
+) => {
+  const newReports = await db.db
+    .selectFrom('moderation_event')
+    .where('action', '=', 'com.atproto.admin.defs#modEventReport')
+    .where('legacyRefId', '>', latestReportLegacyRefId)
+    .orderBy('legacyRefId', 'asc')
+    .selectAll()
+    .execute()
+
+  if (!newReports.length) {
+    console.log('No new reports to process')
+    return
+  }
+
+  console.log(`Processing ${newReports.length} new reports`)
+  // This will be slow but we need to run this in sequence
+  for (const newReport of newReports) {
+    await adjustModerationSubjectStatus(db, newReport)
+  }
+  console.log(`Completed processing ${newReports.length} new reports`)
+}
+
 const createEvents = async (
   db: PrimaryDatabase,
   opts?: { onlyReportsAboveId: number },
@@ -315,6 +340,7 @@ export async function MigrateModerationData() {
       await createEvents(primaryDb, {
         onlyReportsAboveId: latestReportLegacyRefId,
       })
+      await processNewReports(primaryDb, latestReportLegacyRefId)
       await setReportedAtTimestamp(primaryDb)
     } else {
       console.log('No reports have been migrated into events yet, bailing.')
