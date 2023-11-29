@@ -8,21 +8,21 @@ export type CacheItem<T> = {
 }
 
 export class RedisCache {
-  public redis: Redis
+  public driver: Redis
 
   constructor(host: string, password?: string) {
     const redisAddr = addressParts(host)
-    this.redis = new Redis({
+    this.driver = new Redis({
       ...redisAddr,
       password,
     })
-    this.redis.on('error', (err) => {
+    this.driver.on('error', (err) => {
       log.error({ host, err }, 'redis error')
     })
   }
 
   async get<T>(key: string, namespace?: string): Promise<CacheItem<T> | null> {
-    const got = await this.redis.get(ns(key, namespace))
+    const got = await this.driver.get(ns(key, namespace))
     return got ? JSON.parse(got) : null
   }
 
@@ -31,7 +31,7 @@ export class RedisCache {
     namespace?: string,
   ): Promise<Record<string, CacheItem<T>>> {
     const namespacedKeys = keys.map((k) => ns(k, namespace))
-    const got = await this.redis.mget(...namespacedKeys)
+    const got = await this.driver.mget(...namespacedKeys)
     const results: Record<string, CacheItem<T>> = {}
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i]
@@ -53,7 +53,7 @@ export class RedisCache {
     ttlMs?: number,
   ) {
     const toSet: string[] = []
-    let builder = this.redis.multi({ pipeline: true })
+    let builder = this.driver.multi({ pipeline: true })
     for (const key of Object.keys(vals)) {
       toSet.push(key)
       const val = JSON.stringify({
@@ -69,11 +69,11 @@ export class RedisCache {
   }
 
   async delete(key: string, namespace?: string) {
-    await this.redis.del(ns(key, namespace))
+    await this.driver.del(ns(key, namespace))
   }
 
   async close() {
-    await this.redis.quit()
+    await this.driver.quit()
   }
 }
 
