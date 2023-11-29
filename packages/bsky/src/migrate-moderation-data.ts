@@ -43,6 +43,16 @@ const countEvents = async (db: PrimaryDatabase) => {
   return events.count
 }
 
+const getLatestReportLegacyRefId = async (db: PrimaryDatabase) => {
+  const events = await db.db
+    .selectFrom('moderation_event')
+    .select((eb) => eb.fn.max('legacyRefId').as('latestLegacyRefId'))
+    .where('action', '=', 'com.atproto.admin.defs#modEventReport')
+    .executeTakeFirstOrThrow()
+
+  return events.latestLegacyRefId
+}
+
 const countStatuses = async (db: PrimaryDatabase) => {
   const events = await db.db
     .selectFrom('moderation_subject_status')
@@ -52,7 +62,10 @@ const countStatuses = async (db: PrimaryDatabase) => {
   return events.count
 }
 
-const createEvents = async (db: PrimaryDatabase) => {
+const createEvents = async (
+  db: PrimaryDatabase,
+  opts?: { onlyReportsAboveId: number },
+) => {
   const commonColumnsToSelect = [
     'subjectDid',
     'subjectUri',
@@ -72,50 +85,55 @@ const createEvents = async (db: PrimaryDatabase) => {
     'createdBy',
   ] as const
 
-  await db.db
-    .insertInto('moderation_event')
-    .columns([
-      'id',
-      ...commonColumnsToInsert,
-      'createLabelVals',
-      'negateLabelVals',
-      'durationInHours',
-      'expiresAt',
-    ])
-    .expression((eb) =>
-      eb
-        // @ts-ignore
-        .selectFrom('moderation_action')
-        // @ts-ignore
-        .select([
-          'id',
-          ...commonColumnsToSelect,
-          sql`CONCAT('com.atproto.admin.defs#modEvent', UPPER(SUBSTRING(SPLIT_PART(action, '#', 2) FROM 1 FOR 1)), SUBSTRING(SPLIT_PART(action, '#', 2) FROM 2))`.as(
-            'action',
-          ),
-          'createdBy',
-          'createLabelVals',
-          'negateLabelVals',
-          'durationInHours',
-          'expiresAt',
-        ])
-        .orderBy('id', 'asc'),
+  let totalActions: number
+  if (!opts?.onlyReportsAboveId) {
+    await db.db
+      .insertInto('moderation_event')
+      .columns([
+        'id',
+        ...commonColumnsToInsert,
+        'createLabelVals',
+        'negateLabelVals',
+        'durationInHours',
+        'expiresAt',
+      ])
+      .expression((eb) =>
+        eb
+          // @ts-ignore
+          .selectFrom('moderation_action')
+          // @ts-ignore
+          .select([
+            'id',
+            ...commonColumnsToSelect,
+            sql`CONCAT('com.atproto.admin.defs#modEvent', UPPER(SUBSTRING(SPLIT_PART(action, '#', 2) FROM 1 FOR 1)), SUBSTRING(SPLIT_PART(action, '#', 2) FROM 2))`.as(
+              'action',
+            ),
+            'createdBy',
+            'createLabelVals',
+            'negateLabelVals',
+            'durationInHours',
+            'expiresAt',
+          ])
+          .orderBy('id', 'asc'),
+      )
+      .execute()
+
+    totalActions = await countEvents(db)
+    console.log(`Created ${totalActions} events from actions`)
+
+    await sql`SELECT setval(pg_get_serial_sequence('moderation_event', 'id'), (select max(id) from moderation_event))`.execute(
+      db.db,
     )
-    .execute()
-
-  const totalActions = await countEvents(db)
-  console.log(`Created ${totalActions} events from actions`)
-
-  await sql`SELECT setval(pg_get_serial_sequence('moderation_event', 'id'), (select max(id) from moderation_event))`.execute(
-    db.db,
-  )
-  console.log('Reset the id sequence for moderation_event')
+    console.log('Reset the id sequence for moderation_event')
+  } else {
+    totalActions = await countEvents(db)
+  }
 
   await db.db
     .insertInto('moderation_event')
     .columns([...commonColumnsToInsert, 'meta', 'legacyRefId'])
-    .expression((eb) =>
-      eb
+    .expression((eb) => {
+      const builder = eb
         // @ts-ignore
         .selectFrom('moderation_report')
         // @ts-ignore
@@ -125,8 +143,15 @@ const createEvents = async (db: PrimaryDatabase) => {
           sql`"reportedByDid"`.as('createdBy'),
           sql`json_build_object('reportType', "reasonType")`.as('meta'),
           sql`id`.as('legacyRefId'),
-        ]),
-    )
+        ])
+
+      if (opts?.onlyReportsAboveId) {
+        // @ts-ignore
+        return builder.where('id', '>', opts.onlyReportsAboveId)
+      }
+
+      return builder
+    })
     .execute()
 
   const totalEvents = await countEvents(db)
@@ -272,9 +297,37 @@ export async function MigrateModerationData() {
 
   const primaryDb = db.getPrimary()
 
-  const counts = await countEntries(primaryDb)
-  const totalEntries = counts.actionsCount + counts.reportsCount
+  const [counts, existingEventsCount] = await Promise.all([
+    countEntries(primaryDb),
+    countEvents(primaryDb),
+  ])
 
+  // If there are existing events in the moderation_event table, we assume that the migration has already been run
+  // so we just bring over any new reports since last run
+  if (existingEventsCount) {
+    console.log(
+      `Found ${existingEventsCount} existing events. Migrating ${counts.reportsCount} reports only, ignoring actions`,
+    )
+    const reportMigrationStartedAt = Date.now()
+    const latestReportLegacyRefId = await getLatestReportLegacyRefId(primaryDb)
+
+    if (latestReportLegacyRefId) {
+      await createEvents(primaryDb, {
+        onlyReportsAboveId: latestReportLegacyRefId,
+      })
+      await setReportedAtTimestamp(primaryDb)
+    } else {
+      console.log('No reports have been migrated into events yet, bailing.')
+    }
+
+    console.log(
+      `Time spent: ${(Date.now() - reportMigrationStartedAt) / 1000} seconds`,
+    )
+    console.log('Migration complete!')
+    return
+  }
+
+  const totalEntries = counts.actionsCount + counts.reportsCount
   console.log(`Migrating ${totalEntries} rows of actions and reports`)
   const startedAt = Date.now()
   await createEvents(primaryDb)
