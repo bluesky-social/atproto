@@ -170,4 +170,33 @@ describe('redis cache', () => {
     expect(try2).toEqual('b')
     expect(hits).toBe(2)
   })
+
+  it('times out and fails open', async () => {
+    let val = 'a'
+    let hits = 0
+    const cache = new ReadThroughCache<string>(redisCache, {
+      staleTTL: 60000,
+      maxTTL: 60000,
+      namespace: 'test5',
+      fetchMethod: async () => {
+        hits++
+        return val
+      },
+    })
+
+    const try1 = await cache.get('1')
+    expect(try1).toEqual('a')
+
+    const orig = cache.redisCache.driver.get
+    cache.redisCache.driver.get = async (key) => {
+      await wait(100)
+      return orig(key)
+    }
+
+    val = 'b'
+
+    const try2 = await cache.get('1')
+    expect(try2).toEqual('b')
+    expect(hits).toBe(2)
+  })
 })
