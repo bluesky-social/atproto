@@ -11,6 +11,7 @@ import {
   RateLimiterOpts,
   Options as XrpcServerOptions,
 } from '@atproto/xrpc-server'
+import { MINUTE } from '@atproto/common'
 import API, { health, wellKnown, blobResolver } from './api'
 import { DatabaseCoordinator } from './db'
 import * as error from './error'
@@ -32,7 +33,6 @@ import { NotificationServer } from './notifications'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { RedisCache } from './cache/redis'
-import { MINUTE } from '@atproto/common'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
