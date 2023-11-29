@@ -50,6 +50,7 @@ export class TestBsky {
       triagePassword: TRIAGE_PASSWORD,
       labelerDid: 'did:example:labeler',
       feedGenDid: 'did:example:feedGen',
+      rateLimitsEnabled: false,
     })
 
     // shared across server, ingester, and indexer in order to share pool, avoid too many pg connections.

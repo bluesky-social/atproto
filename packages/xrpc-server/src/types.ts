@@ -85,7 +85,7 @@ export type StreamAuthVerifier = (ctx: {
   req: IncomingMessage
 }) => Promise<AuthOutput> | AuthOutput
 
-export type CalcKeyFn = (ctx: XRPCReqContext) => string
+export type CalcKeyFn = (ctx: XRPCReqContext) => string | null
 export type CalcPointsFn = (ctx: XRPCReqContext) => number
 
 export interface RateLimiterI {
@@ -101,29 +101,29 @@ export type RateLimiterCreator = (opts: {
   keyPrefix: string
   durationMs: number
   points: number
-  calcKey?: (ctx: XRPCReqContext) => string
-  calcPoints?: (ctx: XRPCReqContext) => number
+  calcKey?: CalcKeyFn
+  calcPoints?: CalcPointsFn
 }) => RateLimiterI
 
 export type ServerRateLimitDescription = {
   name: string
   durationMs: number
   points: number
-  calcKey?: (ctx: XRPCReqContext) => string
-  calcPoints?: (ctx: XRPCReqContext) => number
+  calcKey?: CalcKeyFn
+  calcPoints?: CalcPointsFn
 }
 
 export type SharedRateLimitOpts = {
   name: string
-  calcKey?: (ctx: XRPCReqContext) => string
-  calcPoints?: (ctx: XRPCReqContext) => number
+  calcKey?: CalcKeyFn
+  calcPoints?: CalcPointsFn
 }
 
 export type RouteRateLimitOpts = {
   durationMs: number
   points: number
-  calcKey?: (ctx: XRPCReqContext) => string
-  calcPoints?: (ctx: XRPCReqContext) => number
+  calcKey?: CalcKeyFn
+  calcPoints?: CalcPointsFn
 }
 
 export type HandlerRateLimitOpts = SharedRateLimitOpts | RouteRateLimitOpts
