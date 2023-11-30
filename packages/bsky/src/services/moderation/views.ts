@@ -1,4 +1,4 @@
-import { Selectable } from 'kysely'
+import { sql } from 'kysely'
 import { ArrayEl } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { INVALID_HANDLE } from '@atproto/syntax'
@@ -6,22 +6,25 @@ import { BlobRef, jsonStringToLex } from '@atproto/lexicon'
 import { Database } from '../../db'
 import { Actor } from '../../db/tables/actor'
 import { Record as RecordRow } from '../../db/tables/record'
-import { ModerationAction } from '../../db/tables/moderation'
 import {
+  ModEventView,
   RepoView,
   RepoViewDetail,
   RecordView,
   RecordViewDetail,
-  ActionView,
-  ActionViewDetail,
-  ReportView,
   ReportViewDetail,
   BlobView,
+  SubjectStatusView,
+  ModEventViewDetail,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
-import { ModerationReportRowWithHandle } from '.'
+import {
+  ModerationEventRowWithHandle,
+  ModerationSubjectStatusRowWithHandle,
+} from './types'
 import { getSelfLabels } from '../label'
+import { REASONOTHER } from '../../lexicon/types/com/atproto/moderation/defs'
 
 export class ModerationViews {
   constructor(private db: Database) {}
@@ -34,7 +37,7 @@ export class ModerationViews {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
-    const [info, actionResults] = await Promise.all([
+    const [info, subjectStatuses] = await Promise.all([
       await this.db.db
         .selectFrom('actor')
         .leftJoin('profile', 'profile.creator', 'actor.did')
@@ -50,31 +53,21 @@ export class ModerationViews {
         )
         .select(['actor.did as did', 'profile_record.json as profileJson'])
         .execute(),
-      this.db.db
-        .selectFrom('moderation_action')
-        .where('reversedAt', 'is', null)
-        .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
-        .where(
-          'subjectDid',
-          'in',
-          results.map((r) => r.did),
-        )
-        .select(['id', 'action', 'durationInHours', 'subjectDid'])
-        .execute(),
+      this.getSubjectStatus(results.map((r) => ({ did: r.did }))),
     ])
 
     const infoByDid = info.reduce(
       (acc, cur) => Object.assign(acc, { [cur.did]: cur }),
       {} as Record<string, ArrayEl<typeof info>>,
     )
-    const actionByDid = actionResults.reduce(
-      (acc, cur) => Object.assign(acc, { [cur.subjectDid ?? '']: cur }),
-      {} as Record<string, ArrayEl<typeof actionResults>>,
+    const subjectStatusByDid = subjectStatuses.reduce(
+      (acc, cur) =>
+        Object.assign(acc, { [cur.did ?? '']: this.subjectStatus(cur) }),
+      {},
     )
 
     const views = results.map((r) => {
       const { profileJson } = infoByDid[r.did] ?? {}
-      const action = actionByDid[r.did]
       const relatedRecords: object[] = []
       if (profileJson) {
         relatedRecords.push(
@@ -88,49 +81,125 @@ export class ModerationViews {
         relatedRecords,
         indexedAt: r.indexedAt,
         moderation: {
-          currentAction: action
-            ? {
-                id: action.id,
-                action: action.action,
-                durationInHours: action.durationInHours ?? undefined,
-              }
-            : undefined,
+          subjectStatus: subjectStatusByDid[r.did] ?? undefined,
         },
       }
     })
 
     return Array.isArray(result) ? views : views[0]
   }
+  event(result: EventResult): Promise<ModEventView>
+  event(result: EventResult[]): Promise<ModEventView[]>
+  async event(
+    result: EventResult | EventResult[],
+  ): Promise<ModEventView | ModEventView[]> {
+    const results = Array.isArray(result) ? result : [result]
+    if (results.length === 0) return []
+
+    const views = results.map((res) => {
+      const eventView: ModEventView = {
+        id: res.id,
+        event: {
+          $type: res.action,
+          comment: res.comment ?? undefined,
+        },
+        subject:
+          res.subjectType === 'com.atproto.admin.defs#repoRef'
+            ? {
+                $type: 'com.atproto.admin.defs#repoRef',
+                did: res.subjectDid,
+              }
+            : {
+                $type: 'com.atproto.repo.strongRef',
+                uri: res.subjectUri,
+                cid: res.subjectCid,
+              },
+        subjectBlobCids: [],
+        createdBy: res.createdBy,
+        createdAt: res.createdAt,
+        subjectHandle: res.subjectHandle ?? undefined,
+        creatorHandle: res.creatorHandle ?? undefined,
+      }
+
+      if (
+        [
+          'com.atproto.admin.defs#modEventTakedown',
+          'com.atproto.admin.defs#modEventMute',
+        ].includes(res.action)
+      ) {
+        eventView.event = {
+          ...eventView.event,
+          durationInHours: res.durationInHours ?? undefined,
+        }
+      }
+
+      if (res.action === 'com.atproto.admin.defs#modEventLabel') {
+        eventView.event = {
+          ...eventView.event,
+          createLabelVals: res.createLabelVals?.length
+            ? res.createLabelVals.split(' ')
+            : [],
+          negateLabelVals: res.negateLabelVals?.length
+            ? res.negateLabelVals.split(' ')
+            : [],
+        }
+      }
+
+      if (res.action === 'com.atproto.admin.defs#modEventReport') {
+        eventView.event = {
+          ...eventView.event,
+          reportType: res.meta?.reportType ?? undefined,
+        }
+      }
+
+      if (res.action === 'com.atproto.admin.defs#modEventEmail') {
+        eventView.event = {
+          ...eventView.event,
+          subject: res.meta?.subject ?? undefined,
+        }
+      }
+
+      if (
+        res.action === 'com.atproto.admin.defs#modEventComment' &&
+        res.meta?.sticky
+      ) {
+        eventView.event.sticky = true
+      }
+
+      return eventView
+    })
+
+    return Array.isArray(result) ? views : views[0]
+  }
+
+  async eventDetail(result: EventResult): Promise<ModEventViewDetail> {
+    const [event, subject] = await Promise.all([
+      this.event(result),
+      this.subject(result),
+    ])
+    const allBlobs = findBlobRefs(subject.value)
+    const subjectBlobs = await this.blob(
+      allBlobs.filter((blob) =>
+        event.subjectBlobCids.includes(blob.ref.toString()),
+      ),
+    )
+    return {
+      ...event,
+      subject,
+      subjectBlobs,
+    }
+  }
 
   async repoDetail(result: RepoResult): Promise<RepoViewDetail> {
-    const repo = await this.repo(result)
-    const [reportResults, actionResults] = await Promise.all([
-      this.db.db
-        .selectFrom('moderation_report')
-        .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
-        .where('subjectDid', '=', repo.did)
-        .orderBy('id', 'desc')
-        .selectAll()
-        .execute(),
-      this.db.db
-        .selectFrom('moderation_action')
-        .where('subjectType', '=', 'com.atproto.admin.defs#repoRef')
-        .where('subjectDid', '=', repo.did)
-        .orderBy('id', 'desc')
-        .selectAll()
-        .execute(),
+    const [repo, labels] = await Promise.all([
+      this.repo(result),
+      this.labels(result.did),
     ])
-    const [reports, actions, labels] = await Promise.all([
-      this.report(reportResults),
-      this.action(actionResults),
-      this.labels(repo.did),
-    ])
+
     return {
       ...repo,
       moderation: {
         ...repo.moderation,
-        reports,
-        actions,
       },
       labels,
     }
@@ -144,7 +213,7 @@ export class ModerationViews {
     const results = Array.isArray(result) ? result : [result]
     if (results.length === 0) return []
 
-    const [repoResults, actionResults] = await Promise.all([
+    const [repoResults, subjectStatuses] = await Promise.all([
       this.db.db
         .selectFrom('actor')
         .where(
@@ -154,17 +223,7 @@ export class ModerationViews {
         )
         .selectAll()
         .execute(),
-      this.db.db
-        .selectFrom('moderation_action')
-        .where('reversedAt', 'is', null)
-        .where('subjectType', '=', 'com.atproto.repo.strongRef')
-        .where(
-          'subjectUri',
-          'in',
-          results.map((r) => r.uri),
-        )
-        .select(['id', 'action', 'durationInHours', 'subjectUri'])
-        .execute(),
+      this.getSubjectStatus(results.map((r) => didAndRecordPathFromUri(r.uri))),
     ])
     const repos = await this.repo(repoResults)
 
@@ -172,14 +231,18 @@ export class ModerationViews {
       (acc, cur) => Object.assign(acc, { [cur.did]: cur }),
       {} as Record<string, ArrayEl<typeof repos>>,
     )
-    const actionByUri = actionResults.reduce(
-      (acc, cur) => Object.assign(acc, { [cur.subjectUri ?? '']: cur }),
-      {} as Record<string, ArrayEl<typeof actionResults>>,
+    const subjectStatusByUri = subjectStatuses.reduce(
+      (acc, cur) =>
+        Object.assign(acc, {
+          [`${cur.did}/${cur.recordPath}` ?? '']: this.subjectStatus(cur),
+        }),
+      {},
     )
 
     const views = results.map((res) => {
       const repo = reposByDid[didFromUri(res.uri)]
-      const action = actionByUri[res.uri]
+      const { did, recordPath } = didAndRecordPathFromUri(res.uri)
+      const subjectStatus = subjectStatusByUri[`${did}/${recordPath}`]
       if (!repo) throw new Error(`Record repo is missing: ${res.uri}`)
       const value = jsonStringToLex(res.json) as Record<string, unknown>
       return {
@@ -190,13 +253,7 @@ export class ModerationViews {
         indexedAt: res.indexedAt,
         repo,
         moderation: {
-          currentAction: action
-            ? {
-                id: action.id,
-                action: action.action,
-                durationInHours: action.durationInHours ?? undefined,
-              }
-            : undefined,
+          subjectStatus,
         },
       }
     })
@@ -205,29 +262,17 @@ export class ModerationViews {
   }
 
   async recordDetail(result: RecordResult): Promise<RecordViewDetail> {
-    const [record, reportResults, actionResults] = await Promise.all([
+    const [record, subjectStatusResult] = await Promise.all([
       this.record(result),
-      this.db.db
-        .selectFrom('moderation_report')
-        .where('subjectType', '=', 'com.atproto.repo.strongRef')
-        .where('subjectUri', '=', result.uri)
-        .leftJoin('actor', 'actor.did', 'moderation_report.subjectDid')
-        .orderBy('id', 'desc')
-        .selectAll()
-        .execute(),
-      this.db.db
-        .selectFrom('moderation_action')
-        .where('subjectType', '=', 'com.atproto.repo.strongRef')
-        .where('subjectUri', '=', result.uri)
-        .orderBy('id', 'desc')
-        .selectAll()
-        .execute(),
+      this.getSubjectStatus(didAndRecordPathFromUri(result.uri)),
     ])
-    const [reports, actions, blobs, labels] = await Promise.all([
-      this.report(reportResults),
-      this.action(actionResults),
+
+    const [blobs, labels, subjectStatus] = await Promise.all([
       this.blob(findBlobRefs(record.value)),
       this.labels(record.uri),
+      subjectStatusResult?.length
+        ? this.subjectStatus(subjectStatusResult[0])
+        : Promise.resolve(undefined),
     ])
     const selfLabels = getSelfLabels({
       uri: result.uri,
@@ -239,196 +284,22 @@ export class ModerationViews {
       blobs,
       moderation: {
         ...record.moderation,
-        reports,
-        actions,
+        subjectStatus,
       },
       labels: [...labels, ...selfLabels],
     }
   }
-
-  action(result: ActionResult): Promise<ActionView>
-  action(result: ActionResult[]): Promise<ActionView[]>
-  async action(
-    result: ActionResult | ActionResult[],
-  ): Promise<ActionView | ActionView[]> {
-    const results = Array.isArray(result) ? result : [result]
-    if (results.length === 0) return []
-
-    const [resolutions, subjectBlobResults] = await Promise.all([
-      this.db.db
-        .selectFrom('moderation_report_resolution')
-        .select(['reportId as id', 'actionId'])
-        .where(
-          'actionId',
-          'in',
-          results.map((r) => r.id),
-        )
-        .orderBy('id', 'desc')
-        .execute(),
-      await this.db.db
-        .selectFrom('moderation_action_subject_blob')
-        .selectAll()
-        .where(
-          'actionId',
-          'in',
-          results.map((r) => r.id),
-        )
-        .execute(),
-    ])
-
-    const reportIdsByActionId = resolutions.reduce((acc, cur) => {
-      acc[cur.actionId] ??= []
-      acc[cur.actionId].push(cur.id)
-      return acc
-    }, {} as Record<string, number[]>)
-    const subjectBlobCidsByActionId = subjectBlobResults.reduce((acc, cur) => {
-      acc[cur.actionId] ??= []
-      acc[cur.actionId].push(cur.cid)
-      return acc
-    }, {} as Record<string, string[]>)
-
-    const views = results.map((res) => ({
-      id: res.id,
-      action: res.action,
-      durationInHours: res.durationInHours ?? undefined,
-      subject:
-        res.subjectType === 'com.atproto.admin.defs#repoRef'
-          ? {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: res.subjectDid,
-            }
-          : {
-              $type: 'com.atproto.repo.strongRef',
-              uri: res.subjectUri,
-              cid: res.subjectCid,
-            },
-      subjectBlobCids: subjectBlobCidsByActionId[res.id] ?? [],
-      reason: res.reason,
-      createdAt: res.createdAt,
-      createdBy: res.createdBy,
-      createLabelVals:
-        res.createLabelVals && res.createLabelVals.length > 0
-          ? res.createLabelVals.split(' ')
-          : undefined,
-      negateLabelVals:
-        res.negateLabelVals && res.negateLabelVals.length > 0
-          ? res.negateLabelVals.split(' ')
-          : undefined,
-      reversal:
-        res.reversedAt !== null &&
-        res.reversedBy !== null &&
-        res.reversedReason !== null
-          ? {
-              createdAt: res.reversedAt,
-              createdBy: res.reversedBy,
-              reason: res.reversedReason,
-            }
-          : undefined,
-      resolvedReportIds: reportIdsByActionId[res.id] ?? [],
-    }))
-
-    return Array.isArray(result) ? views : views[0]
-  }
-
-  async actionDetail(result: ActionResult): Promise<ActionViewDetail> {
-    const action = await this.action(result)
-    const reportResults = action.resolvedReportIds.length
-      ? await this.db.db
-          .selectFrom('moderation_report')
-          .where('id', 'in', action.resolvedReportIds)
-          .orderBy('id', 'desc')
-          .selectAll()
-          .execute()
-      : []
-    const [subject, resolvedReports] = await Promise.all([
-      this.subject(result),
-      this.report(reportResults),
-    ])
-    const allBlobs = findBlobRefs(subject.value)
-    const subjectBlobs = await this.blob(
-      allBlobs.filter((blob) =>
-        action.subjectBlobCids.includes(blob.ref.toString()),
-      ),
-    )
-    return {
-      id: action.id,
-      action: action.action,
-      durationInHours: action.durationInHours,
-      subject,
-      subjectBlobs,
-      createLabelVals: action.createLabelVals,
-      negateLabelVals: action.negateLabelVals,
-      reason: action.reason,
-      createdAt: action.createdAt,
-      createdBy: action.createdBy,
-      reversal: action.reversal,
-      resolvedReports,
-    }
-  }
-
-  report(result: ReportResult): Promise<ReportView>
-  report(result: ReportResult[]): Promise<ReportView[]>
-  async report(
-    result: ReportResult | ReportResult[],
-  ): Promise<ReportView | ReportView[]> {
-    const results = Array.isArray(result) ? result : [result]
-    if (results.length === 0) return []
-
-    const resolutions = await this.db.db
-      .selectFrom('moderation_report_resolution')
-      .select(['actionId as id', 'reportId'])
-      .where(
-        'reportId',
-        'in',
-        results.map((r) => r.id),
-      )
-      .orderBy('id', 'desc')
-      .execute()
-
-    const actionIdsByReportId = resolutions.reduce((acc, cur) => {
-      acc[cur.reportId] ??= []
-      acc[cur.reportId].push(cur.id)
-      return acc
-    }, {} as Record<string, number[]>)
-
-    const views: ReportView[] = results.map((res) => {
-      const decoratedView: ReportView = {
-        id: res.id,
-        createdAt: res.createdAt,
-        reasonType: res.reasonType,
-        reason: res.reason ?? undefined,
-        reportedBy: res.reportedByDid,
-        subject:
-          res.subjectType === 'com.atproto.admin.defs#repoRef'
-            ? {
-                $type: 'com.atproto.admin.defs#repoRef',
-                did: res.subjectDid,
-              }
-            : {
-                $type: 'com.atproto.repo.strongRef',
-                uri: res.subjectUri,
-                cid: res.subjectCid,
-              },
-        resolvedByActionIds: actionIdsByReportId[res.id] ?? [],
-      }
-
-      if (res.handle) {
-        decoratedView.subjectRepoHandle = res.handle
-      }
-
-      return decoratedView
-    })
-
-    return Array.isArray(result) ? views : views[0]
-  }
-
   reportPublic(report: ReportResult): ReportOutput {
     return {
       id: report.id,
       createdAt: report.createdAt,
-      reasonType: report.reasonType,
-      reason: report.reason ?? undefined,
-      reportedBy: report.reportedByDid,
+      // Ideally, we would never have a report entry that does not have a reasonType but at the schema level
+      // we are not guarantying that so in whatever case, if we end up with such entries, default to 'other'
+      reasonType: report.meta?.reportType
+        ? (report.meta?.reportType as string)
+        : REASONOTHER,
+      reason: report.comment ?? undefined,
+      reportedBy: report.createdBy,
       subject:
         report.subjectType === 'com.atproto.admin.defs#repoRef'
           ? {
@@ -442,32 +313,6 @@ export class ModerationViews {
             },
     }
   }
-
-  async reportDetail(result: ReportResult): Promise<ReportViewDetail> {
-    const report = await this.report(result)
-    const actionResults = report.resolvedByActionIds.length
-      ? await this.db.db
-          .selectFrom('moderation_action')
-          .where('id', 'in', report.resolvedByActionIds)
-          .orderBy('id', 'desc')
-          .selectAll()
-          .execute()
-      : []
-    const [subject, resolvedByActions] = await Promise.all([
-      this.subject(result),
-      this.action(actionResults),
-    ])
-    return {
-      id: report.id,
-      createdAt: report.createdAt,
-      reasonType: report.reasonType,
-      reason: report.reason ?? undefined,
-      reportedBy: report.reportedBy,
-      subject,
-      resolvedByActions,
-    }
-  }
-
   // Partial view for subjects
 
   async subject(result: SubjectResult): Promise<SubjectView> {
@@ -511,44 +356,35 @@ export class ModerationViews {
 
   async blob(blobs: BlobRef[]): Promise<BlobView[]> {
     if (!blobs.length) return []
-    const actionResults = await this.db.db
-      .selectFrom('moderation_action')
-      .where('reversedAt', 'is', null)
-      .innerJoin(
-        'moderation_action_subject_blob as subject_blob',
-        'subject_blob.actionId',
-        'moderation_action.id',
-      )
+    const { ref } = this.db.db.dynamic
+    const modStatusResults = await this.db.db
+      .selectFrom('moderation_subject_status')
       .where(
-        'subject_blob.cid',
-        'in',
-        blobs.map((blob) => blob.ref.toString()),
+        sql<string>`${ref(
+          'moderation_subject_status.blobCids',
+        )} @> ${JSON.stringify(blobs.map((blob) => blob.ref.toString()))}`,
       )
-      .select(['id', 'action', 'durationInHours', 'cid'])
-      .execute()
-    const actionByCid = actionResults.reduce(
-      (acc, cur) => Object.assign(acc, { [cur.cid]: cur }),
-      {} as Record<string, ArrayEl<typeof actionResults>>,
+      .selectAll()
+      .executeTakeFirst()
+    const statusByCid = (modStatusResults?.blobCids || [])?.reduce(
+      (acc, cur) => Object.assign(acc, { [cur]: modStatusResults }),
+      {},
     )
     // Intentionally missing details field, since we don't have any on appview.
     // We also don't know when the blob was created, so we use a canned creation time.
     const unknownTime = new Date(0).toISOString()
     return blobs.map((blob) => {
       const cid = blob.ref.toString()
-      const action = actionByCid[cid]
+      const subjectStatus = statusByCid[cid]
+        ? this.subjectStatus(statusByCid[cid])
+        : undefined
       return {
         cid,
         mimeType: blob.mimeType,
         size: blob.size,
         createdAt: unknownTime,
         moderation: {
-          currentAction: action
-            ? {
-                id: action.id,
-                action: action.action,
-                durationInHours: action.durationInHours ?? undefined,
-              }
-            : undefined,
+          subjectStatus,
         },
       }
     })
@@ -567,25 +403,115 @@ export class ModerationViews {
       neg: l.neg,
     }))
   }
+
+  async getSubjectStatus(
+    subject:
+      | { did: string; recordPath?: string }
+      | { did: string; recordPath?: string }[],
+  ): Promise<ModerationSubjectStatusRowWithHandle[]> {
+    const subjectFilters = Array.isArray(subject) ? subject : [subject]
+    const filterForSubject =
+      ({ did, recordPath }: { did: string; recordPath?: string }) =>
+      // TODO: Fix the typing here?
+      (clause: any) => {
+        clause = clause
+          .where('moderation_subject_status.did', '=', did)
+          .where('moderation_subject_status.recordPath', '=', recordPath || '')
+        return clause
+      }
+
+    const builder = this.db.db
+      .selectFrom('moderation_subject_status')
+      .leftJoin('actor', 'actor.did', 'moderation_subject_status.did')
+      .where((clause) => {
+        subjectFilters.forEach(({ did, recordPath }, i) => {
+          const applySubjectFilter = filterForSubject({ did, recordPath })
+          if (i === 0) {
+            clause = clause.where(applySubjectFilter)
+          } else {
+            clause = clause.orWhere(applySubjectFilter)
+          }
+        })
+
+        return clause
+      })
+      .selectAll('moderation_subject_status')
+      .select('actor.handle as handle')
+
+    return builder.execute()
+  }
+
+  subjectStatus(result: ModerationSubjectStatusRowWithHandle): SubjectStatusView
+  subjectStatus(
+    result: ModerationSubjectStatusRowWithHandle[],
+  ): SubjectStatusView[]
+  subjectStatus(
+    result:
+      | ModerationSubjectStatusRowWithHandle
+      | ModerationSubjectStatusRowWithHandle[],
+  ): SubjectStatusView | SubjectStatusView[] {
+    const results = Array.isArray(result) ? result : [result]
+    if (results.length === 0) return []
+
+    const decoratedSubjectStatuses = results.map((subjectStatus) => ({
+      id: subjectStatus.id,
+      reviewState: subjectStatus.reviewState,
+      createdAt: subjectStatus.createdAt,
+      updatedAt: subjectStatus.updatedAt,
+      comment: subjectStatus.comment ?? undefined,
+      lastReviewedBy: subjectStatus.lastReviewedBy ?? undefined,
+      lastReviewedAt: subjectStatus.lastReviewedAt ?? undefined,
+      lastReportedAt: subjectStatus.lastReportedAt ?? undefined,
+      muteUntil: subjectStatus.muteUntil ?? undefined,
+      suspendUntil: subjectStatus.suspendUntil ?? undefined,
+      takendown: subjectStatus.takendown ?? undefined,
+      subjectRepoHandle: subjectStatus.handle ?? undefined,
+      subjectBlobCids: subjectStatus.blobCids || [],
+      subject: !subjectStatus.recordPath
+        ? {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: subjectStatus.did,
+          }
+        : {
+            $type: 'com.atproto.repo.strongRef',
+            uri: AtUri.make(
+              subjectStatus.did,
+              // Not too intuitive but the recordpath is basically <collection>/<rkey>
+              // which is what the last 2 params of .make() arguments are
+              ...subjectStatus.recordPath.split('/'),
+            ).toString(),
+            cid: subjectStatus.recordCid,
+          },
+    }))
+
+    return Array.isArray(result)
+      ? decoratedSubjectStatuses
+      : decoratedSubjectStatuses[0]
+  }
 }
 
 type RepoResult = Actor
 
-type ActionResult = Selectable<ModerationAction>
+type EventResult = ModerationEventRowWithHandle
 
-type ReportResult = ModerationReportRowWithHandle
+type ReportResult = ModerationEventRowWithHandle
 
 type RecordResult = RecordRow
 
 type SubjectResult = Pick<
-  ActionResult & ReportResult,
+  EventResult & ReportResult,
   'id' | 'subjectType' | 'subjectDid' | 'subjectUri' | 'subjectCid'
 >
 
-type SubjectView = ActionViewDetail['subject'] & ReportViewDetail['subject']
+type SubjectView = ModEventViewDetail['subject'] & ReportViewDetail['subject']
 
 function didFromUri(uri: string) {
   return new AtUri(uri).host
+}
+
+function didAndRecordPathFromUri(uri: string) {
+  const atUri = new AtUri(uri)
+  return { did: atUri.host, recordPath: `${atUri.collection}/${atUri.rkey}` }
 }
 
 function findBlobRefs(value: unknown, refs: BlobRef[] = []) {

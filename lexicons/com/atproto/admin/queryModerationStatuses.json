@@ -1,0 +1,95 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.admin.queryModerationStatuses",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "View moderation statuses of subjects (record or repo).",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "subject": { "type": "string", "format": "uri" },
+          "comment": {
+            "type": "string",
+            "description": "Search subjects by keyword from comments"
+          },
+          "reportedAfter": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Search subjects reported after a given timestamp"
+          },
+          "reportedBefore": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Search subjects reported before a given timestamp"
+          },
+          "reviewedAfter": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Search subjects reviewed after a given timestamp"
+          },
+          "reviewedBefore": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Search subjects reviewed before a given timestamp"
+          },
+          "includeMuted": {
+            "type": "boolean",
+            "description": "By default, we don't include muted subjects in the results. Set this to true to include them."
+          },
+          "reviewState": {
+            "type": "string",
+            "description": "Specify when fetching subjects in a certain state"
+          },
+          "ignoreSubjects": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" }
+          },
+          "lastReviewedBy": {
+            "type": "string",
+            "format": "did",
+            "description": "Get all subject statuses that were reviewed by a specific moderator"
+          },
+          "sortField": {
+            "type": "string",
+            "default": "lastReportedAt",
+            "enum": ["lastReviewedAt", "lastReportedAt"]
+          },
+          "sortDirection": {
+            "type": "string",
+            "default": "desc",
+            "enum": ["asc", "desc"]
+          },
+          "takendown": {
+            "type": "boolean",
+            "description": "Get subjects that were taken down"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["subjectStatuses"],
+          "properties": {
+            "cursor": { "type": "string" },
+            "subjectStatuses": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "com.atproto.admin.defs#subjectStatusView"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
