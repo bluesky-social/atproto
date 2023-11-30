@@ -1601,7 +1601,6 @@ type HandlerRateLimitOpts<T> = SharedRateLimitOpts<T> | RouteRateLimitOpts<T>
 type ConfigOf<Auth, Handler, ReqCtx> =
   | Handler
   | {
-      opts?: { blobLimit?: number }
       auth?: Auth
       rateLimit?: HandlerRateLimitOpts<ReqCtx> | HandlerRateLimitOpts<ReqCtx>[]
       handler: Handler
