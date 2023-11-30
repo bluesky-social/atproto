@@ -639,7 +639,7 @@ export class ModerationService {
     const { did, recordPath } = getStatusIdentifierFromSubject(
       'did' in subject ? subject.did : subject.uri,
     )
-    let builder = this.db.db
+    const builder = this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
       .where('recordPath', '=', recordPath || '')
