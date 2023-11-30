@@ -11,21 +11,18 @@ import {
 import { schemas } from './lexicons'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
+import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
-import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
-import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
-import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
-import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
+import * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
-import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
-import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
+import * as ComAtprotoAdminQueryModerationEvents from './types/com/atproto/admin/queryModerationEvents'
+import * as ComAtprotoAdminQueryModerationStatuses from './types/com/atproto/admin/queryModerationStatuses'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
-import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
@@ -123,10 +120,9 @@ import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecce
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
 export const COM_ATPROTO_ADMIN = {
-  DefsTakedown: 'com.atproto.admin.defs#takedown',
-  DefsFlag: 'com.atproto.admin.defs#flag',
-  DefsAcknowledge: 'com.atproto.admin.defs#acknowledge',
-  DefsEscalate: 'com.atproto.admin.defs#escalate',
+  DefsReviewOpen: 'com.atproto.admin.defs#reviewOpen',
+  DefsReviewEscalated: 'com.atproto.admin.defs#reviewEscalated',
+  DefsReviewClosed: 'com.atproto.admin.defs#reviewClosed',
 }
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -220,6 +216,17 @@ export class AdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  emitModerationEvent<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminEmitModerationEvent.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminEmitModerationEvent.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.emitModerationEvent' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   enableAccountInvites<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -253,47 +260,14 @@ export class AdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getModerationAction<AV extends AuthVerifier>(
+  getModerationEvent<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ComAtprotoAdminGetModerationAction.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminGetModerationAction.HandlerReqCtx<ExtractAuth<AV>>
+      ComAtprotoAdminGetModerationEvent.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminGetModerationEvent.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'com.atproto.admin.getModerationAction' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getModerationActions<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminGetModerationActions.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminGetModerationActions.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.getModerationActions' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getModerationReport<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminGetModerationReport.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminGetModerationReport.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.getModerationReport' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getModerationReports<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminGetModerationReports.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminGetModerationReports.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.getModerationReports' // @ts-ignore
+    const nsid = 'com.atproto.admin.getModerationEvent' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -330,25 +304,25 @@ export class AdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  resolveModerationReports<AV extends AuthVerifier>(
+  queryModerationEvents<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ComAtprotoAdminResolveModerationReports.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminResolveModerationReports.HandlerReqCtx<ExtractAuth<AV>>
+      ComAtprotoAdminQueryModerationEvents.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminQueryModerationEvents.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'com.atproto.admin.resolveModerationReports' // @ts-ignore
+    const nsid = 'com.atproto.admin.queryModerationEvents' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  reverseModerationAction<AV extends AuthVerifier>(
+  queryModerationStatuses<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ComAtprotoAdminReverseModerationAction.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminReverseModerationAction.HandlerReqCtx<ExtractAuth<AV>>
+      ComAtprotoAdminQueryModerationStatuses.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminQueryModerationStatuses.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'com.atproto.admin.reverseModerationAction' // @ts-ignore
+    const nsid = 'com.atproto.admin.queryModerationStatuses' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -371,17 +345,6 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.sendEmail' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  takeModerationAction<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminTakeModerationAction.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminTakeModerationAction.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.takeModerationAction' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

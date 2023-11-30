@@ -10,57 +10,67 @@
         "ref": { "type": "string" }
       }
     },
-    "actionView": {
+    "modEventView": {
       "type": "object",
       "required": [
         "id",
-        "action",
+        "event",
         "subject",
         "subjectBlobCids",
-        "reason",
         "createdBy",
-        "createdAt",
-        "resolvedReportIds"
+        "createdAt"
       ],
       "properties": {
         "id": { "type": "integer" },
-        "action": { "type": "ref", "ref": "#actionType" },
-        "durationInHours": {
-          "type": "integer",
-          "description": "Indicates how long this action is meant to be in effect before automatically expiring."
+        "event": {
+          "type": "union",
+          "refs": [
+            "#modEventTakedown",
+            "#modEventReverseTakedown",
+            "#modEventComment",
+            "#modEventReport",
+            "#modEventLabel",
+            "#modEventAcknowledge",
+            "#modEventEscalate",
+            "#modEventMute",
+            "#modEventEmail"
+          ]
         },
         "subject": {
           "type": "union",
           "refs": ["#repoRef", "com.atproto.repo.strongRef"]
         },
         "subjectBlobCids": { "type": "array", "items": { "type": "string" } },
-        "createLabelVals": { "type": "array", "items": { "type": "string" } },
-        "negateLabelVals": { "type": "array", "items": { "type": "string" } },
-        "reason": { "type": "string" },
         "createdBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" },
-        "reversal": { "type": "ref", "ref": "#actionReversal" },
-        "resolvedReportIds": { "type": "array", "items": { "type": "integer" } }
+        "creatorHandle": { "type": "string" },
+        "subjectHandle": { "type": "string" }
       }
     },
-    "actionViewDetail": {
+    "modEventViewDetail": {
       "type": "object",
       "required": [
         "id",
-        "action",
+        "event",
         "subject",
         "subjectBlobs",
-        "reason",
         "createdBy",
-        "createdAt",
-        "resolvedReports"
+        "createdAt"
       ],
       "properties": {
         "id": { "type": "integer" },
-        "action": { "type": "ref", "ref": "#actionType" },
-        "durationInHours": {
-          "type": "integer",
-          "description": "Indicates how long this action is meant to be in effect before automatically expiring."
+        "event": {
+          "type": "union",
+          "refs": [
+            "#modEventTakedown",
+            "#modEventReverseTakedown",
+            "#modEventComment",
+            "#modEventReport",
+            "#modEventLabel",
+            "#modEventAcknowledge",
+            "#modEventEscalate",
+            "#modEventMute"
+          ]
         },
         "subject": {
           "type": "union",
@@ -75,58 +85,9 @@
           "type": "array",
           "items": { "type": "ref", "ref": "#blobView" }
         },
-        "createLabelVals": { "type": "array", "items": { "type": "string" } },
-        "negateLabelVals": { "type": "array", "items": { "type": "string" } },
-        "reason": { "type": "string" },
-        "createdBy": { "type": "string", "format": "did" },
-        "createdAt": { "type": "string", "format": "datetime" },
-        "reversal": { "type": "ref", "ref": "#actionReversal" },
-        "resolvedReports": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "#reportView" }
-        }
-      }
-    },
-    "actionViewCurrent": {
-      "type": "object",
-      "required": ["id", "action"],
-      "properties": {
-        "id": { "type": "integer" },
-        "action": { "type": "ref", "ref": "#actionType" },
-        "durationInHours": {
-          "type": "integer",
-          "description": "Indicates how long this action is meant to be in effect before automatically expiring."
-        }
-      }
-    },
-    "actionReversal": {
-      "type": "object",
-      "required": ["reason", "createdBy", "createdAt"],
-      "properties": {
-        "reason": { "type": "string" },
         "createdBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" }
       }
-    },
-    "actionType": {
-      "type": "string",
-      "knownValues": ["#takedown", "#flag", "#acknowledge", "#escalate"]
-    },
-    "takedown": {
-      "type": "token",
-      "description": "Moderation action type: Takedown. Indicates that content should not be served by the PDS."
-    },
-    "flag": {
-      "type": "token",
-      "description": "Moderation action type: Flag. Indicates that the content was reviewed and considered to violate PDS rules, but may still be served."
-    },
-    "acknowledge": {
-      "type": "token",
-      "description": "Moderation action type: Acknowledge. Indicates that the content was reviewed and not considered to violate PDS rules."
-    },
-    "escalate": {
-      "type": "token",
-      "description": "Moderation action type: Escalate. Indicates that the content has been flagged for additional review."
     },
     "reportView": {
       "type": "object",
@@ -144,7 +105,7 @@
           "type": "ref",
           "ref": "com.atproto.moderation.defs#reasonType"
         },
-        "reason": { "type": "string" },
+        "comment": { "type": "string" },
         "subjectRepoHandle": { "type": "string" },
         "subject": {
           "type": "union",
@@ -155,6 +116,63 @@
         "resolvedByActionIds": {
           "type": "array",
           "items": { "type": "integer" }
+        }
+      }
+    },
+    "subjectStatusView": {
+      "type": "object",
+      "required": ["id", "subject", "createdAt", "updatedAt", "reviewState"],
+      "properties": {
+        "id": { "type": "integer" },
+        "subject": {
+          "type": "union",
+          "refs": ["#repoRef", "com.atproto.repo.strongRef"]
+        },
+        "subjectBlobCids": {
+          "type": "array",
+          "items": { "type": "string", "format": "cid" }
+        },
+        "subjectRepoHandle": { "type": "string" },
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp referencing when the last update was made to the moderation status of the subject"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp referencing the first moderation status impacting event was emitted on the subject"
+        },
+        "reviewState": {
+          "type": "ref",
+          "ref": "#subjectReviewState"
+        },
+        "comment": {
+          "type": "string",
+          "description": "Sticky comment on the subject."
+        },
+        "muteUntil": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "lastReviewedBy": {
+          "type": "string",
+          "format": "did"
+        },
+        "lastReviewedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "lastReportedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "takendown": {
+          "type": "boolean"
+        },
+        "suspendUntil": {
+          "type": "string",
+          "format": "datetime"
         }
       }
     },
@@ -174,7 +192,7 @@
           "type": "ref",
           "ref": "com.atproto.moderation.defs#reasonType"
         },
-        "reason": { "type": "string" },
+        "comment": { "type": "string" },
         "subject": {
           "type": "union",
           "refs": [
@@ -184,11 +202,18 @@
             "#recordViewNotFound"
           ]
         },
+        "subjectStatus": {
+          "type": "ref",
+          "ref": "com.atproto.admin.defs#subjectStatusView"
+        },
         "reportedBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" },
         "resolvedByActions": {
           "type": "array",
-          "items": { "type": "ref", "ref": "com.atproto.admin.defs#actionView" }
+          "items": {
+            "type": "ref",
+            "ref": "com.atproto.admin.defs#modEventView"
+          }
         }
       }
     },
@@ -361,21 +386,15 @@
     "moderation": {
       "type": "object",
       "properties": {
-        "currentAction": { "type": "ref", "ref": "#actionViewCurrent" }
+        "subjectStatus": { "type": "ref", "ref": "#subjectStatusView" }
       }
     },
     "moderationDetail": {
       "type": "object",
-      "required": ["actions", "reports"],
       "properties": {
-        "currentAction": { "type": "ref", "ref": "#actionViewCurrent" },
-        "actions": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "#actionView" }
-        },
-        "reports": {
-          "type": "array",
-          "items": { "type": "ref", "ref": "#reportView" }
+        "subjectStatus": {
+          "type": "ref",
+          "ref": "#subjectStatusView"
         }
       }
     },
@@ -409,6 +428,136 @@
         "width": { "type": "integer" },
         "height": { "type": "integer" },
         "length": { "type": "integer" }
+      }
+    },
+    "subjectReviewState": {
+      "type": "string",
+      "knownValues": ["#reviewOpen", "#reviewEscalated", "#reviewClosed"]
+    },
+    "reviewOpen": {
+      "type": "token",
+      "description": "Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator"
+    },
+    "reviewEscalated": {
+      "type": "token",
+      "description": "Moderator review status of a subject: Escalated. Indicates that the subject was escalated for review by a moderator"
+    },
+    "reviewClosed": {
+      "type": "token",
+      "description": "Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator"
+    },
+    "modEventTakedown": {
+      "type": "object",
+      "description": "Take down a subject permanently or temporarily",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "durationInHours": {
+          "type": "integer",
+          "description": "Indicates how long the takedown should be in effect before automatically expiring."
+        }
+      }
+    },
+    "modEventReverseTakedown": {
+      "type": "object",
+      "description": "Revert take down action on a subject",
+      "properties": {
+        "comment": {
+          "type": "string",
+          "description": "Describe reasoning behind the reversal."
+        }
+      }
+    },
+    "modEventComment": {
+      "type": "object",
+      "description": "Add a comment to a subject",
+      "required": ["comment"],
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "sticky": {
+          "type": "boolean",
+          "description": "Make the comment persistent on the subject"
+        }
+      }
+    },
+    "modEventReport": {
+      "type": "object",
+      "description": "Report a subject",
+      "required": ["reportType"],
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "reportType": {
+          "type": "ref",
+          "ref": "com.atproto.moderation.defs#reasonType"
+        }
+      }
+    },
+    "modEventLabel": {
+      "type": "object",
+      "description": "Apply/Negate labels on a subject",
+      "required": ["createLabelVals", "negateLabelVals"],
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "createLabelVals": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "negateLabelVals": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "modEventAcknowledge": {
+      "type": "object",
+      "properties": {
+        "comment": { "type": "string" }
+      }
+    },
+    "modEventEscalate": {
+      "type": "object",
+      "properties": {
+        "comment": { "type": "string" }
+      }
+    },
+    "modEventMute": {
+      "type": "object",
+      "description": "Mute incoming reports on a subject",
+      "required": ["durationInHours"],
+      "properties": {
+        "comment": { "type": "string" },
+        "durationInHours": {
+          "type": "integer",
+          "description": "Indicates how long the subject should remain muted."
+        }
+      }
+    },
+    "modEventUnmute": {
+      "type": "object",
+      "description": "Unmute action on a subject",
+      "properties": {
+        "comment": {
+          "type": "string",
+          "description": "Describe reasoning behind the reversal."
+        }
+      }
+    },
+    "modEventEmail": {
+      "type": "object",
+      "description": "Keep a log of outgoing email to a user",
+      "required": ["subjectLine"],
+      "properties": {
+        "subjectLine": {
+          "type": "string",
+          "description": "The subject line of the email sent to the user."
+        }
       }
     }
   }

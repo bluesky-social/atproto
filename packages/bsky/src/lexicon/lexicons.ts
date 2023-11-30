@@ -20,30 +20,33 @@ export const schemaDict = {
           },
         },
       },
-      actionView: {
+      modEventView: {
         type: 'object',
         required: [
           'id',
-          'action',
+          'event',
           'subject',
           'subjectBlobCids',
-          'reason',
           'createdBy',
           'createdAt',
-          'resolvedReportIds',
         ],
         properties: {
           id: {
             type: 'integer',
           },
-          action: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionType',
-          },
-          durationInHours: {
-            type: 'integer',
-            description:
-              'Indicates how long this action is meant to be in effect before automatically expiring.',
+          event: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.admin.defs#modEventTakedown',
+              'lex:com.atproto.admin.defs#modEventReverseTakedown',
+              'lex:com.atproto.admin.defs#modEventComment',
+              'lex:com.atproto.admin.defs#modEventReport',
+              'lex:com.atproto.admin.defs#modEventLabel',
+              'lex:com.atproto.admin.defs#modEventAcknowledge',
+              'lex:com.atproto.admin.defs#modEventEscalate',
+              'lex:com.atproto.admin.defs#modEventMute',
+              'lex:com.atproto.admin.defs#modEventEmail',
+            ],
           },
           subject: {
             type: 'union',
@@ -58,21 +61,6 @@ export const schemaDict = {
               type: 'string',
             },
           },
-          createLabelVals: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-          negateLabelVals: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-          reason: {
-            type: 'string',
-          },
           createdBy: {
             type: 'string',
             format: 'did',
@@ -81,42 +69,40 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
-          reversal: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionReversal',
+          creatorHandle: {
+            type: 'string',
           },
-          resolvedReportIds: {
-            type: 'array',
-            items: {
-              type: 'integer',
-            },
+          subjectHandle: {
+            type: 'string',
           },
         },
       },
-      actionViewDetail: {
+      modEventViewDetail: {
         type: 'object',
         required: [
           'id',
-          'action',
+          'event',
           'subject',
           'subjectBlobs',
-          'reason',
           'createdBy',
           'createdAt',
-          'resolvedReports',
         ],
         properties: {
           id: {
             type: 'integer',
           },
-          action: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionType',
-          },
-          durationInHours: {
-            type: 'integer',
-            description:
-              'Indicates how long this action is meant to be in effect before automatically expiring.',
+          event: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.admin.defs#modEventTakedown',
+              'lex:com.atproto.admin.defs#modEventReverseTakedown',
+              'lex:com.atproto.admin.defs#modEventComment',
+              'lex:com.atproto.admin.defs#modEventReport',
+              'lex:com.atproto.admin.defs#modEventLabel',
+              'lex:com.atproto.admin.defs#modEventAcknowledge',
+              'lex:com.atproto.admin.defs#modEventEscalate',
+              'lex:com.atproto.admin.defs#modEventMute',
+            ],
           },
           subject: {
             type: 'union',
@@ -134,67 +120,6 @@ export const schemaDict = {
               ref: 'lex:com.atproto.admin.defs#blobView',
             },
           },
-          createLabelVals: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-          negateLabelVals: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-          reason: {
-            type: 'string',
-          },
-          createdBy: {
-            type: 'string',
-            format: 'did',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          reversal: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionReversal',
-          },
-          resolvedReports: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#reportView',
-            },
-          },
-        },
-      },
-      actionViewCurrent: {
-        type: 'object',
-        required: ['id', 'action'],
-        properties: {
-          id: {
-            type: 'integer',
-          },
-          action: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionType',
-          },
-          durationInHours: {
-            type: 'integer',
-            description:
-              'Indicates how long this action is meant to be in effect before automatically expiring.',
-          },
-        },
-      },
-      actionReversal: {
-        type: 'object',
-        required: ['reason', 'createdBy', 'createdAt'],
-        properties: {
-          reason: {
-            type: 'string',
-          },
           createdBy: {
             type: 'string',
             format: 'did',
@@ -204,35 +129,6 @@ export const schemaDict = {
             format: 'datetime',
           },
         },
-      },
-      actionType: {
-        type: 'string',
-        knownValues: [
-          'lex:com.atproto.admin.defs#takedown',
-          'lex:com.atproto.admin.defs#flag',
-          'lex:com.atproto.admin.defs#acknowledge',
-          'lex:com.atproto.admin.defs#escalate',
-        ],
-      },
-      takedown: {
-        type: 'token',
-        description:
-          'Moderation action type: Takedown. Indicates that content should not be served by the PDS.',
-      },
-      flag: {
-        type: 'token',
-        description:
-          'Moderation action type: Flag. Indicates that the content was reviewed and considered to violate PDS rules, but may still be served.',
-      },
-      acknowledge: {
-        type: 'token',
-        description:
-          'Moderation action type: Acknowledge. Indicates that the content was reviewed and not considered to violate PDS rules.',
-      },
-      escalate: {
-        type: 'token',
-        description:
-          'Moderation action type: Escalate. Indicates that the content has been flagged for additional review.',
       },
       reportView: {
         type: 'object',
@@ -252,7 +148,7 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.moderation.defs#reasonType',
           },
-          reason: {
+          comment: {
             type: 'string',
           },
           subjectRepoHandle: {
@@ -281,6 +177,75 @@ export const schemaDict = {
           },
         },
       },
+      subjectStatusView: {
+        type: 'object',
+        required: ['id', 'subject', 'createdAt', 'updatedAt', 'reviewState'],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          subject: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.admin.defs#repoRef',
+              'lex:com.atproto.repo.strongRef',
+            ],
+          },
+          subjectBlobCids: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'cid',
+            },
+          },
+          subjectRepoHandle: {
+            type: 'string',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp referencing when the last update was made to the moderation status of the subject',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp referencing the first moderation status impacting event was emitted on the subject',
+          },
+          reviewState: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#subjectReviewState',
+          },
+          comment: {
+            type: 'string',
+            description: 'Sticky comment on the subject.',
+          },
+          muteUntil: {
+            type: 'string',
+            format: 'datetime',
+          },
+          lastReviewedBy: {
+            type: 'string',
+            format: 'did',
+          },
+          lastReviewedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          lastReportedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          takendown: {
+            type: 'boolean',
+          },
+          suspendUntil: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
       reportViewDetail: {
         type: 'object',
         required: [
@@ -299,7 +264,7 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.moderation.defs#reasonType',
           },
-          reason: {
+          comment: {
             type: 'string',
           },
           subject: {
@@ -310,6 +275,10 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#recordView',
               'lex:com.atproto.admin.defs#recordViewNotFound',
             ],
+          },
+          subjectStatus: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#subjectStatusView',
           },
           reportedBy: {
             type: 'string',
@@ -323,7 +292,7 @@ export const schemaDict = {
             type: 'array',
             items: {
               type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#actionView',
+              ref: 'lex:com.atproto.admin.defs#modEventView',
             },
           },
         },
@@ -628,33 +597,18 @@ export const schemaDict = {
       moderation: {
         type: 'object',
         properties: {
-          currentAction: {
+          subjectStatus: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionViewCurrent',
+            ref: 'lex:com.atproto.admin.defs#subjectStatusView',
           },
         },
       },
       moderationDetail: {
         type: 'object',
-        required: ['actions', 'reports'],
         properties: {
-          currentAction: {
+          subjectStatus: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionViewCurrent',
-          },
-          actions: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#actionView',
-            },
-          },
-          reports: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#reportView',
-            },
+            ref: 'lex:com.atproto.admin.defs#subjectStatusView',
           },
         },
       },
@@ -716,6 +670,154 @@ export const schemaDict = {
           },
         },
       },
+      subjectReviewState: {
+        type: 'string',
+        knownValues: [
+          'lex:com.atproto.admin.defs#reviewOpen',
+          'lex:com.atproto.admin.defs#reviewEscalated',
+          'lex:com.atproto.admin.defs#reviewClosed',
+        ],
+      },
+      reviewOpen: {
+        type: 'token',
+        description:
+          'Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator',
+      },
+      reviewEscalated: {
+        type: 'token',
+        description:
+          'Moderator review status of a subject: Escalated. Indicates that the subject was escalated for review by a moderator',
+      },
+      reviewClosed: {
+        type: 'token',
+        description:
+          'Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator',
+      },
+      modEventTakedown: {
+        type: 'object',
+        description: 'Take down a subject permanently or temporarily',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long the takedown should be in effect before automatically expiring.',
+          },
+        },
+      },
+      modEventReverseTakedown: {
+        type: 'object',
+        description: 'Revert take down action on a subject',
+        properties: {
+          comment: {
+            type: 'string',
+            description: 'Describe reasoning behind the reversal.',
+          },
+        },
+      },
+      modEventComment: {
+        type: 'object',
+        description: 'Add a comment to a subject',
+        required: ['comment'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          sticky: {
+            type: 'boolean',
+            description: 'Make the comment persistent on the subject',
+          },
+        },
+      },
+      modEventReport: {
+        type: 'object',
+        description: 'Report a subject',
+        required: ['reportType'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          reportType: {
+            type: 'ref',
+            ref: 'lex:com.atproto.moderation.defs#reasonType',
+          },
+        },
+      },
+      modEventLabel: {
+        type: 'object',
+        description: 'Apply/Negate labels on a subject',
+        required: ['createLabelVals', 'negateLabelVals'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          createLabelVals: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+          negateLabelVals: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+        },
+      },
+      modEventAcknowledge: {
+        type: 'object',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+        },
+      },
+      modEventEscalate: {
+        type: 'object',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+        },
+      },
+      modEventMute: {
+        type: 'object',
+        description: 'Mute incoming reports on a subject',
+        required: ['durationInHours'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          durationInHours: {
+            type: 'integer',
+            description: 'Indicates how long the subject should remain muted.',
+          },
+        },
+      },
+      modEventUnmute: {
+        type: 'object',
+        description: 'Unmute action on a subject',
+        properties: {
+          comment: {
+            type: 'string',
+            description: 'Describe reasoning behind the reversal.',
+          },
+        },
+      },
+      modEventEmail: {
+        type: 'object',
+        description: 'Keep a log of outgoing email to a user',
+        required: ['subjectLine'],
+        properties: {
+          subjectLine: {
+            type: 'string',
+            description: 'The subject line of the email sent to the user.',
+          },
+        },
+      },
     },
   },
   ComAtprotoAdminDisableAccountInvites: {
@@ -774,6 +876,70 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  ComAtprotoAdminEmitModerationEvent: {
+    lexicon: 1,
+    id: 'com.atproto.admin.emitModerationEvent',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Take a moderation action on an actor.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['event', 'subject', 'createdBy'],
+            properties: {
+              event: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#modEventTakedown',
+                  'lex:com.atproto.admin.defs#modEventAcknowledge',
+                  'lex:com.atproto.admin.defs#modEventEscalate',
+                  'lex:com.atproto.admin.defs#modEventComment',
+                  'lex:com.atproto.admin.defs#modEventLabel',
+                  'lex:com.atproto.admin.defs#modEventReport',
+                  'lex:com.atproto.admin.defs#modEventMute',
+                  'lex:com.atproto.admin.defs#modEventReverseTakedown',
+                  'lex:com.atproto.admin.defs#modEventUnmute',
+                  'lex:com.atproto.admin.defs#modEventEmail',
+                ],
+              },
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                ],
+              },
+              subjectBlobCids: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'cid',
+                },
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#modEventView',
+          },
+        },
+        errors: [
+          {
+            name: 'SubjectHasAction',
+          },
+        ],
       },
     },
   },
@@ -879,13 +1045,13 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminGetModerationAction: {
+  ComAtprotoAdminGetModerationEvent: {
     lexicon: 1,
-    id: 'com.atproto.admin.getModerationAction',
+    id: 'com.atproto.admin.getModerationEvent',
     defs: {
       main: {
         type: 'query',
-        description: 'Get details about a moderation action.',
+        description: 'Get details about a moderation event.',
         parameters: {
           type: 'params',
           required: ['id'],
@@ -899,161 +1065,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionViewDetail',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminGetModerationActions: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getModerationActions',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get a list of moderation actions related to a subject.',
-        parameters: {
-          type: 'params',
-          properties: {
-            subject: {
-              type: 'string',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['actions'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              actions: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.admin.defs#actionView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminGetModerationReport: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getModerationReport',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get details about a moderation report.',
-        parameters: {
-          type: 'params',
-          required: ['id'],
-          properties: {
-            id: {
-              type: 'integer',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#reportViewDetail',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminGetModerationReports: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getModerationReports',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get moderation reports related to a subject.',
-        parameters: {
-          type: 'params',
-          properties: {
-            subject: {
-              type: 'string',
-            },
-            ignoreSubjects: {
-              type: 'array',
-              items: {
-                type: 'string',
-              },
-            },
-            actionedBy: {
-              type: 'string',
-              format: 'did',
-              description:
-                'Get all reports that were actioned by a specific moderator.',
-            },
-            reporters: {
-              type: 'array',
-              items: {
-                type: 'string',
-              },
-              description: 'Filter reports made by one or more DIDs.',
-            },
-            resolved: {
-              type: 'boolean',
-            },
-            actionType: {
-              type: 'string',
-              knownValues: [
-                'com.atproto.admin.defs#takedown',
-                'com.atproto.admin.defs#flag',
-                'com.atproto.admin.defs#acknowledge',
-                'com.atproto.admin.defs#escalate',
-              ],
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-            reverse: {
-              type: 'boolean',
-              description:
-                'Reverse the order of the returned records. When true, returns reports in chronological order.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['reports'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              reports: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.admin.defs#reportView',
-                },
-              },
-            },
+            ref: 'lex:com.atproto.admin.defs#modEventViewDetail',
           },
         },
       },
@@ -1176,76 +1188,180 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminResolveModerationReports: {
+  ComAtprotoAdminQueryModerationEvents: {
     lexicon: 1,
-    id: 'com.atproto.admin.resolveModerationReports',
+    id: 'com.atproto.admin.queryModerationEvents',
     defs: {
       main: {
-        type: 'procedure',
-        description: 'Resolve moderation reports by an action.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['actionId', 'reportIds', 'createdBy'],
-            properties: {
-              actionId: {
-                type: 'integer',
-              },
-              reportIds: {
-                type: 'array',
-                items: {
-                  type: 'integer',
-                },
-              },
-              createdBy: {
+        type: 'query',
+        description: 'List moderation events related to a subject.',
+        parameters: {
+          type: 'params',
+          properties: {
+            types: {
+              type: 'array',
+              items: {
                 type: 'string',
-                format: 'did',
               },
+              description:
+                'The types of events (fully qualified string in the format of com.atproto.admin#modEvent<name>) to filter by. If not specified, all events are returned.',
+            },
+            createdBy: {
+              type: 'string',
+              format: 'did',
+            },
+            sortDirection: {
+              type: 'string',
+              default: 'desc',
+              enum: ['asc', 'desc'],
+              description:
+                'Sort direction for the events. Defaults to descending order of created at timestamp.',
+            },
+            subject: {
+              type: 'string',
+              format: 'uri',
+            },
+            includeAllUserRecords: {
+              type: 'boolean',
+              default: false,
+              description:
+                'If true, events on all record types (posts, lists, profile etc.) owned by the did are returned',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
             },
           },
         },
         output: {
           encoding: 'application/json',
           schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionView',
+            type: 'object',
+            required: ['events'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              events: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.defs#modEventView',
+                },
+              },
+            },
           },
         },
       },
     },
   },
-  ComAtprotoAdminReverseModerationAction: {
+  ComAtprotoAdminQueryModerationStatuses: {
     lexicon: 1,
-    id: 'com.atproto.admin.reverseModerationAction',
+    id: 'com.atproto.admin.queryModerationStatuses',
     defs: {
       main: {
-        type: 'procedure',
-        description: 'Reverse a moderation action.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['id', 'reason', 'createdBy'],
-            properties: {
-              id: {
-                type: 'integer',
-              },
-              reason: {
+        type: 'query',
+        description: 'View moderation statuses of subjects (record or repo).',
+        parameters: {
+          type: 'params',
+          properties: {
+            subject: {
+              type: 'string',
+              format: 'uri',
+            },
+            comment: {
+              type: 'string',
+              description: 'Search subjects by keyword from comments',
+            },
+            reportedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reported after a given timestamp',
+            },
+            reportedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reported before a given timestamp',
+            },
+            reviewedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reviewed after a given timestamp',
+            },
+            reviewedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reviewed before a given timestamp',
+            },
+            includeMuted: {
+              type: 'boolean',
+              description:
+                "By default, we don't include muted subjects in the results. Set this to true to include them.",
+            },
+            reviewState: {
+              type: 'string',
+              description: 'Specify when fetching subjects in a certain state',
+            },
+            ignoreSubjects: {
+              type: 'array',
+              items: {
                 type: 'string',
+                format: 'uri',
               },
-              createdBy: {
-                type: 'string',
-                format: 'did',
-              },
+            },
+            lastReviewedBy: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Get all subject statuses that were reviewed by a specific moderator',
+            },
+            sortField: {
+              type: 'string',
+              default: 'lastReportedAt',
+              enum: ['lastReviewedAt', 'lastReportedAt'],
+            },
+            sortDirection: {
+              type: 'string',
+              default: 'desc',
+              enum: ['asc', 'desc'],
+            },
+            takendown: {
+              type: 'boolean',
+              description: 'Get subjects that were taken down',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
             },
           },
         },
         output: {
           encoding: 'application/json',
           schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionView',
+            type: 'object',
+            required: ['subjectStatuses'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              subjectStatuses: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.defs#subjectStatusView',
+                },
+              },
+            },
           },
         },
       },
@@ -1312,7 +1428,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['recipientDid', 'content'],
+            required: ['recipientDid', 'content', 'senderDid'],
             properties: {
               recipientDid: {
                 type: 'string',
@@ -1323,6 +1439,10 @@ export const schemaDict = {
               },
               subject: {
                 type: 'string',
+              },
+              senderDid: {
+                type: 'string',
+                format: 'did',
               },
             },
           },
@@ -1339,83 +1459,6 @@ export const schemaDict = {
             },
           },
         },
-      },
-    },
-  },
-  ComAtprotoAdminTakeModerationAction: {
-    lexicon: 1,
-    id: 'com.atproto.admin.takeModerationAction',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Take a moderation action on an actor.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['action', 'subject', 'reason', 'createdBy'],
-            properties: {
-              action: {
-                type: 'string',
-                knownValues: [
-                  'com.atproto.admin.defs#takedown',
-                  'com.atproto.admin.defs#flag',
-                  'com.atproto.admin.defs#acknowledge',
-                ],
-              },
-              subject: {
-                type: 'union',
-                refs: [
-                  'lex:com.atproto.admin.defs#repoRef',
-                  'lex:com.atproto.repo.strongRef',
-                ],
-              },
-              subjectBlobCids: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                  format: 'cid',
-                },
-              },
-              createLabelVals: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-              },
-              negateLabelVals: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-              },
-              reason: {
-                type: 'string',
-              },
-              durationInHours: {
-                type: 'integer',
-                description:
-                  'Indicates how long this action is meant to be in effect before automatically expiring.',
-              },
-              createdBy: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionView',
-          },
-        },
-        errors: [
-          {
-            name: 'SubjectHasAction',
-          },
-        ],
       },
     },
   },
@@ -7627,23 +7670,20 @@ export const ids = {
   ComAtprotoAdminDisableAccountInvites:
     'com.atproto.admin.disableAccountInvites',
   ComAtprotoAdminDisableInviteCodes: 'com.atproto.admin.disableInviteCodes',
+  ComAtprotoAdminEmitModerationEvent: 'com.atproto.admin.emitModerationEvent',
   ComAtprotoAdminEnableAccountInvites: 'com.atproto.admin.enableAccountInvites',
   ComAtprotoAdminGetAccountInfo: 'com.atproto.admin.getAccountInfo',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
-  ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationAction',
-  ComAtprotoAdminGetModerationActions: 'com.atproto.admin.getModerationActions',
-  ComAtprotoAdminGetModerationReport: 'com.atproto.admin.getModerationReport',
-  ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',
+  ComAtprotoAdminGetModerationEvent: 'com.atproto.admin.getModerationEvent',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
   ComAtprotoAdminGetSubjectStatus: 'com.atproto.admin.getSubjectStatus',
-  ComAtprotoAdminResolveModerationReports:
-    'com.atproto.admin.resolveModerationReports',
-  ComAtprotoAdminReverseModerationAction:
-    'com.atproto.admin.reverseModerationAction',
+  ComAtprotoAdminQueryModerationEvents:
+    'com.atproto.admin.queryModerationEvents',
+  ComAtprotoAdminQueryModerationStatuses:
+    'com.atproto.admin.queryModerationStatuses',
   ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',
   ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
-  ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',

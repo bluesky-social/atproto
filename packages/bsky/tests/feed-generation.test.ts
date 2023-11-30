@@ -9,7 +9,6 @@ import {
 import { Handler as SkeletonHandler } from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { GeneratorView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 import { UnknownFeedError } from '@atproto/api/src/client/types/app/bsky/feed/getFeed'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { ids } from '../src/lexicon/lexicons'
 import {
   FeedViewPost,
@@ -158,9 +157,9 @@ describe('feed generation', () => {
       sc.getHeaders(alice),
     )
     await network.processAll()
-    await agent.api.com.atproto.admin.takeModerationAction(
+    await agent.api.com.atproto.admin.emitModerationEvent(
       {
-        action: TAKEDOWN,
+        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: prime.uri,

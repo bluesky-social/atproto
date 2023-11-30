@@ -1,6 +1,5 @@
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { paginateAll } from '../_util'
 import usersBulkSeed from '../seeds/users-bulk'
 
@@ -25,8 +24,8 @@ describe('admin repo search view', () => {
   })
 
   beforeAll(async () => {
-    await sc.takeModerationAction({
-      action: TAKEDOWN,
+    await sc.emitModerationEvent({
+      event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
         did: sc.dids['cara-wiegand69.test'],

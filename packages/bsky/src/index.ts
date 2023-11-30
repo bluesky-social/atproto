@@ -32,13 +32,14 @@ export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
 export { ServerConfig } from './config'
 export { Database, PrimaryDatabase, DatabaseCoordinator } from './db'
-export { PeriodicModerationActionReversal } from './db/periodic-moderation-action-reversal'
+export { PeriodicModerationEventReversal } from './db/periodic-moderation-event-reversal'
 export { Redis } from './redis'
 export { ViewMaintainer } from './db/views'
 export { AppContext } from './context'
 export { makeAlgos } from './feed-gen'
 export * from './indexer'
 export * from './ingester'
+export { MigrateModerationData } from './migrate-moderation-data'
 
 export class BskyAppView {
   public ctx: AppContext
