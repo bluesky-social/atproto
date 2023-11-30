@@ -133,15 +133,7 @@ export class ModerationViews {
         }
       }
 
-      if (
-        [
-          'com.atproto.admin.defs#modEventLabel',
-          // This is for legacy data only, for new events, these types of events won't have labels attached
-          'com.atproto.admin.defs#modEventAcknowledge',
-          'com.atproto.admin.defs#modEventTakedown',
-          'com.atproto.admin.defs#modEventEscalate',
-        ].includes(res.action)
-      ) {
+      if ('com.atproto.admin.defs#modEventLabel' === res.action) {
         eventView.event = {
           ...eventView.event,
           createLabelVals: res.createLabelVals?.length
@@ -150,6 +142,33 @@ export class ModerationViews {
           negateLabelVals: res.negateLabelVals?.length
             ? res.negateLabelVals.split(' ')
             : [],
+        }
+      }
+
+      // This is for legacy data only, for new events, these types of events won't have labels attached
+      if (
+        [
+          'com.atproto.admin.defs#modEventAcknowledge',
+          'com.atproto.admin.defs#modEventTakedown',
+          'com.atproto.admin.defs#modEventEscalate',
+        ].includes(res.action)
+      ) {
+        if (res.createLabelVals?.length) {
+          eventView.event = {
+            ...eventView.event,
+            createLabelVals: res.createLabelVals?.length
+              ? res.createLabelVals.split(' ')
+              : [],
+          }
+        }
+
+        if (res.negateLabelVals?.length) {
+          eventView.event = {
+            ...eventView.event,
+            negateLabelVals: res.negateLabelVals?.length
+              ? res.negateLabelVals.split(' ')
+              : [],
+          }
         }
       }
 
