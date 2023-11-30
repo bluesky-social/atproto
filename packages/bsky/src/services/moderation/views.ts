@@ -133,7 +133,7 @@ export class ModerationViews {
         }
       }
 
-      if ('com.atproto.admin.defs#modEventLabel' === res.action) {
+      if (res.action === 'com.atproto.admin.defs#modEventLabel') {
         eventView.event = {
           ...eventView.event,
           createLabelVals: res.createLabelVals?.length
@@ -156,18 +156,14 @@ export class ModerationViews {
         if (res.createLabelVals?.length) {
           eventView.event = {
             ...eventView.event,
-            createLabelVals: res.createLabelVals?.length
-              ? res.createLabelVals.split(' ')
-              : [],
+            createLabelVals: res.createLabelVals.split(' '),
           }
         }
 
         if (res.negateLabelVals?.length) {
           eventView.event = {
             ...eventView.event,
-            negateLabelVals: res.negateLabelVals?.length
-              ? res.negateLabelVals.split(' ')
-              : [],
+            negateLabelVals: res.negateLabelVals.split(' '),
           }
         }
       }
