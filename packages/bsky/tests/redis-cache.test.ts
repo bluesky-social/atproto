@@ -195,6 +195,10 @@ describe('redis cache', () => {
     const try3 = await cache.get('1', { revalidate: true })
     expect(try3).toEqual('b')
     expect(hits).toEqual(2)
+
+    const try4 = await cache.get('1')
+    expect(try4).toEqual('b')
+    expect(hits).toEqual(2)
   })
 
   it('times out and fails open', async () => {
