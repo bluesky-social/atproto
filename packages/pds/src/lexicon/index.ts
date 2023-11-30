@@ -1597,11 +1597,13 @@ type RouteRateLimitOpts<T> = {
   calcKey?: (ctx: T) => string
   calcPoints?: (ctx: T) => number
 }
+type HandlerOpts = { blobLimit?: number }
 type HandlerRateLimitOpts<T> = SharedRateLimitOpts<T> | RouteRateLimitOpts<T>
 type ConfigOf<Auth, Handler, ReqCtx> =
   | Handler
   | {
       auth?: Auth
+      opts?: HandlerOpts
       rateLimit?: HandlerRateLimitOpts<ReqCtx> | HandlerRateLimitOpts<ReqCtx>[]
       handler: Handler
     }
