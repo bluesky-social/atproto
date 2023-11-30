@@ -62,8 +62,11 @@ export class FeedViews {
   formatFeedGeneratorView(
     info: FeedGenInfo,
     profiles: ActorInfoMap,
-  ): GeneratorView {
+  ): GeneratorView | undefined {
     const profile = profiles[info.creator]
+    if (!profile) {
+      return undefined
+    }
     return {
       uri: info.uri,
       cid: info.cid,
