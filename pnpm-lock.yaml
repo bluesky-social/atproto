@@ -546,7 +546,7 @@ importers:
         version: 5.3.2
       jose:
         specifier: ^5.0.1
-        version: 5.0.1
+        version: 5.1.3
       key-encoder:
         specifier: ^2.0.3
         version: 2.0.3
@@ -773,10 +773,10 @@ importers:
         version: link:../../packages/pds
       '@opentelemetry/instrumentation':
         specifier: ^0.45.0
-        version: 0.45.0(@opentelemetry/api@1.7.0)
+        version: 0.45.1(@opentelemetry/api@1.7.0)
       dd-trace:
         specifier: ^4.18.0
-        version: 4.18.0
+        version: 4.20.0
       opentelemetry-plugin-better-sqlite3:
         specifier: ^1.1.0
         version: 1.1.0(better-sqlite3@7.6.2)
@@ -851,7 +851,7 @@ packages:
       pg: 8.10.0
       pino: 8.15.0
       pino-http: 8.4.0
-      sharp: 0.31.2
+      sharp: 0.31.3
       typed-emitter: 2.1.0
       uint8arrays: 3.0.0
       zod: 3.21.4
@@ -4622,8 +4622,8 @@ packages:
       node-gyp-build: 3.9.0
     dev: false
 
-  /@datadog/native-iast-taint-tracking@1.6.3:
-    resolution: {integrity: sha512-u/bBPNx0w8Bq+I+30enI99Ua2WPbVLkANGNyQNjW4tz2PHyeGI++HyzZV+fGm0YSy41FuHZq9EWP3SSDz/eSVw==}
+  /@datadog/native-iast-taint-tracking@1.6.4:
+    resolution: {integrity: sha512-Owxk7hQ4Dxwv4zJAoMjRga0IvE6lhvxnNc8pJCHsemCWBXchjr/9bqg05Zy5JnMbKUWn4XuZeJD6RFZpRa8bfw==}
     requiresBuild: true
     dependencies:
       node-gyp-build: 3.9.0
@@ -5147,14 +5147,14 @@ packages:
     engines: {node: '>=8.0.0'}
     dev: false
 
-  /@opentelemetry/core@1.18.0(@opentelemetry/api@1.7.0):
-    resolution: {integrity: sha512-PCW0UCIazJRw4Q8m3Z1A20kJqKTCB4Ob02bFjov3sHozspHGnY21O7T8Q20XKe168N4Px+n7Mt4dkcay3fy92Q==}
+  /@opentelemetry/core@1.18.1(@opentelemetry/api@1.7.0):
+    resolution: {integrity: sha512-kvnUqezHMhsQvdsnhnqTNfAJs3ox/isB0SVrM1dhVFw7SsB7TstuVa6fgWnN2GdPyilIFLUvvbTZoVRmx6eiRg==}
     engines: {node: '>=14'}
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.8.0'
     dependencies:
       '@opentelemetry/api': 1.7.0
-      '@opentelemetry/semantic-conventions': 1.18.0
+      '@opentelemetry/semantic-conventions': 1.18.1
     dev: false
 
   /@opentelemetry/instrumentation@0.44.0(@opentelemetry/api@1.7.0):
@@ -5173,8 +5173,8 @@ packages:
       - supports-color
     dev: false
 
-  /@opentelemetry/instrumentation@0.45.0(@opentelemetry/api@1.7.0):
-    resolution: {integrity: sha512-U+69WBjG4olh6oyB6ZRdX6qwWeUul+Ulw9OwCA54Ph5yPTMYUUkB3O9OACEbN/Ls1suwpLjAN2DkLPrwkDy1Ww==}
+  /@opentelemetry/instrumentation@0.45.1(@opentelemetry/api@1.7.0):
+    resolution: {integrity: sha512-V1Cr0g8hSg35lpW3G/GYVZurrhHrQZJdmP68WyJ83f1FDn3iru+/Vnlto9kiOSm7PHhW+pZGdb9Fbv+mkQ31CA==}
     engines: {node: '>=14'}
     peerDependencies:
       '@opentelemetry/api': ^1.3.0
@@ -5189,8 +5189,8 @@ packages:
       - supports-color
     dev: false
 
-  /@opentelemetry/semantic-conventions@1.18.0:
-    resolution: {integrity: sha512-Bxtd+h2+rBv3XBHZaoXq133/hzgAQvbl2Kg5a9cG4ozfiUJHC9Xkblt7PrLc9CbzwWQpSxUxWoZJHXT3lUlkOw==}
+  /@opentelemetry/semantic-conventions@1.18.1:
+    resolution: {integrity: sha512-+NLGHr6VZwcgE/2lw8zDIufOCGnzsA5CbQIMleXZTrgkBd0TanCX+MiDYJ1TOS4KL/Tqk0nFRxawnaYr6pkZkA==}
     engines: {node: '>=14'}
     dev: false
 
@@ -5609,12 +5609,6 @@ packages:
     dependencies:
       '@types/http-errors': 2.0.1
       '@types/mime': 3.0.1
-      '@types/node': 18.17.8
-    dev: true
-
-  /@types/sharp@0.31.0:
-    resolution: {integrity: sha512-nwivOU101fYInCwdDcH/0/Ru6yIRXOpORx25ynEOc6/IakuCmjOAGpaO5VfUl4QkDtUC6hj+Z2eCQvgXOioknw==}
-    dependencies:
       '@types/node': 18.17.8
     dev: true
 
@@ -6642,6 +6636,11 @@ packages:
     resolution: {integrity: sha512-2P0p0pFGzHS5EMnhdxQi7aJN+iMheud0UhG4dlE1DLAlvL8JHjJJTX/CSm4JXwV0Ka5nGk3zC5mcb5bUQUxxMA==}
     dev: true
 
+  /dc-polyfill@0.1.3:
+    resolution: {integrity: sha512-Wyk5n/5KUj3GfVKV2jtDbtChC/Ff9fjKsBcg4ZtYW1yQe3DXNHcGURvmoxhqQdfOQ9TwyMjnfyv1lyYcOkFkFA==}
+    engines: {node: '>=12.17'}
+    dev: false
+
   /dd-trace@3.13.2:
     resolution: {integrity: sha512-POO9nEcAufe5pgp2xV1X3PfWip6wh+6TpEcRSlSgZJCIIMvWVCkcIVL/J2a6KAZq6V3Yjbkl8Ktfe+MOzQf5kw==}
     engines: {node: '>=14'}
@@ -6676,21 +6675,21 @@ packages:
       semver: 5.7.2
     dev: false
 
-  /dd-trace@4.18.0:
-    resolution: {integrity: sha512-rycfmSIshWcphYavFE4iozpu0QbnLpXiUuan+Ft3mvPFe+wYgqY8agu+goRNGAXZYFXNLk7jVN5OTXYO2AMJtQ==}
+  /dd-trace@4.20.0:
+    resolution: {integrity: sha512-y7IDLSSt6nww6zMdw/I8oLdfgOQADIOkERCNdfSzlBrXHz5CHimEOFfsHN87ag0mn6vusr06aoi+CQRZSNJz2g==}
     engines: {node: '>=16'}
     requiresBuild: true
     dependencies:
       '@datadog/native-appsec': 4.0.0
       '@datadog/native-iast-rewriter': 2.2.1
-      '@datadog/native-iast-taint-tracking': 1.6.3
+      '@datadog/native-iast-taint-tracking': 1.6.4
       '@datadog/native-metrics': 2.0.0
       '@datadog/pprof': 4.0.1
       '@datadog/sketches-js': 2.1.0
       '@opentelemetry/api': 1.7.0
-      '@opentelemetry/core': 1.18.0(@opentelemetry/api@1.7.0)
+      '@opentelemetry/core': 1.18.1(@opentelemetry/api@1.7.0)
       crypto-randomuuid: 1.0.0
-      diagnostics_channel: 1.1.0
+      dc-polyfill: 0.1.3
       ignore: 5.2.4
       import-in-the-middle: 1.4.2
       int64-buffer: 0.1.10
@@ -6710,6 +6709,7 @@ packages:
       node-abort-controller: 3.1.1
       opentracing: 0.14.7
       path-to-regexp: 0.1.7
+      pprof-format: 2.0.7
       protobufjs: 7.2.5
       retry: 0.13.1
       semver: 7.5.4
@@ -8907,8 +8907,8 @@ packages:
     resolution: {integrity: sha512-W+oqK4H+r5sITxfxpSU+MMdr/YSWGvgZMQDIsNoBDGGy4i7GBPTtvFKibQzW06n3U3TqHjhvBJsirShsEJ6eeQ==}
     dev: true
 
-  /jose@5.0.1:
-    resolution: {integrity: sha512-gRVzy7s3RRdGbXmcTdlOswJOjhwPLx1ijIgAqLY6ktzFpOJxxYn4l0fC2vHaHHi4YBX/5FOL3aY+6W0cvQgpug==}
+  /jose@5.1.3:
+    resolution: {integrity: sha512-GPExOkcMsCLBTi1YetY2LmkoY559fss0+0KVa6kOfb2YFe84nAM7Nm/XzuZozah4iHgmBGrCOHL5/cy670SBRw==}
     dev: false
 
   /joycon@3.1.1:
@@ -9414,6 +9414,7 @@ packages:
 
   /node-addon-api@5.1.0:
     resolution: {integrity: sha512-eh0GgfEkpnoWDq+VY8OyvYhFEzBk6jIYbRKdIlyTiAXIVJ8PyBaKb0rp7oDtoddbdoHWhq8wwr+XZ81F1rpNdA==}
+    dev: true
 
   /node-addon-api@6.1.0:
     resolution: {integrity: sha512-+eawOlIgy680F0kBzPUNFhMZGtJ1YmqM6l4+Crf4IkImjYrO/mqPwRMh352g23uIaQKFItcQ64I7KMaJxHgAVA==}
@@ -9580,9 +9581,9 @@ packages:
       better-sqlite3: ^7.1.1 || ^8.0.0 || ^9.0.0
     dependencies:
       '@opentelemetry/api': 1.7.0
-      '@opentelemetry/core': 1.18.0(@opentelemetry/api@1.7.0)
+      '@opentelemetry/core': 1.18.1(@opentelemetry/api@1.7.0)
       '@opentelemetry/instrumentation': 0.44.0(@opentelemetry/api@1.7.0)
-      '@opentelemetry/semantic-conventions': 1.18.0
+      '@opentelemetry/semantic-conventions': 1.18.1
       better-sqlite3: 7.6.2
     transitivePeerDependencies:
       - supports-color
@@ -10431,19 +10432,20 @@ packages:
   /setprototypeof@1.2.0:
     resolution: {integrity: sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw==}
 
-  /sharp@0.32.6:
-    resolution: {integrity: sha512-KyLTWwgcR9Oe4d9HwCwNM2l7+J0dUQwn/yf7S0EnTtb0eVS4RxO0eUSvxPtzT4F3SY+C4K6fqdv/DO27sJ/v/w==}
+  /sharp@0.31.3:
+    resolution: {integrity: sha512-XcR4+FCLBFKw1bdB+GEhnUNXNXvnt0tDo4WsBsraKymuo/IAuPuCBVAL2wIkUw2r/dwFW5Q5+g66Kwl2dgDFVg==}
     engines: {node: '>=14.15.0'}
     requiresBuild: true
     dependencies:
       color: 4.2.3
       detect-libc: 2.0.2
-      node-addon-api: 6.1.0
+      node-addon-api: 5.1.0
       prebuild-install: 7.1.1
       semver: 7.5.4
       simple-get: 4.0.1
-      tar-fs: 3.0.4
+      tar-fs: 2.1.1
       tunnel-agent: 0.6.0
+    dev: true
 
   /sharp@0.32.6:
     resolution: {integrity: sha512-KyLTWwgcR9Oe4d9HwCwNM2l7+J0dUQwn/yf7S0EnTtb0eVS4RxO0eUSvxPtzT4F3SY+C4K6fqdv/DO27sJ/v/w==}
@@ -10810,14 +10812,6 @@ packages:
       tar-stream: 3.1.6
     dev: false
 
-  /tar-fs@3.0.4:
-    resolution: {integrity: sha512-5AFQU8b9qLfZCX9zp2duONhPmZv0hGYiBPJsyUdqMjzq/mqVpy/rEUSeHk1+YitmxugaptgBh5oDGU3VsAJq4w==}
-    dependencies:
-      mkdirp-classic: 0.5.3
-      pump: 3.0.0
-      tar-stream: 3.1.6
-    dev: false
-
   /tar-stream@2.2.0:
     resolution: {integrity: sha512-ujeqbceABgwMZxEJnk2HDY2DlnUZ+9oEcb1KzTVfYHio0UE6dG71n60d8D2I4qNvleWrrXpmjpt7vZeF1LnMZQ==}
     engines: {node: '>=6'}
@@ -10827,14 +10821,6 @@ packages:
       fs-constants: 1.0.0
       inherits: 2.0.4
       readable-stream: 3.6.2
-
-  /tar-stream@3.1.6:
-    resolution: {integrity: sha512-B/UyjYwPpMBv+PaFSWAmtYjwdrlEaZQEhMIBFNC5oEG8lpiW8XjcSdmEaClj28ArfKScKHs2nshz3k2le6crsg==}
-    dependencies:
-      b4a: 1.6.4
-      fast-fifo: 1.3.2
-      streamx: 2.15.5
-    dev: false
 
   /tar-stream@3.1.6:
     resolution: {integrity: sha512-B/UyjYwPpMBv+PaFSWAmtYjwdrlEaZQEhMIBFNC5oEG8lpiW8XjcSdmEaClj28ArfKScKHs2nshz3k2le6crsg==}
