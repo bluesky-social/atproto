@@ -118,8 +118,8 @@ export class BskyAppView {
       imgInvalidator,
       labelCacheOpts: {
         redis: redisScratch.withNamespace('label'),
-        staleTTL: 5000,
-        maxTTL: 60000,
+        staleTTL: config.labelCacheStaleTTL,
+        maxTTL: config.labelCacheMaxTTL,
       },
     })
 

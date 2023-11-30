@@ -1,5 +1,11 @@
 import assert from 'assert'
-import { DAY, HOUR, parseIntWithFallback } from '@atproto/common'
+import {
+  DAY,
+  HOUR,
+  MINUTE,
+  SECOND,
+  parseIntWithFallback,
+} from '@atproto/common'
 
 export interface ServerConfigValues {
   version: string
@@ -17,6 +23,8 @@ export interface ServerConfigValues {
   didPlcUrl: string
   didCacheStaleTTL: number
   didCacheMaxTTL: number
+  labelCacheStaleTTL: number
+  labelCacheMaxTTL: number
   handleResolveNameservers?: string[]
   imgUriEndpoint?: string
   blobCacheLocation?: string
@@ -51,6 +59,14 @@ export class ServerConfig {
     const didCacheMaxTTL = parseIntWithFallback(
       process.env.DID_CACHE_MAX_TTL,
       DAY,
+    )
+    const labelCacheStaleTTL = parseIntWithFallback(
+      process.env.LABEL_CACHE_STALE_TTL,
+      30 * SECOND,
+    )
+    const labelCacheMaxTTL = parseIntWithFallback(
+      process.env.LABEL_CACHE_MAX_TTL,
+      MINUTE,
     )
     const handleResolveNameservers = process.env.HANDLE_RESOLVE_NAMESERVERS
       ? process.env.HANDLE_RESOLVE_NAMESERVERS.split(',')
@@ -103,6 +119,8 @@ export class ServerConfig {
       didPlcUrl,
       didCacheStaleTTL,
       didCacheMaxTTL,
+      labelCacheStaleTTL,
+      labelCacheMaxTTL,
       handleResolveNameservers,
       imgUriEndpoint,
       blobCacheLocation,
@@ -183,6 +201,14 @@ export class ServerConfig {
 
   get didCacheMaxTTL() {
     return this.cfg.didCacheMaxTTL
+  }
+
+  get labelCacheStaleTTL() {
+    return this.cfg.labelCacheStaleTTL
+  }
+
+  get labelCacheMaxTTL() {
+    return this.cfg.labelCacheMaxTTL
   }
 
   get handleResolveNameservers() {

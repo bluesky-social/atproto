@@ -2,7 +2,7 @@ import assert from 'assert'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as bsky from '@atproto/bsky'
-import { DAY, HOUR, wait } from '@atproto/common-web'
+import { DAY, HOUR, MINUTE, SECOND, wait } from '@atproto/common-web'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair, randomIntFromSeed } from '@atproto/crypto'
 import { Client as PlcClient } from '@did-plc/lib'
@@ -42,6 +42,8 @@ export class TestBsky {
       serverDid,
       didCacheStaleTTL: HOUR,
       didCacheMaxTTL: DAY,
+      labelCacheStaleTTL: 30 * SECOND,
+      labelCacheMaxTTL: MINUTE,
       redisScratchHost: cfg.redisHost,
       ...cfg,
       // Each test suite gets its own lock id for the repo subscription
