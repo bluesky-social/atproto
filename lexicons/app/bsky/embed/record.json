@@ -1,7 +1,7 @@
 {
   "lexicon": 1,
   "id": "app.bsky.embed.record",
-  "description": "A representation of a record embedded in another form of content",
+  "description": "A representation of a record embedded in another form of content.",
   "defs": {
     "main": {
       "type": "object",

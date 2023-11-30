@@ -77,28 +77,41 @@ describe('takedowner', () => {
     const post = await sc.post(alice, 'blah', undefined, [goodBlob, badBlob1])
     await network.processAll()
     await autoMod.processAll()
-    const modAction = await ctx.db.db
-      .selectFrom('moderation_action')
-      .where('subjectUri', '=', post.ref.uriStr)
-      .select(['action', 'id'])
-      .executeTakeFirst()
-    if (!modAction) {
+    const [modStatus, takedownEvent] = await Promise.all([
+      ctx.db.db
+        .selectFrom('moderation_subject_status')
+        .where('did', '=', alice)
+        .where(
+          'recordPath',
+          '=',
+          `${post.ref.uri.collection}/${post.ref.uri.rkey}`,
+        )
+        .select(['takendown', 'id'])
+        .executeTakeFirst(),
+      ctx.db.db
+        .selectFrom('moderation_event')
+        .where('subjectDid', '=', alice)
+        .where('action', '=', 'com.atproto.admin.defs#modEventTakedown')
+        .selectAll()
+        .executeTakeFirst(),
+    ])
+    if (!modStatus || !takedownEvent) {
       throw new Error('expected mod action')
     }
-    expect(modAction.action).toEqual('com.atproto.admin.defs#takedown')
+    expect(modStatus.takendown).toEqual(true)
     const record = await ctx.db.db
       .selectFrom('record')
       .where('uri', '=', post.ref.uriStr)
       .select('takedownId')
       .executeTakeFirst()
-    expect(record?.takedownId).toEqual(modAction.id)
+    expect(record?.takedownId).toBeGreaterThan(0)
 
     const recordPds = await network.pds.ctx.db.db
       .selectFrom('record')
       .where('uri', '=', post.ref.uriStr)
       .select('takedownRef')
       .executeTakeFirst()
-    expect(recordPds?.takedownRef).toEqual(modAction.id.toString())
+    expect(recordPds?.takedownRef).toEqual(takedownEvent.id.toString())
 
     expect(testInvalidator.invalidated.length).toBe(1)
     expect(testInvalidator.invalidated[0].subject).toBe(
@@ -119,28 +132,42 @@ describe('takedowner', () => {
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
     await network.processAll()
-    const modAction = await ctx.db.db
-      .selectFrom('moderation_action')
-      .where('subjectUri', '=', res.data.uri)
-      .select(['action', 'id'])
-      .executeTakeFirst()
-    if (!modAction) {
+    const [modStatus, takedownEvent] = await Promise.all([
+      ctx.db.db
+        .selectFrom('moderation_subject_status')
+        .where('did', '=', alice)
+        .where('recordPath', '=', `${ids.AppBskyActorProfile}/self`)
+        .select(['takendown', 'id'])
+        .executeTakeFirst(),
+      ctx.db.db
+        .selectFrom('moderation_event')
+        .where('subjectDid', '=', alice)
+        .where(
+          'subjectUri',
+          '=',
+          AtUri.make(alice, ids.AppBskyActorProfile, 'self').toString(),
+        )
+        .where('action', '=', 'com.atproto.admin.defs#modEventTakedown')
+        .selectAll()
+        .executeTakeFirst(),
+    ])
+    if (!modStatus || !takedownEvent) {
       throw new Error('expected mod action')
     }
-    expect(modAction.action).toEqual('com.atproto.admin.defs#takedown')
+    expect(modStatus.takendown).toEqual(true)
     const record = await ctx.db.db
       .selectFrom('record')
       .where('uri', '=', res.data.uri)
       .select('takedownId')
       .executeTakeFirst()
-    expect(record?.takedownId).toEqual(modAction.id)
+    expect(record?.takedownId).toBeGreaterThan(0)
 
     const recordPds = await network.pds.ctx.db.db
       .selectFrom('record')
       .where('uri', '=', res.data.uri)
       .select('takedownRef')
       .executeTakeFirst()
-    expect(recordPds?.takedownRef).toEqual(modAction.id.toString())
+    expect(recordPds?.takedownRef).toEqual(takedownEvent.id.toString())
 
     expect(testInvalidator.invalidated.length).toBe(2)
     expect(testInvalidator.invalidated[1].subject).toBe(

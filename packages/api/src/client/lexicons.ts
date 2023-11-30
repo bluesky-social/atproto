@@ -20,30 +20,33 @@ export const schemaDict = {
           },
         },
       },
-      actionView: {
+      modEventView: {
         type: 'object',
         required: [
           'id',
-          'action',
+          'event',
           'subject',
           'subjectBlobCids',
-          'reason',
           'createdBy',
           'createdAt',
-          'resolvedReportIds',
         ],
         properties: {
           id: {
             type: 'integer',
           },
-          action: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionType',
-          },
-          durationInHours: {
-            type: 'integer',
-            description:
-              'Indicates how long this action was meant to be in effect before automatically expiring.',
+          event: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.admin.defs#modEventTakedown',
+              'lex:com.atproto.admin.defs#modEventReverseTakedown',
+              'lex:com.atproto.admin.defs#modEventComment',
+              'lex:com.atproto.admin.defs#modEventReport',
+              'lex:com.atproto.admin.defs#modEventLabel',
+              'lex:com.atproto.admin.defs#modEventAcknowledge',
+              'lex:com.atproto.admin.defs#modEventEscalate',
+              'lex:com.atproto.admin.defs#modEventMute',
+              'lex:com.atproto.admin.defs#modEventEmail',
+            ],
           },
           subject: {
             type: 'union',
@@ -58,21 +61,6 @@ export const schemaDict = {
               type: 'string',
             },
           },
-          createLabelVals: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-          negateLabelVals: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-          reason: {
-            type: 'string',
-          },
           createdBy: {
             type: 'string',
             format: 'did',
@@ -81,42 +69,40 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
-          reversal: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionReversal',
+          creatorHandle: {
+            type: 'string',
           },
-          resolvedReportIds: {
-            type: 'array',
-            items: {
-              type: 'integer',
-            },
+          subjectHandle: {
+            type: 'string',
           },
         },
       },
-      actionViewDetail: {
+      modEventViewDetail: {
         type: 'object',
         required: [
           'id',
-          'action',
+          'event',
           'subject',
           'subjectBlobs',
-          'reason',
           'createdBy',
           'createdAt',
-          'resolvedReports',
         ],
         properties: {
           id: {
             type: 'integer',
           },
-          action: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionType',
-          },
-          durationInHours: {
-            type: 'integer',
-            description:
-              'Indicates how long this action was meant to be in effect before automatically expiring.',
+          event: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.admin.defs#modEventTakedown',
+              'lex:com.atproto.admin.defs#modEventReverseTakedown',
+              'lex:com.atproto.admin.defs#modEventComment',
+              'lex:com.atproto.admin.defs#modEventReport',
+              'lex:com.atproto.admin.defs#modEventLabel',
+              'lex:com.atproto.admin.defs#modEventAcknowledge',
+              'lex:com.atproto.admin.defs#modEventEscalate',
+              'lex:com.atproto.admin.defs#modEventMute',
+            ],
           },
           subject: {
             type: 'union',
@@ -134,67 +120,6 @@ export const schemaDict = {
               ref: 'lex:com.atproto.admin.defs#blobView',
             },
           },
-          createLabelVals: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-          negateLabelVals: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-          reason: {
-            type: 'string',
-          },
-          createdBy: {
-            type: 'string',
-            format: 'did',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          reversal: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionReversal',
-          },
-          resolvedReports: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#reportView',
-            },
-          },
-        },
-      },
-      actionViewCurrent: {
-        type: 'object',
-        required: ['id', 'action'],
-        properties: {
-          id: {
-            type: 'integer',
-          },
-          action: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionType',
-          },
-          durationInHours: {
-            type: 'integer',
-            description:
-              'Indicates how long this action was meant to be in effect before automatically expiring.',
-          },
-        },
-      },
-      actionReversal: {
-        type: 'object',
-        required: ['reason', 'createdBy', 'createdAt'],
-        properties: {
-          reason: {
-            type: 'string',
-          },
           createdBy: {
             type: 'string',
             format: 'did',
@@ -204,35 +129,6 @@ export const schemaDict = {
             format: 'datetime',
           },
         },
-      },
-      actionType: {
-        type: 'string',
-        knownValues: [
-          'lex:com.atproto.admin.defs#takedown',
-          'lex:com.atproto.admin.defs#flag',
-          'lex:com.atproto.admin.defs#acknowledge',
-          'lex:com.atproto.admin.defs#escalate',
-        ],
-      },
-      takedown: {
-        type: 'token',
-        description:
-          'Moderation action type: Takedown. Indicates that content should not be served by the PDS.',
-      },
-      flag: {
-        type: 'token',
-        description:
-          'Moderation action type: Flag. Indicates that the content was reviewed and considered to violate PDS rules, but may still be served.',
-      },
-      acknowledge: {
-        type: 'token',
-        description:
-          'Moderation action type: Acknowledge. Indicates that the content was reviewed and not considered to violate PDS rules.',
-      },
-      escalate: {
-        type: 'token',
-        description:
-          'Moderation action type: Escalate. Indicates that the content has been flagged for additional review.',
       },
       reportView: {
         type: 'object',
@@ -252,7 +148,7 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.moderation.defs#reasonType',
           },
-          reason: {
+          comment: {
             type: 'string',
           },
           subjectRepoHandle: {
@@ -281,6 +177,75 @@ export const schemaDict = {
           },
         },
       },
+      subjectStatusView: {
+        type: 'object',
+        required: ['id', 'subject', 'createdAt', 'updatedAt', 'reviewState'],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          subject: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.admin.defs#repoRef',
+              'lex:com.atproto.repo.strongRef',
+            ],
+          },
+          subjectBlobCids: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'cid',
+            },
+          },
+          subjectRepoHandle: {
+            type: 'string',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp referencing when the last update was made to the moderation status of the subject',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp referencing the first moderation status impacting event was emitted on the subject',
+          },
+          reviewState: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#subjectReviewState',
+          },
+          comment: {
+            type: 'string',
+            description: 'Sticky comment on the subject.',
+          },
+          muteUntil: {
+            type: 'string',
+            format: 'datetime',
+          },
+          lastReviewedBy: {
+            type: 'string',
+            format: 'did',
+          },
+          lastReviewedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          lastReportedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          takendown: {
+            type: 'boolean',
+          },
+          suspendUntil: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
       reportViewDetail: {
         type: 'object',
         required: [
@@ -299,7 +264,7 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:com.atproto.moderation.defs#reasonType',
           },
-          reason: {
+          comment: {
             type: 'string',
           },
           subject: {
@@ -310,6 +275,10 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#recordView',
               'lex:com.atproto.admin.defs#recordViewNotFound',
             ],
+          },
+          subjectStatus: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#subjectStatusView',
           },
           reportedBy: {
             type: 'string',
@@ -323,7 +292,7 @@ export const schemaDict = {
             type: 'array',
             items: {
               type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#actionView',
+              ref: 'lex:com.atproto.admin.defs#modEventView',
             },
           },
         },
@@ -434,6 +403,10 @@ export const schemaDict = {
           inviteNote: {
             type: 'string',
           },
+          emailConfirmedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
         },
       },
       accountView: {
@@ -468,6 +441,10 @@ export const schemaDict = {
           },
           invitesDisabled: {
             type: 'boolean',
+          },
+          emailConfirmedAt: {
+            type: 'string',
+            format: 'datetime',
           },
           inviteNote: {
             type: 'string',
@@ -620,33 +597,18 @@ export const schemaDict = {
       moderation: {
         type: 'object',
         properties: {
-          currentAction: {
+          subjectStatus: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionViewCurrent',
+            ref: 'lex:com.atproto.admin.defs#subjectStatusView',
           },
         },
       },
       moderationDetail: {
         type: 'object',
-        required: ['actions', 'reports'],
         properties: {
-          currentAction: {
+          subjectStatus: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionViewCurrent',
-          },
-          actions: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#actionView',
-            },
-          },
-          reports: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#reportView',
-            },
+            ref: 'lex:com.atproto.admin.defs#subjectStatusView',
           },
         },
       },
@@ -708,6 +670,154 @@ export const schemaDict = {
           },
         },
       },
+      subjectReviewState: {
+        type: 'string',
+        knownValues: [
+          'lex:com.atproto.admin.defs#reviewOpen',
+          'lex:com.atproto.admin.defs#reviewEscalated',
+          'lex:com.atproto.admin.defs#reviewClosed',
+        ],
+      },
+      reviewOpen: {
+        type: 'token',
+        description:
+          'Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator',
+      },
+      reviewEscalated: {
+        type: 'token',
+        description:
+          'Moderator review status of a subject: Escalated. Indicates that the subject was escalated for review by a moderator',
+      },
+      reviewClosed: {
+        type: 'token',
+        description:
+          'Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator',
+      },
+      modEventTakedown: {
+        type: 'object',
+        description: 'Take down a subject permanently or temporarily',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long the takedown should be in effect before automatically expiring.',
+          },
+        },
+      },
+      modEventReverseTakedown: {
+        type: 'object',
+        description: 'Revert take down action on a subject',
+        properties: {
+          comment: {
+            type: 'string',
+            description: 'Describe reasoning behind the reversal.',
+          },
+        },
+      },
+      modEventComment: {
+        type: 'object',
+        description: 'Add a comment to a subject',
+        required: ['comment'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          sticky: {
+            type: 'boolean',
+            description: 'Make the comment persistent on the subject',
+          },
+        },
+      },
+      modEventReport: {
+        type: 'object',
+        description: 'Report a subject',
+        required: ['reportType'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          reportType: {
+            type: 'ref',
+            ref: 'lex:com.atproto.moderation.defs#reasonType',
+          },
+        },
+      },
+      modEventLabel: {
+        type: 'object',
+        description: 'Apply/Negate labels on a subject',
+        required: ['createLabelVals', 'negateLabelVals'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          createLabelVals: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+          negateLabelVals: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+        },
+      },
+      modEventAcknowledge: {
+        type: 'object',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+        },
+      },
+      modEventEscalate: {
+        type: 'object',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+        },
+      },
+      modEventMute: {
+        type: 'object',
+        description: 'Mute incoming reports on a subject',
+        required: ['durationInHours'],
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          durationInHours: {
+            type: 'integer',
+            description: 'Indicates how long the subject should remain muted.',
+          },
+        },
+      },
+      modEventUnmute: {
+        type: 'object',
+        description: 'Unmute action on a subject',
+        properties: {
+          comment: {
+            type: 'string',
+            description: 'Describe reasoning behind the reversal.',
+          },
+        },
+      },
+      modEventEmail: {
+        type: 'object',
+        description: 'Keep a log of outgoing email to a user',
+        required: ['subjectLine'],
+        properties: {
+          subjectLine: {
+            type: 'string',
+            description: 'The subject line of the email sent to the user.',
+          },
+        },
+      },
     },
   },
   ComAtprotoAdminDisableAccountInvites: {
@@ -717,7 +827,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Disable an account from receiving new invite codes, but does not invalidate existing codes',
+          'Disable an account from receiving new invite codes, but does not invalidate existing codes.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -730,8 +840,7 @@ export const schemaDict = {
               },
               note: {
                 type: 'string',
-                description:
-                  'Additionally add a note describing why the invites were disabled',
+                description: 'Optional reason for disabled invites.',
               },
             },
           },
@@ -746,7 +855,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Disable some set of codes and/or all codes associated with a set of users',
+          'Disable some set of codes and/or all codes associated with a set of users.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -770,13 +879,77 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminEmitModerationEvent: {
+    lexicon: 1,
+    id: 'com.atproto.admin.emitModerationEvent',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Take a moderation action on an actor.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['event', 'subject', 'createdBy'],
+            properties: {
+              event: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#modEventTakedown',
+                  'lex:com.atproto.admin.defs#modEventAcknowledge',
+                  'lex:com.atproto.admin.defs#modEventEscalate',
+                  'lex:com.atproto.admin.defs#modEventComment',
+                  'lex:com.atproto.admin.defs#modEventLabel',
+                  'lex:com.atproto.admin.defs#modEventReport',
+                  'lex:com.atproto.admin.defs#modEventMute',
+                  'lex:com.atproto.admin.defs#modEventReverseTakedown',
+                  'lex:com.atproto.admin.defs#modEventUnmute',
+                  'lex:com.atproto.admin.defs#modEventEmail',
+                ],
+              },
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                ],
+              },
+              subjectBlobCids: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'cid',
+                },
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#modEventView',
+          },
+        },
+        errors: [
+          {
+            name: 'SubjectHasAction',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoAdminEnableAccountInvites: {
     lexicon: 1,
     id: 'com.atproto.admin.enableAccountInvites',
     defs: {
       main: {
         type: 'procedure',
-        description: 'Re-enable an accounts ability to receive invite codes',
+        description: "Re-enable an account's ability to receive invite codes.",
         input: {
           encoding: 'application/json',
           schema: {
@@ -789,8 +962,7 @@ export const schemaDict = {
               },
               note: {
                 type: 'string',
-                description:
-                  'Additionally add a note describing why the invites were enabled',
+                description: 'Optional reason for enabled invites.',
               },
             },
           },
@@ -804,7 +976,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'View details about an account.',
+        description: 'Get details about an account.',
         parameters: {
           type: 'params',
           required: ['did'],
@@ -831,7 +1003,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Admin view of invite codes',
+        description: 'Get an admin view of invite codes.',
         parameters: {
           type: 'params',
           properties: {
@@ -873,13 +1045,13 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminGetModerationAction: {
+  ComAtprotoAdminGetModerationEvent: {
     lexicon: 1,
-    id: 'com.atproto.admin.getModerationAction',
+    id: 'com.atproto.admin.getModerationEvent',
     defs: {
       main: {
         type: 'query',
-        description: 'View details about a moderation action.',
+        description: 'Get details about a moderation event.',
         parameters: {
           type: 'params',
           required: ['id'],
@@ -893,161 +1065,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionViewDetail',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminGetModerationActions: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getModerationActions',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'List moderation actions related to a subject.',
-        parameters: {
-          type: 'params',
-          properties: {
-            subject: {
-              type: 'string',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['actions'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              actions: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.admin.defs#actionView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminGetModerationReport: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getModerationReport',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'View details about a moderation report.',
-        parameters: {
-          type: 'params',
-          required: ['id'],
-          properties: {
-            id: {
-              type: 'integer',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#reportViewDetail',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminGetModerationReports: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getModerationReports',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'List moderation reports related to a subject.',
-        parameters: {
-          type: 'params',
-          properties: {
-            subject: {
-              type: 'string',
-            },
-            ignoreSubjects: {
-              type: 'array',
-              items: {
-                type: 'string',
-              },
-            },
-            actionedBy: {
-              type: 'string',
-              format: 'did',
-              description:
-                'Get all reports that were actioned by a specific moderator',
-            },
-            reporters: {
-              type: 'array',
-              items: {
-                type: 'string',
-              },
-              description: 'Filter reports made by one or more DIDs',
-            },
-            resolved: {
-              type: 'boolean',
-            },
-            actionType: {
-              type: 'string',
-              knownValues: [
-                'com.atproto.admin.defs#takedown',
-                'com.atproto.admin.defs#flag',
-                'com.atproto.admin.defs#acknowledge',
-                'com.atproto.admin.defs#escalate',
-              ],
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-            reverse: {
-              type: 'boolean',
-              description:
-                'Reverse the order of the returned records? when true, returns reports in chronological order',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['reports'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              reports: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.admin.defs#reportView',
-                },
-              },
-            },
+            ref: 'lex:com.atproto.admin.defs#modEventViewDetail',
           },
         },
       },
@@ -1059,7 +1077,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'View details about a record.',
+        description: 'Get details about a record.',
         parameters: {
           type: 'params',
           required: ['uri'],
@@ -1095,7 +1113,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'View details about a repository.',
+        description: 'Get details about a repository.',
         parameters: {
           type: 'params',
           required: ['did'],
@@ -1128,7 +1146,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Fetch the service-specific the admin status of a subject (account, record, or blob)',
+          'Get the service-specific admin status of a subject (account, record, or blob).',
         parameters: {
           type: 'params',
           properties: {
@@ -1170,76 +1188,180 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminResolveModerationReports: {
+  ComAtprotoAdminQueryModerationEvents: {
     lexicon: 1,
-    id: 'com.atproto.admin.resolveModerationReports',
+    id: 'com.atproto.admin.queryModerationEvents',
     defs: {
       main: {
-        type: 'procedure',
-        description: 'Resolve moderation reports by an action.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['actionId', 'reportIds', 'createdBy'],
-            properties: {
-              actionId: {
-                type: 'integer',
-              },
-              reportIds: {
-                type: 'array',
-                items: {
-                  type: 'integer',
-                },
-              },
-              createdBy: {
+        type: 'query',
+        description: 'List moderation events related to a subject.',
+        parameters: {
+          type: 'params',
+          properties: {
+            types: {
+              type: 'array',
+              items: {
                 type: 'string',
-                format: 'did',
               },
+              description:
+                'The types of events (fully qualified string in the format of com.atproto.admin#modEvent<name>) to filter by. If not specified, all events are returned.',
+            },
+            createdBy: {
+              type: 'string',
+              format: 'did',
+            },
+            sortDirection: {
+              type: 'string',
+              default: 'desc',
+              enum: ['asc', 'desc'],
+              description:
+                'Sort direction for the events. Defaults to descending order of created at timestamp.',
+            },
+            subject: {
+              type: 'string',
+              format: 'uri',
+            },
+            includeAllUserRecords: {
+              type: 'boolean',
+              default: false,
+              description:
+                'If true, events on all record types (posts, lists, profile etc.) owned by the did are returned',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
             },
           },
         },
         output: {
           encoding: 'application/json',
           schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionView',
+            type: 'object',
+            required: ['events'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              events: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.defs#modEventView',
+                },
+              },
+            },
           },
         },
       },
     },
   },
-  ComAtprotoAdminReverseModerationAction: {
+  ComAtprotoAdminQueryModerationStatuses: {
     lexicon: 1,
-    id: 'com.atproto.admin.reverseModerationAction',
+    id: 'com.atproto.admin.queryModerationStatuses',
     defs: {
       main: {
-        type: 'procedure',
-        description: 'Reverse a moderation action.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['id', 'reason', 'createdBy'],
-            properties: {
-              id: {
-                type: 'integer',
-              },
-              reason: {
+        type: 'query',
+        description: 'View moderation statuses of subjects (record or repo).',
+        parameters: {
+          type: 'params',
+          properties: {
+            subject: {
+              type: 'string',
+              format: 'uri',
+            },
+            comment: {
+              type: 'string',
+              description: 'Search subjects by keyword from comments',
+            },
+            reportedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reported after a given timestamp',
+            },
+            reportedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reported before a given timestamp',
+            },
+            reviewedAfter: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reviewed after a given timestamp',
+            },
+            reviewedBefore: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Search subjects reviewed before a given timestamp',
+            },
+            includeMuted: {
+              type: 'boolean',
+              description:
+                "By default, we don't include muted subjects in the results. Set this to true to include them.",
+            },
+            reviewState: {
+              type: 'string',
+              description: 'Specify when fetching subjects in a certain state',
+            },
+            ignoreSubjects: {
+              type: 'array',
+              items: {
                 type: 'string',
+                format: 'uri',
               },
-              createdBy: {
-                type: 'string',
-                format: 'did',
-              },
+            },
+            lastReviewedBy: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Get all subject statuses that were reviewed by a specific moderator',
+            },
+            sortField: {
+              type: 'string',
+              default: 'lastReportedAt',
+              enum: ['lastReviewedAt', 'lastReportedAt'],
+            },
+            sortDirection: {
+              type: 'string',
+              default: 'desc',
+              enum: ['asc', 'desc'],
+            },
+            takendown: {
+              type: 'boolean',
+              description: 'Get subjects that were taken down',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
             },
           },
         },
         output: {
           encoding: 'application/json',
           schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionView',
+            type: 'object',
+            required: ['subjectStatuses'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              subjectStatuses: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.defs#subjectStatusView',
+                },
+              },
+            },
           },
         },
       },
@@ -1301,12 +1423,12 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: "Send email to a user's primary email address",
+        description: "Send email to a user's account email address.",
         input: {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['recipientDid', 'content'],
+            required: ['recipientDid', 'content', 'senderDid'],
             properties: {
               recipientDid: {
                 type: 'string',
@@ -1317,6 +1439,10 @@ export const schemaDict = {
               },
               subject: {
                 type: 'string',
+              },
+              senderDid: {
+                type: 'string',
+                format: 'did',
               },
             },
           },
@@ -1336,90 +1462,13 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminTakeModerationAction: {
-    lexicon: 1,
-    id: 'com.atproto.admin.takeModerationAction',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Take a moderation action on a repo.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['action', 'subject', 'reason', 'createdBy'],
-            properties: {
-              action: {
-                type: 'string',
-                knownValues: [
-                  'com.atproto.admin.defs#takedown',
-                  'com.atproto.admin.defs#flag',
-                  'com.atproto.admin.defs#acknowledge',
-                ],
-              },
-              subject: {
-                type: 'union',
-                refs: [
-                  'lex:com.atproto.admin.defs#repoRef',
-                  'lex:com.atproto.repo.strongRef',
-                ],
-              },
-              subjectBlobCids: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                  format: 'cid',
-                },
-              },
-              createLabelVals: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-              },
-              negateLabelVals: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-              },
-              reason: {
-                type: 'string',
-              },
-              durationInHours: {
-                type: 'integer',
-                description:
-                  'Indicates how long this action was meant to be in effect before automatically expiring.',
-              },
-              createdBy: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#actionView',
-          },
-        },
-        errors: [
-          {
-            name: 'SubjectHasAction',
-          },
-        ],
-      },
-    },
-  },
   ComAtprotoAdminUpdateAccountEmail: {
     lexicon: 1,
     id: 'com.atproto.admin.updateAccountEmail',
     defs: {
       main: {
         type: 'procedure',
-        description: "Administrative action to update an account's email",
+        description: "Administrative action to update an account's email.",
         input: {
           encoding: 'application/json',
           schema: {
@@ -1446,7 +1495,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: "Administrative action to update an account's handle",
+        description: "Administrative action to update an account's handle.",
         input: {
           encoding: 'application/json',
           schema: {
@@ -1474,7 +1523,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Update the service-specific admin status of a subject (account, record, or blob)',
+          'Update the service-specific admin status of a subject (account, record, or blob).',
         input: {
           encoding: 'application/json',
           schema: {
@@ -1560,7 +1609,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Updates the handle of the account',
+        description: 'Updates the handle of the account.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -1583,41 +1632,42 @@ export const schemaDict = {
     defs: {
       label: {
         type: 'object',
-        description: 'Metadata tag on an atproto resource (eg, repo or record)',
+        description:
+          'Metadata tag on an atproto resource (eg, repo or record).',
         required: ['src', 'uri', 'val', 'cts'],
         properties: {
           src: {
             type: 'string',
             format: 'did',
-            description: 'DID of the actor who created this label',
+            description: 'DID of the actor who created this label.',
           },
           uri: {
             type: 'string',
             format: 'uri',
             description:
-              'AT URI of the record, repository (account), or other resource which this label applies to',
+              'AT URI of the record, repository (account), or other resource that this label applies to.',
           },
           cid: {
             type: 'string',
             format: 'cid',
             description:
-              "optionally, CID specifying the specific version of 'uri' resource this label applies to",
+              "Optionally, CID specifying the specific version of 'uri' resource this label applies to.",
           },
           val: {
             type: 'string',
             maxLength: 128,
             description:
-              'the short string name of the value or type of this label',
+              'The short string name of the value or type of this label.',
           },
           neg: {
             type: 'boolean',
             description:
-              'if true, this is a negation label, overwriting a previous label',
+              'If true, this is a negation label, overwriting a previous label.',
           },
           cts: {
             type: 'string',
             format: 'datetime',
-            description: 'timestamp when this label was created',
+            description: 'Timestamp when this label was created.',
           },
         },
       },
@@ -1640,14 +1690,14 @@ export const schemaDict = {
       selfLabel: {
         type: 'object',
         description:
-          'Metadata tag on an atproto record, published by the author within the record. Note -- schemas should use #selfLabels, not #selfLabel.',
+          'Metadata tag on an atproto record, published by the author within the record. Note that schemas should use #selfLabels, not #selfLabel.',
         required: ['val'],
         properties: {
           val: {
             type: 'string',
             maxLength: 128,
             description:
-              'the short string name of the value or type of this label',
+              'The short string name of the value or type of this label.',
           },
         },
       },
@@ -1670,7 +1720,7 @@ export const schemaDict = {
                 type: 'string',
               },
               description:
-                "List of AT URI patterns to match (boolean 'OR'). Each may be a prefix (ending with '*'; will match inclusive of the string leading to '*'), or a full URI",
+                "List of AT URI patterns to match (boolean 'OR'). Each may be a prefix (ending with '*'; will match inclusive of the string leading to '*'), or a full URI.",
             },
             sources: {
               type: 'array',
@@ -1678,7 +1728,8 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
-              description: 'Optional list of label sources (DIDs) to filter on',
+              description:
+                'Optional list of label sources (DIDs) to filter on.',
             },
             limit: {
               type: 'integer',
@@ -1719,7 +1770,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'subscription',
-        description: 'Subscribe to label updates',
+        description: 'Subscribe to label updates.',
         parameters: {
           type: 'params',
           properties: {
@@ -1914,7 +1965,7 @@ export const schemaDict = {
               validate: {
                 type: 'boolean',
                 default: true,
-                description: 'Validate the records?',
+                description: 'Flag for validating the records.',
               },
               writes: {
                 type: 'array',
@@ -2023,7 +2074,7 @@ export const schemaDict = {
               validate: {
                 type: 'boolean',
                 default: true,
-                description: 'Validate the record?',
+                description: 'Flag for validating the record.',
               },
               record: {
                 type: 'unknown',
@@ -2033,7 +2084,7 @@ export const schemaDict = {
                 type: 'string',
                 format: 'cid',
                 description:
-                  'Compare and swap with the previous commit by cid.',
+                  'Compare and swap with the previous commit by CID.',
               },
             },
           },
@@ -2094,13 +2145,13 @@ export const schemaDict = {
                 type: 'string',
                 format: 'cid',
                 description:
-                  'Compare and swap with the previous record by cid.',
+                  'Compare and swap with the previous record by CID.',
               },
               swapCommit: {
                 type: 'string',
                 format: 'cid',
                 description:
-                  'Compare and swap with the previous commit by cid.',
+                  'Compare and swap with the previous commit by CID.',
               },
             },
           },
@@ -2270,7 +2321,7 @@ export const schemaDict = {
             },
             reverse: {
               type: 'boolean',
-              description: 'Reverse the order of the returned records?',
+              description: 'Flag to reverse the order of the returned records.',
             },
           },
         },
@@ -2345,7 +2396,7 @@ export const schemaDict = {
               validate: {
                 type: 'boolean',
                 default: true,
-                description: 'Validate the record?',
+                description: 'Flag for validating the record.',
               },
               record: {
                 type: 'unknown',
@@ -2355,13 +2406,13 @@ export const schemaDict = {
                 type: 'string',
                 format: 'cid',
                 description:
-                  'Compare and swap with the previous record by cid.',
+                  'Compare and swap with the previous record by CID.',
               },
               swapCommit: {
                 type: 'string',
                 format: 'cid',
                 description:
-                  'Compare and swap with the previous commit by cid.',
+                  'Compare and swap with the previous commit by CID.',
               },
             },
           },
@@ -2575,7 +2626,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Create an app-specific password.',
+        description: 'Create an App Password.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -2663,7 +2714,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Create an invite code.',
+        description: 'Create invite codes.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -2851,7 +2902,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Delete a user account with a token and password.',
+        description: "Delete an actor's account with a token and password.",
         input: {
           encoding: 'application/json',
           schema: {
@@ -2942,7 +2993,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Get all invite codes for a given account',
+        description: 'Get all invite codes for a given account.',
         parameters: {
           type: 'params',
           properties: {
@@ -3022,7 +3073,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'List all app-specific passwords.',
+        description: 'List all App Passwords.',
         output: {
           encoding: 'application/json',
           schema: {
@@ -3118,7 +3169,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Request an email with a code to confirm ownership of email',
+          'Request an email with a code to confirm ownership of email.',
       },
     },
   },
@@ -3240,7 +3291,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Revoke an app-specific password by name.',
+        description: 'Revoke an App Password by name.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -3329,7 +3380,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Gets blocks from a given repo.',
+        description: 'Get blocks from a given repo.',
         parameters: {
           type: 'params',
           required: ['did', 'cids'],
@@ -3424,7 +3475,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Gets the current commit CID & revision of the repo.',
+        description: 'Get the current commit CID & revision of the repo.',
         parameters: {
           type: 'params',
           required: ['did'],
@@ -3467,7 +3518,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Gets blocks needed for existence or non-existence of record.',
+          'Get blocks needed for existence or non-existence of record.',
         parameters: {
           type: 'params',
           required: ['did', 'collection', 'rkey'],
@@ -3504,7 +3555,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          "Gets the did's repo, optionally catching up from a specific revision.",
+          "Gets the DID's repo, optionally catching up from a specific revision.",
         parameters: {
           type: 'params',
           required: ['did'],
@@ -3532,7 +3583,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'List blob cids since some revision',
+        description: 'List blob CIDs since some revision.',
         parameters: {
           type: 'params',
           required: ['did'],
@@ -3544,7 +3595,7 @@ export const schemaDict = {
             },
             since: {
               type: 'string',
-              description: 'Optional revision of the repo to list blobs since',
+              description: 'Optional revision of the repo to list blobs since.',
             },
             limit: {
               type: 'integer',
@@ -3585,7 +3636,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'List dids and root cids of hosted repos',
+        description: 'List DIDs and root CIDs of hosted repos.',
         parameters: {
           type: 'params',
           properties: {
@@ -3646,7 +3697,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Notify a crawling service of a recent update. Often when a long break between updates causes the connection with the crawling service to break.',
+          'Notify a crawling service of a recent update; often when a long break between updates causes the connection with the crawling service to break.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -3694,7 +3745,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'subscription',
-        description: 'Subscribe to repo updates',
+        description: 'Subscribe to repo updates.',
         parameters: {
           type: 'params',
           properties: {
@@ -3763,15 +3814,15 @@ export const schemaDict = {
           },
           rev: {
             type: 'string',
-            description: 'The rev of the emitted commit',
+            description: 'The rev of the emitted commit.',
           },
           since: {
             type: 'string',
-            description: 'The rev of the last emitted commit from this repo',
+            description: 'The rev of the last emitted commit from this repo.',
           },
           blocks: {
             type: 'bytes',
-            description: 'CAR file containing relevant blocks',
+            description: 'CAR file containing relevant blocks.',
             maxLength: 1000000,
           },
           ops: {
@@ -3869,7 +3920,7 @@ export const schemaDict = {
       repoOp: {
         type: 'object',
         description:
-          "A repo operation, ie a write of a single record. For creates and updates, cid is the record's CID as of this operation. For deletes, it's null.",
+          "A repo operation, ie a write of a single record. For creates and updates, CID is the record's CID as of this operation. For deletes, it's null.",
         required: ['action', 'path', 'cid'],
         nullable: ['cid'],
         properties: {
@@ -3882,6 +3933,47 @@ export const schemaDict = {
           },
           cid: {
             type: 'cid-link',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoTempFetchLabels: {
+    lexicon: 1,
+    id: 'com.atproto.temp.fetchLabels',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Fetch all labels from a labeler created after a certain date.',
+        parameters: {
+          type: 'params',
+          properties: {
+            since: {
+              type: 'integer',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 250,
+              default: 50,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['labels'],
+            properties: {
+              labels: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.label.defs#label',
+                },
+              },
+            },
           },
         },
       },
@@ -4115,7 +4207,7 @@ export const schemaDict = {
           birthDate: {
             type: 'string',
             format: 'datetime',
-            description: 'The birth date of the owner of the account.',
+            description: 'The birth date of account owner.',
           },
         },
       },
@@ -4157,7 +4249,7 @@ export const schemaDict = {
         properties: {
           sort: {
             type: 'string',
-            description: 'Sorting mode.',
+            description: 'Sorting mode for threads.',
             knownValues: ['oldest', 'newest', 'most-likes', 'random'],
           },
           prioritizeFollowedUsers: {
@@ -4201,6 +4293,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
+        description: 'Get detailed profile view of an actor.',
         parameters: {
           type: 'params',
           required: ['actor'],
@@ -4227,6 +4320,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
+        description: 'Get detailed profile views of multiple actors.',
         parameters: {
           type: 'params',
           required: ['actors'],
@@ -4266,8 +4360,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description:
-          'Get a list of actors suggested for following. Used in discovery UIs.',
+        description: 'Get a list of suggested actors, used for discovery.',
         parameters: {
           type: 'params',
           properties: {
@@ -4310,6 +4403,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'record',
+        description: 'A declaration of a profile.',
         key: 'literal:self',
         record: {
           type: 'object',
@@ -4349,7 +4443,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Sets the private preferences attached to the account.',
+        description: 'Set the private preferences attached to the account.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -4378,12 +4472,12 @@ export const schemaDict = {
           properties: {
             term: {
               type: 'string',
-              description: "DEPRECATED: use 'q' instead",
+              description: "DEPRECATED: use 'q' instead.",
             },
             q: {
               type: 'string',
               description:
-                'search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended',
+                'Search query string. Syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended.',
             },
             limit: {
               type: 'integer',
@@ -4424,17 +4518,17 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Find actor suggestions for a search term.',
+        description: 'Find actor suggestions for a prefix search term.',
         parameters: {
           type: 'params',
           properties: {
             term: {
               type: 'string',
-              description: "DEPRECATED: use 'q' instead",
+              description: "DEPRECATED: use 'q' instead.",
             },
             q: {
               type: 'string',
-              description: 'search query prefix; not a full query string',
+              description: 'Search query prefix; not a full query string.',
             },
             limit: {
               type: 'integer',
@@ -4467,7 +4561,7 @@ export const schemaDict = {
     lexicon: 1,
     id: 'app.bsky.embed.external',
     description:
-      'A representation of some externally linked content, embedded in another form of content',
+      'A representation of some externally linked content, embedded in another form of content.',
     defs: {
       main: {
         type: 'object',
@@ -4534,7 +4628,7 @@ export const schemaDict = {
   AppBskyEmbedImages: {
     lexicon: 1,
     id: 'app.bsky.embed.images',
-    description: 'A set of images embedded in some other form of content',
+    description: 'A set of images embedded in some other form of content.',
     defs: {
       main: {
         type: 'object',
@@ -4623,7 +4717,7 @@ export const schemaDict = {
     lexicon: 1,
     id: 'app.bsky.embed.record',
     description:
-      'A representation of a record embedded in another form of content',
+      'A representation of a record embedded in another form of content.',
     defs: {
       main: {
         type: 'object',
@@ -4733,7 +4827,7 @@ export const schemaDict = {
     lexicon: 1,
     id: 'app.bsky.embed.recordWithMedia',
     description:
-      'A representation of a record embedded in another form of content, alongside other compatible embeds',
+      'A representation of a record embedded in another form of content, alongside other compatible embeds.',
     defs: {
       main: {
         type: 'object',
@@ -4841,6 +4935,9 @@ export const schemaDict = {
             type: 'string',
             format: 'at-uri',
           },
+          replyDisabled: {
+            type: 'boolean',
+          },
         },
       },
       feedViewPost: {
@@ -4924,10 +5021,6 @@ export const schemaDict = {
               ],
             },
           },
-          viewer: {
-            type: 'ref',
-            ref: 'lex:app.bsky.feed.defs#viewerThreadState',
-          },
         },
       },
       notFoundPost: {
@@ -4973,14 +5066,6 @@ export const schemaDict = {
           viewer: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#viewerState',
-          },
-        },
-      },
-      viewerThreadState: {
-        type: 'object',
-        properties: {
-          canReply: {
-            type: 'boolean',
           },
         },
       },
@@ -5101,7 +5186,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Returns information about a given feed generator including TOS & offered feed URIs',
+          'Get information about a feed generator, including policies and offered feed URIs.',
         output: {
           encoding: 'application/json',
           schema: {
@@ -5156,7 +5241,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'record',
-        description: 'A declaration of the existence of a feed generator',
+        description: 'A declaration of the existence of a feed generator.',
         key: 'any',
         record: {
           type: 'object',
@@ -5207,7 +5292,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Retrieve a list of feeds created by a given actor',
+        description: 'Get a list of feeds created by the actor.',
         parameters: {
           type: 'params',
           required: ['actor'],
@@ -5255,7 +5340,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'A view of the posts liked by an actor.',
+        description: 'Get a list of posts liked by an actor.',
         parameters: {
           type: 'params',
           required: ['actor'],
@@ -5311,7 +5396,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: "A view of an actor's feed.",
+        description: "Get a view of an actor's feed.",
         parameters: {
           type: 'params',
           required: ['actor'],
@@ -5377,7 +5462,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          "Compose and hydrate a feed from a user's selected feed generator",
+          "Get a hydrated feed from an actor's selected feed generator.",
         parameters: {
           type: 'params',
           required: ['feed'],
@@ -5430,8 +5515,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description:
-          'Get information about a specific feed offered by a feed generator, such as its online status',
+        description: 'Get information about a feed generator.',
         parameters: {
           type: 'params',
           required: ['feed'],
@@ -5470,7 +5554,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Get information about a list of feed generators',
+        description: 'Get information about a list of feed generators.',
         parameters: {
           type: 'params',
           required: ['feeds'],
@@ -5509,7 +5593,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'A skeleton of a feed provided by a feed generator',
+        description: 'Get a skeleton of a feed provided by a feed generator.',
         parameters: {
           type: 'params',
           required: ['feed'],
@@ -5562,6 +5646,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
+        description: 'Get the list of likes.',
         parameters: {
           type: 'params',
           required: ['uri'],
@@ -5639,7 +5724,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'A view of a recent posts from actors in a list',
+        description: 'Get a view of a recent posts from actors in a list.',
         parameters: {
           type: 'params',
           required: ['list'],
@@ -5692,6 +5777,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
+        description: 'Get posts in a thread.',
         parameters: {
           type: 'params',
           required: ['uri'],
@@ -5745,7 +5831,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: "A view of an actor's feed.",
+        description: "Get a view of an actor's feed.",
         parameters: {
           type: 'params',
           required: ['uris'],
@@ -5785,6 +5871,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
+        description: 'Get a list of reposts.',
         parameters: {
           type: 'params',
           required: ['uri'],
@@ -5887,7 +5974,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: "A view of the user's home timeline.",
+        description: "Get a view of the actor's home timeline.",
         parameters: {
           type: 'params',
           properties: {
@@ -5933,6 +6020,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'record',
+        description: 'A declaration of a like.',
         key: 'tid',
         record: {
           type: 'object',
@@ -5957,6 +6045,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'record',
+        description: 'A declaration of a post.',
         key: 'tid',
         record: {
           type: 'object',
@@ -6079,6 +6168,7 @@ export const schemaDict = {
     id: 'app.bsky.feed.repost',
     defs: {
       main: {
+        description: 'A declaration of a repost.',
         type: 'record',
         key: 'tid',
         record: {
@@ -6104,7 +6194,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Find posts matching search criteria',
+        description: 'Find posts matching search criteria.',
         parameters: {
           type: 'params',
           required: ['q'],
@@ -6112,7 +6202,7 @@ export const schemaDict = {
             q: {
               type: 'string',
               description:
-                'search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended',
+                'Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended.',
             },
             limit: {
               type: 'integer',
@@ -6123,7 +6213,7 @@ export const schemaDict = {
             cursor: {
               type: 'string',
               description:
-                'optional pagination mechanism; may not necessarily allow scrolling through entire result set',
+                'Optional pagination mechanism; may not necessarily allow scrolling through entire result set.',
             },
           },
         },
@@ -6139,7 +6229,7 @@ export const schemaDict = {
               hitsTotal: {
                 type: 'integer',
                 description:
-                  'count of search hits. optional, may be rounded/truncated, and may not be possible to paginate through all hits',
+                  'Count of search hits. Optional, may be rounded/truncated, and may not be possible to paginate through all hits.',
               },
               posts: {
                 type: 'array',
@@ -6224,7 +6314,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'record',
-        description: 'A block.',
+        description: 'A declaration of a block.',
         key: 'tid',
         record: {
           type: 'object',
@@ -6351,12 +6441,12 @@ export const schemaDict = {
       modlist: {
         type: 'token',
         description:
-          'A list of actors to apply an aggregate moderation action (mute/block) on',
+          'A list of actors to apply an aggregate moderation action (mute/block) on.',
       },
       curatelist: {
         type: 'token',
         description:
-          'A list of actors used for curation purposes such as list feeds or interaction gating',
+          'A list of actors used for curation purposes such as list feeds or interaction gating.',
       },
       listViewerState: {
         type: 'object',
@@ -6378,7 +6468,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'record',
-        description: 'A social follow.',
+        description: 'A declaration of a social follow.',
         key: 'tid',
         record: {
           type: 'object',
@@ -6403,7 +6493,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: "Who is the requester's account blocking?",
+        description: 'Get a list of who the actor is blocking.',
         parameters: {
           type: 'params',
           properties: {
@@ -6446,7 +6536,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Who is following an actor?',
+        description: "Get a list of an actor's followers.",
         parameters: {
           type: 'params',
           required: ['actor'],
@@ -6498,7 +6588,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Who is an actor following?',
+        description: 'Get a list of who the actor follows.',
         parameters: {
           type: 'params',
           required: ['actor'],
@@ -6550,7 +6640,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Fetch a list of actors',
+        description: 'Get a list of actors.',
         parameters: {
           type: 'params',
           required: ['list'],
@@ -6602,7 +6692,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: "Which lists is the requester's account blocking?",
+        description: 'Get lists that the actor is blocking.',
         parameters: {
           type: 'params',
           properties: {
@@ -6645,7 +6735,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: "Which lists is the requester's account muting?",
+        description: 'Get lists that the actor is muting.',
         parameters: {
           type: 'params',
           properties: {
@@ -6688,7 +6778,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Fetch a list of lists that belong to an actor',
+        description: 'Get a list of lists that belong to an actor.',
         parameters: {
           type: 'params',
           required: ['actor'],
@@ -6736,7 +6826,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Who does the viewer mute?',
+        description: 'Get a list of who the actor mutes.',
         parameters: {
           type: 'params',
           properties: {
@@ -6891,7 +6981,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'record',
-        description: 'An item under a declared list of actors',
+        description: 'An item under a declared list of actors.',
         key: 'tid',
         record: {
           type: 'object',
@@ -6920,7 +7010,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Mute an actor by did or handle.',
+        description: 'Mute an actor by DID or handle.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -6966,7 +7056,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Unmute an actor by did or handle.',
+        description: 'Unmute an actor by DID or handle.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -7012,6 +7102,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
+        description: 'Get the count of unread notifications.',
         parameters: {
           type: 'params',
           properties: {
@@ -7042,6 +7133,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
+        description: 'Get a list of notifications.',
         parameters: {
           type: 'params',
           properties: {
@@ -7148,7 +7240,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Register for push notifications with a service',
+        description: 'Register for push notifications with a service.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -7308,7 +7400,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'DEPRECATED: will be removed soon, please find a feed generator alternative',
+          'DEPRECATED: will be removed soon. Use a feed generator alternative.',
         parameters: {
           type: 'params',
           properties: {
@@ -7355,7 +7447,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'An unspecced view of globally popular feed generators',
+        description: 'An unspecced view of globally popular feed generators.',
         parameters: {
           type: 'params',
           properties: {
@@ -7401,7 +7493,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'A skeleton of a timeline - UNSPECCED & WILL GO AWAY SOON',
+        description:
+          'DEPRECATED: a skeleton of a timeline. Unspecced and will be unavailable soon.',
         parameters: {
           type: 'params',
           properties: {
@@ -7449,7 +7542,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Backend Actors (profile) search, returning only skeleton',
+        description: 'Backend Actors (profile) search, returns only skeleton.',
         parameters: {
           type: 'params',
           required: ['q'],
@@ -7457,11 +7550,11 @@ export const schemaDict = {
             q: {
               type: 'string',
               description:
-                'search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. For typeahead search, only simple term match is supported, not full syntax',
+                'Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended. For typeahead search, only simple term match is supported, not full syntax.',
             },
             typeahead: {
               type: 'boolean',
-              description: "if true, acts as fast/simple 'typeahead' query",
+              description: "If true, acts as fast/simple 'typeahead' query.",
             },
             limit: {
               type: 'integer',
@@ -7472,7 +7565,7 @@ export const schemaDict = {
             cursor: {
               type: 'string',
               description:
-                'optional pagination mechanism; may not necessarily allow scrolling through entire result set',
+                'Optional pagination mechanism; may not necessarily allow scrolling through entire result set.',
             },
           },
         },
@@ -7488,7 +7581,7 @@ export const schemaDict = {
               hitsTotal: {
                 type: 'integer',
                 description:
-                  'count of search hits. optional, may be rounded/truncated, and may not be possible to paginate through all hits',
+                  'Count of search hits. Optional, may be rounded/truncated, and may not be possible to paginate through all hits.',
               },
               actors: {
                 type: 'array',
@@ -7514,7 +7607,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Backend Posts search, returning only skeleton',
+        description: 'Backend Posts search, returns only skeleton',
         parameters: {
           type: 'params',
           required: ['q'],
@@ -7522,7 +7615,7 @@ export const schemaDict = {
             q: {
               type: 'string',
               description:
-                'search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended',
+                'Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended.',
             },
             limit: {
               type: 'integer',
@@ -7533,7 +7626,7 @@ export const schemaDict = {
             cursor: {
               type: 'string',
               description:
-                'optional pagination mechanism; may not necessarily allow scrolling through entire result set',
+                'Optional pagination mechanism; may not necessarily allow scrolling through entire result set.',
             },
           },
         },
@@ -7549,7 +7642,7 @@ export const schemaDict = {
               hitsTotal: {
                 type: 'integer',
                 description:
-                  'count of search hits. optional, may be rounded/truncated, and may not be possible to paginate through all hits',
+                  'Count of search hits. Optional, may be rounded/truncated, and may not be possible to paginate through all hits.',
               },
               posts: {
                 type: 'array',
@@ -7577,23 +7670,20 @@ export const ids = {
   ComAtprotoAdminDisableAccountInvites:
     'com.atproto.admin.disableAccountInvites',
   ComAtprotoAdminDisableInviteCodes: 'com.atproto.admin.disableInviteCodes',
+  ComAtprotoAdminEmitModerationEvent: 'com.atproto.admin.emitModerationEvent',
   ComAtprotoAdminEnableAccountInvites: 'com.atproto.admin.enableAccountInvites',
   ComAtprotoAdminGetAccountInfo: 'com.atproto.admin.getAccountInfo',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
-  ComAtprotoAdminGetModerationAction: 'com.atproto.admin.getModerationAction',
-  ComAtprotoAdminGetModerationActions: 'com.atproto.admin.getModerationActions',
-  ComAtprotoAdminGetModerationReport: 'com.atproto.admin.getModerationReport',
-  ComAtprotoAdminGetModerationReports: 'com.atproto.admin.getModerationReports',
+  ComAtprotoAdminGetModerationEvent: 'com.atproto.admin.getModerationEvent',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
   ComAtprotoAdminGetSubjectStatus: 'com.atproto.admin.getSubjectStatus',
-  ComAtprotoAdminResolveModerationReports:
-    'com.atproto.admin.resolveModerationReports',
-  ComAtprotoAdminReverseModerationAction:
-    'com.atproto.admin.reverseModerationAction',
+  ComAtprotoAdminQueryModerationEvents:
+    'com.atproto.admin.queryModerationEvents',
+  ComAtprotoAdminQueryModerationStatuses:
+    'com.atproto.admin.queryModerationStatuses',
   ComAtprotoAdminSearchRepos: 'com.atproto.admin.searchRepos',
   ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
-  ComAtprotoAdminTakeModerationAction: 'com.atproto.admin.takeModerationAction',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
@@ -7651,6 +7741,7 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
+  ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',

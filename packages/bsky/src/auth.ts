@@ -37,7 +37,6 @@ export const authOptionalVerifier = (
   opts: { aud: string | null },
 ) => {
   const verifyAccess = authVerifier(idResolver, opts)
-
   return async (reqCtx: { req: express.Request; res: express.Response }) => {
     if (!reqCtx.req.headers.authorization) {
       return { credentials: { did: null } }

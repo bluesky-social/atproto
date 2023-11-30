@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
-      "description": "A social follow.",
+      "description": "A declaration of a social follow.",
       "key": "tid",
       "record": {
         "type": "object",

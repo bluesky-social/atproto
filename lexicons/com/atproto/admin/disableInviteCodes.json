@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Disable some set of codes and/or all codes associated with a set of users",
+      "description": "Disable some set of codes and/or all codes associated with a set of users.",
       "input": {
         "encoding": "application/json",
         "schema": {

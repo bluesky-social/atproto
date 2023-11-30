@@ -52,6 +52,7 @@ make build
 make test
 
 # run a local PDS and AppView with fake test accounts and data
+# (this requires a global installation of `jq` and `docker`)
 make run-dev-env
 
 # show all other commands

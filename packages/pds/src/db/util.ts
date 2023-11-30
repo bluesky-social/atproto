@@ -57,3 +57,11 @@ export const dummyDialect = {
 export type DbRef = RawBuilder | ReturnType<DynamicModule['ref']>
 
 export type AnyQb = SelectQueryBuilder<any, any, any>
+
+export const isErrUniqueViolation = (err: unknown) => {
+  const code = err?.['code']
+  return (
+    code === '23505' || // postgres, see https://www.postgresql.org/docs/current/errcodes-appendix.html
+    code === 'SQLITE_CONSTRAINT_UNIQUE' // sqlite, see https://www.sqlite.org/rescode.html#constraint_unique
+  )
+}

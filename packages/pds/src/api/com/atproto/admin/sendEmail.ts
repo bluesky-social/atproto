@@ -1,11 +1,12 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { authPassthru } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.sendEmail({
     auth: ctx.authVerifier.role,
-    handler: async ({ input, auth }) => {
+    handler: async ({ req, input, auth }) => {
       if (!auth.credentials.admin && !auth.credentials.moderator) {
         throw new AuthRequiredError('Insufficient privileges')
       }
@@ -13,6 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       const {
         content,
         recipientDid,
+        senderDid,
         subject = 'Message from Bluesky moderator',
       } = input.body
       const userInfo = await ctx.db.db
@@ -28,6 +30,20 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.moderationMailer.send(
         { content },
         { subject, to: userInfo.email },
+      )
+      await ctx.appViewAgent.api.com.atproto.admin.emitModerationEvent(
+        {
+          event: {
+            $type: 'com.atproto.admin.defs#modEventEmail',
+            subjectLine: subject,
+          },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: recipientDid,
+          },
+          createdBy: senderDid,
+        },
+        { ...authPassthru(req), encoding: 'application/json' },
       )
       return {
         encoding: 'application/json',

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Which lists is the requester's account blocking?",
+      "description": "Get lists that the actor is blocking.",
       "parameters": {
         "type": "params",
         "properties": {

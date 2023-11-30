@@ -61,7 +61,6 @@ export class AutoModerator {
         'moderation service not properly configured',
       )
     }
-
     this.imgLabeler = hiveApiKey ? new HiveLabeler(hiveApiKey, ctx) : undefined
     this.textLabeler = new KeywordLabeler(ctx.cfg.labelerKeywords)
     if (abyssEndpoint && abyssPassword) {
@@ -157,18 +156,22 @@ export class AutoModerator {
     if (!this.textFlagger) return
     const matches = this.textFlagger.getMatches(text)
     if (matches.length < 1) return
-    if (!this.services.moderation) {
-      log.error(
-        { subject, text, matches },
-        'no moderation service setup to flag record text',
-      )
-      return
-    }
-    await this.services.moderation(this.ctx.db).report({
-      reasonType: REASONOTHER,
-      reason: `Automatically flagged for possible slurs: ${matches.join(', ')}`,
-      subject,
-      reportedBy: this.ctx.cfg.labelerDid,
+    await this.ctx.db.transaction(async (dbTxn) => {
+      if (!this.services.moderation) {
+        log.error(
+          { subject, text, matches },
+          'no moderation service setup to flag record text',
+        )
+        return
+      }
+      return this.services.moderation(dbTxn).report({
+        reasonType: REASONOTHER,
+        reason: `Automatically flagged for possible slurs: ${matches.join(
+          ', ',
+        )}`,
+        subject,
+        reportedBy: this.ctx.cfg.labelerDid,
+      })
     })
   }
 
@@ -244,15 +247,17 @@ export class AutoModerator {
     }
 
     if (this.pushAgent) {
-      await this.pushAgent.com.atproto.admin.takeModerationAction({
-        action: 'com.atproto.admin.defs#takedown',
+      await this.pushAgent.com.atproto.admin.emitModerationEvent({
+        event: {
+          $type: 'com.atproto.admin.defs#modEventTakedown',
+          comment: takedownReason,
+        },
         subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: uri.toString(),
           cid: recordCid.toString(),
         },
         subjectBlobCids: takedownCids.map((c) => c.toString()),
-        reason: takedownReason,
         createdBy: this.ctx.cfg.labelerDid,
       })
     } else {
@@ -261,11 +266,13 @@ export class AutoModerator {
           throw new Error('no mod push agent or uri invalidator setup')
         }
         const modSrvc = this.services.moderation(dbTxn)
-        const action = await modSrvc.logAction({
-          action: 'com.atproto.admin.defs#takedown',
+        const action = await modSrvc.logEvent({
+          event: {
+            $type: 'com.atproto.admin.defs#modEventTakedown',
+            comment: takedownReason,
+          },
           subject: { uri, cid: recordCid },
           subjectBlobCids: takedownCids,
-          reason: takedownReason,
           createdBy: this.ctx.cfg.labelerDid,
         })
         await modSrvc.takedownRecord({

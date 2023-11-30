@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Unmute an actor by did or handle.",
+      "description": "Unmute an actor by DID or handle.",
       "input": {
         "encoding": "application/json",
         "schema": {

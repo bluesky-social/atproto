@@ -91,13 +91,16 @@ const presentation = (state: HydrationState, ctx: Context) => {
   const actors = actorService.views.profilePresentation(
     Object.keys(profileState.profiles),
     profileState,
-    { viewer: params.viewer },
+    params.viewer,
   )
   const creator = actors[list.creator]
   if (!creator) {
     throw new InvalidRequestError(`Actor not found: ${list.handle}`)
   }
   const listView = graphService.formatListView(list, actors)
+  if (!listView) {
+    throw new InvalidRequestError('List not found')
+  }
   const items = mapDefined(listItems, (item) => {
     const subject = actors[item.did]
     if (!subject) return

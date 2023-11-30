@@ -11,7 +11,7 @@ export interface QueryParams {}
 
 export interface InputSchema {
   account: string
-  /** Additionally add a note describing why the invites were disabled */
+  /** Optional reason for disabled invites. */
   note?: string
   [k: string]: unknown
 }

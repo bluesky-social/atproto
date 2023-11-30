@@ -4,14 +4,14 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Backend Posts search, returning only skeleton",
+      "description": "Backend Posts search, returns only skeleton",
       "parameters": {
         "type": "params",
         "required": ["q"],
         "properties": {
           "q": {
             "type": "string",
-            "description": "search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended"
+            "description": "Search query string; syntax, phrase, boolean, and faceting is unspecified, but Lucene query syntax is recommended."
           },
           "limit": {
             "type": "integer",
@@ -21,7 +21,7 @@
           },
           "cursor": {
             "type": "string",
-            "description": "optional pagination mechanism; may not necessarily allow scrolling through entire result set"
+            "description": "Optional pagination mechanism; may not necessarily allow scrolling through entire result set."
           }
         }
       },
@@ -34,7 +34,7 @@
             "cursor": { "type": "string" },
             "hitsTotal": {
               "type": "integer",
-              "description": "count of search hits. optional, may be rounded/truncated, and may not be possible to paginate through all hits"
+              "description": "Count of search hits. Optional, may be rounded/truncated, and may not be possible to paginate through all hits."
             },
             "posts": {
               "type": "array",

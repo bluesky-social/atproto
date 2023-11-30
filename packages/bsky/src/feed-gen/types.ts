@@ -11,7 +11,7 @@ export type AlgoResponse = {
 export type AlgoHandler = (
   ctx: AppContext,
   params: SkeletonParams,
-  requester: string,
+  viewer: string | null,
 ) => Promise<AlgoResponse>
 
 export type MountedAlgos = Record<string, AlgoHandler>
