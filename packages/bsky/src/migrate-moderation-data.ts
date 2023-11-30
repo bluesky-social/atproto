@@ -66,7 +66,6 @@ const processLegacyReports = async (
   db: PrimaryDatabase,
   legacyIds: number[],
 ) => {
-  db.assertTransaction()
   if (!legacyIds.length) {
     console.log('No legacy reports to process')
     return
