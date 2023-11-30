@@ -169,10 +169,38 @@ describe('redis cache', () => {
     expect(hits).toBe(2)
   })
 
+  it('caches negative values', async () => {
+    let val: string | null = null
+    let hits = 0
+    const cache = new ReadThroughCache<string>(redis.withNamespace('test5'), {
+      staleTTL: 60000,
+      maxTTL: 60000,
+      fetchMethod: async () => {
+        hits++
+        return val
+      },
+    })
+
+    const try1 = await cache.get('1')
+    expect(try1).toEqual(null)
+    expect(hits).toBe(1)
+
+    val = 'b'
+
+    const try2 = await cache.get('1')
+    // returns cached negative value
+    expect(try2).toEqual(null)
+    expect(hits).toBe(1)
+
+    const try3 = await cache.get('1', { revalidate: true })
+    expect(try3).toEqual('b')
+    expect(hits).toEqual(2)
+  })
+
   it('times out and fails open', async () => {
     let val = 'a'
     let hits = 0
-    const cache = new ReadThroughCache<string>(redis.withNamespace('test5'), {
+    const cache = new ReadThroughCache<string>(redis.withNamespace('test6'), {
       staleTTL: 60000,
       maxTTL: 60000,
       fetchMethod: async () => {
