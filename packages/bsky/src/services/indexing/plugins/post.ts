@@ -243,8 +243,14 @@ const notifsForInsert = (obj: IndexedPost) => {
     }
   }
 
+  if (obj.post.violatesThreadGate) {
+    // don't generate reply notifications when post violates threadgate
+    return notifs
+  }
+
+  // reply notifications
+
   for (const ancestor of obj.ancestors ?? []) {
-    if (obj.post.violatesThreadGate) continue // don't notify thread when post violates threadgate
     if (ancestor.uri === obj.post.uri) continue // no need to notify for own post
     if (ancestor.height < REPLY_NOTIF_DEPTH) {
       const ancestorUri = new AtUri(ancestor.uri)
@@ -263,7 +269,6 @@ const notifsForInsert = (obj: IndexedPost) => {
   // descendents indicate out-of-order indexing: need to notify
   // the current post and upwards.
   for (const descendent of obj.descendents ?? []) {
-    if (obj.post.violatesThreadGate) continue // don't notify thread when post violates threadgate
     for (const ancestor of obj.ancestors ?? []) {
       const totalHeight = descendent.depth + ancestor.height
       if (totalHeight < REPLY_NOTIF_DEPTH) {
@@ -357,6 +362,11 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
           replyCount: db
             .selectFrom('post')
             .where('post.replyParent', '=', postIdx.post.replyParent)
+            .where((qb) =>
+              qb
+                .where('post.violatesThreadGate', 'is', null)
+                .orWhere('post.violatesThreadGate', '=', false),
+            )
             .select(countAll.as('count')),
         })
         .onConflict((oc) =>
