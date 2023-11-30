@@ -1,3 +1,4 @@
+import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { FeedGenInfo, FeedService } from '../../../../services/feed'
@@ -60,7 +61,7 @@ const hydration = async (state: SkeletonState, ctx: Context) => {
 
 const presentation = (state: HydrationState, ctx: Context) => {
   const { feedService } = ctx
-  const feeds = state.generators.map((gen) =>
+  const feeds = mapDefined(state.generators, (gen) =>
     feedService.views.formatFeedGeneratorView(gen, state.profiles),
   )
   return { feeds }

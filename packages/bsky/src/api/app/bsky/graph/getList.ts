@@ -98,6 +98,9 @@ const presentation = (state: HydrationState, ctx: Context) => {
     throw new InvalidRequestError(`Actor not found: ${list.handle}`)
   }
   const listView = graphService.formatListView(list, actors)
+  if (!listView) {
+    throw new InvalidRequestError('List not found')
+  }
   const items = mapDefined(listItems, (item) => {
     const subject = actors[item.did]
     if (!subject) return
