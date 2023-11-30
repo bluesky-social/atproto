@@ -163,7 +163,7 @@ export class ModerationViews {
       if (res.action === 'com.atproto.admin.defs#modEventEmail') {
         eventView.event = {
           ...eventView.event,
-          subject: res.meta?.subject ?? undefined,
+          subjectLine: res.meta?.subjectLine ?? undefined,
         }
       }
 
