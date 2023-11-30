@@ -19,7 +19,11 @@ export class NotificationsDaemon {
       ...opts,
       forever: opts?.forever !== false, // run forever by default
     })
-      .catch((err) => logger.error({ err }, 'notifications daemon failed'))
+      .catch((err) => {
+        // allow this to cause an unhandled rejection, let deployment handle the crash.
+        logger.error({ err }, 'notifications daemon crashed')
+        throw err
+      })
       .finally(() => (this.running = undefined))
   }
 
