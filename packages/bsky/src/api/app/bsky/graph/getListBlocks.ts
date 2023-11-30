@@ -1,3 +1,4 @@
+import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getListBlocks'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
@@ -89,7 +90,7 @@ const presentation = (state: HydrationState, ctx: Context) => {
     profileState,
     params.viewer,
   )
-  const lists = listInfos.map((list) =>
+  const lists = mapDefined(listInfos, (list) =>
     graphService.formatListView(list, actors),
   )
   return { lists, cursor }

@@ -411,14 +411,26 @@ export class FeedService {
     for (const uri of nestedUris) {
       const collection = new AtUri(uri).collection
       if (collection === ids.AppBskyFeedGenerator && feedGenInfos[uri]) {
-        recordEmbedViews[uri] = {
-          $type: 'app.bsky.feed.defs#generatorView',
-          ...this.views.formatFeedGeneratorView(feedGenInfos[uri], actorInfos),
+        const genView = this.views.formatFeedGeneratorView(
+          feedGenInfos[uri],
+          actorInfos,
+        )
+        if (genView) {
+          recordEmbedViews[uri] = {
+            $type: 'app.bsky.feed.defs#generatorView',
+            ...genView,
+          }
         }
       } else if (collection === ids.AppBskyGraphList && listViews[uri]) {
-        recordEmbedViews[uri] = {
-          $type: 'app.bsky.graph.defs#listView',
-          ...this.services.graph.formatListView(listViews[uri], actorInfos),
+        const listView = this.services.graph.formatListView(
+          listViews[uri],
+          actorInfos,
+        )
+        if (listView) {
+          recordEmbedViews[uri] = {
+            $type: 'app.bsky.graph.defs#listView',
+            ...listView,
+          }
         }
       } else if (collection === ids.AppBskyFeedPost && feedState.posts[uri]) {
         const formatted = this.views.formatPostView(
