@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "subscription",
-      "description": "Subscribe to repo updates",
+      "description": "Subscribe to repo updates.",
       "parameters": {
         "type": "params",
         "properties": {
@@ -47,15 +47,15 @@
         "prev": { "type": "cid-link" },
         "rev": {
           "type": "string",
-          "description": "The rev of the emitted commit"
+          "description": "The rev of the emitted commit."
         },
         "since": {
           "type": "string",
-          "description": "The rev of the last emitted commit from this repo"
+          "description": "The rev of the last emitted commit from this repo."
         },
         "blocks": {
           "type": "bytes",
-          "description": "CAR file containing relevant blocks",
+          "description": "CAR file containing relevant blocks.",
           "maxLength": 1000000
         },
         "ops": {
@@ -115,7 +115,7 @@
     },
     "repoOp": {
       "type": "object",
-      "description": "A repo operation, ie a write of a single record. For creates and updates, cid is the record's CID as of this operation. For deletes, it's null.",
+      "description": "A repo operation, ie a write of a single record. For creates and updates, CID is the record's CID as of this operation. For deletes, it's null.",
       "required": ["action", "path", "cid"],
       "nullable": ["cid"],
       "properties": {

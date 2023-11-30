@@ -45,10 +45,7 @@ export class ActorViews {
       viewer,
       ...opts,
     })
-    return this.profilePresentation(dids, hydrated, {
-      viewer,
-      ...opts,
-    })
+    return this.profilePresentation(dids, hydrated, viewer)
   }
 
   async profilesBasic(
@@ -62,10 +59,7 @@ export class ActorViews {
       viewer,
       includeSoftDeleted: opts?.includeSoftDeleted,
     })
-    return this.profileBasicPresentation(dids, hydrated, {
-      viewer,
-      omitLabels: opts?.omitLabels,
-    })
+    return this.profileBasicPresentation(dids, hydrated, viewer, opts)
   }
 
   async profilesList(
@@ -293,11 +287,8 @@ export class ActorViews {
       labels: Labels
       bam: BlockAndMuteState
     },
-    opts?: {
-      viewer?: string | null
-    },
+    viewer: string | null,
   ): ProfileViewMap {
-    const { viewer } = opts ?? {}
     const { profiles, lists, labels, bam } = state
     return dids.reduce((acc, did) => {
       const prof = profiles[did]
@@ -357,12 +348,12 @@ export class ActorViews {
   profileBasicPresentation(
     dids: string[],
     state: ProfileHydrationState,
+    viewer: string | null,
     opts?: {
-      viewer?: string | null
       omitLabels?: boolean
     },
   ): ProfileViewMap {
-    const result = this.profilePresentation(dids, state, opts)
+    const result = this.profilePresentation(dids, state, viewer)
     return Object.values(result).reduce((acc, prof) => {
       const profileBasic = {
         did: prof.did,

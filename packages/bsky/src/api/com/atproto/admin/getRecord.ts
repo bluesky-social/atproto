@@ -18,6 +18,7 @@ export default function (server: Server, ctx: AppContext) {
       if (!result) {
         throw new InvalidRequestError('Record not found', 'RecordNotFound')
       }
+
       const [record, accountInfo] = await Promise.all([
         ctx.services.moderation(db).views.recordDetail(result),
         getPdsAccountInfo(ctx, result.did),

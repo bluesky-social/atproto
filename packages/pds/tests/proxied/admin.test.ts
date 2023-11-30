@@ -6,11 +6,6 @@ import {
   REASONSPAM,
 } from '@atproto/api/src/client/types/com/atproto/moderation/defs'
 import { forSnapshot } from '../_util'
-import {
-  ACKNOWLEDGE,
-  FLAG,
-  TAKEDOWN,
-} from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { NotFoundError } from '@atproto/api/src/client/types/app/bsky/feed/getPostThread'
 
 describe('proxies admin requests', () => {
@@ -106,9 +101,9 @@ describe('proxies admin requests', () => {
   it('takes actions and resolves reports', async () => {
     const post = sc.posts[sc.dids.bob][1]
     const { data: actionA } =
-      await agent.api.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
-          action: FLAG,
+          event: { $type: 'com.atproto.admin.defs#modEventAcknowledge' },
           subject: {
             $type: 'com.atproto.repo.strongRef',
             uri: post.ref.uriStr,
@@ -124,9 +119,9 @@ describe('proxies admin requests', () => {
       )
     expect(forSnapshot(actionA)).toMatchSnapshot()
     const { data: actionB } =
-      await agent.api.com.atproto.admin.takeModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
-          action: ACKNOWLEDGE,
+          event: { $type: 'com.atproto.admin.defs#modEventAcknowledge' },
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
             did: sc.dids.bob,
@@ -140,39 +135,18 @@ describe('proxies admin requests', () => {
         },
       )
     expect(forSnapshot(actionB)).toMatchSnapshot()
-    const { data: resolved } =
-      await agent.api.com.atproto.admin.resolveModerationReports(
-        {
-          actionId: actionA.id,
-          reportIds: [1, 2],
-          createdBy: 'did:example:admin',
-        },
-        {
-          headers: network.pds.adminAuthHeaders(),
-          encoding: 'application/json',
-        },
-      )
-    expect(forSnapshot(resolved)).toMatchSnapshot()
   })
 
-  it('fetches report details.', async () => {
+  it('fetches moderation events.', async () => {
     const { data: result } =
-      await agent.api.com.atproto.admin.getModerationReport(
-        { id: 1 },
+      await agent.api.com.atproto.admin.queryModerationEvents(
+        {
+          subject: sc.posts[sc.dids.bob][1].ref.uriStr,
+        },
         { headers: network.pds.adminAuthHeaders() },
       )
-    expect(forSnapshot(result)).toMatchSnapshot()
+    expect(forSnapshot(result.events)).toMatchSnapshot()
   })
-
-  it('fetches a list of reports.', async () => {
-    const { data: result } =
-      await agent.api.com.atproto.admin.getModerationReports(
-        { reverse: true },
-        { headers: network.pds.adminAuthHeaders() },
-      )
-    expect(forSnapshot(result)).toMatchSnapshot()
-  })
-
   it('fetches repo details.', async () => {
     const { data: result } = await agent.api.com.atproto.admin.getRepo(
       { did: sc.dids.eve },
@@ -190,34 +164,22 @@ describe('proxies admin requests', () => {
     expect(forSnapshot(result)).toMatchSnapshot()
   })
 
-  it('reverses action.', async () => {
+  it('fetches event details.', async () => {
     const { data: result } =
-      await agent.api.com.atproto.admin.reverseModerationAction(
-        { id: 3, createdBy: 'did:example:admin', reason: 'X' },
-        {
-          headers: network.pds.adminAuthHeaders(),
-          encoding: 'application/json',
-        },
-      )
-    expect(forSnapshot(result)).toMatchSnapshot()
-  })
-
-  it('fetches action details.', async () => {
-    const { data: result } =
-      await agent.api.com.atproto.admin.getModerationAction(
-        { id: 3 },
+      await agent.api.com.atproto.admin.getModerationEvent(
+        { id: 2 },
         { headers: network.pds.adminAuthHeaders() },
       )
     expect(forSnapshot(result)).toMatchSnapshot()
   })
 
-  it('fetches a list of actions.', async () => {
+  it('fetches a list of events.', async () => {
     const { data: result } =
-      await agent.api.com.atproto.admin.getModerationActions(
+      await agent.api.com.atproto.admin.queryModerationEvents(
         { subject: sc.dids.bob },
         { headers: network.pds.adminAuthHeaders() },
       )
-    expect(forSnapshot(result)).toMatchSnapshot()
+    expect(forSnapshot(result.events)).toMatchSnapshot()
   })
 
   it('searches repos.', async () => {
@@ -229,11 +191,6 @@ describe('proxies admin requests', () => {
   })
 
   it('passes through errors.', async () => {
-    const tryGetReport = agent.api.com.atproto.admin.getModerationReport(
-      { id: 1000 },
-      { headers: network.pds.adminAuthHeaders() },
-    )
-    await expect(tryGetReport).rejects.toThrow('Report not found')
     const tryGetRepo = agent.api.com.atproto.admin.getRepo(
       { did: 'did:does:not:exist' },
       { headers: network.pds.adminAuthHeaders() },
@@ -248,24 +205,23 @@ describe('proxies admin requests', () => {
 
   it('takesdown and labels repos, and reverts.', async () => {
     // takedown repo
-    const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: sc.dids.alice,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-          createLabelVals: ['dogs'],
-          negateLabelVals: ['cats'],
+    await agent.api.com.atproto.admin.emitModerationEvent(
+      {
+        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.alice,
         },
-        {
-          headers: network.pds.adminAuthHeaders(),
-          encoding: 'application/json',
-        },
-      )
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+        createLabelVals: ['dogs'],
+        negateLabelVals: ['cats'],
+      },
+      {
+        headers: network.pds.adminAuthHeaders(),
+        encoding: 'application/json',
+      },
+    )
     // check profile and labels
     const tryGetProfileAppview = agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.alice },
@@ -277,8 +233,18 @@ describe('proxies admin requests', () => {
       'Account has been taken down',
     )
     // reverse action
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      { id: action.id, createdBy: 'did:example:admin', reason: 'X' },
+    await agent.api.com.atproto.admin.emitModerationEvent(
+      {
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.alice,
+        },
+        event: {
+          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+        },
+        createdBy: 'did:example:admin',
+        reason: 'X',
+      },
       {
         headers: network.pds.adminAuthHeaders(),
         encoding: 'application/json',
@@ -299,25 +265,24 @@ describe('proxies admin requests', () => {
   it('takesdown and labels records, and reverts.', async () => {
     const post = sc.posts[sc.dids.alice][0]
     // takedown post
-    const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: post.ref.uriStr,
-            cid: post.ref.cidStr,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-          createLabelVals: ['dogs'],
-          negateLabelVals: ['cats'],
+    await agent.api.com.atproto.admin.emitModerationEvent(
+      {
+        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.ref.uriStr,
+          cid: post.ref.cidStr,
         },
-        {
-          headers: network.pds.adminAuthHeaders(),
-          encoding: 'application/json',
-        },
-      )
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+        createLabelVals: ['dogs'],
+        negateLabelVals: ['cats'],
+      },
+      {
+        headers: network.pds.adminAuthHeaders(),
+        encoding: 'application/json',
+      },
+    )
     // check thread and labels
     const tryGetPost = agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr, depth: 0 },
@@ -325,8 +290,17 @@ describe('proxies admin requests', () => {
     )
     await expect(tryGetPost).rejects.toThrow(NotFoundError)
     // reverse action
-    await agent.api.com.atproto.admin.reverseModerationAction(
-      { id: action.id, createdBy: 'did:example:admin', reason: 'X' },
+    await agent.api.com.atproto.admin.emitModerationEvent(
+      {
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.ref.uriStr,
+          cid: post.ref.cidStr,
+        },
+        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+        createdBy: 'did:example:admin',
+        reason: 'X',
+      },
       {
         headers: network.pds.adminAuthHeaders(),
         encoding: 'application/json',

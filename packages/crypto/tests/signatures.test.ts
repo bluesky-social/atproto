@@ -78,7 +78,7 @@ describe('signatures', () => {
           keyBytes,
           messageBytes,
           signatureBytes,
-          { lowS: false },
+          { allowMalleableSig: true },
         )
         expect(verified).toEqual(true)
         expect(vector.validSignature).toEqual(false) // otherwise would fail per low-s requirement
@@ -87,7 +87,46 @@ describe('signatures', () => {
           keyBytes,
           messageBytes,
           signatureBytes,
-          { lowS: false },
+          { allowMalleableSig: true },
+        )
+        expect(verified).toEqual(true)
+        expect(vector.validSignature).toEqual(false) // otherwise would fail per low-s requirement
+      } else {
+        throw new Error('Unsupported test vector')
+      }
+    }
+  })
+
+  it('verifies der-encoded signatures with explicit option', async () => {
+    const DERVectors = vectors.filter((vec) => vec.tags.includes('der-encoded'))
+    expect(DERVectors.length).toBeGreaterThanOrEqual(2)
+    for (const vector of DERVectors) {
+      const messageBytes = uint8arrays.fromString(
+        vector.messageBase64,
+        'base64',
+      )
+      const signatureBytes = uint8arrays.fromString(
+        vector.signatureBase64,
+        'base64',
+      )
+      const keyBytes = multibaseToBytes(vector.publicKeyMultibase)
+      const didKey = parseDidKey(vector.publicKeyDid)
+      expect(uint8arrays.equals(keyBytes, didKey.keyBytes))
+      if (vector.algorithm === P256_JWT_ALG) {
+        const verified = await p256.verifySig(
+          keyBytes,
+          messageBytes,
+          signatureBytes,
+          { allowMalleableSig: true },
+        )
+        expect(verified).toEqual(true)
+        expect(vector.validSignature).toEqual(false) // otherwise would fail per low-s requirement
+      } else if (vector.algorithm === SECP256K1_JWT_ALG) {
+        const verified = await secp.verifySig(
+          keyBytes,
+          messageBytes,
+          signatureBytes,
+          { allowMalleableSig: true },
         )
         expect(verified).toEqual(true)
         expect(vector.validSignature).toEqual(false) // otherwise would fail per low-s requirement
@@ -168,6 +207,39 @@ async function generateTestVectors(): Promise<TestVector[]> {
       validSignature: false,
       tags: ['high-s'],
     },
+    // these vectors test to ensure we don't allow der-encoded signatures
+    {
+      messageBase64,
+      algorithm: P256_JWT_ALG, // "ES256" / ecdsa p-256
+      publicKeyDid: p256Key.did(),
+      publicKeyMultibase: bytesToMultibase(
+        p256Key.publicKeyBytes(),
+        'base58btc',
+      ),
+      signatureBase64: await makeDerEncodedSig(
+        messageBytes,
+        await p256Key.export(),
+        P256_JWT_ALG,
+      ),
+      validSignature: false,
+      tags: ['der-encoded'],
+    },
+    {
+      messageBase64,
+      algorithm: SECP256K1_JWT_ALG, // "ES256K" / secp256k
+      publicKeyDid: secpKey.did(),
+      publicKeyMultibase: bytesToMultibase(
+        secpKey.publicKeyBytes(),
+        'base58btc',
+      ),
+      signatureBase64: await makeDerEncodedSig(
+        messageBytes,
+        await secpKey.export(),
+        SECP256K1_JWT_ALG,
+      ),
+      validSignature: false,
+      tags: ['der-encoded'],
+    },
   ]
 }
 
@@ -192,6 +264,24 @@ async function makeHighSSig(
       }
     }
   } while (sig === undefined)
+  return sig
+}
+
+async function makeDerEncodedSig(
+  msgBytes: Uint8Array,
+  keyBytes: Uint8Array,
+  alg: string,
+): Promise<string> {
+  const hash = await sha256(msgBytes)
+
+  let sig: string
+  if (alg === SECP256K1_JWT_ALG) {
+    const attempt = await nobleK256.sign(hash, keyBytes, { lowS: true })
+    sig = uint8arrays.toString(attempt.toDERRawBytes(), 'base64')
+  } else {
+    const attempt = await nobleP256.sign(hash, keyBytes, { lowS: true })
+    sig = uint8arrays.toString(attempt.toDERRawBytes(), 'base64')
+  }
   return sig
 }
 

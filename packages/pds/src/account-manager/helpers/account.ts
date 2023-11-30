@@ -1,6 +1,8 @@
-import { notSoftDeletedClause } from '../../db'
+import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
 import { AccountDb, ActorEntry } from '../db'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
+
+export class UserAlreadyExistsError extends Error {}
 
 export type ActorAccount = ActorEntry & {
   email: string | null
@@ -75,7 +77,7 @@ export const registerActor = async (
       .returning('did'),
   )
   if (!registered) {
-    throw new Error('actor already exists')
+    throw new UserAlreadyExistsError()
   }
 }
 
@@ -100,7 +102,7 @@ export const registerAccount = async (
       .returning('did'),
   )
   if (!registered) {
-    throw new Error('account already exists')
+    throw new UserAlreadyExistsError()
   }
 }
 
@@ -142,7 +144,7 @@ export const updateHandle = async (
       ),
   )
   if (res.numUpdatedRows < 1) {
-    throw new Error('user already exists')
+    throw new UserAlreadyExistsError()
   }
 }
 
@@ -151,12 +153,19 @@ export const updateEmail = async (
   did: string,
   email: string,
 ) => {
-  await db.executeWithRetry(
-    db.db
-      .updateTable('account')
-      .set({ email: email.toLowerCase(), emailConfirmedAt: null })
-      .where('did', '=', did),
-  )
+  try {
+    await db.executeWithRetry(
+      db.db
+        .updateTable('account')
+        .set({ email: email.toLowerCase(), emailConfirmedAt: null })
+        .where('did', '=', did),
+    )
+  } catch (err) {
+    if (isErrUniqueViolation(err)) {
+      throw new UserAlreadyExistsError()
+    }
+    throw err
+  }
 }
 
 export const setEmailConfirmedAt = async (

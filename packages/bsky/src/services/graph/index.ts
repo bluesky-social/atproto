@@ -4,6 +4,10 @@ import { ImageUriBuilder } from '../../image/uri'
 import { valuesList } from '../../db/util'
 import { ListInfo } from './types'
 import { ActorInfoMap } from '../actor'
+import {
+  ListView,
+  ListViewBasic,
+} from '../../lexicon/types/app/bsky/graph/defs'
 
 export * from './types'
 
@@ -91,6 +95,12 @@ export class GraphService {
           .whereRef('list_block.subjectUri', '=', ref('list.uri'))
           .select('list_block.uri')
           .as('viewerListBlockUri'),
+        this.db.db
+          .selectFrom('list_item')
+          .whereRef('list_item.listUri', '=', ref('list.uri'))
+          .where('list_item.subjectDid', '=', viewer ?? '')
+          .select('list_item.uri')
+          .as('viewerInList'),
       ])
   }
 
@@ -229,7 +239,10 @@ export class GraphService {
     )
   }
 
-  formatListView(list: ListInfo, profiles: ActorInfoMap) {
+  formatListView(list: ListInfo, profiles: ActorInfoMap): ListView | undefined {
+    if (!profiles[list.creator]) {
+      return undefined
+    }
     return {
       ...this.formatListViewBasic(list),
       creator: profiles[list.creator],
@@ -237,10 +250,11 @@ export class GraphService {
       descriptionFacets: list.descriptionFacets
         ? JSON.parse(list.descriptionFacets)
         : undefined,
+      indexedAt: list.sortAt,
     }
   }
 
-  formatListViewBasic(list: ListInfo) {
+  formatListViewBasic(list: ListInfo): ListViewBasic {
     return {
       uri: list.uri,
       cid: list.cid,

@@ -60,7 +60,7 @@ export function decodeQueryParam(
   if (type === 'float') {
     return Number(String(value))
   } else if (type === 'integer') {
-    return Number(String(value)) | 0
+    return parseInt(String(value), 10) || 0
   } else if (type === 'boolean') {
     return value === 'true'
   }

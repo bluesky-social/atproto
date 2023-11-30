@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "View details about a repository.",
+      "description": "Get details about a repository.",
       "parameters": {
         "type": "params",
         "required": ["did"],

@@ -3,6 +3,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { authPassthru } from '../../../proxy'
+import { UserAlreadyExistsError } from '../../../../account-manager/helpers/account'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.updateEmail({
@@ -43,7 +44,17 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      await ctx.accountManager.updateEmail({ did, email, token })
+      try {
+        await ctx.accountManager.updateEmail({ did, email, token })
+      } catch (err) {
+        if (err instanceof UserAlreadyExistsError) {
+          throw new InvalidRequestError(
+            'This email address is already in use, please use a different email.',
+          )
+        } else {
+          throw err
+        }
+      }
     },
   })
 }

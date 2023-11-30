@@ -2,7 +2,7 @@ import fs from 'fs/promises'
 import { CID } from 'multiformats/cid'
 import AtpAgent from '@atproto/api'
 import { Main as Facet } from '@atproto/api/src/client/types/app/bsky/richtext/facet'
-import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/takeModerationAction'
+import { InputSchema as TakeActionInput } from '@atproto/api/src/client/types/com/atproto/admin/emitModerationEvent'
 import { InputSchema as CreateReportInput } from '@atproto/api/src/client/types/com/atproto/moderation/createReport'
 import { Record as PostRecord } from '@atproto/api/src/client/types/app/bsky/feed/post'
 import { Record as LikeRecord } from '@atproto/api/src/client/types/app/bsky/feed/like'
@@ -419,20 +419,21 @@ export class SeedClient {
     delete foundList.items[subject]
   }
 
-  async takeModerationAction(opts: {
-    action: TakeActionInput['action']
+  async emitModerationEvent(opts: {
+    event: TakeActionInput['event']
     subject: TakeActionInput['subject']
     reason?: string
     createdBy?: string
+    meta?: TakeActionInput['meta']
   }) {
     const {
-      action,
+      event,
       subject,
       reason = 'X',
       createdBy = 'did:example:admin',
     } = opts
-    const result = await this.agent.api.com.atproto.admin.takeModerationAction(
-      { action, subject, createdBy, reason },
+    const result = await this.agent.api.com.atproto.admin.emitModerationEvent(
+      { event, subject, createdBy, reason },
       {
         encoding: 'application/json',
         headers: this.adminAuthHeaders(),
@@ -443,35 +444,25 @@ export class SeedClient {
 
   async reverseModerationAction(opts: {
     id: number
+    subject: TakeActionInput['subject']
     reason?: string
     createdBy?: string
   }) {
-    const { id, reason = 'X', createdBy = 'did:example:admin' } = opts
-    const result =
-      await this.agent.api.com.atproto.admin.reverseModerationAction(
-        { id, reason, createdBy },
-        {
-          encoding: 'application/json',
-          headers: this.adminAuthHeaders(),
+    const { id, subject, reason = 'X', createdBy = 'did:example:admin' } = opts
+    const result = await this.agent.api.com.atproto.admin.emitModerationEvent(
+      {
+        subject,
+        event: {
+          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+          comment: reason,
         },
-      )
-    return result.data
-  }
-
-  async resolveReports(opts: {
-    actionId: number
-    reportIds: number[]
-    createdBy?: string
-  }) {
-    const { actionId, reportIds, createdBy = 'did:example:admin' } = opts
-    const result =
-      await this.agent.api.com.atproto.admin.resolveModerationReports(
-        { actionId, createdBy, reportIds },
-        {
-          encoding: 'application/json',
-          headers: this.adminAuthHeaders(),
-        },
-      )
+        createdBy,
+      },
+      {
+        encoding: 'application/json',
+        headers: this.adminAuthHeaders(),
+      },
+    )
     return result.data
   }
 
