@@ -1,16 +1,20 @@
-import { CacheItem, RedisCache } from './redis'
 import { cacheLogger as log } from '../logger'
+import { Redis } from '../redis'
+
+export type CacheItem<T> = {
+  val: T | null // null here is for negative caching
+  updatedAt: number
+}
 
 export type CacheOptions<T> = {
   staleTTL: number
   maxTTL: number
-  namespace?: string
   fetchMethod: (key: string) => Promise<T | null>
   fetchManyMethod?: (keys: string[]) => Promise<Record<string, T | null>>
 }
 
 export class ReadThroughCache<T> {
-  constructor(public redisCache: RedisCache, public opts: CacheOptions<T>) {}
+  constructor(public redis: Redis, public opts: CacheOptions<T>) {}
 
   private async _fetchMany(keys: string[]): Promise<Record<string, T | null>> {
     if (this.opts.fetchManyMethod) {
@@ -46,7 +50,8 @@ export class ReadThroughCache<T> {
     }
     let cached: CacheItem<T> | null
     try {
-      cached = await this.redisCache.get<T>(key, this.opts.namespace)
+      const got = await this.redis.get(key)
+      cached = got ? JSON.parse(got) : null
     } catch (err) {
       cached = null
       log.warn({ key, err }, 'failed to fetch value from cache')
@@ -71,7 +76,7 @@ export class ReadThroughCache<T> {
     }
     let cached: Record<string, CacheItem<T>>
     try {
-      cached = await this.redisCache.getMany<T>(keys, this.opts.namespace)
+      cached = await this.redis.getMulti(keys)
     } catch (err) {
       cached = {}
       log.warn({ keys, err }, 'failed to fetch values from cache')
@@ -101,15 +106,22 @@ export class ReadThroughCache<T> {
   }
 
   async set(key: string, val: T | null) {
-    await this.redisCache.set(key, val, this.opts.namespace, this.opts.maxTTL)
+    await this.setMany({ [key]: val })
   }
 
   async setMany(vals: Record<string, T | null>) {
-    await this.redisCache.setMany(vals, this.opts.namespace, this.opts.maxTTL)
+    const items: Record<string, string> = {}
+    for (const key of Object.keys(vals)) {
+      items[key] = JSON.stringify({
+        val: vals[key],
+        updatedAt: Date.now(),
+      })
+    }
+    await this.redis.setMulti(items, this.opts.maxTTL)
   }
 
   async clearEntry(key: string) {
-    await this.redisCache.delete(key, this.opts.namespace)
+    await this.redis.del(key)
   }
 
   isExpired(result: CacheItem<T>) {

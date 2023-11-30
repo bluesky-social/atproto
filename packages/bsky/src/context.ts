@@ -12,7 +12,7 @@ import DidRedisCache from './did-cache'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
 import { NotificationServer } from './notifications'
-import { RedisCache } from './cache/redis'
+import { Redis } from './redis'
 
 export class AppContext {
   public moderationPushAgent: AtpAgent | undefined
@@ -25,7 +25,7 @@ export class AppContext {
       signingKey: Keypair
       idResolver: IdResolver
       didCache: DidRedisCache
-      redisCache: RedisCache
+      redisScratch: Redis
       backgroundQueue: BackgroundQueue
       searchAgent?: AtpAgent
       algos: MountedAlgos
@@ -74,8 +74,8 @@ export class AppContext {
     return this.opts.didCache
   }
 
-  get redisCache(): RedisCache {
-    return this.opts.redisCache
+  get redisScratch(): Redis {
+    return this.opts.redisScratch
   }
 
   get notifServer(): NotificationServer {

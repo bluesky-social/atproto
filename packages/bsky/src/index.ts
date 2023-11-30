@@ -26,7 +26,7 @@ import { MountedAlgos } from './feed-gen/types'
 import { NotificationServer } from './notifications'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
-import { RedisCache } from './cache/redis'
+import { Redis } from './redis'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
@@ -66,12 +66,13 @@ export class BskyAppView {
     app.use(loggerMiddleware)
     app.use(compression())
 
-    const redisCache = new RedisCache(
-      config.redisScratchHost,
-      config.redisScratchPassword,
-    )
+    const redisScratch = new Redis({
+      host: config.redisScratchHost,
+      password: config.redisScratchPassword,
+      commandTimeout: 500,
+    })
 
-    const didCache = new DidRedisCache(redisCache, {
+    const didCache = new DidRedisCache(redisScratch.withNamespace('did-doc'), {
       staleTTL: config.didCacheStaleTTL,
       maxTTL: config.didCacheMaxTTL,
     })
@@ -116,7 +117,7 @@ export class BskyAppView {
       imgUriBuilder,
       imgInvalidator,
       labelCacheOpts: {
-        cache: redisCache,
+        redis: redisScratch.withNamespace('label'),
         staleTTL: 5000,
         maxTTL: 60000,
       },
@@ -130,7 +131,7 @@ export class BskyAppView {
       signingKey,
       idResolver,
       didCache,
-      redisCache,
+      redisScratch,
       backgroundQueue,
       searchAgent,
       algos,
@@ -204,8 +205,8 @@ export class BskyAppView {
   }
 
   async destroy(opts?: { skipDb: boolean }): Promise<void> {
-    await this.ctx.redisCache.close()
     await this.ctx.didCache.destroy()
+    await this.ctx.redisScratch.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     if (!opts?.skipDb) await this.ctx.db.close()

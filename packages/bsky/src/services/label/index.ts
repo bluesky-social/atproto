@@ -4,13 +4,13 @@ import { toSimplifiedISOSafe } from '@atproto/common'
 import { Database } from '../../db'
 import { Label, isSelfLabels } from '../../lexicon/types/com/atproto/label/defs'
 import { ids } from '../../lexicon/lexicons'
-import { RedisCache } from '../../cache/redis'
 import { ReadThroughCache } from '../../cache/read-through'
+import { Redis } from '../../redis'
 
 export type Labels = Record<string, Label[]>
 
 export type LabelCacheOpts = {
-  cache: RedisCache
+  redis: Redis
   staleTTL: number
   maxTTL: number
 }
@@ -20,9 +20,8 @@ export class LabelService {
 
   constructor(public db: Database, cacheOpts: LabelCacheOpts | null) {
     if (cacheOpts) {
-      this.cache = new ReadThroughCache(cacheOpts.cache, {
+      this.cache = new ReadThroughCache(cacheOpts.redis, {
         ...cacheOpts,
-        namespace: 'label',
         fetchMethod: async (subject: string) => {
           const res = await fetchLabelsForSubjects(db, [subject])
           return res[subject] ?? null

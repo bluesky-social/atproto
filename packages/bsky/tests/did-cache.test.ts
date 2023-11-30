@@ -3,13 +3,13 @@ import userSeed from './seeds/users'
 import { IdResolver } from '@atproto/identity'
 import DidRedisCache from '../src/did-cache'
 import { wait } from '@atproto/common'
-import { RedisCache } from '../src/cache/redis'
+import { Redis } from '../src'
 
 describe('did cache', () => {
   let network: TestNetwork
   let sc: SeedClient
   let idResolver: IdResolver
-  let redisCache: RedisCache
+  let redis: Redis
   let didCache: DidRedisCache
 
   let alice: string
@@ -22,7 +22,7 @@ describe('did cache', () => {
       dbPostgresSchema: 'bsky_did_cache',
     })
     idResolver = network.bsky.indexer.ctx.idResolver
-    redisCache = network.bsky.indexer.ctx.redisCache
+    redis = network.bsky.indexer.ctx.redisScratch
     didCache = network.bsky.indexer.ctx.didCache
     sc = network.getSeedClient()
     await userSeed(sc)
@@ -89,7 +89,7 @@ describe('did cache', () => {
   })
 
   it('accurately reports expired dids & refreshes the cache', async () => {
-    const didCache = new DidRedisCache(redisCache, {
+    const didCache = new DidRedisCache(redis.withNamespace('did-doc'), {
       staleTTL: 1,
       maxTTL: 60000,
     })
@@ -121,7 +121,7 @@ describe('did cache', () => {
   })
 
   it('does not return expired dids & refreshes the cache', async () => {
-    const didCache = new DidRedisCache(redisCache, {
+    const didCache = new DidRedisCache(redis.withNamespace('did-doc'), {
       staleTTL: 0,
       maxTTL: 1,
     })
