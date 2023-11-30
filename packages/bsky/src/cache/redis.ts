@@ -80,5 +80,5 @@ export class RedisCache {
 
 function ns(key: string, namespace?: string): string {
   if (!namespace) return key
-  return `${namespace}-${key}`
+  return `${namespace}:${key}`
 }

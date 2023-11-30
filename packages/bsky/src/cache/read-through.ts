@@ -40,8 +40,8 @@ export class ReadThroughCache<T> {
     return removeNulls(fetched)
   }
 
-  async get(key: string, opts?: { skipCache?: boolean }): Promise<T | null> {
-    if (opts?.skipCache) {
+  async get(key: string, opts?: { revalidate?: boolean }): Promise<T | null> {
+    if (opts?.revalidate) {
       return this.fetchAndCache(key)
     }
     let cached: CacheItem<T> | null
@@ -64,9 +64,9 @@ export class ReadThroughCache<T> {
 
   async getMany(
     keys: string[],
-    opts?: { skipCache?: boolean },
+    opts?: { revalidate?: boolean },
   ): Promise<Record<string, T>> {
-    if (opts?.skipCache) {
+    if (opts?.revalidate) {
       return this.fetchAndCacheMany(keys)
     }
     let cached: Record<string, CacheItem<T>>

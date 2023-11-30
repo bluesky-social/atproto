@@ -96,7 +96,7 @@ export class LabelService {
   ): Promise<Labels> {
     if (subjects.length < 1) return {}
     const res = this.cache
-      ? await this.cache.getMany(subjects, opts)
+      ? await this.cache.getMany(subjects, { revalidate: opts?.skipCache })
       : await fetchLabelsForSubjects(this.db, subjects)
 
     if (opts?.includeNeg) {
