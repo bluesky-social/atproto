@@ -74,7 +74,7 @@ export class ReadThroughCache<T> {
     if (opts?.revalidate) {
       return this.fetchAndCacheMany(keys)
     }
-    let cached: Record<string, CacheItem<T>>
+    let cached: Record<string, string>
     try {
       cached = await this.redis.getMulti(keys)
     } catch (err) {
@@ -86,7 +86,7 @@ export class ReadThroughCache<T> {
     const toFetch: string[] = []
     const results: Record<string, T> = {}
     for (const key of keys) {
-      const val = cached[key]
+      const val = cached[key] ? (JSON.parse(cached[key]) as CacheItem<T>) : null
       if (!val || this.isExpired(val)) {
         toFetch.push(key)
       } else if (this.isStale(val)) {
