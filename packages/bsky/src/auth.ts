@@ -7,37 +7,41 @@ import { ServerConfig } from './config'
 const BASIC = 'Basic '
 const BEARER = 'Bearer '
 
-export const authVerifier =
-  (idResolver: IdResolver, opts: { aud: string | null }) =>
-  async (reqCtx: { req: express.Request; res: express.Response }) => {
+export const authVerifier = (
+  idResolver: IdResolver,
+  opts: { aud: string | null },
+) => {
+  const getSigningKey = async (
+    did: string,
+    forceRefresh: boolean,
+  ): Promise<string> => {
+    const atprotoData = await idResolver.did.resolveAtprotoData(
+      did,
+      forceRefresh,
+    )
+    return atprotoData.signingKey
+  }
+
+  return async (reqCtx: { req: express.Request; res: express.Response }) => {
     const jwtStr = getJwtStrFromReq(reqCtx.req)
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    const payload = await verifyJwt(
-      jwtStr,
-      opts.aud,
-      async (did, forceRefresh) => {
-        const atprotoData = await idResolver.did.resolveAtprotoData(
-          did,
-          forceRefresh,
-        )
-        return atprotoData.signingKey
-      },
-    )
+    const payload = await verifyJwt(jwtStr, opts.aud, getSigningKey)
     return { credentials: { did: payload.iss }, artifacts: { aud: opts.aud } }
   }
+}
 
 export const authOptionalVerifier = (
   idResolver: IdResolver,
   opts: { aud: string | null },
 ) => {
-  const verify = authVerifier(idResolver, opts)
+  const verifyAccess = authVerifier(idResolver, opts)
   return async (reqCtx: { req: express.Request; res: express.Response }) => {
     if (!reqCtx.req.headers.authorization) {
       return { credentials: { did: null } }
     }
-    return verify(reqCtx)
+    return verifyAccess(reqCtx)
   }
 }
 
@@ -131,9 +135,9 @@ export const buildBasicAuth = (username: string, password: string): string => {
 }
 
 export const getJwtStrFromReq = (req: express.Request): string | null => {
-  const { authorization = '' } = req.headers
-  if (!authorization.startsWith(BEARER)) {
+  const { authorization } = req.headers
+  if (!authorization?.startsWith(BEARER)) {
     return null
   }
-  return authorization.replace(BEARER, '').trim()
+  return authorization.slice(BEARER.length).trim()
 }
