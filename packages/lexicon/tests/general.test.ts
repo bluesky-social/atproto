@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { lexiconDoc, Lexicons } from '../src/index'
+import { LexiconDoc, Lexicons, parseLexiconDoc } from '../src/index'
 import LexiconDocs from './_scaffolds/lexicons'
 
 describe('Lexicons collection', () => {
@@ -97,7 +97,7 @@ describe('General validation', () => {
       },
     }
     expect(() => {
-      lexiconDoc.parse(schema)
+      parseLexiconDoc(schema)
     }).toThrow('Required field \\"foo\\" not defined')
   })
   it('fails when unknown fields are present', () => {
@@ -113,11 +113,11 @@ describe('General validation', () => {
     }
 
     expect(() => {
-      lexiconDoc.parse(schema)
+      parseLexiconDoc(schema)
     }).toThrow("Unrecognized key(s) in object: 'foo'")
   })
   it('fails lexicon parsing when uri is invalid', () => {
-    const schema = {
+    const schema: LexiconDoc = {
       lexicon: 1,
       id: 'com.example.invalidUri',
       defs: {
@@ -135,7 +135,7 @@ describe('General validation', () => {
     }).toThrow('Uri can only have one hash segment')
   })
   it('fails validation when ref uri has multiple hash segments', () => {
-    const schema = {
+    const schema: LexiconDoc = {
       lexicon: 1,
       id: 'com.example.invalidUri',
       defs: {
@@ -168,7 +168,7 @@ describe('General validation', () => {
     }).toThrow('Uri can only have one hash segment')
   })
   it('union handles both implicit and explicit #main', () => {
-    const schemas = [
+    const schemas: LexiconDoc[] = [
       {
         lexicon: 1,
         id: 'com.example.implicitMain',
@@ -659,7 +659,9 @@ describe('Record validation', () => {
         $type: 'com.example.datetime',
         datetime: 'bad date',
       }),
-    ).toThrow('Record/datetime must be an iso8601 formatted datetime')
+    ).toThrow(
+      'Record/datetime must be an valid atproto datetime (both RFC-3339 and ISO-8601)',
+    )
   })
 
   it('Applies uri formatting constraint', () => {

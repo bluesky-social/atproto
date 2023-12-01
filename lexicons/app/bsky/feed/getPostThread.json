@@ -4,6 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
+      "description": "Get posts in a thread.",
       "parameters": {
         "type": "params",
         "required": ["uri"],

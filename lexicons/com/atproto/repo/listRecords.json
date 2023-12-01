@@ -37,7 +37,7 @@
           },
           "reverse": {
             "type": "boolean",
-            "description": "Reverse the order of the returned records?"
+            "description": "Flag to reverse the order of the returned records."
           }
         }
       },

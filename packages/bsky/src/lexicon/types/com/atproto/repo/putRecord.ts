@@ -17,13 +17,13 @@ export interface InputSchema {
   collection: string
   /** The key of the record. */
   rkey: string
-  /** Validate the record? */
+  /** Flag for validating the record. */
   validate: boolean
   /** The record to write. */
   record: {}
-  /** Compare and swap with the previous record by cid. */
+  /** Compare and swap with the previous record by CID. */
   swapRecord?: string | null
-  /** Compare and swap with the previous commit by cid. */
+  /** Compare and swap with the previous commit by CID. */
   swapCommit?: string
   [k: string]: unknown
 }

@@ -20,11 +20,11 @@ export const actorWhereClause = (actor: string) => {
 
 // Applies to repo_root or record table
 export const notSoftDeletedClause = (alias: DbRef) => {
-  return sql`${alias}."takedownId" is null`
+  return sql`${alias}."takedownRef" is null`
 }
 
-export const softDeleted = (repoOrRecord: { takedownId: number | null }) => {
-  return repoOrRecord.takedownId !== null
+export const softDeleted = (repoOrRecord: { takedownRef: string | null }) => {
+  return repoOrRecord.takedownRef !== null
 }
 
 export const countAll = sql<number>`count(*)`
@@ -57,3 +57,11 @@ export const dummyDialect = {
 export type DbRef = RawBuilder | ReturnType<DynamicModule['ref']>
 
 export type AnyQb = SelectQueryBuilder<any, any, any>
+
+export const isErrUniqueViolation = (err: unknown) => {
+  const code = err?.['code']
+  return (
+    code === '23505' || // postgres, see https://www.postgresql.org/docs/current/errcodes-appendix.html
+    code === 'SQLITE_CONSTRAINT_UNIQUE' // sqlite, see https://www.sqlite.org/rescode.html#constraint_unique
+  )
+}

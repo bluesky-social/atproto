@@ -6,7 +6,7 @@ import { LocalRecords } from '../../../../services/local'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
-    auth: ctx.accessVerifier,
+    auth: ctx.authVerifier.access,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
       const res = await ctx.appViewAgent.api.app.bsky.feed.getTimeline(

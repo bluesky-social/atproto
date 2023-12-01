@@ -48,6 +48,7 @@ export function validatePostView(v: unknown): ValidationResult {
 export interface ViewerState {
   repost?: string
   like?: string
+  replyDisabled?: boolean
   [k: string]: unknown
 }
 
@@ -137,7 +138,6 @@ export interface ThreadViewPost {
     | BlockedPost
     | { $type: string; [k: string]: unknown }
   )[]
-  viewer?: ViewerThreadState
   [k: string]: unknown
 }
 
@@ -206,23 +206,6 @@ export function isBlockedAuthor(v: unknown): v is BlockedAuthor {
 
 export function validateBlockedAuthor(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.feed.defs#blockedAuthor', v)
-}
-
-export interface ViewerThreadState {
-  canReply?: boolean
-  [k: string]: unknown
-}
-
-export function isViewerThreadState(v: unknown): v is ViewerThreadState {
-  return (
-    isObj(v) &&
-    hasProp(v, '$type') &&
-    v.$type === 'app.bsky.feed.defs#viewerThreadState'
-  )
-}
-
-export function validateViewerThreadState(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.feed.defs#viewerThreadState', v)
 }
 
 export interface GeneratorView {

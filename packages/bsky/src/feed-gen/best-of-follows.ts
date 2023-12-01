@@ -1,4 +1,4 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { AlgoHandler, AlgoResponse } from './types'
 import { GenericKeyset, paginate } from '../db/pagination'
@@ -7,12 +7,15 @@ import AppContext from '../context'
 const handler: AlgoHandler = async (
   ctx: AppContext,
   params: SkeletonParams,
-  viewer: string,
+  viewer: string | null,
 ): Promise<AlgoResponse> => {
+  if (!viewer) {
+    throw new AuthRequiredError('This feed requires being logged-in')
+  }
+
   const { limit, cursor } = params
   const db = ctx.db.getReplica('feed')
   const feedService = ctx.services.feed(db)
-
   const { ref } = db.db.dynamic
 
   // candidates are ranked within a materialized view by like count, depreciated over time.

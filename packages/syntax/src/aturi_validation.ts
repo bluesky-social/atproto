@@ -38,13 +38,13 @@ export const ensureValidAtUri = (uri: string) => {
   }
 
   try {
-    ensureValidHandle(parts[2])
-  } catch {
-    try {
+    if (parts[2].startsWith('did:')) {
       ensureValidDid(parts[2])
-    } catch {
-      throw new Error('ATURI authority must be a valid handle or DID')
+    } else {
+      ensureValidHandle(parts[2])
     }
+  } catch {
+    throw new Error('ATURI authority must be a valid handle or DID')
   }
 
   if (parts.length >= 4) {

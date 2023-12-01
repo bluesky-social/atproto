@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get information about a list of feed generators",
+      "description": "Get information about a list of feed generators.",
       "parameters": {
         "type": "params",
         "required": ["feeds"],

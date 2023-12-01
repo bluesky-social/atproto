@@ -194,6 +194,19 @@ describe('email confirmation', () => {
     )
   })
 
+  it('fails email update with in-use email', async () => {
+    const attempt = agent.api.com.atproto.server.updateEmail(
+      {
+        email: 'bob@test.com',
+        token: updateToken,
+      },
+      { headers: sc.getHeaders(alice.did), encoding: 'application/json' },
+    )
+    await expect(attempt).rejects.toThrow(
+      'This email address is already in use, please use a different email.',
+    )
+  })
+
   it('updates email', async () => {
     await agent.api.com.atproto.server.updateEmail(
       {

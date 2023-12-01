@@ -1,6 +1,5 @@
 import { Selectable } from 'kysely'
-import { AtUri } from '@atproto/syntax'
-import { toSimplifiedISOSafe } from '@atproto/common'
+import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
 import * as Like from '../../../lexicon/types/app/bsky/feed/like'
 import * as lex from '../../../lexicon/lexicons'
@@ -29,7 +28,7 @@ const insertFn = async (
       creator: uri.host,
       subject: obj.subject.uri,
       subjectCid: obj.subject.cid,
-      createdAt: toSimplifiedISOSafe(obj.createdAt),
+      createdAt: normalizeDatetimeAlways(obj.createdAt),
       indexedAt: timestamp,
     })
     .onConflict((oc) => oc.doNothing())

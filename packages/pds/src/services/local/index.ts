@@ -220,6 +220,7 @@ export class LocalService {
           did,
           img.image.ref.toString(),
         ),
+        aspectRatio: img.aspectRatio,
         alt: img.alt,
       }))
       return {
@@ -230,12 +231,14 @@ export class LocalService {
       const { uri, title, description, thumb } = embed.external
       return {
         $type: 'app.bsky.embed.external#view',
-        uri,
-        title,
-        description,
-        thumb: thumb
-          ? this.getImageUrl('feed_thumbnail', did, thumb.ref.toString())
-          : undefined,
+        external: {
+          uri,
+          title,
+          description,
+          thumb: thumb
+            ? this.getImageUrl('feed_thumbnail', did, thumb.ref.toString())
+            : undefined,
+        },
       }
     }
   }

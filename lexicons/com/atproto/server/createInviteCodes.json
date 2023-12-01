@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Create an invite code.",
+      "description": "Create invite codes.",
       "input": {
         "encoding": "application/json",
         "schema": {

@@ -1,7 +1,6 @@
 import assert from 'assert'
 import AtpAgent from '@atproto/api'
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { forSnapshot, getOriginator, paginateAll } from '../_util'
 import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
@@ -182,11 +181,11 @@ describe('timeline views', () => {
   })
 
   it('blocks posts, reposts, replies by actor takedown', async () => {
-    const actionResults = await Promise.all(
+    await Promise.all(
       [bob, carol].map((did) =>
-        agent.api.com.atproto.admin.takeModerationAction(
+        agent.api.com.atproto.admin.emitModerationEvent(
           {
-            action: TAKEDOWN,
+            event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
             subject: {
               $type: 'com.atproto.admin.defs#repoRef',
               did,
@@ -211,10 +210,14 @@ describe('timeline views', () => {
 
     // Cleanup
     await Promise.all(
-      actionResults.map((result) =>
-        agent.api.com.atproto.admin.reverseModerationAction(
+      [bob, carol].map((did) =>
+        agent.api.com.atproto.admin.emitModerationEvent(
           {
-            id: result.data.id,
+            event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did,
+            },
             createdBy: 'did:example:admin',
             reason: 'Y',
           },
@@ -230,11 +233,11 @@ describe('timeline views', () => {
   it('blocks posts, reposts, replies by record takedown.', async () => {
     const postRef1 = sc.posts[dan][1].ref // Repost
     const postRef2 = sc.replies[bob][0].ref // Post and reply parent
-    const actionResults = await Promise.all(
+    await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        agent.api.com.atproto.admin.takeModerationAction(
+        agent.api.com.atproto.admin.emitModerationEvent(
           {
-            action: TAKEDOWN,
+            event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
             subject: {
               $type: 'com.atproto.repo.strongRef',
               uri: postRef.uriStr,
@@ -260,10 +263,15 @@ describe('timeline views', () => {
 
     // Cleanup
     await Promise.all(
-      actionResults.map((result) =>
-        agent.api.com.atproto.admin.reverseModerationAction(
+      [postRef1, postRef2].map((postRef) =>
+        agent.api.com.atproto.admin.emitModerationEvent(
           {
-            id: result.data.id,
+            event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+            subject: {
+              $type: 'com.atproto.repo.strongRef',
+              uri: postRef.uriStr,
+              cid: postRef.cidStr,
+            },
             createdBy: 'did:example:admin',
             reason: 'Y',
           },

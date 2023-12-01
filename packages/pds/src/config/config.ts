@@ -54,7 +54,24 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     throw new Error('Cannot set both S3 and disk blobstore env vars')
   }
   if (env.blobstoreS3Bucket) {
-    blobstoreCfg = { provider: 's3', bucket: env.blobstoreS3Bucket }
+    blobstoreCfg = {
+      provider: 's3',
+      bucket: env.blobstoreS3Bucket,
+      region: env.blobstoreS3Region,
+      endpoint: env.blobstoreS3Endpoint,
+      forcePathStyle: env.blobstoreS3ForcePathStyle,
+    }
+    if (env.blobstoreS3AccessKeyId || env.blobstoreS3SecretAccessKey) {
+      if (!env.blobstoreS3AccessKeyId || !env.blobstoreS3SecretAccessKey) {
+        throw new Error(
+          'Must specify both S3 access key id and secret access key blobstore env vars',
+        )
+      }
+      blobstoreCfg.credentials = {
+        accessKeyId: env.blobstoreS3AccessKeyId,
+        secretAccessKey: env.blobstoreS3SecretAccessKey,
+      }
+    }
   } else if (env.blobstoreDiskLocation) {
     blobstoreCfg = {
       provider: 'disk',
@@ -91,6 +108,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     recoveryDidKey: env.recoveryDidKey ?? null,
     serviceHandleDomains,
     handleBackupNameservers: env.handleBackupNameservers,
+    enableDidDocWithSession: !!env.enableDidDocWithSession,
   }
 
   // default to being required if left undefined
@@ -237,6 +255,13 @@ export type PostgresConfig = {
 export type S3BlobstoreConfig = {
   provider: 's3'
   bucket: string
+  region?: string
+  endpoint?: string
+  forcePathStyle?: boolean
+  credentials?: {
+    accessKeyId: string
+    secretAccessKey: string
+  }
 }
 
 export type DiskBlobstoreConfig = {
@@ -253,6 +278,7 @@ export type IdentityConfig = {
   recoveryDidKey: string | null
   serviceHandleDomains: string[]
   handleBackupNameservers?: string[]
+  enableDidDocWithSession: boolean
 }
 
 export type InvitesConfig =

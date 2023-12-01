@@ -55,6 +55,9 @@ export default function (server: Server, ctx: AppContext) {
         feedInfo,
         profiles,
       )
+      if (!feedView) {
+        throw new InvalidRequestError('could not find feed')
+      }
 
       return {
         encoding: 'application/json',

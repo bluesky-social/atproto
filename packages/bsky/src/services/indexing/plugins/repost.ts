@@ -1,7 +1,6 @@
 import { Selectable } from 'kysely'
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/syntax'
-import { toSimplifiedISOSafe } from '@atproto/common'
+import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as Repost from '../../../lexicon/types/app/bsky/feed/repost'
 import * as lex from '../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
@@ -27,7 +26,7 @@ const insertFn = async (
     creator: uri.host,
     subject: obj.subject.uri,
     subjectCid: obj.subject.cid,
-    createdAt: toSimplifiedISOSafe(obj.createdAt),
+    createdAt: normalizeDatetimeAlways(obj.createdAt),
     indexedAt: timestamp,
   }
   const [inserted] = await Promise.all([

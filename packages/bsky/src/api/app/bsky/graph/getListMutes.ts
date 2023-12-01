@@ -1,3 +1,4 @@
+import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
 import AppContext from '../../../../context'
@@ -34,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
       const actorService = ctx.services.actor(db)
       const profiles = await actorService.views.profiles(listsRes, requester)
 
-      const lists = listsRes.map((row) =>
+      const lists = mapDefined(listsRes, (row) =>
         graphService.formatListView(row, profiles),
       )
 

@@ -11,7 +11,7 @@ import { DAY, MINUTE } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
-    auth: ctx.accessVerifierCheckTakedown,
+    auth: ctx.authVerifier.accessCheckTakedown,
     rateLimit: [
       {
         durationMs: 5 * MINUTE,

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "A view of an actor's feed.",
+      "description": "Get a view of an actor's feed.",
       "parameters": {
         "type": "params",
         "required": ["uris"],

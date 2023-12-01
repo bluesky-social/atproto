@@ -89,8 +89,8 @@ export const skeleton = async (
 
   if (filter === 'posts_with_media') {
     feedItemsQb = feedItemsQb
-      // and only your own posts/reposts
-      .where('post.creator', '=', actorDid)
+      // only your own posts
+      .where('type', '=', 'post')
       // only posts with media
       .whereExists((qb) =>
         qb
@@ -147,9 +147,7 @@ const noBlocksOrMutedReposts = (state: HydrationState) => {
 const presentation = (state: HydrationState, ctx: Context) => {
   const { feedService } = ctx
   const { feedItems, cursor, params } = state
-  const feed = feedService.views.formatFeed(feedItems, state, {
-    viewer: params.viewer,
-  })
+  const feed = feedService.views.formatFeed(feedItems, state, params.viewer)
   return { feed, cursor }
 }
 

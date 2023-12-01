@@ -14,6 +14,7 @@ export interface InputSchema {
   recipientDid: string
   content: string
   subject?: string
+  senderDid: string
   [k: string]: unknown
 }
 
