@@ -13,7 +13,7 @@ import { defaultFetchHandler } from '@atproto/xrpc'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
 import { paginateAll } from './_util'
 import AppContext from '../src/context'
-import { ids } from '../src/lexicon/lexicons'
+import { ids, lexicons } from '../src/lexicon/lexicons'
 
 const alice = {
   email: 'alice@test.com',
@@ -576,6 +576,24 @@ describe('crud operations', () => {
       }),
     ).rejects.toThrow(
       'Invalid app.bsky.feed.post record: Record must have the property "text"',
+    )
+  })
+
+  it('validates datetimes more rigorously than lex sdk', async () => {
+    const postRecord = {
+      $type: 'app.bsky.feed.post',
+      text: 'test',
+      createdAt: '1985-04-12T23:20:50.123',
+    }
+    lexicons.assertValidRecord('app.bsky.feed.post', postRecord)
+    await expect(
+      aliceAgent.api.com.atproto.repo.createRecord({
+        repo: alice.did,
+        collection: 'app.bsky.feed.post',
+        record: postRecord,
+      }),
+    ).rejects.toThrow(
+      'Invalid app.bsky.feed.post record: createdAt must be an valid atproto datetime (both RFC-3339 and ISO-8601)',
     )
   })
 

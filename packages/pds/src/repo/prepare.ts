@@ -1,9 +1,10 @@
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, ensureValidDatetime } from '@atproto/syntax'
 import { MINUTE, TID, dataToCborBlock } from '@atproto/common'
 import {
   LexiconDefNotFoundError,
   RepoRecord,
+  ValidationError,
   lexToIpld,
 } from '@atproto/lexicon'
 import {
@@ -115,6 +116,7 @@ export const assertValidRecord = (record: Record<string, unknown>) => {
   }
   try {
     lex.lexicons.assertValidRecord(record.$type, record)
+    assertValidCreatedAt(record)
   } catch (e) {
     if (e instanceof LexiconDefNotFoundError) {
       throw new InvalidRecordError(e.message)
@@ -123,6 +125,22 @@ export const assertValidRecord = (record: Record<string, unknown>) => {
       `Invalid ${record.$type} record: ${
         e instanceof Error ? e.message : String(e)
       }`,
+    )
+  }
+}
+
+// additional more rigorous check on datetimes
+// this check will eventually be in the lex sdk, but this will stop the bleed until then
+export const assertValidCreatedAt = (record: Record<string, unknown>) => {
+  const createdAt = record['createdAt']
+  if (typeof createdAt !== 'string') {
+    return
+  }
+  try {
+    ensureValidDatetime(createdAt)
+  } catch {
+    throw new ValidationError(
+      'createdAt must be an valid atproto datetime (both RFC-3339 and ISO-8601)',
     )
   }
 }
