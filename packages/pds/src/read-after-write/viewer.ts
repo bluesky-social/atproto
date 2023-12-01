@@ -232,6 +232,7 @@ export class LocalViewer {
       const images = embed.images.map((img) => ({
         thumb: this.getImageUrl('feed_thumbnail', img.image.ref.toString()),
         fullsize: this.getImageUrl('feed_fullsize', img.image.ref.toString()),
+        aspectRatio: img.aspectRatio,
         alt: img.alt,
       }))
       return {
