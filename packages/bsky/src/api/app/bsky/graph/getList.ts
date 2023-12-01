@@ -104,7 +104,7 @@ const presentation = (state: HydrationState, ctx: Context) => {
   const items = mapDefined(listItems, (item) => {
     const subject = actors[item.did]
     if (!subject) return
-    return { subject }
+    return { uri: item.uri, subject }
   })
   return { list: listView, items, cursor }
 }
@@ -122,7 +122,7 @@ type Params = QueryParams & {
 type SkeletonState = {
   params: Params
   list: Actor & ListInfo
-  listItems: (Actor & { cid: string; sortAt: string })[]
+  listItems: (Actor & { uri: string; cid: string; sortAt: string })[]
   cursor?: string
 }
 
