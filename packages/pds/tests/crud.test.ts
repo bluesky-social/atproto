@@ -567,6 +567,22 @@ describe('crud operations', () => {
     )
   })
 
+  it('requires valid rkey', async () => {
+    await expect(
+      aliceAgent.api.com.atproto.repo.createRecord({
+        repo: alice.did,
+        collection: 'app.bsky.feed.generator',
+        record: {
+          $type: 'app.bsky.feed.generator',
+          did: 'did:web:dummy.example.com',
+          displayName: 'dummy',
+          createdAt: new Date().toISOString(),
+        },
+        rkey: '..',
+      }),
+    ).rejects.toThrow('record key can not be "." or ".."')
+  })
+
   it('validates the record on write', async () => {
     await expect(
       aliceAgent.api.com.atproto.repo.createRecord({
