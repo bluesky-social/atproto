@@ -1,5 +1,16 @@
 # @atproto/api
 
+## 0.6.24
+
+### Patch Changes
+
+- [#1912](https://github.com/bluesky-social/atproto/pull/1912) [`378fc613`](https://github.com/bluesky-social/atproto/commit/378fc6132f621ca517897c9467ed5bba134b3776) Thanks [@devinivy](https://github.com/devinivy)! - Contains breaking lexicon changes: removing legacy com.atproto admin endpoints, making uri field required on app.bsky list views.
+
+- Updated dependencies [[`3c0ef382`](https://github.com/bluesky-social/atproto/commit/3c0ef382c12a413cc971ae47ffb341236c545f60)]:
+  - @atproto/syntax@0.1.5
+  - @atproto/lexicon@0.3.1
+  - @atproto/xrpc@0.4.1
+
 ## 0.6.23
 
 ### Patch Changes
