@@ -3321,8 +3321,8 @@ Object {
         "labels": Array [],
         "viewer": Object {
           "blockedBy": false,
-          "followedBy": "record(4)",
-          "following": "record(3)",
+          "followedBy": "record(5)",
+          "following": "record(4)",
           "muted": false,
         },
       },
