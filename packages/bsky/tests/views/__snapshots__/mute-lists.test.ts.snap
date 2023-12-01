@@ -518,6 +518,7 @@ Object {
           },
         },
       },
+      "uri": "record(3)",
     },
     Object {
       "subject": Object {
@@ -545,6 +546,7 @@ Object {
           },
         },
       },
+      "uri": "record(5)",
     },
   ],
   "list": Object {

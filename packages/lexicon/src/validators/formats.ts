@@ -18,7 +18,7 @@ export function datetime(path: string, value: string): ValidationResult {
     return {
       success: false,
       error: new ValidationError(
-        `${path} must be an iso8601 formatted datetime`,
+        `${path} must be an valid atproto datetime (both RFC-3339 and ISO-8601)`,
       ),
     }
   }

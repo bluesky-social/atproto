@@ -3326,6 +3326,7 @@ Object {
           "muted": false,
         },
       },
+      "uri": "record(3)",
     },
     Object {
       "subject": Object {
@@ -3341,7 +3342,7 @@ Object {
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
             "src": "user(3)",
-            "uri": "record(5)",
+            "uri": "record(7)",
             "val": "self-label-a",
           },
           Object {
@@ -3349,7 +3350,7 @@ Object {
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
             "src": "user(3)",
-            "uri": "record(5)",
+            "uri": "record(7)",
             "val": "self-label-b",
           },
         ],
@@ -3358,6 +3359,7 @@ Object {
           "muted": false,
         },
       },
+      "uri": "record(6)",
     },
   ],
   "list": Object {

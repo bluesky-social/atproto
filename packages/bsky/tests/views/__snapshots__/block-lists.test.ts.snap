@@ -489,6 +489,7 @@ Object {
           "muted": false,
         },
       },
+      "uri": "record(4)",
     },
     Object {
       "subject": Object {
@@ -541,6 +542,7 @@ Object {
           "muted": false,
         },
       },
+      "uri": "record(5)",
     },
   ],
   "list": Object {
