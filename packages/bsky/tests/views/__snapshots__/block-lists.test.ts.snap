@@ -514,6 +514,7 @@ Object {
           "muted": false,
         },
       },
+      "uri": "record(5)",
     },
     Object {
       "subject": Object {
@@ -542,7 +543,7 @@ Object {
           "muted": false,
         },
       },
-      "uri": "record(5)",
+      "uri": "record(6)",
     },
   ],
   "list": Object {
