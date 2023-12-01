@@ -32,6 +32,18 @@ const {
 const main = async () => {
   const env = getEnv()
   assert(env.dbPrimaryPostgresUrl, 'missing configuration for db')
+
+  if (env.enableMigrations) {
+    // separate db needed for more permissions
+    const migrateDb = new PrimaryDatabase({
+      url: env.dbMigratePostgresUrl,
+      schema: env.dbPostgresSchema,
+      poolSize: 2,
+    })
+    await migrateDb.migrateToLatestOrThrow()
+    await migrateDb.close()
+  }
+
   const db = new DatabaseCoordinator({
     schema: env.dbPostgresSchema,
     primary: {
@@ -102,12 +114,12 @@ const main = async () => {
     algos,
   })
   // separate db needed for more permissions
-  const migrateDb = new PrimaryDatabase({
+  const viewMaintainerDb = new PrimaryDatabase({
     url: env.dbMigratePostgresUrl,
     schema: env.dbPostgresSchema,
     poolSize: 2,
   })
-  const viewMaintainer = new ViewMaintainer(migrateDb, 1800)
+  const viewMaintainer = new ViewMaintainer(viewMaintainerDb, 1800)
   const viewMaintainerRunning = viewMaintainer.run()
 
   const periodicModerationEventReversal = new PeriodicModerationEventReversal(
@@ -125,11 +137,12 @@ const main = async () => {
     await bsky.destroy()
     viewMaintainer.destroy()
     await viewMaintainerRunning
-    await migrateDb.close()
+    await viewMaintainerDb.close()
   })
 }
 
 const getEnv = () => ({
+  enableMigrations: process.env.ENABLE_MIGRATIONS === 'true',
   port: parseInt(process.env.PORT),
   version: process.env.BSKY_VERSION,
   dbMigratePostgresUrl:
