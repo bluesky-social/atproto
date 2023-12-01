@@ -109,7 +109,11 @@ export class GraphService {
       .selectFrom('list_item')
       .innerJoin('actor as subject', 'subject.did', 'list_item.subjectDid')
       .selectAll('subject')
-      .select(['list_item.cid as cid', 'list_item.sortAt as sortAt'])
+      .select([
+        'list_item.uri as uri',
+        'list_item.cid as cid',
+        'list_item.sortAt as sortAt',
+      ])
   }
 
   async getBlockAndMuteState(

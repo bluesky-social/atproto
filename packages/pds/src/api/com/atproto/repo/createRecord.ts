@@ -1,5 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
+import { InvalidRecordKeyError } from '@atproto/syntax'
 import { prepareCreate, prepareDelete } from '../../../../repo'
 import { Server } from '../../../../lexicon'
 import {
@@ -53,6 +54,9 @@ export default function (server: Server, ctx: AppContext) {
         })
       } catch (err) {
         if (err instanceof InvalidRecordError) {
+          throw new InvalidRequestError(err.message)
+        }
+        if (err instanceof InvalidRecordKeyError) {
           throw new InvalidRequestError(err.message)
         }
         throw err
