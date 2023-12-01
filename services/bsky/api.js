@@ -137,7 +137,7 @@ const main = async () => {
     await bsky.destroy()
     viewMaintainer.destroy()
     await viewMaintainerRunning
-    await migrateDb.close()
+    await viewMaintainerDb.close()
   })
 }
 
