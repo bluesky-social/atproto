@@ -1,5 +1,11 @@
 # @atproto/syntax
 
+## 0.1.5
+
+### Patch Changes
+
+- [#1908](https://github.com/bluesky-social/atproto/pull/1908) [`3c0ef382`](https://github.com/bluesky-social/atproto/commit/3c0ef382c12a413cc971ae47ffb341236c545f60) Thanks [@gaearon](https://github.com/gaearon)! - prevent unnecessary throw/catch on uri syntax
+
 ## 0.1.4
 
 ### Patch Changes
