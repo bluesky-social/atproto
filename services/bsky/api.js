@@ -33,7 +33,7 @@ const main = async () => {
   const env = getEnv()
   assert(env.dbPrimaryPostgresUrl, 'missing configuration for db')
 
-  if(env.enableMigrations) {
+  if (env.enableMigrations) {
     // separate db needed for more permissions
     const migrateDb = new PrimaryDatabase({
       url: env.dbMigratePostgresUrl,
