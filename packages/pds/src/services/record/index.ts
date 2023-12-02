@@ -235,14 +235,14 @@ export class RecordService {
       .execute()
   }
 
-  async getRecordBacklinks(opts: {
+  async getExistingBacklink(opts: {
     did: string
     collection: string
     path: string
     linkTo: string
-  }) {
+  }): Promise<{ uri: AtUri; cid: CID } | null> {
     const { did, collection, path, linkTo } = opts
-    return await this.db.db
+    const res = await this.db.db
       .selectFrom('record')
       .innerJoin('backlink', 'backlink.uri', 'record.uri')
       .where('backlink.path', '=', path)
@@ -254,8 +254,15 @@ export class RecordService {
       )
       .where('record.did', '=', did)
       .where('record.collection', '=', collection)
+      .orderBy('record.indexedAt', 'asc')
+      .limit(1)
       .selectAll('record')
-      .execute()
+      .executeTakeFirst()
+    if (!res) return null
+    return {
+      uri: new AtUri(res.uri),
+      cid: CID.parse(res.cid),
+    }
   }
 }
 
