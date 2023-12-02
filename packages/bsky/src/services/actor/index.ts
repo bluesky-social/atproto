@@ -1,4 +1,5 @@
 import { sql } from 'kysely'
+import { wait } from '@atproto/common'
 import { Database } from '../../db'
 import { notSoftDeletedClause } from '../../db/util'
 import { ActorViews } from './views'
@@ -143,6 +144,34 @@ export class ActorService {
       .where('did', '=', did)
       .executeTakeFirst()
     return res?.repoRev ?? null
+  }
+
+  async *all(
+    opts: { batchSize?: number; forever?: boolean; cooldownMs?: number } = {},
+  ) {
+    const { cooldownMs = 1000, batchSize = 1000, forever = false } = opts
+    const baseQuery = this.db.db
+      .selectFrom('actor')
+      .selectAll()
+      .orderBy('did')
+      .limit(batchSize)
+    while (true) {
+      let cursor: ActorResult | undefined
+      do {
+        const actors = cursor
+          ? await baseQuery.where('did', '>', cursor.did).execute()
+          : await baseQuery.execute()
+        for (const actor of actors) {
+          yield actor
+        }
+        cursor = actors.at(-1)
+      } while (cursor)
+      if (forever) {
+        await wait(cooldownMs)
+      } else {
+        return
+      }
+    }
   }
 }
 
