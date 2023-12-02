@@ -19,6 +19,7 @@ export default function (server: Server, ctx: AppContext) {
         calcKey: ({ input, req }) => `${input.body.identifier}-${req.ip}`,
       },
     ],
+    timing: { constant: 500 },
     handler: async ({ input }) => {
       const { password } = input.body
       const identifier = input.body.identifier.toLowerCase()
