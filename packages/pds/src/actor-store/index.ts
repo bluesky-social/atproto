@@ -22,6 +22,7 @@ import { CID } from 'multiformats/cid'
 import DiskBlobStore from '../disk-blobstore'
 import { mkdir } from 'fs/promises'
 import { ActorStoreConfig } from '../config'
+import { retrySqlite } from '../db'
 
 type ActorStoreResources = {
   blobstore: (did: string) => BlobStore
@@ -67,7 +68,9 @@ export class ActorStore {
 
     const db = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
     try {
-      await db.ensureReady()
+      await retrySqlite(() =>
+        db.db.selectFrom('account_pref').selectAll().limit(1).execute(),
+      )
     } catch (err) {
       db.close()
       throw err
