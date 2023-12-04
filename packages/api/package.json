@@ -1,6 +1,6 @@
 {
   "name": "@atproto/api",
-  "version": "0.6.24-next.1",
+  "version": "0.6.24",
   "license": "MIT",
   "description": "Client library for atproto and Bluesky",
   "keywords": [

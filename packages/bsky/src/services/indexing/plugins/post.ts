@@ -112,6 +112,7 @@ const insertFn = async (
       obj.reply,
     )
     if (invalidReplyRoot || violatesThreadGate) {
+      Object.assign(insertedPost, { invalidReplyRoot, violatesThreadGate })
       await db
         .updateTable('post')
         .where('uri', '=', post.uri)
@@ -241,6 +242,13 @@ const notifsForInsert = (obj: IndexedPost) => {
     }
   }
 
+  if (obj.post.violatesThreadGate) {
+    // don't generate reply notifications when post violates threadgate
+    return notifs
+  }
+
+  // reply notifications
+
   for (const ancestor of obj.ancestors ?? []) {
     if (ancestor.uri === obj.post.uri) continue // no need to notify for own post
     if (ancestor.height < REPLY_NOTIF_DEPTH) {
@@ -353,6 +361,11 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
           replyCount: db
             .selectFrom('post')
             .where('post.replyParent', '=', postIdx.post.replyParent)
+            .where((qb) =>
+              qb
+                .where('post.violatesThreadGate', 'is', null)
+                .orWhere('post.violatesThreadGate', '=', false),
+            )
             .select(countAll.as('count')),
         })
         .onConflict((oc) =>
