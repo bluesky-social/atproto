@@ -8,19 +8,24 @@ import {
   StatusAttr,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { Main as StrongRef } from '../../lexicon/types/com/atproto/repo/strongRef'
+import { PdsCache } from '../account'
 
 export class ModerationService {
-  constructor(public db: Database, public blobstore: BlobStore) {}
+  constructor(
+    public db: Database,
+    public blobstore: BlobStore,
+    public pdsCache: PdsCache,
+  ) {}
 
-  static creator(blobstore: BlobStore) {
-    return (db: Database) => new ModerationService(db, blobstore)
+  static creator(blobstore: BlobStore, pdsCache: PdsCache) {
+    return (db: Database) => new ModerationService(db, blobstore, pdsCache)
   }
 
   async getRepoTakedownState(
     did: string,
   ): Promise<StatusResponse<RepoRef> | null> {
     const res = await this.db.db
-      .selectFrom('repo_root')
+      .selectFrom('user_account')
       .select('takedownRef')
       .where('did', '=', did)
       .executeTakeFirst()
@@ -80,7 +85,7 @@ export class ModerationService {
   async updateRepoTakedownState(did: string, takedown: StatusAttr) {
     const takedownRef = statusTotakedownRef(takedown)
     await this.db.db
-      .updateTable('repo_root')
+      .updateTable('user_account')
       .set({ takedownRef })
       .where('did', '=', did)
       .execute()

@@ -7,6 +7,7 @@ export const readEnv = (): ServerEnvironment => {
     hostname: envStr('PDS_HOSTNAME'),
     serviceDid: envStr('PDS_SERVICE_DID'),
     version: envStr('PDS_VERSION'),
+    isEntryway: envBool('PDS_IS_ENTRYWAY'),
     privacyPolicyUrl: envStr('PDS_PRIVACY_POLICY_URL'),
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
 
@@ -80,6 +81,12 @@ export const readEnv = (): ServerEnvironment => {
 
     // secrets
     jwtSecret: envStr('PDS_JWT_SECRET'),
+    jwtSigningKeyK256PrivateKeyHex: envStr(
+      'PDS_JWT_SIGNING_KEY_K256_PRIVATE_KEY_HEX',
+    ),
+    jwtVerifyKeyK256PublicKeyHex: envStr(
+      'PDS_JWT_VERIFY_KEY_K256_PUBLIC_KEY_HEX',
+    ),
     adminPassword: envStr('PDS_ADMIN_PASSWORD'),
     moderatorPassword: envStr('PDS_MODERATOR_PASSWORD'),
     triagePassword: envStr('PDS_TRIAGE_PASSWORD'),
@@ -106,6 +113,7 @@ export type ServerEnvironment = {
   hostname?: string
   serviceDid?: string
   version?: string
+  isEntryway?: boolean
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
 
@@ -177,6 +185,8 @@ export type ServerEnvironment = {
 
   // secrets
   jwtSecret?: string
+  jwtSigningKeyK256PrivateKeyHex?: string
+  jwtVerifyKeyK256PublicKeyHex?: string
   adminPassword?: string
   moderatorPassword?: string
   triagePassword?: string

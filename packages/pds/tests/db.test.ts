@@ -52,7 +52,6 @@ describe('db', () => {
         root: 'x',
         rev: 'x',
         indexedAt: 'bad-date',
-        takedownRef: null,
       })
     })
 

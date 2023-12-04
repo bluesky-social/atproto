@@ -51,6 +51,7 @@ describe('account deletion', () => {
       return result
     }
 
+    await network.processAll()
     initialDbContents = await getDbContents(db)
   })
 

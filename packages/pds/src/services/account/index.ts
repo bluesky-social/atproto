@@ -1,13 +1,16 @@
-import { sql } from 'kysely'
+import { Selectable, sql } from 'kysely'
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { MINUTE, lessThanAgoMs } from '@atproto/common'
+import { INVALID_HANDLE } from '@atproto/syntax'
 import { dbLogger as log } from '../../logger'
 import Database from '../../db'
 import * as scrypt from '../../db/scrypt'
 import { UserAccountEntry } from '../../db/tables/user-account'
 import { DidHandle } from '../../db/tables/did-handle'
 import { RepoRoot } from '../../db/tables/repo-root'
+import { Pds } from '../../db/tables/pds'
+import { OptionalJoin } from '../../db/types'
 import {
   countAll,
   isErrUniqueViolation,
@@ -19,26 +22,27 @@ import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPas
 import { EmailTokenPurpose } from '../../db/tables/email-token'
 import { getRandomToken } from '../../api/com/atproto/server/util'
 import { AccountView } from '../../lexicon/types/com/atproto/admin/defs'
-import { INVALID_HANDLE } from '@atproto/syntax'
 
 export class AccountService {
-  constructor(public db: Database) {}
+  constructor(public db: Database, private pdsCache: PdsCache) {}
 
-  static creator() {
-    return (db: Database) => new AccountService(db)
+  static creator(pdsCache: PdsCache) {
+    return (db: Database) => new AccountService(db, pdsCache)
   }
 
+  // @TODO decouple account from repo_root, move takedownId.
   async getAccount(
     handleOrDid: string,
     includeSoftDeleted = false,
-  ): Promise<(UserAccountEntry & DidHandle & RepoRoot) | null> {
+  ): Promise<AccountInfo | null> {
     const { ref } = this.db.db.dynamic
     const result = await this.db.db
       .selectFrom('user_account')
       .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .leftJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .leftJoin('pds', 'pds.id', 'user_account.pdsId')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .where((qb) => {
         if (handleOrDid.startsWith('did:')) {
@@ -53,9 +57,10 @@ export class AccountService {
           )
         }
       })
-      .selectAll('user_account')
+      .selectAll('repo_root') // first so that its possibly-null vals don't shadow other cols
       .selectAll('did_handle')
-      .selectAll('repo_root')
+      .selectAll('user_account')
+      .select('pds.did as pdsDid')
       .executeTakeFirst()
     return result || null
   }
@@ -63,10 +68,11 @@ export class AccountService {
   // Repo exists and is not taken-down
   async isRepoAvailable(did: string) {
     const found = await this.db.db
-      .selectFrom('repo_root')
-      .where('did', '=', did)
-      .where('takedownRef', 'is', null)
-      .select('did')
+      .selectFrom('user_account')
+      .innerJoin('repo_root', 'repo_root.did', 'user_account.did')
+      .where('user_account.did', '=', did)
+      .where('user_account.takedownRef', 'is', null)
+      .select('user_account.did')
       .executeTakeFirst()
     return found !== undefined
   }
@@ -74,19 +80,21 @@ export class AccountService {
   async getAccountByEmail(
     email: string,
     includeSoftDeleted = false,
-  ): Promise<(UserAccountEntry & DidHandle & RepoRoot) | null> {
+  ): Promise<AccountInfo | null> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('user_account')
       .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .leftJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .leftJoin('pds', 'pds.id', 'user_account.pdsId')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .where('email', '=', email.toLowerCase())
-      .selectAll('user_account')
+      .selectAll('repo_root') // first so that its possibly-null vals don't shadow other cols
       .selectAll('did_handle')
-      .selectAll('repo_root')
+      .selectAll('user_account')
+      .select(['pds.did as pdsDid'])
       .executeTakeFirst()
     return found || null
   }
@@ -105,9 +113,9 @@ export class AccountService {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('did_handle')
-      .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
+      .innerJoin('user_account', 'user_account.did', 'did_handle.did')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .where('handle', '=', handleOrDid)
       .select('did_handle.did')
@@ -119,16 +127,18 @@ export class AccountService {
     email: string
     handle: string
     did: string
+    pdsId?: number
     passwordScrypt: string
   }) {
     this.db.assertTransaction()
-    const { email, handle, did, passwordScrypt } = opts
+    const { email, handle, did, pdsId, passwordScrypt } = opts
     log.debug({ handle, email }, 'registering user')
     const registerUserAccnt = this.db.db
       .insertInto('user_account')
       .values({
         email: email.toLowerCase(),
         did,
+        pdsId,
         passwordScrypt,
         createdAt: new Date().toISOString(),
       })
@@ -290,6 +300,7 @@ export class AccountService {
       .execute()
   }
 
+  // @NOTE only searches active repos, not all accounts.
   async search(opts: {
     query: string
     limit: number
@@ -304,7 +315,7 @@ export class AccountService {
       .innerJoin('repo_root', 'repo_root.did', 'did_handle.did')
       .innerJoin('user_account', 'user_account.did', 'did_handle.did')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .where((qb) => {
         // sqlite doesn't support "ilike", but performs "like" case-insensitively
@@ -331,6 +342,7 @@ export class AccountService {
     }).execute()
   }
 
+  // @NOTE only searches active repos, not all accounts.
   async list(opts: {
     limit: number
     cursor?: string
@@ -343,8 +355,9 @@ export class AccountService {
     let builder = this.db.db
       .selectFrom('repo_root')
       .innerJoin('did_handle', 'did_handle.did', 'repo_root.did')
+      .innerJoin('user_account', 'user_account.did', 'repo_root.did')
       .if(!includeSoftDeleted, (qb) =>
-        qb.where(notSoftDeletedClause(ref('repo_root'))),
+        qb.where(notSoftDeletedClause(ref('user_account'))),
       )
       .selectAll('did_handle')
       .selectAll('repo_root')
@@ -384,6 +397,9 @@ export class AccountService {
       .deleteFrom('did_handle')
       .where('did_handle.did', '=', did)
       .execute()
+  }
+
+  async sequenceTombstone(did: string): Promise<void> {
     const seqEvt = await sequencer.formatSeqTombstone(did)
     await this.db.transaction(async (txn) => {
       await sequencer.sequenceEvt(txn, seqEvt)
@@ -636,6 +652,29 @@ export class AccountService {
       await this.db.db.insertInto('user_pref').values(putPrefs).execute()
     }
   }
+
+  // @NOTE cached due to heavy usage in proxy logic
+  async getPds(pdsDid: string, opts?: { cached: boolean }) {
+    if (opts?.cached && this.pdsCache.has(pdsDid)) {
+      return this.pdsCache.get(pdsDid)
+    }
+    const pds = await this.db.db
+      .selectFrom('pds')
+      .where('did', '=', pdsDid)
+      .selectAll()
+      .executeTakeFirst()
+    if (pds) this.pdsCache.set(pdsDid, pds)
+    return pds
+  }
+
+  async getPdses(opts?: { cached: boolean }) {
+    if (opts?.cached && this.pdsCache.hasAll()) {
+      return this.pdsCache.getAll() ?? []
+    }
+    const pdses = await this.db.db.selectFrom('pds').selectAll().execute()
+    this.pdsCache.setAll(pdses)
+    return pdses
+  }
 }
 
 export type UserPreference = Record<string, unknown> & { $type: string }
@@ -671,3 +710,34 @@ const matchNamespace = (namespace: string, fullname: string) => {
 }
 
 export type HandleSequenceToken = { did: string; handle: string }
+
+type AccountInfo = UserAccountEntry &
+  DidHandle &
+  OptionalJoin<RepoRoot> & { pdsDid: string | null }
+
+export class PdsCache {
+  private all: PdsResult[] | undefined
+  private individual = new Map<string, PdsResult>()
+  get(did: string) {
+    return this.individual.get(did)
+  }
+  has(did: string) {
+    return this.individual.has(did)
+  }
+  set(did: string, pds: PdsResult) {
+    return this.individual.set(did, pds)
+  }
+  getAll() {
+    return this.all
+  }
+  hasAll() {
+    return this.all !== undefined
+  }
+  setAll(pdses: PdsResult[]) {
+    this.all = pdses
+    this.individual.clear()
+    pdses.forEach((pds) => this.individual.set(pds.did, pds))
+  }
+}
+
+type PdsResult = Selectable<Pds>

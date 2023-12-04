@@ -28,7 +28,7 @@ export class TestNetworkNoAppView {
       ...params.pds,
     })
 
-    mockNetworkUtilities(pds)
+    mockNetworkUtilities([pds])
 
     return new TestNetworkNoAppView(plc, pds)
   }

@@ -15,6 +15,7 @@ import {
 } from '../../../../repo'
 import AppContext from '../../../../context'
 import { ConcurrentWriteError } from '../../../../services/repo'
+import { proxy, authPassthru, ensureThisPds } from '../../../proxy'
 
 const ratelimitPoints = ({ input }: { input: HandlerInput }) => {
   let points = 0
@@ -46,7 +47,23 @@ export default function (server: Server, ctx: AppContext) {
       },
     ],
 
-    handler: async ({ input, auth }) => {
+    handler: async ({ input, auth, req }) => {
+      const proxied = await proxy(
+        ctx,
+        auth.credentials.audience,
+        async (agent) => {
+          await agent.api.com.atproto.repo.applyWrites(
+            input.body,
+            authPassthru(req, true),
+          )
+        },
+      )
+      if (proxied !== null) {
+        return proxied
+      }
+
+      ensureThisPds(ctx, auth.credentials.pdsDid)
+
       const tx = input.body
       const { repo, validate, swapCommit } = tx
       const did = await ctx.services.account(ctx.db).getDidForActor(repo)

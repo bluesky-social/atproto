@@ -1,4 +1,5 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, UpstreamFailureError } from '@atproto/xrpc-server'
+import { DAY, MINUTE } from '@atproto/common'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
@@ -7,7 +8,7 @@ import {
   UserAlreadyExistsError,
 } from '../../../../services/account'
 import { httpLogger } from '../../../../logger'
-import { DAY, MINUTE } from '@atproto/common'
+import { isThisPds } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
@@ -26,6 +27,7 @@ export default function (server: Server, ctx: AppContext) {
     ],
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
+      const pdsDid = auth.credentials.pdsDid
       const handle = await normalizeAndValidateHandle({
         ctx,
         handle: input.body.handle,
@@ -61,6 +63,29 @@ export default function (server: Server, ctx: AppContext) {
           )
           return tok
         })
+      }
+
+      if (ctx.cfg.service.isEntryway && !isThisPds(ctx, pdsDid)) {
+        const pds =
+          pdsDid &&
+          (await ctx.services.account(ctx.db).getPds(pdsDid, { cached: true }))
+        if (!pds) {
+          throw new UpstreamFailureError('unknown pds')
+        }
+        // the pds emits the handle event on the firehose, but the entryway is responsible for updating the did doc.
+        // the long flow is: pds(identity.updateHandle) -> entryway(identity.updateHandle) -> pds(admin.updateAccountHandle)
+        const agent = ctx.pdsAgents.get(pds.host)
+        await agent.com.atproto.admin.updateAccountHandle(
+          {
+            did: requester,
+            handle: input.body.handle,
+          },
+          {
+            encoding: 'application/json',
+            headers: ctx.authVerifier.createAdminRoleHeaders(),
+          },
+        )
+        return // do not sequence handle event on the entryway
       }
 
       try {

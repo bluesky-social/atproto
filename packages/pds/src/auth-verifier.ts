@@ -1,13 +1,24 @@
 import {
+  KeyObject,
+  createPrivateKey,
+  createPublicKey,
+  createSecretKey,
+} from 'node:crypto'
+import * as crypto from '@atproto/crypto'
+import {
   AuthRequiredError,
+  ForbiddenError,
   InvalidRequestError,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
 import { IdResolver } from '@atproto/identity'
 import * as ui8 from 'uint8arrays'
 import express from 'express'
-import * as jwt from 'jsonwebtoken'
+import * as jose from 'jose'
+import KeyEncoder from 'key-encoder'
 import Database from './db'
+import { softDeleted } from './db/util'
+import { SigningKeyMemory, VerifyKey } from './config'
 
 type ReqCtx = {
   req: express.Request
@@ -52,6 +63,14 @@ type AccessOutput = {
     type: 'access'
     did: string
     scope: AuthScope
+    audience: string | undefined
+  }
+  artifacts: string
+}
+
+type AccessCheckedOutput = AccessOutput & {
+  credentials: {
+    pdsDid: string | null
   }
   artifacts: string
 }
@@ -61,6 +80,7 @@ type RefreshOutput = {
     type: 'refresh'
     did: string
     scope: AuthScope
+    audience: string | undefined
     tokenId: string
   }
   artifacts: string
@@ -70,11 +90,12 @@ type ValidatedBearer = {
   did: string
   scope: AuthScope
   token: string
-  payload: jwt.JwtPayload
+  payload: jose.JWTPayload
+  audience: string | undefined
 }
 
 export type AuthVerifierOpts = {
-  jwtSecret: string
+  authKeys: AuthKeys
   adminPass: string
   moderatorPass: string
   triagePass: string
@@ -82,62 +103,70 @@ export type AuthVerifierOpts = {
 }
 
 export class AuthVerifier {
-  private _secret: string
+  private _signingSecret: KeyObject
+  private _verifyKey?: KeyObject
   private _adminPass: string
   private _moderatorPass: string
   private _triagePass: string
-  public adminServiceDid: string
+  private _adminServiceDid: string
 
   constructor(
     public db: Database,
     public idResolver: IdResolver,
     opts: AuthVerifierOpts,
   ) {
-    this._secret = opts.jwtSecret
+    this._signingSecret = opts.authKeys.signingSecret
+    this._verifyKey = opts.authKeys.verifyKey
     this._adminPass = opts.adminPass
     this._moderatorPass = opts.moderatorPass
     this._triagePass = opts.triagePass
-    this.adminServiceDid = opts.adminServiceDid
+    this._adminServiceDid = opts.adminServiceDid
   }
 
   // verifiers (arrow fns to preserve scope)
 
-  access = (ctx: ReqCtx): AccessOutput => {
+  access = (ctx: ReqCtx): Promise<AccessOutput> => {
     return this.validateAccessToken(ctx.req, [
       AuthScope.Access,
       AuthScope.AppPass,
     ])
   }
 
-  accessCheckTakedown = async (ctx: ReqCtx): Promise<AccessOutput> => {
-    const result = this.validateAccessToken(ctx.req, [
+  accessCheckTakedown = async (ctx: ReqCtx): Promise<AccessCheckedOutput> => {
+    const result = await this.validateAccessToken(ctx.req, [
       AuthScope.Access,
       AuthScope.AppPass,
     ])
     const found = await this.db.db
       .selectFrom('user_account')
-      .innerJoin('repo_root', 'repo_root.did', 'user_account.did')
+      .leftJoin('pds', 'pds.id', 'user_account.pdsId')
       .where('user_account.did', '=', result.credentials.did)
-      .where('repo_root.takedownRef', 'is', null)
-      .select('user_account.did')
+      .select(['user_account.did', 'pds.did as pdsDid', 'takedownRef'])
       .executeTakeFirst()
     if (!found) {
+      // will be turned into ExpiredToken for the client if proxied by entryway
+      throw new ForbiddenError('Account not found', 'AccountNotFound')
+    }
+    if (softDeleted(found)) {
       throw new AuthRequiredError(
         'Account has been taken down',
         'AccountTakedown',
       )
     }
-    return result
+    return {
+      ...result,
+      credentials: { ...result.credentials, pdsDid: found.pdsDid },
+    }
   }
 
-  accessNotAppPassword = (ctx: ReqCtx): AccessOutput => {
+  accessNotAppPassword = (ctx: ReqCtx): Promise<AccessOutput> => {
     return this.validateAccessToken(ctx.req, [AuthScope.Access])
   }
 
-  refresh = (ctx: ReqCtx): RefreshOutput => {
-    const { did, scope, token, payload } = this.validateBearerToken(ctx.req, [
-      AuthScope.Refresh,
-    ])
+  // @TODO additional check on aud when set
+  refresh = async (ctx: ReqCtx): Promise<RefreshOutput> => {
+    const { did, scope, token, audience, payload } =
+      await this.validateBearerToken(ctx.req, [AuthScope.Refresh])
     if (!payload.jti) {
       throw new AuthRequiredError(
         'Unexpected missing refresh token id',
@@ -149,6 +178,7 @@ export class AuthVerifier {
         type: 'refresh',
         did,
         scope,
+        audience,
         tokenId: payload.jti,
       },
       artifacts: token,
@@ -168,7 +198,7 @@ export class AuthVerifier {
     }
   }
 
-  accessOrRole = (ctx: ReqCtx): AccessOutput | RoleOutput => {
+  accessOrRole = async (ctx: ReqCtx): Promise<AccessOutput | RoleOutput> => {
     if (isBearerToken(ctx.req)) {
       return this.access(ctx)
     } else {
@@ -176,11 +206,11 @@ export class AuthVerifier {
     }
   }
 
-  optionalAccessOrRole = (
+  optionalAccessOrRole = async (
     ctx: ReqCtx,
-  ): AccessOutput | RoleOutput | NullOutput => {
+  ): Promise<AccessOutput | RoleOutput | NullOutput> => {
     if (isBearerToken(ctx.req)) {
-      return this.access(ctx)
+      return await this.access(ctx)
     } else {
       const creds = this.parseRoleCreds(ctx.req)
       if (creds.status === RoleStatus.Missing) {
@@ -206,14 +236,14 @@ export class AuthVerifier {
     const payload = await verifyServiceJwt(
       jwtStr,
       null,
-      async (did: string) => {
-        if (did !== this.adminServiceDid) {
+      async (did, forceRefresh) => {
+        if (did !== this._adminServiceDid) {
           throw new AuthRequiredError(
             'Untrusted issuer for admin actions',
             'UntrustedIss',
           )
         }
-        return this.idResolver.did.resolveAtprotoKey(did)
+        return this.idResolver.did.resolveAtprotoKey(did, forceRefresh)
       },
     )
     return {
@@ -235,39 +265,59 @@ export class AuthVerifier {
     }
   }
 
-  validateBearerToken(
+  async validateBearerToken(
     req: express.Request,
     scopes: AuthScope[],
-    options?: jwt.VerifyOptions,
-  ): ValidatedBearer {
+    verifyOptions?: jose.JWTVerifyOptions,
+  ): Promise<ValidatedBearer> {
     const token = bearerTokenFromReq(req)
     if (!token) {
       throw new AuthRequiredError(undefined, 'AuthMissing')
     }
-    const payload = verifyJwt({ secret: this._secret, token, options })
-    const sub = payload.sub
+    const payload = await verifyJwt({
+      token,
+      keys: {
+        verifyKey: this._verifyKey,
+        signingSecret: this._signingSecret,
+      },
+      verifyOptions,
+    })
+    const { sub, aud, scope } = payload
     if (typeof sub !== 'string' || !sub.startsWith('did:')) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
-    if (scopes.length > 0 && !scopes.includes(payload.scope)) {
+    if (
+      aud !== undefined &&
+      (typeof aud !== 'string' || !aud.startsWith('did:'))
+    ) {
+      throw new InvalidRequestError('Malformed token', 'InvalidToken')
+    }
+    if (!isAuthScope(scope) || (scopes.length > 0 && !scopes.includes(scope))) {
       throw new InvalidRequestError('Bad token scope', 'InvalidToken')
     }
-
     return {
       did: sub,
-      scope: payload.scope,
+      scope,
+      audience: aud,
       token,
       payload,
     }
   }
 
-  validateAccessToken(req: express.Request, scopes: AuthScope[]): AccessOutput {
-    const { did, scope, token } = this.validateBearerToken(req, scopes)
+  async validateAccessToken(
+    req: express.Request,
+    scopes: AuthScope[],
+  ): Promise<AccessOutput> {
+    const { did, scope, token, audience } = await this.validateBearerToken(
+      req,
+      scopes,
+    )
     return {
       credentials: {
         type: 'access',
         did,
         scope,
+        audience,
       },
       artifacts: token,
     }
@@ -292,6 +342,17 @@ export class AuthVerifier {
     return { status: Invalid, admin: false, moderator: false, triage: false }
   }
 
+  createAdminRoleHeaders = () => {
+    return {
+      authorization:
+        'Basic ' +
+        ui8.toString(
+          ui8.fromString(`admin:${this._adminPass}`, 'utf8'),
+          'base64pad',
+        ),
+    }
+  }
+
   isUserOrAdmin(
     auth: AccessOutput | RoleOutput | NullOutput,
     did: string,
@@ -311,6 +372,36 @@ export class AuthVerifier {
 
 const BEARER = 'Bearer '
 const BASIC = 'Basic '
+export const SECP256K1_JWT = 'ES256K'
+export const HMACSHA256_JWT = 'HS256'
+
+export const getAuthKeys = async (opts: AuthKeyOptions): Promise<AuthKeys> => {
+  const signingSecret = createSecretKey(Buffer.from(opts.jwtSecret))
+  const signingKeypair =
+    opts.jwtSigningKey &&
+    (await crypto.Secp256k1Keypair.import(opts.jwtSigningKey.privateKeyHex, {
+      exportable: true,
+    }))
+  const signingKey = signingKeypair
+    ? await createPrivateKeyObject(signingKeypair)
+    : undefined
+  const verifyKey = opts.jwtVerifyKey
+    ? await createPublicKeyObject(opts.jwtVerifyKey.publicKeyHex)
+    : signingKey
+  return { signingSecret, signingKey, verifyKey }
+}
+
+type AuthKeyOptions = {
+  jwtSecret: string
+  jwtSigningKey?: SigningKeyMemory
+  jwtVerifyKey?: VerifyKey
+}
+
+export type AuthKeys = {
+  signingSecret: KeyObject
+  signingKey?: KeyObject
+  verifyKey?: KeyObject
+}
 
 const isBearerToken = (req: express.Request): boolean => {
   return req.headers.authorization?.startsWith(BEARER) ?? false
@@ -322,24 +413,29 @@ const bearerTokenFromReq = (req: express.Request) => {
   return header.slice(BEARER.length)
 }
 
-const verifyJwt = (params: {
-  secret: string
+const verifyJwt = async (params: {
   token: string
-  options?: jwt.VerifyOptions
-}): jwt.JwtPayload => {
-  const { secret, token, options } = params
+  keys: { verifyKey?: KeyObject; signingSecret: KeyObject }
+  verifyOptions?: jose.JWTVerifyOptions
+}): Promise<jose.JWTPayload> => {
+  const { token, keys, verifyOptions } = params
+  const header = jose.decodeProtectedHeader(token)
+  let result: jose.JWTVerifyResult
   try {
-    const payload = jwt.verify(token, secret, options)
-    if (typeof payload === 'string' || 'signature' in payload) {
-      throw new InvalidRequestError('Malformed token', 'InvalidToken')
+    if (header.alg === SECP256K1_JWT && keys.verifyKey) {
+      const key = keys.verifyKey
+      result = await jose.jwtVerify(token, key, verifyOptions)
+    } else {
+      const key = keys.signingSecret
+      result = await jose.jwtVerify(token, key, verifyOptions)
     }
-    return payload
   } catch (err) {
-    if (err instanceof jwt.TokenExpiredError) {
+    if (err?.['code'] === 'ERR_JWT_EXPIRED') {
       throw new InvalidRequestError('Token has expired', 'ExpiredToken')
     }
     throw new InvalidRequestError('Token could not be verified', 'InvalidToken')
   }
+  return result.payload
 }
 
 export const parseBasicAuth = (
@@ -372,3 +468,25 @@ export const ensureValidAdminAud = (
     )
   }
 }
+
+const authScopes = new Set(Object.values(AuthScope))
+const isAuthScope = (val: unknown): val is AuthScope => {
+  return authScopes.has(val as any)
+}
+
+const createPrivateKeyObject = async (
+  privateKey: crypto.Secp256k1Keypair,
+): Promise<KeyObject> => {
+  const raw = await privateKey.export()
+  const key = keyEncoder.encodePrivate(ui8.toString(raw, 'hex'), 'raw', 'pem')
+  return createPrivateKey({ format: 'pem', key })
+}
+
+const createPublicKeyObject = async (
+  publicKeyHex: string,
+): Promise<KeyObject> => {
+  const key = keyEncoder.encodePublic(publicKeyHex, 'raw', 'pem')
+  return createPublicKey({ format: 'pem', key })
+}
+
+const keyEncoder = new KeyEncoder('secp256k1')

@@ -1,3 +1,4 @@
+import { getPdsEndpoint } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { DidDocument } from '@atproto/identity'
 import { ServerConfig } from '../../../../config'
@@ -26,17 +27,35 @@ export const getRandomToken = () => {
   return token.slice(0, 5) + '-' + token.slice(5, 10)
 }
 
-// @TODO once supporting multiple pdses, validate pds in did doc based on allow-list.
 export const didDocForSession = async (
   ctx: AppContext,
-  did: string,
-  forceRefresh?: boolean,
+  account: { did: string; pdsDid: string | null },
 ): Promise<DidDocument | undefined> => {
-  if (!ctx.cfg.identity.enableDidDocWithSession) return
-  try {
-    const didDoc = await ctx.idResolver.did.resolve(did, forceRefresh)
-    return didDoc ?? undefined
-  } catch (err) {
-    dbLogger.warn({ err, did }, 'failed to resolve did doc')
+  if (!ctx.cfg.identity.enableDidDocWithSession || account.pdsDid === null) {
+    return
   }
+  try {
+    const [didDoc, pds] = await Promise.all([
+      ctx.idResolver.did.resolve(account.did),
+      ctx.services.account(ctx.db).getPds(account.pdsDid, { cached: true }),
+    ])
+    if (!didDoc || !pds) return
+    if (getPdsHost(didDoc) === pds.host) {
+      return didDoc
+    }
+    // no pds match, try again with fresh did doc
+    const freshDidDoc = await ctx.idResolver.did.resolve(account.did, true)
+    if (!freshDidDoc) return
+    if (getPdsHost(freshDidDoc) === pds.host) {
+      return didDoc
+    }
+  } catch (err) {
+    dbLogger.warn({ err, did: account.did }, 'failed to resolve did doc')
+  }
+}
+
+const getPdsHost = (didDoc: DidDocument) => {
+  const pdsEndpoint = getPdsEndpoint(didDoc)
+  if (!pdsEndpoint) return
+  return new URL(pdsEndpoint).host
 }

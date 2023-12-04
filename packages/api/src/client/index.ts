@@ -8,6 +8,7 @@ import {
 import { schemas } from './lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
+import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
@@ -143,6 +144,7 @@ import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecce
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
+export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 export * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 export * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
@@ -364,6 +366,17 @@ export class AdminNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  deleteAccount(
+    data?: ComAtprotoAdminDeleteAccount.InputSchema,
+    opts?: ComAtprotoAdminDeleteAccount.CallOptions,
+  ): Promise<ComAtprotoAdminDeleteAccount.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.deleteAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminDeleteAccount.toKnownErr(e)
+      })
   }
 
   disableAccountInvites(

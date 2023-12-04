@@ -2,7 +2,7 @@ import { AtpAgent } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { BlobStore } from '@atproto/repo'
 import Database from '../db'
-import { AccountService } from './account'
+import { AccountService, PdsCache } from './account'
 import { AuthService } from './auth'
 import { RecordService } from './record'
 import { RepoService } from './repo'
@@ -10,12 +10,14 @@ import { ModerationService } from './moderation'
 import { BackgroundQueue } from '../background'
 import { Crawlers } from '../crawlers'
 import { LocalService } from './local'
+import { AuthKeys } from '../auth-verifier'
 
 export function createServices(resources: {
   repoSigningKey: crypto.Keypair
   blobstore: BlobStore
   pdsHostname: string
-  jwtSecret: string
+  authKeys: AuthKeys
+  identityDid: string
   appViewAgent?: AtpAgent
   appViewDid?: string
   appViewCdnUrlPattern?: string
@@ -26,16 +28,18 @@ export function createServices(resources: {
     repoSigningKey,
     blobstore,
     pdsHostname,
-    jwtSecret,
+    authKeys,
+    identityDid,
     appViewAgent,
     appViewDid,
     appViewCdnUrlPattern,
     backgroundQueue,
     crawlers,
   } = resources
+  const pdsCache = new PdsCache()
   return {
-    account: AccountService.creator(),
-    auth: AuthService.creator(jwtSecret),
+    account: AccountService.creator(pdsCache),
+    auth: AuthService.creator(identityDid, authKeys),
     record: RecordService.creator(),
     repo: RepoService.creator(
       repoSigningKey,
@@ -50,7 +54,7 @@ export function createServices(resources: {
       appViewDid,
       appViewCdnUrlPattern,
     ),
-    moderation: ModerationService.creator(blobstore),
+    moderation: ModerationService.creator(blobstore, pdsCache),
   }
 }
 

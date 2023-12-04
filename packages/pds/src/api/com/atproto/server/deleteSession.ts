@@ -4,10 +4,10 @@ import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deleteSession(async ({ req }) => {
-    const result = ctx.authVerifier.validateBearerToken(
+    const result = await ctx.authVerifier.validateBearerToken(
       req,
       [AuthScope.Refresh],
-      { ignoreExpiration: true },
+      { clockTolerance: Infinity }, // ignore expiration
     )
     const id = result.payload.jti
     if (!id) {

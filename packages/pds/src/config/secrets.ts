@@ -35,6 +35,20 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
     throw new Error('Must configure plc rotation key')
   }
 
+  let jwtSigningKey: ServerSecrets['jwtSigningKey']
+  if (env.jwtSigningKeyK256PrivateKeyHex) {
+    jwtSigningKey = {
+      provider: 'memory',
+      privateKeyHex: env.jwtSigningKeyK256PrivateKeyHex,
+    }
+  }
+  let jwtVerifyKey: ServerSecrets['jwtVerifyKey']
+  if (env.jwtVerifyKeyK256PublicKeyHex) {
+    jwtVerifyKey = {
+      publicKeyHex: env.jwtVerifyKeyK256PublicKeyHex,
+    }
+  }
+
   if (!env.jwtSecret) {
     throw new Error('Must provide a JWT secret')
   }
@@ -45,6 +59,8 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
 
   return {
     jwtSecret: env.jwtSecret,
+    jwtSigningKey,
+    jwtVerifyKey,
     adminPassword: env.adminPassword,
     moderatorPassword: env.moderatorPassword ?? env.adminPassword,
     triagePassword:
@@ -56,6 +72,8 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
 
 export type ServerSecrets = {
   jwtSecret: string
+  jwtSigningKey?: SigningKeyMemory
+  jwtVerifyKey?: VerifyKey
   adminPassword: string
   moderatorPassword: string
   triagePassword: string
@@ -71,4 +89,8 @@ export type SigningKeyKms = {
 export type SigningKeyMemory = {
   provider: 'memory'
   privateKeyHex: string
+}
+
+export type VerifyKey = {
+  publicKeyHex: string
 }

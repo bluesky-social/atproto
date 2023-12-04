@@ -23,11 +23,12 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const [didDoc, rotated] = await Promise.all([
-        didDocForSession(ctx, user.did),
+        didDocForSession(ctx, user),
         ctx.db.transaction((dbTxn) => {
-          return ctx.services
-            .auth(dbTxn)
-            .rotateRefreshToken(auth.credentials.tokenId)
+          return ctx.services.auth(dbTxn).rotateRefreshToken({
+            id: auth.credentials.tokenId,
+            pdsDid: user.pdsDid,
+          })
         }),
       ])
       if (rotated === null) {
@@ -40,8 +41,8 @@ export default function (server: Server, ctx: AppContext) {
           did: user.did,
           didDoc,
           handle: user.handle,
-          accessJwt: rotated.access.jwt,
-          refreshJwt: rotated.refresh.jwt,
+          accessJwt: rotated.access,
+          refreshJwt: rotated.refresh,
         },
       }
     },

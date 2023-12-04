@@ -22,19 +22,40 @@ import {
   getRepoRev,
   handleReadAfterWrite,
 } from '../util/read-after-write'
-import { authPassthru } from '../../../com/atproto/admin/util'
+import {
+  authPassthru,
+  proxy,
+  proxyAppView,
+  resultPassthru,
+} from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
     auth: ctx.authVerifier.accessOrRole,
     handler: async ({ req, params, auth }) => {
+      if (auth.credentials.type === 'access') {
+        const proxied = await proxy(
+          ctx,
+          auth.credentials.audience,
+          async (agent) => {
+            const result = await agent.api.app.bsky.feed.getPostThread(
+              params,
+              authPassthru(req),
+            )
+            return resultPassthru(result)
+          },
+        )
+        if (proxied !== null) {
+          return proxied
+        }
+      }
+
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null
 
       if (!requester) {
-        const res = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
-          params,
-          authPassthru(req),
+        const res = await proxyAppView(ctx, (agent) =>
+          agent.api.app.bsky.feed.getPostThread(params, authPassthru(req)),
         )
 
         return {
@@ -44,9 +65,11 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       try {
-        const res = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
-          params,
-          await ctx.serviceAuthHeaders(requester),
+        const res = await proxyAppView(ctx, async (agent) =>
+          agent.api.app.bsky.feed.getPostThread(
+            params,
+            await ctx.serviceAuthHeaders(requester),
+          ),
         )
 
         return await handleReadAfterWrite(
@@ -201,9 +224,11 @@ const readAfterWriteNotFound = async (
   const highestParent = getHighestParent(thread)
   if (highestParent) {
     try {
-      const parentsRes = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
-        { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
-        await ctx.serviceAuthHeaders(requester),
+      const parentsRes = await proxyAppView(ctx, async (agent) =>
+        agent.api.app.bsky.feed.getPostThread(
+          { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
+          await ctx.serviceAuthHeaders(requester),
+        ),
       )
       thread.parent = parentsRes.data.thread
     } catch (err) {

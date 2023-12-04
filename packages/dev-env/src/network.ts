@@ -55,7 +55,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       ...params.pds,
     })
 
-    mockNetworkUtilities(pds, bsky)
+    mockNetworkUtilities([pds], bsky)
 
     return new TestNetwork(plc, pds, bsky)
   }

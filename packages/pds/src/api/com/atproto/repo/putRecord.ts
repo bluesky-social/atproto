@@ -12,6 +12,12 @@ import {
   PreparedUpdate,
 } from '../../../../repo'
 import { ConcurrentWriteError } from '../../../../services/repo'
+import {
+  proxy,
+  resultPassthru,
+  authPassthru,
+  ensureThisPds,
+} from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
@@ -28,7 +34,24 @@ export default function (server: Server, ctx: AppContext) {
         calcPoints: () => 2,
       },
     ],
-    handler: async ({ auth, input }) => {
+    handler: async ({ auth, input, req }) => {
+      const proxied = await proxy(
+        ctx,
+        auth.credentials.audience,
+        async (agent) => {
+          const result = await agent.api.com.atproto.repo.putRecord(
+            input.body,
+            authPassthru(req, true),
+          )
+          return resultPassthru(result)
+        },
+      )
+      if (proxied !== null) {
+        return proxied
+      }
+
+      ensureThisPds(ctx, auth.credentials.pdsDid)
+
       const {
         repo,
         collection,

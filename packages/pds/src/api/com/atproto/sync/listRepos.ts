@@ -8,10 +8,11 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listRepos(async ({ params }) => {
     const { limit, cursor } = params
     const { ref } = ctx.db.db.dynamic
+    // @NOTE this join will become sparse as accounts move off, pagination will become relatively expensive.
     let builder = ctx.db.db
       .selectFrom('user_account')
       .innerJoin('repo_root', 'repo_root.did', 'user_account.did')
-      .where(notSoftDeletedClause(ref('repo_root')))
+      .where(notSoftDeletedClause(ref('user_account')))
       .select([
         'user_account.did as did',
         'repo_root.root as head',

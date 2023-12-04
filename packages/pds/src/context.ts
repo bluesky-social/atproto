@@ -8,7 +8,7 @@ import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { Database } from './db'
 import { ServerConfig, ServerSecrets } from './config'
-import { AuthVerifier } from './auth-verifier'
+import { AuthVerifier, getAuthKeys } from './auth-verifier'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
@@ -20,6 +20,7 @@ import { Crawlers } from './crawlers'
 import { DiskBlobStore } from './storage'
 import { getRedisClient } from './redis'
 import { RuntimeFlags } from './runtime-flags'
+import { PdsAgents } from './pds-agents'
 
 export type AppContextOptions = {
   db: Database
@@ -38,6 +39,7 @@ export type AppContextOptions = {
   crawlers: Crawlers
   appViewAgent: AtpAgent
   authVerifier: AuthVerifier
+  pdsAgents: PdsAgents
   repoSigningKey: crypto.Keypair
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
@@ -60,6 +62,7 @@ export class AppContext {
   public crawlers: Crawlers
   public appViewAgent: AtpAgent
   public authVerifier: AuthVerifier
+  public pdsAgents: PdsAgents
   public repoSigningKey: crypto.Keypair
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
@@ -81,6 +84,7 @@ export class AppContext {
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
     this.authVerifier = opts.authVerifier
+    this.pdsAgents = opts.pdsAgents
     this.repoSigningKey = opts.repoSigningKey
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
@@ -157,8 +161,10 @@ export class AppContext {
 
     const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
 
+    const authKeys = await getAuthKeys(secrets)
+
     const authVerifier = new AuthVerifier(db, idResolver, {
-      jwtSecret: secrets.jwtSecret,
+      authKeys,
       adminPass: secrets.adminPassword,
       moderatorPass: secrets.moderatorPassword,
       triagePass: secrets.triagePassword,
@@ -188,12 +194,15 @@ export class AppContext {
       blobstore,
       appViewAgent,
       pdsHostname: cfg.service.hostname,
-      jwtSecret: secrets.jwtSecret,
+      authKeys,
+      identityDid: cfg.service.did,
       appViewDid: cfg.bskyAppView.did,
       appViewCdnUrlPattern: cfg.bskyAppView.cdnUrlPattern,
       backgroundQueue,
       crawlers,
     })
+
+    const pdsAgents = new PdsAgents()
 
     return new AppContext({
       db,
@@ -214,6 +223,7 @@ export class AppContext {
       authVerifier,
       repoSigningKey,
       plcRotationKey,
+      pdsAgents,
       cfg,
       ...(overrides ?? {}),
     })
