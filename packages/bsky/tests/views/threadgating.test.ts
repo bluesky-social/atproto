@@ -72,6 +72,7 @@ describe('views with thread gating', () => {
       { post: post.ref.uriStr, createdAt: iso(), allow: [] },
       sc.getHeaders(sc.dids.carol),
     )
+    await network.processAll()
     const reply = await sc.reply(
       sc.dids.alice,
       post.ref,
