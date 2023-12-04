@@ -458,6 +458,29 @@ describe('crud operations', () => {
       })
     })
 
+    it('does not produce commit on no-op update', async () => {
+      const { repo } = bobAgent.api.com.atproto
+      const rootRes1 = await bobAgent.api.com.atproto.sync.getLatestCommit({
+        did: bob.did,
+      })
+      const { data: put } = await repo.putRecord({
+        ...profilePath,
+        repo: bob.did,
+        record: {
+          displayName: 'Robert',
+          description: 'Dog lover',
+        },
+      })
+      expect(put.uri).toEqual(`at://${bob.did}/${ids.AppBskyActorProfile}/self`)
+
+      const rootRes2 = await bobAgent.api.com.atproto.sync.getLatestCommit({
+        did: bob.did,
+      })
+
+      expect(rootRes2.data.cid).toEqual(rootRes1.data.cid)
+      expect(rootRes2.data.rev).toEqual(rootRes1.data.rev)
+    })
+
     it('temporarily only allows updates to profile', async () => {
       const { repo } = bobAgent.api.com.atproto
       const put = await repo.putRecord({
