@@ -64,6 +64,32 @@ describe('views with thread gating', () => {
     await checkReplyDisabled(post.ref.uriStr, sc.dids.alice, true)
   })
 
+  it('does not generate notifications when post violates threadgate.', async () => {
+    const post = await sc.post(sc.dids.carol, 'notifications')
+    await pdsAgent.api.app.bsky.feed.threadgate.create(
+      { repo: sc.dids.carol, rkey: post.ref.uri.rkey },
+      { post: post.ref.uriStr, createdAt: iso(), allow: [] },
+      sc.getHeaders(sc.dids.carol),
+    )
+    const reply = await sc.reply(
+      sc.dids.alice,
+      post.ref,
+      post.ref,
+      'notifications reply',
+    )
+    await network.processAll()
+    const {
+      data: { notifications },
+    } = await agent.api.app.bsky.notification.listNotifications(
+      {},
+      { headers: await network.serviceHeaders(sc.dids.carol) },
+    )
+    const notificationFromReply = notifications.find(
+      (notif) => notif.uri === reply.ref.uriStr,
+    )
+    expect(notificationFromReply).toBeUndefined()
+  })
+
   it('applies gate for mention rule.', async () => {
     const post = await sc.post(
       sc.dids.carol,

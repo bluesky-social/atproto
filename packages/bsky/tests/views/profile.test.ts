@@ -25,7 +25,6 @@ describe('pds profile views', () => {
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
