@@ -15,7 +15,7 @@ import { dbLogger } from '../logger'
 import { retrySqlite } from './util'
 
 const DEFAULT_PRAGMAS = {
-  strict: 'ON', // @TODO strictness should live on table defs instead
+  // strict: 'ON', // @TODO strictness should live on table defs instead
 }
 
 export class Database<Schema> {
@@ -48,6 +48,13 @@ export class Database<Schema> {
 
   async ensureWal() {
     await sql`PRAGMA journal_mode = WAL`.execute(this.db)
+  }
+
+  // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode)
+  async ensureReady() {
+    await retrySqlite(async () => {
+      await sql`select 1`.execute(this.db)
+    })
   }
 
   async transactionNoRetry<T>(

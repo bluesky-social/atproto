@@ -65,7 +65,14 @@ export class ActorStore {
       throw new InvalidRequestError('Repo not found', 'NotFound')
     }
 
-    return getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
+    const db = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
+    try {
+      await db.ensureReady()
+    } catch (err) {
+      db.close()
+      throw err
+    }
+    return db
   }
 
   async read<T>(did: string, fn: ActorStoreReadFn<T>) {
