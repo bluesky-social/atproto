@@ -1,6 +1,7 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { CommitData } from '@atproto/repo'
 import { Server } from '../../../../lexicon'
 import { prepareUpdate, prepareCreate } from '../../../../repo'
 import AppContext from '../../../../context'
@@ -11,7 +12,6 @@ import {
   PreparedCreate,
   PreparedUpdate,
 } from '../../../../repo'
-import { CommitData } from '@atproto/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
@@ -82,6 +82,14 @@ export default function (server: Server, ctx: AppContext) {
             throw err
           }
 
+          // no-op
+          if (current && current.cid === write.cid.toString()) {
+            return {
+              commit: null,
+              write,
+            }
+          }
+
           let commit: CommitData
           try {
             commit = await actorTxn.repo.processWrites([write], swapCommitCid)
@@ -99,8 +107,10 @@ export default function (server: Server, ctx: AppContext) {
         },
       )
 
-      await ctx.sequencer.sequenceCommit(did, commit, [write])
-      await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
+      if (commit !== null) {
+        await ctx.sequencer.sequenceCommit(did, commit, [write])
+        await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
+      }
 
       return {
         encoding: 'application/json',
