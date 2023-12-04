@@ -82,7 +82,12 @@ const getWaitMsSqlite = (n: number, timeout = 5000) => {
 const last = <T>(arr: T[]) => arr[arr.length - 1]
 const DELAYS = [1, 2, 5, 10, 15, 20, 25, 25, 25, 50, 50, 100]
 const TOTALS = [0, 1, 3, 8, 18, 33, 53, 78, 103, 128, 178, 228]
-const RETRY_ERRORS = new Set(['SQLITE_BUSY', 'SQLITE_BUSY_SNAPSHOT'])
+const RETRY_ERRORS = new Set([
+  'SQLITE_BUSY',
+  'SQLITE_BUSY_SNAPSHOT',
+  'SQLITE_BUSY_RECOVERY',
+  'SQLITE_BUSY_TIMEOUT',
+])
 
 export type Ref = ReferenceExpression<any, any>
 
