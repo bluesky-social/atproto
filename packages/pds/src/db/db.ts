@@ -50,13 +50,6 @@ export class Database<Schema> {
     await sql`PRAGMA journal_mode = WAL`.execute(this.db)
   }
 
-  // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode)
-  async ensureReady() {
-    await retrySqlite(async () => {
-      await sql`select 1`.execute(this.db)
-    })
-  }
-
   async transactionNoRetry<T>(
     fn: (db: Database<Schema>) => Promise<T>,
   ): Promise<T> {

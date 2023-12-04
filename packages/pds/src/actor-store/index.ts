@@ -67,14 +67,17 @@ export class ActorStore {
     }
 
     const db = getDb(dbLocation, this.cfg.disableWalAutoCheckpoint)
+
+    // run a simple select with retry logic to ensure the db is ready (not in wal recovery mode)
     try {
       await retrySqlite(() =>
-        db.db.selectFrom('account_pref').selectAll().limit(1).execute(),
+        db.db.selectFrom('repo_root').selectAll().execute(),
       )
     } catch (err) {
       db.close()
       throw err
     }
+
     return db
   }
 
