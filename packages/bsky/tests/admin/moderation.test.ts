@@ -387,7 +387,7 @@ describe('moderation', () => {
         createLabelVals: ['nsfw'],
         negateLabelVals: [],
       })
-      const { data: takedownAction } = await emitModEvent({
+      await emitModEvent({
         $type: 'com.atproto.admin.defs#modEventTakedown',
       })
 
@@ -779,7 +779,7 @@ describe('moderation', () => {
         negateLabelVals: ModEventLabel['negateLabelVals']
       },
     ) {
-      const { createLabelVals, negateLabelVals, ...rest } = opts
+      const { createLabelVals, negateLabelVals } = opts
       const result = await agent.api.com.atproto.admin.emitModerationEvent(
         {
           event: {

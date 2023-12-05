@@ -165,22 +165,21 @@ describe('pds thread views', () => {
 
   describe('takedown', () => {
     it('blocks post by actor', async () => {
-      const { data: modAction } =
-        await agent.api.com.atproto.admin.emitModerationEvent(
-          {
-            event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: alice,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
+      await agent.api.com.atproto.admin.emitModerationEvent(
+        {
+          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: alice,
           },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        )
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
 
       // Same as shallow post thread test, minus alice
       const promise = agent.api.app.bsky.feed.getPostThread(
@@ -211,22 +210,21 @@ describe('pds thread views', () => {
     })
 
     it('blocks replies by actor', async () => {
-      const { data: modAction } =
-        await agent.api.com.atproto.admin.emitModerationEvent(
-          {
-            event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: carol,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
+      await agent.api.com.atproto.admin.emitModerationEvent(
+        {
+          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: carol,
           },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        )
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
 
       // Same as deep post thread test, minus carol
       const thread = await agent.api.app.bsky.feed.getPostThread(
@@ -255,22 +253,21 @@ describe('pds thread views', () => {
     })
 
     it('blocks ancestors by actor', async () => {
-      const { data: modAction } =
-        await agent.api.com.atproto.admin.emitModerationEvent(
-          {
-            event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: bob,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
+      await agent.api.com.atproto.admin.emitModerationEvent(
+        {
+          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: bob,
           },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        )
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
 
       // Same as ancestor post thread test, minus bob
       const thread = await agent.api.app.bsky.feed.getPostThread(
@@ -300,23 +297,22 @@ describe('pds thread views', () => {
 
     it('blocks post by record', async () => {
       const postRef = sc.posts[alice][1].ref
-      const { data: modAction } =
-        await agent.api.com.atproto.admin.emitModerationEvent(
-          {
-            event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: postRef.uriStr,
-              cid: postRef.cidStr,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
+      await agent.api.com.atproto.admin.emitModerationEvent(
+        {
+          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+          subject: {
+            $type: 'com.atproto.repo.strongRef',
+            uri: postRef.uriStr,
+            cid: postRef.cidStr,
           },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        )
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
 
       const promise = agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: postRef.uriStr },
@@ -354,23 +350,22 @@ describe('pds thread views', () => {
 
       const parent = threadPreTakedown.data.thread.parent?.['post']
 
-      const { data: modAction } =
-        await agent.api.com.atproto.admin.emitModerationEvent(
-          {
-            event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: parent.uri,
-              cid: parent.cid,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
+      await agent.api.com.atproto.admin.emitModerationEvent(
+        {
+          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+          subject: {
+            $type: 'com.atproto.repo.strongRef',
+            uri: parent.uri,
+            cid: parent.cid,
           },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        )
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
 
       // Same as ancestor post thread test, minus parent post
       const thread = await agent.api.app.bsky.feed.getPostThread(
@@ -407,7 +402,7 @@ describe('pds thread views', () => {
       const post1 = threadPreTakedown.data.thread.replies?.[0].post
       const post2 = threadPreTakedown.data.thread.replies?.[1].replies[0].post
 
-      const actionResults = await Promise.all(
+      await Promise.all(
         [post1, post2].map((post) =>
           agent.api.com.atproto.admin.emitModerationEvent(
             {
