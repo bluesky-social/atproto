@@ -287,6 +287,25 @@ export class AutoModerator {
 
   async storeLabels(uri: AtUri, cid: CID, labels: string[]): Promise<void> {
     if (labels.length < 1) return
+
+    // Given that moderation service is available, log the labeling event for historical purposes
+    if (this.services.moderation) {
+      await this.ctx.db.transaction(async (dbTxn) => {
+        if (!this.services.moderation) return
+        const modSrvc = this.services.moderation(dbTxn)
+        await modSrvc.logEvent({
+          event: {
+            $type: 'com.atproto.admin.defs#modEventLabel',
+            createLabelVals: labels,
+            negateLabelVals: [],
+            comment: '[AutoModerator]: Applying labels',
+          },
+          subject: { uri, cid },
+          createdBy: this.ctx.cfg.labelerDid,
+        })
+      })
+    }
+
     const labelSrvc = this.services.label(this.ctx.db)
     await labelSrvc.formatAndCreate(
       this.ctx.cfg.labelerDid,
