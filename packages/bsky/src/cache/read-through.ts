@@ -17,13 +17,18 @@ export class ReadThroughCache<T> {
   constructor(public redis: Redis, public opts: CacheOptions<T>) {}
 
   private async _fetchMany(keys: string[]): Promise<Record<string, T | null>> {
+    let result: Record<string, T | null> = {}
     if (this.opts.fetchManyMethod) {
-      return this.opts.fetchManyMethod(keys)
+      result = await this.opts.fetchManyMethod(keys)
+    } else {
+      const got = await Promise.all(keys.map((k) => this.opts.fetchMethod(k)))
+      for (let i = 0; i < keys.length; i++) {
+        result[keys[i]] = got[i] ?? null
+      }
     }
-    const got = await Promise.all(keys.map((k) => this.opts.fetchMethod(k)))
-    const result: Record<string, T | null> = {}
-    for (let i = 0; i < keys.length; i++) {
-      result[keys[i]] = got[i] ?? null
+    // ensure caching negatives
+    for (const key of keys) {
+      result[key] ??= null
     }
     return result
   }
