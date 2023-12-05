@@ -79,17 +79,17 @@ const main = async () => {
   })
 
   const redis = new Redis(
-    config.redisSentinelName
+    cfg.redisSentinelName
       ? {
-          sentinel: config.redisSentinelName,
-          hosts: config.redisSentinelHosts,
-          password: config.redisPassword,
+          sentinel: cfg.redisSentinelName,
+          hosts: cfg.redisSentinelHosts,
+          password: cfg.redisPassword,
           db: 1,
           commandTimeout: 500,
         }
       : {
-          host: config.redisHost,
-          password: config.redisPassword,
+          host: cfg.redisHost,
+          password: cfg.redisPassword,
           db: 1,
           commandTimeout: 500,
         },
