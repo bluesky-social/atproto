@@ -13,17 +13,8 @@ export class TestNetworkNoAppView {
   static async create(
     params: Partial<TestServerParams> = {},
   ): Promise<TestNetworkNoAppView> {
-    const dbPostgresUrl = params.dbPostgresUrl || process.env.DB_POSTGRES_URL
-    const dbPostgresSchema =
-      params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
-    const dbSqliteLocation =
-      dbPostgresUrl === undefined ? ':memory:' : undefined
-
     const plc = await TestPlc.create(params.plc ?? {})
     const pds = await TestPds.create({
-      dbPostgresUrl,
-      dbPostgresSchema,
-      dbSqliteLocation,
       didPlcUrl: plc.url,
       ...params.pds,
     })

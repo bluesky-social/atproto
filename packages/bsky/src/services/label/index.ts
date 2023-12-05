@@ -1,16 +1,15 @@
 import { sql } from 'kysely'
-import { AtUri } from '@atproto/syntax'
-import { toSimplifiedISOSafe } from '@atproto/common'
+import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { Database } from '../../db'
 import { Label, isSelfLabels } from '../../lexicon/types/com/atproto/label/defs'
 import { ids } from '../../lexicon/lexicons'
-import { RedisCache } from '../../cache/redis'
 import { ReadThroughCache } from '../../cache/read-through'
+import { Redis } from '../../redis'
 
 export type Labels = Record<string, Label[]>
 
 export type LabelCacheOpts = {
-  cache: RedisCache
+  redis: Redis
   staleTTL: number
   maxTTL: number
 }
@@ -20,9 +19,8 @@ export class LabelService {
 
   constructor(public db: Database, cacheOpts: LabelCacheOpts | null) {
     if (cacheOpts) {
-      this.cache = new ReadThroughCache(cacheOpts.cache, {
+      this.cache = new ReadThroughCache(cacheOpts.redis, {
         ...cacheOpts,
-        namespace: 'label',
         fetchMethod: async (subject: string) => {
           const res = await fetchLabelsForSubjects(db, [subject])
           return res[subject] ?? null
@@ -96,7 +94,7 @@ export class LabelService {
   ): Promise<Labels> {
     if (subjects.length < 1) return {}
     const res = this.cache
-      ? await this.cache.getMany(subjects, opts)
+      ? await this.cache.getMany(subjects, { revalidate: opts?.skipCache })
       : await fetchLabelsForSubjects(this.db, subjects)
 
     if (opts?.includeNeg) {
@@ -183,7 +181,7 @@ export function getSelfLabels(details: {
   const src = new AtUri(uri).host // record creator
   const cts =
     typeof record.createdAt === 'string'
-      ? toSimplifiedISOSafe(record.createdAt)
+      ? normalizeDatetimeAlways(record.createdAt)
       : new Date(0).toISOString()
   return record.labels.values.map(({ val }) => {
     return { src, uri, cid, val, cts, neg: false }

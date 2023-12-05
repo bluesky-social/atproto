@@ -1,49 +1,51 @@
 import { wait } from '@atproto/common'
-import { RedisCache } from '../src/cache/redis'
+import { Redis } from '../src/'
 import { ReadThroughCache } from '../src/cache/read-through'
 
 describe('redis cache', () => {
-  let redisCache: RedisCache
+  let redis: Redis
 
   beforeAll(async () => {
-    redisCache = new RedisCache(process.env.REDIS_HOST || '')
+    redis = new Redis({ host: process.env.REDIS_HOST || '' })
   })
 
   afterAll(async () => {
-    await redisCache.close()
+    await redis.destroy()
   })
 
   it('caches according to namespace', async () => {
+    const ns1 = redis.withNamespace('ns1')
+    const ns2 = redis.withNamespace('ns2')
     await Promise.all([
-      redisCache.set('key', 'a', 'ns1'),
-      redisCache.set('key', 'b', 'ns2'),
-      redisCache.set('key', 'c'),
+      ns1.set('key', 'a'),
+      ns2.set('key', 'b'),
+      redis.set('key', 'c'),
     ])
     const got = await Promise.all([
-      redisCache.get('key', 'ns1'),
-      redisCache.get('key', 'ns2'),
-      redisCache.get('key'),
+      ns1.get('key'),
+      ns2.get('key'),
+      redis.get('key'),
     ])
-    expect(got[0]?.val).toEqual('a')
-    expect(got[1]?.val).toEqual('b')
-    expect(got[2]?.val).toEqual('c')
+    expect(got[0]).toEqual('a')
+    expect(got[1]).toEqual('b')
+    expect(got[2]).toEqual('c')
 
     await Promise.all([
-      redisCache.setMany({ key1: 'a', key2: 'b' }, 'ns1'),
-      redisCache.setMany({ key1: 'c', key2: 'd' }, 'ns2'),
-      redisCache.setMany({ key1: 'e', key2: 'f' }),
+      ns1.setMulti({ key1: 'a', key2: 'b' }),
+      ns2.setMulti({ key1: 'c', key2: 'd' }),
+      redis.setMulti({ key1: 'e', key2: 'f' }),
     ])
     const gotMany = await Promise.all([
-      redisCache.getMany(['key1', 'key2'], 'ns1'),
-      redisCache.getMany(['key1', 'key2'], 'ns2'),
-      redisCache.getMany(['key1', 'key2']),
+      ns1.getMulti(['key1', 'key2']),
+      ns2.getMulti(['key1', 'key2']),
+      redis.getMulti(['key1', 'key2']),
     ])
-    expect(gotMany[0]['key1']['val']).toEqual('a')
-    expect(gotMany[0]['key2']['val']).toEqual('b')
-    expect(gotMany[1]['key1']['val']).toEqual('c')
-    expect(gotMany[1]['key2']['val']).toEqual('d')
-    expect(gotMany[2]['key1']['val']).toEqual('e')
-    expect(gotMany[2]['key2']['val']).toEqual('f')
+    expect(gotMany[0]['key1']).toEqual('a')
+    expect(gotMany[0]['key2']).toEqual('b')
+    expect(gotMany[1]['key1']).toEqual('c')
+    expect(gotMany[1]['key2']).toEqual('d')
+    expect(gotMany[2]['key1']).toEqual('e')
+    expect(gotMany[2]['key2']).toEqual('f')
   })
 
   it('caches values when empty', async () => {
@@ -53,10 +55,9 @@ describe('redis cache', () => {
       '3': 'c',
     }
     let hits = 0
-    const cache = new ReadThroughCache<string>(redisCache, {
+    const cache = new ReadThroughCache<string>(redis.withNamespace('test1'), {
       staleTTL: 60000,
       maxTTL: 60000,
-      namespace: 'test1',
       fetchMethod: async (key) => {
         hits++
         return vals[key]
@@ -86,10 +87,9 @@ describe('redis cache', () => {
   it('skips and refreshes cache when requested', async () => {
     let val = 'a'
     let hits = 0
-    const cache = new ReadThroughCache<string>(redisCache, {
+    const cache = new ReadThroughCache<string>(redis.withNamespace('test2'), {
       staleTTL: 60000,
       maxTTL: 60000,
-      namespace: 'test2',
       fetchMethod: async () => {
         hits++
         return val
@@ -106,7 +106,7 @@ describe('redis cache', () => {
     expect(try2).toEqual('a')
     expect(hits).toBe(1)
 
-    const try3 = await cache.get('1', { skipCache: true })
+    const try3 = await cache.get('1', { revalidate: true })
     expect(try3).toEqual('b')
     expect(hits).toBe(2)
 
@@ -118,10 +118,9 @@ describe('redis cache', () => {
   it('accurately reports stale entries & refreshes the cache', async () => {
     let val = 'a'
     let hits = 0
-    const cache = new ReadThroughCache<string>(redisCache, {
+    const cache = new ReadThroughCache<string>(redis.withNamespace('test3'), {
       staleTTL: 1,
       maxTTL: 60000,
-      namespace: 'test3',
       fetchMethod: async () => {
         hits++
         return val
@@ -149,10 +148,9 @@ describe('redis cache', () => {
   it('does not return expired dids & refreshes the cache', async () => {
     let val = 'a'
     let hits = 0
-    const cache = new ReadThroughCache<string>(redisCache, {
+    const cache = new ReadThroughCache<string>(redis.withNamespace('test4'), {
       staleTTL: 0,
       maxTTL: 1,
-      namespace: 'test4',
       fetchMethod: async () => {
         hits++
         return val
@@ -171,13 +169,44 @@ describe('redis cache', () => {
     expect(hits).toBe(2)
   })
 
+  it('caches negative values', async () => {
+    let val: string | null = null
+    let hits = 0
+    const cache = new ReadThroughCache<string>(redis.withNamespace('test5'), {
+      staleTTL: 60000,
+      maxTTL: 60000,
+      fetchMethod: async () => {
+        hits++
+        return val
+      },
+    })
+
+    const try1 = await cache.get('1')
+    expect(try1).toEqual(null)
+    expect(hits).toBe(1)
+
+    val = 'b'
+
+    const try2 = await cache.get('1')
+    // returns cached negative value
+    expect(try2).toEqual(null)
+    expect(hits).toBe(1)
+
+    const try3 = await cache.get('1', { revalidate: true })
+    expect(try3).toEqual('b')
+    expect(hits).toEqual(2)
+
+    const try4 = await cache.get('1')
+    expect(try4).toEqual('b')
+    expect(hits).toEqual(2)
+  })
+
   it('times out and fails open', async () => {
     let val = 'a'
     let hits = 0
-    const cache = new ReadThroughCache<string>(redisCache, {
+    const cache = new ReadThroughCache<string>(redis.withNamespace('test6'), {
       staleTTL: 60000,
       maxTTL: 60000,
-      namespace: 'test5',
       fetchMethod: async () => {
         hits++
         return val
@@ -187,9 +216,9 @@ describe('redis cache', () => {
     const try1 = await cache.get('1')
     expect(try1).toEqual('a')
 
-    const orig = cache.redisCache.driver.get
-    cache.redisCache.driver.get = async (key) => {
-      await wait(100)
+    const orig = cache.redis.driver.get
+    cache.redis.driver.get = async (key) => {
+      await wait(600)
       return orig(key)
     }
 

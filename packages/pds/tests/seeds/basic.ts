@@ -1,6 +1,5 @@
 import { SeedClient } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
-import { FLAG } from '../../src/lexicon/types/com/atproto/admin/defs'
 import usersSeed from './users'
 
 export default async (
@@ -107,6 +106,8 @@ export default async (
     'tests/sample-img/key-landscape-small.jpg',
     'image/jpeg',
   )
+  // must ensure ordering of replies in indexing
+  await sc.network.processAll()
   await sc.reply(
     bob,
     sc.posts[alice][1].ref,
@@ -121,6 +122,7 @@ export default async (
     sc.posts[alice][1].ref,
     replies.carol[0],
   )
+  await sc.network.processAll()
   const alicesReplyToBob = await sc.reply(
     alice,
     sc.posts[alice][1].ref,
@@ -132,16 +134,18 @@ export default async (
   await sc.repost(dan, alicesReplyToBob.ref)
 
   if (opts?.addModLabels) {
-    await sc.agent.com.atproto.admin.takeModerationAction(
+    await sc.agent.com.atproto.admin.emitModerationEvent(
       {
-        action: FLAG,
+        event: {
+          createLabelVals: ['repo-action-label'],
+          negateLabelVals: [],
+          $type: 'com.atproto.admin.defs#modEventLabel',
+        },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: dan,
         },
         createdBy: 'did:example:admin',
-        reason: 'test',
-        createLabelVals: ['repo-action-label'],
       },
       {
         encoding: 'application/json',

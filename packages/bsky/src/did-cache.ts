@@ -1,7 +1,7 @@
 import PQueue from 'p-queue'
 import { CacheResult, DidCache, DidDocument } from '@atproto/identity'
 import { cacheLogger as log } from './logger'
-import { RedisCache } from './cache/redis'
+import { Redis } from './redis'
 
 type CacheOptions = {
   staleTTL: number
@@ -9,15 +9,18 @@ type CacheOptions = {
 }
 
 export class DidRedisCache implements DidCache {
-  public pQueue: PQueue | null //null during teardown
-  namespace = 'did-doc'
+  public pQueue: PQueue | null // null during teardown
 
-  constructor(public redisCache: RedisCache, public opts: CacheOptions) {
+  constructor(public redis: Redis, public opts: CacheOptions) {
     this.pQueue = new PQueue()
   }
 
   async cacheDid(did: string, doc: DidDocument): Promise<void> {
-    await this.redisCache.set(did, doc, this.namespace)
+    const item = JSON.stringify({
+      doc,
+      updatedAt: Date.now(),
+    })
+    await this.redis.set(did, item, this.opts.maxTTL)
   }
 
   async refreshCache(
@@ -39,14 +42,14 @@ export class DidRedisCache implements DidCache {
   }
 
   async checkCache(did: string): Promise<CacheResult | null> {
-    const got = await this.redisCache.get<DidDocument>(did, this.namespace)
-    if (!got || !got.val) return null
-    const { val, updatedAt } = got
+    const got = await this.redis.get(did)
+    if (!got) return null
+    const { doc, updatedAt } = JSON.parse(got) as CacheResult
     const now = Date.now()
     const expired = now > updatedAt + this.opts.maxTTL
     const stale = now > updatedAt + this.opts.staleTTL
     return {
-      doc: val,
+      doc,
       updatedAt,
       did,
       stale,
@@ -55,7 +58,7 @@ export class DidRedisCache implements DidCache {
   }
 
   async clearEntry(did: string): Promise<void> {
-    await this.redisCache.delete(did, this.namespace)
+    await this.redis.del(did)
   }
 
   async clear(): Promise<void> {

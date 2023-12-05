@@ -1,23 +1,38 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { authPassthru, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.requestEmailUpdate({
     auth: ctx.authVerifier.accessCheckTakedown,
-    handler: async ({ auth }) => {
+    handler: async ({ auth, req }) => {
       const did = auth.credentials.did
-      const user = await ctx.services.account(ctx.db).getAccount(did)
-      if (!user) {
-        throw new InvalidRequestError('user not found')
+      const account = await ctx.accountManager.getAccount(did)
+      if (!account) {
+        throw new InvalidRequestError('account not found')
       }
 
-      const tokenRequired = !!user.emailConfirmedAt
+      if (ctx.entrywayAgent) {
+        return resultPassthru(
+          await ctx.entrywayAgent.com.atproto.server.requestEmailUpdate(
+            undefined,
+            authPassthru(req),
+          ),
+        )
+      }
+
+      if (!account.email) {
+        throw new InvalidRequestError('account does not have an email address')
+      }
+
+      const tokenRequired = !!account.emailConfirmedAt
       if (tokenRequired) {
-        const token = await ctx.services
-          .account(ctx.db)
-          .createEmailToken(did, 'update_email')
-        await ctx.mailer.sendUpdateEmail({ token }, { to: user.email })
+        const token = await ctx.accountManager.createEmailToken(
+          did,
+          'update_email',
+        )
+        await ctx.mailer.sendUpdateEmail({ token }, { to: account.email })
       }
 
       return {

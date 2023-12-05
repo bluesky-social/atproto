@@ -58,6 +58,7 @@ export function validateListView(v: unknown): ValidationResult {
 }
 
 export interface ListItemView {
+  uri: string
   subject: AppBskyActorDefs.ProfileView
   [k: string]: unknown
 }

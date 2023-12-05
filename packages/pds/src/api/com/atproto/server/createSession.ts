@@ -1,9 +1,11 @@
 import { DAY, MINUTE } from '@atproto/common'
+import { INVALID_HANDLE } from '@atproto/syntax'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { didDocForSession } from './util'
+import { authPassthru, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createSession({
@@ -19,27 +21,34 @@ export default function (server: Server, ctx: AppContext) {
         calcKey: ({ input, req }) => `${input.body.identifier}-${req.ip}`,
       },
     ],
-    handler: async ({ input }) => {
+    handler: async ({ input, req }) => {
+      if (ctx.entrywayAgent) {
+        return resultPassthru(
+          await ctx.entrywayAgent.com.atproto.server.createSession(
+            input.body,
+            authPassthru(req, true),
+          ),
+        )
+      }
+
       const { password } = input.body
       const identifier = input.body.identifier.toLowerCase()
-      const authService = ctx.services.auth(ctx.db)
-      const actorService = ctx.services.account(ctx.db)
 
       const user = identifier.includes('@')
-        ? await actorService.getAccountByEmail(identifier, true)
-        : await actorService.getAccount(identifier, true)
+        ? await ctx.accountManager.getAccountByEmail(identifier, true)
+        : await ctx.accountManager.getAccount(identifier, true)
 
       if (!user) {
         throw new AuthRequiredError('Invalid identifier or password')
       }
 
       let appPasswordName: string | null = null
-      const validAccountPass = await actorService.verifyAccountPassword(
+      const validAccountPass = await ctx.accountManager.verifyAccountPassword(
         user.did,
         password,
       )
       if (!validAccountPass) {
-        appPasswordName = await actorService.verifyAppPassword(
+        appPasswordName = await ctx.accountManager.verifyAppPassword(
           user.did,
           password,
         )
@@ -55,8 +64,8 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const [{ access, refresh }, didDoc] = await Promise.all([
-        authService.createSession(user.did, appPasswordName),
+      const [{ accessJwt, refreshJwt }, didDoc] = await Promise.all([
+        ctx.accountManager.createSession(user.did, appPasswordName),
         didDocForSession(ctx, user.did),
       ])
 
@@ -65,11 +74,11 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           did: user.did,
           didDoc,
-          handle: user.handle,
-          email: user.email,
+          handle: user.handle ?? INVALID_HANDLE,
+          email: user.email ?? undefined,
           emailConfirmed: !!user.emailConfirmedAt,
-          accessJwt: access.jwt,
-          refreshJwt: refresh.jwt,
+          accessJwt,
+          refreshJwt,
         },
       }
     },

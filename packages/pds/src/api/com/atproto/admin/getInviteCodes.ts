@@ -7,13 +7,20 @@ import {
   GenericKeyset,
   paginate,
 } from '../../../../db/pagination'
+import { selectInviteCodesQb } from '../../../../account-manager/helpers/invite'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getInviteCodes({
     auth: ctx.authVerifier.role,
     handler: async ({ params }) => {
+      if (ctx.cfg.entryway) {
+        throw new InvalidRequestError(
+          'Account invites are managed by the entryway service',
+        )
+      }
       const { sort, limit, cursor } = params
-      const ref = ctx.db.db.dynamic.ref
+      const db = ctx.accountManager.db
+      const ref = db.db.dynamic.ref
       let keyset
       if (sort === 'recent') {
         keyset = new TimeCodeKeyset(ref('createdAt'), ref('code'))
@@ -23,9 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`unknown sort method: ${sort}`)
       }
 
-      const accntSrvc = ctx.services.account(ctx.db)
-
-      let builder = accntSrvc.selectInviteCodesQb()
+      let builder = selectInviteCodesQb(db)
       builder = paginate(builder, {
         limit,
         cursor,
@@ -35,7 +40,7 @@ export default function (server: Server, ctx: AppContext) {
       const res = await builder.execute()
 
       const codes = res.map((row) => row.code)
-      const uses = await accntSrvc.getInviteCodesUses(codes)
+      const uses = await ctx.accountManager.getInviteCodesUses(codes)
 
       const resultCursor = keyset.packFromResult(res)
       const codeDetails = res.map((row) => ({

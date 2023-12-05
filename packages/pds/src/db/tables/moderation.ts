@@ -1,11 +1,5 @@
 import { Generated } from 'kysely'
 import {
-  ACKNOWLEDGE,
-  FLAG,
-  TAKEDOWN,
-  ESCALATE,
-} from '../../lexicon/types/com/atproto/admin/defs'
-import {
   REASONOTHER,
   REASONSPAM,
   REASONMISLEADING,
@@ -21,21 +15,27 @@ export const reportResolutionTableName = 'moderation_report_resolution'
 
 export interface ModerationAction {
   id: Generated<number>
-  action: typeof TAKEDOWN | typeof FLAG | typeof ACKNOWLEDGE | typeof ESCALATE
+  action:
+    | 'com.atproto.admin.defs#modEventTakedown'
+    | 'com.atproto.admin.defs#modEventAcknowledge'
+    | 'com.atproto.admin.defs#modEventEscalate'
+    | 'com.atproto.admin.defs#modEventComment'
+    | 'com.atproto.admin.defs#modEventLabel'
+    | 'com.atproto.admin.defs#modEventReport'
+    | 'com.atproto.admin.defs#modEventMute'
+    | 'com.atproto.admin.defs#modEventReverseTakedown'
   subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
   createLabelVals: string | null
   negateLabelVals: string | null
-  reason: string
+  comment: string | null
   createdAt: string
   createdBy: string
-  reversedAt: string | null
-  reversedBy: string | null
-  reversedReason: string | null
   durationInHours: number | null
   expiresAt: string | null
+  meta: Record<string, string | boolean> | null
 }
 
 export interface ModerationActionSubjectBlob {

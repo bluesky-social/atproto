@@ -32,19 +32,21 @@ import { MountedAlgos } from './feed-gen/types'
 import { NotificationServer } from './notifications'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
-import { RedisCache } from './cache/redis'
+import { Redis } from './redis'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
 export { ServerConfig } from './config'
 export { Database, PrimaryDatabase, DatabaseCoordinator } from './db'
-export { PeriodicModerationActionReversal } from './db/periodic-moderation-action-reversal'
+export { PeriodicModerationEventReversal } from './db/periodic-moderation-event-reversal'
 export { Redis } from './redis'
 export { ViewMaintainer } from './db/views'
 export { AppContext } from './context'
 export { makeAlgos } from './feed-gen'
+export * from './daemon'
 export * from './indexer'
 export * from './ingester'
+export { MigrateModerationData } from './migrate-moderation-data'
 
 export class BskyAppView {
   public ctx: AppContext
@@ -60,24 +62,20 @@ export class BskyAppView {
 
   static create(opts: {
     db: DatabaseCoordinator
+    redis: Redis
     config: ServerConfig
     signingKey: Keypair
     imgInvalidator?: ImageInvalidator
     algos?: MountedAlgos
   }): BskyAppView {
-    const { db, config, signingKey, algos = {} } = opts
+    const { db, redis, config, signingKey, algos = {} } = opts
     let maybeImgInvalidator = opts.imgInvalidator
     const app = express()
     app.use(cors())
     app.use(loggerMiddleware)
     app.use(compression())
 
-    const redisCache = new RedisCache(
-      config.redisScratchHost,
-      config.redisScratchPassword,
-    )
-
-    const didCache = new DidRedisCache(redisCache, {
+    const didCache = new DidRedisCache(redis.withNamespace('did-doc'), {
       staleTTL: config.didCacheStaleTTL,
       maxTTL: config.didCacheMaxTTL,
     })
@@ -122,9 +120,9 @@ export class BskyAppView {
       imgUriBuilder,
       imgInvalidator,
       labelCacheOpts: {
-        cache: redisCache,
-        staleTTL: 5000,
-        maxTTL: 60000,
+        redis: redis.withNamespace('label'),
+        staleTTL: config.labelCacheStaleTTL,
+        maxTTL: config.labelCacheMaxTTL,
       },
     })
 
@@ -136,7 +134,7 @@ export class BskyAppView {
       signingKey,
       idResolver,
       didCache,
-      redisCache,
+      redis,
       backgroundQueue,
       searchAgent,
       algos,
@@ -236,11 +234,11 @@ export class BskyAppView {
     return server
   }
 
-  async destroy(opts?: { skipDb: boolean }): Promise<void> {
-    await this.ctx.redisCache.close()
+  async destroy(opts?: { skipDb: boolean; skipRedis: boolean }): Promise<void> {
     await this.ctx.didCache.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
+    if (!opts?.skipRedis) await this.ctx.redis.destroy()
     if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
   }

@@ -1,20 +1,34 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.requestEmailConfirmation({
     auth: ctx.authVerifier.accessCheckTakedown,
-    handler: async ({ auth }) => {
+    handler: async ({ auth, req }) => {
       const did = auth.credentials.did
-      const user = await ctx.services.account(ctx.db).getAccount(did)
-      if (!user) {
-        throw new InvalidRequestError('user not found')
+      const account = await ctx.accountManager.getAccount(did)
+      if (!account) {
+        throw new InvalidRequestError('account not found')
       }
-      const token = await ctx.services
-        .account(ctx.db)
-        .createEmailToken(did, 'confirm_email')
-      await ctx.mailer.sendConfirmEmail({ token }, { to: user.email })
+
+      if (ctx.entrywayAgent) {
+        await ctx.entrywayAgent.com.atproto.server.requestEmailConfirmation(
+          undefined,
+          authPassthru(req),
+        )
+        return
+      }
+
+      if (!account.email) {
+        throw new InvalidRequestError('account does not have an email address')
+      }
+      const token = await ctx.accountManager.createEmailToken(
+        did,
+        'confirm_email',
+      )
+      await ctx.mailer.sendConfirmEmail({ token }, { to: account.email })
     },
   })
 }

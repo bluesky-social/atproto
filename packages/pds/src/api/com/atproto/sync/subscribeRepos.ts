@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
         ctx.sequencer.next(cursor),
         ctx.sequencer.curr(),
       ])
-      if (cursor > (curr?.seq ?? 0)) {
+      if (cursor > (curr ?? 0)) {
         throw new InvalidRequestError('Cursor in the future.', 'FutureCursor')
       } else if (next && next.sequencedAt < backfillTime) {
         // if cursor is before backfill time, find earliest cursor from backfill window

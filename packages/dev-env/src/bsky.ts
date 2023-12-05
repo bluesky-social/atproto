@@ -2,7 +2,7 @@ import assert from 'assert'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as bsky from '@atproto/bsky'
-import { DAY, HOUR, wait } from '@atproto/common-web'
+import { DAY, HOUR, MINUTE, SECOND, wait } from '@atproto/common-web'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair, randomIntFromSeed } from '@atproto/crypto'
 import { Client as PlcClient } from '@did-plc/lib'
@@ -42,7 +42,8 @@ export class TestBsky {
       serverDid,
       didCacheStaleTTL: HOUR,
       didCacheMaxTTL: DAY,
-      redisScratchHost: cfg.redisHost,
+      labelCacheStaleTTL: 30 * SECOND,
+      labelCacheMaxTTL: MINUTE,
       ...cfg,
       // Each test suite gets its own lock id for the repo subscription
       adminPassword: ADMIN_PASSWORD,
@@ -75,24 +76,29 @@ export class TestBsky {
     }
     await migrationDb.close()
 
+    const ns = cfg.dbPostgresSchema
+      ? await randomIntFromSeed(cfg.dbPostgresSchema, 1000000)
+      : undefined
+    assert(config.redisHost)
+    const redis = new bsky.Redis({
+      host: config.redisHost,
+    })
+
     // api server
     const server = bsky.BskyAppView.create({
       db,
+      redis,
       config,
       algos: cfg.algos,
       imgInvalidator: cfg.imgInvalidator,
       signingKey: serviceKeypair,
     })
     // indexer
-    const ns = cfg.dbPostgresSchema
-      ? await randomIntFromSeed(cfg.dbPostgresSchema, 1000000)
-      : undefined
     const indexerCfg = new bsky.IndexerConfig({
       version: '0.0.0',
       didCacheStaleTTL: HOUR,
       didCacheMaxTTL: DAY,
       labelerDid: 'did:example:labeler',
-      redisScratchHost: cfg.redisHost,
       redisHost: cfg.redisHost,
       dbPostgresUrl: cfg.dbPrimaryPostgresUrl,
       dbPostgresSchema: cfg.dbPostgresSchema,
@@ -113,8 +119,9 @@ export class TestBsky {
     assert(indexerCfg.redisHost)
     const indexerRedis = new bsky.Redis({
       host: indexerCfg.redisHost,
-      namespace: indexerCfg.indexerNamespace,
+      namespace: `ns${ns}`,
     })
+
     const indexer = bsky.BskyIndexer.create({
       cfg: indexerCfg,
       db: db.getPrimary(),
@@ -189,9 +196,9 @@ export class TestBsky {
   }
 
   async close() {
-    await this.server.destroy({ skipDb: true })
+    await this.server.destroy({ skipDb: true, skipRedis: false })
     await this.ingester.destroy({ skipDb: true })
-    await this.indexer.destroy() // closes shared db
+    await this.indexer.destroy() // closes shared db & redis
   }
 }
 
@@ -243,7 +250,6 @@ export async function getIndexers(
     didCacheMaxTTL: DAY,
     labelerDid: 'did:example:labeler',
     labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
-    redisScratchHost: process.env.REDIS_HOST || '',
     redisHost: process.env.REDIS_HOST || '',
     dbPostgresUrl: process.env.DB_POSTGRES_URL || '',
     dbPostgresSchema: `appview_${name}`,
@@ -307,7 +313,6 @@ export async function processAll(
   network: TestNetworkNoAppView,
   ingester: bsky.BskyIngester,
 ) {
-  assert(network.pds.ctx.sequencerLeader, 'sequencer leader does not exist')
   await network.pds.processAll()
   await ingestAll(network, ingester)
   // eslint-disable-next-line no-constant-condition
@@ -327,25 +332,17 @@ export async function ingestAll(
   network: TestNetworkNoAppView,
   ingester: bsky.BskyIngester,
 ) {
-  assert(network.pds.ctx.sequencerLeader, 'sequencer leader does not exist')
-  const pdsDb = network.pds.ctx.db.db
+  const sequencer = network.pds.ctx.sequencer
   await network.pds.processAll()
   // eslint-disable-next-line no-constant-condition
   while (true) {
     await wait(50)
-    // check sequencer
-    const sequencerCaughtUp = await network.pds.ctx.sequencerLeader.isCaughtUp()
-    if (!sequencerCaughtUp) continue
     // check ingester
-    const [ingesterCursor, { lastSeq }] = await Promise.all([
+    const [ingesterCursor, curr] = await Promise.all([
       ingester.sub.getCursor(),
-      pdsDb
-        .selectFrom('repo_seq')
-        .where('seq', 'is not', null)
-        .select(pdsDb.fn.max('repo_seq.seq').as('lastSeq'))
-        .executeTakeFirstOrThrow(),
+      sequencer.curr(),
     ])
-    const ingesterCaughtUp = ingesterCursor === lastSeq
+    const ingesterCaughtUp = curr !== null && ingesterCursor === curr
     if (ingesterCaughtUp) return
   }
 }

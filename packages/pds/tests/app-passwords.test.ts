@@ -1,6 +1,6 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
-import * as jwt from 'jsonwebtoken'
+import * as jose from 'jose'
 
 describe('app_passwords', () => {
   let network: TestNetworkNoAppView
@@ -44,9 +44,7 @@ describe('app_passwords', () => {
   })
 
   it('creates an access token for an app with a restricted scope', () => {
-    const decoded = jwt.decode(appAgent.session?.accessJwt ?? '', {
-      json: true,
-    })
+    const decoded = jose.decodeJwt(appAgent.session?.accessJwt ?? '')
     expect(decoded?.scope).toEqual('com.atproto.appPass')
   })
 
