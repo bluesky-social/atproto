@@ -4,14 +4,7 @@ import {
   SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
-import {
-  Lexicons,
-  LexiconDoc,
-  LexXrpcProcedure,
-  LexXrpcQuery,
-  LexRecord,
-  LexXrpcSubscription,
-} from '@atproto/lexicon'
+import { Lexicons, LexiconDoc } from '@atproto/lexicon'
 import { NSID } from '@atproto/syntax'
 import { gen, lexiconsTs, utilTs } from './common'
 import { GeneratedAPI } from '../types'
@@ -411,9 +404,8 @@ function genServerXrpcMethod(
   lexicons: Lexicons,
   lexUri: string,
 ) {
-  const def = lexicons.getDefOrThrow(lexUri, ['query', 'procedure']) as
-    | LexXrpcQuery
-    | LexXrpcProcedure
+  const def = lexicons.getDefOrThrow(lexUri, ['query', 'procedure'])
+
   file.addImportDeclaration({
     moduleSpecifier: '@atproto/xrpc-server',
     namedImports: [{ name: 'HandlerAuth' }],
@@ -543,9 +535,7 @@ function genServerXrpcStreaming(
   lexicons: Lexicons,
   lexUri: string,
 ) {
-  const def = lexicons.getDefOrThrow(lexUri, [
-    'subscription',
-  ]) as LexXrpcSubscription
+  const def = lexicons.getDefOrThrow(lexUri, ['subscription'])
 
   file.addImportDeclaration({
     moduleSpecifier: '@atproto/xrpc-server',
@@ -601,7 +591,7 @@ function genServerRecord(
   lexicons: Lexicons,
   lexUri: string,
 ) {
-  const def = lexicons.getDefOrThrow(lexUri, ['record']) as LexRecord
+  const def = lexicons.getDefOrThrow(lexUri, ['record'])
 
   //= export interface Record {...}
   genObject(file, imports, lexUri, def.record, 'Record')
