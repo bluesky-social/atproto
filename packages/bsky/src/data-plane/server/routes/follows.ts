@@ -1,6 +1,6 @@
 import { ServiceImpl } from '@connectrpc/connect'
-import { Database } from '../../../db'
 import { Service } from '../../gen/bsky_connect'
+import { Database } from '../../../db'
 import { TimeCidKeyset, paginate } from '../../../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({

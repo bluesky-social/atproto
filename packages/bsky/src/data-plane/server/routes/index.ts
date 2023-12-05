@@ -32,7 +32,7 @@ export default (db: Database) => (router: ConnectRouter) =>
     ...moderation,
     ...mutes,
     ...notifs,
-    ...posts,
+    ...posts(db),
     ...profile,
     ...reposts,
     ...search,
