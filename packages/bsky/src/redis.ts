@@ -11,6 +11,7 @@ export class Redis {
         name: opts.sentinel,
         sentinels: opts.hosts.map((h) => addressParts(h, 26379)),
         password: opts.password,
+        db: opts.db,
         commandTimeout: opts.commandTimeout,
       })
     } else if ('host' in opts) {
@@ -18,6 +19,8 @@ export class Redis {
       this.driver = new RedisDriver({
         ...addressParts(opts.host),
         password: opts.password,
+        db: opts.db,
+        commandTimeout: opts.commandTimeout,
       })
     } else {
       assert(opts.driver)
@@ -182,6 +185,7 @@ export type RedisOptions = (
 ) & {
   password?: string
   namespace?: string
+  db?: number
   commandTimeout?: number
 }
 
