@@ -121,7 +121,9 @@ export class ServerConfig {
     const rateLimitsEnabled = process.env.RATE_LIMITS_ENABLED === 'true'
     const rateLimitBypassKey = process.env.RATE_LIMIT_BYPASS_KEY
     const rateLimitBypassIps = process.env.RATE_LIMIT_BYPASS_IPS
-      ? process.env.RATE_LIMIT_BYPASS_IPS.split(',')
+      ? process.env.RATE_LIMIT_BYPASS_IPS.split(',').map((ipOrCidr) =>
+          ipOrCidr.split('/')[0]?.trim(),
+        )
       : undefined
 
     return new ServerConfig({
