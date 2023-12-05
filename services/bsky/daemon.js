@@ -18,6 +18,7 @@ const main = async () => {
     version: env.version,
     dbPostgresUrl: env.dbPostgresUrl,
     dbPostgresSchema: env.dbPostgresSchema,
+    notificationsDaemonFromDid: env.notificationsDaemonFromDid,
   })
   const daemon = BskyDaemon.create({ db, cfg })
   await daemon.start()
@@ -34,6 +35,8 @@ const getEnv = () => ({
   dbPoolSize: maybeParseInt(process.env.DB_POOL_SIZE),
   dbPoolMaxUses: maybeParseInt(process.env.DB_POOL_MAX_USES),
   dbPoolIdleTimeoutMs: maybeParseInt(process.env.DB_POOL_IDLE_TIMEOUT_MS),
+  notificationsDaemonFromDid:
+    process.env.BSKY_NOTIFS_DAEMON_FROM_DID || undefined,
 })
 
 const maybeParseInt = (str) => {

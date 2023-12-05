@@ -47,4 +47,8 @@ export class NotificationsDaemon {
   }
 }
 
-type RunOptions = { forever?: boolean; batchSize?: number }
+type RunOptions = {
+  forever?: boolean
+  batchSize?: number
+  startFromDid?: string
+}

@@ -4,6 +4,7 @@ export interface DaemonConfigValues {
   version: string
   dbPostgresUrl: string
   dbPostgresSchema?: string
+  notificationsDaemonFromDid?: string
 }
 
 export class DaemonConfig {
@@ -15,11 +16,16 @@ export class DaemonConfig {
       overrides?.dbPostgresUrl || process.env.DB_PRIMARY_POSTGRES_URL
     const dbPostgresSchema =
       overrides?.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
+    const notificationsDaemonFromDid =
+      overrides?.notificationsDaemonFromDid ||
+      process.env.BSKY_NOTIFS_DAEMON_FROM_DID ||
+      undefined
     assert(dbPostgresUrl)
     return new DaemonConfig({
       version,
       dbPostgresUrl,
       dbPostgresSchema,
+      notificationsDaemonFromDid,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -34,6 +40,10 @@ export class DaemonConfig {
 
   get dbPostgresSchema() {
     return this.cfg.dbPostgresSchema
+  }
+
+  get notificationsDaemonFromDid() {
+    return this.cfg.notificationsDaemonFromDid
   }
 }
 
