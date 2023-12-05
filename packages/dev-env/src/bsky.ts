@@ -81,7 +81,6 @@ export class TestBsky {
     assert(config.redisHost)
     const redis = new bsky.Redis({
       host: config.redisHost,
-      namespace: `ns${ns}`,
     })
 
     // api server
@@ -117,10 +116,15 @@ export class TestBsky {
       ...(cfg.indexer ?? {}),
     })
     assert(indexerCfg.redisHost)
+    const indexerRedis = new bsky.Redis({
+      host: indexerCfg.redisHost,
+      namespace: `ns${ns}`,
+    })
+
     const indexer = bsky.BskyIndexer.create({
       cfg: indexerCfg,
       db: db.getPrimary(),
-      redis,
+      redis: indexerRedis,
       imgInvalidator: cfg.imgInvalidator,
     })
     // ingester
@@ -191,7 +195,7 @@ export class TestBsky {
   }
 
   async close() {
-    await this.server.destroy({ skipDb: true, skipRedis: true })
+    await this.server.destroy({ skipDb: true, skipRedis: false })
     await this.ingester.destroy({ skipDb: true })
     await this.indexer.destroy() // closes shared db & redis
   }
