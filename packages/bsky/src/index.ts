@@ -69,8 +69,8 @@ export class BskyAppView {
     app.use(compression())
 
     const didCache = new DidRedisCache({
-      redisHost: config.redisScratchHost,
-      redisPassword: config.redisScratchPassword,
+      redisHost: config.redisHost,
+      redisPassword: config.redisPassword,
       staleTTL: config.didCacheStaleTTL,
       maxTTL: config.didCacheMaxTTL,
     })

@@ -45,8 +45,8 @@ export class BskyIndexer {
   }): BskyIndexer {
     const { db, redis, cfg } = opts
     const didCache = new DidRedisCache({
-      redisHost: cfg.redisScratchHost,
-      redisPassword: cfg.redisScratchPassword,
+      redisHost: cfg.redisHost,
+      redisPassword: cfg.redisPassword,
       staleTTL: cfg.didCacheStaleTTL,
       maxTTL: cfg.didCacheMaxTTL,
     })
