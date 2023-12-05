@@ -22,7 +22,7 @@ describe('did cache', () => {
       dbPostgresSchema: 'bsky_did_cache',
     })
     idResolver = network.bsky.indexer.ctx.idResolver
-    redis = network.bsky.indexer.ctx.redisScratch
+    redis = network.bsky.indexer.ctx.redis
     didCache = network.bsky.indexer.ctx.didCache
     sc = network.getSeedClient()
     await userSeed(sc)
