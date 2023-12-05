@@ -6,6 +6,12 @@ import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
 import compression from 'compression'
 import { IdResolver } from '@atproto/identity'
+import {
+  RateLimiter,
+  RateLimiterOpts,
+  Options as XrpcServerOptions,
+} from '@atproto/xrpc-server'
+import { MINUTE } from '@atproto/common'
 import API, { health, wellKnown, blobResolver } from './api'
 import { DatabaseCoordinator } from './db'
 import * as error from './error'
@@ -135,14 +141,41 @@ export class BskyAppView {
       notifServer,
     })
 
-    let server = createServer({
+    const xrpcOpts: XrpcServerOptions = {
       validateResponse: config.debugMode,
       payload: {
         jsonLimit: 100 * 1024, // 100kb
         textLimit: 100 * 1024, // 100kb
         blobLimit: 5 * 1024 * 1024, // 5mb
       },
-    })
+    }
+    if (config.rateLimitsEnabled) {
+      const rlCreator = (opts: RateLimiterOpts) =>
+        RateLimiter.redis(redis.driver, {
+          bypassSecret: config.rateLimitsBypassKey,
+          bypassIps: config.rateLimitsBypassIps,
+          ...opts,
+        })
+      xrpcOpts['rateLimits'] = {
+        creator: rlCreator,
+        global: [
+          {
+            name: 'global-unauthed-ip',
+            durationMs: 5 * MINUTE,
+            points: 3000,
+            calcKey: (ctx) => (ctx.auth ? null : ctx.req.ip),
+          },
+          {
+            name: 'global-authed-did',
+            durationMs: 5 * MINUTE,
+            points: 3000,
+            calcKey: (ctx) => ctx.auth?.credentials?.did ?? null,
+          },
+        ],
+      }
+    }
+
+    let server = createServer(xrpcOpts)
 
     server = API(server, ctx)
 
