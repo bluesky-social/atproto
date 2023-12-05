@@ -1,4 +1,6 @@
-export default {
+import { Database } from '../../../db'
+
+export default (db: Database) => ({
   async getBidirectionalBlock(req) {
     throw new Error('unimplemented')
   },
@@ -14,4 +16,4 @@ export default {
   async getBlocklistSubscriptions(req) {
     throw new Error('unimplemented')
   },
-}
+})
