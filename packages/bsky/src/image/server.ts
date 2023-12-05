@@ -25,15 +25,15 @@ export class ImageProcessingServer {
 
   constructor(public cfg: ServerConfig, public cache: BlobCache) {
     this.uriBuilder = new ImageUriBuilder('')
-    this.app.get('*', this.handler.bind(this))
+    this.app.get('*', this.handler)
     this.app.use(errorMiddleware)
   }
 
-  async handler(
+  handler = async (
     req: express.Request,
     res: express.Response,
     next: NextFunction,
-  ) {
+  ) => {
     try {
       const path = req.path
       const options = ImageUriBuilder.getOptions(path)
