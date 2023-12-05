@@ -6,82 +6,89 @@ import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { Database } from './db'
 import { ServerConfig, ServerSecrets } from './config'
-import { AuthVerifier } from './auth-verifier'
+import {
+  AuthVerifier,
+  createPublicKeyObject,
+  createSecretKeyObject,
+} from './auth-verifier'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
-import { Services, createServices } from './services'
-import { Sequencer, SequencerLeader } from './sequencer'
+import { AccountManager } from './account-manager'
+import { Sequencer } from './sequencer'
 import { BackgroundQueue } from './background'
-import DidSqlCache from './did-cache'
+import { DidSqliteCache } from './did-cache'
 import { Crawlers } from './crawlers'
-import { DiskBlobStore } from './storage'
+import { DiskBlobStore } from './disk-blobstore'
 import { getRedisClient } from './redis'
-import { RuntimeFlags } from './runtime-flags'
+import { ActorStore, ActorStoreReader } from './actor-store'
+import { LocalViewer } from './read-after-write/viewer'
 
 export type AppContextOptions = {
-  db: Database
-  blobstore: BlobStore
+  actorStore: ActorStore
+  blobstore: (did: string) => BlobStore
+  localViewer: (
+    actorStore: ActorStoreReader,
+    actorKey: crypto.Keypair,
+  ) => LocalViewer
   mailer: ServerMailer
   moderationMailer: ModerationMailer
-  didCache: DidSqlCache
+  didCache: DidSqliteCache
   idResolver: IdResolver
   plcClient: plc.Client
-  services: Services
+  accountManager: AccountManager
   sequencer: Sequencer
-  sequencerLeader?: SequencerLeader
   backgroundQueue: BackgroundQueue
-  runtimeFlags: RuntimeFlags
   redisScratch?: Redis
   crawlers: Crawlers
   appViewAgent: AtpAgent
+  entrywayAgent?: AtpAgent
   authVerifier: AuthVerifier
-  repoSigningKey: crypto.Keypair
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
 }
 
 export class AppContext {
-  public db: Database
-  public blobstore: BlobStore
+  public actorStore: ActorStore
+  public blobstore: (did: string) => BlobStore
+  public localViewer: (
+    actorStore: ActorStoreReader,
+    actorKey: crypto.Keypair,
+  ) => LocalViewer
   public mailer: ServerMailer
   public moderationMailer: ModerationMailer
-  public didCache: DidSqlCache
+  public didCache: DidSqliteCache
   public idResolver: IdResolver
   public plcClient: plc.Client
-  public services: Services
+  public accountManager: AccountManager
   public sequencer: Sequencer
-  public sequencerLeader?: SequencerLeader
   public backgroundQueue: BackgroundQueue
-  public runtimeFlags: RuntimeFlags
   public redisScratch?: Redis
   public crawlers: Crawlers
   public appViewAgent: AtpAgent
+  public entrywayAgent: AtpAgent | undefined
   public authVerifier: AuthVerifier
-  public repoSigningKey: crypto.Keypair
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
 
   constructor(opts: AppContextOptions) {
-    this.db = opts.db
+    this.actorStore = opts.actorStore
     this.blobstore = opts.blobstore
+    this.localViewer = opts.localViewer
     this.mailer = opts.mailer
     this.moderationMailer = opts.moderationMailer
     this.didCache = opts.didCache
     this.idResolver = opts.idResolver
     this.plcClient = opts.plcClient
-    this.services = opts.services
+    this.accountManager = opts.accountManager
     this.sequencer = opts.sequencer
-    this.sequencerLeader = opts.sequencerLeader
     this.backgroundQueue = opts.backgroundQueue
-    this.runtimeFlags = opts.runtimeFlags
     this.redisScratch = opts.redisScratch
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
+    this.entrywayAgent = opts.entrywayAgent
     this.authVerifier = opts.authVerifier
-    this.repoSigningKey = opts.repoSigningKey
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
   }
@@ -91,26 +98,16 @@ export class AppContext {
     secrets: ServerSecrets,
     overrides?: Partial<AppContextOptions>,
   ): Promise<AppContext> {
-    const db =
-      cfg.db.dialect === 'sqlite'
-        ? Database.sqlite(cfg.db.location)
-        : Database.postgres({
-            url: cfg.db.url,
-            schema: cfg.db.schema,
-            poolSize: cfg.db.pool.size,
-            poolMaxUses: cfg.db.pool.maxUses,
-            poolIdleTimeoutMs: cfg.db.pool.idleTimeoutMs,
-          })
     const blobstore =
       cfg.blobstore.provider === 's3'
-        ? new S3BlobStore({
+        ? S3BlobStore.creator({
             bucket: cfg.blobstore.bucket,
             region: cfg.blobstore.region,
             endpoint: cfg.blobstore.endpoint,
             forcePathStyle: cfg.blobstore.forcePathStyle,
             credentials: cfg.blobstore.credentials,
           })
-        : await DiskBlobStore.create(
+        : DiskBlobStore.creator(
             cfg.blobstore.location,
             cfg.blobstore.tempLocation,
           )
@@ -129,11 +126,14 @@ export class AppContext {
 
     const moderationMailer = new ModerationMailer(modMailTransport, cfg)
 
-    const didCache = new DidSqlCache(
-      db,
+    const didCache = new DidSqliteCache(
+      cfg.db.didCacheDbLoc,
       cfg.identity.cacheStaleTTL,
       cfg.identity.cacheMaxTTL,
+      cfg.db.disableWalAutoCheckpoint,
     )
+    await didCache.migrateOrThrow()
+
     const idResolver = new IdResolver({
       plcUrl: cfg.identity.plcUrl,
       didCache,
@@ -142,37 +142,52 @@ export class AppContext {
     })
     const plcClient = new plc.Client(cfg.identity.plcUrl)
 
-    const sequencer = new Sequencer(db)
-    const sequencerLeader = cfg.subscription.sequencerLeaderEnabled
-      ? new SequencerLeader(db, cfg.subscription.sequencerLeaderLockId)
-      : undefined
-
-    const backgroundQueue = new BackgroundQueue(db)
-    const runtimeFlags = new RuntimeFlags(db)
+    const backgroundQueue = new BackgroundQueue()
+    const crawlers = new Crawlers(
+      cfg.service.hostname,
+      cfg.crawlers,
+      backgroundQueue,
+    )
+    const sequencer = new Sequencer(
+      cfg.db.sequencerDbLoc,
+      crawlers,
+      undefined,
+      cfg.db.disableWalAutoCheckpoint,
+    )
     const redisScratch = cfg.redis
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
 
-    const crawlers = new Crawlers(cfg.service.hostname, cfg.crawlers)
-
     const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
 
-    const authVerifier = new AuthVerifier(db, idResolver, {
-      jwtSecret: secrets.jwtSecret,
+    const entrywayAgent = cfg.entryway
+      ? new AtpAgent({ service: cfg.entryway.url })
+      : undefined
+
+    const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
+    const accountManager = new AccountManager(
+      cfg.db.accountDbLoc,
+      jwtSecretKey,
+      cfg.service.did,
+      cfg.db.disableWalAutoCheckpoint,
+    )
+    await accountManager.migrateOrThrow()
+
+    const jwtKey = cfg.entryway
+      ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
+      : jwtSecretKey
+
+    const authVerifier = new AuthVerifier(accountManager, idResolver, {
+      jwtKey, // @TODO support multiple keys?
       adminPass: secrets.adminPassword,
       moderatorPass: secrets.moderatorPassword,
       triagePass: secrets.triagePassword,
-      adminServiceDid: cfg.bskyAppView.did,
+      dids: {
+        pds: cfg.service.did,
+        entryway: cfg.entryway?.did,
+        admin: cfg.bskyAppView.did,
+      },
     })
-
-    const repoSigningKey =
-      secrets.repoSigningKey.provider === 'kms'
-        ? await KmsKeypair.load({
-            keyId: secrets.repoSigningKey.keyId,
-          })
-        : await crypto.Secp256k1Keypair.import(
-            secrets.repoSigningKey.privateKeyHex,
-          )
 
     const plcRotationKey =
       secrets.plcRotationKey.provider === 'kms'
@@ -183,36 +198,36 @@ export class AppContext {
             secrets.plcRotationKey.privateKeyHex,
           )
 
-    const services = createServices({
-      repoSigningKey,
+    const actorStore = new ActorStore(cfg.actorStore, {
       blobstore,
+      backgroundQueue,
+    })
+
+    const localViewer = LocalViewer.creator({
+      accountManager,
       appViewAgent,
       pdsHostname: cfg.service.hostname,
-      jwtSecret: secrets.jwtSecret,
-      appViewDid: cfg.bskyAppView.did,
-      appViewCdnUrlPattern: cfg.bskyAppView.cdnUrlPattern,
-      backgroundQueue,
-      crawlers,
+      appviewDid: cfg.bskyAppView.did,
+      appviewCdnUrlPattern: cfg.bskyAppView.cdnUrlPattern,
     })
 
     return new AppContext({
-      db,
+      actorStore,
       blobstore,
+      localViewer,
       mailer,
       moderationMailer,
       didCache,
       idResolver,
       plcClient,
-      services,
+      accountManager,
       sequencer,
-      sequencerLeader,
       backgroundQueue,
-      runtimeFlags,
       redisScratch,
       crawlers,
       appViewAgent,
+      entrywayAgent,
       authVerifier,
-      repoSigningKey,
       plcRotationKey,
       cfg,
       ...(overrides ?? {}),
@@ -224,10 +239,11 @@ export class AppContext {
     if (!aud) {
       throw new Error('Could not find bsky appview did')
     }
+    const keypair = await this.actorStore.keypair(did)
     return createServiceAuthHeaders({
       iss: did,
       aud,
-      keypair: this.repoSigningKey,
+      keypair,
     })
   }
 }

@@ -1,9 +1,12 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { authPassthru } from '../../../proxy'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
-import { handleReadAfterWrite } from '../util/read-after-write'
-import { authPassthru } from '../../../../api/com/atproto/admin/util'
-import { LocalRecords } from '../../../../services/local'
+import {
+  LocalViewer,
+  handleReadAfterWrite,
+  LocalRecords,
+} from '../../../../read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getActorLikes({
@@ -28,12 +31,11 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const getAuthorMunge = async (
-  ctx: AppContext,
+  localViewer: LocalViewer,
   original: OutputSchema,
   local: LocalRecords,
   requester: string,
 ): Promise<OutputSchema> => {
-  const localSrvc = ctx.services.local(ctx.db)
   const localProf = local.profile
   let feed = original.feed
   // first update any out of date profile pictures in feed
@@ -44,7 +46,7 @@ const getAuthorMunge = async (
           ...item,
           post: {
             ...item.post,
-            author: localSrvc.updateProfileViewBasic(
+            author: localViewer.updateProfileViewBasic(
               item.post.author,
               localProf.record,
             ),

@@ -9,11 +9,12 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["recipientDid", "content"],
+          "required": ["recipientDid", "content", "senderDid"],
           "properties": {
             "recipientDid": { "type": "string", "format": "did" },
             "content": { "type": "string" },
-            "subject": { "type": "string" }
+            "subject": { "type": "string" },
+            "senderDid": { "type": "string", "format": "did" }
           }
         }
       },

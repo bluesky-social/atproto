@@ -2,7 +2,6 @@ import AtpAgent from '@atproto/api'
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewer } from '../_util'
 import followsSeed from '../seeds/follows'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
 describe('pds follow views', () => {
   let agent: AtpAgent
@@ -121,22 +120,21 @@ describe('pds follow views', () => {
   })
 
   it('blocks followers by actor takedown', async () => {
-    const { data: modAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: sc.dids.dan,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+    await agent.api.com.atproto.admin.emitModerationEvent(
+      {
+        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.dan,
         },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
 
     const aliceFollowers = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.alice },
@@ -147,9 +145,13 @@ describe('pds follow views', () => {
       sc.dids.dan,
     )
 
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.emitModerationEvent(
       {
-        id: modAction.id,
+        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.dan,
+        },
         createdBy: 'did:example:admin',
         reason: 'Y',
       },
@@ -250,22 +252,21 @@ describe('pds follow views', () => {
   })
 
   it('blocks follows by actor takedown', async () => {
-    const { data: modAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: sc.dids.dan,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+    await agent.api.com.atproto.admin.emitModerationEvent(
+      {
+        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.dan,
         },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
 
     const aliceFollows = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.alice },
@@ -276,9 +277,13 @@ describe('pds follow views', () => {
       sc.dids.dan,
     )
 
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.emitModerationEvent(
       {
-        id: modAction.id,
+        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.dan,
+        },
         createdBy: 'did:example:admin',
         reason: 'Y',
       },

@@ -1,3 +1,4 @@
+import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
@@ -23,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       const creators = genList.map((gen) => gen.creator)
       const profiles = await actorService.views.profilesBasic(creators, viewer)
 
-      const feedViews = genList.map((gen) =>
+      const feedViews = mapDefined(genList, (gen) =>
         feedService.views.formatFeedGeneratorView(gen, profiles),
       )
 

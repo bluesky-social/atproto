@@ -13,3 +13,30 @@ export const fileExists = async (location: string): Promise<boolean> => {
     throw err
   }
 }
+
+export const readIfExists = async (
+  filepath: string,
+): Promise<Uint8Array | undefined> => {
+  try {
+    return await fs.readFile(filepath)
+  } catch (err) {
+    if (isErrnoException(err) && err.code === 'ENOENT') {
+      return
+    }
+    throw err
+  }
+}
+
+export const rmIfExists = async (
+  filepath: string,
+  recursive = false,
+): Promise<void> => {
+  try {
+    await fs.rm(filepath, { recursive })
+  } catch (err) {
+    if (isErrnoException(err) && err.code === 'ENOENT') {
+      return
+    }
+    throw err
+  }
+}

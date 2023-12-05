@@ -2,11 +2,14 @@ import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import AtpAgent from '@atproto/api'
-import { AtUri } from '@atproto/syntax'
 import { mapDefined } from '@atproto/common'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/searchPosts'
 import { Database } from '../../../../db'
-import { FeedHydrationState, FeedService } from '../../../../services/feed'
+import {
+  FeedHydrationState,
+  FeedRow,
+  FeedService,
+} from '../../../../services/feed'
 import { ActorService } from '../../../../services/actor'
 import { createPipeline } from '../../../../pipeline'
 
@@ -51,9 +54,11 @@ const skeleton = async (
     cursor: params.cursor,
     limit: params.limit,
   })
+  const postUris = res.data.posts.map((a) => a.uri)
+  const feedItems = await ctx.feedService.postUrisToFeedItems(postUris)
   return {
     params,
-    postUris: res.data.posts.map((a) => a.uri),
+    feedItems,
     cursor: res.data.cursor,
     hitsTotal: res.data.hitsTotal,
   }
@@ -64,12 +69,10 @@ const hydration = async (
   ctx: Context,
 ): Promise<HydrationState> => {
   const { feedService } = ctx
-  const { params, postUris } = state
-  const uris = new Set<string>(postUris)
-  const dids = new Set<string>(postUris.map((uri) => new AtUri(uri).hostname))
+  const { params, feedItems } = state
+  const refs = feedService.feedItemRefs(feedItems)
   const hydrated = await feedService.feedHydration({
-    uris,
-    dids,
+    ...refs,
     viewer: params.viewer,
   })
   return { ...state, ...hydrated }
@@ -77,32 +80,32 @@ const hydration = async (
 
 const noBlocks = (state: HydrationState): HydrationState => {
   const { viewer } = state.params
-  state.postUris = state.postUris.filter((uri) => {
-    const post = state.posts[uri]
-    if (!viewer || !post) return true
-    return !state.bam.block([viewer, post.creator])
+  state.feedItems = state.feedItems.filter((item) => {
+    if (!viewer) return true
+    return !state.bam.block([viewer, item.postAuthorDid])
   })
   return state
 }
 
 const presentation = (state: HydrationState, ctx: Context) => {
   const { feedService, actorService } = ctx
-  const { postUris, profiles, params } = state
+  const { feedItems, profiles, params } = state
   const actors = actorService.views.profileBasicPresentation(
     Object.keys(profiles),
     state,
-    { viewer: params.viewer },
+    params.viewer,
   )
 
-  const postViews = mapDefined(postUris, (uri) =>
+  const postViews = mapDefined(feedItems, (item) =>
     feedService.views.formatPostView(
-      uri,
+      item.postUri,
       actors,
       state.posts,
       state.threadgates,
       state.embeds,
       state.labels,
       state.lists,
+      params.viewer,
     ),
   )
   return { posts: postViews, cursor: state.cursor, hitsTotal: state.hitsTotal }
@@ -119,7 +122,7 @@ type Params = QueryParams & { viewer: string | null }
 
 type SkeletonState = {
   params: Params
-  postUris: string[]
+  feedItems: FeedRow[]
   hitsTotal?: number
   cursor?: string
 }

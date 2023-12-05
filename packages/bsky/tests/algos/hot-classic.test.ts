@@ -31,7 +31,6 @@ describe('algo hot-classic', () => {
     alice = sc.dids.alice
     bob = sc.dids.bob
     await network.processAll()
-    await network.bsky.processAll()
   })
 
   afterAll(async () => {
@@ -59,7 +58,7 @@ describe('algo hot-classic', () => {
       await sc.like(sc.dids[name], two.ref)
       await sc.like(sc.dids[name], three.ref)
     }
-    await network.bsky.processAll()
+    await network.processAll()
 
     const res = await agent.api.app.bsky.feed.getFeed(
       { feed: feedUri },

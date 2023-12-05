@@ -1,6 +1,7 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { CommitData } from '@atproto/repo'
 import { Server } from '../../../../lexicon'
 import { prepareUpdate, prepareCreate } from '../../../../repo'
 import AppContext from '../../../../context'
@@ -11,7 +12,6 @@ import {
   PreparedCreate,
   PreparedUpdate,
 } from '../../../../repo'
-import { ConcurrentWriteError } from '../../../../services/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.putRecord({
@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
         swapCommit,
         swapRecord,
       } = input.body
-      const did = await ctx.services.account(ctx.db).getDidForActor(repo)
+      const did = await ctx.accountManager.getDidForActor(repo)
 
       if (!did) {
         throw new InvalidRequestError(`Could not find repo: ${repo}`)
@@ -57,47 +57,59 @@ export default function (server: Server, ctx: AppContext) {
       const swapRecordCid =
         typeof swapRecord === 'string' ? CID.parse(swapRecord) : swapRecord
 
-      const current = await ctx.services
-        .record(ctx.db)
-        .getRecord(uri, null, true)
-      const writeInfo = {
+      const { commit, write } = await ctx.actorStore.transact(
         did,
-        collection,
-        rkey,
-        record,
-        swapCid: swapRecordCid,
-        validate,
-      }
+        async (actorTxn) => {
+          const current = await actorTxn.record.getRecord(uri, null, true)
+          const writeInfo = {
+            did,
+            collection,
+            rkey,
+            record,
+            swapCid: swapRecordCid,
+            validate,
+          }
 
-      let write: PreparedCreate | PreparedUpdate
-      try {
-        write = current
-          ? await prepareUpdate(writeInfo)
-          : await prepareCreate(writeInfo)
-      } catch (err) {
-        if (err instanceof InvalidRecordError) {
-          throw new InvalidRequestError(err.message)
-        }
-        throw err
-      }
+          let write: PreparedCreate | PreparedUpdate
+          try {
+            write = current
+              ? await prepareUpdate(writeInfo)
+              : await prepareCreate(writeInfo)
+          } catch (err) {
+            if (err instanceof InvalidRecordError) {
+              throw new InvalidRequestError(err.message)
+            }
+            throw err
+          }
 
-      const writes = [write]
+          // no-op
+          if (current && current.cid === write.cid.toString()) {
+            return {
+              commit: null,
+              write,
+            }
+          }
 
-      try {
-        await ctx.services
-          .repo(ctx.db)
-          .processWrites({ did, writes, swapCommitCid }, 10)
-      } catch (err) {
-        if (
-          err instanceof BadCommitSwapError ||
-          err instanceof BadRecordSwapError
-        ) {
-          throw new InvalidRequestError(err.message, 'InvalidSwap')
-        } else if (err instanceof ConcurrentWriteError) {
-          throw new InvalidRequestError(err.message, 'ConcurrentWrites')
-        } else {
-          throw err
-        }
+          let commit: CommitData
+          try {
+            commit = await actorTxn.repo.processWrites([write], swapCommitCid)
+          } catch (err) {
+            if (
+              err instanceof BadCommitSwapError ||
+              err instanceof BadRecordSwapError
+            ) {
+              throw new InvalidRequestError(err.message, 'InvalidSwap')
+            } else {
+              throw err
+            }
+          }
+          return { commit, write }
+        },
+      )
+
+      if (commit !== null) {
+        await ctx.sequencer.sequenceCommit(did, commit, [write])
+        await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
       }
 
       return {

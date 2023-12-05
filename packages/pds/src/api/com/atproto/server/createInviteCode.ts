@@ -1,4 +1,4 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { genInvCode } from './util'
@@ -6,27 +6,23 @@ import { genInvCode } from './util'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createInviteCode({
     auth: ctx.authVerifier.role,
-    handler: async ({ input, req, auth }) => {
+    handler: async ({ input, auth }) => {
       if (!auth.credentials.admin) {
         throw new AuthRequiredError('Insufficient privileges')
+      }
+      if (ctx.cfg.entryway) {
+        throw new InvalidRequestError(
+          'Account invites are managed by the entryway service',
+        )
       }
       const { useCount, forAccount = 'admin' } = input.body
 
       const code = genInvCode(ctx.cfg)
 
-      await ctx.db.db
-        .insertInto('invite_code')
-        .values({
-          code: code,
-          availableUses: useCount,
-          disabled: 0,
-          forUser: forAccount,
-          createdBy: 'admin',
-          createdAt: new Date().toISOString(),
-        })
-        .execute()
-
-      req.log.info({ useCount, code, forAccount }, 'created invite code')
+      await ctx.accountManager.createInviteCodes(
+        [{ account: forAccount, codes: [code] }],
+        useCount,
+      )
 
       return {
         encoding: 'application/json',

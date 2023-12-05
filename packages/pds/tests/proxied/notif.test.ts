@@ -68,7 +68,10 @@ describe('notif service proxy', () => {
     const auth = await verifyJwt(
       spy.current?.['jwt'] as string,
       notifDid,
-      async () => network.pds.ctx.repoSigningKey.did(),
+      async (did) => {
+        const keypair = await network.pds.ctx.actorStore.keypair(did)
+        return keypair.did()
+      },
     )
     expect(auth.iss).toEqual(sc.dids.bob)
   })

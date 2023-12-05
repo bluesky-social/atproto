@@ -1,10 +1,13 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { authPassthru } from '../../../proxy'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
-import { handleReadAfterWrite } from '../util/read-after-write'
-import { authPassthru } from '../../../../api/com/atproto/admin/util'
-import { LocalRecords } from '../../../../services/local'
 import { isReasonRepost } from '../../../../lexicon/types/app/bsky/feed/defs'
+import {
+  LocalViewer,
+  handleReadAfterWrite,
+  LocalRecords,
+} from '../../../../read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
@@ -28,12 +31,11 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const getAuthorMunge = async (
-  ctx: AppContext,
+  localViewer: LocalViewer,
   original: OutputSchema,
   local: LocalRecords,
   requester: string,
 ): Promise<OutputSchema> => {
-  const localSrvc = ctx.services.local(ctx.db)
   const localProf = local.profile
   // only munge on own feed
   if (!isUsersFeed(original, requester)) {
@@ -48,7 +50,7 @@ const getAuthorMunge = async (
           ...item,
           post: {
             ...item.post,
-            author: localSrvc.updateProfileViewBasic(
+            author: localViewer.updateProfileViewBasic(
               item.post.author,
               localProf.record,
             ),
@@ -59,7 +61,7 @@ const getAuthorMunge = async (
       }
     })
   }
-  feed = await localSrvc.formatAndInsertPostsInFeed(feed, local.posts)
+  feed = await localViewer.formatAndInsertPostsInFeed(feed, local.posts)
   return {
     ...original,
     feed,
