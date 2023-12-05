@@ -1,3 +1,4 @@
+import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { paginate, TimeCidKeyset } from '../../../../db/pagination'
@@ -39,7 +40,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
       }
 
-      const lists = listsRes.map((row) =>
+      const lists = mapDefined(listsRes, (row) =>
         graphService.formatListView(row, profiles),
       )
 

@@ -19,7 +19,7 @@ export interface QueryParams {
   rkeyStart?: string
   /** DEPRECATED: The highest sort-ordered rkey to stop at (exclusive) */
   rkeyEnd?: string
-  /** Reverse the order of the returned records? */
+  /** Flag to reverse the order of the returned records. */
   reverse?: boolean
 }
 

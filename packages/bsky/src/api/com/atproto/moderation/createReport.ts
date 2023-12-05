@@ -22,15 +22,17 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const moderationService = ctx.services.moderation(db)
-
-      const report = await moderationService.report({
-        reasonType: getReasonType(reasonType),
-        reason,
-        subject: getSubject(subject),
-        reportedBy: requester || ctx.cfg.serverDid,
+      const report = await db.transaction(async (dbTxn) => {
+        const moderationTxn = ctx.services.moderation(dbTxn)
+        return moderationTxn.report({
+          reasonType: getReasonType(reasonType),
+          reason,
+          subject: getSubject(subject),
+          reportedBy: requester || ctx.cfg.serverDid,
+        })
       })
 
+      const moderationService = ctx.services.moderation(db)
       return {
         encoding: 'application/json',
         body: moderationService.views.reportPublic(report),

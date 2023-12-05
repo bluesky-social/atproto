@@ -6,11 +6,11 @@ import { CID } from 'multiformats/cid'
 import { ensureValidDid } from '@atproto/syntax'
 import { forwardStreamErrors, VerifyCidTransform } from '@atproto/common'
 import { IdResolver, DidNotFoundError } from '@atproto/identity'
-import { TAKEDOWN } from '../lexicon/types/com/atproto/admin/defs'
 import AppContext from '../context'
 import { httpLogger as log } from '../logger'
 import { retryHttp } from '../util/retry'
 import { Database } from '../db'
+import { sql } from 'kysely'
 
 // Resolve and verify blob from its origin host
 
@@ -84,19 +84,14 @@ export async function resolveBlob(
   idResolver: IdResolver,
 ) {
   const cidStr = cid.toString()
+
   const [{ pds }, takedown] = await Promise.all([
     idResolver.did.resolveAtprotoData(did), // @TODO cache did info
     db.db
-      .selectFrom('moderation_action_subject_blob')
-      .select('actionId')
-      .innerJoin(
-        'moderation_action',
-        'moderation_action.id',
-        'moderation_action_subject_blob.actionId',
-      )
-      .where('cid', '=', cidStr)
-      .where('action', '=', TAKEDOWN)
-      .where('reversedAt', 'is', null)
+      .selectFrom('moderation_subject_status')
+      .select('id')
+      .where('blobCids', '@>', sql`CAST(${JSON.stringify([cidStr])} AS JSONB)`)
+      .where('takendown', 'is', true)
       .executeTakeFirst(),
   ])
   if (takedown) {

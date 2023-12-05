@@ -14,11 +14,11 @@ export interface Commit {
   repo: string
   commit: CID
   prev?: CID | null
-  /** The rev of the emitted commit */
+  /** The rev of the emitted commit. */
   rev: string
-  /** The rev of the last emitted commit from this repo */
+  /** The rev of the last emitted commit from this repo. */
   since: string | null
-  /** CAR file containing relevant blocks */
+  /** CAR file containing relevant blocks. */
   blocks: Uint8Array
   ops: RepoOp[]
   blobs: CID[]
@@ -115,7 +115,7 @@ export function validateInfo(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.sync.subscribeRepos#info', v)
 }
 
-/** A repo operation, ie a write of a single record. For creates and updates, cid is the record's CID as of this operation. For deletes, it's null. */
+/** A repo operation, ie a write of a single record. For creates and updates, CID is the record's CID as of this operation. For deletes, it's null. */
 export interface RepoOp {
   action: 'create' | 'update' | 'delete' | (string & {})
   path: string

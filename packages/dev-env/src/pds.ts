@@ -1,16 +1,19 @@
 import path from 'node:path'
 import os from 'node:os'
+import fs from 'node:fs/promises'
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as pds from '@atproto/pds'
+import { createSecretKeyObject } from '@atproto/pds/src/auth-verifier'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { AtpAgent } from '@atproto/api'
 import { PdsConfig } from './types'
-import { uniqueLockId } from './util'
-
-const ADMIN_PASSWORD = 'admin-pass'
-const MOD_PASSWORD = 'mod-pass'
-const TRIAGE_PASSWORD = 'triage-pass'
+import {
+  ADMIN_PASSWORD,
+  JWT_SECRET,
+  MOD_PASSWORD,
+  TRIAGE_PASSWORD,
+} from './const'
 
 export class TestPds {
   constructor(
@@ -20,8 +23,6 @@ export class TestPds {
   ) {}
 
   static async create(config: PdsConfig): Promise<TestPds> {
-    const repoSigningKey = await Secp256k1Keypair.create({ exportable: true })
-    const repoSigningPriv = ui8.toString(await repoSigningKey.export(), 'hex')
     const plcRotationKey = await Secp256k1Keypair.create({ exportable: true })
     const plcRotationPriv = ui8.toString(await plcRotationKey.export(), 'hex')
     const recoveryKey = (await Secp256k1Keypair.create()).did()
@@ -30,21 +31,22 @@ export class TestPds {
     const url = `http://localhost:${port}`
 
     const blobstoreLoc = path.join(os.tmpdir(), randomStr(8, 'base32'))
+    const dataDirectory = path.join(os.tmpdir(), randomStr(8, 'base32'))
+    await fs.mkdir(dataDirectory, { recursive: true })
 
     const env: pds.ServerEnvironment = {
       port,
+      dataDirectory: dataDirectory,
       blobstoreDiskLocation: blobstoreLoc,
       recoveryDidKey: recoveryKey,
       adminPassword: ADMIN_PASSWORD,
       moderatorPassword: MOD_PASSWORD,
       triagePassword: TRIAGE_PASSWORD,
-      jwtSecret: 'jwt-secret',
+      jwtSecret: JWT_SECRET,
       serviceHandleDomains: ['.test'],
-      sequencerLeaderLockId: uniqueLockId(),
       bskyAppViewUrl: 'https://appview.invalid',
       bskyAppViewDid: 'did:example:invalid',
       bskyAppViewCdnUrlPattern: 'http://cdn.appview.com/%s/%s/%s',
-      repoSigningKeyK256PrivateKeyHex: repoSigningPriv,
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
       inviteRequired: false,
       ...config,
@@ -53,20 +55,6 @@ export class TestPds {
     const secrets = pds.envToSecrets(env)
 
     const server = await pds.PDS.create(cfg, secrets)
-
-    // Separate migration db on postgres in case migration changes some
-    // connection state that we need in the tests, e.g. "alter database ... set ..."
-    const migrationDb =
-      cfg.db.dialect === 'pg'
-        ? pds.Database.postgres({
-            url: cfg.db.url,
-            schema: cfg.db.schema,
-          })
-        : server.ctx.db
-    await migrationDb.migrateToLatestOrThrow()
-    if (migrationDb !== server.ctx.db) {
-      await migrationDb.close()
-    }
 
     await server.start()
 
@@ -98,6 +86,10 @@ export class TestPds {
     return {
       authorization: this.adminAuth(role),
     }
+  }
+
+  jwtSecretKey() {
+    return createSecretKeyObject(JWT_SECRET)
   }
 
   async processAll() {

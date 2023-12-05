@@ -3,12 +3,10 @@ import { randomStr } from '@atproto/crypto'
 import { cborEncode, readFromGenerator, wait } from '@atproto/common'
 import { Sequencer, SeqEvt } from '../src/sequencer'
 import Outbox from '../src/sequencer/outbox'
-import { Database } from '../src'
 import userSeed from './seeds/users'
 
 describe('sequencer', () => {
   let network: TestNetworkNoAppView
-  let db: Database
   let sequencer: Sequencer
   let sc: SeedClient
   let alice: string
@@ -21,7 +19,6 @@ describe('sequencer', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'sequencer',
     })
-    db = network.pds.ctx.db
     sequencer = network.pds.ctx.sequencer
     sc = network.getSeedClient()
     await userSeed(sc)
@@ -49,7 +46,7 @@ describe('sequencer', () => {
   }
 
   const loadFromDb = (lastSeen: number) => {
-    return db.db
+    return sequencer.db.db
       .selectFrom('repo_seq')
       .select([
         'seq',
@@ -78,11 +75,9 @@ describe('sequencer', () => {
 
   const caughtUp = (outbox: Outbox): (() => Promise<boolean>) => {
     return async () => {
-      const leaderCaughtUp = await network.pds.ctx.sequencerLeader?.isCaughtUp()
-      if (!leaderCaughtUp) return false
       const lastEvt = await outbox.sequencer.curr()
-      if (!lastEvt) return true
-      return outbox.lastSeen >= (lastEvt.seq ?? 0)
+      if (lastEvt === null) return true
+      return outbox.lastSeen >= (lastEvt ?? 0)
     }
   }
 
@@ -182,6 +177,8 @@ describe('sequencer', () => {
       await readFromGenerator(gen, caughtUp(outbox), createPromise)
     }
     await expect(overloadBuffer).rejects.toThrow('Stream consumer too slow')
+
+    await createPromise
 
     const fromDb = await loadFromDb(lastSeen)
     lastSeen = fromDb.at(-1)?.seq ?? lastSeen

@@ -10,20 +10,25 @@ export const readEnv = (): ServerEnvironment => {
     privacyPolicyUrl: envStr('PDS_PRIVACY_POLICY_URL'),
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
 
-    // db: one required
-    // sqlite
-    dbSqliteLocation: envStr('PDS_DB_SQLITE_LOCATION'),
-    // postgres
-    dbPostgresUrl: envStr('PDS_DB_POSTGRES_URL'),
-    dbPostgresMigrationUrl: envStr('PDS_DB_POSTGRES_MIGRATION_URL'),
-    dbPostgresSchema: envStr('PDS_DB_POSTGRES_SCHEMA'),
-    dbPostgresPoolSize: envInt('PDS_DB_POSTGRES_POOL_SIZE'),
-    dbPostgresPoolMaxUses: envInt('PDS_DB_POSTGRES_POOL_MAX_USES'),
-    dbPostgresPoolIdleTimeoutMs: envInt('PDS_DB_POSTGRES_POOL_IDLE_TIMEOUT_MS'),
+    // database
+    dataDirectory: envStr('PDS_DATA_DIRECTORY'),
+    disableWalAutoCheckpoint: envBool('PDS_SQLITE_DISABLE_WAL_AUTO_CHECKPOINT'),
+    accountDbLocation: envStr('PDS_ACCOUNT_DB_LOCATION'),
+    sequencerDbLocation: envStr('PDS_SEQUENCER_DB_LOCATION'),
+    didCacheDbLocation: envStr('PDS_DID_CACHE_DB_LOCATION'),
+
+    // actor store
+    actorStoreDirectory: envStr('PDS_ACTOR_STORE_DIRECTORY'),
+    actorStoreCacheSize: envInt('PDS_ACTOR_STORE_CACHE_SIZE'),
 
     // blobstore: one required
     // s3
     blobstoreS3Bucket: envStr('PDS_BLOBSTORE_S3_BUCKET'),
+    blobstoreS3Region: envStr('PDS_BLOBSTORE_S3_REGION'),
+    blobstoreS3Endpoint: envStr('PDS_BLOBSTORE_S3_ENDPOINT'),
+    blobstoreS3ForcePathStyle: envBool('PDS_BLOBSTORE_S3_FORCE_PATH_STYLE'),
+    blobstoreS3AccessKeyId: envStr('PDS_BLOBSTORE_S3_ACCESS_KEY_ID'),
+    blobstoreS3SecretAccessKey: envStr('PDS_BLOBSTORE_S3_SECRET_ACCESS_KEY'),
     // disk
     blobstoreDiskLocation: envStr('PDS_BLOBSTORE_DISK_LOCATION'),
     blobstoreDiskTmpLocation: envStr('PDS_BLOBSTORE_DISK_TMP_LOCATION'),
@@ -36,6 +41,15 @@ export const readEnv = (): ServerEnvironment => {
     recoveryDidKey: envStr('PDS_RECOVERY_DID_KEY'),
     serviceHandleDomains: envList('PDS_SERVICE_HANDLE_DOMAINS'),
     handleBackupNameservers: envList('PDS_HANDLE_BACKUP_NAMESERVERS'),
+    enableDidDocWithSession: envBool('PDS_ENABLE_DID_DOC_WITH_SESSION'),
+
+    // entryway
+    entrywayUrl: envStr('PDS_ENTRYWAY_URL'),
+    entrywayDid: envStr('PDS_ENTRYWAY_DID'),
+    entrywayJwtVerifyKeyK256PublicKeyHex: envStr(
+      'PDS_ENTRYWAY_JWT_VERIFY_KEY_K256_PUBLIC_KEY_HEX',
+    ),
+    entrywayPlcRotationKey: envStr('PDS_ENTRYWAY_PLC_ROTATION_KEY'),
 
     // invites
     inviteRequired: envBool('PDS_INVITE_REQUIRED'),
@@ -51,8 +65,6 @@ export const readEnv = (): ServerEnvironment => {
     // subscription
     maxSubscriptionBuffer: envInt('PDS_MAX_SUBSCRIPTION_BUFFER'),
     repoBackfillLimitMs: envInt('PDS_REPO_BACKFILL_LIMIT_MS'),
-    sequencerLeaderEnabled: envBool('PDS_SEQUENCER_LEADER_ENABLED'),
-    sequencerLeaderLockId: envInt('PDS_SEQUENCER_LEADER_LOCK_ID'),
 
     // appview
     bskyAppViewUrl: envStr('PDS_BSKY_APP_VIEW_URL'),
@@ -78,13 +90,6 @@ export const readEnv = (): ServerEnvironment => {
     moderatorPassword: envStr('PDS_MODERATOR_PASSWORD'),
     triagePassword: envStr('PDS_TRIAGE_PASSWORD'),
 
-    // keys: only one of each required
-    // kms
-    repoSigningKeyKmsKeyId: envStr('PDS_REPO_SIGNING_KEY_KMS_KEY_ID'),
-    // memory
-    repoSigningKeyK256PrivateKeyHex: envStr(
-      'PDS_REPO_SIGNING_KEY_K256_PRIVATE_KEY_HEX',
-    ),
     // kms
     plcRotationKeyKmsKeyId: envStr('PDS_PLC_ROTATION_KEY_KMS_KEY_ID'),
     // memory
@@ -103,19 +108,28 @@ export type ServerEnvironment = {
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
 
-  // db: one required
-  dbSqliteLocation?: string
-  dbPostgresUrl?: string
-  dbPostgresMigrationUrl?: string
-  dbPostgresSchema?: string
-  dbPostgresPoolSize?: number
-  dbPostgresPoolMaxUses?: number
-  dbPostgresPoolIdleTimeoutMs?: number
+  // database
+  dataDirectory?: string
+  disableWalAutoCheckpoint?: boolean
+  accountDbLocation?: string
+  sequencerDbLocation?: string
+  didCacheDbLocation?: string
+
+  // actor store
+  actorStoreDirectory?: string
+  actorStoreCacheSize?: number
 
   // blobstore: one required
   blobstoreS3Bucket?: string
   blobstoreDiskLocation?: string
   blobstoreDiskTmpLocation?: string
+
+  // -- optional s3 parameters
+  blobstoreS3Region?: string
+  blobstoreS3Endpoint?: string
+  blobstoreS3ForcePathStyle?: boolean
+  blobstoreS3AccessKeyId?: string
+  blobstoreS3SecretAccessKey?: string
 
   // identity
   didPlcUrl?: string
@@ -125,6 +139,13 @@ export type ServerEnvironment = {
   recoveryDidKey?: string
   serviceHandleDomains?: string[] // public hostname by default
   handleBackupNameservers?: string[]
+  enableDidDocWithSession?: boolean
+
+  // entryway
+  entrywayUrl?: string
+  entrywayDid?: string
+  entrywayJwtVerifyKeyK256PublicKeyHex?: string
+  entrywayPlcRotationKey?: string
 
   // invites
   inviteRequired?: boolean
@@ -140,8 +161,6 @@ export type ServerEnvironment = {
   // subscription
   maxSubscriptionBuffer?: number
   repoBackfillLimitMs?: number
-  sequencerLeaderEnabled?: boolean
-  sequencerLeaderLockId?: number
 
   // appview
   bskyAppViewUrl?: string
@@ -168,8 +187,6 @@ export type ServerEnvironment = {
   triagePassword?: string
 
   // keys
-  repoSigningKeyKmsKeyId?: string
-  repoSigningKeyK256PrivateKeyHex?: string
   plcRotationKeyKmsKeyId?: string
   plcRotationKeyK256PrivateKeyHex?: string
 }

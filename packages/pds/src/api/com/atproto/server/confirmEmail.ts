@@ -1,34 +1,33 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.confirmEmail({
     auth: ctx.authVerifier.accessCheckTakedown,
-    handler: async ({ auth, input }) => {
+    handler: async ({ auth, input, req }) => {
       const did = auth.credentials.did
-      const { token, email } = input.body
 
-      const user = await ctx.services.account(ctx.db).getAccount(did)
+      const user = await ctx.accountManager.getAccount(did)
       if (!user) {
         throw new InvalidRequestError('user not found', 'AccountNotFound')
       }
 
+      if (ctx.entrywayAgent) {
+        await ctx.entrywayAgent.com.atproto.server.confirmEmail(
+          input.body,
+          authPassthru(req, true),
+        )
+        return
+      }
+
+      const { token, email } = input.body
+
       if (user.email !== email.toLowerCase()) {
         throw new InvalidRequestError('invalid email', 'InvalidEmail')
       }
-      await ctx.services
-        .account(ctx.db)
-        .assertValidToken(did, 'confirm_email', token)
-
-      await ctx.db.transaction(async (dbTxn) => {
-        await ctx.services.account(dbTxn).deleteEmailToken(did, 'confirm_email')
-        await dbTxn.db
-          .updateTable('user_account')
-          .set({ emailConfirmedAt: new Date().toISOString() })
-          .where('did', '=', did)
-          .execute()
-      })
+      await ctx.accountManager.confirmEmail({ did, token })
     },
   })
 }

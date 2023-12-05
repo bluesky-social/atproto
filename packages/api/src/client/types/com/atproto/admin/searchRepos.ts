@@ -12,7 +12,6 @@ export interface QueryParams {
   /** DEPRECATED: use 'q' instead */
   term?: string
   q?: string
-  invitedBy?: string
   limit?: number
   cursor?: string
 }

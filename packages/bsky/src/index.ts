@@ -26,18 +26,21 @@ import { MountedAlgos } from './feed-gen/types'
 import { LabelCache } from './label-cache'
 import { NotificationServer } from './notifications'
 import { AtpAgent } from '@atproto/api'
+import { Keypair } from '@atproto/crypto'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
 export { ServerConfig } from './config'
 export { Database, PrimaryDatabase, DatabaseCoordinator } from './db'
-export { PeriodicModerationActionReversal } from './db/periodic-moderation-action-reversal'
+export { PeriodicModerationEventReversal } from './db/periodic-moderation-event-reversal'
 export { Redis } from './redis'
 export { ViewMaintainer } from './db/views'
 export { AppContext } from './context'
 export { makeAlgos } from './feed-gen'
+export * from './daemon'
 export * from './indexer'
 export * from './ingester'
+export { MigrateModerationData } from './migrate-moderation-data'
 
 export class BskyAppView {
   public ctx: AppContext
@@ -54,10 +57,11 @@ export class BskyAppView {
   static create(opts: {
     db: DatabaseCoordinator
     config: ServerConfig
+    signingKey: Keypair
     imgInvalidator?: ImageInvalidator
     algos?: MountedAlgos
   }): BskyAppView {
-    const { db, config, algos = {} } = opts
+    const { db, config, signingKey, algos = {} } = opts
     let maybeImgInvalidator = opts.imgInvalidator
     const app = express()
     app.use(cors())
@@ -116,6 +120,7 @@ export class BskyAppView {
       cfg: config,
       services,
       imgUriBuilder,
+      signingKey,
       idResolver,
       didCache,
       labelCache,

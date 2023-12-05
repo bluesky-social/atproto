@@ -1,7 +1,7 @@
 {
   "lexicon": 1,
   "id": "app.bsky.embed.images",
-  "description": "A set of images embedded in some other form of content",
+  "description": "A set of images embedded in some other form of content.",
   "defs": {
     "main": {
       "type": "object",

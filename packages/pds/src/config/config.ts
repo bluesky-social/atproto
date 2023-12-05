@@ -1,5 +1,5 @@
-import os from 'node:os'
 import path from 'node:path'
+import assert from 'node:assert'
 import { DAY, HOUR, SECOND } from '@atproto/common'
 import { ServerEnvironment } from './env'
 
@@ -24,29 +24,23 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     termsOfServiceUrl: env.termsOfServiceUrl,
   }
 
-  let dbCfg: ServerConfig['db']
-  if (env.dbSqliteLocation && env.dbPostgresUrl) {
-    throw new Error('Cannot set both sqlite & postgres db env vars')
+  const dbLoc = (name: string) => {
+    return env.dataDirectory ? path.join(env.dataDirectory, name) : name
   }
-  if (env.dbSqliteLocation) {
-    dbCfg = {
-      dialect: 'sqlite',
-      location: env.dbSqliteLocation,
-    }
-  } else if (env.dbPostgresUrl) {
-    dbCfg = {
-      dialect: 'pg',
-      url: env.dbPostgresUrl,
-      migrationUrl: env.dbPostgresMigrationUrl ?? env.dbPostgresUrl,
-      schema: env.dbPostgresSchema,
-      pool: {
-        idleTimeoutMs: env.dbPostgresPoolIdleTimeoutMs ?? 10000,
-        maxUses: env.dbPostgresPoolMaxUses ?? Infinity,
-        size: env.dbPostgresPoolSize ?? 10,
-      },
-    }
-  } else {
-    throw new Error('Must configure either sqlite or postgres db')
+
+  const disableWalAutoCheckpoint = env.disableWalAutoCheckpoint ?? false
+
+  const dbCfg: ServerConfig['db'] = {
+    accountDbLoc: env.accountDbLocation ?? dbLoc('account.sqlite'),
+    sequencerDbLoc: env.sequencerDbLocation ?? dbLoc('sequencer.sqlite'),
+    didCacheDbLoc: env.didCacheDbLocation ?? dbLoc('did_cache.sqlite'),
+    disableWalAutoCheckpoint,
+  }
+
+  const actorStoreCfg: ServerConfig['actorStore'] = {
+    directory: env.actorStoreDirectory ?? dbLoc('actors'),
+    cacheSize: env.actorStoreCacheSize ?? 100,
+    disableWalAutoCheckpoint,
   }
 
   let blobstoreCfg: ServerConfig['blobstore']
@@ -54,13 +48,29 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     throw new Error('Cannot set both S3 and disk blobstore env vars')
   }
   if (env.blobstoreS3Bucket) {
-    blobstoreCfg = { provider: 's3', bucket: env.blobstoreS3Bucket }
+    blobstoreCfg = {
+      provider: 's3',
+      bucket: env.blobstoreS3Bucket,
+      region: env.blobstoreS3Region,
+      endpoint: env.blobstoreS3Endpoint,
+      forcePathStyle: env.blobstoreS3ForcePathStyle,
+    }
+    if (env.blobstoreS3AccessKeyId || env.blobstoreS3SecretAccessKey) {
+      if (!env.blobstoreS3AccessKeyId || !env.blobstoreS3SecretAccessKey) {
+        throw new Error(
+          'Must specify both S3 access key id and secret access key blobstore env vars',
+        )
+      }
+      blobstoreCfg.credentials = {
+        accessKeyId: env.blobstoreS3AccessKeyId,
+        secretAccessKey: env.blobstoreS3SecretAccessKey,
+      }
+    }
   } else if (env.blobstoreDiskLocation) {
     blobstoreCfg = {
       provider: 'disk',
       location: env.blobstoreDiskLocation,
-      tempLocation:
-        env.blobstoreDiskTmpLocation ?? path.join(os.tmpdir(), 'pds/blobs'),
+      tempLocation: env.blobstoreDiskTmpLocation,
     }
   } else {
     throw new Error('Must configure either S3 or disk blobstore')
@@ -91,6 +101,23 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     recoveryDidKey: env.recoveryDidKey ?? null,
     serviceHandleDomains,
     handleBackupNameservers: env.handleBackupNameservers,
+    enableDidDocWithSession: !!env.enableDidDocWithSession,
+  }
+
+  let entrywayCfg: ServerConfig['entryway'] = null
+  if (env.entrywayUrl) {
+    assert(
+      env.entrywayJwtVerifyKeyK256PublicKeyHex &&
+        env.entrywayPlcRotationKey &&
+        env.entrywayDid,
+      'if entryway url is configured, must include all required entryway configuration',
+    )
+    entrywayCfg = {
+      url: env.entrywayUrl,
+      did: env.entrywayDid,
+      jwtPublicKeyHex: env.entrywayJwtVerifyKeyK256PublicKeyHex,
+      plcRotationKey: env.entrywayPlcRotationKey,
+    }
   }
 
   // default to being required if left undefined
@@ -138,8 +165,6 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const subscriptionCfg: ServerConfig['subscription'] = {
     maxBuffer: env.maxSubscriptionBuffer ?? 500,
     repoBackfillLimitMs: env.repoBackfillLimitMs ?? DAY,
-    sequencerLeaderEnabled: env.sequencerLeaderEnabled ?? true,
-    sequencerLeaderLockId: env.sequencerLeaderLockId ?? 1100,
   }
 
   if (!env.bskyAppViewUrl) {
@@ -177,8 +202,10 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   return {
     service: serviceCfg,
     db: dbCfg,
+    actorStore: actorStoreCfg,
     blobstore: blobstoreCfg,
     identity: identityCfg,
+    entryway: entrywayCfg,
     invites: invitesCfg,
     email: emailCfg,
     moderationEmail: moderationEmailCfg,
@@ -192,9 +219,11 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 
 export type ServerConfig = {
   service: ServiceConfig
-  db: SqliteConfig | PostgresConfig
+  db: DatabaseConfig
+  actorStore: ActorStoreConfig
   blobstore: S3BlobstoreConfig | DiskBlobstoreConfig
   identity: IdentityConfig
+  entryway: EntrywayConfig | null
   invites: InvitesConfig
   email: EmailConfig | null
   moderationEmail: EmailConfig | null
@@ -215,34 +244,35 @@ export type ServiceConfig = {
   termsOfServiceUrl?: string
 }
 
-export type SqliteConfig = {
-  dialect: 'sqlite'
-  location: string
+export type DatabaseConfig = {
+  accountDbLoc: string
+  sequencerDbLoc: string
+  didCacheDbLoc: string
+  disableWalAutoCheckpoint: boolean
 }
 
-export type PostgresPoolConfig = {
-  size: number
-  maxUses: number
-  idleTimeoutMs: number
-}
-
-export type PostgresConfig = {
-  dialect: 'pg'
-  url: string
-  migrationUrl: string
-  pool: PostgresPoolConfig
-  schema?: string
+export type ActorStoreConfig = {
+  directory: string
+  cacheSize: number
+  disableWalAutoCheckpoint: boolean
 }
 
 export type S3BlobstoreConfig = {
   provider: 's3'
   bucket: string
+  region?: string
+  endpoint?: string
+  forcePathStyle?: boolean
+  credentials?: {
+    accessKeyId: string
+    secretAccessKey: string
+  }
 }
 
 export type DiskBlobstoreConfig = {
   provider: 'disk'
   location: string
-  tempLocation: string
+  tempLocation?: string
 }
 
 export type IdentityConfig = {
@@ -253,6 +283,14 @@ export type IdentityConfig = {
   recoveryDidKey: string | null
   serviceHandleDomains: string[]
   handleBackupNameservers?: string[]
+  enableDidDocWithSession: boolean
+}
+
+export type EntrywayConfig = {
+  url: string
+  did: string
+  jwtPublicKeyHex: string
+  plcRotationKey: string
 }
 
 export type InvitesConfig =
@@ -273,8 +311,6 @@ export type EmailConfig = {
 export type SubscriptionConfig = {
   maxBuffer: number
   repoBackfillLimitMs: number
-  sequencerLeaderEnabled: boolean
-  sequencerLeaderLockId: number
 }
 
 export type RedisScratchConfig = {

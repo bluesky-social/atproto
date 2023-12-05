@@ -4,6 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
+      "description": "Get a list of notifications.",
       "parameters": {
         "type": "params",
         "properties": {

@@ -1,31 +1,28 @@
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { TID } from '@atproto/common'
-import { randomStr } from '@atproto/crypto'
+import { Keypair, randomStr } from '@atproto/crypto'
 import * as repo from '@atproto/repo'
 import { MemoryBlockstore } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { CID } from 'multiformats/cid'
-import { AppContext } from '../../src'
 
 describe('repo sync', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
   let did: string
+  let signingKey: Keypair
 
   const repoData: repo.RepoContents = {}
   const uris: AtUri[] = []
   const storage = new MemoryBlockstore()
   let currRoot: CID | undefined
-  let ctx: AppContext
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'repo_sync',
     })
-    ctx = network.pds.ctx
     agent = network.pds.getClient()
     sc = network.getSeedClient()
     await sc.createAccount('alice', {
@@ -34,7 +31,7 @@ describe('repo sync', () => {
       password: 'alice-pass',
     })
     did = sc.dids.alice
-    agent.api.setHeader('authorization', `Bearer ${sc.accounts[did].accessJwt}`)
+    signingKey = await network.pds.ctx.actorStore.keypair(did)
   })
 
   afterAll(async () => {
@@ -58,7 +55,7 @@ describe('repo sync', () => {
       car.blocks,
       car.root,
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     await storage.applyCommit(synced.commit)
     expect(synced.creates.length).toBe(ADD_COUNT)
@@ -83,11 +80,7 @@ describe('repo sync', () => {
     // delete two that are already sync & two that have not been
     for (let i = 0; i < DEL_COUNT; i++) {
       const uri = uris[i * 5]
-      await agent.api.app.bsky.feed.post.delete({
-        repo: did,
-        collection: uri.collection,
-        rkey: uri.rkey,
-      })
+      await sc.deletePost(did, uri)
       delete repoData[uri.collection][uri.rkey]
     }
 
@@ -99,7 +92,7 @@ describe('repo sync', () => {
       car.blocks,
       car.root,
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     expect(synced.writes.length).toBe(ADD_COUNT) // -2 because of dels of new records, +2 because of dels of old records
     await storage.applyCommit(synced.commit)
@@ -137,7 +130,7 @@ describe('repo sync', () => {
       car.blocks,
       car.root,
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     expect(synced.writes.length).toBe(1)
     await storage.applyCommit(synced.commit)
@@ -159,7 +152,7 @@ describe('repo sync', () => {
     const records = await repo.verifyRecords(
       new Uint8Array(car.data),
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     const claim = {
       collection,
@@ -172,7 +165,7 @@ describe('repo sync', () => {
       new Uint8Array(car.data),
       [claim],
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     expect(result.verified.length).toBe(1)
     expect(result.unverified.length).toBe(0)
@@ -195,7 +188,7 @@ describe('repo sync', () => {
       new Uint8Array(car.data),
       [claim],
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     expect(result.verified.length).toBe(1)
     expect(result.unverified.length).toBe(0)
@@ -203,14 +196,19 @@ describe('repo sync', () => {
 
   describe('repo takedown', () => {
     beforeAll(async () => {
-      await sc.takeModerationAction({
-        action: TAKEDOWN,
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did,
+      await agent.api.com.atproto.admin.updateSubjectStatus(
+        {
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did,
+          },
+          takedown: { applied: true },
         },
-      })
-      agent.api.xrpc.unsetHeader('authorization')
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
     })
 
     it('does not sync repo unauthed', async () => {

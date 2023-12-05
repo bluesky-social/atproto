@@ -16,6 +16,7 @@ export type ActorInfo = {
     mutedByList?: ListViewBasic
     blockedBy?: boolean
     blocking?: string
+    blockingByList?: ListViewBasic
     following?: string
     followedBy?: string
   }

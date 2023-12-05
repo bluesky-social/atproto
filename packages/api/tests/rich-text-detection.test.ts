@@ -40,6 +40,7 @@ describe('detectFacets', () => {
     'start.com/foo/bar?baz=bux#hash middle end',
     'start middle end.com/foo/bar?baz=bux#hash',
     'newline1.com\nnewline2.com',
+    'a example.com/index.php php link',
 
     'not.. a..url ..here',
     'e.g.',
@@ -155,6 +156,11 @@ describe('detectFacets', () => {
       ['newline1.com', 'https://newline1.com'],
       ['\n'],
       ['newline2.com', 'https://newline2.com'],
+    ],
+    [
+      ['a '],
+      ['example.com/index.php', 'https://example.com/index.php'],
+      [' php link'],
     ],
 
     [['not.. a..url ..here']],

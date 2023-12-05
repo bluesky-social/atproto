@@ -44,6 +44,7 @@ import {
 import { FeedViews } from './views'
 import { LabelCache } from '../../label-cache'
 import { threadgateToPostUri, postToThreadgateUri } from './util'
+import { mapDefined } from '@atproto/common'
 
 export * from './types'
 
@@ -203,6 +204,11 @@ export class FeedService {
     return feedItems.reduce((acc, item) => {
       return Object.assign(acc, { [item.uri]: item })
     }, {} as Record<string, FeedRow>)
+  }
+
+  async postUrisToFeedItems(uris: string[]): Promise<FeedRow[]> {
+    const feedItems = await this.getFeedItems(uris)
+    return mapDefined(uris, (uri) => feedItems[uri])
   }
 
   feedItemRefs(items: FeedRow[]) {
@@ -399,20 +405,32 @@ export class FeedService {
     const actorInfos = this.services.actor.views.profileBasicPresentation(
       [...nestedDids],
       feedState,
-      { viewer },
+      viewer,
     )
     const recordEmbedViews: RecordEmbedViewRecordMap = {}
     for (const uri of nestedUris) {
       const collection = new AtUri(uri).collection
       if (collection === ids.AppBskyFeedGenerator && feedGenInfos[uri]) {
-        recordEmbedViews[uri] = {
-          $type: 'app.bsky.feed.defs#generatorView',
-          ...this.views.formatFeedGeneratorView(feedGenInfos[uri], actorInfos),
+        const genView = this.views.formatFeedGeneratorView(
+          feedGenInfos[uri],
+          actorInfos,
+        )
+        if (genView) {
+          recordEmbedViews[uri] = {
+            $type: 'app.bsky.feed.defs#generatorView',
+            ...genView,
+          }
         }
       } else if (collection === ids.AppBskyGraphList && listViews[uri]) {
-        recordEmbedViews[uri] = {
-          $type: 'app.bsky.graph.defs#listView',
-          ...this.services.graph.formatListView(listViews[uri], actorInfos),
+        const listView = this.services.graph.formatListView(
+          listViews[uri],
+          actorInfos,
+        )
+        if (listView) {
+          recordEmbedViews[uri] = {
+            $type: 'app.bsky.graph.defs#listView',
+            ...listView,
+          }
         }
       } else if (collection === ids.AppBskyFeedPost && feedState.posts[uri]) {
         const formatted = this.views.formatPostView(
@@ -423,6 +441,7 @@ export class FeedService {
           feedState.embeds,
           feedState.labels,
           feedState.lists,
+          viewer,
         )
         recordEmbedViews[uri] = this.views.getRecordEmbedView(
           uri,

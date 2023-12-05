@@ -4,7 +4,6 @@ import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { AppContext } from '../src'
 import { DAY } from '@atproto/common'
 import { genInvCodes } from '../src/api/com/atproto/server/util'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
 describe('account', () => {
   let network: TestNetworkNoAppView
@@ -50,22 +49,20 @@ describe('account', () => {
     // assign an invite code to the user
     const code = await createInviteCode(network, agent, 1, account.did)
     // takedown the user's account
-    const { data: takedownAction } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: account.did,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+    const subject = {
+      $type: 'com.atproto.admin.defs#repoRef',
+      did: account.did,
+    }
+    await agent.api.com.atproto.admin.updateSubjectStatus(
+      {
+        subject,
+        takedown: { applied: true },
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
     // attempt to create account with the previously generated invite code
     const promise = createAccountWithInvite(agent, code)
     await expect(promise).rejects.toThrow(
@@ -73,11 +70,10 @@ describe('account', () => {
     )
 
     // double check that reversing the takedown action makes the invite code valid again
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        id: takedownAction.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        subject,
+        takedown: { applied: false },
       },
       {
         encoding: 'application/json',
@@ -130,8 +126,8 @@ describe('account', () => {
 
     // next, pretend account was made 2 days in the past
     const twoDaysAgo = new Date(Date.now() - 2 * DAY).toISOString()
-    await ctx.db.db
-      .updateTable('user_account')
+    await ctx.accountManager.db.db
+      .updateTable('actor')
       .set({ createdAt: twoDaysAgo })
       .where('did', '=', account.did)
       .execute()
@@ -154,8 +150,8 @@ describe('account', () => {
 
     // again, pretend account was made 2 days ago
     const twoDaysAgo = new Date(Date.now() - 2 * DAY).toISOString()
-    await ctx.db.db
-      .updateTable('user_account')
+    await ctx.accountManager.db.db
+      .updateTable('actor')
       .set({ createdAt: twoDaysAgo })
       .where('did', '=', account.did)
       .execute()
@@ -184,8 +180,8 @@ describe('account', () => {
 
     // first, pretend account was made 2 days ago & get those two codes
     const twoDaysAgo = new Date(Date.now() - 2 * DAY).toISOString()
-    await ctx.db.db
-      .updateTable('user_account')
+    await ctx.accountManager.db.db
+      .updateTable('actor')
       .set({ createdAt: twoDaysAgo })
       .where('did', '=', account.did)
       .execute()
@@ -196,8 +192,8 @@ describe('account', () => {
 
     // then pretend account was made ever so slightly over 10 days ago
     const tenDaysAgo = new Date(Date.now() - 10.01 * DAY).toISOString()
-    await ctx.db.db
-      .updateTable('user_account')
+    await ctx.accountManager.db.db
+      .updateTable('actor')
       .set({ createdAt: tenDaysAgo })
       .where('did', '=', account.did)
       .execute()
@@ -217,11 +213,14 @@ describe('account', () => {
       code: code,
       availableUses: 1,
       disabled: 0 as const,
-      forUser: account.did,
+      forAccount: account.did,
       createdBy: account.did,
       createdAt: new Date(Date.now() - 5 * DAY).toISOString(),
     }))
-    await ctx.db.db.insertInto('invite_code').values(inviteRows).execute()
+    await ctx.accountManager.db.db
+      .insertInto('invite_code')
+      .values(inviteRows)
+      .execute()
     const res3 =
       await account.agent.api.com.atproto.server.getAccountInviteCodes({
         includeUsed: false,
@@ -229,7 +228,7 @@ describe('account', () => {
     expect(res3.data.codes.length).toBe(10)
 
     // no we use the codes which should still not allow them to generate anymore
-    await ctx.db.db
+    await ctx.accountManager.db.db
       .insertInto('invite_code_use')
       .values(
         inviteRows.map((row) => ({
@@ -299,18 +298,18 @@ describe('account', () => {
       },
     )
     expect(res.data.codes.length).toBe(3)
-    const fromDb = await ctx.db.db
+    const fromDb = await ctx.accountManager.db.db
       .selectFrom('invite_code')
       .selectAll()
-      .where('forUser', 'in', accounts)
+      .where('forAccount', 'in', accounts)
       .execute()
     expect(fromDb.length).toBe(6)
     const dbCodesByUser = {}
     for (const row of fromDb) {
       expect(row.disabled).toBe(0)
       expect(row.availableUses).toBe(2)
-      dbCodesByUser[row.forUser] ??= []
-      dbCodesByUser[row.forUser].push(row.code)
+      dbCodesByUser[row.forAccount] ??= []
+      dbCodesByUser[row.forAccount].push(row.code)
     }
     for (const { account, codes } of res.data.codes) {
       expect(codes.length).toBe(2)

@@ -102,11 +102,7 @@ describe('handle invalidation', () => {
   it('deals with handle contention', async () => {
     await backdateIndexedAt(bob)
     // update alices handle so that the pds will let bob take her old handle
-    await network.pds.ctx.db.db
-      .updateTable('did_handle')
-      .where('did', '=', alice)
-      .set({ handle: 'not-alice.test' })
-      .execute()
+    await network.pds.ctx.accountManager.updateHandle(alice, 'not-alice.test')
 
     await pdsAgent.api.com.atproto.identity.updateHandle(
       {

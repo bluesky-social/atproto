@@ -1,5 +1,8 @@
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
+import { AtpAgent } from '@atproto/api'
+import { Keypair } from '@atproto/crypto'
+import { createServiceJwt } from '@atproto/xrpc-server'
 import { DatabaseCoordinator } from './db'
 import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
@@ -10,15 +13,16 @@ import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
 import { LabelCache } from './label-cache'
 import { NotificationServer } from './notifications'
-import { AtpAgent } from '@atproto/api'
 
 export class AppContext {
+  public moderationPushAgent: AtpAgent | undefined
   constructor(
     private opts: {
       db: DatabaseCoordinator
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       services: Services
+      signingKey: Keypair
       idResolver: IdResolver
       didCache: DidSqlCache
       labelCache: LabelCache
@@ -27,7 +31,16 @@ export class AppContext {
       algos: MountedAlgos
       notifServer: NotificationServer
     },
-  ) {}
+  ) {
+    if (opts.cfg.moderationPushUrl) {
+      const url = new URL(opts.cfg.moderationPushUrl)
+      this.moderationPushAgent = new AtpAgent({ service: url.origin })
+      this.moderationPushAgent.api.setHeader(
+        'authorization',
+        auth.buildBasicAuth(url.username, url.password),
+      )
+    }
+  }
 
   get db(): DatabaseCoordinator {
     return this.opts.db
@@ -43,6 +56,10 @@ export class AppContext {
 
   get services(): Services {
     return this.opts.services
+  }
+
+  get signingKey(): Keypair {
+    return this.opts.signingKey
   }
 
   get plcClient(): plc.Client {
@@ -77,6 +94,10 @@ export class AppContext {
     return auth.authVerifier(this.idResolver, { aud: null })
   }
 
+  get authOptionalVerifierAnyAudience() {
+    return auth.authOptionalVerifier(this.idResolver, { aud: null })
+  }
+
   get authOptionalVerifier() {
     return auth.authOptionalVerifier(this.idResolver, {
       aud: this.cfg.serverDid,
@@ -89,6 +110,15 @@ export class AppContext {
 
   get roleVerifier() {
     return auth.roleVerifier(this.cfg)
+  }
+
+  async serviceAuthJwt(aud: string) {
+    const iss = this.cfg.serverDid
+    return createServiceJwt({
+      iss,
+      aud,
+      keypair: this.signingKey,
+    })
   }
 
   get backgroundQueue(): BackgroundQueue {

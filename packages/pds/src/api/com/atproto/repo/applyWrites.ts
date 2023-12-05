@@ -14,7 +14,6 @@ import {
   PreparedWrite,
 } from '../../../../repo'
 import AppContext from '../../../../context'
-import { ConcurrentWriteError } from '../../../../services/repo'
 
 const ratelimitPoints = ({ input }: { input: HandlerInput }) => {
   let points = 0
@@ -49,7 +48,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const tx = input.body
       const { repo, validate, swapCommit } = tx
-      const did = await ctx.services.account(ctx.db).getDidForActor(repo)
+      const did = await ctx.accountManager.getDidForActor(repo)
 
       if (!did) {
         throw new InvalidRequestError(`Could not find repo: ${repo}`)
@@ -108,19 +107,20 @@ export default function (server: Server, ctx: AppContext) {
 
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
 
-      try {
-        await ctx.services
-          .repo(ctx.db)
-          .processWrites({ did, writes, swapCommitCid }, 10)
-      } catch (err) {
-        if (err instanceof BadCommitSwapError) {
-          throw new InvalidRequestError(err.message, 'InvalidSwap')
-        } else if (err instanceof ConcurrentWriteError) {
-          throw new InvalidRequestError(err.message, 'ConcurrentWrites')
-        } else {
-          throw err
+      const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
+        try {
+          return await actorTxn.repo.processWrites(writes, swapCommitCid)
+        } catch (err) {
+          if (err instanceof BadCommitSwapError) {
+            throw new InvalidRequestError(err.message, 'InvalidSwap')
+          } else {
+            throw err
+          }
         }
-      }
+      })
+
+      await ctx.sequencer.sequenceCommit(did, commit, writes)
+      await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
     },
   })
 }

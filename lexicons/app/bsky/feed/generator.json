@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
-      "description": "A declaration of the existence of a feed generator",
+      "description": "A declaration of the existence of a feed generator.",
       "key": "any",
       "record": {
         "type": "object",

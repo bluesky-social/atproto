@@ -4,6 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
+      "description": "A declaration of a like.",
       "key": "tid",
       "record": {
         "type": "object",
