@@ -22,6 +22,7 @@ const { Secp256k1Keypair } = require('@atproto/crypto')
 const {
   DatabaseCoordinator,
   PrimaryDatabase,
+  Redis,
   ServerConfig,
   BskyAppView,
   ViewMaintainer,
