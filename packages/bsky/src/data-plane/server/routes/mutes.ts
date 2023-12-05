@@ -105,7 +105,5 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       listUris: lists.map((l) => l.uri),
       cursor: keyset.packFromResult(lists),
     }
-
-    throw new Error('unimplemented')
   },
 })
