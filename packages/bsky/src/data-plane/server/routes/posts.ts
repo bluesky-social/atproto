@@ -1,7 +1,8 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../gen/bsky_connect'
+import { keyBy } from '@atproto/common'
+import * as ui8 from 'uint8arrays'
 import { Database } from '../../../db'
-import { cborEncode, jsonToIpld, keyBy } from '@atproto/common'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getPosts(req) {
@@ -10,19 +11,14 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }
     const res = await db.db
       .selectFrom('record')
-      .select('json')
+      .selectAll()
       .where('uri', 'in', req.uris)
       .execute()
     const byUri = keyBy(res, 'uri')
-
-    // @TODO fix this so that it accepts undefined records
-    // @ts-ignore
-    const records: Uint8Array[] = req.uris.map((uri) => {
+    const records = req.uris.map((uri) => {
       const row = byUri[uri]
-      if (!row) {
-        return undefined
-      }
-      return cborEncode(jsonToIpld(JSON.parse(row.json)))
+      const json = row ? row.json : JSON.stringify(null)
+      return ui8.fromString(json, 'utf8')
     })
     return { records }
   },

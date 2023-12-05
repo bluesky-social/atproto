@@ -2,6 +2,7 @@ import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../gen/bsky_connect'
 import { Database } from '../../../db'
 import { TimeCidKeyset, paginate } from '../../../db/pagination'
+import { keyBy } from '@atproto/common'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActorFollowsActors(req) {
@@ -13,10 +14,12 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectFrom('follow')
       .where('follow.creator', '=', actorDid)
       .where('follow.subjectDid', 'in', targetDids)
-      .select('uri')
+      .selectAll()
       .execute()
+    const bySubject = keyBy(res, 'subjectDid')
+    const uris = targetDids.map((did) => bySubject[did]?.uri ?? '')
     return {
-      uris: res.map((row) => row.uri),
+      uris,
     }
   },
   async getFollowers(req) {
