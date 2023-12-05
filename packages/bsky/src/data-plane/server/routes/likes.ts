@@ -11,15 +11,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     let builder = db.db
       .selectFrom('like')
       .where('like.subject', '=', subjectUri)
-      .innerJoin('actor as creator', 'creator.did', 'like.creator')
-      .selectAll('creator')
-      .select([
-        'like.uri as uri',
-        'like.cid as cid',
-        'like.createdAt as createdAt',
-        'like.indexedAt as indexedAt',
-        'like.sortAt as sortAt',
-      ])
+      .selectAll('like')
 
     const keyset = new TimeCidKeyset(ref('like.sortAt'), ref('like.cid'))
     builder = paginate(builder, {
@@ -35,6 +27,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor: keyset.packFromResult(likes),
     }
   },
+
   async getLikeByActorAndSubject(req) {
     const { actorDid, subjectUri } = req
     const res = await db.db
@@ -45,6 +38,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .executeTakeFirst()
     return { uri: res?.uri }
   },
+
   async getActorLikes(req) {
     const { actorDid, limit, cursor } = req
     const { ref } = db.db.dynamic
@@ -69,6 +63,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor: keyset.packFromResult(likes),
     }
   },
+
   async getLikesCount(req) {
     const res = await db.db
       .selectFrom('post_agg')
