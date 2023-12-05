@@ -192,7 +192,7 @@ const fetchLabelsForSubjects = async (
   db: Database,
   subjects: string[],
 ): Promise<Record<string, Label[]>> => {
-  if (subjects.length < 0) {
+  if (subjects.length === 0) {
     return {}
   }
   const res = await db.db
