@@ -107,9 +107,10 @@ export class Redis {
 
   async set(key: string, val: string | number, ttlMs?: number) {
     if (ttlMs !== undefined) {
-      return this.setMulti({ [key]: val })
+      await this.driver.set(this.ns(key), val, 'PX', ttlMs)
+    } else {
+      await this.driver.set(this.ns(key), val)
     }
-    await this.driver.set(this.ns(key), val)
   }
 
   async getMulti(keys: string[]) {
@@ -124,11 +125,15 @@ export class Redis {
   }
 
   async setMulti(vals: Record<string, string | number>, ttlMs?: number) {
+    if (Object.keys(vals).length === 0) {
+      return
+    }
     let builder = this.driver.multi({ pipeline: true })
     for (const key of Object.keys(vals)) {
-      builder = builder.set(this.ns(key), vals[key])
       if (ttlMs !== undefined) {
-        builder = builder.pexpire(key, ttlMs)
+        builder = builder.set(this.ns(key), vals[key], 'PX', ttlMs)
+      } else {
+        builder = builder.set(this.ns(key), vals[key])
       }
     }
     await builder.exec()
