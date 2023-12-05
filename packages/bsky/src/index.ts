@@ -42,8 +42,6 @@ export * from './indexer'
 export * from './ingester'
 export { MigrateModerationData } from './migrate-moderation-data'
 
-// @TODO APPVIEW V2 INCOMING
-
 export class BskyAppView {
   public ctx: AppContext
   public app: express.Application
