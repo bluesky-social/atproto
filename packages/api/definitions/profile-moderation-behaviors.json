@@ -185,11 +185,14 @@
       "author": "alice",
       "labels": { "profile": ["!no-logged-out"] },
       "behaviors": {
-        "profile": { "cause": "label:!no-logged-out", "blur": true, "noOverride": true },
+        "profile": {
+          "cause": "label:!no-logged-out",
+          "blur": true,
+          "noOverride": true
+        },
         "avatar": { "blur": true, "noOverride": true }
       }
     },
-
 
     "Imperative label ('!no-logged-out') on account when logged in": {
       "cfg": "none",

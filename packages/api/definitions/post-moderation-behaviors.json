@@ -271,7 +271,11 @@
       "author": "alice",
       "labels": { "profile": ["!no-logged-out"] },
       "behaviors": {
-        "avatar": { "cause": "label:!no-logged-out", "blur": true, "noOverride": true }
+        "avatar": {
+          "cause": "label:!no-logged-out",
+          "blur": true,
+          "noOverride": true
+        }
       }
     },
     "Imperative label ('!no-logged-out') on author account when logged out": {
@@ -286,7 +290,11 @@
           "blur": true,
           "noOverride": true
         },
-        "avatar": { "cause": "label:!no-logged-out", "blur": true, "noOverride": true }
+        "avatar": {
+          "cause": "label:!no-logged-out",
+          "blur": true,
+          "noOverride": true
+        }
       }
     },
     "Imperative label ('!no-logged-out') on quoted post when logged out": {
@@ -297,7 +305,11 @@
       "labels": { "quotedPost": ["!no-logged-out"] },
       "behaviors": {
         "content": { "cause": "label:!no-logged-out", "filter": true },
-        "embed": { "cause": "label:!no-logged-out", "blur": true, "noOverride": true }
+        "embed": {
+          "cause": "label:!no-logged-out",
+          "blur": true,
+          "noOverride": true
+        }
       }
     },
     "Imperative label ('!no-logged-out') on quoted author account when logged out": {
@@ -308,7 +320,11 @@
       "labels": { "quotedAccount": ["!no-logged-out"] },
       "behaviors": {
         "content": { "cause": "label:!no-logged-out", "filter": true },
-        "embed": { "cause": "label:!no-logged-out", "blur": true, "noOverride": true }
+        "embed": {
+          "cause": "label:!no-logged-out",
+          "blur": true,
+          "noOverride": true
+        }
       }
     },
 
