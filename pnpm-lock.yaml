@@ -53,9 +53,9 @@ importers:
       esbuild-node-externals:
         specifier: ^1.5.0
         version: 1.5.0(esbuild@0.14.48)
-      esbuild-plugin-copy:
-        specifier: ^1.6.0
-        version: 1.6.0(esbuild@0.14.48)
+      esbuild-plugin-handlebars:
+        specifier: ^1.0.2
+        version: 1.0.2
       eslint:
         specifier: ^8.24.0
         version: 8.24.0
@@ -65,6 +65,9 @@ importers:
       eslint-plugin-prettier:
         specifier: ^4.2.1
         version: 4.2.1(eslint-config-prettier@8.5.0)(eslint@8.24.0)(prettier@2.7.1)
+      handlebars-jest:
+        specifier: ^1.0.0
+        version: 1.0.0
       jest:
         specifier: ^28.1.2
         version: 28.1.2(@types/node@18.0.0)(ts-node@10.8.2)
@@ -6445,6 +6448,11 @@ packages:
     engines: {node: '>=0.8'}
     dev: true
 
+  /clone@2.1.2:
+    resolution: {integrity: sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w==}
+    engines: {node: '>=0.8'}
+    dev: true
+
   /cluster-key-slot@1.1.2:
     resolution: {integrity: sha512-RMr0FhtfXemyinomL4hrWcYJxmX6deFdCxpJzhDttxgO1+bcCnkk+9drydLVDmAMG7NE6aN/fl4F7ucU/90gAA==}
     engines: {node: '>=0.10.0'}
@@ -7178,15 +7186,10 @@ packages:
     dev: true
     optional: true
 
-  /esbuild-plugin-copy@1.6.0(esbuild@0.14.48):
-    resolution: {integrity: sha512-wN1paBCoE0yRBl9ZY3ZSD6SxGE4Yfr0Em7zh2yTbJv1JaHEIR3FYYN7HU6F+j/peSaGZJNSORSGxJ5QX1a1Sgg==}
-    peerDependencies:
-      esbuild: '>= 0.14.0'
+  /esbuild-plugin-handlebars@1.0.2:
+    resolution: {integrity: sha512-2U45b8AZV0UdLrdlB5q0siV7J2FfJUeoMb+8qxTpeOmrOna09aox+YRfxUlFWS+OzK3ZDiPdvYnFzuE+YQ2hmw==}
     dependencies:
-      chalk: 4.1.2
-      esbuild: 0.14.48
-      fs-extra: 10.1.0
-      globby: 11.1.0
+      handlebars: 4.7.7
     dev: true
 
   /esbuild-sunos-64@0.14.48:
@@ -7743,15 +7746,6 @@ packages:
   /fs-constants@1.0.0:
     resolution: {integrity: sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow==}
 
-  /fs-extra@10.1.0:
-    resolution: {integrity: sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==}
-    engines: {node: '>=12'}
-    dependencies:
-      graceful-fs: 4.2.11
-      jsonfile: 6.1.0
-      universalify: 2.0.0
-    dev: true
-
   /fs-extra@7.0.1:
     resolution: {integrity: sha512-YJDaCJZEnBmcbw13fvdAM9AwNOJwOzrE4pqMqBq5nFiEqXUqHwlK4B+3pUw6JNvfSPtX05xFHtYy/1ni01eGCw==}
     engines: {node: '>=6 <7 || >=8'}
@@ -7944,6 +7938,12 @@ packages:
   /graphemer@1.4.0:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
     dev: false
+
+  /handlebars-jest@1.0.0:
+    resolution: {integrity: sha512-giA9RSHNLKOqFU2dJ3QapELUJmXb4wmQWIEPc5cYp3Sx4Nwo01PBsTWrwo28cGWC8gRg+seMVMBi7wQtcaqw3g==}
+    dependencies:
+      node-cache: 5.1.2
+    dev: true
 
   /handlebars@4.7.7:
     resolution: {integrity: sha512-aAcXm5OAfE/8IXkcZvCepKU3VzW1/39Fb5ZuqMtgI/hT8X2YgoMvBY5dLhq/cpOvw7Lk1nK/UF71aLG/ZnVYRA==}
@@ -8986,14 +8986,6 @@ packages:
       graceful-fs: 4.2.11
     dev: true
 
-  /jsonfile@6.1.0:
-    resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
-    dependencies:
-      universalify: 2.0.0
-    optionalDependencies:
-      graceful-fs: 4.2.11
-    dev: true
-
   /key-encoder@2.0.3:
     resolution: {integrity: sha512-fgBtpAGIr/Fy5/+ZLQZIPPhsZEcbSlYu/Wu96tNDFNSjSACw5lEIOFeaVdQ/iwrb8oxjlWi6wmWdH76hV6GZjg==}
     dependencies:
@@ -9419,6 +9411,13 @@ packages:
   /node-addon-api@6.1.0:
     resolution: {integrity: sha512-+eawOlIgy680F0kBzPUNFhMZGtJ1YmqM6l4+Crf4IkImjYrO/mqPwRMh352g23uIaQKFItcQ64I7KMaJxHgAVA==}
     dev: false
+
+  /node-cache@5.1.2:
+    resolution: {integrity: sha512-t1QzWwnk4sjLWaQAS8CHgOJ+RAfmHpxFWmc36IWTiWHQfs0w5JDMBS1b1ZxQteo0vVVuWJvIUKHDkkeK7vIGCg==}
+    engines: {node: '>= 8.0.0'}
+    dependencies:
+      clone: 2.1.2
+    dev: true
 
   /node-fetch@2.7.0:
     resolution: {integrity: sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==}
@@ -11199,11 +11198,6 @@ packages:
   /universalify@0.1.2:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
     engines: {node: '>= 4.0.0'}
-    dev: true
-
-  /universalify@2.0.0:
-    resolution: {integrity: sha512-hAZsKq7Yy11Zu1DE0OzWjw7nnLZmJZYTDZZyEFHZdUhV8FkH5MCfoU1XMaxXovpyW5nq5scPqq0ZDP9Zyl04oQ==}
-    engines: {node: '>= 10.0.0'}
     dev: true
 
   /unpipe@1.0.0:
