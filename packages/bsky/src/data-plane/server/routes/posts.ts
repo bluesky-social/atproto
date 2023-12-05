@@ -1,7 +1,7 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../gen/bsky_connect'
 import { Database } from '../../../db'
-import { cborEncode, jsonToIpld } from '@atproto/common'
+import { cborEncode, jsonToIpld, keyBy } from '@atproto/common'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getPosts(req) {
@@ -13,9 +13,17 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .select('json')
       .where('uri', 'in', req.uris)
       .execute()
-    const records = res.map((row) =>
-      cborEncode(jsonToIpld(JSON.parse(row.json))),
-    )
+    const byUri = keyBy(res, 'uri')
+
+    // @TODO fix this so that it accepts undefined records
+    // @ts-ignore
+    const records: Uint8Array[] = req.uris.map((uri) => {
+      const row = byUri[uri]
+      if (!row) {
+        return undefined
+      }
+      return cborEncode(jsonToIpld(JSON.parse(row.json)))
+    })
     return { records }
   },
   async getPostReplyCount(req) {
@@ -27,11 +35,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .select(['uri', 'replyCount'])
       .where('uri', 'in', req.uris)
       .execute()
-    const countByUri = res.reduce((acc, cur) => {
-      acc[cur.uri] = cur.replyCount
-      return acc
-    }, {} as Record<string, number>)
-    const counts = req.uris.map((uri) => countByUri[uri] ?? 0)
+    const byUri = keyBy(res, 'uri')
+    const counts = req.uris.map((uri) => byUri[uri]?.replyCount ?? 0)
     return { counts }
   },
 })
