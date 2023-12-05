@@ -354,9 +354,9 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>!no-logged-out</td>
   <td>
-    <code>general</code><br><strong>Requested Hidden to Logged-out Users</strong><br>This user has requested that their content only be shown to logged-in accounts.<br><br>
-    <code>on an account</code><br><strong>Sign-in Required</strong><br>This user has requested that their content only be shown to logged-in accounts.<br><br>
-    <code>on content</code><br><strong>Sign-in Required</strong><br>This user has requested that their content only be shown to logged-in accounts.<br><br>
+    <code>general</code><br><strong>Sign-in Required</strong><br>This user has requested that their account only be shown to signed-in users.<br><br>
+    <code>on an account</code><br><strong>Sign-in Required</strong><br>This user has requested that their account only be shown to signed-in users.<br><br>
+    <code>on content</code><br><strong>Sign-in Required</strong><br>This user has requested that their content only be shown to signed-in users.<br><br>
   </td>
 </tr>
 <tr>
