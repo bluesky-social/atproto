@@ -37,8 +37,8 @@ export interface ServerConfigValues {
   triagePassword?: string
   moderationPushUrl?: string
   rateLimitsEnabled: boolean
-  rateLimitsBypassKey?: string
-  rateLimitsBypassIps?: string[]
+  rateLimitBypassKey?: string
+  rateLimitBypassIps?: string[]
 }
 
 export class ServerConfig {
@@ -119,9 +119,9 @@ export class ServerConfig {
       process.env.MODERATION_PUSH_URL ||
       undefined
     const rateLimitsEnabled = process.env.RATE_LIMITS_ENABLED === 'true'
-    const rateLimitsBypassKey = process.env.RATE_LIMITS_BYPASS_KEY
-    const rateLimitsBypassIps = process.env.RATE_LIMITS_BYPASS_IPS
-      ? process.env.RATE_LIMITS_BYPASS_IPS.split(',')
+    const rateLimitBypassKey = process.env.RATE_LIMIT_BYPASS_KEY
+    const rateLimitBypassIps = process.env.RATE_LIMIT_BYPASS_IPS
+      ? process.env.RATE_LIMIT_BYPASS_IPS.split(',')
       : undefined
 
     return new ServerConfig({
@@ -154,8 +154,8 @@ export class ServerConfig {
       triagePassword,
       moderationPushUrl,
       rateLimitsEnabled,
-      rateLimitsBypassKey,
-      rateLimitsBypassIps,
+      rateLimitBypassKey,
+      rateLimitBypassIps,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -289,12 +289,12 @@ export class ServerConfig {
     return this.cfg.rateLimitsEnabled
   }
 
-  get rateLimitsBypassKey() {
-    return this.cfg.rateLimitsBypassKey
+  get rateLimitBypassKey() {
+    return this.cfg.rateLimitBypassKey
   }
 
-  get rateLimitsBypassIps() {
-    return this.cfg.rateLimitsBypassIps
+  get rateLimitBypassIps() {
+    return this.cfg.rateLimitBypassIps
   }
 }
 
