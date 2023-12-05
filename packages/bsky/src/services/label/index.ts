@@ -23,7 +23,7 @@ export class LabelService {
         ...cacheOpts,
         fetchMethod: async (subject: string) => {
           const res = await fetchLabelsForSubjects(db, [subject])
-          return res[subject] ?? null
+          return res[subject] ?? []
         },
         fetchManyMethod: (subjects: string[]) =>
           fetchLabelsForSubjects(db, subjects),
@@ -192,7 +192,7 @@ const fetchLabelsForSubjects = async (
   db: Database,
   subjects: string[],
 ): Promise<Record<string, Label[]>> => {
-  if (subjects.length < 0) {
+  if (subjects.length === 0) {
     return {}
   }
   const res = await db.db
@@ -200,7 +200,7 @@ const fetchLabelsForSubjects = async (
     .where('label.uri', 'in', subjects)
     .selectAll()
     .execute()
-  return res.reduce((acc, cur) => {
+  const labelMap = res.reduce((acc, cur) => {
     acc[cur.uri] ??= []
     acc[cur.uri].push({
       ...cur,
@@ -209,4 +209,9 @@ const fetchLabelsForSubjects = async (
     })
     return acc
   }, {} as Record<string, Label[]>)
+  // ensure we cache negatives
+  for (const subject of subjects) {
+    labelMap[subject] ??= []
+  }
+  return labelMap
 }
