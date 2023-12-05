@@ -26,12 +26,24 @@ const {
   BskyAppView,
   ViewMaintainer,
   makeAlgos,
-  PeriodicModerationActionReversal,
+  PeriodicModerationEventReversal,
 } = require('@atproto/bsky')
 
 const main = async () => {
   const env = getEnv()
   assert(env.dbPrimaryPostgresUrl, 'missing configuration for db')
+
+  if (env.enableMigrations) {
+    // separate db needed for more permissions
+    const migrateDb = new PrimaryDatabase({
+      url: env.dbMigratePostgresUrl,
+      schema: env.dbPostgresSchema,
+      poolSize: 2,
+    })
+    await migrateDb.migrateToLatestOrThrow()
+    await migrateDb.close()
+  }
+
   const db = new DatabaseCoordinator({
     schema: env.dbPostgresSchema,
     primary: {
@@ -65,6 +77,21 @@ const main = async () => {
     blobCacheLocation: env.blobCacheLocation,
   })
 
+  const redis = new Redis(
+    config.redisSentinelName
+      ? {
+          sentinel: config.redisSentinelName,
+          hosts: config.redisSentinelHosts,
+          password: config.redisPassword,
+          commandTimeout: 500,
+        }
+      : {
+          host: config.redisHost,
+          password: config.redisPassword,
+          commandTimeout: 500,
+        },
+  )
+
   const signingKey = await Secp256k1Keypair.import(env.serviceSigningKey)
 
   // configure zero, one, or both image invalidators
@@ -96,40 +123,42 @@ const main = async () => {
   const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const bsky = BskyAppView.create({
     db,
+    redis,
     signingKey,
     config: cfg,
     imgInvalidator,
     algos,
   })
   // separate db needed for more permissions
-  const migrateDb = new PrimaryDatabase({
+  const viewMaintainerDb = new PrimaryDatabase({
     url: env.dbMigratePostgresUrl,
     schema: env.dbPostgresSchema,
     poolSize: 2,
   })
-  const viewMaintainer = new ViewMaintainer(migrateDb, 1800)
+  const viewMaintainer = new ViewMaintainer(viewMaintainerDb, 1800)
   const viewMaintainerRunning = viewMaintainer.run()
 
-  const periodicModerationActionReversal = new PeriodicModerationActionReversal(
+  const periodicModerationEventReversal = new PeriodicModerationEventReversal(
     bsky.ctx,
   )
-  const periodicModerationActionReversalRunning =
-    periodicModerationActionReversal.run()
+  const periodicModerationEventReversalRunning =
+    periodicModerationEventReversal.run()
 
   await bsky.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
-    // Gracefully shutdown periodic-moderation-action-reversal before destroying bsky instance
-    periodicModerationActionReversal.destroy()
-    await periodicModerationActionReversalRunning
+    // Gracefully shutdown periodic-moderation-event-reversal before destroying bsky instance
+    periodicModerationEventReversal.destroy()
+    await periodicModerationEventReversalRunning
     await bsky.destroy()
     viewMaintainer.destroy()
     await viewMaintainerRunning
-    await migrateDb.close()
+    await viewMaintainerDb.close()
   })
 }
 
 const getEnv = () => ({
+  enableMigrations: process.env.ENABLE_MIGRATIONS === 'true',
   port: parseInt(process.env.PORT),
   version: process.env.BSKY_VERSION,
   dbMigratePostgresUrl:

@@ -11,8 +11,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.roleOrAdminService,
     handler: async ({ params, auth }) => {
       const { did, uri, blob } = params
-      const modSrvc = ctx.services.moderation(ctx.db)
-      let body: OutputSchema | null
+      let body: OutputSchema | null = null
       if (blob) {
         if (!did) {
           throw new InvalidRequestError(
@@ -20,14 +19,52 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
         ensureValidAdminAud(auth, did)
-        body = await modSrvc.getBlobTakedownState(did, CID.parse(blob))
+        const takedown = await ctx.actorStore.read(did, (store) =>
+          store.repo.blob.getBlobTakedownStatus(CID.parse(blob)),
+        )
+        if (takedown) {
+          body = {
+            subject: {
+              $type: 'com.atproto.admin.defs#repoBlobRef',
+              did: did,
+              cid: blob,
+            },
+            takedown,
+          }
+        }
       } else if (uri) {
         const parsedUri = new AtUri(uri)
         ensureValidAdminAud(auth, parsedUri.hostname)
-        body = await modSrvc.getRecordTakedownState(parsedUri)
+        const [takedown, cid] = await ctx.actorStore.read(
+          parsedUri.hostname,
+          (store) =>
+            Promise.all([
+              store.record.getRecordTakedownStatus(parsedUri),
+              store.record.getCurrentRecordCid(parsedUri),
+            ]),
+        )
+        if (cid && takedown) {
+          body = {
+            subject: {
+              $type: 'com.atproto.repo.strongRef',
+              uri: parsedUri.toString(),
+              cid: cid.toString(),
+            },
+            takedown,
+          }
+        }
       } else if (did) {
         ensureValidAdminAud(auth, did)
-        body = await modSrvc.getRepoTakedownState(did)
+        const takedown = await ctx.accountManager.getAccountTakedownStatus(did)
+        if (takedown) {
+          body = {
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: did,
+            },
+            takedown,
+          }
+        }
       } else {
         throw new InvalidRequestError('No provided subject')
       }

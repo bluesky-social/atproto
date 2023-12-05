@@ -25,7 +25,7 @@ export class AppContext {
       signingKey: Keypair
       idResolver: IdResolver
       didCache: DidRedisCache
-      redisScratch: Redis
+      redis: Redis
       backgroundQueue: BackgroundQueue
       searchAgent?: AtpAgent
       algos: MountedAlgos
@@ -74,8 +74,8 @@ export class AppContext {
     return this.opts.didCache
   }
 
-  get redisScratch(): Redis {
-    return this.opts.redisScratch
+  get redis(): Redis {
+    return this.opts.redis
   }
 
   get notifServer(): NotificationServer {

@@ -42,16 +42,12 @@ describe('user preferences', () => {
   })
 
   it('only gets preferences in app.bsky namespace.', async () => {
-    const { db, services } = network.pds.ctx
-    await db.transaction(async (tx) => {
-      await services
-        .account(tx)
-        .putPreferences(
-          sc.dids.alice,
-          [{ $type: 'com.atproto.server.defs#unknown' }],
-          'com.atproto',
-        )
-    })
+    await network.pds.ctx.actorStore.transact(sc.dids.alice, (store) =>
+      store.pref.putPreferences(
+        [{ $type: 'com.atproto.server.defs#unknown' }],
+        'com.atproto',
+      ),
+    )
     const { data } = await agent.api.app.bsky.actor.getPreferences(
       {},
       { headers: sc.getHeaders(sc.dids.alice) },
@@ -98,10 +94,10 @@ describe('user preferences', () => {
       ],
     })
     // Ensure other prefs were not clobbered
-    const { db, services } = network.pds.ctx
-    const otherPrefs = await services
-      .account(db)
-      .getPreferences(sc.dids.alice, 'com.atproto')
+    const otherPrefs = await network.pds.ctx.actorStore.read(
+      sc.dids.alice,
+      (store) => store.pref.getPreferences('com.atproto'),
+    )
     expect(otherPrefs).toEqual([{ $type: 'com.atproto.server.defs#unknown' }])
   })
 

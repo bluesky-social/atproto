@@ -1,11 +1,11 @@
 import { mapDefined } from '@atproto/common'
+import { AtUri } from '@atproto/syntax'
 import { Database } from '../../db'
 import {
   FeedViewPost,
   GeneratorView,
   PostView,
 } from '../../lexicon/types/app/bsky/feed/defs'
-import { isListRule } from '../../lexicon/types/app/bsky/feed/threadgate'
 import {
   Main as EmbedImages,
   isMain as isEmbedImages,
@@ -22,6 +22,8 @@ import {
   ViewNotFound,
   ViewRecord,
 } from '../../lexicon/types/app/bsky/embed/record'
+import { Record as PostRecord } from '../../lexicon/types/app/bsky/feed/post'
+import { isListRule } from '../../lexicon/types/app/bsky/feed/threadgate'
 import {
   PostEmbedViews,
   FeedGenInfo,
@@ -39,6 +41,7 @@ import { ImageUriBuilder } from '../../image/uri'
 import { ActorInfoMap, ActorService } from '../actor'
 import { ListInfoMap, GraphService } from '../graph'
 import { FromDb } from '../types'
+import { parseThreadGate } from './util'
 
 export class FeedViews {
   services: {
@@ -69,8 +72,11 @@ export class FeedViews {
   formatFeedGeneratorView(
     info: FeedGenInfo,
     profiles: ActorInfoMap,
-  ): GeneratorView {
+  ): GeneratorView | undefined {
     const profile = profiles[info.creator]
+    if (!profile) {
+      return undefined
+    }
     return {
       uri: info.uri,
       cid: info.cid,
@@ -101,8 +107,8 @@ export class FeedViews {
   formatFeed(
     items: FeedRow[],
     state: FeedHydrationState,
+    viewer: string | null,
     opts?: {
-      viewer?: string | null
       usePostViewUnion?: boolean
     },
   ): FeedViewPost[] {
@@ -111,7 +117,7 @@ export class FeedViews {
     const actors = this.services.actor.views.profileBasicPresentation(
       Object.keys(profiles),
       state,
-      opts,
+      viewer,
     )
     const feed: FeedViewPost[] = []
     for (const item of items) {
@@ -124,6 +130,7 @@ export class FeedViews {
         embeds,
         labels,
         lists,
+        viewer,
       )
       // skip over not found & blocked posts
       if (!post || blocks[post.uri]?.reply) {
@@ -159,6 +166,7 @@ export class FeedViews {
           labels,
           lists,
           blocks,
+          viewer,
           opts,
         )
         const replyRoot = this.formatMaybePostView(
@@ -170,6 +178,7 @@ export class FeedViews {
           labels,
           lists,
           blocks,
+          viewer,
           opts,
         )
         if (replyRoot && replyParent) {
@@ -192,6 +201,7 @@ export class FeedViews {
     embeds: PostEmbedViews,
     labels: Labels,
     lists: ListInfoMap,
+    viewer: string | null,
   ): PostView | undefined {
     const post = posts[uri]
     const gate = threadgates[uri]
@@ -217,6 +227,14 @@ export class FeedViews {
         ? {
             repost: post.requesterRepost ?? undefined,
             like: post.requesterLike ?? undefined,
+            replyDisabled: this.userReplyDisabled(
+              uri,
+              actors,
+              posts,
+              threadgates,
+              lists,
+              viewer,
+            ),
           }
         : undefined,
       labels: [...postLabels, ...postSelfLabels],
@@ -225,6 +243,50 @@ export class FeedViews {
           ? this.formatThreadgate(gate, lists)
           : undefined,
     }
+  }
+
+  userReplyDisabled(
+    uri: string,
+    actors: ActorInfoMap,
+    posts: PostInfoMap,
+    threadgates: ThreadgateInfoMap,
+    lists: ListInfoMap,
+    viewer: string | null,
+  ): boolean | undefined {
+    if (viewer === null) {
+      return undefined
+    } else if (posts[uri]?.violatesThreadGate) {
+      return true
+    }
+
+    const rootUriStr: string =
+      posts[uri]?.record?.['reply']?.['root']?.['uri'] ?? uri
+    const gate = threadgates[rootUriStr]?.record
+    if (!gate) {
+      return undefined
+    }
+    const rootPost = posts[rootUriStr]?.record as PostRecord | undefined
+    const ownerDid = new AtUri(rootUriStr).hostname
+
+    const {
+      canReply,
+      allowFollowing,
+      allowListUris = [],
+    } = parseThreadGate(viewer, ownerDid, rootPost ?? null, gate ?? null)
+
+    if (canReply) {
+      return false
+    }
+    if (allowFollowing && actors[ownerDid]?.viewer?.followedBy) {
+      return false
+    }
+    for (const listUri of allowListUris) {
+      const list = lists[listUri]
+      if (list?.viewerInList) {
+        return false
+      }
+    }
+    return true
   }
 
   formatMaybePostView(
@@ -236,6 +298,7 @@ export class FeedViews {
     labels: Labels,
     lists: ListInfoMap,
     blocks: PostBlocksMap,
+    viewer: string | null,
     opts?: {
       usePostViewUnion?: boolean
     },
@@ -248,6 +311,7 @@ export class FeedViews {
       embeds,
       labels,
       lists,
+      viewer,
     )
     if (!post) {
       if (!opts?.usePostViewUnion) return

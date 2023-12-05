@@ -1,6 +1,6 @@
 {
   "name": "@atproto/syntax",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "license": "MIT",
   "description": "Validation for atproto identifiers and formats: DID, handle, NSID, AT URI, etc",
   "keywords": [

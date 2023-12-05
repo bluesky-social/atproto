@@ -1,4 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { TimeCidKeyset, paginate } from '../../../../db/pagination'
@@ -42,7 +43,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Actor not found: ${actor}`)
       }
 
-      const feeds = feedsRes.map((row) => {
+      const feeds = mapDefined(feedsRes, (row) => {
         const feed = {
           ...row,
           viewer: viewer ? { like: row.viewerLike } : undefined,

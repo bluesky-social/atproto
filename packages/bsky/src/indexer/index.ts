@@ -44,11 +44,7 @@ export class BskyIndexer {
     imgInvalidator?: ImageInvalidator
   }): BskyIndexer {
     const { db, redis, cfg } = opts
-    const redisScratch = new Redis({
-      host: cfg.redisScratchHost,
-      password: cfg.redisScratchPassword,
-    })
-    const didCache = new DidRedisCache(redisScratch.withNamespace('did-doc'), {
+    const didCache = new DidRedisCache(redis.withNamespace('did-doc'), {
       staleTTL: cfg.didCacheStaleTTL,
       maxTTL: cfg.didCacheMaxTTL,
     })
@@ -88,7 +84,6 @@ export class BskyIndexer {
       services,
       idResolver,
       didCache,
-      redisScratch,
       backgroundQueue,
       autoMod,
     })
@@ -144,7 +139,6 @@ export class BskyIndexer {
     await this.sub.destroy()
     clearInterval(this.subStatsInterval)
     await this.ctx.didCache.destroy()
-    await this.ctx.redisScratch.destroy()
     if (!opts?.skipRedis) await this.ctx.redis.destroy()
     if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)

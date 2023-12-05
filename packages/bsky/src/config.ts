@@ -18,8 +18,10 @@ export interface ServerConfigValues {
   dbReplicaPostgresUrls?: string[]
   dbReplicaTags?: Record<string, number[]> // E.g. { timeline: [0], thread: [1] }
   dbPostgresSchema?: string
-  redisScratchHost: string
-  redisScratchPassword?: string
+  redisHost?: string // either set redis host, or both sentinel name and hosts
+  redisSentinelName?: string
+  redisSentinelHosts?: string[]
+  redisPassword?: string
   didPlcUrl: string
   didCacheStaleTTL: number
   didCacheMaxTTL: number
@@ -48,9 +50,19 @@ export class ServerConfig {
     const feedGenDid = process.env.FEED_GEN_DID
     const envPort = parseInt(process.env.PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
-    const redisScratchHost = process.env.REDIS_SCRATCH_HOST
-    assert(redisScratchHost)
-    const redisScratchPassword = process.env.REDIS_SCRATCH_PASSWORD
+    const redisHost =
+      overrides?.redisHost || process.env.REDIS_HOST || undefined
+    const redisSentinelName =
+      overrides?.redisSentinelName ||
+      process.env.REDIS_SENTINEL_NAME ||
+      undefined
+    const redisSentinelHosts =
+      overrides?.redisSentinelHosts ||
+      (process.env.REDIS_SENTINEL_HOSTS
+        ? process.env.REDIS_SENTINEL_HOSTS.split(',')
+        : [])
+    const redisPassword =
+      overrides?.redisPassword || process.env.REDIS_PASSWORD || undefined
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
     const didCacheStaleTTL = parseIntWithFallback(
       process.env.DID_CACHE_STALE_TTL,
@@ -114,8 +126,10 @@ export class ServerConfig {
       dbReplicaPostgresUrls,
       dbReplicaTags,
       dbPostgresSchema,
-      redisScratchHost,
-      redisScratchPassword,
+      redisHost,
+      redisSentinelName,
+      redisSentinelHosts,
+      redisPassword,
       didPlcUrl,
       didCacheStaleTTL,
       didCacheMaxTTL,
@@ -187,12 +201,20 @@ export class ServerConfig {
     return this.cfg.dbPostgresSchema
   }
 
-  get redisScratchHost() {
-    return this.cfg.redisScratchHost
+  get redisHost() {
+    return this.cfg.redisHost
   }
 
-  get redisScratchPassword() {
-    return this.cfg.redisScratchPassword
+  get redisSentinelName() {
+    return this.cfg.redisSentinelName
+  }
+
+  get redisSentinelHosts() {
+    return this.cfg.redisSentinelHosts
+  }
+
+  get redisPassword() {
+    return this.cfg.redisPassword
   }
 
   get didCacheStaleTTL() {

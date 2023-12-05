@@ -32,13 +32,15 @@ export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
 export { ServerConfig } from './config'
 export { Database, PrimaryDatabase, DatabaseCoordinator } from './db'
-export { PeriodicModerationActionReversal } from './db/periodic-moderation-action-reversal'
+export { PeriodicModerationEventReversal } from './db/periodic-moderation-event-reversal'
 export { Redis } from './redis'
 export { ViewMaintainer } from './db/views'
 export { AppContext } from './context'
 export { makeAlgos } from './feed-gen'
+export * from './daemon'
 export * from './indexer'
 export * from './ingester'
+export { MigrateModerationData } from './migrate-moderation-data'
 
 export class BskyAppView {
   public ctx: AppContext
@@ -54,25 +56,20 @@ export class BskyAppView {
 
   static create(opts: {
     db: DatabaseCoordinator
+    redis: Redis
     config: ServerConfig
     signingKey: Keypair
     imgInvalidator?: ImageInvalidator
     algos?: MountedAlgos
   }): BskyAppView {
-    const { db, config, signingKey, algos = {} } = opts
+    const { db, redis, config, signingKey, algos = {} } = opts
     let maybeImgInvalidator = opts.imgInvalidator
     const app = express()
     app.use(cors())
     app.use(loggerMiddleware)
     app.use(compression())
 
-    const redisScratch = new Redis({
-      host: config.redisScratchHost,
-      password: config.redisScratchPassword,
-      commandTimeout: 500,
-    })
-
-    const didCache = new DidRedisCache(redisScratch.withNamespace('did-doc'), {
+    const didCache = new DidRedisCache(redis.withNamespace('did-doc'), {
       staleTTL: config.didCacheStaleTTL,
       maxTTL: config.didCacheMaxTTL,
     })
@@ -117,7 +114,7 @@ export class BskyAppView {
       imgUriBuilder,
       imgInvalidator,
       labelCacheOpts: {
-        redis: redisScratch.withNamespace('label'),
+        redis: redis.withNamespace('label'),
         staleTTL: config.labelCacheStaleTTL,
         maxTTL: config.labelCacheMaxTTL,
       },
@@ -131,7 +128,7 @@ export class BskyAppView {
       signingKey,
       idResolver,
       didCache,
-      redisScratch,
+      redis,
       backgroundQueue,
       searchAgent,
       algos,
@@ -204,11 +201,11 @@ export class BskyAppView {
     return server
   }
 
-  async destroy(opts?: { skipDb: boolean }): Promise<void> {
+  async destroy(opts?: { skipDb: boolean; skipRedis: boolean }): Promise<void> {
     await this.ctx.didCache.destroy()
-    await this.ctx.redisScratch.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
+    if (!opts?.skipRedis) await this.ctx.redis.destroy()
     if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
   }

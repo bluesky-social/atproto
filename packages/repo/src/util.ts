@@ -1,8 +1,8 @@
+import { setImmediate } from 'node:timers/promises'
 import { CID } from 'multiformats/cid'
 import * as cbor from '@ipld/dag-cbor'
-import { CarReader } from '@ipld/car/reader'
+import { CarBlockIterator } from '@ipld/car'
 import { BlockWriter, CarWriter } from '@ipld/car/writer'
-import { Block as CarBlock } from '@ipld/car/api'
 import {
   streamToBuffer,
   verifyCidForBytes,
@@ -18,6 +18,7 @@ import { ipldToLex, lexToIpld, LexValue, RepoRecord } from '@atproto/lexicon'
 import * as crypto from '@atproto/crypto'
 import DataDiff from './data-diff'
 import {
+  CarBlock,
   Commit,
   LegacyV2Commit,
   RecordCreateDescript,
@@ -29,7 +30,6 @@ import {
   WriteOpAction,
 } from './types'
 import BlockMap from './block-map'
-import * as parse from './parse'
 import { Keypair } from '@atproto/crypto'
 import { Readable } from 'stream'
 
@@ -88,19 +88,32 @@ export const blocksToCarFile = (
   return streamToBuffer(carStream)
 }
 
-export const readCar = async (
-  bytes: Uint8Array,
+export const carToBlocks = async (
+  car: CarBlockIterator,
 ): Promise<{ roots: CID[]; blocks: BlockMap }> => {
-  const car = await CarReader.fromBytes(bytes)
   const roots = await car.getRoots()
   const blocks = new BlockMap()
-  for await (const block of verifyIncomingCarBlocks(car.blocks())) {
+  for await (const block of verifyIncomingCarBlocks(car)) {
     blocks.set(block.cid, block.bytes)
+    // break up otherwise "synchronous" work in car parsing
+    await setImmediate()
   }
   return {
     roots,
     blocks,
   }
+}
+
+export const readCar = async (
+  bytes: Uint8Array,
+): Promise<{ roots: CID[]; blocks: BlockMap }> => {
+  const car = await CarBlockIterator.fromBytes(bytes)
+  return carToBlocks(car)
+}
+
+export const readCarStream = async (stream: AsyncIterable<Uint8Array>) => {
+  const car = await CarBlockIterator.fromIterable(stream)
+  return carToBlocks(car)
 }
 
 export const readCarWithRoot = async (
@@ -119,30 +132,25 @@ export const readCarWithRoot = async (
 
 export const diffToWriteDescripts = (
   diff: DataDiff,
-  blocks: BlockMap,
 ): Promise<RecordWriteDescript[]> => {
   return Promise.all([
     ...diff.addList().map(async (add) => {
       const { collection, rkey } = parseDataKey(add.key)
-      const value = await parse.getAndParseRecord(blocks, add.cid)
       return {
         action: WriteOpAction.Create,
         collection,
         rkey,
         cid: add.cid,
-        record: value.record,
       } as RecordCreateDescript
     }),
     ...diff.updateList().map(async (upd) => {
       const { collection, rkey } = parseDataKey(upd.key)
-      const value = await parse.getAndParseRecord(blocks, upd.cid)
       return {
         action: WriteOpAction.Update,
         collection,
         rkey,
         cid: upd.cid,
         prev: upd.prev,
-        record: value.record,
       } as RecordUpdateDescript
     }),
     ...diff.deleteList().map((del) => {

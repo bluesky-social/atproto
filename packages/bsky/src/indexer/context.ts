@@ -16,7 +16,6 @@ export class IndexerContext {
       services: Services
       idResolver: IdResolver
       didCache: DidSqlCache
-      redisScratch: Redis
       backgroundQueue: BackgroundQueue
       autoMod: AutoModerator
     },
@@ -44,10 +43,6 @@ export class IndexerContext {
 
   get didCache(): DidSqlCache {
     return this.opts.didCache
-  }
-
-  get redisScratch(): Redis {
-    return this.opts.redisScratch
   }
 
   get backgroundQueue(): BackgroundQueue {

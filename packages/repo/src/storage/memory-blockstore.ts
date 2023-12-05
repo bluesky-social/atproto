@@ -10,6 +10,7 @@ export class MemoryBlockstore
 {
   blocks: BlockMap
   root: CID | null = null
+  rev: string | null = null
 
   constructor(blocks?: BlockMap) {
     super()
@@ -43,8 +44,9 @@ export class MemoryBlockstore
     this.blocks.addMap(blocks)
   }
 
-  async updateRoot(cid: CID): Promise<void> {
+  async updateRoot(cid: CID, rev: string): Promise<void> {
     this.root = cid
+    this.rev = rev
   }
 
   async applyCommit(commit: CommitData): Promise<void> {

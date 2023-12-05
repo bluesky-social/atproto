@@ -659,7 +659,9 @@ describe('Record validation', () => {
         $type: 'com.example.datetime',
         datetime: 'bad date',
       }),
-    ).toThrow('Record/datetime must be an iso8601 formatted datetime')
+    ).toThrow(
+      'Record/datetime must be an valid atproto datetime (both RFC-3339 and ISO-8601)',
+    )
   })
 
   it('Applies uri formatting constraint', () => {
