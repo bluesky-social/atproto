@@ -1,4 +1,4 @@
-import { Service } from './bsky_connect'
+import { Service } from './gen/bsky_connect'
 import { createPromiseClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-node'
 
