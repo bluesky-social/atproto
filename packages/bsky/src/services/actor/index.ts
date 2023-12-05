@@ -5,24 +5,33 @@ import { notSoftDeletedClause } from '../../db/util'
 import { ActorViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
 import { Actor } from '../../db/tables/actor'
-import { LabelCache } from '../../label-cache'
 import { TimeCidKeyset, paginate } from '../../db/pagination'
 import { SearchKeyset, getUserSearchQuery } from '../util/search'
+import { FromDb } from '../types'
+import { GraphService } from '../graph'
+import { LabelService } from '../label'
 
 export * from './types'
 
 export class ActorService {
+  views: ActorViews
+
   constructor(
     public db: Database,
     public imgUriBuilder: ImageUriBuilder,
-    public labelCache: LabelCache,
-  ) {}
-
-  static creator(imgUriBuilder: ImageUriBuilder, labelCache: LabelCache) {
-    return (db: Database) => new ActorService(db, imgUriBuilder, labelCache)
+    private graph: FromDb<GraphService>,
+    private label: FromDb<LabelService>,
+  ) {
+    this.views = new ActorViews(this.db, this.imgUriBuilder, graph, label)
   }
 
-  views = new ActorViews(this.db, this.imgUriBuilder, this.labelCache)
+  static creator(
+    imgUriBuilder: ImageUriBuilder,
+    graph: FromDb<GraphService>,
+    label: FromDb<LabelService>,
+  ) {
+    return (db: Database) => new ActorService(db, imgUriBuilder, graph, label)
+  }
 
   async getActorDid(handleOrDid: string): Promise<string | null> {
     if (handleOrDid.startsWith('did:')) {

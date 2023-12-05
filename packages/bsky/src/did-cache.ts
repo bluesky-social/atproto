@@ -1,81 +1,55 @@
 import PQueue from 'p-queue'
 import { CacheResult, DidCache, DidDocument } from '@atproto/identity'
-import { PrimaryDatabase } from './db'
-import { excluded } from './db/util'
-import { dbLogger } from './logger'
+import { cacheLogger as log } from './logger'
+import { Redis } from './redis'
 
-export class DidSqlCache implements DidCache {
-  public pQueue: PQueue | null //null during teardown
+type CacheOptions = {
+  staleTTL: number
+  maxTTL: number
+}
 
-  constructor(
-    // @TODO perhaps could use both primary and non-primary. not high enough
-    // throughput to matter right now. also may just move this over to redis before long!
-    public db: PrimaryDatabase,
-    public staleTTL: number,
-    public maxTTL: number,
-  ) {
+export class DidRedisCache implements DidCache {
+  public pQueue: PQueue | null // null during teardown
+
+  constructor(public redis: Redis, public opts: CacheOptions) {
     this.pQueue = new PQueue()
   }
 
-  async cacheDid(
-    did: string,
-    doc: DidDocument,
-    prevResult?: CacheResult,
-  ): Promise<void> {
-    if (prevResult) {
-      await this.db.db
-        .updateTable('did_cache')
-        .set({ doc, updatedAt: Date.now() })
-        .where('did', '=', did)
-        .where('updatedAt', '=', prevResult.updatedAt)
-        .execute()
-    } else {
-      await this.db.db
-        .insertInto('did_cache')
-        .values({ did, doc, updatedAt: Date.now() })
-        .onConflict((oc) =>
-          oc.column('did').doUpdateSet({
-            doc: excluded(this.db.db, 'doc'),
-            updatedAt: excluded(this.db.db, 'updatedAt'),
-          }),
-        )
-        .executeTakeFirst()
-    }
+  async cacheDid(did: string, doc: DidDocument): Promise<void> {
+    const item = JSON.stringify({
+      doc,
+      updatedAt: Date.now(),
+    })
+    await this.redis.set(did, item, this.opts.maxTTL)
   }
 
   async refreshCache(
     did: string,
     getDoc: () => Promise<DidDocument | null>,
-    prevResult?: CacheResult,
   ): Promise<void> {
     this.pQueue?.add(async () => {
       try {
         const doc = await getDoc()
         if (doc) {
-          await this.cacheDid(did, doc, prevResult)
+          await this.cacheDid(did, doc)
         } else {
           await this.clearEntry(did)
         }
       } catch (err) {
-        dbLogger.error({ did, err }, 'refreshing did cache failed')
+        log.error({ did, err }, 'refreshing did cache failed')
       }
     })
   }
 
   async checkCache(did: string): Promise<CacheResult | null> {
-    const res = await this.db.db
-      .selectFrom('did_cache')
-      .where('did', '=', did)
-      .selectAll()
-      .executeTakeFirst()
-    if (!res) return null
-
+    const got = await this.redis.get(did)
+    if (!got) return null
+    const { doc, updatedAt } = JSON.parse(got) as CacheResult
     const now = Date.now()
-    const updatedAt = new Date(res.updatedAt).getTime()
-    const expired = now > updatedAt + this.maxTTL
-    const stale = now > updatedAt + this.staleTTL
+    const expired = now > updatedAt + this.opts.maxTTL
+    const stale = now > updatedAt + this.opts.staleTTL
     return {
-      doc: res.doc,
+      doc,
       updatedAt,
       did,
       stale,
@@ -84,14 +58,11 @@ export class DidSqlCache implements DidCache {
   }
 
   async clearEntry(did: string): Promise<void> {
-    await this.db.db
-      .deleteFrom('did_cache')
-      .where('did', '=', did)
-      .executeTakeFirst()
+    await this.redis.del(did)
   }
 
   async clear(): Promise<void> {
-    await this.db.db.deleteFrom('did_cache').execute()
+    throw new Error('Not implemented for redis cache')
   }
 
   async processAll() {
@@ -107,4 +78,4 @@ export class DidSqlCache implements DidCache {
   }
 }
 
-export default DidSqlCache
+export default DidRedisCache

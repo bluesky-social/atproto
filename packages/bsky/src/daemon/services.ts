@@ -1,15 +1,17 @@
 import { PrimaryDatabase } from '../db'
 import { ActorService } from '../services/actor'
 import { ImageUriBuilder } from '../image/uri'
-import { LabelCache } from '../label-cache'
+import { GraphService } from '../services/graph'
+import { LabelService } from '../services/label'
 
 export function createServices(resources: {
   imgUriBuilder: ImageUriBuilder
-  labelCache: LabelCache
 }): Services {
-  const { imgUriBuilder, labelCache } = resources
+  const { imgUriBuilder } = resources
+  const graph = GraphService.creator(imgUriBuilder)
+  const label = LabelService.creator(null)
   return {
-    actor: ActorService.creator(imgUriBuilder, labelCache),
+    actor: ActorService.creator(imgUriBuilder, graph, label),
   }
 }
 

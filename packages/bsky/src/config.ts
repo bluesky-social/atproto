@@ -1,5 +1,11 @@
 import assert from 'assert'
-import { DAY, HOUR, parseIntWithFallback } from '@atproto/common'
+import {
+  DAY,
+  HOUR,
+  MINUTE,
+  SECOND,
+  parseIntWithFallback,
+} from '@atproto/common'
 
 export interface ServerConfigValues {
   version: string
@@ -12,9 +18,15 @@ export interface ServerConfigValues {
   dbReplicaPostgresUrls?: string[]
   dbReplicaTags?: Record<string, number[]> // E.g. { timeline: [0], thread: [1] }
   dbPostgresSchema?: string
+  redisHost?: string // either set redis host, or both sentinel name and hosts
+  redisSentinelName?: string
+  redisSentinelHosts?: string[]
+  redisPassword?: string
   didPlcUrl: string
   didCacheStaleTTL: number
   didCacheMaxTTL: number
+  labelCacheStaleTTL: number
+  labelCacheMaxTTL: number
   handleResolveNameservers?: string[]
   imgUriEndpoint?: string
   blobCacheLocation?: string
@@ -38,6 +50,19 @@ export class ServerConfig {
     const feedGenDid = process.env.FEED_GEN_DID
     const envPort = parseInt(process.env.PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
+    const redisHost =
+      overrides?.redisHost || process.env.REDIS_HOST || undefined
+    const redisSentinelName =
+      overrides?.redisSentinelName ||
+      process.env.REDIS_SENTINEL_NAME ||
+      undefined
+    const redisSentinelHosts =
+      overrides?.redisSentinelHosts ||
+      (process.env.REDIS_SENTINEL_HOSTS
+        ? process.env.REDIS_SENTINEL_HOSTS.split(',')
+        : [])
+    const redisPassword =
+      overrides?.redisPassword || process.env.REDIS_PASSWORD || undefined
     const didPlcUrl = process.env.DID_PLC_URL || 'http://localhost:2582'
     const didCacheStaleTTL = parseIntWithFallback(
       process.env.DID_CACHE_STALE_TTL,
@@ -46,6 +71,14 @@ export class ServerConfig {
     const didCacheMaxTTL = parseIntWithFallback(
       process.env.DID_CACHE_MAX_TTL,
       DAY,
+    )
+    const labelCacheStaleTTL = parseIntWithFallback(
+      process.env.LABEL_CACHE_STALE_TTL,
+      30 * SECOND,
+    )
+    const labelCacheMaxTTL = parseIntWithFallback(
+      process.env.LABEL_CACHE_MAX_TTL,
+      MINUTE,
     )
     const handleResolveNameservers = process.env.HANDLE_RESOLVE_NAMESERVERS
       ? process.env.HANDLE_RESOLVE_NAMESERVERS.split(',')
@@ -93,9 +126,15 @@ export class ServerConfig {
       dbReplicaPostgresUrls,
       dbReplicaTags,
       dbPostgresSchema,
+      redisHost,
+      redisSentinelName,
+      redisSentinelHosts,
+      redisPassword,
       didPlcUrl,
       didCacheStaleTTL,
       didCacheMaxTTL,
+      labelCacheStaleTTL,
+      labelCacheMaxTTL,
       handleResolveNameservers,
       imgUriEndpoint,
       blobCacheLocation,
@@ -162,12 +201,36 @@ export class ServerConfig {
     return this.cfg.dbPostgresSchema
   }
 
+  get redisHost() {
+    return this.cfg.redisHost
+  }
+
+  get redisSentinelName() {
+    return this.cfg.redisSentinelName
+  }
+
+  get redisSentinelHosts() {
+    return this.cfg.redisSentinelHosts
+  }
+
+  get redisPassword() {
+    return this.cfg.redisPassword
+  }
+
   get didCacheStaleTTL() {
     return this.cfg.didCacheStaleTTL
   }
 
   get didCacheMaxTTL() {
     return this.cfg.didCacheMaxTTL
+  }
+
+  get labelCacheStaleTTL() {
+    return this.cfg.labelCacheStaleTTL
+  }
+
+  get labelCacheMaxTTL() {
+    return this.cfg.labelCacheMaxTTL
   }
 
   get handleResolveNameservers() {

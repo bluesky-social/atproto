@@ -17,6 +17,7 @@ describe('admin repo search view', () => {
     sc = network.getSeedClient()
     await usersBulkSeed(sc)
     headers = network.pds.adminAuthHeaders()
+    await network.processAll()
   })
 
   afterAll(async () => {

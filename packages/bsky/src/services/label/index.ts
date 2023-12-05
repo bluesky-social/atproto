@@ -3,15 +3,36 @@ import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { Database } from '../../db'
 import { Label, isSelfLabels } from '../../lexicon/types/com/atproto/label/defs'
 import { ids } from '../../lexicon/lexicons'
-import { LabelCache } from '../../label-cache'
+import { ReadThroughCache } from '../../cache/read-through'
+import { Redis } from '../../redis'
 
 export type Labels = Record<string, Label[]>
 
-export class LabelService {
-  constructor(public db: Database, public cache: LabelCache | null) {}
+export type LabelCacheOpts = {
+  redis: Redis
+  staleTTL: number
+  maxTTL: number
+}
 
-  static creator(cache: LabelCache | null) {
-    return (db: Database) => new LabelService(db, cache)
+export class LabelService {
+  public cache: ReadThroughCache<Label[]> | null
+
+  constructor(public db: Database, cacheOpts: LabelCacheOpts | null) {
+    if (cacheOpts) {
+      this.cache = new ReadThroughCache(cacheOpts.redis, {
+        ...cacheOpts,
+        fetchMethod: async (subject: string) => {
+          const res = await fetchLabelsForSubjects(db, [subject])
+          return res[subject] ?? null
+        },
+        fetchManyMethod: (subjects: string[]) =>
+          fetchLabelsForSubjects(db, subjects),
+      })
+    }
+  }
+
+  static creator(cacheOpts: LabelCacheOpts | null) {
+    return (db: Database) => new LabelService(db, cacheOpts)
   }
 
   async formatAndCreate(
@@ -72,24 +93,19 @@ export class LabelService {
     },
   ): Promise<Labels> {
     if (subjects.length < 1) return {}
-    const res =
-      this.cache === null || opts?.skipCache
-        ? await this.db.db
-            .selectFrom('label')
-            .where('label.uri', 'in', subjects)
-            .if(!opts?.includeNeg, (qb) => qb.where('neg', '=', false))
-            .selectAll()
-            .execute()
-        : this.cache.forSubjects(subjects, opts?.includeNeg)
-    return res.reduce((acc, cur) => {
-      acc[cur.uri] ??= []
-      acc[cur.uri].push({
-        ...cur,
-        cid: cur.cid === '' ? undefined : cur.cid,
-        neg: cur.neg,
-      })
-      return acc
-    }, {} as Labels)
+    const res = this.cache
+      ? await this.cache.getMany(subjects, { revalidate: opts?.skipCache })
+      : await fetchLabelsForSubjects(this.db, subjects)
+
+    if (opts?.includeNeg) {
+      return res
+    }
+
+    const noNegs: Labels = {}
+    for (const [key, val] of Object.entries(res)) {
+      noNegs[key] = val.filter((label) => !label.neg)
+    }
+    return noNegs
   }
 
   // gets labels for any record. when did is present, combine labels for both did & profile record.
@@ -170,4 +186,27 @@ export function getSelfLabels(details: {
   return record.labels.values.map(({ val }) => {
     return { src, uri, cid, val, cts, neg: false }
   })
+}
+
+const fetchLabelsForSubjects = async (
+  db: Database,
+  subjects: string[],
+): Promise<Record<string, Label[]>> => {
+  if (subjects.length < 0) {
+    return {}
+  }
+  const res = await db.db
+    .selectFrom('label')
+    .where('label.uri', 'in', subjects)
+    .selectAll()
+    .execute()
+  return res.reduce((acc, cur) => {
+    acc[cur.uri] ??= []
+    acc[cur.uri].push({
+      ...cur,
+      cid: cur.cid === '' ? undefined : cur.cid,
+      neg: cur.neg,
+    })
+    return acc
+  }, {} as Record<string, Label[]>)
 }

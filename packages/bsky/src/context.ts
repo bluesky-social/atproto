@@ -8,11 +8,11 @@ import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import * as auth from './auth'
-import DidSqlCache from './did-cache'
+import DidRedisCache from './did-cache'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
-import { LabelCache } from './label-cache'
 import { NotificationServer } from './notifications'
+import { Redis } from './redis'
 
 export class AppContext {
   public moderationPushAgent: AtpAgent | undefined
@@ -24,8 +24,8 @@ export class AppContext {
       services: Services
       signingKey: Keypair
       idResolver: IdResolver
-      didCache: DidSqlCache
-      labelCache: LabelCache
+      didCache: DidRedisCache
+      redis: Redis
       backgroundQueue: BackgroundQueue
       searchAgent?: AtpAgent
       algos: MountedAlgos
@@ -70,12 +70,12 @@ export class AppContext {
     return this.opts.idResolver
   }
 
-  get didCache(): DidSqlCache {
+  get didCache(): DidRedisCache {
     return this.opts.didCache
   }
 
-  get labelCache(): LabelCache {
-    return this.opts.labelCache
+  get redis(): Redis {
+    return this.opts.redis
   }
 
   get notifServer(): NotificationServer {

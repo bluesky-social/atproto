@@ -77,6 +77,23 @@ const main = async () => {
     blobCacheLocation: env.blobCacheLocation,
   })
 
+  const redis = new Redis(
+    config.redisSentinelName
+      ? {
+          sentinel: config.redisSentinelName,
+          hosts: config.redisSentinelHosts,
+          password: config.redisPassword,
+          db: 1,
+          commandTimeout: 500,
+        }
+      : {
+          host: config.redisHost,
+          password: config.redisPassword,
+          db: 1,
+          commandTimeout: 500,
+        },
+  )
+
   const signingKey = await Secp256k1Keypair.import(env.serviceSigningKey)
 
   // configure zero, one, or more image invalidators
@@ -108,6 +125,7 @@ const main = async () => {
   const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const bsky = BskyAppView.create({
     db,
+    redis,
     signingKey,
     config: cfg,
     imgInvalidator,

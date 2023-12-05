@@ -11,7 +11,6 @@ import { Actor } from '../../db/tables/actor'
 import { ImageUriBuilder } from '../../image/uri'
 import { LabelService, Labels, getSelfLabels } from '../label'
 import { BlockAndMuteState, GraphService } from '../graph'
-import { LabelCache } from '../../label-cache'
 import {
   ActorInfoMap,
   ProfileDetailHydrationState,
@@ -21,17 +20,24 @@ import {
   toMapByDid,
 } from './types'
 import { ListInfoMap } from '../graph/types'
+import { FromDb } from '../types'
 
 export class ActorViews {
+  services: {
+    label: LabelService
+    graph: GraphService
+  }
+
   constructor(
     private db: Database,
     private imgUriBuilder: ImageUriBuilder,
-    private labelCache: LabelCache,
-  ) {}
-
-  services = {
-    label: LabelService.creator(this.labelCache)(this.db),
-    graph: GraphService.creator(this.imgUriBuilder)(this.db),
+    private graph: FromDb<GraphService>,
+    private label: FromDb<LabelService>,
+  ) {
+    this.services = {
+      label: label(db),
+      graph: graph(db),
+    }
   }
 
   async profiles(
