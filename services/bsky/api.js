@@ -79,31 +79,31 @@ const main = async () => {
 
   const signingKey = await Secp256k1Keypair.import(env.serviceSigningKey)
 
-  // configure zero, one, or both image invalidators
-  let imgInvalidator
-  const bunnyInvalidator = env.bunnyAccessKey
-    ? new BunnyInvalidator({
+  // configure zero, one, or more image invalidators
+  const imgInvalidators = []
+
+  if (env.bunnyAccessKey) {
+    imgInvalidators.push(
+      new BunnyInvalidator({
         accessKey: env.bunnyAccessKey,
         urlPrefix: cfg.imgUriEndpoint,
-      })
-    : undefined
-  const cfInvalidator = env.cfDistributionId
-    ? new CloudfrontInvalidator({
+      }),
+    )
+  }
+
+  if (env.cfDistributionId) {
+    imgInvalidators.push(
+      new CloudfrontInvalidator({
         distributionId: env.cfDistributionId,
         pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
-      })
-    : undefined
-
-  if (bunnyInvalidator && imgInvalidator) {
-    imgInvalidator = new MultiImageInvalidator([
-      bunnyInvalidator,
-      imgInvalidator,
-    ])
-  } else if (bunnyInvalidator) {
-    imgInvalidator = bunnyInvalidator
-  } else if (cfInvalidator) {
-    imgInvalidator = cfInvalidator
+      }),
+    )
   }
+
+  const imgInvalidator =
+    imgInvalidators.length > 1
+      ? new MultiImageInvalidator(imgInvalidators)
+      : imgInvalidators[0]
 
   const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const bsky = BskyAppView.create({
