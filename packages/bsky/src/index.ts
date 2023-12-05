@@ -151,7 +151,7 @@ export class BskyAppView {
     }
     if (config.rateLimitsEnabled) {
       const rlCreator = (opts: RateLimiterOpts) =>
-        RateLimiter.redis(redisCache.driver, {
+        RateLimiter.redis(redis.driver, {
           bypassSecret: config.rateLimitsBypassKey,
           bypassIps: config.rateLimitsBypassIps,
           ...opts,
