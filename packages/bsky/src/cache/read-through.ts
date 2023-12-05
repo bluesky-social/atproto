@@ -94,9 +94,12 @@ export class ReadThroughCache<T> {
       const val = cached[key] ? (JSON.parse(cached[key]) as CacheItem<T>) : null
       if (!val || this.isExpired(val)) {
         toFetch.push(key)
-      } else if (this.isStale(val)) {
+        continue
+      }
+      if (this.isStale(val)) {
         stale.push(key)
-      } else if (val.val) {
+      }
+      if (val.val) {
         results[key] = val.val
       }
     }
