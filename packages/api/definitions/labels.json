@@ -20,6 +20,12 @@
         "preferences": ["warn"],
         "flags": [],
         "onwarn": "blur"
+      },
+      {
+        "id": "!no-logged-out",
+        "preferences": ["hide"],
+        "flags": ["no-override", "unauthed"],
+        "onwarn": "blur"
       }
     ]
   },

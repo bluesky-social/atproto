@@ -89,6 +89,9 @@
     "porn-warn-intolerant-hide": {
       "adultContentEnabled": true,
       "settings": { "porn": "warn", "intolerant": "hide" }
+    },
+    "logged-out": {
+      "authed": false
     }
   },
   "scenarios": {
@@ -246,6 +249,105 @@
       "behaviors": {
         "embed": { "cause": "label:!warn", "blur": true }
       }
+    },
+
+    "Imperative label ('!no-logged-out') on post when logged out": {
+      "cfg": "logged-out",
+      "subject": "post",
+      "author": "alice",
+      "labels": { "post": ["!no-logged-out"] },
+      "behaviors": {
+        "content": {
+          "cause": "label:!no-logged-out",
+          "filter": true,
+          "blur": true,
+          "noOverride": true
+        }
+      }
+    },
+    "Imperative label ('!no-logged-out') on author profile when logged out": {
+      "cfg": "logged-out",
+      "subject": "post",
+      "author": "alice",
+      "labels": { "profile": ["!no-logged-out"] },
+      "behaviors": {
+        "avatar": { "cause": "label:!no-logged-out", "blur": true, "noOverride": true }
+      }
+    },
+    "Imperative label ('!no-logged-out') on author account when logged out": {
+      "cfg": "logged-out",
+      "subject": "post",
+      "author": "alice",
+      "labels": { "account": ["!no-logged-out"] },
+      "behaviors": {
+        "content": {
+          "cause": "label:!no-logged-out",
+          "filter": true,
+          "blur": true,
+          "noOverride": true
+        },
+        "avatar": { "cause": "label:!no-logged-out", "blur": true, "noOverride": true }
+      }
+    },
+    "Imperative label ('!no-logged-out') on quoted post when logged out": {
+      "cfg": "logged-out",
+      "subject": "post",
+      "author": "alice",
+      "quoteAuthor": "alice",
+      "labels": { "quotedPost": ["!no-logged-out"] },
+      "behaviors": {
+        "content": { "cause": "label:!no-logged-out", "filter": true },
+        "embed": { "cause": "label:!no-logged-out", "blur": true, "noOverride": true }
+      }
+    },
+    "Imperative label ('!no-logged-out') on quoted author account when logged out": {
+      "cfg": "logged-out",
+      "subject": "post",
+      "author": "alice",
+      "quoteAuthor": "alice",
+      "labels": { "quotedAccount": ["!no-logged-out"] },
+      "behaviors": {
+        "content": { "cause": "label:!no-logged-out", "filter": true },
+        "embed": { "cause": "label:!no-logged-out", "blur": true, "noOverride": true }
+      }
+    },
+
+    "Imperative label ('!no-logged-out') on post when logged in": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "alice",
+      "labels": { "post": ["!no-logged-out"] },
+      "behaviors": {}
+    },
+    "Imperative label ('!no-logged-out') on author profile when logged in": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "alice",
+      "labels": { "profile": ["!no-logged-out"] },
+      "behaviors": {}
+    },
+    "Imperative label ('!no-logged-out') on author account when logged in": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "alice",
+      "labels": { "account": ["!no-logged-out"] },
+      "behaviors": {}
+    },
+    "Imperative label ('!no-logged-out') on quoted post when logged in": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "alice",
+      "quoteAuthor": "alice",
+      "labels": { "quotedPost": ["!no-logged-out"] },
+      "behaviors": {}
+    },
+    "Imperative label ('!no-logged-out') on quoted author account when logged in": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "alice",
+      "quoteAuthor": "alice",
+      "labels": { "quotedAccount": ["!no-logged-out"] },
+      "behaviors": {}
     },
 
     "Blur label ('intolerant') on post (hide)": {

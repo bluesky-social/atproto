@@ -11,7 +11,7 @@ import {
 export type Label = ComAtprotoLabelDefs.Label
 
 export type LabelPreference = 'ignore' | 'warn' | 'hide'
-export type LabelDefinitionFlag = 'no-override' | 'adult'
+export type LabelDefinitionFlag = 'no-override' | 'adult' | 'unauthed'
 export type LabelDefinitionOnWarnBehavior =
   | 'blur'
   | 'blur-media'

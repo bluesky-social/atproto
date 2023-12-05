@@ -41,6 +41,20 @@
       "description": "This content has received a general warning from moderators."
     }
   },
+  "!no-logged-out": {
+    "settings": {
+      "name": "Requested Hidden to Logged-out Users",
+      "description": "This user has requested that their content only be shown to logged-in accounts."
+    },
+    "account": {
+      "name": "Sign-in Required",
+      "description": "This user has requested that their content only be shown to logged-in accounts."
+    },
+    "content": {
+      "name": "Sign-in Required",
+      "description": "This user has requested that their content only be shown to logged-in accounts."
+    }
+  },
   "dmca-violation": {
     "settings": {
       "name": "Copyright Violation",
