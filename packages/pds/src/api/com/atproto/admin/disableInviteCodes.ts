@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
           'Account invites are managed by the entryway service',
         )
       }
-      if (!auth.credentials.admin) {
+      if (!auth.credentials.moderator) {
         throw new AuthRequiredError('Insufficient privileges')
       }
       const { codes = [], accounts = [] } = input.body
