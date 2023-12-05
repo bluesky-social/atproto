@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/pds",
+  "name": "@atproto/entryway",
   "version": "0.3.0-entryway.2",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",

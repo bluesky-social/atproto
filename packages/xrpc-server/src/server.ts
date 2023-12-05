@@ -173,7 +173,7 @@ export class Server {
     this.routes[verb](
       `/xrpc/${nsid}`,
       ...middleware,
-      this.createHandler(nsid, def, config.handler),
+      this.createHandler(nsid, def, config),
     )
   }
 
@@ -206,10 +206,13 @@ export class Server {
   createHandler(
     nsid: string,
     def: LexXrpcQuery | LexXrpcProcedure,
-    handler: XRPCHandler,
+    routeCfg: XRPCHandlerConfig,
   ): RequestHandler {
+    const routeOpts = {
+      blobLimit: routeCfg.opts?.blobLimit ?? this.options.payload?.blobLimit,
+    }
     const validateReqInput = (req: express.Request) =>
-      validateInput(nsid, def, req, this.options, this.lex)
+      validateInput(nsid, def, req, routeOpts, this.lex)
     const validateResOutput =
       this.options.validateResponse === false
         ? (output?: HandlerSuccess) => output
@@ -254,7 +257,7 @@ export class Server {
         }
 
         // run the handler
-        const outputUnvalidated = await handler(reqCtx)
+        const outputUnvalidated = await routeCfg.handler(reqCtx)
 
         if (isHandlerError(outputUnvalidated)) {
           throw XRPCError.fromError(outputUnvalidated)

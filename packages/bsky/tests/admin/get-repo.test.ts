@@ -97,9 +97,11 @@ describe('admin get repo view', () => {
     expect(beforeEmailVerification.emailConfirmedAt).toBeUndefined()
     const timestampBeforeVerification = Date.now()
     const bobsAccount = sc.accounts[sc.dids.bob]
-    const verificationToken = await network.pds.ctx.services
-      .account(network.pds.ctx.db)
-      .createEmailToken(sc.dids.bob, 'confirm_email')
+    const verificationToken =
+      await network.pds.ctx.accountManager.createEmailToken(
+        sc.dids.bob,
+        'confirm_email',
+      )
     await agent.api.com.atproto.server.confirmEmail(
       { email: bobsAccount.email, token: verificationToken },
       {

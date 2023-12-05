@@ -106,11 +106,15 @@ describe('takedowner', () => {
       .executeTakeFirst()
     expect(record?.takedownId).toBeGreaterThan(0)
 
-    const recordPds = await network.pds.ctx.db.db
-      .selectFrom('record')
-      .where('uri', '=', post.ref.uriStr)
-      .select('takedownRef')
-      .executeTakeFirst()
+    const recordPds = await network.pds.ctx.actorStore.read(
+      post.ref.uri.hostname,
+      (store) =>
+        store.db.db
+          .selectFrom('record')
+          .where('uri', '=', post.ref.uriStr)
+          .select('takedownRef')
+          .executeTakeFirst(),
+    )
     expect(recordPds?.takedownRef).toEqual(takedownEvent.id.toString())
 
     expect(testInvalidator.invalidated.length).toBe(1)
@@ -162,11 +166,13 @@ describe('takedowner', () => {
       .executeTakeFirst()
     expect(record?.takedownId).toBeGreaterThan(0)
 
-    const recordPds = await network.pds.ctx.db.db
-      .selectFrom('record')
-      .where('uri', '=', res.data.uri)
-      .select('takedownRef')
-      .executeTakeFirst()
+    const recordPds = await network.pds.ctx.actorStore.read(alice, (store) =>
+      store.db.db
+        .selectFrom('record')
+        .where('uri', '=', res.data.uri)
+        .select('takedownRef')
+        .executeTakeFirst(),
+    )
     expect(recordPds?.takedownRef).toEqual(takedownEvent.id.toString())
 
     expect(testInvalidator.invalidated.length).toBe(2)

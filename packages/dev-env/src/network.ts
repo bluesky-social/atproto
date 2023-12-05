@@ -45,9 +45,6 @@ export class TestNetwork extends TestNetworkNoAppView {
     })
     const pds = await TestPds.create({
       port: pdsPort,
-      dbPostgresUrl,
-      dbPostgresSchema,
-      dbPostgresPoolSize: 5,
       didPlcUrl: plc.url,
       bskyAppViewUrl: bsky.url,
       bskyAppViewDid: bsky.ctx.cfg.serverDid,
@@ -62,26 +59,17 @@ export class TestNetwork extends TestNetworkNoAppView {
 
   async processFullSubscription(timeout = 5000) {
     const sub = this.bsky.indexer.sub
-    const { db } = this.pds.ctx.db
     const start = Date.now()
+    const lastSeq = await this.pds.ctx.sequencer.curr()
+    if (!lastSeq) return
     while (Date.now() - start < timeout) {
-      await wait(50)
-      if (!this.pds.ctx.sequencerLeader) {
-        throw new Error('Sequencer leader not configured on the pds')
-      }
-      const caughtUp = await this.pds.ctx.sequencerLeader.isCaughtUp()
-      if (!caughtUp) continue
-      const { lastSeq } = await db
-        .selectFrom('repo_seq')
-        .where('seq', 'is not', null)
-        .select(db.fn.max('repo_seq.seq').as('lastSeq'))
-        .executeTakeFirstOrThrow()
-      const { cursor } = sub.partitions.get(0)
-      if (cursor === lastSeq) {
+      const partitionState = sub.partitions.get(0)
+      if (partitionState?.cursor >= lastSeq) {
         // has seen last seq, just need to wait for it to finish processing
         await sub.repoQueue.main.onIdle()
         return
       }
+      await wait(5)
     }
     throw new Error(`Sequence was not processed within ${timeout}ms`)
   }
@@ -93,10 +81,11 @@ export class TestNetwork extends TestNetworkNoAppView {
   }
 
   async serviceHeaders(did: string, aud?: string) {
+    const keypair = await this.pds.ctx.actorStore.keypair(did)
     const jwt = await createServiceJwt({
       iss: did,
       aud: aud ?? this.bsky.ctx.cfg.serverDid,
-      keypair: this.pds.ctx.repoSigningKey,
+      keypair,
     })
     return { authorization: `Bearer ${jwt}` }
   }

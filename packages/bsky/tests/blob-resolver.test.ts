@@ -77,8 +77,10 @@ describe('blob resolver', () => {
   })
 
   it('fails on blob with bad signature check.', async () => {
-    await network.pds.ctx.blobstore.delete(fileCid)
-    await network.pds.ctx.blobstore.putPermanent(fileCid, randomBytes(100))
+    await network.pds.ctx.blobstore(fileDid).delete(fileCid)
+    await network.pds.ctx
+      .blobstore(fileDid)
+      .putPermanent(fileCid, randomBytes(100))
     const tryGetBlob = client.get(`/blob/${fileDid}/${fileCid.toString()}`)
     await expect(tryGetBlob).rejects.toThrow(
       'maxContentLength size of -1 exceeded',

@@ -40,26 +40,25 @@ describe('labeler', () => {
     await usersSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
-    const repoSvc = pdsCtx.services.repo(pdsCtx.db)
-    const storeBlob = async (bytes: Uint8Array) => {
-      const blobRef = await repoSvc.blobs.addUntetheredBlob(
-        alice,
-        'image/jpeg',
-        Readable.from([bytes], { objectMode: false }),
-      )
-      const preparedBlobRef = {
-        cid: blobRef.ref,
-        mimeType: 'image/jpeg',
-        constraints: {},
-      }
-      await repoSvc.blobs.verifyBlobAndMakePermanent(alice, preparedBlobRef)
-      await repoSvc.blobs.associateBlob(
-        preparedBlobRef,
-        postUri(),
-        TID.nextStr(),
-        alice,
-      )
-      return blobRef
+    const storeBlob = (bytes: Uint8Array) => {
+      return pdsCtx.actorStore.transact(alice, async (store) => {
+        const blobRef = await store.repo.blob.addUntetheredBlob(
+          'image/jpeg',
+          Readable.from([bytes], { objectMode: false }),
+        )
+        const preparedBlobRef = {
+          cid: blobRef.ref,
+          mimeType: 'image/jpeg',
+          constraints: {},
+        }
+        await store.repo.blob.verifyBlobAndMakePermanent(preparedBlobRef)
+        await store.repo.blob.associateBlob(
+          preparedBlobRef,
+          postUri(),
+          TID.nextStr(),
+        )
+        return blobRef
+      })
     }
     const bytes1 = new Uint8Array([1, 2, 3, 4])
     const bytes2 = new Uint8Array([5, 6, 7, 8])

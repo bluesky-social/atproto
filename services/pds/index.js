@@ -1,14 +1,28 @@
 'use strict' /* eslint-disable */
 
-require('dd-trace') // Only works with commonjs
+const { registerInstrumentations } = require('@opentelemetry/instrumentation')
+
+const {
+  BetterSqlite3Instrumentation,
+} = require('opentelemetry-plugin-better-sqlite3')
+
+const { TracerProvider } = require('dd-trace') // Only works with commonjs
   .init({ logInjection: true })
-  .tracer.use('express', {
+  .use('express', {
     hooks: {
       request: (span, req) => {
         maintainXrpcResource(span, req)
       },
     },
   })
+
+const tracer = new TracerProvider()
+tracer.register()
+
+registerInstrumentations({
+  tracerProvider: tracer,
+  instrumentations: [new BetterSqlite3Instrumentation()],
+})
 
 // Tracer code above must come before anything else
 const path = require('path')
@@ -18,7 +32,6 @@ const {
   envToSecrets,
   readEnv,
   httpLogger,
-  PeriodicModerationActionReversal,
 } = require('@atproto/pds')
 const pkg = require('@atproto/pds/package.json')
 
@@ -28,16 +41,6 @@ const main = async () => {
   const cfg = envToCfg(env)
   const secrets = envToSecrets(env)
   const pds = await PDS.create(cfg, secrets)
-
-  // If the PDS is configured to proxy moderation, this will be running on appview instead of pds.
-  // Also don't run this on the sequencer leader, which may not be configured regarding moderation proxying at all.
-  const periodicModerationActionReversal =
-    pds.ctx.cfg.bskyAppView.proxyModeration ||
-    pds.ctx.cfg.sequencerLeaderEnabled
-      ? null
-      : new PeriodicModerationActionReversal(pds.ctx)
-  const periodicModerationActionReversalRunning =
-    periodicModerationActionReversal?.run()
 
   await pds.start()
 

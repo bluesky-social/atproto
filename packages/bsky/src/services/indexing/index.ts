@@ -7,6 +7,7 @@ import {
   verifyRepo,
   Commit,
   VerifiedRepo,
+  getAndParseRecord,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { IdResolver, getPds } from '@atproto/identity'
@@ -201,10 +202,11 @@ export class IndexingService {
           if (op.op === 'delete') {
             await this.deleteRecord(uri)
           } else {
+            const parsed = await getAndParseRecord(blocks, cid)
             await this.indexRecord(
               uri,
               cid,
-              op.value,
+              parsed.record,
               op.op === 'create' ? WriteOpAction.Create : WriteOpAction.Update,
               now,
             )
@@ -389,19 +391,15 @@ type UriAndCid = {
   cid: CID
 }
 
-type RecordDescript = UriAndCid & {
-  value: unknown
-}
-
 type IndexOp =
   | ({
       op: 'create' | 'update'
-    } & RecordDescript)
+    } & UriAndCid)
   | ({ op: 'delete' } & UriAndCid)
 
 const findDiffFromCheckout = (
   curr: Record<string, UriAndCid>,
-  checkout: Record<string, RecordDescript>,
+  checkout: Record<string, UriAndCid>,
 ): IndexOp[] => {
   const ops: IndexOp[] = []
   for (const uri of Object.keys(checkout)) {
@@ -428,14 +426,13 @@ const findDiffFromCheckout = (
 const formatCheckout = (
   did: string,
   verifiedRepo: VerifiedRepo,
-): Record<string, RecordDescript> => {
-  const records: Record<string, RecordDescript> = {}
+): Record<string, UriAndCid> => {
+  const records: Record<string, UriAndCid> = {}
   for (const create of verifiedRepo.creates) {
     const uri = AtUri.make(did, create.collection, create.rkey)
     records[uri.toString()] = {
       uri,
       cid: create.cid,
-      value: create.record,
     }
   }
   return records

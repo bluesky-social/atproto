@@ -16,6 +16,7 @@ import log from './logger'
 import BlockMap from './block-map'
 import { ReadableRepo } from './readable-repo'
 import * as util from './util'
+import CidSet from './cid-set'
 
 type Params = {
   storage: RepoStorage
@@ -186,6 +187,34 @@ export class Repo extends ReadableRepo {
   ): Promise<Repo> {
     const commit = await this.formatCommit(toWrite, keypair)
     return this.applyCommit(commit)
+  }
+
+  async formatResignCommit(rev: string, keypair: crypto.Keypair) {
+    const commit = await util.signCommit(
+      {
+        did: this.did,
+        version: 3,
+        rev,
+        prev: null, // added for backwards compatibility with v2
+        data: this.commit.data,
+      },
+      keypair,
+    )
+    const newBlocks = new BlockMap()
+    const commitCid = await newBlocks.add(commit)
+    return {
+      cid: commitCid,
+      rev,
+      since: null,
+      prev: null,
+      newBlocks,
+      removedCids: new CidSet([this.cid]),
+    }
+  }
+
+  async resignCommit(rev: string, keypair: crypto.Keypair) {
+    const formatted = await this.formatResignCommit(rev, keypair)
+    return this.applyCommit(formatted)
   }
 }
 
