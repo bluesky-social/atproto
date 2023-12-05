@@ -44,7 +44,6 @@ export class TestBsky {
       didCacheMaxTTL: DAY,
       labelCacheStaleTTL: 30 * SECOND,
       labelCacheMaxTTL: MINUTE,
-      redisScratchHost: cfg.redisHost,
       ...cfg,
       // Each test suite gets its own lock id for the repo subscription
       adminPassword: ADMIN_PASSWORD,
@@ -76,24 +75,30 @@ export class TestBsky {
     }
     await migrationDb.close()
 
+    const ns = cfg.dbPostgresSchema
+      ? await randomIntFromSeed(cfg.dbPostgresSchema, 1000000)
+      : undefined
+    assert(config.redisHost)
+    const redis = new bsky.Redis({
+      host: config.redisHost,
+      namespace: `ns${ns}`,
+    })
+
     // api server
     const server = bsky.BskyAppView.create({
       db,
+      redis,
       config,
       algos: cfg.algos,
       imgInvalidator: cfg.imgInvalidator,
       signingKey: serviceKeypair,
     })
     // indexer
-    const ns = cfg.dbPostgresSchema
-      ? await randomIntFromSeed(cfg.dbPostgresSchema, 1000000)
-      : undefined
     const indexerCfg = new bsky.IndexerConfig({
       version: '0.0.0',
       didCacheStaleTTL: HOUR,
       didCacheMaxTTL: DAY,
       labelerDid: 'did:example:labeler',
-      redisScratchHost: cfg.redisHost,
       redisHost: cfg.redisHost,
       dbPostgresUrl: cfg.dbPrimaryPostgresUrl,
       dbPostgresSchema: cfg.dbPostgresSchema,
@@ -112,14 +117,10 @@ export class TestBsky {
       ...(cfg.indexer ?? {}),
     })
     assert(indexerCfg.redisHost)
-    const indexerRedis = new bsky.Redis({
-      host: indexerCfg.redisHost,
-      namespace: indexerCfg.indexerNamespace,
-    })
     const indexer = bsky.BskyIndexer.create({
       cfg: indexerCfg,
       db: db.getPrimary(),
-      redis: indexerRedis,
+      redis,
       imgInvalidator: cfg.imgInvalidator,
     })
     // ingester
@@ -190,9 +191,9 @@ export class TestBsky {
   }
 
   async close() {
-    await this.server.destroy({ skipDb: true })
+    await this.server.destroy({ skipDb: true, skipRedis: true })
     await this.ingester.destroy({ skipDb: true })
-    await this.indexer.destroy() // closes shared db
+    await this.indexer.destroy() // closes shared db & redis
   }
 }
 
@@ -244,7 +245,6 @@ export async function getIndexers(
     didCacheMaxTTL: DAY,
     labelerDid: 'did:example:labeler',
     labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
-    redisScratchHost: process.env.REDIS_HOST || '',
     redisHost: process.env.REDIS_HOST || '',
     dbPostgresUrl: process.env.DB_POSTGRES_URL || '',
     dbPostgresSchema: `appview_${name}`,

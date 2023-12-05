@@ -4,7 +4,6 @@ import { DaemonConfig } from './config'
 import { DaemonContext } from './context'
 import { createServices } from './services'
 import { ImageUriBuilder } from '../image/uri'
-import { LabelCache } from '../label-cache'
 import { NotificationsDaemon } from './notifications'
 import logger from './logger'
 
@@ -28,10 +27,8 @@ export class BskyDaemon {
   static create(opts: { db: PrimaryDatabase; cfg: DaemonConfig }): BskyDaemon {
     const { db, cfg } = opts
     const imgUriBuilder = new ImageUriBuilder('https://daemon.invalid') // will not be used by daemon
-    const labelCache = new LabelCache(db)
     const services = createServices({
       imgUriBuilder,
-      labelCache,
     })
     const ctx = new DaemonContext({
       db,
