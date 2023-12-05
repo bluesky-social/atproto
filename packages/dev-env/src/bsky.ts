@@ -79,14 +79,16 @@ export class TestBsky {
       ? await randomIntFromSeed(cfg.dbPostgresSchema, 1000000)
       : undefined
     assert(config.redisHost)
-    const redis = new bsky.Redis({
+    const redisCache = new bsky.Redis({
       host: config.redisHost,
+      namespace: `ns${ns}`,
+      db: 1,
     })
 
     // api server
     const server = bsky.BskyAppView.create({
       db,
-      redis,
+      redis: redisCache,
       config,
       algos: cfg.algos,
       imgInvalidator: cfg.imgInvalidator,
@@ -125,6 +127,7 @@ export class TestBsky {
       cfg: indexerCfg,
       db: db.getPrimary(),
       redis: indexerRedis,
+      redisCache,
       imgInvalidator: cfg.imgInvalidator,
     })
     // ingester
@@ -195,7 +198,7 @@ export class TestBsky {
   }
 
   async close() {
-    await this.server.destroy({ skipDb: true, skipRedis: false })
+    await this.server.destroy({ skipDb: true, skipRedis: true })
     await this.ingester.destroy({ skipDb: true })
     await this.indexer.destroy() // closes shared db & redis
   }
@@ -270,6 +273,12 @@ export async function getIndexers(
     host: baseCfg.redisHost,
     namespace: baseCfg.indexerNamespace,
   })
+  const redisCache = new bsky.Redis({
+    host: baseCfg.redisHost,
+    namespace: baseCfg.indexerNamespace,
+    db: 1,
+  })
+
   const indexers = await Promise.all(
     opts.partitionIdsByIndexer.map(async (indexerPartitionIds) => {
       const cfg = new bsky.IndexerConfig({
@@ -278,7 +287,7 @@ export async function getIndexers(
         indexerSubLockId: uniqueLockId(),
         indexerPort: await getPort(),
       })
-      return bsky.BskyIndexer.create({ cfg, db, redis })
+      return bsky.BskyIndexer.create({ cfg, db, redis, redisCache })
     }),
   )
   await db.migrateToLatestOrThrow()

@@ -12,6 +12,7 @@ export class IndexerContext {
     private opts: {
       db: PrimaryDatabase
       redis: Redis
+      redisCache: Redis
       cfg: IndexerConfig
       services: Services
       idResolver: IdResolver
@@ -27,6 +28,10 @@ export class IndexerContext {
 
   get redis(): Redis {
     return this.opts.redis
+  }
+
+  get redisCache(): Redis {
+    return this.opts.redisCache
   }
 
   get cfg(): IndexerConfig {

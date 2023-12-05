@@ -83,11 +83,13 @@ const main = async () => {
           sentinel: config.redisSentinelName,
           hosts: config.redisSentinelHosts,
           password: config.redisPassword,
+          db: 1,
           commandTimeout: 500,
         }
       : {
           host: config.redisHost,
           password: config.redisPassword,
+          db: 1,
           commandTimeout: 500,
         },
   )

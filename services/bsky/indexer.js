@@ -63,9 +63,26 @@ const main = async () => {
           password: cfg.redisPassword,
         },
   )
+
+  const redisCache = new Redis(
+    cfg.redisSentinelName
+      ? {
+          sentinel: cfg.redisSentinelName,
+          hosts: cfg.redisSentinelHosts,
+          password: cfg.redisPassword,
+          db: 1,
+        }
+      : {
+          host: cfg.redisHost,
+          password: cfg.redisPassword,
+          db: 1,
+        },
+  )
+
   const indexer = BskyIndexer.create({
     db,
     redis,
+    redisCache,
     cfg,
     imgInvalidator,
   })
