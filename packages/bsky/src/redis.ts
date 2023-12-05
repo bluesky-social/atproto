@@ -125,6 +125,9 @@ export class Redis {
   }
 
   async setMulti(vals: Record<string, string | number>, ttlMs?: number) {
+    if (Object.keys(vals).length === 0) {
+      return
+    }
     let builder = this.driver.multi({ pipeline: true })
     for (const key of Object.keys(vals)) {
       if (ttlMs !== undefined) {
