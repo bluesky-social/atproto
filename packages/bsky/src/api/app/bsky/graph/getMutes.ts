@@ -1,5 +1,5 @@
 import { Server } from '../../../../lexicon'
-import { paginate, TimeCidKeyset } from '../../../../db/pagination'
+import { CreatedAtDidKeyset, paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { notSoftDeletedClause } from '../../../../db/util'
 
@@ -43,13 +43,4 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
-}
-
-export class CreatedAtDidKeyset extends TimeCidKeyset<{
-  createdAt: string
-  did: string // dids are treated identically to cids in TimeCidKeyset
-}> {
-  labelResult(result: { createdAt: string; did: string }) {
-    return { primary: result.createdAt, secondary: result.did }
-  }
 }
