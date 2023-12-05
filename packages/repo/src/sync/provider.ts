@@ -3,7 +3,7 @@ import { BlockWriter } from '@ipld/car/writer'
 import { CID } from 'multiformats/cid'
 import CidSet from '../cid-set'
 import { MissingBlocksError } from '../error'
-import { RepoStorage } from '../storage'
+import { ReadableBlockstore, RepoStorage } from '../storage'
 import * as util from '../util'
 import { MST } from '../mst'
 
@@ -26,7 +26,7 @@ export const getFullRepo = (
 // -------------
 
 export const getRecords = (
-  storage: RepoStorage,
+  storage: ReadableBlockstore,
   commitCid: CID,
   paths: RecordPath[],
 ): AsyncIterable<Uint8Array> => {

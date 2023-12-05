@@ -8,6 +8,7 @@ import {
 import { schemas } from './lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
+import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
@@ -76,6 +77,9 @@ import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
+import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
+import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
+import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -143,6 +147,7 @@ import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecce
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
+export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 export * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 export * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
@@ -211,6 +216,9 @@ export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
+export * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
+export * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
+export * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 export * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -364,6 +372,17 @@ export class AdminNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  deleteAccount(
+    data?: ComAtprotoAdminDeleteAccount.InputSchema,
+    opts?: ComAtprotoAdminDeleteAccount.CallOptions,
+  ): Promise<ComAtprotoAdminDeleteAccount.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.deleteAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminDeleteAccount.toKnownErr(e)
+      })
   }
 
   disableAccountInvites(
@@ -1106,6 +1125,39 @@ export class TempNS {
       .call('com.atproto.temp.fetchLabels', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoTempFetchLabels.toKnownErr(e)
+      })
+  }
+
+  importRepo(
+    data?: ComAtprotoTempImportRepo.InputSchema,
+    opts?: ComAtprotoTempImportRepo.CallOptions,
+  ): Promise<ComAtprotoTempImportRepo.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.importRepo', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoTempImportRepo.toKnownErr(e)
+      })
+  }
+
+  pushBlob(
+    data?: ComAtprotoTempPushBlob.InputSchema,
+    opts?: ComAtprotoTempPushBlob.CallOptions,
+  ): Promise<ComAtprotoTempPushBlob.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.pushBlob', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoTempPushBlob.toKnownErr(e)
+      })
+  }
+
+  transferAccount(
+    data?: ComAtprotoTempTransferAccount.InputSchema,
+    opts?: ComAtprotoTempTransferAccount.CallOptions,
+  ): Promise<ComAtprotoTempTransferAccount.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.transferAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoTempTransferAccount.toKnownErr(e)
       })
   }
 }

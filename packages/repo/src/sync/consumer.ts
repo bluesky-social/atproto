@@ -23,8 +23,9 @@ export const verifyRepo = async (
   head: CID,
   did?: string,
   signingKey?: string,
+  opts?: { ensureLeaves?: boolean },
 ): Promise<VerifiedRepo> => {
-  const diff = await verifyDiff(null, blocks, head, did, signingKey)
+  const diff = await verifyDiff(null, blocks, head, did, signingKey, opts)
   const creates = util.ensureCreates(diff.writes)
   return {
     creates,
@@ -37,9 +38,10 @@ export const verifyDiffCar = async (
   carBytes: Uint8Array,
   did?: string,
   signingKey?: string,
+  opts?: { ensureLeaves?: boolean },
 ): Promise<VerifiedDiff> => {
   const car = await util.readCarWithRoot(carBytes)
-  return verifyDiff(repo, car.blocks, car.root, did, signingKey)
+  return verifyDiff(repo, car.blocks, car.root, did, signingKey, opts)
 }
 
 export const verifyDiff = async (
@@ -48,7 +50,9 @@ export const verifyDiff = async (
   updateRoot: CID,
   did?: string,
   signingKey?: string,
+  opts?: { ensureLeaves?: boolean },
 ): Promise<VerifiedDiff> => {
+  const { ensureLeaves = true } = opts ?? {}
   const stagedStorage = new MemoryBlockstore(updateBlocks)
   const updateStorage = repo
     ? new SyncStorage(stagedStorage, repo.storage)
@@ -60,10 +64,10 @@ export const verifyDiff = async (
     signingKey,
   )
   const diff = await DataDiff.of(updated.data, repo?.data ?? null)
-  const writes = await util.diffToWriteDescripts(diff, updateBlocks)
+  const writes = await util.diffToWriteDescripts(diff)
   const newBlocks = diff.newMstBlocks
   const leaves = updateBlocks.getMany(diff.newLeafCids.toList())
-  if (leaves.missing.length > 0) {
+  if (leaves.missing.length > 0 && ensureLeaves) {
     throw new Error(`missing leaf blocks: ${leaves.missing}`)
   }
   newBlocks.addMap(leaves.blocks)

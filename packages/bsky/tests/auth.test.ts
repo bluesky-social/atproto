@@ -36,7 +36,7 @@ describe('auth', () => {
         { headers: { authorization: `Bearer ${jwt}` } },
       )
     }
-    const origSigningKey = network.pds.ctx.repoSigningKey
+    const origSigningKey = await network.pds.ctx.actorStore.keypair(issuer)
     const newSigningKey = await Secp256k1Keypair.create({ exportable: true })
     // confirm original signing key works
     await expect(attemptWithKey(origSigningKey)).resolves.toBeDefined()

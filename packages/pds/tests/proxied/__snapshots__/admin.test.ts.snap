@@ -195,11 +195,11 @@ Object {
         },
         Object {
           "usedAt": "1970-01-01T00:00:00.000Z",
-          "usedBy": "user(0)",
+          "usedBy": "user(2)",
         },
         Object {
           "usedAt": "1970-01-01T00:00:00.000Z",
-          "usedBy": "user(2)",
+          "usedBy": "user(0)",
         },
         Object {
           "usedAt": "1970-01-01T00:00:00.000Z",

@@ -15,20 +15,21 @@ export default function (server: Server, ctx: AppContext) {
       reverse = false,
     } = params
 
-    const did = await ctx.services.account(ctx.db).getDidForActor(repo)
+    const did = await ctx.accountManager.getDidForActor(repo)
     if (!did) {
       throw new InvalidRequestError(`Could not find repo: ${repo}`)
     }
 
-    const records = await ctx.services.record(ctx.db).listRecordsForCollection({
-      did,
-      collection,
-      limit,
-      reverse,
-      cursor,
-      rkeyStart,
-      rkeyEnd,
-    })
+    const records = await ctx.actorStore.read(did, (store) =>
+      store.record.listRecordsForCollection({
+        collection,
+        limit,
+        reverse,
+        cursor,
+        rkeyStart,
+        rkeyEnd,
+      }),
+    )
 
     const lastRecord = records.at(-1)
     const lastUri = lastRecord && new AtUri(lastRecord?.uri)

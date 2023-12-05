@@ -9,3 +9,10 @@ export const sha256 = async (
     typeof input === 'string' ? uint8arrays.fromString(input, 'utf8') : input
   return noble.sha256(bytes)
 }
+
+export const sha256Hex = async (
+  input: Uint8Array | string,
+): Promise<string> => {
+  const hash = await sha256(input)
+  return uint8arrays.toString(hash, 'hex')
+}

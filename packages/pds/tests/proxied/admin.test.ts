@@ -317,18 +317,4 @@ describe('proxies admin requests', () => {
       expect.objectContaining({ uri: post.ref.uriStr, cid: post.ref.cidStr }),
     )
   })
-
-  it('does not persist actions and reports on pds.', async () => {
-    const { db } = network.pds.ctx
-    const actions = await db.db
-      .selectFrom('moderation_action')
-      .selectAll()
-      .execute()
-    const reports = await db.db
-      .selectFrom('moderation_report')
-      .selectAll()
-      .execute()
-    expect(actions).toEqual([])
-    expect(reports).toEqual([])
-  })
 })

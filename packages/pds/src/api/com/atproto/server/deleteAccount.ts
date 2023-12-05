@@ -1,9 +1,8 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
+import { MINUTE } from '@atproto/common'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { MINUTE } from '@atproto/common'
-
-const REASON_ACCT_DELETION = 'account_deletion'
+import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.deleteAccount({
@@ -13,41 +12,37 @@ export default function (server: Server, ctx: AppContext) {
     },
     handler: async ({ input, req }) => {
       const { did, password, token } = input.body
-      const validPass = await ctx.services
-        .account(ctx.db)
-        .verifyAccountPassword(did, password)
+
+      const account = await ctx.accountManager.getAccount(did, true)
+      if (!account) {
+        throw new InvalidRequestError('account not found')
+      }
+
+      if (ctx.entrywayAgent) {
+        await ctx.entrywayAgent.com.atproto.server.deleteAccount(
+          input.body,
+          authPassthru(req, true),
+        )
+        return
+      }
+
+      const validPass = await ctx.accountManager.verifyAccountPassword(
+        did,
+        password,
+      )
       if (!validPass) {
         throw new AuthRequiredError('Invalid did or password')
       }
 
-      await ctx.services
-        .account(ctx.db)
-        .assertValidToken(did, 'delete_account', token)
-
-      await ctx.db.transaction(async (dbTxn) => {
-        const accountService = ctx.services.account(dbTxn)
-        const moderationTxn = ctx.services.moderation(dbTxn)
-        const currState = await moderationTxn.getRepoTakedownState(did)
-        // Do not disturb an existing takedown, continue with account deletion
-        if (currState?.takedown.applied !== true) {
-          await moderationTxn.updateRepoTakedownState(did, {
-            applied: true,
-            ref: REASON_ACCT_DELETION,
-          })
-        }
-        await accountService.deleteEmailToken(did, 'delete_account')
-      })
-
-      ctx.backgroundQueue.add(async (db) => {
-        try {
-          // In the background perform the hard account deletion work
-          await ctx.services.record(db).deleteForActor(did)
-          await ctx.services.repo(db).deleteRepo(did)
-          await ctx.services.account(db).deleteAccount(did)
-        } catch (err) {
-          req.log.error({ did, err }, 'account deletion failed')
-        }
-      })
+      await ctx.accountManager.assertValidEmailToken(
+        did,
+        'delete_account',
+        token,
+      )
+      await ctx.actorStore.destroy(did)
+      await ctx.accountManager.deleteAccount(did)
+      await ctx.sequencer.sequenceTombstone(did)
+      await ctx.sequencer.deleteAllForUser(did)
     },
   })
 }

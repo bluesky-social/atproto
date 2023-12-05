@@ -19,7 +19,7 @@ import API from './api'
 import * as basicRoutes from './basic-routes'
 import * as wellKnown from './well-known'
 import * as error from './error'
-import { dbLogger, loggerMiddleware, seqLogger } from './logger'
+import { loggerMiddleware } from './logger'
 import { ServerConfig, ServerSecrets } from './config'
 import { createServer } from './lexicon'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
@@ -28,7 +28,7 @@ import compression from './util/compression'
 
 export * from './config'
 export { Database } from './db'
-export { DiskBlobStore, MemoryBlobStore } from './storage'
+export { DiskBlobStore } from './disk-blobstore'
 export { AppContext } from './context'
 export { httpLogger } from './logger'
 
@@ -128,41 +128,7 @@ export class PDS {
   }
 
   async start(): Promise<http.Server> {
-    const { db, backgroundQueue } = this.ctx
-    if (db.cfg.dialect === 'pg') {
-      const { pool } = db.cfg
-      this.dbStatsInterval = setInterval(() => {
-        dbLogger.info(
-          {
-            idleCount: pool.idleCount,
-            totalCount: pool.totalCount,
-            waitingCount: pool.waitingCount,
-          },
-          'db pool stats',
-        )
-        dbLogger.info(
-          {
-            runningCount: backgroundQueue.queue.pending,
-            waitingCount: backgroundQueue.queue.size,
-          },
-          'background queue stats',
-        )
-      }, 10000)
-    }
-    this.sequencerStatsInterval = setInterval(async () => {
-      if (this.ctx.sequencerLeader?.isLeader) {
-        try {
-          const seq = await this.ctx.sequencerLeader.lastSeq()
-          seqLogger.info({ seq }, 'sequencer leader stats')
-        } catch (err) {
-          seqLogger.error({ err }, 'error getting last seq')
-        }
-      }
-    }, 500)
-    this.ctx.sequencerLeader?.run()
     await this.ctx.sequencer.start()
-    await this.ctx.db.startListeningToChannels()
-    await this.ctx.runtimeFlags.start()
     const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
     this.server.keepAliveTimeout = 90000
@@ -172,11 +138,10 @@ export class PDS {
   }
 
   async destroy(): Promise<void> {
-    await this.ctx.runtimeFlags.destroy()
-    await this.ctx.sequencerLeader?.destroy()
+    await this.ctx.sequencer.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
-    await this.ctx.db.close()
+    await this.ctx.accountManager.close()
     await this.ctx.redisScratch?.quit()
     clearInterval(this.dbStatsInterval)
     clearInterval(this.sequencerStatsInterval)

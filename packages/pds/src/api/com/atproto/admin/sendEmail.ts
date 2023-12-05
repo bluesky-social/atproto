@@ -1,7 +1,7 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru } from './util'
+import { authPassthru, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.sendEmail({
@@ -17,19 +17,27 @@ export default function (server: Server, ctx: AppContext) {
         senderDid,
         subject = 'Message from Bluesky moderator',
       } = input.body
-      const userInfo = await ctx.db.db
-        .selectFrom('user_account')
-        .where('did', '=', recipientDid)
-        .select('email')
-        .executeTakeFirst()
-
-      if (!userInfo) {
+      const account = await ctx.accountManager.getAccount(recipientDid)
+      if (!account) {
         throw new InvalidRequestError('Recipient not found')
+      }
+
+      if (ctx.entrywayAgent) {
+        return resultPassthru(
+          await ctx.entrywayAgent.com.atproto.admin.sendEmail(
+            input.body,
+            authPassthru(req, true),
+          ),
+        )
+      }
+
+      if (!account.email) {
+        throw new InvalidRequestError('account does not have an email address')
       }
 
       await ctx.moderationMailer.send(
         { content },
-        { subject, to: userInfo.email },
+        { subject, to: account.email },
       )
       await ctx.appViewAgent.api.com.atproto.admin.emitModerationEvent(
         {

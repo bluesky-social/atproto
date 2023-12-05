@@ -9,6 +9,10 @@ export interface Didable {
 
 export interface Keypair extends Signer, Didable {}
 
+export interface ExportableKeypair extends Keypair {
+  export(): Promise<Uint8Array>
+}
+
 export type DidKeyPlugin = {
   prefix: Uint8Array
   jwtAlg: string

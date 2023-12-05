@@ -1,17 +1,17 @@
 import AtpAgent from '@atproto/api'
 import { wait } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { CommitData, readCarWithRoot, verifyRepo } from '@atproto/repo'
+import { readCarWithRoot, verifyRepo } from '@atproto/repo'
 import AppContext from '../src/context'
-import { PreparedWrite, prepareCreate } from '../src/repo'
-import SqlRepoStorage from '../src/sql-repo-storage'
-import { ConcurrentWriteError } from '../src/services/repo'
+import { PreparedCreate, prepareCreate } from '../src/repo'
+import { Keypair } from '@atproto/crypto'
 
-describe('crud operations', () => {
+describe('races', () => {
   let network: TestNetworkNoAppView
   let ctx: AppContext
   let agent: AtpAgent
   let did: string
+  let signingKey: Keypair
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -25,13 +25,29 @@ describe('crud operations', () => {
       password: 'alice-pass',
     })
     did = agent.session?.did || ''
+    signingKey = await network.pds.ctx.actorStore.keypair(did)
   })
 
   afterAll(async () => {
     await network.close()
   })
 
-  const formatWrite = async () => {
+  const processCommitWithWait = async (
+    did: string,
+    write: PreparedCreate,
+    waitMs: number,
+  ) => {
+    const now = new Date().toISOString()
+    return ctx.actorStore.transact(did, async (store) => {
+      const commitData = await store.repo.formatCommit([write])
+      await store.repo.storage.applyCommit(commitData)
+      await wait(waitMs)
+      await store.repo.indexWrites([write], now)
+      return write
+    })
+  }
+
+  it('handles races in record routes', async () => {
     const write = await prepareCreate({
       did,
       collection: 'app.bsky.feed.post',
@@ -41,42 +57,8 @@ describe('crud operations', () => {
       },
       validate: true,
     })
-    const storage = new SqlRepoStorage(ctx.db, did)
-    const commit = await ctx.services
-      .repo(ctx.db)
-      .formatCommit(storage, did, [write])
-    return { write, commit }
-  }
 
-  const processCommitWithWait = async (
-    did: string,
-    writes: PreparedWrite[],
-    commitData: CommitData,
-    waitMs: number,
-  ) => {
-    const now = new Date().toISOString()
-    await ctx.db.transaction(async (dbTxn) => {
-      const storage = new SqlRepoStorage(dbTxn, did, now)
-      const locked = await storage.lockRepo()
-      if (!locked) {
-        throw new ConcurrentWriteError()
-      }
-      await wait(waitMs)
-      const srvc = ctx.services.repo(dbTxn)
-      await Promise.all([
-        // persist the commit to repo storage
-        storage.applyCommit(commitData),
-        // & send to indexing
-        srvc.indexWrites(writes, now),
-        // do any other processing needed after write
-        srvc.afterWriteProcessing(did, commitData, writes),
-      ])
-    })
-  }
-
-  it('handles races in record routes', async () => {
-    const { write, commit } = await formatWrite()
-    const processPromise = processCommitWithWait(did, [write], commit, 500)
+    const processPromise = processCommitWithWait(did, write, 500)
 
     const createdPost = await agent.api.app.bsky.feed.post.create(
       { repo: did },
@@ -94,10 +76,10 @@ describe('crud operations', () => {
       car.blocks,
       car.root,
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     expect(verified.creates.length).toBe(2)
-    expect(verified.creates[0].cid.equals(write.cid)).toBeTruthy()
+    expect(verified.creates[0].cid.toString()).toEqual(write.cid.toString())
     expect(verified.creates[1].cid.toString()).toEqual(
       createdPost.cid.toString(),
     )

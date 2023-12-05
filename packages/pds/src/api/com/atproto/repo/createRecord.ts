@@ -1,18 +1,14 @@
 import { CID } from 'multiformats/cid'
 import { InvalidRequestError, AuthRequiredError } from '@atproto/xrpc-server'
 import { InvalidRecordKeyError } from '@atproto/syntax'
-import { prepareCreate } from '../../../../repo'
+import { prepareCreate, prepareDelete } from '../../../../repo'
 import { Server } from '../../../../lexicon'
 import {
   BadCommitSwapError,
   InvalidRecordError,
   PreparedCreate,
-  prepareDelete,
 } from '../../../../repo'
 import AppContext from '../../../../context'
-import { ids } from '../../../../lexicon/lexicons'
-import Database from '../../../../db'
-import { ConcurrentWriteError } from '../../../../services/repo'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.createRecord({
@@ -32,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const { repo, collection, rkey, record, swapCommit, validate } =
         input.body
-      const did = await ctx.services.account(ctx.db).getDidForActor(repo)
+      const did = await ctx.accountManager.getDidForActor(repo)
 
       if (!did) {
         throw new InvalidRequestError(`Could not find repo: ${repo}`)
@@ -66,24 +62,40 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
-      const backlinkDeletions = validate
-        ? await getBacklinkDeletions(ctx.db, ctx, write)
-        : []
+      const { commit, writes } = await ctx.actorStore.transact(
+        did,
+        async (actorTxn) => {
+          const backlinkConflicts = validate
+            ? await actorTxn.record.getBacklinkConflicts(
+                write.uri,
+                write.record,
+              )
+            : []
+          const backlinkDeletions = backlinkConflicts.map((uri) =>
+            prepareDelete({
+              did: uri.hostname,
+              collection: uri.collection,
+              rkey: uri.rkey,
+            }),
+          )
+          const writes = [...backlinkDeletions, write]
+          try {
+            const commit = await actorTxn.repo.processWrites(
+              writes,
+              swapCommitCid,
+            )
+            return { commit, writes }
+          } catch (err) {
+            if (err instanceof BadCommitSwapError) {
+              throw new InvalidRequestError(err.message, 'InvalidSwap')
+            }
+            throw err
+          }
+        },
+      )
 
-      const writes = [...backlinkDeletions, write]
-
-      try {
-        await ctx.services
-          .repo(ctx.db)
-          .processWrites({ did, writes, swapCommitCid }, 10)
-      } catch (err) {
-        if (err instanceof BadCommitSwapError) {
-          throw new InvalidRequestError(err.message, 'InvalidSwap')
-        } else if (err instanceof ConcurrentWriteError) {
-          throw new InvalidRequestError(err.message, 'ConcurrentWrites')
-        }
-        throw err
-      }
+      await ctx.sequencer.sequenceCommit(did, commit, writes)
+      await ctx.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
 
       return {
         encoding: 'application/json',
@@ -91,51 +103,4 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
-}
-
-// @NOTE this logic a placeholder until we allow users to specify these constraints themselves.
-// Ensures that we don't end-up with duplicate likes, reposts, and follows from race conditions.
-
-async function getBacklinkDeletions(
-  tx: Database,
-  ctx: AppContext,
-  write: PreparedCreate,
-) {
-  const recordTxn = ctx.services.record(tx)
-  const {
-    record,
-    uri: { host: did, collection },
-  } = write
-  const toDelete = ({ rkey }: { rkey: string }) =>
-    prepareDelete({ did, collection, rkey })
-
-  if (
-    (collection === ids.AppBskyGraphFollow ||
-      collection === ids.AppBskyGraphBlock) &&
-    typeof record['subject'] === 'string'
-  ) {
-    const backlinks = await recordTxn.getRecordBacklinks({
-      did,
-      collection,
-      path: 'subject',
-      linkTo: record['subject'],
-    })
-    return backlinks.map(toDelete)
-  }
-
-  if (
-    (collection === ids.AppBskyFeedLike ||
-      collection === ids.AppBskyFeedRepost) &&
-    typeof record['subject']?.['uri'] === 'string'
-  ) {
-    const backlinks = await recordTxn.getRecordBacklinks({
-      did,
-      collection,
-      path: 'subject.uri',
-      linkTo: record['subject']['uri'],
-    })
-    return backlinks.map(toDelete)
-  }
-
-  return []
 }

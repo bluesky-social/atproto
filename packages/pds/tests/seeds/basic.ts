@@ -106,6 +106,8 @@ export default async (
     'tests/sample-img/key-landscape-small.jpg',
     'image/jpeg',
   )
+  // must ensure ordering of replies in indexing
+  await sc.network.processAll()
   await sc.reply(
     bob,
     sc.posts[alice][1].ref,
@@ -120,6 +122,7 @@ export default async (
     sc.posts[alice][1].ref,
     replies.carol[0],
   )
+  await sc.network.processAll()
   const alicesReplyToBob = await sc.reply(
     alice,
     sc.posts[alice][1].ref,

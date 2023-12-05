@@ -9,6 +9,7 @@ import {
   StreamAuthVerifier,
 } from '@atproto/xrpc-server'
 import { schemas } from './lexicons'
+import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
 import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
@@ -73,6 +74,9 @@ import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
+import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
+import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
+import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
@@ -192,6 +196,17 @@ export class AdminNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  deleteAccount<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminDeleteAccount.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminDeleteAccount.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.deleteAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   disableAccountInvites<AV extends AuthVerifier>(
@@ -953,6 +968,39 @@ export class TempNS {
     const nsid = 'com.atproto.temp.fetchLabels' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
+
+  importRepo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempImportRepo.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempImportRepo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.importRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  pushBlob<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempPushBlob.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempPushBlob.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.pushBlob' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  transferAccount<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempTransferAccount.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempTransferAccount.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.transferAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
 }
 
 export class AppNS {
@@ -1549,11 +1597,13 @@ type RouteRateLimitOpts<T> = {
   calcKey?: (ctx: T) => string
   calcPoints?: (ctx: T) => number
 }
+type HandlerOpts = { blobLimit?: number }
 type HandlerRateLimitOpts<T> = SharedRateLimitOpts<T> | RouteRateLimitOpts<T>
 type ConfigOf<Auth, Handler, ReqCtx> =
   | Handler
   | {
       auth?: Auth
+      opts?: HandlerOpts
       rateLimit?: HandlerRateLimitOpts<ReqCtx> | HandlerRateLimitOpts<ReqCtx>[]
       handler: Handler
     }

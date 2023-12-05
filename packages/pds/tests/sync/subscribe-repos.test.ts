@@ -17,7 +17,7 @@ import {
   Handle as HandleEvt,
   Tombstone as TombstoneEvt,
 } from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
-import { AppContext, Database } from '../../src'
+import { AppContext } from '../../src'
 import basicSeed from '../seeds/basic'
 import { CID } from 'multiformats/cid'
 
@@ -25,7 +25,6 @@ describe('repo subscribe repos', () => {
   let serverHost: string
 
   let network: TestNetworkNoAppView
-  let db: Database
   let ctx: AppContext
 
   let agent: AtpAgent
@@ -44,7 +43,6 @@ describe('repo subscribe repos', () => {
     })
     serverHost = network.pds.url.replace('http://', '')
     ctx = network.pds.ctx
-    db = network.pds.ctx.db
     agent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
@@ -61,7 +59,8 @@ describe('repo subscribe repos', () => {
   const getRepo = async (did: string): Promise<repo.VerifiedRepo> => {
     const carRes = await agent.api.com.atproto.sync.getRepo({ did })
     const car = await repo.readCarWithRoot(carRes.data)
-    return repo.verifyRepo(car.blocks, car.root, did, ctx.repoSigningKey.did())
+    const signingKey = await network.pds.ctx.actorStore.keypair(did)
+    return repo.verifyRepo(car.blocks, car.root, did, signingKey.did())
   }
 
   const getHandleEvts = (frames: Frame[]): HandleEvt[] => {
@@ -72,6 +71,25 @@ describe('repo subscribe repos', () => {
       }
     }
     return evts
+  }
+
+  const getAllEvents = (userDid: string, frames: Frame[]) => {
+    const types: unknown[] = []
+    for (const frame of frames) {
+      if (frame instanceof MessageFrame) {
+        if (
+          (frame.header.t === '#commit' &&
+            (frame.body as CommitEvt).repo === userDid) ||
+          (frame.header.t === '#handle' &&
+            (frame.body as HandleEvt).did === userDid) ||
+          (frame.header.t === '#tombstone' &&
+            (frame.body as TombstoneEvt).did === userDid)
+        ) {
+          types.push(frame.body)
+        }
+      }
+    }
+    return types
   }
 
   const getTombstoneEvts = (frames: Frame[]): TombstoneEvt[] => {
@@ -110,25 +128,6 @@ describe('repo subscribe repos', () => {
     return evts
   }
 
-  const getAllEvents = (userDid: string, frames: Frame[]) => {
-    const types: unknown[] = []
-    for (const frame of frames) {
-      if (frame instanceof MessageFrame) {
-        if (
-          (frame.header.t === '#commit' &&
-            (frame.body as CommitEvt).repo === userDid) ||
-          (frame.header.t === '#handle' &&
-            (frame.body as HandleEvt).did === userDid) ||
-          (frame.header.t === '#tombstone' &&
-            (frame.body as TombstoneEvt).did === userDid)
-        ) {
-          types.push(frame.body)
-        }
-      }
-    }
-    return types
-  }
-
   const verifyCommitEvents = async (frames: Frame[]) => {
     await verifyRepo(alice, getCommitEvents(alice, frames))
     await verifyRepo(bob, getCommitEvents(bob, frames))
@@ -164,11 +163,12 @@ describe('repo subscribe repos', () => {
     if (!lastCommit) {
       throw new Error('no last commit')
     }
+    const signingKey = await network.pds.ctx.actorStore.keypair(did)
     const fromStream = await repo.verifyRepo(
       allBlocks,
       lastCommit,
       did,
-      ctx.repoSigningKey.did(),
+      signingKey.did(),
     )
     const fromRpcOps = fromRpc.creates
     const fromStreamOps = fromStream.creates
@@ -199,16 +199,8 @@ describe('repo subscribe repos', () => {
     const isDone = async (evt: any) => {
       if (evt === undefined) return false
       if (evt instanceof ErrorFrame) return true
-      const caughtUp = await ctx.sequencerLeader?.isCaughtUp()
-      if (!caughtUp) return false
-      const curr = await db.db
-        .selectFrom('repo_seq')
-        .where('seq', 'is not', null)
-        .select('seq')
-        .limit(1)
-        .orderBy('seq', 'desc')
-        .executeTakeFirst()
-      return curr !== undefined && evt.body.seq === curr.seq
+      const curr = await ctx.sequencer.curr()
+      return evt.body.seq === curr
     }
 
     return readFromGenerator(gen, isDone, waitFor)
@@ -271,9 +263,8 @@ describe('repo subscribe repos', () => {
   })
 
   it('backfills only from provided cursor', async () => {
-    const seqs = await db.db
+    const seqs = await ctx.sequencer.db.db
       .selectFrom('repo_seq')
-      .where('seq', 'is not', null)
       .selectAll()
       .orderBy('seq', 'asc')
       .execute()
@@ -348,9 +339,7 @@ describe('repo subscribe repos', () => {
     ).did
 
     for (const did of [baddie1, baddie2]) {
-      await ctx.services.record(db).deleteForActor(did)
-      await ctx.services.repo(db).deleteRepo(did)
-      await ctx.services.account(db).deleteAccount(did)
+      await ctx.sequencer.sequenceTombstone(did)
     }
 
     const ws = new WebSocket(
@@ -368,7 +357,7 @@ describe('repo subscribe repos', () => {
 
   it('account deletions invalidate all seq ops', async () => {
     const baddie3 = (
-      await sc.createAccount('baddie3.test', {
+      await sc.createAccount('baddie3', {
         email: 'baddie3@test.com',
         handle: 'baddie3.test',
         password: 'baddie3-pass',
@@ -377,10 +366,15 @@ describe('repo subscribe repos', () => {
 
     await randomPost(baddie3)
     await sc.updateHandle(baddie3, 'baddie3-update.test')
-
-    await ctx.services.record(db).deleteForActor(baddie3)
-    await ctx.services.repo(db).deleteRepo(baddie3)
-    await ctx.services.account(db).deleteAccount(baddie3)
+    const token = await network.pds.ctx.accountManager.createEmailToken(
+      baddie3,
+      'delete_account',
+    )
+    await agent.api.com.atproto.server.deleteAccount({
+      token,
+      did: baddie3,
+      password: sc.accounts[baddie3].password,
+    })
 
     const ws = new WebSocket(
       `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
@@ -395,33 +389,11 @@ describe('repo subscribe repos', () => {
     verifyTombstoneEvent(didEvts[0], baddie3)
   })
 
-  it('does not return invalidated events', async () => {
-    await sc.updateHandle(alice, 'alice3.test')
-    await sc.updateHandle(alice, 'alice4.test')
-    await sc.updateHandle(alice, 'alice5.test')
-    await sc.updateHandle(bob, 'bob3.test')
-    await sc.updateHandle(bob, 'bob4.test')
-    await sc.updateHandle(bob, 'bob5.test')
-
-    const ws = new WebSocket(
-      `ws://${serverHost}/xrpc/com.atproto.sync.subscribeRepos?cursor=${-1}`,
-    )
-
-    const gen = byFrame(ws)
-    const evts = await readTillCaughtUp(gen)
-    ws.terminate()
-
-    const handleEvts = getHandleEvts(evts)
-    expect(handleEvts.length).toBe(2)
-    verifyHandleEvent(handleEvts[0], alice, 'alice5.test')
-    verifyHandleEvent(handleEvts[1], bob, 'bob5.test')
-  })
-
   it('sends info frame on out of date cursor', async () => {
     // we rewrite the sequenceAt time for existing seqs to be past the backfill cutoff
     // then we create some new posts
     const overAnHourAgo = new Date(Date.now() - HOUR - MINUTE).toISOString()
-    await db.db
+    await ctx.sequencer.db.db
       .updateTable('repo_seq')
       .set({ sequencedAt: overAnHourAgo })
       .execute()

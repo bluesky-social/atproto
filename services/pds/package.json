@@ -5,6 +5,8 @@
     "@atproto/aws": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/pds": "workspace:^",
-    "dd-trace": "3.13.2"
+    "@opentelemetry/instrumentation": "^0.45.0",
+    "dd-trace": "^4.18.0",
+    "opentelemetry-plugin-better-sqlite3": "^1.1.0"
   }
 }

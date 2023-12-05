@@ -2,12 +2,13 @@ import disposable from 'disposable-email'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { UserAlreadyExistsError } from '../../../../services/account'
+import { authPassthru } from '../../../proxy'
+import { UserAlreadyExistsError } from '../../../../account-manager/helpers/account'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.updateEmail({
     auth: ctx.authVerifier.accessNotAppPassword,
-    handler: async ({ auth, input }) => {
+    handler: async ({ auth, input, req }) => {
       const did = auth.credentials.did
       const { token, email } = input.body
       if (!disposable.validate(email)) {
@@ -15,43 +16,45 @@ export default function (server: Server, ctx: AppContext) {
           'This email address is not supported, please use a different email.',
         )
       }
-      const user = await ctx.services.account(ctx.db).getAccount(did)
-      if (!user) {
-        throw new InvalidRequestError('user not found')
+      const account = await ctx.accountManager.getAccount(did)
+      if (!account) {
+        throw new InvalidRequestError('account not found')
       }
-      // require valid token if user email is confirmed
-      if (user.emailConfirmedAt) {
+
+      if (ctx.entrywayAgent) {
+        await ctx.entrywayAgent.com.atproto.server.updateEmail(
+          input.body,
+          authPassthru(req, true),
+        )
+        return
+      }
+
+      // require valid token if account email is confirmed
+      if (account.emailConfirmedAt) {
         if (!token) {
           throw new InvalidRequestError(
             'confirmation token required',
             'TokenRequired',
           )
         }
-        await ctx.services
-          .account(ctx.db)
-          .assertValidToken(did, 'update_email', token)
+        await ctx.accountManager.assertValidEmailToken(
+          did,
+          'update_email',
+          token,
+        )
       }
 
-      await ctx.db.transaction(async (dbTxn) => {
-        const accntSrvce = ctx.services.account(dbTxn)
-
-        if (token) {
-          await accntSrvce.deleteEmailToken(did, 'update_email')
+      try {
+        await ctx.accountManager.updateEmail({ did, email, token })
+      } catch (err) {
+        if (err instanceof UserAlreadyExistsError) {
+          throw new InvalidRequestError(
+            'This email address is already in use, please use a different email.',
+          )
+        } else {
+          throw err
         }
-        if (user.email !== email) {
-          try {
-            await accntSrvce.updateEmail(did, email)
-          } catch (err) {
-            if (err instanceof UserAlreadyExistsError) {
-              throw new InvalidRequestError(
-                'This email address is already in use, please use a different email.',
-              )
-            } else {
-              throw err
-            }
-          }
-        }
-      })
+      }
     },
   })
 }

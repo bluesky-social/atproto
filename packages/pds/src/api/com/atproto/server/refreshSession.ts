@@ -1,15 +1,17 @@
+import { INVALID_HANDLE } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
 import { softDeleted } from '../../../../db/util'
 import { Server } from '../../../../lexicon'
 import { didDocForSession } from './util'
+import { authPassthru, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.refreshSession({
     auth: ctx.authVerifier.refresh,
-    handler: async ({ auth }) => {
+    handler: async ({ auth, req }) => {
       const did = auth.credentials.did
-      const user = await ctx.services.account(ctx.db).getAccount(did, true)
+      const user = await ctx.accountManager.getAccount(did, true)
       if (!user) {
         throw new InvalidRequestError(
           `Could not find user info for account: ${did}`,
@@ -22,13 +24,18 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      if (ctx.entrywayAgent) {
+        return resultPassthru(
+          await ctx.entrywayAgent.com.atproto.server.refreshSession(
+            undefined,
+            authPassthru(req),
+          ),
+        )
+      }
+
       const [didDoc, rotated] = await Promise.all([
         didDocForSession(ctx, user.did),
-        ctx.db.transaction((dbTxn) => {
-          return ctx.services
-            .auth(dbTxn)
-            .rotateRefreshToken(auth.credentials.tokenId)
-        }),
+        ctx.accountManager.rotateRefreshToken(auth.credentials.tokenId),
       ])
       if (rotated === null) {
         throw new InvalidRequestError('Token has been revoked', 'ExpiredToken')
@@ -39,9 +46,9 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           did: user.did,
           didDoc,
-          handle: user.handle,
-          accessJwt: rotated.access.jwt,
-          refreshJwt: rotated.refresh.jwt,
+          handle: user.handle ?? INVALID_HANDLE,
+          accessJwt: rotated.accessJwt,
+          refreshJwt: rotated.refreshJwt,
         },
       }
     },
