@@ -43,9 +43,11 @@ export class BskyDaemon {
   }
 
   async start() {
-    const { db } = this.ctx
+    const { db, cfg } = this.ctx
     const pool = db.pool
-    this.notifications.run()
+    this.notifications.run({
+      startFromDid: cfg.notificationsDaemonFromDid,
+    })
     this.dbStatsInterval = setInterval(() => {
       dbLogger.info(
         {
