@@ -3,121 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import {
-  GetActorFeedsRequest,
-  GetActorFeedsResponse,
-  GetActorFollowsActorsRequest,
-  GetActorFollowsActorsResponse,
-  GetActorLikesRequest,
-  GetActorLikesResponse,
-  GetActorMutesActorRequest,
-  GetActorMutesActorResponse,
-  GetActorMutesActorViaListRequest,
-  GetActorMutesActorViaListResponse,
-  GetActorRepostsRequest,
-  GetActorRepostsResponse,
-  GetAuthorFeedRequest,
-  GetAuthorFeedResponse,
-  GetBidirectionalBlockRequest,
-  GetBidirectionalBlockResponse,
-  GetBidirectionalBlockViaListRequest,
-  GetBidirectionalBlockViaListResponse,
-  GetBlobTakedownRequest,
-  GetBlobTakedownResponse,
-  GetBlocklistSubscriptionRequest,
-  GetBlocklistSubscriptionResponse,
-  GetBlocklistSubscriptionsRequest,
-  GetBlocklistSubscriptionsResponse,
-  GetBlocksRequest,
-  GetBlocksResponse,
-  GetDidsByHandlesRequest,
-  GetDidsByHandlesResponse,
-  GetFeedGeneratorsRequest,
-  GetFeedGeneratorsResponse,
-  GetFeedGeneratorStatusRequest,
-  GetFeedGeneratorStatusResponse,
-  GetFollowersCountRequest,
-  GetFollowersCountResponse,
-  GetFollowersRequest,
-  GetFollowersResponse,
-  GetFollowsCountRequest,
-  GetFollowsCountResponse,
-  GetFollowsRequest,
-  GetFollowsResponse,
-  GetHandlesRequest,
-  GetHandlesResponse,
-  GetLabelsRequest,
-  GetLabelsResponse,
-  GetLatestRevRequest,
-  GetLatestRevResponse,
-  GetLikeByActorAndSubjectRequest,
-  GetLikeByActorAndSubjectResponse,
-  GetLikesBySubjectRequest,
-  GetLikesBySubjectResponse,
-  GetLikesCountRequest,
-  GetLikesCountResponse,
-  GetListCountRequest,
-  GetListCountResponse,
-  GetListFeedRequest,
-  GetListFeedResponse,
-  GetListMembershipRequest,
-  GetListMembershipResponse,
-  GetListMembersRequest,
-  GetListMembersResponse,
-  GetListRequest,
-  GetListResponse,
-  GetMutelistSubscriptionRequest,
-  GetMutelistSubscriptionResponse,
-  GetMutelistSubscriptionsRequest,
-  GetMutelistSubscriptionsResponse,
-  GetMutesRequest,
-  GetMutesResponse,
-  GetNotificationSeenRequest,
-  GetNotificationSeenResponse,
-  GetNotificationsRequest,
-  GetNotificationsResponse,
-  GetPostReplyCountRequest,
-  GetPostReplyCountResponse,
-  GetPostsRequest,
-  GetPostsResponse,
-  GetProfilesRequest,
-  GetProfilesResponse,
-  GetRepostByActorAndSubjectRequest,
-  GetRepostByActorAndSubjectResponse,
-  GetRepostsBySubjectRequest,
-  GetRepostsBySubjectResponse,
-  GetRepostsCountRequest,
-  GetRepostsCountResponse,
-  GetSuggestedFeedsRequest,
-  GetSuggestedFeedsResponse,
-  GetSuggestionsRequest,
-  GetSuggestionsResponse,
-  GetThreadgatesRequest,
-  GetThreadgatesResponse,
-  GetThreadRequest,
-  GetThreadResponse,
-  GetTimelineRequest,
-  GetTimelineResponse,
-  GetUnreadNotificationCountRequest,
-  GetUnreadNotificationCountResponse,
-  PingRequest,
-  PingResponse,
-  SearchActorsRequest,
-  SearchActorsResponse,
-  SearchPostsRequest,
-  SearchPostsResponse,
-  UpdateNotificationSeenRequest,
-  UpdateNotificationSeenResponse,
-  UpdateTakedownRequest,
-  UpdateTakedownResponse,
-} from './bsky_pb.js'
-import { MethodKind } from '@bufbuild/protobuf'
+import { GetActorFeedsRequest, GetActorFeedsResponse, GetActorFollowsActorsRequest, GetActorFollowsActorsResponse, GetActorLikesRequest, GetActorLikesResponse, GetActorMutesActorRequest, GetActorMutesActorResponse, GetActorMutesActorViaListRequest, GetActorMutesActorViaListResponse, GetActorRepostsRequest, GetActorRepostsResponse, GetAuthorFeedRequest, GetAuthorFeedResponse, GetBidirectionalBlockRequest, GetBidirectionalBlockResponse, GetBidirectionalBlockViaListRequest, GetBidirectionalBlockViaListResponse, GetBlobTakedownRequest, GetBlobTakedownResponse, GetBlocklistSubscriptionRequest, GetBlocklistSubscriptionResponse, GetBlocklistSubscriptionsRequest, GetBlocklistSubscriptionsResponse, GetBlocksRequest, GetBlocksResponse, GetDidsByHandlesRequest, GetDidsByHandlesResponse, GetFeedGeneratorsRequest, GetFeedGeneratorsResponse, GetFeedGeneratorStatusRequest, GetFeedGeneratorStatusResponse, GetFollowersCountRequest, GetFollowersCountResponse, GetFollowersRequest, GetFollowersResponse, GetFollowsCountRequest, GetFollowsCountResponse, GetFollowsRequest, GetFollowsResponse, GetHandlesRequest, GetHandlesResponse, GetLabelsRequest, GetLabelsResponse, GetLatestRevRequest, GetLatestRevResponse, GetLikeByActorAndSubjectRequest, GetLikeByActorAndSubjectResponse, GetLikesBySubjectRequest, GetLikesBySubjectResponse, GetLikesCountRequest, GetLikesCountResponse, GetListCountRequest, GetListCountResponse, GetListFeedRequest, GetListFeedResponse, GetListMembershipRequest, GetListMembershipResponse, GetListMembersRequest, GetListMembersResponse, GetListRequest, GetListResponse, GetMutelistSubscriptionRequest, GetMutelistSubscriptionResponse, GetMutelistSubscriptionsRequest, GetMutelistSubscriptionsResponse, GetMutesRequest, GetMutesResponse, GetNotificationSeenRequest, GetNotificationSeenResponse, GetNotificationsRequest, GetNotificationsResponse, GetPostReplyCountRequest, GetPostReplyCountResponse, GetPostsRequest, GetPostsResponse, GetProfilesRequest, GetProfilesResponse, GetRepostByActorAndSubjectRequest, GetRepostByActorAndSubjectResponse, GetRepostsBySubjectRequest, GetRepostsBySubjectResponse, GetRepostsCountRequest, GetRepostsCountResponse, GetSuggestedFeedsRequest, GetSuggestedFeedsResponse, GetSuggestionsRequest, GetSuggestionsResponse, GetThreadgatesRequest, GetThreadgatesResponse, GetThreadRequest, GetThreadResponse, GetTimelineRequest, GetTimelineResponse, GetUnreadNotificationCountRequest, GetUnreadNotificationCountResponse, PingRequest, PingResponse, SearchActorsRequest, SearchActorsResponse, SearchPostsRequest, SearchPostsResponse, UpdateNotificationSeenRequest, UpdateNotificationSeenResponse, UpdateTakedownRequest, UpdateTakedownResponse } from "./bsky_pb.js";
+import { MethodKind } from "@bufbuild/protobuf";
 
 /**
  * @generated from service bsky.Service
  */
 export const Service = {
-  typeName: 'bsky.Service',
+  typeName: "bsky.Service",
   methods: {
     /**
      * Follows
@@ -125,7 +18,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetActorFollowsActors
      */
     getActorFollowsActors: {
-      name: 'GetActorFollowsActors',
+      name: "GetActorFollowsActors",
       I: GetActorFollowsActorsRequest,
       O: GetActorFollowsActorsResponse,
       kind: MethodKind.Unary,
@@ -134,7 +27,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetFollowers
      */
     getFollowers: {
-      name: 'GetFollowers',
+      name: "GetFollowers",
       I: GetFollowersRequest,
       O: GetFollowersResponse,
       kind: MethodKind.Unary,
@@ -143,7 +36,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetFollows
      */
     getFollows: {
-      name: 'GetFollows',
+      name: "GetFollows",
       I: GetFollowsRequest,
       O: GetFollowsResponse,
       kind: MethodKind.Unary,
@@ -152,7 +45,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetFollowersCount
      */
     getFollowersCount: {
-      name: 'GetFollowersCount',
+      name: "GetFollowersCount",
       I: GetFollowersCountRequest,
       O: GetFollowersCountResponse,
       kind: MethodKind.Unary,
@@ -161,7 +54,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetFollowsCount
      */
     getFollowsCount: {
-      name: 'GetFollowsCount',
+      name: "GetFollowsCount",
       I: GetFollowsCountRequest,
       O: GetFollowsCountResponse,
       kind: MethodKind.Unary,
@@ -172,7 +65,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetLikesBySubject
      */
     getLikesBySubject: {
-      name: 'GetLikesBySubject',
+      name: "GetLikesBySubject",
       I: GetLikesBySubjectRequest,
       O: GetLikesBySubjectResponse,
       kind: MethodKind.Unary,
@@ -181,7 +74,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetLikeByActorAndSubject
      */
     getLikeByActorAndSubject: {
-      name: 'GetLikeByActorAndSubject',
+      name: "GetLikeByActorAndSubject",
       I: GetLikeByActorAndSubjectRequest,
       O: GetLikeByActorAndSubjectResponse,
       kind: MethodKind.Unary,
@@ -190,7 +83,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetActorLikes
      */
     getActorLikes: {
-      name: 'GetActorLikes',
+      name: "GetActorLikes",
       I: GetActorLikesRequest,
       O: GetActorLikesResponse,
       kind: MethodKind.Unary,
@@ -199,7 +92,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetLikesCount
      */
     getLikesCount: {
-      name: 'GetLikesCount',
+      name: "GetLikesCount",
       I: GetLikesCountRequest,
       O: GetLikesCountResponse,
       kind: MethodKind.Unary,
@@ -210,7 +103,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetRepostsBySubject
      */
     getRepostsBySubject: {
-      name: 'GetRepostsBySubject',
+      name: "GetRepostsBySubject",
       I: GetRepostsBySubjectRequest,
       O: GetRepostsBySubjectResponse,
       kind: MethodKind.Unary,
@@ -219,7 +112,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetRepostByActorAndSubject
      */
     getRepostByActorAndSubject: {
-      name: 'GetRepostByActorAndSubject',
+      name: "GetRepostByActorAndSubject",
       I: GetRepostByActorAndSubjectRequest,
       O: GetRepostByActorAndSubjectResponse,
       kind: MethodKind.Unary,
@@ -228,7 +121,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetActorReposts
      */
     getActorReposts: {
-      name: 'GetActorReposts',
+      name: "GetActorReposts",
       I: GetActorRepostsRequest,
       O: GetActorRepostsResponse,
       kind: MethodKind.Unary,
@@ -237,7 +130,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetRepostsCount
      */
     getRepostsCount: {
-      name: 'GetRepostsCount',
+      name: "GetRepostsCount",
       I: GetRepostsCountRequest,
       O: GetRepostsCountResponse,
       kind: MethodKind.Unary,
@@ -248,7 +141,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetProfiles
      */
     getProfiles: {
-      name: 'GetProfiles',
+      name: "GetProfiles",
       I: GetProfilesRequest,
       O: GetProfilesResponse,
       kind: MethodKind.Unary,
@@ -257,7 +150,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetHandles
      */
     getHandles: {
-      name: 'GetHandles',
+      name: "GetHandles",
       I: GetHandlesRequest,
       O: GetHandlesResponse,
       kind: MethodKind.Unary,
@@ -266,7 +159,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetDidsByHandles
      */
     getDidsByHandles: {
-      name: 'GetDidsByHandles',
+      name: "GetDidsByHandles",
       I: GetDidsByHandlesRequest,
       O: GetDidsByHandlesResponse,
       kind: MethodKind.Unary,
@@ -277,7 +170,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetListMembers
      */
     getListMembers: {
-      name: 'GetListMembers',
+      name: "GetListMembers",
       I: GetListMembersRequest,
       O: GetListMembersResponse,
       kind: MethodKind.Unary,
@@ -286,7 +179,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetListMembership
      */
     getListMembership: {
-      name: 'GetListMembership',
+      name: "GetListMembership",
       I: GetListMembershipRequest,
       O: GetListMembershipResponse,
       kind: MethodKind.Unary,
@@ -295,7 +188,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetList
      */
     getList: {
-      name: 'GetList',
+      name: "GetList",
       I: GetListRequest,
       O: GetListResponse,
       kind: MethodKind.Unary,
@@ -304,7 +197,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetListCount
      */
     getListCount: {
-      name: 'GetListCount',
+      name: "GetListCount",
       I: GetListCountRequest,
       O: GetListCountResponse,
       kind: MethodKind.Unary,
@@ -315,7 +208,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetActorMutesActor
      */
     getActorMutesActor: {
-      name: 'GetActorMutesActor',
+      name: "GetActorMutesActor",
       I: GetActorMutesActorRequest,
       O: GetActorMutesActorResponse,
       kind: MethodKind.Unary,
@@ -324,7 +217,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetMutes
      */
     getMutes: {
-      name: 'GetMutes',
+      name: "GetMutes",
       I: GetMutesRequest,
       O: GetMutesResponse,
       kind: MethodKind.Unary,
@@ -335,7 +228,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetActorMutesActorViaList
      */
     getActorMutesActorViaList: {
-      name: 'GetActorMutesActorViaList',
+      name: "GetActorMutesActorViaList",
       I: GetActorMutesActorViaListRequest,
       O: GetActorMutesActorViaListResponse,
       kind: MethodKind.Unary,
@@ -344,7 +237,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetMutelistSubscription
      */
     getMutelistSubscription: {
-      name: 'GetMutelistSubscription',
+      name: "GetMutelistSubscription",
       I: GetMutelistSubscriptionRequest,
       O: GetMutelistSubscriptionResponse,
       kind: MethodKind.Unary,
@@ -353,7 +246,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetMutelistSubscriptions
      */
     getMutelistSubscriptions: {
-      name: 'GetMutelistSubscriptions',
+      name: "GetMutelistSubscriptions",
       I: GetMutelistSubscriptionsRequest,
       O: GetMutelistSubscriptionsResponse,
       kind: MethodKind.Unary,
@@ -364,7 +257,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetBidirectionalBlock
      */
     getBidirectionalBlock: {
-      name: 'GetBidirectionalBlock',
+      name: "GetBidirectionalBlock",
       I: GetBidirectionalBlockRequest,
       O: GetBidirectionalBlockResponse,
       kind: MethodKind.Unary,
@@ -373,7 +266,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetBlocks
      */
     getBlocks: {
-      name: 'GetBlocks',
+      name: "GetBlocks",
       I: GetBlocksRequest,
       O: GetBlocksResponse,
       kind: MethodKind.Unary,
@@ -384,7 +277,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetBidirectionalBlockViaList
      */
     getBidirectionalBlockViaList: {
-      name: 'GetBidirectionalBlockViaList',
+      name: "GetBidirectionalBlockViaList",
       I: GetBidirectionalBlockViaListRequest,
       O: GetBidirectionalBlockViaListResponse,
       kind: MethodKind.Unary,
@@ -393,7 +286,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetBlocklistSubscription
      */
     getBlocklistSubscription: {
-      name: 'GetBlocklistSubscription',
+      name: "GetBlocklistSubscription",
       I: GetBlocklistSubscriptionRequest,
       O: GetBlocklistSubscriptionResponse,
       kind: MethodKind.Unary,
@@ -402,7 +295,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetBlocklistSubscriptions
      */
     getBlocklistSubscriptions: {
-      name: 'GetBlocklistSubscriptions',
+      name: "GetBlocklistSubscriptions",
       I: GetBlocklistSubscriptionsRequest,
       O: GetBlocklistSubscriptionsResponse,
       kind: MethodKind.Unary,
@@ -413,7 +306,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetNotifications
      */
     getNotifications: {
-      name: 'GetNotifications',
+      name: "GetNotifications",
       I: GetNotificationsRequest,
       O: GetNotificationsResponse,
       kind: MethodKind.Unary,
@@ -422,7 +315,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetNotificationSeen
      */
     getNotificationSeen: {
-      name: 'GetNotificationSeen',
+      name: "GetNotificationSeen",
       I: GetNotificationSeenRequest,
       O: GetNotificationSeenResponse,
       kind: MethodKind.Unary,
@@ -431,7 +324,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetUnreadNotificationCount
      */
     getUnreadNotificationCount: {
-      name: 'GetUnreadNotificationCount',
+      name: "GetUnreadNotificationCount",
       I: GetUnreadNotificationCountRequest,
       O: GetUnreadNotificationCountResponse,
       kind: MethodKind.Unary,
@@ -440,7 +333,7 @@ export const Service = {
      * @generated from rpc bsky.Service.UpdateNotificationSeen
      */
     updateNotificationSeen: {
-      name: 'UpdateNotificationSeen',
+      name: "UpdateNotificationSeen",
       I: UpdateNotificationSeenRequest,
       O: UpdateNotificationSeenResponse,
       kind: MethodKind.Unary,
@@ -451,7 +344,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetFeedGenerators
      */
     getFeedGenerators: {
-      name: 'GetFeedGenerators',
+      name: "GetFeedGenerators",
       I: GetFeedGeneratorsRequest,
       O: GetFeedGeneratorsResponse,
       kind: MethodKind.Unary,
@@ -460,7 +353,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetActorFeeds
      */
     getActorFeeds: {
-      name: 'GetActorFeeds',
+      name: "GetActorFeeds",
       I: GetActorFeedsRequest,
       O: GetActorFeedsResponse,
       kind: MethodKind.Unary,
@@ -469,7 +362,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetSuggestedFeeds
      */
     getSuggestedFeeds: {
-      name: 'GetSuggestedFeeds',
+      name: "GetSuggestedFeeds",
       I: GetSuggestedFeedsRequest,
       O: GetSuggestedFeedsResponse,
       kind: MethodKind.Unary,
@@ -478,7 +371,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetFeedGeneratorStatus
      */
     getFeedGeneratorStatus: {
-      name: 'GetFeedGeneratorStatus',
+      name: "GetFeedGeneratorStatus",
       I: GetFeedGeneratorStatusRequest,
       O: GetFeedGeneratorStatusResponse,
       kind: MethodKind.Unary,
@@ -489,7 +382,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetAuthorFeed
      */
     getAuthorFeed: {
-      name: 'GetAuthorFeed',
+      name: "GetAuthorFeed",
       I: GetAuthorFeedRequest,
       O: GetAuthorFeedResponse,
       kind: MethodKind.Unary,
@@ -498,7 +391,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetTimeline
      */
     getTimeline: {
-      name: 'GetTimeline',
+      name: "GetTimeline",
       I: GetTimelineRequest,
       O: GetTimelineResponse,
       kind: MethodKind.Unary,
@@ -507,7 +400,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetListFeed
      */
     getListFeed: {
-      name: 'GetListFeed',
+      name: "GetListFeed",
       I: GetListFeedRequest,
       O: GetListFeedResponse,
       kind: MethodKind.Unary,
@@ -518,7 +411,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetThread
      */
     getThread: {
-      name: 'GetThread',
+      name: "GetThread",
       I: GetThreadRequest,
       O: GetThreadResponse,
       kind: MethodKind.Unary,
@@ -527,7 +420,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetThreadgates
      */
     getThreadgates: {
-      name: 'GetThreadgates',
+      name: "GetThreadgates",
       I: GetThreadgatesRequest,
       O: GetThreadgatesResponse,
       kind: MethodKind.Unary,
@@ -538,7 +431,7 @@ export const Service = {
      * @generated from rpc bsky.Service.SearchActors
      */
     searchActors: {
-      name: 'SearchActors',
+      name: "SearchActors",
       I: SearchActorsRequest,
       O: SearchActorsResponse,
       kind: MethodKind.Unary,
@@ -547,7 +440,7 @@ export const Service = {
      * @generated from rpc bsky.Service.SearchPosts
      */
     searchPosts: {
-      name: 'SearchPosts',
+      name: "SearchPosts",
       I: SearchPostsRequest,
       O: SearchPostsResponse,
       kind: MethodKind.Unary,
@@ -558,7 +451,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetSuggestions
      */
     getSuggestions: {
-      name: 'GetSuggestions',
+      name: "GetSuggestions",
       I: GetSuggestionsRequest,
       O: GetSuggestionsResponse,
       kind: MethodKind.Unary,
@@ -569,7 +462,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetPosts
      */
     getPosts: {
-      name: 'GetPosts',
+      name: "GetPosts",
       I: GetPostsRequest,
       O: GetPostsResponse,
       kind: MethodKind.Unary,
@@ -578,7 +471,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetPostReplyCount
      */
     getPostReplyCount: {
-      name: 'GetPostReplyCount',
+      name: "GetPostReplyCount",
       I: GetPostReplyCountRequest,
       O: GetPostReplyCountResponse,
       kind: MethodKind.Unary,
@@ -589,7 +482,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetLabels
      */
     getLabels: {
-      name: 'GetLabels',
+      name: "GetLabels",
       I: GetLabelsRequest,
       O: GetLabelsResponse,
       kind: MethodKind.Unary,
@@ -600,7 +493,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetLatestRev
      */
     getLatestRev: {
-      name: 'GetLatestRev',
+      name: "GetLatestRev",
       I: GetLatestRevRequest,
       O: GetLatestRevResponse,
       kind: MethodKind.Unary,
@@ -611,7 +504,7 @@ export const Service = {
      * @generated from rpc bsky.Service.GetBlobTakedown
      */
     getBlobTakedown: {
-      name: 'GetBlobTakedown',
+      name: "GetBlobTakedown",
       I: GetBlobTakedownRequest,
       O: GetBlobTakedownResponse,
       kind: MethodKind.Unary,
@@ -620,7 +513,7 @@ export const Service = {
      * @generated from rpc bsky.Service.UpdateTakedown
      */
     updateTakedown: {
-      name: 'UpdateTakedown',
+      name: "UpdateTakedown",
       I: UpdateTakedownRequest,
       O: UpdateTakedownResponse,
       kind: MethodKind.Unary,
@@ -631,10 +524,11 @@ export const Service = {
      * @generated from rpc bsky.Service.Ping
      */
     ping: {
-      name: 'Ping',
+      name: "Ping",
       I: PingRequest,
       O: PingResponse,
       kind: MethodKind.Unary,
     },
-  },
-} as const
+  }
+} as const;
+
