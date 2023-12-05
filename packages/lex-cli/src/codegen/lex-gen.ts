@@ -7,10 +7,7 @@ import {
   LexArray,
   LexPrimitive,
   LexBlob,
-  LexXrpcProcedure,
-  LexXrpcQuery,
   LexToken,
-  LexXrpcSubscription,
   LexCidLink,
   LexBytes,
   LexIpldType,
@@ -270,7 +267,7 @@ export function genXrpcParams(
     'query',
     'subscription',
     'procedure',
-  ]) as LexXrpcQuery
+  ])
 
   //= export interface QueryParams {...}
   const iface = file.addInterface({
@@ -306,12 +303,9 @@ export function genXrpcInput(
   lexUri: string,
   defaultsArePresent = true,
 ) {
-  const def = lexicons.getDefOrThrow(lexUri, [
-    'query',
-    'procedure',
-  ]) as LexXrpcProcedure
+  const def = lexicons.getDefOrThrow(lexUri, ['query', 'procedure'])
 
-  if (def.input?.schema) {
+  if (def.type === 'procedure' && def.input?.schema) {
     if (def.input.schema.type === 'ref' || def.input.schema.type === 'union') {
       //= export type InputSchema = ...
       const refs =
@@ -340,7 +334,7 @@ export function genXrpcInput(
         defaultsArePresent,
       )
     }
-  } else if (def.input?.encoding) {
+  } else if (def.type === 'procedure' && def.input?.encoding) {
     //= export type InputSchema = string | Uint8Array
     file.addTypeAlias({
       isExported: true,
@@ -368,7 +362,7 @@ export function genXrpcOutput(
     'query',
     'subscription',
     'procedure',
-  ]) as LexXrpcQuery | LexXrpcSubscription | LexXrpcProcedure
+  ])
 
   const schema =
     def.type === 'subscription' ? def.message?.schema : def.output?.schema

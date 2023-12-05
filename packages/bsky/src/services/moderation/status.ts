@@ -2,10 +2,7 @@
 
 import { AtUri } from '@atproto/syntax'
 import { PrimaryDatabase } from '../../db'
-import {
-  ModerationEvent,
-  ModerationSubjectStatus,
-} from '../../db/tables/moderation'
+import { ModerationSubjectStatus } from '../../db/tables/moderation'
 import {
   REVIEWOPEN,
   REVIEWCLOSED,
