@@ -1,27 +1,34 @@
+import { AtUri } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
+import { ids } from '../lexicon/lexicons'
 import {
   ActorHydrator,
   ProfileAggs,
-  ProfileInfos,
+  Profiles,
   ProfileViewerStates,
 } from './actor'
-import { GraphHydrator, ListInfos, ListViewerStates } from './graph'
+import { GraphHydrator, ListViewerStates, Lists } from './graph'
+import { LabelHydrator, Labels } from './label'
+import { HydrationMap } from './util'
 
 export type HydrationState = {
-  profiles?: ProfileInfos
+  profiles?: Profiles
   profileViewers?: ProfileViewerStates
   profileAggs?: ProfileAggs
-  lists?: ListInfos
+  lists?: Lists
   listViewers?: ListViewerStates
+  labels?: Labels
 }
 
 export class Hydrator {
   actor: ActorHydrator
   graph: GraphHydrator
+  label: LabelHydrator
 
   constructor(public dataplane: DataPlaneClient) {
     this.actor = new ActorHydrator(dataplane)
     this.graph = new GraphHydrator(dataplane)
+    this.label = new LabelHydrator(dataplane)
   }
 
   // app.bsky.actor.defs#profileView
@@ -33,22 +40,24 @@ export class Hydrator {
     viewer: string | null,
   ): Promise<HydrationState> {
     const state: HydrationState = {}
-    const [profiles, profileViewers] = await Promise.all([
+    const [profiles, labels, profileViewers] = await Promise.all([
       this.actor.getProfiles(dids),
+      this.label.getLabelsForSubjects(labelSubjectsForDid(dids)),
       viewer ? this.actor.getProfileViewerStates(dids, viewer) : null,
     ])
     state.profiles = profiles
+    state.labels = labels
     if (profileViewers) {
       state.profileViewers = profileViewers
-      const listUris = Object.values(profileViewers).reduce((acc, cur) => {
-        if (cur?.mutedByList) {
-          acc.push(cur.mutedByList)
+      const listUris: string[] = []
+      profileViewers.forEach((item) => {
+        if (item?.mutedByList) {
+          listUris.push(item.mutedByList)
         }
-        if (cur?.blockingByList) {
-          acc.push(cur.blockingByList)
+        if (item?.blockingByList) {
+          listUris.push(item.blockingByList)
         }
-        return acc
-      }, [] as string[])
+      })
       const listState = await this.hydrateListsBasic(listUris, viewer)
       state.lists = listState.lists
       state.listViewers = listState.listViewers
@@ -91,8 +100,15 @@ export class Hydrator {
   }
 
   // app.bsky.graph.defs#listView
-  async hydrateLists(uris: string[]): Promise<HydrationState> {
-    throw new Error('not implemented')
+  async hydrateLists(
+    uris: string[],
+    viewer: string | null,
+  ): Promise<HydrationState> {
+    const [listsState, profilesState] = await Promise.all([
+      await this.hydrateListsBasic(uris, viewer),
+      await this.hydrateProfilesBasic(uris.map(didFromUri), viewer),
+    ])
+    return mergeHydrationStates(listsState, profilesState)
   }
 
   // app.bsky.graph.defs#listViewBasic
@@ -136,4 +152,35 @@ export class Hydrator {
   async hydrateThreadgates(uris: string[]): Promise<HydrationState> {
     throw new Error('not implemented')
   }
+}
+
+const labelSubjectsForDid = (dids: string[]) => {
+  return [
+    ...dids,
+    ...dids.map((did) => `at://${did}/${ids.AppBskyActorProfile}/self`),
+  ]
+}
+
+const didFromUri = (uri: string) => {
+  return new AtUri(uri).hostname
+}
+
+const mergeHydrationStates = (
+  stateA: HydrationState,
+  stateB: HydrationState,
+): HydrationState => {
+  return {
+    labels: mergeMaps(stateA.labels, stateB.labels),
+    listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
+    lists: mergeMaps(stateA.lists, stateB.lists),
+    profileAggs: mergeMaps(stateA.profileAggs, stateB.profileAggs),
+    profileViewers: mergeMaps(stateA.profileViewers, stateB.profileViewers),
+    profiles: mergeMaps(stateA.profiles, stateB.profiles),
+  }
+}
+
+const mergeMaps = <T>(mapA?: HydrationMap<T>, mapB?: HydrationMap<T>) => {
+  if (!mapA) return mapB
+  if (!mapB) return mapA
+  return mapA.merge(mapB)
 }

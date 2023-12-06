@@ -6,7 +6,7 @@ export type { Label } from '../lexicon/types/com/atproto/label/defs'
 
 export type Labels = HydrationMap<Label>
 
-export class ActorHydrator {
+export class LabelHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 
   async getLabelsForSubjects(subjects: string[]): Promise<Labels> {
