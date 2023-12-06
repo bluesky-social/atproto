@@ -5,7 +5,7 @@ import { jsonToLex } from '@atproto/lexicon'
 
 export type ListInfo = ListRecord
 
-export type ListInfos = Record<string, ListInfo | null>
+export type ListInfos = Map<string, ListInfo | null>
 
 export type ListViewerState = {
   viewerMuted?: string
@@ -13,7 +13,7 @@ export type ListViewerState = {
   viewerInList?: string
 }
 
-export type ListViewerStates = Record<string, ListViewerState | null>
+export type ListViewerStates = Map<string, ListViewerState | null>
 
 export class GraphHydrator {
   constructor(public dataplane: DataPlaneClient) {}
@@ -23,9 +23,9 @@ export class GraphHydrator {
     return uris.reduce((acc, uri, i) => {
       const list = res.records[i]
       const parsed = JSON.parse(ui8.toString(list, 'utf8'))
-      acc[uri] = parsed ? (jsonToLex(parsed) as ListRecord) : null
-      return acc
-    }, {} as ListInfos)
+      const record = parsed ? (jsonToLex(parsed) as ListRecord) : null
+      return acc.set(uri, record)
+    }, new Map() as ListInfos)
   }
 
   async getListsViewerState(
@@ -40,13 +40,12 @@ export class GraphHydrator {
       listUris: uris,
     })
     return uris.reduce((acc, uri, i) => {
-      acc[uri] = {
+      return acc.set(uri, {
         viewerMuted: mutesAndBlocks[i].muted ? uri : undefined,
         viewerListBlockUri: mutesAndBlocks[i].listBlockUri,
         viewerInList: listMemberships.listitemUris[i],
-      }
-      return acc
-    }, {} as ListViewerStates)
+      })
+    }, new Map() as ListViewerStates)
   }
 
   private async getMutesAndBlocks(uri: string, viewer: string) {

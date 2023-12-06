@@ -7,7 +7,7 @@ export type ProfileInfo = {
   record: ProfileRecord | null
 }
 
-export type ProfileInfos = Record<string, ProfileInfo | null>
+export type ProfileInfos = Map<string, ProfileInfo | null>
 
 export type ProfileViewerState = {
   muted?: boolean
@@ -19,7 +19,7 @@ export type ProfileViewerState = {
   followedBy?: string
 }
 
-export type ProfileViewerStates = Record<string, ProfileViewerState | null>
+export type ProfileViewerStates = Map<string, ProfileViewerState | null>
 
 export type ProfileAgg = {
   followers: number
@@ -27,7 +27,7 @@ export type ProfileAgg = {
   posts: number
 }
 
-export type ProfileAggs = Record<string, ProfileAgg | null>
+export type ProfileAggs = Map<string, ProfileAgg | null>
 
 export class ActorHydrator {
   constructor(public dataplane: DataPlaneClient) {}
