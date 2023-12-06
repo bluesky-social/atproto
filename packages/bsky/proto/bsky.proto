@@ -238,12 +238,12 @@ message GetListMembershipResponse {
 
 // - Return list record for list uri
 //     - list view hydration
-message GetListRequest {
-  string list_uri = 1;
+message GetListsRequest {
+  repeated string uris = 1;
 }
 
-message GetListResponse {
-  bytes record = 1;
+message GetListsResponse {
+  repeated bytes records = 1;
 }
 
 // - Return number of items in list A
@@ -377,7 +377,7 @@ message GetBlocklistSubscriptionRequest {
 }
 
 message GetBlocklistSubscriptionResponse {
-  bool subscribed = 1;
+  string listblock_uri = 1;
 }
 
 // - return list of list uris of Blockslists that A subscribes to
@@ -724,7 +724,7 @@ service Service {
   // Lists
   rpc GetListMembers(GetListMembersRequest) returns (GetListMembersResponse);
   rpc GetListMembership(GetListMembershipRequest) returns (GetListMembershipResponse);
-  rpc GetList(GetListRequest) returns (GetListResponse);
+  rpc GetLists(GetListsRequest) returns (GetListsResponse);
   rpc GetListCount(GetListCountRequest) returns (GetListCountResponse);
 
   // Mutes
