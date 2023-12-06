@@ -24,8 +24,10 @@ export class Hydrator {
     this.graph = new GraphHydrator(dataplane)
   }
 
+  // app.bsky.actor.defs#profileView
   // - profile
   //   - list
+  //   - labels
   async hydrateProfiles(
     dids: string[],
     viewer: string | null,
@@ -47,18 +49,31 @@ export class Hydrator {
         }
         return acc
       }, [] as string[])
-      const [lists, listViewers] = await Promise.all([
-        this.graph.getListRecords(listUris),
-        viewer ? this.graph.getListsViewerState(listUris, viewer) : null,
-      ])
-      state.lists = lists
-      if (listViewers) {
-        state.listViewers = listViewers
-      }
+      const listState = await this.hydrateListsBasic(listUris, viewer)
+      state.lists = listState.lists
+      state.listViewers = listState.listViewers
     }
     return state
   }
 
+  // app.bsky.actor.defs#profileViewBasic
+  // - profile
+  //   - list
+  async hydrateProfilesBasic(
+    dids: string[],
+    viewer: string | null,
+  ): Promise<HydrationState> {
+    const [state, profileAggs] = await Promise.all([
+      this.hydrateProfiles(dids, viewer),
+      this.actor.getProfileAggregates(dids),
+    ])
+    return {
+      ...state,
+      profileAggs,
+    }
+  }
+
+  // app.bsky.actor.defs#profileViewDetailed
   // - profile
   //   - list
   async hydrateProfilesDetailed(
@@ -73,5 +88,52 @@ export class Hydrator {
       ...state,
       profileAggs,
     }
+  }
+
+  // app.bsky.graph.defs#listView
+  async hydrateLists(uris: string[]): Promise<HydrationState> {
+    throw new Error('not implemented')
+  }
+
+  // app.bsky.graph.defs#listViewBasic
+  async hydrateListsBasic(
+    uris: string[],
+    viewer: string | null,
+  ): Promise<HydrationState> {
+    const state: HydrationState = {}
+    const [lists, listViewers] = await Promise.all([
+      this.graph.getListRecords(uris),
+      viewer ? this.graph.getListsViewerState(uris, viewer) : null,
+    ])
+    state.lists = lists
+    if (listViewers) {
+      state.listViewers = listViewers
+    }
+    return state
+  }
+
+  // app.bsky.feed.defs#postView
+  async hydratePosts(uris: string[]): Promise<HydrationState> {
+    throw new Error('not implemented')
+  }
+
+  // app.bsky.feed.defs#feedViewPost
+  async hydrateFeedPosts(uris: string[]): Promise<HydrationState> {
+    throw new Error('not implemented')
+  }
+
+  // app.bsky.feed.defs#threadViewPost
+  async hydrateThreadPosts(uris: string[]): Promise<HydrationState> {
+    throw new Error('not implemented')
+  }
+
+  // app.bsky.feed.defs#generatorView
+  async hydrateGenerators(uris: string[]): Promise<HydrationState> {
+    throw new Error('not implemented')
+  }
+
+  // app.bsky.feed.defs#threadgateView
+  async hydrateThreadgates(uris: string[]): Promise<HydrationState> {
+    throw new Error('not implemented')
   }
 }
