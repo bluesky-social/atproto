@@ -89,8 +89,8 @@ export const LABELS: LabelDefinitionMap = {
       },
     },
   },
-  '!no-logged-out': {
-    id: '!no-logged-out',
+  '!no-unauthenticated': {
+    id: '!no-unauthenticated',
     preferences: ['hide'],
     flags: ['no-override', 'unauthed'],
     onwarn: 'blur',

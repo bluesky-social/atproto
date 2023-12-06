@@ -10,7 +10,7 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
       LABELS['!hide'],
       LABELS['!no-promote'],
       LABELS['!warn'],
-      LABELS['!no-logged-out'],
+      LABELS['!no-unauthenticated'],
     ],
     strings: {
       settings: {

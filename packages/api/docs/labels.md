@@ -74,7 +74,7 @@ The kind of UI behavior used when a warning must be applied.
   <td>blur</td>
 </tr>
 <tr>
-  <td>!no-logged-out</td>
+  <td>!no-unauthenticated</td>
   <td>system</td>
   <td>hide</td>
   <td>❌</td>
@@ -352,7 +352,7 @@ The kind of UI behavior used when a warning must be applied.
   </td>
 </tr>
 <tr>
-  <td>!no-logged-out</td>
+  <td>!no-unauthenticated</td>
   <td>
     <code>general</code><br><strong>Sign-in Required</strong><br>This user has requested that their account only be shown to signed-in users.<br><br>
     <code>on an account</code><br><strong>Sign-in Required</strong><br>This user has requested that their account only be shown to signed-in users.<br><br>

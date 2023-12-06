@@ -41,7 +41,7 @@
       "description": "This content has received a general warning from moderators."
     }
   },
-  "!no-logged-out": {
+  "!no-unauthenticated": {
     "settings": {
       "name": "Sign-in Required",
       "description": "This user has requested that their account only be shown to signed-in users."

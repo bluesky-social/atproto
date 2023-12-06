@@ -268,7 +268,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!no-logged-out') on post when logged out</strong></td>
+<td><strong>Imperative label ('!no-unauthenticated') on post when logged out</strong></td>
 <td>
 ❌
 </td>
@@ -284,7 +284,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!no-logged-out') on author profile when logged out</strong></td>
+<td><strong>Imperative label ('!no-unauthenticated') on author profile when logged out</strong></td>
 <td>
 
 </td>
@@ -300,7 +300,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!no-logged-out') on author account when logged out</strong></td>
+<td><strong>Imperative label ('!no-unauthenticated') on author account when logged out</strong></td>
 <td>
 ❌
 </td>
@@ -316,7 +316,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!no-logged-out') on quoted post when logged out</strong></td>
+<td><strong>Imperative label ('!no-unauthenticated') on quoted post when logged out</strong></td>
 <td>
 ❌
 </td>
@@ -332,7 +332,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!no-logged-out') on quoted author account when logged out</strong></td>
+<td><strong>Imperative label ('!no-unauthenticated') on quoted author account when logged out</strong></td>
 <td>
 ❌
 </td>
@@ -348,7 +348,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!no-logged-out') on post when logged in</strong></td>
+<td><strong>Imperative label ('!no-unauthenticated') on post when logged in</strong></td>
 <td>
 
 </td>
@@ -364,7 +364,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!no-logged-out') on author profile when logged in</strong></td>
+<td><strong>Imperative label ('!no-unauthenticated') on author profile when logged in</strong></td>
 <td>
 
 </td>
@@ -380,7 +380,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!no-logged-out') on author account when logged in</strong></td>
+<td><strong>Imperative label ('!no-unauthenticated') on author account when logged in</strong></td>
 <td>
 
 </td>
@@ -396,7 +396,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!no-logged-out') on quoted post when logged in</strong></td>
+<td><strong>Imperative label ('!no-unauthenticated') on quoted post when logged in</strong></td>
 <td>
 
 </td>
@@ -412,7 +412,7 @@ Key:
 </tr>
 
 <tr>
-<td><strong>Imperative label ('!no-logged-out') on quoted author account when logged in</strong></td>
+<td><strong>Imperative label ('!no-unauthenticated') on quoted author account when logged in</strong></td>
 <td>
 
 </td>

@@ -22,7 +22,7 @@
         "onwarn": "blur"
       },
       {
-        "id": "!no-logged-out",
+        "id": "!no-unauthenticated",
         "preferences": ["hide"],
         "flags": ["no-override", "unauthed"],
         "onwarn": "blur"
