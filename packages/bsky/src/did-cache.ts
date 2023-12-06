@@ -42,7 +42,13 @@ export class DidRedisCache implements DidCache {
   }
 
   async checkCache(did: string): Promise<CacheResult | null> {
-    const got = await this.redis.get(did)
+    let got: string | null
+    try {
+      got = await this.redis.get(did)
+    } catch (err) {
+      got = null
+      log.error({ did, err }, 'error fetching did from cache')
+    }
     if (!got) return null
     const { doc, updatedAt } = JSON.parse(got) as CacheResult
     const now = Date.now()
