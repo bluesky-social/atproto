@@ -9,7 +9,7 @@ export type Labels = HydrationMap<Label>
 export class ActorHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 
-  async getLabelsForUris(uris: string[]): Promise<Labels> {
+  async getLabelsForSubjects(subjects: string[]): Promise<Labels> {
     throw new Error('unimplemented')
   }
 }
