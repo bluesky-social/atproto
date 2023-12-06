@@ -34,7 +34,6 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 <td>
 
@@ -54,7 +53,6 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 <td>
 
@@ -68,11 +66,9 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 <td>
 🚫
-
 </td>
 <td>
 
@@ -92,7 +88,6 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 </tr>
 
@@ -109,7 +104,6 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 </tr>
 
@@ -200,7 +194,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 
@@ -220,7 +213,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 
@@ -234,11 +226,9 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 ✋
-
 </td>
 <td>
 
@@ -258,7 +248,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -275,6 +264,165 @@ Key:
 </td>
 <td>
 ✋
+</td>
+</tr>
+
+<tr>
+<td><strong>Imperative label ('!no-unauthenticated') on post when logged out</strong></td>
+<td>
+❌
+</td>
+<td>
+🚫
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+</tr>
+
+<tr>
+<td><strong>Imperative label ('!no-unauthenticated') on author profile when logged out</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+🚫
+</td>
+<td>
+
+</td>
+</tr>
+
+<tr>
+<td><strong>Imperative label ('!no-unauthenticated') on author account when logged out</strong></td>
+<td>
+❌
+</td>
+<td>
+🚫
+</td>
+<td>
+🚫
+</td>
+<td>
+
+</td>
+</tr>
+
+<tr>
+<td><strong>Imperative label ('!no-unauthenticated') on quoted post when logged out</strong></td>
+<td>
+❌
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+🚫
+</td>
+</tr>
+
+<tr>
+<td><strong>Imperative label ('!no-unauthenticated') on quoted author account when logged out</strong></td>
+<td>
+❌
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+🚫
+</td>
+</tr>
+
+<tr>
+<td><strong>Imperative label ('!no-unauthenticated') on post when logged in</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+</tr>
+
+<tr>
+<td><strong>Imperative label ('!no-unauthenticated') on author profile when logged in</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+</tr>
+
+<tr>
+<td><strong>Imperative label ('!no-unauthenticated') on author account when logged in</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+</tr>
+
+<tr>
+<td><strong>Imperative label ('!no-unauthenticated') on quoted post when logged in</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+</tr>
+
+<tr>
+<td><strong>Imperative label ('!no-unauthenticated') on quoted author account when logged in</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
 
 </td>
 </tr>
@@ -287,7 +435,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 
@@ -307,7 +454,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 
@@ -321,11 +467,9 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 ✋
-
 </td>
 <td>
 
@@ -345,7 +489,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -362,7 +505,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -373,7 +515,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 
@@ -393,7 +534,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 
@@ -407,11 +547,9 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 ✋
-
 </td>
 <td>
 
@@ -431,7 +569,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -448,7 +585,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -546,7 +682,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -560,7 +695,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 
@@ -577,11 +711,9 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -598,7 +730,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -631,7 +762,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -645,7 +775,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 
@@ -662,11 +791,9 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -683,7 +810,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -790,9 +916,7 @@ Key:
 ❌
 </td>
 <td>
-
 🪧
-
 </td>
 <td>
 
@@ -811,9 +935,7 @@ Key:
 
 </td>
 <td>
-
 🪧
-
 </td>
 <td>
 
@@ -826,14 +948,10 @@ Key:
 ❌
 </td>
 <td>
-
 🪧
-
 </td>
 <td>
-
 🪧
-
 </td>
 <td>
 
@@ -852,9 +970,7 @@ Key:
 
 </td>
 <td>
-
 🪧
-
 </td>
 </tr>
 
@@ -870,9 +986,7 @@ Key:
 
 </td>
 <td>
-
 🪧
-
 </td>
 </tr>
 
@@ -882,9 +996,7 @@ Key:
 
 </td>
 <td>
-
 🪧
-
 </td>
 <td>
 
@@ -903,9 +1015,7 @@ Key:
 
 </td>
 <td>
-
 🪧
-
 </td>
 <td>
 
@@ -918,14 +1028,10 @@ Key:
 
 </td>
 <td>
-
 🪧
-
 </td>
 <td>
-
 🪧
-
 </td>
 <td>
 
@@ -944,9 +1050,7 @@ Key:
 
 </td>
 <td>
-
 🪧
-
 </td>
 </tr>
 
@@ -962,9 +1066,7 @@ Key:
 
 </td>
 <td>
-
 🪧
-
 </td>
 </tr>
 
@@ -1062,7 +1164,6 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 </tr>
 
@@ -1076,7 +1177,6 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 <td>
 
@@ -1093,11 +1193,9 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 <td>
 🚫
-
 </td>
 </tr>
 
@@ -1114,7 +1212,6 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 </tr>
 
@@ -1142,7 +1239,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 
@@ -1197,7 +1293,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -1224,7 +1319,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 
@@ -1279,7 +1373,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -1312,7 +1405,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -1361,7 +1453,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -1394,7 +1485,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -1443,7 +1533,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -1471,11 +1560,9 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 <td>
 🚫
-
 </td>
 <td>
 
@@ -1495,7 +1582,6 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 </tr>
 
@@ -1506,11 +1592,9 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 <td>
 🚫
-
 </td>
 <td>
 
@@ -1530,7 +1614,6 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 </tr>
 
@@ -1541,7 +1624,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 
@@ -1564,7 +1646,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -1575,7 +1656,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 
@@ -1598,7 +1678,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 
@@ -1610,11 +1689,9 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 <td>
 🚫
-
 </td>
 <td>
 
@@ -1634,7 +1711,6 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 </tr>
 
@@ -1645,11 +1721,9 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 <td>
 🚫
-
 </td>
 <td>
 
@@ -1663,15 +1737,12 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 <td>
 🚫
-
 </td>
 <td>
 🚫
-
 </td>
 </tr>
 
@@ -1682,7 +1753,6 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 <td>
 
@@ -1699,7 +1769,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 <td>
 
@@ -1716,7 +1785,6 @@ Key:
 </td>
 <td>
 🚫
-
 </td>
 <td>
 
@@ -1739,7 +1807,6 @@ Key:
 </td>
 <td>
 ✋
-
 </td>
 </tr>
 

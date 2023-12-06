@@ -89,6 +89,9 @@
     "porn-warn-intolerant-hide": {
       "adultContentEnabled": true,
       "settings": { "porn": "warn", "intolerant": "hide" }
+    },
+    "logged-out": {
+      "authed": false
     }
   },
   "scenarios": {
@@ -246,6 +249,121 @@
       "behaviors": {
         "embed": { "cause": "label:!warn", "blur": true }
       }
+    },
+
+    "Imperative label ('!no-unauthenticated') on post when logged out": {
+      "cfg": "logged-out",
+      "subject": "post",
+      "author": "alice",
+      "labels": { "post": ["!no-unauthenticated"] },
+      "behaviors": {
+        "content": {
+          "cause": "label:!no-unauthenticated",
+          "filter": true,
+          "blur": true,
+          "noOverride": true
+        }
+      }
+    },
+    "Imperative label ('!no-unauthenticated') on author profile when logged out": {
+      "cfg": "logged-out",
+      "subject": "post",
+      "author": "alice",
+      "labels": { "profile": ["!no-unauthenticated"] },
+      "behaviors": {
+        "avatar": {
+          "cause": "label:!no-unauthenticated",
+          "blur": true,
+          "noOverride": true
+        }
+      }
+    },
+    "Imperative label ('!no-unauthenticated') on author account when logged out": {
+      "cfg": "logged-out",
+      "subject": "post",
+      "author": "alice",
+      "labels": { "account": ["!no-unauthenticated"] },
+      "behaviors": {
+        "content": {
+          "cause": "label:!no-unauthenticated",
+          "filter": true,
+          "blur": true,
+          "noOverride": true
+        },
+        "avatar": {
+          "cause": "label:!no-unauthenticated",
+          "blur": true,
+          "noOverride": true
+        }
+      }
+    },
+    "Imperative label ('!no-unauthenticated') on quoted post when logged out": {
+      "cfg": "logged-out",
+      "subject": "post",
+      "author": "alice",
+      "quoteAuthor": "alice",
+      "labels": { "quotedPost": ["!no-unauthenticated"] },
+      "behaviors": {
+        "content": { "cause": "label:!no-unauthenticated", "filter": true },
+        "embed": {
+          "cause": "label:!no-unauthenticated",
+          "blur": true,
+          "noOverride": true
+        }
+      }
+    },
+    "Imperative label ('!no-unauthenticated') on quoted author account when logged out": {
+      "cfg": "logged-out",
+      "subject": "post",
+      "author": "alice",
+      "quoteAuthor": "alice",
+      "labels": { "quotedAccount": ["!no-unauthenticated"] },
+      "behaviors": {
+        "content": { "cause": "label:!no-unauthenticated", "filter": true },
+        "embed": {
+          "cause": "label:!no-unauthenticated",
+          "blur": true,
+          "noOverride": true
+        }
+      }
+    },
+
+    "Imperative label ('!no-unauthenticated') on post when logged in": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "alice",
+      "labels": { "post": ["!no-unauthenticated"] },
+      "behaviors": {}
+    },
+    "Imperative label ('!no-unauthenticated') on author profile when logged in": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "alice",
+      "labels": { "profile": ["!no-unauthenticated"] },
+      "behaviors": {}
+    },
+    "Imperative label ('!no-unauthenticated') on author account when logged in": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "alice",
+      "labels": { "account": ["!no-unauthenticated"] },
+      "behaviors": {}
+    },
+    "Imperative label ('!no-unauthenticated') on quoted post when logged in": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "alice",
+      "quoteAuthor": "alice",
+      "labels": { "quotedPost": ["!no-unauthenticated"] },
+      "behaviors": {}
+    },
+    "Imperative label ('!no-unauthenticated') on quoted author account when logged in": {
+      "cfg": "none",
+      "subject": "post",
+      "author": "alice",
+      "quoteAuthor": "alice",
+      "labels": { "quotedAccount": ["!no-unauthenticated"] },
+      "behaviors": {}
     },
 
     "Blur label ('intolerant') on post (hide)": {

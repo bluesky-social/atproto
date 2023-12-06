@@ -131,6 +131,74 @@ Key:
 </td>
 </tr>
 
+<tr>
+<td><strong>Imperative label ('!no-unauthenticated') on account when logged out</strong></td>
+<td>
+❌
+</td>
+<td>
+🚫
+
+</td>
+<td>
+
+</td>
+<td>
+🚫
+
+</td>
+</tr>
+
+<tr>
+<td><strong>Imperative label ('!no-unauthenticated') on profile when logged out</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+🚫
+
+</td>
+<td>
+🚫
+
+</td>
+</tr>
+
+<tr>
+<td><strong>Imperative label ('!no-unauthenticated') on account when logged in</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+</tr>
+
+<tr>
+<td><strong>Imperative label ('!no-unauthenticated') on profile when logged in</strong></td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+<td>
+
+</td>
+</tr>
+
 <tr><th>Scenario</th><th>Filter</th><th>Account</th><th>Profile</td><th>Avatar</th></tr>
 <tr>
 <td><strong>Blur label ('intolerant') on account (hide)</strong></td>
