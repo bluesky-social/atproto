@@ -10,6 +10,12 @@ import {
 import { GraphHydrator, ListViewerStates, Lists } from './graph'
 import { LabelHydrator, Labels } from './label'
 import { HydrationMap } from './util'
+import {
+  FeedGenAggs,
+  FeedGens,
+  FeedGenViewerStates,
+  FeedHydrator,
+} from './feed'
 
 export type HydrationState = {
   profiles?: Profiles
@@ -18,15 +24,20 @@ export type HydrationState = {
   lists?: Lists
   listViewers?: ListViewerStates
   labels?: Labels
+  generators?: FeedGens
+  generatorViewers?: FeedGenViewerStates
+  generatorAggs?: FeedGenAggs
 }
 
 export class Hydrator {
   actor: ActorHydrator
+  feed: FeedHydrator
   graph: GraphHydrator
   label: LabelHydrator
 
   constructor(public dataplane: DataPlaneClient) {
     this.actor = new ActorHydrator(dataplane)
+    this.feed = new FeedHydrator(dataplane)
     this.graph = new GraphHydrator(dataplane)
     this.label = new LabelHydrator(dataplane)
   }
@@ -144,13 +155,19 @@ export class Hydrator {
   }
 
   // app.bsky.feed.defs#generatorView
-  async hydrateGenerators(uris: string[]): Promise<HydrationState> {
-    throw new Error('not implemented')
-  }
-
-  // app.bsky.feed.defs#threadgateView
-  async hydrateThreadgates(uris: string[]): Promise<HydrationState> {
-    throw new Error('not implemented')
+  async hydrateGenerators(uris: string[], viewer): Promise<HydrationState> {
+    const [generators, generatorAggs, generatorViewers, profileState] =
+      await Promise.all([
+        this.feed.getFeedGens(uris),
+        this.feed.getFeedGenAggregates(uris),
+        viewer ? this.feed.getFeedGenViewerStates(uris, viewer) : undefined,
+        this.hydrateProfiles(uris.map(didFromUri), viewer),
+      ])
+    return mergeHydrationStates(profileState, {
+      generators,
+      generatorAggs,
+      generatorViewers,
+    })
   }
 }
 
@@ -176,6 +193,12 @@ const mergeHydrationStates = (
     profileAggs: mergeMaps(stateA.profileAggs, stateB.profileAggs),
     profileViewers: mergeMaps(stateA.profileViewers, stateB.profileViewers),
     profiles: mergeMaps(stateA.profiles, stateB.profiles),
+    generators: mergeMaps(stateA.generators, stateB.generators),
+    generatorViewers: mergeMaps(
+      stateA.generatorViewers,
+      stateB.generatorViewers,
+    ),
+    generatorAggs: mergeMaps(stateA.generatorAggs, stateB.generatorAggs),
   }
 }
 

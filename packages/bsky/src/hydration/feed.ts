@@ -8,27 +8,33 @@ export type Post = PostRecord
 export type Posts = HydrationMap<Post>
 
 export type PostViewerState = {
-  muted?: boolean
-  mutedByList?: string
-  blockedBy?: boolean
-  blocking?: string
-  blockingByList?: string
-  following?: string
-  followedBy?: string
+  like?: string
 }
 
-export type PostViewerStates = Map<string, PostViewerState | null>
+export type PostViewerStates = HydrationMap<PostViewerState>
 
 export type PostAgg = {
-  followers: number
-  follows: number
-  posts: number
+  likes: number
+  replies: number
+  reposts: number
 }
 
-export type PostAggs = Map<string, PostAgg | null>
+export type PostAggs = HydrationMap<PostAgg>
+
+export type FeedGenAgg = {
+  likes: number
+}
+
+export type FeedGenAggs = HydrationMap<FeedGenAgg>
 
 export type FeedGen = FeedGenRecord
 export type FeedGens = HydrationMap<FeedGen>
+
+export type FeedGenViewerState = {
+  like?: string
+}
+
+export type FeedGenViewerStates = HydrationMap<FeedGenViewerState>
 
 export type Threadgate = ThreadgateRecord
 export type Threadgates = HydrationMap<Threadgate>
@@ -52,6 +58,17 @@ export class FeedHydrator {
   }
 
   async getFeedGens(uris: string[]): Promise<FeedGens> {
+    throw new Error('unimplemented')
+  }
+
+  async getFeedGenViewerStates(
+    uris: string[],
+    viewer: string,
+  ): Promise<FeedGenViewerStates> {
+    throw new Error('unimplemented')
+  }
+
+  async getFeedGenAggregates(uris: string[]): Promise<FeedGenAggs> {
     throw new Error('unimplemented')
   }
 
