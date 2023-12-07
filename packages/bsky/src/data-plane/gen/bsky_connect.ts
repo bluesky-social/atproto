@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { GetActorFeedsRequest, GetActorFeedsResponse, GetActorFollowsActorsRequest, GetActorFollowsActorsResponse, GetActorLikesRequest, GetActorLikesResponse, GetActorMutesActorRequest, GetActorMutesActorResponse, GetActorMutesActorViaListRequest, GetActorMutesActorViaListResponse, GetActorRepostsRequest, GetActorRepostsResponse, GetAuthorFeedRequest, GetAuthorFeedResponse, GetBidirectionalBlockRequest, GetBidirectionalBlockResponse, GetBidirectionalBlockViaListRequest, GetBidirectionalBlockViaListResponse, GetBlobTakedownRequest, GetBlobTakedownResponse, GetBlocklistSubscriptionRequest, GetBlocklistSubscriptionResponse, GetBlocklistSubscriptionsRequest, GetBlocklistSubscriptionsResponse, GetBlocksRequest, GetBlocksResponse, GetDidsByHandlesRequest, GetDidsByHandlesResponse, GetFeedGeneratorsRequest, GetFeedGeneratorsResponse, GetFeedGeneratorStatusRequest, GetFeedGeneratorStatusResponse, GetFollowersCountRequest, GetFollowersCountResponse, GetFollowersRequest, GetFollowersResponse, GetFollowsCountRequest, GetFollowsCountResponse, GetFollowsRequest, GetFollowsResponse, GetHandlesRequest, GetHandlesResponse, GetLabelsRequest, GetLabelsResponse, GetLatestRevRequest, GetLatestRevResponse, GetLikeByActorAndSubjectRequest, GetLikeByActorAndSubjectResponse, GetLikesBySubjectRequest, GetLikesBySubjectResponse, GetLikesCountRequest, GetLikesCountResponse, GetListCountRequest, GetListCountResponse, GetListFeedRequest, GetListFeedResponse, GetListMembershipRequest, GetListMembershipResponse, GetListMembersRequest, GetListMembersResponse, GetListsRequest, GetListsResponse, GetMutelistSubscriptionRequest, GetMutelistSubscriptionResponse, GetMutelistSubscriptionsRequest, GetMutelistSubscriptionsResponse, GetMutesRequest, GetMutesResponse, GetNotificationSeenRequest, GetNotificationSeenResponse, GetNotificationsRequest, GetNotificationsResponse, GetPostReplyCountRequest, GetPostReplyCountResponse, GetPostsRequest, GetPostsResponse, GetProfilesRequest, GetProfilesResponse, GetRepostByActorAndSubjectRequest, GetRepostByActorAndSubjectResponse, GetRepostsBySubjectRequest, GetRepostsBySubjectResponse, GetRepostsCountRequest, GetRepostsCountResponse, GetSuggestedFeedsRequest, GetSuggestedFeedsResponse, GetSuggestionsRequest, GetSuggestionsResponse, GetThreadgatesRequest, GetThreadgatesResponse, GetThreadRequest, GetThreadResponse, GetTimelineRequest, GetTimelineResponse, GetUnreadNotificationCountRequest, GetUnreadNotificationCountResponse, PingRequest, PingResponse, SearchActorsRequest, SearchActorsResponse, SearchPostsRequest, SearchPostsResponse, UpdateNotificationSeenRequest, UpdateNotificationSeenResponse, UpdateTakedownRequest, UpdateTakedownResponse } from "./bsky_pb.js";
+import { GetActorFeedsRequest, GetActorFeedsResponse, GetActorFollowsActorsRequest, GetActorFollowsActorsResponse, GetActorLikesRequest, GetActorLikesResponse, GetActorMutesActorRequest, GetActorMutesActorResponse, GetActorMutesActorViaListRequest, GetActorMutesActorViaListResponse, GetActorRepostsRequest, GetActorRepostsResponse, GetAuthorFeedRequest, GetAuthorFeedResponse, GetBidirectionalBlockRequest, GetBidirectionalBlockResponse, GetBidirectionalBlockViaListRequest, GetBidirectionalBlockViaListResponse, GetBlobTakedownRequest, GetBlobTakedownResponse, GetBlocklistSubscriptionRequest, GetBlocklistSubscriptionResponse, GetBlocklistSubscriptionsRequest, GetBlocklistSubscriptionsResponse, GetBlocksRequest, GetBlocksResponse, GetDidsByHandlesRequest, GetDidsByHandlesResponse, GetFeedGeneratorsRequest, GetFeedGeneratorsResponse, GetFeedGeneratorStatusRequest, GetFeedGeneratorStatusResponse, GetFollowCountsRequest, GetFollowCountsResponse, GetFollowerCountsRequest, GetFollowerCountsResponse, GetFollowersRequest, GetFollowersResponse, GetFollowsRequest, GetFollowsResponse, GetHandlesRequest, GetHandlesResponse, GetLabelsRequest, GetLabelsResponse, GetLatestRevRequest, GetLatestRevResponse, GetLikeByActorAndSubjectRequest, GetLikeByActorAndSubjectResponse, GetLikeCountsRequest, GetLikeCountsResponse, GetLikesBySubjectRequest, GetLikesBySubjectResponse, GetListCountRequest, GetListCountResponse, GetListFeedRequest, GetListFeedResponse, GetListMembershipRequest, GetListMembershipResponse, GetListMembersRequest, GetListMembersResponse, GetListsRequest, GetListsResponse, GetMutelistSubscriptionRequest, GetMutelistSubscriptionResponse, GetMutelistSubscriptionsRequest, GetMutelistSubscriptionsResponse, GetMutesRequest, GetMutesResponse, GetNotificationSeenRequest, GetNotificationSeenResponse, GetNotificationsRequest, GetNotificationsResponse, GetPostCountsRequest, GetPostCountsResponse, GetPostReplyCountsRequest, GetPostReplyCountsResponse, GetPostsRequest, GetPostsResponse, GetProfilesRequest, GetProfilesResponse, GetRelationshipsRequest, GetRelationshipsResponse, GetRepostByActorAndSubjectRequest, GetRepostByActorAndSubjectResponse, GetRepostCountsRequest, GetRepostCountsResponse, GetRepostsBySubjectRequest, GetRepostsBySubjectResponse, GetSuggestedFeedsRequest, GetSuggestedFeedsResponse, GetSuggestionsRequest, GetSuggestionsResponse, GetThreadgatesRequest, GetThreadgatesResponse, GetThreadRequest, GetThreadResponse, GetTimelineRequest, GetTimelineResponse, GetUnreadNotificationCountRequest, GetUnreadNotificationCountResponse, PingRequest, PingResponse, SearchActorsRequest, SearchActorsResponse, SearchPostsRequest, SearchPostsResponse, UpdateNotificationSeenRequest, UpdateNotificationSeenResponse, UpdateTakedownRequest, UpdateTakedownResponse } from "./bsky_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -42,21 +42,21 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetFollowersCount
+     * @generated from rpc bsky.Service.GetFollowerCounts
      */
-    getFollowersCount: {
-      name: "GetFollowersCount",
-      I: GetFollowersCountRequest,
-      O: GetFollowersCountResponse,
+    getFollowerCounts: {
+      name: "GetFollowerCounts",
+      I: GetFollowerCountsRequest,
+      O: GetFollowerCountsResponse,
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetFollowsCount
+     * @generated from rpc bsky.Service.GetFollowCounts
      */
-    getFollowsCount: {
-      name: "GetFollowsCount",
-      I: GetFollowsCountRequest,
-      O: GetFollowsCountResponse,
+    getFollowCounts: {
+      name: "GetFollowCounts",
+      I: GetFollowCountsRequest,
+      O: GetFollowCountsResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -89,12 +89,12 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetLikesCount
+     * @generated from rpc bsky.Service.GetLikeCounts
      */
-    getLikesCount: {
-      name: "GetLikesCount",
-      I: GetLikesCountRequest,
-      O: GetLikesCountResponse,
+    getLikeCounts: {
+      name: "GetLikeCounts",
+      I: GetLikeCountsRequest,
+      O: GetLikeCountsResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -127,12 +127,12 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetRepostsCount
+     * @generated from rpc bsky.Service.GetRepostCounts
      */
-    getRepostsCount: {
-      name: "GetRepostsCount",
-      I: GetRepostsCountRequest,
-      O: GetRepostsCountResponse,
+    getRepostCounts: {
+      name: "GetRepostCounts",
+      I: GetRepostCountsRequest,
+      O: GetRepostCountsResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -162,6 +162,17 @@ export const Service = {
       name: "GetDidsByHandles",
       I: GetDidsByHandlesRequest,
       O: GetDidsByHandlesResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Relationships
+     *
+     * @generated from rpc bsky.Service.GetRelationships
+     */
+    getRelationships: {
+      name: "GetRelationships",
+      I: GetRelationshipsRequest,
+      O: GetRelationshipsResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -468,12 +479,21 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetPostReplyCount
+     * @generated from rpc bsky.Service.GetPostReplyCounts
      */
-    getPostReplyCount: {
-      name: "GetPostReplyCount",
-      I: GetPostReplyCountRequest,
-      O: GetPostReplyCountResponse,
+    getPostReplyCounts: {
+      name: "GetPostReplyCounts",
+      I: GetPostReplyCountsRequest,
+      O: GetPostReplyCountsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetPostCounts
+     */
+    getPostCounts: {
+      name: "GetPostCounts",
+      I: GetPostCountsRequest,
+      O: GetPostCountsResponse,
       kind: MethodKind.Unary,
     },
     /**

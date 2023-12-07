@@ -52,22 +52,22 @@ message GetFollowsResponse {
 
 // - Return number of users who follow A
 //     - For `followersCount` on a profile
-message GetFollowersCountRequest {
-  string actor_did = 1;
+message GetFollowerCountsRequest {
+  repeated string dids = 1;
 }
 
-message GetFollowersCountResponse {
-  int32 count = 1;
+message GetFollowerCountsResponse {
+  repeated int32 counts = 1;
 }
 
 // - Return number of users followed by A
 //     - For `followCount` on a profile
-message GetFollowsCountRequest {
-  string actor_did = 1;
+message GetFollowCountsRequest {
+  repeated string dids = 1;
 }
 
-message GetFollowsCountResponse {
-  int32 count = 1;
+message GetFollowCountsResponse {
+  repeated int32 counts = 1;
 }
 
 //
@@ -111,14 +111,14 @@ message GetActorLikesResponse {
   string cursor = 2;
 }
 
-// - return number of likes on subject A
+// - return number of likes on subjects A, B, C...
 //     - post or feed generator hydration `likeCount` field
-message GetLikesCountRequest {
-  string subject_uri = 1;
+message GetLikeCountsRequest {
+  repeated string uris = 1;
 }
 
-message GetLikesCountResponse {
-  int32 count = 1;
+message GetLikeCountsResponse {
+  repeated int32 counts = 1;
 }
 
 //
@@ -164,12 +164,12 @@ message GetActorRepostsResponse {
 
 // - return number of reposts on subject A
 //     - post or feed generator hydration `repostCount` field
-message GetRepostsCountRequest {
-  string subject_uri = 1;
+message GetRepostCountsRequest {
+  repeated string uris = 1;
 }
 
-message GetRepostsCountResponse {
-  int32 count = 1;
+message GetRepostCountsResponse {
+  repeated int32 counts = 1;
 }
 
 //
@@ -206,6 +206,33 @@ message GetDidsByHandlesRequest {
 
 message GetDidsByHandlesResponse {
   repeated string dids = 1;
+}
+
+//
+// Relationships
+//
+
+// - return relationships between user A and users B, C, D...
+//     - profile hydration
+//     - block application
+message GetRelationshipsRequest {
+  string actorDid = 1;
+  repeated string targetDids = 2;
+}
+
+message Relationships {
+  bool muted = 1;
+  string muted_by_list = 2;
+  string blockedBy = 3;
+  string blocking = 4;
+  string blockedByList = 5;
+  string blockingByList = 6;
+  string following = 7;
+  string followedBy = 8;
+}
+
+message GetRelationshipsResponse {
+  repeated Relationships relationships = 1;
 }
 
 //
@@ -508,7 +535,7 @@ message GetAuthorFeedRequest {
   string actor_did = 1;
   int32 limit = 2;
   string cursor = 3;
-  bool replies_only = 4;
+  bool no_replies = 4;
   bool media_only = 5;
 }
 
@@ -631,11 +658,21 @@ message GetPostsResponse {
 
 // - Return post reply count with uris A, B, C…
 //     - All feed hydration
-message GetPostReplyCountRequest {
+message GetPostReplyCountsRequest {
   repeated string uris = 1;
 }
 
-message GetPostReplyCountResponse {
+message GetPostReplyCountsResponse {
+  repeated int32 counts = 1;
+}
+
+// - Return post count for users A, B, C…
+//     - Profile hydration
+message GetPostCountsRequest {
+  repeated string dids = 1;
+}
+
+message GetPostCountsResponse {
   repeated int32 counts = 1;
 }
 
@@ -701,25 +738,28 @@ service Service {
   rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);
   rpc GetFollowers(GetFollowersRequest) returns (GetFollowersResponse);
   rpc GetFollows(GetFollowsRequest) returns (GetFollowsResponse);
-  rpc GetFollowersCount(GetFollowersCountRequest) returns (GetFollowersCountResponse);
-  rpc GetFollowsCount(GetFollowsCountRequest) returns (GetFollowsCountResponse);
+  rpc GetFollowerCounts(GetFollowerCountsRequest) returns (GetFollowerCountsResponse);
+  rpc GetFollowCounts(GetFollowCountsRequest) returns (GetFollowCountsResponse);
 
   // Likes
   rpc GetLikesBySubject(GetLikesBySubjectRequest) returns (GetLikesBySubjectResponse);
   rpc GetLikeByActorAndSubject(GetLikeByActorAndSubjectRequest) returns (GetLikeByActorAndSubjectResponse);
   rpc GetActorLikes(GetActorLikesRequest) returns (GetActorLikesResponse);
-  rpc GetLikesCount(GetLikesCountRequest) returns (GetLikesCountResponse);
+  rpc GetLikeCounts(GetLikeCountsRequest) returns (GetLikeCountsResponse);
 
   // Reposts
   rpc GetRepostsBySubject(GetRepostsBySubjectRequest) returns (GetRepostsBySubjectResponse);
   rpc GetRepostByActorAndSubject(GetRepostByActorAndSubjectRequest) returns (GetRepostByActorAndSubjectResponse);
   rpc GetActorReposts(GetActorRepostsRequest) returns (GetActorRepostsResponse);
-  rpc GetRepostsCount(GetRepostsCountRequest) returns (GetRepostsCountResponse);
+  rpc GetRepostCounts(GetRepostCountsRequest) returns (GetRepostCountsResponse);
 
   // Profile
   rpc GetProfiles(GetProfilesRequest) returns (GetProfilesResponse);
   rpc GetHandles(GetHandlesRequest) returns (GetHandlesResponse);
   rpc GetDidsByHandles(GetDidsByHandlesRequest) returns (GetDidsByHandlesResponse);
+
+  // Relationships
+  rpc GetRelationships(GetRelationshipsRequest) returns (GetRelationshipsResponse);
 
   // Lists
   rpc GetListMembers(GetListMembersRequest) returns (GetListMembersResponse);
@@ -775,7 +815,8 @@ service Service {
 
   // Posts
   rpc GetPosts(GetPostsRequest) returns (GetPostsResponse);
-  rpc GetPostReplyCount(GetPostReplyCountRequest) returns (GetPostReplyCountResponse);
+  rpc GetPostReplyCounts(GetPostReplyCountsRequest) returns (GetPostReplyCountsResponse);
+  rpc GetPostCounts(GetPostCountsRequest) returns (GetPostCountsResponse);
 
   // Labels
   rpc GetLabels(GetLabelsRequest) returns (GetLabelsResponse);

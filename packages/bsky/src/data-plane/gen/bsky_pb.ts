@@ -283,76 +283,76 @@ export class GetFollowsResponse extends Message<GetFollowsResponse> {
  * - Return number of users who follow A
  *     - For `followersCount` on a profile
  *
- * @generated from message bsky.GetFollowersCountRequest
+ * @generated from message bsky.GetFollowerCountsRequest
  */
-export class GetFollowersCountRequest extends Message<GetFollowersCountRequest> {
+export class GetFollowerCountsRequest extends Message<GetFollowerCountsRequest> {
   /**
-   * @generated from field: string actor_did = 1;
+   * @generated from field: repeated string dids = 1;
    */
-  actorDid = "";
+  dids: string[] = [];
 
-  constructor(data?: PartialMessage<GetFollowersCountRequest>) {
+  constructor(data?: PartialMessage<GetFollowerCountsRequest>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "bsky.GetFollowersCountRequest";
+  static readonly typeName = "bsky.GetFollowerCountsRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "dids", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetFollowersCountRequest {
-    return new GetFollowersCountRequest().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetFollowerCountsRequest {
+    return new GetFollowerCountsRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetFollowersCountRequest {
-    return new GetFollowersCountRequest().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetFollowerCountsRequest {
+    return new GetFollowerCountsRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetFollowersCountRequest {
-    return new GetFollowersCountRequest().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetFollowerCountsRequest {
+    return new GetFollowerCountsRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetFollowersCountRequest | PlainMessage<GetFollowersCountRequest> | undefined, b: GetFollowersCountRequest | PlainMessage<GetFollowersCountRequest> | undefined): boolean {
-    return proto3.util.equals(GetFollowersCountRequest, a, b);
+  static equals(a: GetFollowerCountsRequest | PlainMessage<GetFollowerCountsRequest> | undefined, b: GetFollowerCountsRequest | PlainMessage<GetFollowerCountsRequest> | undefined): boolean {
+    return proto3.util.equals(GetFollowerCountsRequest, a, b);
   }
 }
 
 /**
- * @generated from message bsky.GetFollowersCountResponse
+ * @generated from message bsky.GetFollowerCountsResponse
  */
-export class GetFollowersCountResponse extends Message<GetFollowersCountResponse> {
+export class GetFollowerCountsResponse extends Message<GetFollowerCountsResponse> {
   /**
-   * @generated from field: int32 count = 1;
+   * @generated from field: repeated int32 counts = 1;
    */
-  count = 0;
+  counts: number[] = [];
 
-  constructor(data?: PartialMessage<GetFollowersCountResponse>) {
+  constructor(data?: PartialMessage<GetFollowerCountsResponse>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "bsky.GetFollowersCountResponse";
+  static readonly typeName = "bsky.GetFollowerCountsResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 1, name: "counts", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetFollowersCountResponse {
-    return new GetFollowersCountResponse().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetFollowerCountsResponse {
+    return new GetFollowerCountsResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetFollowersCountResponse {
-    return new GetFollowersCountResponse().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetFollowerCountsResponse {
+    return new GetFollowerCountsResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetFollowersCountResponse {
-    return new GetFollowersCountResponse().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetFollowerCountsResponse {
+    return new GetFollowerCountsResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetFollowersCountResponse | PlainMessage<GetFollowersCountResponse> | undefined, b: GetFollowersCountResponse | PlainMessage<GetFollowersCountResponse> | undefined): boolean {
-    return proto3.util.equals(GetFollowersCountResponse, a, b);
+  static equals(a: GetFollowerCountsResponse | PlainMessage<GetFollowerCountsResponse> | undefined, b: GetFollowerCountsResponse | PlainMessage<GetFollowerCountsResponse> | undefined): boolean {
+    return proto3.util.equals(GetFollowerCountsResponse, a, b);
   }
 }
 
@@ -360,76 +360,76 @@ export class GetFollowersCountResponse extends Message<GetFollowersCountResponse
  * - Return number of users followed by A
  *     - For `followCount` on a profile
  *
- * @generated from message bsky.GetFollowsCountRequest
+ * @generated from message bsky.GetFollowCountsRequest
  */
-export class GetFollowsCountRequest extends Message<GetFollowsCountRequest> {
+export class GetFollowCountsRequest extends Message<GetFollowCountsRequest> {
   /**
-   * @generated from field: string actor_did = 1;
+   * @generated from field: repeated string dids = 1;
    */
-  actorDid = "";
+  dids: string[] = [];
 
-  constructor(data?: PartialMessage<GetFollowsCountRequest>) {
+  constructor(data?: PartialMessage<GetFollowCountsRequest>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "bsky.GetFollowsCountRequest";
+  static readonly typeName = "bsky.GetFollowCountsRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "dids", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetFollowsCountRequest {
-    return new GetFollowsCountRequest().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetFollowCountsRequest {
+    return new GetFollowCountsRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetFollowsCountRequest {
-    return new GetFollowsCountRequest().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetFollowCountsRequest {
+    return new GetFollowCountsRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetFollowsCountRequest {
-    return new GetFollowsCountRequest().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetFollowCountsRequest {
+    return new GetFollowCountsRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetFollowsCountRequest | PlainMessage<GetFollowsCountRequest> | undefined, b: GetFollowsCountRequest | PlainMessage<GetFollowsCountRequest> | undefined): boolean {
-    return proto3.util.equals(GetFollowsCountRequest, a, b);
+  static equals(a: GetFollowCountsRequest | PlainMessage<GetFollowCountsRequest> | undefined, b: GetFollowCountsRequest | PlainMessage<GetFollowCountsRequest> | undefined): boolean {
+    return proto3.util.equals(GetFollowCountsRequest, a, b);
   }
 }
 
 /**
- * @generated from message bsky.GetFollowsCountResponse
+ * @generated from message bsky.GetFollowCountsResponse
  */
-export class GetFollowsCountResponse extends Message<GetFollowsCountResponse> {
+export class GetFollowCountsResponse extends Message<GetFollowCountsResponse> {
   /**
-   * @generated from field: int32 count = 1;
+   * @generated from field: repeated int32 counts = 1;
    */
-  count = 0;
+  counts: number[] = [];
 
-  constructor(data?: PartialMessage<GetFollowsCountResponse>) {
+  constructor(data?: PartialMessage<GetFollowCountsResponse>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "bsky.GetFollowsCountResponse";
+  static readonly typeName = "bsky.GetFollowCountsResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 1, name: "counts", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetFollowsCountResponse {
-    return new GetFollowsCountResponse().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetFollowCountsResponse {
+    return new GetFollowCountsResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetFollowsCountResponse {
-    return new GetFollowsCountResponse().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetFollowCountsResponse {
+    return new GetFollowCountsResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetFollowsCountResponse {
-    return new GetFollowsCountResponse().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetFollowCountsResponse {
+    return new GetFollowCountsResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetFollowsCountResponse | PlainMessage<GetFollowsCountResponse> | undefined, b: GetFollowsCountResponse | PlainMessage<GetFollowsCountResponse> | undefined): boolean {
-    return proto3.util.equals(GetFollowsCountResponse, a, b);
+  static equals(a: GetFollowCountsResponse | PlainMessage<GetFollowCountsResponse> | undefined, b: GetFollowCountsResponse | PlainMessage<GetFollowCountsResponse> | undefined): boolean {
+    return proto3.util.equals(GetFollowCountsResponse, a, b);
   }
 }
 
@@ -707,79 +707,79 @@ export class GetActorLikesResponse extends Message<GetActorLikesResponse> {
 }
 
 /**
- * - return number of likes on subject A
+ * - return number of likes on subjects A, B, C...
  *     - post or feed generator hydration `likeCount` field
  *
- * @generated from message bsky.GetLikesCountRequest
+ * @generated from message bsky.GetLikeCountsRequest
  */
-export class GetLikesCountRequest extends Message<GetLikesCountRequest> {
+export class GetLikeCountsRequest extends Message<GetLikeCountsRequest> {
   /**
-   * @generated from field: string subject_uri = 1;
+   * @generated from field: repeated string uris = 1;
    */
-  subjectUri = "";
+  uris: string[] = [];
 
-  constructor(data?: PartialMessage<GetLikesCountRequest>) {
+  constructor(data?: PartialMessage<GetLikeCountsRequest>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "bsky.GetLikesCountRequest";
+  static readonly typeName = "bsky.GetLikeCountsRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "subject_uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetLikesCountRequest {
-    return new GetLikesCountRequest().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetLikeCountsRequest {
+    return new GetLikeCountsRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetLikesCountRequest {
-    return new GetLikesCountRequest().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetLikeCountsRequest {
+    return new GetLikeCountsRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetLikesCountRequest {
-    return new GetLikesCountRequest().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetLikeCountsRequest {
+    return new GetLikeCountsRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetLikesCountRequest | PlainMessage<GetLikesCountRequest> | undefined, b: GetLikesCountRequest | PlainMessage<GetLikesCountRequest> | undefined): boolean {
-    return proto3.util.equals(GetLikesCountRequest, a, b);
+  static equals(a: GetLikeCountsRequest | PlainMessage<GetLikeCountsRequest> | undefined, b: GetLikeCountsRequest | PlainMessage<GetLikeCountsRequest> | undefined): boolean {
+    return proto3.util.equals(GetLikeCountsRequest, a, b);
   }
 }
 
 /**
- * @generated from message bsky.GetLikesCountResponse
+ * @generated from message bsky.GetLikeCountsResponse
  */
-export class GetLikesCountResponse extends Message<GetLikesCountResponse> {
+export class GetLikeCountsResponse extends Message<GetLikeCountsResponse> {
   /**
-   * @generated from field: int32 count = 1;
+   * @generated from field: repeated int32 counts = 1;
    */
-  count = 0;
+  counts: number[] = [];
 
-  constructor(data?: PartialMessage<GetLikesCountResponse>) {
+  constructor(data?: PartialMessage<GetLikeCountsResponse>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "bsky.GetLikesCountResponse";
+  static readonly typeName = "bsky.GetLikeCountsResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 1, name: "counts", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetLikesCountResponse {
-    return new GetLikesCountResponse().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetLikeCountsResponse {
+    return new GetLikeCountsResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetLikesCountResponse {
-    return new GetLikesCountResponse().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetLikeCountsResponse {
+    return new GetLikeCountsResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetLikesCountResponse {
-    return new GetLikesCountResponse().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetLikeCountsResponse {
+    return new GetLikeCountsResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetLikesCountResponse | PlainMessage<GetLikesCountResponse> | undefined, b: GetLikesCountResponse | PlainMessage<GetLikesCountResponse> | undefined): boolean {
-    return proto3.util.equals(GetLikesCountResponse, a, b);
+  static equals(a: GetLikeCountsResponse | PlainMessage<GetLikeCountsResponse> | undefined, b: GetLikeCountsResponse | PlainMessage<GetLikeCountsResponse> | undefined): boolean {
+    return proto3.util.equals(GetLikeCountsResponse, a, b);
   }
 }
 
@@ -1060,76 +1060,76 @@ export class GetActorRepostsResponse extends Message<GetActorRepostsResponse> {
  * - return number of reposts on subject A
  *     - post or feed generator hydration `repostCount` field
  *
- * @generated from message bsky.GetRepostsCountRequest
+ * @generated from message bsky.GetRepostCountsRequest
  */
-export class GetRepostsCountRequest extends Message<GetRepostsCountRequest> {
+export class GetRepostCountsRequest extends Message<GetRepostCountsRequest> {
   /**
-   * @generated from field: string subject_uri = 1;
+   * @generated from field: repeated string uris = 1;
    */
-  subjectUri = "";
+  uris: string[] = [];
 
-  constructor(data?: PartialMessage<GetRepostsCountRequest>) {
+  constructor(data?: PartialMessage<GetRepostCountsRequest>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "bsky.GetRepostsCountRequest";
+  static readonly typeName = "bsky.GetRepostCountsRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "subject_uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetRepostsCountRequest {
-    return new GetRepostsCountRequest().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetRepostCountsRequest {
+    return new GetRepostCountsRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetRepostsCountRequest {
-    return new GetRepostsCountRequest().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetRepostCountsRequest {
+    return new GetRepostCountsRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetRepostsCountRequest {
-    return new GetRepostsCountRequest().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetRepostCountsRequest {
+    return new GetRepostCountsRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetRepostsCountRequest | PlainMessage<GetRepostsCountRequest> | undefined, b: GetRepostsCountRequest | PlainMessage<GetRepostsCountRequest> | undefined): boolean {
-    return proto3.util.equals(GetRepostsCountRequest, a, b);
+  static equals(a: GetRepostCountsRequest | PlainMessage<GetRepostCountsRequest> | undefined, b: GetRepostCountsRequest | PlainMessage<GetRepostCountsRequest> | undefined): boolean {
+    return proto3.util.equals(GetRepostCountsRequest, a, b);
   }
 }
 
 /**
- * @generated from message bsky.GetRepostsCountResponse
+ * @generated from message bsky.GetRepostCountsResponse
  */
-export class GetRepostsCountResponse extends Message<GetRepostsCountResponse> {
+export class GetRepostCountsResponse extends Message<GetRepostCountsResponse> {
   /**
-   * @generated from field: int32 count = 1;
+   * @generated from field: repeated int32 counts = 1;
    */
-  count = 0;
+  counts: number[] = [];
 
-  constructor(data?: PartialMessage<GetRepostsCountResponse>) {
+  constructor(data?: PartialMessage<GetRepostCountsResponse>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "bsky.GetRepostsCountResponse";
+  static readonly typeName = "bsky.GetRepostCountsResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 1, name: "counts", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetRepostsCountResponse {
-    return new GetRepostsCountResponse().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetRepostCountsResponse {
+    return new GetRepostCountsResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetRepostsCountResponse {
-    return new GetRepostsCountResponse().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetRepostCountsResponse {
+    return new GetRepostCountsResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetRepostsCountResponse {
-    return new GetRepostsCountResponse().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetRepostCountsResponse {
+    return new GetRepostCountsResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetRepostsCountResponse | PlainMessage<GetRepostsCountResponse> | undefined, b: GetRepostsCountResponse | PlainMessage<GetRepostsCountResponse> | undefined): boolean {
-    return proto3.util.equals(GetRepostsCountResponse, a, b);
+  static equals(a: GetRepostCountsResponse | PlainMessage<GetRepostCountsResponse> | undefined, b: GetRepostCountsResponse | PlainMessage<GetRepostCountsResponse> | undefined): boolean {
+    return proto3.util.equals(GetRepostCountsResponse, a, b);
   }
 }
 
@@ -1363,6 +1363,169 @@ export class GetDidsByHandlesResponse extends Message<GetDidsByHandlesResponse> 
 
   static equals(a: GetDidsByHandlesResponse | PlainMessage<GetDidsByHandlesResponse> | undefined, b: GetDidsByHandlesResponse | PlainMessage<GetDidsByHandlesResponse> | undefined): boolean {
     return proto3.util.equals(GetDidsByHandlesResponse, a, b);
+  }
+}
+
+/**
+ * - return relationships between user A and users B, C, D...
+ *     - profile hydration
+ *     - block application
+ *
+ * @generated from message bsky.GetRelationshipsRequest
+ */
+export class GetRelationshipsRequest extends Message<GetRelationshipsRequest> {
+  /**
+   * @generated from field: string actorDid = 1;
+   */
+  actorDid = "";
+
+  /**
+   * @generated from field: repeated string targetDids = 2;
+   */
+  targetDids: string[] = [];
+
+  constructor(data?: PartialMessage<GetRelationshipsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetRelationshipsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "actorDid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "targetDids", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetRelationshipsRequest {
+    return new GetRelationshipsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetRelationshipsRequest {
+    return new GetRelationshipsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetRelationshipsRequest {
+    return new GetRelationshipsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetRelationshipsRequest | PlainMessage<GetRelationshipsRequest> | undefined, b: GetRelationshipsRequest | PlainMessage<GetRelationshipsRequest> | undefined): boolean {
+    return proto3.util.equals(GetRelationshipsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.Relationships
+ */
+export class Relationships extends Message<Relationships> {
+  /**
+   * @generated from field: bool muted = 1;
+   */
+  muted = false;
+
+  /**
+   * @generated from field: string muted_by_list = 2;
+   */
+  mutedByList = "";
+
+  /**
+   * @generated from field: string blockedBy = 3;
+   */
+  blockedBy = "";
+
+  /**
+   * @generated from field: string blocking = 4;
+   */
+  blocking = "";
+
+  /**
+   * @generated from field: string blockedByList = 5;
+   */
+  blockedByList = "";
+
+  /**
+   * @generated from field: string blockingByList = 6;
+   */
+  blockingByList = "";
+
+  /**
+   * @generated from field: string following = 7;
+   */
+  following = "";
+
+  /**
+   * @generated from field: string followedBy = 8;
+   */
+  followedBy = "";
+
+  constructor(data?: PartialMessage<Relationships>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.Relationships";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "muted", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 2, name: "muted_by_list", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "blockedBy", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "blocking", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "blockedByList", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "blockingByList", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 7, name: "following", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 8, name: "followedBy", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Relationships {
+    return new Relationships().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Relationships {
+    return new Relationships().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Relationships {
+    return new Relationships().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: Relationships | PlainMessage<Relationships> | undefined, b: Relationships | PlainMessage<Relationships> | undefined): boolean {
+    return proto3.util.equals(Relationships, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetRelationshipsResponse
+ */
+export class GetRelationshipsResponse extends Message<GetRelationshipsResponse> {
+  /**
+   * @generated from field: repeated bsky.Relationships relationships = 1;
+   */
+  relationships: Relationships[] = [];
+
+  constructor(data?: PartialMessage<GetRelationshipsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetRelationshipsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "relationships", kind: "message", T: Relationships, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetRelationshipsResponse {
+    return new GetRelationshipsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetRelationshipsResponse {
+    return new GetRelationshipsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetRelationshipsResponse {
+    return new GetRelationshipsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetRelationshipsResponse | PlainMessage<GetRelationshipsResponse> | undefined, b: GetRelationshipsResponse | PlainMessage<GetRelationshipsResponse> | undefined): boolean {
+    return proto3.util.equals(GetRelationshipsResponse, a, b);
   }
 }
 
@@ -3324,9 +3487,9 @@ export class GetAuthorFeedRequest extends Message<GetAuthorFeedRequest> {
   cursor = "";
 
   /**
-   * @generated from field: bool replies_only = 4;
+   * @generated from field: bool no_replies = 4;
    */
-  repliesOnly = false;
+  noReplies = false;
 
   /**
    * @generated from field: bool media_only = 5;
@@ -3344,7 +3507,7 @@ export class GetAuthorFeedRequest extends Message<GetAuthorFeedRequest> {
     { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 3, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "replies_only", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 4, name: "no_replies", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
     { no: 5, name: "media_only", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
@@ -4129,76 +4292,153 @@ export class GetPostsResponse extends Message<GetPostsResponse> {
  * - Return post reply count with uris A, B, C…
  *     - All feed hydration
  *
- * @generated from message bsky.GetPostReplyCountRequest
+ * @generated from message bsky.GetPostReplyCountsRequest
  */
-export class GetPostReplyCountRequest extends Message<GetPostReplyCountRequest> {
+export class GetPostReplyCountsRequest extends Message<GetPostReplyCountsRequest> {
   /**
    * @generated from field: repeated string uris = 1;
    */
   uris: string[] = [];
 
-  constructor(data?: PartialMessage<GetPostReplyCountRequest>) {
+  constructor(data?: PartialMessage<GetPostReplyCountsRequest>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "bsky.GetPostReplyCountRequest";
+  static readonly typeName = "bsky.GetPostReplyCountsRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetPostReplyCountRequest {
-    return new GetPostReplyCountRequest().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetPostReplyCountsRequest {
+    return new GetPostReplyCountsRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetPostReplyCountRequest {
-    return new GetPostReplyCountRequest().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetPostReplyCountsRequest {
+    return new GetPostReplyCountsRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetPostReplyCountRequest {
-    return new GetPostReplyCountRequest().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetPostReplyCountsRequest {
+    return new GetPostReplyCountsRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetPostReplyCountRequest | PlainMessage<GetPostReplyCountRequest> | undefined, b: GetPostReplyCountRequest | PlainMessage<GetPostReplyCountRequest> | undefined): boolean {
-    return proto3.util.equals(GetPostReplyCountRequest, a, b);
+  static equals(a: GetPostReplyCountsRequest | PlainMessage<GetPostReplyCountsRequest> | undefined, b: GetPostReplyCountsRequest | PlainMessage<GetPostReplyCountsRequest> | undefined): boolean {
+    return proto3.util.equals(GetPostReplyCountsRequest, a, b);
   }
 }
 
 /**
- * @generated from message bsky.GetPostReplyCountResponse
+ * @generated from message bsky.GetPostReplyCountsResponse
  */
-export class GetPostReplyCountResponse extends Message<GetPostReplyCountResponse> {
+export class GetPostReplyCountsResponse extends Message<GetPostReplyCountsResponse> {
   /**
    * @generated from field: repeated int32 counts = 1;
    */
   counts: number[] = [];
 
-  constructor(data?: PartialMessage<GetPostReplyCountResponse>) {
+  constructor(data?: PartialMessage<GetPostReplyCountsResponse>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "bsky.GetPostReplyCountResponse";
+  static readonly typeName = "bsky.GetPostReplyCountsResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "counts", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetPostReplyCountResponse {
-    return new GetPostReplyCountResponse().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetPostReplyCountsResponse {
+    return new GetPostReplyCountsResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetPostReplyCountResponse {
-    return new GetPostReplyCountResponse().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetPostReplyCountsResponse {
+    return new GetPostReplyCountsResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetPostReplyCountResponse {
-    return new GetPostReplyCountResponse().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetPostReplyCountsResponse {
+    return new GetPostReplyCountsResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetPostReplyCountResponse | PlainMessage<GetPostReplyCountResponse> | undefined, b: GetPostReplyCountResponse | PlainMessage<GetPostReplyCountResponse> | undefined): boolean {
-    return proto3.util.equals(GetPostReplyCountResponse, a, b);
+  static equals(a: GetPostReplyCountsResponse | PlainMessage<GetPostReplyCountsResponse> | undefined, b: GetPostReplyCountsResponse | PlainMessage<GetPostReplyCountsResponse> | undefined): boolean {
+    return proto3.util.equals(GetPostReplyCountsResponse, a, b);
+  }
+}
+
+/**
+ * - Return post count for users A, B, C…
+ *     - Profile hydration
+ *
+ * @generated from message bsky.GetPostCountsRequest
+ */
+export class GetPostCountsRequest extends Message<GetPostCountsRequest> {
+  /**
+   * @generated from field: repeated string dids = 1;
+   */
+  dids: string[] = [];
+
+  constructor(data?: PartialMessage<GetPostCountsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetPostCountsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "dids", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetPostCountsRequest {
+    return new GetPostCountsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetPostCountsRequest {
+    return new GetPostCountsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetPostCountsRequest {
+    return new GetPostCountsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetPostCountsRequest | PlainMessage<GetPostCountsRequest> | undefined, b: GetPostCountsRequest | PlainMessage<GetPostCountsRequest> | undefined): boolean {
+    return proto3.util.equals(GetPostCountsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetPostCountsResponse
+ */
+export class GetPostCountsResponse extends Message<GetPostCountsResponse> {
+  /**
+   * @generated from field: repeated int32 counts = 1;
+   */
+  counts: number[] = [];
+
+  constructor(data?: PartialMessage<GetPostCountsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetPostCountsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "counts", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetPostCountsResponse {
+    return new GetPostCountsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetPostCountsResponse {
+    return new GetPostCountsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetPostCountsResponse {
+    return new GetPostCountsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetPostCountsResponse | PlainMessage<GetPostCountsResponse> | undefined, b: GetPostCountsResponse | PlainMessage<GetPostCountsResponse> | undefined): boolean {
+    return proto3.util.equals(GetPostCountsResponse, a, b);
   }
 }
 
