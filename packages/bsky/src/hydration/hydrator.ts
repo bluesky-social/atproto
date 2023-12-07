@@ -1,5 +1,6 @@
 import { AtUri } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
+import { Notification } from '../data-plane/gen/bsky_pb'
 import { ids } from '../lexicon/lexicons'
 import {
   ActorHydrator,
@@ -17,12 +18,14 @@ import {
   FeedGenViewerStates,
   FeedHydrator,
   Likes,
+  Posts,
 } from './feed'
 
 export type HydrationState = {
   actors?: Actors
   profileViewers?: ProfileViewerStates
   profileAggs?: ProfileAggs
+  posts?: Posts
   lists?: Lists
   listViewers?: ListViewerStates
   listItems?: ListItems
@@ -202,6 +205,29 @@ export class Hydrator {
     ])
     return mergeStates(profileState, { likes })
   }
+
+  // app.bsky.notification.listNotifications#notification
+  // - notification
+  //   - profile
+  //     - list basic
+  async hydrateNotifications(notifs: Notification[], viewer: string | null) {
+    const uris = notifs.map((notif) => notif.uri)
+    const parsedUris = uris.map((uri) => new AtUri(uri))
+    // @TODO incomplete: need support from data plane to fetch more types of original records, such as reposts.
+    const postUris = parsedUris
+      .filter((uri) => uri.collection === ids.AppBskyFeedPost)
+      .map((uri) => uri.toString())
+    const likeUris = parsedUris
+      .filter((uri) => uri.collection === ids.AppBskyFeedLike)
+      .map((uri) => uri.toString())
+    const [posts, likes, labels, profileState] = await Promise.all([
+      this.feed.getPosts(postUris),
+      this.feed.getLikes(likeUris),
+      this.label.getLabelsForSubjects(uris), // @TODO can we batch these with profile labels?
+      this.hydrateProfiles(uris.map(didFromUri), viewer),
+    ])
+    return mergeStates(profileState, { posts, likes, labels })
+  }
 }
 
 const listUrisFromProfileViewer = (item: ProfileViewerState | null) => {
@@ -234,6 +260,7 @@ const mergeStates = (
     actors: mergeMaps(stateA.actors, stateB.actors),
     profileAggs: mergeMaps(stateA.profileAggs, stateB.profileAggs),
     profileViewers: mergeMaps(stateA.profileViewers, stateB.profileViewers),
+    posts: mergeMaps(stateA.posts, stateB.posts),
     lists: mergeMaps(stateA.lists, stateB.lists),
     listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
     listItems: mergeMaps(stateA.listItems, stateB.listItems),
