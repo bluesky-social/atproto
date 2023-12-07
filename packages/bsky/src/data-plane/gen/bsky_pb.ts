@@ -1754,9 +1754,9 @@ export class GetRepostsByActorAndSubjectsRequest extends Message<GetRepostsByAct
   actorDid = "";
 
   /**
-   * @generated from field: string subject_uris = 2;
+   * @generated from field: repeated string subject_uris = 2;
    */
-  subjectUris = "";
+  subjectUris: string[] = [];
 
   constructor(data?: PartialMessage<GetRepostsByActorAndSubjectsRequest>) {
     super();
@@ -1767,7 +1767,7 @@ export class GetRepostsByActorAndSubjectsRequest extends Message<GetRepostsByAct
   static readonly typeName = "bsky.GetRepostsByActorAndSubjectsRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "subject_uris", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "subject_uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetRepostsByActorAndSubjectsRequest {
@@ -1792,9 +1792,9 @@ export class GetRepostsByActorAndSubjectsRequest extends Message<GetRepostsByAct
  */
 export class GetRepostsByActorAndSubjectsResponse extends Message<GetRepostsByActorAndSubjectsResponse> {
   /**
-   * @generated from field: string uris = 1;
+   * @generated from field: repeated string uris = 1;
    */
-  uris = "";
+  uris: string[] = [];
 
   constructor(data?: PartialMessage<GetRepostsByActorAndSubjectsResponse>) {
     super();
@@ -1804,7 +1804,7 @@ export class GetRepostsByActorAndSubjectsResponse extends Message<GetRepostsByAc
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetRepostsByActorAndSubjectsResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetRepostsByActorAndSubjectsResponse {
@@ -2047,19 +2047,9 @@ export class ActorInfo extends Message<ActorInfo> {
   handle = "";
 
   /**
-   * @generated from field: bytes profile = 2;
+   * @generated from field: bsky.Record profile = 2;
    */
-  profile = new Uint8Array(0);
-
-  /**
-   * @generated from field: string profile_cid = 3;
-   */
-  profileCid = "";
-
-  /**
-   * @generated from field: google.protobuf.Timestamp indexed_at = 4;
-   */
-  indexedAt?: Timestamp;
+  profile?: Record;
 
   constructor(data?: PartialMessage<ActorInfo>) {
     super();
@@ -2070,9 +2060,7 @@ export class ActorInfo extends Message<ActorInfo> {
   static readonly typeName = "bsky.ActorInfo";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "handle", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "profile", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
-    { no: 3, name: "profile_cid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "indexed_at", kind: "message", T: Timestamp },
+    { no: 2, name: "profile", kind: "message", T: Record },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ActorInfo {

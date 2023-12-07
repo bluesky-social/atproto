@@ -50,7 +50,7 @@ export class FeedHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 
   async getPosts(uris: string[]): Promise<Posts> {
-    const res = await this.dataplane.getPosts({ uris })
+    const res = await this.dataplane.getPostRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       return acc.set(uri, parseRecord<PostRecord>(res.records[i]) ?? null)
     }, new HydrationMap<Post>())
@@ -60,25 +60,21 @@ export class FeedHydrator {
     uris: string[],
     viewer: string,
   ): Promise<PostViewerStates> {
-    const stateForPost = async (uri: string) => {
-      const [like, repost] = await Promise.all([
-        this.dataplane.getLikeByActorAndSubject({
-          actorDid: viewer,
-          subjectUri: uri,
-        }),
-        this.dataplane.getRepostByActorAndSubject({
-          actorDid: viewer,
-          subjectUri: uri,
-        }),
-      ])
-      return {
-        like: parseString(like.uri),
-        repost: parseString(repost.uri),
-      }
-    }
-    const states = await Promise.all(uris.map((uri) => stateForPost(uri)))
+    const [likes, reposts] = await Promise.all([
+      this.dataplane.getLikesByActorAndSubjects({
+        actorDid: viewer,
+        subjectUris: uris,
+      }),
+      this.dataplane.getRepostsByActorAndSubjects({
+        actorDid: viewer,
+        subjectUris: uris,
+      }),
+    ])
     return uris.reduce((acc, uri, i) => {
-      return acc.set(uri, states[i])
+      return acc.set(uri, {
+        like: parseString(likes.uris[i]),
+        repost: parseString(reposts.uris[i]),
+      })
     }, new HydrationMap<PostViewerState>())
   }
 
@@ -98,7 +94,7 @@ export class FeedHydrator {
   }
 
   async getFeedGens(uris: string[]): Promise<FeedGens> {
-    const res = await this.dataplane.getFeedGenerators({ uris })
+    const res = await this.dataplane.getFeedGeneratorRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       return acc.set(uri, parseRecord<FeedGenRecord>(res.records[i]) ?? null)
     }, new HydrationMap<FeedGen>())
@@ -108,18 +104,14 @@ export class FeedHydrator {
     uris: string[],
     viewer: string,
   ): Promise<FeedGenViewerStates> {
-    const stateForPost = async (uri: string) => {
-      const like = await this.dataplane.getLikeByActorAndSubject({
-        actorDid: viewer,
-        subjectUri: uri,
-      })
-      return {
-        like: parseString(like.uri),
-      }
-    }
-    const states = await Promise.all(uris.map((uri) => stateForPost(uri)))
+    const likes = await this.dataplane.getLikesByActorAndSubjects({
+      actorDid: viewer,
+      subjectUris: uris,
+    })
     return uris.reduce((acc, uri, i) => {
-      return acc.set(uri, states[i])
+      return acc.set(uri, {
+        like: parseString(likes.uris[i]),
+      })
     }, new HydrationMap<FeedGenViewerState>())
   }
 
@@ -141,7 +133,7 @@ export class FeedHydrator {
         parsed.rkey,
       ).toString()
     })
-    const res = await this.dataplane.getThreadgates({ uris })
+    const res = await this.dataplane.getThreadGateRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       return acc.set(uri, parseRecord<ThreadgateRecord>(res.records[i]) ?? null)
     }, new HydrationMap<Threadgate>())

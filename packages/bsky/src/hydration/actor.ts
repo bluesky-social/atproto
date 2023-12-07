@@ -50,9 +50,9 @@ export class ActorHydrator {
       return acc.set(did, {
         did,
         handle: parseString(actor.handle),
-        profile: parseRecordBytes<ProfileRecord>(actor.profile),
-        profileCid: parseCid(actor.profileCid),
-        indexedAt: parseTimestamp(actor.indexedAt),
+        profile: parseRecordBytes<ProfileRecord>(actor.profile?.record),
+        profileCid: parseCid(actor.profile?.cid),
+        indexedAt: parseTimestamp(actor.profile?.indexedAt),
       })
     }, new HydrationMap<Actor>())
   }

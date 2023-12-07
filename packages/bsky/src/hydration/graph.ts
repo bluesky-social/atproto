@@ -63,7 +63,7 @@ export class GraphHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 
   async getLists(uris: string[]): Promise<Lists> {
-    const res = await this.dataplane.getLists({ uris })
+    const res = await this.dataplane.getListRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       return acc.set(uri, parseRecord<ListRecord>(res.records[i]) ?? null)
     }, new HydrationMap<List>())

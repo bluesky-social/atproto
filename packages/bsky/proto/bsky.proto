@@ -242,11 +242,11 @@ message GetRepostsBySubjectResponse {
 //     - viewer state on posts
 message GetRepostsByActorAndSubjectsRequest {
   string actor_did = 1;
-  string subject_uris = 2;
+  repeated string subject_uris = 2;
 }
 
 message GetRepostsByActorAndSubjectsResponse {
-  string uris = 1;
+  repeated string uris = 1;
 }
 
 // - return recent repost uris for user A
@@ -285,9 +285,7 @@ message GetActorsRequest {
 
 message ActorInfo {
   string handle = 1;
-  bytes profile = 2;
-  string profile_cid = 3;
-  google.protobuf.Timestamp indexed_at = 4;
+  Record profile = 2;
 }
 
 message GetActorsResponse {
