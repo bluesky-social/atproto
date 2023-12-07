@@ -9,6 +9,12 @@ import "google/protobuf/timestamp.proto";
 // Bsky
 //
 
+message Record {
+  bytes record = 1;
+  string cid = 2;
+  google.protobuf.Timestamp indexed_at = 4;
+}
+
 //
 // Follows
 //
@@ -176,25 +182,22 @@ message GetRepostCountsResponse {
 // Profile
 //
 
-// - return profile record for dids A, B, C…
+// - return actor information for dids A, B, C…
 //     - profile hydration
 //     - should this include handles?  apply repo takedown?
-message GetProfilesRequest {
+message GetActorsRequest {
   repeated string dids = 1;
 }
 
-message GetProfilesResponse {
-  repeated bytes records = 1;
+message ActorInfo {
+  string handle = 1;
+  bytes profile = 2;
+  string profile_cid = 3;
+  google.protobuf.Timestamp indexed_at = 4;
 }
 
-// - return handle for dids A, B, C…
-//     - profile hydration
-message GetHandlesRequest {
-  repeated string dids = 1;
-}
-
-message GetHandlesResponse {
-  repeated string handles = 1;
+message GetActorsResponse {
+  repeated ActorInfo actors = 1;
 }
 
 // - return did for handle A
@@ -235,6 +238,22 @@ message GetRelationshipsResponse {
   repeated Relationships relationships = 1;
 }
 
+// - return whether a block (bidrectionally and either direct or through a list) exists between two dids
+//     - enforcing 3rd party block violations
+message RelationshipPair {
+  string a = 1;
+  string b = 2;
+}
+
+message GetBlockExistenceRequest {
+  repeated RelationshipPair pairs = 1;
+}
+
+message GetBlockExistenceResponse {
+  repeated bool exists = 1;
+}
+
+
 //
 // Lists
 //
@@ -270,7 +289,7 @@ message GetListsRequest {
 }
 
 message GetListsResponse {
-  repeated bytes records = 1;
+  repeated Record records = 1;
 }
 
 // - Return number of items in list A
@@ -484,7 +503,7 @@ message GetFeedGeneratorsRequest {
 }
 
 message GetFeedGeneratorsResponse {
-  repeated bytes records = 1;
+  repeated Record records = 1;
 }
 
 // - Return uris of feed generator records created by user A
@@ -592,7 +611,7 @@ message GetThreadgatesRequest {
 }
 
 message GetThreadgatesResponse {
-  repeated bytes records = 1;
+  repeated Record records = 1;
 }
 
 //
@@ -631,13 +650,13 @@ message SearchPostsResponse {
 
 // - Return DIDs of suggested follows for a user, excluding anyone they already follow
 //     - `getSuggestions`
-message GetSuggestionsRequest {
+message GetFollowSuggestionsRequest {
   string actor_did = 1;
   int32 limit = 2;
   string cursor = 3;
 }
 
-message GetSuggestionsResponse {
+message GetFollowSuggestionsResponse {
   repeated string dids = 1;
   string cursor = 2;
 }
@@ -653,7 +672,7 @@ message GetPostsRequest {
 }
 
 message GetPostsResponse {
-  repeated bytes records = 1;
+  repeated Record records = 1;
 }
 
 // - Return post reply count with uris A, B, C…
@@ -688,7 +707,7 @@ message GetLabelsRequest {
 }
 
 message GetLabelsResponse {
-  repeated bytes records = 1;
+  repeated bytes labels = 1;
 }
 
 //
@@ -754,12 +773,12 @@ service Service {
   rpc GetRepostCounts(GetRepostCountsRequest) returns (GetRepostCountsResponse);
 
   // Profile
-  rpc GetProfiles(GetProfilesRequest) returns (GetProfilesResponse);
-  rpc GetHandles(GetHandlesRequest) returns (GetHandlesResponse);
+  rpc GetActors(GetActorsRequest) returns (GetActorsResponse);
   rpc GetDidsByHandles(GetDidsByHandlesRequest) returns (GetDidsByHandlesResponse);
 
   // Relationships
   rpc GetRelationships(GetRelationshipsRequest) returns (GetRelationshipsResponse);
+  rpc GetBlockExistence(GetBlockExistenceRequest) returns (GetBlockExistenceResponse);
 
   // Lists
   rpc GetListMembers(GetListMembersRequest) returns (GetListMembersResponse);
@@ -811,7 +830,7 @@ service Service {
   rpc SearchPosts(SearchPostsRequest) returns (SearchPostsResponse);
 
   // Suggestions
-  rpc GetSuggestions(GetSuggestionsRequest) returns (GetSuggestionsResponse);
+  rpc GetFollowSuggestions(GetFollowSuggestionsRequest) returns (GetFollowSuggestionsResponse);
 
   // Posts
   rpc GetPosts(GetPostsRequest) returns (GetPostsResponse);
