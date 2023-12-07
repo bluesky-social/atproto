@@ -1,14 +1,23 @@
+import { CID } from 'multiformats/cid'
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
-import { HydrationMap, parseRecord } from './util'
+import {
+  HydrationMap,
+  parseCid,
+  parseRecord,
+  parseString,
+  parseTimestamp,
+} from './util'
 
-export type Profile = {
+export type Actor = {
   did: string
-  handle: string | null
-  record: ProfileRecord | null
+  handle?: string
+  profile?: ProfileRecord
+  profileCid?: CID
+  indexedAt?: Date
 }
 
-export type Profiles = HydrationMap<Profile>
+export type Actors = HydrationMap<Actor>
 
 export type ProfileViewerState = {
   muted?: boolean
@@ -34,20 +43,18 @@ export type ProfileAggs = HydrationMap<ProfileAgg>
 export class ActorHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 
-  async getProfiles(dids: string[]): Promise<Profiles> {
-    const [handles, profiles] = await Promise.all([
-      this.dataplane.getHandles({ dids }),
-      this.dataplane.getProfiles({ dids }),
-    ])
+  async getProfiles(dids: string[]): Promise<Actors> {
+    const res = await this.dataplane.getActors({ dids })
     return dids.reduce((acc, did, i) => {
-      const handle = handles[i] ?? null
-      const record = parseRecord<Profile>(profiles.records[i])
+      const actor = res.actors[i]
       return acc.set(did, {
         did,
-        handle,
-        record,
+        handle: parseString(actor.handle),
+        profile: parseRecord<ProfileRecord>(actor.profile),
+        profileCid: parseCid(actor.profileCid),
+        indexedAt: parseTimestamp(actor.indexedAt),
       })
-    }, new HydrationMap<Profile>())
+    }, new HydrationMap<Actor>())
   }
 
   async getProfileViewerStates(
@@ -62,36 +69,29 @@ export class ActorHydrator {
       const rels = res.relationships[i]
       return acc.set(did, {
         muted: rels.muted,
-        mutedByList: rels.mutedByList.length > 0 ? rels.mutedByList : undefined,
-        blockedBy: rels.blockedBy.length > 0 ? rels.blockedBy : undefined,
-        blocking: rels.blocking.length > 0 ? rels.blocking : undefined,
-        blockedByList:
-          rels.blockedByList.length > 0 ? rels.blockedByList : undefined,
-        blockingByList:
-          rels.blockingByList.length > 0 ? rels.blockingByList : undefined,
-        following: rels.following.length > 0 ? rels.following : undefined,
-        followedBy: rels.followedBy.length > 0 ? rels.followedBy : undefined,
+        mutedByList: parseString(rels.mutedByList),
+        blockedBy: parseString(rels.blockedBy),
+        blocking: parseString(rels.blocking),
+        blockedByList: parseString(rels.blockedByList),
+        blockingByList: parseString(rels.blockingByList),
+        following: parseString(rels.following),
+        followedBy: parseString(rels.followedBy),
       })
     }, new HydrationMap<ProfileViewerState>())
   }
 
   async getProfileAggregates(dids: string[]): Promise<ProfileAggs> {
-    const aggs = await Promise.all(dids.map((did) => this.getAggsForDid(did)))
-    return dids.reduce((acc, did, i) => {
-      return acc.set(did, aggs[i])
-    }, new HydrationMap<ProfileAgg>())
-  }
-
-  private async getAggsForDid(actorDid: string) {
     const [followers, follows, posts] = await Promise.all([
-      this.dataplane.getFollowersCount({ actorDid }),
-      this.dataplane.getFollowsCount({ actorDid }),
-      { count: 0 }, // @TODO need getPostsCount function
+      this.dataplane.getFollowerCounts({ dids }),
+      this.dataplane.getFollowCounts({ dids }),
+      this.dataplane.getPostCounts({ dids }),
     ])
-    return {
-      followers: followers.count,
-      follows: follows.count,
-      posts: posts.count,
-    }
+    return dids.reduce((acc, did, i) => {
+      return acc.set(did, {
+        followers: followers.counts[i] ?? 0,
+        follows: follows.counts[i] ?? 0,
+        posts: posts.counts[i] ?? 0,
+      })
+    }, new HydrationMap<ProfileAgg>())
   }
 }
