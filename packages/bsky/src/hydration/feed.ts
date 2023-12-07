@@ -1,5 +1,6 @@
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
+import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
 import { Record as FeedGenRecord } from '../lexicon/types/app/bsky/feed/generator'
 import { Record as ThreadgateRecord } from '../lexicon/types/app/bsky/feed/threadgate'
 import { HydrationMap } from './util'
@@ -20,6 +21,9 @@ export type PostAgg = {
 }
 
 export type PostAggs = HydrationMap<PostAgg>
+
+export type Like = LikeRecord
+export type Likes = HydrationMap<Like>
 
 export type FeedGenAgg = {
   likes: number
@@ -73,6 +77,11 @@ export class FeedHydrator {
   }
 
   async getThreadgatesForPosts(postUris: string[]): Promise<Threadgates> {
+    throw new Error('unimplemented')
+  }
+
+  // @TODO may not be supported yet by data plane
+  async getLikes(uris: string[]): Promise<Likes> {
     throw new Error('unimplemented')
   }
 }

@@ -1,9 +1,13 @@
 import { Record as ListRecord } from '../lexicon/types/app/bsky/graph/list'
+import { Record as ListItemRecord } from '../lexicon/types/app/bsky/graph/listitem'
 import { DataPlaneClient } from '../data-plane/client'
 import { HydrationMap, RecordInfo, parseRecord } from './util'
 
 export type List = RecordInfo<ListRecord>
 export type Lists = HydrationMap<List>
+
+export type ListItem = RecordInfo<ListItemRecord>
+export type ListItems = HydrationMap<ListItem>
 
 export type ListViewerState = {
   viewerMuted?: string
@@ -36,6 +40,11 @@ export class GraphHydrator {
     return uris.reduce((acc, uri, i) => {
       return acc.set(uri, parseRecord<ListRecord>(res.records[i]) ?? null)
     }, new HydrationMap<List>())
+  }
+
+  // @TODO may not be supported yet by data plane
+  async getListItems(uris: string[]): Promise<ListItems> {
+    throw new Error('unimplemented')
   }
 
   async getListViewerStates(

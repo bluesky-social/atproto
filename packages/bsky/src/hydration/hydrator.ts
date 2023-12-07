@@ -8,7 +8,7 @@ import {
   ProfileViewerStates,
   ProfileViewerState,
 } from './actor'
-import { GraphHydrator, ListViewerStates, Lists } from './graph'
+import { GraphHydrator, ListItems, ListViewerStates, Lists } from './graph'
 import { LabelHydrator, Labels } from './label'
 import { HydrationMap } from './util'
 import {
@@ -16,6 +16,7 @@ import {
   FeedGens,
   FeedGenViewerStates,
   FeedHydrator,
+  Likes,
 } from './feed'
 
 export type HydrationState = {
@@ -24,6 +25,8 @@ export type HydrationState = {
   profileAggs?: ProfileAggs
   lists?: Lists
   listViewers?: ListViewerStates
+  listItems?: ListItems
+  likes?: Likes
   labels?: Labels
   feedgens?: FeedGens
   feedgenViewers?: FeedGenViewerStates
@@ -123,18 +126,46 @@ export class Hydrator {
     return { lists, listViewers }
   }
 
+  // app.bsky.graph.defs#listItemView
+  // - list item
+  //   - profile
+  //     - list basic
+  async hydrateListItems(
+    uris: string[],
+    viewer: string | null,
+  ): Promise<HydrationState> {
+    const listItems = await this.graph.getListItems(uris)
+    const dids: string[] = []
+    listItems.forEach((item) => {
+      if (item) {
+        dids.push(item.record.subject)
+      }
+    })
+    const profileState = await this.hydrateProfiles(dids, viewer)
+    return mergeStates(profileState, { listItems })
+  }
+
   // app.bsky.feed.defs#postView
-  async hydratePosts(uris: string[]): Promise<HydrationState> {
+  async hydratePosts(
+    uris: string[],
+    viewer: string | null,
+  ): Promise<HydrationState> {
     throw new Error('not implemented')
   }
 
   // app.bsky.feed.defs#feedViewPost
-  async hydrateFeedPosts(uris: string[]): Promise<HydrationState> {
+  async hydrateFeedPosts(
+    uris: string[],
+    viewer: string | null,
+  ): Promise<HydrationState> {
     throw new Error('not implemented')
   }
 
   // app.bsky.feed.defs#threadViewPost
-  async hydrateThreadPosts(uris: string[]): Promise<HydrationState> {
+  async hydrateThreadPosts(
+    uris: string[],
+    viewer: string | null,
+  ): Promise<HydrationState> {
     throw new Error('not implemented')
   }
 
@@ -142,7 +173,10 @@ export class Hydrator {
   // - feedgen
   //   - profile
   //     - list basic
-  async hydrateFeedGens(uris: string[], viewer): Promise<HydrationState> {
+  async hydrateFeedGens(
+    uris: string[],
+    viewer: string | null,
+  ): Promise<HydrationState> {
     const [feedgens, feedgenAggs, feedgenViewers, profileState] =
       await Promise.all([
         this.feed.getFeedGens(uris),
@@ -155,6 +189,18 @@ export class Hydrator {
       feedgenAggs,
       feedgenViewers,
     })
+  }
+
+  // app.bsky.feed.getLikes#like
+  // - like
+  //   - profile
+  //     - list basic
+  async hydrateLikes(uris: string[], viewer: string | null) {
+    const [likes, profileState] = await Promise.all([
+      this.feed.getLikes(uris),
+      this.hydrateProfiles(uris.map(didFromUri), viewer),
+    ])
+    return mergeStates(profileState, { likes })
   }
 }
 
@@ -190,6 +236,8 @@ const mergeStates = (
     profileViewers: mergeMaps(stateA.profileViewers, stateB.profileViewers),
     lists: mergeMaps(stateA.lists, stateB.lists),
     listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
+    listItems: mergeMaps(stateA.listItems, stateB.listItems),
+    likes: mergeMaps(stateA.likes, stateB.likes),
     labels: mergeMaps(stateA.labels, stateB.labels),
     feedgens: mergeMaps(stateA.feedgens, stateB.feedgens),
     feedgenAggs: mergeMaps(stateA.feedgenAggs, stateB.feedgenAggs),
