@@ -2,6 +2,9 @@ import { AtUri } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
 import { Notification } from '../data-plane/gen/bsky_pb'
 import { ids } from '../lexicon/lexicons'
+import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
+import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
+
 import {
   ActorHydrator,
   ProfileAggs,
@@ -19,6 +22,7 @@ import {
   FeedHydrator,
   Likes,
   Posts,
+  Threadgates,
 } from './feed'
 
 export type HydrationState = {
@@ -26,6 +30,7 @@ export type HydrationState = {
   profileViewers?: ProfileViewerStates
   profileAggs?: ProfileAggs
   posts?: Posts
+  threadgates?: Threadgates
   lists?: Lists
   listViewers?: ListViewerStates
   listItems?: ListItems
@@ -149,11 +154,61 @@ export class Hydrator {
   }
 
   // app.bsky.feed.defs#postView
+  // @TODO handle 3p blocks
+  // - post
+  //   - profile
+  //     - list basic
+  //   - list
+  //     - profile
+  //       - list basic
+  //   - feedgen
+  //     - profile
+  //       - list basic
   async hydratePosts(
     uris: string[],
     viewer: string | null,
   ): Promise<HydrationState> {
-    throw new Error('not implemented')
+    const postsLayer0 = await this.feed.getPosts(uris)
+    // first level embeds
+    const urisLayer1 = nestedRecordUris(postsLayer0)
+    const urisLayer1ByCollection = urisByCollection(urisLayer1)
+    const postUrisLayer1 = urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
+    const postsLayer1 = await this.feed.getPosts(postUrisLayer1)
+    // second level embeds
+    const urisLayer2 = nestedRecordUris(postsLayer1)
+    const urisLayer2ByCollection = urisByCollection(urisLayer2)
+    // collect remaining post embeds, list/feedgen embeds, post record hydration
+    const postUrisLayer2 = urisLayer2ByCollection.get(ids.AppBskyFeedPost) ?? []
+    const nestedListUris = [
+      ...(urisLayer1ByCollection.get(ids.AppBskyGraphList) ?? []),
+      ...(urisLayer2ByCollection.get(ids.AppBskyGraphList) ?? []),
+    ]
+    const nestedFeedGenUris = [
+      ...(urisLayer1ByCollection.get(ids.AppBskyFeedGenerator) ?? []),
+      ...(urisLayer2ByCollection.get(ids.AppBskyFeedGenerator) ?? []),
+    ]
+    const allPostUris = [...uris, ...postUrisLayer1, ...postUrisLayer2]
+    const [
+      postsLayer2,
+      labels,
+      threadgates,
+      profileState,
+      listState,
+      feedGenState,
+    ] = await Promise.all([
+      this.feed.getPosts(postUrisLayer2),
+      this.label.getLabelsForSubjects(allPostUris),
+      this.feed.getThreadgatesForPosts(allPostUris),
+      this.hydrateProfiles(allPostUris.map(didFromUri), viewer),
+      this.hydrateLists(nestedListUris, viewer),
+      this.hydrateFeedGens(nestedFeedGenUris, viewer),
+    ])
+    // combine all hydration state
+    return mergeManyStates(profileState, listState, feedGenState, {
+      posts: mergeManyMaps(postsLayer0, postsLayer1, postsLayer2),
+      labels,
+      threadgates,
+    })
   }
 
   // app.bsky.feed.defs#feedViewPost
@@ -244,12 +299,39 @@ const listUrisFromProfileViewer = (item: ProfileViewerState | null) => {
 const labelSubjectsForDid = (dids: string[]) => {
   return [
     ...dids,
-    ...dids.map((did) => `at://${did}/${ids.AppBskyActorProfile}/self`),
+    ...dids.map((did) =>
+      AtUri.make(did, ids.AppBskyActorProfile, 'self').toString(),
+    ),
   ]
 }
 
 const didFromUri = (uri: string) => {
   return new AtUri(uri).hostname
+}
+
+const nestedRecordUris = (posts: Posts): string[] => {
+  const uris: string[] = []
+  for (const item of posts.values()) {
+    const post = item?.record
+    if (!post?.embed) continue
+    if (isEmbedRecord(post.embed)) {
+      uris.push(post.embed.record.uri)
+    } else if (isEmbedRecordWithMedia(post.embed)) {
+      uris.push(post.embed.record.record.uri)
+    }
+  }
+  return uris
+}
+
+const urisByCollection = (uris: string[]): Map<string, string[]> => {
+  const result = new Map<string, string[]>()
+  for (const uri of uris) {
+    const collection = new AtUri(uri).collection
+    const items = result.get(collection) ?? []
+    items.push(uri)
+    result.set(collection, items)
+  }
+  return result
 }
 
 const mergeStates = (
@@ -272,8 +354,23 @@ const mergeStates = (
   }
 }
 
-const mergeMaps = <T>(mapA?: HydrationMap<T>, mapB?: HydrationMap<T>) => {
+const mergeMaps = <T>(
+  mapA?: HydrationMap<T>,
+  mapB?: HydrationMap<T>,
+): HydrationMap<T> | undefined => {
   if (!mapA) return mapB
   if (!mapB) return mapA
   return mapA.merge(mapB)
+}
+
+const mergeManyStates = (...states: HydrationState[]) => {
+  const initial: HydrationState = {}
+  return states.reduce((acc, state) => mergeStates(acc, state), initial)
+}
+
+const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
+  return maps.reduce(
+    (acc, map) => mergeMaps(acc, map),
+    undefined as HydrationMap<T> | undefined,
+  )
 }
