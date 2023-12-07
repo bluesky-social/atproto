@@ -31,6 +31,8 @@ import {
   Post,
   Posts,
   Reposts,
+  PostAggs,
+  PostViewerStates,
   Threadgates,
 } from './feed'
 
@@ -39,6 +41,8 @@ export type HydrationState = {
   profileViewers?: ProfileViewerStates
   profileAggs?: ProfileAggs
   posts?: Posts
+  postsAggs?: PostAggs
+  postViewers?: PostViewerStates
   postBlocks?: PostBlocks
   reposts?: Reposts
   follows?: Follows

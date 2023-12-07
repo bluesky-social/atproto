@@ -7,8 +7,34 @@ import {
   ProfileView,
   ProfileViewBasic,
 } from '../lexicon/types/app/bsky/actor/defs'
+import {
+  GeneratorView,
+  PostView,
+  ThreadgateView,
+} from '../lexicon/types/app/bsky/feed/defs'
 import { ListView, ListViewBasic } from '../lexicon/types/app/bsky/graph/defs'
-import { compositeTime } from './util'
+import { compositeTime, creatorFromUri } from './util'
+import { mapDefined } from '@atproto/common'
+import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
+import {
+  Embed,
+  EmbedBlocked,
+  EmbedNotFound,
+  EmbedView,
+  ExternalEmbed,
+  ExternalEmbedView,
+  ImagesEmbed,
+  ImagesEmbedView,
+  PostEmbedView,
+  RecordEmbed,
+  RecordEmbedView,
+  RecordWithMedia,
+  RecordWithMediaView,
+  isExternalEmbed,
+  isImagesEmbed,
+  isRecordEmbed,
+  isRecordWithMedia,
+} from './types'
 
 export class Views {
   constructor(public imgUriBuilder: ImageUriBuilder) {}
@@ -152,6 +178,253 @@ export class Views {
             blocked: listViewer.viewerListBlockUri,
           }
         : undefined,
+    }
+  }
+
+  // Feed
+  // ------------
+
+  feedGenerator(uri: string, state: HydrationState): GeneratorView | undefined {
+    const feedgen = state.feedgens?.get(uri)
+    if (!feedgen) return
+    const creatorDid = creatorFromUri(uri)
+    const creator = this.profile(creatorDid, state)
+    if (!creator) return
+    const viewer = state.feedgenViewers?.get(uri)
+    const aggs = state.feedgenAggs?.get(uri)
+
+    return {
+      uri,
+      cid: feedgen.cid.toString(),
+      did: feedgen.record.did,
+      creator,
+      displayName: feedgen.record.displayName,
+      description: feedgen.record.description,
+      descriptionFacets: feedgen.record.descriptionFacets,
+      avatar: feedgen.record.avatar
+        ? this.imgUriBuilder.getPresetUri(
+            'avatar',
+            creatorDid,
+            feedgen.record.avatar.ref,
+          )
+        : undefined,
+      likeCount: aggs?.likes,
+      viewer: viewer
+        ? {
+            like: viewer.like,
+          }
+        : undefined,
+      indexedAt: compositeTime(
+        feedgen.record.createdAt,
+        feedgen.indexedAt?.toISOString(),
+      ),
+    }
+  }
+
+  threadGate(uri: string, state: HydrationState): ThreadgateView | undefined {
+    const gate = state.threadgates?.get(uri)
+    if (!gate) return
+    return {
+      uri,
+      cid: gate.cid.toString(),
+      record: gate.record,
+      lists: mapDefined(gate.record.allow ?? [], (rule) => {
+        if (!isListRule(rule)) return
+        return this.listBasic(rule.list, state)
+      }),
+    }
+  }
+
+  post(uri: string, state: HydrationState): PostView | undefined {
+    const post = state.posts?.get(uri)
+    if (!post) return
+    const parsedUri = new AtUri(uri)
+    const authorDid = parsedUri.hostname
+    const author = this.profileBasic(authorDid, state)
+    if (!author) return
+    const aggs = state.postsAggs?.get(uri)
+    const viewer = state.postViewers?.get(uri)
+    const gateUri = AtUri.make(
+      authorDid,
+      ids.AppBskyFeedThreadgate,
+      parsedUri.rkey,
+    ).toString()
+    return {
+      uri,
+      cid: post.cid.toString(),
+      author,
+      record: post.record,
+      embed: post.record.embed
+        ? this.embed(authorDid, post.record.embed, state)
+        : undefined,
+      replyCount: aggs?.replies,
+      repostCount: aggs?.reposts,
+      likeCount: aggs?.likes,
+      indexedAt: compositeTime(
+        post.record.createdAt,
+        post.indexedAt?.toISOString(),
+      ),
+      viewer: viewer
+        ? {
+            repost: viewer.repost,
+            like: viewer.like,
+            replyDisabled: undefined, // @TODO
+          }
+        : undefined,
+      labels: state.labels?.get(uri) ?? undefined,
+      threadgate: !post.record.reply // only hydrate gate on root post
+        ? this.threadGate(gateUri, state)
+        : undefined,
+    }
+  }
+
+  // Embeds
+  // ------------
+
+  embed(
+    did: string,
+    embed: Embed | { $type: string },
+    state: HydrationState,
+  ): EmbedView | undefined {
+    if (isImagesEmbed(embed)) {
+      return this.imagesEmbed(did, embed)
+    } else if (isExternalEmbed(embed)) {
+      return this.externalEmbed(did, embed)
+    } else if (isRecordEmbed(embed)) {
+      return this.recordEmbed(embed, state)
+    } else if (isRecordWithMedia(embed)) {
+      return this.recordWithMediaEmbed(did, embed, state)
+    } else {
+      return undefined
+    }
+  }
+
+  imagesEmbed(did: string, embed: ImagesEmbed): ImagesEmbedView {
+    const imgViews = embed.images.map((img) => ({
+      thumb: this.imgUriBuilder.getPresetUri(
+        'feed_thumbnail',
+        did,
+        img.image.ref,
+      ),
+      fullsize: this.imgUriBuilder.getPresetUri(
+        'feed_fullsize',
+        did,
+        img.image.ref,
+      ),
+      alt: img.alt,
+      aspectRatio: img.aspectRatio,
+    }))
+    return {
+      $type: 'app.bsky.embed.images#view',
+      images: imgViews,
+    }
+  }
+
+  externalEmbed(did: string, embed: ExternalEmbed): ExternalEmbedView {
+    const { uri, title, description, thumb } = embed.external
+    return {
+      $type: 'app.bsky.embed.external#view',
+      external: {
+        uri,
+        title,
+        description,
+        thumb: thumb
+          ? this.imgUriBuilder.getPresetUri('feed_thumbnail', did, thumb.ref)
+          : undefined,
+      },
+    }
+  }
+
+  embedNotFound(uri: string): { record: EmbedNotFound } {
+    return {
+      record: {
+        $type: 'app.bsky.embed.record#viewNotFound',
+        uri,
+        notFound: true,
+      },
+    }
+  }
+
+  embedBlocked(uri: string, author: ProfileView): { record: EmbedBlocked } {
+    return {
+      record: {
+        $type: 'app.bsky.embed.record#viewBlocked',
+        uri,
+        blocked: true,
+        author: {
+          did: author.did,
+          viewer: author.viewer
+            ? {
+                blockedBy: author.viewer?.blockedBy,
+                blocking: author.viewer?.blocking,
+              }
+            : undefined,
+        },
+      },
+    }
+  }
+
+  embedPostView(uri: string, state: HydrationState): PostEmbedView | undefined {
+    const postView = this.post(uri, state)
+    if (!postView) return
+    return {
+      $type: 'app.bsky.embed.record#viewRecord',
+      uri: postView.uri,
+      cid: postView.cid,
+      author: postView.author,
+      value: postView.record,
+      labels: postView.labels,
+      indexedAt: postView.indexedAt,
+      // @TODO
+      // embeds: postView.embed,
+    }
+  }
+
+  recordEmbed(embed: RecordEmbed, state: HydrationState): RecordEmbedView {
+    const uri = embed.record.uri
+    const parsedUri = new AtUri(uri)
+    if (parsedUri.collection === ids.AppBskyFeedPost) {
+      const view = this.embedPostView(uri, state)
+      if (!view) return this.embedNotFound(uri)
+      if (view.author.viewer?.blockedBy || view.author.viewer?.blocking) {
+        return this.embedBlocked(uri, view.author)
+      }
+      return { record: view }
+    } else if (parsedUri.collection === ids.AppBskyFeedGenerator) {
+      const view = this.feedGenerator(uri, state)
+      if (!view) return this.embedNotFound(uri)
+      if (view.creator.viewer?.blockedBy || view.creator.viewer?.blocking) {
+        return this.embedBlocked(uri, view.creator)
+      }
+      return { record: view }
+    } else if (parsedUri.collection === ids.AppBskyGraphList) {
+      const view = this.list(uri, state)
+      if (!view) return this.embedNotFound(uri)
+      if (view.creator.viewer?.blockedBy || view.creator.viewer?.blocking) {
+        return this.embedBlocked(uri, view.creator)
+      }
+      return { record: view }
+    }
+    return this.embedNotFound(uri)
+  }
+
+  recordWithMediaEmbed(
+    did: string,
+    embed: RecordWithMedia,
+    state: HydrationState,
+  ): RecordWithMediaView | undefined {
+    let mediaEmbed: ImagesEmbedView | ExternalEmbedView
+    if (isImagesEmbed(embed.media)) {
+      mediaEmbed = this.imagesEmbed(did, embed.media)
+    } else if (isExternalEmbed(embed.media)) {
+      mediaEmbed = this.externalEmbed(did, embed.media)
+    } else {
+      return
+    }
+    return {
+      $type: 'app.bsky.embed.recordWithMedia#view',
+      media: mediaEmbed,
+      record: this.recordEmbed(embed.record, state),
     }
   }
 }
