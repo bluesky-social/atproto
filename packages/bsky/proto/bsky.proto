@@ -219,8 +219,8 @@ message GetDidsByHandlesResponse {
 //     - profile hydration
 //     - block application
 message GetRelationshipsRequest {
-  string actorDid = 1;
-  repeated string targetDids = 2;
+  string actor_did = 1;
+  repeated string target_dids = 2;
 }
 
 message Relationships {

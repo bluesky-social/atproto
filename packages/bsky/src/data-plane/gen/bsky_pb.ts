@@ -1402,12 +1402,12 @@ export class GetDidsByHandlesResponse extends Message<GetDidsByHandlesResponse> 
  */
 export class GetRelationshipsRequest extends Message<GetRelationshipsRequest> {
   /**
-   * @generated from field: string actorDid = 1;
+   * @generated from field: string actor_did = 1;
    */
   actorDid = "";
 
   /**
-   * @generated from field: repeated string targetDids = 2;
+   * @generated from field: repeated string target_dids = 2;
    */
   targetDids: string[] = [];
 
@@ -1419,8 +1419,8 @@ export class GetRelationshipsRequest extends Message<GetRelationshipsRequest> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetRelationshipsRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "actorDid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "targetDids", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "target_dids", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetRelationshipsRequest {
