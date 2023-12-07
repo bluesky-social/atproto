@@ -4,8 +4,9 @@ import { ids } from '../lexicon/lexicons'
 import {
   ActorHydrator,
   ProfileAggs,
-  Profiles,
+  Actors,
   ProfileViewerStates,
+  ProfileViewerState,
 } from './actor'
 import { GraphHydrator, ListViewerStates, Lists } from './graph'
 import { LabelHydrator, Labels } from './label'
@@ -18,15 +19,15 @@ import {
 } from './feed'
 
 export type HydrationState = {
-  profiles?: Profiles
+  actors?: Actors
   profileViewers?: ProfileViewerStates
   profileAggs?: ProfileAggs
   lists?: Lists
   listViewers?: ListViewerStates
   labels?: Labels
-  generators?: FeedGens
-  generatorViewers?: FeedGenViewerStates
-  generatorAggs?: FeedGenAggs
+  feedgens?: FeedGens
+  feedgenViewers?: FeedGenViewerStates
+  feedgenAggs?: FeedGenAggs
 }
 
 export class Hydrator {
@@ -44,58 +45,43 @@ export class Hydrator {
 
   // app.bsky.actor.defs#profileView
   // - profile
-  //   - list
-  //   - labels
+  //   - list basic
   async hydrateProfiles(
     dids: string[],
     viewer: string | null,
   ): Promise<HydrationState> {
-    const state: HydrationState = {}
-    const [profiles, labels, profileViewers] = await Promise.all([
-      this.actor.getProfiles(dids),
+    const [actors, labels, profileViewers] = await Promise.all([
+      this.actor.getActors(dids),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids)),
-      viewer ? this.actor.getProfileViewerStates(dids, viewer) : null,
+      viewer ? this.actor.getProfileViewerStates(dids, viewer) : undefined,
     ])
-    state.profiles = profiles
-    state.labels = labels
-    if (profileViewers) {
-      state.profileViewers = profileViewers
-      const listUris: string[] = []
-      profileViewers.forEach((item) => {
-        if (item?.mutedByList) {
-          listUris.push(item.mutedByList)
-        }
-        if (item?.blockingByList) {
-          listUris.push(item.blockingByList)
-        }
-      })
-      const listState = await this.hydrateListsBasic(listUris, viewer)
-      state.lists = listState.lists
-      state.listViewers = listState.listViewers
-    }
-    return state
+    const listUris: string[] = []
+    profileViewers?.forEach((item) => {
+      listUris.push(...listUrisFromProfileViewer(item))
+    })
+    const listState = await this.hydrateListsBasic(listUris, viewer)
+    return mergeStates(listState, {
+      actors,
+      labels,
+      profileViewers,
+    })
   }
 
   // app.bsky.actor.defs#profileViewBasic
-  // - profile
-  //   - list
+  // - profile basic
+  //   - profile
+  //     - list basic
   async hydrateProfilesBasic(
     dids: string[],
     viewer: string | null,
   ): Promise<HydrationState> {
-    const [state, profileAggs] = await Promise.all([
-      this.hydrateProfiles(dids, viewer),
-      this.actor.getProfileAggregates(dids),
-    ])
-    return {
-      ...state,
-      profileAggs,
-    }
+    return this.hydrateProfiles(dids, viewer)
   }
 
   // app.bsky.actor.defs#profileViewDetailed
-  // - profile
-  //   - list
+  // - profile detailed
+  //   - profile
+  //     - list basic
   async hydrateProfilesDetailed(
     dids: string[],
     viewer: string | null,
@@ -111,6 +97,8 @@ export class Hydrator {
   }
 
   // app.bsky.graph.defs#listView
+  // - list
+  //   - profile basic
   async hydrateLists(
     uris: string[],
     viewer: string | null,
@@ -119,24 +107,20 @@ export class Hydrator {
       await this.hydrateListsBasic(uris, viewer),
       await this.hydrateProfilesBasic(uris.map(didFromUri), viewer),
     ])
-    return mergeHydrationStates(listsState, profilesState)
+    return mergeStates(listsState, profilesState)
   }
 
   // app.bsky.graph.defs#listViewBasic
+  // - list basic
   async hydrateListsBasic(
     uris: string[],
     viewer: string | null,
   ): Promise<HydrationState> {
-    const state: HydrationState = {}
     const [lists, listViewers] = await Promise.all([
-      this.graph.getListRecords(uris),
-      viewer ? this.graph.getListsViewerState(uris, viewer) : null,
+      this.graph.getLists(uris),
+      viewer ? this.graph.getListViewerStates(uris, viewer) : undefined,
     ])
-    state.lists = lists
-    if (listViewers) {
-      state.listViewers = listViewers
-    }
-    return state
+    return { lists, listViewers }
   }
 
   // app.bsky.feed.defs#postView
@@ -155,20 +139,34 @@ export class Hydrator {
   }
 
   // app.bsky.feed.defs#generatorView
-  async hydrateGenerators(uris: string[], viewer): Promise<HydrationState> {
-    const [generators, generatorAggs, generatorViewers, profileState] =
+  // - feedgen
+  //   - profile
+  //     - list basic
+  async hydrateFeedGens(uris: string[], viewer): Promise<HydrationState> {
+    const [feedgens, feedgenAggs, feedgenViewers, profileState] =
       await Promise.all([
         this.feed.getFeedGens(uris),
         this.feed.getFeedGenAggregates(uris),
         viewer ? this.feed.getFeedGenViewerStates(uris, viewer) : undefined,
         this.hydrateProfiles(uris.map(didFromUri), viewer),
       ])
-    return mergeHydrationStates(profileState, {
-      generators,
-      generatorAggs,
-      generatorViewers,
+    return mergeStates(profileState, {
+      feedgens,
+      feedgenAggs,
+      feedgenViewers,
     })
   }
+}
+
+const listUrisFromProfileViewer = (item: ProfileViewerState | null) => {
+  const listUris: string[] = []
+  if (item?.mutedByList) {
+    listUris.push(item.mutedByList)
+  }
+  if (item?.blockingByList) {
+    listUris.push(item.blockingByList)
+  }
+  return listUris
 }
 
 const labelSubjectsForDid = (dids: string[]) => {
@@ -182,23 +180,20 @@ const didFromUri = (uri: string) => {
   return new AtUri(uri).hostname
 }
 
-const mergeHydrationStates = (
+const mergeStates = (
   stateA: HydrationState,
   stateB: HydrationState,
 ): HydrationState => {
   return {
-    labels: mergeMaps(stateA.labels, stateB.labels),
-    listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
-    lists: mergeMaps(stateA.lists, stateB.lists),
+    actors: mergeMaps(stateA.actors, stateB.actors),
     profileAggs: mergeMaps(stateA.profileAggs, stateB.profileAggs),
     profileViewers: mergeMaps(stateA.profileViewers, stateB.profileViewers),
-    profiles: mergeMaps(stateA.profiles, stateB.profiles),
-    generators: mergeMaps(stateA.generators, stateB.generators),
-    generatorViewers: mergeMaps(
-      stateA.generatorViewers,
-      stateB.generatorViewers,
-    ),
-    generatorAggs: mergeMaps(stateA.generatorAggs, stateB.generatorAggs),
+    lists: mergeMaps(stateA.lists, stateB.lists),
+    listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
+    labels: mergeMaps(stateA.labels, stateB.labels),
+    feedgens: mergeMaps(stateA.feedgens, stateB.feedgens),
+    feedgenAggs: mergeMaps(stateA.feedgenAggs, stateB.feedgenAggs),
+    feedgenViewers: mergeMaps(stateA.feedgenViewers, stateB.feedgenViewers),
   }
 }
 

@@ -43,7 +43,7 @@ export type ProfileAggs = HydrationMap<ProfileAgg>
 export class ActorHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 
-  async getProfiles(dids: string[]): Promise<Actors> {
+  async getActors(dids: string[]): Promise<Actors> {
     const res = await this.dataplane.getActors({ dids })
     return dids.reduce((acc, did, i) => {
       const actor = res.actors[i]

@@ -35,7 +35,7 @@ export class GraphHydrator {
     const res = await this.dataplane.getLists({ uris })
     return uris.reduce((acc, uri, i) => {
       return acc.set(uri, parseRecord<ListRecord>(res.records[i]) ?? null)
-    }, new HydrationMap() as Lists)
+    }, new HydrationMap<List>())
   }
 
   async getListViewerStates(
@@ -55,7 +55,7 @@ export class GraphHydrator {
         viewerListBlockUri: mutesAndBlocks[i].listBlockUri,
         viewerInList: listMemberships.listitemUris[i],
       })
-    }, new HydrationMap() as ListViewerStates)
+    }, new HydrationMap<ListViewerState>())
   }
 
   private async getMutesAndBlocks(uri: string, viewer: string) {
