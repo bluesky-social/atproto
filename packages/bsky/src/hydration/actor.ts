@@ -4,7 +4,7 @@ import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile
 import {
   HydrationMap,
   parseCid,
-  parseRecord,
+  parseRecordBytes,
   parseString,
   parseTimestamp,
 } from './util'
@@ -50,7 +50,7 @@ export class ActorHydrator {
       return acc.set(did, {
         did,
         handle: parseString(actor.handle),
-        profile: parseRecord<ProfileRecord>(actor.profile),
+        profile: parseRecordBytes<ProfileRecord>(actor.profile),
         profileCid: parseCid(actor.profileCid),
         indexedAt: parseTimestamp(actor.indexedAt),
       })
@@ -68,7 +68,7 @@ export class ActorHydrator {
     return dids.reduce((acc, did, i) => {
       const rels = res.relationships[i]
       return acc.set(did, {
-        muted: rels.muted,
+        muted: rels.muted ?? false,
         mutedByList: parseString(rels.mutedByList),
         blockedBy: parseString(rels.blockedBy),
         blocking: parseString(rels.blocking),

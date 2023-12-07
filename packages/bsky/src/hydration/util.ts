@@ -2,6 +2,7 @@ import { jsonToLex } from '@atproto/lexicon'
 import { Timestamp } from '@bufbuild/protobuf'
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
+import { Record } from '../data-plane/gen/bsky_pb'
 
 export class HydrationMap<T> extends Map<string, T | null> {
   merge(map: HydrationMap<T>): HydrationMap<T> {
@@ -12,7 +13,21 @@ export class HydrationMap<T> extends Map<string, T | null> {
   }
 }
 
-export const parseRecord = <T>(
+export type RecordInfo<T> = {
+  record: T
+  cid: CID
+  indexedAt?: Date
+}
+
+export const parseRecord = <T>(entry: Record): RecordInfo<T> | undefined => {
+  const record = parseRecordBytes<T>(entry.record)
+  const cid = parseCid(entry.cid)
+  const indexedAt = parseTimestamp(entry.indexedAt)
+  if (!record || !cid) return
+  return { record, cid, indexedAt }
+}
+
+export const parseRecordBytes = <T>(
   bytes: Uint8Array | undefined,
 ): T | undefined => {
   if (!bytes || bytes.byteLength === 0) return

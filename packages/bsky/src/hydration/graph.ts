@@ -1,8 +1,8 @@
 import { Record as ListRecord } from '../lexicon/types/app/bsky/graph/list'
 import { DataPlaneClient } from '../data-plane/client'
-import { HydrationMap, parseRecord } from './util'
+import { HydrationMap, RecordInfo, parseRecord } from './util'
 
-export type List = ListRecord
+export type List = RecordInfo<ListRecord>
 export type Lists = HydrationMap<List>
 
 export type ListViewerState = {
@@ -34,8 +34,7 @@ export class GraphHydrator {
   async getLists(uris: string[]): Promise<Lists> {
     const res = await this.dataplane.getLists({ uris })
     return uris.reduce((acc, uri, i) => {
-      const record = parseRecord<List>(res.records[i])
-      return acc.set(uri, record)
+      return acc.set(uri, parseRecord<ListRecord>(res.records[i]) ?? null)
     }, new HydrationMap() as Lists)
   }
 
