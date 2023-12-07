@@ -226,12 +226,12 @@ message GetRelationshipsRequest {
 message Relationships {
   bool muted = 1;
   string muted_by_list = 2;
-  string blockedBy = 3;
+  string blocked_by = 3;
   string blocking = 4;
-  string blockedByList = 5;
-  string blockingByList = 6;
+  string blocked_by_list = 5;
+  string blocking_by_list = 6;
   string following = 7;
-  string followedBy = 8;
+  string followed_by = 8;
 }
 
 message GetRelationshipsResponse {

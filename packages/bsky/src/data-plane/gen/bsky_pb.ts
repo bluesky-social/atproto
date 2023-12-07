@@ -1455,7 +1455,7 @@ export class Relationships extends Message<Relationships> {
   mutedByList = "";
 
   /**
-   * @generated from field: string blockedBy = 3;
+   * @generated from field: string blocked_by = 3;
    */
   blockedBy = "";
 
@@ -1465,12 +1465,12 @@ export class Relationships extends Message<Relationships> {
   blocking = "";
 
   /**
-   * @generated from field: string blockedByList = 5;
+   * @generated from field: string blocked_by_list = 5;
    */
   blockedByList = "";
 
   /**
-   * @generated from field: string blockingByList = 6;
+   * @generated from field: string blocking_by_list = 6;
    */
   blockingByList = "";
 
@@ -1480,7 +1480,7 @@ export class Relationships extends Message<Relationships> {
   following = "";
 
   /**
-   * @generated from field: string followedBy = 8;
+   * @generated from field: string followed_by = 8;
    */
   followedBy = "";
 
@@ -1494,12 +1494,12 @@ export class Relationships extends Message<Relationships> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "muted", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
     { no: 2, name: "muted_by_list", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "blockedBy", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "blocked_by", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "blocking", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "blockedByList", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 6, name: "blockingByList", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "blocked_by_list", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "blocking_by_list", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 7, name: "following", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 8, name: "followedBy", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 8, name: "followed_by", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Relationships {
