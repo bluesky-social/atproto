@@ -25,7 +25,7 @@ export type PostAgg = {
 
 export type PostAggs = HydrationMap<PostAgg>
 
-export type Like = LikeRecord
+export type Like = RecordInfo<LikeRecord>
 export type Likes = HydrationMap<Like>
 
 export type FeedGenAgg = {
@@ -141,6 +141,9 @@ export class FeedHydrator {
 
   // @TODO may not be supported yet by data plane
   async getLikes(uris: string[]): Promise<Likes> {
-    throw new Error('unimplemented')
+    const res = await this.dataplane.getLikeRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      return acc.set(uri, parseRecord<LikeRecord>(res.records[i]) ?? null)
+    }, new HydrationMap<Like>())
   }
 }

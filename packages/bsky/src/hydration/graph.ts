@@ -71,7 +71,10 @@ export class GraphHydrator {
 
   // @TODO may not be supported yet by data plane
   async getListItems(uris: string[]): Promise<ListItems> {
-    throw new Error('unimplemented')
+    const res = await this.dataplane.getListItemRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      return acc.set(uri, parseRecord<ListItemRecord>(res.records[i]) ?? null)
+    }, new HydrationMap<ListItem>())
   }
 
   async getListViewerStates(
