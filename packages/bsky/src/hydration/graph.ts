@@ -1,8 +1,6 @@
-import * as ui8 from 'uint8arrays'
 import { Record as ListRecord } from '../lexicon/types/app/bsky/graph/list'
 import { DataPlaneClient } from '../data-plane/client'
-import { jsonToLex } from '@atproto/lexicon'
-import { HydrationMap } from './util'
+import { HydrationMap, parseRecord } from './util'
 
 export type List = ListRecord
 export type Lists = HydrationMap<List>
@@ -33,17 +31,15 @@ export class Blocks {
 export class GraphHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 
-  async getListRecords(uris: string[]): Promise<Lists> {
+  async getLists(uris: string[]): Promise<Lists> {
     const res = await this.dataplane.getLists({ uris })
     return uris.reduce((acc, uri, i) => {
-      const list = res.records[i]
-      const parsed = JSON.parse(ui8.toString(list, 'utf8'))
-      const record = parsed ? (jsonToLex(parsed) as ListRecord) : null
+      const record = parseRecord<List>(res.records[i])
       return acc.set(uri, record)
-    }, new Map() as Lists)
+    }, new HydrationMap() as Lists)
   }
 
-  async getListsViewerState(
+  async getListViewerStates(
     uris: string[],
     viewer: string,
   ): Promise<ListViewerStates> {
@@ -60,11 +56,7 @@ export class GraphHydrator {
         viewerListBlockUri: mutesAndBlocks[i].listBlockUri,
         viewerInList: listMemberships.listitemUris[i],
       })
-    }, new Map() as ListViewerStates)
-  }
-
-  async getBidirectionalBlocks(pairs: RelationshipPair[]): Promise<Blocks> {
-    throw new Error('unimplemented')
+    }, new HydrationMap() as ListViewerStates)
   }
 
   private async getMutesAndBlocks(uri: string, viewer: string) {
@@ -82,5 +74,9 @@ export class GraphHydrator {
       muted: muted.subscribed,
       listBlockUri: listBlockUri.listblockUri,
     }
+  }
+
+  async getBidirectionalBlocks(pairs: RelationshipPair[]): Promise<Blocks> {
+    throw new Error('unimplemented')
   }
 }
