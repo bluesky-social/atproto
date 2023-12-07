@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const actors = await ctx.services
         .actor(db)
-        .views.profilesBasic(results, requester, { omitLabels: true })
+        .views.profilesBasic(results, requester)
 
       const SKIP = []
       const filtered = results.flatMap((did) => {
