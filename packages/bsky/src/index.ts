@@ -29,6 +29,7 @@ import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { createDataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
+import { Views } from './views'
 
 export * from './data-plane'
 export type { ServerConfigValues } from './config'
@@ -120,6 +121,7 @@ export class BskyAppView {
 
     const dataplane = createDataPlaneClient(config.dataplaneUrl, '1.1')
     const hydrator = new Hydrator(dataplane)
+    const views = new Views(imgUriBuilder)
 
     const ctx = new AppContext({
       db,
@@ -127,6 +129,7 @@ export class BskyAppView {
       services,
       dataplane,
       hydrator,
+      views,
       imgUriBuilder,
       signingKey,
       idResolver,

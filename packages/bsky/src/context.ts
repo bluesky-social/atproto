@@ -15,6 +15,7 @@ import { LabelCache } from './label-cache'
 import { NotificationServer } from './notifications'
 import { DataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
+import { Views } from './views'
 
 export class AppContext {
   public moderationPushAgent: AtpAgent | undefined
@@ -26,6 +27,7 @@ export class AppContext {
       services: Services
       dataplane: DataPlaneClient
       hydrator: Hydrator
+      views: Views
       signingKey: Keypair
       idResolver: IdResolver
       didCache: DidSqlCache
@@ -68,6 +70,10 @@ export class AppContext {
 
   get hydrator(): Hydrator {
     return this.opts.hydrator
+  }
+
+  get views(): Views {
+    return this.opts.views
   }
 
   get signingKey(): Keypair {
