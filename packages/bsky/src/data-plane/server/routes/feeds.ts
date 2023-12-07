@@ -5,12 +5,13 @@ import { TimeCidKeyset, paginate } from '../../../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getAuthorFeed(req) {
-    const { actorDid, limit, cursor, repliesOnly, mediaOnly } = req
+    const { actorDid, limit, cursor, noReplies, mediaOnly } = req
     const { ref } = db.db.dynamic
 
     // defaults to posts, reposts, and replies
     let builder = db.db
       .selectFrom('feed_item')
+      .innerJoin('post', 'post.uri', 'feed_item.postUri')
       .selectAll('feed_item')
       .where('originatorDid', '=', actorDid)
 
@@ -25,8 +26,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
             .select('post_embed_image.postUri')
             .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
         )
-    } else if (repliesOnly) {
-      // @TODO
+    } else if (noReplies) {
+      builder = builder.where((qb) =>
+        qb.where('post.replyParent', 'is', null).orWhere('type', '=', 'repost'),
+      )
     }
 
     const keyset = new TimeCidKeyset(

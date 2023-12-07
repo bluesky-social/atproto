@@ -78,24 +78,30 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor: keyset.packFromResult(follows),
     }
   },
-  async getFollowersCount(req) {
+  async getFollowerCounts(req) {
+    if (req.dids.length === 0) {
+      return { counts: [] }
+    }
     const res = await db.db
       .selectFrom('profile_agg')
-      .select('followersCount')
-      .where('did', '=', req.actorDid)
-      .executeTakeFirst()
-    return {
-      count: res?.followersCount,
-    }
+      .selectAll()
+      .where('did', 'in', req.dids)
+      .execute()
+    const byDid = keyBy(res, 'did')
+    const counts = req.dids.map((did) => byDid[did]?.followersCount ?? 0)
+    return { counts }
   },
-  async getFollowsCount(req) {
+  async getFollowCounts(req) {
+    if (req.dids.length === 0) {
+      return { counts: [] }
+    }
     const res = await db.db
       .selectFrom('profile_agg')
-      .select('followsCount')
-      .where('did', '=', req.actorDid)
-      .executeTakeFirst()
-    return {
-      count: res?.followsCount,
-    }
+      .selectAll()
+      .where('did', 'in', req.dids)
+      .execute()
+    const byDid = keyBy(res, 'did')
+    const counts = req.dids.map((did) => byDid[did]?.followsCount ?? 0)
+    return { counts }
   },
 })

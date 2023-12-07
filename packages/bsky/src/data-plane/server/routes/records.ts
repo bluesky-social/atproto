@@ -19,7 +19,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   getThreadGateRecords: getRecords(db),
 })
 
-const getRecords =
+export const getRecords =
   (db: Database) =>
   async (req: { uris: string[] }): Promise<{ records: Record[] }> => {
     if (req.uris.length === 0) {

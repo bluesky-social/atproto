@@ -2,6 +2,7 @@ import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../gen/bsky_connect'
 import { Database } from '../../../db'
 import { TimeCidKeyset, paginate } from '../../../db/pagination'
+import { keyBy } from '@atproto/common'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getLikesBySubject(req) {
@@ -28,15 +29,20 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }
   },
 
-  async getLikeByActorAndSubject(req) {
-    const { actorDid, subjectUri } = req
+  async getLikesByActorAndSubjects(req) {
+    const { actorDid, subjectUris } = req
+    if (subjectUris.length === 0) {
+      return { uris: [] }
+    }
     const res = await db.db
       .selectFrom('like')
       .where('creator', '=', actorDid)
-      .where('subject', '=', subjectUri)
-      .select('uri')
-      .executeTakeFirst()
-    return { uri: res?.uri }
+      .where('subject', 'in', subjectUris)
+      .selectAll()
+      .execute()
+    const bySubject = keyBy(res, 'subject')
+    const uris = req.subjectUris.map((uri) => bySubject[uri]?.uri)
+    return { uris }
   },
 
   async getActorLikes(req) {
@@ -64,14 +70,17 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }
   },
 
-  async getLikesCount(req) {
+  async getLikeCounts(req) {
+    if (req.uris.length === 0) {
+      return { counts: [] }
+    }
     const res = await db.db
       .selectFrom('post_agg')
-      .where('uri', '=', req.subjectUri)
-      .select('likeCount')
-      .executeTakeFirst()
-    return {
-      count: res?.likeCount,
-    }
+      .where('uri', 'in', req.uris)
+      .selectAll()
+      .execute()
+    const byUri = keyBy(res, 'uri')
+    const counts = req.uris.map((uri) => byUri[uri]?.likeCount ?? 0)
+    return { counts }
   },
 })

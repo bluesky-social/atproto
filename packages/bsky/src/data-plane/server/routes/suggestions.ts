@@ -3,7 +3,7 @@ import { Service } from '../../gen/bsky_connect'
 import { Database } from '../../../db'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
-  async getSuggestions(req) {
+  async getFollowSuggestions(req) {
     const alreadyIncluded = parseCursor(req.cursor)
     const suggestions = await db.db
       .selectFrom('suggested_follow')

@@ -1,6 +1,5 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../gen/bsky_connect'
-import * as ui8 from 'uint8arrays'
 import { Database } from '../../../db'
 import { countAll } from '../../../db/util'
 import { keyBy } from '@atproto/common'
@@ -48,18 +47,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const listitemUris = listUris.map((uri) => byListUri[uri]?.uri ?? '')
     return {
       listitemUris,
-    }
-  },
-
-  async getList(req) {
-    const res = await db.db
-      .selectFrom('record')
-      .where('uri', '=', req.listUri)
-      .select('json')
-      .executeTakeFirst()
-    const record = res ? ui8.fromString(res.json, 'utf8') : undefined
-    return {
-      record,
     }
   },
 

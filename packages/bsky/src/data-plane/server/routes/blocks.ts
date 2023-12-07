@@ -87,7 +87,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .limit(1)
       .executeTakeFirst()
     return {
-      subscribed: !!res,
+      listblockUri: res?.uri,
     }
   },
 
