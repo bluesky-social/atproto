@@ -41,7 +41,7 @@ export type HydrationState = {
   profileViewers?: ProfileViewerStates
   profileAggs?: ProfileAggs
   posts?: Posts
-  postsAggs?: PostAggs
+  postAggs?: PostAggs
   postViewers?: PostViewerStates
   postBlocks?: PostBlocks
   reposts?: Reposts
@@ -211,15 +211,19 @@ export class Hydrator {
       mergeManyMaps(postsLayer0, postsLayer1, postsLayer2) ?? postsLayer0
     const allPostUris = [...posts.keys()]
     const [
-      labels,
+      postAggs,
+      postViewers,
       threadgates,
+      labels,
       postBlocks,
       profileState,
       listState,
       feedGenState,
     ] = await Promise.all([
+      this.feed.getPostAggregates(uris),
+      viewer ? this.feed.getPostViewerStates(uris, viewer) : undefined,
+      this.feed.getThreadgatesForPosts(uris),
       this.label.getLabelsForSubjects(allPostUris),
-      this.feed.getThreadgatesForPosts(allPostUris),
       this.hydratePostBlocks(posts),
       this.hydrateProfiles(allPostUris.map(didFromUri), viewer),
       this.hydrateLists(nestedListUris, viewer),
@@ -228,6 +232,8 @@ export class Hydrator {
     // combine all hydration state
     return mergeManyStates(profileState, listState, feedGenState, {
       posts,
+      postAggs,
+      postViewers,
       postBlocks,
       labels,
       threadgates,
@@ -460,6 +466,8 @@ const mergeStates = (
     profileAggs: mergeMaps(stateA.profileAggs, stateB.profileAggs),
     profileViewers: mergeMaps(stateA.profileViewers, stateB.profileViewers),
     posts: mergeMaps(stateA.posts, stateB.posts),
+    postAggs: mergeMaps(stateA.postAggs, stateB.postAggs),
+    postViewers: mergeMaps(stateA.postViewers, stateB.postViewers),
     postBlocks: mergeMaps(stateA.postBlocks, stateB.postBlocks),
     reposts: mergeMaps(stateA.reposts, stateB.reposts),
     follows: mergeMaps(stateA.follows, stateB.follows),
