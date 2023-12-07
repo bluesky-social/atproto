@@ -1,3 +1,4 @@
+import { Record as FollowRecord } from '../lexicon/types/app/bsky/graph/follow'
 import { Record as ListRecord } from '../lexicon/types/app/bsky/graph/list'
 import { Record as ListItemRecord } from '../lexicon/types/app/bsky/graph/listitem'
 import { DataPlaneClient } from '../data-plane/client'
@@ -16,6 +17,9 @@ export type ListViewerState = {
 }
 
 export type ListViewerStates = HydrationMap<ListViewerState>
+
+export type Follow = RecordInfo<FollowRecord>
+export type Follows = HydrationMap<Follow>
 
 export type RelationshipPair = [didA: string, didB: string]
 
@@ -126,5 +130,12 @@ export class GraphHydrator {
       blocks.set(pair.a, pair.b, res.exists[i] ?? false)
     }
     return blocks
+  }
+
+  async getFollows(uris: string[]): Promise<Follows> {
+    const res = await this.dataplane.getFollowRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      return acc.set(uri, parseRecord<FollowRecord>(res.records[i]) ?? null)
+    }, new HydrationMap<Follow>())
   }
 }

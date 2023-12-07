@@ -13,6 +13,7 @@ import {
   ProfileViewerState,
 } from './actor'
 import {
+  Follows,
   GraphHydrator,
   ListItems,
   ListViewerStates,
@@ -40,6 +41,7 @@ export type HydrationState = {
   posts?: Posts
   postBlocks?: PostBlocks
   reposts?: Reposts
+  follows?: Follows
   threadgates?: Threadgates
   lists?: Lists
   listViewers?: ListViewerStates
@@ -371,21 +373,21 @@ export class Hydrator {
   //     - list basic
   async hydrateNotifications(notifs: Notification[], viewer: string | null) {
     const uris = notifs.map((notif) => notif.uri)
-    const parsedUris = uris.map((uri) => new AtUri(uri))
-    // @TODO incomplete: need support from data plane to fetch more types of original records, such as reposts.
-    const postUris = parsedUris
-      .filter((uri) => uri.collection === ids.AppBskyFeedPost)
-      .map((uri) => uri.toString())
-    const likeUris = parsedUris
-      .filter((uri) => uri.collection === ids.AppBskyFeedLike)
-      .map((uri) => uri.toString())
-    const [posts, likes, labels, profileState] = await Promise.all([
-      this.feed.getPosts(postUris),
-      this.feed.getLikes(likeUris),
-      this.label.getLabelsForSubjects(uris), // @TODO can we batch these with profile labels?
-      this.hydrateProfiles(uris.map(didFromUri), viewer),
-    ])
-    return mergeStates(profileState, { posts, likes, labels })
+    const collections = urisByCollection(uris)
+    const postUris = collections.get(ids.AppBskyFeedPost) ?? []
+    const likeUris = collections.get(ids.AppBskyFeedLike) ?? []
+    const repostUris = collections.get(ids.AppBskyFeedRepost) ?? []
+    const followUris = collections.get(ids.AppBskyGraphFollow) ?? []
+    const [posts, likes, reposts, follows, labels, profileState] =
+      await Promise.all([
+        this.feed.getPosts(postUris), // reason: mention, reply, quote
+        this.feed.getLikes(likeUris), // reason: like
+        this.feed.getReposts(repostUris), // reason: repost
+        this.graph.getFollows(followUris),
+        this.label.getLabelsForSubjects(uris),
+        this.hydrateProfiles(uris.map(didFromUri), viewer),
+      ])
+    return mergeStates(profileState, { posts, likes, reposts, follows, labels })
   }
 }
 
@@ -456,6 +458,7 @@ const mergeStates = (
     posts: mergeMaps(stateA.posts, stateB.posts),
     postBlocks: mergeMaps(stateA.postBlocks, stateB.postBlocks),
     reposts: mergeMaps(stateA.reposts, stateB.reposts),
+    follows: mergeMaps(stateA.follows, stateB.follows),
     lists: mergeMaps(stateA.lists, stateB.lists),
     listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
     listItems: mergeMaps(stateA.listItems, stateB.listItems),
