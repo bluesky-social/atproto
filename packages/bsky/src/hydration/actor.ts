@@ -43,6 +43,23 @@ export type ProfileAggs = HydrationMap<ProfileAgg>
 export class ActorHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 
+  async getRepoRevSafe(did: string | null): Promise<string | null> {
+    if (!did) return null
+    try {
+      const res = await this.dataplane.getLatestRev({ actorDid: did })
+      return parseString(res.rev) ?? null
+    } catch {
+      return null
+    }
+  }
+
+  async getDids(didsOrhandles: string[]): Promise<string[]> {
+    const dids = didsOrhandles.filter((actor) => actor.startsWith('did:'))
+    const handles = didsOrhandles.filter((actor) => !actor.startsWith('did:'))
+    const res = await this.dataplane.getDidsByHandles({ handles })
+    return [...dids, ...res.dids.filter((did) => did.length > 0)]
+  }
+
   async getActors(dids: string[]): Promise<Actors> {
     const res = await this.dataplane.getActors({ dids })
     return dids.reduce((acc, did, i) => {

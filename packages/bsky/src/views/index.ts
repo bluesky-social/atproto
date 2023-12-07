@@ -268,7 +268,7 @@ export class Views {
         ? {
             repost: viewer.repost,
             like: viewer.like,
-            replyDisabled: undefined, // @TODO
+            replyDisabled: this.userReplyDisabled(uri, state),
           }
         : undefined,
       labels: state.labels?.get(uri) ?? undefined,
@@ -426,5 +426,10 @@ export class Views {
       media: mediaEmbed,
       record: this.recordEmbed(embed.record, state),
     }
+  }
+
+  userReplyDisabled(_uri: string, _state: HydrationState): boolean | undefined {
+    // @TODO
+    return undefined
   }
 }

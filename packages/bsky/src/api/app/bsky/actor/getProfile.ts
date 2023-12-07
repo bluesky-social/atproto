@@ -1,91 +1,73 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfile'
-import { softDeleted } from '../../../../db/util'
 import AppContext from '../../../../context'
-import { Database } from '../../../../db'
-import { Actor } from '../../../../db/tables/actor'
-import {
-  ActorService,
-  ProfileDetailHydrationState,
-} from '../../../../services/actor'
 import { setRepoRev } from '../../../util'
-import { createPipeline, noRules } from '../../../../pipeline'
+import { createPipelineNew, noRulesNew } from '../../../../pipeline'
+import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
-  const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
+  const getProfile = createPipelineNew(
+    skeleton,
+    hydration,
+    noRulesNew,
+    presentation,
+  )
   server.app.bsky.actor.getProfile({
     auth: ctx.authOptionalAccessOrRoleVerifier,
     handler: async ({ auth, params, res }) => {
-      const db = ctx.db.getReplica()
-      const actorService = ctx.services.actor(db)
       const viewer = 'did' in auth.credentials ? auth.credentials.did : null
       const canViewTakendownProfile =
         auth.credentials.type === 'role' && auth.credentials.triage
 
-      const [result, repoRev] = await Promise.allSettled([
-        getProfile(
-          { ...params, viewer, canViewTakendownProfile },
-          { db, actorService },
-        ),
-        actorService.getRepoRev(viewer),
+      const [result, repoRev] = await Promise.all([
+        getProfile({ ...params, viewer, canViewTakendownProfile }, ctx),
+        ctx.hydrator.actor.getRepoRevSafe(viewer),
       ])
 
-      if (repoRev.status === 'fulfilled') {
-        setRepoRev(res, repoRev.value)
-      }
-      if (result.status === 'rejected') {
-        throw result.reason
-      }
+      setRepoRev(res, repoRev)
 
       return {
         encoding: 'application/json',
-        body: result.value,
+        body: result,
       }
     },
   })
 }
 
 const skeleton = async (
-  params: Params,
   ctx: Context,
+  params: Params,
 ): Promise<SkeletonState> => {
-  const { actorService } = ctx
-  const { canViewTakendownProfile } = params
-  const actor = await actorService.getActor(params.actor, true)
-  if (!actor) {
+  // const { canViewTakendownProfile } = params
+  const [did] = await ctx.hydrator.actor.getDids([params.actor])
+  if (!did) {
     throw new InvalidRequestError('Profile not found')
   }
-  if (!canViewTakendownProfile && softDeleted(actor)) {
-    throw new InvalidRequestError(
-      'Account has been taken down',
-      'AccountTakedown',
-    )
-  }
-  return { params, actor }
+  // if (!canViewTakendownProfile && softDeleted(actor)) {
+  //   throw new InvalidRequestError(
+  //     'Account has been taken down',
+  //     'AccountTakedown',
+  //   )
+  // }
+  return { did }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { actorService } = ctx
-  const { params, actor } = state
-  const { viewer, canViewTakendownProfile } = params
-  const hydration = await actorService.views.profileDetailHydration(
-    [actor.did],
-    { viewer, includeSoftDeleted: canViewTakendownProfile },
-  )
-  return { ...state, ...hydration }
+const hydration = async (
+  ctx: Context,
+  params: Params,
+  skele: SkeletonState,
+) => {
+  return ctx.hydrator.hydrateProfilesDetailed([skele.did], params.viewer)
 }
 
-const presentation = (state: HydrationState, ctx: Context) => {
-  const { actorService } = ctx
-  const { params, actor } = state
-  const { viewer } = params
-  const profiles = actorService.views.profileDetailPresentation(
-    [actor.did],
-    state,
-    { viewer },
-  )
-  const profile = profiles[actor.did]
+const presentation = (
+  ctx: Context,
+  skele: SkeletonState,
+  hydration: HydrationState,
+) => {
+  const profile = ctx.views.profileDetailed(skele.did, hydration)
   if (!profile) {
     throw new InvalidRequestError('Profile not found')
   }
@@ -93,8 +75,8 @@ const presentation = (state: HydrationState, ctx: Context) => {
 }
 
 type Context = {
-  db: Database
-  actorService: ActorService
+  hydrator: Hydrator
+  views: Views
 }
 
 type Params = QueryParams & {
@@ -102,6 +84,4 @@ type Params = QueryParams & {
   canViewTakendownProfile: boolean
 }
 
-type SkeletonState = { params: Params; actor: Actor }
-
-type HydrationState = SkeletonState & ProfileDetailHydrationState
+type SkeletonState = { did: string }
