@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { GetActorFeedsRequest, GetActorFeedsResponse, GetActorFollowsActorsRequest, GetActorFollowsActorsResponse, GetActorLikesRequest, GetActorLikesResponse, GetActorMutesActorRequest, GetActorMutesActorResponse, GetActorMutesActorViaListRequest, GetActorMutesActorViaListResponse, GetActorRepostsRequest, GetActorRepostsResponse, GetActorsRequest, GetActorsResponse, GetAuthorFeedRequest, GetAuthorFeedResponse, GetBidirectionalBlockRequest, GetBidirectionalBlockResponse, GetBidirectionalBlockViaListRequest, GetBidirectionalBlockViaListResponse, GetBlobTakedownRequest, GetBlobTakedownResponse, GetBlockExistenceRequest, GetBlockExistenceResponse, GetBlocklistSubscriptionRequest, GetBlocklistSubscriptionResponse, GetBlocklistSubscriptionsRequest, GetBlocklistSubscriptionsResponse, GetBlockRecordRequest, GetBlockRecordResponse, GetBlocksRequest, GetBlocksResponse, GetDidsByHandlesRequest, GetDidsByHandlesResponse, GetFeedGeneratorRecordRequest, GetFeedGeneratorRecordResponse, GetFeedGeneratorStatusRequest, GetFeedGeneratorStatusResponse, GetFollowCountsRequest, GetFollowCountsResponse, GetFollowerCountsRequest, GetFollowerCountsResponse, GetFollowersRequest, GetFollowersResponse, GetFollowRecordRequest, GetFollowRecordResponse, GetFollowsRequest, GetFollowsResponse, GetFollowSuggestionsRequest, GetFollowSuggestionsResponse, GetLabelsRequest, GetLabelsResponse, GetLatestRevRequest, GetLatestRevResponse, GetLikeCountsRequest, GetLikeCountsResponse, GetLikeRecordRequest, GetLikeRecordResponse, GetLikesByActorAndSubjectsRequest, GetLikesByActorAndSubjectsResponse, GetLikesBySubjectRequest, GetLikesBySubjectResponse, GetListBlockRecordRequest, GetListBlockRecordResponse, GetListCountRequest, GetListCountResponse, GetListFeedRequest, GetListFeedResponse, GetListItemRecordRequest, GetListItemRecordResponse, GetListMembershipRequest, GetListMembershipResponse, GetListMembersRequest, GetListMembersResponse, GetListRecordRequest, GetListRecordResponse, GetMutelistSubscriptionRequest, GetMutelistSubscriptionResponse, GetMutelistSubscriptionsRequest, GetMutelistSubscriptionsResponse, GetMutesRequest, GetMutesResponse, GetNotificationSeenRequest, GetNotificationSeenResponse, GetNotificationsRequest, GetNotificationsResponse, GetPostCountsRequest, GetPostCountsResponse, GetPostRecordRequest, GetPostRecordResponse, GetPostReplyCountsRequest, GetPostReplyCountsResponse, GetProfileRecordRequest, GetProfileRecordResponse, GetRelationshipsRequest, GetRelationshipsResponse, GetRepostCountsRequest, GetRepostCountsResponse, GetRepostRecordRequest, GetRepostRecordResponse, GetRepostsByActorAndSubjectsRequest, GetRepostsByActorAndSubjectsResponse, GetRepostsBySubjectRequest, GetRepostsBySubjectResponse, GetSuggestedFeedsRequest, GetSuggestedFeedsResponse, GetThreadGateRecordRequest, GetThreadGateRecordResponse, GetThreadRequest, GetThreadResponse, GetTimelineRequest, GetTimelineResponse, GetUnreadNotificationCountRequest, GetUnreadNotificationCountResponse, PingRequest, PingResponse, SearchActorsRequest, SearchActorsResponse, SearchPostsRequest, SearchPostsResponse, UpdateNotificationSeenRequest, UpdateNotificationSeenResponse, UpdateTakedownRequest, UpdateTakedownResponse } from "./bsky_pb.js";
+import { GetActorFeedsRequest, GetActorFeedsResponse, GetActorFollowsActorsRequest, GetActorFollowsActorsResponse, GetActorLikesRequest, GetActorLikesResponse, GetActorMutesActorRequest, GetActorMutesActorResponse, GetActorMutesActorViaListRequest, GetActorMutesActorViaListResponse, GetActorRepostsRequest, GetActorRepostsResponse, GetActorsRequest, GetActorsResponse, GetAuthorFeedRequest, GetAuthorFeedResponse, GetBidirectionalBlockRequest, GetBidirectionalBlockResponse, GetBidirectionalBlockViaListRequest, GetBidirectionalBlockViaListResponse, GetBlobTakedownRequest, GetBlobTakedownResponse, GetBlockExistenceRequest, GetBlockExistenceResponse, GetBlocklistSubscriptionRequest, GetBlocklistSubscriptionResponse, GetBlocklistSubscriptionsRequest, GetBlocklistSubscriptionsResponse, GetBlockRecordsRequest, GetBlockRecordsResponse, GetBlocksRequest, GetBlocksResponse, GetDidsByHandlesRequest, GetDidsByHandlesResponse, GetFeedGeneratorRecordsRequest, GetFeedGeneratorRecordsResponse, GetFeedGeneratorStatusRequest, GetFeedGeneratorStatusResponse, GetFollowCountsRequest, GetFollowCountsResponse, GetFollowerCountsRequest, GetFollowerCountsResponse, GetFollowersRequest, GetFollowersResponse, GetFollowRecordsRequest, GetFollowRecordsResponse, GetFollowsRequest, GetFollowsResponse, GetFollowSuggestionsRequest, GetFollowSuggestionsResponse, GetLabelsRequest, GetLabelsResponse, GetLatestRevRequest, GetLatestRevResponse, GetLikeCountsRequest, GetLikeCountsResponse, GetLikeRecordsRequest, GetLikeRecordsResponse, GetLikesByActorAndSubjectsRequest, GetLikesByActorAndSubjectsResponse, GetLikesBySubjectRequest, GetLikesBySubjectResponse, GetListBlockRecordsRequest, GetListBlockRecordsResponse, GetListCountRequest, GetListCountResponse, GetListFeedRequest, GetListFeedResponse, GetListItemRecordsRequest, GetListItemRecordsResponse, GetListMembershipRequest, GetListMembershipResponse, GetListMembersRequest, GetListMembersResponse, GetListRecordsRequest, GetListRecordsResponse, GetMutelistSubscriptionRequest, GetMutelistSubscriptionResponse, GetMutelistSubscriptionsRequest, GetMutelistSubscriptionsResponse, GetMutesRequest, GetMutesResponse, GetNotificationSeenRequest, GetNotificationSeenResponse, GetNotificationsRequest, GetNotificationsResponse, GetPostCountsRequest, GetPostCountsResponse, GetPostRecordsRequest, GetPostRecordsResponse, GetPostReplyCountsRequest, GetPostReplyCountsResponse, GetProfileRecordsRequest, GetProfileRecordsResponse, GetRelationshipsRequest, GetRelationshipsResponse, GetRepostCountsRequest, GetRepostCountsResponse, GetRepostRecordsRequest, GetRepostRecordsResponse, GetRepostsByActorAndSubjectsRequest, GetRepostsByActorAndSubjectsResponse, GetRepostsBySubjectRequest, GetRepostsBySubjectResponse, GetSuggestedFeedsRequest, GetSuggestedFeedsResponse, GetThreadGateRecordsRequest, GetThreadGateRecordsResponse, GetThreadRequest, GetThreadResponse, GetTimelineRequest, GetTimelineResponse, GetUnreadNotificationCountRequest, GetUnreadNotificationCountResponse, PingRequest, PingResponse, SearchActorsRequest, SearchActorsResponse, SearchPostsRequest, SearchPostsResponse, UpdateNotificationSeenRequest, UpdateNotificationSeenResponse, UpdateTakedownRequest, UpdateTakedownResponse } from "./bsky_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -15,102 +15,102 @@ export const Service = {
     /**
      * Records
      *
-     * @generated from rpc bsky.Service.GetBlockRecord
+     * @generated from rpc bsky.Service.GetBlockRecords
      */
-    getBlockRecord: {
-      name: "GetBlockRecord",
-      I: GetBlockRecordRequest,
-      O: GetBlockRecordResponse,
+    getBlockRecords: {
+      name: "GetBlockRecords",
+      I: GetBlockRecordsRequest,
+      O: GetBlockRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetFeedGeneratorRecord
+     * @generated from rpc bsky.Service.GetFeedGeneratorRecords
      */
-    getFeedGeneratorRecord: {
-      name: "GetFeedGeneratorRecord",
-      I: GetFeedGeneratorRecordRequest,
-      O: GetFeedGeneratorRecordResponse,
+    getFeedGeneratorRecords: {
+      name: "GetFeedGeneratorRecords",
+      I: GetFeedGeneratorRecordsRequest,
+      O: GetFeedGeneratorRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetFollowRecord
+     * @generated from rpc bsky.Service.GetFollowRecords
      */
-    getFollowRecord: {
-      name: "GetFollowRecord",
-      I: GetFollowRecordRequest,
-      O: GetFollowRecordResponse,
+    getFollowRecords: {
+      name: "GetFollowRecords",
+      I: GetFollowRecordsRequest,
+      O: GetFollowRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetLikeRecord
+     * @generated from rpc bsky.Service.GetLikeRecords
      */
-    getLikeRecord: {
-      name: "GetLikeRecord",
-      I: GetLikeRecordRequest,
-      O: GetLikeRecordResponse,
+    getLikeRecords: {
+      name: "GetLikeRecords",
+      I: GetLikeRecordsRequest,
+      O: GetLikeRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetListBlockRecord
+     * @generated from rpc bsky.Service.GetListBlockRecords
      */
-    getListBlockRecord: {
-      name: "GetListBlockRecord",
-      I: GetListBlockRecordRequest,
-      O: GetListBlockRecordResponse,
+    getListBlockRecords: {
+      name: "GetListBlockRecords",
+      I: GetListBlockRecordsRequest,
+      O: GetListBlockRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetListItemRecord
+     * @generated from rpc bsky.Service.GetListItemRecords
      */
-    getListItemRecord: {
-      name: "GetListItemRecord",
-      I: GetListItemRecordRequest,
-      O: GetListItemRecordResponse,
+    getListItemRecords: {
+      name: "GetListItemRecords",
+      I: GetListItemRecordsRequest,
+      O: GetListItemRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetListRecord
+     * @generated from rpc bsky.Service.GetListRecords
      */
-    getListRecord: {
-      name: "GetListRecord",
-      I: GetListRecordRequest,
-      O: GetListRecordResponse,
+    getListRecords: {
+      name: "GetListRecords",
+      I: GetListRecordsRequest,
+      O: GetListRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetPostRecord
+     * @generated from rpc bsky.Service.GetPostRecords
      */
-    getPostRecord: {
-      name: "GetPostRecord",
-      I: GetPostRecordRequest,
-      O: GetPostRecordResponse,
+    getPostRecords: {
+      name: "GetPostRecords",
+      I: GetPostRecordsRequest,
+      O: GetPostRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetProfileRecord
+     * @generated from rpc bsky.Service.GetProfileRecords
      */
-    getProfileRecord: {
-      name: "GetProfileRecord",
-      I: GetProfileRecordRequest,
-      O: GetProfileRecordResponse,
+    getProfileRecords: {
+      name: "GetProfileRecords",
+      I: GetProfileRecordsRequest,
+      O: GetProfileRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetRepostRecord
+     * @generated from rpc bsky.Service.GetRepostRecords
      */
-    getRepostRecord: {
-      name: "GetRepostRecord",
-      I: GetRepostRecordRequest,
-      O: GetRepostRecordResponse,
+    getRepostRecords: {
+      name: "GetRepostRecords",
+      I: GetRepostRecordsRequest,
+      O: GetRepostRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetThreadGateRecord
+     * @generated from rpc bsky.Service.GetThreadGateRecords
      */
-    getThreadGateRecord: {
-      name: "GetThreadGateRecord",
-      I: GetThreadGateRecordRequest,
-      O: GetThreadGateRecordResponse,
+    getThreadGateRecords: {
+      name: "GetThreadGateRecords",
+      I: GetThreadGateRecordsRequest,
+      O: GetThreadGateRecordsResponse,
       kind: MethodKind.Unary,
     },
     /**

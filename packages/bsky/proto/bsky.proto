@@ -20,91 +20,91 @@ message Record {
 }
 
 
-message GetBlockRecordRequest {
+message GetBlockRecordsRequest {
   repeated string uris = 1;
 }
 
-message GetBlockRecordResponse {
+message GetBlockRecordsResponse {
   repeated Record records = 1;
 }
 
-message GetFeedGeneratorRecordRequest {
+message GetFeedGeneratorRecordsRequest {
   repeated string uris = 1;
 }
 
-message GetFeedGeneratorRecordResponse {
+message GetFeedGeneratorRecordsResponse {
   repeated Record records = 1;
 }
 
-message GetFollowRecordRequest {
+message GetFollowRecordsRequest {
   repeated string uris = 1;
 }
 
-message GetFollowRecordResponse {
+message GetFollowRecordsResponse {
   repeated Record records = 1;
 }
 
-message GetLikeRecordRequest {
+message GetLikeRecordsRequest {
   repeated string uris = 1;
 }
 
-message GetLikeRecordResponse {
+message GetLikeRecordsResponse {
   repeated Record records = 1;
 }
 
-message GetListBlockRecordRequest {
+message GetListBlockRecordsRequest {
   repeated string uris = 1;
 }
 
-message GetListBlockRecordResponse {
+message GetListBlockRecordsResponse {
   repeated Record records = 1;
 }
 
-message GetListItemRecordRequest {
+message GetListItemRecordsRequest {
   repeated string uris = 1;
 }
 
-message GetListItemRecordResponse {
+message GetListItemRecordsResponse {
   repeated Record records = 1;
 }
 
-message GetListRecordRequest {
+message GetListRecordsRequest {
   repeated string uris = 1;
 }
 
-message GetListRecordResponse {
+message GetListRecordsResponse {
   repeated Record records = 1;
 }
 
-message GetPostRecordRequest {
+message GetPostRecordsRequest {
   repeated string uris = 1;
 }
 
-message GetPostRecordResponse {
+message GetPostRecordsResponse {
   repeated Record records = 1;
 }
 
-message GetProfileRecordRequest {
+message GetProfileRecordsRequest {
   repeated string uris = 1;
 }
 
-message GetProfileRecordResponse {
+message GetProfileRecordsResponse {
   repeated Record records = 1;
 }
 
-message GetRepostRecordRequest {
+message GetRepostRecordsRequest {
   repeated string uris = 1;
 }
 
-message GetRepostRecordResponse {
+message GetRepostRecordsResponse {
   repeated Record records = 1;
 }
 
-message GetThreadGateRecordRequest {
+message GetThreadGateRecordsRequest {
   repeated string uris = 1;
 }
 
-message GetThreadGateRecordResponse {
+message GetThreadGateRecordsResponse {
   repeated Record records = 1;
 }
 
@@ -809,17 +809,17 @@ message PingResponse {}
 
 service Service {
   // Records
-  rpc GetBlockRecord(GetBlockRecordRequest) returns (GetBlockRecordResponse);
-  rpc GetFeedGeneratorRecord(GetFeedGeneratorRecordRequest) returns (GetFeedGeneratorRecordResponse);
-  rpc GetFollowRecord(GetFollowRecordRequest) returns (GetFollowRecordResponse);
-  rpc GetLikeRecord(GetLikeRecordRequest) returns (GetLikeRecordResponse);
-  rpc GetListBlockRecord(GetListBlockRecordRequest) returns (GetListBlockRecordResponse);
-  rpc GetListItemRecord(GetListItemRecordRequest) returns (GetListItemRecordResponse);
-  rpc GetListRecord(GetListRecordRequest) returns (GetListRecordResponse);
-  rpc GetPostRecord(GetPostRecordRequest) returns (GetPostRecordResponse);
-  rpc GetProfileRecord(GetProfileRecordRequest) returns (GetProfileRecordResponse);
-  rpc GetRepostRecord(GetRepostRecordRequest) returns (GetRepostRecordResponse);
-  rpc GetThreadGateRecord(GetThreadGateRecordRequest) returns (GetThreadGateRecordResponse);
+  rpc GetBlockRecords(GetBlockRecordsRequest) returns (GetBlockRecordsResponse);
+  rpc GetFeedGeneratorRecords(GetFeedGeneratorRecordsRequest) returns (GetFeedGeneratorRecordsResponse);
+  rpc GetFollowRecords(GetFollowRecordsRequest) returns (GetFollowRecordsResponse);
+  rpc GetLikeRecords(GetLikeRecordsRequest) returns (GetLikeRecordsResponse);
+  rpc GetListBlockRecords(GetListBlockRecordsRequest) returns (GetListBlockRecordsResponse);
+  rpc GetListItemRecords(GetListItemRecordsRequest) returns (GetListItemRecordsResponse);
+  rpc GetListRecords(GetListRecordsRequest) returns (GetListRecordsResponse);
+  rpc GetPostRecords(GetPostRecordsRequest) returns (GetPostRecordsResponse);
+  rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
+  rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
+  rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
 
   // Follows
   rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);
