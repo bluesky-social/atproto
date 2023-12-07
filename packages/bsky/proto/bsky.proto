@@ -9,11 +9,105 @@ import "google/protobuf/timestamp.proto";
 // Bsky
 //
 
+//
+// Records
+//
+
 message Record {
   bytes record = 1;
   string cid = 2;
   google.protobuf.Timestamp indexed_at = 4;
 }
+
+
+message GetBlockRecordRequest {
+  repeated string uris = 1;
+}
+
+message GetBlockRecordResponse {
+  repeated Record records = 1;
+}
+
+message GetFeedGeneratorRecordRequest {
+  repeated string uris = 1;
+}
+
+message GetFeedGeneratorRecordResponse {
+  repeated Record records = 1;
+}
+
+message GetFollowRecordRequest {
+  repeated string uris = 1;
+}
+
+message GetFollowRecordResponse {
+  repeated Record records = 1;
+}
+
+message GetLikeRecordRequest {
+  repeated string uris = 1;
+}
+
+message GetLikeRecordResponse {
+  repeated Record records = 1;
+}
+
+message GetListBlockRecordRequest {
+  repeated string uris = 1;
+}
+
+message GetListBlockRecordResponse {
+  repeated Record records = 1;
+}
+
+message GetListItemRecordRequest {
+  repeated string uris = 1;
+}
+
+message GetListItemRecordResponse {
+  repeated Record records = 1;
+}
+
+message GetListRecordRequest {
+  repeated string uris = 1;
+}
+
+message GetListRecordResponse {
+  repeated Record records = 1;
+}
+
+message GetPostRecordRequest {
+  repeated string uris = 1;
+}
+
+message GetPostRecordResponse {
+  repeated Record records = 1;
+}
+
+message GetProfileRecordRequest {
+  repeated string uris = 1;
+}
+
+message GetProfileRecordResponse {
+  repeated Record records = 1;
+}
+
+message GetRepostRecordRequest {
+  repeated string uris = 1;
+}
+
+message GetRepostRecordResponse {
+  repeated Record records = 1;
+}
+
+message GetThreadGateRecordRequest {
+  repeated string uris = 1;
+}
+
+message GetThreadGateRecordResponse {
+  repeated Record records = 1;
+}
+
 
 //
 // Follows
@@ -93,15 +187,15 @@ message GetLikesBySubjectResponse {
   string cursor = 2;
 }
 
-// - return like uri for user A on subject B
+// - return like uris for user A on subject B, C, D...
 //     - viewer state on posts
-message GetLikeByActorAndSubjectRequest {
+message GetLikesByActorAndSubjectsRequest {
   string actor_did = 1;
-  string subject_uri = 2;
+  repeated string subject_uris = 2;
 }
 
-message GetLikeByActorAndSubjectResponse {
-  string uri = 1;
+message GetLikesByActorAndSubjectsResponse {
+  repeated string uris = 1;
 }
 
 // - return recent like uris for user A
@@ -144,15 +238,15 @@ message GetRepostsBySubjectResponse {
   string cursor = 2;
 }
 
-// - return repost uri for user A on subject B
+// - return repost uris for user A on subject B, C, D...
 //     - viewer state on posts
-message GetRepostByActorAndSubjectRequest {
+message GetRepostsByActorAndSubjectsRequest {
   string actor_did = 1;
-  string subject_uri = 2;
+  string subject_uris = 2;
 }
 
-message GetRepostByActorAndSubjectResponse {
-  string uri = 1;
+message GetRepostsByActorAndSubjectsResponse {
+  string uris = 1;
 }
 
 // - return recent repost uris for user A
@@ -280,16 +374,6 @@ message GetListMembershipRequest {
 
 message GetListMembershipResponse {
   repeated string listitem_uris = 1;
-}
-
-// - Return list record for list uri
-//     - list view hydration
-message GetListsRequest {
-  repeated string uris = 1;
-}
-
-message GetListsResponse {
-  repeated Record records = 1;
 }
 
 // - Return number of items in list A
@@ -496,16 +580,6 @@ message GetUnreadNotificationCountResponse {
 // FeedGenerators
 //
 
-// - Returns feed generator records with uris A, B, C…
-//     - hydration of feed generator views
-message GetFeedGeneratorsRequest {
-  repeated string uris = 1;
-}
-
-message GetFeedGeneratorsResponse {
-  repeated Record records = 1;
-}
-
 // - Return uris of feed generator records created by user A
 //     - `getActorFeeds`
 message GetActorFeedsRequest {
@@ -605,15 +679,6 @@ message GetThreadResponse {
   repeated string uris = 1;
 }
 
-// Return threadgate records with uris A, B, C…
-message GetThreadgatesRequest {
-  repeated string uris = 1;
-}
-
-message GetThreadgatesResponse {
-  repeated Record records = 1;
-}
-
 //
 // Search
 //
@@ -664,16 +729,6 @@ message GetFollowSuggestionsResponse {
 //
 // Posts
 //
-
-// - Return post records with uris A, B, C…
-//     - All feed hydration
-message GetPostsRequest {
-  repeated string uris = 1;
-}
-
-message GetPostsResponse {
-  repeated Record records = 1;
-}
 
 // - Return post reply count with uris A, B, C…
 //     - All feed hydration
@@ -753,6 +808,19 @@ message PingRequest {}
 message PingResponse {}
 
 service Service {
+  // Records
+  rpc GetBlockRecord(GetBlockRecordRequest) returns (GetBlockRecordResponse);
+  rpc GetFeedGeneratorRecord(GetFeedGeneratorRecordRequest) returns (GetFeedGeneratorRecordResponse);
+  rpc GetFollowRecord(GetFollowRecordRequest) returns (GetFollowRecordResponse);
+  rpc GetLikeRecord(GetLikeRecordRequest) returns (GetLikeRecordResponse);
+  rpc GetListBlockRecord(GetListBlockRecordRequest) returns (GetListBlockRecordResponse);
+  rpc GetListItemRecord(GetListItemRecordRequest) returns (GetListItemRecordResponse);
+  rpc GetListRecord(GetListRecordRequest) returns (GetListRecordResponse);
+  rpc GetPostRecord(GetPostRecordRequest) returns (GetPostRecordResponse);
+  rpc GetProfileRecord(GetProfileRecordRequest) returns (GetProfileRecordResponse);
+  rpc GetRepostRecord(GetRepostRecordRequest) returns (GetRepostRecordResponse);
+  rpc GetThreadGateRecord(GetThreadGateRecordRequest) returns (GetThreadGateRecordResponse);
+
   // Follows
   rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);
   rpc GetFollowers(GetFollowersRequest) returns (GetFollowersResponse);
@@ -762,13 +830,13 @@ service Service {
 
   // Likes
   rpc GetLikesBySubject(GetLikesBySubjectRequest) returns (GetLikesBySubjectResponse);
-  rpc GetLikeByActorAndSubject(GetLikeByActorAndSubjectRequest) returns (GetLikeByActorAndSubjectResponse);
+  rpc GetLikesByActorAndSubjects(GetLikesByActorAndSubjectsRequest) returns (GetLikesByActorAndSubjectsResponse);
   rpc GetActorLikes(GetActorLikesRequest) returns (GetActorLikesResponse);
   rpc GetLikeCounts(GetLikeCountsRequest) returns (GetLikeCountsResponse);
 
   // Reposts
   rpc GetRepostsBySubject(GetRepostsBySubjectRequest) returns (GetRepostsBySubjectResponse);
-  rpc GetRepostByActorAndSubject(GetRepostByActorAndSubjectRequest) returns (GetRepostByActorAndSubjectResponse);
+  rpc GetRepostsByActorAndSubjects(GetRepostsByActorAndSubjectsRequest) returns (GetRepostsByActorAndSubjectsResponse);
   rpc GetActorReposts(GetActorRepostsRequest) returns (GetActorRepostsResponse);
   rpc GetRepostCounts(GetRepostCountsRequest) returns (GetRepostCountsResponse);
 
@@ -783,7 +851,6 @@ service Service {
   // Lists
   rpc GetListMembers(GetListMembersRequest) returns (GetListMembersResponse);
   rpc GetListMembership(GetListMembershipRequest) returns (GetListMembershipResponse);
-  rpc GetLists(GetListsRequest) returns (GetListsResponse);
   rpc GetListCount(GetListCountRequest) returns (GetListCountResponse);
 
   // Mutes
@@ -811,7 +878,6 @@ service Service {
   rpc UpdateNotificationSeen(UpdateNotificationSeenRequest) returns (UpdateNotificationSeenResponse);
 
   // FeedGenerators
-  rpc GetFeedGenerators(GetFeedGeneratorsRequest) returns (GetFeedGeneratorsResponse);
   rpc GetActorFeeds(GetActorFeedsRequest) returns (GetActorFeedsResponse);
   rpc GetSuggestedFeeds(GetSuggestedFeedsRequest) returns (GetSuggestedFeedsResponse);
   rpc GetFeedGeneratorStatus(GetFeedGeneratorStatusRequest) returns (GetFeedGeneratorStatusResponse);
@@ -823,7 +889,6 @@ service Service {
 
   // Threads
   rpc GetThread(GetThreadRequest) returns (GetThreadResponse);
-  rpc GetThreadgates(GetThreadgatesRequest) returns (GetThreadgatesResponse);
 
   // Search
   rpc SearchActors(SearchActorsRequest) returns (SearchActorsResponse);
@@ -833,7 +898,6 @@ service Service {
   rpc GetFollowSuggestions(GetFollowSuggestionsRequest) returns (GetFollowSuggestionsResponse);
 
   // Posts
-  rpc GetPosts(GetPostsRequest) returns (GetPostsResponse);
   rpc GetPostReplyCounts(GetPostReplyCountsRequest) returns (GetPostReplyCountsResponse);
   rpc GetPostCounts(GetPostCountsRequest) returns (GetPostCountsResponse);
 
@@ -850,3 +914,4 @@ service Service {
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);
 }
+
