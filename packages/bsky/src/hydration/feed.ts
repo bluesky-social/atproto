@@ -1,6 +1,7 @@
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
+import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
 import { Record as FeedGenRecord } from '../lexicon/types/app/bsky/feed/generator'
 import { Record as ThreadgateRecord } from '../lexicon/types/app/bsky/feed/threadgate'
 import { HydrationMap, RecordInfo, parseRecord, parseString } from './util'
@@ -27,6 +28,9 @@ export type PostAggs = HydrationMap<PostAgg>
 
 export type Like = RecordInfo<LikeRecord>
 export type Likes = HydrationMap<Like>
+
+export type Repost = RecordInfo<RepostRecord>
+export type Reposts = HydrationMap<Repost>
 
 export type FeedGenAgg = {
   likes: number
@@ -145,5 +149,12 @@ export class FeedHydrator {
     return uris.reduce((acc, uri, i) => {
       return acc.set(uri, parseRecord<LikeRecord>(res.records[i]) ?? null)
     }, new HydrationMap<Like>())
+  }
+
+  async getReposts(uris: string[]): Promise<Reposts> {
+    const res = await this.dataplane.getRepostRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      return acc.set(uri, parseRecord<RepostRecord>(res.records[i]) ?? null)
+    }, new HydrationMap<Repost>())
   }
 }

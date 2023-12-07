@@ -12,7 +12,13 @@ import {
   ProfileViewerStates,
   ProfileViewerState,
 } from './actor'
-import { GraphHydrator, ListItems, ListViewerStates, Lists } from './graph'
+import {
+  GraphHydrator,
+  ListItems,
+  ListViewerStates,
+  Lists,
+  RelationshipPair,
+} from './graph'
 import { LabelHydrator, Labels } from './label'
 import { HydrationMap } from './util'
 import {
@@ -21,7 +27,9 @@ import {
   FeedGenViewerStates,
   FeedHydrator,
   Likes,
+  Post,
   Posts,
+  Reposts,
   Threadgates,
 } from './feed'
 
@@ -30,6 +38,8 @@ export type HydrationState = {
   profileViewers?: ProfileViewerStates
   profileAggs?: ProfileAggs
   posts?: Posts
+  postBlocks?: PostBlocks
+  reposts?: Reposts
   threadgates?: Threadgates
   lists?: Lists
   listViewers?: ListViewerStates
@@ -40,6 +50,10 @@ export type HydrationState = {
   feedgenViewers?: FeedGenViewerStates
   feedgenAggs?: FeedGenAggs
 }
+
+export type PostBlock = { embed: boolean; reply: boolean }
+export type PostBlocks = HydrationMap<PostBlock>
+type PostBlockPairs = { embed?: RelationshipPair; reply?: RelationshipPair }
 
 export class Hydrator {
   actor: ActorHydrator
@@ -154,7 +168,6 @@ export class Hydrator {
   }
 
   // app.bsky.feed.defs#postView
-  // @TODO handle 3p blocks
   // - post
   //   - profile
   //     - list basic
@@ -170,15 +183,16 @@ export class Hydrator {
   ): Promise<HydrationState> {
     const postsLayer0 = await this.feed.getPosts(uris)
     // first level embeds
-    const urisLayer1 = nestedRecordUris(postsLayer0)
+    const urisLayer1 = nestedRecordUrisFromPosts(postsLayer0)
     const urisLayer1ByCollection = urisByCollection(urisLayer1)
     const postUrisLayer1 = urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
     const postsLayer1 = await this.feed.getPosts(postUrisLayer1)
     // second level embeds
-    const urisLayer2 = nestedRecordUris(postsLayer1)
+    const urisLayer2 = nestedRecordUrisFromPosts(postsLayer1)
     const urisLayer2ByCollection = urisByCollection(urisLayer2)
-    // collect remaining post embeds, list/feedgen embeds, post record hydration
     const postUrisLayer2 = urisLayer2ByCollection.get(ids.AppBskyFeedPost) ?? []
+    const postsLayer2 = await this.feed.getPosts(postUrisLayer2)
+    // collect list/feedgen embeds, post record hydration
     const nestedListUris = [
       ...(urisLayer1ByCollection.get(ids.AppBskyGraphList) ?? []),
       ...(urisLayer2ByCollection.get(ids.AppBskyGraphList) ?? []),
@@ -187,44 +201,134 @@ export class Hydrator {
       ...(urisLayer1ByCollection.get(ids.AppBskyFeedGenerator) ?? []),
       ...(urisLayer2ByCollection.get(ids.AppBskyFeedGenerator) ?? []),
     ]
-    const allPostUris = [...uris, ...postUrisLayer1, ...postUrisLayer2]
+    const posts =
+      mergeManyMaps(postsLayer0, postsLayer1, postsLayer2) ?? postsLayer0
+    const allPostUris = [...posts.keys()]
     const [
-      postsLayer2,
       labels,
       threadgates,
+      postBlocks,
       profileState,
       listState,
       feedGenState,
     ] = await Promise.all([
-      this.feed.getPosts(postUrisLayer2),
       this.label.getLabelsForSubjects(allPostUris),
       this.feed.getThreadgatesForPosts(allPostUris),
+      this.hydratePostBlocks(posts),
       this.hydrateProfiles(allPostUris.map(didFromUri), viewer),
       this.hydrateLists(nestedListUris, viewer),
       this.hydrateFeedGens(nestedFeedGenUris, viewer),
     ])
     // combine all hydration state
     return mergeManyStates(profileState, listState, feedGenState, {
-      posts: mergeManyMaps(postsLayer0, postsLayer1, postsLayer2),
+      posts,
+      postBlocks,
       labels,
       threadgates,
     })
   }
 
+  private async hydratePostBlocks(posts: Posts): Promise<PostBlocks> {
+    const postBlocks = new HydrationMap<PostBlock>()
+    const postBlocksPairs = new Map<string, PostBlockPairs>()
+    const relationships: RelationshipPair[] = []
+    for (const [uri, item] of posts) {
+      if (!item) continue
+      const post = item.record
+      const creator = didFromUri(uri)
+      const postBlockPairs: PostBlockPairs = {}
+      postBlocksPairs.set(uri, postBlockPairs)
+      // 3p block for replies
+      const parentUri = post.reply?.parent.uri
+      const parentDid = parentUri && didFromUri(parentUri)
+      if (parentDid) {
+        const pair: RelationshipPair = [creator, parentDid]
+        relationships.push(pair)
+        postBlockPairs.reply = pair
+      }
+      // 3p block for record embeds
+      for (const embedUri of nestedRecordUris(post)) {
+        const pair: RelationshipPair = [creator, didFromUri(embedUri)]
+        relationships.push(pair)
+        postBlockPairs.embed = pair
+      }
+    }
+    // replace embed/reply pairs with block state
+    const blocks = await this.graph.getBidirectionalBlocks(relationships)
+    for (const [uri, { embed, reply }] of postBlocksPairs) {
+      postBlocks.set(uri, {
+        embed: !!embed && blocks.isBlocked(...embed),
+        reply: !!reply && blocks.isBlocked(...reply),
+      })
+    }
+    return postBlocks
+  }
+
   // app.bsky.feed.defs#feedViewPost
+  // - post (+ replies)
+  //   - profile
+  //     - list basic
+  //   - list
+  //     - profile
+  //       - list basic
+  //   - feedgen
+  //     - profile
+  //       - list basic
+  // - repost
+  //   - profile
+  //     - list basic
+  //   - post
+  //     - ...
   async hydrateFeedPosts(
     uris: string[],
     viewer: string | null,
   ): Promise<HydrationState> {
-    throw new Error('not implemented')
+    const collectionUris = urisByCollection(uris)
+    const postUris = collectionUris.get(ids.AppBskyFeedPost) ?? []
+    const repostUris = collectionUris.get(ids.AppBskyFeedRepost) ?? []
+    const [posts, reposts, repostProfileState] = await Promise.all([
+      this.feed.getPosts(postUris),
+      this.feed.getReposts(repostUris),
+      this.hydrateProfiles(repostUris.map(didFromUri), viewer),
+    ])
+    const repostedAndReplyUris: string[] = []
+    reposts.forEach((repost) => {
+      if (repost) {
+        repostedAndReplyUris.push(repost.record.subject.uri)
+      }
+    })
+    posts.forEach((post) => {
+      if (post?.record.reply) {
+        repostedAndReplyUris.push(
+          post.record.reply.root.uri,
+          post.record.reply.parent.uri,
+        )
+      }
+    })
+    const postState = await this.hydratePosts(
+      [...postUris, ...repostedAndReplyUris],
+      viewer,
+    )
+    return mergeManyStates(postState, repostProfileState, {
+      reposts,
+    })
   }
 
   // app.bsky.feed.defs#threadViewPost
+  // - post
+  //   - profile
+  //     - list basic
+  //   - list
+  //     - profile
+  //       - list basic
+  //   - feedgen
+  //     - profile
+  //       - list basic
   async hydrateThreadPosts(
     uris: string[],
     viewer: string | null,
   ): Promise<HydrationState> {
-    throw new Error('not implemented')
+    return this.hydratePosts(uris, viewer)
   }
 
   // app.bsky.feed.defs#generatorView
@@ -309,16 +413,23 @@ const didFromUri = (uri: string) => {
   return new AtUri(uri).hostname
 }
 
-const nestedRecordUris = (posts: Posts): string[] => {
+const nestedRecordUrisFromPosts = (posts: Posts): string[] => {
   const uris: string[] = []
   for (const item of posts.values()) {
-    const post = item?.record
-    if (!post?.embed) continue
-    if (isEmbedRecord(post.embed)) {
-      uris.push(post.embed.record.uri)
-    } else if (isEmbedRecordWithMedia(post.embed)) {
-      uris.push(post.embed.record.record.uri)
+    if (item) {
+      uris.push(...nestedRecordUris(item.record))
     }
+  }
+  return uris
+}
+
+const nestedRecordUris = (post: Post['record']): string[] => {
+  const uris: string[] = []
+  if (!post?.embed) return uris
+  if (isEmbedRecord(post.embed)) {
+    uris.push(post.embed.record.uri)
+  } else if (isEmbedRecordWithMedia(post.embed)) {
+    uris.push(post.embed.record.record.uri)
   }
   return uris
 }
@@ -343,6 +454,8 @@ const mergeStates = (
     profileAggs: mergeMaps(stateA.profileAggs, stateB.profileAggs),
     profileViewers: mergeMaps(stateA.profileViewers, stateB.profileViewers),
     posts: mergeMaps(stateA.posts, stateB.posts),
+    postBlocks: mergeMaps(stateA.postBlocks, stateB.postBlocks),
+    reposts: mergeMaps(stateA.reposts, stateB.reposts),
     lists: mergeMaps(stateA.lists, stateB.lists),
     listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
     listItems: mergeMaps(stateA.listItems, stateB.listItems),
