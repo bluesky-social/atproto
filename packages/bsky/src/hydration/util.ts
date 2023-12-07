@@ -30,10 +30,16 @@ export const parseRecord = <T>(entry: Record): RecordInfo<T> | undefined => {
 export const parseRecordBytes = <T>(
   bytes: Uint8Array | undefined,
 ): T | undefined => {
+  const parsed = parseJsonBytes(bytes)
+  return jsonToLex(parsed) as T
+}
+
+export const parseJsonBytes = (
+  bytes: Uint8Array | undefined,
+): JSON | undefined => {
   if (!bytes || bytes.byteLength === 0) return
   const parsed = JSON.parse(ui8.toString(bytes, 'utf8'))
-  if (!parsed) return
-  return jsonToLex(parsed) as T
+  return parsed ?? undefined
 }
 
 export const parseString = (str: string | undefined): string | undefined => {

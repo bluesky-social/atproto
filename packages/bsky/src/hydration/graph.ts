@@ -18,17 +18,44 @@ export type ListViewerState = {
 export type ListViewerStates = HydrationMap<ListViewerState>
 
 export type RelationshipPair = [didA: string, didB: string]
+
+const dedupePairs = (pairs: RelationshipPair[]): RelationshipPair[] => {
+  const mapped = pairs.reduce((acc, cur) => {
+    const sorted = cur.sort()
+    acc[sorted.join('-')] = sorted
+    return acc
+  }, {} as Record<string, RelationshipPair>)
+  return Object.values(mapped)
+}
 export class Blocks {
+  _blocks: Map<string, boolean> = new Map()
+  constructor() {}
+
+  static key(didA: string, didB: string): string {
+    return [didA, didB].sort().join(',')
+  }
+
+  set(didA: string, didB: string, exists: boolean): Blocks {
+    const key = Blocks.key(didA, didB)
+    this._blocks.set(key, exists)
+    return this
+  }
+
   has(didA: string, didB: string): boolean {
-    throw new Error('unimplemented')
+    const key = Blocks.key(didA, didB)
+    return this._blocks.has(key)
   }
 
   isBlocked(didA: string, didB: string): boolean {
-    throw new Error('unimplemented')
+    const key = Blocks.key(didA, didB)
+    return this._blocks.get(key) ?? false
   }
 
   merge(blocks: Blocks): Blocks {
-    throw new Error('unimplemented')
+    blocks._blocks.forEach((exists, key) => {
+      this._blocks.set(key, exists)
+    })
+    return this
   }
 }
 
@@ -85,6 +112,16 @@ export class GraphHydrator {
   }
 
   async getBidirectionalBlocks(pairs: RelationshipPair[]): Promise<Blocks> {
-    throw new Error('unimplemented')
+    const deduped = dedupePairs(pairs).map((pair) => ({
+      a: pair[0],
+      b: pair[0],
+    }))
+    const res = await this.dataplane.getBlockExistence({ pairs: deduped })
+    const blocks = new Blocks()
+    for (let i = 0; i < deduped.length; i++) {
+      const pair = deduped[i]
+      blocks.set(pair.a, pair.b, res.exists[i] ?? false)
+    }
+    return blocks
   }
 }
