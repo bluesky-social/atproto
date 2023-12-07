@@ -242,7 +242,7 @@ export class Views {
     const authorDid = parsedUri.hostname
     const author = this.profileBasic(authorDid, state)
     if (!author) return
-    const aggs = state.postsAggs?.get(uri)
+    const aggs = state.postAggs?.get(uri)
     const viewer = state.postViewers?.get(uri)
     const gateUri = AtUri.make(
       authorDid,
