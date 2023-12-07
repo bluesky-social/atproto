@@ -13,6 +13,8 @@ import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
 import { LabelCache } from './label-cache'
 import { NotificationServer } from './notifications'
+import { DataPlaneClient } from './data-plane/client'
+import { Hydrator } from './hydration/hydrator'
 
 export class AppContext {
   public moderationPushAgent: AtpAgent | undefined
@@ -22,6 +24,8 @@ export class AppContext {
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       services: Services
+      dataplane: DataPlaneClient
+      hydrator: Hydrator
       signingKey: Keypair
       idResolver: IdResolver
       didCache: DidSqlCache
@@ -56,6 +60,14 @@ export class AppContext {
 
   get services(): Services {
     return this.opts.services
+  }
+
+  get dataplane(): DataPlaneClient {
+    return this.opts.dataplane
+  }
+
+  get hydrator(): Hydrator {
+    return this.opts.hydrator
   }
 
   get signingKey(): Keypair {

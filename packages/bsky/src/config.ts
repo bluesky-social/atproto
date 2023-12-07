@@ -12,6 +12,7 @@ export interface ServerConfigValues {
   dbReplicaPostgresUrls?: string[]
   dbReplicaTags?: Record<string, number[]> // E.g. { timeline: [0], thread: [1] }
   dbPostgresSchema?: string
+  dataplaneUrl: string
   didPlcUrl: string
   didCacheStaleTTL: number
   didCacheMaxTTL: number
@@ -74,6 +75,8 @@ export class ServerConfig {
     )
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
     assert(dbPrimaryPostgresUrl)
+    const dataplaneUrl = process.env.DATAPLANE_URL
+    assert(dataplaneUrl)
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
     const moderatorPassword = process.env.MODERATOR_PASSWORD || undefined
     const triagePassword = process.env.TRIAGE_PASSWORD || undefined
@@ -93,6 +96,7 @@ export class ServerConfig {
       dbReplicaPostgresUrls,
       dbReplicaTags,
       dbPostgresSchema,
+      dataplaneUrl,
       didPlcUrl,
       didCacheStaleTTL,
       didCacheMaxTTL,
@@ -160,6 +164,10 @@ export class ServerConfig {
 
   get dbPostgresSchema() {
     return this.cfg.dbPostgresSchema
+  }
+
+  get dataplaneUrl() {
+    return this.cfg.dataplaneUrl
   }
 
   get didCacheStaleTTL() {
