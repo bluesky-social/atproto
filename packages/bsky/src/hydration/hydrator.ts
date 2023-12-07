@@ -480,13 +480,9 @@ const mergeMaps = <T>(
 }
 
 const mergeManyStates = (...states: HydrationState[]) => {
-  const initial: HydrationState = {}
-  return states.reduce((acc, state) => mergeStates(acc, state), initial)
+  return states.reduce(mergeStates, {} as HydrationState)
 }
 
 const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
-  return maps.reduce(
-    (acc, map) => mergeMaps(acc, map),
-    undefined as HydrationMap<T> | undefined,
-  )
+  return maps.reduce(mergeMaps, undefined as HydrationMap<T> | undefined)
 }
