@@ -41,6 +41,7 @@ describe('detectFacets', () => {
     'start middle end.com/foo/bar?baz=bux#hash',
     'newline1.com\nnewline2.com',
     'a example.com/index.php php link',
+    'a trailing bsky.app: colon',
 
     'not.. a..url ..here',
     'e.g.',
@@ -162,6 +163,7 @@ describe('detectFacets', () => {
       ['example.com/index.php', 'https://example.com/index.php'],
       [' php link'],
     ],
+    [['a trailing '], ['bsky.app', 'https://bsky.app'], [': colon']],
 
     [['not.. a..url ..here']],
     [['e.g.']],
