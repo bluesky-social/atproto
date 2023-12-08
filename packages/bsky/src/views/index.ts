@@ -29,6 +29,7 @@ import {
   PostEmbedView,
   RecordEmbed,
   RecordEmbedView,
+  RecordEmbedViewInternal,
   RecordWithMedia,
   RecordWithMediaView,
   isExternalEmbed,
@@ -278,7 +279,7 @@ export class Views {
     }
   }
 
-  post(uri: string, state: HydrationState): PostView | undefined {
+  post(uri: string, state: HydrationState, depth = 0): PostView | undefined {
     const post = state.posts?.get(uri)
     if (!post) return
     const parsedUri = new AtUri(uri)
@@ -292,21 +293,27 @@ export class Views {
       ids.AppBskyFeedThreadgate,
       parsedUri.rkey,
     ).toString()
+    const labels = [
+      ...(state.labels?.get(uri) ?? []),
+      ...this.selfLabels({
+        uri,
+        cid: post.cid.toString(),
+        record: post.record,
+      }),
+    ]
     return {
       uri,
       cid: post.cid.toString(),
       author,
       record: post.record,
-      embed: post.record.embed
-        ? this.embed(authorDid, post.record.embed, state)
-        : undefined,
+      embed:
+        depth < 2 && post.record.embed
+          ? this.embed(authorDid, post.record.embed, state, depth + 1)
+          : undefined,
       replyCount: aggs?.replies,
       repostCount: aggs?.reposts,
       likeCount: aggs?.likes,
-      indexedAt: compositeTime(
-        post.record.createdAt,
-        post.indexedAt?.toISOString(),
-      ),
+      indexedAt: (post.indexedAt ?? new Date()).toISOString(),
       viewer: viewer
         ? {
             repost: viewer.repost,
@@ -314,7 +321,7 @@ export class Views {
             replyDisabled: this.userReplyDisabled(uri, state),
           }
         : undefined,
-      labels: state.labels?.get(uri) ?? undefined,
+      labels,
       threadgate: !post.record.reply // only hydrate gate on root post
         ? this.threadGate(gateUri, state)
         : undefined,
@@ -328,15 +335,16 @@ export class Views {
     did: string,
     embed: Embed | { $type: string },
     state: HydrationState,
+    depth: number,
   ): EmbedView | undefined {
     if (isImagesEmbed(embed)) {
       return this.imagesEmbed(did, embed)
     } else if (isExternalEmbed(embed)) {
       return this.externalEmbed(did, embed)
     } else if (isRecordEmbed(embed)) {
-      return this.recordEmbed(embed, state)
+      return this.recordEmbed(embed, state, depth)
     } else if (isRecordWithMedia(embed)) {
-      return this.recordWithMediaEmbed(did, embed, state)
+      return this.recordWithMediaEmbed(did, embed, state, depth)
     } else {
       return undefined
     }
@@ -407,8 +415,12 @@ export class Views {
     }
   }
 
-  embedPostView(uri: string, state: HydrationState): PostEmbedView | undefined {
-    const postView = this.post(uri, state)
+  embedPostView(
+    uri: string,
+    state: HydrationState,
+    depth: number,
+  ): PostEmbedView | undefined {
+    const postView = this.post(uri, state, depth)
     if (!postView) return
     return {
       $type: 'app.bsky.embed.record#viewRecord',
@@ -418,43 +430,58 @@ export class Views {
       value: postView.record,
       labels: postView.labels,
       indexedAt: postView.indexedAt,
-      // @TODO
-      // embeds: postView.embed,
+      embeds: depth > 1 ? undefined : postView.embed ? [postView.embed] : [],
     }
   }
 
-  recordEmbed(embed: RecordEmbed, state: HydrationState): RecordEmbedView {
+  recordEmbed(
+    embed: RecordEmbed,
+    state: HydrationState,
+    depth: number,
+    withTypeTag = true,
+  ): RecordEmbedView {
     const uri = embed.record.uri
     const parsedUri = new AtUri(uri)
     if (parsedUri.collection === ids.AppBskyFeedPost) {
-      const view = this.embedPostView(uri, state)
+      const view = this.embedPostView(uri, state, depth)
       if (!view) return this.embedNotFound(uri)
       if (view.author.viewer?.blockedBy || view.author.viewer?.blocking) {
         return this.embedBlocked(uri, view.author)
       }
-      return { record: view }
+      return this.recordEmbedWrapper(view, withTypeTag)
     } else if (parsedUri.collection === ids.AppBskyFeedGenerator) {
       const view = this.feedGenerator(uri, state)
       if (!view) return this.embedNotFound(uri)
       if (view.creator.viewer?.blockedBy || view.creator.viewer?.blocking) {
         return this.embedBlocked(uri, view.creator)
       }
-      return { record: view }
+      return this.recordEmbedWrapper(view, withTypeTag)
     } else if (parsedUri.collection === ids.AppBskyGraphList) {
       const view = this.list(uri, state)
       if (!view) return this.embedNotFound(uri)
       if (view.creator.viewer?.blockedBy || view.creator.viewer?.blocking) {
         return this.embedBlocked(uri, view.creator)
       }
-      return { record: view }
+      return this.recordEmbedWrapper(view, withTypeTag)
     }
     return this.embedNotFound(uri)
+  }
+
+  private recordEmbedWrapper(
+    record: RecordEmbedViewInternal,
+    withTypeTag: boolean,
+  ): RecordEmbedView {
+    return {
+      $type: withTypeTag ? 'app.bsky.embed.record#view' : undefined,
+      record,
+    }
   }
 
   recordWithMediaEmbed(
     did: string,
     embed: RecordWithMedia,
     state: HydrationState,
+    depth: number,
   ): RecordWithMediaView | undefined {
     let mediaEmbed: ImagesEmbedView | ExternalEmbedView
     if (isImagesEmbed(embed.media)) {
@@ -467,7 +494,7 @@ export class Views {
     return {
       $type: 'app.bsky.embed.recordWithMedia#view',
       media: mediaEmbed,
-      record: this.recordEmbed(embed.record, state),
+      record: this.recordEmbed(embed.record, state, depth, false),
     }
   }
 

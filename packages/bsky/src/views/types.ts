@@ -67,9 +67,4 @@ export type EmbedView =
 
 export type MaybePostView = PostView | NotFoundPost | BlockedPost
 
-export type RecordEmbedViewInternal =
-  | PostEmbedView
-  | EmbedNotFound
-  | EmbedBlocked
-  | GeneratorView
-  | ListView
+export type RecordEmbedViewInternal = PostEmbedView | GeneratorView | ListView
