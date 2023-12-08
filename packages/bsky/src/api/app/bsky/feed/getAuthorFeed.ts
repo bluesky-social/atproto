@@ -100,6 +100,10 @@ export const skeleton = async (
       )
   } else if (filter === 'posts_no_replies') {
     feedItemsQb = feedItemsQb.where((qb) =>
+      qb.where('post.replyParent', 'is', null).orWhere('type', '=', 'repost'),
+    )
+  } else if (filter === 'posts_and_author_threads') {
+    feedItemsQb = feedItemsQb.where((qb) =>
       qb
         .where('type', '=', 'repost')
         .orWhere('post.replyParent', 'is', null)
