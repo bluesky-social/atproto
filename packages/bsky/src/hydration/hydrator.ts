@@ -45,6 +45,7 @@ export type HydrationState = {
   postBlocks?: PostBlocks
   reposts?: Reposts
   follows?: Follows
+  followBlocks?: FollowBlocks
   threadgates?: Threadgates
   lists?: Lists
   listViewers?: ListViewerStates
@@ -59,6 +60,9 @@ export type HydrationState = {
 export type PostBlock = { embed: boolean; reply: boolean }
 export type PostBlocks = HydrationMap<PostBlock>
 type PostBlockPairs = { embed?: RelationshipPair; reply?: RelationshipPair }
+
+export type FollowBlock = boolean
+export type FollowBlocks = HydrationMap<FollowBlock>
 
 export class Hydrator {
   actor: ActorHydrator
@@ -406,6 +410,30 @@ export class Hydrator {
         this.hydrateProfiles(uris.map(didFromUri), viewer),
       ])
     return mergeStates(profileState, { posts, likes, reposts, follows, labels })
+  }
+
+  // provides partial hydration state withing getFollows / getFollowers, mainly for applying rules
+  async hydrateFollows(uris: string[]): Promise<HydrationState> {
+    const follows = await this.graph.getFollows(uris)
+    const pairs: RelationshipPair[] = []
+    for (const [uri, follow] of follows) {
+      if (follow) {
+        pairs.push([didFromUri(uri), follow.record.subject])
+      }
+    }
+    const blocks = await this.graph.getBidirectionalBlocks(pairs)
+    const followBlocks = new HydrationMap<FollowBlock>()
+    for (const [uri, follow] of follows) {
+      if (follow) {
+        followBlocks.set(
+          uri,
+          blocks.isBlocked(didFromUri(uri), follow.record.subject),
+        )
+      } else {
+        followBlocks.set(uri, null)
+      }
+    }
+    return { follows, followBlocks }
   }
 }
 

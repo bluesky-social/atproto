@@ -10,7 +10,7 @@ import {
   SkeletonFnInput,
   createPipelineNew,
 } from '../../../../pipeline'
-import { Hydrator } from '../../../../hydration/hydrator'
+import { Hydrator, mergeStates } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
@@ -64,30 +64,31 @@ const hydration = async (
   const { ctx, params, skeleton } = input
   const { viewer } = params
   const { followUris, subjectDid } = skeleton
-  // @TODO hydrate follows w/ block info
-  const follows = await ctx.hydrator.graph.getFollows(followUris, {
-    disallowBlock: true,
-  })
+  const followState = await ctx.hydrator.hydrateFollows(followUris)
   const dids = [subjectDid]
-  for (const follow of follows.values()) {
-    if (follow) {
-      dids.push(follow.record.subject)
+  if (followState.follows) {
+    for (const follow of followState.follows.values()) {
+      if (follow) {
+        dids.push(follow.record.subject)
+      }
     }
   }
   const profileState = await ctx.hydrator.hydrateProfiles(dids, viewer)
-  return { ...profileState, follows }
+  return mergeStates(followState, profileState)
 }
 
 const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
   const { skeleton, params, hydration, ctx } = input
   const { viewer } = params
-  if (viewer) {
-    skeleton.followUris = skeleton.followUris.filter((followUri) => {
-      const follow = hydration.follows?.get(followUri)
-      if (!follow) return true
-      return !ctx.views.viewerBlockExists(follow.record.subject, hydration)
-    })
-  }
+  skeleton.followUris = skeleton.followUris.filter((followUri) => {
+    const follow = hydration.follows?.get(followUri)
+    if (!follow) return false
+    return (
+      !hydration.followBlocks?.get(followUri) &&
+      (!viewer ||
+        !ctx.views.viewerBlockExists(follow.record.subject, hydration))
+    )
+  })
   return skeleton
 }
 
