@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.7.1
+
+### Patch Changes
+
+- [#1944](https://github.com/bluesky-social/atproto/pull/1944) [`60deea17`](https://github.com/bluesky-social/atproto/commit/60deea17622f7c574c18432a55ced4e1cdc1b3a1) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Strip trailing colon from URLs in rich-text facet detection.
+
 ## 0.7.0
 
 ### Minor Changes
