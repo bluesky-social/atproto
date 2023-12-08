@@ -19,7 +19,6 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {
       const viewer = auth.credentials.did
-
       const result = await getLikes({ ...params, viewer }, ctx)
 
       return {

@@ -386,6 +386,18 @@ export class Hydrator {
     return mergeStates(profileState, { likes })
   }
 
+  // app.bsky.feed.getRepostedBy#repostedBy
+  // - repost
+  //   - profile
+  //     - list basic
+  async hydrateReposts(uris: string[], viewer: string | null) {
+    const [reposts, profileState] = await Promise.all([
+      this.feed.getReposts(uris),
+      this.hydrateProfiles(uris.map(didFromUri), viewer),
+    ])
+    return mergeStates(profileState, { reposts })
+  }
+
   // app.bsky.notification.listNotifications#notification
   // - notification
   //   - profile
