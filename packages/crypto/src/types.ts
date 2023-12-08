@@ -22,6 +22,9 @@ export type DidKeyPlugin = {
     data: Uint8Array,
     opts?: VerifyOptions,
   ) => Promise<boolean>
+
+  compressPubkey: (uncompressed: Uint8Array) => Uint8Array
+  decompressPubkey: (compressed: Uint8Array) => Uint8Array
 }
 
 export type VerifyOptions = {
