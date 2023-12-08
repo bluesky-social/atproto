@@ -37,17 +37,15 @@ const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
   const { ctx, params } = input
-  const { list, limit, cursor } = params
-  // @TODO this should be an array of listitem uris rather than dids
-  const listMembers = await ctx.hydrator.dataplane.getListMembers({
-    listUri: list,
-    limit,
-    cursor,
+  const { listitemUris, cursor } = await ctx.hydrator.dataplane.getListMembers({
+    listUri: params.list,
+    limit: params.limit,
+    cursor: params.cursor,
   })
   return {
-    listUri: list,
-    listMembers: listMembers.dids, // TODO
-    cursor: listMembers.cursor,
+    listUri: params.list,
+    listitemUris: listitemUris,
+    cursor: cursor,
   }
 }
 
@@ -56,34 +54,31 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = input
   const { viewer } = params
-  const { listUri, listMembers } = skeleton
-  const [listState, profileState] = await Promise.all([
+  const { listUri, listitemUris } = skeleton
+  const [listState, listitemState] = await Promise.all([
     ctx.hydrator.hydrateLists([listUri], viewer),
-    ctx.hydrator.hydrateProfiles(listMembers, viewer),
+    ctx.hydrator.hydrateListItems(listitemUris, viewer),
   ])
-  return mergeStates(listState, profileState)
+  return mergeStates(listState, listitemState)
 }
 
 const presentation = (
   input: PresentationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, skeleton, hydration } = input
-  const { listUri, listMembers, cursor } = skeleton
+  const { listUri, listitemUris, cursor } = skeleton
   const list = ctx.views.list(listUri, hydration)
-  const profiles = mapDefined(listMembers, (did) =>
-    ctx.views.profile(did, hydration),
-  )
+  const items = mapDefined(listitemUris, (uri) => {
+    const listitem = hydration.listItems?.get(uri)
+    if (!listitem) return
+    const subject = ctx.views.profile(listitem.record.subject, hydration)
+    if (!subject) return
+    return { uri, subject }
+  })
   if (!list) {
     throw new InvalidRequestError('List not found')
   }
-  return {
-    list,
-    items: profiles.map((profile) => ({
-      uri: `at://did:example:creator/app.bsky.graph.listitem/${profile.did}`, // @TODO need list item uri
-      subject: profile,
-    })),
-    cursor,
-  }
+  return { list, items, cursor }
 }
 
 type Context = {
@@ -97,6 +92,6 @@ type Params = QueryParams & {
 
 type SkeletonState = {
   listUri: string
-  listMembers: string[]
+  listitemUris: string[]
   cursor?: string
 }

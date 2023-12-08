@@ -23,11 +23,12 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       limit,
       cursor,
       keyset,
+      tryIndex: true,
     })
 
     const listItems = await builder.execute()
     return {
-      dids: listItems.map((item) => item.subjectDid),
+      listitemUris: listItems.map((item) => item.uri),
       cursor: keyset.packFromResult(listItems),
     }
   },

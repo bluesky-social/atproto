@@ -362,7 +362,7 @@ message GetListMembersRequest {
 }
 
 message GetListMembersResponse {
-  repeated string dids = 1;
+  repeated string listitem_uris = 1;
   string cursor = 2;
 }
 
@@ -911,7 +911,7 @@ service Service {
   // Moderation
   rpc GetBlobTakedown(GetBlobTakedownRequest) returns (GetBlobTakedownResponse);
   rpc UpdateTakedown(UpdateTakedownRequest) returns (UpdateTakedownResponse);
-  
+
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);
 }

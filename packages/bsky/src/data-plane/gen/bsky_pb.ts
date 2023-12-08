@@ -2553,9 +2553,9 @@ export class GetListMembersRequest extends Message<GetListMembersRequest> {
  */
 export class GetListMembersResponse extends Message<GetListMembersResponse> {
   /**
-   * @generated from field: repeated string dids = 1;
+   * @generated from field: repeated string listitem_uris = 1;
    */
-  dids: string[] = [];
+  listitemUris: string[] = [];
 
   /**
    * @generated from field: string cursor = 2;
@@ -2570,7 +2570,7 @@ export class GetListMembersResponse extends Message<GetListMembersResponse> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetListMembersResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "dids", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 1, name: "listitem_uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
     { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
