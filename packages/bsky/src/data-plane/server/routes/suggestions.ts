@@ -32,7 +32,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         : undefined
 
     return {
-      dids: suggestions.map((s) => s.did),
+      dids: limited.map((s) => s.did),
       cursor,
     }
   },

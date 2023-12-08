@@ -60,6 +60,12 @@ export class Views {
     )
   }
 
+  viewerMuteExists(did: string, state: HydrationState): boolean {
+    const actor = state.profileViewers?.get(did)
+    if (!actor) return false
+    return actor.muted || !!actor.mutedByList
+  }
+
   profileDetailed(
     did: string,
     state: HydrationState,
