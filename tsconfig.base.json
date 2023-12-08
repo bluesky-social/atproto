@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "noImplicitAny": false,
+    "removeComments": true,
+    "noLib": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "es2020",
+    "sourceMap": true,
+    "declarationMap": true,
+    "module": "commonjs",
+    "jsx": "preserve",
+    "strict": true,
+    "checkJs": true,
+    "strictPropertyInitialization": false,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "lib": ["dom", "dom.iterable", "esnext", "webworker"],
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true
+  },
+  "exclude": ["node_modules", "dist"],
+  "typeAcquisition": {
+    "enable": false
+  },
+}
