@@ -308,7 +308,7 @@ describe('pds author feed views', () => {
     ).toBeTruthy()
   })
 
-  it('posts_no_replies still includes self-replies', async () => {
+  it('posts_and_author_threads includes self-replies', async () => {
     const { data: eveFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
       actor: eve,
       filter: 'posts_and_author_threads',
