@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.3.7
+
+### Patch Changes
+
+- [#1776](https://github.com/bluesky-social/atproto/pull/1776) [`ffe39aae`](https://github.com/bluesky-social/atproto/commit/ffe39aae8394394f73bbfaa9047a8b5818aa053a) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `posts_and_author_threads` filter to `getAuthorFeed`
+
+- Updated dependencies [[`ffe39aae`](https://github.com/bluesky-social/atproto/commit/ffe39aae8394394f73bbfaa9047a8b5818aa053a)]:
+  - @atproto/api@0.7.2
+
 ## 0.3.6
 
 ### Patch Changes
