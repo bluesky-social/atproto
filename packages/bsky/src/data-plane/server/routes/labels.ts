@@ -5,13 +5,13 @@ import * as ui8 from 'uint8arrays'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getLabels(req) {
-    const { subjects, issuers } = req
-    if (subjects.length === 0 || issuers.length === 0) {
+    // @TODO add in issues param
+    const { subjects } = req
+    if (subjects.length === 0) {
       return { records: [] }
     }
     const res = await db.db
       .selectFrom('label')
-      .where('src', 'in', issuers)
       .where('uri', 'in', subjects)
       .selectAll()
       .execute()

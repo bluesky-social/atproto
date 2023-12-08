@@ -4,6 +4,7 @@ import { Database } from '../../../db'
 import { countAll, excluded } from '../../../db/util'
 import { sql } from 'kysely'
 import { TimeCidKeyset, paginate } from '../../../db/pagination'
+import { Timestamp } from '@bufbuild/protobuf'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getNotifications(req) {
@@ -46,9 +47,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const notifications = notifsRes.map((notif) => ({
       uri: notif.uri,
       reason: notif.reason,
-      timestamp: {
-        nanos: new Date(notif.sortAt).getTime() * 1000,
-      },
+      timestamp: Timestamp.fromDate(new Date(notif.sortAt)),
     }))
     return {
       notifications,
@@ -65,11 +64,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     if (!res) {
       return {}
     }
-    const nanos = new Date(res.lastSeenNotifs).getTime() * 1000
     return {
-      timestamp: {
-        nanos,
-      },
+      timestamp: Timestamp.fromDate(new Date(res.lastSeenNotifs)),
     }
   },
 
@@ -101,9 +97,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     if (!timestamp) {
       return
     }
-    const lastSeenNotifs = new Date(
-      Math.floor(timestamp.nanos / 1000),
-    ).toISOString()
+    const lastSeenNotifs = timestamp.toDate().toISOString()
     await db.db
       .insertInto('actor_state')
       .values({ did: actorDid, lastSeenNotifs })

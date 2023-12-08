@@ -21,7 +21,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const actors = dids.map((did, i) => {
       return {
         handle: byDid[did]?.handle ?? undefined,
-        profile: profiles[i],
+        profile: profiles.records[i],
       }
     })
     return { actors }

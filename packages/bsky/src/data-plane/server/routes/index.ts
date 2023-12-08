@@ -13,6 +13,8 @@ import mutes from './mutes'
 import notifs from './notifs'
 import posts from './posts'
 import profile from './profile'
+import records from './records'
+import relationships from './relationships'
 import reposts from './reposts'
 import search from './search'
 import suggestions from './suggestions'
@@ -34,6 +36,8 @@ export default (db: Database) => (router: ConnectRouter) =>
     ...notifs(db),
     ...posts(db),
     ...profile(db),
+    ...records(db),
+    ...relationships(db),
     ...reposts(db),
     ...search(db),
     ...suggestions(db),

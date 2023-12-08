@@ -4,6 +4,7 @@ import * as ui8 from 'uint8arrays'
 import { Database } from '../../../db'
 import { keyBy } from '@atproto/common'
 import { Record } from '../../gen/bsky_pb'
+import { Timestamp } from '@bufbuild/protobuf'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   getBlockRecords: getRecords(db),
@@ -38,9 +39,7 @@ export const getRecords =
       return new Record({
         record: recordBytes,
         cid: row.cid,
-        indexedAt: {
-          nanos: new Date(row.indexedAt).getTime() * 1000,
-        },
+        indexedAt: Timestamp.fromDate(new Date(row.indexedAt)),
       })
     })
     return { records }

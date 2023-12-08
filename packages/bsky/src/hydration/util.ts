@@ -22,7 +22,7 @@ export type RecordInfo<T> = {
 export const parseRecord = <T>(entry: Record): RecordInfo<T> | undefined => {
   const record = parseRecordBytes<T>(entry.record)
   const cid = parseCid(entry.cid)
-  const indexedAt = parseTimestamp(entry.indexedAt)
+  const indexedAt = entry.indexedAt?.toDate()
   if (!record || !cid) return
   return { record, cid, indexedAt }
 }
@@ -53,10 +53,4 @@ export const parseCid = (cidStr: string | undefined): CID | undefined => {
   } catch {
     return
   }
-}
-
-export const parseTimestamp = (ts: Timestamp | undefined): Date | undefined => {
-  if (!ts) return undefined
-  const ms = Math.floor(ts.nanos / 1000)
-  return new Date(ms)
 }

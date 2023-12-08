@@ -1,4 +1,4 @@
-import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
+import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { ImageUriBuilder } from '../image/uri'
 import { HydrationState } from '../hydration/hydrator'
 import { ids } from '../lexicon/lexicons'
@@ -16,6 +16,7 @@ import { ListView, ListViewBasic } from '../lexicon/types/app/bsky/graph/defs'
 import { compositeTime, creatorFromUri } from './util'
 import { mapDefined } from '@atproto/common'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
+import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
   Embed,
   EmbedBlocked,
@@ -35,6 +36,7 @@ import {
   isRecordEmbed,
   isRecordWithMedia,
 } from './types'
+import { Label } from '../hydration/label'
 
 export class Views {
   constructor(public imgUriBuilder: ImageUriBuilder) {}
@@ -93,6 +95,11 @@ export class Views {
     const labels = [
       ...(state.labels?.get(did) ?? []),
       ...(state.labels?.get(profileUri) ?? []),
+      ...this.selfLabels({
+        uri: profileUri,
+        cid: actor.profileCid?.toString(),
+        record: actor.profile,
+      }),
     ]
     return {
       did,
@@ -179,6 +186,27 @@ export class Views {
           }
         : undefined,
     }
+  }
+
+  // Labels
+  // ------------
+
+  selfLabels(details: {
+    uri?: string
+    cid?: string
+    record?: Record<string, unknown>
+  }): Label[] {
+    const { uri, cid, record } = details
+    if (!uri || !cid || !record) return []
+    if (!isSelfLabels(record.labels)) return []
+    const src = new AtUri(uri).host // record creator
+    const cts =
+      typeof record.createdAt === 'string'
+        ? normalizeDatetimeAlways(record.createdAt)
+        : new Date(0).toISOString()
+    return record.labels.values.map(({ val }) => {
+      return { src, uri, cid, val, cts, neg: false }
+    })
   }
 
   // Feed
