@@ -2,7 +2,7 @@ import express from 'express'
 import { IdResolver } from '@atproto/identity'
 import { BackgroundQueue } from '../background'
 import { PrimaryDatabase } from '../db'
-import DidSqlCache from '../did-cache'
+import DidRedisCache from '../did-cache'
 import log from './logger'
 import { dbLogger } from '../logger'
 import { IndexerConfig } from './config'
@@ -40,15 +40,15 @@ export class BskyIndexer {
   static create(opts: {
     db: PrimaryDatabase
     redis: Redis
+    redisCache: Redis
     cfg: IndexerConfig
     imgInvalidator?: ImageInvalidator
   }): BskyIndexer {
-    const { db, redis, cfg } = opts
-    const didCache = new DidSqlCache(
-      db,
-      cfg.didCacheStaleTTL,
-      cfg.didCacheMaxTTL,
-    )
+    const { db, redis, redisCache, cfg } = opts
+    const didCache = new DidRedisCache(redisCache.withNamespace('did-doc'), {
+      staleTTL: cfg.didCacheStaleTTL,
+      maxTTL: cfg.didCacheMaxTTL,
+    })
     const idResolver = new IdResolver({
       plcUrl: cfg.didPlcUrl,
       didCache,
@@ -81,6 +81,7 @@ export class BskyIndexer {
     const ctx = new IndexerContext({
       db,
       redis,
+      redisCache,
       cfg,
       services,
       idResolver,
@@ -139,7 +140,9 @@ export class BskyIndexer {
     if (this.closeServer) await this.closeServer()
     await this.sub.destroy()
     clearInterval(this.subStatsInterval)
+    await this.ctx.didCache.destroy()
     if (!opts?.skipRedis) await this.ctx.redis.destroy()
+    if (!opts?.skipRedis) await this.ctx.redisCache.destroy()
     if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
   }

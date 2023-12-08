@@ -11,7 +11,6 @@ import { Actor } from '../../db/tables/actor'
 import { ImageUriBuilder } from '../../image/uri'
 import { LabelService, Labels, getSelfLabels } from '../label'
 import { BlockAndMuteState, GraphService } from '../graph'
-import { LabelCache } from '../../label-cache'
 import {
   ActorInfoMap,
   ProfileDetailHydrationState,
@@ -21,17 +20,24 @@ import {
   toMapByDid,
 } from './types'
 import { ListInfoMap } from '../graph/types'
+import { FromDb } from '../types'
 
 export class ActorViews {
+  services: {
+    label: LabelService
+    graph: GraphService
+  }
+
   constructor(
     private db: Database,
     private imgUriBuilder: ImageUriBuilder,
-    private labelCache: LabelCache,
-  ) {}
-
-  services = {
-    label: LabelService.creator(this.labelCache)(this.db),
-    graph: GraphService.creator(this.imgUriBuilder)(this.db),
+    private graph: FromDb<GraphService>,
+    private label: FromDb<LabelService>,
+  ) {
+    this.services = {
+      label: label(db),
+      graph: graph(db),
+    }
   }
 
   async profiles(
@@ -51,7 +57,7 @@ export class ActorViews {
   async profilesBasic(
     results: (ActorResult | string)[],
     viewer: string | null,
-    opts?: { omitLabels?: boolean; includeSoftDeleted?: boolean },
+    opts?: { includeSoftDeleted?: boolean },
   ): Promise<ActorInfoMap> {
     if (results.length === 0) return {}
     const dids = results.map((res) => (typeof res === 'string' ? res : res.did))
@@ -59,7 +65,7 @@ export class ActorViews {
       viewer,
       includeSoftDeleted: opts?.includeSoftDeleted,
     })
-    return this.profileBasicPresentation(dids, hydrated, viewer, opts)
+    return this.profileBasicPresentation(dids, hydrated, viewer)
   }
 
   async profilesList(
@@ -349,9 +355,6 @@ export class ActorViews {
     dids: string[],
     state: ProfileHydrationState,
     viewer: string | null,
-    opts?: {
-      omitLabels?: boolean
-    },
   ): ProfileViewMap {
     const result = this.profilePresentation(dids, state, viewer)
     return Object.values(result).reduce((acc, prof) => {
@@ -361,7 +364,7 @@ export class ActorViews {
         displayName: prof.displayName,
         avatar: prof.avatar,
         viewer: prof.viewer,
-        labels: opts?.omitLabels ? undefined : prof.labels,
+        labels: prof.labels,
       }
       acc[prof.did] = profileBasic
       return acc

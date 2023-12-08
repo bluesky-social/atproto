@@ -3,6 +3,8 @@ import { subsystemLogger } from '@atproto/common'
 
 export const dbLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:db')
+export const cacheLogger: ReturnType<typeof subsystemLogger> =
+  subsystemLogger('bsky:cache')
 export const subLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:sub')
 export const labelerLogger: ReturnType<typeof subsystemLogger> =

@@ -1,6 +1,7 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
 import { jsonStringToLex } from '@atproto/lexicon'
+import { mapDefined } from '@atproto/common'
 import { Database } from '../../db'
 import { countAll, noMatch, notSoftDeletedClause } from '../../db/util'
 import { ImageUriBuilder } from '../../image/uri'
@@ -42,29 +43,42 @@ import {
   RelationshipPair,
 } from '../graph'
 import { FeedViews } from './views'
-import { LabelCache } from '../../label-cache'
 import { threadgateToPostUri, postToThreadgateUri } from './util'
-import { mapDefined } from '@atproto/common'
+import { FromDb } from '../types'
 
 export * from './types'
 
 export class FeedService {
+  views: FeedViews
+  services: {
+    label: LabelService
+    actor: ActorService
+    graph: GraphService
+  }
+
   constructor(
     public db: Database,
     public imgUriBuilder: ImageUriBuilder,
-    public labelCache: LabelCache,
-  ) {}
-
-  views = new FeedViews(this.db, this.imgUriBuilder, this.labelCache)
-
-  services = {
-    label: LabelService.creator(this.labelCache)(this.db),
-    actor: ActorService.creator(this.imgUriBuilder, this.labelCache)(this.db),
-    graph: GraphService.creator(this.imgUriBuilder)(this.db),
+    private actor: FromDb<ActorService>,
+    private label: FromDb<LabelService>,
+    private graph: FromDb<GraphService>,
+  ) {
+    this.views = new FeedViews(this.db, this.imgUriBuilder, actor, graph)
+    this.services = {
+      label: label(this.db),
+      actor: actor(this.db),
+      graph: graph(this.db),
+    }
   }
 
-  static creator(imgUriBuilder: ImageUriBuilder, labelCache: LabelCache) {
-    return (db: Database) => new FeedService(db, imgUriBuilder, labelCache)
+  static creator(
+    imgUriBuilder: ImageUriBuilder,
+    actor: FromDb<ActorService>,
+    label: FromDb<LabelService>,
+    graph: FromDb<GraphService>,
+  ) {
+    return (db: Database) =>
+      new FeedService(db, imgUriBuilder, actor, label, graph)
   }
 
   selectPostQb() {

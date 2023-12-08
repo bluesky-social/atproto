@@ -6,6 +6,12 @@ import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
 import compression from 'compression'
 import { IdResolver } from '@atproto/identity'
+import {
+  RateLimiter,
+  RateLimiterOpts,
+  Options as XrpcServerOptions,
+} from '@atproto/xrpc-server'
+import { MINUTE } from '@atproto/common'
 import API, { health, wellKnown, blobResolver } from './api'
 import { DatabaseCoordinator } from './db'
 import * as error from './error'
@@ -16,17 +22,17 @@ import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import { createServices } from './services'
 import AppContext from './context'
-import DidSqlCache from './did-cache'
+import DidRedisCache from './did-cache'
 import {
   ImageInvalidator,
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
-import { LabelCache } from './label-cache'
 import { NotificationServer } from './notifications'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
+import { Redis } from './redis'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
@@ -56,23 +62,25 @@ export class BskyAppView {
 
   static create(opts: {
     db: DatabaseCoordinator
+    redis: Redis
     config: ServerConfig
     signingKey: Keypair
     imgInvalidator?: ImageInvalidator
     algos?: MountedAlgos
   }): BskyAppView {
-    const { db, config, signingKey, algos = {} } = opts
+    const { db, redis, config, signingKey, algos = {} } = opts
     let maybeImgInvalidator = opts.imgInvalidator
     const app = express()
+    app.set('trust proxy', true)
     app.use(cors())
     app.use(loggerMiddleware)
     app.use(compression())
 
-    const didCache = new DidSqlCache(
-      db.getPrimary(),
-      config.didCacheStaleTTL,
-      config.didCacheMaxTTL,
-    )
+    const didCache = new DidRedisCache(redis.withNamespace('did-doc'), {
+      staleTTL: config.didCacheStaleTTL,
+      maxTTL: config.didCacheMaxTTL,
+    })
+
     const idResolver = new IdResolver({
       plcUrl: config.didPlcUrl,
       didCache,
@@ -103,7 +111,7 @@ export class BskyAppView {
     }
 
     const backgroundQueue = new BackgroundQueue(db.getPrimary())
-    const labelCache = new LabelCache(db.getPrimary())
+
     const notifServer = new NotificationServer(db.getPrimary())
     const searchAgent = config.searchEndpoint
       ? new AtpAgent({ service: config.searchEndpoint })
@@ -112,7 +120,11 @@ export class BskyAppView {
     const services = createServices({
       imgUriBuilder,
       imgInvalidator,
-      labelCache,
+      labelCacheOpts: {
+        redis: redis.withNamespace('label'),
+        staleTTL: config.labelCacheStaleTTL,
+        maxTTL: config.labelCacheMaxTTL,
+      },
     })
 
     const ctx = new AppContext({
@@ -123,21 +135,48 @@ export class BskyAppView {
       signingKey,
       idResolver,
       didCache,
-      labelCache,
+      redis,
       backgroundQueue,
       searchAgent,
       algos,
       notifServer,
     })
 
-    let server = createServer({
+    const xrpcOpts: XrpcServerOptions = {
       validateResponse: config.debugMode,
       payload: {
         jsonLimit: 100 * 1024, // 100kb
         textLimit: 100 * 1024, // 100kb
         blobLimit: 5 * 1024 * 1024, // 5mb
       },
-    })
+    }
+    if (config.rateLimitsEnabled) {
+      const rlCreator = (opts: RateLimiterOpts) =>
+        RateLimiter.redis(redis.driver, {
+          bypassSecret: config.rateLimitBypassKey,
+          bypassIps: config.rateLimitBypassIps,
+          ...opts,
+        })
+      xrpcOpts['rateLimits'] = {
+        creator: rlCreator,
+        global: [
+          {
+            name: 'global-unauthed-ip',
+            durationMs: 5 * MINUTE,
+            points: 3000,
+            calcKey: (ctx) => (ctx.auth ? null : ctx.req.ip),
+          },
+          {
+            name: 'global-authed-did',
+            durationMs: 5 * MINUTE,
+            points: 3000,
+            calcKey: (ctx) => ctx.auth?.credentials?.did ?? null,
+          },
+        ],
+      }
+    }
+
+    let server = createServer(xrpcOpts)
 
     server = API(server, ctx)
 
@@ -186,7 +225,6 @@ export class BskyAppView {
         'background queue stats',
       )
     }, 10000)
-    this.ctx.labelCache.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -197,11 +235,11 @@ export class BskyAppView {
     return server
   }
 
-  async destroy(opts?: { skipDb: boolean }): Promise<void> {
-    this.ctx.labelCache.stop()
+  async destroy(opts?: { skipDb: boolean; skipRedis: boolean }): Promise<void> {
     await this.ctx.didCache.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
+    if (!opts?.skipRedis) await this.ctx.redis.destroy()
     if (!opts?.skipDb) await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
   }

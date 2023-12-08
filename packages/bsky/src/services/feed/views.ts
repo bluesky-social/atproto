@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { AtUri } from '@atproto/syntax'
 import { Database } from '../../db'
 import {
   FeedViewPost,
@@ -37,26 +38,35 @@ import {
 } from './types'
 import { Labels, getSelfLabels } from '../label'
 import { ImageUriBuilder } from '../../image/uri'
-import { LabelCache } from '../../label-cache'
 import { ActorInfoMap, ActorService } from '../actor'
 import { ListInfoMap, GraphService } from '../graph'
-import { AtUri } from '@atproto/syntax'
+import { FromDb } from '../types'
 import { parseThreadGate } from './util'
 
 export class FeedViews {
+  services: {
+    actor: ActorService
+    graph: GraphService
+  }
+
   constructor(
     public db: Database,
     public imgUriBuilder: ImageUriBuilder,
-    public labelCache: LabelCache,
-  ) {}
-
-  static creator(imgUriBuilder: ImageUriBuilder, labelCache: LabelCache) {
-    return (db: Database) => new FeedViews(db, imgUriBuilder, labelCache)
+    private actor: FromDb<ActorService>,
+    private graph: FromDb<GraphService>,
+  ) {
+    this.services = {
+      actor: actor(this.db),
+      graph: graph(this.db),
+    }
   }
 
-  services = {
-    actor: ActorService.creator(this.imgUriBuilder, this.labelCache)(this.db),
-    graph: GraphService.creator(this.imgUriBuilder)(this.db),
+  static creator(
+    imgUriBuilder: ImageUriBuilder,
+    actor: FromDb<ActorService>,
+    graph: FromDb<GraphService>,
+  ) {
+    return (db: Database) => new FeedViews(db, imgUriBuilder, actor, graph)
   }
 
   formatFeedGeneratorView(

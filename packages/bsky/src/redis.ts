@@ -11,18 +11,26 @@ export class Redis {
         name: opts.sentinel,
         sentinels: opts.hosts.map((h) => addressParts(h, 26379)),
         password: opts.password,
+        db: opts.db,
+        commandTimeout: opts.commandTimeout,
       })
     } else if ('host' in opts) {
       assert(opts.host)
       this.driver = new RedisDriver({
         ...addressParts(opts.host),
         password: opts.password,
+        db: opts.db,
+        commandTimeout: opts.commandTimeout,
       })
     } else {
       assert(opts.driver)
       this.driver = opts.driver
     }
     this.namespace = opts.namespace
+  }
+
+  withNamespace(namespace: string): Redis {
+    return new Redis({ driver: this.driver, namespace })
   }
 
   async readStreams(
@@ -97,8 +105,38 @@ export class Redis {
     return await this.driver.get(this.ns(key))
   }
 
-  async set(key: string, val: string | number) {
-    await this.driver.set(this.ns(key), val)
+  async set(key: string, val: string | number, ttlMs?: number) {
+    if (ttlMs !== undefined) {
+      await this.driver.set(this.ns(key), val, 'PX', ttlMs)
+    } else {
+      await this.driver.set(this.ns(key), val)
+    }
+  }
+
+  async getMulti(keys: string[]) {
+    const namespaced = keys.map((k) => this.ns(k))
+    const got = await this.driver.mget(...namespaced)
+    const results = {}
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i]
+      results[key] = got[i]
+    }
+    return results
+  }
+
+  async setMulti(vals: Record<string, string | number>, ttlMs?: number) {
+    if (Object.keys(vals).length === 0) {
+      return
+    }
+    let builder = this.driver.multi({ pipeline: true })
+    for (const key of Object.keys(vals)) {
+      if (ttlMs !== undefined) {
+        builder = builder.set(this.ns(key), vals[key], 'PX', ttlMs)
+      } else {
+        builder = builder.set(this.ns(key), vals[key])
+      }
+    }
+    await builder.exec()
   }
 
   async del(key: string) {
@@ -152,9 +190,11 @@ export type RedisOptions = (
 ) & {
   password?: string
   namespace?: string
+  db?: number
+  commandTimeout?: number
 }
 
-function addressParts(
+export function addressParts(
   addr: string,
   defaultPort = 6379,
 ): { host: string; port: number } {
