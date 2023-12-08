@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "isolatedModules": false,
+    "emitDeclarationOnly": true,
+    "types": ["node", "handlebars"],
+  },
+  "include": ["./src"]
+}

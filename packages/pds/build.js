@@ -1,5 +1,4 @@
 const { nodeExternalsPlugin } = require('esbuild-node-externals')
-const hbsPlugin = require('esbuild-plugin-handlebars')
 
 const buildShallow =
   process.argv.includes('--shallow') || process.env.ATP_BUILD_SHALLOW === 'true'
@@ -17,11 +16,5 @@ require('esbuild').build({
     'pg-native',
     'sharp',
   ],
-  plugins: [].concat(buildShallow ? [nodeExternalsPlugin()] : []).concat([
-    hbsPlugin({
-      filter: /\.(hbs)$/,
-      additionalHelpers: {},
-      precompileOptions: {},
-    }),
-  ]),
+  plugins: [].concat(buildShallow ? [nodeExternalsPlugin()] : []),
 })

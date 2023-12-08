@@ -3,6 +3,7 @@
   "include": [],
   "references": [
     { "path": "./packages/pds/tsconfig.build.json" },
+    { "path": "./packages/pds-templates/tsconfig.build.json" },
     { "path": "./packages/bsky/tsconfig.build.json" },
     { "path": "./packages/api/tsconfig.build.json" },
     { "path": "./packages/aws/tsconfig.build.json" },

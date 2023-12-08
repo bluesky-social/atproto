@@ -1,0 +1,32 @@
+{
+  "name": "@atproto/pds-templates",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "Templates used by the atproto Personal Data Server (PDS)",
+  "keywords": [
+    "atproto",
+    "pds",
+    "templates"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/pds-templates"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "node build.js",
+    "postbuild": "tsc --build tsconfig.build.json"
+  },
+  "dependencies": {
+    "handlebars": "^4.7.7",
+    "tslib": "^2.6.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.14.48",
+    "esbuild-plugin-handlebars": "^1.0.2"
+  }
+}

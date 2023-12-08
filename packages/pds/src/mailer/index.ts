@@ -5,7 +5,7 @@ import SMTPTransport from 'nodemailer/lib/smtp-transport'
 import { ServerConfig } from '../config'
 import { mailerLogger } from '../logger'
 
-import * as templates from './templates'
+import { mailer as templates } from '@atproto/pds-templates'
 
 export class ServerMailer {
   private readonly templates = templates

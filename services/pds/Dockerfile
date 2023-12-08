@@ -6,6 +6,7 @@ RUN npm install -g pnpm
 WORKDIR /app
 COPY ./*.* ./
 # NOTE pds's transitive dependencies go here: if that changes, this needs to be updated.
+COPY ./packages/pds-templates ./packages/pds-templates
 COPY ./packages/pds ./packages/pds
 COPY ./packages/api ./packages/api
 COPY ./packages/aws ./packages/aws
