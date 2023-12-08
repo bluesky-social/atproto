@@ -48,6 +48,17 @@ export class Views {
     return state.actors?.get(did)?.takendown ?? false
   }
 
+  viewerBlockExists(did: string, state: HydrationState): boolean {
+    const actor = state.profileViewers?.get(did)
+    if (!actor) return false
+    return (
+      !!actor.blockedBy ||
+      !!actor.blocking ||
+      !!actor.blockedByList ||
+      !!actor.blockingByList
+    )
+  }
+
   profileDetailed(
     did: string,
     state: HydrationState,
