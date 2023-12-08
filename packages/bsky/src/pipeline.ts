@@ -32,11 +32,13 @@ export function createPipelineNew<Params, Skeleton, View, Context>(
   ) => Promise<HydrationState>,
   rules: (
     ctx: Context,
+    params: Params,
     skeleton: Skeleton,
     hydration: HydrationState,
   ) => Skeleton,
   presentation: (
     ctx: Context,
+    params: Params,
     skeleton: Skeleton,
     hydration: HydrationState,
   ) => View,
@@ -44,11 +46,11 @@ export function createPipelineNew<Params, Skeleton, View, Context>(
   return async (params: Params, ctx: Context) => {
     const skeletonState = await skeleton(ctx, params)
     const hydrationState = await hydration(ctx, params, skeletonState)
-    const appliedRules = rules(ctx, skeletonState, hydrationState)
-    return presentation(ctx, appliedRules, hydrationState)
+    const appliedRules = rules(ctx, params, skeletonState, hydrationState)
+    return presentation(ctx, params, appliedRules, hydrationState)
   }
 }
 
-export function noRulesNew<C, S>(ctx: C, skeleton: S) {
+export function noRulesNew<C, P, S>(ctx: C, params: P, skeleton: S) {
   return skeleton
 }

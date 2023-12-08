@@ -17,6 +17,7 @@ message Record {
   bytes record = 1;
   string cid = 2;
   google.protobuf.Timestamp indexed_at = 4;
+  bool taken_down = 5;
 }
 
 
@@ -286,6 +287,7 @@ message GetActorsRequest {
 message ActorInfo {
   string handle = 1;
   Record profile = 2;
+  bool taken_down = 3;
 }
 
 message GetActorsResponse {

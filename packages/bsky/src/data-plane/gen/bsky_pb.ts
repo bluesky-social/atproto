@@ -25,6 +25,11 @@ export class Record extends Message<Record> {
    */
   indexedAt?: Timestamp;
 
+  /**
+   * @generated from field: bool taken_down = 5;
+   */
+  takenDown = false;
+
   constructor(data?: PartialMessage<Record>) {
     super();
     proto3.util.initPartial(data, this);
@@ -36,6 +41,7 @@ export class Record extends Message<Record> {
     { no: 1, name: "record", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
     { no: 2, name: "cid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "indexed_at", kind: "message", T: Timestamp },
+    { no: 5, name: "taken_down", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Record {
@@ -2051,6 +2057,11 @@ export class ActorInfo extends Message<ActorInfo> {
    */
   profile?: Record;
 
+  /**
+   * @generated from field: bool taken_down = 3;
+   */
+  takenDown = false;
+
   constructor(data?: PartialMessage<ActorInfo>) {
     super();
     proto3.util.initPartial(data, this);
@@ -2061,6 +2072,7 @@ export class ActorInfo extends Message<ActorInfo> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "handle", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "profile", kind: "message", T: Record },
+    { no: 3, name: "taken_down", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ActorInfo {

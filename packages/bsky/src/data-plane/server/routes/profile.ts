@@ -19,9 +19,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     ])
     const byDid = keyBy(handlesRes, 'did')
     const actors = dids.map((did, i) => {
+      const row = byDid[did]
       return {
-        handle: byDid[did]?.handle ?? undefined,
+        handle: row?.handle ?? undefined,
         profile: profiles.records[i],
+        takenDown: !!row.takedownId,
       }
     })
     return { actors }

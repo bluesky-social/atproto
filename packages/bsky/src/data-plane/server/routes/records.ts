@@ -35,11 +35,15 @@ export const getRecords =
     const records: Record[] = req.uris.map((uri) => {
       const row = byUri[uri]
       const json = row ? row.json : JSON.stringify(null)
+      const indexedAt = row?.indexedAt
+        ? Timestamp.fromDate(new Date(row?.indexedAt))
+        : undefined
       const recordBytes = ui8.fromString(json, 'utf8')
       return new Record({
         record: recordBytes,
-        cid: row.cid,
-        indexedAt: Timestamp.fromDate(new Date(row.indexedAt)),
+        cid: row?.cid,
+        indexedAt,
+        takenDown: !!row?.takedownId,
       })
     })
     return { records }

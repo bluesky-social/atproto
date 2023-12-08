@@ -80,9 +80,10 @@ export class Hydrator {
   async hydrateProfiles(
     dids: string[],
     viewer: string | null,
+    includeTakedowns = false,
   ): Promise<HydrationState> {
     const [actors, labels, profileViewers] = await Promise.all([
-      this.actor.getActors(dids),
+      this.actor.getActors(dids, includeTakedowns),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids)),
       viewer ? this.actor.getProfileViewerStates(dids, viewer) : undefined,
     ])
@@ -105,8 +106,9 @@ export class Hydrator {
   async hydrateProfilesBasic(
     dids: string[],
     viewer: string | null,
+    includeTakedowns = false,
   ): Promise<HydrationState> {
-    return this.hydrateProfiles(dids, viewer)
+    return this.hydrateProfiles(dids, viewer, includeTakedowns)
   }
 
   // app.bsky.actor.defs#profileViewDetailed
@@ -116,9 +118,10 @@ export class Hydrator {
   async hydrateProfilesDetailed(
     dids: string[],
     viewer: string | null,
+    includeTakedowns = false,
   ): Promise<HydrationState> {
     const [state, profileAggs] = await Promise.all([
-      this.hydrateProfiles(dids, viewer),
+      this.hydrateProfiles(dids, viewer, includeTakedowns),
       this.actor.getProfileAggregates(dids),
     ])
     return {

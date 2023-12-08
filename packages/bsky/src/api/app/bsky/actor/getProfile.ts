@@ -40,17 +40,10 @@ const skeleton = async (
   ctx: Context,
   params: Params,
 ): Promise<SkeletonState> => {
-  // const { canViewTakendownProfile } = params
   const [did] = await ctx.hydrator.actor.getDids([params.actor])
   if (!did) {
     throw new InvalidRequestError('Profile not found')
   }
-  // if (!canViewTakendownProfile && softDeleted(actor)) {
-  //   throw new InvalidRequestError(
-  //     'Account has been taken down',
-  //     'AccountTakedown',
-  //   )
-  // }
   return { did }
 }
 
@@ -59,17 +52,26 @@ const hydration = async (
   params: Params,
   skele: SkeletonState,
 ) => {
-  return ctx.hydrator.hydrateProfilesDetailed([skele.did], params.viewer)
+  return ctx.hydrator.hydrateProfilesDetailed([skele.did], params.viewer, true)
 }
 
 const presentation = (
   ctx: Context,
+  params: Params,
   skele: SkeletonState,
   hydration: HydrationState,
 ) => {
   const profile = ctx.views.profileDetailed(skele.did, hydration)
   if (!profile) {
     throw new InvalidRequestError('Profile not found')
+  } else if (
+    !params.canViewTakendownProfile &&
+    ctx.views.actorIsTakendown(skele.did, hydration)
+  ) {
+    throw new InvalidRequestError(
+      'Account has been taken down',
+      'AccountTakedown',
+    )
   }
   return profile
 }

@@ -44,6 +44,10 @@ export class Views {
   // Actor
   // ------------
 
+  actorIsTakendown(did: string, state: HydrationState): boolean {
+    return state.actors?.get(did)?.takendown ?? false
+  }
+
   profileDetailed(
     did: string,
     state: HydrationState,

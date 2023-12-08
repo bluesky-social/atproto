@@ -9,6 +9,7 @@ export type Actor = {
   profile?: ProfileRecord
   profileCid?: CID
   indexedAt?: Date
+  takendown: boolean
 }
 
 export type Actors = HydrationMap<Actor>
@@ -54,16 +55,22 @@ export class ActorHydrator {
     return [...dids, ...res.dids.filter((did) => did.length > 0)]
   }
 
-  async getActors(dids: string[]): Promise<Actors> {
+  async getActors(dids: string[], includeTakedowns = false): Promise<Actors> {
     const res = await this.dataplane.getActors({ dids })
     return dids.reduce((acc, did, i) => {
       const actor = res.actors[i]
+      if (actor.takenDown && !includeTakedowns) return acc
+      const profile =
+        includeTakedowns || !actor.profile?.takenDown
+          ? actor.profile
+          : undefined
       return acc.set(did, {
         did,
         handle: parseString(actor.handle),
-        profile: parseRecordBytes<ProfileRecord>(actor.profile?.record),
-        profileCid: parseCid(actor.profile?.cid),
-        indexedAt: actor.profile?.indexedAt?.toDate(),
+        profile: parseRecordBytes<ProfileRecord>(profile?.record),
+        profileCid: parseCid(profile?.cid),
+        indexedAt: profile?.indexedAt?.toDate(),
+        takendown: actor.takenDown ?? false,
       })
     }, new HydrationMap<Actor>())
   }
