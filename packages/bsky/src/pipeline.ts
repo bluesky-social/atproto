@@ -24,33 +24,33 @@ export function noRules<T>(state: T) {
 }
 
 export function createPipelineNew<Params, Skeleton, View, Context>(
-  skeleton: (ctx: Context, params: Params) => Promise<Skeleton>,
-  hydration: (
-    ctx: Context,
-    params: Params,
-    skeleton: Skeleton,
-  ) => Promise<HydrationState>,
-  rules: (
-    ctx: Context,
-    params: Params,
-    skeleton: Skeleton,
-    hydration: HydrationState,
-  ) => Skeleton,
-  presentation: (
-    ctx: Context,
-    params: Params,
-    skeleton: Skeleton,
-    hydration: HydrationState,
-  ) => View,
+  skeletonFn: (input: { ctx: Context; params: Params }) => Promise<Skeleton>,
+  hydrationFn: (input: {
+    ctx: Context
+    params: Params
+    skeleton: Skeleton
+  }) => Promise<HydrationState>,
+  rulesFn: (input: {
+    ctx: Context
+    params: Params
+    skeleton: Skeleton
+    hydration: HydrationState
+  }) => Skeleton,
+  presentationFn: (input: {
+    ctx: Context
+    params: Params
+    skeleton: Skeleton
+    hydration: HydrationState
+  }) => View,
 ) {
   return async (params: Params, ctx: Context) => {
-    const skeletonState = await skeleton(ctx, params)
-    const hydrationState = await hydration(ctx, params, skeletonState)
-    const appliedRules = rules(ctx, params, skeletonState, hydrationState)
-    return presentation(ctx, params, appliedRules, hydrationState)
+    const skeleton = await skeletonFn({ ctx, params })
+    const hydration = await hydrationFn({ ctx, params, skeleton })
+    const appliedRules = rulesFn({ ctx, params, skeleton, hydration })
+    return presentationFn({ ctx, params, skeleton: appliedRules, hydration })
   }
 }
 
-export function noRulesNew<C, P, S>(ctx: C, params: P, skeleton: S) {
-  return skeleton
+export function noRulesNew<S>(input: { skeleton: S }) {
+  return input.skeleton
 }

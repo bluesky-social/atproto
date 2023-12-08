@@ -48,18 +48,34 @@ export class ActorHydrator {
     }
   }
 
-  async getDids(didsOrhandles: string[]): Promise<string[]> {
-    const dids = didsOrhandles.filter((actor) => actor.startsWith('did:'))
-    const handles = didsOrhandles.filter((actor) => !actor.startsWith('did:'))
+  async getDids(handleOrDids: string[]): Promise<(string | undefined)[]> {
+    const handles = handleOrDids.filter((actor) => !actor.startsWith('did:'))
     const res = await this.dataplane.getDidsByHandles({ handles })
-    return [...dids, ...res.dids.filter((did) => did.length > 0)]
+    const didByHandle = handles.reduce((acc, cur, i) => {
+      const did = res.dids[i]
+      if (did && did.length > 0) {
+        return acc.set(cur, did)
+      }
+      return acc
+    }, new Map() as Map<string, string>)
+    return handleOrDids.map((id) =>
+      id.startsWith('did:') ? id : didByHandle.get(id),
+    )
+  }
+
+  async getDidsDefined(handleOrDids: string[]): Promise<string[]> {
+    const res = await this.getDids(handleOrDids)
+    // @ts-ignore
+    return res.filter((did) => did !== undefined)
   }
 
   async getActors(dids: string[], includeTakedowns = false): Promise<Actors> {
     const res = await this.dataplane.getActors({ dids })
     return dids.reduce((acc, did, i) => {
       const actor = res.actors[i]
-      if (actor.takenDown && !includeTakedowns) return acc
+      if (!actor.exists || (actor.takenDown && !includeTakedowns)) {
+        return acc.set(did, null)
+      }
       const profile =
         includeTakedowns || !actor.profile?.takenDown
           ? actor.profile

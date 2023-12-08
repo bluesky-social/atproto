@@ -36,10 +36,11 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (
-  ctx: Context,
-  params: Params,
-): Promise<SkeletonState> => {
+const skeleton = async (input: {
+  ctx: Context
+  params: Params
+}): Promise<SkeletonState> => {
+  const { ctx, params } = input
   const [did] = await ctx.hydrator.actor.getDids([params.actor])
   if (!did) {
     throw new InvalidRequestError('Profile not found')
@@ -47,26 +48,32 @@ const skeleton = async (
   return { did }
 }
 
-const hydration = async (
-  ctx: Context,
-  params: Params,
-  skele: SkeletonState,
-) => {
-  return ctx.hydrator.hydrateProfilesDetailed([skele.did], params.viewer, true)
+const hydration = async (input: {
+  ctx: Context
+  params: Params
+  skeleton: SkeletonState
+}) => {
+  const { ctx, params, skeleton } = input
+  return ctx.hydrator.hydrateProfilesDetailed(
+    [skeleton.did],
+    params.viewer,
+    true,
+  )
 }
 
-const presentation = (
-  ctx: Context,
-  params: Params,
-  skele: SkeletonState,
-  hydration: HydrationState,
-) => {
-  const profile = ctx.views.profileDetailed(skele.did, hydration)
+const presentation = (input: {
+  ctx: Context
+  params: Params
+  skeleton: SkeletonState
+  hydration: HydrationState
+}) => {
+  const { ctx, params, skeleton, hydration } = input
+  const profile = ctx.views.profileDetailed(skeleton.did, hydration)
   if (!profile) {
     throw new InvalidRequestError('Profile not found')
   } else if (
     !params.canViewTakendownProfile &&
-    ctx.views.actorIsTakendown(skele.did, hydration)
+    ctx.views.actorIsTakendown(skeleton.did, hydration)
   ) {
     throw new InvalidRequestError(
       'Account has been taken down',

@@ -2048,17 +2048,22 @@ export class GetActorsRequest extends Message<GetActorsRequest> {
  */
 export class ActorInfo extends Message<ActorInfo> {
   /**
-   * @generated from field: string handle = 1;
+   * @generated from field: bool exists = 1;
+   */
+  exists = false;
+
+  /**
+   * @generated from field: string handle = 2;
    */
   handle = "";
 
   /**
-   * @generated from field: bsky.Record profile = 2;
+   * @generated from field: bsky.Record profile = 3;
    */
   profile?: Record;
 
   /**
-   * @generated from field: bool taken_down = 3;
+   * @generated from field: bool taken_down = 4;
    */
   takenDown = false;
 
@@ -2070,9 +2075,10 @@ export class ActorInfo extends Message<ActorInfo> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.ActorInfo";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "handle", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "profile", kind: "message", T: Record },
-    { no: 3, name: "taken_down", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 1, name: "exists", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 2, name: "handle", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "profile", kind: "message", T: Record },
+    { no: 4, name: "taken_down", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ActorInfo {

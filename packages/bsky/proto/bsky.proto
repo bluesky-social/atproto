@@ -285,9 +285,10 @@ message GetActorsRequest {
 }
 
 message ActorInfo {
-  string handle = 1;
-  Record profile = 2;
-  bool taken_down = 3;
+  bool exists = 1;
+  string handle = 2;
+  Record profile = 3;
+  bool taken_down = 4;
 }
 
 message GetActorsResponse {
