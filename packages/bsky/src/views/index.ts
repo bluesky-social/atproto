@@ -155,7 +155,7 @@ export class Views {
     const creatorDid = new AtUri(uri).hostname
     const list = state.lists?.get(uri)
     if (!list) return
-    const creator = this.profileBasic(creatorDid, state)
+    const creator = this.profile(creatorDid, state)
     if (!creator) return
     const basicView = this.listBasic(uri, state)
     if (!basicView) return

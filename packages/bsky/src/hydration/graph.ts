@@ -95,7 +95,7 @@ export class GraphHydrator {
     return uris.reduce((acc, uri, i) => {
       return acc.set(uri, {
         viewerMuted: mutesAndBlocks[i].muted ? uri : undefined,
-        viewerListBlockUri: mutesAndBlocks[i].listBlockUri,
+        viewerListBlockUri: mutesAndBlocks[i].listBlockUri || undefined,
         viewerInList: listMemberships.listitemUris[i],
       })
     }, new HydrationMap<ListViewerState>())
