@@ -99,23 +99,23 @@ export const LABELS: LabelDefinitionMap = {
     strings: {
       settings: {
         en: {
-          name: 'Requested Hidden to Logged-out Users',
+          name: 'Sign-in Required',
           description:
-            'This user has requested that their content only be shown to logged-in accounts.',
+            'This user has requested that their account only be shown to signed-in users.',
         },
       },
       account: {
         en: {
           name: 'Sign-in Required',
           description:
-            'This user has requested that their content only be shown to logged-in accounts.',
+            'This user has requested that their account only be shown to signed-in users.',
         },
       },
       content: {
         en: {
           name: 'Sign-in Required',
           description:
-            'This user has requested that their content only be shown to logged-in accounts.',
+            'This user has requested that their content only be shown to signed-in users.',
         },
       },
     },

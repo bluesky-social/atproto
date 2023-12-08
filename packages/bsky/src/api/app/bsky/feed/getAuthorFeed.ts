@@ -102,6 +102,13 @@ export const skeleton = async (
     feedItemsQb = feedItemsQb.where((qb) =>
       qb.where('post.replyParent', 'is', null).orWhere('type', '=', 'repost'),
     )
+  } else if (filter === 'posts_and_author_threads') {
+    feedItemsQb = feedItemsQb.where((qb) =>
+      qb
+        .where('type', '=', 'repost')
+        .orWhere('post.replyParent', 'is', null)
+        .orWhere('post.replyRoot', 'like', `at://${actorDid}/%`),
+    )
   }
 
   const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
