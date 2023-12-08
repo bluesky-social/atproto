@@ -1,9 +1,10 @@
 import { secp256k1 as k256 } from '@noble/curves/secp256k1'
 import { sha256 } from '@noble/hashes/sha256'
 import * as ui8 from 'uint8arrays'
-import { SECP256K1_JWT_ALG } from '../const'
-import { parseDidKey } from '../did'
+
+import { SECP256K1_DID_PREFIX } from '../const'
 import { VerifyOptions } from '../types'
+import { extractMultikey, extractPrefixedBytes, hasPrefix } from '../utils'
 
 export const verifyDidSig = async (
   did: string,
@@ -11,10 +12,11 @@ export const verifyDidSig = async (
   sig: Uint8Array,
   opts?: VerifyOptions,
 ): Promise<boolean> => {
-  const { jwtAlg, keyBytes } = parseDidKey(did)
-  if (jwtAlg !== SECP256K1_JWT_ALG) {
+  const prefixedBytes = extractPrefixedBytes(extractMultikey(did))
+  if (!hasPrefix(prefixedBytes, SECP256K1_DID_PREFIX)) {
     throw new Error(`Not a secp256k1 did:key: ${did}`)
   }
+  const keyBytes = prefixedBytes.slice(SECP256K1_DID_PREFIX.length)
   return verifySig(keyBytes, data, sig, opts)
 }
 
