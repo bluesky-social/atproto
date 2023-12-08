@@ -136,7 +136,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const existMap = res.reduce((acc, cur) => {
       const key = [cur.source, cur.target].sort().join(',')
       return acc.set(key, true)
-    }, {} as Map<string, boolean>)
+    }, new Map<string, boolean>())
     const exists = pairs.map((pair) => {
       const key = [pair.a, pair.b].sort().join(',')
       return existMap.get(key) === true

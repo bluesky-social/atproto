@@ -2,7 +2,7 @@ import { Record as FollowRecord } from '../lexicon/types/app/bsky/graph/follow'
 import { Record as ListRecord } from '../lexicon/types/app/bsky/graph/list'
 import { Record as ListItemRecord } from '../lexicon/types/app/bsky/graph/listitem'
 import { DataPlaneClient } from '../data-plane/client'
-import { HydrationMap, RecordInfo, parseRecord } from './util'
+import { HydrationMap, RecordInfo, didFromUri, parseRecord } from './util'
 
 export type List = RecordInfo<ListRecord>
 export type Lists = HydrationMap<List>
@@ -132,10 +132,59 @@ export class GraphHydrator {
     return blocks
   }
 
-  async getFollows(uris: string[]): Promise<Follows> {
+  async getFollows(
+    uris: string[],
+    opts?: { disallowBlock?: boolean },
+  ): Promise<Follows> {
     const res = await this.dataplane.getFollowRecords({ uris })
-    return uris.reduce((acc, uri, i) => {
+    const follows = uris.reduce((acc, uri, i) => {
       return acc.set(uri, parseRecord<FollowRecord>(res.records[i]) ?? null)
     }, new HydrationMap<Follow>())
+    if (opts?.disallowBlock) {
+      const pairs: RelationshipPair[] = []
+      for (const [uri, follow] of follows) {
+        if (follow) {
+          pairs.push([didFromUri(uri), follow.record.subject])
+        }
+      }
+      const blocks = await this.getBidirectionalBlocks(pairs)
+      for (const [uri, follow] of follows) {
+        if (
+          follow &&
+          blocks.isBlocked(didFromUri(uri), follow.record.subject)
+        ) {
+          follows.set(uri, null)
+        }
+      }
+    }
+    return follows
+  }
+
+  async getActorFollows(input: {
+    did: string
+    cursor?: string
+    limit?: number
+  }): Promise<{ uris: string[]; cursor: string }> {
+    const { did, cursor, limit } = input
+    const res = await this.dataplane.getFollows({
+      actorDid: did,
+      cursor,
+      limit,
+    })
+    return { uris: res.uris, cursor: res.cursor }
+  }
+
+  async getActorFollowers(input: {
+    did: string
+    cursor?: string
+    limit?: number
+  }): Promise<{ uris: string[]; cursor: string }> {
+    const { did, cursor, limit } = input
+    const res = await this.dataplane.getFollowers({
+      actorDid: did,
+      cursor,
+      limit,
+    })
+    return { uris: res.uris, cursor: res.cursor }
   }
 }

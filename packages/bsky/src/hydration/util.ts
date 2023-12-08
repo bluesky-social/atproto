@@ -1,5 +1,5 @@
+import { AtUri } from '@atproto/syntax'
 import { jsonToLex } from '@atproto/lexicon'
-import { Timestamp } from '@bufbuild/protobuf'
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
 import { Record } from '../data-plane/gen/bsky_pb'
@@ -53,4 +53,8 @@ export const parseCid = (cidStr: string | undefined): CID | undefined => {
   } catch {
     return
   }
+}
+
+export const didFromUri = (uri: string) => {
+  return new AtUri(uri).hostname
 }

@@ -1,36 +1,35 @@
 import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getFollows'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getFollowers'
 import AppContext from '../../../../context'
-import { Database } from '../../../../db'
-import { notSoftDeletedClause } from '../../../../db/util'
-import { paginate, TimeCidKeyset } from '../../../../db/pagination'
-import { Actor } from '../../../../db/tables/actor'
-import { ActorInfoMap, ActorService } from '../../../../services/actor'
-import { BlockAndMuteState, GraphService } from '../../../../services/graph'
-import { createPipeline } from '../../../../pipeline'
+import {
+  HydrationFnInput,
+  PresentationFnInput,
+  RulesFnInput,
+  SkeletonFnInput,
+  createPipelineNew,
+} from '../../../../pipeline'
+import { Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
-  const getFollows = createPipeline(
+  const getFollows = createPipelineNew(
     skeleton,
     hydration,
-    noBlocksInclInvalid,
+    noBlocks,
     presentation,
   )
   server.app.bsky.graph.getFollows({
     auth: ctx.authOptionalAccessOrRoleVerifier,
     handler: async ({ params, auth }) => {
-      const db = ctx.db.getReplica()
-      const actorService = ctx.services.actor(db)
-      const graphService = ctx.services.graph(db)
       const viewer = 'did' in auth.credentials ? auth.credentials.did : null
       const canViewTakendownProfile =
         auth.credentials.type === 'role' && auth.credentials.triage
 
       const result = await getFollows(
         { ...params, viewer, canViewTakendownProfile },
-        { db, actorService, graphService },
+        ctx,
       )
 
       return {
@@ -41,92 +40,88 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (
-  params: Params,
-  ctx: Context,
-): Promise<SkeletonState> => {
-  const { db, actorService } = ctx
-  const { limit, cursor, actor, canViewTakendownProfile } = params
-  const { ref } = db.db.dynamic
-
-  const creator = await actorService.getActor(actor, canViewTakendownProfile)
-  if (!creator) {
-    throw new InvalidRequestError(`Actor not found: ${actor}`)
-  }
-
-  let followsReq = db.db
-    .selectFrom('follow')
-    .where('follow.creator', '=', creator.did)
-    .innerJoin('actor as subject', 'subject.did', 'follow.subjectDid')
-    .if(!canViewTakendownProfile, (qb) =>
-      qb.where(notSoftDeletedClause(ref('subject'))),
-    )
-    .selectAll('subject')
-    .select(['follow.cid as cid', 'follow.sortAt as sortAt'])
-
-  const keyset = new TimeCidKeyset(ref('follow.sortAt'), ref('follow.cid'))
-  followsReq = paginate(followsReq, {
-    limit,
-    cursor,
-    keyset,
-  })
-
-  const follows = await followsReq.execute()
-
-  return {
-    params,
-    follows,
-    creator,
-    cursor: keyset.packFromResult(follows),
-  }
-}
-
-const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { graphService, actorService } = ctx
-  const { params, follows, creator } = state
-  const { viewer } = params
-  const [actors, bam] = await Promise.all([
-    actorService.views.profiles([creator, ...follows], viewer),
-    graphService.getBlockAndMuteState(
-      follows.flatMap((item) => {
-        if (viewer) {
-          return [
-            [viewer, item.did],
-            [creator.did, item.did],
-          ]
-        }
-        return [[creator.did, item.did]]
-      }),
-    ),
-  ])
-  return { ...state, bam, actors }
-}
-
-const noBlocksInclInvalid = (state: HydrationState) => {
-  const { creator } = state
-  const { viewer } = state.params
-  state.follows = state.follows.filter(
-    (item) =>
-      !state.bam.block([creator.did, item.did]) &&
-      (!viewer || !state.bam.block([viewer, item.did])),
-  )
-  return state
-}
-
-const presentation = (state: HydrationState) => {
-  const { params, follows, creator, actors, cursor } = state
-  const creatorView = actors[creator.did]
-  const followsView = mapDefined(follows, (item) => actors[item.did])
-  if (!creatorView) {
+const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+  const { params, ctx } = input
+  const [subjectDid] = await ctx.hydrator.actor.getDidsDefined([params.actor])
+  if (!subjectDid) {
     throw new InvalidRequestError(`Actor not found: ${params.actor}`)
   }
-  return { follows: followsView, subject: creatorView, cursor }
+  const result = await ctx.hydrator.graph.getActorFollows({
+    did: subjectDid,
+    cursor: params.cursor,
+    limit: params.limit,
+  })
+  return {
+    subjectDid,
+    followUris: result.uris,
+    cursor: result.cursor,
+  }
+}
+
+const hydration = async (
+  input: HydrationFnInput<Context, Params, SkeletonState>,
+) => {
+  const { ctx, params, skeleton } = input
+  const { viewer } = params
+  const { followUris, subjectDid } = skeleton
+  // @TODO hydrate follows w/ block info
+  const follows = await ctx.hydrator.graph.getFollows(followUris, {
+    disallowBlock: true,
+  })
+  const dids = [subjectDid]
+  for (const follow of follows.values()) {
+    if (follow) {
+      dids.push(follow.record.subject)
+    }
+  }
+  const profileState = await ctx.hydrator.hydrateProfiles(dids, viewer)
+  return { ...profileState, follows }
+}
+
+const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
+  const { skeleton, params, hydration, ctx } = input
+  const { viewer } = params
+  if (viewer) {
+    skeleton.followUris = skeleton.followUris.filter((followUri) => {
+      const follow = hydration.follows?.get(followUri)
+      if (!follow) return true
+      return !ctx.views.viewerBlockExists(follow.record.subject, hydration)
+    })
+  }
+  return skeleton
+}
+
+const presentation = (
+  input: PresentationFnInput<Context, Params, SkeletonState>,
+) => {
+  const { ctx, hydration, skeleton, params } = input
+  const { subjectDid, followUris, cursor } = skeleton
+  const isTakendown = (did: string) =>
+    ctx.views.actorIsTakendown(did, hydration)
+
+  const subject = ctx.views.profile(subjectDid, hydration)
+  if (
+    !subject ||
+    (!params.canViewTakendownProfile && isTakendown(subjectDid))
+  ) {
+    throw new InvalidRequestError(`Actor not found: ${params.actor}`)
+  }
+
+  const follows = mapDefined(followUris, (followUri) => {
+    const followDid = hydration.follows?.get(followUri)?.record.subject
+    if (!followDid) return
+    if (!params.canViewTakendownProfile && isTakendown(followDid)) {
+      return
+    }
+    return ctx.views.profile(followDid, hydration)
+  })
+
+  return { follows, subject, cursor }
 }
 
 type Context = {
-  db: Database
-  actorService: ActorService
-  graphService: GraphService
+  hydrator: Hydrator
+  views: Views
 }
 
 type Params = QueryParams & {
@@ -135,13 +130,7 @@ type Params = QueryParams & {
 }
 
 type SkeletonState = {
-  params: Params
-  follows: Actor[]
-  creator: Actor
+  subjectDid: string
+  followUris: string[]
   cursor?: string
-}
-
-type HydrationState = SkeletonState & {
-  bam: BlockAndMuteState
-  actors: ActorInfoMap
 }

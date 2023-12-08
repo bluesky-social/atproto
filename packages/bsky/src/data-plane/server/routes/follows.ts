@@ -41,6 +41,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       limit,
       cursor,
       keyset,
+      tryIndex: true,
     })
 
     const followers = await followersReq.execute()
@@ -69,6 +70,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       limit,
       cursor,
       keyset,
+      tryIndex: true,
     })
 
     const follows = await followsReq.execute()

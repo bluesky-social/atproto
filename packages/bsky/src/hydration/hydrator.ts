@@ -4,7 +4,6 @@ import { Notification } from '../data-plane/gen/bsky_pb'
 import { ids } from '../lexicon/lexicons'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
-
 import {
   ActorHydrator,
   ProfileAggs,
@@ -21,7 +20,7 @@ import {
   RelationshipPair,
 } from './graph'
 import { LabelHydrator, Labels } from './label'
-import { HydrationMap } from './util'
+import { HydrationMap, didFromUri } from './util'
 import {
   FeedGenAggs,
   FeedGens,
@@ -372,7 +371,10 @@ export class Hydrator {
   // - like
   //   - profile
   //     - list basic
-  async hydrateLikes(uris: string[], viewer: string | null) {
+  async hydrateLikes(
+    uris: string[],
+    viewer: string | null,
+  ): Promise<HydrationState> {
     const [likes, profileState] = await Promise.all([
       this.feed.getLikes(uris),
       this.hydrateProfiles(uris.map(didFromUri), viewer),
@@ -384,7 +386,10 @@ export class Hydrator {
   // - notification
   //   - profile
   //     - list basic
-  async hydrateNotifications(notifs: Notification[], viewer: string | null) {
+  async hydrateNotifications(
+    notifs: Notification[],
+    viewer: string | null,
+  ): Promise<HydrationState> {
     const uris = notifs.map((notif) => notif.uri)
     const collections = urisByCollection(uris)
     const postUris = collections.get(ids.AppBskyFeedPost) ?? []
@@ -424,10 +429,6 @@ const labelSubjectsForDid = (dids: string[]) => {
   ]
 }
 
-const didFromUri = (uri: string) => {
-  return new AtUri(uri).hostname
-}
-
 const nestedRecordUrisFromPosts = (posts: Posts): string[] => {
   const uris: string[] = []
   for (const item of posts.values()) {
@@ -460,7 +461,7 @@ const urisByCollection = (uris: string[]): Map<string, string[]> => {
   return result
 }
 
-const mergeStates = (
+export const mergeStates = (
   stateA: HydrationState,
   stateB: HydrationState,
 ): HydrationState => {
