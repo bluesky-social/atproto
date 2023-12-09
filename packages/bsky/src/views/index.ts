@@ -6,10 +6,15 @@ import {
   ProfileViewDetailed,
   ProfileView,
   ProfileViewBasic,
+  ViewerState as ProfileViewerState,
 } from '../lexicon/types/app/bsky/actor/defs'
 import {
+  BlockedPost,
+  FeedViewPost,
   GeneratorView,
+  NotFoundPost,
   PostView,
+  ReasonRepost,
   ThreadgateView,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { ListView, ListViewBasic } from '../lexicon/types/app/bsky/graph/defs'
@@ -26,6 +31,7 @@ import {
   ExternalEmbedView,
   ImagesEmbed,
   ImagesEmbedView,
+  MaybePostView,
   PostEmbedView,
   RecordEmbed,
   RecordEmbedView,
@@ -38,6 +44,7 @@ import {
   isRecordWithMedia,
 } from './types'
 import { Label } from '../hydration/label'
+import { Repost } from '../hydration/feed'
 
 export class Views {
   constructor(public imgUriBuilder: ImageUriBuilder) {}
@@ -108,7 +115,6 @@ export class Views {
   ): ProfileViewBasic | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
-    const viewer = state.profileViewers?.get(did)
     const profileUri = AtUri.make(
       did,
       ids.AppBskyActorProfile,
@@ -134,23 +140,30 @@ export class Views {
             actor.profile.avatar.ref,
           )
         : undefined,
-      viewer: viewer
-        ? {
-            muted: viewer.muted,
-            mutedByList: viewer.mutedByList
-              ? this.listBasic(viewer.mutedByList, state)
-              : undefined,
-            blockedBy: !!viewer.blockedBy,
-            blocking: viewer.blocking,
-            // @TODO blockedByList?
-            blockingByList: viewer.blockingByList
-              ? this.listBasic(viewer.blockingByList, state)
-              : undefined,
-            following: viewer.following,
-            followedBy: viewer.followedBy,
-          }
-        : undefined,
+      viewer: this.profileViewer(did, state),
       labels,
+    }
+  }
+
+  profileViewer(
+    did: string,
+    state: HydrationState,
+  ): ProfileViewerState | undefined {
+    const viewer = state.profileViewers?.get(did)
+    if (!viewer) return
+    return {
+      muted: viewer.muted,
+      mutedByList: viewer.mutedByList
+        ? this.listBasic(viewer.mutedByList, state)
+        : undefined,
+      blockedBy: !!viewer.blockedBy,
+      blocking: viewer.blocking,
+      // @TODO blockedByList?
+      blockingByList: viewer.blockingByList
+        ? this.listBasic(viewer.blockingByList, state)
+        : undefined,
+      following: viewer.following,
+      followedBy: viewer.followedBy,
     }
   }
 
@@ -233,6 +246,27 @@ export class Views {
 
   // Feed
   // ------------
+
+  feedItemBlockOrMuteExists(uri: string, state: HydrationState): boolean {
+    const parsed = new AtUri(uri)
+    if (parsed.collection === ids.AppBskyFeedRepost) {
+      const repost = state.reposts?.get(uri)
+      const postUri = repost?.record.subject.uri
+      if (postUri) {
+        const postDid = creatorFromUri(postUri)
+        if (
+          this.viewerBlockExists(postDid, state) ||
+          this.viewerMuteExists(postDid, state)
+        ) {
+          return false
+        }
+      }
+    }
+    return (
+      this.viewerBlockExists(parsed.hostname, state) ||
+      this.viewerMuteExists(parsed.hostname, state)
+    )
+  }
 
   feedGenerator(uri: string, state: HydrationState): GeneratorView | undefined {
     const feedgen = state.feedgens?.get(uri)
@@ -334,6 +368,101 @@ export class Views {
     }
   }
 
+  feedViewPost(uri: string, state: HydrationState): FeedViewPost | undefined {
+    const parsedUri = new AtUri(uri)
+    let postUri: AtUri
+    let reason: ReasonRepost | undefined
+    if (parsedUri.collection === ids.AppBskyFeedRepost) {
+      const repost = state.reposts?.get(uri)
+      if (!repost) return
+      reason = this.reasonRepost(parsedUri.hostname, repost, state)
+      if (!reason) return
+      postUri = new AtUri(repost.record.subject.uri)
+    } else {
+      postUri = parsedUri
+    }
+    const post = this.post(postUri.toString(), state)
+    if (!post) return
+    return {
+      post,
+      reason,
+      reply: this.replyRef(postUri.toString(), state),
+    }
+  }
+
+  replyRef(uri: string, state: HydrationState, usePostViewUnion = false) {
+    const postRecord = state.posts?.get(uri.toString())?.record
+    if (!postRecord?.reply) return
+    const root = this.maybePost(
+      postRecord.reply.root.uri,
+      state,
+      usePostViewUnion,
+    )
+    const parent = this.maybePost(
+      postRecord.reply.parent.uri,
+      state,
+      usePostViewUnion,
+    )
+    return root && parent ? { root, parent } : undefined
+  }
+
+  maybePost(
+    uri: string,
+    state: HydrationState,
+    usePostViewUnion = false,
+  ): MaybePostView | undefined {
+    const post = this.post(uri, state)
+    if (!post) return usePostViewUnion ? this.notFoundPost(uri) : undefined
+    if (this.viewerBlockExists(post.author.did, state)) {
+      return usePostViewUnion
+        ? this.blockedPost(uri, post.author.did, state)
+        : undefined
+    }
+    return {
+      $type: 'app.bsky.feed.defs#postView',
+      ...post,
+    }
+  }
+
+  blockedPost(
+    uri: string,
+    authorDid: string,
+    state: HydrationState,
+  ): BlockedPost {
+    return {
+      $type: 'app.bsky.feed.defs#blockedPost',
+      uri,
+      blocked: true,
+      author: {
+        did: authorDid,
+        viewer: this.profileViewer(authorDid, state),
+      },
+    }
+  }
+
+  notFoundPost(uri: string): NotFoundPost {
+    return {
+      $type: 'app.bsky.feed.defs#notFoundPost',
+      uri,
+      notFound: true,
+    }
+  }
+
+  reasonRepost(
+    creatorDid: string,
+    repost: Repost,
+    state: HydrationState,
+  ): ReasonRepost | undefined {
+    const creator = this.profileBasic(creatorDid, state)
+    if (!creator) return
+    if (!repost.indexedAt) return
+    return {
+      $type: 'app.bsky.feed.defs#reasonRepost',
+      by: creator,
+      indexedAt: repost.indexedAt.toISOString(),
+    }
+  }
+
   // Embeds
   // ------------
 
@@ -392,8 +521,9 @@ export class Views {
     }
   }
 
-  embedNotFound(uri: string): { record: EmbedNotFound } {
+  embedNotFound(uri: string): { $type: string; record: EmbedNotFound } {
     return {
+      $type: 'app.bsky.embed.record#view',
       record: {
         $type: 'app.bsky.embed.record#viewNotFound',
         uri,
@@ -402,8 +532,12 @@ export class Views {
     }
   }
 
-  embedBlocked(uri: string, author: ProfileView): { record: EmbedBlocked } {
+  embedBlocked(
+    uri: string,
+    author: ProfileView,
+  ): { $type: string; record: EmbedBlocked } {
     return {
+      $type: 'app.bsky.embed.record#view',
       record: {
         $type: 'app.bsky.embed.record#viewBlocked',
         uri,

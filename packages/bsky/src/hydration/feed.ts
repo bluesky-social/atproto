@@ -53,9 +53,13 @@ export type Threadgates = HydrationMap<Threadgate>
 export class FeedHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 
-  async getPosts(uris: string[]): Promise<Posts> {
+  async getPosts(uris: string[], includeTakedowns = false): Promise<Posts> {
     const res = await this.dataplane.getPostRecords({ uris })
     return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<PostRecord>(res.records[i])
+      if (!record || (record.takenDown && !includeTakedowns)) {
+        return acc.set(uri, null)
+      }
       return acc.set(uri, parseRecord<PostRecord>(res.records[i]) ?? null)
     }, new HydrationMap<Post>())
   }

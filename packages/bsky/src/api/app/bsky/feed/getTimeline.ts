@@ -1,20 +1,16 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
-import { FeedAlgorithm, FeedKeyset, getFeedDateThreshold } from '../util/feed'
-import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
-import { Database } from '../../../../db'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getTimeline'
 import { setRepoRev } from '../../../util'
-import {
-  FeedHydrationState,
-  FeedRow,
-  FeedService,
-} from '../../../../services/feed'
-import { createPipeline } from '../../../../pipeline'
+import { createPipelineNew } from '../../../../pipeline'
+import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { DataPlaneClient } from '../../../../data-plane'
+import { parseString } from '../../../../hydration/util'
+import { mapDefined } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
-  const getTimeline = createPipeline(
+  const getTimeline = createPipelineNew(
     skeleton,
     hydration,
     noBlocksOrMutes,
@@ -24,13 +20,10 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier,
     handler: async ({ params, auth, res }) => {
       const viewer = auth.credentials.did
-      const db = ctx.db.getReplica('timeline')
-      const feedService = ctx.services.feed(db)
-      const actorService = ctx.services.actor(db)
 
       const [result, repoRev] = await Promise.all([
-        getTimeline({ ...params, viewer }, { db, feedService }),
-        actorService.getRepoRev(viewer),
+        getTimeline({ ...params, viewer }, ctx),
+        ctx.hydrator.actor.getRepoRevSafe(viewer),
       ])
 
       setRepoRev(res, repoRev)
@@ -43,124 +36,64 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-export const skeleton = async (
-  params: Params,
-  ctx: Context,
-): Promise<SkeletonState> => {
-  const { cursor, limit, algorithm, viewer } = params
-  const { db } = ctx
-  const { ref } = db.db.dynamic
-
-  if (algorithm && algorithm !== FeedAlgorithm.ReverseChronological) {
-    throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
-  }
-
-  const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
-  const sortFrom = keyset.unpack(cursor)?.primary
-
-  let followQb = db.db
-    .selectFrom('feed_item')
-    .innerJoin('follow', 'follow.subjectDid', 'feed_item.originatorDid')
-    .where('follow.creator', '=', viewer)
-    .innerJoin('post', 'post.uri', 'feed_item.postUri')
-    .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom, 2))
-    .selectAll('feed_item')
-    .select([
-      'post.replyRoot',
-      'post.replyParent',
-      'post.creator as postAuthorDid',
-    ])
-
-  followQb = paginate(followQb, {
-    limit,
-    cursor,
-    keyset,
-    tryIndex: true,
+export const skeleton = async (inputs: {
+  ctx: Context
+  params: Params
+}): Promise<Skeleton> => {
+  const { ctx, params } = inputs
+  const res = await ctx.dataplane.getTimeline({
+    actorDid: params.viewer,
+    limit: params.limit,
+    cursor: params.cursor,
   })
-
-  let selfQb = db.db
-    .selectFrom('feed_item')
-    .innerJoin('post', 'post.uri', 'feed_item.postUri')
-    .where('feed_item.originatorDid', '=', viewer)
-    .where('feed_item.sortAt', '>', getFeedDateThreshold(sortFrom, 2))
-    .selectAll('feed_item')
-    .select([
-      'post.replyRoot',
-      'post.replyParent',
-      'post.creator as postAuthorDid',
-    ])
-
-  selfQb = paginate(selfQb, {
-    limit: Math.min(limit, 10),
-    cursor,
-    keyset,
-    tryIndex: true,
-  })
-
-  const [followRes, selfRes] = await Promise.all([
-    followQb.execute(),
-    selfQb.execute(),
-  ])
-
-  const feedItems: FeedRow[] = [...followRes, ...selfRes]
-    .sort((a, b) => {
-      if (a.sortAt > b.sortAt) return -1
-      if (a.sortAt < b.sortAt) return 1
-      return a.cid > b.cid ? -1 : 1
-    })
-    .slice(0, limit)
-
   return {
-    params,
-    feedItems,
-    cursor: keyset.packFromResult(feedItems),
+    posts: res.uris,
+    cursor: parseString(res.cursor),
   }
 }
 
-const hydration = async (
-  state: SkeletonState,
-  ctx: Context,
-): Promise<HydrationState> => {
-  const { feedService } = ctx
-  const { params, feedItems } = state
-  const refs = feedService.feedItemRefs(feedItems)
-  const hydrated = await feedService.feedHydration({
-    ...refs,
-    viewer: params.viewer,
-  })
-  return { ...state, ...hydrated }
+const hydration = async (inputs: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+}): Promise<HydrationState> => {
+  const { ctx, params, skeleton } = inputs
+  return ctx.hydrator.hydrateFeedPosts(skeleton.posts, params.viewer)
 }
 
-const noBlocksOrMutes = (state: HydrationState): HydrationState => {
-  const { viewer } = state.params
-  state.feedItems = state.feedItems.filter(
-    (item) =>
-      !state.bam.block([viewer, item.postAuthorDid]) &&
-      !state.bam.block([viewer, item.originatorDid]) &&
-      !state.bam.mute([viewer, item.postAuthorDid]) &&
-      !state.bam.mute([viewer, item.originatorDid]),
+const noBlocksOrMutes = (inputs: {
+  ctx: Context
+  skeleton: Skeleton
+  hydration: HydrationState
+}): Skeleton => {
+  const { ctx, skeleton, hydration } = inputs
+  skeleton.posts = skeleton.posts.filter(
+    (uri) => !ctx.views.feedItemBlockOrMuteExists(uri, hydration),
   )
-  return state
+  return skeleton
 }
 
-const presentation = (state: HydrationState, ctx: Context) => {
-  const { feedService } = ctx
-  const { feedItems, cursor, params } = state
-  const feed = feedService.views.formatFeed(feedItems, state, params.viewer)
-  return { feed, cursor }
+const presentation = (inputs: {
+  ctx: Context
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, skeleton, hydration } = inputs
+  const feed = mapDefined(skeleton.posts, (uri) =>
+    ctx.views.feedViewPost(uri, hydration),
+  )
+  return { feed, cursor: skeleton.cursor }
 }
 
 type Context = {
-  db: Database
-  feedService: FeedService
+  hydrator: Hydrator
+  views: Views
+  dataplane: DataPlaneClient
 }
 
 type Params = QueryParams & { viewer: string }
 
-type SkeletonState = {
-  params: Params
-  feedItems: FeedRow[]
+type Skeleton = {
+  posts: string[]
   cursor?: string
 }
-
-type HydrationState = SkeletonState & FeedHydrationState

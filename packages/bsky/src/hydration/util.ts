@@ -17,6 +17,7 @@ export type RecordInfo<T> = {
   record: T
   cid: CID
   indexedAt?: Date
+  takenDown: boolean
 }
 
 export const parseRecord = <T>(entry: Record): RecordInfo<T> | undefined => {
@@ -24,7 +25,7 @@ export const parseRecord = <T>(entry: Record): RecordInfo<T> | undefined => {
   const cid = parseCid(entry.cid)
   const indexedAt = entry.indexedAt?.toDate()
   if (!record || !cid) return
-  return { record, cid, indexedAt }
+  return { record, cid, indexedAt, takenDown: entry.takenDown }
 }
 
 export const parseRecordBytes = <T>(

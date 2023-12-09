@@ -192,18 +192,25 @@ export class Hydrator {
   async hydratePosts(
     uris: string[],
     viewer: string | null,
+    includeTakedowns = false,
   ): Promise<HydrationState> {
-    const postsLayer0 = await this.feed.getPosts(uris)
+    const postsLayer0 = await this.feed.getPosts(uris, includeTakedowns)
     // first level embeds
     const urisLayer1 = nestedRecordUrisFromPosts(postsLayer0)
     const urisLayer1ByCollection = urisByCollection(urisLayer1)
     const postUrisLayer1 = urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
-    const postsLayer1 = await this.feed.getPosts(postUrisLayer1)
+    const postsLayer1 = await this.feed.getPosts(
+      postUrisLayer1,
+      includeTakedowns,
+    )
     // second level embeds
     const urisLayer2 = nestedRecordUrisFromPosts(postsLayer1)
     const urisLayer2ByCollection = urisByCollection(urisLayer2)
     const postUrisLayer2 = urisLayer2ByCollection.get(ids.AppBskyFeedPost) ?? []
-    const postsLayer2 = await this.feed.getPosts(postUrisLayer2)
+    const postsLayer2 = await this.feed.getPosts(
+      postUrisLayer2,
+      includeTakedowns,
+    )
     // collect list/feedgen embeds, post record hydration
     const nestedListUris = [
       ...(urisLayer1ByCollection.get(ids.AppBskyGraphList) ?? []),
@@ -231,7 +238,11 @@ export class Hydrator {
       this.feed.getThreadgatesForPosts(uris),
       this.label.getLabelsForSubjects(allPostUris),
       this.hydratePostBlocks(posts),
-      this.hydrateProfiles(allPostUris.map(didFromUri), viewer),
+      this.hydrateProfiles(
+        allPostUris.map(didFromUri),
+        viewer,
+        includeTakedowns,
+      ),
       this.hydrateLists(nestedListUris, viewer),
       this.hydrateFeedGens(nestedFeedGenUris, viewer),
     ])
@@ -300,14 +311,19 @@ export class Hydrator {
   async hydrateFeedPosts(
     uris: string[],
     viewer: string | null,
+    includeTakedowns = false,
   ): Promise<HydrationState> {
     const collectionUris = urisByCollection(uris)
     const postUris = collectionUris.get(ids.AppBskyFeedPost) ?? []
     const repostUris = collectionUris.get(ids.AppBskyFeedRepost) ?? []
     const [posts, reposts, repostProfileState] = await Promise.all([
-      this.feed.getPosts(postUris),
+      this.feed.getPosts(postUris, includeTakedowns),
       this.feed.getReposts(repostUris),
-      this.hydrateProfiles(repostUris.map(didFromUri), viewer),
+      this.hydrateProfiles(
+        repostUris.map(didFromUri),
+        viewer,
+        includeTakedowns,
+      ),
     ])
     const repostedAndReplyUris: string[] = []
     reposts.forEach((repost) => {
@@ -326,6 +342,7 @@ export class Hydrator {
     const postState = await this.hydratePosts(
       [...postUris, ...repostedAndReplyUris],
       viewer,
+      includeTakedowns,
     )
     return mergeManyStates(postState, repostProfileState, {
       reposts,
