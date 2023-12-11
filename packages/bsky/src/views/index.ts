@@ -152,7 +152,7 @@ export class Views {
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return
     return {
-      muted: viewer.muted,
+      muted: viewer.muted || !!viewer.mutedByList,
       mutedByList: viewer.mutedByList
         ? this.listBasic(viewer.mutedByList, state)
         : undefined,

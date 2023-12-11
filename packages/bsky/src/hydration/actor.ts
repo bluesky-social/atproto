@@ -101,6 +101,10 @@ export class ActorHydrator {
     })
     return dids.reduce((acc, did, i) => {
       const rels = res.relationships[i]
+      if (viewer === did) {
+        // ignore self-follows, self-mutes, self-blocks
+        return acc.set(did, {})
+      }
       return acc.set(did, {
         muted: rels.muted ?? false,
         mutedByList: parseString(rels.mutedByList),
