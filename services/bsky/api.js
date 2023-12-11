@@ -25,7 +25,6 @@ const {
   Redis,
   ServerConfig,
   BskyAppView,
-  ViewMaintainer,
   makeAlgos,
   PeriodicModerationEventReversal,
 } = require('@atproto/bsky')
@@ -132,14 +131,6 @@ const main = async () => {
     imgInvalidator,
     algos,
   })
-  // separate db needed for more permissions
-  const viewMaintainerDb = new PrimaryDatabase({
-    url: env.dbMigratePostgresUrl,
-    schema: env.dbPostgresSchema,
-    poolSize: 2,
-  })
-  const viewMaintainer = new ViewMaintainer(viewMaintainerDb, 1800)
-  const viewMaintainerRunning = viewMaintainer.run()
 
   const periodicModerationEventReversal = new PeriodicModerationEventReversal(
     bsky.ctx,
@@ -154,9 +145,6 @@ const main = async () => {
     periodicModerationEventReversal.destroy()
     await periodicModerationEventReversalRunning
     await bsky.destroy()
-    viewMaintainer.destroy()
-    await viewMaintainerRunning
-    await viewMaintainerDb.close()
   })
 }
 
