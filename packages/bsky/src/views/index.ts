@@ -156,9 +156,8 @@ export class Views {
       mutedByList: viewer.mutedByList
         ? this.listBasic(viewer.mutedByList, state)
         : undefined,
-      blockedBy: !!viewer.blockedBy,
-      blocking: viewer.blocking,
-      // @TODO blockedByList?
+      blockedBy: !!viewer.blockedBy || !!viewer.blockedByList,
+      blocking: viewer.blocking || viewer.blockingByList,
       blockingByList: viewer.blockingByList
         ? this.listBasic(viewer.blockingByList, state)
         : undefined,
@@ -592,6 +591,7 @@ export class Views {
     } else if (parsedUri.collection === ids.AppBskyFeedGenerator) {
       const view = this.feedGenerator(uri, state)
       if (!view) return this.embedNotFound(uri)
+      view.$type = 'app.bsky.feed.defs#generatorView'
       if (view.creator.viewer?.blockedBy || view.creator.viewer?.blocking) {
         return this.embedBlocked(uri, view.creator)
       }
@@ -599,6 +599,7 @@ export class Views {
     } else if (parsedUri.collection === ids.AppBskyGraphList) {
       const view = this.list(uri, state)
       if (!view) return this.embedNotFound(uri)
+      view.$type = 'app.bsky.graph.defs#listView'
       if (view.creator.viewer?.blockedBy || view.creator.viewer?.blocking) {
         return this.embedBlocked(uri, view.creator)
       }
