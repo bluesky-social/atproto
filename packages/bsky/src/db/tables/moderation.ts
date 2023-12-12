@@ -7,6 +7,7 @@ import {
 
 export const eventTableName = 'moderation_event'
 export const subjectStatusTableName = 'moderation_subject_status'
+export const recordSnapshotTableName = 'moderation_record_snapshot'
 
 export interface ModerationEvent {
   id: Generated<number>
@@ -53,7 +54,18 @@ export interface ModerationSubjectStatus {
   comment: string | null
 }
 
+export interface ModerationRecordSnapshot {
+  id: Generated<number>
+  did: string
+  recordPath: string
+  blobCid: string | null
+  recordCid: string | null
+  recordContent: Uint8Array
+  indexedAt: string
+}
+
 export type PartialDB = {
   [eventTableName]: ModerationEvent
   [subjectStatusTableName]: ModerationSubjectStatus
+  [recordSnapshotTableName]: ModerationRecordSnapshot
 }

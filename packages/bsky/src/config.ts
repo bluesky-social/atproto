@@ -39,6 +39,7 @@ export interface ServerConfigValues {
   rateLimitsEnabled: boolean
   rateLimitBypassKey?: string
   rateLimitBypassIps?: string[]
+  moderationSnapshotExpiryInDays?: number
 }
 
 export class ServerConfig {
@@ -126,6 +127,10 @@ export class ServerConfig {
         )
       : undefined
 
+    const moderationSnapshotExpiryInDays = parseIntWithFallback(
+      process.env.MODERATION_SNAPSHOT_EXPIRY_IN_DAYS,
+      30,
+    )
     return new ServerConfig({
       version,
       debugMode,
@@ -158,6 +163,7 @@ export class ServerConfig {
       rateLimitsEnabled,
       rateLimitBypassKey,
       rateLimitBypassIps,
+      moderationSnapshotExpiryInDays,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -285,6 +291,10 @@ export class ServerConfig {
 
   get moderationPushUrl() {
     return this.cfg.moderationPushUrl
+  }
+
+  get moderationSnapshotExpiryInDays() {
+    return this.cfg.moderationSnapshotExpiryInDays
   }
 
   get rateLimitsEnabled() {

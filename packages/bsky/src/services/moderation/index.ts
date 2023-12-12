@@ -19,6 +19,7 @@ import {
 import { addHoursToDate } from '../../util/date'
 import {
   adjustModerationSubjectStatus,
+  createModerationRecordSnapshot,
   getStatusIdentifierFromSubject,
 } from './status'
 import {
@@ -264,7 +265,11 @@ export class ModerationService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    await adjustModerationSubjectStatus(this.db, modEvent, subjectBlobCids)
+    // These are not dependent on each other in any way and snapshots are kinda fire and forget so running them in parallel
+    await Promise.all([
+      adjustModerationSubjectStatus(this.db, modEvent, subjectBlobCids),
+      createModerationRecordSnapshot(this.db, modEvent, subjectBlobCids),
+    ])
 
     return modEvent
   }
@@ -647,6 +652,18 @@ export class ModerationService {
     const result = await builder.select('takendown').executeTakeFirst()
 
     return !!result?.takendown
+  }
+
+  async cleanupExpiredRecordSnapshots(expiryInDays: number): Promise<void> {
+    await this.db.db
+      .deleteFrom('moderation_record_snapshot')
+      .where(
+        'indexedAt',
+        '<',
+        // The API is a bit odd here but by passing a negative value as the first param, we are subtracting the number of hours from current timestamp
+        addHoursToDate(-(expiryInDays * 24), new Date()).toISOString(),
+      )
+      .execute()
   }
 }
 

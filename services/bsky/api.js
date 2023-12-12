@@ -27,6 +27,7 @@ const {
   BskyAppView,
   makeAlgos,
   PeriodicModerationEventReversal,
+  PeriodicModerationSnapshotCleanup,
 } = require('@atproto/bsky')
 
 const main = async () => {
@@ -137,13 +138,21 @@ const main = async () => {
   )
   const periodicModerationEventReversalRunning =
     periodicModerationEventReversal.run()
+  const periodicModerationSnapshotCleanup =
+    new PeriodicModerationSnapshotCleanup(bsky.ctx)
+  const periodicModerationSnapshotCleanupRunning =
+    periodicModerationSnapshotCleanup.run()
 
   await bsky.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
     // Gracefully shutdown periodic-moderation-event-reversal before destroying bsky instance
     periodicModerationEventReversal.destroy()
-    await periodicModerationEventReversalRunning
+    periodicModerationSnapshotCleanup.destroy()
+    await Promise.all([
+      periodicModerationEventReversalRunning,
+      periodicModerationSnapshotCleanupRunning,
+    ])
     await bsky.destroy()
   })
 }

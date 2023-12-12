@@ -2,14 +2,17 @@
 
 import { AtUri } from '@atproto/syntax'
 import { PrimaryDatabase } from '../../db'
-import { ModerationSubjectStatus } from '../../db/tables/moderation'
+import {
+  ModerationRecordSnapshot,
+  ModerationSubjectStatus,
+} from '../../db/tables/moderation'
 import {
   REVIEWOPEN,
   REVIEWCLOSED,
   REVIEWESCALATED,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
-import { HOUR } from '@atproto/common'
+import { HOUR, cborEncode } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { sql } from 'kysely'
 
@@ -238,4 +241,34 @@ export const getStatusIdentifierFromSubject = (
     did: uri.host,
     recordPath: `${uri.collection}/${uri.rkey}`,
   }
+}
+
+// TODO: should we build the logic in here
+export const createModerationRecordSnapshot = async (
+  db: PrimaryDatabase,
+  moderationEvent: ModerationEventRow,
+  blobCids?: CID[],
+) => {
+  // For account-level events, we don't want to create a record snapshot
+  if (!moderationEvent.subjectUri) {
+    return
+  }
+
+  const identifier = getStatusIdentifierFromSubject(moderationEvent.subjectUri)
+  const snapshot = {
+    ...identifier,
+    indexedAt: moderationEvent.createdAt,
+  }
+  // TODO: Handle blobCids here
+  await db.db
+    .insertInto('moderation_record_snapshot')
+    .values({
+      // TODO: Figure out if we really want blob here or just json?
+      recordContent: cborEncode(''),
+      ...snapshot,
+    })
+    .onConflict((oc) =>
+      oc.constraint('moderation_record_snapshot_unique_idx').doNothing(),
+    )
+    .execute()
 }
