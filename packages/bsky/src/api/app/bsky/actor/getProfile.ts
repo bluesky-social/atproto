@@ -11,6 +11,7 @@ import {
 } from '../../../../services/actor'
 import { setRepoRev } from '../../../util'
 import { createPipeline, noRules } from '../../../../pipeline'
+import { ModerationService } from '../../../../services/moderation'
 
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
@@ -19,6 +20,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, res }) => {
       const db = ctx.db.getReplica()
       const actorService = ctx.services.actor(db)
+      const modService = ctx.services.moderation(ctx.db.getPrimary())
       const viewer = 'did' in auth.credentials ? auth.credentials.did : null
       const canViewTakendownProfile =
         auth.credentials.type === 'role' && auth.credentials.triage
@@ -26,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
       const [result, repoRev] = await Promise.allSettled([
         getProfile(
           { ...params, viewer, canViewTakendownProfile },
-          { db, actorService },
+          { db, actorService, modService },
         ),
         actorService.getRepoRev(viewer),
       ])
@@ -50,17 +52,25 @@ const skeleton = async (
   params: Params,
   ctx: Context,
 ): Promise<SkeletonState> => {
-  const { actorService } = ctx
+  const { actorService, modService } = ctx
   const { canViewTakendownProfile } = params
   const actor = await actorService.getActor(params.actor, true)
   if (!actor) {
     throw new InvalidRequestError('Profile not found')
   }
   if (!canViewTakendownProfile && softDeleted(actor)) {
-    throw new InvalidRequestError(
-      'Account has been taken down',
-      'AccountTakedown',
-    )
+    const isSuspended = await modService.isSubjectSuspended(actor.did)
+    if (isSuspended) {
+      throw new InvalidRequestError(
+        'Account has been temporarily suspended',
+        'AccountTakedown',
+      )
+    } else {
+      throw new InvalidRequestError(
+        'Account has been taken down',
+        'AccountTakedown',
+      )
+    }
   }
   return { params, actor }
 }
@@ -95,6 +105,7 @@ const presentation = (state: HydrationState, ctx: Context) => {
 type Context = {
   db: Database
   actorService: ActorService
+  modService: ModerationService
 }
 
 type Params = QueryParams & {

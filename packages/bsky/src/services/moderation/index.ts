@@ -323,6 +323,18 @@ export class ModerationService {
     return subjectsDueForReversal
   }
 
+  async isSubjectSuspended(did: string): Promise<boolean> {
+    const res = await this.db.db
+      .selectFrom('moderation_subject_status')
+      .where('did', '=', did)
+      .where('recordPath', '=', '')
+      .where('suspendUntil', '>', new Date().toISOString())
+      .select('did')
+      .limit(1)
+      .executeTakeFirst()
+    return !!res
+  }
+
   async revertState({
     createdBy,
     createdAt,
