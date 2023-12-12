@@ -327,6 +327,7 @@ export class ModerationService {
     const res = await this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', did)
+      .where('recordPath', '=', '')
       .where('suspendUntil', '>', new Date().toISOString())
       .select('did')
       .limit(1)
