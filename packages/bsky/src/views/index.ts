@@ -151,18 +151,21 @@ export class Views {
   ): ProfileViewerState | undefined {
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return
+    const blockedByUri = viewer.blockedBy || viewer.blockedByList
+    const blockingUri = viewer.blocking || viewer.blockingByList
+    const block = !!blockedByUri || !!blockingUri
     return {
       muted: viewer.muted || !!viewer.mutedByList,
       mutedByList: viewer.mutedByList
         ? this.listBasic(viewer.mutedByList, state)
         : undefined,
-      blockedBy: !!viewer.blockedBy || !!viewer.blockedByList,
-      blocking: viewer.blocking || viewer.blockingByList,
+      blockedBy: !!blockedByUri,
+      blocking: blockingUri,
       blockingByList: viewer.blockingByList
         ? this.listBasic(viewer.blockingByList, state)
         : undefined,
-      following: viewer.following,
-      followedBy: viewer.followedBy,
+      following: viewer.following && !block ? viewer.following : undefined,
+      followedBy: viewer.followedBy && !block ? viewer.followedBy : undefined,
     }
   }
 

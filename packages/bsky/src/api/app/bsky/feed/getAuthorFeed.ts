@@ -5,10 +5,15 @@ import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFe
 import AppContext from '../../../../context'
 import { setRepoRev } from '../../../util'
 import { createPipelineNew } from '../../../../pipeline'
-import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import {
+  HydrationState,
+  Hydrator,
+  mergeStates,
+} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
+import { Actor } from '../../../../hydration/actor'
 
 export default function (server: Server, ctx: AppContext) {
   const getAuthorFeed = createPipelineNew(
@@ -47,8 +52,9 @@ export const skeleton = async (inputs: {
   if (!did) {
     throw new InvalidRequestError('Profile not found')
   }
-  const actor = await ctx.hydrator.actor.getActors([did])
-  if (!actor.get(did) || actor.get(did)?.takendown) {
+  const actors = await ctx.hydrator.actor.getActors([did])
+  const actor = actors.get(did)
+  if (!actor || actor.takendown) {
     throw new InvalidRequestError('Profile not found')
   }
   const res = await ctx.dataplane.getAuthorFeed({
@@ -59,6 +65,7 @@ export const skeleton = async (inputs: {
     mediaOnly: params.filter === 'posts_with_media',
   })
   return {
+    actor,
     uris: res.uris,
     cursor: parseString(res.cursor),
   }
@@ -70,7 +77,16 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateFeedPosts(skeleton.uris, params.viewer)
+  const [feedPostState, profileViewerState = {}] = await Promise.all([
+    ctx.hydrator.hydrateFeedPosts(skeleton.uris, params.viewer),
+    params.viewer
+      ? ctx.hydrator.actor.getProfileViewerStates(
+          [skeleton.actor.did],
+          params.viewer,
+        )
+      : undefined,
+  ])
+  return mergeStates(feedPostState, profileViewerState)
 }
 
 const noBlocksOrMutedReposts = (inputs: {
@@ -79,6 +95,19 @@ const noBlocksOrMutedReposts = (inputs: {
   hydration: HydrationState
 }): Skeleton => {
   const { ctx, skeleton, hydration } = inputs
+  const relationship = hydration.profileViewers?.get(skeleton.actor.did)
+  if (relationship?.blocking || relationship?.blockingByList) {
+    throw new InvalidRequestError(
+      `Requester has blocked actor: ${skeleton.actor.did}`,
+      'BlockedActor',
+    )
+  }
+  if (relationship?.blockedBy || relationship?.blockedByList) {
+    throw new InvalidRequestError(
+      `Requester is blocked by actor: ${skeleton.actor.did}`,
+      'BlockedByActor',
+    )
+  }
   skeleton.uris = skeleton.uris.filter((uri) => {
     const bam = ctx.views.feedItemBlocksAndMutes(uri, hydration)
     return (
@@ -111,6 +140,7 @@ type Context = {
 type Params = QueryParams & { viewer: string | null }
 
 type Skeleton = {
+  actor: Actor
   uris: string[]
   cursor?: string
 }
