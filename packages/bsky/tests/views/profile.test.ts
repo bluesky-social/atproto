@@ -224,6 +224,52 @@ describe('pds profile views', () => {
     )
   })
 
+  it('blocked by actor suspension', async () => {
+    await agent.api.com.atproto.admin.emitModerationEvent(
+      {
+        event: {
+          $type: 'com.atproto.admin.defs#modEventTakedown',
+          durationInHours: 1,
+        },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: alice,
+        },
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
+    const promise = agent.api.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: await network.serviceHeaders(bob) },
+    )
+
+    await expect(promise).rejects.toThrow(
+      'Account has been temporarily suspended',
+    )
+
+    // Cleanup
+    await agent.api.com.atproto.admin.emitModerationEvent(
+      {
+        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: alice,
+        },
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
+  })
+
   async function updateProfile(did: string, record: Record<string, unknown>) {
     return await pdsAgent.api.com.atproto.repo.putRecord(
       {
