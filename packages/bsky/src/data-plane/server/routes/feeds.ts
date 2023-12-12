@@ -110,7 +110,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     let builder = db.db
       .selectFrom('post')
-      .selectAll()
+      .selectAll('post')
       .innerJoin('list_item', 'list_item.subjectDid', 'post.creator')
       .where('list_item.listUri', '=', listUri)
 

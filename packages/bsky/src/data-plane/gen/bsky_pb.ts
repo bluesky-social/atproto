@@ -1533,13 +1533,56 @@ export class GetActorLikesRequest extends Message<GetActorLikesRequest> {
 }
 
 /**
+ * @generated from message bsky.LikeInfo
+ */
+export class LikeInfo extends Message<LikeInfo> {
+  /**
+   * @generated from field: string uri = 1;
+   */
+  uri = "";
+
+  /**
+   * @generated from field: string subject = 2;
+   */
+  subject = "";
+
+  constructor(data?: PartialMessage<LikeInfo>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.LikeInfo";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "subject", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): LikeInfo {
+    return new LikeInfo().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): LikeInfo {
+    return new LikeInfo().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): LikeInfo {
+    return new LikeInfo().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: LikeInfo | PlainMessage<LikeInfo> | undefined, b: LikeInfo | PlainMessage<LikeInfo> | undefined): boolean {
+    return proto3.util.equals(LikeInfo, a, b);
+  }
+}
+
+/**
  * @generated from message bsky.GetActorLikesResponse
  */
 export class GetActorLikesResponse extends Message<GetActorLikesResponse> {
   /**
-   * @generated from field: repeated string uris = 1;
+   * @generated from field: repeated bsky.LikeInfo likes = 1;
    */
-  uris: string[] = [];
+  likes: LikeInfo[] = [];
 
   /**
    * @generated from field: string cursor = 2;
@@ -1554,7 +1597,7 @@ export class GetActorLikesResponse extends Message<GetActorLikesResponse> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetActorLikesResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 1, name: "likes", kind: "message", T: LikeInfo, repeated: true },
     { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 

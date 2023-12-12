@@ -207,8 +207,13 @@ message GetActorLikesRequest {
   string cursor = 3;
 }
 
+message LikeInfo {
+  string uri = 1;
+  string subject = 2;
+}
+
 message GetActorLikesResponse {
-  repeated string uris = 1;
+  repeated LikeInfo likes = 1;
   string cursor = 2;
 }
 

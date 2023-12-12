@@ -414,16 +414,6 @@ export class Views {
       state,
       usePostViewUnion,
     )
-    if ((root || parent) && !(root && parent)) {
-      console.log('HERE')
-      console.log(postRecord.reply)
-      const parentPost = this.post(postRecord.reply.parent.uri, state)
-      console.log(parentPost)
-      const rootRecord = state.posts?.get(postRecord.reply.root.uri)
-      console.log(rootRecord)
-      const parentRecord = state.posts?.get(postRecord.reply.parent.uri)
-      console.log(parentRecord)
-    }
     return root && parent ? { root, parent } : undefined
   }
 

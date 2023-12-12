@@ -65,7 +65,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const likes = await builder.execute()
 
     return {
-      uris: likes.map((l) => l.uri),
+      likes: likes.map((l) => ({
+        uri: l.uri,
+        subject: l.subject,
+      })),
       cursor: keyset.packFromResult(likes),
     }
   },
