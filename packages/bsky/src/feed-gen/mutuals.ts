@@ -46,11 +46,15 @@ const handler: AlgoHandler = async (
 
   feedQb = paginate(feedQb, { limit, cursor, keyset })
 
-  const feedItems = await feedQb.execute()
+  const feedItemsRes = await feedQb.execute()
+  const feedItems = feedItemsRes.map((item) => ({
+    itemUri: item.uri,
+    postUri: item.postUri,
+  }))
 
   return {
     feedItems,
-    cursor: keyset.packFromResult(feedItems),
+    cursor: keyset.packFromResult(feedItemsRes),
   }
 }
 
