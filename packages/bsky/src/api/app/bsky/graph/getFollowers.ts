@@ -47,15 +47,15 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   if (!subjectDid) {
     throw new InvalidRequestError(`Actor not found: ${params.actor}`)
   }
-  const result = await ctx.hydrator.graph.getActorFollowers({
+  const { uris, cursor } = await ctx.hydrator.graph.getActorFollowers({
     did: subjectDid,
     cursor: params.cursor,
     limit: params.limit,
   })
   return {
     subjectDid,
-    followUris: result.uris,
-    cursor: result.cursor,
+    followUris: uris,
+    cursor: cursor || undefined,
   }
 }
 

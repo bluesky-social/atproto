@@ -42,7 +42,7 @@ const skeleton = async (
       cursor: params.cursor,
       limit: params.limit,
     })
-  return { listUris, cursor }
+  return { listUris, cursor: cursor || undefined }
 }
 
 const hydration = async (

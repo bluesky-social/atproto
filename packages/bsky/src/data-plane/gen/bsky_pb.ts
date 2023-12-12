@@ -2795,6 +2795,101 @@ export class GetListCountResponse extends Message<GetListCountResponse> {
 }
 
 /**
+ * - return list of uris of lists created by A
+ *     - `getLists`
+ *
+ * @generated from message bsky.GetActorListsRequest
+ */
+export class GetActorListsRequest extends Message<GetActorListsRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = "";
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0;
+
+  /**
+   * @generated from field: string cursor = 3;
+   */
+  cursor = "";
+
+  constructor(data?: PartialMessage<GetActorListsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetActorListsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetActorListsRequest {
+    return new GetActorListsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetActorListsRequest {
+    return new GetActorListsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetActorListsRequest {
+    return new GetActorListsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetActorListsRequest | PlainMessage<GetActorListsRequest> | undefined, b: GetActorListsRequest | PlainMessage<GetActorListsRequest> | undefined): boolean {
+    return proto3.util.equals(GetActorListsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetActorListsResponse
+ */
+export class GetActorListsResponse extends Message<GetActorListsResponse> {
+  /**
+   * @generated from field: repeated string list_uris = 1;
+   */
+  listUris: string[] = [];
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = "";
+
+  constructor(data?: PartialMessage<GetActorListsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetActorListsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "list_uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetActorListsResponse {
+    return new GetActorListsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetActorListsResponse {
+    return new GetActorListsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetActorListsResponse {
+    return new GetActorListsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetActorListsResponse | PlainMessage<GetActorListsResponse> | undefined, b: GetActorListsResponse | PlainMessage<GetActorListsResponse> | undefined): boolean {
+    return proto3.util.equals(GetActorListsResponse, a, b);
+  }
+}
+
+/**
  * - return boolean if user A has muted user B
  *     - hydrating mute state onto profiles
  *

@@ -6,6 +6,27 @@ import { keyBy } from '@atproto/common'
 import { TimeCidKeyset, paginate } from '../../../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
+  async getActorLists(req) {
+    const { actorDid, cursor, limit } = req
+    const { ref } = db.db.dynamic
+    let builder = db.db
+      .selectFrom('list')
+      .where('creator', '=', actorDid)
+      .selectAll()
+    const keyset = new TimeCidKeyset(ref('list.sortAt'), ref('list.cid'))
+    builder = paginate(builder, {
+      limit,
+      cursor,
+      keyset,
+      tryIndex: true,
+    })
+    const lists = await builder.execute()
+    return {
+      listUris: lists.map((item) => item.uri),
+      cursor: keyset.packFromResult(lists),
+    }
+  },
+
   async getListMembers(req) {
     const { listUri, cursor, limit } = req
     const { ref } = db.db.dynamic

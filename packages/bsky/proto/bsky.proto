@@ -392,6 +392,20 @@ message GetListCountResponse {
   int32 count = 1;
 }
 
+
+// - return list of uris of lists created by A
+//     - `getLists`
+message GetActorListsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetActorListsResponse {
+  repeated string list_uris = 1;
+  string cursor = 2;
+}
+
 //
 // Mutes
 //
@@ -855,6 +869,7 @@ service Service {
   rpc GetBlockExistence(GetBlockExistenceRequest) returns (GetBlockExistenceResponse);
 
   // Lists
+  rpc GetActorLists(GetActorListsRequest) returns (GetActorListsResponse);
   rpc GetListMembers(GetListMembersRequest) returns (GetListMembersResponse);
   rpc GetListMembership(GetListMembershipRequest) returns (GetListMembershipResponse);
   rpc GetListCount(GetListCountRequest) returns (GetListCountResponse);
