@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.7.3
+
+### Patch Changes
+
+- [#1962](https://github.com/bluesky-social/atproto/pull/1962) [`7dec9df3`](https://github.com/bluesky-social/atproto/commit/7dec9df3b583ee8c06c0c6a7e32c259820dc84a5) Thanks [@pfrazee](https://github.com/pfrazee)! - Add seenAt time to listNotifications output
+
 ## 0.7.2
 
 ### Patch Changes
