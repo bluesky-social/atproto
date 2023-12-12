@@ -104,7 +104,7 @@ export class Views {
     if (!basicView) return
     return {
       ...basicView,
-      description: actor.profile?.description,
+      description: actor.profile?.description || undefined,
       indexedAt: actor.indexedAt?.toISOString(),
     }
   }
