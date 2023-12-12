@@ -56,11 +56,8 @@ export class FeedHydrator {
   async getPosts(uris: string[], includeTakedowns = false): Promise<Posts> {
     const res = await this.dataplane.getPostRecords({ uris })
     return uris.reduce((acc, uri, i) => {
-      const record = parseRecord<PostRecord>(res.records[i])
-      if (!record || (record.takenDown && !includeTakedowns)) {
-        return acc.set(uri, null)
-      }
-      return acc.set(uri, parseRecord<PostRecord>(res.records[i]) ?? null)
+      const record = parseRecord<PostRecord>(res.records[i], includeTakedowns)
+      return acc.set(uri, record ?? null)
     }, new HydrationMap<Post>())
   }
 
@@ -101,10 +98,17 @@ export class FeedHydrator {
     }, new HydrationMap<PostAgg>())
   }
 
-  async getFeedGens(uris: string[]): Promise<FeedGens> {
+  async getFeedGens(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<FeedGens> {
     const res = await this.dataplane.getFeedGeneratorRecords({ uris })
     return uris.reduce((acc, uri, i) => {
-      return acc.set(uri, parseRecord<FeedGenRecord>(res.records[i]) ?? null)
+      const record = parseRecord<FeedGenRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      return acc.set(uri, record ?? null)
     }, new HydrationMap<FeedGen>())
   }
 
@@ -132,7 +136,10 @@ export class FeedHydrator {
     }, new HydrationMap<FeedGenAgg>())
   }
 
-  async getThreadgatesForPosts(postUris: string[]): Promise<Threadgates> {
+  async getThreadgatesForPosts(
+    postUris: string[],
+    includeTakedowns = false,
+  ): Promise<Threadgates> {
     const uris = postUris.map((uri) => {
       const parsed = new AtUri(uri)
       return AtUri.make(
@@ -143,22 +150,28 @@ export class FeedHydrator {
     })
     const res = await this.dataplane.getThreadGateRecords({ uris })
     return uris.reduce((acc, uri, i) => {
-      return acc.set(uri, parseRecord<ThreadgateRecord>(res.records[i]) ?? null)
+      const record = parseRecord<ThreadgateRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      return acc.set(uri, record ?? null)
     }, new HydrationMap<Threadgate>())
   }
 
   // @TODO may not be supported yet by data plane
-  async getLikes(uris: string[]): Promise<Likes> {
+  async getLikes(uris: string[], includeTakedowns = false): Promise<Likes> {
     const res = await this.dataplane.getLikeRecords({ uris })
     return uris.reduce((acc, uri, i) => {
-      return acc.set(uri, parseRecord<LikeRecord>(res.records[i]) ?? null)
+      const record = parseRecord<LikeRecord>(res.records[i], includeTakedowns)
+      return acc.set(uri, record ?? null)
     }, new HydrationMap<Like>())
   }
 
-  async getReposts(uris: string[]): Promise<Reposts> {
+  async getReposts(uris: string[], includeTakedowns = false): Promise<Reposts> {
     const res = await this.dataplane.getRepostRecords({ uris })
     return uris.reduce((acc, uri, i) => {
-      return acc.set(uri, parseRecord<RepostRecord>(res.records[i]) ?? null)
+      const record = parseRecord<RepostRecord>(res.records[i], includeTakedowns)
+      return acc.set(uri, record ?? null)
     }, new HydrationMap<Repost>())
   }
 }

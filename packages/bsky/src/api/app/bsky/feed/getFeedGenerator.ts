@@ -14,17 +14,13 @@ export default function (server: Server, ctx: AppContext) {
       const { feed } = params
       const viewer = auth.credentials.did
 
-      const db = ctx.db.getReplica()
-      const feedService = ctx.services.feed(db)
-      const actorService = ctx.services.actor(db)
-
-      const got = await feedService.getFeedGeneratorInfos([feed], viewer)
-      const feedInfo = got[feed]
+      const hydration = await ctx.hydrator.hydrateFeedGens([feed], viewer)
+      const feedInfo = hydration.feedgens?.get(feed)
       if (!feedInfo) {
         throw new InvalidRequestError('could not find feed')
       }
 
-      const feedDid = feedInfo.feedDid
+      const feedDid = feedInfo.record.did
       let resolved: DidDocument | null
       try {
         resolved = await ctx.idResolver.did.resolve(feedDid)
@@ -47,14 +43,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const profiles = await actorService.views.profilesBasic(
-        [feedInfo.creator],
-        viewer,
-      )
-      const feedView = feedService.views.formatFeedGeneratorView(
-        feedInfo,
-        profiles,
-      )
+      const feedView = ctx.views.feedGenerator(feed, hydration)
       if (!feedView) {
         throw new InvalidRequestError('could not find feed')
       }

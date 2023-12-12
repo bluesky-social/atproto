@@ -66,18 +66,26 @@ export class Blocks {
 export class GraphHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 
-  async getLists(uris: string[]): Promise<Lists> {
+  async getLists(uris: string[], includeTakedowns = false): Promise<Lists> {
     const res = await this.dataplane.getListRecords({ uris })
     return uris.reduce((acc, uri, i) => {
-      return acc.set(uri, parseRecord<ListRecord>(res.records[i]) ?? null)
+      const record = parseRecord<ListRecord>(res.records[i], includeTakedowns)
+      return acc.set(uri, record ?? null)
     }, new HydrationMap<List>())
   }
 
   // @TODO may not be supported yet by data plane
-  async getListItems(uris: string[]): Promise<ListItems> {
+  async getListItems(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<ListItems> {
     const res = await this.dataplane.getListItemRecords({ uris })
     return uris.reduce((acc, uri, i) => {
-      return acc.set(uri, parseRecord<ListItemRecord>(res.records[i]) ?? null)
+      const record = parseRecord<ListItemRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      return acc.set(uri, record ?? null)
     }, new HydrationMap<ListItem>())
   }
 
@@ -132,10 +140,11 @@ export class GraphHydrator {
     return blocks
   }
 
-  async getFollows(uris: string[]): Promise<Follows> {
+  async getFollows(uris: string[], includeTakedowns = false): Promise<Follows> {
     const res = await this.dataplane.getFollowRecords({ uris })
     return uris.reduce((acc, uri, i) => {
-      return acc.set(uri, parseRecord<FollowRecord>(res.records[i]) ?? null)
+      const record = parseRecord<FollowRecord>(res.records[i], includeTakedowns)
+      return acc.set(uri, record ?? null)
     }, new HydrationMap<Follow>())
   }
 
