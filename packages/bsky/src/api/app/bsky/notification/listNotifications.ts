@@ -148,7 +148,7 @@ const presentation = (state: HydrationState) => {
       labels: [...recordLabels, ...recordSelfLabels],
     }
   })
-  return { notifications, cursor }
+  return { notifications, cursor, seenAt: lastSeenNotifs }
 }
 
 const getRecordMap = async (

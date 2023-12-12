@@ -7325,6 +7325,10 @@ export const schemaDict = {
                   ref: 'lex:app.bsky.notification.listNotifications#notification',
                 },
               },
+              seenAt: {
+                type: 'string',
+                format: 'datetime',
+              },
             },
           },
         },
