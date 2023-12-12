@@ -176,6 +176,13 @@ describe('notification views', () => {
         encoding: 'application/json',
       },
     )
+    const full2 = await agent.api.app.bsky.notification.listNotifications(
+      {},
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(full2.data.notifications.length).toBe(full.data.notifications.length)
+    expect(full2.data.seenAt).toEqual(seenAt)
+
     const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
       {},
       { headers: await network.serviceHeaders(alice) },
