@@ -246,25 +246,34 @@ export class Views {
   // Feed
   // ------------
 
-  feedItemBlockOrMuteExists(uri: string, state: HydrationState): boolean {
+  feedItemBlocksAndMutes(
+    uri: string,
+    state: HydrationState,
+  ): {
+    originatorMuted: boolean
+    originatorBlocked: boolean
+    authorMuted: boolean
+    authorBlocked: boolean
+  } {
     const parsed = new AtUri(uri)
     if (parsed.collection === ids.AppBskyFeedRepost) {
       const repost = state.reposts?.get(uri)
       const postUri = repost?.record.subject.uri
-      if (postUri) {
-        const postDid = creatorFromUri(postUri)
-        if (
-          this.viewerBlockExists(postDid, state) ||
-          this.viewerMuteExists(postDid, state)
-        ) {
-          return false
-        }
+      const postDid = postUri ? creatorFromUri(postUri) : undefined
+      return {
+        originatorMuted: this.viewerMuteExists(parsed.hostname, state),
+        originatorBlocked: this.viewerBlockExists(parsed.hostname, state),
+        authorMuted: !!postDid && this.viewerMuteExists(postDid, state),
+        authorBlocked: !!postDid && this.viewerBlockExists(postDid, state),
+      }
+    } else {
+      return {
+        originatorMuted: this.viewerMuteExists(parsed.hostname, state),
+        originatorBlocked: this.viewerBlockExists(parsed.hostname, state),
+        authorMuted: this.viewerMuteExists(parsed.hostname, state),
+        authorBlocked: this.viewerBlockExists(parsed.hostname, state),
       }
     }
-    return (
-      this.viewerBlockExists(parsed.hostname, state) ||
-      this.viewerMuteExists(parsed.hostname, state)
-    )
   }
 
   feedGenerator(uri: string, state: HydrationState): GeneratorView | undefined {
@@ -402,6 +411,16 @@ export class Views {
       state,
       usePostViewUnion,
     )
+    if ((root || parent) && !(root && parent)) {
+      console.log('HERE')
+      console.log(postRecord.reply)
+      const parentPost = this.post(postRecord.reply.parent.uri, state)
+      console.log(parentPost)
+      const rootRecord = state.posts?.get(postRecord.reply.root.uri)
+      console.log(rootRecord)
+      const parentRecord = state.posts?.get(postRecord.reply.parent.uri)
+      console.log(parentRecord)
+    }
     return root && parent ? { root, parent } : undefined
   }
 

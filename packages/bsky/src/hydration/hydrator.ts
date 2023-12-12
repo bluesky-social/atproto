@@ -34,6 +34,7 @@ import {
   PostViewerStates,
   Threadgates,
 } from './feed'
+import { mapDefined } from '@atproto/common'
 
 export type HydrationState = {
   actors?: Actors
@@ -325,10 +326,22 @@ export class Hydrator {
         includeTakedowns,
       ),
     ])
+    const repostPostUris = mapDefined(
+      [...reposts.values()],
+      (repost) => repost?.record.subject.uri,
+    )
+    const repostPosts = await this.feed.getPosts(
+      repostPostUris,
+      includeTakedowns,
+    )
     const repostedAndReplyUris: string[] = []
-    reposts.forEach((repost) => {
-      if (repost) {
-        repostedAndReplyUris.push(repost.record.subject.uri)
+    repostPosts.forEach((post, uri) => {
+      repostedAndReplyUris.push(uri)
+      if (post?.record.reply) {
+        repostedAndReplyUris.push(
+          post.record.reply.root.uri,
+          post.record.reply.parent.uri,
+        )
       }
     })
     posts.forEach((post) => {

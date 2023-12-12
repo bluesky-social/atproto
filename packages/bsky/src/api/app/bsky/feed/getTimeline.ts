@@ -47,7 +47,7 @@ export const skeleton = async (inputs: {
     cursor: params.cursor,
   })
   return {
-    posts: res.uris,
+    uris: res.uris,
     cursor: parseString(res.cursor),
   }
 }
@@ -58,7 +58,7 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateFeedPosts(skeleton.posts, params.viewer)
+  return ctx.hydrator.hydrateFeedPosts(skeleton.uris, params.viewer)
 }
 
 const noBlocksOrMutes = (inputs: {
@@ -67,9 +67,15 @@ const noBlocksOrMutes = (inputs: {
   hydration: HydrationState
 }): Skeleton => {
   const { ctx, skeleton, hydration } = inputs
-  skeleton.posts = skeleton.posts.filter(
-    (uri) => !ctx.views.feedItemBlockOrMuteExists(uri, hydration),
-  )
+  skeleton.uris = skeleton.uris.filter((uri) => {
+    const bam = ctx.views.feedItemBlocksAndMutes(uri, hydration)
+    return (
+      !bam.authorBlocked &&
+      !bam.authorMuted &&
+      !bam.originatorBlocked &&
+      !bam.originatorMuted
+    )
+  })
   return skeleton
 }
 
@@ -79,7 +85,7 @@ const presentation = (inputs: {
   hydration: HydrationState
 }) => {
   const { ctx, skeleton, hydration } = inputs
-  const feed = mapDefined(skeleton.posts, (uri) =>
+  const feed = mapDefined(skeleton.uris, (uri) =>
     ctx.views.feedViewPost(uri, hydration),
   )
   return { feed, cursor: skeleton.cursor }
@@ -94,6 +100,6 @@ type Context = {
 type Params = QueryParams & { viewer: string }
 
 type Skeleton = {
-  posts: string[]
+  uris: string[]
   cursor?: string
 }
