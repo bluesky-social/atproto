@@ -57,6 +57,8 @@ export type {
 } from '../lexicon/types/app/bsky/feed/defs'
 export type { ListView } from '../lexicon/types/app/bsky/graph/defs'
 
+export type { Notification as NotificationView } from '../lexicon/types/app/bsky/notification/listNotifications'
+
 export type Embed = ImagesEmbed | ExternalEmbed | RecordEmbed | RecordWithMedia
 
 export type EmbedView =

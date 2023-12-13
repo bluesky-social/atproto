@@ -559,7 +559,8 @@ message GetNotificationsRequest {
 message Notification {
   string uri = 1;
   string reason = 2;
-  google.protobuf.Timestamp timestamp = 3;
+  string reason_subject = 3;
+  google.protobuf.Timestamp timestamp = 4;
 }
 
 message GetNotificationsResponse {

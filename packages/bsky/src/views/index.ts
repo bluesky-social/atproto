@@ -33,6 +33,7 @@ import {
   ImagesEmbed,
   ImagesEmbedView,
   MaybePostView,
+  NotificationView,
   PostEmbedView,
   RecordEmbed,
   RecordEmbedView,
@@ -46,6 +47,8 @@ import {
 } from './types'
 import { Label } from '../hydration/label'
 import { Repost } from '../hydration/feed'
+import { RecordInfo } from '../hydration/util'
+import { Notification } from '../data-plane/gen/bsky_pb'
 
 export class Views {
   constructor(public imgUriBuilder: ImageUriBuilder) {}
@@ -735,5 +738,46 @@ export class Views {
   userReplyDisabled(_uri: string, _state: HydrationState): boolean | undefined {
     // @TODO
     return undefined
+  }
+
+  notification(
+    notif: Notification,
+    lastSeenAt: string | undefined,
+    state: HydrationState,
+  ): NotificationView | undefined {
+    if (!notif.timestamp || !notif.reason) return
+    const uri = new AtUri(notif.uri)
+    const authorDid = uri.hostname
+    const author = this.profile(authorDid, state)
+    if (!author) return
+    let recordInfo: RecordInfo<Record<string, unknown>> | null | undefined
+    if (uri.collection === ids.AppBskyFeedPost) {
+      recordInfo = state.posts?.get(notif.uri)
+    } else if (uri.collection === ids.AppBskyFeedLike) {
+      recordInfo = state.likes?.get(notif.uri)
+    } else if (uri.collection === ids.AppBskyFeedRepost) {
+      recordInfo = state.reposts?.get(notif.uri)
+    } else if (uri.collection === ids.AppBskyGraphFollow) {
+      recordInfo = state.follows?.get(notif.uri)
+    }
+    if (!recordInfo) return
+    const labels = state.labels?.get(notif.uri) ?? []
+    const selfLabels = this.selfLabels({
+      uri: notif.uri,
+      cid: recordInfo.cid.toString(),
+      record: recordInfo.record,
+    })
+    const indexedAt = notif.timestamp.toDate().toISOString()
+    return {
+      uri: notif.uri,
+      cid: recordInfo.cid.toString(),
+      author,
+      reason: notif.reason,
+      reasonSubject: notif.reasonSubject || undefined,
+      record: recordInfo.record,
+      isRead: lastSeenAt ? lastSeenAt >= indexedAt : false,
+      indexedAt: notif.timestamp.toDate().toISOString(),
+      labels: [...labels, ...selfLabels],
+    }
   }
 }

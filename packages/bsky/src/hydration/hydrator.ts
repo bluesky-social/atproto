@@ -447,7 +447,7 @@ export class Hydrator {
         this.feed.getPosts(postUris), // reason: mention, reply, quote
         this.feed.getLikes(likeUris), // reason: like
         this.feed.getReposts(repostUris), // reason: repost
-        this.graph.getFollows(followUris),
+        this.graph.getFollows(followUris), // reason: follow
         this.label.getLabelsForSubjects(uris),
         this.hydrateProfiles(uris.map(didFromUri), viewer),
       ])

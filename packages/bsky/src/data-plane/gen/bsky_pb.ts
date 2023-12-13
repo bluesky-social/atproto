@@ -3838,7 +3838,12 @@ export class Notification extends Message<Notification> {
   reason = "";
 
   /**
-   * @generated from field: google.protobuf.Timestamp timestamp = 3;
+   * @generated from field: string reason_subject = 3;
+   */
+  reasonSubject = "";
+
+  /**
+   * @generated from field: google.protobuf.Timestamp timestamp = 4;
    */
   timestamp?: Timestamp;
 
@@ -3852,7 +3857,8 @@ export class Notification extends Message<Notification> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "reason", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "timestamp", kind: "message", T: Timestamp },
+    { no: 3, name: "reason_subject", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "timestamp", kind: "message", T: Timestamp },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Notification {

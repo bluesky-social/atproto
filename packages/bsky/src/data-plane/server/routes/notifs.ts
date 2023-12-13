@@ -47,6 +47,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const notifications = notifsRes.map((notif) => ({
       uri: notif.uri,
       reason: notif.reason,
+      reasonSubject: notif.reasonSubject ?? undefined,
       timestamp: Timestamp.fromDate(new Date(notif.sortAt)),
     }))
     return {
