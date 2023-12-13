@@ -15,6 +15,7 @@ import {
   NotFoundPost,
   PostView,
   ReasonRepost,
+  ThreadViewPost,
   ThreadgateView,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { ListView, ListViewBasic } from '../lexicon/types/app/bsky/graph/defs'
@@ -474,6 +475,86 @@ export class Views {
     }
   }
 
+  // Threads
+  // ------------
+
+  thread(
+    anchor: string,
+    state: HydrationState,
+    opts: { height: number; depth: number },
+  ): ThreadViewPost | NotFoundPost | BlockedPost {
+    const post = this.post(anchor, state)
+    if (!post) return this.notFoundPost(anchor)
+    if (this.viewerBlockExists(post.author.did, state)) {
+      return this.blockedPost(anchor, post.author.did, state)
+    }
+
+    const includedPosts = new Set<string>([anchor])
+    const childrenByParentUri: Record<string, string[]> = {}
+    state.posts?.forEach((post, uri) => {
+      const parentUri = post?.record.reply?.parent.uri
+      if (!parentUri) return
+      if (includedPosts.has(uri)) return
+      includedPosts.add(uri)
+      childrenByParentUri[parentUri] ??= []
+      childrenByParentUri[parentUri].push(uri)
+    })
+
+    return {
+      $type: 'app.bsky.feed.defs#threadViewPost',
+      post,
+      parent: this.threadParent(anchor, state, opts.height),
+      replies: this.threadReplies(
+        anchor,
+        childrenByParentUri,
+        state,
+        opts.depth,
+      ),
+    }
+  }
+
+  threadParent(
+    childUri: string,
+    state: HydrationState,
+    height: number,
+  ): ThreadViewPost | NotFoundPost | BlockedPost | undefined {
+    if (height < 1) return undefined
+    const parentUri = state.posts?.get(childUri)?.record.reply?.parent.uri
+    if (!parentUri) return undefined
+    const post = this.post(parentUri, state)
+    if (!post) return this.notFoundPost(parentUri)
+    if (this.viewerBlockExists(post.author.did, state)) {
+      return this.blockedPost(parentUri, post.author.did, state)
+    }
+    return {
+      $type: 'app.bsky.feed.defs#threadViewPost',
+      post,
+      parent: this.threadParent(parentUri, state, height - 1),
+    }
+  }
+
+  threadReplies(
+    parentUri: string,
+    childrenByParentUri: Record<string, string[]>,
+    state: HydrationState,
+    depth: number,
+  ): (ThreadViewPost | NotFoundPost | BlockedPost)[] | undefined {
+    if (depth < 1) return undefined
+    const childrenUris = childrenByParentUri[parentUri] ?? []
+    return childrenUris.map((uri) => {
+      const post = this.post(uri, state)
+      if (!post) return this.notFoundPost(parentUri)
+      if (this.viewerBlockExists(post.author.did, state)) {
+        return this.blockedPost(parentUri, post.author.did, state)
+      }
+      return {
+        $type: 'app.bsky.feed.defs#threadViewPost',
+        post,
+        replies: this.threadReplies(uri, childrenByParentUri, state, depth - 1),
+      }
+    })
+  }
+
   // Embeds
   // ------------
 
@@ -596,7 +677,7 @@ export class Views {
     if (parsedUri.collection === ids.AppBskyFeedPost) {
       const view = this.embedPostView(uri, state, depth)
       if (!view) return this.embedNotFound(uri)
-      if (view.author.viewer?.blockedBy || view.author.viewer?.blocking) {
+      if (this.viewerBlockExists(view.author.did, state)) {
         return this.embedBlocked(uri, view.author)
       }
       return this.recordEmbedWrapper(view, withTypeTag)
@@ -604,7 +685,7 @@ export class Views {
       const view = this.feedGenerator(uri, state)
       if (!view) return this.embedNotFound(uri)
       view.$type = 'app.bsky.feed.defs#generatorView'
-      if (view.creator.viewer?.blockedBy || view.creator.viewer?.blocking) {
+      if (this.viewerBlockExists(view.creator.did, state)) {
         return this.embedBlocked(uri, view.creator)
       }
       return this.recordEmbedWrapper(view, withTypeTag)
@@ -612,7 +693,7 @@ export class Views {
       const view = this.list(uri, state)
       if (!view) return this.embedNotFound(uri)
       view.$type = 'app.bsky.graph.defs#listView'
-      if (view.creator.viewer?.blockedBy || view.creator.viewer?.blocking) {
+      if (this.viewerBlockExists(view.creator.did, state)) {
         return this.embedBlocked(uri, view.creator)
       }
       return this.recordEmbedWrapper(view, withTypeTag)
