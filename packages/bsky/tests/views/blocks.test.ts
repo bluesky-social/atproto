@@ -80,7 +80,6 @@ describe('pds views with blocking', () => {
           viewer: {
             blockedBy: false,
             blocking: danBlockUri,
-            muted: false,
           },
         },
       },
@@ -98,7 +97,6 @@ describe('pds views with blocking', () => {
           did: dan,
           viewer: {
             blockedBy: true,
-            muted: false,
           },
         },
       },

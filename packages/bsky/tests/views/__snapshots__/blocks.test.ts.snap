@@ -140,7 +140,6 @@ Object {
         "did": "user(2)",
         "viewer": Object {
           "blockedBy": true,
-          "muted": false,
         },
       },
       "blocked": true,
@@ -348,7 +347,6 @@ Object {
           "viewer": Object {
             "blockedBy": false,
             "blocking": "record(7)",
-            "muted": false,
           },
         },
         "blocked": true,

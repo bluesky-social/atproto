@@ -173,6 +173,20 @@ export class Views {
     }
   }
 
+  blockedProfileViewer(
+    did: string,
+    state: HydrationState,
+  ): ProfileViewerState | undefined {
+    const viewer = state.profileViewers?.get(did)
+    if (!viewer) return
+    const blockedByUri = viewer.blockedBy || viewer.blockedByList
+    const blockingUri = viewer.blocking || viewer.blockingByList
+    return {
+      blockedBy: !!blockedByUri,
+      blocking: blockingUri,
+    }
+  }
+
   // Graph
   // ------------
 
@@ -452,7 +466,7 @@ export class Views {
       blocked: true,
       author: {
         did: authorDid,
-        viewer: this.profileViewer(authorDid, state),
+        viewer: this.blockedProfileViewer(authorDid, state),
       },
     }
   }
@@ -640,7 +654,6 @@ export class Views {
     state: HydrationState,
   ): { $type: string; record: EmbedBlocked } {
     const creator = creatorFromUri(uri)
-    const creatorViewer = this.profileViewer(creator, state)
     return {
       $type: 'app.bsky.embed.record#view',
       record: {
@@ -649,12 +662,7 @@ export class Views {
         blocked: true,
         author: {
           did: creator,
-          viewer: creatorViewer
-            ? {
-                blockedBy: creatorViewer?.blockedBy,
-                blocking: creatorViewer?.blocking,
-              }
-            : undefined,
+          viewer: this.blockedProfileViewer(creator, state),
         },
       },
     }
