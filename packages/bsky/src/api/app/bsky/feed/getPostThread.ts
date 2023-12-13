@@ -1,26 +1,9 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AtUri } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
-import {
-  BlockedPost,
-  NotFoundPost,
-  ThreadViewPost,
-  isNotFoundPost,
-} from '../../../../lexicon/types/app/bsky/feed/defs'
+import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import AppContext from '../../../../context'
-import {
-  FeedService,
-  FeedRow,
-  FeedHydrationState,
-} from '../../../../services/feed'
-import {
-  getAncestorsAndSelfQb,
-  getDescendentsQb,
-} from '../../../../services/util/post'
-import { Database } from '../../../../db'
 import { setRepoRev } from '../../../util'
-import { ActorInfoMap, ActorService } from '../../../../services/actor'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -99,6 +82,7 @@ const presentation = (
   return { thread }
 }
 
+// @TODO tidy
 // const composeThread = (
 //   threadData: PostThread,
 //   actors: ActorInfoMap,
