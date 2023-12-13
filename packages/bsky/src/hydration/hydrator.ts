@@ -545,6 +545,7 @@ export const mergeStates = (
     postBlocks: mergeMaps(stateA.postBlocks, stateB.postBlocks),
     reposts: mergeMaps(stateA.reposts, stateB.reposts),
     follows: mergeMaps(stateA.follows, stateB.follows),
+    followBlocks: mergeMaps(stateA.followBlocks, stateB.followBlocks),
     lists: mergeMaps(stateA.lists, stateB.lists),
     listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
     listItems: mergeMaps(stateA.listItems, stateB.listItems),

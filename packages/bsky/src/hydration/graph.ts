@@ -1,4 +1,5 @@
 import { Record as FollowRecord } from '../lexicon/types/app/bsky/graph/follow'
+import { Record as BlockRecord } from '../lexicon/types/app/bsky/graph/block'
 import { Record as ListRecord } from '../lexicon/types/app/bsky/graph/list'
 import { Record as ListItemRecord } from '../lexicon/types/app/bsky/graph/listitem'
 import { DataPlaneClient } from '../data-plane/client'
@@ -20,6 +21,8 @@ export type ListViewerStates = HydrationMap<ListViewerState>
 
 export type Follow = RecordInfo<FollowRecord>
 export type Follows = HydrationMap<Follow>
+
+export type Block = RecordInfo<BlockRecord>
 
 export type RelationshipPair = [didA: string, didB: string]
 
@@ -127,10 +130,7 @@ export class GraphHydrator {
   }
 
   async getBidirectionalBlocks(pairs: RelationshipPair[]): Promise<Blocks> {
-    const deduped = dedupePairs(pairs).map((pair) => ({
-      a: pair[0],
-      b: pair[0],
-    }))
+    const deduped = dedupePairs(pairs).map(([a, b]) => ({ a, b }))
     const res = await this.dataplane.getBlockExistence({ pairs: deduped })
     const blocks = new Blocks()
     for (let i = 0; i < deduped.length; i++) {
@@ -146,6 +146,14 @@ export class GraphHydrator {
       const record = parseRecord<FollowRecord>(res.records[i], includeTakedowns)
       return acc.set(uri, record ?? null)
     }, new HydrationMap<Follow>())
+  }
+
+  async getBlocks(uris: string[], includeTakedowns = false): Promise<Follows> {
+    const res = await this.dataplane.getBlockRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<BlockRecord>(res.records[i], includeTakedowns)
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<Block>())
   }
 
   async getActorFollows(input: {

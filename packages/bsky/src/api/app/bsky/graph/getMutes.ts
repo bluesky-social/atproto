@@ -1,3 +1,4 @@
+import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getMutes'
 import AppContext from '../../../../context'
@@ -10,7 +11,6 @@ import {
   createPipelineNew,
   noRulesNew,
 } from '../../../../pipeline'
-import { mapDefined } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   const getMutes = createPipelineNew(
