@@ -140,6 +140,7 @@ Object {
         "did": "user(2)",
         "viewer": Object {
           "blockedBy": true,
+          "muted": false,
         },
       },
       "blocked": true,
@@ -258,29 +259,17 @@ Object {
     },
     "replies": Array [
       Object {
-        "$type": "app.bsky.feed.defs#blockedPost",
-        "author": Object {
-          "did": "user(2)",
-          "viewer": Object {
-            "blockedBy": false,
-            "blocking": "record(6)",
-          },
-        },
-        "blocked": true,
-        "uri": "record(5)",
-      },
-      Object {
         "$type": "app.bsky.feed.defs#threadViewPost",
         "post": Object {
           "author": Object {
-            "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(1)@jpeg",
-            "did": "user(3)",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(1)@jpeg",
+            "did": "user(2)",
             "displayName": "bobby",
             "handle": "bob.test",
             "labels": Array [],
             "viewer": Object {
               "blockedBy": false,
-              "following": "record(8)",
+              "following": "record(6)",
               "muted": false,
             },
           },
@@ -290,8 +279,8 @@ Object {
             "images": Array [
               Object {
                 "alt": "tests/sample-img/key-landscape-small.jpg",
-                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(4)@jpeg",
-                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(4)@jpeg",
+                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(4)@jpeg",
+                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(4)@jpeg",
               },
             ],
           },
@@ -302,7 +291,7 @@ Object {
               "cts": "1970-01-01T00:00:00.000Z",
               "neg": false,
               "src": "did:example:labeler",
-              "uri": "record(7)",
+              "uri": "record(5)",
               "val": "test-label",
             },
             Object {
@@ -310,7 +299,7 @@ Object {
               "cts": "1970-01-01T00:00:00.000Z",
               "neg": false,
               "src": "did:example:labeler",
-              "uri": "record(7)",
+              "uri": "record(5)",
               "val": "test-label-2",
             },
           ],
@@ -348,9 +337,22 @@ Object {
           },
           "replyCount": 1,
           "repostCount": 0,
-          "uri": "record(7)",
+          "uri": "record(5)",
           "viewer": Object {},
         },
+      },
+      Object {
+        "$type": "app.bsky.feed.defs#blockedPost",
+        "author": Object {
+          "did": "user(4)",
+          "viewer": Object {
+            "blockedBy": false,
+            "blocking": "record(7)",
+            "muted": false,
+          },
+        },
+        "blocked": true,
+        "uri": "record(0)",
       },
     ],
   },
