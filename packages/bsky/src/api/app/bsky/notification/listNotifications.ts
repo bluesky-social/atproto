@@ -53,7 +53,6 @@ const skeleton = async (
     }),
   ])
   return {
-    params,
     notifs: res.notifications,
     cursor: res.cursor,
     lastSeenNotifs: lastSeenRes.timestamp?.toDate().toISOString(),
@@ -102,7 +101,6 @@ type Params = QueryParams & {
 }
 
 type SkeletonState = {
-  params: Params
   notifs: Notification[]
   lastSeenNotifs?: string
   cursor?: string

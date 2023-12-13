@@ -1,7 +1,7 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../gen/bsky_connect'
 import { Database } from '../../../db'
-import { countAll, excluded } from '../../../db/util'
+import { countAll, excluded, notSoftDeletedClause } from '../../../db/util'
 import { sql } from 'kysely'
 import { TimeCidKeyset, paginate } from '../../../db/pagination'
 import { Timestamp } from '@bufbuild/protobuf'
@@ -79,6 +79,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .innerJoin('actor', 'actor.did', 'notification.did')
       .leftJoin('actor_state', 'actor_state.did', 'actor.did')
       .innerJoin('record', 'record.uri', 'notification.recordUri')
+      .where(notSoftDeletedClause(ref('record')))
+      .where(notSoftDeletedClause(ref('actor')))
       // Ensure to hit notification_did_sortat_idx, handling case where lastSeenNotifs is null.
       .where('notification.did', '=', actorDid)
       .where(
