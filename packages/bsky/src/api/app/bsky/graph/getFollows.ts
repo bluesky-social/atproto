@@ -27,6 +27,7 @@ export default function (server: Server, ctx: AppContext) {
       const canViewTakendownProfile =
         auth.credentials.type === 'role' && auth.credentials.triage
 
+      // @TODO ensure canViewTakendownProfile gets threaded through and applied properly
       const result = await getFollows(
         { ...params, viewer, canViewTakendownProfile },
         ctx,
