@@ -734,11 +734,12 @@ message SearchPostsResponse {
 //
 
 // - Return DIDs of suggested follows for a user, excluding anyone they already follow
-//     - `getSuggestions`
+//     - `getSuggestions`, `getSuggestedFollowsByActor`
 message GetFollowSuggestionsRequest {
   string actor_did = 1;
-  int32 limit = 2;
-  string cursor = 3;
+  string relative_to_did = 2;
+  int32 limit = 3;
+  string cursor = 4;
 }
 
 message GetFollowSuggestionsResponse {

@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getSuggestedFollowsByActor'
 import AppContext from '../../../../context'
@@ -12,7 +13,6 @@ import {
 import { Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
-// @TODO fix in tests
 export default function (server: Server, ctx: AppContext) {
   const getSuggestedFollowsByActor = createPipelineNew(
     skeleton,
@@ -38,8 +38,13 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
+  const [relativeToDid] = await ctx.hydrator.actor.getDids([params.actor])
+  if (!relativeToDid) {
+    throw new InvalidRequestError('Actor not found')
+  }
   const { dids, cursor } = await ctx.hydrator.dataplane.getFollowSuggestions({
     actorDid: params.viewer,
+    relativeToDid,
   })
   return {
     suggestedDids: dids,
@@ -60,12 +65,11 @@ const noBlocksOrMutes = (
   input: RulesFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, skeleton, hydration } = input
-  skeleton.suggestedDids = skeleton.suggestedDids.filter((did) => {
-    return (
+  skeleton.suggestedDids = skeleton.suggestedDids.filter(
+    (did) =>
       !ctx.views.viewerBlockExists(did, hydration) &&
-      !ctx.views.viewerMuteExists(did, hydration)
-    )
-  })
+      !ctx.views.viewerMuteExists(did, hydration),
+  )
   return skeleton
 }
 
@@ -74,9 +78,9 @@ const presentation = (
 ) => {
   const { ctx, hydration, skeleton } = input
   const { suggestedDids } = skeleton
-  const suggestions = mapDefined(suggestedDids, (did) => {
-    return ctx.views.profileDetailed(did, hydration)
-  })
+  const suggestions = mapDefined(suggestedDids, (did) =>
+    ctx.views.profileDetailed(did, hydration),
+  )
   return { suggestions }
 }
 

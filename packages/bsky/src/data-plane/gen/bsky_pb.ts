@@ -4993,7 +4993,7 @@ export class SearchPostsResponse extends Message<SearchPostsResponse> {
 
 /**
  * - Return DIDs of suggested follows for a user, excluding anyone they already follow
- *     - `getSuggestions`
+ *     - `getSuggestions`, `getSuggestedFollowsByActor`
  *
  * @generated from message bsky.GetFollowSuggestionsRequest
  */
@@ -5004,12 +5004,17 @@ export class GetFollowSuggestionsRequest extends Message<GetFollowSuggestionsReq
   actorDid = "";
 
   /**
-   * @generated from field: int32 limit = 2;
+   * @generated from field: string relative_to_did = 2;
+   */
+  relativeToDid = "";
+
+  /**
+   * @generated from field: int32 limit = 3;
    */
   limit = 0;
 
   /**
-   * @generated from field: string cursor = 3;
+   * @generated from field: string cursor = 4;
    */
   cursor = "";
 
@@ -5022,8 +5027,9 @@ export class GetFollowSuggestionsRequest extends Message<GetFollowSuggestionsReq
   static readonly typeName = "bsky.GetFollowSuggestionsRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 3, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "relative_to_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 4, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetFollowSuggestionsRequest {
