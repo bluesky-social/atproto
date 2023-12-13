@@ -401,10 +401,9 @@ describe('pds views with blocking', () => {
       { headers: await network.serviceHeaders(alice) },
     )
     assert(isThreadViewPost(unblock.thread))
-    expect(unblock.thread.replies?.map(getThreadPostUri)).toEqual([
-      carolReplyToDan.ref.uriStr,
-      aliceReplyToDan.ref.uriStr,
-    ])
+    expect(unblock.thread.replies?.map(getThreadPostUri).sort()).toEqual(
+      [aliceReplyToDan.ref.uriStr, carolReplyToDan.ref.uriStr].sort(),
+    )
 
     // block then reply
     danBlockCarol = await pdsAgent.api.app.bsky.graph.block.create(

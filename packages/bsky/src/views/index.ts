@@ -363,7 +363,7 @@ export class Views {
       record: post.record,
       embed:
         depth < 2 && post.record.embed
-          ? this.embed(authorDid, post.record.embed, state, depth + 1)
+          ? this.embed(uri, post.record.embed, state, depth + 1)
           : undefined,
       replyCount: aggs?.replies,
       repostCount: aggs?.reposts,
@@ -384,6 +384,8 @@ export class Views {
   }
 
   feedViewPost(uri: string, state: HydrationState): FeedViewPost | undefined {
+    // no block violating posts in feeds
+    if (state.postBlocks?.get(uri)?.reply) return undefined
     const parsedUri = new AtUri(uri)
     let postUri: AtUri
     let reason: ReasonRepost | undefined
@@ -524,6 +526,9 @@ export class Views {
     if (height < 1) return undefined
     const parentUri = state.posts?.get(childUri)?.record.reply?.parent.uri
     if (!parentUri) return undefined
+    if (state.postBlocks?.get(childUri)?.reply) {
+      return this.blockedPost(parentUri, creatorFromUri(parentUri), state)
+    }
     const post = this.post(parentUri, state)
     if (!post) return this.notFoundPost(parentUri)
     if (this.viewerBlockExists(post.author.did, state)) {
@@ -544,7 +549,10 @@ export class Views {
   ): (ThreadViewPost | NotFoundPost | BlockedPost)[] | undefined {
     if (depth < 1) return undefined
     const childrenUris = childrenByParentUri[parentUri] ?? []
-    return childrenUris.map((uri) => {
+    return mapDefined(childrenUris, (uri) => {
+      if (state.postBlocks?.get(uri)?.reply) {
+        return undefined
+      }
       const post = this.post(uri, state)
       if (!post) return this.notFoundPost(parentUri)
       if (this.viewerBlockExists(post.author.did, state)) {
@@ -562,19 +570,19 @@ export class Views {
   // ------------
 
   embed(
-    did: string,
+    postUri: string,
     embed: Embed | { $type: string },
     state: HydrationState,
     depth: number,
   ): EmbedView | undefined {
     if (isImagesEmbed(embed)) {
-      return this.imagesEmbed(did, embed)
+      return this.imagesEmbed(creatorFromUri(postUri), embed)
     } else if (isExternalEmbed(embed)) {
-      return this.externalEmbed(did, embed)
+      return this.externalEmbed(creatorFromUri(postUri), embed)
     } else if (isRecordEmbed(embed)) {
-      return this.recordEmbed(embed, state, depth)
+      return this.recordEmbed(postUri, embed, state, depth)
     } else if (isRecordWithMedia(embed)) {
-      return this.recordWithMediaEmbed(did, embed, state, depth)
+      return this.recordWithMediaEmbed(postUri, embed, state, depth)
     } else {
       return undefined
     }
@@ -629,8 +637,10 @@ export class Views {
 
   embedBlocked(
     uri: string,
-    author: ProfileView,
+    state: HydrationState,
   ): { $type: string; record: EmbedBlocked } {
+    const creator = creatorFromUri(uri)
+    const creatorViewer = this.profileViewer(creator, state)
     return {
       $type: 'app.bsky.embed.record#view',
       record: {
@@ -638,11 +648,11 @@ export class Views {
         uri,
         blocked: true,
         author: {
-          did: author.did,
-          viewer: author.viewer
+          did: creator,
+          viewer: creatorViewer
             ? {
-                blockedBy: author.viewer?.blockedBy,
-                blocking: author.viewer?.blocking,
+                blockedBy: creatorViewer?.blockedBy,
+                blocking: creatorViewer?.blocking,
               }
             : undefined,
         },
@@ -670,6 +680,7 @@ export class Views {
   }
 
   recordEmbed(
+    postUri: string,
     embed: RecordEmbed,
     state: HydrationState,
     depth: number,
@@ -677,28 +688,26 @@ export class Views {
   ): RecordEmbedView {
     const uri = embed.record.uri
     const parsedUri = new AtUri(uri)
+    if (
+      this.viewerBlockExists(parsedUri.hostname, state) ||
+      state.postBlocks?.get(postUri)?.embed
+    ) {
+      return this.embedBlocked(uri, state)
+    }
+
     if (parsedUri.collection === ids.AppBskyFeedPost) {
       const view = this.embedPostView(uri, state, depth)
       if (!view) return this.embedNotFound(uri)
-      if (this.viewerBlockExists(view.author.did, state)) {
-        return this.embedBlocked(uri, view.author)
-      }
       return this.recordEmbedWrapper(view, withTypeTag)
     } else if (parsedUri.collection === ids.AppBskyFeedGenerator) {
       const view = this.feedGenerator(uri, state)
       if (!view) return this.embedNotFound(uri)
       view.$type = 'app.bsky.feed.defs#generatorView'
-      if (this.viewerBlockExists(view.creator.did, state)) {
-        return this.embedBlocked(uri, view.creator)
-      }
       return this.recordEmbedWrapper(view, withTypeTag)
     } else if (parsedUri.collection === ids.AppBskyGraphList) {
       const view = this.list(uri, state)
       if (!view) return this.embedNotFound(uri)
       view.$type = 'app.bsky.graph.defs#listView'
-      if (this.viewerBlockExists(view.creator.did, state)) {
-        return this.embedBlocked(uri, view.creator)
-      }
       return this.recordEmbedWrapper(view, withTypeTag)
     }
     return this.embedNotFound(uri)
@@ -715,23 +724,24 @@ export class Views {
   }
 
   recordWithMediaEmbed(
-    did: string,
+    postUri: string,
     embed: RecordWithMedia,
     state: HydrationState,
     depth: number,
   ): RecordWithMediaView | undefined {
+    const creator = creatorFromUri(postUri)
     let mediaEmbed: ImagesEmbedView | ExternalEmbedView
     if (isImagesEmbed(embed.media)) {
-      mediaEmbed = this.imagesEmbed(did, embed.media)
+      mediaEmbed = this.imagesEmbed(creator, embed.media)
     } else if (isExternalEmbed(embed.media)) {
-      mediaEmbed = this.externalEmbed(did, embed.media)
+      mediaEmbed = this.externalEmbed(creator, embed.media)
     } else {
       return
     }
     return {
       $type: 'app.bsky.embed.recordWithMedia#view',
       media: mediaEmbed,
-      record: this.recordEmbed(embed.record, state, depth, false),
+      record: this.recordEmbed(postUri, embed.record, state, depth, false),
     }
   }
 
