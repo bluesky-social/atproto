@@ -257,6 +257,7 @@ export const createModerationRecordSnapshot = async (
   const identifier = getStatusIdentifierFromSubject(moderationEvent.subjectUri)
   const snapshot = {
     ...identifier,
+    recordCid: moderationEvent.subjectCid,
     indexedAt: moderationEvent.createdAt,
   }
   // TODO: Handle blobCids here

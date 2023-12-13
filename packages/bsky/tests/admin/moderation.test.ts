@@ -22,6 +22,7 @@ import {
   PeriodicModerationEventReversal,
   PeriodicModerationSnapshotCleanup,
 } from '../../src'
+import { DAY } from '@atproto/common'
 
 type BaseCreateReportParams =
   | { account: string }
@@ -777,10 +778,19 @@ describe('moderation', () => {
 
     it('automatically cleans up expired record snapshot', async () => {
       const db = network.bsky.ctx.db.getPrimary()
-      const postA = sc.posts[sc.dids.bob][0].ref
+      const postA = sc.posts[sc.dids.alice][2].ref
       const postB = sc.posts[sc.dids.carol][0].ref
       const getSnapshots = async () =>
-        db.db.selectFrom('moderation_record_snapshot').selectAll().execute()
+        db.db
+          .selectFrom('moderation_record_snapshot')
+          .where('recordPath', '=', `${postA.uri.collection}/${postA.uri.rkey}`)
+          .orWhere(
+            'recordPath',
+            '=',
+            `${postB.uri.collection}/${postB.uri.rkey}`,
+          )
+          .selectAll()
+          .execute()
 
       // Create an event which should trigger a snapshot
       await db.transaction(async (dbTxn) => {
@@ -793,7 +803,7 @@ describe('moderation', () => {
             },
             subject: { uri: postB.uri, cid: postB.cid },
             createdBy: 'did:example:admin',
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 29),
+            createdAt: new Date(Date.now() - DAY * 29),
           }),
           moderationService.logEvent({
             event: {
@@ -803,7 +813,7 @@ describe('moderation', () => {
             subject: { uri: postA.uri, cid: postA.cid },
             createdBy: 'did:example:admin',
             // Explicitly set the timestamp to create expired snapshot
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 31),
+            createdAt: new Date(Date.now() - DAY * 31),
           }),
         ])
       })

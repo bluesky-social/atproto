@@ -33,6 +33,7 @@ import {
 import { ModerationEvent } from '../../db/tables/moderation'
 import { paginate } from '../../db/pagination'
 import { StatusKeyset, TimeIdKeyset } from './pagination'
+import { DAY } from '@atproto/common'
 
 export class ModerationService {
   constructor(
@@ -660,8 +661,7 @@ export class ModerationService {
       .where(
         'indexedAt',
         '<',
-        // The API is a bit odd here but by passing a negative value as the first param, we are subtracting the number of hours from current timestamp
-        addHoursToDate(-(expiryInDays * 24), new Date()).toISOString(),
+        new Date(Date.now() - expiryInDays * DAY).toISOString(),
       )
       .execute()
   }
