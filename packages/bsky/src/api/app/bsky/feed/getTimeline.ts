@@ -2,7 +2,7 @@ import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getTimeline'
 import { setRepoRev } from '../../../util'
-import { createPipelineNew } from '../../../../pipeline'
+import { createPipeline } from '../../../../pipeline'
 import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
@@ -10,7 +10,7 @@ import { parseString } from '../../../../hydration/util'
 import { mapDefined } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
-  const getTimeline = createPipelineNew(
+  const getTimeline = createPipeline(
     skeleton,
     hydration,
     noBlocksOrMutes,

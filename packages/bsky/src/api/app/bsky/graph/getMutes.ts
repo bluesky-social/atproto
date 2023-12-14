@@ -8,17 +8,12 @@ import {
   HydrationFnInput,
   PresentationFnInput,
   SkeletonFnInput,
-  createPipelineNew,
-  noRulesNew,
+  createPipeline,
+  noRules,
 } from '../../../../pipeline'
 
 export default function (server: Server, ctx: AppContext) {
-  const getMutes = createPipelineNew(
-    skeleton,
-    hydration,
-    noRulesNew,
-    presentation,
-  )
+  const getMutes = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.graph.getMutes({
     auth: ctx.authVerifier,
     handler: async ({ params, auth }) => {

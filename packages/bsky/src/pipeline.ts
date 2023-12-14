@@ -1,29 +1,6 @@
 import { HydrationState } from './hydration/hydrator'
 
-export function createPipeline<
-  Params,
-  SkeletonState,
-  HydrationState extends SkeletonState,
-  View,
-  Context,
->(
-  skeleton: (params: Params, ctx: Context) => Promise<SkeletonState>,
-  hydration: (state: SkeletonState, ctx: Context) => Promise<HydrationState>,
-  rules: (state: HydrationState, ctx: Context) => HydrationState,
-  presentation: (state: HydrationState, ctx: Context) => View,
-) {
-  return async (params: Params, ctx: Context) => {
-    const skeletonState = await skeleton(params, ctx)
-    const hydrationState = await hydration(skeletonState, ctx)
-    return presentation(rules(hydrationState, ctx), ctx)
-  }
-}
-
-export function noRules<T>(state: T) {
-  return state
-}
-
-export function createPipelineNew<Params, Skeleton, View, Context>(
+export function createPipeline<Params, Skeleton, View, Context>(
   skeletonFn: (input: SkeletonFnInput<Context, Params>) => Promise<Skeleton>,
   hydrationFn: (
     input: HydrationFnInput<Context, Params, Skeleton>,
@@ -66,6 +43,6 @@ export type PresentationFnInput<Context, Params, Skeleton> = {
   hydration: HydrationState
 }
 
-export function noRulesNew<S>(input: { skeleton: S }) {
+export function noRules<S>(input: { skeleton: S }) {
   return input.skeleton
 }

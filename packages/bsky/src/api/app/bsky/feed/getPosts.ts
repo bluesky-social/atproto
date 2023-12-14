@@ -2,18 +2,13 @@ import { dedupeStrs, mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPosts'
 import AppContext from '../../../../context'
-import { createPipelineNew } from '../../../../pipeline'
+import { createPipeline } from '../../../../pipeline'
 import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { creatorFromUri } from '../../../../views/util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getPosts = createPipelineNew(
-    skeleton,
-    hydration,
-    noBlocks,
-    presentation,
-  )
+  const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.feed.getPosts({
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {

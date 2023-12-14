@@ -2,19 +2,14 @@ import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getLikes'
 import AppContext from '../../../../context'
-import { createPipelineNew } from '../../../../pipeline'
+import { createPipeline } from '../../../../pipeline'
 import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { parseString } from '../../../../hydration/util'
 import { creatorFromUri } from '../../../../views/util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getLikes = createPipelineNew(
-    skeleton,
-    hydration,
-    noBlocks,
-    presentation,
-  )
+  const getLikes = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.feed.getLikes({
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {

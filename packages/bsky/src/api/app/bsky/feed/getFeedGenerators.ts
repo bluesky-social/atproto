@@ -2,15 +2,15 @@ import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getFeedGenerators'
 import AppContext from '../../../../context'
-import { createPipelineNew, noRulesNew } from '../../../../pipeline'
+import { createPipeline, noRules } from '../../../../pipeline'
 import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
-  const getFeedGenerators = createPipelineNew(
+  const getFeedGenerators = createPipeline(
     skeleton,
     hydration,
-    noRulesNew,
+    noRules,
     presentation,
   )
   server.app.bsky.feed.getFeedGenerators({

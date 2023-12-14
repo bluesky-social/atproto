@@ -8,18 +8,18 @@ import {
   HydrationFnInput,
   PresentationFnInput,
   SkeletonFnInput,
-  createPipelineNew,
-  noRulesNew,
+  createPipeline,
+  noRules,
 } from '../../../../pipeline'
 import { Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 
 export default function (server: Server, ctx: AppContext) {
-  const getPostThread = createPipelineNew(
+  const getPostThread = createPipeline(
     skeleton,
     hydration,
-    noRulesNew, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
+    noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
     presentation,
   )
   server.app.bsky.feed.getPostThread({

@@ -3,17 +3,17 @@ import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorFeeds'
 import AppContext from '../../../../context'
-import { createPipelineNew, noRulesNew } from '../../../../pipeline'
+import { createPipeline, noRules } from '../../../../pipeline'
 import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getActorFeeds = createPipelineNew(
+  const getActorFeeds = createPipeline(
     skeleton,
     hydration,
-    noRulesNew,
+    noRules,
     presentation,
   )
   server.app.bsky.feed.getActorFeeds({

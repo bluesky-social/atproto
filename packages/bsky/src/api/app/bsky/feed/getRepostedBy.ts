@@ -2,14 +2,14 @@ import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getRepostedBy'
 import AppContext from '../../../../context'
-import { createPipelineNew } from '../../../../pipeline'
+import { createPipeline } from '../../../../pipeline'
 import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { parseString } from '../../../../hydration/util'
 import { creatorFromUri } from '../../../../views/util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getRepostedBy = createPipelineNew(
+  const getRepostedBy = createPipeline(
     skeleton,
     hydration,
     noBlocks,

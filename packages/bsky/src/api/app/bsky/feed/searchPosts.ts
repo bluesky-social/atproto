@@ -7,7 +7,7 @@ import {
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
-  createPipelineNew,
+  createPipeline,
 } from '../../../../pipeline'
 import { Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
@@ -16,7 +16,7 @@ import { parseString } from '../../../../hydration/util'
 import { creatorFromUri } from '../../../../views/util'
 
 export default function (server: Server, ctx: AppContext) {
-  const searchPosts = createPipelineNew(
+  const searchPosts = createPipeline(
     skeleton,
     hydration,
     noBlocks,

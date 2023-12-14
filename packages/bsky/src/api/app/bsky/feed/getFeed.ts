@@ -21,12 +21,12 @@ import {
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
-  createPipelineNew,
+  createPipeline,
 } from '../../../../pipeline'
 import { mapDefined } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
-  const getFeed = createPipelineNew(
+  const getFeed = createPipeline(
     skeleton,
     hydration,
     noBlocksOrMutes,

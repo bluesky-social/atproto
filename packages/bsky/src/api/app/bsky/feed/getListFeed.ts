@@ -2,7 +2,7 @@ import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getListFeed'
 import AppContext from '../../../../context'
 import { setRepoRev } from '../../../util'
-import { createPipelineNew } from '../../../../pipeline'
+import { createPipeline } from '../../../../pipeline'
 import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
@@ -10,7 +10,7 @@ import { mapDefined } from '@atproto/common'
 import { parseString } from '../../../../hydration/util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getListFeed = createPipelineNew(
+  const getListFeed = createPipeline(
     skeleton,
     hydration,
     noBlocksOrMutes,

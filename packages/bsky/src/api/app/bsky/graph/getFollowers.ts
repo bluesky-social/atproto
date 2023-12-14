@@ -8,14 +8,14 @@ import {
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
-  createPipelineNew,
+  createPipeline,
 } from '../../../../pipeline'
 import { didFromUri } from '../../../../hydration/util'
 import { Hydrator, mergeStates } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
-  const getFollowers = createPipelineNew(
+  const getFollowers = createPipeline(
     skeleton,
     hydration,
     noBlocks,

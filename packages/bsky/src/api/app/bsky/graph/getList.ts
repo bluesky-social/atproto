@@ -4,9 +4,9 @@ import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getList'
 import AppContext from '../../../../context'
 import {
-  createPipelineNew,
+  createPipeline,
   HydrationFnInput,
-  noRulesNew,
+  noRules,
   PresentationFnInput,
   SkeletonFnInput,
 } from '../../../../pipeline'
@@ -14,12 +14,7 @@ import { Hydrator, mergeStates } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
-  const getList = createPipelineNew(
-    skeleton,
-    hydration,
-    noRulesNew,
-    presentation,
-  )
+  const getList = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.graph.getList({
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth }) => {

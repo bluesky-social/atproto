@@ -2,14 +2,14 @@ import { mapDefined } from '@atproto/common'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getSuggestions'
-import { createPipelineNew } from '../../../../pipeline'
+import { createPipeline } from '../../../../pipeline'
 import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
 
 export default function (server: Server, ctx: AppContext) {
-  const getSuggestions = createPipelineNew(
+  const getSuggestions = createPipeline(
     skeleton,
     hydration,
     noBlocksOrMutes,

@@ -3,9 +3,9 @@ import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getBlocks'
 import AppContext from '../../../../context'
 import {
-  createPipelineNew,
+  createPipeline,
   HydrationFnInput,
-  noRulesNew,
+  noRules,
   PresentationFnInput,
   SkeletonFnInput,
 } from '../../../../pipeline'
@@ -13,12 +13,7 @@ import { Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
-  const getBlocks = createPipelineNew(
-    skeleton,
-    hydration,
-    noRulesNew,
-    presentation,
-  )
+  const getBlocks = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.graph.getBlocks({
     auth: ctx.authVerifier,
     handler: async ({ params, auth }) => {

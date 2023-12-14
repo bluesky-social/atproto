@@ -8,13 +8,13 @@ import {
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
-  createPipelineNew,
+  createPipeline,
 } from '../../../../pipeline'
 import { Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
-  const getSuggestedFollowsByActor = createPipelineNew(
+  const getSuggestedFollowsByActor = createPipeline(
     skeleton,
     hydration,
     noBlocksOrMutes,

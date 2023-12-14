@@ -4,7 +4,7 @@ import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import AppContext from '../../../../context'
 import { setRepoRev } from '../../../util'
-import { createPipelineNew } from '../../../../pipeline'
+import { createPipeline } from '../../../../pipeline'
 import {
   HydrationState,
   Hydrator,
@@ -16,7 +16,7 @@ import { parseString } from '../../../../hydration/util'
 import { Actor } from '../../../../hydration/actor'
 
 export default function (server: Server, ctx: AppContext) {
-  const getAuthorFeed = createPipelineNew(
+  const getAuthorFeed = createPipeline(
     skeleton,
     hydration,
     noBlocksOrMutedReposts,

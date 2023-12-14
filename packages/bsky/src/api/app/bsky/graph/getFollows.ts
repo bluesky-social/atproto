@@ -8,18 +8,13 @@ import {
   PresentationFnInput,
   RulesFnInput,
   SkeletonFnInput,
-  createPipelineNew,
+  createPipeline,
 } from '../../../../pipeline'
 import { Hydrator, mergeStates } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
-  const getFollows = createPipelineNew(
-    skeleton,
-    hydration,
-    noBlocks,
-    presentation,
-  )
+  const getFollows = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.graph.getFollows({
     auth: ctx.authOptionalAccessOrRoleVerifier,
     handler: async ({ params, auth }) => {

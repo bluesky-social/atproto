@@ -6,17 +6,17 @@ import {
   HydrationFnInput,
   PresentationFnInput,
   SkeletonFnInput,
-  createPipelineNew,
-  noRulesNew,
+  createPipeline,
+  noRules,
 } from '../../../../pipeline'
 import { Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
-  const getUnreadCount = createPipelineNew(
+  const getUnreadCount = createPipeline(
     skeleton,
     hydration,
-    noRulesNew,
+    noRules,
     presentation,
   )
   server.app.bsky.notification.getUnreadCount({

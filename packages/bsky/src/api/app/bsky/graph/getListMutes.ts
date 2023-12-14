@@ -3,9 +3,9 @@ import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getListBlocks'
 import AppContext from '../../../../context'
 import {
-  createPipelineNew,
+  createPipeline,
   HydrationFnInput,
-  noRulesNew,
+  noRules,
   PresentationFnInput,
   SkeletonFnInput,
 } from '../../../../pipeline'
@@ -13,10 +13,10 @@ import { Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
-  const getListMutes = createPipelineNew(
+  const getListMutes = createPipeline(
     skeleton,
     hydration,
-    noRulesNew,
+    noRules,
     presentation,
   )
   server.app.bsky.graph.getListMutes({

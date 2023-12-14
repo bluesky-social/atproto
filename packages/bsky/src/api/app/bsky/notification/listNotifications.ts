@@ -4,7 +4,7 @@ import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/listNotifications'
 import AppContext from '../../../../context'
 import {
-  createPipelineNew,
+  createPipeline,
   HydrationFnInput,
   PresentationFnInput,
   RulesFnInput,
@@ -16,7 +16,7 @@ import { Notification } from '../../../../data-plane/gen/bsky_pb'
 import { didFromUri } from '../../../../hydration/util'
 
 export default function (server: Server, ctx: AppContext) {
-  const listNotifications = createPipelineNew(
+  const listNotifications = createPipeline(
     skeleton,
     hydration,
     noBlockOrMutes,

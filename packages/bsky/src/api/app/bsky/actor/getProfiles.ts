@@ -3,17 +3,12 @@ import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfiles'
 import AppContext from '../../../../context'
 import { setRepoRev } from '../../../util'
-import { createPipelineNew, noRulesNew } from '../../../../pipeline'
+import { createPipeline, noRules } from '../../../../pipeline'
 import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
-  const getProfile = createPipelineNew(
-    skeleton,
-    hydration,
-    noRulesNew,
-    presentation,
-  )
+  const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.actor.getProfiles({
     auth: ctx.authOptionalVerifier,
     handler: async ({ auth, params, res }) => {
