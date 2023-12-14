@@ -502,10 +502,11 @@ export class Views {
   // ------------
 
   thread(
-    anchor: string,
+    skele: { anchor: string; uris: string[] },
     state: HydrationState,
     opts: { height: number; depth: number },
   ): ThreadViewPost | NotFoundPost | BlockedPost {
+    const { anchor, uris } = skele
     const post = this.post(anchor, state)
     if (!post) return this.notFoundPost(anchor)
     if (this.viewerBlockExists(post.author.did, state)) {
@@ -513,7 +514,8 @@ export class Views {
     }
     const includedPosts = new Set<string>([anchor])
     const childrenByParentUri: Record<string, string[]> = {}
-    state.posts?.forEach((post, uri) => {
+    uris.forEach((uri) => {
+      const post = state.posts?.get(uri)
       const parentUri = post?.record.reply?.parent.uri
       if (!parentUri) return
       if (includedPosts.has(uri)) return

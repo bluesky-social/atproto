@@ -71,7 +71,7 @@ const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton, hydration } = inputs
-  const thread = ctx.views.thread(skeleton.anchor, hydration, {
+  const thread = ctx.views.thread(skeleton, hydration, {
     height: params.parentHeight,
     depth: params.depth,
   })

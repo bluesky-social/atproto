@@ -31,7 +31,6 @@ describe('pds thread views', () => {
     // Add a repost of a reply so that we can confirm myState in the thread
     await sc.repost(bob, sc.replies[alice][0].ref)
     await network.processAll()
-    await network.bsky.processAll()
   })
 
   afterAll(async () => {
@@ -399,8 +398,8 @@ describe('pds thread views', () => {
         { uri: sc.posts[alice][1].ref.uriStr },
         { headers: await network.serviceHeaders(bob) },
       )
-      const post1 = threadPreTakedown.data.thread.replies?.[0].replies[0].post
-      const post2 = threadPreTakedown.data.thread.replies?.[1].post
+      const post1 = threadPreTakedown.data.thread.replies?.[0].post
+      const post2 = threadPreTakedown.data.thread.replies?.[1].replies[0].post
 
       await Promise.all(
         [post1, post2].map((post) =>

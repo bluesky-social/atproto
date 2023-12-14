@@ -22,6 +22,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         depth: below,
       })
         .selectFrom('descendent')
+        .innerJoin('post', 'post.uri', 'descendent.uri')
+        .orderBy('post.sortAt', 'desc')
         .selectAll()
         .execute(),
     ])
