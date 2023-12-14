@@ -1,5 +1,5 @@
 {
-  "name": "@atproto/bsky",
+  "name": "@atproto/mod-service",
   "version": "0.0.21",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
