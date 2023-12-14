@@ -16,12 +16,17 @@ import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bs
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { AlgoResponse, AlgoResponseItem } from '../../../../feed-gen/types'
-import { createPipeline } from '../../../../pipeline'
-import { HydrationState } from '../../../../hydration/hydrator'
+import {
+  HydrationFnInput,
+  PresentationFnInput,
+  RulesFnInput,
+  SkeletonFnInput,
+  createPipelineNew,
+} from '../../../../pipeline'
 import { mapDefined } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
-  const getFeed = createPipeline(
+  const getFeed = createPipelineNew(
     skeleton,
     hydration,
     noBlocksOrMutes,
@@ -48,7 +53,10 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (params: Params, ctx: Context): Promise<Skeleton> => {
+const skeleton = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
+  const { ctx, params } = inputs
   const timerSkele = new ServerTimer('skele').start()
   const localAlgo = ctx.algos[params.feed]
   const { feedItems, cursor, ...passthrough } =
@@ -56,27 +64,32 @@ const skeleton = async (params: Params, ctx: Context): Promise<Skeleton> => {
       ? await localAlgo(ctx, params, params.viewer)
       : await skeletonFromFeedGen(ctx, params)
   return {
-    params,
     cursor,
     feedItems,
     timerSkele: timerSkele.stop(),
+    timerHydr: new ServerTimer('hydr').start(),
     passthrough,
   }
 }
 
-const hydration = async (state: Skeleton, ctx: Context) => {
+const hydration = async (
+  inputs: HydrationFnInput<Context, Params, Skeleton>,
+) => {
+  const { ctx, params, skeleton } = inputs
   const timerHydr = new ServerTimer('hydr').start()
-  const feedItemUris = state.feedItems.map((item) => item.itemUri)
+  const feedItemUris = skeleton.feedItems.map((item) => item.itemUri)
   const hydration = await ctx.hydrator.hydrateFeedPosts(
     feedItemUris,
-    state.params.viewer,
+    params.viewer,
   )
-  return { ...state, hydration, timerHydr: timerHydr.stop() }
+  skeleton.timerHydr = timerHydr.stop()
+  return hydration
 }
 
-const noBlocksOrMutes = (state: Hydration, ctx: Context) => {
-  state.feedItems = state.feedItems.filter((item) => {
-    const bam = ctx.views.feedItemBlocksAndMutes(item.itemUri, state.hydration)
+const noBlocksOrMutes = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
+  const { ctx, skeleton, hydration } = inputs
+  skeleton.feedItems = skeleton.feedItems.filter((item) => {
+    const bam = ctx.views.feedItemBlocksAndMutes(item.itemUri, hydration)
     return (
       !bam.authorBlocked &&
       !bam.authorMuted &&
@@ -84,24 +97,27 @@ const noBlocksOrMutes = (state: Hydration, ctx: Context) => {
       !bam.originatorMuted
     )
   })
-  return state
+  return skeleton
 }
 
-const presentation = (state: Hydration, ctx: Context) => {
-  const feed = mapDefined(state.feedItems, (item) => {
-    const view = ctx.views.feedViewPost(item.itemUri, state.hydration)
+const presentation = (
+  inputs: PresentationFnInput<Context, Params, Skeleton>,
+) => {
+  const { ctx, params, skeleton, hydration } = inputs
+  const feed = mapDefined(skeleton.feedItems, (item) => {
+    const view = ctx.views.feedViewPost(item.itemUri, hydration)
     if (view?.post.uri !== item.postUri) {
       return undefined
     } else {
       return view
     }
-  }).slice(0, state.params.limit)
+  }).slice(0, params.limit)
   return {
     feed,
-    cursor: state.cursor,
-    timerSkele: state.timerSkele,
-    timerHydr: state.timerHydr,
-    ...state.passthrough,
+    cursor: skeleton.cursor,
+    timerSkele: skeleton.timerSkele,
+    timerHydr: skeleton.timerHydr,
+    ...skeleton.passthrough,
   }
 }
 
@@ -110,15 +126,10 @@ type Context = AppContext
 type Params = GetFeedParams & { viewer: string | null; authorization?: string }
 
 type Skeleton = {
-  params: Params
   feedItems: AlgoResponseItem[]
   passthrough: Record<string, unknown> // pass through additional items in feedgen response
   cursor?: string
   timerSkele: ServerTimer
-}
-
-type Hydration = Skeleton & {
-  hydration: HydrationState
   timerHydr: ServerTimer
 }
 
