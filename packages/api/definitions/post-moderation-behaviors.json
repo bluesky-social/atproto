@@ -271,6 +271,12 @@
       "author": "alice",
       "labels": { "profile": ["!no-unauthenticated"] },
       "behaviors": {
+        "content": {
+          "cause": "label:!no-unauthenticated",
+          "filter": true,
+          "blur": true,
+          "noOverride": true
+        },
         "avatar": {
           "cause": "label:!no-unauthenticated",
           "blur": true,

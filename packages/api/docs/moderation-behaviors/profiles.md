@@ -38,12 +38,16 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
 🚫
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Imperative label ('!hide') on profile</strong></td>
@@ -52,6 +56,7 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
 🚫
@@ -62,6 +67,9 @@ Key:
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Imperative label ('!no-promote') on account</strong></td>
@@ -70,14 +78,20 @@ Key:
 </td>
 <td>
 
-</td>
-<td>
 
 </td>
 <td>
+
+
+</td>
+<td>
+
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Imperative label ('!no-promote') on profile</strong></td>
@@ -86,14 +100,20 @@ Key:
 </td>
 <td>
 
-</td>
-<td>
 
 </td>
 <td>
+
+
+</td>
+<td>
+
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Imperative label ('!warn') on account</strong></td>
@@ -106,12 +126,16 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
 ✋
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Imperative label ('!warn') on profile</strong></td>
@@ -120,6 +144,7 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
 ✋
@@ -130,6 +155,9 @@ Key:
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Imperative label ('!no-unauthenticated') on account when logged out</strong></td>
@@ -142,19 +170,24 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
 🚫
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Imperative label ('!no-unauthenticated') on profile when logged out</strong></td>
 <td>
-
+❌
 </td>
 <td>
+🚫
 
 </td>
 <td>
@@ -166,6 +199,9 @@ Key:
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Imperative label ('!no-unauthenticated') on account when logged in</strong></td>
@@ -174,14 +210,20 @@ Key:
 </td>
 <td>
 
-</td>
-<td>
 
 </td>
 <td>
+
+
+</td>
+<td>
+
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Imperative label ('!no-unauthenticated') on profile when logged in</strong></td>
@@ -190,14 +232,19 @@ Key:
 </td>
 <td>
 
-</td>
-<td>
 
 </td>
 <td>
+
+
+</td>
+<td>
+
 
 </td>
 </tr>
+
+
 
 <tr><th>Scenario</th><th>Filter</th><th>Account</th><th>Profile</td><th>Avatar</th></tr>
 <tr>
@@ -211,12 +258,16 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
 ✋
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Blur label ('intolerant') on profile (hide)</strong></td>
@@ -225,6 +276,7 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
 ✋
@@ -235,6 +287,9 @@ Key:
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Blur label ('intolerant') on account (warn)</strong></td>
@@ -247,12 +302,16 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
 ✋
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Blur label ('intolerant') on profile (warn)</strong></td>
@@ -261,6 +320,7 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
 ✋
@@ -271,6 +331,9 @@ Key:
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Blur label ('intolerant') on account (ignore)</strong></td>
@@ -279,14 +342,20 @@ Key:
 </td>
 <td>
 
-</td>
-<td>
 
 </td>
 <td>
+
+
+</td>
+<td>
+
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Blur label ('intolerant') on profile (ignore)</strong></td>
@@ -295,14 +364,19 @@ Key:
 </td>
 <td>
 
-</td>
-<td>
 
 </td>
 <td>
+
+
+</td>
+<td>
+
 
 </td>
 </tr>
+
+
 
 <tr><th>Scenario</th><th>Filter</th><th>Account</th><th>Profile</td><th>Avatar</th></tr>
 <tr>
@@ -316,12 +390,16 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
 ✋
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Blur-media label ('porn') on profile (hide)</strong></td>
@@ -330,8 +408,10 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
+
 
 </td>
 <td>
@@ -339,6 +419,9 @@ Key:
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Blur-media label ('porn') on account (warn)</strong></td>
@@ -351,12 +434,16 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
 ✋
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Blur-media label ('porn') on profile (warn)</strong></td>
@@ -365,8 +452,10 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
+
 
 </td>
 <td>
@@ -375,6 +464,9 @@ Key:
 </td>
 </tr>
 
+
+
+
 <tr>
 <td><strong>Blur-media label ('porn') on account (ignore)</strong></td>
 <td>
@@ -382,14 +474,20 @@ Key:
 </td>
 <td>
 
-</td>
-<td>
 
 </td>
 <td>
+
+
+</td>
+<td>
+
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Blur-media label ('porn') on profile (ignore)</strong></td>
@@ -398,14 +496,19 @@ Key:
 </td>
 <td>
 
-</td>
-<td>
 
 </td>
 <td>
+
+
+</td>
+<td>
+
 
 </td>
 </tr>
+
+
 
 <tr><th>Scenario</th><th>Filter</th><th>Account</th><th>Profile</td><th>Avatar</th></tr>
 <tr>
@@ -416,17 +519,19 @@ Key:
 <td>
 
 🪧
-
 </td>
 <td>
+
 
 </td>
 <td>
 
 🪧
-
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Notice label ('scam') on profile (hide)</strong></td>
@@ -435,18 +540,20 @@ Key:
 </td>
 <td>
 
-</td>
-<td>
-
-🪧
 
 </td>
 <td>
 
 🪧
+</td>
+<td>
 
+🪧
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Notice label ('scam') on account (warn)</strong></td>
@@ -456,17 +563,19 @@ Key:
 <td>
 
 🪧
-
 </td>
 <td>
+
 
 </td>
 <td>
 
 🪧
-
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Notice label ('scam') on profile (warn)</strong></td>
@@ -475,18 +584,20 @@ Key:
 </td>
 <td>
 
-</td>
-<td>
-
-🪧
 
 </td>
 <td>
 
 🪧
+</td>
+<td>
 
+🪧
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Notice label ('scam') on account (ignore)</strong></td>
@@ -495,14 +606,20 @@ Key:
 </td>
 <td>
 
-</td>
-<td>
 
 </td>
 <td>
+
+
+</td>
+<td>
+
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Notice label ('scam') on profile (ignore)</strong></td>
@@ -511,14 +628,19 @@ Key:
 </td>
 <td>
 
-</td>
-<td>
 
 </td>
 <td>
+
+
+</td>
+<td>
+
 
 </td>
 </tr>
+
+
 
 <tr><th>Scenario</th><th>Filter</th><th>Account</th><th>Profile</td><th>Avatar</th></tr>
 <tr>
@@ -532,12 +654,16 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
 🚫
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Adult-only label on profile when adult content is disabled</strong></td>
@@ -546,8 +672,10 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
+
 
 </td>
 <td>
@@ -555,6 +683,8 @@ Key:
 
 </td>
 </tr>
+
+
 
 <tr><th>Scenario</th><th>Filter</th><th>Account</th><th>Profile</td><th>Avatar</th></tr>
 <tr>
@@ -565,17 +695,19 @@ Key:
 <td>
 
 🪧
-
 </td>
 <td>
+
 
 </td>
 <td>
 
 🪧
-
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Self-profile: !hide on profile</strong></td>
@@ -584,18 +716,19 @@ Key:
 </td>
 <td>
 
-</td>
-<td>
-
-🪧
 
 </td>
 <td>
 
 🪧
+</td>
+<td>
 
+🪧
 </td>
 </tr>
+
+
 
 <tr><th>Scenario</th><th>Filter</th><th>Account</th><th>Profile</td><th>Avatar</th></tr>
 <tr>
@@ -605,8 +738,10 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
+
 
 </td>
 <td>
@@ -614,6 +749,9 @@ Key:
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Mute/block: Blocking-by-list user</strong></td>
@@ -622,8 +760,10 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
+
 
 </td>
 <td>
@@ -631,6 +771,9 @@ Key:
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Mute/block: Blocked by user</strong></td>
@@ -639,8 +782,10 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
+
 
 </td>
 <td>
@@ -649,6 +794,9 @@ Key:
 </td>
 </tr>
 
+
+
+
 <tr>
 <td><strong>Mute/block: Muted user</strong></td>
 <td>
@@ -656,14 +804,20 @@ Key:
 </td>
 <td>
 
-</td>
-<td>
 
 </td>
 <td>
+
+
+</td>
+<td>
+
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Mute/block: Muted-by-list user</strong></td>
@@ -672,14 +826,19 @@ Key:
 </td>
 <td>
 
-</td>
-<td>
 
 </td>
 <td>
+
+
+</td>
+<td>
+
 
 </td>
 </tr>
+
+
 
 <tr><th>Scenario</th><th>Filter</th><th>Account</th><th>Profile</td><th>Avatar</th></tr>
 <tr>
@@ -689,8 +848,10 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
+
 
 </td>
 <td>
@@ -698,6 +859,9 @@ Key:
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Prioritization: '!hide' label on account of blocked user</strong></td>
@@ -710,12 +874,16 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
 🚫
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Prioritization: '!hide' and 'intolerant' labels on account (hide)</strong></td>
@@ -728,12 +896,16 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
 🚫
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Prioritization: '!warn' and 'intolerant' labels on account (hide)</strong></td>
@@ -746,12 +918,16 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
 ✋
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Prioritization: '!warn' and 'porn' labels on account (hide)</strong></td>
@@ -764,12 +940,16 @@ Key:
 </td>
 <td>
 
+
 </td>
 <td>
 ✋
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Prioritization: intolerant label on account (hide) and scam label on profile (warn)</strong></td>
@@ -783,13 +963,15 @@ Key:
 <td>
 
 🪧
-
 </td>
 <td>
 ✋
 🪧
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Prioritization: !hide on account, !warn on profile</strong></td>
@@ -809,6 +991,9 @@ Key:
 
 </td>
 </tr>
+
+
+
 
 <tr>
 <td><strong>Prioritization: !warn on account, !hide on profile</strong></td>
