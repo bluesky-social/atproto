@@ -152,9 +152,10 @@ Key:
 <tr>
 <td><strong>Imperative label ('!no-unauthenticated') on profile when logged out</strong></td>
 <td>
-
+❌
 </td>
 <td>
+🚫
 
 </td>
 <td>

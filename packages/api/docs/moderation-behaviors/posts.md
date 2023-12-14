@@ -286,10 +286,10 @@ Key:
 <tr>
 <td><strong>Imperative label ('!no-unauthenticated') on author profile when logged out</strong></td>
 <td>
-
+❌
 </td>
 <td>
-
+🚫
 </td>
 <td>
 🚫
