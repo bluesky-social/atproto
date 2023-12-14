@@ -237,6 +237,12 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          appealedAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp referencing when the owner of the subject appealed a moderation action',
+          },
           takendown: {
             type: 'boolean',
           },
@@ -676,6 +682,7 @@ export const schemaDict = {
           'lex:com.atproto.admin.defs#reviewOpen',
           'lex:com.atproto.admin.defs#reviewEscalated',
           'lex:com.atproto.admin.defs#reviewClosed',
+          'lex:com.atproto.admin.defs#reviewAppealed',
         ],
       },
       reviewOpen: {
@@ -692,6 +699,11 @@ export const schemaDict = {
         type: 'token',
         description:
           'Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator',
+      },
+      reviewAppealed: {
+        type: 'token',
+        description:
+          'Moderator review status of a subject: Appealed. Indicates that the a previously taken moderator action was appealed agains, by the author of the content',
       },
       modEventTakedown: {
         type: 'object',
@@ -1937,6 +1949,7 @@ export const schemaDict = {
           'com.atproto.moderation.defs#reasonSexual',
           'com.atproto.moderation.defs#reasonRude',
           'com.atproto.moderation.defs#reasonOther',
+          'com.atproto.moderation.defs#reasonAppeal',
         ],
       },
       reasonSpam: {
@@ -1963,6 +1976,10 @@ export const schemaDict = {
       reasonOther: {
         type: 'token',
         description: 'Other: reports not falling under another report category',
+      },
+      reasonAppeal: {
+        type: 'token',
+        description: 'Appeal: appeal a previously taken moderation action',
       },
     },
   },

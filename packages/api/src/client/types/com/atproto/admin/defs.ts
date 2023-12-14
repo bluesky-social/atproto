@@ -147,6 +147,8 @@ export interface SubjectStatusView {
   lastReviewedBy?: string
   lastReviewedAt?: string
   lastReportedAt?: string
+  /** Timestamp referencing when the owner of the subject appealed a moderation action */
+  appealedAt?: string
   takendown?: boolean
   suspendUntil?: string
   [k: string]: unknown
@@ -488,6 +490,7 @@ export type SubjectReviewState =
   | 'lex:com.atproto.admin.defs#reviewOpen'
   | 'lex:com.atproto.admin.defs#reviewEscalated'
   | 'lex:com.atproto.admin.defs#reviewClosed'
+  | 'lex:com.atproto.admin.defs#reviewAppealed'
   | (string & {})
 
 /** Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator */
@@ -496,6 +499,8 @@ export const REVIEWOPEN = 'com.atproto.admin.defs#reviewOpen'
 export const REVIEWESCALATED = 'com.atproto.admin.defs#reviewEscalated'
 /** Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator */
 export const REVIEWCLOSED = 'com.atproto.admin.defs#reviewClosed'
+/** Moderator review status of a subject: Appealed. Indicates that the a previously taken moderator action was appealed agains, by the author of the content */
+export const REVIEWAPPEALED = 'com.atproto.admin.defs#reviewAppealed'
 
 /** Take down a subject permanently or temporarily */
 export interface ModEventTakedown {

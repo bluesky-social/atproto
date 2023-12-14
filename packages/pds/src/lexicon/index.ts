@@ -127,6 +127,7 @@ export const COM_ATPROTO_ADMIN = {
   DefsReviewOpen: 'com.atproto.admin.defs#reviewOpen',
   DefsReviewEscalated: 'com.atproto.admin.defs#reviewEscalated',
   DefsReviewClosed: 'com.atproto.admin.defs#reviewClosed',
+  DefsReviewAppealed: 'com.atproto.admin.defs#reviewAppealed',
 }
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -135,6 +136,7 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonSexual: 'com.atproto.moderation.defs#reasonSexual',
   DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
+  DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
 }
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
@@ -1597,13 +1599,11 @@ type RouteRateLimitOpts<T> = {
   calcKey?: (ctx: T) => string
   calcPoints?: (ctx: T) => number
 }
-type HandlerOpts = { blobLimit?: number }
 type HandlerRateLimitOpts<T> = SharedRateLimitOpts<T> | RouteRateLimitOpts<T>
 type ConfigOf<Auth, Handler, ReqCtx> =
   | Handler
   | {
       auth?: Auth
-      opts?: HandlerOpts
       rateLimit?: HandlerRateLimitOpts<ReqCtx> | HandlerRateLimitOpts<ReqCtx>[]
       handler: Handler
     }

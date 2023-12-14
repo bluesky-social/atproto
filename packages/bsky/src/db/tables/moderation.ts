@@ -3,6 +3,7 @@ import {
   REVIEWCLOSED,
   REVIEWOPEN,
   REVIEWESCALATED,
+  REVIEWAPPEALED,
 } from '../../lexicon/types/com/atproto/admin/defs'
 
 export const eventTableName = 'moderation_event'
@@ -41,12 +42,17 @@ export interface ModerationSubjectStatus {
   recordPath: string
   recordCid: string | null
   blobCids: string[] | null
-  reviewState: typeof REVIEWCLOSED | typeof REVIEWOPEN | typeof REVIEWESCALATED
+  reviewState:
+    | typeof REVIEWCLOSED
+    | typeof REVIEWOPEN
+    | typeof REVIEWESCALATED
+    | typeof REVIEWAPPEALED
   createdAt: string
   updatedAt: string
   lastReviewedBy: string | null
   lastReviewedAt: string | null
   lastReportedAt: string | null
+  appealedAt: string | null
   muteUntil: string | null
   suspendUntil: string | null
   takendown: boolean

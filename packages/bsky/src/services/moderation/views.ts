@@ -485,6 +485,7 @@ export class ModerationViews {
       lastReviewedBy: subjectStatus.lastReviewedBy ?? undefined,
       lastReviewedAt: subjectStatus.lastReviewedAt ?? undefined,
       lastReportedAt: subjectStatus.lastReportedAt ?? undefined,
+      appealedAt: subjectStatus.appealedAt ?? undefined,
       muteUntil: subjectStatus.muteUntil ?? undefined,
       suspendUntil: subjectStatus.suspendUntil ?? undefined,
       takendown: subjectStatus.takendown ?? undefined,

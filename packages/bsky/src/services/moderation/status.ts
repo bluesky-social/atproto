@@ -7,11 +7,13 @@ import {
   REVIEWOPEN,
   REVIEWCLOSED,
   REVIEWESCALATED,
+  REVIEWAPPEALED,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 import { HOUR } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { sql } from 'kysely'
+import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs'
 
 const getSubjectStatusForModerationEvent = ({
   action,
@@ -106,6 +108,10 @@ export const adjustModerationSubjectStatus = async (
     createdAt,
   } = moderationEvent
 
+  const isAppealEvent =
+    action === 'com.atproto.admin.defs#modEventReport' &&
+    meta?.reportType === REASONAPPEAL
+
   const subjectStatus = getSubjectStatusForModerationEvent({
     action,
     createdBy,
@@ -115,6 +121,11 @@ export const adjustModerationSubjectStatus = async (
 
   // If there are no subjectStatus that means there are no side-effect of the incoming event
   if (!subjectStatus) {
+    return null
+  }
+
+  // Exit early if someone is trying to game the system by appealing someone else's content
+  if (isAppealEvent && createdBy !== subjectDid) {
     return null
   }
 
@@ -131,13 +142,31 @@ export const adjustModerationSubjectStatus = async (
     .selectAll()
     .executeTakeFirst()
 
-  if (
+  // If the incoming event is an appeal and the subject has never been appealed before, allow setting the state to appealed
+  if (isAppealEvent) {
+    if (!currentStatus?.appealedAt) {
+      subjectStatus.reviewState = REVIEWAPPEALED
+      subjectStatus.appealedAt = createdAt
+    } else {
+      // If the subject has been appealed before, we don't want to change the state to reviewOpen caused by the report event
+      // so we set the reviewState to whatever is the current state in DB
+      subjectStatus.reviewState = currentStatus.reviewState
+    }
+  } else if (
     currentStatus?.reviewState === REVIEWESCALATED &&
     subjectStatus.reviewState === REVIEWOPEN
   ) {
     // If the current status is escalated and the incoming event is to open the review
     // We want to keep the status as escalated
     subjectStatus.reviewState = REVIEWESCALATED
+  } else if (
+    currentStatus?.reviewState === REVIEWAPPEALED &&
+    subjectStatus.reviewState !== REVIEWCLOSED
+  ) {
+    // Keep the status as appealed if the incoming event is not to close the review
+    // But don't exit here because there may be other properties that
+    // require updating such lastReportedAt or lastReviewedAt
+    subjectStatus.reviewState = REVIEWAPPEALED
   }
 
   // Set these because we don't want to override them if they're already set

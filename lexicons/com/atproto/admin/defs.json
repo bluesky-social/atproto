@@ -167,6 +167,11 @@
           "type": "string",
           "format": "datetime"
         },
+        "appealedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp referencing when the owner of the subject appealed a moderation action"
+        },
         "takendown": {
           "type": "boolean"
         },
@@ -432,7 +437,12 @@
     },
     "subjectReviewState": {
       "type": "string",
-      "knownValues": ["#reviewOpen", "#reviewEscalated", "#reviewClosed"]
+      "knownValues": [
+        "#reviewOpen",
+        "#reviewEscalated",
+        "#reviewClosed",
+        "#reviewAppealed"
+      ]
     },
     "reviewOpen": {
       "type": "token",
@@ -445,6 +455,10 @@
     "reviewClosed": {
       "type": "token",
       "description": "Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator"
+    },
+    "reviewAppealed": {
+      "type": "token",
+      "description": "Moderator review status of a subject: Appealed. Indicates that the a previously taken moderator action was appealed agains, by the author of the content"
     },
     "modEventTakedown": {
       "type": "object",
