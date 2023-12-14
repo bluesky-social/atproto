@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.7.4
+
+### Patch Changes
+
+- [#1966](https://github.com/bluesky-social/atproto/pull/1966) [`8f3f43cb`](https://github.com/bluesky-social/atproto/commit/8f3f43cb40f79ff7c52f81290daec55cfb000093) Thanks [@pfrazee](https://github.com/pfrazee)! - Fix to the application of the no-unauthenticated label
+
 ## 0.7.3
 
 ### Patch Changes
