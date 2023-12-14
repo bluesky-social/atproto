@@ -101,7 +101,12 @@ const validateInputsForEntrywayPds = async (
       'IncompatibleDidDoc',
     )
   }
-  await plc.assureValidOp(plcOp)
+  try {
+    await plc.assureValidOp(plcOp)
+    await plc.assureValidSig([plcRotationKey], plcOp)
+  } catch (err) {
+    throw new InvalidRequestError('invalid plc operation', 'IncompatibleDidDoc')
+  }
   const doc = plc.formatDidDoc({ did, ...plcOp })
   const data = ensureAtpDocument(doc)
 
