@@ -5,7 +5,7 @@ import { ServiceImpl } from '@connectrpc/connect'
 import * as ui8 from 'uint8arrays'
 import { ids } from '../../../lexicon/lexicons'
 import { Service } from '../../gen/bsky_connect'
-import { Record } from '../../gen/bsky_pb'
+import { PostRecordMeta, Record } from '../../gen/bsky_pb'
 import { Database } from '../../../db'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
@@ -16,7 +16,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   getListBlockRecords: getRecords(db, ids.AppBskyGraphListblock),
   getListItemRecords: getRecords(db, ids.AppBskyGraphListitem),
   getListRecords: getRecords(db, ids.AppBskyGraphList),
-  getPostRecords: getRecords(db, ids.AppBskyFeedPost),
+  getPostRecords: getPostRecords(db),
   getProfileRecords: getRecords(db, ids.AppBskyActorProfile),
   getRepostRecords: getRecords(db, ids.AppBskyFeedRepost),
   getThreadGateRecords: getRecords(db, ids.AppBskyFeedThreadgate),
@@ -25,9 +25,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 export const getRecords =
   (db: Database, collection?: string) =>
   async (req: { uris: string[] }): Promise<{ records: Record[] }> => {
-    if (req.uris.length === 0) {
-      return { records: [] }
-    }
     const validUris = collection
       ? req.uris.filter((uri) => new AtUri(uri).collection === collection)
       : req.uris
@@ -55,3 +52,28 @@ export const getRecords =
     })
     return { records }
   }
+
+export const getPostRecords = (db: Database) => {
+  const getBaseRecords = getRecords(db, ids.AppBskyFeedPost)
+  return async (req: {
+    uris: string[]
+  }): Promise<{ records: Record[]; meta: PostRecordMeta[] }> => {
+    const [{ records }, details] = await Promise.all([
+      getBaseRecords(req),
+      req.uris.length
+        ? await db.db
+            .selectFrom('post')
+            .where('uri', 'in', req.uris)
+            .select(['uri', 'violatesThreadGate'])
+            .execute()
+        : [],
+    ])
+    const byKey = keyBy(details, 'uri')
+    const meta = req.uris.map((uri) => {
+      return new PostRecordMeta({
+        violatesThreadGate: !!byKey[uri]?.violatesThreadGate,
+      })
+    })
+    return { records, meta }
+  }
+}

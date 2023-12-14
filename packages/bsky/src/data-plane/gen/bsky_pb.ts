@@ -580,6 +580,43 @@ export class GetListRecordsResponse extends Message<GetListRecordsResponse> {
 }
 
 /**
+ * @generated from message bsky.PostRecordMeta
+ */
+export class PostRecordMeta extends Message<PostRecordMeta> {
+  /**
+   * @generated from field: bool violates_thread_gate = 1;
+   */
+  violatesThreadGate = false;
+
+  constructor(data?: PartialMessage<PostRecordMeta>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.PostRecordMeta";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "violates_thread_gate", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PostRecordMeta {
+    return new PostRecordMeta().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PostRecordMeta {
+    return new PostRecordMeta().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PostRecordMeta {
+    return new PostRecordMeta().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: PostRecordMeta | PlainMessage<PostRecordMeta> | undefined, b: PostRecordMeta | PlainMessage<PostRecordMeta> | undefined): boolean {
+    return proto3.util.equals(PostRecordMeta, a, b);
+  }
+}
+
+/**
  * @generated from message bsky.GetPostRecordsRequest
  */
 export class GetPostRecordsRequest extends Message<GetPostRecordsRequest> {
@@ -625,6 +662,11 @@ export class GetPostRecordsResponse extends Message<GetPostRecordsResponse> {
    */
   records: Record[] = [];
 
+  /**
+   * @generated from field: repeated bsky.PostRecordMeta meta = 2;
+   */
+  meta: PostRecordMeta[] = [];
+
   constructor(data?: PartialMessage<GetPostRecordsResponse>) {
     super();
     proto3.util.initPartial(data, this);
@@ -634,6 +676,7 @@ export class GetPostRecordsResponse extends Message<GetPostRecordsResponse> {
   static readonly typeName = "bsky.GetPostRecordsResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "records", kind: "message", T: Record, repeated: true },
+    { no: 2, name: "meta", kind: "message", T: PostRecordMeta, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetPostRecordsResponse {

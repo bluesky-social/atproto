@@ -8,7 +8,7 @@ import { HydrationMap, RecordInfo, parseRecord, parseString } from './util'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../lexicon/lexicons'
 
-export type Post = RecordInfo<PostRecord>
+export type Post = RecordInfo<PostRecord> & { violatesThreadGate: boolean }
 export type Posts = HydrationMap<Post>
 
 export type PostViewerState = {
@@ -57,7 +57,8 @@ export class FeedHydrator {
     const res = await this.dataplane.getPostRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       const record = parseRecord<PostRecord>(res.records[i], includeTakedowns)
-      return acc.set(uri, record ?? null)
+      const violatesThreadGate = res.meta[i].violatesThreadGate
+      return acc.set(uri, record ? { ...record, violatesThreadGate } : null)
     }, new HydrationMap<Post>())
   }
 

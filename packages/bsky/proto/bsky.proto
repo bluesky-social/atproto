@@ -20,7 +20,6 @@ message Record {
   bool taken_down = 5;
 }
 
-
 message GetBlockRecordsRequest {
   repeated string uris = 1;
 }
@@ -77,12 +76,17 @@ message GetListRecordsResponse {
   repeated Record records = 1;
 }
 
+message PostRecordMeta {
+  bool violates_thread_gate = 1;
+}
+
 message GetPostRecordsRequest {
   repeated string uris = 1;
 }
 
 message GetPostRecordsResponse {
   repeated Record records = 1;
+  repeated PostRecordMeta meta = 2;
 }
 
 message GetProfileRecordsRequest {

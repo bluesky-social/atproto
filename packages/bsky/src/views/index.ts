@@ -402,6 +402,7 @@ export class Views {
     // no block violating posts in feeds
     if (state.postBlocks?.get(uri)?.reply) return undefined
     const parsedUri = new AtUri(uri)
+    const postInfo = state.posts?.get(uri)
     let postUri: AtUri
     let reason: ReasonRepost | undefined
     if (parsedUri.collection === ids.AppBskyFeedRepost) {
@@ -418,7 +419,9 @@ export class Views {
     return {
       post,
       reason,
-      reply: this.replyRef(postUri.toString(), state),
+      reply: !postInfo?.violatesThreadGate
+        ? this.replyRef(postUri.toString(), state)
+        : undefined,
     }
   }
 
@@ -508,7 +511,6 @@ export class Views {
     if (this.viewerBlockExists(post.author.did, state)) {
       return this.blockedPost(anchor, post.author.did, state)
     }
-
     const includedPosts = new Set<string>([anchor])
     const childrenByParentUri: Record<string, string[]> = {}
     state.posts?.forEach((post, uri) => {
@@ -519,17 +521,17 @@ export class Views {
       childrenByParentUri[parentUri] ??= []
       childrenByParentUri[parentUri].push(uri)
     })
+    const violatesThreadGate = state.posts?.get(anchor)?.violatesThreadGate
 
     return {
       $type: 'app.bsky.feed.defs#threadViewPost',
       post,
-      parent: this.threadParent(anchor, state, opts.height),
-      replies: this.threadReplies(
-        anchor,
-        childrenByParentUri,
-        state,
-        opts.depth,
-      ),
+      parent: !violatesThreadGate
+        ? this.threadParent(anchor, state, opts.height)
+        : undefined,
+      replies: !violatesThreadGate
+        ? this.threadReplies(anchor, childrenByParentUri, state, opts.depth)
+        : undefined,
     }
   }
 
@@ -565,6 +567,9 @@ export class Views {
     if (depth < 1) return undefined
     const childrenUris = childrenByParentUri[parentUri] ?? []
     return mapDefined(childrenUris, (uri) => {
+      if (state.posts?.get(uri)?.violatesThreadGate) {
+        return undefined
+      }
       if (state.postBlocks?.get(uri)?.reply) {
         return undefined
       }
@@ -755,8 +760,10 @@ export class Views {
   }
 
   userReplyDisabled(uri: string, state: HydrationState): boolean | undefined {
-    // @TODO if the post itself violates threadgate then disable replies
     const post = state.posts?.get(uri)
+    if (post?.violatesThreadGate) {
+      return true
+    }
     const rootUriStr: string = post?.record.reply?.root.uri ?? uri
     const gate = state.threadgates?.get(postToGateUri(rootUriStr))?.record
     if (!gate || !state.viewer) {
