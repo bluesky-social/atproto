@@ -46,9 +46,10 @@ import {
   isRecordWithMedia,
 } from './types'
 import { Label } from '../hydration/label'
-import { Repost } from '../hydration/feed'
+import { PostViewerState, Repost } from '../hydration/feed'
 import { RecordInfo } from '../hydration/util'
 import { Notification } from '../data-plane/gen/bsky_pb'
+import { parseThreadGate } from '../services/feed/util'
 
 export class Views {
   constructor(public imgUriBuilder: ImageUriBuilder) {}
@@ -753,9 +754,34 @@ export class Views {
     }
   }
 
-  userReplyDisabled(_uri: string, _state: HydrationState): boolean | undefined {
-    // @TODO
-    return undefined
+  userReplyDisabled(uri: string, state: HydrationState): boolean | undefined {
+    // @TODO if the post itself violates threadgate then disable replies
+    const post = state.posts?.get(uri)
+    const rootUriStr: string = post?.record.reply?.root.uri ?? uri
+    const gate = state.threadgates?.get(postToGateUri(rootUriStr))?.record
+    if (!gate || !state.viewer) {
+      return undefined
+    }
+    const rootPost = state.posts?.get(rootUriStr)?.record
+    const ownerDid = new AtUri(rootUriStr).hostname
+    const {
+      canReply,
+      allowFollowing,
+      allowListUris = [],
+    } = parseThreadGate(state.viewer, ownerDid, rootPost ?? null, gate)
+    if (canReply) {
+      return false
+    }
+    if (allowFollowing && state.profileViewers?.get(ownerDid)?.followedBy) {
+      return false
+    }
+    for (const listUri of allowListUris) {
+      const list = state.listViewers?.get(listUri)
+      if (list?.viewerInList) {
+        return false
+      }
+    }
+    return true
   }
 
   notification(
@@ -798,4 +824,12 @@ export class Views {
       labels: [...labels, ...selfLabels],
     }
   }
+}
+
+const postToGateUri = (uri: string) => {
+  const aturi = new AtUri(uri)
+  if (aturi.collection === ids.AppBskyFeedPost) {
+    aturi.collection = ids.AppBskyFeedThreadgate
+  }
+  return aturi.toString()
 }

@@ -1,9 +1,12 @@
+import assert from 'assert'
+import { mapDefined } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
 import { Notification } from '../data-plane/gen/bsky_pb'
 import { ids } from '../lexicon/lexicons'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
+import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import {
   ActorHydrator,
   ProfileAggs,
@@ -34,9 +37,9 @@ import {
   PostViewerStates,
   Threadgates,
 } from './feed'
-import { mapDefined } from '@atproto/common'
 
 export type HydrationState = {
+  viewer?: string | null
   actors?: Actors
   profileViewers?: ProfileViewerStates
   profileAggs?: ProfileAggs
@@ -100,6 +103,7 @@ export class Hydrator {
       actors,
       labels,
       profileViewers,
+      viewer,
     })
   }
 
@@ -158,7 +162,7 @@ export class Hydrator {
       this.graph.getLists(uris),
       viewer ? this.graph.getListViewerStates(uris, viewer) : undefined,
     ])
-    return { lists, listViewers }
+    return { lists, listViewers, viewer }
   }
 
   // app.bsky.graph.defs#listItemView
@@ -177,7 +181,7 @@ export class Hydrator {
       }
     })
     const profileState = await this.hydrateProfiles(dids, viewer)
-    return mergeStates(profileState, { listItems })
+    return mergeStates(profileState, { listItems, viewer })
   }
 
   // app.bsky.feed.defs#postView
@@ -196,23 +200,31 @@ export class Hydrator {
     includeTakedowns = false,
   ): Promise<HydrationState> {
     const postsLayer0 = await this.feed.getPosts(uris, includeTakedowns)
-    // first level embeds
+    // first level embeds plus thread roots we haven't fetched yet
     const urisLayer1 = nestedRecordUrisFromPosts(postsLayer0)
+    const additionalRootUris = rootUrisFromPosts(postsLayer0) // supports computing threadgates
     const urisLayer1ByCollection = urisByCollection(urisLayer1)
     const postUrisLayer1 = urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
     const postsLayer1 = await this.feed.getPosts(
-      postUrisLayer1,
+      [...postUrisLayer1, ...additionalRootUris],
       includeTakedowns,
     )
-    // second level embeds
-    const urisLayer2 = nestedRecordUrisFromPosts(postsLayer1)
+    // second level embeds, ignoring any additional root uris we mixed-in to the previous layer
+    const urisLayer2 = nestedRecordUrisFromPosts(postsLayer1, postUrisLayer1)
     const urisLayer2ByCollection = urisByCollection(urisLayer2)
     const postUrisLayer2 = urisLayer2ByCollection.get(ids.AppBskyFeedPost) ?? []
-    const postsLayer2 = await this.feed.getPosts(
-      postUrisLayer2,
-      includeTakedowns,
-    )
-    // collect list/feedgen embeds, post record hydration
+    const threadRootUris = new Set<string>()
+    for (const [uri, post] of postsLayer0) {
+      if (post) {
+        threadRootUris.add(rootUriFromPost(post) ?? uri)
+      }
+    }
+    const [postsLayer2, threadgates] = await Promise.all([
+      this.feed.getPosts(postUrisLayer2, includeTakedowns),
+      this.feed.getThreadgatesForPosts([...threadRootUris.values()]),
+    ])
+    // collect list/feedgen embeds, lists in threadgates, post record hydration
+    const gateListUris = getListUrisFromGates(threadgates)
     const nestedListUris = [
       ...(urisLayer1ByCollection.get(ids.AppBskyGraphList) ?? []),
       ...(urisLayer2ByCollection.get(ids.AppBskyGraphList) ?? []),
@@ -227,7 +239,6 @@ export class Hydrator {
     const [
       postAggs,
       postViewers,
-      threadgates,
       labels,
       postBlocks,
       profileState,
@@ -236,7 +247,6 @@ export class Hydrator {
     ] = await Promise.all([
       this.feed.getPostAggregates(uris),
       viewer ? this.feed.getPostViewerStates(uris, viewer) : undefined,
-      this.feed.getThreadgatesForPosts(uris),
       this.label.getLabelsForSubjects(allPostUris),
       this.hydratePostBlocks(posts),
       this.hydrateProfiles(
@@ -244,7 +254,7 @@ export class Hydrator {
         viewer,
         includeTakedowns,
       ),
-      this.hydrateLists(nestedListUris, viewer),
+      this.hydrateLists([...nestedListUris, ...gateListUris], viewer),
       this.hydrateFeedGens(nestedFeedGenUris, viewer),
     ])
     // combine all hydration state
@@ -255,6 +265,7 @@ export class Hydrator {
       postBlocks,
       labels,
       threadgates,
+      viewer,
     })
   }
 
@@ -359,6 +370,7 @@ export class Hydrator {
     )
     return mergeManyStates(postState, repostProfileState, {
       reposts,
+      viewer,
     })
   }
 
@@ -398,6 +410,7 @@ export class Hydrator {
       feedgens,
       feedgenAggs,
       feedgenViewers,
+      viewer,
     })
   }
 
@@ -413,7 +426,7 @@ export class Hydrator {
       this.feed.getLikes(uris),
       this.hydrateProfiles(uris.map(didFromUri), viewer),
     ])
-    return mergeStates(profileState, { likes })
+    return mergeStates(profileState, { likes, viewer })
   }
 
   // app.bsky.feed.getRepostedBy#repostedBy
@@ -425,7 +438,7 @@ export class Hydrator {
       this.feed.getReposts(uris),
       this.hydrateProfiles(uris.map(didFromUri), viewer),
     ])
-    return mergeStates(profileState, { reposts })
+    return mergeStates(profileState, { reposts, viewer })
   }
 
   // app.bsky.notification.listNotifications#notification
@@ -451,7 +464,14 @@ export class Hydrator {
         this.label.getLabelsForSubjects(uris),
         this.hydrateProfiles(uris.map(didFromUri), viewer),
       ])
-    return mergeStates(profileState, { posts, likes, reposts, follows, labels })
+    return mergeStates(profileState, {
+      posts,
+      likes,
+      reposts,
+      follows,
+      labels,
+      viewer,
+    })
   }
 
   // provides partial hydration state withing getFollows / getFollowers, mainly for applying rules
@@ -499,9 +519,29 @@ const labelSubjectsForDid = (dids: string[]) => {
   ]
 }
 
-const nestedRecordUrisFromPosts = (posts: Posts): string[] => {
+const rootUrisFromPosts = (posts: Posts): string[] => {
   const uris: string[] = []
   for (const item of posts.values()) {
+    const rootUri = item && rootUriFromPost(item)
+    if (rootUri) {
+      uris.push(rootUri)
+    }
+  }
+  return uris
+}
+
+const rootUriFromPost = (post: Post): string | undefined => {
+  return post.record.reply?.root.uri
+}
+
+const nestedRecordUrisFromPosts = (
+  posts: Posts,
+  fromUris?: string[],
+): string[] => {
+  const uris: string[] = []
+  const postUris = fromUris ?? posts.keys()
+  for (const uri of postUris) {
+    const item = posts.get(uri)
     if (item) {
       uris.push(...nestedRecordUris(item.record))
     }
@@ -516,6 +556,17 @@ const nestedRecordUris = (post: Post['record']): string[] => {
     uris.push(post.embed.record.uri)
   } else if (isEmbedRecordWithMedia(post.embed)) {
     uris.push(post.embed.record.record.uri)
+  }
+  return uris
+}
+
+const getListUrisFromGates = (gates: Threadgates) => {
+  const uris: string[] = []
+  for (const gate of gates.values()) {
+    const listRules = gate?.record.allow?.filter(isListRule) ?? []
+    for (const rule of listRules) {
+      uris.push(rule.list)
+    }
   }
   return uris
 }
@@ -535,7 +586,12 @@ export const mergeStates = (
   stateA: HydrationState,
   stateB: HydrationState,
 ): HydrationState => {
+  assert(
+    !stateA.viewer || !stateB.viewer || stateA.viewer === stateB.viewer,
+    'incompatible viewers',
+  )
   return {
+    viewer: stateA.viewer ?? stateB.viewer,
     actors: mergeMaps(stateA.actors, stateB.actors),
     profileAggs: mergeMaps(stateA.profileAggs, stateB.profileAggs),
     profileViewers: mergeMaps(stateA.profileViewers, stateB.profileViewers),
@@ -546,6 +602,7 @@ export const mergeStates = (
     reposts: mergeMaps(stateA.reposts, stateB.reposts),
     follows: mergeMaps(stateA.follows, stateB.follows),
     followBlocks: mergeMaps(stateA.followBlocks, stateB.followBlocks),
+    threadgates: mergeMaps(stateA.threadgates, stateB.threadgates),
     lists: mergeMaps(stateA.lists, stateB.lists),
     listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
     listItems: mergeMaps(stateA.listItems, stateB.listItems),

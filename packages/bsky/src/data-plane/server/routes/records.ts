@@ -1,36 +1,43 @@
-import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../gen/bsky_connect'
-import * as ui8 from 'uint8arrays'
-import { Database } from '../../../db'
 import { keyBy } from '@atproto/common'
-import { Record } from '../../gen/bsky_pb'
+import { AtUri } from '@atproto/syntax'
 import { Timestamp } from '@bufbuild/protobuf'
+import { ServiceImpl } from '@connectrpc/connect'
+import * as ui8 from 'uint8arrays'
+import { ids } from '../../../lexicon/lexicons'
+import { Service } from '../../gen/bsky_connect'
+import { Record } from '../../gen/bsky_pb'
+import { Database } from '../../../db'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
-  getBlockRecords: getRecords(db),
-  getFeedGeneratorRecords: getRecords(db),
-  getFollowRecords: getRecords(db),
-  getLikeRecords: getRecords(db),
-  getListBlockRecords: getRecords(db),
-  getListItemRecords: getRecords(db),
-  getListRecords: getRecords(db),
-  getPostRecords: getRecords(db),
-  getProfileRecords: getRecords(db),
-  getRepostRecords: getRecords(db),
-  getThreadGateRecords: getRecords(db),
+  getBlockRecords: getRecords(db, ids.AppBskyGraphBlock),
+  getFeedGeneratorRecords: getRecords(db, ids.AppBskyFeedGenerator),
+  getFollowRecords: getRecords(db, ids.AppBskyGraphFollow),
+  getLikeRecords: getRecords(db, ids.AppBskyFeedLike),
+  getListBlockRecords: getRecords(db, ids.AppBskyGraphListblock),
+  getListItemRecords: getRecords(db, ids.AppBskyGraphListitem),
+  getListRecords: getRecords(db, ids.AppBskyGraphList),
+  getPostRecords: getRecords(db, ids.AppBskyFeedPost),
+  getProfileRecords: getRecords(db, ids.AppBskyActorProfile),
+  getRepostRecords: getRecords(db, ids.AppBskyFeedRepost),
+  getThreadGateRecords: getRecords(db, ids.AppBskyFeedThreadgate),
 })
 
 export const getRecords =
-  (db: Database) =>
+  (db: Database, collection?: string) =>
   async (req: { uris: string[] }): Promise<{ records: Record[] }> => {
     if (req.uris.length === 0) {
       return { records: [] }
     }
-    const res = await db.db
-      .selectFrom('record')
-      .selectAll()
-      .where('uri', 'in', req.uris)
-      .execute()
+    const validUris = collection
+      ? req.uris.filter((uri) => new AtUri(uri).collection === collection)
+      : req.uris
+    const res = validUris.length
+      ? await db.db
+          .selectFrom('record')
+          .selectAll()
+          .where('uri', 'in', validUris)
+          .execute()
+      : []
     const byUri = keyBy(res, 'uri')
     const records: Record[] = req.uris.map((uri) => {
       const row = byUri[uri]
