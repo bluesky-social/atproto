@@ -1,7 +1,7 @@
 // This may require better organization but for now, just dumping functions here containing DB queries for moderation status
 
 import { AtUri } from '@atproto/syntax'
-import { Database, PrimaryDatabase } from '../../db'
+import { Database } from '../../db'
 import { ModerationSubjectStatus } from '../../db/schema/moderation_subject_status'
 import {
   REVIEWOPEN,
@@ -200,7 +200,7 @@ type ModerationSubjectStatusFilter =
   | Pick<ModerationSubjectStatus, 'did' | 'recordPath'>
   | Pick<ModerationSubjectStatus, 'did' | 'recordPath' | 'recordCid'>
 export const getModerationSubjectStatus = async (
-  db: PrimaryDatabase,
+  db: Database,
   filters: ModerationSubjectStatusFilter,
 ) => {
   let builder = db.db

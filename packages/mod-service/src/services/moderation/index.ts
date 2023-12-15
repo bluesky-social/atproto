@@ -3,9 +3,7 @@ import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Database } from '../../db'
 import { ModerationViews } from './views'
-import { ImageUriBuilder } from '../../image/uri'
 import { Main as StrongRef } from '../../lexicon/types/com/atproto/repo/strongRef'
-import { ImageInvalidator } from '../../image/invalidator'
 import {
   isModEventComment,
   isModEventLabel,
@@ -34,20 +32,10 @@ import { StatusKeyset, TimeIdKeyset } from './pagination'
 import AtpAgent from '@atproto/api'
 
 export class ModerationService {
-  constructor(
-    public db: Database,
-    public appviewAgent: AtpAgent,
-    public imgUriBuilder: ImageUriBuilder,
-    public imgInvalidator: ImageInvalidator,
-  ) {}
+  constructor(public db: Database, public appviewAgent: AtpAgent) {}
 
-  static creator(
-    appviewAgent: AtpAgent,
-    imgUriBuilder: ImageUriBuilder,
-    imgInvalidator: ImageInvalidator,
-  ) {
-    return (db: Database) =>
-      new ModerationService(db, appviewAgent, imgUriBuilder, imgInvalidator)
+  static creator(appviewAgent: AtpAgent) {
+    return (db: Database) => new ModerationService(db, appviewAgent)
   }
 
   views = new ModerationViews(this.db, this.appviewAgent)

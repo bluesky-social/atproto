@@ -213,7 +213,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: await moderationService.views.event(moderationEvent),
+        body: moderationService.views.formatEvent(moderationEvent),
       }
     },
   })

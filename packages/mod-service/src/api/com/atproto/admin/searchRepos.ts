@@ -5,7 +5,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
     auth: ctx.roleVerifier,
     handler: async ({ params }) => {
-      const db = ctx.db.getPrimary()
+      const db = ctx.db
       const moderationService = ctx.services.moderation(db)
       const { limit, cursor } = params
       // prefer new 'q' query param over deprecated 'term'

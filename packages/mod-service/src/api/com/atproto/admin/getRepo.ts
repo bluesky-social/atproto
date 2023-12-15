@@ -9,14 +9,13 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { did } = params
       const db = ctx.db
-      const result = await ctx.services.actor(db).getActor(did, true)
-      if (!result) {
+      const [partialRepo, accountInfo] = await Promise.all([
+        ctx.services.moderation(db).views.repoDetail(did),
+        getPdsAccountInfo(ctx, did),
+      ])
+      if (!partialRepo) {
         throw new InvalidRequestError('Repo not found', 'RepoNotFound')
       }
-      const [partialRepo, accountInfo] = await Promise.all([
-        ctx.services.moderation(db).views.repoDetail(result),
-        getPdsAccountInfo(ctx, result.did),
-      ])
 
       const repo = addAccountInfoToRepoViewDetail(
         partialRepo,

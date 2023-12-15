@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
         limit = 50,
         cursor,
       } = params
-      const db = ctx.db.getPrimary()
+      const db = ctx.db
       const moderationService = ctx.services.moderation(db)
       const results = await moderationService.getSubjectStatuses({
         reviewState: getReviewState(reviewState),
@@ -40,8 +40,12 @@ export default function (server: Server, ctx: AppContext) {
         limit,
         cursor,
       })
-      const subjectStatuses = moderationService.views.subjectStatus(
-        results.statuses,
+      const subjectStatuses = results.statuses.map(
+        (status) =>
+          moderationService.views.formatSubjectStatus({
+            ...status,
+            handle: '',
+          }), // @TODO fix handle
       )
       return {
         encoding: 'application/json',

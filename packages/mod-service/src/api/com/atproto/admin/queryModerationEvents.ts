@@ -30,7 +30,9 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           cursor: results.cursor,
-          events: await moderationService.views.event(results.events),
+          events: results.events.map((evt) =>
+            moderationService.views.formatEvent(evt),
+          ),
         },
       }
     },
