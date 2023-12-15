@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { ArrayEl } from '@atproto/common'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
-import { BlobRef, jsonStringToLex } from '@atproto/lexicon'
+import { BlobRef } from '@atproto/lexicon'
 import { Database } from '../../db'
 import {
   ModEventView,
@@ -18,9 +18,7 @@ import {
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import {
-  ModerationEventRow,
   ModerationEventRowWithHandle,
-  ModerationSubjectStatusRow,
   ModerationSubjectStatusRowWithHandle,
 } from './types'
 import { getSelfLabels } from '../label'
@@ -157,7 +155,14 @@ export class ModerationViews {
   async eventDetail(
     result: ModerationEventRowWithHandle,
   ): Promise<ModEventViewDetail> {
-    const subject = await this.subject(result)
+    const subjectId =
+      result.subjectType === 'com.atproto.admin.defs#repoRef'
+        ? result.subjectDid
+        : result.subjectUri
+    if (!subjectId) {
+      throw new Error(`Bad subject: ${result.id}`)
+    }
+    const subject = await this.subject(subjectId)
     const eventView = this.formatEvent(result)
     const allBlobs = findBlobRefs(subject.value)
     const subjectBlobs = await this.blob(
@@ -242,23 +247,26 @@ export class ModerationViews {
     }, new Map<string, RecordView>())
   }
 
-  async recordDetail(result: RecordResult): Promise<RecordViewDetail> {
-    const [record, subjectStatusResult] = await Promise.all([
-      this.record(result),
-      this.getSubjectStatus(didAndRecordPathFromUri(result.uri)),
+  async recordDetail(uri: AtUri): Promise<RecordViewDetail | undefined> {
+    const uriStr = uri.toString()
+    const [records, subjectStatusesResult] = await Promise.all([
+      this.records([uri]),
+      this.getSubjectStatus([uriStr]),
     ])
+    const record = records.get(uriStr)
+    if (!record) return undefined
+
+    const status = subjectStatusesResult.get(uriStr)
 
     const [blobs, labels, subjectStatus] = await Promise.all([
       this.blob(findBlobRefs(record.value)),
       this.labels(record.uri),
-      subjectStatusResult?.length
-        ? this.subjectStatus(subjectStatusResult[0])
-        : Promise.resolve(undefined),
+      status ? this.formatSubjectStatus(status) : Promise.resolve(undefined),
     ])
     const selfLabels = getSelfLabels({
-      uri: result.uri,
-      cid: result.cid,
-      record: jsonStringToLex(result.json) as Record<string, unknown>,
+      uri: record.uri,
+      cid: record.cid,
+      record: record.value,
     })
     return {
       ...record,
@@ -270,7 +278,8 @@ export class ModerationViews {
       labels: [...labels, ...selfLabels],
     }
   }
-  reportPublic(report: ReportResult): ReportOutput {
+
+  formatReport(report: ModerationEventRowWithHandle): ReportOutput {
     return {
       id: report.id,
       createdAt: report.createdAt,
@@ -296,41 +305,36 @@ export class ModerationViews {
   }
   // Partial view for subjects
 
-  async subject(result: SubjectResult): Promise<SubjectView> {
-    let subject: SubjectView
-    if (result.subjectType === 'com.atproto.admin.defs#repoRef') {
-      const repoResult = await this.db.db
-        .selectFrom('actor')
-        .selectAll()
-        .where('did', '=', result.subjectDid)
-        .executeTakeFirst()
-      if (repoResult) {
-        subject = await this.repo(repoResult)
-        subject.$type = 'com.atproto.admin.defs#repoView'
+  async subject(subject: string): Promise<SubjectView> {
+    if (subject.startsWith('did:')) {
+      const repos = await this.repos([subject])
+      const repo = repos.get(subject)
+      if (repo) {
+        return {
+          $type: 'com.atproto.admin.defs#repoView',
+          ...repo,
+        }
       } else {
-        subject = { did: result.subjectDid }
-        subject.$type = 'com.atproto.admin.defs#repoViewNotFound'
-      }
-    } else if (
-      result.subjectType === 'com.atproto.repo.strongRef' &&
-      result.subjectUri !== null
-    ) {
-      const recordResult = await this.db.db
-        .selectFrom('record')
-        .selectAll()
-        .where('uri', '=', result.subjectUri)
-        .executeTakeFirst()
-      if (recordResult) {
-        subject = await this.record(recordResult)
-        subject.$type = 'com.atproto.admin.defs#recordView'
-      } else {
-        subject = { uri: result.subjectUri }
-        subject.$type = 'com.atproto.admin.defs#recordViewNotFound'
+        return {
+          $type: 'com.atproto.admin.defs#repoViewNotFound',
+          did: subject,
+        }
       }
     } else {
-      throw new Error(`Bad subject data: (${result.id}) ${result.subjectType}`)
+      const records = await this.records([new AtUri(subject)])
+      const record = records.get(subject)
+      if (record) {
+        return {
+          $type: 'com.atproto.admin.defs#recordView',
+          ...record,
+        }
+      } else {
+        return {
+          $type: 'com.atproto.admin.defs#recordViewNotFound',
+          uri: subject,
+        }
+      }
     }
-    return subject
   }
 
   // Partial view for blobs
@@ -479,10 +483,6 @@ export class ModerationViews {
 }
 
 type SubjectView = ModEventViewDetail['subject'] & ReportViewDetail['subject']
-
-function didFromUri(uri: string) {
-  return new AtUri(uri).host
-}
 
 function parseSubjectId(subject: string) {
   if (subject.startsWith('did:')) {
