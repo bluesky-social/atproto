@@ -1,11 +1,12 @@
+import { SeedClient } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
-import { FLAG } from '../../src/lexicon/types/com/atproto/admin/defs'
-import { adminAuth } from '../_util'
-import { SeedClient } from './client'
 import usersSeed from './users'
 
-export default async (sc: SeedClient, invite?: { code: string }) => {
-  await usersSeed(sc, invite)
+export default async (
+  sc: SeedClient,
+  opts?: { inviteCode?: string; addModLabels?: boolean },
+) => {
+  await usersSeed(sc, opts)
 
   const alice = sc.dids.alice
   const bob = sc.dids.bob
@@ -36,12 +37,12 @@ export default async (sc: SeedClient, invite?: { code: string }) => {
   })
   const img1 = await sc.uploadFile(
     carol,
-    'tests/image/fixtures/key-landscape-small.jpg',
+    'tests/sample-img/key-landscape-small.jpg',
     'image/jpeg',
   )
   const img2 = await sc.uploadFile(
     carol,
-    'tests/image/fixtures/key-alt.jpg',
+    'tests/sample-img/key-alt.jpg',
     'image/jpeg',
   )
   await sc.post(
@@ -102,9 +103,11 @@ export default async (sc: SeedClient, invite?: { code: string }) => {
 
   const replyImg = await sc.uploadFile(
     bob,
-    'tests/image/fixtures/key-landscape-small.jpg',
+    'tests/sample-img/key-landscape-small.jpg',
     'image/jpeg',
   )
+  // must ensure ordering of replies in indexing
+  await sc.network.processAll()
   await sc.reply(
     bob,
     sc.posts[alice][1].ref,
@@ -119,6 +122,7 @@ export default async (sc: SeedClient, invite?: { code: string }) => {
     sc.posts[alice][1].ref,
     replies.carol[0],
   )
+  await sc.network.processAll()
   const alicesReplyToBob = await sc.reply(
     alice,
     sc.posts[alice][1].ref,
@@ -129,22 +133,26 @@ export default async (sc: SeedClient, invite?: { code: string }) => {
   await sc.repost(dan, sc.posts[alice][1].ref)
   await sc.repost(dan, alicesReplyToBob.ref)
 
-  await sc.agent.com.atproto.admin.takeModerationAction(
-    {
-      action: FLAG,
-      subject: {
-        $type: 'com.atproto.admin.defs#repoRef',
-        did: dan,
+  if (opts?.addModLabels) {
+    await sc.agent.com.atproto.admin.emitModerationEvent(
+      {
+        event: {
+          createLabelVals: ['repo-action-label'],
+          negateLabelVals: [],
+          $type: 'com.atproto.admin.defs#modEventLabel',
+        },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: dan,
+        },
+        createdBy: 'did:example:admin',
       },
-      createdBy: 'did:example:admin',
-      reason: 'test',
-      createLabelVals: ['repo-action-label'],
-    },
-    {
-      encoding: 'application/json',
-      headers: { authorization: adminAuth() },
-    },
-  )
+      {
+        encoding: 'application/json',
+        headers: sc.adminAuthHeaders(),
+      },
+    )
+  }
 
   return sc
 }

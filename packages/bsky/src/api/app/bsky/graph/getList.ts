@@ -91,17 +91,20 @@ const presentation = (state: HydrationState, ctx: Context) => {
   const actors = actorService.views.profilePresentation(
     Object.keys(profileState.profiles),
     profileState,
-    { viewer: params.viewer },
+    params.viewer,
   )
   const creator = actors[list.creator]
   if (!creator) {
     throw new InvalidRequestError(`Actor not found: ${list.handle}`)
   }
   const listView = graphService.formatListView(list, actors)
+  if (!listView) {
+    throw new InvalidRequestError('List not found')
+  }
   const items = mapDefined(listItems, (item) => {
     const subject = actors[item.did]
     if (!subject) return
-    return { subject }
+    return { uri: item.uri, subject }
   })
   return { list: listView, items, cursor }
 }
@@ -119,7 +122,7 @@ type Params = QueryParams & {
 type SkeletonState = {
   params: Params
   list: Actor & ListInfo
-  listItems: (Actor & { cid: string; sortAt: string })[]
+  listItems: (Actor & { uri: string; cid: string; sortAt: string })[]
   cursor?: string
 }
 

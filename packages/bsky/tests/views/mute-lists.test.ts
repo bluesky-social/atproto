@@ -1,7 +1,6 @@
 import AtpAgent, { AtUri } from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
-import { RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('bsky views with mutes from mute lists', () => {
@@ -21,7 +20,7 @@ describe('bsky views with mutes from mute lists', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -43,7 +42,7 @@ describe('bsky views with mutes from mute lists', () => {
   it('creates a list with some items', async () => {
     const avatar = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-portrait-small.jpg',
+      'tests/sample-img/key-portrait-small.jpg',
       'image/jpeg',
     )
     // alice creates mute list with bob & carol that dan uses
@@ -74,6 +73,16 @@ describe('bsky views with mutes from mute lists', () => {
       { repo: alice },
       {
         subject: sc.dids.carol,
+        list: list.uri,
+        reason: 'idk',
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
+    await pdsAgent.api.app.bsky.graph.listitem.create(
+      { repo: alice },
+      {
+        subject: sc.dids.dan,
         list: list.uri,
         reason: 'idk',
         createdAt: new Date().toISOString(),
@@ -159,6 +168,15 @@ describe('bsky views with mutes from mute lists', () => {
     expect(res.data.profiles[0].viewer?.mutedByList).toBeUndefined()
     expect(res.data.profiles[1].viewer?.muted).toBe(true)
     expect(res.data.profiles[1].viewer?.mutedByList?.uri).toEqual(listUri)
+  })
+
+  it('ignores self-mutes', async () => {
+    const res = await agent.api.app.bsky.actor.getProfile(
+      { actor: dan }, // dan subscribes to list that contains himself
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(res.data.viewer?.muted).toBe(false)
+    expect(res.data.viewer?.mutedByList).toBeUndefined()
   })
 
   it('does not return notifs for muted accounts', async () => {
@@ -343,7 +361,7 @@ describe('bsky views with mutes from mute lists', () => {
     expect(got.data.list.name).toBe('updated alice mutes')
     expect(got.data.list.description).toBe('new descript')
     expect(got.data.list.avatar).toBeUndefined()
-    expect(got.data.items.length).toBe(2)
+    expect(got.data.items.length).toBe(3)
   })
 
   it('embeds lists in posts', async () => {

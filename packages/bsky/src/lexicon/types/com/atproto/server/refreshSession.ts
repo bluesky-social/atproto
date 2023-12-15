@@ -17,6 +17,7 @@ export interface OutputSchema {
   refreshJwt: string
   handle: string
   did: string
+  didDoc?: {}
   [k: string]: unknown
 }
 

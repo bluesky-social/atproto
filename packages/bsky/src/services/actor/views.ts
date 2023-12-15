@@ -11,7 +11,6 @@ import { Actor } from '../../db/tables/actor'
 import { ImageUriBuilder } from '../../image/uri'
 import { LabelService, Labels, getSelfLabels } from '../label'
 import { BlockAndMuteState, GraphService } from '../graph'
-import { LabelCache } from '../../label-cache'
 import {
   ActorInfoMap,
   ProfileDetailHydrationState,
@@ -21,17 +20,24 @@ import {
   toMapByDid,
 } from './types'
 import { ListInfoMap } from '../graph/types'
+import { FromDb } from '../types'
 
 export class ActorViews {
+  services: {
+    label: LabelService
+    graph: GraphService
+  }
+
   constructor(
     private db: Database,
     private imgUriBuilder: ImageUriBuilder,
-    private labelCache: LabelCache,
-  ) {}
-
-  services = {
-    label: LabelService.creator(this.labelCache)(this.db),
-    graph: GraphService.creator(this.imgUriBuilder)(this.db),
+    private graph: FromDb<GraphService>,
+    private label: FromDb<LabelService>,
+  ) {
+    this.services = {
+      label: label(db),
+      graph: graph(db),
+    }
   }
 
   async profiles(
@@ -45,16 +51,13 @@ export class ActorViews {
       viewer,
       ...opts,
     })
-    return this.profilePresentation(dids, hydrated, {
-      viewer,
-      ...opts,
-    })
+    return this.profilePresentation(dids, hydrated, viewer)
   }
 
   async profilesBasic(
     results: (ActorResult | string)[],
     viewer: string | null,
-    opts?: { omitLabels?: boolean; includeSoftDeleted?: boolean },
+    opts?: { includeSoftDeleted?: boolean },
   ): Promise<ActorInfoMap> {
     if (results.length === 0) return {}
     const dids = results.map((res) => (typeof res === 'string' ? res : res.did))
@@ -62,10 +65,7 @@ export class ActorViews {
       viewer,
       includeSoftDeleted: opts?.includeSoftDeleted,
     })
-    return this.profileBasicPresentation(dids, hydrated, {
-      viewer,
-      omitLabels: opts?.omitLabels,
-    })
+    return this.profileBasicPresentation(dids, hydrated, viewer)
   }
 
   async profilesList(
@@ -137,10 +137,13 @@ export class ActorViews {
       ),
     ])
     const listUris = mapDefined(profiles, ({ did }) => {
-      const list = viewer && bam.muteList([viewer, did])
-      if (!list) return
-      return list
-    })
+      const muteList = viewer && bam.muteList([viewer, did])
+      const blockList = viewer && bam.blockList([viewer, did])
+      const lists: string[] = []
+      if (muteList) lists.push(muteList)
+      if (blockList) lists.push(blockList)
+      return lists
+    }).flat()
     const lists = await this.services.graph.getListViews(listUris, viewer)
     return { profilesDetailed: toMapByDid(profiles), labels, bam, lists }
   }
@@ -168,6 +171,11 @@ export class ActorViews {
         mutedByListUri && lists[mutedByListUri]
           ? this.services.graph.formatListViewBasic(lists[mutedByListUri])
           : undefined
+      const blockingByListUri = viewer && bam.blockList([viewer, did])
+      const blockingByList =
+        blockingByListUri && lists[blockingByListUri]
+          ? this.services.graph.formatListViewBasic(lists[blockingByListUri])
+          : undefined
       const actorLabels = labels[did] ?? []
       const selfLabels = getSelfLabels({
         uri: prof.profileUri,
@@ -194,6 +202,7 @@ export class ActorViews {
               mutedByList,
               blockedBy: !!bam.blockedBy([viewer, did]),
               blocking: bam.blocking([viewer, did]) ?? undefined,
+              blockingByList,
               following:
                 prof?.viewerFollowing && !bam.block([viewer, did])
                   ? prof.viewerFollowing
@@ -265,10 +274,13 @@ export class ActorViews {
       ),
     ])
     const listUris = mapDefined(profiles, ({ did }) => {
-      const list = viewer && bam.muteList([viewer, did])
-      if (!list) return
-      return list
-    })
+      const muteList = viewer && bam.muteList([viewer, did])
+      const blockList = viewer && bam.blockList([viewer, did])
+      const lists: string[] = []
+      if (muteList) lists.push(muteList)
+      if (blockList) lists.push(blockList)
+      return lists
+    }).flat()
     const lists = await this.services.graph.getListViews(listUris, viewer)
     return { profiles: toMapByDid(profiles), labels, bam, lists }
   }
@@ -281,11 +293,8 @@ export class ActorViews {
       labels: Labels
       bam: BlockAndMuteState
     },
-    opts?: {
-      viewer?: string | null
-    },
+    viewer: string | null,
   ): ProfileViewMap {
-    const { viewer } = opts ?? {}
     const { profiles, lists, labels, bam } = state
     return dids.reduce((acc, did) => {
       const prof = profiles[did]
@@ -297,6 +306,11 @@ export class ActorViews {
       const mutedByList =
         mutedByListUri && lists[mutedByListUri]
           ? this.services.graph.formatListViewBasic(lists[mutedByListUri])
+          : undefined
+      const blockingByListUri = viewer && bam.blockList([viewer, did])
+      const blockingByList =
+        blockingByListUri && lists[blockingByListUri]
+          ? this.services.graph.formatListViewBasic(lists[blockingByListUri])
           : undefined
       const actorLabels = labels[did] ?? []
       const selfLabels = getSelfLabels({
@@ -320,6 +334,7 @@ export class ActorViews {
               mutedByList,
               blockedBy: !!bam.blockedBy([viewer, did]),
               blocking: bam.blocking([viewer, did]) ?? undefined,
+              blockingByList,
               following:
                 prof?.viewerFollowing && !bam.block([viewer, did])
                   ? prof.viewerFollowing
@@ -339,12 +354,9 @@ export class ActorViews {
   profileBasicPresentation(
     dids: string[],
     state: ProfileHydrationState,
-    opts?: {
-      viewer?: string | null
-      omitLabels?: boolean
-    },
+    viewer: string | null,
   ): ProfileViewMap {
-    const result = this.profilePresentation(dids, state, opts)
+    const result = this.profilePresentation(dids, state, viewer)
     return Object.values(result).reduce((acc, prof) => {
       const profileBasic = {
         did: prof.did,
@@ -352,7 +364,7 @@ export class ActorViews {
         displayName: prof.displayName,
         avatar: prof.avatar,
         viewer: prof.viewer,
-        labels: opts?.omitLabels ? undefined : prof.labels,
+        labels: prof.labels,
       }
       acc[prof.did] = profileBasic
       return acc

@@ -40,6 +40,8 @@ describe('detectFacets', () => {
     'start.com/foo/bar?baz=bux#hash middle end',
     'start middle end.com/foo/bar?baz=bux#hash',
     'newline1.com\nnewline2.com',
+    'a example.com/index.php php link',
+    'a trailing bsky.app: colon',
 
     'not.. a..url ..here',
     'e.g.',
@@ -156,6 +158,12 @@ describe('detectFacets', () => {
       ['\n'],
       ['newline2.com', 'https://newline2.com'],
     ],
+    [
+      ['a '],
+      ['example.com/index.php', 'https://example.com/index.php'],
+      [' php link'],
+    ],
+    [['a trailing '], ['bsky.app', 'https://bsky.app'], [': colon']],
 
     [['not.. a..url ..here']],
     [['e.g.']],
@@ -295,10 +303,10 @@ describe('detectFacets', () => {
       const rt = new RichText({ text: input })
       await rt.detectFacets(agent)
 
-      let detectedTags: string[] = []
-      let detectedIndices: { byteStart: number; byteEnd: number }[] = []
+      const detectedTags: string[] = []
+      const detectedIndices: { byteStart: number; byteEnd: number }[] = []
 
-      for (const { facet, ...rest } of rt.segments()) {
+      for (const { facet } of rt.segments()) {
         if (!facet) continue
         for (const feature of facet.features) {
           if (isTag(feature)) {

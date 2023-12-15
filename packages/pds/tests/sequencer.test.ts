@@ -1,16 +1,12 @@
-import AtpAgent from '@atproto/api'
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import { randomStr } from '@atproto/crypto'
 import { cborEncode, readFromGenerator, wait } from '@atproto/common'
 import { Sequencer, SeqEvt } from '../src/sequencer'
 import Outbox from '../src/sequencer/outbox'
-import { Database } from '../src'
-import { SeedClient } from './seeds/client'
 import userSeed from './seeds/users'
-import { TestServerInfo, runTestServer } from './_util'
 
 describe('sequencer', () => {
-  let server: TestServerInfo
-  let db: Database
+  let network: TestNetworkNoAppView
   let sequencer: Sequencer
   let sc: SeedClient
   let alice: string
@@ -20,13 +16,11 @@ describe('sequencer', () => {
   let lastSeen: number
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'sequencer',
     })
-    db = server.ctx.db
-    sequencer = server.ctx.sequencer
-    const agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    sequencer = network.pds.ctx.sequencer
+    sc = network.getSeedClient()
     await userSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -35,7 +29,7 @@ describe('sequencer', () => {
   })
 
   afterAll(async () => {
-    await server.close()
+    await network.close()
   })
 
   const randomPost = async (by: string) => sc.post(by, randomStr(8, 'base32'))
@@ -52,7 +46,7 @@ describe('sequencer', () => {
   }
 
   const loadFromDb = (lastSeen: number) => {
-    return db.db
+    return sequencer.db.db
       .selectFrom('repo_seq')
       .select([
         'seq',
@@ -81,11 +75,9 @@ describe('sequencer', () => {
 
   const caughtUp = (outbox: Outbox): (() => Promise<boolean>) => {
     return async () => {
-      const leaderCaughtUp = await server.ctx.sequencerLeader?.isCaughtUp()
-      if (!leaderCaughtUp) return false
       const lastEvt = await outbox.sequencer.curr()
-      if (!lastEvt) return true
-      return outbox.lastSeen >= (lastEvt.seq ?? 0)
+      if (lastEvt === null) return true
+      return outbox.lastSeen >= (lastEvt ?? 0)
     }
   }
 
@@ -185,6 +177,8 @@ describe('sequencer', () => {
       await readFromGenerator(gen, caughtUp(outbox), createPromise)
     }
     await expect(overloadBuffer).rejects.toThrow('Stream consumer too slow')
+
+    await createPromise
 
     const fromDb = await loadFromDb(lastSeen)
     lastSeen = fromDb.at(-1)?.seq ?? lastSeen

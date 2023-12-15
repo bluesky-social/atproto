@@ -4,6 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
+      "description": "A declaration of a post.",
       "key": "tid",
       "record": {
         "type": "object",

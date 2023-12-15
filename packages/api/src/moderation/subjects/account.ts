@@ -20,7 +20,13 @@ export function decideAccount(
       acc.addMuted(subject.viewer?.muted)
     }
   }
-  acc.addBlocking(subject.viewer?.blocking)
+  if (subject.viewer?.blocking) {
+    if (subject.viewer?.blockingByList) {
+      acc.addBlockingByList(subject.viewer?.blockingByList)
+    } else {
+      acc.addBlocking(subject.viewer?.blocking)
+    }
+  }
   acc.addBlockedBy(subject.viewer?.blockedBy)
 
   for (const label of filterAccountLabels(subject.labels)) {
@@ -35,6 +41,8 @@ export function filterAccountLabels(labels?: Label[]): Label[] {
     return []
   }
   return labels.filter(
-    (label) => !label.uri.endsWith('/app.bsky.actor.profile/self'),
+    (label) =>
+      !label.uri.endsWith('/app.bsky.actor.profile/self') ||
+      label.val === '!no-unauthenticated',
   )
 }

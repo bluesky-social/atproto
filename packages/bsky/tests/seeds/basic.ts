@@ -1,5 +1,5 @@
+import { SeedClient } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
-import { SeedClient } from './client'
 import usersSeed from './users'
 
 export default async (sc: SeedClient, users = true) => {
@@ -34,12 +34,12 @@ export default async (sc: SeedClient, users = true) => {
   })
   const img1 = await sc.uploadFile(
     carol,
-    'tests/image/fixtures/key-landscape-small.jpg',
+    'tests/sample-img/key-landscape-small.jpg',
     'image/jpeg',
   )
   const img2 = await sc.uploadFile(
     carol,
-    'tests/image/fixtures/key-alt.jpg',
+    'tests/sample-img/key-alt.jpg',
     'image/jpeg',
   )
   await sc.post(
@@ -100,9 +100,11 @@ export default async (sc: SeedClient, users = true) => {
 
   const replyImg = await sc.uploadFile(
     bob,
-    'tests/image/fixtures/key-landscape-small.jpg',
+    'tests/sample-img/key-landscape-small.jpg',
     'image/jpeg',
   )
+  // must ensure ordering of replies in indexing
+  await sc.network.processAll()
   await sc.reply(
     bob,
     sc.posts[alice][1].ref,
@@ -117,6 +119,7 @@ export default async (sc: SeedClient, users = true) => {
     sc.posts[alice][1].ref,
     replies.carol[0],
   )
+  await sc.network.processAll()
   const alicesReplyToBob = await sc.reply(
     alice,
     sc.posts[alice][1].ref,

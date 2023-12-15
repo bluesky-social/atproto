@@ -1,10 +1,9 @@
 import fs from 'fs/promises'
+import { TestNetwork, SeedClient, ImageRef } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
 import { AutoModerator } from '../../src/auto-moderator'
 import IndexerContext from '../../src/indexer/context'
 import { sha256RawToCid } from '@atproto/common'
-import { TestNetwork } from '@atproto/dev-env'
-import { ImageRef, SeedClient } from '../seeds/client'
 import usersSeed from '../seeds/users'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
@@ -41,31 +40,31 @@ describe('takedowner', () => {
     autoMod = ctx.autoMod
     autoMod.imageFlagger = new TestFlagger()
     pdsAgent = new AtpAgent({ service: network.pds.url })
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
     const fileBytes1 = await fs.readFile(
-      'tests/image/fixtures/key-portrait-small.jpg',
+      'tests/sample-img/key-portrait-small.jpg',
     )
     const fileBytes2 = await fs.readFile(
-      'tests/image/fixtures/key-portrait-large.jpg',
+      'tests/sample-img/key-portrait-large.jpg',
     )
     badCid1 = sha256RawToCid(await sha256(fileBytes1))
     badCid2 = sha256RawToCid(await sha256(fileBytes2))
     goodBlob = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-landscape-small.jpg',
+      'tests/sample-img/key-landscape-small.jpg',
       'image/jpeg',
     )
     badBlob1 = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-portrait-small.jpg',
+      'tests/sample-img/key-portrait-small.jpg',
       'image/jpeg',
     )
     badBlob2 = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-portrait-large.jpg',
+      'tests/sample-img/key-portrait-large.jpg',
       'image/jpeg',
     )
   })
@@ -78,28 +77,45 @@ describe('takedowner', () => {
     const post = await sc.post(alice, 'blah', undefined, [goodBlob, badBlob1])
     await network.processAll()
     await autoMod.processAll()
-    const modAction = await ctx.db.db
-      .selectFrom('moderation_action')
-      .where('subjectUri', '=', post.ref.uriStr)
-      .select(['action', 'id'])
-      .executeTakeFirst()
-    if (!modAction) {
+    const [modStatus, takedownEvent] = await Promise.all([
+      ctx.db.db
+        .selectFrom('moderation_subject_status')
+        .where('did', '=', alice)
+        .where(
+          'recordPath',
+          '=',
+          `${post.ref.uri.collection}/${post.ref.uri.rkey}`,
+        )
+        .select(['takendown', 'id'])
+        .executeTakeFirst(),
+      ctx.db.db
+        .selectFrom('moderation_event')
+        .where('subjectDid', '=', alice)
+        .where('action', '=', 'com.atproto.admin.defs#modEventTakedown')
+        .selectAll()
+        .executeTakeFirst(),
+    ])
+    if (!modStatus || !takedownEvent) {
       throw new Error('expected mod action')
     }
-    expect(modAction.action).toEqual('com.atproto.admin.defs#takedown')
+    expect(modStatus.takendown).toEqual(true)
     const record = await ctx.db.db
       .selectFrom('record')
       .where('uri', '=', post.ref.uriStr)
       .select('takedownId')
       .executeTakeFirst()
-    expect(record?.takedownId).toEqual(modAction.id)
+    expect(record?.takedownId).toBeGreaterThan(0)
 
-    const recordPds = await network.pds.ctx.db.db
-      .selectFrom('record')
-      .where('uri', '=', post.ref.uriStr)
-      .select('takedownId')
-      .executeTakeFirst()
-    expect(recordPds?.takedownId).toEqual(modAction.id)
+    const recordPds = await network.pds.ctx.actorStore.read(
+      post.ref.uri.hostname,
+      (store) =>
+        store.db.db
+          .selectFrom('record')
+          .where('uri', '=', post.ref.uriStr)
+          .select('takedownRef')
+          .executeTakeFirst(),
+    )
+    expect(recordPds?.takedownRef).toEqual(takedownEvent.id.toString())
 
     expect(testInvalidator.invalidated.length).toBe(1)
     expect(testInvalidator.invalidated[0].subject).toBe(
@@ -120,28 +136,44 @@ describe('takedowner', () => {
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
     await network.processAll()
-    const modAction = await ctx.db.db
-      .selectFrom('moderation_action')
-      .where('subjectUri', '=', res.data.uri)
-      .select(['action', 'id'])
-      .executeTakeFirst()
-    if (!modAction) {
+    const [modStatus, takedownEvent] = await Promise.all([
+      ctx.db.db
+        .selectFrom('moderation_subject_status')
+        .where('did', '=', alice)
+        .where('recordPath', '=', `${ids.AppBskyActorProfile}/self`)
+        .select(['takendown', 'id'])
+        .executeTakeFirst(),
+      ctx.db.db
+        .selectFrom('moderation_event')
+        .where('subjectDid', '=', alice)
+        .where(
+          'subjectUri',
+          '=',
+          AtUri.make(alice, ids.AppBskyActorProfile, 'self').toString(),
+        )
+        .where('action', '=', 'com.atproto.admin.defs#modEventTakedown')
+        .selectAll()
+        .executeTakeFirst(),
+    ])
+    if (!modStatus || !takedownEvent) {
       throw new Error('expected mod action')
     }
-    expect(modAction.action).toEqual('com.atproto.admin.defs#takedown')
+    expect(modStatus.takendown).toEqual(true)
     const record = await ctx.db.db
       .selectFrom('record')
       .where('uri', '=', res.data.uri)
       .select('takedownId')
       .executeTakeFirst()
-    expect(record?.takedownId).toEqual(modAction.id)
+    expect(record?.takedownId).toBeGreaterThan(0)
 
-    const recordPds = await network.pds.ctx.db.db
-      .selectFrom('record')
-      .where('uri', '=', res.data.uri)
-      .select('takedownId')
-      .executeTakeFirst()
-    expect(recordPds?.takedownId).toEqual(modAction.id)
+    const recordPds = await network.pds.ctx.actorStore.read(alice, (store) =>
+      store.db.db
+        .selectFrom('record')
+        .where('uri', '=', res.data.uri)
+        .select('takedownRef')
+        .executeTakeFirst(),
+    )
+    expect(recordPds?.takedownRef).toEqual(takedownEvent.id.toString())
 
     expect(testInvalidator.invalidated.length).toBe(2)
     expect(testInvalidator.invalidated[1].subject).toBe(

@@ -7,20 +7,19 @@ import { notSoftDeletedClause } from '../../../../db/util'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.listRepos(async ({ params }) => {
     const { limit, cursor } = params
-    const { ref } = ctx.db.db.dynamic
-    let builder = ctx.db.db
-      .selectFrom('user_account')
-      .innerJoin('repo_root', 'repo_root.did', 'user_account.did')
-      .where(notSoftDeletedClause(ref('repo_root')))
+    const db = ctx.accountManager.db
+    const { ref } = db.db.dynamic
+    let builder = db.db
+      .selectFrom('actor')
+      .innerJoin('repo_root', 'repo_root.did', 'actor.did')
+      .where(notSoftDeletedClause(ref('actor')))
       .select([
-        'user_account.did as did',
-        'repo_root.root as head',
-        'user_account.createdAt as createdAt',
+        'actor.did as did',
+        'repo_root.cid as head',
+        'repo_root.rev as rev',
+        'actor.createdAt as createdAt',
       ])
-    const keyset = new TimeDidKeyset(
-      ref('user_account.createdAt'),
-      ref('user_account.did'),
-    )
+    const keyset = new TimeDidKeyset(ref('actor.createdAt'), ref('actor.did'))
     builder = paginate(builder, {
       limit,
       cursor,
@@ -29,7 +28,11 @@ export default function (server: Server, ctx: AppContext) {
       tryIndex: true,
     })
     const res = await builder.execute()
-    const repos = res.map((row) => ({ did: row.did, head: row.head }))
+    const repos = res.map((row) => ({
+      did: row.did,
+      head: row.head,
+      rev: row.rev ?? '',
+    }))
     return {
       encoding: 'application/json',
       body: {

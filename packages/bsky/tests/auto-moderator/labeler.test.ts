@@ -1,12 +1,11 @@
-import { AtUri, AtpAgent, BlobRef } from '@atproto/api'
+import { TestNetwork } from '@atproto/dev-env'
+import { AtUri, BlobRef } from '@atproto/api'
 import { Readable } from 'stream'
 import { AutoModerator } from '../../src/auto-moderator'
 import IndexerContext from '../../src/indexer/context'
 import { cidForRecord } from '@atproto/repo'
-import { cidForCbor, TID } from '@atproto/common'
+import { TID } from '@atproto/common'
 import { LabelService } from '../../src/services/label'
-import { TestNetwork } from '@atproto/dev-env'
-import { SeedClient } from '../seeds/client'
 import usersSeed from '../seeds/users'
 import { CID } from 'multiformats/cid'
 import { ImgLabeler } from '../../src/auto-moderator/hive'
@@ -37,31 +36,29 @@ describe('labeler', () => {
     autoMod = ctx.autoMod
     autoMod.imgLabeler = new TestImgLabeler()
     labelSrvc = ctx.services.label(ctx.db)
-    const pdsAgent = new AtpAgent({ service: network.pds.url })
-    const sc = new SeedClient(pdsAgent)
+    const sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
-    const repoSvc = pdsCtx.services.repo(pdsCtx.db)
-    const storeBlob = async (bytes: Uint8Array) => {
-      const blobRef = await repoSvc.blobs.addUntetheredBlob(
-        alice,
-        'image/jpeg',
-        Readable.from([bytes], { objectMode: false }),
-      )
-      const preparedBlobRef = {
-        cid: blobRef.ref,
-        mimeType: 'image/jpeg',
-        constraints: {},
-      }
-      await repoSvc.blobs.verifyBlobAndMakePermanent(alice, preparedBlobRef)
-      await repoSvc.blobs.associateBlob(
-        preparedBlobRef,
-        postUri(),
-        await cidForCbor(1),
-        alice,
-      )
-      return blobRef
+    const storeBlob = (bytes: Uint8Array) => {
+      return pdsCtx.actorStore.transact(alice, async (store) => {
+        const blobRef = await store.repo.blob.addUntetheredBlob(
+          'image/jpeg',
+          Readable.from([bytes], { objectMode: false }),
+        )
+        const preparedBlobRef = {
+          cid: blobRef.ref,
+          mimeType: 'image/jpeg',
+          constraints: {},
+        }
+        await store.repo.blob.verifyBlobAndMakePermanent(preparedBlobRef)
+        await store.repo.blob.associateBlob(
+          preparedBlobRef,
+          postUri(),
+          TID.nextStr(),
+        )
+        return blobRef
+      })
     }
     const bytes1 = new Uint8Array([1, 2, 3, 4])
     const bytes2 = new Uint8Array([5, 6, 7, 8])

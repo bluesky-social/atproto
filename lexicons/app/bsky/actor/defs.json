@@ -86,6 +86,10 @@
         },
         "blockedBy": { "type": "boolean" },
         "blocking": { "type": "string", "format": "at-uri" },
+        "blockingByList": {
+          "type": "ref",
+          "ref": "app.bsky.graph.defs#listViewBasic"
+        },
         "following": { "type": "string", "format": "at-uri" },
         "followedBy": { "type": "string", "format": "at-uri" }
       }
@@ -148,7 +152,7 @@
         "birthDate": {
           "type": "string",
           "format": "datetime",
-          "description": "The birth date of the owner of the account."
+          "description": "The birth date of account owner."
         }
       }
     },
@@ -187,7 +191,7 @@
       "properties": {
         "sort": {
           "type": "string",
-          "description": "Sorting mode.",
+          "description": "Sorting mode for threads.",
           "knownValues": ["oldest", "newest", "most-likes", "random"]
         },
         "prioritizeFollowedUsers": {

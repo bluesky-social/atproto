@@ -3,10 +3,10 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getBlocks({
-    auth: ctx.accessVerifier,
+    auth: ctx.authVerifier.access,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.graph.getBlocks(
+      const res = await ctx.appViewAgent.api.app.bsky.graph.getBlocks(
         params,
         await ctx.serviceAuthHeaders(requester),
       )

@@ -1,20 +1,18 @@
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
-import * as jwt from 'jsonwebtoken'
-import { CloseFn, runTestServer, TestServerInfo } from './_util'
+import * as jose from 'jose'
 
 describe('app_passwords', () => {
-  let server: TestServerInfo
+  let network: TestNetworkNoAppView
   let accntAgent: AtpAgent
   let appAgent: AtpAgent
-  let close: CloseFn
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'app_passwords',
     })
-    accntAgent = new AtpAgent({ service: server.url })
-    appAgent = new AtpAgent({ service: server.url })
-    close = server.close
+    accntAgent = network.pds.getClient()
+    appAgent = network.pds.getClient()
 
     await accntAgent.createAccount({
       handle: 'alice.test',
@@ -24,7 +22,7 @@ describe('app_passwords', () => {
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   let appPass: string
@@ -46,9 +44,7 @@ describe('app_passwords', () => {
   })
 
   it('creates an access token for an app with a restricted scope', () => {
-    const decoded = jwt.decode(appAgent.session?.accessJwt ?? '', {
-      json: true,
-    })
+    const decoded = jose.decodeJwt(appAgent.session?.accessJwt ?? '')
     expect(decoded?.scope).toEqual('com.atproto.appPass')
   })
 
@@ -68,7 +64,7 @@ describe('app_passwords', () => {
     const attempt = appAgent.api.com.atproto.server.createAppPassword({
       name: 'another-one',
     })
-    await expect(attempt).rejects.toThrow('Token could not be verified')
+    await expect(attempt).rejects.toThrow('Bad token scope')
   })
 
   it('persists scope across refreshes', async () => {
@@ -103,7 +99,7 @@ describe('app_passwords', () => {
         headers: { authorization: `Bearer ${session.data.accessJwt}` },
       },
     )
-    await expect(attempt).rejects.toThrow('Token could not be verified')
+    await expect(attempt).rejects.toThrow('Bad token scope')
   })
 
   it('lists available app-specific passwords', async () => {
@@ -128,7 +124,7 @@ describe('app_passwords', () => {
   })
 
   it('no longer allows session creation after revocation', async () => {
-    const newAgent = new AtpAgent({ service: server.url })
+    const newAgent = network.pds.getClient()
     const attempt = newAgent.login({
       identifier: 'alice.test',
       password: appPass,

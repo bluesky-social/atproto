@@ -3,16 +3,20 @@ import AppContext from '../context'
 import { paginate } from '../db/pagination'
 import { AlgoHandler, AlgoResponse } from './types'
 import { FeedKeyset, getFeedDateThreshold } from '../api/app/bsky/util/feed'
+import { AuthRequiredError } from '@atproto/xrpc-server'
 
 const handler: AlgoHandler = async (
   ctx: AppContext,
   params: SkeletonParams,
-  viewer: string,
+  viewer: string | null,
 ): Promise<AlgoResponse> => {
+  if (!viewer) {
+    throw new AuthRequiredError('This feed requires being logged-in')
+  }
+
   const { limit = 50, cursor } = params
   const db = ctx.db.getReplica('feed')
   const feedService = ctx.services.feed(db)
-
   const { ref } = db.db.dynamic
 
   const mutualsSubquery = db.db

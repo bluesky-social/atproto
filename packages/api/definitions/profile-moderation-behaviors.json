@@ -2,43 +2,57 @@
   "users": {
     "self": {
       "blocking": false,
+      "blockingByList": false,
       "blockedBy": false,
       "muted": false,
       "mutedByList": false
     },
     "alice": {
       "blocking": false,
+      "blockingByList": false,
       "blockedBy": false,
       "muted": false,
       "mutedByList": false
     },
     "bob": {
       "blocking": true,
+      "blockingByList": false,
       "blockedBy": false,
       "muted": false,
       "mutedByList": false
     },
     "carla": {
       "blocking": false,
+      "blockingByList": false,
       "blockedBy": true,
       "muted": false,
       "mutedByList": false
     },
     "dan": {
       "blocking": false,
+      "blockingByList": false,
       "blockedBy": false,
       "muted": true,
       "mutedByList": false
     },
     "elise": {
       "blocking": false,
+      "blockingByList": false,
       "blockedBy": false,
       "muted": false,
       "mutedByList": true
     },
     "fern": {
       "blocking": true,
+      "blockingByList": false,
       "blockedBy": true,
+      "muted": false,
+      "mutedByList": false
+    },
+    "georgia": {
+      "blocking": false,
+      "blockingByList": true,
+      "blockedBy": false,
       "muted": false,
       "mutedByList": false
     }
@@ -80,6 +94,9 @@
     },
     "intolerant-hide-scam-warn": {
       "settings": { "intolerant": "hide", "scam": "hide" }
+    },
+    "logged-out": {
+      "authed": false
     }
   },
   "scenarios": {
@@ -145,6 +162,57 @@
         "profile": { "cause": "label:!warn", "blur": true },
         "avatar": { "blur": true }
       }
+    },
+
+    "Imperative label ('!no-unauthenticated') on account when logged out": {
+      "cfg": "logged-out",
+      "subject": "profile",
+      "author": "alice",
+      "labels": { "account": ["!no-unauthenticated"] },
+      "behaviors": {
+        "account": {
+          "cause": "label:!no-unauthenticated",
+          "filter": true,
+          "blur": true,
+          "noOverride": true
+        },
+        "avatar": { "blur": true, "noOverride": true }
+      }
+    },
+    "Imperative label ('!no-unauthenticated') on profile when logged out": {
+      "cfg": "logged-out",
+      "subject": "profile",
+      "author": "alice",
+      "labels": { "profile": ["!no-unauthenticated"] },
+      "behaviors": {
+        "account": {
+          "cause": "label:!no-unauthenticated",
+          "filter": true,
+          "blur": true,
+          "noOverride": true
+        },
+        "profile": {
+          "cause": "label:!no-unauthenticated",
+          "blur": true,
+          "noOverride": true
+        },
+        "avatar": { "blur": true, "noOverride": true }
+      }
+    },
+
+    "Imperative label ('!no-unauthenticated') on account when logged in": {
+      "cfg": "none",
+      "subject": "profile",
+      "author": "alice",
+      "labels": { "account": ["!no-unauthenticated"] },
+      "behaviors": {}
+    },
+    "Imperative label ('!no-unauthenticated') on profile when logged in": {
+      "cfg": "none",
+      "subject": "profile",
+      "author": "alice",
+      "labels": { "profile": ["!no-unauthenticated"] },
+      "behaviors": {}
     },
 
     "Blur label ('intolerant') on account (hide)": {
@@ -373,6 +441,17 @@
       "labels": {},
       "behaviors": {
         "account": { "cause": "blocking", "filter": true },
+        "avatar": { "blur": true, "noOverride": true }
+      }
+    },
+
+    "Mute/block: Blocking-by-list user": {
+      "cfg": "none",
+      "subject": "profile",
+      "author": "georgia",
+      "labels": {},
+      "behaviors": {
+        "account": { "cause": "blocking-by-list", "filter": true },
         "avatar": { "blur": true, "noOverride": true }
       }
     },

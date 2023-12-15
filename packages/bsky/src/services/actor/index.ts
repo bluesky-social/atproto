@@ -1,27 +1,37 @@
 import { sql } from 'kysely'
+import { wait } from '@atproto/common'
 import { Database } from '../../db'
 import { notSoftDeletedClause } from '../../db/util'
 import { ActorViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
 import { Actor } from '../../db/tables/actor'
-import { LabelCache } from '../../label-cache'
 import { TimeCidKeyset, paginate } from '../../db/pagination'
 import { SearchKeyset, getUserSearchQuery } from '../util/search'
+import { FromDb } from '../types'
+import { GraphService } from '../graph'
+import { LabelService } from '../label'
 
 export * from './types'
 
 export class ActorService {
+  views: ActorViews
+
   constructor(
     public db: Database,
     public imgUriBuilder: ImageUriBuilder,
-    public labelCache: LabelCache,
-  ) {}
-
-  static creator(imgUriBuilder: ImageUriBuilder, labelCache: LabelCache) {
-    return (db: Database) => new ActorService(db, imgUriBuilder, labelCache)
+    private graph: FromDb<GraphService>,
+    private label: FromDb<LabelService>,
+  ) {
+    this.views = new ActorViews(this.db, this.imgUriBuilder, graph, label)
   }
 
-  views = new ActorViews(this.db, this.imgUriBuilder, this.labelCache)
+  static creator(
+    imgUriBuilder: ImageUriBuilder,
+    graph: FromDb<GraphService>,
+    label: FromDb<LabelService>,
+  ) {
+    return (db: Database) => new ActorService(db, imgUriBuilder, graph, label)
+  }
 
   async getActorDid(handleOrDid: string): Promise<string | null> {
     if (handleOrDid.startsWith('did:')) {
@@ -66,7 +76,13 @@ export class ActorService {
           qb = qb.orWhere('actor.did', 'in', dids)
         }
         if (handles.length) {
-          qb = qb.orWhere('actor.handle', 'in', handles)
+          qb = qb.orWhere(
+            'actor.handle',
+            'in',
+            handles.length === 1
+              ? [handles[0], handles[0]] // a silly (but worthwhile) optimization to avoid usage of actor_handle_tgrm_idx
+              : handles,
+          )
         }
         return qb
       })
@@ -83,15 +99,15 @@ export class ActorService {
   async getSearchResults({
     cursor,
     limit = 25,
-    term = '',
+    query = '',
     includeSoftDeleted,
   }: {
     cursor?: string
     limit?: number
-    term?: string
+    query?: string
     includeSoftDeleted?: boolean
   }) {
-    const searchField = term.startsWith('did:') ? 'did' : 'handle'
+    const searchField = query.startsWith('did:') ? 'did' : 'handle'
     let paginatedBuilder
     const { ref } = this.db.db.dynamic
     const paginationOptions = {
@@ -101,10 +117,10 @@ export class ActorService {
     }
     let keyset
 
-    if (term && searchField === 'handle') {
+    if (query && searchField === 'handle') {
       keyset = new SearchKeyset(sql``, sql``)
       paginatedBuilder = getUserSearchQuery(this.db, {
-        term,
+        query,
         includeSoftDeleted,
         ...paginationOptions,
       }).select('distance')
@@ -114,10 +130,10 @@ export class ActorService {
         .select([sql<number>`0`.as('distance')])
       keyset = new ListKeyset(ref('indexedAt'), ref('did'))
 
-      // When searchField === 'did', the term will always be a valid string because
-      // searchField is set to 'did' after checking that the term is a valid did
-      if (term && searchField === 'did') {
-        paginatedBuilder = paginatedBuilder.where('actor.did', '=', term)
+      // When searchField === 'did', the query will always be a valid string because
+      // searchField is set to 'did' after checking that the query is a valid did
+      if (query && searchField === 'did') {
+        paginatedBuilder = paginatedBuilder.where('actor.did', '=', query)
       }
       paginatedBuilder = paginate(paginatedBuilder, {
         keyset,
@@ -137,6 +153,44 @@ export class ActorService {
       .where('did', '=', did)
       .executeTakeFirst()
     return res?.repoRev ?? null
+  }
+
+  async *all(
+    opts: {
+      batchSize?: number
+      forever?: boolean
+      cooldownMs?: number
+      startFromDid?: string
+    } = {},
+  ) {
+    const {
+      cooldownMs = 1000,
+      batchSize = 1000,
+      forever = false,
+      startFromDid,
+    } = opts
+    const baseQuery = this.db.db
+      .selectFrom('actor')
+      .selectAll()
+      .orderBy('did')
+      .limit(batchSize)
+    while (true) {
+      let cursor = startFromDid
+      do {
+        const actors = cursor
+          ? await baseQuery.where('did', '>', cursor).execute()
+          : await baseQuery.execute()
+        for (const actor of actors) {
+          yield actor
+        }
+        cursor = actors.at(-1)?.did
+      } while (cursor)
+      if (forever) {
+        await wait(cooldownMs)
+      } else {
+        return
+      }
+    }
   }
 }
 

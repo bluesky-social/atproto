@@ -1,4 +1,3 @@
-import Database from '../db'
 import { z } from 'zod'
 import { cborEncode, schema } from '@atproto/common'
 import {
@@ -10,33 +9,7 @@ import {
 } from '@atproto/repo'
 import { PreparedWrite } from '../repo'
 import { CID } from 'multiformats/cid'
-import { EventType, RepoSeqInsert } from '../db/tables/repo-seq'
-
-export const sequenceEvt = async (dbTxn: Database, evt: RepoSeqInsert) => {
-  dbTxn.assertTransaction()
-  await dbTxn.notify('new_repo_event')
-  if (evt.eventType === 'rebase') {
-    await invalidatePrevRepoOps(dbTxn, evt.did)
-  } else if (evt.eventType === 'handle') {
-    await invalidatePrevHandleOps(dbTxn, evt.did)
-  }
-
-  const res = await dbTxn.db
-    .insertInto('repo_seq')
-    .values(evt)
-    .returning('id')
-    .executeTakeFirst()
-
-  // since sqlite is serializable, sequence right after insert instead of relying on sequencer-leader
-  if (res && dbTxn.dialect === 'sqlite') {
-    await dbTxn.db
-      .updateTable('repo_seq')
-      .set({ seq: res.id })
-      .where('id', '=', res.id)
-      .execute()
-    await dbTxn.notify('outgoing_repo_seq')
-  }
-}
+import { RepoSeqInsert } from './db'
 
 export const formatSeqCommit = async (
   did: string,
@@ -120,29 +93,6 @@ export const formatSeqTombstone = async (
     event: cborEncode(evt),
     sequencedAt: new Date().toISOString(),
   }
-}
-
-export const invalidatePrevSeqEvts = async (
-  db: Database,
-  did: string,
-  eventTypes: EventType[],
-) => {
-  if (eventTypes.length < 1) return
-  await db.db
-    .updateTable('repo_seq')
-    .where('did', '=', did)
-    .where('eventType', 'in', eventTypes)
-    .where('invalidated', '=', 0)
-    .set({ invalidated: 1 })
-    .execute()
-}
-
-export const invalidatePrevRepoOps = async (db: Database, did: string) => {
-  return invalidatePrevSeqEvts(db, did, ['append', 'rebase'])
-}
-
-export const invalidatePrevHandleOps = async (db: Database, did: string) => {
-  return invalidatePrevSeqEvts(db, did, ['handle'])
 }
 
 export const commitEvtOp = z.object({

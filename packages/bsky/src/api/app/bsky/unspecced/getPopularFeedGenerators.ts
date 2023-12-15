@@ -57,7 +57,9 @@ export default function (server: Server, ctx: AppContext) {
         const gen = genInfos[row.uri]
         if (!gen) continue
         const view = feedService.views.formatFeedGeneratorView(gen, profiles)
-        genViews.push(view)
+        if (view) {
+          genViews.push(view)
+        }
       }
 
       return {

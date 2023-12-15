@@ -13,20 +13,37 @@ require('dd-trace') // Only works with commonjs
 // Tracer code above must come before anything else
 const path = require('path')
 const assert = require('assert')
-const { CloudfrontInvalidator } = require('@atproto/aws')
+const {
+  BunnyInvalidator,
+  CloudfrontInvalidator,
+  MultiImageInvalidator,
+} = require('@atproto/aws')
+const { Secp256k1Keypair } = require('@atproto/crypto')
 const {
   DatabaseCoordinator,
   PrimaryDatabase,
+  Redis,
   ServerConfig,
   BskyAppView,
-  ViewMaintainer,
   makeAlgos,
-  PeriodicModerationActionReversal,
+  PeriodicModerationEventReversal,
 } = require('@atproto/bsky')
 
 const main = async () => {
   const env = getEnv()
   assert(env.dbPrimaryPostgresUrl, 'missing configuration for db')
+
+  if (env.enableMigrations) {
+    // separate db needed for more permissions
+    const migrateDb = new PrimaryDatabase({
+      url: env.dbMigratePostgresUrl,
+      schema: env.dbPostgresSchema,
+      poolSize: 2,
+    })
+    await migrateDb.migrateToLatestOrThrow()
+    await migrateDb.close()
+  }
+
   const db = new DatabaseCoordinator({
     schema: env.dbPostgresSchema,
     primary: {
@@ -59,48 +76,80 @@ const main = async () => {
     imgUriEndpoint: env.imgUriEndpoint,
     blobCacheLocation: env.blobCacheLocation,
   })
-  const cfInvalidator = env.cfDistributionId
-    ? new CloudfrontInvalidator({
+
+  const redis = new Redis(
+    cfg.redisSentinelName
+      ? {
+          sentinel: cfg.redisSentinelName,
+          hosts: cfg.redisSentinelHosts,
+          password: cfg.redisPassword,
+          db: 1,
+          commandTimeout: 500,
+        }
+      : {
+          host: cfg.redisHost,
+          password: cfg.redisPassword,
+          db: 1,
+          commandTimeout: 500,
+        },
+  )
+
+  const signingKey = await Secp256k1Keypair.import(env.serviceSigningKey)
+
+  // configure zero, one, or more image invalidators
+  const imgInvalidators = []
+
+  if (env.bunnyAccessKey) {
+    imgInvalidators.push(
+      new BunnyInvalidator({
+        accessKey: env.bunnyAccessKey,
+        urlPrefix: cfg.imgUriEndpoint,
+      }),
+    )
+  }
+
+  if (env.cfDistributionId) {
+    imgInvalidators.push(
+      new CloudfrontInvalidator({
         distributionId: env.cfDistributionId,
         pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
-      })
-    : undefined
+      }),
+    )
+  }
+
+  const imgInvalidator =
+    imgInvalidators.length > 1
+      ? new MultiImageInvalidator(imgInvalidators)
+      : imgInvalidators[0]
+
   const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const bsky = BskyAppView.create({
     db,
+    redis,
+    signingKey,
     config: cfg,
-    imgInvalidator: cfInvalidator,
+    imgInvalidator,
     algos,
   })
-  // separate db needed for more permissions
-  const migrateDb = new PrimaryDatabase({
-    url: env.dbMigratePostgresUrl,
-    schema: env.dbPostgresSchema,
-    poolSize: 2,
-  })
-  const viewMaintainer = new ViewMaintainer(migrateDb)
-  const viewMaintainerRunning = viewMaintainer.run()
 
-  const periodicModerationActionReversal = new PeriodicModerationActionReversal(
+  const periodicModerationEventReversal = new PeriodicModerationEventReversal(
     bsky.ctx,
   )
-  const periodicModerationActionReversalRunning =
-    periodicModerationActionReversal.run()
+  const periodicModerationEventReversalRunning =
+    periodicModerationEventReversal.run()
 
   await bsky.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
-    // Gracefully shutdown periodic-moderation-action-reversal before destroying bsky instance
-    periodicModerationActionReversal.destroy()
-    await periodicModerationActionReversalRunning
+    // Gracefully shutdown periodic-moderation-event-reversal before destroying bsky instance
+    periodicModerationEventReversal.destroy()
+    await periodicModerationEventReversalRunning
     await bsky.destroy()
-    viewMaintainer.destroy()
-    await viewMaintainerRunning
-    await migrateDb.close()
   })
 }
 
 const getEnv = () => ({
+  enableMigrations: process.env.ENABLE_MIGRATIONS === 'true',
   port: parseInt(process.env.PORT),
   version: process.env.BSKY_VERSION,
   dbMigratePostgresUrl:
@@ -121,12 +170,14 @@ const getEnv = () => ({
   dbPoolSize: maybeParseInt(process.env.DB_POOL_SIZE),
   dbPoolMaxUses: maybeParseInt(process.env.DB_POOL_MAX_USES),
   dbPoolIdleTimeoutMs: maybeParseInt(process.env.DB_POOL_IDLE_TIMEOUT_MS),
+  serviceSigningKey: process.env.SERVICE_SIGNING_KEY,
   publicUrl: process.env.PUBLIC_URL,
   didPlcUrl: process.env.DID_PLC_URL,
   imgUriSalt: process.env.IMG_URI_SALT,
   imgUriKey: process.env.IMG_URI_KEY,
   imgUriEndpoint: process.env.IMG_URI_ENDPOINT,
   blobCacheLocation: process.env.BLOB_CACHE_LOC,
+  bunnyAccessKey: process.env.BUNNY_ACCESS_KEY,
   cfDistributionId: process.env.CF_DISTRIBUTION_ID,
   feedPublisherDid: process.env.FEED_PUBLISHER_DID,
 })

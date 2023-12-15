@@ -1,7 +1,6 @@
 import { DAY } from '@atproto/common'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
-import { SeedClient } from './seeds/client'
 import userSeed from './seeds/users'
 
 describe('handle invalidation', () => {
@@ -20,7 +19,7 @@ describe('handle invalidation', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await userSeed(sc)
     await network.processAll()
 
@@ -103,11 +102,7 @@ describe('handle invalidation', () => {
   it('deals with handle contention', async () => {
     await backdateIndexedAt(bob)
     // update alices handle so that the pds will let bob take her old handle
-    await network.pds.ctx.db.db
-      .updateTable('did_handle')
-      .where('did', '=', alice)
-      .set({ handle: 'not-alice.test' })
-      .execute()
+    await network.pds.ctx.accountManager.updateHandle(alice, 'not-alice.test')
 
     await pdsAgent.api.com.atproto.identity.updateHandle(
       {

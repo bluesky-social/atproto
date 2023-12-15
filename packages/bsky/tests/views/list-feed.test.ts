@@ -1,9 +1,7 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
-import { RecordRef, SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 
 describe('list feed views', () => {
   let network: TestNetwork
@@ -22,8 +20,7 @@ describe('list feed views', () => {
       dbPostgresSchema: 'bsky_views_list_feed',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -115,9 +112,9 @@ describe('list feed views', () => {
   })
 
   it('blocks posts by actor takedown', async () => {
-    const actionRes = await agent.api.com.atproto.admin.takeModerationAction(
+    await agent.api.com.atproto.admin.emitModerationEvent(
       {
-        action: TAKEDOWN,
+        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: bob,
@@ -138,9 +135,13 @@ describe('list feed views', () => {
     expect(hasBob).toBe(false)
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.emitModerationEvent(
       {
-        id: actionRes.data.id,
+        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: bob,
+        },
         createdBy: 'did:example:admin',
         reason: 'Y',
       },
@@ -153,9 +154,9 @@ describe('list feed views', () => {
 
   it('blocks posts by record takedown.', async () => {
     const postRef = sc.replies[bob][0].ref // Post and reply parent
-    const actionRes = await agent.api.com.atproto.admin.takeModerationAction(
+    await agent.api.com.atproto.admin.emitModerationEvent(
       {
-        action: TAKEDOWN,
+        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: postRef.uriStr,
@@ -179,9 +180,14 @@ describe('list feed views', () => {
     expect(hasPost).toBe(false)
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.emitModerationEvent(
       {
-        id: actionRes.data.id,
+        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: postRef.uriStr,
+          cid: postRef.cidStr,
+        },
         createdBy: 'did:example:admin',
         reason: 'Y',
       },

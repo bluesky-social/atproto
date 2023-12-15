@@ -1,6 +1,7 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
 import { jsonStringToLex } from '@atproto/lexicon'
+import { mapDefined } from '@atproto/common'
 import { Database } from '../../db'
 import { countAll, noMatch, notSoftDeletedClause } from '../../db/util'
 import { ImageUriBuilder } from '../../image/uri'
@@ -42,28 +43,42 @@ import {
   RelationshipPair,
 } from '../graph'
 import { FeedViews } from './views'
-import { LabelCache } from '../../label-cache'
 import { threadgateToPostUri, postToThreadgateUri } from './util'
+import { FromDb } from '../types'
 
 export * from './types'
 
 export class FeedService {
+  views: FeedViews
+  services: {
+    label: LabelService
+    actor: ActorService
+    graph: GraphService
+  }
+
   constructor(
     public db: Database,
     public imgUriBuilder: ImageUriBuilder,
-    public labelCache: LabelCache,
-  ) {}
-
-  views = new FeedViews(this.db, this.imgUriBuilder, this.labelCache)
-
-  services = {
-    label: LabelService.creator(this.labelCache)(this.db),
-    actor: ActorService.creator(this.imgUriBuilder, this.labelCache)(this.db),
-    graph: GraphService.creator(this.imgUriBuilder)(this.db),
+    private actor: FromDb<ActorService>,
+    private label: FromDb<LabelService>,
+    private graph: FromDb<GraphService>,
+  ) {
+    this.views = new FeedViews(this.db, this.imgUriBuilder, actor, graph)
+    this.services = {
+      label: label(this.db),
+      actor: actor(this.db),
+      graph: graph(this.db),
+    }
   }
 
-  static creator(imgUriBuilder: ImageUriBuilder, labelCache: LabelCache) {
-    return (db: Database) => new FeedService(db, imgUriBuilder, labelCache)
+  static creator(
+    imgUriBuilder: ImageUriBuilder,
+    actor: FromDb<ActorService>,
+    label: FromDb<LabelService>,
+    graph: FromDb<GraphService>,
+  ) {
+    return (db: Database) =>
+      new FeedService(db, imgUriBuilder, actor, label, graph)
   }
 
   selectPostQb() {
@@ -203,6 +218,11 @@ export class FeedService {
     return feedItems.reduce((acc, item) => {
       return Object.assign(acc, { [item.uri]: item })
     }, {} as Record<string, FeedRow>)
+  }
+
+  async postUrisToFeedItems(uris: string[]): Promise<FeedRow[]> {
+    const feedItems = await this.getFeedItems(uris)
+    return mapDefined(uris, (uri) => feedItems[uri])
   }
 
   feedItemRefs(items: FeedRow[]) {
@@ -399,20 +419,32 @@ export class FeedService {
     const actorInfos = this.services.actor.views.profileBasicPresentation(
       [...nestedDids],
       feedState,
-      { viewer },
+      viewer,
     )
     const recordEmbedViews: RecordEmbedViewRecordMap = {}
     for (const uri of nestedUris) {
       const collection = new AtUri(uri).collection
       if (collection === ids.AppBskyFeedGenerator && feedGenInfos[uri]) {
-        recordEmbedViews[uri] = {
-          $type: 'app.bsky.feed.defs#generatorView',
-          ...this.views.formatFeedGeneratorView(feedGenInfos[uri], actorInfos),
+        const genView = this.views.formatFeedGeneratorView(
+          feedGenInfos[uri],
+          actorInfos,
+        )
+        if (genView) {
+          recordEmbedViews[uri] = {
+            $type: 'app.bsky.feed.defs#generatorView',
+            ...genView,
+          }
         }
       } else if (collection === ids.AppBskyGraphList && listViews[uri]) {
-        recordEmbedViews[uri] = {
-          $type: 'app.bsky.graph.defs#listView',
-          ...this.services.graph.formatListView(listViews[uri], actorInfos),
+        const listView = this.services.graph.formatListView(
+          listViews[uri],
+          actorInfos,
+        )
+        if (listView) {
+          recordEmbedViews[uri] = {
+            $type: 'app.bsky.graph.defs#listView',
+            ...listView,
+          }
         }
       } else if (collection === ids.AppBskyFeedPost && feedState.posts[uri]) {
         const formatted = this.views.formatPostView(
@@ -423,6 +455,7 @@ export class FeedService {
           feedState.embeds,
           feedState.labels,
           feedState.lists,
+          viewer,
         )
         recordEmbedViews[uri] = this.views.getRecordEmbedView(
           uri,

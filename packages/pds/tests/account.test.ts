@@ -2,9 +2,9 @@ import { once, EventEmitter } from 'events'
 import AtpAgent, { ComAtprotoServerResetPassword } from '@atproto/api'
 import { IdResolver } from '@atproto/identity'
 import * as crypto from '@atproto/crypto'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 import Mail from 'nodemailer/lib/mailer'
-import { AppContext, Database } from '../src'
-import * as util from './_util'
+import { AppContext } from '../src'
 import { ServerMailer } from '../src/mailer'
 
 const email = 'alice@test.com'
@@ -14,31 +14,26 @@ const passwordAlt = 'test456'
 const minsToMs = 60 * 1000
 
 describe('account', () => {
-  let serverUrl: string
+  let network: TestNetworkNoAppView
   let ctx: AppContext
-  let repoSigningKey: string
   let agent: AtpAgent
-  let close: util.CloseFn
   let mailer: ServerMailer
-  let db: Database
   let idResolver: IdResolver
   const mailCatcher = new EventEmitter()
   let _origSendMail
 
   beforeAll(async () => {
-    const server = await util.runTestServer({
-      termsOfServiceUrl: 'https://example.com/tos',
-      privacyPolicyUrl: '/privacy-policy',
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'account',
+      pds: {
+        termsOfServiceUrl: 'https://example.com/tos',
+        privacyPolicyUrl: 'https://example.com/privacy-policy',
+      },
     })
-    close = server.close
-    mailer = server.ctx.mailer
-    db = server.ctx.db
-    ctx = server.ctx
-    serverUrl = server.url
-    repoSigningKey = server.ctx.repoSigningKey.did()
-    idResolver = new IdResolver({ plcUrl: ctx.cfg.didPlcUrl })
-    agent = new AtpAgent({ service: serverUrl })
+    mailer = network.pds.ctx.mailer
+    ctx = network.pds.ctx
+    idResolver = network.pds.ctx.idResolver
+    agent = network.pds.getClient()
 
     // Catch emails for use in tests
     _origSendMail = mailer.transporter.sendMail
@@ -51,9 +46,7 @@ describe('account', () => {
 
   afterAll(async () => {
     mailer.transporter.sendMail = _origSendMail
-    if (close) {
-      await close()
-    }
+    await network.close()
   })
 
   it('serves the accounts system config', async () => {
@@ -62,7 +55,7 @@ describe('account', () => {
     expect(res.data.availableUserDomains[0]).toBe('.test')
     expect(typeof res.data.inviteCodeRequired).toBe('boolean')
     expect(res.data.links?.privacyPolicy).toBe(
-      'https://pds.public.url/privacy-policy',
+      'https://example.com/privacy-policy',
     )
     expect(res.data.links?.termsOfService).toBe('https://example.com/tos')
   })
@@ -74,6 +67,28 @@ describe('account', () => {
       password: 'asdf',
     })
     await expect(promise).rejects.toThrow('Input/handle must be a valid handle')
+  })
+
+  describe('email validation', () => {
+    it('succeeds on allowed emails', async () => {
+      const promise = agent.api.com.atproto.server.createAccount({
+        email: 'ok-email@gmail.com',
+        handle: 'ok-email.test',
+        password: 'asdf',
+      })
+      await expect(promise).resolves.toBeTruthy()
+    })
+
+    it('fails on disallowed emails', async () => {
+      const promise = agent.api.com.atproto.server.createAccount({
+        email: 'bad-email@disposeamail.com',
+        handle: 'bad-email.test',
+        password: 'asdf',
+      })
+      await expect(promise).rejects.toThrow(
+        'This email address is not supported, please use a different email.',
+      )
+    })
   })
 
   let did: string
@@ -95,11 +110,12 @@ describe('account', () => {
 
   it('generates a properly formatted PLC DID', async () => {
     const didData = await idResolver.did.resolveAtprotoData(did)
+    const signingKey = await network.pds.ctx.actorStore.keypair(did)
 
     expect(didData.did).toBe(did)
     expect(didData.handle).toBe(handle)
-    expect(didData.signingKey).toBe(repoSigningKey)
-    expect(didData.pds).toBe('https://pds.public.url') // Mapped from publicUrl
+    expect(didData.signingKey).toBe(signingKey.did())
+    expect(didData.pds).toBe(network.pds.url)
   })
 
   it('allows a custom set recovery key', async () => {
@@ -115,104 +131,105 @@ describe('account', () => {
 
     expect(didData.rotationKeys).toEqual([
       recoveryKey,
-      ctx.cfg.recoveryKey,
+      ctx.cfg.identity.recoveryDidKey,
       ctx.plcRotationKey.did(),
     ])
   })
 
-  it('allows a user to bring their own DID', async () => {
-    const userKey = await crypto.Secp256k1Keypair.create()
-    const handle = 'byo-did.test'
-    const did = await ctx.plcClient.createDid({
-      signingKey: ctx.repoSigningKey.did(),
-      handle,
-      rotationKeys: [
-        userKey.did(),
-        ctx.cfg.recoveryKey,
-        ctx.plcRotationKey.did(),
-      ],
-      pds: ctx.cfg.publicUrl,
-      signer: userKey,
-    })
+  // @NOTE currently disabled until we allow a user to resver a keypair before migration
+  // it('allows a user to bring their own DID', async () => {
+  //   const userKey = await crypto.Secp256k1Keypair.create()
+  //   const handle = 'byo-did.test'
+  //   const did = await ctx.plcClient.createDid({
+  //     signingKey: ctx.repoSigningKey.did(),
+  //     handle,
+  //     rotationKeys: [
+  //       userKey.did(),
+  //       ctx.cfg.identity.recoveryDidKey ?? '',
+  //       ctx.plcRotationKey.did(),
+  //     ],
+  //     pds: network.pds.url,
+  //     signer: userKey,
+  //   })
 
-    const res = await agent.api.com.atproto.server.createAccount({
-      email: 'byo-did@test.com',
-      handle,
-      did,
-      password: 'byo-did-pass',
-    })
+  //   const res = await agent.api.com.atproto.server.createAccount({
+  //     email: 'byo-did@test.com',
+  //     handle,
+  //     did,
+  //     password: 'byo-did-pass',
+  //   })
 
-    expect(res.data.handle).toEqual(handle)
-    expect(res.data.did).toEqual(did)
-  })
+  //   expect(res.data.handle).toEqual(handle)
+  //   expect(res.data.did).toEqual(did)
+  // })
 
-  it('requires that the did a user brought be correctly set up for the server', async () => {
-    const userKey = await crypto.Secp256k1Keypair.create()
-    const baseDidInfo = {
-      signingKey: ctx.repoSigningKey.did(),
-      handle: 'byo-did.test',
-      rotationKeys: [
-        userKey.did(),
-        ctx.cfg.recoveryKey,
-        ctx.plcRotationKey.did(),
-      ],
-      pds: ctx.cfg.publicUrl,
-      signer: userKey,
-    }
-    const baseAccntInfo = {
-      email: 'byo-did@test.com',
-      handle: 'byo-did.test',
-      password: 'byo-did-pass',
-    }
+  // it('requires that the did a user brought be correctly set up for the server', async () => {
+  //   const userKey = await crypto.Secp256k1Keypair.create()
+  //   const baseDidInfo = {
+  //     signingKey: ctx.repoSigningKey.did(),
+  //     handle: 'byo-did.test',
+  //     rotationKeys: [
+  //       userKey.did(),
+  //       ctx.cfg.identity.recoveryDidKey ?? '',
+  //       ctx.plcRotationKey.did(),
+  //     ],
+  //     pds: ctx.cfg.service.publicUrl,
+  //     signer: userKey,
+  //   }
+  //   const baseAccntInfo = {
+  //     email: 'byo-did@test.com',
+  //     handle: 'byo-did.test',
+  //     password: 'byo-did-pass',
+  //   }
 
-    const did1 = await ctx.plcClient.createDid({
-      ...baseDidInfo,
-      handle: 'different-handle.test',
-    })
-    const attempt1 = agent.api.com.atproto.server.createAccount({
-      ...baseAccntInfo,
-      did: did1,
-    })
-    await expect(attempt1).rejects.toThrow(
-      'provided handle does not match DID document handle',
-    )
+  //   const did1 = await ctx.plcClient.createDid({
+  //     ...baseDidInfo,
+  //     handle: 'different-handle.test',
+  //   })
+  //   const attempt1 = agent.api.com.atproto.server.createAccount({
+  //     ...baseAccntInfo,
+  //     did: did1,
+  //   })
+  //   await expect(attempt1).rejects.toThrow(
+  //     'provided handle does not match DID document handle',
+  //   )
 
-    const did2 = await ctx.plcClient.createDid({
-      ...baseDidInfo,
-      pds: 'https://other-pds.com',
-    })
-    const attempt2 = agent.api.com.atproto.server.createAccount({
-      ...baseAccntInfo,
-      did: did2,
-    })
-    await expect(attempt2).rejects.toThrow(
-      'DID document pds endpoint does not match service endpoint',
-    )
+  //   const did2 = await ctx.plcClient.createDid({
+  //     ...baseDidInfo,
+  //     pds: 'https://other-pds.com',
+  //   })
+  //   const attempt2 = agent.api.com.atproto.server.createAccount({
+  //     ...baseAccntInfo,
+  //     did: did2,
+  //   })
+  //   await expect(attempt2).rejects.toThrow(
+  //     'DID document pds endpoint does not match service endpoint',
+  //   )
 
-    const did3 = await ctx.plcClient.createDid({
-      ...baseDidInfo,
-      rotationKeys: [userKey.did()],
-    })
-    const attempt3 = agent.api.com.atproto.server.createAccount({
-      ...baseAccntInfo,
-      did: did3,
-    })
-    await expect(attempt3).rejects.toThrow(
-      'PLC DID does not include service rotation key',
-    )
+  //   const did3 = await ctx.plcClient.createDid({
+  //     ...baseDidInfo,
+  //     rotationKeys: [userKey.did()],
+  //   })
+  //   const attempt3 = agent.api.com.atproto.server.createAccount({
+  //     ...baseAccntInfo,
+  //     did: did3,
+  //   })
+  //   await expect(attempt3).rejects.toThrow(
+  //     'PLC DID does not include service rotation key',
+  //   )
 
-    const did4 = await ctx.plcClient.createDid({
-      ...baseDidInfo,
-      signingKey: userKey.did(),
-    })
-    const attempt4 = agent.api.com.atproto.server.createAccount({
-      ...baseAccntInfo,
-      did: did4,
-    })
-    await expect(attempt4).rejects.toThrow(
-      'DID document signing key does not match service signing key',
-    )
-  })
+  //   const did4 = await ctx.plcClient.createDid({
+  //     ...baseDidInfo,
+  //     signingKey: userKey.did(),
+  //   })
+  //   const attempt4 = agent.api.com.atproto.server.createAccount({
+  //     ...baseAccntInfo,
+  //     did: did4,
+  //   })
+  //   await expect(attempt4).rejects.toThrow(
+  //     'DID document signing key does not match service signing key',
+  //   )
+  // })
 
   it('allows administrative email updates', async () => {
     await agent.api.com.atproto.admin.updateAccountEmail(
@@ -222,11 +239,11 @@ describe('account', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: util.adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
       },
     )
 
-    const accnt = await ctx.services.account(ctx.db).getAccount(handle)
+    const accnt = await ctx.accountManager.getAccount(handle)
     expect(accnt?.email).toBe('alice-new@test.com')
 
     await agent.api.com.atproto.admin.updateAccountEmail(
@@ -236,11 +253,11 @@ describe('account', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: util.adminAuth() },
+        headers: network.pds.adminAuthHeaders(),
       },
     )
 
-    const accnt2 = await ctx.services.account(ctx.db).getAccount(handle)
+    const accnt2 = await ctx.accountManager.getAccount(handle)
     expect(accnt2?.email).toBe(email)
   })
 
@@ -252,7 +269,7 @@ describe('account', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: util.moderatorAuth() },
+        headers: network.pds.adminAuthHeaders('moderator'),
       },
     )
     await expect(attemptUpdateMod).rejects.toThrow('Insufficient privileges')
@@ -263,7 +280,7 @@ describe('account', () => {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: util.triageAuth() },
+        headers: network.pds.adminAuthHeaders('triage'),
       },
     )
     await expect(attemptUpdateTriage).rejects.toThrow('Insufficient privileges')
@@ -506,24 +523,23 @@ describe('account', () => {
   it('allows only unexpired password reset tokens', async () => {
     await agent.api.com.atproto.server.requestPasswordReset({ email })
 
-    const user = await db.db
-      .updateTable('user_account')
-      .where('email', '=', email)
+    const res = await ctx.accountManager.db.db
+      .updateTable('email_token')
+      .where('purpose', '=', 'reset_password')
+      .where('did', '=', did)
       .set({
-        passwordResetGrantedAt: new Date(
-          Date.now() - 16 * minsToMs,
-        ).toISOString(),
+        requestedAt: new Date(Date.now() - 16 * minsToMs).toISOString(),
       })
-      .returning(['passwordResetToken'])
+      .returning(['token'])
       .executeTakeFirst()
-    if (!user?.passwordResetToken) {
+    if (!res?.token) {
       throw new Error('Missing reset token')
     }
 
     // Use of expired token fails
     await expect(
       agent.api.com.atproto.server.resetPassword({
-        token: user.passwordResetToken,
+        token: res.token,
         password: passwordAlt,
       }),
     ).rejects.toThrow(ComAtprotoServerResetPassword.ExpiredTokenError)

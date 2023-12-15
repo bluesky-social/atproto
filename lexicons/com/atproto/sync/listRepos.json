@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "List dids and root cids of hosted repos",
+      "description": "List DIDs and root CIDs of hosted repos.",
       "parameters": {
         "type": "params",
         "properties": {
@@ -34,10 +34,11 @@
     },
     "repo": {
       "type": "object",
-      "required": ["did", "head"],
+      "required": ["did", "head", "rev"],
       "properties": {
         "did": { "type": "string", "format": "did" },
-        "head": { "type": "string", "format": "cid" }
+        "head": { "type": "string", "format": "cid" },
+        "rev": { "type": "string" }
       }
     }
   }

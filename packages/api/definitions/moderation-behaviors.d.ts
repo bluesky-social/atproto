@@ -32,6 +32,7 @@ export interface ModerationBehaviors {
     string,
     {
       blocking: boolean
+      blockingByList: boolean
       blockedBy: boolean
       muted: boolean
       mutedByList: boolean
@@ -40,6 +41,7 @@ export interface ModerationBehaviors {
   configurations: Record<
     string,
     {
+      authed?: boolean
       adultContentEnabled: boolean
       settings: Record<string, LabelPreference>
     }

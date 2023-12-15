@@ -1,9 +1,7 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
-import { SeedClient } from '../seeds/client'
-import basicSeed from '../seeds/basic'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import authorFeedSeed from '../seeds/author-feed'
 import { isRecord } from '../../src/lexicon/types/app/bsky/feed/post'
 import { isView as isEmbedRecordWithMedia } from '../../src/lexicon/types/app/bsky/embed/recordWithMedia'
 import { isView as isImageEmbed } from '../../src/lexicon/types/app/bsky/embed/images'
@@ -18,20 +16,21 @@ describe('pds author feed views', () => {
   let bob: string
   let carol: string
   let dan: string
+  let eve: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_author_feed',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
-    await basicSeed(sc)
+    sc = network.getSeedClient()
+    await authorFeedSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
+    eve = sc.dids.eve
   })
 
   afterAll(async () => {
@@ -148,22 +147,21 @@ describe('pds author feed views', () => {
 
     expect(preBlock.feed.length).toBeGreaterThan(0)
 
-    const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: alice,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+    await agent.api.com.atproto.admin.emitModerationEvent(
+      {
+        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: alice,
         },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
 
     const attempt = agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
@@ -172,9 +170,13 @@ describe('pds author feed views', () => {
     await expect(attempt).rejects.toThrow('Profile not found')
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.emitModerationEvent(
       {
-        id: action.id,
+        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: alice,
+        },
         createdBy: 'did:example:admin',
         reason: 'Y',
       },
@@ -195,23 +197,22 @@ describe('pds author feed views', () => {
 
     const post = preBlock.feed[0].post
 
-    const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: post.uri,
-            cid: post.cid,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+    await agent.api.com.atproto.admin.emitModerationEvent(
+      {
+        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.uri,
+          cid: post.cid,
         },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
 
     const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
@@ -222,9 +223,14 @@ describe('pds author feed views', () => {
     expect(postBlock.feed.map((item) => item.post.uri)).not.toContain(post.uri)
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.emitModerationEvent(
       {
-        id: action.id,
+        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.uri,
+          cid: post.cid,
+        },
         createdBy: 'did:example:admin',
         reason: 'Y',
       },
@@ -297,6 +303,22 @@ describe('pds author feed views', () => {
         return (
           (isRecord(post.record) && !post.record.reply) ||
           (isRecord(post.record) && post.record.reply)
+        )
+      }),
+    ).toBeTruthy()
+  })
+
+  it('posts_and_author_threads includes self-replies', async () => {
+    const { data: eveFeed } = await agent.api.app.bsky.feed.getAuthorFeed({
+      actor: eve,
+      filter: 'posts_and_author_threads',
+    })
+
+    expect(eveFeed.feed.length).toEqual(7)
+    expect(
+      eveFeed.feed.some(({ post }) => {
+        return (
+          isRecord(post.record) && post.record.reply && post.author.did === eve
         )
       }),
     ).toBeTruthy()

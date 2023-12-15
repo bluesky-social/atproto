@@ -1,10 +1,8 @@
 import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { forSnapshot, stripViewer } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
-import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds profile views', () => {
@@ -24,10 +22,9 @@ describe('pds profile views', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
@@ -109,10 +106,10 @@ describe('pds profile views', () => {
 
   it('presents avatars & banners', async () => {
     const avatarImg = await fs.readFile(
-      'tests/image/fixtures/key-portrait-small.jpg',
+      'tests/sample-img/key-portrait-small.jpg',
     )
     const bannerImg = await fs.readFile(
-      'tests/image/fixtures/key-landscape-small.jpg',
+      'tests/sample-img/key-landscape-small.jpg',
     )
     const avatarRes = await pdsAgent.api.com.atproto.repo.uploadBlob(
       avatarImg,
@@ -187,22 +184,21 @@ describe('pds profile views', () => {
   })
 
   it('blocked by actor takedown', async () => {
-    const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: alice,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+    await agent.api.com.atproto.admin.emitModerationEvent(
+      {
+        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: alice,
         },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
     const promise = agent.api.app.bsky.actor.getProfile(
       { actor: alice },
       { headers: await network.serviceHeaders(bob) },
@@ -211,9 +207,59 @@ describe('pds profile views', () => {
     await expect(promise).rejects.toThrow('Account has been taken down')
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.emitModerationEvent(
       {
-        id: action.id,
+        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: alice,
+        },
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
+  })
+
+  it('blocked by actor suspension', async () => {
+    await agent.api.com.atproto.admin.emitModerationEvent(
+      {
+        event: {
+          $type: 'com.atproto.admin.defs#modEventTakedown',
+          durationInHours: 1,
+        },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: alice,
+        },
+        createdBy: 'did:example:admin',
+        reason: 'Y',
+      },
+      {
+        encoding: 'application/json',
+        headers: network.pds.adminAuthHeaders(),
+      },
+    )
+    const promise = agent.api.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: await network.serviceHeaders(bob) },
+    )
+
+    await expect(promise).rejects.toThrow(
+      'Account has been temporarily suspended',
+    )
+
+    // Cleanup
+    await agent.api.com.atproto.admin.emitModerationEvent(
+      {
+        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: alice,
+        },
         createdBy: 'did:example:admin',
         reason: 'Y',
       },

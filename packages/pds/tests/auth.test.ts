@@ -1,26 +1,23 @@
+import * as jose from 'jose'
 import AtpAgent from '@atproto/api'
-import * as jwt from 'jsonwebtoken'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import * as CreateSession from '@atproto/api/src/client/types/com/atproto/server/createSession'
 import * as RefreshSession from '@atproto/api/src/client/types/com/atproto/server/refreshSession'
-import { SeedClient } from './seeds/client'
-import { adminAuth, CloseFn, runTestServer, TestServerInfo } from './_util'
+import { createRefreshToken } from '../src/account-manager/helpers/auth'
 
 describe('auth', () => {
-  let server: TestServerInfo
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
-  let close: CloseFn
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'auth',
     })
-    agent = new AtpAgent({ service: server.url })
-    close = server.close
+    agent = network.pds.getClient()
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   const createAccount = async (info) => {
@@ -45,12 +42,10 @@ describe('auth', () => {
       headers: SeedClient.getHeaders(jwt),
     })
   }
-  const refreshSession = async (jwt) => {
+  const refreshSession = async (jwt: string) => {
     const { data } = await agent.api.com.atproto.server.refreshSession(
       undefined,
-      {
-        headers: SeedClient.getHeaders(jwt),
-      },
+      { headers: SeedClient.getHeaders(jwt) },
     )
     return data
   }
@@ -68,6 +63,7 @@ describe('auth', () => {
       did: account.did,
       handle: account.handle,
       email,
+      emailConfirmed: false,
     })
     // Valid refresh token
     const nextSession = await refreshSession(account.refreshJwt)
@@ -96,6 +92,7 @@ describe('auth', () => {
       did: session.did,
       handle: session.handle,
       email,
+      emailConfirmed: false,
     })
     // Valid refresh token
     const nextSession = await refreshSession(session.refreshJwt)
@@ -139,6 +136,7 @@ describe('auth', () => {
       did: session.did,
       handle: session.handle,
       email,
+      emailConfirmed: false,
     })
     // Valid refresh token
     const nextSession = await refreshSession(session.refreshJwt)
@@ -150,6 +148,31 @@ describe('auth', () => {
     )
   })
 
+  it('handles racing refreshes', async () => {
+    const email = 'dan@test.com'
+    const account = await createAccount({
+      handle: 'dan.test',
+      password: 'password',
+      email,
+    })
+    const tokenIdPromises: Promise<string>[] = []
+    const doRefresh = async () => {
+      const res = await refreshSession(account.refreshJwt)
+      const decoded = jose.decodeJwt(res.refreshJwt)
+      if (!decoded?.jti) {
+        throw new Error('undefined jti on refresh token')
+      }
+      return decoded.jti
+    }
+    for (let i = 0; i < 10; i++) {
+      tokenIdPromises.push(doRefresh())
+    }
+    const tokenIds = await Promise.all(tokenIdPromises)
+    for (let i = 0; i < 10; i++) {
+      expect(tokenIds[i]).toEqual(tokenIds[0])
+    }
+  })
+
   it('refresh token provides new token with same id on multiple uses during grace period.', async () => {
     const account = await createAccount({
       handle: 'eve.test',
@@ -159,9 +182,9 @@ describe('auth', () => {
     const refresh1 = await refreshSession(account.refreshJwt)
     const refresh2 = await refreshSession(account.refreshJwt)
 
-    const token0 = jwt.decode(account.refreshJwt, { json: true })
-    const token1 = jwt.decode(refresh1.refreshJwt, { json: true })
-    const token2 = jwt.decode(refresh2.refreshJwt, { json: true })
+    const token0 = jose.decodeJwt(account.refreshJwt)
+    const token1 = jose.decodeJwt(refresh1.refreshJwt)
+    const token2 = jose.decodeJwt(refresh2.refreshJwt)
 
     expect(typeof token1?.jti).toEqual('string')
     expect(token1?.jti).toEqual(token2?.jti)
@@ -170,14 +193,14 @@ describe('auth', () => {
   })
 
   it('refresh token is revoked after grace period completes.', async () => {
-    const { db } = server.ctx
+    const { db } = network.pds.ctx.accountManager
     const account = await createAccount({
       handle: 'evan.test',
       email: 'evan@test.com',
       password: 'password',
     })
     await refreshSession(account.refreshJwt)
-    const token = jwt.decode(account.refreshJwt, { json: true })
+    const token = jose.decodeJwt(account.refreshJwt)
 
     // Update expiration (i.e. grace period) to end immediately
     const refreshUpdated = await db.db
@@ -219,22 +242,24 @@ describe('auth', () => {
       password: 'password',
     })
     const refreshWithAccess = refreshSession(account.accessJwt)
-    await expect(refreshWithAccess).rejects.toThrow(
-      'Token could not be verified',
-    )
+    await expect(refreshWithAccess).rejects.toThrow('Bad token scope')
   })
 
   it('expired refresh token cannot be used to refresh a session.', async () => {
-    const { auth } = server.ctx
     const account = await createAccount({
       handle: 'holga.test',
       email: 'holga@test.com',
       password: 'password',
     })
-    const refresh = auth.createRefreshToken({ did: account.did, expiresIn: -1 })
-    const refreshExpired = refreshSession(refresh.jwt)
+    const refreshJwt = await createRefreshToken({
+      did: account.did,
+      jwtKey: network.pds.jwtSecretKey(),
+      serviceDid: network.pds.ctx.cfg.service.did,
+      expiresIn: -1,
+    })
+    const refreshExpired = refreshSession(refreshJwt)
     await expect(refreshExpired).rejects.toThrow('Token has expired')
-    await deleteSession(refresh.jwt) // No problem revoking an expired token
+    await deleteSession(refreshJwt) // No problem revoking an expired token
   })
 
   it('actor takedown disallows fresh session.', async () => {
@@ -243,19 +268,17 @@ describe('auth', () => {
       email: 'iris@test.com',
       password: 'password',
     })
-    await agent.api.com.atproto.admin.takeModerationAction(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        action: TAKEDOWN,
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: account.did,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: { applied: true },
       },
       {
         encoding: 'application/json',
-        headers: { authorization: adminAuth() },
+        headers: { authorization: network.pds.adminAuth() },
       },
     )
     await expect(
@@ -269,19 +292,17 @@ describe('auth', () => {
       email: 'jared@test.com',
       password: 'password',
     })
-    await agent.api.com.atproto.admin.takeModerationAction(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        action: TAKEDOWN,
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: account.did,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: { applied: true },
       },
       {
         encoding: 'application/json',
-        headers: { authorization: adminAuth() },
+        headers: { authorization: network.pds.adminAuth() },
       },
     )
     await expect(refreshSession(account.refreshJwt)).rejects.toThrow(

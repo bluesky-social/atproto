@@ -1,7 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { stripViewer } from '../_util'
-import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 
 describe('pds user search views', () => {
@@ -14,17 +13,18 @@ describe('pds user search views', () => {
       dbPostgresSchema: 'bsky_views_suggestions',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
     await network.bsky.processAll()
 
     const suggestions = [
-      { did: sc.dids.bob, order: 1 },
-      { did: sc.dids.carol, order: 2 },
-      { did: sc.dids.dan, order: 3 },
+      { did: sc.dids.alice, order: 1 },
+      { did: sc.dids.bob, order: 2 },
+      { did: sc.dids.carol, order: 3 },
+      { did: sc.dids.dan, order: 4 },
     ]
+
     await network.bsky.ctx.db
       .getPrimary()
       .db.insertInto('suggested_follow')
@@ -65,16 +65,22 @@ describe('pds user search views', () => {
       { limit: 1 },
       { headers: await network.serviceHeaders(sc.dids.carol) },
     )
+    expect(result1.data.actors.length).toBe(1)
+    expect(result1.data.actors[0].handle).toEqual('bob.test')
+
     const result2 = await agent.api.app.bsky.actor.getSuggestions(
       { limit: 1, cursor: result1.data.cursor },
       { headers: await network.serviceHeaders(sc.dids.carol) },
     )
-
-    expect(result1.data.actors.length).toBe(1)
-    expect(result1.data.actors[0].handle).toEqual('bob.test')
-
     expect(result2.data.actors.length).toBe(1)
     expect(result2.data.actors[0].handle).toEqual('dan.test')
+
+    const result3 = await agent.api.app.bsky.actor.getSuggestions(
+      { limit: 1, cursor: result2.data.cursor },
+      { headers: await network.serviceHeaders(sc.dids.carol) },
+    )
+    expect(result3.data.actors.length).toBe(0)
+    expect(result3.data.cursor).toBeUndefined()
   })
 
   it('fetches suggestions unauthed', async () => {

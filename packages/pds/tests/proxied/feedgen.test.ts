@@ -1,7 +1,6 @@
 import { makeAlgos } from '@atproto/bsky'
 import AtpAgent, { AtUri, FeedNS } from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { SeedClient } from '../seeds/client'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import { forSnapshot } from '../_util'
 
@@ -23,8 +22,8 @@ describe('feedgen proxy view', () => {
       bsky: { algos: makeAlgos(feedUri.host) },
     })
     agent = network.pds.getClient()
-    sc = new SeedClient(agent)
-    await basicSeed(sc)
+    sc = network.getSeedClient()
+    await basicSeed(sc, { addModLabels: true })
     // publish feed
     const feed = await agent.api.app.bsky.feed.generator.create(
       { repo: sc.dids.alice, rkey: feedUri.rkey },
@@ -69,7 +68,7 @@ describe('feedgen proxy view', () => {
     const { data: feed } = await agent.api.app.bsky.feed.getFeed(
       { feed: feedUri.toString() },
       {
-        headers: { ...sc.getHeaders(sc.dids.alice), 'x-appview-proxy': 'true' },
+        headers: { ...sc.getHeaders(sc.dids.alice) },
       },
     )
     expect(forSnapshot(feed)).toMatchSnapshot()

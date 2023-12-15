@@ -549,9 +549,7 @@ function genClientXrpcCommon(
   lexicons: Lexicons,
   lexUri: string,
 ) {
-  const def = lexicons.getDefOrThrow(lexUri, ['query', 'procedure']) as
-    | LexXrpcQuery
-    | LexXrpcProcedure
+  const def = lexicons.getDefOrThrow(lexUri, ['query', 'procedure'])
 
   //= export interface CallOptions {...}
   const opts = file.addInterface({
@@ -635,7 +633,7 @@ function genClientRecord(
   lexicons: Lexicons,
   lexUri: string,
 ) {
-  const def = lexicons.getDefOrThrow(lexUri, ['record']) as LexRecord
+  const def = lexicons.getDefOrThrow(lexUri, ['record'])
 
   //= export interface Record {...}
   genObject(file, imports, lexUri, def.record, 'Record')

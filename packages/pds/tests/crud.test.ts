@@ -1,6 +1,8 @@
 import fs from 'fs/promises'
 import { AtUri } from '@atproto/syntax'
 import AtpAgent from '@atproto/api'
+import { BlobRef } from '@atproto/lexicon'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
 import * as createRecord from '@atproto/api/src/client/types/com/atproto/repo/createRecord'
 import * as putRecord from '@atproto/api/src/client/types/com/atproto/repo/putRecord'
 import * as deleteRecord from '@atproto/api/src/client/types/com/atproto/repo/deleteRecord'
@@ -9,11 +11,9 @@ import { cidForCbor, TID, ui8ToArrayBuffer } from '@atproto/common'
 import { BlobNotFoundError } from '@atproto/repo'
 import { defaultFetchHandler } from '@atproto/xrpc'
 import * as Post from '../src/lexicon/types/app/bsky/feed/post'
-import { adminAuth, CloseFn, paginateAll, runTestServer } from './_util'
+import { paginateAll } from './_util'
 import AppContext from '../src/context'
-import { TAKEDOWN } from '../src/lexicon/types/com/atproto/admin/defs'
-import { BlobRef } from '@atproto/lexicon'
-import { ids } from '../src/lexicon/lexicons'
+import { ids, lexicons } from '../src/lexicon/lexicons'
 
 const alice = {
   email: 'alice@test.com',
@@ -29,25 +29,24 @@ const bob = {
 }
 
 describe('crud operations', () => {
+  let network: TestNetworkNoAppView
   let ctx: AppContext
   let agent: AtpAgent
   let aliceAgent: AtpAgent
   let bobAgent: AtpAgent
-  let close: CloseFn
 
   beforeAll(async () => {
-    const server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'crud',
     })
-    ctx = server.ctx
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    aliceAgent = new AtpAgent({ service: server.url })
-    bobAgent = new AtpAgent({ service: server.url })
+    ctx = network.pds.ctx
+    agent = network.pds.getClient()
+    aliceAgent = network.pds.getClient()
+    bobAgent = network.pds.getClient()
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('registers users', async () => {
@@ -174,17 +173,15 @@ describe('crud operations', () => {
   })
 
   it('attaches images to a post', async () => {
-    const file = await fs.readFile(
-      'tests/image/fixtures/key-landscape-small.jpg',
-    )
+    const file = await fs.readFile('tests/sample-img/key-landscape-small.jpg')
     const uploadedRes = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
       encoding: 'image/jpeg',
     })
     const uploaded = uploadedRes.data.blob
     // Expect blobstore not to have image yet
-    await expect(ctx.blobstore.getBytes(uploaded.ref)).rejects.toThrow(
-      BlobNotFoundError,
-    )
+    await expect(
+      ctx.blobstore(alice.did).getBytes(uploaded.ref),
+    ).rejects.toThrow(BlobNotFoundError)
     // Associate image with post, image should be placed in blobstore
     const res = await aliceAgent.api.app.bsky.feed.post.create(
       { repo: alice.did },
@@ -208,7 +205,7 @@ describe('crud operations', () => {
     expect(images.length).toEqual(1)
     expect(uploaded.ref.equals(images[0].image.ref)).toBeTruthy()
     // Ensure that the uploaded image is now in the blobstore, i.e. doesn't throw BlobNotFoundError
-    await ctx.blobstore.getBytes(uploaded.ref)
+    await ctx.blobstore(alice.did).getBytes(uploaded.ref)
     // Cleanup
     await aliceAgent.api.app.bsky.feed.post.delete({
       rkey: postUri.rkey,
@@ -461,6 +458,29 @@ describe('crud operations', () => {
       })
     })
 
+    it('does not produce commit on no-op update', async () => {
+      const { repo } = bobAgent.api.com.atproto
+      const rootRes1 = await bobAgent.api.com.atproto.sync.getLatestCommit({
+        did: bob.did,
+      })
+      const { data: put } = await repo.putRecord({
+        ...profilePath,
+        repo: bob.did,
+        record: {
+          displayName: 'Robert',
+          description: 'Dog lover',
+        },
+      })
+      expect(put.uri).toEqual(`at://${bob.did}/${ids.AppBskyActorProfile}/self`)
+
+      const rootRes2 = await bobAgent.api.com.atproto.sync.getLatestCommit({
+        did: bob.did,
+      })
+
+      expect(rootRes2.data.cid).toEqual(rootRes1.data.cid)
+      expect(rootRes2.data.rev).toEqual(rootRes1.data.rev)
+    })
+
     it('temporarily only allows updates to profile', async () => {
       const { repo } = bobAgent.api.com.atproto
       const put = await repo.putRecord({
@@ -570,6 +590,22 @@ describe('crud operations', () => {
     )
   })
 
+  it('requires valid rkey', async () => {
+    await expect(
+      aliceAgent.api.com.atproto.repo.createRecord({
+        repo: alice.did,
+        collection: 'app.bsky.feed.generator',
+        record: {
+          $type: 'app.bsky.feed.generator',
+          did: 'did:web:dummy.example.com',
+          displayName: 'dummy',
+          createdAt: new Date().toISOString(),
+        },
+        rkey: '..',
+      }),
+    ).rejects.toThrow('record key can not be "." or ".."')
+  })
+
   it('validates the record on write', async () => {
     await expect(
       aliceAgent.api.com.atproto.repo.createRecord({
@@ -579,6 +615,24 @@ describe('crud operations', () => {
       }),
     ).rejects.toThrow(
       'Invalid app.bsky.feed.post record: Record must have the property "text"',
+    )
+  })
+
+  it('validates datetimes more rigorously than lex sdk', async () => {
+    const postRecord = {
+      $type: 'app.bsky.feed.post',
+      text: 'test',
+      createdAt: '1985-04-12T23:20:50.123',
+    }
+    lexicons.assertValidRecord('app.bsky.feed.post', postRecord)
+    await expect(
+      aliceAgent.api.com.atproto.repo.createRecord({
+        repo: alice.did,
+        collection: 'app.bsky.feed.post',
+        record: postRecord,
+      }),
+    ).rejects.toThrow(
+      'Invalid app.bsky.feed.post record: createdAt must be an valid atproto datetime (both RFC-3339 and ISO-8601)',
     )
   })
 
@@ -1156,23 +1210,21 @@ describe('crud operations', () => {
     const posts = await agent.api.app.bsky.feed.post.list({ repo: alice.did })
     expect(posts.records.map((r) => r.uri)).toContain(post.uri)
 
-    const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: created.uri,
-            cid: created.cid,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
+    const subject = {
+      $type: 'com.atproto.repo.strongRef',
+      uri: created.uri,
+      cid: created.cid,
+    }
+    await agent.api.com.atproto.admin.updateSubjectStatus(
+      {
+        subject,
+        takedown: { applied: true },
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: network.pds.adminAuth() },
+      },
+    )
 
     const postTakedownPromise = agent.api.app.bsky.feed.post.get({
       repo: alice.did,
@@ -1185,15 +1237,14 @@ describe('crud operations', () => {
     expect(postsTakedown.records.map((r) => r.uri)).not.toContain(post.uri)
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        id: action.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        subject,
+        takedown: { applied: false },
       },
       {
         encoding: 'application/json',
-        headers: { authorization: adminAuth() },
+        headers: { authorization: network.pds.adminAuth() },
       },
     )
   })
@@ -1202,22 +1253,21 @@ describe('crud operations', () => {
     const posts = await agent.api.app.bsky.feed.post.list({ repo: alice.did })
     expect(posts.records.length).toBeGreaterThan(0)
 
-    const { data: action } =
-      await agent.api.com.atproto.admin.takeModerationAction(
-        {
-          action: TAKEDOWN,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: alice.did,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: { authorization: adminAuth() },
-        },
-      )
+    const subject = {
+      $type: 'com.atproto.admin.defs#repoRef',
+      did: alice.did,
+    }
+
+    await agent.api.com.atproto.admin.updateSubjectStatus(
+      {
+        subject,
+        takedown: { applied: true },
+      },
+      {
+        encoding: 'application/json',
+        headers: { authorization: network.pds.adminAuth() },
+      },
+    )
 
     const tryListPosts = agent.api.app.bsky.feed.post.list({
       repo: alice.did,
@@ -1225,15 +1275,14 @@ describe('crud operations', () => {
     await expect(tryListPosts).rejects.toThrow(/Could not find repo/)
 
     // Cleanup
-    await agent.api.com.atproto.admin.reverseModerationAction(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        id: action.id,
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        subject,
+        takedown: { applied: false },
       },
       {
         encoding: 'application/json',
-        headers: { authorization: adminAuth() },
+        headers: { authorization: network.pds.adminAuth() },
       },
     )
   })

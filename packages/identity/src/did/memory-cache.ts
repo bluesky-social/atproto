@@ -35,13 +35,12 @@ export class MemoryCache implements DidCache {
     if (!val) return null
     const now = Date.now()
     const expired = now > val.updatedAt + this.maxTTL
-    if (expired) return null
-
     const stale = now > val.updatedAt + this.staleTTL
     return {
       ...val,
       did,
       stale,
+      expired,
     }
   }
 

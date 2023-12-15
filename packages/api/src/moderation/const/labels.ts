@@ -89,6 +89,37 @@ export const LABELS: LabelDefinitionMap = {
       },
     },
   },
+  '!no-unauthenticated': {
+    id: '!no-unauthenticated',
+    preferences: ['hide'],
+    flags: ['no-override', 'unauthed'],
+    onwarn: 'blur',
+    groupId: 'system',
+    configurable: false,
+    strings: {
+      settings: {
+        en: {
+          name: 'Sign-in Required',
+          description:
+            'This user has requested that their account only be shown to signed-in users.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Sign-in Required',
+          description:
+            'This user has requested that their account only be shown to signed-in users.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Sign-in Required',
+          description:
+            'This user has requested that their content only be shown to signed-in users.',
+        },
+      },
+    },
+  },
   'dmca-violation': {
     id: 'dmca-violation',
     preferences: ['hide'],

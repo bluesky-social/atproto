@@ -1,8 +1,7 @@
 import AtpAgent, { AtUri } from '@atproto/api'
-import { SeedClient } from '../seeds/client'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
 import { makeAlgos } from '../../src'
-import { TestNetwork } from '@atproto/dev-env'
 
 describe('algo hot-classic', () => {
   let network: TestNetwork
@@ -26,14 +25,12 @@ describe('algo hot-classic', () => {
       bsky: { algos: makeAlgos(feedPublisherDid) },
     })
     agent = new AtpAgent({ service: network.bsky.url })
-    const pdsAgent = new AtpAgent({ service: network.pds.url })
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
 
     alice = sc.dids.alice
     bob = sc.dids.bob
     await network.processAll()
-    await network.bsky.processAll()
   })
 
   afterAll(async () => {
@@ -43,7 +40,7 @@ describe('algo hot-classic', () => {
   it('returns well liked posts', async () => {
     const img = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-landscape-small.jpg',
+      'tests/sample-img/key-landscape-small.jpg',
       'image/jpeg',
     )
     const one = await sc.post(alice, 'first post', undefined, [img])
@@ -61,7 +58,7 @@ describe('algo hot-classic', () => {
       await sc.like(sc.dids[name], two.ref)
       await sc.like(sc.dids[name], three.ref)
     }
-    await network.bsky.processAll()
+    await network.processAll()
 
     const res = await agent.api.app.bsky.feed.getFeed(
       { feed: feedUri },

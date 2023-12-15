@@ -1,9 +1,14 @@
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/syntax'
+import {
+  AtUri,
+  ensureValidRecordKey,
+  ensureValidDatetime,
+} from '@atproto/syntax'
 import { MINUTE, TID, dataToCborBlock } from '@atproto/common'
 import {
   LexiconDefNotFoundError,
   RepoRecord,
+  ValidationError,
   lexToIpld,
 } from '@atproto/lexicon'
 import {
@@ -31,6 +36,7 @@ import {
   Record as PostRecord,
   isRecord as isPost,
 } from '../lexicon/types/app/bsky/feed/post'
+import { isTag } from '../lexicon/types/app/bsky/richtext/facet'
 import { isRecord as isList } from '../lexicon/types/app/bsky/graph/list'
 import { isRecord as isProfile } from '../lexicon/types/app/bsky/actor/profile'
 import { hasExplicitSlur } from '../handle/explicit-slurs'
@@ -114,6 +120,7 @@ export const assertValidRecord = (record: Record<string, unknown>) => {
   }
   try {
     lex.lexicons.assertValidRecord(record.$type, record)
+    assertValidCreatedAt(record)
   } catch (e) {
     if (e instanceof LexiconDefNotFoundError) {
       throw new InvalidRecordError(e.message)
@@ -122,6 +129,22 @@ export const assertValidRecord = (record: Record<string, unknown>) => {
       `Invalid ${record.$type} record: ${
         e instanceof Error ? e.message : String(e)
       }`,
+    )
+  }
+}
+
+// additional more rigorous check on datetimes
+// this check will eventually be in the lex sdk, but this will stop the bleed until then
+export const assertValidCreatedAt = (record: Record<string, unknown>) => {
+  const createdAt = record['createdAt']
+  if (typeof createdAt !== 'string') {
+    return
+  }
+  try {
+    ensureValidDatetime(createdAt)
+  } catch {
+    throw new ValidationError(
+      'createdAt must be an valid atproto datetime (both RFC-3339 and ISO-8601)',
     )
   }
 }
@@ -169,6 +192,8 @@ export const prepareCreate = async (opts: {
   }
 
   const rkey = opts.rkey || nextRkey.toString()
+  // @TODO: validate against Lexicon record 'key' type, not just overall recordkey syntax
+  ensureValidRecordKey(rkey)
   assertNoExplicitSlurs(rkey, record)
   return {
     action: WriteOpAction.Create,
@@ -300,7 +325,17 @@ function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
     toCheck += ' ' + rkey
     toCheck += ' ' + record.displayName
   } else if (isPost(record)) {
-    toCheck += record.tags?.join(' ')
+    if (record.tags) {
+      toCheck += record.tags.join(' ')
+    }
+
+    for (const facet of record.facets || []) {
+      for (const feat of facet.features) {
+        if (isTag(feat)) {
+          toCheck += ' ' + feat.tag
+        }
+      }
+    }
   }
   if (hasExplicitSlur(toCheck)) {
     throw new InvalidRecordError('Unacceptable slur in record')

@@ -1,15 +1,18 @@
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/actor/getProfiles'
-import { LocalRecords } from '../../../../services/local'
-import { handleReadAfterWrite } from '../util/read-after-write'
+import {
+  LocalViewer,
+  handleReadAfterWrite,
+  LocalRecords,
+} from '../../../../read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfiles({
-    auth: ctx.accessVerifier,
+    auth: ctx.authVerifier.access,
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appviewAgent.api.app.bsky.actor.getProfiles(
+      const res = await ctx.appViewAgent.api.app.bsky.actor.getProfiles(
         params,
         await ctx.serviceAuthHeaders(requester),
       )
@@ -26,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const getProfilesMunge = async (
-  ctx: AppContext,
+  localViewer: LocalViewer,
   original: OutputSchema,
   local: LocalRecords,
   requester: string,
@@ -35,9 +38,7 @@ const getProfilesMunge = async (
   if (!localProf) return original
   const profiles = original.profiles.map((prof) => {
     if (prof.did !== requester) return prof
-    return ctx.services
-      .local(ctx.db)
-      .updateProfileDetailed(prof, localProf.record)
+    return localViewer.updateProfileDetailed(prof, localProf.record)
   })
   return {
     ...original,

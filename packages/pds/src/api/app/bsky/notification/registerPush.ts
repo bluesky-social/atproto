@@ -7,7 +7,7 @@ import { getDidDoc } from '../util/resolver'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.registerPush({
-    auth: ctx.accessVerifier,
+    auth: ctx.authVerifier.access,
     handler: async ({ auth, input }) => {
       const { serviceDid } = input.body
       const {
@@ -16,12 +16,14 @@ export default function (server: Server, ctx: AppContext) {
 
       const authHeaders = await ctx.serviceAuthHeaders(did, serviceDid)
 
-      if (ctx.canProxyWrite() && ctx.cfg.bskyAppViewDid === serviceDid) {
-        const { appviewAgent } = ctx
-        await appviewAgent.api.app.bsky.notification.registerPush(input.body, {
-          ...authHeaders,
-          encoding: 'application/json',
-        })
+      if (ctx.cfg.bskyAppView.did === serviceDid) {
+        await ctx.appViewAgent.api.app.bsky.notification.registerPush(
+          input.body,
+          {
+            ...authHeaders,
+            encoding: 'application/json',
+          },
+        )
         return
       }
 

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Gets the current commit CID & revision of the repo.",
+      "description": "Get the current commit CID & revision of the repo.",
       "parameters": {
         "type": "params",
         "required": ["did"],

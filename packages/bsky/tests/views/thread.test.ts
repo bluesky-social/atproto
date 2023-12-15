@@ -1,8 +1,6 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
-import { TAKEDOWN } from '@atproto/api/src/client/types/com/atproto/admin/defs'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { forSnapshot, stripViewerFromThread } from '../_util'
-import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
 import assert from 'assert'
 import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
@@ -22,8 +20,7 @@ describe('pds thread views', () => {
       dbPostgresSchema: 'bsky_views_thread',
     })
     agent = network.bsky.getClient()
-    const pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -168,22 +165,21 @@ describe('pds thread views', () => {
 
   describe('takedown', () => {
     it('blocks post by actor', async () => {
-      const { data: modAction } =
-        await agent.api.com.atproto.admin.takeModerationAction(
-          {
-            action: TAKEDOWN,
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: alice,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
+      await agent.api.com.atproto.admin.emitModerationEvent(
+        {
+          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: alice,
           },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        )
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
 
       // Same as shallow post thread test, minus alice
       const promise = agent.api.app.bsky.feed.getPostThread(
@@ -196,9 +192,13 @@ describe('pds thread views', () => {
       )
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
-          id: modAction.id,
+          event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: alice,
+          },
           createdBy: 'did:example:admin',
           reason: 'Y',
         },
@@ -210,22 +210,21 @@ describe('pds thread views', () => {
     })
 
     it('blocks replies by actor', async () => {
-      const { data: modAction } =
-        await agent.api.com.atproto.admin.takeModerationAction(
-          {
-            action: TAKEDOWN,
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: carol,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
+      await agent.api.com.atproto.admin.emitModerationEvent(
+        {
+          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: carol,
           },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        )
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
 
       // Same as deep post thread test, minus carol
       const thread = await agent.api.app.bsky.feed.getPostThread(
@@ -236,9 +235,13 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
-          id: modAction.id,
+          event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: carol,
+          },
           createdBy: 'did:example:admin',
           reason: 'Y',
         },
@@ -250,22 +253,21 @@ describe('pds thread views', () => {
     })
 
     it('blocks ancestors by actor', async () => {
-      const { data: modAction } =
-        await agent.api.com.atproto.admin.takeModerationAction(
-          {
-            action: TAKEDOWN,
-            subject: {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: bob,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
+      await agent.api.com.atproto.admin.emitModerationEvent(
+        {
+          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: bob,
           },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        )
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
 
       // Same as ancestor post thread test, minus bob
       const thread = await agent.api.app.bsky.feed.getPostThread(
@@ -276,9 +278,13 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
-          id: modAction.id,
+          event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: bob,
+          },
           createdBy: 'did:example:admin',
           reason: 'Y',
         },
@@ -291,23 +297,22 @@ describe('pds thread views', () => {
 
     it('blocks post by record', async () => {
       const postRef = sc.posts[alice][1].ref
-      const { data: modAction } =
-        await agent.api.com.atproto.admin.takeModerationAction(
-          {
-            action: TAKEDOWN,
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: postRef.uriStr,
-              cid: postRef.cidStr,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
+      await agent.api.com.atproto.admin.emitModerationEvent(
+        {
+          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+          subject: {
+            $type: 'com.atproto.repo.strongRef',
+            uri: postRef.uriStr,
+            cid: postRef.cidStr,
           },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        )
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
 
       const promise = agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: postRef.uriStr },
@@ -319,9 +324,14 @@ describe('pds thread views', () => {
       )
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
-          id: modAction.id,
+          event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+          subject: {
+            $type: 'com.atproto.repo.strongRef',
+            uri: postRef.uriStr,
+            cid: postRef.cidStr,
+          },
           createdBy: 'did:example:admin',
           reason: 'Y',
         },
@@ -340,23 +350,22 @@ describe('pds thread views', () => {
 
       const parent = threadPreTakedown.data.thread.parent?.['post']
 
-      const { data: modAction } =
-        await agent.api.com.atproto.admin.takeModerationAction(
-          {
-            action: TAKEDOWN,
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: parent.uri,
-              cid: parent.cid,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
+      await agent.api.com.atproto.admin.emitModerationEvent(
+        {
+          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+          subject: {
+            $type: 'com.atproto.repo.strongRef',
+            uri: parent.uri,
+            cid: parent.cid,
           },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        )
+          createdBy: 'did:example:admin',
+          reason: 'Y',
+        },
+        {
+          encoding: 'application/json',
+          headers: network.pds.adminAuthHeaders(),
+        },
+      )
 
       // Same as ancestor post thread test, minus parent post
       const thread = await agent.api.app.bsky.feed.getPostThread(
@@ -367,9 +376,14 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.reverseModerationAction(
+      await agent.api.com.atproto.admin.emitModerationEvent(
         {
-          id: modAction.id,
+          event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+          subject: {
+            $type: 'com.atproto.repo.strongRef',
+            uri: parent.uri,
+            cid: parent.cid,
+          },
           createdBy: 'did:example:admin',
           reason: 'Y',
         },
@@ -388,11 +402,11 @@ describe('pds thread views', () => {
       const post1 = threadPreTakedown.data.thread.replies?.[0].post
       const post2 = threadPreTakedown.data.thread.replies?.[1].replies[0].post
 
-      const actionResults = await Promise.all(
+      await Promise.all(
         [post1, post2].map((post) =>
-          agent.api.com.atproto.admin.takeModerationAction(
+          agent.api.com.atproto.admin.emitModerationEvent(
             {
-              action: TAKEDOWN,
+              event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
               subject: {
                 $type: 'com.atproto.repo.strongRef',
                 uri: post.uri,
@@ -419,10 +433,17 @@ describe('pds thread views', () => {
 
       // Cleanup
       await Promise.all(
-        actionResults.map((result) =>
-          agent.api.com.atproto.admin.reverseModerationAction(
+        [post1, post2].map((post) =>
+          agent.api.com.atproto.admin.emitModerationEvent(
             {
-              id: result.data.id,
+              event: {
+                $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+              },
+              subject: {
+                $type: 'com.atproto.repo.strongRef',
+                uri: post.uri,
+                cid: post.cid,
+              },
               createdBy: 'did:example:admin',
               reason: 'Y',
             },

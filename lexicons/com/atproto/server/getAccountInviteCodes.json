@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get all invite codes for a given account",
+      "description": "Get all invite codes for a given account.",
       "parameters": {
         "type": "params",
         "properties": {

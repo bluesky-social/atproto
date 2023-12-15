@@ -11,9 +11,8 @@ import AtpAgent, {
   AppBskyFeedRepost,
   AppBskyGraphFollow,
 } from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { forSnapshot } from './_util'
-import { SeedClient } from './seeds/client'
 import usersSeed from './seeds/users'
 import basicSeed from './seeds/basic'
 import { ids } from '../src/lexicon/lexicons'
@@ -31,7 +30,7 @@ describe('indexing', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await usersSeed(sc)
     // Data in tests is not processed from subscription
     await network.processAll()
@@ -499,7 +498,8 @@ describe('indexing', () => {
 
     it('skips invalid records.', async () => {
       const { db, services } = network.bsky.indexer.ctx
-      const { db: pdsDb, services: pdsServices } = network.pds.ctx
+      const { accountManager } = network.pds.ctx
+      // const { db: pdsDb, services: pdsServices } = network.pds.ctx
       // Create a good and a bad post record
       const writes = await Promise.all([
         pdsRepo.prepareCreate({
@@ -514,9 +514,20 @@ describe('indexing', () => {
           validate: false,
         }),
       ])
-      await pdsServices
-        .repo(pdsDb)
-        .processWrites({ did: sc.dids.alice, writes }, 1)
+      const writeCommit = await network.pds.ctx.actorStore.transact(
+        sc.dids.alice,
+        (store) => store.repo.processWrites(writes),
+      )
+      await accountManager.updateRepoRoot(
+        sc.dids.alice,
+        writeCommit.cid,
+        writeCommit.rev,
+      )
+      await network.pds.ctx.sequencer.sequenceCommit(
+        sc.dids.alice,
+        writeCommit,
+        writes,
+      )
       // Index
       const { data: commit } =
         await pdsAgent.api.com.atproto.sync.getLatestCommit({
@@ -644,14 +655,10 @@ describe('indexing', () => {
       )
       await expect(getProfileBefore).resolves.toBeDefined()
       // Delete account on pds
-      await pdsAgent.api.com.atproto.server.requestAccountDelete(undefined, {
-        headers: sc.getHeaders(alice),
-      })
-      const { token } = await network.pds.ctx.db.db
-        .selectFrom('delete_account_token')
-        .selectAll()
-        .where('did', '=', alice)
-        .executeTakeFirstOrThrow()
+      const token = await network.pds.ctx.accountManager.createEmailToken(
+        alice,
+        'delete_account',
+      )
       await pdsAgent.api.com.atproto.server.deleteAccount({
         token,
         did: alice,

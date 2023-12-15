@@ -8,23 +8,24 @@ import {
 import { schemas } from './lexicons'
 import { CID } from 'multiformats/cid'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
+import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
+import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
+import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
-import * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
-import * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
-import * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
-import * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
+import * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
-import * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
-import * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
+import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+import * as ComAtprotoAdminQueryModerationEvents from './types/com/atproto/admin/queryModerationEvents'
+import * as ComAtprotoAdminQueryModerationStatuses from './types/com/atproto/admin/queryModerationStatuses'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
-import * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
+import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 import * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 import * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
@@ -41,6 +42,7 @@ import * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords
 import * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 import * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 import * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+import * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 import * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 import * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 import * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
@@ -55,9 +57,13 @@ import * as ComAtprotoServerGetSession from './types/com/atproto/server/getSessi
 import * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 import * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 import * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
+import * as ComAtprotoServerRequestEmailConfirmation from './types/com/atproto/server/requestEmailConfirmation'
+import * as ComAtprotoServerRequestEmailUpdate from './types/com/atproto/server/requestEmailUpdate'
 import * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
+import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/reserveSigningKey'
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
+import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
@@ -70,6 +76,10 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
+import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
+import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
+import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -137,23 +147,24 @@ import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecce
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs'
+export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites'
 export * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes'
+export * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
 export * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
+export * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 export * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
-export * as ComAtprotoAdminGetModerationAction from './types/com/atproto/admin/getModerationAction'
-export * as ComAtprotoAdminGetModerationActions from './types/com/atproto/admin/getModerationActions'
-export * as ComAtprotoAdminGetModerationReport from './types/com/atproto/admin/getModerationReport'
-export * as ComAtprotoAdminGetModerationReports from './types/com/atproto/admin/getModerationReports'
+export * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
 export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
-export * as ComAtprotoAdminResolveModerationReports from './types/com/atproto/admin/resolveModerationReports'
-export * as ComAtprotoAdminReverseModerationAction from './types/com/atproto/admin/reverseModerationAction'
+export * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+export * as ComAtprotoAdminQueryModerationEvents from './types/com/atproto/admin/queryModerationEvents'
+export * as ComAtprotoAdminQueryModerationStatuses from './types/com/atproto/admin/queryModerationStatuses'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
 export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail'
-export * as ComAtprotoAdminTakeModerationAction from './types/com/atproto/admin/takeModerationAction'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle'
+export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus'
 export * as ComAtprotoIdentityResolveHandle from './types/com/atproto/identity/resolveHandle'
 export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle'
 export * as ComAtprotoLabelDefs from './types/com/atproto/label/defs'
@@ -170,6 +181,7 @@ export * as ComAtprotoRepoListRecords from './types/com/atproto/repo/listRecords
 export * as ComAtprotoRepoPutRecord from './types/com/atproto/repo/putRecord'
 export * as ComAtprotoRepoStrongRef from './types/com/atproto/repo/strongRef'
 export * as ComAtprotoRepoUploadBlob from './types/com/atproto/repo/uploadBlob'
+export * as ComAtprotoServerConfirmEmail from './types/com/atproto/server/confirmEmail'
 export * as ComAtprotoServerCreateAccount from './types/com/atproto/server/createAccount'
 export * as ComAtprotoServerCreateAppPassword from './types/com/atproto/server/createAppPassword'
 export * as ComAtprotoServerCreateInviteCode from './types/com/atproto/server/createInviteCode'
@@ -184,9 +196,13 @@ export * as ComAtprotoServerGetSession from './types/com/atproto/server/getSessi
 export * as ComAtprotoServerListAppPasswords from './types/com/atproto/server/listAppPasswords'
 export * as ComAtprotoServerRefreshSession from './types/com/atproto/server/refreshSession'
 export * as ComAtprotoServerRequestAccountDelete from './types/com/atproto/server/requestAccountDelete'
+export * as ComAtprotoServerRequestEmailConfirmation from './types/com/atproto/server/requestEmailConfirmation'
+export * as ComAtprotoServerRequestEmailUpdate from './types/com/atproto/server/requestEmailUpdate'
 export * as ComAtprotoServerRequestPasswordReset from './types/com/atproto/server/requestPasswordReset'
+export * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/reserveSigningKey'
 export * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword'
 export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword'
+export * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail'
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks'
 export * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout'
@@ -199,6 +215,10 @@ export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
+export * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
+export * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
+export * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 export * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -266,10 +286,9 @@ export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecce
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
 export const COM_ATPROTO_ADMIN = {
-  DefsTakedown: 'com.atproto.admin.defs#takedown',
-  DefsFlag: 'com.atproto.admin.defs#flag',
-  DefsAcknowledge: 'com.atproto.admin.defs#acknowledge',
-  DefsEscalate: 'com.atproto.admin.defs#escalate',
+  DefsReviewOpen: 'com.atproto.admin.defs#reviewOpen',
+  DefsReviewEscalated: 'com.atproto.admin.defs#reviewEscalated',
+  DefsReviewClosed: 'com.atproto.admin.defs#reviewClosed',
 }
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -333,6 +352,7 @@ export class AtprotoNS {
   repo: RepoNS
   server: ServerNS
   sync: SyncNS
+  temp: TempNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
@@ -343,6 +363,7 @@ export class AtprotoNS {
     this.repo = new RepoNS(service)
     this.server = new ServerNS(service)
     this.sync = new SyncNS(service)
+    this.temp = new TempNS(service)
   }
 }
 
@@ -351,6 +372,17 @@ export class AdminNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  deleteAccount(
+    data?: ComAtprotoAdminDeleteAccount.InputSchema,
+    opts?: ComAtprotoAdminDeleteAccount.CallOptions,
+  ): Promise<ComAtprotoAdminDeleteAccount.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.deleteAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminDeleteAccount.toKnownErr(e)
+      })
   }
 
   disableAccountInvites(
@@ -375,6 +407,17 @@ export class AdminNS {
       })
   }
 
+  emitModerationEvent(
+    data?: ComAtprotoAdminEmitModerationEvent.InputSchema,
+    opts?: ComAtprotoAdminEmitModerationEvent.CallOptions,
+  ): Promise<ComAtprotoAdminEmitModerationEvent.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.emitModerationEvent', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminEmitModerationEvent.toKnownErr(e)
+      })
+  }
+
   enableAccountInvites(
     data?: ComAtprotoAdminEnableAccountInvites.InputSchema,
     opts?: ComAtprotoAdminEnableAccountInvites.CallOptions,
@@ -383,6 +426,17 @@ export class AdminNS {
       .call('com.atproto.admin.enableAccountInvites', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminEnableAccountInvites.toKnownErr(e)
+      })
+  }
+
+  getAccountInfo(
+    params?: ComAtprotoAdminGetAccountInfo.QueryParams,
+    opts?: ComAtprotoAdminGetAccountInfo.CallOptions,
+  ): Promise<ComAtprotoAdminGetAccountInfo.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.getAccountInfo', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminGetAccountInfo.toKnownErr(e)
       })
   }
 
@@ -397,47 +451,14 @@ export class AdminNS {
       })
   }
 
-  getModerationAction(
-    params?: ComAtprotoAdminGetModerationAction.QueryParams,
-    opts?: ComAtprotoAdminGetModerationAction.CallOptions,
-  ): Promise<ComAtprotoAdminGetModerationAction.Response> {
+  getModerationEvent(
+    params?: ComAtprotoAdminGetModerationEvent.QueryParams,
+    opts?: ComAtprotoAdminGetModerationEvent.CallOptions,
+  ): Promise<ComAtprotoAdminGetModerationEvent.Response> {
     return this._service.xrpc
-      .call('com.atproto.admin.getModerationAction', params, undefined, opts)
+      .call('com.atproto.admin.getModerationEvent', params, undefined, opts)
       .catch((e) => {
-        throw ComAtprotoAdminGetModerationAction.toKnownErr(e)
-      })
-  }
-
-  getModerationActions(
-    params?: ComAtprotoAdminGetModerationActions.QueryParams,
-    opts?: ComAtprotoAdminGetModerationActions.CallOptions,
-  ): Promise<ComAtprotoAdminGetModerationActions.Response> {
-    return this._service.xrpc
-      .call('com.atproto.admin.getModerationActions', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoAdminGetModerationActions.toKnownErr(e)
-      })
-  }
-
-  getModerationReport(
-    params?: ComAtprotoAdminGetModerationReport.QueryParams,
-    opts?: ComAtprotoAdminGetModerationReport.CallOptions,
-  ): Promise<ComAtprotoAdminGetModerationReport.Response> {
-    return this._service.xrpc
-      .call('com.atproto.admin.getModerationReport', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoAdminGetModerationReport.toKnownErr(e)
-      })
-  }
-
-  getModerationReports(
-    params?: ComAtprotoAdminGetModerationReports.QueryParams,
-    opts?: ComAtprotoAdminGetModerationReports.CallOptions,
-  ): Promise<ComAtprotoAdminGetModerationReports.Response> {
-    return this._service.xrpc
-      .call('com.atproto.admin.getModerationReports', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoAdminGetModerationReports.toKnownErr(e)
+        throw ComAtprotoAdminGetModerationEvent.toKnownErr(e)
       })
   }
 
@@ -463,25 +484,41 @@ export class AdminNS {
       })
   }
 
-  resolveModerationReports(
-    data?: ComAtprotoAdminResolveModerationReports.InputSchema,
-    opts?: ComAtprotoAdminResolveModerationReports.CallOptions,
-  ): Promise<ComAtprotoAdminResolveModerationReports.Response> {
+  getSubjectStatus(
+    params?: ComAtprotoAdminGetSubjectStatus.QueryParams,
+    opts?: ComAtprotoAdminGetSubjectStatus.CallOptions,
+  ): Promise<ComAtprotoAdminGetSubjectStatus.Response> {
     return this._service.xrpc
-      .call('com.atproto.admin.resolveModerationReports', opts?.qp, data, opts)
+      .call('com.atproto.admin.getSubjectStatus', params, undefined, opts)
       .catch((e) => {
-        throw ComAtprotoAdminResolveModerationReports.toKnownErr(e)
+        throw ComAtprotoAdminGetSubjectStatus.toKnownErr(e)
       })
   }
 
-  reverseModerationAction(
-    data?: ComAtprotoAdminReverseModerationAction.InputSchema,
-    opts?: ComAtprotoAdminReverseModerationAction.CallOptions,
-  ): Promise<ComAtprotoAdminReverseModerationAction.Response> {
+  queryModerationEvents(
+    params?: ComAtprotoAdminQueryModerationEvents.QueryParams,
+    opts?: ComAtprotoAdminQueryModerationEvents.CallOptions,
+  ): Promise<ComAtprotoAdminQueryModerationEvents.Response> {
     return this._service.xrpc
-      .call('com.atproto.admin.reverseModerationAction', opts?.qp, data, opts)
+      .call('com.atproto.admin.queryModerationEvents', params, undefined, opts)
       .catch((e) => {
-        throw ComAtprotoAdminReverseModerationAction.toKnownErr(e)
+        throw ComAtprotoAdminQueryModerationEvents.toKnownErr(e)
+      })
+  }
+
+  queryModerationStatuses(
+    params?: ComAtprotoAdminQueryModerationStatuses.QueryParams,
+    opts?: ComAtprotoAdminQueryModerationStatuses.CallOptions,
+  ): Promise<ComAtprotoAdminQueryModerationStatuses.Response> {
+    return this._service.xrpc
+      .call(
+        'com.atproto.admin.queryModerationStatuses',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw ComAtprotoAdminQueryModerationStatuses.toKnownErr(e)
       })
   }
 
@@ -507,17 +544,6 @@ export class AdminNS {
       })
   }
 
-  takeModerationAction(
-    data?: ComAtprotoAdminTakeModerationAction.InputSchema,
-    opts?: ComAtprotoAdminTakeModerationAction.CallOptions,
-  ): Promise<ComAtprotoAdminTakeModerationAction.Response> {
-    return this._service.xrpc
-      .call('com.atproto.admin.takeModerationAction', opts?.qp, data, opts)
-      .catch((e) => {
-        throw ComAtprotoAdminTakeModerationAction.toKnownErr(e)
-      })
-  }
-
   updateAccountEmail(
     data?: ComAtprotoAdminUpdateAccountEmail.InputSchema,
     opts?: ComAtprotoAdminUpdateAccountEmail.CallOptions,
@@ -537,6 +563,17 @@ export class AdminNS {
       .call('com.atproto.admin.updateAccountHandle', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoAdminUpdateAccountHandle.toKnownErr(e)
+      })
+  }
+
+  updateSubjectStatus(
+    data?: ComAtprotoAdminUpdateSubjectStatus.InputSchema,
+    opts?: ComAtprotoAdminUpdateSubjectStatus.CallOptions,
+  ): Promise<ComAtprotoAdminUpdateSubjectStatus.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.updateSubjectStatus', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminUpdateSubjectStatus.toKnownErr(e)
       })
   }
 }
@@ -712,6 +749,17 @@ export class ServerNS {
     this._service = service
   }
 
+  confirmEmail(
+    data?: ComAtprotoServerConfirmEmail.InputSchema,
+    opts?: ComAtprotoServerConfirmEmail.CallOptions,
+  ): Promise<ComAtprotoServerConfirmEmail.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.confirmEmail', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerConfirmEmail.toKnownErr(e)
+      })
+  }
+
   createAccount(
     data?: ComAtprotoServerCreateAccount.InputSchema,
     opts?: ComAtprotoServerCreateAccount.CallOptions,
@@ -855,6 +903,28 @@ export class ServerNS {
       })
   }
 
+  requestEmailConfirmation(
+    data?: ComAtprotoServerRequestEmailConfirmation.InputSchema,
+    opts?: ComAtprotoServerRequestEmailConfirmation.CallOptions,
+  ): Promise<ComAtprotoServerRequestEmailConfirmation.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.requestEmailConfirmation', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerRequestEmailConfirmation.toKnownErr(e)
+      })
+  }
+
+  requestEmailUpdate(
+    data?: ComAtprotoServerRequestEmailUpdate.InputSchema,
+    opts?: ComAtprotoServerRequestEmailUpdate.CallOptions,
+  ): Promise<ComAtprotoServerRequestEmailUpdate.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.requestEmailUpdate', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerRequestEmailUpdate.toKnownErr(e)
+      })
+  }
+
   requestPasswordReset(
     data?: ComAtprotoServerRequestPasswordReset.InputSchema,
     opts?: ComAtprotoServerRequestPasswordReset.CallOptions,
@@ -863,6 +933,17 @@ export class ServerNS {
       .call('com.atproto.server.requestPasswordReset', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoServerRequestPasswordReset.toKnownErr(e)
+      })
+  }
+
+  reserveSigningKey(
+    data?: ComAtprotoServerReserveSigningKey.InputSchema,
+    opts?: ComAtprotoServerReserveSigningKey.CallOptions,
+  ): Promise<ComAtprotoServerReserveSigningKey.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.reserveSigningKey', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerReserveSigningKey.toKnownErr(e)
       })
   }
 
@@ -885,6 +966,17 @@ export class ServerNS {
       .call('com.atproto.server.revokeAppPassword', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoServerRevokeAppPassword.toKnownErr(e)
+      })
+  }
+
+  updateEmail(
+    data?: ComAtprotoServerUpdateEmail.InputSchema,
+    opts?: ComAtprotoServerUpdateEmail.CallOptions,
+  ): Promise<ComAtprotoServerUpdateEmail.Response> {
+    return this._service.xrpc
+      .call('com.atproto.server.updateEmail', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerUpdateEmail.toKnownErr(e)
       })
   }
 }
@@ -1014,6 +1106,58 @@ export class SyncNS {
       .call('com.atproto.sync.requestCrawl', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoSyncRequestCrawl.toKnownErr(e)
+      })
+  }
+}
+
+export class TempNS {
+  _service: AtpServiceClient
+
+  constructor(service: AtpServiceClient) {
+    this._service = service
+  }
+
+  fetchLabels(
+    params?: ComAtprotoTempFetchLabels.QueryParams,
+    opts?: ComAtprotoTempFetchLabels.CallOptions,
+  ): Promise<ComAtprotoTempFetchLabels.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.fetchLabels', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoTempFetchLabels.toKnownErr(e)
+      })
+  }
+
+  importRepo(
+    data?: ComAtprotoTempImportRepo.InputSchema,
+    opts?: ComAtprotoTempImportRepo.CallOptions,
+  ): Promise<ComAtprotoTempImportRepo.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.importRepo', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoTempImportRepo.toKnownErr(e)
+      })
+  }
+
+  pushBlob(
+    data?: ComAtprotoTempPushBlob.InputSchema,
+    opts?: ComAtprotoTempPushBlob.CallOptions,
+  ): Promise<ComAtprotoTempPushBlob.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.pushBlob', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoTempPushBlob.toKnownErr(e)
+      })
+  }
+
+  transferAccount(
+    data?: ComAtprotoTempTransferAccount.InputSchema,
+    opts?: ComAtprotoTempTransferAccount.CallOptions,
+  ): Promise<ComAtprotoTempTransferAccount.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.transferAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoTempTransferAccount.toKnownErr(e)
       })
   }
 }

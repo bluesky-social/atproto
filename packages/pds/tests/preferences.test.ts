@@ -1,26 +1,23 @@
+import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
-import { CloseFn, runTestServer, TestServerInfo } from './_util'
-import { SeedClient } from './seeds/client'
 import usersSeed from './seeds/users'
 
 describe('user preferences', () => {
-  let server: TestServerInfo
-  let close: CloseFn
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
-    server = await runTestServer({
+    network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'preferences',
     })
-    close = server.close
-    agent = new AtpAgent({ service: server.url })
-    sc = new SeedClient(agent)
+    agent = network.pds.getClient()
+    sc = network.getSeedClient()
     await usersSeed(sc)
   })
 
   afterAll(async () => {
-    await close()
+    await network.close()
   })
 
   it('requires auth to set or put preferences.', async () => {
@@ -45,16 +42,12 @@ describe('user preferences', () => {
   })
 
   it('only gets preferences in app.bsky namespace.', async () => {
-    const { db, services } = server.ctx
-    await db.transaction(async (tx) => {
-      await services
-        .account(tx)
-        .putPreferences(
-          sc.dids.alice,
-          [{ $type: 'com.atproto.server.defs#unknown' }],
-          'com.atproto',
-        )
-    })
+    await network.pds.ctx.actorStore.transact(sc.dids.alice, (store) =>
+      store.pref.putPreferences(
+        [{ $type: 'com.atproto.server.defs#unknown' }],
+        'com.atproto',
+      ),
+    )
     const { data } = await agent.api.app.bsky.actor.getPreferences(
       {},
       { headers: sc.getHeaders(sc.dids.alice) },
@@ -101,10 +94,10 @@ describe('user preferences', () => {
       ],
     })
     // Ensure other prefs were not clobbered
-    const { db, services } = server.ctx
-    const otherPrefs = await services
-      .account(db)
-      .getPreferences(sc.dids.alice, 'com.atproto')
+    const otherPrefs = await network.pds.ctx.actorStore.read(
+      sc.dids.alice,
+      (store) => store.pref.getPreferences('com.atproto'),
+    )
     expect(otherPrefs).toEqual([{ $type: 'com.atproto.server.defs#unknown' }])
   })
 

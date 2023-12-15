@@ -1,9 +1,7 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
-import { SeedClient } from '../seeds/client'
 import basicSeed from '../seeds/basic'
-import { RecordRef } from '@atproto/bsky/tests/seeds/client'
 import { BlockedActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
 import { BlockedByActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
 
@@ -25,7 +23,7 @@ describe('pds views with blocking from block lists', () => {
     })
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
-    sc = new SeedClient(pdsAgent)
+    sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -52,7 +50,7 @@ describe('pds views with blocking from block lists', () => {
   it('creates a list with some items', async () => {
     const avatar = await sc.uploadFile(
       alice,
-      'tests/image/fixtures/key-portrait-small.jpg',
+      'tests/sample-img/key-portrait-small.jpg',
       'image/jpeg',
     )
     // alice creates block list with bob & carol that dan uses
@@ -60,7 +58,7 @@ describe('pds views with blocking from block lists', () => {
       { repo: alice },
       {
         name: 'alice blocks',
-        purpose: 'app.bsky.graph.defs#blocklist',
+        purpose: 'app.bsky.graph.defs#modlist',
         description: 'big list of blocks',
         avatar: avatar.image,
         createdAt: new Date().toISOString(),
@@ -81,6 +79,15 @@ describe('pds views with blocking from block lists', () => {
       { repo: alice },
       {
         subject: sc.dids.carol,
+        list: list.uri,
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(alice),
+    )
+    await pdsAgent.api.app.bsky.graph.listitem.create(
+      { repo: alice },
+      {
+        subject: sc.dids.dan,
         list: list.uri,
         createdAt: new Date().toISOString(),
       },
@@ -194,6 +201,7 @@ describe('pds views with blocking from block lists', () => {
       { headers: await network.serviceHeaders(carol) },
     )
     expect(resCarol.data.viewer?.blocking).toBeUndefined()
+    expect(resCarol.data.viewer?.blockingByList).toBeUndefined()
     expect(resCarol.data.viewer?.blockedBy).toBe(true)
 
     const resDan = await agent.api.app.bsky.actor.getProfile(
@@ -201,6 +209,9 @@ describe('pds views with blocking from block lists', () => {
       { headers: await network.serviceHeaders(dan) },
     )
     expect(resDan.data.viewer?.blocking).toBeDefined()
+    expect(resDan.data.viewer?.blockingByList?.uri).toEqual(
+      resDan.data.viewer?.blocking,
+    )
     expect(resDan.data.viewer?.blockedBy).toBe(false)
   })
 
@@ -210,8 +221,10 @@ describe('pds views with blocking from block lists', () => {
       { headers: await network.serviceHeaders(carol) },
     )
     expect(resCarol.data.profiles[0].viewer?.blocking).toBeUndefined()
+    expect(resCarol.data.profiles[0].viewer?.blockingByList).toBeUndefined()
     expect(resCarol.data.profiles[0].viewer?.blockedBy).toBe(false)
     expect(resCarol.data.profiles[1].viewer?.blocking).toBeUndefined()
+    expect(resCarol.data.profiles[1].viewer?.blockingByList).toBeUndefined()
     expect(resCarol.data.profiles[1].viewer?.blockedBy).toBe(true)
 
     const resDan = await agent.api.app.bsky.actor.getProfiles(
@@ -219,9 +232,23 @@ describe('pds views with blocking from block lists', () => {
       { headers: await network.serviceHeaders(dan) },
     )
     expect(resDan.data.profiles[0].viewer?.blocking).toBeUndefined()
+    expect(resDan.data.profiles[0].viewer?.blockingByList).toBeUndefined()
     expect(resDan.data.profiles[0].viewer?.blockedBy).toBe(false)
     expect(resDan.data.profiles[1].viewer?.blocking).toBeDefined()
+    expect(resDan.data.profiles[1].viewer?.blockingByList?.uri).toEqual(
+      resDan.data.profiles[1].viewer?.blocking,
+    )
     expect(resDan.data.profiles[1].viewer?.blockedBy).toBe(false)
+  })
+
+  it('ignores self-blocks', async () => {
+    const res = await agent.api.app.bsky.actor.getProfile(
+      { actor: dan }, // dan subscribes to list that contains himself
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(res.data.viewer?.blocking).toBeUndefined()
+    expect(res.data.viewer?.blockingByList).toBeUndefined()
+    expect(res.data.viewer?.blockedBy).toBe(false)
   })
 
   it('does not return notifs for blocked accounts', async () => {
@@ -337,7 +364,7 @@ describe('pds views with blocking from block lists', () => {
       { repo: alice },
       {
         name: 'new list',
-        purpose: 'app.bsky.graph.defs#blocklist',
+        purpose: 'app.bsky.graph.defs#modlist',
         description: 'blah blah',
         createdAt: new Date().toISOString(),
       },

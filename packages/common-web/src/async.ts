@@ -72,6 +72,8 @@ export class AsyncBuffer<T> {
   private buffer: T[] = []
   private promise: Promise<void>
   private resolve: () => void
+  private closed = false
+  private toThrow: unknown | undefined
 
   constructor(public maxSize?: number) {
     // Initializing to satisfy types/build, immediately reset by resetPromise()
@@ -86,6 +88,10 @@ export class AsyncBuffer<T> {
 
   get size(): number {
     return this.buffer.length
+  }
+
+  get isClosed(): boolean {
+    return this.closed
   }
 
   resetPromise() {
@@ -104,7 +110,17 @@ export class AsyncBuffer<T> {
 
   async *events(): AsyncGenerator<T> {
     while (true) {
+      if (this.closed && this.buffer.length === 0) {
+        if (this.toThrow) {
+          throw this.toThrow
+        } else {
+          return
+        }
+      }
       await this.promise
+      if (this.toThrow) {
+        throw this.toThrow
+      }
       if (this.maxSize && this.size > this.maxSize) {
         throw new AsyncBufferFullError(this.maxSize)
       }
@@ -117,10 +133,43 @@ export class AsyncBuffer<T> {
       }
     }
   }
+
+  throw(err: unknown) {
+    this.toThrow = err
+    this.closed = true
+    this.resolve()
+  }
+
+  close() {
+    this.closed = true
+    this.resolve()
+  }
 }
 
 export class AsyncBufferFullError extends Error {
   constructor(maxSize: number) {
     super(`ReachedMaxBufferSize: ${maxSize}`)
   }
+}
+
+export const handleAllSettledErrors = (
+  results: PromiseSettledResult<unknown>[],
+) => {
+  const errors = results.filter(isRejected).map((res) => res.reason)
+  if (errors.length === 0) {
+    return
+  }
+  if (errors.length === 1) {
+    throw errors[0]
+  }
+  throw new AggregateError(
+    errors,
+    'Multiple errors: ' + errors.map((err) => err?.message).join('\n'),
+  )
+}
+
+const isRejected = (
+  result: PromiseSettledResult<unknown>,
+): result is PromiseRejectedResult => {
+  return result.status === 'rejected'
 }

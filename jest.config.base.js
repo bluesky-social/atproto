@@ -9,6 +9,7 @@ module.exports = {
   roots: ['<rootDir>/src', '<rootDir>/tests'],
   transform: {
     '^.+\\.(t|j)s?$': '@swc/jest',
+    '^.+\\.hbs$': require.resolve('handlebars-jest'),
   },
   transformIgnorePatterns: [`<rootDir>/node_modules/(?!${esModules})`],
   testRegex: '(/tests/.*.(test|spec)).(jsx?|tsx?)$',

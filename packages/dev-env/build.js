@@ -1,5 +1,5 @@
-const { copy } = require('esbuild-plugin-copy')
 const { nodeExternalsPlugin } = require('esbuild-node-externals')
+const hbsPlugin = require('esbuild-plugin-handlebars')
 
 const buildShallow =
   process.argv.includes('--shallow') || process.env.ATP_BUILD_SHALLOW === 'true'
@@ -18,12 +18,10 @@ require('esbuild').build({
     'sharp',
   ],
   plugins: [].concat(buildShallow ? [nodeExternalsPlugin()] : []).concat([
-    copy({
-      assets: {
-        from: ['../pds/src/mailer/templates/**/*'],
-        to: ['./templates'],
-        keepStructure: true,
-      },
+    hbsPlugin({
+      filter: /\.(hbs)$/,
+      additionalHelpers: {},
+      precompileOptions: {},
     }),
   ]),
 })

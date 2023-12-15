@@ -1,42 +1,54 @@
+import stream from 'stream'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { byteIterableToStream } from '@atproto/common'
 import { Server } from '../../../../lexicon'
-import SqlRepoStorage, {
-  RepoRootNotFoundError,
-} from '../../../../sql-repo-storage'
 import AppContext from '../../../../context'
-import { isUserOrAdmin } from '../../../../auth'
+import {
+  RepoRootNotFoundError,
+  SqlRepoReader,
+} from '../../../../actor-store/repo/sql-repo-reader'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getRepo({
-    auth: ctx.optionalAccessOrRoleVerifier,
+    auth: ctx.authVerifier.optionalAccessOrRole,
     handler: async ({ params, auth }) => {
       const { did, since } = params
       // takedown check for anyone other than an admin or the user
-      if (!isUserOrAdmin(auth, did)) {
-        const available = await ctx.services
-          .account(ctx.db)
-          .isRepoAvailable(did)
+      if (!ctx.authVerifier.isUserOrAdmin(auth, did)) {
+        const available = await ctx.accountManager.isRepoAvailable(did)
         if (!available) {
           throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
         }
       }
 
-      const storage = new SqlRepoStorage(ctx.db, did)
-      let carStream: AsyncIterable<Uint8Array>
-      try {
-        carStream = await storage.getCarStream(since)
-      } catch (err) {
-        if (err instanceof RepoRootNotFoundError) {
-          throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
-        }
-        throw err
-      }
+      const carStream = await getCarStream(ctx, did, since)
 
       return {
         encoding: 'application/vnd.ipld.car',
-        body: byteIterableToStream(carStream),
+        body: carStream,
       }
     },
   })
+}
+
+export const getCarStream = async (
+  ctx: AppContext,
+  did: string,
+  since?: string,
+): Promise<stream.Readable> => {
+  const actorDb = await ctx.actorStore.openDb(did)
+  let carStream: stream.Readable
+  try {
+    const storage = new SqlRepoReader(actorDb)
+    carStream = await storage.getCarStream(since)
+  } catch (err) {
+    await actorDb.close()
+    if (err instanceof RepoRootNotFoundError) {
+      throw new InvalidRequestError(`Could not find repo for DID: ${did}`)
+    }
+    throw err
+  }
+  const closeDb = () => actorDb.close()
+  carStream.on('error', closeDb)
+  carStream.on('close', closeDb)
+  return carStream
 }

@@ -1,17 +1,20 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru } from '../../../../api/com/atproto/admin/util'
+import { authPassthru } from '../../../proxy'
 import { OutputSchema } from '../../../../lexicon/types/app/bsky/actor/getProfile'
-import { handleReadAfterWrite } from '../util/read-after-write'
-import { LocalRecords } from '../../../../services/local'
+import {
+  LocalViewer,
+  handleReadAfterWrite,
+  LocalRecords,
+} from '../../../../read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
-    auth: ctx.accessOrRoleVerifier,
+    auth: ctx.authVerifier.accessOrRole,
     handler: async ({ req, auth, params }) => {
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null
-      const res = await ctx.appviewAgent.api.app.bsky.actor.getProfile(
+      const res = await ctx.appViewAgent.api.app.bsky.actor.getProfile(
         params,
         requester ? await ctx.serviceAuthHeaders(requester) : authPassthru(req),
       )
@@ -27,12 +30,10 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const getProfileMunge = async (
-  ctx: AppContext,
+  localViewer: LocalViewer,
   original: OutputSchema,
   local: LocalRecords,
 ): Promise<OutputSchema> => {
   if (!local.profile) return original
-  return ctx.services
-    .local(ctx.db)
-    .updateProfileDetailed(original, local.profile.record)
+  return localViewer.updateProfileDetailed(original, local.profile.record)
 }

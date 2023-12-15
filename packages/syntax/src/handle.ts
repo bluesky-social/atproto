@@ -10,6 +10,8 @@ export const DISALLOWED_TLDS = [
   '.invalid',
   '.localhost',
   '.internal',
+  '.example',
+  '.alt',
   // policy could concievably change on ".onion" some day
   '.onion',
   // NOTE: .test is allowed in testing and devopment. In practical terms

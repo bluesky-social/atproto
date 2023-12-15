@@ -89,8 +89,8 @@ export const skeleton = async (
 
   if (filter === 'posts_with_media') {
     feedItemsQb = feedItemsQb
-      // and only your own posts/reposts
-      .where('post.creator', '=', actorDid)
+      // only your own posts
+      .where('type', '=', 'post')
       // only posts with media
       .whereExists((qb) =>
         qb
@@ -101,6 +101,13 @@ export const skeleton = async (
   } else if (filter === 'posts_no_replies') {
     feedItemsQb = feedItemsQb.where((qb) =>
       qb.where('post.replyParent', 'is', null).orWhere('type', '=', 'repost'),
+    )
+  } else if (filter === 'posts_and_author_threads') {
+    feedItemsQb = feedItemsQb.where((qb) =>
+      qb
+        .where('type', '=', 'repost')
+        .orWhere('post.replyParent', 'is', null)
+        .orWhere('post.replyRoot', 'like', `at://${actorDid}/%`),
     )
   }
 
@@ -147,9 +154,7 @@ const noBlocksOrMutedReposts = (state: HydrationState) => {
 const presentation = (state: HydrationState, ctx: Context) => {
   const { feedService } = ctx
   const { feedItems, cursor, params } = state
-  const feed = feedService.views.formatFeed(feedItems, state, {
-    viewer: params.viewer,
-  })
+  const feed = feedService.views.formatFeed(feedItems, state, params.viewer)
   return { feed, cursor }
 }
 

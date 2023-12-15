@@ -7,12 +7,19 @@ import createAccount from './createAccount'
 import createInviteCode from './createInviteCode'
 import createInviteCodes from './createInviteCodes'
 import getAccountInviteCodes from './getAccountInviteCodes'
+import reserveSigningKey from './reserveSigningKey'
 
 import requestDelete from './requestAccountDelete'
 import deleteAccount from './deleteAccount'
 
 import requestPasswordReset from './requestPasswordReset'
 import resetPassword from './resetPassword'
+
+import requestEmailConfirmation from './requestEmailConfirmation'
+import confirmEmail from './confirmEmail'
+
+import requestEmailUpdate from './requestEmailUpdate'
+import updateEmail from './updateEmail'
 
 import createSession from './createSession'
 import deleteSession from './deleteSession'
@@ -29,10 +36,15 @@ export default function (server: Server, ctx: AppContext) {
   createInviteCode(server, ctx)
   createInviteCodes(server, ctx)
   getAccountInviteCodes(server, ctx)
+  reserveSigningKey(server, ctx)
   requestDelete(server, ctx)
   deleteAccount(server, ctx)
   requestPasswordReset(server, ctx)
   resetPassword(server, ctx)
+  requestEmailConfirmation(server, ctx)
+  confirmEmail(server, ctx)
+  requestEmailUpdate(server, ctx)
+  updateEmail(server, ctx)
   createSession(server, ctx)
   deleteSession(server, ctx)
   getSession(server, ctx)

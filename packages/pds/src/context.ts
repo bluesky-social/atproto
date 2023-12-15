@@ -1,174 +1,250 @@
+import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
+import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { Database } from './db'
-import { ServerConfig } from './config'
-import * as auth from './auth'
+import { ServerConfig, ServerSecrets } from './config'
+import {
+  AuthVerifier,
+  createPublicKeyObject,
+  createSecretKeyObject,
+} from './auth-verifier'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { BlobStore } from '@atproto/repo'
-import { Services } from './services'
-import { Sequencer, SequencerLeader } from './sequencer'
+import { AccountManager } from './account-manager'
+import { Sequencer } from './sequencer'
 import { BackgroundQueue } from './background'
-import DidSqlCache from './did-cache'
+import { DidSqliteCache } from './did-cache'
 import { Crawlers } from './crawlers'
-import { RuntimeFlags } from './runtime-flags'
+import { DiskBlobStore } from './disk-blobstore'
+import { getRedisClient } from './redis'
+import { ActorStore, ActorStoreReader } from './actor-store'
+import { LocalViewer } from './read-after-write/viewer'
+
+export type AppContextOptions = {
+  actorStore: ActorStore
+  blobstore: (did: string) => BlobStore
+  localViewer: (
+    actorStore: ActorStoreReader,
+    actorKey: crypto.Keypair,
+  ) => LocalViewer
+  mailer: ServerMailer
+  moderationMailer: ModerationMailer
+  didCache: DidSqliteCache
+  idResolver: IdResolver
+  plcClient: plc.Client
+  accountManager: AccountManager
+  sequencer: Sequencer
+  backgroundQueue: BackgroundQueue
+  redisScratch?: Redis
+  crawlers: Crawlers
+  appViewAgent: AtpAgent
+  entrywayAgent?: AtpAgent
+  authVerifier: AuthVerifier
+  plcRotationKey: crypto.Keypair
+  cfg: ServerConfig
+}
 
 export class AppContext {
-  constructor(
-    private opts: {
-      db: Database
-      blobstore: BlobStore
-      redisScratch?: Redis
-      repoSigningKey: crypto.Keypair
-      plcRotationKey: crypto.Keypair
-      idResolver: IdResolver
-      didCache: DidSqlCache
-      auth: auth.ServerAuth
-      cfg: ServerConfig
-      mailer: ServerMailer
-      moderationMailer: ModerationMailer
-      services: Services
-      sequencer: Sequencer
-      sequencerLeader: SequencerLeader | null
-      runtimeFlags: RuntimeFlags
-      backgroundQueue: BackgroundQueue
-      appviewAgent: AtpAgent
-      crawlers: Crawlers
-    },
-  ) {}
+  public actorStore: ActorStore
+  public blobstore: (did: string) => BlobStore
+  public localViewer: (
+    actorStore: ActorStoreReader,
+    actorKey: crypto.Keypair,
+  ) => LocalViewer
+  public mailer: ServerMailer
+  public moderationMailer: ModerationMailer
+  public didCache: DidSqliteCache
+  public idResolver: IdResolver
+  public plcClient: plc.Client
+  public accountManager: AccountManager
+  public sequencer: Sequencer
+  public backgroundQueue: BackgroundQueue
+  public redisScratch?: Redis
+  public crawlers: Crawlers
+  public appViewAgent: AtpAgent
+  public entrywayAgent: AtpAgent | undefined
+  public authVerifier: AuthVerifier
+  public plcRotationKey: crypto.Keypair
+  public cfg: ServerConfig
 
-  get db(): Database {
-    return this.opts.db
+  constructor(opts: AppContextOptions) {
+    this.actorStore = opts.actorStore
+    this.blobstore = opts.blobstore
+    this.localViewer = opts.localViewer
+    this.mailer = opts.mailer
+    this.moderationMailer = opts.moderationMailer
+    this.didCache = opts.didCache
+    this.idResolver = opts.idResolver
+    this.plcClient = opts.plcClient
+    this.accountManager = opts.accountManager
+    this.sequencer = opts.sequencer
+    this.backgroundQueue = opts.backgroundQueue
+    this.redisScratch = opts.redisScratch
+    this.crawlers = opts.crawlers
+    this.appViewAgent = opts.appViewAgent
+    this.entrywayAgent = opts.entrywayAgent
+    this.authVerifier = opts.authVerifier
+    this.plcRotationKey = opts.plcRotationKey
+    this.cfg = opts.cfg
   }
 
-  get blobstore(): BlobStore {
-    return this.opts.blobstore
-  }
+  static async fromConfig(
+    cfg: ServerConfig,
+    secrets: ServerSecrets,
+    overrides?: Partial<AppContextOptions>,
+  ): Promise<AppContext> {
+    const blobstore =
+      cfg.blobstore.provider === 's3'
+        ? S3BlobStore.creator({
+            bucket: cfg.blobstore.bucket,
+            region: cfg.blobstore.region,
+            endpoint: cfg.blobstore.endpoint,
+            forcePathStyle: cfg.blobstore.forcePathStyle,
+            credentials: cfg.blobstore.credentials,
+          })
+        : DiskBlobStore.creator(
+            cfg.blobstore.location,
+            cfg.blobstore.tempLocation,
+          )
 
-  get redisScratch(): Redis | undefined {
-    return this.opts.redisScratch
-  }
+    const mailTransport =
+      cfg.email !== null
+        ? nodemailer.createTransport(cfg.email.smtpUrl)
+        : nodemailer.createTransport({ jsonTransport: true })
 
-  get repoSigningKey(): crypto.Keypair {
-    return this.opts.repoSigningKey
-  }
+    const mailer = new ServerMailer(mailTransport, cfg)
 
-  get plcRotationKey(): crypto.Keypair {
-    return this.opts.plcRotationKey
-  }
+    const modMailTransport =
+      cfg.moderationEmail !== null
+        ? nodemailer.createTransport(cfg.moderationEmail.smtpUrl)
+        : nodemailer.createTransport({ jsonTransport: true })
 
-  get auth(): auth.ServerAuth {
-    return this.opts.auth
-  }
+    const moderationMailer = new ModerationMailer(modMailTransport, cfg)
 
-  get accessVerifier() {
-    return auth.accessVerifier(this.auth)
-  }
+    const didCache = new DidSqliteCache(
+      cfg.db.didCacheDbLoc,
+      cfg.identity.cacheStaleTTL,
+      cfg.identity.cacheMaxTTL,
+      cfg.db.disableWalAutoCheckpoint,
+    )
+    await didCache.migrateOrThrow()
 
-  get accessVerifierNotAppPassword() {
-    return auth.accessVerifierNotAppPassword(this.auth)
-  }
+    const idResolver = new IdResolver({
+      plcUrl: cfg.identity.plcUrl,
+      didCache,
+      timeout: cfg.identity.resolverTimeout,
+      backupNameservers: cfg.identity.handleBackupNameservers,
+    })
+    const plcClient = new plc.Client(cfg.identity.plcUrl)
 
-  get accessVerifierCheckTakedown() {
-    return auth.accessVerifierCheckTakedown(this.auth, this)
-  }
+    const backgroundQueue = new BackgroundQueue()
+    const crawlers = new Crawlers(
+      cfg.service.hostname,
+      cfg.crawlers,
+      backgroundQueue,
+    )
+    const sequencer = new Sequencer(
+      cfg.db.sequencerDbLoc,
+      crawlers,
+      undefined,
+      cfg.db.disableWalAutoCheckpoint,
+    )
+    const redisScratch = cfg.redis
+      ? getRedisClient(cfg.redis.address, cfg.redis.password)
+      : undefined
 
-  get refreshVerifier() {
-    return auth.refreshVerifier(this.auth)
-  }
+    const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
 
-  get roleVerifier() {
-    return auth.roleVerifier(this.auth)
-  }
+    const entrywayAgent = cfg.entryway
+      ? new AtpAgent({ service: cfg.entryway.url })
+      : undefined
 
-  get accessOrRoleVerifier() {
-    return auth.accessOrRoleVerifier(this.auth)
-  }
+    const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
+    const accountManager = new AccountManager(
+      cfg.db.accountDbLoc,
+      jwtSecretKey,
+      cfg.service.did,
+      cfg.db.disableWalAutoCheckpoint,
+    )
+    await accountManager.migrateOrThrow()
 
-  get optionalAccessOrRoleVerifier() {
-    return auth.optionalAccessOrRoleVerifier(this.auth)
-  }
+    const jwtKey = cfg.entryway
+      ? createPublicKeyObject(cfg.entryway.jwtPublicKeyHex)
+      : jwtSecretKey
 
-  get cfg(): ServerConfig {
-    return this.opts.cfg
-  }
+    const authVerifier = new AuthVerifier(accountManager, idResolver, {
+      jwtKey, // @TODO support multiple keys?
+      adminPass: secrets.adminPassword,
+      moderatorPass: secrets.moderatorPassword,
+      triagePass: secrets.triagePassword,
+      dids: {
+        pds: cfg.service.did,
+        entryway: cfg.entryway?.did,
+        admin: cfg.bskyAppView.did,
+      },
+    })
 
-  get mailer(): ServerMailer {
-    return this.opts.mailer
-  }
+    const plcRotationKey =
+      secrets.plcRotationKey.provider === 'kms'
+        ? await KmsKeypair.load({
+            keyId: secrets.plcRotationKey.keyId,
+          })
+        : await crypto.Secp256k1Keypair.import(
+            secrets.plcRotationKey.privateKeyHex,
+          )
 
-  get moderationMailer(): ModerationMailer {
-    return this.opts.moderationMailer
-  }
+    const actorStore = new ActorStore(cfg.actorStore, {
+      blobstore,
+      backgroundQueue,
+    })
 
-  get services(): Services {
-    return this.opts.services
-  }
+    const localViewer = LocalViewer.creator({
+      accountManager,
+      appViewAgent,
+      pdsHostname: cfg.service.hostname,
+      appviewDid: cfg.bskyAppView.did,
+      appviewCdnUrlPattern: cfg.bskyAppView.cdnUrlPattern,
+    })
 
-  get sequencer(): Sequencer {
-    return this.opts.sequencer
-  }
-
-  get sequencerLeader(): SequencerLeader | null {
-    return this.opts.sequencerLeader
-  }
-
-  get runtimeFlags(): RuntimeFlags {
-    return this.opts.runtimeFlags
-  }
-
-  get backgroundQueue(): BackgroundQueue {
-    return this.opts.backgroundQueue
-  }
-
-  get crawlers(): Crawlers {
-    return this.opts.crawlers
-  }
-
-  get plcClient(): plc.Client {
-    return new plc.Client(this.cfg.didPlcUrl)
-  }
-
-  get idResolver(): IdResolver {
-    return this.opts.idResolver
-  }
-
-  get didCache(): DidSqlCache {
-    return this.opts.didCache
-  }
-
-  get appviewAgent(): AtpAgent {
-    return this.opts.appviewAgent
-  }
-
-  async serviceAuthHeaders(did: string, audience?: string) {
-    const aud = audience ?? this.cfg.bskyAppViewDid
-    if (!aud) {
-      throw new Error('Could not find bsky appview did')
-    }
-    return createServiceAuthHeaders({
-      iss: did,
-      aud,
-      keypair: this.repoSigningKey,
+    return new AppContext({
+      actorStore,
+      blobstore,
+      localViewer,
+      mailer,
+      moderationMailer,
+      didCache,
+      idResolver,
+      plcClient,
+      accountManager,
+      sequencer,
+      backgroundQueue,
+      redisScratch,
+      crawlers,
+      appViewAgent,
+      entrywayAgent,
+      authVerifier,
+      plcRotationKey,
+      cfg,
+      ...(overrides ?? {}),
     })
   }
 
-  shouldProxyModeration(): boolean {
-    return (
-      this.cfg.bskyAppViewEndpoint !== undefined &&
-      this.cfg.bskyAppViewModeration === true
-    )
-  }
-
-  canProxyWrite(): boolean {
-    return (
-      this.cfg.bskyAppViewEndpoint !== undefined &&
-      this.cfg.bskyAppViewDid !== undefined
-    )
+  async serviceAuthHeaders(did: string, audience?: string) {
+    const aud = audience ?? this.cfg.bskyAppView.did
+    if (!aud) {
+      throw new Error('Could not find bsky appview did')
+    }
+    const keypair = await this.actorStore.keypair(did)
+    return createServiceAuthHeaders({
+      iss: did,
+      aud,
+      keypair,
+    })
   }
 }
 

@@ -1,6 +1,5 @@
 import { Selectable } from 'kysely'
-import { AtUri } from '@atproto/syntax'
-import { toSimplifiedISOSafe } from '@atproto/common'
+import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
 import * as FeedGenerator from '../../../lexicon/types/app/bsky/feed/generator'
 import * as lex from '../../../lexicon/lexicons'
@@ -33,7 +32,7 @@ const insertFn = async (
         ? JSON.stringify(obj.descriptionFacets)
         : undefined,
       avatarCid: obj.avatar?.ref.toString(),
-      createdAt: toSimplifiedISOSafe(obj.createdAt),
+      createdAt: normalizeDatetimeAlways(obj.createdAt),
       indexedAt: timestamp,
     })
     .onConflict((oc) => oc.doNothing())

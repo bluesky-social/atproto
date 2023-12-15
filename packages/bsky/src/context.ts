@@ -1,31 +1,46 @@
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
+import { AtpAgent } from '@atproto/api'
+import { Keypair } from '@atproto/crypto'
+import { createServiceJwt } from '@atproto/xrpc-server'
 import { DatabaseCoordinator } from './db'
 import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import * as auth from './auth'
-import DidSqlCache from './did-cache'
+import DidRedisCache from './did-cache'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
-import { LabelCache } from './label-cache'
 import { NotificationServer } from './notifications'
+import { Redis } from './redis'
 
 export class AppContext {
+  public moderationPushAgent: AtpAgent | undefined
   constructor(
     private opts: {
       db: DatabaseCoordinator
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       services: Services
+      signingKey: Keypair
       idResolver: IdResolver
-      didCache: DidSqlCache
-      labelCache: LabelCache
+      didCache: DidRedisCache
+      redis: Redis
       backgroundQueue: BackgroundQueue
+      searchAgent?: AtpAgent
       algos: MountedAlgos
       notifServer: NotificationServer
     },
-  ) {}
+  ) {
+    if (opts.cfg.moderationPushUrl) {
+      const url = new URL(opts.cfg.moderationPushUrl)
+      this.moderationPushAgent = new AtpAgent({ service: url.origin })
+      this.moderationPushAgent.api.setHeader(
+        'authorization',
+        auth.buildBasicAuth(url.username, url.password),
+      )
+    }
+  }
 
   get db(): DatabaseCoordinator {
     return this.opts.db
@@ -43,6 +58,10 @@ export class AppContext {
     return this.opts.services
   }
 
+  get signingKey(): Keypair {
+    return this.opts.signingKey
+  }
+
   get plcClient(): plc.Client {
     return new plc.Client(this.cfg.didPlcUrl)
   }
@@ -51,16 +70,20 @@ export class AppContext {
     return this.opts.idResolver
   }
 
-  get didCache(): DidSqlCache {
+  get didCache(): DidRedisCache {
     return this.opts.didCache
   }
 
-  get labelCache(): LabelCache {
-    return this.opts.labelCache
+  get redis(): Redis {
+    return this.opts.redis
   }
 
   get notifServer(): NotificationServer {
     return this.opts.notifServer
+  }
+
+  get searchAgent(): AtpAgent | undefined {
+    return this.opts.searchAgent
   }
 
   get authVerifier() {
@@ -69,6 +92,10 @@ export class AppContext {
 
   get authVerifierAnyAudience() {
     return auth.authVerifier(this.idResolver, { aud: null })
+  }
+
+  get authOptionalVerifierAnyAudience() {
+    return auth.authOptionalVerifier(this.idResolver, { aud: null })
   }
 
   get authOptionalVerifier() {
@@ -83,6 +110,15 @@ export class AppContext {
 
   get roleVerifier() {
     return auth.roleVerifier(this.cfg)
+  }
+
+  async serviceAuthJwt(aud: string) {
+    const iss = this.cfg.serverDid
+    return createServiceJwt({
+      iss,
+      aud,
+      keypair: this.signingKey,
+    })
   }
 
   get backgroundQueue(): BackgroundQueue {

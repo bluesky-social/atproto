@@ -3,7 +3,7 @@
 require('dd-trace/init') // Only works with commonjs
 
 // Tracer code above must come before anything else
-const { CloudfrontInvalidator } = require('@atproto/aws')
+const { CloudfrontInvalidator, BunnyInvalidator } = require('@atproto/aws')
 const {
   IndexerConfig,
   BskyIndexer,
@@ -25,12 +25,32 @@ const main = async () => {
     dbPostgresUrl: env.dbPostgresUrl,
     dbPostgresSchema: env.dbPostgresSchema,
   })
+
+  // configure zero, one, or both image invalidators
+  let imgInvalidator
+  const bunnyInvalidator = env.bunnyAccessKey
+    ? new BunnyInvalidator({
+        accessKey: env.bunnyAccessKey,
+        urlPrefix: cfg.imgUriEndpoint,
+      })
+    : undefined
   const cfInvalidator = env.cfDistributionId
     ? new CloudfrontInvalidator({
         distributionId: env.cfDistributionId,
         pathPrefix: cfg.imgUriEndpoint && new URL(cfg.imgUriEndpoint).pathname,
       })
     : undefined
+  if (bunnyInvalidator && imgInvalidator) {
+    imgInvalidator = new MultiImageInvalidator([
+      bunnyInvalidator,
+      imgInvalidator,
+    ])
+  } else if (bunnyInvalidator) {
+    imgInvalidator = bunnyInvalidator
+  } else if (cfInvalidator) {
+    imgInvalidator = cfInvalidator
+  }
+
   const redis = new Redis(
     cfg.redisSentinelName
       ? {
@@ -43,11 +63,28 @@ const main = async () => {
           password: cfg.redisPassword,
         },
   )
+
+  const redisCache = new Redis(
+    cfg.redisSentinelName
+      ? {
+          sentinel: cfg.redisSentinelName,
+          hosts: cfg.redisSentinelHosts,
+          password: cfg.redisPassword,
+          db: 1,
+        }
+      : {
+          host: cfg.redisHost,
+          password: cfg.redisPassword,
+          db: 1,
+        },
+  )
+
   const indexer = BskyIndexer.create({
     db,
     redis,
+    redisCache,
     cfg,
-    imgInvalidator: cfInvalidator,
+    imgInvalidator,
   })
   await indexer.start()
   process.on('SIGTERM', async () => {
@@ -77,6 +114,7 @@ const getEnv = () => ({
   dbPoolSize: maybeParseInt(process.env.DB_POOL_SIZE),
   dbPoolMaxUses: maybeParseInt(process.env.DB_POOL_MAX_USES),
   dbPoolIdleTimeoutMs: maybeParseInt(process.env.DB_POOL_IDLE_TIMEOUT_MS),
+  bunnyAccessKey: process.env.BUNNY_ACCESS_KEY,
   cfDistributionId: process.env.CF_DISTRIBUTION_ID,
   imgUriEndpoint: process.env.IMG_URI_ENDPOINT,
 })
