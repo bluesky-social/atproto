@@ -1,11 +1,8 @@
 import { sql } from 'kysely'
 import { ArrayEl } from '@atproto/common'
-import { AtUri } from '@atproto/syntax'
-import { INVALID_HANDLE } from '@atproto/syntax'
+import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { BlobRef, jsonStringToLex } from '@atproto/lexicon'
 import { Database } from '../../db'
-import { Actor } from '../../db/tables/actor'
-import { Record as RecordRow } from '../../db/tables/record'
 import {
   ModEventView,
   RepoView,
@@ -16,208 +13,172 @@ import {
   BlobView,
   SubjectStatusView,
   ModEventViewDetail,
+  AccountView,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import {
+  ModerationEventRow,
   ModerationEventRowWithHandle,
+  ModerationSubjectStatusRow,
   ModerationSubjectStatusRowWithHandle,
 } from './types'
 import { getSelfLabels } from '../label'
 import { REASONOTHER } from '../../lexicon/types/com/atproto/moderation/defs'
+import AtpAgent from '@atproto/api'
 
 export class ModerationViews {
-  constructor(private db: Database) {}
+  constructor(private db: Database, private appviewAgent: AtpAgent) {}
 
-  repo(result: RepoResult): Promise<RepoView>
-  repo(result: RepoResult[]): Promise<RepoView[]>
-  async repo(
-    result: RepoResult | RepoResult[],
-  ): Promise<RepoView | RepoView[]> {
-    const results = Array.isArray(result) ? result : [result]
-    if (results.length === 0) return []
-
-    const [info, subjectStatuses] = await Promise.all([
-      await this.db.db
-        .selectFrom('actor')
-        .leftJoin('profile', 'profile.creator', 'actor.did')
-        .leftJoin(
-          'record as profile_record',
-          'profile_record.uri',
-          'profile.uri',
-        )
-        .where(
-          'actor.did',
-          'in',
-          results.map((r) => r.did),
-        )
-        .select(['actor.did as did', 'profile_record.json as profileJson'])
-        .execute(),
-      this.getSubjectStatus(results.map((r) => ({ did: r.did }))),
+  async repos(dids: string[]): Promise<Map<string, RepoView>> {
+    const [appviewRes, subjectStatuses] = await Promise.all([
+      this.appviewAgent.api.com.atproto.admin.getAccountInfos({ dids }),
+      this.getSubjectStatus(dids),
     ])
 
-    const infoByDid = info.reduce(
+    const infoByDid = appviewRes.data.infos.reduce(
       (acc, cur) => Object.assign(acc, { [cur.did]: cur }),
-      {} as Record<string, ArrayEl<typeof info>>,
-    )
-    const subjectStatusByDid = subjectStatuses.reduce(
-      (acc, cur) =>
-        Object.assign(acc, { [cur.did ?? '']: this.subjectStatus(cur) }),
-      {},
+      {} as Record<string, ArrayEl<AccountView>>,
     )
 
-    const views = results.map((r) => {
-      const { profileJson } = infoByDid[r.did] ?? {}
-      const relatedRecords: object[] = []
-      if (profileJson) {
-        relatedRecords.push(
-          jsonStringToLex(profileJson) as Record<string, unknown>,
-        )
-      }
-      return {
+    return dids.reduce((acc, did) => {
+      const info = infoByDid[did] as AccountView | undefined
+      if (!info) return acc
+      const status = subjectStatuses.get(did)
+      return acc.set(did, {
         // No email or invite info on appview
-        did: r.did,
-        handle: r.handle ?? INVALID_HANDLE,
-        relatedRecords,
-        indexedAt: r.indexedAt,
+        did,
+        handle: info.handle,
+        relatedRecords: info.relatedRecords ?? [],
+        indexedAt: info.indexedAt,
         moderation: {
-          subjectStatus: subjectStatusByDid[r.did] ?? undefined,
+          subjectStatus: status ? this.formatSubjectStatus(status) : undefined,
         },
-      }
-    })
-
-    return Array.isArray(result) ? views : views[0]
-  }
-  event(result: EventResult): Promise<ModEventView>
-  event(result: EventResult[]): Promise<ModEventView[]>
-  async event(
-    result: EventResult | EventResult[],
-  ): Promise<ModEventView | ModEventView[]> {
-    const results = Array.isArray(result) ? result : [result]
-    if (results.length === 0) return []
-
-    const views = results.map((res) => {
-      const eventView: ModEventView = {
-        id: res.id,
-        event: {
-          $type: res.action,
-          comment: res.comment ?? undefined,
-        },
-        subject:
-          res.subjectType === 'com.atproto.admin.defs#repoRef'
-            ? {
-                $type: 'com.atproto.admin.defs#repoRef',
-                did: res.subjectDid,
-              }
-            : {
-                $type: 'com.atproto.repo.strongRef',
-                uri: res.subjectUri,
-                cid: res.subjectCid,
-              },
-        subjectBlobCids: [],
-        createdBy: res.createdBy,
-        createdAt: res.createdAt,
-        subjectHandle: res.subjectHandle ?? undefined,
-        creatorHandle: res.creatorHandle ?? undefined,
-      }
-
-      if (
-        [
-          'com.atproto.admin.defs#modEventTakedown',
-          'com.atproto.admin.defs#modEventMute',
-        ].includes(res.action)
-      ) {
-        eventView.event = {
-          ...eventView.event,
-          durationInHours: res.durationInHours ?? undefined,
-        }
-      }
-
-      if (res.action === 'com.atproto.admin.defs#modEventLabel') {
-        eventView.event = {
-          ...eventView.event,
-          createLabelVals: res.createLabelVals?.length
-            ? res.createLabelVals.split(' ')
-            : [],
-          negateLabelVals: res.negateLabelVals?.length
-            ? res.negateLabelVals.split(' ')
-            : [],
-        }
-      }
-
-      // This is for legacy data only, for new events, these types of events won't have labels attached
-      if (
-        [
-          'com.atproto.admin.defs#modEventAcknowledge',
-          'com.atproto.admin.defs#modEventTakedown',
-          'com.atproto.admin.defs#modEventEscalate',
-        ].includes(res.action)
-      ) {
-        if (res.createLabelVals?.length) {
-          eventView.event = {
-            ...eventView.event,
-            createLabelVals: res.createLabelVals.split(' '),
-          }
-        }
-
-        if (res.negateLabelVals?.length) {
-          eventView.event = {
-            ...eventView.event,
-            negateLabelVals: res.negateLabelVals.split(' '),
-          }
-        }
-      }
-
-      if (res.action === 'com.atproto.admin.defs#modEventReport') {
-        eventView.event = {
-          ...eventView.event,
-          reportType: res.meta?.reportType ?? undefined,
-        }
-      }
-
-      if (res.action === 'com.atproto.admin.defs#modEventEmail') {
-        eventView.event = {
-          ...eventView.event,
-          subjectLine: res.meta?.subjectLine ?? '',
-        }
-      }
-
-      if (
-        res.action === 'com.atproto.admin.defs#modEventComment' &&
-        res.meta?.sticky
-      ) {
-        eventView.event.sticky = true
-      }
-
-      return eventView
-    })
-
-    return Array.isArray(result) ? views : views[0]
+      })
+    }, new Map<string, RepoView>())
   }
 
-  async eventDetail(result: EventResult): Promise<ModEventViewDetail> {
-    const [event, subject] = await Promise.all([
-      this.event(result),
-      this.subject(result),
-    ])
+  formatEvent(event: ModerationEventRowWithHandle): ModEventView {
+    const eventView: ModEventView = {
+      id: event.id,
+      event: {
+        $type: event.action,
+        comment: event.comment ?? undefined,
+      },
+      subject:
+        event.subjectType === 'com.atproto.admin.defs#repoRef'
+          ? {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: event.subjectDid,
+            }
+          : {
+              $type: 'com.atproto.repo.strongRef',
+              uri: event.subjectUri,
+              cid: event.subjectCid,
+            },
+      subjectBlobCids: [],
+      createdBy: event.createdBy,
+      createdAt: event.createdAt,
+      subjectHandle: event.subjectHandle ?? undefined,
+      creatorHandle: event.creatorHandle ?? undefined,
+    }
+
+    if (
+      [
+        'com.atproto.admin.defs#modEventTakedown',
+        'com.atproto.admin.defs#modEventMute',
+      ].includes(event.action)
+    ) {
+      eventView.event = {
+        ...eventView.event,
+        durationInHours: event.durationInHours ?? undefined,
+      }
+    }
+
+    if (event.action === 'com.atproto.admin.defs#modEventLabel') {
+      eventView.event = {
+        ...eventView.event,
+        createLabelVals: event.createLabelVals?.length
+          ? event.createLabelVals.split(' ')
+          : [],
+        negateLabelVals: event.negateLabelVals?.length
+          ? event.negateLabelVals.split(' ')
+          : [],
+      }
+    }
+
+    // This is for legacy data only, for new events, these types of events won't have labels attached
+    if (
+      [
+        'com.atproto.admin.defs#modEventAcknowledge',
+        'com.atproto.admin.defs#modEventTakedown',
+        'com.atproto.admin.defs#modEventEscalate',
+      ].includes(event.action)
+    ) {
+      if (event.createLabelVals?.length) {
+        eventView.event = {
+          ...eventView.event,
+          createLabelVals: event.createLabelVals.split(' '),
+        }
+      }
+
+      if (event.negateLabelVals?.length) {
+        eventView.event = {
+          ...eventView.event,
+          negateLabelVals: event.negateLabelVals.split(' '),
+        }
+      }
+    }
+
+    if (event.action === 'com.atproto.admin.defs#modEventReport') {
+      eventView.event = {
+        ...eventView.event,
+        reportType: event.meta?.reportType ?? undefined,
+      }
+    }
+
+    if (event.action === 'com.atproto.admin.defs#modEventEmail') {
+      eventView.event = {
+        ...eventView.event,
+        subjectLine: event.meta?.subjectLine ?? '',
+      }
+    }
+
+    if (
+      event.action === 'com.atproto.admin.defs#modEventComment' &&
+      event.meta?.sticky
+    ) {
+      eventView.event.sticky = true
+    }
+
+    return eventView
+  }
+
+  async eventDetail(
+    result: ModerationEventRowWithHandle,
+  ): Promise<ModEventViewDetail> {
+    const subject = await this.subject(result)
+    const eventView = this.formatEvent(result)
     const allBlobs = findBlobRefs(subject.value)
     const subjectBlobs = await this.blob(
       allBlobs.filter((blob) =>
-        event.subjectBlobCids.includes(blob.ref.toString()),
+        eventView.subjectBlobCids.includes(blob.ref.toString()),
       ),
     )
     return {
-      ...event,
+      ...eventView,
       subject,
       subjectBlobs,
     }
   }
 
-  async repoDetail(result: RepoResult): Promise<RepoViewDetail> {
-    const [repo, labels] = await Promise.all([
-      this.repo(result),
-      this.labels(result.did),
+  async repoDetail(did: string): Promise<RepoViewDetail | undefined> {
+    const [repos, labels] = await Promise.all([
+      this.repos([did]),
+      this.labels(did),
     ])
+    const repo = repos.get(did)
+    if (!repo) return
 
     return {
       ...repo,
@@ -228,60 +189,57 @@ export class ModerationViews {
     }
   }
 
-  record(result: RecordResult): Promise<RecordView>
-  record(result: RecordResult[]): Promise<RecordView[]>
-  async record(
-    result: RecordResult | RecordResult[],
-  ): Promise<RecordView | RecordView[]> {
-    const results = Array.isArray(result) ? result : [result]
-    if (results.length === 0) return []
-
-    const [repoResults, subjectStatuses] = await Promise.all([
-      this.db.db
-        .selectFrom('actor')
-        .where(
-          'actor.did',
-          'in',
-          results.map((r) => didFromUri(r.uri)),
-        )
-        .selectAll()
-        .execute(),
-      this.getSubjectStatus(results.map((r) => didAndRecordPathFromUri(r.uri))),
-    ])
-    const repos = await this.repo(repoResults)
-
-    const reposByDid = repos.reduce(
-      (acc, cur) => Object.assign(acc, { [cur.did]: cur }),
-      {} as Record<string, ArrayEl<typeof repos>>,
-    )
-    const subjectStatusByUri = subjectStatuses.reduce(
-      (acc, cur) =>
-        Object.assign(acc, {
-          [`${cur.did}/${cur.recordPath}` ?? '']: this.subjectStatus(cur),
+  async fetchRecords(
+    uris: AtUri[],
+  ): Promise<
+    Map<string, { uri: string; cid: string; value: Record<string, unknown> }>
+  > {
+    const fetched = await Promise.all(
+      uris.map((uri) =>
+        this.appviewAgent.api.com.atproto.repo.getRecord({
+          repo: uri.hostname,
+          collection: uri.collection,
+          rkey: uri.rkey,
         }),
-      {},
+      ),
     )
+    return fetched.reduce((acc, cur) => {
+      // @TODO fix this up
+      // @ts-ignore
+      return acc.set(cur.data.uri, { ...cur, cid: cur.cid ?? '' })
+    }, new Map<string, { uri: string; cid: string; value: Record<string, unknown> }>())
+  }
 
-    const views = results.map((res) => {
-      const repo = reposByDid[didFromUri(res.uri)]
-      const { did, recordPath } = didAndRecordPathFromUri(res.uri)
-      const subjectStatus = subjectStatusByUri[`${did}/${recordPath}`]
-      if (!repo) throw new Error(`Record repo is missing: ${res.uri}`)
-      const value = jsonStringToLex(res.json) as Record<string, unknown>
-      return {
-        uri: res.uri,
-        cid: res.cid,
-        value,
-        blobCids: findBlobRefs(value).map((blob) => blob.ref.toString()),
-        indexedAt: res.indexedAt,
+  async records(uris: AtUri[]): Promise<Map<string, RecordView>> {
+    const dids = uris.map((u) => u.hostname)
+
+    const [repos, subjectStatuses, records] = await Promise.all([
+      this.repos(dids),
+      this.getSubjectStatus(uris.map((uri) => uri.toString())),
+      this.fetchRecords(uris),
+    ])
+
+    return uris.reduce((acc, uri) => {
+      const repo = repos.get(uri.hostname)
+      if (!repo) throw new Error(`Record repo is missing: ${uri.toString()}`)
+      const record = records.get(uri.toString())
+      if (!record) throw new Error(`Record is missing`)
+      const subjectStatus = subjectStatuses.get(uri.toString())
+      return acc.set(uri.toString(), {
+        uri: uri.toString(),
+        cid: record.cid,
+        value: record.value,
+        blobCids: findBlobRefs(record.value).map((blob) => blob.ref.toString()),
+        // indexedAt: res.indexedAt,
+        indexedAt: '', // @TODO fix
         repo,
         moderation: {
-          subjectStatus,
+          subjectStatus: subjectStatus
+            ? this.formatSubjectStatus(subjectStatus)
+            : undefined,
         },
-      }
-    })
-
-    return Array.isArray(result) ? views : views[0]
+      })
+    }, new Map<string, RecordView>())
   }
 
   async recordDetail(result: RecordResult): Promise<RecordViewDetail> {
@@ -399,7 +357,7 @@ export class ModerationViews {
     return blobs.map((blob) => {
       const cid = blob.ref.toString()
       const subjectStatus = statusByCid[cid]
-        ? this.subjectStatus(statusByCid[cid])
+        ? this.formatSubjectStatus(statusByCid[cid])
         : undefined
       return {
         cid,
@@ -427,28 +385,29 @@ export class ModerationViews {
     }))
   }
 
+  // @TODO hydrate handles
   async getSubjectStatus(
-    subject:
-      | { did: string; recordPath?: string }
-      | { did: string; recordPath?: string }[],
-  ): Promise<ModerationSubjectStatusRowWithHandle[]> {
-    const subjectFilters = Array.isArray(subject) ? subject : [subject]
-    const filterForSubject =
-      ({ did, recordPath }: { did: string; recordPath?: string }) =>
-      // TODO: Fix the typing here?
-      (clause: any) => {
+    subjects: string[],
+  ): Promise<Map<string, ModerationSubjectStatusRowWithHandle>> {
+    const parsedSubjects = subjects.map((subject) => parseSubjectId(subject))
+    const filterForSubject = (did: string, recordPath?: string) => {
+      return (clause: any) => {
         clause = clause
           .where('moderation_subject_status.did', '=', did)
           .where('moderation_subject_status.recordPath', '=', recordPath || '')
         return clause
       }
+      // TODO: Fix the typing here?
+    }
 
     const builder = this.db.db
       .selectFrom('moderation_subject_status')
-      .leftJoin('actor', 'actor.did', 'moderation_subject_status.did')
       .where((clause) => {
-        subjectFilters.forEach(({ did, recordPath }, i) => {
-          const applySubjectFilter = filterForSubject({ did, recordPath })
+        parsedSubjects.forEach((subject, i) => {
+          const applySubjectFilter = filterForSubject(
+            subject.did,
+            subject.recordPath,
+          )
           if (i === 0) {
             clause = clause.where(applySubjectFilter)
           } else {
@@ -458,73 +417,66 @@ export class ModerationViews {
 
         return clause
       })
-      .selectAll('moderation_subject_status')
-      .select('actor.handle as handle')
+      .selectAll()
 
-    return builder.execute()
+    const [statusRes, accountsRes] = await Promise.all([
+      builder.execute(),
+      this.appviewAgent.api.com.atproto.admin.getAccountInfos({
+        dids: parsedSubjects.map((s) => s.did),
+      }),
+    ])
+
+    const accountsByDid = accountsRes.data.infos.reduce((acc, cur) => {
+      return acc.set(cur.did, cur)
+    }, new Map<string, AccountView>())
+
+    return statusRes.reduce((acc, cur) => {
+      const subject = cur.recordPath
+        ? formatSubjectId(cur.did, cur.recordPath)
+        : cur.did
+      const handle = accountsByDid.get(cur.did)?.handle
+      return acc.set(subject, {
+        ...cur,
+        handle: handle ?? INVALID_HANDLE,
+      })
+    }, new Map<string, ModerationSubjectStatusRowWithHandle>())
   }
 
-  subjectStatus(result: ModerationSubjectStatusRowWithHandle): SubjectStatusView
-  subjectStatus(
-    result: ModerationSubjectStatusRowWithHandle[],
-  ): SubjectStatusView[]
-  subjectStatus(
-    result:
-      | ModerationSubjectStatusRowWithHandle
-      | ModerationSubjectStatusRowWithHandle[],
-  ): SubjectStatusView | SubjectStatusView[] {
-    const results = Array.isArray(result) ? result : [result]
-    if (results.length === 0) return []
-
-    const decoratedSubjectStatuses = results.map((subjectStatus) => ({
-      id: subjectStatus.id,
-      reviewState: subjectStatus.reviewState,
-      createdAt: subjectStatus.createdAt,
-      updatedAt: subjectStatus.updatedAt,
-      comment: subjectStatus.comment ?? undefined,
-      lastReviewedBy: subjectStatus.lastReviewedBy ?? undefined,
-      lastReviewedAt: subjectStatus.lastReviewedAt ?? undefined,
-      lastReportedAt: subjectStatus.lastReportedAt ?? undefined,
-      muteUntil: subjectStatus.muteUntil ?? undefined,
-      suspendUntil: subjectStatus.suspendUntil ?? undefined,
-      takendown: subjectStatus.takendown ?? undefined,
-      subjectRepoHandle: subjectStatus.handle ?? undefined,
-      subjectBlobCids: subjectStatus.blobCids || [],
-      subject: !subjectStatus.recordPath
+  formatSubjectStatus(
+    status: ModerationSubjectStatusRowWithHandle,
+  ): SubjectStatusView {
+    return {
+      id: status.id,
+      reviewState: status.reviewState,
+      createdAt: status.createdAt,
+      updatedAt: status.updatedAt,
+      comment: status.comment ?? undefined,
+      lastReviewedBy: status.lastReviewedBy ?? undefined,
+      lastReviewedAt: status.lastReviewedAt ?? undefined,
+      lastReportedAt: status.lastReportedAt ?? undefined,
+      muteUntil: status.muteUntil ?? undefined,
+      suspendUntil: status.suspendUntil ?? undefined,
+      takendown: status.takendown ?? undefined,
+      subjectRepoHandle: status.handle ?? undefined,
+      subjectBlobCids: status.blobCids || [],
+      subject: !status.recordPath
         ? {
             $type: 'com.atproto.admin.defs#repoRef',
-            did: subjectStatus.did,
+            did: status.did,
           }
         : {
             $type: 'com.atproto.repo.strongRef',
             uri: AtUri.make(
-              subjectStatus.did,
+              status.did,
               // Not too intuitive but the recordpath is basically <collection>/<rkey>
               // which is what the last 2 params of .make() arguments are
-              ...subjectStatus.recordPath.split('/'),
+              ...status.recordPath.split('/'),
             ).toString(),
-            cid: subjectStatus.recordCid,
+            cid: status.recordCid,
           },
-    }))
-
-    return Array.isArray(result)
-      ? decoratedSubjectStatuses
-      : decoratedSubjectStatuses[0]
+    }
   }
 }
-
-type RepoResult = Actor
-
-type EventResult = ModerationEventRowWithHandle
-
-type ReportResult = ModerationEventRowWithHandle
-
-type RecordResult = RecordRow
-
-type SubjectResult = Pick<
-  EventResult & ReportResult,
-  'id' | 'subjectType' | 'subjectDid' | 'subjectUri' | 'subjectCid'
->
 
 type SubjectView = ModEventViewDetail['subject'] & ReportViewDetail['subject']
 
@@ -532,9 +484,16 @@ function didFromUri(uri: string) {
   return new AtUri(uri).host
 }
 
-function didAndRecordPathFromUri(uri: string) {
-  const atUri = new AtUri(uri)
-  return { did: atUri.host, recordPath: `${atUri.collection}/${atUri.rkey}` }
+function parseSubjectId(subject: string) {
+  if (subject.startsWith('did:')) {
+    return { did: subject }
+  }
+  const uri = new AtUri(subject)
+  return { did: uri.hostname, recordPath: `${uri.collection}/${uri.rkey}` }
+}
+
+function formatSubjectId(did: string, recordPath?: string) {
+  return recordPath ? `at://${did}/${recordPath}` : did
 }
 
 function findBlobRefs(value: unknown, refs: BlobRef[] = []) {

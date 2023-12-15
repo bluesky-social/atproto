@@ -424,6 +424,12 @@ export const schemaDict = {
           email: {
             type: 'string',
           },
+          relatedRecords: {
+            type: 'array',
+            items: {
+              type: 'unknown',
+            },
+          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -1015,6 +1021,45 @@ export const schemaDict = {
           schema: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#accountView',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminGetAccountInfos: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getAccountInfos',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get details about some accounts.',
+        parameters: {
+          type: 'params',
+          required: ['dids'],
+          properties: {
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['infos'],
+            properties: {
+              infos: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.defs#accountView',
+                },
+              },
+            },
           },
         },
       },
@@ -7835,6 +7880,7 @@ export const ids = {
   ComAtprotoAdminEmitModerationEvent: 'com.atproto.admin.emitModerationEvent',
   ComAtprotoAdminEnableAccountInvites: 'com.atproto.admin.enableAccountInvites',
   ComAtprotoAdminGetAccountInfo: 'com.atproto.admin.getAccountInfo',
+  ComAtprotoAdminGetAccountInfos: 'com.atproto.admin.getAccountInfos',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
   ComAtprotoAdminGetModerationEvent: 'com.atproto.admin.getModerationEvent',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',

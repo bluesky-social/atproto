@@ -5,7 +5,7 @@ import { GraphService } from './graph'
 import { ModerationService } from './moderation'
 import { LabelCacheOpts, LabelService } from './label'
 import { ImageInvalidator } from '../image/invalidator'
-import { FromDb, FromDbPrimary } from './types'
+import { FromDb } from './types'
 
 export function createServices(resources: {
   imgUriBuilder: ImageUriBuilder
@@ -31,6 +31,6 @@ export type Services = {
   actor: FromDb<ActorService>
   feed: FromDb<FeedService>
   graph: FromDb<GraphService>
-  moderation: FromDbPrimary<ModerationService>
+  moderation: FromDb<ModerationService>
   label: FromDb<LabelService>
 }

@@ -1,7 +1,7 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { PrimaryDatabase } from '../../db'
+import { Database } from '../../db'
 import { ModerationViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
 import { Main as StrongRef } from '../../lexicon/types/com/atproto/repo/strongRef'
@@ -24,31 +24,33 @@ import {
 import {
   ModEventType,
   ModerationEventRow,
-  ModerationEventRowWithHandle,
   ModerationSubjectStatusRow,
   ReversibleModerationEvent,
   SubjectInfo,
 } from './types'
-import { ModerationEvent } from '../../db/tables/moderation'
+import { ModerationEvent } from '../../db/schema/moderation_event'
 import { paginate } from '../../db/pagination'
 import { StatusKeyset, TimeIdKeyset } from './pagination'
+import AtpAgent from '@atproto/api'
 
 export class ModerationService {
   constructor(
-    public db: PrimaryDatabase,
+    public db: Database,
+    public appviewAgent: AtpAgent,
     public imgUriBuilder: ImageUriBuilder,
     public imgInvalidator: ImageInvalidator,
   ) {}
 
   static creator(
+    appviewAgent: AtpAgent,
     imgUriBuilder: ImageUriBuilder,
     imgInvalidator: ImageInvalidator,
   ) {
-    return (db: PrimaryDatabase) =>
-      new ModerationService(db, imgUriBuilder, imgInvalidator)
+    return (db: Database) =>
+      new ModerationService(db, appviewAgent, imgUriBuilder, imgInvalidator)
   }
 
-  views = new ModerationViews(this.db)
+  views = new ModerationViews(this.db, this.appviewAgent)
 
   async getEvent(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
@@ -72,7 +74,7 @@ export class ModerationService {
     includeAllUserRecords: boolean
     types: ModerationEvent['action'][]
     sortDirection?: 'asc' | 'desc'
-  }): Promise<{ cursor?: string; events: ModerationEventRowWithHandle[] }> {
+  }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
       createdBy,
@@ -82,18 +84,7 @@ export class ModerationService {
       sortDirection = 'desc',
       types,
     } = opts
-    let builder = this.db.db
-      .selectFrom('moderation_event')
-      .leftJoin(
-        'actor as creatorActor',
-        'creatorActor.did',
-        'moderation_event.createdBy',
-      )
-      .leftJoin(
-        'actor as subjectActor',
-        'subjectActor.did',
-        'moderation_event.subjectDid',
-      )
+    let builder = this.db.db.selectFrom('moderation_event').selectAll()
     if (subject) {
       builder = builder.where((qb) => {
         if (includeAllUserRecords) {
@@ -140,13 +131,7 @@ export class ModerationService {
       tryIndex: true,
     })
 
-    const result = await paginatedBuilder
-      .selectAll(['moderation_event'])
-      .select([
-        'subjectActor.handle as subjectHandle',
-        'creatorActor.handle as creatorHandle',
-      ])
-      .execute()
+    const result = await paginatedBuilder.execute()
 
     return { cursor: keyset.packFromResult(result), events: result }
   }
@@ -428,11 +413,18 @@ export class ModerationService {
   }): Promise<TakedownSubjects> {
     const { takedownId, did } = info
     await this.db.db
-      .updateTable('actor')
-      .set({ takedownId })
-      .where('did', '=', did)
-      .where('takedownId', 'is', null)
-      .executeTakeFirst()
+      .insertInto('push_event')
+      .values({
+        eventType: 'repo_takedown',
+        subjectDid: did,
+        takedownId,
+      })
+      .onConflict((oc) =>
+        oc
+          .columns(['eventType', 'subjectDid'])
+          .doUpdateSet({ confirmedAt: null, takedownId }),
+      )
+      .execute()
 
     return {
       did,
@@ -447,9 +439,10 @@ export class ModerationService {
 
   async reverseTakedownRepo(info: { did: string }) {
     await this.db.db
-      .updateTable('actor')
-      .set({ takedownId: null })
-      .where('did', '=', info.did)
+      .updateTable('push_event')
+      .where('eventType', '=', 'repo_takedown')
+      .where('subjectDid', '=', info.did)
+      .set({ takedownId: null, confirmedAt: null })
       .execute()
   }
 
@@ -457,28 +450,25 @@ export class ModerationService {
     takedownId: number
     uri: AtUri
     cid: CID
-    blobCids?: CID[]
   }): Promise<TakedownSubjects> {
-    const { takedownId, uri, cid, blobCids } = info
+    const { takedownId, uri, cid } = info
     const did = uri.hostname
     this.db.assertTransaction()
     await this.db.db
-      .updateTable('record')
-      .set({ takedownId })
-      .where('uri', '=', uri.toString())
-      .where('takedownId', 'is', null)
-      .executeTakeFirst()
-    if (blobCids) {
-      await Promise.all(
-        blobCids.map(async (cid) => {
-          const paths = ImageUriBuilder.presets.map((id) => {
-            const imgUri = this.imgUriBuilder.getPresetUri(id, uri.host, cid)
-            return imgUri.replace(this.imgUriBuilder.endpoint, '')
-          })
-          await this.imgInvalidator.invalidate(cid.toString(), paths)
-        }),
+      .insertInto('push_event')
+      .values({
+        eventType: 'record_takedown',
+        subjectDid: uri.hostname,
+        subjectUri: uri.toString(),
+        subjectCid: cid.toString(),
+        takedownId,
+      })
+      .onConflict((oc) =>
+        oc
+          .columns(['eventType', 'subjectDid', 'subjectUri'])
+          .doUpdateSet({ confirmedAt: null, takedownId }),
       )
-    }
+      .execute()
     return {
       did,
       subjects: [
@@ -487,12 +477,6 @@ export class ModerationService {
           uri: uri.toString(),
           cid: cid.toString(),
         },
-        ...(blobCids || []).map((cid) => ({
-          $type: 'com.atproto.admin.defs#repoBlobRef',
-          did,
-          cid: cid.toString(),
-          recordUri: uri.toString(),
-        })),
       ],
     }
   }
@@ -500,9 +484,64 @@ export class ModerationService {
   async reverseTakedownRecord(info: { uri: AtUri }) {
     this.db.assertTransaction()
     await this.db.db
-      .updateTable('record')
-      .set({ takedownId: null })
-      .where('uri', '=', info.uri.toString())
+      .updateTable('push_event')
+      .where('eventType', '=', 'record_takedown')
+      .where('subjectDid', '=', info.uri.hostname)
+      .where('subjectUri', '=', info.uri.toString())
+      .set({ takedownId: null, confirmedAt: null })
+      .execute()
+  }
+
+  async takedownBlobs(info: {
+    takedownId: number
+    did: string
+    blobCids: CID[]
+  }): Promise<TakedownSubjects> {
+    const { takedownId, did, blobCids } = info
+    this.db.assertTransaction()
+
+    if (blobCids.length > 0) {
+      await this.db.db
+        .insertInto('push_event')
+        .values(
+          blobCids.map((cid) => ({
+            eventType: 'blob_takedown' as const,
+            subjectDid: did,
+            subjectBlobCid: cid.toString(),
+            takedownId,
+          })),
+        )
+        .onConflict((oc) =>
+          oc
+            .columns(['eventType', 'subjectDid', 'subjectBlobCid'])
+            .doUpdateSet({ confirmedAt: null, takedownId }),
+        )
+        .execute()
+    }
+    return {
+      did,
+      subjects: blobCids.map((cid) => ({
+        $type: 'com.atproto.admin.defs#repoBlobRef',
+        did,
+        cid: cid.toString(),
+      })),
+    }
+  }
+
+  async reverseTakedownBlobs(info: { did: string; blobCids: CID[] }) {
+    this.db.assertTransaction()
+    const { did, blobCids } = info
+    if (blobCids.length < 1) return
+    await this.db.db
+      .updateTable('push_event')
+      .where('eventType', '=', 'blob_takedown')
+      .where('subjectDid', '=', did)
+      .where(
+        'subjectBlobCid',
+        'in',
+        blobCids.map((c) => c.toString()),
+      )
+      .set({ takedownId: null, confirmedAt: null })
       .execute()
   }
 
@@ -566,9 +605,7 @@ export class ModerationService {
     lastReviewedBy?: string
     sortField: 'lastReviewedAt' | 'lastReportedAt'
   }) {
-    let builder = this.db.db
-      .selectFrom('moderation_subject_status')
-      .leftJoin('actor', 'actor.did', 'moderation_subject_status.did')
+    let builder = this.db.db.selectFrom('moderation_subject_status').selectAll()
 
     if (subject) {
       const subjectInfo = getStatusIdentifierFromSubject(subject)
@@ -637,10 +674,7 @@ export class ModerationService {
       nullsLast: true,
     })
 
-    const results = await paginatedBuilder
-      .select('actor.handle as handle')
-      .selectAll('moderation_subject_status')
-      .execute()
+    const results = await paginatedBuilder.execute()
 
     return { statuses: results, cursor: keyset.packFromResult(results) }
   }

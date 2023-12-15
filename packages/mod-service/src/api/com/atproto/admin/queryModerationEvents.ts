@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
         includeAllUserRecords = false,
         createdBy,
       } = params
-      const db = ctx.db.getPrimary()
+      const db = ctx.db
       const moderationService = ctx.services.moderation(db)
       const results = await moderationService.getEvents({
         types: types?.length ? types.map(getEventType) : [],

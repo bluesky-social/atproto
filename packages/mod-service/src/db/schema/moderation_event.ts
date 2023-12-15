@@ -1,12 +1,6 @@
 import { Generated } from 'kysely'
-import {
-  REVIEWCLOSED,
-  REVIEWOPEN,
-  REVIEWESCALATED,
-} from '../../lexicon/types/com/atproto/admin/defs'
 
 export const eventTableName = 'moderation_event'
-export const subjectStatusTableName = 'moderation_subject_status'
 
 export interface ModerationEvent {
   id: Generated<number>
@@ -35,25 +29,6 @@ export interface ModerationEvent {
   legacyRefId: number | null
 }
 
-export interface ModerationSubjectStatus {
-  id: Generated<number>
-  did: string
-  recordPath: string
-  recordCid: string | null
-  blobCids: string[] | null
-  reviewState: typeof REVIEWCLOSED | typeof REVIEWOPEN | typeof REVIEWESCALATED
-  createdAt: string
-  updatedAt: string
-  lastReviewedBy: string | null
-  lastReviewedAt: string | null
-  lastReportedAt: string | null
-  muteUntil: string | null
-  suspendUntil: string | null
-  takendown: boolean
-  comment: string | null
-}
-
 export type PartialDB = {
   [eventTableName]: ModerationEvent
-  [subjectStatusTableName]: ModerationSubjectStatus
 }

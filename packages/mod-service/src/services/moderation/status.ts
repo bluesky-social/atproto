@@ -1,8 +1,8 @@
 // This may require better organization but for now, just dumping functions here containing DB queries for moderation status
 
 import { AtUri } from '@atproto/syntax'
-import { PrimaryDatabase } from '../../db'
-import { ModerationSubjectStatus } from '../../db/tables/moderation'
+import { Database, PrimaryDatabase } from '../../db'
+import { ModerationSubjectStatus } from '../../db/schema/moderation_subject_status'
 import {
   REVIEWOPEN,
   REVIEWCLOSED,
@@ -91,7 +91,7 @@ const getSubjectStatusForModerationEvent = ({
 // If there's no existing status, it will create one
 // If the action event does not affect the status, it will do nothing
 export const adjustModerationSubjectStatus = async (
-  db: PrimaryDatabase,
+  db: Database,
   moderationEvent: ModerationEventRow,
   blobCids?: CID[],
 ) => {

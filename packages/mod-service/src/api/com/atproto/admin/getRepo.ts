@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.roleVerifier,
     handler: async ({ params, auth }) => {
       const { did } = params
-      const db = ctx.db.getPrimary()
+      const db = ctx.db
       const result = await ctx.services.actor(db).getActor(did, true)
       if (!result) {
         throw new InvalidRequestError('Repo not found', 'RepoNotFound')

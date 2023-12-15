@@ -3,7 +3,7 @@ import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { createServiceJwt } from '@atproto/xrpc-server'
-import { DatabaseCoordinator } from './db'
+import { Database } from './db'
 import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
@@ -18,7 +18,8 @@ export class AppContext {
   public moderationPushAgent: AtpAgent | undefined
   constructor(
     private opts: {
-      db: DatabaseCoordinator
+      db: Database
+      appviewAgent: AtpAgent
       imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       services: Services
@@ -42,7 +43,7 @@ export class AppContext {
     }
   }
 
-  get db(): DatabaseCoordinator {
+  get db(): Database {
     return this.opts.db
   }
 

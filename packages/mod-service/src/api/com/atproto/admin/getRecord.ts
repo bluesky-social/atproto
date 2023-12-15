@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.roleVerifier,
     handler: async ({ params, auth }) => {
       const { uri, cid } = params
-      const db = ctx.db.getPrimary()
+      const db = ctx.db
       const result = await db.db
         .selectFrom('record')
         .selectAll()

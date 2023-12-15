@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.roleVerifier,
     handler: async ({ input, auth }) => {
       const access = auth.credentials
-      const db = ctx.db.getPrimary()
+      const db = ctx.db
       const moderationService = ctx.services.moderation(db)
       const { subject, createdBy, subjectBlobCids, event } = input.body
       const isTakedownEvent = isModEventTakedown(event)
@@ -117,37 +117,48 @@ export default function (server: Server, ctx: AppContext) {
             result.subjectType === 'com.atproto.repo.strongRef' &&
             result.subjectUri
           ) {
+            const subjectUri = new AtUri(result.subjectUri)
             const blobCids = subjectBlobCids?.map((cid) => CID.parse(cid)) ?? []
             if (isTakedownEvent) {
-              takenDown = await moderationTxn.takedownRecord({
+              await moderationTxn.takedownRecord({
                 takedownId: result.id,
-                uri: new AtUri(result.subjectUri),
+                uri: subjectUri,
                 // TODO: I think this will always be available for strongRefs?
                 cid: CID.parse(result.subjectCid as string),
-                blobCids,
               })
+              if (blobCids && blobCids.length > 0) {
+                await moderationTxn.takedownBlobs({
+                  takedownId: result.id,
+                  did: subjectUri.hostname,
+                  blobCids,
+                })
+              }
             }
 
             if (isReverseTakedownEvent) {
               await moderationTxn.reverseTakedownRecord({
                 uri: new AtUri(result.subjectUri),
               })
-              takenDown = {
-                did: result.subjectDid,
-                subjects: [
-                  {
-                    $type: 'com.atproto.repo.strongRef',
-                    uri: result.subjectUri,
-                    cid: result.subjectCid ?? '',
-                  },
-                  ...blobCids.map((cid) => ({
-                    $type: 'com.atproto.admin.defs#repoBlobRef',
-                    did: result.subjectDid,
-                    cid: cid.toString(),
-                    recordUri: result.subjectUri,
-                  })),
-                ],
-              }
+              await moderationTxn.reverseTakedownBlobs({
+                did: subjectUri.hostname,
+                blobCids,
+              })
+              // takenDown = {
+              //   did: result.subjectDid,
+              //   subjects: [
+              //     {
+              //       $type: 'com.atproto.repo.strongRef',
+              //       uri: result.subjectUri,
+              //       cid: result.subjectCid ?? '',
+              //     },
+              //     ...blobCids.map((cid) => ({
+              //       $type: 'com.atproto.admin.defs#repoBlobRef',
+              //       did: result.subjectDid,
+              //       cid: cid.toString(),
+              //       recordUri: result.subjectUri,
+              //     })),
+              //   ],
+              // }
             }
           }
 
@@ -171,33 +182,34 @@ export default function (server: Server, ctx: AppContext) {
         },
       )
 
-      if (takenDown && ctx.moderationPushAgent) {
-        const { did, subjects } = takenDown
-        if (did && subjects.length > 0) {
-          const agent = ctx.moderationPushAgent
-          const results = await Promise.allSettled(
-            subjects.map((subject) =>
-              retryHttp(() =>
-                agent.api.com.atproto.admin.updateSubjectStatus({
-                  subject,
-                  takedown: isTakedownEvent
-                    ? {
-                        applied: true,
-                        ref: moderationEvent.id.toString(),
-                      }
-                    : {
-                        applied: false,
-                      },
-                }),
-              ),
-            ),
-          )
-          const hadFailure = results.some((r) => r.status === 'rejected')
-          if (hadFailure) {
-            throw new UpstreamFailureError('failed to apply action on PDS')
-          }
-        }
-      }
+      // @TODO move to commit hook on takedown method
+      // if (takenDown && ctx.moderationPushAgent) {
+      //   const { did, subjects } = takenDown
+      //   if (did && subjects.length > 0) {
+      //     const agent = ctx.moderationPushAgent
+      //     const results = await Promise.allSettled(
+      //       subjects.map((subject) =>
+      //         retryHttp(() =>
+      //           agent.api.com.atproto.admin.updateSubjectStatus({
+      //             subject,
+      //             takedown: isTakedownEvent
+      //               ? {
+      //                   applied: true,
+      //                   ref: moderationEvent.id.toString(),
+      //                 }
+      //               : {
+      //                   applied: false,
+      //                 },
+      //           }),
+      //         ),
+      //       ),
+      //     )
+      //     const hadFailure = results.some((r) => r.status === 'rejected')
+      //     if (hadFailure) {
+      //       throw new UpstreamFailureError('failed to apply action on PDS')
+      //     }
+      //   }
+      // }
 
       return {
         encoding: 'application/json',

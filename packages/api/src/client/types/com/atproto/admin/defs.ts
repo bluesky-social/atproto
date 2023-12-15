@@ -250,6 +250,7 @@ export interface AccountView {
   did: string
   handle: string
   email?: string
+  relatedRecords?: {}[]
   indexedAt: string
   invitedBy?: ComAtprotoServerDefs.InviteCode
   invites?: ComAtprotoServerDefs.InviteCode[]
