@@ -112,6 +112,18 @@ describe('pds views with blocking', () => {
     expect(forSnapshot(thread)).toMatchSnapshot()
   })
 
+  it('loads blocked reply as anchor with no parent', async () => {
+    const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
+      { depth: 1, uri: carolReplyToDan.ref.uriStr },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    if (!isThreadViewPost(thread.thread)) {
+      throw new Error('Expected thread view post')
+    }
+    expect(thread.thread.post.uri).toEqual(carolReplyToDan.ref.uriStr)
+    expect(thread.thread.parent).toBeUndefined()
+  })
+
   it('blocks thread parent', async () => {
     // Parent is a post by dan
     const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
