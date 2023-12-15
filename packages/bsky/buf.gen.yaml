@@ -1,13 +1,13 @@
 version: v1
 plugins:
   - plugin: es
-    opt: 
+    opt:
       - target=ts
       - import_extension=.ts
 
     out: src/data-plane/gen
   - plugin: connect-es
-    opt: 
+    opt:
       - target=ts
       - import_extension=.ts
     out: src/data-plane/gen
