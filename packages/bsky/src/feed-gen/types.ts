@@ -21,15 +21,15 @@ export type AlgoHandler = (
 export type MountedAlgos = Record<string, AlgoHandler>
 
 export const toSkeletonItem = (feedItem: {
-  uri: string
+  itemUri: string
   postUri: string
 }): SkeletonFeedPost => ({
   post: feedItem.postUri,
   reason:
-    feedItem.uri === feedItem.postUri
+    feedItem.itemUri === feedItem.postUri
       ? undefined
       : {
           $type: 'app.bsky.feed.defs#skeletonReasonRepost',
-          repost: feedItem.uri,
+          repost: feedItem.itemUri,
         },
 })

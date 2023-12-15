@@ -46,7 +46,7 @@ import {
   isRecordWithMedia,
 } from './types'
 import { Label } from '../hydration/label'
-import { PostViewerState, Repost } from '../hydration/feed'
+import { Repost } from '../hydration/feed'
 import { RecordInfo } from '../hydration/util'
 import { Notification } from '../data-plane/gen/bsky_pb'
 import { parseThreadGate } from '../services/feed/util'
@@ -206,7 +206,7 @@ export class Views {
       description: list.record.description,
       descriptionFacets: list.record.descriptionFacets,
       indexedAt: compositeTime(
-        list.record.createdAt,
+        normalizeDatetimeAlways(list.record.createdAt),
         list.indexedAt?.toISOString(),
       ),
     }
@@ -232,7 +232,7 @@ export class Views {
           )
         : undefined,
       indexedAt: compositeTime(
-        list.record.createdAt,
+        normalizeDatetimeAlways(list.record.createdAt),
         list.indexedAt?.toISOString(),
       ),
       viewer: listViewer
@@ -329,7 +329,7 @@ export class Views {
           }
         : undefined,
       indexedAt: compositeTime(
-        feedgen.record.createdAt,
+        normalizeDatetimeAlways(feedgen.record.createdAt),
         feedgen.indexedAt?.toISOString(),
       ),
     }

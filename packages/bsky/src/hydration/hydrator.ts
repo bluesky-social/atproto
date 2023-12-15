@@ -23,7 +23,7 @@ import {
   RelationshipPair,
 } from './graph'
 import { LabelHydrator, Labels } from './label'
-import { HydrationMap, didFromUri } from './util'
+import { HydrationMap, didFromUri, urisByCollection } from './util'
 import {
   FeedGenAggs,
   FeedGens,
@@ -569,17 +569,6 @@ const getListUrisFromGates = (gates: Threadgates) => {
     }
   }
   return uris
-}
-
-const urisByCollection = (uris: string[]): Map<string, string[]> => {
-  const result = new Map<string, string[]>()
-  for (const uri of uris) {
-    const collection = new AtUri(uri).collection
-    const items = result.get(collection) ?? []
-    items.push(uri)
-    result.set(collection, items)
-  }
-  return result
 }
 
 export const mergeStates = (

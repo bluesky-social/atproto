@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { normalizeDatetimeAlways } from '@atproto/syntax'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getLikes'
 import AppContext from '../../../../context'
@@ -81,7 +82,7 @@ const presentation = (inputs: {
     }
     return {
       actor,
-      createdAt: like.record.createdAt,
+      createdAt: normalizeDatetimeAlways(like.record.createdAt),
       indexedAt: like.indexedAt.toISOString(),
     }
   })

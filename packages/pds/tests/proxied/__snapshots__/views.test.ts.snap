@@ -114,7 +114,7 @@ Object {
       },
     },
   ],
-  "cursor": "1:3",
+  "cursor": "1:2:3",
 }
 `;
 
@@ -204,6 +204,24 @@ Array [
     "did": "user(0)",
     "displayName": "ali",
     "handle": "alice.test",
+    "labels": Array [
+      Object {
+        "cid": "cids(1)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "user(0)",
+        "uri": "record(0)",
+        "val": "self-label-a",
+      },
+      Object {
+        "cid": "cids(1)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "user(0)",
+        "uri": "record(0)",
+        "val": "self-label-b",
+      },
+    ],
     "viewer": Object {
       "blockedBy": false,
       "muted": false,
@@ -214,29 +232,40 @@ Array [
     "did": "user(2)",
     "displayName": "bobby",
     "handle": "bob.test",
+    "labels": Array [],
     "viewer": Object {
       "blockedBy": false,
-      "followedBy": "record(1)",
-      "following": "record(0)",
+      "followedBy": "record(2)",
+      "following": "record(1)",
       "muted": false,
     },
   },
   Object {
     "did": "user(4)",
     "handle": "carol.test",
+    "labels": Array [],
     "viewer": Object {
       "blockedBy": false,
-      "followedBy": "record(3)",
-      "following": "record(2)",
+      "followedBy": "record(4)",
+      "following": "record(3)",
       "muted": false,
     },
   },
   Object {
     "did": "user(5)",
     "handle": "dan.test",
+    "labels": Array [
+      Object {
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "user(5)",
+        "val": "repo-action-label",
+      },
+    ],
     "viewer": Object {
       "blockedBy": false,
-      "following": "record(4)",
+      "following": "record(5)",
       "muted": false,
     },
   },
@@ -496,9 +525,11 @@ Object {
     "cid": "cids(0)",
     "creator": Object {
       "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+      "description": "its me!",
       "did": "user(1)",
       "displayName": "ali",
       "handle": "alice.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
       "labels": Array [
         Object {
           "cid": "cids(2)",
@@ -539,9 +570,11 @@ Object {
       "cid": "cids(0)",
       "creator": Object {
         "avatar": "https://bsky.public.url/img/avatar/plain/user(2)/cids(1)@jpeg",
+        "description": "its me!",
         "did": "user(1)",
         "displayName": "ali",
         "handle": "alice.test",
+        "indexedAt": "1970-01-01T00:00:00.000Z",
         "labels": Array [
           Object {
             "cid": "cids(2)",
