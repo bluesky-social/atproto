@@ -1,4 +1,5 @@
-FROM node:18-alpine as build
+# @NOTE just a temp fix: alpine3.19 breaks sharp install, see nodejs/docker-node#2009
+FROM node:18-alpine3.18 as build
 
 RUN npm install -g pnpm
 
