@@ -36,7 +36,7 @@ RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline > 
 WORKDIR services/pds
 
 # Uses assets from build stage to reduce build size
-FROM node:18-alpine
+FROM node:18-alpine3.18
 
 RUN apk add --update dumb-init
 
