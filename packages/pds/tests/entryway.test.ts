@@ -1,5 +1,6 @@
 import * as os from 'node:os'
 import * as path from 'node:path'
+import * as plcLib from '@did-plc/lib'
 import AtpAgent from '@atproto/api'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { SeedClient, TestPds, TestPlc, mockResolvers } from '@atproto/dev-env'
@@ -130,6 +131,28 @@ describe('entryway', () => {
     expect(handleToDid).toEqual(alice)
     expect(accountFromPds?.handle).toEqual('alice3.test')
     expect(accountFromEntryway?.handle).toEqual('alice3.test')
+  })
+
+  it('does not allow bringing own op to account creation.', async () => {
+    const {
+      data: { signingKey },
+    } = await pdsAgent.api.com.atproto.server.reserveSigningKey({})
+    const rotationKey = await Secp256k1Keypair.create()
+    const plcCreate = await plcLib.createOp({
+      signingKey,
+      rotationKeys: [rotationKey.did(), entryway.ctx.plcRotationKey.did()],
+      handle: 'weirdalice.test',
+      pds: pds.ctx.cfg.service.publicUrl,
+      signer: rotationKey,
+    })
+    const tryCreateAccount = pdsAgent.api.com.atproto.server.createAccount(
+      { did: plcCreate.did, plcOp: plcCreate.op, handle: 'weirdalice.test' },
+      {
+        headers: SeedClient.getHeaders(accessToken),
+        encoding: 'application/json',
+      },
+    )
+    await expect(tryCreateAccount).rejects.toThrow('invalid plc operation')
   })
 })
 

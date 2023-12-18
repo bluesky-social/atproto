@@ -2,12 +2,12 @@ import { DidDocument, MINUTE, check } from '@atproto/common'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import * as plc from '@did-plc/lib'
 import disposable from 'disposable-email'
 import {
   baseNormalizeAndValidate,
   normalizeAndValidateHandle,
 } from '../../../../handle'
-import * as plc from '@did-plc/lib'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
 import AppContext from '../../../../context'
