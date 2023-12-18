@@ -401,7 +401,7 @@ importers:
     devDependencies:
       ts-node:
         specifier: ^10.8.1
-        version: 10.8.2(@swc/core@1.3.42)(@types/node@18.17.8)(typescript@4.9.5)
+        version: 10.8.2(@swc/core@1.3.42)(@types/node@20.10.4)(typescript@5.3.3)
 
   packages/identity:
     dependencies:
@@ -506,8 +506,8 @@ importers:
         specifier: workspace:^
         version: link:../xrpc-server
       '@did-plc/lib':
-        specifier: ^0.0.1
-        version: 0.0.1
+        specifier: ^0.0.4
+        version: 0.0.4
       better-sqlite3:
         specifier: ^7.6.2
         version: 7.6.2
@@ -782,7 +782,7 @@ importers:
         version: 4.20.0
       opentelemetry-plugin-better-sqlite3:
         specifier: ^1.1.0
-        version: 1.1.0(better-sqlite3@7.6.2)
+        version: 1.1.0(better-sqlite3@9.2.2)
 
 packages:
 
@@ -801,6 +801,14 @@ packages:
 
   /@atproto/common@0.1.0:
     resolution: {integrity: sha512-OB5tWE2R19jwiMIs2IjQieH5KTUuMb98XGCn9h3xuu6NanwjlmbCYMv08fMYwIp3UQ6jcq//84cDT3Bu6fJD+A==}
+    dependencies:
+      '@ipld/dag-cbor': 7.0.3
+      multiformats: 9.9.0
+      pino: 8.15.0
+      zod: 3.21.4
+
+  /@atproto/common@0.1.1:
+    resolution: {integrity: sha512-GYwot5wF/z8iYGSPjrLHuratLc0CVgovmwfJss7+BUOB6y2/Vw8+1Vw0n9DDI0gb5vmx3UI8z0uJgC8aa8yuJg==}
     dependencies:
       '@ipld/dag-cbor': 7.0.3
       multiformats: 9.9.0
@@ -853,7 +861,7 @@ packages:
       p-queue: 6.6.2
       pg: 8.10.0
       pino: 8.15.0
-      pino-http: 8.4.0
+      pino-http: 8.2.1
       sharp: 0.31.3
       typed-emitter: 2.1.0
       uint8arrays: 3.0.0
@@ -4686,7 +4694,20 @@ packages:
       '@atproto/common': 0.1.0
       '@atproto/crypto': 0.1.0
       '@ipld/dag-cbor': 7.0.3
-      axios: 1.4.0
+      axios: 1.6.2
+      multiformats: 9.9.0
+      uint8arrays: 3.0.0
+      zod: 3.21.4
+    transitivePeerDependencies:
+      - debug
+
+  /@did-plc/lib@0.0.4:
+    resolution: {integrity: sha512-Omeawq3b8G/c/5CtkTtzovSOnWuvIuCI4GTJNrt1AmCskwEQV7zbX5d6km1mjJNbE0gHuQPTVqZxLVqetNbfwA==}
+    dependencies:
+      '@atproto/common': 0.1.1
+      '@atproto/crypto': 0.1.0
+      '@ipld/dag-cbor': 7.0.3
+      axios: 1.6.2
       multiformats: 9.9.0
       uint8arrays: 3.0.0
       zod: 3.21.4
@@ -4698,7 +4719,7 @@ packages:
     dependencies:
       '@atproto/common': 0.1.0
       '@atproto/crypto': 0.1.0
-      '@did-plc/lib': 0.0.1
+      '@did-plc/lib': 0.0.4
       axios: 1.4.0
       cors: 2.8.5
       express: 4.18.2
@@ -5566,6 +5587,12 @@ packages:
   /@types/node@18.17.8:
     resolution: {integrity: sha512-Av/7MqX/iNKwT9Tr60V85NqMnsmh8ilfJoBlIVibkXfitk9Q22D9Y5mSpm+FvG5DET7EbVfB40bOiLzKgYFgPw==}
 
+  /@types/node@20.10.4:
+    resolution: {integrity: sha512-D08YG6rr8X90YB56tSIuBaddy/UXAA9RKJoFvrsnogAum/0pmjkgi4+2nx96A330FmioegBWmEYQ+syqCFaveg==}
+    dependencies:
+      undici-types: 5.26.5
+    dev: true
+
   /@types/nodemailer@6.4.6:
     resolution: {integrity: sha512-pD6fL5GQtUKvD2WnPmg5bC2e8kWCAPDwMPmHe/ohQbW+Dy0EcHgZ2oCSuPlWNqk74LS5BVMig1SymQbFMPPK3w==}
     dependencies:
@@ -6014,6 +6041,15 @@ packages:
     transitivePeerDependencies:
       - debug
 
+  /axios@1.6.2:
+    resolution: {integrity: sha512-7i24Ri4pmDRfJTR7LDBhsOTtcm+9kjX5WiY1X3wIisx6G9So3pfMkEiU7emUBe46oceVImccTEM3k6C5dbVW8A==}
+    dependencies:
+      follow-redirects: 1.15.3
+      form-data: 4.0.0
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+
   /b4a@1.6.4:
     resolution: {integrity: sha512-fpWrvyVHEKyeEvbKZTVOeZF3VSKKWtJxFIxX/jaVPf+cLbGUSitjb49pHLqPV2BUNNZ0LcoeEGfE/YCpyDYHIw==}
     dev: false
@@ -6163,6 +6199,14 @@ packages:
     dependencies:
       bindings: 1.5.0
       prebuild-install: 7.1.1
+
+  /better-sqlite3@9.2.2:
+    resolution: {integrity: sha512-qwjWB46il0lsDkeB4rSRI96HyDQr8sxeu1MkBVLMrwusq1KRu4Bpt1TMI+8zIJkDUtZ3umjAkaEjIlokZKWCQw==}
+    requiresBuild: true
+    dependencies:
+      bindings: 1.5.0
+      prebuild-install: 7.1.1
+    dev: false
 
   /big-integer@1.6.51:
     resolution: {integrity: sha512-GPEid2Y9QU1Exl1rpO9B2IPJGHPSupF5GnVIP0blYvNOMer2bTvSWs1jGOUg04hTmu67nmLsQ9TBo1puaotBHg==}
@@ -7614,7 +7658,6 @@ packages:
     resolution: {integrity: sha512-5jOCVXADYNuRkKFzNJ0dCCewsZiYo0dz8QNYljkOpFC6r2U4OBmKtvm/Tsuh4w1YYdDqDb31a8TVhBJ2OJKdqQ==}
     dependencies:
       punycode: 1.4.1
-    dev: false
 
   /fast-xml-parser@4.0.11:
     resolution: {integrity: sha512-4aUg3aNRR/WjQAcpceODG1C3x3lFANXRo8+1biqfieHmg9pyMt7qB4lQV/Ta6sJCTbA5vfD8fnA8S54JATiFUA==}
@@ -7714,6 +7757,15 @@ packages:
 
   /follow-redirects@1.15.2:
     resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
+
+  /follow-redirects@1.15.3:
+    resolution: {integrity: sha512-1VzOtuEM8pC9SFU1E+8KfTjZyMztRsgEfwQl44z8A25uy13jSzTj6dyK2Df52iV0vgHCfBwLhDWevLn95w5v6Q==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -9574,7 +9626,7 @@ packages:
       mimic-fn: 2.1.0
     dev: true
 
-  /opentelemetry-plugin-better-sqlite3@1.1.0(better-sqlite3@7.6.2):
+  /opentelemetry-plugin-better-sqlite3@1.1.0(better-sqlite3@9.2.2):
     resolution: {integrity: sha512-yd+mgaB5W5JxzcQt9TvX1VIrusqtbbeuxSoZ6KQe4Ra0J/Kqkp6kz7dg0VQUU5+cenOWkza6xtvsT0KGXI03HA==}
     peerDependencies:
       better-sqlite3: ^7.1.1 || ^8.0.0 || ^9.0.0
@@ -9583,7 +9635,7 @@ packages:
       '@opentelemetry/core': 1.18.1(@opentelemetry/api@1.7.0)
       '@opentelemetry/instrumentation': 0.44.0(@opentelemetry/api@1.7.0)
       '@opentelemetry/semantic-conventions': 1.18.1
-      better-sqlite3: 7.6.2
+      better-sqlite3: 9.2.2
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -9827,7 +9879,6 @@ packages:
       pino: 8.15.0
       pino-std-serializers: 6.2.2
       process-warning: 2.2.0
-    dev: false
 
   /pino-http@8.4.0:
     resolution: {integrity: sha512-9I1eRLxsujQJwLQTrHBU0wDlwnry2HzV2TlDwAsmZ9nT3Y2NQBLrz+DYp73L4i11vl/eudnFT8Eg0Kp62tMwEw==}
@@ -10047,7 +10098,6 @@ packages:
 
   /punycode@1.4.1:
     resolution: {integrity: sha512-jmYNElW7yvO7TV33CjSmvSiE2yco3bV2czu/OzDKdMNVZQWfxCblURLhf+47syQRBntjfLdd/H0egrzIG+oaFQ==}
-    dev: false
 
   /punycode@2.3.0:
     resolution: {integrity: sha512-rRV+zQD8tVFys26lAGR9WUuS4iUAngJScM+ZRSKtvl5tKeZ2t5bvdNFdNHBW9FWR4guGHlgmsZ1G7BSm2wTbuA==}
@@ -10962,7 +11012,7 @@ packages:
       yn: 3.1.1
     dev: true
 
-  /ts-node@10.8.2(@swc/core@1.3.42)(@types/node@18.17.8)(typescript@4.9.5):
+  /ts-node@10.8.2(@swc/core@1.3.42)(@types/node@20.10.4)(typescript@5.3.3):
     resolution: {integrity: sha512-LYdGnoGddf1D6v8REPtIH+5iq/gTDuZqv2/UJUU7tKjuEU8xVZorBM+buCGNjj+pGEud+sOoM4CX3/YzINpENA==}
     hasBin: true
     peerDependencies:
@@ -10982,14 +11032,14 @@ packages:
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 18.17.8
+      '@types/node': 20.10.4
       acorn: 8.10.0
       acorn-walk: 8.2.0
       arg: 4.1.3
       create-require: 1.1.1
       diff: 4.0.2
       make-error: 1.3.6
-      typescript: 4.9.5
+      typescript: 5.3.3
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
     dev: true
@@ -11131,9 +11181,9 @@ packages:
     hasBin: true
     dev: true
 
-  /typescript@4.9.5:
-    resolution: {integrity: sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==}
-    engines: {node: '>=4.2.0'}
+  /typescript@5.3.3:
+    resolution: {integrity: sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==}
+    engines: {node: '>=14.17'}
     hasBin: true
     dev: true
 
@@ -11156,6 +11206,10 @@ packages:
       has-bigints: 1.0.2
       has-symbols: 1.0.3
       which-boxed-primitive: 1.0.2
+    dev: true
+
+  /undici-types@5.26.5:
+    resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
     dev: true
 
   /unicode-canonical-property-names-ecmascript@2.0.0:
