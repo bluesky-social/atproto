@@ -16,6 +16,8 @@ import DatabaseSchema, { DatabaseSchemaType } from './schema'
 import { PgOptions } from './types'
 import { dbLogger } from '../logger'
 import { EventEmitter } from 'stream'
+import * as migrations from './migrations'
+import { CtxMigrationProvider } from './migrations/provider'
 
 export class Database {
   pool: PgPool
@@ -69,6 +71,11 @@ export class Database {
     this.pool = pool
     this.db = new Kysely<DatabaseSchemaType>({
       dialect: new PostgresDialect({ pool }),
+    })
+    this.migrator = new Migrator({
+      db: this.db,
+      migrationTableSchema: opts.schema,
+      provider: new CtxMigrationProvider(migrations, 'pg'),
     })
   }
 

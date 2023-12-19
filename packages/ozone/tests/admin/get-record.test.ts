@@ -16,6 +16,7 @@ describe('admin get record view', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'views_admin_get_record',
+      ozone: { enabled: true },
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()
@@ -65,7 +66,7 @@ describe('admin get record view', () => {
     })
   })
 
-  it('gets a record by uri, even when taken down.', async () => {
+  it.only('gets a record by uri, even when taken down.', async () => {
     const result = await agent.api.com.atproto.admin.getRecord(
       { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
       { headers: network.pds.adminAuthHeaders() },

@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const res = await ctx.appViewAgent.api.app.bsky.graph.getBlocks(
         params,
-        await ctx.serviceAuthHeaders(requester),
+        await ctx.appviewAuthHeaders(requester),
       )
       return {
         encoding: 'application/json',

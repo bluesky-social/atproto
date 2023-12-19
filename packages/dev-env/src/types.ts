@@ -1,5 +1,6 @@
 import * as pds from '@atproto/pds'
 import * as bsky from '@atproto/bsky'
+import * as ozone from '@atproto/ozone'
 import { ImageInvalidator } from '@atproto/bsky/src/image/invalidator'
 
 export type PlcConfig = {
@@ -25,10 +26,18 @@ export type BskyConfig = Partial<bsky.ServerConfig> & {
   ingester?: Partial<bsky.IngesterConfig>
 }
 
+export type OzoneConfig = Partial<ozone.ServerConfig> & {
+  enabled?: boolean
+  plcUrl: string
+  dbPrimaryPostgresUrl: string
+  migration?: string
+}
+
 export type TestServerParams = {
   dbPostgresUrl: string
   dbPostgresSchema: string
   pds: Partial<PdsConfig>
   plc: Partial<PlcConfig>
   bsky: Partial<BskyConfig>
+  ozone: Partial<OzoneConfig>
 }

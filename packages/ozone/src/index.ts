@@ -24,7 +24,7 @@ export { Database } from './db'
 export { PeriodicModerationEventReversal } from './db/periodic-moderation-event-reversal'
 export { AppContext } from './context'
 
-export class BskyAppView {
+export class OzoneService {
   public ctx: AppContext
   public app: express.Application
   public server?: http.Server
@@ -40,7 +40,7 @@ export class BskyAppView {
     db: Database
     config: ServerConfig
     signingKey: Keypair
-  }): BskyAppView {
+  }): OzoneService {
     const { db, config, signingKey } = opts
     const app = express()
     app.set('trust proxy', true)
@@ -85,7 +85,7 @@ export class BskyAppView {
     app.use(server.xrpc.router)
     app.use(error.handler)
 
-    return new BskyAppView({ ctx, app })
+    return new OzoneService({ ctx, app })
   }
 
   async start(): Promise<http.Server> {
@@ -137,4 +137,4 @@ export class BskyAppView {
   }
 }
 
-export default BskyAppView
+export default OzoneService

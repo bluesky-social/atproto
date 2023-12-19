@@ -175,8 +175,18 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const bskyAppViewCfg: ServerConfig['bskyAppView'] = {
     url: env.bskyAppViewUrl,
     did: env.bskyAppViewDid,
-    proxyModeration: env.bskyAppViewModeration ?? false,
     cdnUrlPattern: env.bskyAppViewCdnUrlPattern,
+  }
+
+  if (!env.modServiceUrl) {
+    throw new Error('Must configure PDS_MOD_SERVICE_URL')
+  } else if (!env.modServiceDid) {
+    throw new Error('Must configure PDS_MOD_SERVICE_DID')
+  }
+
+  const modServiceCfg: ServerConfig['modService'] = {
+    url: env.modServiceUrl,
+    did: env.modServiceDid,
   }
 
   const redisCfg: ServerConfig['redis'] = env.redisScratchAddress
@@ -211,6 +221,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     moderationEmail: moderationEmailCfg,
     subscription: subscriptionCfg,
     bskyAppView: bskyAppViewCfg,
+    modService: modServiceCfg,
     redis: redisCfg,
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
@@ -229,6 +240,7 @@ export type ServerConfig = {
   moderationEmail: EmailConfig | null
   subscription: SubscriptionConfig
   bskyAppView: BksyAppViewConfig
+  modService: ModServiceConfig
   redis: RedisScratchConfig | null
   rateLimits: RateLimitsConfig
   crawlers: string[]
@@ -330,6 +342,10 @@ export type RateLimitsConfig =
 export type BksyAppViewConfig = {
   url: string
   did: string
-  proxyModeration: boolean
   cdnUrlPattern?: string
+}
+
+export type ModServiceConfig = {
+  url: string
+  did: string
 }

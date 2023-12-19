@@ -1,6 +1,7 @@
 import { Kysely } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
+  // Moderation event
   await db.schema
     .createTable('moderation_event')
     .addColumn('id', 'serial', (col) => col.primaryKey())
@@ -22,6 +23,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('negateLabelVals', 'varchar')
     .addColumn('legacyRefId', 'integer')
     .execute()
+
+  // Moderation subject status
   await db.schema
     .createTable('moderation_subject_status')
     .addColumn('id', 'serial', (col) => col.primaryKey())
@@ -60,64 +63,45 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .column('blobCids')
     .execute()
 
-  // Move foreign keys from moderation_action to moderation_event
+  // Label
   await db.schema
-    .alterTable('record')
-    .dropConstraint('record_takedown_id_fkey')
+    .createTable('label')
+    .addColumn('src', 'varchar', (col) => col.notNull())
+    .addColumn('uri', 'varchar', (col) => col.notNull())
+    .addColumn('cid', 'varchar', (col) => col.notNull())
+    .addColumn('val', 'varchar', (col) => col.notNull())
+    .addColumn('neg', 'boolean', (col) => col.notNull())
+    .addColumn('cts', 'varchar', (col) => col.notNull())
+    .addPrimaryKeyConstraint('label_pkey', ['src', 'uri', 'cid', 'val'])
     .execute()
   await db.schema
-    .alterTable('actor')
-    .dropConstraint('actor_takedown_id_fkey')
+    .createIndex('label_uri_index')
+    .on('label')
+    .column('uri')
     .execute()
+
+  // PushEvent
   await db.schema
-    .alterTable('actor')
-    .addForeignKeyConstraint(
-      'actor_takedown_id_fkey',
-      ['takedownId'],
-      'moderation_event',
-      ['id'],
-    )
-    .execute()
-  await db.schema
-    .alterTable('record')
-    .addForeignKeyConstraint(
-      'record_takedown_id_fkey',
-      ['takedownId'],
-      'moderation_event',
-      ['id'],
-    )
+    .createTable('push_event')
+    .addColumn('eventType', 'varchar', (col) => col.notNull())
+    .addColumn('subjectDid', 'varchar', (col) => col.notNull())
+    .addColumn('subjectUri', 'varchar')
+    .addColumn('subjectCid', 'varchar')
+    .addColumn('subjectBlobCid', 'varchar')
+    .addColumn('takedownId', 'integer')
+    .addColumn('confirmedAt', 'varchar')
+    .addPrimaryKeyConstraint('push_event_pkey', [
+      'eventType',
+      'subjectDid',
+      'subjectUri',
+      'subjectBlobCid',
+    ])
     .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('moderation_event').execute()
   await db.schema.dropTable('moderation_subject_status').execute()
-
-  // Revert foreign key constraints
-  await db.schema
-    .alterTable('record')
-    .dropConstraint('record_takedown_id_fkey')
-    .execute()
-  await db.schema
-    .alterTable('actor')
-    .dropConstraint('actor_takedown_id_fkey')
-    .execute()
-  await db.schema
-    .alterTable('actor')
-    .addForeignKeyConstraint(
-      'actor_takedown_id_fkey',
-      ['takedownId'],
-      'moderation_action',
-      ['id'],
-    )
-    .execute()
-  await db.schema
-    .alterTable('record')
-    .addForeignKeyConstraint(
-      'record_takedown_id_fkey',
-      ['takedownId'],
-      'moderation_action',
-      ['id'],
-    )
-    .execute()
+  await db.schema.dropTable('label').execute()
+  await db.schema.dropTable('push_event').execute()
 }

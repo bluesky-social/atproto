@@ -343,7 +343,7 @@ importers:
         version: link:../api
       '@atproto/bsky':
         specifier: workspace:^
-        version: link:../mod-service
+        version: link:../bsky
       '@atproto/common-web':
         specifier: workspace:^
         version: link:../common-web
@@ -356,6 +356,9 @@ importers:
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
+      '@atproto/ozone':
+        specifier: workspace:^
+        version: link:../ozone
       '@atproto/pds':
         specifier: workspace:^
         version: link:../pds
@@ -473,7 +476,7 @@ importers:
         specifier: ^3.21.4
         version: 3.21.4
 
-  packages/mod-service:
+  packages/ozone:
     dependencies:
       '@atproto/api':
         specifier: workspace:^
@@ -710,7 +713,7 @@ importers:
     devDependencies:
       '@atproto/bsky':
         specifier: workspace:^
-        version: link:../mod-service
+        version: link:../bsky
       '@atproto/dev-env':
         specifier: workspace:^
         version: link:../dev-env
@@ -876,7 +879,7 @@ importers:
         version: link:../../packages/aws
       '@atproto/bsky':
         specifier: workspace:^
-        version: link:../../packages/mod-service
+        version: link:../../packages/bsky
       dd-trace:
         specifier: 3.13.2
         version: 3.13.2

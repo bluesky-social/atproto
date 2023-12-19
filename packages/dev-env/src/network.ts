@@ -7,6 +7,7 @@ import { TestServerParams } from './types'
 import { TestPlc } from './plc'
 import { TestPds } from './pds'
 import { TestBsky } from './bsky'
+import { TestOzone } from './ozone'
 import { mockNetworkUtilities } from './util'
 import { TestNetworkNoAppView } from './network-no-appview'
 
@@ -14,7 +15,12 @@ const ADMIN_USERNAME = 'admin'
 const ADMIN_PASSWORD = 'admin-pass'
 
 export class TestNetwork extends TestNetworkNoAppView {
-  constructor(public plc: TestPlc, public pds: TestPds, public bsky: TestBsky) {
+  constructor(
+    public plc: TestPlc,
+    public pds: TestPds,
+    public bsky: TestBsky,
+    public ozone?: TestOzone,
+  ) {
     super(plc, pds)
   }
 
@@ -29,6 +35,16 @@ export class TestNetwork extends TestNetworkNoAppView {
       params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
 
     const plc = await TestPlc.create(params.plc ?? {})
+
+    let ozone: TestOzone | undefined = undefined
+    if (params.ozone?.enabled) {
+      ozone = await TestOzone.create({
+        plcUrl: plc.url,
+        dbPostgresSchema: `ozone_${dbPostgresSchema}`,
+        dbPrimaryPostgresUrl: dbPostgresUrl,
+        ...params.ozone,
+      })
+    }
 
     const bskyPort = params.bsky?.port ?? (await getPort())
     const pdsPort = params.pds?.port ?? (await getPort())
@@ -48,7 +64,8 @@ export class TestNetwork extends TestNetworkNoAppView {
       didPlcUrl: plc.url,
       bskyAppViewUrl: bsky.url,
       bskyAppViewDid: bsky.ctx.cfg.serverDid,
-      bskyAppViewModeration: true,
+      modServiceUrl: ozone?.url ?? 'https://admin.invalid',
+      modServiceDid: ozone?.ctx.cfg.serverDid ?? 'did:example:admin_invalid',
       ...params.pds,
     })
 
