@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { ArrayEl } from '@atproto/common'
-import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
+import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { BlobRef } from '@atproto/lexicon'
 import { Database } from '../../db'
 import {
@@ -16,12 +16,11 @@ import {
   AccountView,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
-import { Label } from '../../lexicon/types/com/atproto/label/defs'
+import { Label, isSelfLabels } from '../../lexicon/types/com/atproto/label/defs'
 import {
   ModerationEventRowWithHandle,
   ModerationSubjectStatusRowWithHandle,
 } from './types'
-import { getSelfLabels } from '../label'
 import { REASONOTHER } from '../../lexicon/types/com/atproto/moderation/defs'
 import AtpAgent from '@atproto/api'
 
@@ -505,4 +504,22 @@ function findBlobRefs(value: unknown, refs: BlobRef[] = []) {
     Object.values(value).forEach((val) => findBlobRefs(val, refs))
   }
   return refs
+}
+
+export function getSelfLabels(details: {
+  uri: string | null
+  cid: string | null
+  record: Record<string, unknown> | null
+}): Label[] {
+  const { uri, cid, record } = details
+  if (!uri || !cid || !record) return []
+  if (!isSelfLabels(record.labels)) return []
+  const src = new AtUri(uri).host // record creator
+  const cts =
+    typeof record.createdAt === 'string'
+      ? normalizeDatetimeAlways(record.createdAt)
+      : new Date(0).toISOString()
+  return record.labels.values.map(({ val }) => {
+    return { src, uri, cid, val, cts, neg: false }
+  })
 }

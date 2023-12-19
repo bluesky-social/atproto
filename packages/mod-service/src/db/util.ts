@@ -8,7 +8,7 @@ import {
   SqliteIntrospector,
   SqliteQueryCompiler,
 } from 'kysely'
-import DatabaseSchema from './database-schema'
+import DatabaseSchema from './schema'
 
 export const actorWhereClause = (actor: string) => {
   if (actor.startsWith('did:')) {

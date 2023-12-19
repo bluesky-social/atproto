@@ -1,9 +1,9 @@
 import { PoolClient } from 'pg'
-import PrimaryDatabase from './primary'
+import { Database } from './index'
 
 export class Leader {
   session: Session | null = null
-  constructor(public id: number, public db: PrimaryDatabase) {}
+  constructor(public id: number, public db: Database) {}
 
   async run<T>(
     task: (ctx: { signal: AbortSignal }) => Promise<T>,

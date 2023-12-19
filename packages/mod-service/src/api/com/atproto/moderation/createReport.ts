@@ -12,15 +12,16 @@ export default function (server: Server, ctx: AppContext) {
       const { reasonType, reason, subject } = input.body
       const requester = auth.credentials.did
 
-      const db = ctx.db.getPrimary()
+      const db = ctx.db
 
-      if (requester) {
-        // Don't accept reports from users that are fully taken-down
-        const actor = await ctx.services.actor(db).getActor(requester, true)
-        if (actor && softDeleted(actor)) {
-          throw new AuthRequiredError()
-        }
-      }
+      // @TODO
+      // if (requester) {
+      //   // Don't accept reports from users that are fully taken-down
+      //   const actor = await ctx.services.actor(db).getActor(requester, true)
+      //   if (actor && softDeleted(actor)) {
+      //     throw new AuthRequiredError()
+      //   }
+      // }
 
       const report = await db.transaction(async (dbTxn) => {
         const moderationTxn = ctx.services.moderation(dbTxn)
@@ -35,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
       const moderationService = ctx.services.moderation(db)
       return {
         encoding: 'application/json',
-        body: moderationService.views.reportPublic(report),
+        body: moderationService.views.formatReport(report),
       }
     },
   })

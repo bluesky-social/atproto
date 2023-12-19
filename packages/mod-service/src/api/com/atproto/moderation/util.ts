@@ -16,7 +16,7 @@ import {
   REVIEWESCALATED,
   REVIEWOPEN,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
-import { ModerationEvent } from '../../../../db/tables/moderation'
+import { ModerationEvent } from '../../../../db/schema/moderation_event'
 import { ModerationSubjectStatusRow } from '../../../../services/moderation/types'
 
 type SubjectInput = ReportInput['subject'] | ActionInput['subject']

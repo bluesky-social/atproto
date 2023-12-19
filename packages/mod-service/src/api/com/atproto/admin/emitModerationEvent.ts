@@ -73,7 +73,6 @@ export default function (server: Server, ctx: AppContext) {
       const { result: moderationEvent, takenDown } = await db.transaction(
         async (dbTxn) => {
           const moderationTxn = ctx.services.moderation(dbTxn)
-          const labelTxn = ctx.services.label(dbTxn)
 
           const result = await moderationTxn.logEvent({
             event,
@@ -163,7 +162,7 @@ export default function (server: Server, ctx: AppContext) {
           }
 
           if (isLabelEvent) {
-            await labelTxn.formatAndCreate(
+            await moderationTxn.formatAndCreateLabels(
               ctx.cfg.labelerDid,
               result.subjectUri ?? result.subjectDid,
               result.subjectCid,

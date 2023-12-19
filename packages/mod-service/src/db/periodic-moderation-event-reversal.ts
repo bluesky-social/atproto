@@ -11,10 +11,7 @@ import { retryHttp } from '../util/retry'
 export const MODERATION_ACTION_REVERSAL_ID = 1011
 
 export class PeriodicModerationEventReversal {
-  leader = new Leader(
-    MODERATION_ACTION_REVERSAL_ID,
-    this.appContext.db.getPrimary(),
-  )
+  leader = new Leader(MODERATION_ACTION_REVERSAL_ID, this.appContext.db)
   destroyed = false
   pushAgent?: AtpAgent
 
@@ -23,7 +20,7 @@ export class PeriodicModerationEventReversal {
   }
 
   async revertState(eventRow: ModerationSubjectStatusRow) {
-    await this.appContext.db.getPrimary().transaction(async (dbTxn) => {
+    await this.appContext.db.transaction(async (dbTxn) => {
       const moderationTxn = this.appContext.services.moderation(dbTxn)
       const originalEvent =
         await moderationTxn.getLastReversibleEventForSubject(eventRow)
@@ -71,7 +68,7 @@ export class PeriodicModerationEventReversal {
 
   async findAndRevertDueActions() {
     const moderationService = this.appContext.services.moderation(
-      this.appContext.db.getPrimary(),
+      this.appContext.db,
     )
     const subjectsDueForReversal =
       await moderationService.getSubjectsDueForReversal()

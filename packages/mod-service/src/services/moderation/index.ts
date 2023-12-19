@@ -30,6 +30,8 @@ import { ModerationEvent } from '../../db/schema/moderation_event'
 import { paginate } from '../../db/pagination'
 import { StatusKeyset, TimeIdKeyset } from './pagination'
 import AtpAgent from '@atproto/api'
+import { Label } from '../../lexicon/types/com/atproto/label/defs'
+import { sql } from 'kysely'
 
 export class ModerationService {
   constructor(public db: Database, public appviewAgent: AtpAgent) {}
@@ -681,6 +683,55 @@ export class ModerationService {
     const result = await builder.select('takendown').executeTakeFirst()
 
     return !!result?.takendown
+  }
+
+  async formatAndCreateLabels(
+    src: string,
+    uri: string,
+    cid: string | null,
+    labels: { create?: string[]; negate?: string[] },
+  ): Promise<Label[]> {
+    const { create = [], negate = [] } = labels
+    const toCreate = create.map((val) => ({
+      src,
+      uri,
+      cid: cid ?? undefined,
+      val,
+      neg: false,
+      cts: new Date().toISOString(),
+    }))
+    const toNegate = negate.map((val) => ({
+      src,
+      uri,
+      cid: cid ?? undefined,
+      val,
+      neg: true,
+      cts: new Date().toISOString(),
+    }))
+    const formatted = [...toCreate, ...toNegate]
+    await this.createLabels(formatted)
+    return formatted
+  }
+
+  async createLabels(labels: Label[]) {
+    if (labels.length < 1) return
+    const dbVals = labels.map((l) => ({
+      ...l,
+      cid: l.cid ?? '',
+      neg: !!l.neg,
+    }))
+    const { ref } = this.db.db.dynamic
+    const excluded = (col: string) => ref(`excluded.${col}`)
+    await this.db.db
+      .insertInto('label')
+      .values(dbVals)
+      .onConflict((oc) =>
+        oc.columns(['src', 'uri', 'cid', 'val']).doUpdateSet({
+          neg: sql`${excluded('neg')}`,
+          cts: sql`${excluded('cts')}`,
+        }),
+      )
+      .execute()
   }
 }
 

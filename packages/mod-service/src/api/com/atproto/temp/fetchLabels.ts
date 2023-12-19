@@ -4,10 +4,9 @@ import AppContext from '../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.fetchLabels(async ({ params }) => {
     const { limit } = params
-    const db = ctx.db.getReplica()
     const since =
       params.since !== undefined ? new Date(params.since).toISOString() : ''
-    const labelRes = await db.db
+    const labelRes = await ctx.db.db
       .selectFrom('label')
       .selectAll()
       .orderBy('label.cts', 'asc')

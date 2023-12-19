@@ -5,14 +5,9 @@ import { Keypair } from '@atproto/crypto'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { Database } from './db'
 import { ServerConfig } from './config'
-import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import * as auth from './auth'
-import DidRedisCache from './did-cache'
 import { BackgroundQueue } from './background'
-import { MountedAlgos } from './feed-gen/types'
-import { NotificationServer } from './notifications'
-import { Redis } from './redis'
 
 export class AppContext {
   public moderationPushAgent: AtpAgent | undefined
@@ -20,17 +15,11 @@ export class AppContext {
     private opts: {
       db: Database
       appviewAgent: AtpAgent
-      imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
       services: Services
       signingKey: Keypair
       idResolver: IdResolver
-      didCache: DidRedisCache
-      redis: Redis
       backgroundQueue: BackgroundQueue
-      searchAgent?: AtpAgent
-      algos: MountedAlgos
-      notifServer: NotificationServer
     },
   ) {
     if (opts.cfg.moderationPushUrl) {
@@ -45,10 +34,6 @@ export class AppContext {
 
   get db(): Database {
     return this.opts.db
-  }
-
-  get imgUriBuilder(): ImageUriBuilder {
-    return this.opts.imgUriBuilder
   }
 
   get cfg(): ServerConfig {
@@ -69,22 +54,6 @@ export class AppContext {
 
   get idResolver(): IdResolver {
     return this.opts.idResolver
-  }
-
-  get didCache(): DidRedisCache {
-    return this.opts.didCache
-  }
-
-  get redis(): Redis {
-    return this.opts.redis
-  }
-
-  get notifServer(): NotificationServer {
-    return this.opts.notifServer
-  }
-
-  get searchAgent(): AtpAgent | undefined {
-    return this.opts.searchAgent
   }
 
   get authVerifier() {
@@ -124,10 +93,6 @@ export class AppContext {
 
   get backgroundQueue(): BackgroundQueue {
     return this.opts.backgroundQueue
-  }
-
-  get algos(): MountedAlgos {
-    return this.opts.algos
   }
 }
 
