@@ -66,7 +66,7 @@ export const skeleton = async (inputs: {
   })
   return {
     actor,
-    uris: res.uris,
+    uris: res.items.map((item) => item.repost || item.uri),
     cursor: parseString(res.cursor),
   }
 }

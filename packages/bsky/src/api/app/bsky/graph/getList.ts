@@ -12,6 +12,7 @@ import {
 } from '../../../../pipeline'
 import { Hydrator, mergeStates } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
+import { ListItemInfo } from '../../../../data-plane/gen/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
   const getList = createPipeline(skeleton, hydration, noRules, presentation)
@@ -32,14 +33,14 @@ const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
   const { ctx, params } = input
-  const { listitemUris, cursor } = await ctx.hydrator.dataplane.getListMembers({
+  const { listitems, cursor } = await ctx.hydrator.dataplane.getListMembers({
     listUri: params.list,
     limit: params.limit,
     cursor: params.cursor,
   })
   return {
     listUri: params.list,
-    listitemUris: listitemUris,
+    listitems,
     cursor: cursor || undefined,
   }
 }
@@ -49,24 +50,25 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = input
   const { viewer } = params
-  const { listUri, listitemUris } = skeleton
-  const [listState, listitemState] = await Promise.all([
+  const { listUri, listitems } = skeleton
+  const [listState, profileState] = await Promise.all([
     ctx.hydrator.hydrateLists([listUri], viewer),
-    ctx.hydrator.hydrateListItems(listitemUris, viewer),
+    ctx.hydrator.hydrateProfiles(
+      listitems.map(({ did }) => did),
+      viewer,
+    ),
   ])
-  return mergeStates(listState, listitemState)
+  return mergeStates(listState, profileState)
 }
 
 const presentation = (
   input: PresentationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, skeleton, hydration } = input
-  const { listUri, listitemUris, cursor } = skeleton
+  const { listUri, listitems, cursor } = skeleton
   const list = ctx.views.list(listUri, hydration)
-  const items = mapDefined(listitemUris, (uri) => {
-    const listitem = hydration.listItems?.get(uri)
-    if (!listitem) return
-    const subject = ctx.views.profile(listitem.record.subject, hydration)
+  const items = mapDefined(listitems, ({ uri, did }) => {
+    const subject = ctx.views.profile(did, hydration)
     if (!subject) return
     return { uri, subject }
   })
@@ -87,6 +89,6 @@ type Params = QueryParams & {
 
 type SkeletonState = {
   listUri: string
-  listitemUris: string[]
+  listitems: ListItemInfo[]
   cursor?: string
 }

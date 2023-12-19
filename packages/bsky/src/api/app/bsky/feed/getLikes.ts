@@ -31,7 +31,7 @@ const skeleton = async (inputs: {
 }): Promise<Skeleton> => {
   const { ctx, params } = inputs
   const likesRes = await ctx.hydrator.dataplane.getLikesBySubject({
-    subjectUri: params.uri,
+    subject: { uri: params.uri, cid: params.cid },
     cursor: params.cursor,
     limit: params.limit,
   })

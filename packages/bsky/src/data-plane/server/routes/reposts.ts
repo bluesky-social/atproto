@@ -30,18 +30,23 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async getRepostsByActorAndSubjects(req) {
-    const { actorDid, subjectUris } = req
-    if (subjectUris.length === 0) {
+    const { actorDid, refs } = req
+    if (refs.length === 0) {
       return { uris: [] }
     }
     const res = await db.db
       .selectFrom('repost')
       .where('creator', '=', actorDid)
-      .where('subject', 'in', subjectUris)
+      .where(
+        'subject',
+        'in',
+        refs.map(({ uri }) => uri),
+      )
       .selectAll()
       .execute()
     const bySubject = keyBy(res, 'subject')
-    const uris = req.subjectUris.map((uri) => bySubject[uri]?.uri)
+    // @TODO handling undefineds properly, or do we need to turn them into empty strings?
+    const uris = refs.map(({ uri }) => bySubject[uri]?.uri)
     return { uris }
   },
 

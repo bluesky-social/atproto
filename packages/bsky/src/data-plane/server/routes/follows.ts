@@ -33,6 +33,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .select([
         'follow.uri as uri',
         'follow.cid as cid',
+        'follow.subjectDid as subjectDid',
         'follow.sortAt as sortAt',
       ])
 
@@ -46,7 +47,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     const followers = await followersReq.execute()
     return {
-      uris: followers.map((f) => f.uri),
+      followers: followers.map((f) => ({ uri: f.uri, did: f.subjectDid })),
       cursor: keyset.packFromResult(followers),
     }
   },
@@ -62,6 +63,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .select([
         'follow.uri as uri',
         'follow.cid as cid',
+        'follow.subjectDid as subjectDid',
         'follow.sortAt as sortAt',
       ])
 
@@ -76,7 +78,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const follows = await followsReq.execute()
 
     return {
-      uris: follows.map((f) => f.uri),
+      follows: follows.map((f) => ({ uri: f.uri, did: f.subjectDid })),
       cursor: keyset.packFromResult(follows),
     }
   },

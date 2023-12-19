@@ -69,11 +69,11 @@ export class FeedHydrator {
     const [likes, reposts] = await Promise.all([
       this.dataplane.getLikesByActorAndSubjects({
         actorDid: viewer,
-        subjectUris: uris,
+        refs: uris.map((uri) => ({ uri })),
       }),
       this.dataplane.getRepostsByActorAndSubjects({
         actorDid: viewer,
-        subjectUris: uris,
+        refs: uris.map((uri) => ({ uri })),
       }),
     ])
     return uris.reduce((acc, uri, i) => {
@@ -119,7 +119,7 @@ export class FeedHydrator {
   ): Promise<FeedGenViewerStates> {
     const likes = await this.dataplane.getLikesByActorAndSubjects({
       actorDid: viewer,
-      subjectUris: uris,
+      refs: uris.map((uri) => ({ uri })),
     })
     return uris.reduce((acc, uri, i) => {
       return acc.set(uri, {

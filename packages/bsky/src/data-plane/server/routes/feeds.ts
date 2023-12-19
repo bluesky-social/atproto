@@ -46,7 +46,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const feedItems = await builder.execute()
 
     return {
-      uris: feedItems.map((row) => row.uri),
+      items: feedItems.map(feedItemFromRow),
       cursor: keyset.packFromResult(feedItems),
     }
   },
@@ -99,7 +99,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .slice(0, limit)
 
     return {
-      uris: feedItems.map((item) => item.uri),
+      items: feedItems.map(feedItemFromRow),
       cursor: keyset.packFromResult(feedItems),
     }
   },
@@ -124,8 +124,15 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const feedItems = await builder.execute()
 
     return {
-      uris: feedItems.map((item) => item.uri),
+      uris: feedItems.map((item) => item.uri), // @TODO consider switching to FeedItemInfo[]
       cursor: keyset.packFromResult(feedItems),
     }
   },
 })
+
+const feedItemFromRow = (row: { postUri: string; uri: string }) => {
+  return {
+    uri: row.postUri,
+    repost: row.uri === row.postUri ? undefined : row.uri,
+  }
+}

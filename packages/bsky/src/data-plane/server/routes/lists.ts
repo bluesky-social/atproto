@@ -49,7 +49,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     const listItems = await builder.execute()
     return {
-      listitemUris: listItems.map((item) => item.uri),
+      listitems: listItems.map((item) => ({
+        uri: item.uri,
+        did: item.subjectDid,
+      })),
       cursor: keyset.packFromResult(listItems),
     }
   },

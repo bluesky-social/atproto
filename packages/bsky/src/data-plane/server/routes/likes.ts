@@ -6,12 +6,17 @@ import { keyBy } from '@atproto/common'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getLikesBySubject(req) {
-    const { subjectUri, cursor, limit } = req
+    const { subject, cursor, limit } = req
     const { ref } = db.db.dynamic
 
+    if (!subject?.uri) {
+      return { uris: [] }
+    }
+
+    // @NOTE ignoring subject.cid
     let builder = db.db
       .selectFrom('like')
-      .where('like.subject', '=', subjectUri)
+      .where('like.subject', '=', subject?.uri)
       .selectAll('like')
 
     const keyset = new TimeCidKeyset(ref('like.sortAt'), ref('like.cid'))
@@ -30,18 +35,24 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async getLikesByActorAndSubjects(req) {
-    const { actorDid, subjectUris } = req
-    if (subjectUris.length === 0) {
+    const { actorDid, refs } = req
+    if (refs.length === 0) {
       return { uris: [] }
     }
+    // @NOTE ignoring ref.cid
     const res = await db.db
       .selectFrom('like')
       .where('creator', '=', actorDid)
-      .where('subject', 'in', subjectUris)
+      .where(
+        'subject',
+        'in',
+        refs.map(({ uri }) => uri),
+      )
       .selectAll()
       .execute()
     const bySubject = keyBy(res, 'subject')
-    const uris = req.subjectUris.map((uri) => bySubject[uri]?.uri)
+    // @TODO handling undefineds properly, or do we need to turn them into empty strings?
+    const uris = refs.map(({ uri }) => bySubject[uri]?.uri)
     return { uris }
   },
 

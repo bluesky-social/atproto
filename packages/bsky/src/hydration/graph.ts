@@ -4,6 +4,7 @@ import { Record as ListRecord } from '../lexicon/types/app/bsky/graph/list'
 import { Record as ListItemRecord } from '../lexicon/types/app/bsky/graph/listitem'
 import { DataPlaneClient } from '../data-plane/client'
 import { HydrationMap, RecordInfo, parseRecord } from './util'
+import { FollowInfo } from '../data-plane/gen/bsky_pb'
 
 export type List = RecordInfo<ListRecord>
 export type Lists = HydrationMap<List>
@@ -160,27 +161,27 @@ export class GraphHydrator {
     did: string
     cursor?: string
     limit?: number
-  }): Promise<{ uris: string[]; cursor: string }> {
+  }): Promise<{ follows: FollowInfo[]; cursor: string }> {
     const { did, cursor, limit } = input
     const res = await this.dataplane.getFollows({
       actorDid: did,
       cursor,
       limit,
     })
-    return { uris: res.uris, cursor: res.cursor }
+    return { follows: res.follows, cursor: res.cursor }
   }
 
   async getActorFollowers(input: {
     did: string
     cursor?: string
     limit?: number
-  }): Promise<{ uris: string[]; cursor: string }> {
+  }): Promise<{ followers: FollowInfo[]; cursor: string }> {
     const { did, cursor, limit } = input
     const res = await this.dataplane.getFollowers({
       actorDid: did,
       cursor,
       limit,
     })
-    return { uris: res.uris, cursor: res.cursor }
+    return { followers: res.followers, cursor: res.cursor }
   }
 }
