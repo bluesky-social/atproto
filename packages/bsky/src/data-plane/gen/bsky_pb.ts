@@ -1054,13 +1054,56 @@ export class GetFollowersRequest extends Message<GetFollowersRequest> {
 }
 
 /**
+ * @generated from message bsky.FollowInfo
+ */
+export class FollowInfo extends Message<FollowInfo> {
+  /**
+   * @generated from field: string uri = 1;
+   */
+  uri = "";
+
+  /**
+   * @generated from field: string did = 2;
+   */
+  did = "";
+
+  constructor(data?: PartialMessage<FollowInfo>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.FollowInfo";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): FollowInfo {
+    return new FollowInfo().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): FollowInfo {
+    return new FollowInfo().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): FollowInfo {
+    return new FollowInfo().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: FollowInfo | PlainMessage<FollowInfo> | undefined, b: FollowInfo | PlainMessage<FollowInfo> | undefined): boolean {
+    return proto3.util.equals(FollowInfo, a, b);
+  }
+}
+
+/**
  * @generated from message bsky.GetFollowersResponse
  */
 export class GetFollowersResponse extends Message<GetFollowersResponse> {
   /**
-   * @generated from field: repeated string uris = 1;
+   * @generated from field: repeated bsky.FollowInfo followers = 1;
    */
-  uris: string[] = [];
+  followers: FollowInfo[] = [];
 
   /**
    * @generated from field: string cursor = 2;
@@ -1075,7 +1118,7 @@ export class GetFollowersResponse extends Message<GetFollowersResponse> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetFollowersResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 1, name: "followers", kind: "message", T: FollowInfo, repeated: true },
     { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
@@ -1153,9 +1196,9 @@ export class GetFollowsRequest extends Message<GetFollowsRequest> {
  */
 export class GetFollowsResponse extends Message<GetFollowsResponse> {
   /**
-   * @generated from field: repeated string uris = 1;
+   * @generated from field: repeated bsky.FollowInfo follows = 1;
    */
-  uris: string[] = [];
+  follows: FollowInfo[] = [];
 
   /**
    * @generated from field: string cursor = 2;
@@ -1170,7 +1213,7 @@ export class GetFollowsResponse extends Message<GetFollowsResponse> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetFollowsResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 1, name: "follows", kind: "message", T: FollowInfo, repeated: true },
     { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
@@ -1353,9 +1396,9 @@ export class GetFollowCountsResponse extends Message<GetFollowCountsResponse> {
  */
 export class GetLikesBySubjectRequest extends Message<GetLikesBySubjectRequest> {
   /**
-   * @generated from field: string subject_uri = 1;
+   * @generated from field: bsky.RecordRef subject = 1;
    */
-  subjectUri = "";
+  subject?: RecordRef;
 
   /**
    * @generated from field: int32 limit = 2;
@@ -1375,7 +1418,7 @@ export class GetLikesBySubjectRequest extends Message<GetLikesBySubjectRequest> 
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetLikesBySubjectRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "subject_uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "subject", kind: "message", T: RecordRef },
     { no: 2, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 3, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
@@ -1453,9 +1496,9 @@ export class GetLikesByActorAndSubjectsRequest extends Message<GetLikesByActorAn
   actorDid = "";
 
   /**
-   * @generated from field: repeated string subject_uris = 2;
+   * @generated from field: repeated bsky.RecordRef refs = 2;
    */
-  subjectUris: string[] = [];
+  refs: RecordRef[] = [];
 
   constructor(data?: PartialMessage<GetLikesByActorAndSubjectsRequest>) {
     super();
@@ -1466,7 +1509,7 @@ export class GetLikesByActorAndSubjectsRequest extends Message<GetLikesByActorAn
   static readonly typeName = "bsky.GetLikesByActorAndSubjectsRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "subject_uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 2, name: "refs", kind: "message", T: RecordRef, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetLikesByActorAndSubjectsRequest {
@@ -1751,12 +1794,17 @@ export class GetRepostsBySubjectRequest extends Message<GetRepostsBySubjectReque
   subjectUri = "";
 
   /**
-   * @generated from field: int32 limit = 2;
+   * @generated from field: optional string subject_cid = 2;
+   */
+  subjectCid?: string;
+
+  /**
+   * @generated from field: int32 limit = 3;
    */
   limit = 0;
 
   /**
-   * @generated from field: string cursor = 3;
+   * @generated from field: string cursor = 4;
    */
   cursor = "";
 
@@ -1769,8 +1817,9 @@ export class GetRepostsBySubjectRequest extends Message<GetRepostsBySubjectReque
   static readonly typeName = "bsky.GetRepostsBySubjectRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "subject_uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-    { no: 3, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "subject_cid", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+    { no: 3, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 4, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetRepostsBySubjectRequest {
@@ -1846,9 +1895,9 @@ export class GetRepostsByActorAndSubjectsRequest extends Message<GetRepostsByAct
   actorDid = "";
 
   /**
-   * @generated from field: repeated string subject_uris = 2;
+   * @generated from field: repeated bsky.RecordRef refs = 2;
    */
-  subjectUris: string[] = [];
+  refs: RecordRef[] = [];
 
   constructor(data?: PartialMessage<GetRepostsByActorAndSubjectsRequest>) {
     super();
@@ -1859,7 +1908,7 @@ export class GetRepostsByActorAndSubjectsRequest extends Message<GetRepostsByAct
   static readonly typeName = "bsky.GetRepostsByActorAndSubjectsRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "subject_uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 2, name: "refs", kind: "message", T: RecordRef, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetRepostsByActorAndSubjectsRequest {
@@ -1876,6 +1925,49 @@ export class GetRepostsByActorAndSubjectsRequest extends Message<GetRepostsByAct
 
   static equals(a: GetRepostsByActorAndSubjectsRequest | PlainMessage<GetRepostsByActorAndSubjectsRequest> | undefined, b: GetRepostsByActorAndSubjectsRequest | PlainMessage<GetRepostsByActorAndSubjectsRequest> | undefined): boolean {
     return proto3.util.equals(GetRepostsByActorAndSubjectsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.RecordRef
+ */
+export class RecordRef extends Message<RecordRef> {
+  /**
+   * @generated from field: string uri = 1;
+   */
+  uri = "";
+
+  /**
+   * @generated from field: string cid = 2;
+   */
+  cid = "";
+
+  constructor(data?: PartialMessage<RecordRef>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.RecordRef";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "cid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RecordRef {
+    return new RecordRef().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RecordRef {
+    return new RecordRef().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RecordRef {
+    return new RecordRef().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: RecordRef | PlainMessage<RecordRef> | undefined, b: RecordRef | PlainMessage<RecordRef> | undefined): boolean {
+    return proto3.util.equals(RecordRef, a, b);
   }
 }
 
@@ -2583,6 +2675,49 @@ export class GetBlockExistenceResponse extends Message<GetBlockExistenceResponse
 }
 
 /**
+ * @generated from message bsky.ListItemInfo
+ */
+export class ListItemInfo extends Message<ListItemInfo> {
+  /**
+   * @generated from field: string uri = 1;
+   */
+  uri = "";
+
+  /**
+   * @generated from field: string did = 2;
+   */
+  did = "";
+
+  constructor(data?: PartialMessage<ListItemInfo>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.ListItemInfo";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListItemInfo {
+    return new ListItemInfo().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListItemInfo {
+    return new ListItemInfo().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListItemInfo {
+    return new ListItemInfo().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ListItemInfo | PlainMessage<ListItemInfo> | undefined, b: ListItemInfo | PlainMessage<ListItemInfo> | undefined): boolean {
+    return proto3.util.equals(ListItemInfo, a, b);
+  }
+}
+
+/**
  * - Return dids of users in list A
  *     - E.g. to view items in one of your mute lists
  *
@@ -2639,9 +2774,9 @@ export class GetListMembersRequest extends Message<GetListMembersRequest> {
  */
 export class GetListMembersResponse extends Message<GetListMembersResponse> {
   /**
-   * @generated from field: repeated string listitem_uris = 1;
+   * @generated from field: repeated bsky.ListItemInfo listitems = 1;
    */
-  listitemUris: string[] = [];
+  listitems: ListItemInfo[] = [];
 
   /**
    * @generated from field: string cursor = 2;
@@ -2656,7 +2791,7 @@ export class GetListMembersResponse extends Message<GetListMembersResponse> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetListMembersResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "listitem_uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 1, name: "listitems", kind: "message", T: ListItemInfo, repeated: true },
     { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
@@ -4533,9 +4668,9 @@ export class GetAuthorFeedRequest extends Message<GetAuthorFeedRequest> {
  */
 export class GetAuthorFeedResponse extends Message<GetAuthorFeedResponse> {
   /**
-   * @generated from field: repeated string uris = 1;
+   * @generated from field: repeated bsky.FeedItem items = 1;
    */
-  uris: string[] = [];
+  items: FeedItem[] = [];
 
   /**
    * @generated from field: string cursor = 2;
@@ -4550,7 +4685,7 @@ export class GetAuthorFeedResponse extends Message<GetAuthorFeedResponse> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetAuthorFeedResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 1, name: "items", kind: "message", T: FeedItem, repeated: true },
     { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
@@ -4628,9 +4763,9 @@ export class GetTimelineRequest extends Message<GetTimelineRequest> {
  */
 export class GetTimelineResponse extends Message<GetTimelineResponse> {
   /**
-   * @generated from field: repeated string uris = 1;
+   * @generated from field: repeated bsky.FeedItem items = 1;
    */
-  uris: string[] = [];
+  items: FeedItem[] = [];
 
   /**
    * @generated from field: string cursor = 2;
@@ -4645,7 +4780,7 @@ export class GetTimelineResponse extends Message<GetTimelineResponse> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetTimelineResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 1, name: "items", kind: "message", T: FeedItem, repeated: true },
     { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
@@ -4663,6 +4798,49 @@ export class GetTimelineResponse extends Message<GetTimelineResponse> {
 
   static equals(a: GetTimelineResponse | PlainMessage<GetTimelineResponse> | undefined, b: GetTimelineResponse | PlainMessage<GetTimelineResponse> | undefined): boolean {
     return proto3.util.equals(GetTimelineResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.FeedItem
+ */
+export class FeedItem extends Message<FeedItem> {
+  /**
+   * @generated from field: string uri = 1;
+   */
+  uri = "";
+
+  /**
+   * @generated from field: string repost = 2;
+   */
+  repost = "";
+
+  constructor(data?: PartialMessage<FeedItem>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.FeedItem";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "repost", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): FeedItem {
+    return new FeedItem().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): FeedItem {
+    return new FeedItem().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): FeedItem {
+    return new FeedItem().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: FeedItem | PlainMessage<FeedItem> | undefined, b: FeedItem | PlainMessage<FeedItem> | undefined): boolean {
+    return proto3.util.equals(FeedItem, a, b);
   }
 }
 

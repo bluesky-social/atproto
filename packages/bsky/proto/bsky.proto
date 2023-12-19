@@ -20,6 +20,7 @@ message Record {
   bool taken_down = 5;
 }
 
+
 message GetBlockRecordsRequest {
   repeated string uris = 1;
 }
@@ -137,8 +138,13 @@ message GetFollowersRequest {
   string cursor = 3;
 }
 
+message FollowInfo {
+  string uri = 1;
+  string did = 2;
+}
+
 message GetFollowersResponse {
-  repeated string uris = 1;
+  repeated FollowInfo followers = 1;
   string cursor = 2;
 }
 
@@ -151,7 +157,7 @@ message GetFollowsRequest {
 }
 
 message GetFollowsResponse {
-  repeated string uris = 1;
+  repeated FollowInfo follows = 1;
   string cursor = 2;
 }
 
@@ -182,7 +188,7 @@ message GetFollowCountsResponse {
 // - return like uris where subject uri is subject A
 //     - `getLikes` list for a post
 message GetLikesBySubjectRequest {
-  string subject_uri = 1;
+  RecordRef subject = 1;
   int32 limit = 2;
   string cursor = 3;
 }
@@ -196,7 +202,7 @@ message GetLikesBySubjectResponse {
 //     - viewer state on posts
 message GetLikesByActorAndSubjectsRequest {
   string actor_did = 1;
-  repeated string subject_uris = 2;
+  repeated RecordRef refs = 2;
 }
 
 message GetLikesByActorAndSubjectsResponse {
@@ -239,8 +245,9 @@ message GetLikeCountsResponse {
 //     - `getReposts` list for a post
 message GetRepostsBySubjectRequest {
   string subject_uri = 1;
-  int32 limit = 2;
-  string cursor = 3;
+  optional string subject_cid = 2;
+  int32 limit = 3;
+  string cursor = 4;
 }
 
 message GetRepostsBySubjectResponse {
@@ -252,7 +259,12 @@ message GetRepostsBySubjectResponse {
 //     - viewer state on posts
 message GetRepostsByActorAndSubjectsRequest {
   string actor_did = 1;
-  repeated string subject_uris = 2;
+  repeated RecordRef refs = 2;
+}
+
+message RecordRef {
+  string uri = 1;
+  string cid = 2;
 }
 
 message GetRepostsByActorAndSubjectsResponse {
@@ -362,6 +374,11 @@ message GetBlockExistenceResponse {
 // Lists
 //
 
+message ListItemInfo {
+  string uri = 1;
+  string did = 2;
+}
+
 // - Return dids of users in list A
 //     - E.g. to view items in one of your mute lists
 message GetListMembersRequest {
@@ -371,7 +388,7 @@ message GetListMembersRequest {
 }
 
 message GetListMembersResponse {
-  repeated string listitem_uris = 1;
+  repeated ListItemInfo listitems = 1;
   string cursor = 2;
 }
 
@@ -658,7 +675,7 @@ message GetAuthorFeedRequest {
 }
 
 message GetAuthorFeedResponse {
-  repeated string uris = 1;
+  repeated FeedItem items = 1;
   string cursor = 2;
 }
 
@@ -671,8 +688,13 @@ message GetTimelineRequest {
 }
 
 message GetTimelineResponse {
-  repeated string uris = 1;
+  repeated FeedItem items = 1;
   string cursor = 2;
+}
+
+message FeedItem {
+  string uri = 1;
+  string repost = 2;
 }
 
 // - Return recent post uris from users in list A
@@ -941,4 +963,3 @@ service Service {
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);
 }
-
