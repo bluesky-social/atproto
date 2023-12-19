@@ -132,8 +132,8 @@ export class FeedViews {
         lists,
         viewer,
       )
-      // skip over not found & blocked posts
-      if (!post || blocks[post.uri]?.reply) {
+      // skip over not found post
+      if (!post) {
         continue
       }
       const feedPost = { post }
@@ -159,6 +159,7 @@ export class FeedViews {
       ) {
         const replyParent = this.formatMaybePostView(
           item.replyParent,
+          item.uri,
           actors,
           posts,
           threadgates,
@@ -171,6 +172,7 @@ export class FeedViews {
         )
         const replyRoot = this.formatMaybePostView(
           item.replyRoot,
+          item.uri,
           actors,
           posts,
           threadgates,
@@ -291,6 +293,7 @@ export class FeedViews {
 
   formatMaybePostView(
     uri: string,
+    replyUri: string | null,
     actors: ActorInfoMap,
     posts: PostInfoMap,
     threadgates: ThreadgateInfoMap,
@@ -320,7 +323,7 @@ export class FeedViews {
     if (
       post.author.viewer?.blockedBy ||
       post.author.viewer?.blocking ||
-      blocks[uri]?.reply
+      (replyUri !== null && blocks[replyUri]?.reply)
     ) {
       if (!opts?.usePostViewUnion) return
       return this.blockedPost(post)
