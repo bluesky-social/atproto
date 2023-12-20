@@ -6,13 +6,8 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier,
     handler: async ({ auth, input }) => {
       const { list } = input.body
-      const requester = auth.credentials.did
-      const db = ctx.db.getPrimary()
-
-      await ctx.services.graph(db).unmuteActorList({
-        list,
-        mutedByDid: requester,
-      })
+      const viewer = auth.credentials.did
+      await ctx.dataplane.unmuteActorList({ actorDid: viewer, listUri: list })
     },
   })
 }
