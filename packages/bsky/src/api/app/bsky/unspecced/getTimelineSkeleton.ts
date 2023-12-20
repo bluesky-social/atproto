@@ -2,7 +2,7 @@ import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 import AppContext from '../../../../context'
 import { skeleton } from '../feed/getTimeline'
-import { toSkeletonItem } from '../../../../feed-gen/types'
+import { toSkeletonItem } from '../../../feed-gen/types'
 import { urisByCollection } from '../../../../hydration/util'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE

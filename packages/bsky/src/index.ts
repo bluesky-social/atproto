@@ -14,7 +14,7 @@ import { createServer } from './lexicon'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import AppContext from './context'
-import { MountedAlgos } from './feed-gen/types'
+import { MountedAlgos } from './api/feed-gen/types'
 import { Keypair } from '@atproto/crypto'
 import { createDataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
@@ -22,7 +22,7 @@ import { Views } from './views'
 
 export * from './data-plane'
 export type { ServerConfigValues } from './config'
-export type { MountedAlgos } from './feed-gen/types'
+export type { MountedAlgos } from './api/feed-gen/types'
 export { ServerConfig } from './config'
 export {
   Database,
@@ -31,7 +31,7 @@ export {
 } from './data-plane/server/db'
 export { Redis } from './redis'
 export { AppContext } from './context'
-export { makeAlgos } from './feed-gen'
+export { makeAlgos } from './api/feed-gen'
 
 export class BskyAppView {
   public ctx: AppContext

@@ -3,7 +3,7 @@ import {
   ConsecutiveList,
   LatestQueue,
   PartitionedQueue,
-} from '../../src/subscription/util'
+} from '../../src/data-plane/server/subscription/util'
 import { randomStr } from '../../../crypto/src'
 
 describe('subscription utils', () => {

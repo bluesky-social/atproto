@@ -1,6 +1,6 @@
-import AppContext from '../context'
-import { SkeletonFeedPost } from '../lexicon/types/app/bsky/feed/defs'
-import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
+import AppContext from '../../context'
+import { SkeletonFeedPost } from '../../lexicon/types/app/bsky/feed/defs'
+import { QueryParams as SkeletonParams } from '../../lexicon/types/app/bsky/feed/getFeedSkeleton'
 
 export type AlgoResponseItem = {
   itemUri: string

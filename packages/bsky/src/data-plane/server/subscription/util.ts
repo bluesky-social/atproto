@@ -1,7 +1,7 @@
-import PQueue from 'p-queue'
-import { OutputSchema as RepoMessage } from '../lexicon/types/com/atproto/sync/subscribeRepos'
-import * as message from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import assert from 'node:assert'
+import PQueue from 'p-queue'
+import { OutputSchema as RepoMessage } from '../../../lexicon/types/com/atproto/sync/subscribeRepos'
+import * as message from '../../../lexicon/types/com/atproto/sync/subscribeRepos'
 
 // A queue with arbitrarily many partitions, each processing work sequentially.
 // Partitions are created lazily and taken out of memory when they go idle.
