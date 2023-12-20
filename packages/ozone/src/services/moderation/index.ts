@@ -13,6 +13,7 @@ import {
   isModEventEmail,
   RepoRef,
   RepoBlobRef,
+  AccountView,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { addHoursToDate } from '../../util/date'
 import {
@@ -32,6 +33,7 @@ import { StatusKeyset, TimeIdKeyset } from './pagination'
 import AtpAgent from '@atproto/api'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import { sql } from 'kysely'
+import { dedupeStrs } from '@atproto/common'
 
 export class ModerationService {
   constructor(public db: Database, public appviewAgent: AtpAgent) {}
@@ -123,7 +125,29 @@ export class ModerationService {
 
     const result = await paginatedBuilder.execute()
 
-    return { cursor: keyset.packFromResult(result), events: result }
+    const dids = dedupeStrs([
+      ...result.map((row) => row.subjectDid),
+      ...result.map((row) => row.createdBy),
+    ])
+    const handlesByDid = await this.getHandlesByDid(dids)
+
+    const resultWithHandles = result.map((r) => ({
+      ...r,
+      creatorHandle: handlesByDid.get(r.createdBy),
+      subjectHandle: handlesByDid.get(r.subjectDid),
+    }))
+
+    return { cursor: keyset.packFromResult(result), events: resultWithHandles }
+  }
+
+  async getHandlesByDid(dids: string[]) {
+    if (dids.length === 0) return new Map()
+    const res = await this.appviewAgent.api.com.atproto.admin.getAccountInfos({
+      dids,
+    })
+    return res.data.infos.reduce((acc, cur) => {
+      return acc.set(cur.did, cur.handle)
+    }, new Map<string, string>())
   }
 
   async getReport(id: number): Promise<ModerationEventRow | undefined> {
