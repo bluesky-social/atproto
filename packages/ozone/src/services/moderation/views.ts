@@ -28,6 +28,7 @@ export class ModerationViews {
   constructor(private db: Database, private appviewAgent: AtpAgent) {}
 
   async repos(dids: string[]): Promise<Map<string, RepoView>> {
+    if (dids.length === 0) return new Map()
     const [appviewRes, subjectStatuses] = await Promise.all([
       this.appviewAgent.api.com.atproto.admin.getAccountInfos({ dids }),
       this.getSubjectStatus(dids),

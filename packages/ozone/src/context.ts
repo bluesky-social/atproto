@@ -15,6 +15,7 @@ export class AppContext {
     private opts: {
       db: Database
       appviewAgent: AtpAgent
+      searchAgent: AtpAgent
       cfg: ServerConfig
       services: Services
       signingKey: Keypair
@@ -42,6 +43,14 @@ export class AppContext {
 
   get services(): Services {
     return this.opts.services
+  }
+
+  get appviewAgent(): AtpAgent {
+    return this.opts.appviewAgent
+  }
+
+  get searchAgent(): AtpAgent {
+    return this.opts.searchAgent
   }
 
   get signingKey(): Keypair {
