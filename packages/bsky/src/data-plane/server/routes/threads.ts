@@ -1,10 +1,7 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../gen/bsky_connect'
-import { Database } from '../../../db'
-import {
-  getAncestorsAndSelfQb,
-  getDescendentsQb,
-} from '../../../services/util/post'
+import { Database } from '../db'
+import { getAncestorsAndSelfQb, getDescendentsQb } from '../util'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getThread(req) {

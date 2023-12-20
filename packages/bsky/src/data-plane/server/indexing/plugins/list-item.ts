@@ -1,37 +1,37 @@
-import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
+import { Selectable } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
-import * as Threadgate from '../../../lexicon/types/app/bsky/feed/threadgate'
-import * as lex from '../../../lexicon/lexicons'
-import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
+import * as ListItem from '../../../../lexicon/types/app/bsky/graph/listitem'
+import * as lex from '../../../../lexicon/lexicons'
 import RecordProcessor from '../processor'
-import { PrimaryDatabase } from '../../../db'
-import { BackgroundQueue } from '../../../background'
-import { NotificationServer } from '../../../notifications'
+import { PrimaryDatabase } from '../../db'
+import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 
-const lexId = lex.ids.AppBskyFeedThreadgate
-type IndexedGate = DatabaseSchemaType['thread_gate']
+const lexId = lex.ids.AppBskyGraphListitem
+type IndexedListItem = Selectable<DatabaseSchemaType['list_item']>
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
-  obj: Threadgate.Record,
+  obj: ListItem.Record,
   timestamp: string,
-): Promise<IndexedGate | null> => {
-  const postUri = new AtUri(obj.post)
-  if (postUri.host !== uri.host || postUri.rkey !== uri.rkey) {
+): Promise<IndexedListItem | null> => {
+  const listUri = new AtUri(obj.list)
+  if (listUri.hostname !== uri.hostname) {
     throw new InvalidRequestError(
-      'Creator and rkey of thread gate does not match its post',
+      'Creator of listitem does not match creator of list',
     )
   }
   const inserted = await db
-    .insertInto('thread_gate')
+    .insertInto('list_item')
     .values({
       uri: uri.toString(),
       cid: cid.toString(),
       creator: uri.host,
-      postUri: obj.post,
+      subjectDid: obj.subject,
+      listUri: obj.list,
       createdAt: normalizeDatetimeAlways(obj.createdAt),
       indexedAt: timestamp,
     })
@@ -44,11 +44,12 @@ const insertFn = async (
 const findDuplicate = async (
   db: DatabaseSchema,
   _uri: AtUri,
-  obj: Threadgate.Record,
+  obj: ListItem.Record,
 ): Promise<AtUri | null> => {
   const found = await db
-    .selectFrom('thread_gate')
-    .where('postUri', '=', obj.post)
+    .selectFrom('list_item')
+    .where('listUri', '=', obj.list)
+    .where('subjectDid', '=', obj.subject)
     .selectAll()
     .executeTakeFirst()
   return found ? new AtUri(found.uri) : null
@@ -61,9 +62,9 @@ const notifsForInsert = () => {
 const deleteFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-): Promise<IndexedGate | null> => {
+): Promise<IndexedListItem | null> => {
   const deleted = await db
-    .deleteFrom('thread_gate')
+    .deleteFrom('list_item')
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
@@ -74,14 +75,10 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<Threadgate.Record, IndexedGate>
+export type PluginType = RecordProcessor<ListItem.Record, IndexedListItem>
 
-export const makePlugin = (
-  db: PrimaryDatabase,
-  backgroundQueue: BackgroundQueue,
-  notifServer?: NotificationServer,
-): PluginType => {
-  return new RecordProcessor(db, backgroundQueue, notifServer, {
+export const makePlugin = (db: PrimaryDatabase): PluginType => {
+  return new RecordProcessor(db, {
     lexId,
     insertFn,
     findDuplicate,

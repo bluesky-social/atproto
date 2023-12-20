@@ -3,7 +3,7 @@ import { Kysely, PostgresDialect } from 'kysely'
 import { Pool as PgPool, types as pgTypes } from 'pg'
 import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
 import { PgOptions } from './types'
-import { dbLogger } from '../logger'
+import { dbLogger } from '../../../logger'
 
 export class Database {
   pool: PgPool

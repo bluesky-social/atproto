@@ -1,19 +1,77 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
+import { ids } from '../../lexicon/lexicons'
 import {
   Record as PostRecord,
   ReplyRef,
 } from '../../lexicon/types/app/bsky/feed/post'
-import {
-  Record as GateRecord,
-  isFollowingRule,
-  isListRule,
-  isMentionRule,
-} from '../../lexicon/types/app/bsky/feed/threadgate'
-import { isMention } from '../../lexicon/types/app/bsky/richtext/facet'
-import { valuesList } from '../../db/util'
-import DatabaseSchema from '../../db/database-schema'
-import { ids } from '../../lexicon/lexicons'
+import { Record as GateRecord } from '../../lexicon/types/app/bsky/feed/threadgate'
+import DatabaseSchema from './db/database-schema'
+import { valuesList } from './db/util'
+import { parseThreadGate } from '../../views/util'
+
+export const getDescendentsQb = (
+  db: DatabaseSchema,
+  opts: {
+    uri: string
+    depth: number // required, protects against cycles
+  },
+) => {
+  const { uri, depth } = opts
+  const query = db.withRecursive('descendent(uri, depth)', (cte) => {
+    return cte
+      .selectFrom('post')
+      .select(['post.uri as uri', sql<number>`1`.as('depth')])
+      .where(sql`1`, '<=', depth)
+      .where('replyParent', '=', uri)
+      .unionAll(
+        cte
+          .selectFrom('post')
+          .innerJoin('descendent', 'descendent.uri', 'post.replyParent')
+          .where('descendent.depth', '<', depth)
+          .select([
+            'post.uri as uri',
+            sql<number>`descendent.depth + 1`.as('depth'),
+          ]),
+      )
+  })
+  return query
+}
+
+export const getAncestorsAndSelfQb = (
+  db: DatabaseSchema,
+  opts: {
+    uri: string
+    parentHeight: number // required, protects against cycles
+  },
+) => {
+  const { uri, parentHeight } = opts
+  const query = db.withRecursive(
+    'ancestor(uri, ancestorUri, height)',
+    (cte) => {
+      return cte
+        .selectFrom('post')
+        .select([
+          'post.uri as uri',
+          'post.replyParent as ancestorUri',
+          sql<number>`0`.as('height'),
+        ])
+        .where('uri', '=', uri)
+        .unionAll(
+          cte
+            .selectFrom('post')
+            .innerJoin('ancestor', 'ancestor.ancestorUri', 'post.uri')
+            .where('ancestor.height', '<', parentHeight)
+            .select([
+              'post.uri as uri',
+              'post.replyParent as ancestorUri',
+              sql<number>`ancestor.height + 1`.as('height'),
+            ]),
+        )
+    },
+  )
+  return query
+}
 
 export const invalidReplyRoot = (
   reply: ReplyRef,
@@ -35,46 +93,6 @@ export const invalidReplyRoot = (
   // replying to a reply: ensure the parent is a reply for the same root post
   return parent.record.reply?.root.uri !== replyRoot
 }
-
-type ParsedThreadGate = {
-  canReply?: boolean
-  allowMentions?: boolean
-  allowFollowing?: boolean
-  allowListUris?: string[]
-}
-
-export const parseThreadGate = (
-  replierDid: string,
-  ownerDid: string,
-  rootPost: PostRecord | null,
-  gate: GateRecord | null,
-): ParsedThreadGate => {
-  if (replierDid === ownerDid) {
-    return { canReply: true }
-  }
-  // if gate.allow is unset then *any* reply is allowed, if it is an empty array then *no* reply is allowed
-  if (!gate || !gate.allow) {
-    return { canReply: true }
-  }
-
-  const allowMentions = !!gate.allow.find(isMentionRule)
-  const allowFollowing = !!gate.allow.find(isFollowingRule)
-  const allowListUris = gate.allow?.filter(isListRule).map((item) => item.list)
-
-  // check mentions first since it's quick and synchronous
-  if (allowMentions) {
-    const isMentioned = rootPost?.facets?.some((facet) => {
-      return facet.features.some(
-        (item) => isMention(item) && item.did === replierDid,
-      )
-    })
-    if (isMentioned) {
-      return { canReply: true, allowMentions, allowFollowing, allowListUris }
-    }
-  }
-  return { allowMentions, allowFollowing, allowListUris }
-}
-
 export const violatesThreadGate = async (
   db: DatabaseSchema,
   replierDid: string,
@@ -131,10 +149,4 @@ export const postToThreadgateUri = (postUri: string) => {
   const gateUri = new AtUri(postUri)
   gateUri.collection = ids.AppBskyFeedThreadgate
   return gateUri.toString()
-}
-
-export const threadgateToPostUri = (gateUri: string) => {
-  const postUri = new AtUri(gateUri)
-  postUri.collection = ids.AppBskyFeedPost
-  return postUri.toString()
 }

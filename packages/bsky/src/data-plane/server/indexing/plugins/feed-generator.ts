@@ -1,13 +1,11 @@
 import { Selectable } from 'kysely'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
-import * as FeedGenerator from '../../../lexicon/types/app/bsky/feed/generator'
-import * as lex from '../../../lexicon/lexicons'
-import { PrimaryDatabase } from '../../../db'
-import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
-import { BackgroundQueue } from '../../../background'
+import * as FeedGenerator from '../../../../lexicon/types/app/bsky/feed/generator'
+import * as lex from '../../../../lexicon/lexicons'
+import { PrimaryDatabase } from '../../db'
+import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import RecordProcessor from '../processor'
-import { NotificationServer } from '../../../notifications'
 
 const lexId = lex.ids.AppBskyFeedGenerator
 type IndexedFeedGenerator = Selectable<DatabaseSchemaType['feed_generator']>
@@ -70,12 +68,8 @@ export type PluginType = RecordProcessor<
   IndexedFeedGenerator
 >
 
-export const makePlugin = (
-  db: PrimaryDatabase,
-  backgroundQueue: BackgroundQueue,
-  notifServer?: NotificationServer,
-): PluginType => {
-  return new RecordProcessor(db, backgroundQueue, notifServer, {
+export const makePlugin = (db: PrimaryDatabase): PluginType => {
+  return new RecordProcessor(db, {
     lexId,
     insertFn,
     findDuplicate,

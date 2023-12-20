@@ -3,12 +3,8 @@ import { ServiceImpl } from '@connectrpc/connect'
 import { AtUri } from '@atproto/syntax'
 import { ids } from '../../../lexicon/lexicons'
 import { Service } from '../../gen/bsky_connect'
-import { Database } from '../../../db'
-import {
-  CreatedAtDidKeyset,
-  TimeCidKeyset,
-  paginate,
-} from '../../../db/pagination'
+import { Database } from '../db'
+import { CreatedAtDidKeyset, TimeCidKeyset, paginate } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActorMutesActor(req) {

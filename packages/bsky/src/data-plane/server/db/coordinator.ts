@@ -2,7 +2,7 @@ import { Migrator } from 'kysely'
 import PrimaryDatabase from './primary'
 import Database from './db'
 import { PgOptions } from './types'
-import { dbLogger } from '../logger'
+import { dbLogger } from '../../../logger'
 
 type ReplicaTag = 'timeline' | 'feed' | 'search' | 'thread' | '*'
 type ReplicaOptions = PgOptions & { tags?: ReplicaTag[] }

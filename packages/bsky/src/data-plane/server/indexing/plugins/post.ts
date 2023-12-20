@@ -5,27 +5,29 @@ import { jsonStringToLex } from '@atproto/lexicon'
 import {
   Record as PostRecord,
   ReplyRef,
-} from '../../../lexicon/types/app/bsky/feed/post'
-import { Record as GateRecord } from '../../../lexicon/types/app/bsky/feed/threadgate'
-import { isMain as isEmbedImage } from '../../../lexicon/types/app/bsky/embed/images'
-import { isMain as isEmbedExternal } from '../../../lexicon/types/app/bsky/embed/external'
-import { isMain as isEmbedRecord } from '../../../lexicon/types/app/bsky/embed/record'
-import { isMain as isEmbedRecordWithMedia } from '../../../lexicon/types/app/bsky/embed/recordWithMedia'
+} from '../../../../lexicon/types/app/bsky/feed/post'
+import { Record as GateRecord } from '../../../../lexicon/types/app/bsky/feed/threadgate'
+import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
+import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
+import { isMain as isEmbedRecord } from '../../../../lexicon/types/app/bsky/embed/record'
+import { isMain as isEmbedRecordWithMedia } from '../../../../lexicon/types/app/bsky/embed/recordWithMedia'
 import {
   isMention,
   isLink,
-} from '../../../lexicon/types/app/bsky/richtext/facet'
-import * as lex from '../../../lexicon/lexicons'
-import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
+} from '../../../../lexicon/types/app/bsky/richtext/facet'
+import * as lex from '../../../../lexicon/lexicons'
+import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import RecordProcessor from '../processor'
-import { Notification } from '../../../db/tables/notification'
-import { PrimaryDatabase } from '../../../db'
-import { countAll, excluded } from '../../../db/util'
-import { BackgroundQueue } from '../../../background'
-import { getAncestorsAndSelfQb, getDescendentsQb } from '../../util/post'
-import { NotificationServer } from '../../../notifications'
-import * as feedutil from '../../feed/util'
-import { postToThreadgateUri } from '../../feed/util'
+import { Notification } from '../../db/tables/notification'
+import { PrimaryDatabase } from '../../db'
+import { countAll, excluded } from '../../db/util'
+import {
+  getAncestorsAndSelfQb,
+  getDescendentsQb,
+  invalidReplyRoot as checkInvalidReplyRoot,
+  violatesThreadGate as checkViolatesThreadGate,
+  postToThreadgateUri,
+} from '../../util'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -391,12 +393,8 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
 
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
 
-export const makePlugin = (
-  db: PrimaryDatabase,
-  backgroundQueue: BackgroundQueue,
-  notifServer?: NotificationServer,
-): PluginType => {
-  return new RecordProcessor(db, backgroundQueue, notifServer, {
+export const makePlugin = (db: PrimaryDatabase): PluginType => {
+  return new RecordProcessor(db, {
     lexId,
     insertFn,
     findDuplicate,
@@ -427,9 +425,9 @@ async function validateReply(
   const replyRefs = await getReplyRefs(db, reply)
   // check reply
   const invalidReplyRoot =
-    !replyRefs.parent || feedutil.invalidReplyRoot(reply, replyRefs.parent)
+    !replyRefs.parent || checkInvalidReplyRoot(reply, replyRefs.parent)
   // check interaction
-  const violatesThreadGate = await feedutil.violatesThreadGate(
+  const violatesThreadGate = await checkViolatesThreadGate(
     db,
     creator,
     new AtUri(reply.root.uri).hostname,

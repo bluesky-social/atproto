@@ -1,13 +1,11 @@
 import { Selectable } from 'kysely'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
-import * as ListBlock from '../../../lexicon/types/app/bsky/graph/listblock'
-import * as lex from '../../../lexicon/lexicons'
-import { PrimaryDatabase } from '../../../db'
-import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
+import * as ListBlock from '../../../../lexicon/types/app/bsky/graph/listblock'
+import * as lex from '../../../../lexicon/lexicons'
+import { PrimaryDatabase } from '../../db'
+import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import RecordProcessor from '../processor'
-import { BackgroundQueue } from '../../../background'
-import { NotificationServer } from '../../../notifications'
 
 const lexId = lex.ids.AppBskyGraphListblock
 type IndexedListBlock = Selectable<DatabaseSchemaType['list_block']>
@@ -71,12 +69,8 @@ const notifsForDelete = () => {
 
 export type PluginType = RecordProcessor<ListBlock.Record, IndexedListBlock>
 
-export const makePlugin = (
-  db: PrimaryDatabase,
-  backgroundQueue: BackgroundQueue,
-  notifServer?: NotificationServer,
-): PluginType => {
-  return new RecordProcessor(db, backgroundQueue, notifServer, {
+export const makePlugin = (db: PrimaryDatabase): PluginType => {
+  return new RecordProcessor(db, {
     lexId,
     insertFn,
     findDuplicate,

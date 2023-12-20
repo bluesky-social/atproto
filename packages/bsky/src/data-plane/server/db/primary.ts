@@ -15,7 +15,7 @@ import { wait } from '@atproto/common'
 import DatabaseSchema from './database-schema'
 import * as migrations from './migrations'
 import { CtxMigrationProvider } from './migrations/provider'
-import { dbLogger as log } from '../logger'
+import { dbLogger as log } from '../../../logger'
 import { PgOptions } from './types'
 import { Database } from './db'
 

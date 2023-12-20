@@ -1,9 +1,9 @@
-import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../gen/bsky_connect'
-import { keyBy } from '@atproto/common'
-import { Database } from '../../../db'
 import { sql } from 'kysely'
-import { valuesList } from '../../../db/util'
+import { ServiceImpl } from '@connectrpc/connect'
+import { keyBy } from '@atproto/common'
+import { Service } from '../../gen/bsky_connect'
+import { Database } from '../db'
+import { valuesList } from '../db/util'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getRelationships(req) {

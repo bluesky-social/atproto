@@ -13,7 +13,8 @@ import { AtUri } from '@atproto/syntax'
 import { IdResolver, getPds } from '@atproto/identity'
 import { DAY, HOUR } from '@atproto/common'
 import { ValidationError } from '@atproto/lexicon'
-import { PrimaryDatabase } from '../../db'
+import { PrimaryDatabase } from '../db'
+import { Actor } from '../db/tables/actor'
 import * as Post from './plugins/post'
 import * as Threadgate from './plugins/thread-gate'
 import * as Like from './plugins/like'
@@ -26,12 +27,8 @@ import * as ListBlock from './plugins/list-block'
 import * as Block from './plugins/block'
 import * as FeedGenerator from './plugins/feed-generator'
 import RecordProcessor from './processor'
-import { subLogger } from '../../logger'
-import { retryHttp } from '../../util/retry'
-import { BackgroundQueue } from '../../background'
-import { NotificationServer } from '../../notifications'
-import { AutoModerator } from '../../auto-moderator'
-import { Actor } from '../../db/tables/actor'
+import { subLogger } from '../../../logger'
+import { retryHttp } from '../../../util/retry'
 
 export class IndexingService {
   records: {
@@ -48,51 +45,29 @@ export class IndexingService {
     feedGenerator: FeedGenerator.PluginType
   }
 
-  constructor(
-    public db: PrimaryDatabase,
-    public idResolver: IdResolver,
-    public autoMod: AutoModerator,
-    public backgroundQueue: BackgroundQueue,
-    public notifServer?: NotificationServer,
-  ) {
+  constructor(public db: PrimaryDatabase, public idResolver: IdResolver) {
     this.records = {
-      post: Post.makePlugin(this.db, backgroundQueue, notifServer),
-      threadGate: Threadgate.makePlugin(this.db, backgroundQueue, notifServer),
-      like: Like.makePlugin(this.db, backgroundQueue, notifServer),
-      repost: Repost.makePlugin(this.db, backgroundQueue, notifServer),
-      follow: Follow.makePlugin(this.db, backgroundQueue, notifServer),
-      profile: Profile.makePlugin(this.db, backgroundQueue, notifServer),
-      list: List.makePlugin(this.db, backgroundQueue, notifServer),
-      listItem: ListItem.makePlugin(this.db, backgroundQueue, notifServer),
-      listBlock: ListBlock.makePlugin(this.db, backgroundQueue, notifServer),
-      block: Block.makePlugin(this.db, backgroundQueue, notifServer),
-      feedGenerator: FeedGenerator.makePlugin(
-        this.db,
-        backgroundQueue,
-        notifServer,
-      ),
+      post: Post.makePlugin(this.db),
+      threadGate: Threadgate.makePlugin(this.db),
+      like: Like.makePlugin(this.db),
+      repost: Repost.makePlugin(this.db),
+      follow: Follow.makePlugin(this.db),
+      profile: Profile.makePlugin(this.db),
+      list: List.makePlugin(this.db),
+      listItem: ListItem.makePlugin(this.db),
+      listBlock: ListBlock.makePlugin(this.db),
+      block: Block.makePlugin(this.db),
+      feedGenerator: FeedGenerator.makePlugin(this.db),
     }
   }
 
   transact(txn: PrimaryDatabase) {
     txn.assertTransaction()
-    return new IndexingService(
-      txn,
-      this.idResolver,
-      this.autoMod,
-      this.backgroundQueue,
-      this.notifServer,
-    )
+    return new IndexingService(txn, this.idResolver)
   }
 
-  static creator(
-    idResolver: IdResolver,
-    autoMod: AutoModerator,
-    backgroundQueue: BackgroundQueue,
-    notifServer?: NotificationServer,
-  ) {
-    return (db: PrimaryDatabase) =>
-      new IndexingService(db, idResolver, autoMod, backgroundQueue, notifServer)
+  static creator(idResolver: IdResolver) {
+    return (db: PrimaryDatabase) => new IndexingService(db, idResolver)
   }
 
   async indexRecord(
@@ -114,9 +89,6 @@ export class IndexingService {
         await indexer.updateRecord(uri, cid, obj, timestamp)
       }
     })
-    if (!opts?.disableLabels) {
-      this.autoMod.processRecord(uri, cid, obj)
-    }
   }
 
   async deleteRecord(uri: AtUri, cascading = false) {
@@ -170,10 +142,6 @@ export class IndexingService {
       .onConflict((oc) => oc.column('did').doUpdateSet(actorInfo))
       .returning('did')
       .executeTakeFirst()
-
-    if (handle) {
-      this.autoMod.processHandle(handle, did)
-    }
   }
 
   async indexRepo(did: string, commit?: string) {

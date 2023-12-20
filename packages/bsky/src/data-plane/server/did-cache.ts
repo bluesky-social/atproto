@@ -2,7 +2,7 @@ import PQueue from 'p-queue'
 import { CacheResult, DidCache, DidDocument } from '@atproto/identity'
 import { PrimaryDatabase } from './db'
 import { excluded } from './db/util'
-import { dbLogger } from './logger'
+import { dbLogger } from '../../logger'
 
 export class DidSqlCache implements DidCache {
   public pQueue: PQueue | null //null during teardown

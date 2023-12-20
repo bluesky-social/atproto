@@ -1,14 +1,12 @@
 import { Selectable } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import * as Repost from '../../../lexicon/types/app/bsky/feed/repost'
-import * as lex from '../../../lexicon/lexicons'
-import { DatabaseSchema, DatabaseSchemaType } from '../../../db/database-schema'
+import * as Repost from '../../../../lexicon/types/app/bsky/feed/repost'
+import * as lex from '../../../../lexicon/lexicons'
 import RecordProcessor from '../processor'
-import { PrimaryDatabase } from '../../../db'
-import { countAll, excluded } from '../../../db/util'
-import { BackgroundQueue } from '../../../background'
-import { NotificationServer } from '../../../notifications'
+import { PrimaryDatabase } from '../../db'
+import { countAll, excluded } from '../../db/util'
+import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 
 const lexId = lex.ids.AppBskyFeedRepost
 type IndexedRepost = Selectable<DatabaseSchemaType['repost']>
@@ -133,12 +131,8 @@ const updateAggregates = async (db: DatabaseSchema, repost: IndexedRepost) => {
 
 export type PluginType = RecordProcessor<Repost.Record, IndexedRepost>
 
-export const makePlugin = (
-  db: PrimaryDatabase,
-  backgroundQueue: BackgroundQueue,
-  notifServer?: NotificationServer,
-): PluginType => {
-  return new RecordProcessor(db, backgroundQueue, notifServer, {
+export const makePlugin = (db: PrimaryDatabase): PluginType => {
+  return new RecordProcessor(db, {
     lexId,
     insertFn,
     findDuplicate,

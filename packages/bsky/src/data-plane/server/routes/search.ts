@@ -1,11 +1,7 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../gen/bsky_connect'
-import { Database } from '../../../db'
-import {
-  IndexedAtDidKeyset,
-  TimeCidKeyset,
-  paginate,
-} from '../../../db/pagination'
+import { Database } from '../db'
+import { IndexedAtDidKeyset, TimeCidKeyset, paginate } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async searchActors(req) {
@@ -13,7 +9,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const { ref } = db.db.dynamic
     let builder = db.db
       .selectFrom('actor')
-      .where('actor.handle', 'like', `%${term}%`)
+      .where('actor.handle', 'like', `%${cleanQuery(term)}%`)
       .selectAll()
 
     const keyset = new IndexedAtDidKeyset(
@@ -58,3 +54,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }
   },
 })
+
+// Remove leading @ in case a handle is input that way
+const cleanQuery = (query: string) => query.trim().replace(/^@/g, '')
