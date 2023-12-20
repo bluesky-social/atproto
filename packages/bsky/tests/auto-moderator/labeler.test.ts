@@ -9,6 +9,8 @@ import { LabelService } from '../../src/services/label'
 import usersSeed from '../seeds/users'
 import { CID } from 'multiformats/cid'
 import { ImgLabeler } from '../../src/auto-moderator/hive'
+import { ModerationService } from '../../src/services/moderation'
+import { ImageInvalidator } from '../../src/image/invalidator'
 
 // outside of test suite so that TestLabeler can access them
 let badCid1: CID | undefined = undefined
@@ -75,6 +77,10 @@ describe('labeler', () => {
   })
 
   it('labels text in posts', async () => {
+    autoMod.services.moderation = ModerationService.creator(
+      new NoopImageUriBuilder(''),
+      new NoopInvalidator(),
+    )
     const post = {
       $type: 'app.bsky.feed.post',
       text: 'blah blah label_me',
@@ -93,6 +99,28 @@ describe('labeler', () => {
       val: 'test-label',
       neg: false,
     })
+
+    // Verify that along with applying the labels, we are also leaving trace of the label as moderation event
+    // Temporarily assign an instance of moderation service to the autoMod so that we can validate label event
+    const modSrvc = autoMod.services.moderation(ctx.db)
+    const { events } = await modSrvc.getEvents({
+      includeAllUserRecords: false,
+      subject: uri.toString(),
+      limit: 10,
+      types: [],
+    })
+    expect(events.length).toBe(1)
+    expect(events[0]).toMatchObject({
+      action: 'com.atproto.admin.defs#modEventLabel',
+      subjectUri: uri.toString(),
+      createLabelVals: 'test-label',
+      negateLabelVals: null,
+      comment: `[AutoModerator]: Applying labels`,
+      createdBy: labelerDid,
+    })
+
+    // Cleanup the temporary assignment, knowing that by default, moderation service is not available
+    autoMod.services.moderation = undefined
   })
 
   it('labels embeds in posts', async () => {
@@ -163,5 +191,16 @@ class TestImgLabeler implements ImgLabeler {
       return ['other-img-label']
     }
     return []
+  }
+}
+
+class NoopInvalidator implements ImageInvalidator {
+  async invalidate() {}
+}
+class NoopImageUriBuilder {
+  constructor(public endpoint: string) {}
+
+  getPresetUri() {
+    return ''
   }
 }
