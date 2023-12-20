@@ -690,7 +690,17 @@ export class ModerationService {
 
     const results = await paginatedBuilder.execute()
 
-    return { statuses: results, cursor: keyset.packFromResult(results) }
+    const dids = dedupeStrs(results.map((r) => r.did))
+    const handlesByDid = await this.getHandlesByDid(dids)
+    const resultsWithHandles = results.map((r) => ({
+      ...r,
+      handle: handlesByDid.get(r.did),
+    }))
+
+    return {
+      statuses: resultsWithHandles,
+      cursor: keyset.packFromResult(results),
+    }
   }
 
   async isSubjectTakendown(

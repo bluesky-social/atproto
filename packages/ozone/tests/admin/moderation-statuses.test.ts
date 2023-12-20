@@ -75,8 +75,12 @@ describe('moderation-statuses', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_moderation_statuses',
+      ozone: { enabled: true },
     })
-    agent = network.bsky.getClient()
+    if (!network.ozone) {
+      throw new Error('Ozone not setup')
+    }
+    agent = network.ozone.getClient()
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)

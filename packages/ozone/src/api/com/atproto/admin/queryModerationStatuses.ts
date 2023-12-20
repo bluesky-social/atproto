@@ -40,12 +40,8 @@ export default function (server: Server, ctx: AppContext) {
         limit,
         cursor,
       })
-      const subjectStatuses = results.statuses.map(
-        (status) =>
-          moderationService.views.formatSubjectStatus({
-            ...status,
-            handle: '',
-          }), // @TODO fix handle
+      const subjectStatuses = results.statuses.map((status) =>
+        moderationService.views.formatSubjectStatus(status),
       )
       return {
         encoding: 'application/json',
