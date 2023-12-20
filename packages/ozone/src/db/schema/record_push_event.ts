@@ -6,9 +6,11 @@ export interface RecordPushEvent {
   eventType: RecordPushEventType
   subjectDid: string
   subjectUri: string
-  subjectCid: string | null
+  subjectCid: string
   takedownId: number | null
-  confirmedAt: string | null
+  confirmedAt: Date | null
+  lastAttempted: Date | null
+  attempts: number | null
 }
 
 export type PartialDB = {

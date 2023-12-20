@@ -8,7 +8,9 @@ export interface BlobPushEvent {
   subjectBlobCid: string
   subjectUri: string | null
   takedownId: number | null
-  confirmedAt: string | null
+  confirmedAt: Date | null
+  lastAttempted: Date | null
+  attempts: number | null
 }
 
 export type PartialDB = {
