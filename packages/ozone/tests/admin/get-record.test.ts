@@ -66,7 +66,7 @@ describe('admin get record view', () => {
     })
   })
 
-  it.only('gets a record by uri, even when taken down.', async () => {
+  it('gets a record by uri, even when taken down.', async () => {
     const result = await agent.api.com.atproto.admin.getRecord(
       { uri: sc.posts[sc.dids.alice][0].ref.uriStr },
       { headers: network.pds.adminAuthHeaders() },

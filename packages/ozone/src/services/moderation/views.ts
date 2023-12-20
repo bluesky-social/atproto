@@ -193,7 +193,7 @@ export class ModerationViews {
     }
   }
 
-  async fetchRecords(uris: AtUri[]): Promise<
+  async fetchRecords(subjects: RecordSubject[]): Promise<
     Map<
       string,
       {
@@ -205,15 +205,19 @@ export class ModerationViews {
     >
   > {
     const fetched = await Promise.all(
-      uris.map((uri) =>
-        this.appviewAgent.api.com.atproto.repo
-          .getRecord({
+      subjects.map(async (subject) => {
+        const uri = new AtUri(subject.uri)
+        try {
+          return await this.appviewAgent.api.com.atproto.repo.getRecord({
             repo: uri.hostname,
             collection: uri.collection,
             rkey: uri.rkey,
+            cid: subject.cid,
           })
-          .catch(() => null),
-      ),
+        } catch {
+          return null
+        }
+      }),
     )
     return fetched.reduce((acc, cur) => {
       if (!cur) return acc
@@ -225,13 +229,14 @@ export class ModerationViews {
     }, new Map<string, { uri: string; cid: string; value: Record<string, unknown>; indexedAt: string }>())
   }
 
-  async records(uris: AtUri[]): Promise<Map<string, RecordView>> {
+  async records(subjects: RecordSubject[]): Promise<Map<string, RecordView>> {
+    const uris = subjects.map((record) => new AtUri(record.uri))
     const dids = uris.map((u) => u.hostname)
 
     const [repos, subjectStatuses, records] = await Promise.all([
       this.repos(dids),
-      this.getSubjectStatus(uris.map((uri) => uri.toString())),
-      this.fetchRecords(uris),
+      this.getSubjectStatus(subjects.map((s) => s.uri)),
+      this.fetchRecords(subjects),
     ])
 
     return uris.reduce((acc, uri) => {
@@ -256,16 +261,17 @@ export class ModerationViews {
     }, new Map<string, RecordView>())
   }
 
-  async recordDetail(uri: AtUri): Promise<RecordViewDetail | undefined> {
-    const uriStr = uri.toString()
+  async recordDetail(
+    subject: RecordSubject,
+  ): Promise<RecordViewDetail | undefined> {
     const [records, subjectStatusesResult] = await Promise.all([
-      this.records([uri]),
-      this.getSubjectStatus([uriStr]),
+      this.records([subject]),
+      this.getSubjectStatus([subject.uri]),
     ])
-    const record = records.get(uriStr)
+    const record = records.get(subject.uri)
     if (!record) return undefined
 
-    const status = subjectStatusesResult.get(uriStr)
+    const status = subjectStatusesResult.get(subject.uri)
 
     const [blobs, labels, subjectStatus] = await Promise.all([
       this.blob(findBlobRefs(record.value)),
@@ -330,7 +336,7 @@ export class ModerationViews {
         }
       }
     } else {
-      const records = await this.records([new AtUri(subject)])
+      const records = await this.records([{ uri: subject }])
       const record = records.get(subject)
       if (record) {
         return {
@@ -490,6 +496,8 @@ export class ModerationViews {
     }
   }
 }
+
+type RecordSubject = { uri: string; cid?: string }
 
 type SubjectView = ModEventViewDetail['subject'] & ReportViewDetail['subject']
 

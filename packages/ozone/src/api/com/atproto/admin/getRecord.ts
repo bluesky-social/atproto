@@ -10,11 +10,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const db = ctx.db
 
-      const uri = new AtUri(params.uri)
-
       const [record, accountInfo] = await Promise.all([
-        ctx.services.moderation(db).views.recordDetail(uri),
-        getPdsAccountInfo(ctx, uri.hostname),
+        ctx.services.moderation(db).views.recordDetail(params),
+        getPdsAccountInfo(ctx, new AtUri(params.uri).hostname),
       ])
 
       if (!record) {
