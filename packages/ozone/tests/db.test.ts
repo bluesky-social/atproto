@@ -3,18 +3,20 @@ import { sql } from 'kysely'
 import { wait } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
 import { Database } from '../src'
-import { PrimaryDatabase } from '../src/db'
 import { Leader } from '../src/db/leader'
+import assert from 'assert'
 
 describe('db', () => {
   let network: TestNetwork
-  let db: PrimaryDatabase
+  let db: Database
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_db',
+      ozone: { enabled: true },
     })
-    db = network.bsky.ctx.db.getPrimary()
+    assert(network.ozone)
+    db = network.ozone.ctx.db
   })
 
   afterAll(async () => {
@@ -49,13 +51,12 @@ describe('db', () => {
     it('commits changes', async () => {
       const result = await db.transaction(async (dbTxn) => {
         return await dbTxn.db
-          .insertInto('actor')
+          .insertInto('repo_push_event')
           .values({
-            did: 'x',
-            handle: 'x',
-            indexedAt: 'bad-date',
+            eventType: 'takedown',
+            subjectDid: 'x',
           })
-          .returning('did')
+          .returning('subjectDid')
           .executeTakeFirst()
       })
 
@@ -63,32 +64,31 @@ describe('db', () => {
         return expect(result).toBeTruthy()
       }
 
-      expect(result.did).toEqual('x')
+      expect(result.subjectDid).toEqual('x')
 
       const row = await db.db
-        .selectFrom('actor')
+        .selectFrom('repo_push_event')
         .selectAll()
-        .where('did', '=', 'x')
+        .where('subjectDid', '=', 'x')
         .executeTakeFirst()
 
       expect(row).toEqual({
-        did: 'x',
-        handle: 'x',
-        indexedAt: 'bad-date',
+        eventType: 'takedown',
+        subjectDid: 'x',
         takedownId: null,
+        confirmedAt: null,
       })
     })
 
     it('rolls-back changes on failure', async () => {
       const promise = db.transaction(async (dbTxn) => {
         await dbTxn.db
-          .insertInto('actor')
+          .insertInto('repo_push_event')
           .values({
-            did: 'y',
-            handle: 'y',
-            indexedAt: 'bad-date',
+            eventType: 'takedown',
+            subjectDid: 'y',
           })
-          .returning('did')
+          .returning('subjectDid')
           .executeTakeFirst()
 
         throw new Error('Oops!')
@@ -97,9 +97,9 @@ describe('db', () => {
       await expect(promise).rejects.toThrow('Oops!')
 
       const row = await db.db
-        .selectFrom('actor')
+        .selectFrom('repo_push_event')
         .selectAll()
-        .where('did', '=', 'y')
+        .where('subjectDid', '=', 'y')
         .executeTakeFirst()
 
       expect(row).toBeUndefined()
@@ -130,23 +130,23 @@ describe('db', () => {
       const tx = db.transaction(async (dbTxn) => {
         leakedTx = dbTxn
         await dbTxn.db
-          .insertInto('actor')
-          .values({ handle: 'a', did: 'a', indexedAt: 'bad-date' })
+          .insertInto('repo_push_event')
+          .values({ eventType: 'takedown', subjectDid: 'a' })
           .execute()
         throw new Error('test tx failed')
       })
       await expect(tx).rejects.toThrow('test tx failed')
 
       const attempt = leakedTx?.db
-        .insertInto('actor')
-        .values({ handle: 'b', did: 'b', indexedAt: 'bad-date' })
+        .insertInto('repo_push_event')
+        .values({ eventType: 'takedown', subjectDid: 'b' })
         .execute()
       await expect(attempt).rejects.toThrow('tx already failed')
 
       const res = await db.db
-        .selectFrom('actor')
+        .selectFrom('repo_push_event')
         .selectAll()
-        .where('did', 'in', ['a', 'b'])
+        .where('subjectDid', 'in', ['a', 'b'])
         .execute()
 
       expect(res.length).toBe(0)
@@ -161,11 +161,10 @@ describe('db', () => {
           for (let i = 0; i < 20; i++) {
             const name = `user${i}`
             const query = dbTxn.db
-              .insertInto('actor')
+              .insertInto('repo_push_event')
               .values({
-                handle: name,
-                did: name,
-                indexedAt: 'bad-date',
+                eventType: 'takedown',
+                subjectDid: name,
               })
               .execute()
             names.push(name)
@@ -182,9 +181,9 @@ describe('db', () => {
       }
 
       const res = await db.db
-        .selectFrom('actor')
+        .selectFrom('repo_push_event')
         .selectAll()
-        .where('did', 'in', names)
+        .where('subjectDid', 'in', names)
         .execute()
       expect(res.length).toBe(0)
     })

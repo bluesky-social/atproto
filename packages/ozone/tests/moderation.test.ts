@@ -19,6 +19,7 @@ import {
   REVIEWESCALATED,
 } from '../src/lexicon/types/com/atproto/admin/defs'
 import { PeriodicModerationEventReversal } from '../src'
+import assert from 'assert'
 
 type BaseCreateReportParams =
   | { account: string }
@@ -132,8 +133,10 @@ describe('moderation', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_moderation',
+      ozone: { enabled: true },
     })
-    agent = network.bsky.getClient()
+    assert(network.ozone)
+    agent = network.ozone.getClient()
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
@@ -739,6 +742,7 @@ describe('moderation', () => {
         takendown: true,
       })
 
+      assert(network.ozone)
       // In the actual app, this will be instantiated and run on server startup
       const periodicReversal = new PeriodicModerationEventReversal(
         network.ozone.ctx,

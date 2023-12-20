@@ -6,6 +6,7 @@ import {
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
+import assert from 'assert'
 
 describe('moderation-events', () => {
   let network: TestNetwork
@@ -74,9 +75,7 @@ describe('moderation-events', () => {
       dbPostgresSchema: 'bsky_moderation_events',
       ozone: { enabled: true },
     })
-    if (!network.ozone) {
-      throw new Error('Ozone not setup')
-    }
+    assert(network.ozone)
     agent = network.ozone?.getClient()
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
