@@ -23,7 +23,7 @@ export const notSoftDeletedClause = (alias: DbRef) => {
   return sql`${alias}."takedownId" is null`
 }
 
-export const softDeleted = (actorOrRecord: { takedownId: number | null }) => {
+export const softDeleted = (actorOrRecord: { takedownId: string | null }) => {
   return actorOrRecord.takedownId !== null
 }
 

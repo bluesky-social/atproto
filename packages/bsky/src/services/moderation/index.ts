@@ -423,7 +423,7 @@ export class ModerationService {
   }
 
   async takedownRepo(info: {
-    takedownId: number
+    takedownId: string
     did: string
   }): Promise<TakedownSubjects> {
     const { takedownId, did } = info
@@ -454,14 +454,13 @@ export class ModerationService {
   }
 
   async takedownRecord(info: {
-    takedownId: number
+    takedownId: string
     uri: AtUri
     cid: CID
     blobCids?: CID[]
   }): Promise<TakedownSubjects> {
     const { takedownId, uri, cid, blobCids } = info
     const did = uri.hostname
-    this.db.assertTransaction()
     await this.db.db
       .updateTable('record')
       .set({ takedownId })
@@ -498,11 +497,33 @@ export class ModerationService {
   }
 
   async reverseTakedownRecord(info: { uri: AtUri }) {
-    this.db.assertTransaction()
     await this.db.db
       .updateTable('record')
       .set({ takedownId: null })
       .where('uri', '=', info.uri.toString())
+      .execute()
+  }
+
+  async takedownBlob(info: { takedownId: string; did: string; cid: string }) {
+    const { takedownId, did, cid } = info
+    await this.db.db
+      .insertInto('blob_takedown')
+      .values({ did, cid, takedownId })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+    const paths = ImageUriBuilder.presets.map((id) => {
+      const imgUri = this.imgUriBuilder.getPresetUri(id, did, cid)
+      return imgUri.replace(this.imgUriBuilder.endpoint, '')
+    })
+    await this.imgInvalidator.invalidate(cid.toString(), paths)
+  }
+
+  async reverseTakedownBlob(info: { did: string; cid: string }) {
+    const { did, cid } = info
+    await this.db.db
+      .deleteFrom('blob_takedown')
+      .where('did', '=', did)
+      .where('cid', '=', cid)
       .execute()
   }
 

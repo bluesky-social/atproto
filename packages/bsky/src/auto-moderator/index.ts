@@ -276,7 +276,7 @@ export class AutoModerator {
           createdBy: this.ctx.cfg.labelerDid,
         })
         await modSrvc.takedownRecord({
-          takedownId: action.id,
+          takedownId: action.id.toString(),
           uri: uri,
           cid: recordCid,
           blobCids: takedownCids,

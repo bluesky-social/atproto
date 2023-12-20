@@ -92,7 +92,7 @@ export default function (server: Server, ctx: AppContext) {
             // No credentials to revoke on appview
             if (isTakedownEvent) {
               takenDown = await moderationTxn.takedownRepo({
-                takedownId: result.id,
+                takedownId: result.id.toString(),
                 did: result.subjectDid,
               })
             }
@@ -120,7 +120,7 @@ export default function (server: Server, ctx: AppContext) {
             const blobCids = subjectBlobCids?.map((cid) => CID.parse(cid)) ?? []
             if (isTakedownEvent) {
               takenDown = await moderationTxn.takedownRecord({
-                takedownId: result.id,
+                takedownId: result.id.toString(),
                 uri: new AtUri(result.subjectUri),
                 // TODO: I think this will always be available for strongRefs?
                 cid: CID.parse(result.subjectCid as string),

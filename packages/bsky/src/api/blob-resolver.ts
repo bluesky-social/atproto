@@ -85,7 +85,7 @@ export async function resolveBlob(
 ) {
   const cidStr = cid.toString()
 
-  const [{ pds }, takedown] = await Promise.all([
+  const [{ pds }, takedownStatus, takedown] = await Promise.all([
     idResolver.did.resolveAtprotoData(did), // @TODO cache did info
     db.db
       .selectFrom('moderation_subject_status')
@@ -93,8 +93,14 @@ export async function resolveBlob(
       .where('blobCids', '@>', sql`CAST(${JSON.stringify([cidStr])} AS JSONB)`)
       .where('takendown', 'is', true)
       .executeTakeFirst(),
+    db.db
+      .selectFrom('blob_takedown')
+      .select('takedownId')
+      .where('did', '=', did)
+      .where('cid', '=', cid.toString())
+      .executeTakeFirst(),
   ])
-  if (takedown) {
+  if (takedownStatus || takedown) {
     throw createError(404, 'Blob not found')
   }
 

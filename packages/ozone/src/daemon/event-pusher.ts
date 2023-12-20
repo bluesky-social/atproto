@@ -131,7 +131,7 @@ export class EventPusher {
   ): Promise<boolean> {
     try {
       await Promise.all([
-        // retryHttp(() => fn(this.appviewAgent)),
+        retryHttp(() => fn(this.appviewAgent)),
         retryHttp(() => fn(this.moderationPushAgent)),
       ])
       return true
