@@ -13,7 +13,6 @@ import {
   isModEventEmail,
   RepoRef,
   RepoBlobRef,
-  AccountView,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { addHoursToDate } from '../../util/date'
 import {

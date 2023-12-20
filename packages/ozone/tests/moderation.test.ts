@@ -629,10 +629,12 @@ describe('moderation', () => {
         }),
       ).rejects.toThrow('Subject is not taken down')
     })
+
     it('fans out repo takedowns to pds', async () => {
       await performTakedown({
         account: sc.dids.bob,
       })
+      await ozone.processAll()
 
       const res1 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         {
@@ -644,6 +646,7 @@ describe('moderation', () => {
 
       // cleanup
       await performReverseTakedown({ account: sc.dids.bob })
+      await ozone.processAll()
 
       const res2 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         {
@@ -661,6 +664,7 @@ describe('moderation', () => {
       await performTakedown({
         content: { uri, cid },
       })
+      await ozone.processAll()
       const res1 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         { uri },
         { headers: network.pds.adminAuthHeaders() },
@@ -669,6 +673,7 @@ describe('moderation', () => {
 
       // cleanup
       await performReverseTakedown({ content: { uri, cid } })
+      await ozone.processAll()
 
       const res2 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         { uri },
@@ -737,6 +742,7 @@ describe('moderation', () => {
         // right away without having to wait n number of hours for a successful assertion
         durationInHours: -1,
       })
+      await ozone.processAll()
 
       const { data: statusesAfterTakedown } =
         await agent.api.com.atproto.admin.queryModerationStatuses(
@@ -754,6 +760,7 @@ describe('moderation', () => {
         network.ozone.ctx,
       )
       await periodicReversal.findAndRevertDueActions()
+      await ozone.processAll()
 
       const [{ data: eventList }, { data: statuses }] = await Promise.all([
         agent.api.com.atproto.admin.queryModerationEvents(
@@ -875,6 +882,7 @@ describe('moderation', () => {
         },
         subjectBlobCids: [blob.image.ref.toString()],
       })
+      await ozone.processAll()
     })
 
     it('sets blobCids in moderation status', async () => {
@@ -922,6 +930,8 @@ describe('moderation', () => {
         },
         subjectBlobCids: [blob.image.ref.toString()],
       })
+
+      await ozone.processAll()
 
       // Can resolve blob
       const blobPath = `/blob/${sc.dids.carol}/${blob.image.ref.toString()}`

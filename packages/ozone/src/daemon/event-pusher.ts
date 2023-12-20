@@ -1,10 +1,10 @@
 import AtpAgent from '@atproto/api'
+import { SECOND, wait } from '@atproto/common'
 import Database from '../db'
 import { retryHttp } from '../util/retry'
 import { RepoPushEvent } from '../db/schema/repo_push_event'
 import { RecordPushEvent } from '../db/schema/record_push_event'
 import { BlobPushEvent } from '../db/schema/blob_push_event'
-import { SECOND, wait } from '@atproto/common'
 
 type PollState = {
   promise: Promise<void>
@@ -27,7 +27,11 @@ export class EventPusher {
     tries: 0,
   }
 
-  constructor(public db: Database, public appviewAgent: AtpAgent) {}
+  constructor(
+    public db: Database,
+    public appviewAgent: AtpAgent,
+    public moderationPushAgent: AtpAgent,
+  ) {}
 
   start() {
     this.repoPollState.promise = this.poll(this.repoPollState, () =>
@@ -39,6 +43,23 @@ export class EventPusher {
     this.blobPollState.promise = this.poll(this.blobPollState, () =>
       this.pushBlobEvents(),
     )
+  }
+
+  async processAll() {
+    await Promise.all([
+      this.pushRepoEvents(),
+      this.pushRecordEvents(),
+      this.pushBlobEvents(),
+    ])
+  }
+
+  async destroy() {
+    this.destroyed = true
+    await Promise.all([
+      this.repoPollState.promise,
+      this.recordPollState.promise,
+      this.blobPollState.promise,
+    ])
   }
 
   async poll(state: PollState, fn: () => Promise<boolean>) {
@@ -105,25 +126,34 @@ export class EventPusher {
     })
   }
 
-  async attemptRepoEvent(txn: Database, evt: RepoPushEvent) {
-    let succeeded: boolean
+  private async pushToBoth(
+    fn: (agent: AtpAgent) => Promise<unknown>,
+  ): Promise<boolean> {
     try {
-      await retryHttp(() =>
-        this.appviewAgent.com.atproto.admin.updateSubjectStatus({
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: evt.subjectDid,
-          },
-          takedown: {
-            applied: !!evt.takedownId,
-            ref: evt.takedownId?.toString(),
-          },
-        }),
-      )
-      succeeded = true
-    } catch {
-      succeeded = false
+      await Promise.all([
+        // retryHttp(() => fn(this.appviewAgent)),
+        retryHttp(() => fn(this.moderationPushAgent)),
+      ])
+      return true
+    } catch (err) {
+      console.log(err)
+      return false
     }
+  }
+
+  async attemptRepoEvent(txn: Database, evt: RepoPushEvent) {
+    const succeeded = await this.pushToBoth((agent) =>
+      agent.com.atproto.admin.updateSubjectStatus({
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: evt.subjectDid,
+        },
+        takedown: {
+          applied: !!evt.takedownId,
+          ref: evt.takedownId?.toString(),
+        },
+      }),
+    )
     if (succeeded) {
       await txn.db
         .updateTable('repo_push_event')
@@ -145,25 +175,19 @@ export class EventPusher {
   }
 
   async attemptRecordEvent(txn: Database, evt: RecordPushEvent) {
-    let succeeded: boolean
-    try {
-      await retryHttp(() =>
-        this.appviewAgent.com.atproto.admin.updateSubjectStatus({
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: evt.subjectUri,
-            cid: evt.subjectCid,
-          },
-          takedown: {
-            applied: !!evt.takedownId,
-            ref: evt.takedownId?.toString(),
-          },
-        }),
-      )
-      succeeded = true
-    } catch {
-      succeeded = false
-    }
+    const succeeded = await this.pushToBoth((agent) =>
+      agent.com.atproto.admin.updateSubjectStatus({
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: evt.subjectUri,
+          cid: evt.subjectCid,
+        },
+        takedown: {
+          applied: !!evt.takedownId,
+          ref: evt.takedownId?.toString(),
+        },
+      }),
+    )
     if (succeeded) {
       await txn.db
         .updateTable('record_push_event')
@@ -185,26 +209,19 @@ export class EventPusher {
   }
 
   async attemptBlobEvent(txn: Database, evt: BlobPushEvent) {
-    let succeeded: boolean
-    try {
-      await retryHttp(() =>
-        this.appviewAgent.com.atproto.admin.updateSubjectStatus({
-          subject: {
-            $type: 'com.atproto.admin.defs#repoBlobRef',
-            did: evt.subjectDid,
-            cid: evt.subjectBlobCid,
-            recordUri: evt.subjectUri,
-          },
-          takedown: {
-            applied: !!evt.takedownId,
-            ref: evt.takedownId?.toString(),
-          },
-        }),
-      )
-      succeeded = true
-    } catch {
-      succeeded = false
-    }
+    const succeeded = await this.pushToBoth((agent) =>
+      agent.com.atproto.admin.updateSubjectStatus({
+        subject: {
+          $type: 'com.atproto.admin.defs#repoBlobRef',
+          did: evt.subjectDid,
+          cid: evt.subjectBlobCid,
+        },
+        takedown: {
+          applied: !!evt.takedownId,
+          ref: evt.takedownId?.toString(),
+        },
+      }),
+    )
     if (succeeded) {
       await txn.db
         .updateTable('blob_push_event')

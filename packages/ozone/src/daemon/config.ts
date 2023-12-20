@@ -4,6 +4,7 @@ export interface DaemonConfigValues {
   version: string
   dbPostgresUrl: string
   dbPostgresSchema?: string
+  moderationPushUrl: string
   appviewUrl: string
   adminPassword: string
 }
@@ -18,14 +19,19 @@ export class DaemonConfig {
     const dbPostgresSchema =
       overrides?.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
     assert(dbPostgresUrl)
+    const moderationPushUrl =
+      overrides?.moderationPushUrl || process.env.MODERATION_PUSH_URL
+    assert(moderationPushUrl)
     const appviewUrl = overrides?.appviewUrl || process.env.APPVIEW_URL
     assert(appviewUrl)
     const adminPassword = overrides?.adminPassword || process.env.ADMIN_PASSWORD
     assert(adminPassword)
+
     return new DaemonConfig({
       version,
       dbPostgresUrl,
       dbPostgresSchema,
+      moderationPushUrl,
       appviewUrl,
       adminPassword,
       ...stripUndefineds(overrides ?? {}),
@@ -42,6 +48,10 @@ export class DaemonConfig {
 
   get dbPostgresSchema() {
     return this.cfg.dbPostgresSchema
+  }
+
+  get moderationPushUrl() {
+    return this.cfg.moderationPushUrl
   }
 
   get appviewUrl() {

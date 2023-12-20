@@ -18,6 +18,8 @@ import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import Database from './db'
 import * as auth from './auth'
+import { OzoneDaemon } from './daemon'
+import { DaemonConfig } from './daemon/config'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -56,13 +58,24 @@ export class OzoneService {
 
     const backgroundQueue = new BackgroundQueue(db)
     const appviewAgent = new AtpAgent({ service: config.appviewUrl })
-
     appviewAgent.api.setHeader(
       'authorization',
       auth.buildBasicAuth('admin', config.adminPassword),
     )
 
     const services = createServices(appviewAgent)
+
+    const daemon = OzoneDaemon.create({
+      db,
+      cfg: new DaemonConfig({
+        version: config.version,
+        dbPostgresUrl: config.dbPrimaryPostgresUrl,
+        dbPostgresSchema: config.dbPostgresSchema,
+        moderationPushUrl: config.moderationPushUrl ?? '',
+        appviewUrl: config.appviewUrl,
+        adminPassword: config.adminPassword,
+      }),
+    })
 
     const ctx = new AppContext({
       db,
@@ -72,6 +85,7 @@ export class OzoneService {
       signingKey,
       idResolver,
       backgroundQueue,
+      daemon,
     })
 
     let server = createServer({
@@ -112,6 +126,7 @@ export class OzoneService {
         'background queue stats',
       )
     }, 10000)
+    await this.ctx.daemon?.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -125,6 +140,7 @@ export class OzoneService {
   async destroy(): Promise<void> {
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
+    await this.ctx.daemon?.destroy()
     await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
   }

@@ -8,6 +8,7 @@ import { ServerConfig } from './config'
 import { Services } from './services'
 import * as auth from './auth'
 import { BackgroundQueue } from './background'
+import { OzoneDaemon } from './daemon'
 
 export class AppContext {
   public moderationPushAgent: AtpAgent | undefined
@@ -15,12 +16,12 @@ export class AppContext {
     private opts: {
       db: Database
       appviewAgent: AtpAgent
-      searchAgent: AtpAgent
       cfg: ServerConfig
       services: Services
       signingKey: Keypair
       idResolver: IdResolver
       backgroundQueue: BackgroundQueue
+      daemon?: OzoneDaemon
     },
   ) {
     if (opts.cfg.moderationPushUrl) {
@@ -49,10 +50,6 @@ export class AppContext {
     return this.opts.appviewAgent
   }
 
-  get searchAgent(): AtpAgent {
-    return this.opts.searchAgent
-  }
-
   get signingKey(): Keypair {
     return this.opts.signingKey
   }
@@ -63,6 +60,14 @@ export class AppContext {
 
   get idResolver(): IdResolver {
     return this.opts.idResolver
+  }
+
+  get backgroundQueue(): BackgroundQueue {
+    return this.opts.backgroundQueue
+  }
+
+  get daemon(): OzoneDaemon | undefined {
+    return this.opts.daemon
   }
 
   get authVerifier() {
@@ -98,10 +103,6 @@ export class AppContext {
       aud,
       keypair: this.signingKey,
     })
-  }
-
-  get backgroundQueue(): BackgroundQueue {
-    return this.opts.backgroundQueue
   }
 }
 

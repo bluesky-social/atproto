@@ -1,6 +1,7 @@
 import { DaemonConfig } from './config'
 import { Database } from '../db'
 import { Services } from '../services'
+import { EventPusher } from './event-pusher'
 
 export class DaemonContext {
   constructor(
@@ -8,6 +9,7 @@ export class DaemonContext {
       db: Database
       cfg: DaemonConfig
       services: Services
+      eventPusher: EventPusher
     },
   ) {}
 
@@ -21,6 +23,10 @@ export class DaemonContext {
 
   get services(): Services {
     return this.opts.services
+  }
+
+  get eventPusher(): EventPusher {
+    return this.opts.eventPusher
   }
 }
 

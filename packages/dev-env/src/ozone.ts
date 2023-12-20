@@ -106,7 +106,8 @@ export class TestOzone {
   }
 
   async processAll() {
-    await Promise.all([this.ctx.backgroundQueue.processAll()])
+    await this.ctx.backgroundQueue.processAll()
+    await this.ctx.daemon?.processAll()
   }
 
   async close() {
