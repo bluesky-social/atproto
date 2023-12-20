@@ -4,9 +4,9 @@ import { AtUri } from '@atproto/syntax'
 import {
   REASONOTHER,
   REASONSPAM,
-} from '../../src/lexicon/types/com/atproto/moderation/defs'
-import { forSnapshot } from '../_util'
-import basicSeed from '../seeds/basic'
+} from '../src/lexicon/types/com/atproto/moderation/defs'
+import { forSnapshot } from './_util'
+import basicSeed from './seeds/basic'
 
 describe('admin get record view', () => {
   let network: TestNetwork

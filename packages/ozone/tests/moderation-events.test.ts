@@ -1,11 +1,11 @@
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import AtpAgent, { ComAtprotoAdminDefs } from '@atproto/api'
-import { forSnapshot } from '../_util'
-import basicSeed from '../seeds/basic'
+import { forSnapshot } from './_util'
+import basicSeed from './seeds/basic'
 import {
   REASONMISLEADING,
   REASONSPAM,
-} from '../../src/lexicon/types/com/atproto/moderation/defs'
+} from '../src/lexicon/types/com/atproto/moderation/defs'
 
 describe('moderation-events', () => {
   let network: TestNetwork

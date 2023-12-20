@@ -5,20 +5,20 @@ import AtpAgent, {
   ComAtprotoModerationCreateReport,
 } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
-import { forSnapshot } from '../_util'
-import basicSeed from '../seeds/basic'
+import { forSnapshot } from './_util'
+import basicSeed from './seeds/basic'
 import {
   REASONMISLEADING,
   REASONOTHER,
   REASONSPAM,
-} from '../../src/lexicon/types/com/atproto/moderation/defs'
+} from '../src/lexicon/types/com/atproto/moderation/defs'
 import {
   ModEventLabel,
   ModEventTakedown,
   REVIEWCLOSED,
   REVIEWESCALATED,
-} from '../../src/lexicon/types/com/atproto/admin/defs'
-import { PeriodicModerationEventReversal } from '../../src'
+} from '../src/lexicon/types/com/atproto/admin/defs'
+import { PeriodicModerationEventReversal } from '../src'
 
 type BaseCreateReportParams =
   | { account: string }
@@ -741,7 +741,7 @@ describe('moderation', () => {
 
       // In the actual app, this will be instantiated and run on server startup
       const periodicReversal = new PeriodicModerationEventReversal(
-        network.bsky.ctx,
+        network.ozone.ctx,
       )
       await periodicReversal.findAndRevertDueActions()
 

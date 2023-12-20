@@ -3,9 +3,9 @@ import AtpAgent from '@atproto/api'
 import {
   REASONOTHER,
   REASONSPAM,
-} from '../../src/lexicon/types/com/atproto/moderation/defs'
-import { forSnapshot } from '../_util'
-import basicSeed from '../seeds/basic'
+} from '../src/lexicon/types/com/atproto/moderation/defs'
+import { forSnapshot } from './_util'
+import basicSeed from './seeds/basic'
 
 describe('admin get repo view', () => {
   let network: TestNetwork

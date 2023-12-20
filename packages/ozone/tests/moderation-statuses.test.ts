@@ -3,12 +3,12 @@ import AtpAgent, {
   ComAtprotoAdminDefs,
   ComAtprotoAdminQueryModerationStatuses,
 } from '@atproto/api'
-import { forSnapshot } from '../_util'
-import basicSeed from '../seeds/basic'
+import { forSnapshot } from './_util'
+import basicSeed from './seeds/basic'
 import {
   REASONMISLEADING,
   REASONSPAM,
-} from '../../src/lexicon/types/com/atproto/moderation/defs'
+} from '../src/lexicon/types/com/atproto/moderation/defs'
 
 describe('moderation-statuses', () => {
   let network: TestNetwork
