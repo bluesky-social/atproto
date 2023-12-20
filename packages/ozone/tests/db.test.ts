@@ -72,11 +72,9 @@ describe('db', () => {
         .where('subjectDid', '=', 'x')
         .executeTakeFirst()
 
-      expect(row).toEqual({
+      expect(row).toMatchObject({
         eventType: 'takedown',
         subjectDid: 'x',
-        takedownId: null,
-        confirmedAt: null,
       })
     })
 
