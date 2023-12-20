@@ -403,15 +403,15 @@ export class ModerationService {
   }): Promise<TakedownSubjects> {
     const { takedownId, did } = info
     await this.db.db
-      .insertInto('push_event')
+      .insertInto('repo_push_event')
       .values({
-        eventType: 'repo_takedown',
+        eventType: 'takedown',
         subjectDid: did,
         takedownId,
       })
       .onConflict((oc) =>
         oc
-          .columns(['eventType', 'subjectDid'])
+          .columns(['subjectDid', 'eventType'])
           .doUpdateSet({ confirmedAt: null, takedownId }),
       )
       .execute()
@@ -429,8 +429,8 @@ export class ModerationService {
 
   async reverseTakedownRepo(info: { did: string }) {
     await this.db.db
-      .updateTable('push_event')
-      .where('eventType', '=', 'repo_takedown')
+      .updateTable('repo_push_event')
+      .where('eventType', '=', 'takedown')
       .where('subjectDid', '=', info.did)
       .set({ takedownId: null, confirmedAt: null })
       .execute()
@@ -445,9 +445,9 @@ export class ModerationService {
     const did = uri.hostname
     this.db.assertTransaction()
     await this.db.db
-      .insertInto('push_event')
+      .insertInto('record_push_event')
       .values({
-        eventType: 'record_takedown',
+        eventType: 'takedown',
         subjectDid: uri.hostname,
         subjectUri: uri.toString(),
         subjectCid: cid.toString(),
@@ -455,7 +455,7 @@ export class ModerationService {
       })
       .onConflict((oc) =>
         oc
-          .columns(['eventType', 'subjectDid', 'subjectUri'])
+          .columns(['subjectUri', 'eventType'])
           .doUpdateSet({ confirmedAt: null, takedownId }),
       )
       .execute()
@@ -474,8 +474,8 @@ export class ModerationService {
   async reverseTakedownRecord(info: { uri: AtUri }) {
     this.db.assertTransaction()
     await this.db.db
-      .updateTable('push_event')
-      .where('eventType', '=', 'record_takedown')
+      .updateTable('record_push_event')
+      .where('eventType', '=', 'takedown')
       .where('subjectDid', '=', info.uri.hostname)
       .where('subjectUri', '=', info.uri.toString())
       .set({ takedownId: null, confirmedAt: null })
@@ -492,10 +492,10 @@ export class ModerationService {
 
     if (blobCids.length > 0) {
       await this.db.db
-        .insertInto('push_event')
+        .insertInto('blob_push_event')
         .values(
           blobCids.map((cid) => ({
-            eventType: 'blob_takedown' as const,
+            eventType: 'takedown' as const,
             subjectDid: did,
             subjectBlobCid: cid.toString(),
             takedownId,
@@ -503,7 +503,7 @@ export class ModerationService {
         )
         .onConflict((oc) =>
           oc
-            .columns(['eventType', 'subjectDid', 'subjectBlobCid'])
+            .columns(['subjectDid', 'subjectBlobCid', 'eventType'])
             .doUpdateSet({ confirmedAt: null, takedownId }),
         )
         .execute()
@@ -523,8 +523,8 @@ export class ModerationService {
     const { did, blobCids } = info
     if (blobCids.length < 1) return
     await this.db.db
-      .updateTable('push_event')
-      .where('eventType', '=', 'blob_takedown')
+      .updateTable('blob_push_event')
+      .where('eventType', '=', 'takedown')
       .where('subjectDid', '=', did)
       .where(
         'subjectBlobCid',

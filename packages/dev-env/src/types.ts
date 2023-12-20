@@ -29,6 +29,7 @@ export type BskyConfig = Partial<bsky.ServerConfig> & {
 export type OzoneConfig = Partial<ozone.ServerConfig> & {
   enabled?: boolean
   plcUrl: string
+  appviewUrl: string
   dbPrimaryPostgresUrl: string
   migration?: string
 }

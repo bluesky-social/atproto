@@ -8,7 +8,7 @@ import compression from 'compression'
 import { IdResolver } from '@atproto/identity'
 import API, { health, wellKnown } from './api'
 import * as error from './error'
-import { loggerMiddleware } from './logger'
+import { dbLogger, loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { createServer } from './lexicon'
 import { createServices } from './services'
@@ -17,6 +17,7 @@ import { BackgroundQueue } from './background'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import Database from './db'
+import * as auth from './auth'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -54,8 +55,12 @@ export class OzoneService {
     })
 
     const backgroundQueue = new BackgroundQueue(db)
+    const appviewAgent = new AtpAgent({ service: config.appviewUrl })
 
-    const appviewAgent = new AtpAgent({ service: '@TODO' })
+    appviewAgent.api.setHeader(
+      'authorization',
+      auth.buildBasicAuth('admin', config.adminPassword),
+    )
 
     const services = createServices(appviewAgent)
 
@@ -89,36 +94,24 @@ export class OzoneService {
   }
 
   async start(): Promise<http.Server> {
-    // const { db, backgroundQueue } = this.ctx
-    // this.dbStatsInterval = setInterval(() => {
-    //   dbLogger.info(
-    //     {
-    //       idleCount: replicas.reduce(
-    //         (tot, replica) => tot + replica.pool.idleCount,
-    //         0,
-    //       ),
-    //       totalCount: replicas.reduce(
-    //         (tot, replica) => tot + replica.pool.totalCount,
-    //         0,
-    //       ),
-    //       waitingCount: replicas.reduce(
-    //         (tot, replica) => tot + replica.pool.waitingCount,
-    //         0,
-    //       ),
-    //       primaryIdleCount: primary.pool.idleCount,
-    //       primaryTotalCount: primary.pool.totalCount,
-    //       primaryWaitingCount: primary.pool.waitingCount,
-    //     },
-    //     'db pool stats',
-    //   )
-    //   dbLogger.info(
-    //     {
-    //       runningCount: backgroundQueue.queue.pending,
-    //       waitingCount: backgroundQueue.queue.size,
-    //     },
-    //     'background queue stats',
-    //   )
-    // }, 10000)
+    const { db, backgroundQueue } = this.ctx
+    this.dbStatsInterval = setInterval(() => {
+      dbLogger.info(
+        {
+          idleCount: db.pool.idleCount,
+          totalCount: db.pool.totalCount,
+          waitingCount: db.pool.waitingCount,
+        },
+        'db pool stats',
+      )
+      dbLogger.info(
+        {
+          runningCount: backgroundQueue.queue.pending,
+          waitingCount: backgroundQueue.queue.size,
+        },
+        'background queue stats',
+      )
+    }, 10000)
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -129,10 +122,10 @@ export class OzoneService {
     return server
   }
 
-  async destroy(opts?: { skipDb: boolean }): Promise<void> {
+  async destroy(): Promise<void> {
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
-    if (!opts?.skipDb) await this.ctx.db.close()
+    await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
   }
 }

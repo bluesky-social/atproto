@@ -36,16 +36,6 @@ export class TestNetwork extends TestNetworkNoAppView {
 
     const plc = await TestPlc.create(params.plc ?? {})
 
-    let ozone: TestOzone | undefined = undefined
-    if (params.ozone?.enabled) {
-      ozone = await TestOzone.create({
-        plcUrl: plc.url,
-        dbPostgresSchema: `ozone_${dbPostgresSchema}`,
-        dbPrimaryPostgresUrl: dbPostgresUrl,
-        ...params.ozone,
-      })
-    }
-
     const bskyPort = params.bsky?.port ?? (await getPort())
     const pdsPort = params.pds?.port ?? (await getPort())
     const bsky = await TestBsky.create({
@@ -59,6 +49,19 @@ export class TestNetwork extends TestNetworkNoAppView {
       moderationPushUrl: `http://admin:${ADMIN_PASSWORD}@localhost:${pdsPort}`,
       ...params.bsky,
     })
+
+    let ozone: TestOzone | undefined = undefined
+    if (params.ozone?.enabled) {
+      ozone = await TestOzone.create({
+        plcUrl: plc.url,
+        dbPostgresSchema: `ozone_${dbPostgresSchema}`,
+        dbPrimaryPostgresUrl: dbPostgresUrl,
+        appviewUrl: bsky.url,
+        moderationPushUrl: `http://admin:${ADMIN_PASSWORD}@localhost:${pdsPort}`, // @TODO fix this
+        ...params.ozone,
+      })
+    }
+
     const pds = await TestPds.create({
       port: pdsPort,
       didPlcUrl: plc.url,
@@ -126,6 +129,7 @@ export class TestNetwork extends TestNetworkNoAppView {
 
   async close() {
     await Promise.all(this.feedGens.map((fg) => fg.close()))
+    await this.ozone?.close()
     await this.bsky.close()
     await this.pds.close()
     await this.plc.close()

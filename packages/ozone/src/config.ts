@@ -14,6 +14,7 @@ export interface ServerConfigValues {
   publicUrl?: string
   serverDid: string
   feedGenDid?: string
+  appviewUrl: string
   dbPrimaryPostgresUrl: string
   dbReplicaPostgresUrls?: string[]
   dbReplicaTags?: Record<string, number[]> // E.g. { timeline: [0], thread: [1] }
@@ -53,6 +54,8 @@ export class ServerConfig {
     const feedGenDid = process.env.FEED_GEN_DID
     const envPort = parseInt(process.env.PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
+    const appviewUrl = process.env.APPVIEW_URL
+    assert(appviewUrl)
     const redisHost =
       overrides?.redisHost || process.env.REDIS_HOST || undefined
     const redisSentinelName =
@@ -133,6 +136,7 @@ export class ServerConfig {
       publicUrl,
       serverDid,
       feedGenDid,
+      appviewUrl,
       dbPrimaryPostgresUrl,
       dbReplicaPostgresUrls,
       dbReplicaTags,
@@ -197,6 +201,10 @@ export class ServerConfig {
 
   get feedGenDid() {
     return this.cfg.feedGenDid
+  }
+
+  get appviewUrl() {
+    return this.cfg.appviewUrl
   }
 
   get dbPrimaryPostgresUrl() {

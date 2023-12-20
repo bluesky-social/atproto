@@ -40,20 +40,12 @@ export class TestOzone {
       labelCacheStaleTTL: 30 * SECOND,
       labelCacheMaxTTL: MINUTE,
       ...cfg,
-      // Each test suite gets its own lock id for the repo subscription
       adminPassword: ADMIN_PASSWORD,
       moderatorPassword: MOD_PASSWORD,
       triagePassword: TRIAGE_PASSWORD,
       labelerDid: 'did:example:labeler',
       feedGenDid: 'did:example:feedGen',
       rateLimitsEnabled: false,
-    })
-
-    // shared across server, ingester, and indexer in order to share pool, avoid too many pg connections.
-    const db = new ozone.Database({
-      schema: cfg.dbPostgresSchema,
-      url: cfg.dbPrimaryPostgresUrl,
-      poolSize: 10,
     })
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
@@ -67,6 +59,12 @@ export class TestOzone {
       await migrationDb.migrateToLatestOrThrow()
     }
     await migrationDb.close()
+
+    const db = new ozone.Database({
+      schema: cfg.dbPostgresSchema,
+      url: cfg.dbPrimaryPostgresUrl,
+      poolSize: 10,
+    })
 
     // api server
     const server = ozone.OzoneService.create({

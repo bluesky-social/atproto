@@ -193,25 +193,36 @@ export class ModerationViews {
     }
   }
 
-  async fetchRecords(
-    uris: AtUri[],
-  ): Promise<
-    Map<string, { uri: string; cid: string; value: Record<string, unknown> }>
+  async fetchRecords(uris: AtUri[]): Promise<
+    Map<
+      string,
+      {
+        uri: string
+        cid: string
+        value: Record<string, unknown>
+        indexedAt: string
+      }
+    >
   > {
     const fetched = await Promise.all(
       uris.map((uri) =>
-        this.appviewAgent.api.com.atproto.repo.getRecord({
-          repo: uri.hostname,
-          collection: uri.collection,
-          rkey: uri.rkey,
-        }),
+        this.appviewAgent.api.com.atproto.repo
+          .getRecord({
+            repo: uri.hostname,
+            collection: uri.collection,
+            rkey: uri.rkey,
+          })
+          .catch(() => null),
       ),
     )
     return fetched.reduce((acc, cur) => {
+      if (!cur) return acc
       // @TODO fix this up
       // @ts-ignore
-      return acc.set(cur.data.uri, { ...cur, cid: cur.cid ?? '' })
-    }, new Map<string, { uri: string; cid: string; value: Record<string, unknown> }>())
+      const data = cur.data
+      const indexedAt = new Date().toISOString()
+      return acc.set(data.uri, { ...data, cid: data.cid ?? '', indexedAt })
+    }, new Map<string, { uri: string; cid: string; value: Record<string, unknown>; indexedAt: string }>())
   }
 
   async records(uris: AtUri[]): Promise<Map<string, RecordView>> {
@@ -225,17 +236,16 @@ export class ModerationViews {
 
     return uris.reduce((acc, uri) => {
       const repo = repos.get(uri.hostname)
-      if (!repo) throw new Error(`Record repo is missing: ${uri.toString()}`)
+      if (!repo) return acc
       const record = records.get(uri.toString())
-      if (!record) throw new Error(`Record is missing`)
+      if (!record) return acc
       const subjectStatus = subjectStatuses.get(uri.toString())
       return acc.set(uri.toString(), {
         uri: uri.toString(),
         cid: record.cid,
         value: record.value,
         blobCids: findBlobRefs(record.value).map((blob) => blob.ref.toString()),
-        // indexedAt: res.indexedAt,
-        indexedAt: '', // @TODO fix
+        indexedAt: record.indexedAt,
         repo,
         moderation: {
           subjectStatus: subjectStatus

@@ -80,21 +80,50 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .column('uri')
     .execute()
 
-  // PushEvent
+  // Push Events
   await db.schema
-    .createTable('push_event')
+    .createTable('repo_push_event')
     .addColumn('eventType', 'varchar', (col) => col.notNull())
     .addColumn('subjectDid', 'varchar', (col) => col.notNull())
-    .addColumn('subjectUri', 'varchar')
-    .addColumn('subjectCid', 'varchar')
-    .addColumn('subjectBlobCid', 'varchar')
     .addColumn('takedownId', 'integer')
     .addColumn('confirmedAt', 'varchar')
-    .addPrimaryKeyConstraint('push_event_pkey', [
-      'eventType',
+    .addPrimaryKeyConstraint('repo_push_event_pkey', [
       'subjectDid',
+      'eventType',
+    ])
+    .execute()
+
+  await db.schema
+    .createTable('record_push_event')
+    .addColumn('eventType', 'varchar', (col) => col.notNull())
+    .addColumn('subjectDid', 'varchar', (col) => col.notNull())
+    .addColumn('subjectUri', 'varchar', (col) => col.notNull())
+    .addColumn('subjectCid', 'varchar')
+    .addColumn('takedownId', 'integer')
+    .addColumn('confirmedAt', 'varchar')
+    .addPrimaryKeyConstraint('record_push_event_pkey', [
       'subjectUri',
+      'eventType',
+    ])
+    .execute()
+  await db.schema
+    .createIndex('record_push_event_did_type_idx')
+    .on('record_push_event')
+    .columns(['subjectDid', 'eventType'])
+    .execute()
+
+  await db.schema
+    .createTable('blob_push_event')
+    .addColumn('eventType', 'varchar', (col) => col.notNull())
+    .addColumn('subjectDid', 'varchar', (col) => col.notNull())
+    .addColumn('subjectBlobCid', 'varchar', (col) => col.notNull())
+    .addColumn('subjectUri', 'varchar')
+    .addColumn('takedownId', 'integer')
+    .addColumn('confirmedAt', 'varchar')
+    .addPrimaryKeyConstraint('blob_push_event_pkey', [
+      'subjectDid',
       'subjectBlobCid',
+      'eventType',
     ])
     .execute()
 }
@@ -103,5 +132,7 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('moderation_event').execute()
   await db.schema.dropTable('moderation_subject_status').execute()
   await db.schema.dropTable('label').execute()
-  await db.schema.dropTable('push_event').execute()
+  await db.schema.dropTable('repo_push_event').execute()
+  await db.schema.dropTable('record_push_event').execute()
+  await db.schema.dropTable('blob_push_event').execute()
 }
