@@ -74,7 +74,7 @@ export class TestNetwork extends TestNetworkNoAppView {
 
     mockNetworkUtilities(pds, bsky)
 
-    return new TestNetwork(plc, pds, bsky)
+    return new TestNetwork(plc, pds, bsky, ozone)
   }
 
   async processFullSubscription(timeout = 5000) {
