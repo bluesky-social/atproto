@@ -20,6 +20,7 @@ import {
 } from '../src/lexicon/types/com/atproto/admin/defs'
 import { PeriodicModerationEventReversal } from '../src'
 import assert from 'assert'
+import { TestOzone } from '@atproto/dev-env/src/ozone'
 
 type BaseCreateReportParams =
   | { account: string }
@@ -33,6 +34,7 @@ type TakedownParams = BaseCreateReportParams &
 
 describe('moderation', () => {
   let network: TestNetwork
+  let ozone: TestOzone
   let agent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
@@ -57,7 +59,10 @@ describe('moderation', () => {
               },
       },
       {
-        headers: await network.serviceHeaders(author),
+        headers: await network.serviceHeaders(
+          author,
+          network.ozone?.ctx.cfg.serverDid,
+        ),
         encoding: 'application/json',
       },
     )
@@ -89,7 +94,7 @@ describe('moderation', () => {
       },
       {
         encoding: 'application/json',
-        headers: network.bsky.adminAuthHeaders(),
+        headers: ozone.adminAuthHeaders(),
       },
     )
 
@@ -115,7 +120,7 @@ describe('moderation', () => {
       },
       {
         encoding: 'application/json',
-        headers: network.bsky.adminAuthHeaders(),
+        headers: ozone.adminAuthHeaders(),
       },
     )
 
@@ -124,7 +129,7 @@ describe('moderation', () => {
   ) => {
     const { data } = await agent.api.com.atproto.admin.queryModerationStatuses(
       params,
-      { headers: network.bsky.adminAuthHeaders() },
+      { headers: ozone.adminAuthHeaders() },
     )
 
     return data
@@ -136,6 +141,7 @@ describe('moderation', () => {
       ozone: { enabled: true },
     })
     assert(network.ozone)
+    ozone = network.ozone
     agent = network.ozone.getClient()
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
@@ -291,7 +297,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders('triage'),
+          headers: ozone.adminAuthHeaders('triage'),
         },
       )
 
@@ -325,7 +331,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders('triage'),
+          headers: ozone.adminAuthHeaders('triage'),
         },
       )
 
@@ -360,7 +366,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.bsky.adminAuthHeaders(),
+            headers: ozone.adminAuthHeaders(),
           },
         )
       }
@@ -428,15 +434,15 @@ describe('moderation', () => {
     })
 
     it('negates an existing label.', async () => {
-      const { ctx } = network.bsky
+      const { ctx } = ozone
       const post = sc.posts[sc.dids.bob][0].ref
       const bobsPostSubject = {
         $type: 'com.atproto.repo.strongRef',
         uri: post.uriStr,
         cid: post.cidStr,
       }
-      const labelingService = ctx.services.label(ctx.db.getPrimary())
-      await labelingService.formatAndCreate(
+      const modService = ctx.services.moderation(ctx.db)
+      await modService.formatAndCreateLabels(
         ctx.cfg.labelerDid,
         post.uriStr,
         post.cidStr,
@@ -456,7 +462,7 @@ describe('moderation', () => {
       })
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['kittens'])
       // Cleanup
-      await labelingService.formatAndCreate(
+      await modService.formatAndCreateLabels(
         ctx.cfg.labelerDid,
         post.uriStr,
         post.cidStr,
@@ -465,9 +471,9 @@ describe('moderation', () => {
     })
 
     it('no-ops when negating an already-negated label and reverses.', async () => {
-      const { ctx } = network.bsky
+      const { ctx } = ozone
       const post = sc.posts[sc.dids.bob][0].ref
-      const labelingService = ctx.services.label(ctx.db.getPrimary())
+      const modService = ctx.services.moderation(ctx.db)
       await emitLabelEvent({
         negateLabelVals: ['bears'],
         createLabelVals: [],
@@ -489,7 +495,7 @@ describe('moderation', () => {
       })
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['bears'])
       // Cleanup
-      await labelingService.formatAndCreate(
+      await modService.formatAndCreateLabels(
         ctx.cfg.labelerDid,
         post.uriStr,
         post.cidStr,
@@ -549,9 +555,9 @@ describe('moderation', () => {
     })
 
     it('creates and negates labels on a repo and reverses.', async () => {
-      const { ctx } = network.bsky
-      const labelingService = ctx.services.label(ctx.db.getPrimary())
-      await labelingService.formatAndCreate(
+      const { ctx } = ozone
+      const modService = ctx.services.moderation(ctx.db)
+      await modService.formatAndCreateLabels(
         ctx.cfg.labelerDid,
         sc.dids.bob,
         null,
