@@ -674,6 +674,8 @@ export function validateModEventUnmute(v: unknown): ValidationResult {
 export interface ModEventEmail {
   /** The subject line of the email sent to the user. */
   subjectLine: string
+  /** Additional comment about the outgoing comm. */
+  comment?: string
   [k: string]: unknown
 }
 
