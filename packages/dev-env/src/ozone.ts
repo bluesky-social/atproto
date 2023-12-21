@@ -1,7 +1,6 @@
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as ozone from '@atproto/ozone'
-import { DAY, HOUR, MINUTE, SECOND } from '@atproto/common-web'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client as PlcClient } from '@did-plc/lib'
@@ -35,23 +34,17 @@ export class TestOzone {
       didPlcUrl: cfg.plcUrl,
       publicUrl: 'https://bsky.public.url',
       serverDid,
-      didCacheStaleTTL: HOUR,
-      didCacheMaxTTL: DAY,
-      labelCacheStaleTTL: 30 * SECOND,
-      labelCacheMaxTTL: MINUTE,
       ...cfg,
       adminPassword: ADMIN_PASSWORD,
       moderatorPassword: MOD_PASSWORD,
       triagePassword: TRIAGE_PASSWORD,
       labelerDid: 'did:example:labeler',
-      feedGenDid: 'did:example:feedGen',
-      rateLimitsEnabled: false,
     })
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
     const migrationDb = new ozone.Database({
       schema: cfg.dbPostgresSchema,
-      url: cfg.dbPrimaryPostgresUrl,
+      url: cfg.dbPostgresUrl,
     })
     if (cfg.migration) {
       await migrationDb.migrateToOrThrow(cfg.migration)
@@ -62,7 +55,7 @@ export class TestOzone {
 
     const db = new ozone.Database({
       schema: cfg.dbPostgresSchema,
-      url: cfg.dbPrimaryPostgresUrl,
+      url: cfg.dbPostgresUrl,
       poolSize: 10,
     })
 

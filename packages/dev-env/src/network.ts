@@ -55,7 +55,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       ozone = await TestOzone.create({
         plcUrl: plc.url,
         dbPostgresSchema: `ozone_${dbPostgresSchema}`,
-        dbPrimaryPostgresUrl: dbPostgresUrl,
+        dbPostgresUrl,
         appviewUrl: bsky.url,
         moderationPushUrl: `http://admin:${ADMIN_PASSWORD}@localhost:${pdsPort}`, // @TODO fix this
         ...params.ozone,

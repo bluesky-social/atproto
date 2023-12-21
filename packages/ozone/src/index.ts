@@ -53,7 +53,6 @@ export class OzoneService {
 
     const idResolver = new IdResolver({
       plcUrl: config.didPlcUrl,
-      backupNameservers: config.handleResolveNameservers,
     })
 
     const backgroundQueue = new BackgroundQueue(db)
@@ -69,7 +68,7 @@ export class OzoneService {
       db,
       cfg: new DaemonConfig({
         version: config.version,
-        dbPostgresUrl: config.dbPrimaryPostgresUrl,
+        dbPostgresUrl: config.dbPostgresUrl,
         dbPostgresSchema: config.dbPostgresSchema,
         moderationPushUrl: config.moderationPushUrl ?? '',
         appviewUrl: config.appviewUrl,

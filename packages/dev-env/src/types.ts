@@ -30,7 +30,7 @@ export type OzoneConfig = Partial<ozone.ServerConfig> & {
   enabled?: boolean
   plcUrl: string
   appviewUrl: string
-  dbPrimaryPostgresUrl: string
+  dbPostgresUrl: string
   migration?: string
 }
 
