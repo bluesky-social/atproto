@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - bav-v2-drop-pg
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
