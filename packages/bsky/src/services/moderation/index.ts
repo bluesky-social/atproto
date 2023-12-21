@@ -15,6 +15,7 @@ import {
   isModEventEmail,
   RepoRef,
   RepoBlobRef,
+  StatusAttr,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { addHoursToDate } from '../../util/date'
 import {
@@ -666,6 +667,39 @@ export class ModerationService {
     return { statuses: results, cursor: keyset.packFromResult(results) }
   }
 
+  async getRepoTakedownRef(did: string): Promise<StatusAttr | null> {
+    const res = await this.db.db
+      .selectFrom('actor')
+      .where('did', '=', did)
+      .selectAll()
+      .executeTakeFirst()
+    return res ? formatStatus(res.takedownId) : null
+  }
+
+  async getRecordTakedownRef(uri: string): Promise<StatusAttr | null> {
+    const res = await this.db.db
+      .selectFrom('record')
+      .where('uri', '=', uri)
+      .selectAll()
+      .executeTakeFirst()
+    return res ? formatStatus(res.takedownId) : null
+  }
+
+  async getBlobTakedownRef(
+    did: string,
+    cid: string,
+  ): Promise<StatusAttr | null> {
+    const res = await this.db.db
+      .selectFrom('blob_takedown')
+      .where('did', '=', did)
+      .where('cid', '=', cid)
+      .selectAll()
+      .executeTakeFirst()
+    // this table only tracks takedowns not all blobs
+    // so if no result is returned then the blob is not taken down (rather than not found)
+    return formatStatus(res?.takedownId ?? null)
+  }
+
   async isSubjectTakendown(
     subject: { did: string } | { uri: AtUri },
   ): Promise<boolean> {
@@ -681,6 +715,10 @@ export class ModerationService {
 
     return !!result?.takendown
   }
+}
+
+const formatStatus = (ref: string | null): StatusAttr => {
+  return ref ? { applied: true, ref } : { applied: false }
 }
 
 export type TakedownSubjects = {
