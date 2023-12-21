@@ -2,8 +2,6 @@ import { wait } from '@atproto/common'
 import { Leader } from './leader'
 import { dbLogger } from '../logger'
 import AppContext from '../context'
-import AtpAgent from '@atproto/api'
-import { retryHttp } from '../util/retry'
 import { ReversalSubject } from '../services/moderation'
 
 export const MODERATION_ACTION_REVERSAL_ID = 1011
@@ -11,11 +9,8 @@ export const MODERATION_ACTION_REVERSAL_ID = 1011
 export class PeriodicModerationEventReversal {
   leader = new Leader(MODERATION_ACTION_REVERSAL_ID, this.appContext.db)
   destroyed = false
-  pushAgent?: AtpAgent
 
-  constructor(private appContext: AppContext) {
-    this.pushAgent = appContext.moderationPushAgent
-  }
+  constructor(private appContext: AppContext) {}
 
   async revertState(subject: ReversalSubject) {
     await this.appContext.db.transaction(async (dbTxn) => {
@@ -23,7 +18,7 @@ export class PeriodicModerationEventReversal {
       const originalEvent =
         await moderationTxn.getLastReversibleEventForSubject(subject)
       if (originalEvent) {
-        const { restored } = await moderationTxn.revertState({
+        await moderationTxn.revertState({
           action: originalEvent.action,
           createdBy: originalEvent.createdBy,
           comment:
@@ -31,26 +26,6 @@ export class PeriodicModerationEventReversal {
           subject: subject.subject,
           createdAt: new Date(),
         })
-
-        const { pushAgent } = this
-        if (
-          originalEvent.action === 'com.atproto.admin.defs#modEventTakedown' &&
-          restored?.subjects?.length &&
-          pushAgent
-        ) {
-          await Promise.allSettled(
-            restored.subjects.map((subject) =>
-              retryHttp(() =>
-                pushAgent.api.com.atproto.admin.updateSubjectStatus({
-                  subject,
-                  takedown: {
-                    applied: false,
-                  },
-                }),
-              ),
-            ),
-          )
-        }
       }
     })
   }

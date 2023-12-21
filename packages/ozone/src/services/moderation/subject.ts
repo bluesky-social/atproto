@@ -2,6 +2,9 @@ import { AtUri } from '@atproto/syntax'
 import { InputSchema as ReportInput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import { InputSchema as ActionInput } from '../../lexicon/types/com/atproto/admin/emitModerationEvent'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
+import { RepoRef } from '../../lexicon/types/com/atproto/admin/defs'
+import { Main as StrongRef } from '../../lexicon/types/com/atproto/repo/strongRef'
 
 type SubjectInput = ReportInput['subject'] | ActionInput['subject']
 
@@ -28,6 +31,31 @@ export const subjectFromInput = (
   throw new InvalidRequestError('Invalid subject')
 }
 
+export const subjectFromEventRow = (row: ModerationEventRow): ModSubject => {
+  if (
+    row.subjectType === 'com.atproto.repo.strongRef' &&
+    row.subjectUri &&
+    row.subjectCid
+  ) {
+    return new RecordSubject(row.subjectUri, row.subjectCid)
+  } else {
+    return new RepoSubject(row.subjectDid)
+  }
+}
+
+export const subjectFromStatusRow = (
+  row: ModerationSubjectStatusRow,
+): ModSubject => {
+  if (row.recordPath && row.recordCid) {
+    // Not too intuitive but the recordpath is basically <collection>/<rkey>
+    // which is what the last 2 params of .make() arguments are
+    const uri = AtUri.make(row.did, ...row.recordPath.split('/')).toString()
+    return new RecordSubject(uri.toString(), row.recordCid)
+  } else {
+    return new RepoSubject(row.did)
+  }
+}
+
 type SubjectInfo = {
   subjectType: 'com.atproto.admin.defs#repoRef' | 'com.atproto.repo.strongRef'
   subjectDid: string
@@ -42,6 +70,7 @@ export interface ModSubject {
   isRepo(): this is RepoSubject
   isRecord(): this is RecordSubject
   info(): SubjectInfo
+  lex(): RepoRef | StrongRef
 }
 
 export class RepoSubject implements ModSubject {
@@ -54,12 +83,21 @@ export class RepoSubject implements ModSubject {
   isRecord() {
     return false
   }
+  isWeakRecord() {
+    return false
+  }
   info() {
     return {
       subjectType: 'com.atproto.admin.defs#repoRef' as const,
       subjectDid: this.did,
       subjectUri: null,
       subjectCid: null,
+    }
+  }
+  lex(): RepoRef {
+    return {
+      $type: 'com.atproto.admin.defs#repoRef',
+      did: this.did,
     }
   }
 }
@@ -89,6 +127,13 @@ export class RecordSubject implements ModSubject {
       subjectDid: this.did,
       subjectUri: this.uri,
       subjectCid: this.cid,
+    }
+  }
+  lex(): StrongRef {
+    return {
+      $type: 'com.atproto.repo.strongRef',
+      uri: this.uri,
+      cid: this.cid,
     }
   }
 }

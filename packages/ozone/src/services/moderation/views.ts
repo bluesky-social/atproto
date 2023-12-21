@@ -1,6 +1,7 @@
 import { sql } from 'kysely'
-import { ArrayEl } from '@atproto/common'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
+import AtpAgent from '@atproto/api'
+import { dedupeStrs } from '@atproto/common'
 import { BlobRef } from '@atproto/lexicon'
 import { Database } from '../../db'
 import {
@@ -22,25 +23,30 @@ import {
   ModerationSubjectStatusRowWithHandle,
 } from './types'
 import { REASONOTHER } from '../../lexicon/types/com/atproto/moderation/defs'
-import AtpAgent from '@atproto/api'
+import { subjectFromEventRow, subjectFromStatusRow } from './subject'
 
 export class ModerationViews {
   constructor(private db: Database, private appviewAgent: AtpAgent) {}
 
+  async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {
+    if (dids.length === 0) return new Map()
+    const res = await this.appviewAgent.api.com.atproto.admin.getAccountInfos({
+      dids: dedupeStrs(dids),
+    })
+    return res.data.infos.reduce((acc, cur) => {
+      return acc.set(cur.did, cur)
+    }, new Map<string, AccountView>())
+  }
+
   async repos(dids: string[]): Promise<Map<string, RepoView>> {
     if (dids.length === 0) return new Map()
-    const [appviewRes, subjectStatuses] = await Promise.all([
-      this.appviewAgent.api.com.atproto.admin.getAccountInfos({ dids }),
+    const [infos, subjectStatuses] = await Promise.all([
+      this.getAccoutInfosByDid(dids),
       this.getSubjectStatus(dids),
     ])
 
-    const infoByDid = appviewRes.data.infos.reduce(
-      (acc, cur) => Object.assign(acc, { [cur.did]: cur }),
-      {} as Record<string, ArrayEl<AccountView>>,
-    )
-
     return dids.reduce((acc, did) => {
-      const info = infoByDid[did] as AccountView | undefined
+      const info = infos.get(did)
       if (!info) return acc
       const status = subjectStatuses.get(did)
       return acc.set(did, {
@@ -63,17 +69,7 @@ export class ModerationViews {
         $type: event.action,
         comment: event.comment ?? undefined,
       },
-      subject:
-        event.subjectType === 'com.atproto.admin.defs#repoRef'
-          ? {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: event.subjectDid,
-            }
-          : {
-              $type: 'com.atproto.repo.strongRef',
-              uri: event.subjectUri,
-              cid: event.subjectCid,
-            },
+      subject: subjectFromEventRow(event).lex(),
       subjectBlobCids: [],
       createdBy: event.createdBy,
       createdAt: event.createdAt,
@@ -306,17 +302,7 @@ export class ModerationViews {
         : REASONOTHER,
       reason: report.comment ?? undefined,
       reportedBy: report.createdBy,
-      subject:
-        report.subjectType === 'com.atproto.admin.defs#repoRef'
-          ? {
-              $type: 'com.atproto.admin.defs#repoRef',
-              did: report.subjectDid,
-            }
-          : {
-              $type: 'com.atproto.repo.strongRef',
-              uri: report.subjectUri,
-              cid: report.subjectCid,
-            },
+      subject: subjectFromEventRow(report).lex(),
     }
   }
   // Partial view for subjects
@@ -479,21 +465,7 @@ export class ModerationViews {
       takendown: status.takendown ?? undefined,
       subjectRepoHandle: status.handle ?? undefined,
       subjectBlobCids: status.blobCids || [],
-      subject: !status.recordPath
-        ? {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: status.did,
-          }
-        : {
-            $type: 'com.atproto.repo.strongRef',
-            uri: AtUri.make(
-              status.did,
-              // Not too intuitive but the recordpath is basically <collection>/<rkey>
-              // which is what the last 2 params of .make() arguments are
-              ...status.recordPath.split('/'),
-            ).toString(),
-            cid: status.recordCid,
-          },
+      subject: subjectFromStatusRow(status).lex(),
     }
   }
 }

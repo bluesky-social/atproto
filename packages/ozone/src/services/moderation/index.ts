@@ -31,8 +31,12 @@ import { StatusKeyset, TimeIdKeyset } from './pagination'
 import AtpAgent from '@atproto/api'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import { sql } from 'kysely'
-import { dedupeStrs } from '@atproto/common'
-import { ModSubject, RecordSubject, RepoSubject } from './subject'
+import {
+  ModSubject,
+  RecordSubject,
+  RepoSubject,
+  subjectFromStatusRow,
+} from './subject'
 
 export class ModerationService {
   constructor(public db: Database, public appviewAgent: AtpAgent) {}
@@ -124,29 +128,18 @@ export class ModerationService {
 
     const result = await paginatedBuilder.execute()
 
-    const dids = dedupeStrs([
+    const infos = await this.views.getAccoutInfosByDid([
       ...result.map((row) => row.subjectDid),
       ...result.map((row) => row.createdBy),
     ])
-    const handlesByDid = await this.getHandlesByDid(dids)
 
     const resultWithHandles = result.map((r) => ({
       ...r,
-      creatorHandle: handlesByDid.get(r.createdBy),
-      subjectHandle: handlesByDid.get(r.subjectDid),
+      creatorHandle: infos.get(r.createdBy)?.handle,
+      subjectHandle: infos.get(r.subjectDid)?.handle,
     }))
 
     return { cursor: keyset.packFromResult(result), events: resultWithHandles }
-  }
-
-  async getHandlesByDid(dids: string[]) {
-    if (dids.length === 0) return new Map()
-    const res = await this.appviewAgent.api.com.atproto.admin.getAccountInfos({
-      dids,
-    })
-    return res.data.infos.reduce((acc, cur) => {
-      return acc.set(cur.did, cur.handle)
-    }, new Map<string, string>())
   }
 
   async getReport(id: number): Promise<ModerationEventRow | undefined> {
@@ -279,24 +272,11 @@ export class ModerationService {
       .selectAll()
       .execute()
 
-    return subjects.map((row) => {
-      let subject: ModSubject
-      if (row.recordPath && row.recordCid) {
-        const uri = AtUri.make(row.did, ...row.recordPath.split('/')).toString()
-        subject = new RecordSubject(
-          uri,
-          row.recordCid,
-          row.blobCids ?? undefined,
-        )
-      } else {
-        subject = new RepoSubject(row.did)
-      }
-      return {
-        subject,
-        reverseSuspend: !!row.suspendUntil && row.suspendUntil < now,
-        reverseMute: !!row.muteUntil && row.muteUntil < now,
-      }
-    })
+    return subjects.map((row) => ({
+      subject: subjectFromStatusRow(row),
+      reverseSuspend: !!row.suspendUntil && row.suspendUntil < now,
+      reverseMute: !!row.muteUntil && row.muteUntil < now,
+    }))
   }
 
   async isSubjectSuspended(did: string): Promise<boolean> {
@@ -317,10 +297,7 @@ export class ModerationService {
     comment,
     action,
     subject,
-  }: ReversibleModerationEvent): Promise<{
-    result: ModerationEventRow
-    restored?: TakedownSubjects
-  }> {
+  }: ReversibleModerationEvent): Promise<ModerationEventRow> {
     const isRevertingTakedown =
       action === 'com.atproto.admin.defs#modEventTakedown'
     this.db.assertTransaction()
@@ -336,55 +313,15 @@ export class ModerationService {
       subject,
     })
 
-    let restored: TakedownSubjects | undefined
-
-    if (!isRevertingTakedown) {
-      return { result, restored }
-    }
-
-    if (subject.isRepo()) {
-      await this.reverseTakedownRepo(subject)
-      restored = {
-        did: result.subjectDid,
-        subjects: [
-          {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: result.subjectDid,
-          },
-        ],
+    if (isRevertingTakedown) {
+      if (subject.isRepo()) {
+        await this.reverseTakedownRepo(subject)
+      } else if (subject.isRecord()) {
+        await this.reverseTakedownRecord(subject)
       }
     }
 
-    if (subject.isRecord()) {
-      await this.reverseTakedownRecord(subject)
-      // TODO: MOD_EVENT This bit needs testing
-      const did = subject.did
-      const subjectStatus = await this.db.db
-        .selectFrom('moderation_subject_status')
-        .where('did', '=', did)
-        .where('recordPath', '=', subject.recordPath)
-        .select('blobCids')
-        .executeTakeFirst()
-      const blobCids = subjectStatus?.blobCids || []
-      restored = {
-        did,
-        subjects: [
-          {
-            $type: 'com.atproto.repo.strongRef',
-            uri: subject.uri,
-            cid: subject.cid,
-          },
-          ...blobCids.map((cid) => ({
-            $type: 'com.atproto.admin.defs#repoBlobRef',
-            did,
-            cid,
-            recordUri: result.subjectUri,
-          })),
-        ],
-      }
-    }
-
-    return { result, restored }
+    return result
   }
 
   async takedownRepo(subject: RepoSubject, takedownId: number) {
@@ -607,11 +544,12 @@ export class ModerationService {
 
     const results = await paginatedBuilder.execute()
 
-    const dids = dedupeStrs(results.map((r) => r.did))
-    const handlesByDid = await this.getHandlesByDid(dids)
+    const infos = await this.views.getAccoutInfosByDid(
+      results.map((r) => r.did),
+    )
     const resultsWithHandles = results.map((r) => ({
       ...r,
-      handle: handlesByDid.get(r.did),
+      handle: infos.get(r.did)?.handle,
     }))
 
     return {
