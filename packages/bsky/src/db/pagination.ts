@@ -115,6 +115,15 @@ export class CreatedAtDidKeyset extends TimeCidKeyset<{
   }
 }
 
+export class IndexedAtDidKeyset extends TimeCidKeyset<{
+  indexedAt: string
+  did: string // dids are treated identically to cids in TimeCidKeyset
+}> {
+  labelResult(result: { indexedAt: string; did: string }) {
+    return { primary: result.indexedAt, secondary: result.did }
+  }
+}
+
 export const paginate = <
   QB extends AnyQb,
   K extends GenericKeyset<unknown, any>,

@@ -1,46 +1,75 @@
+import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
-import { CreatedAtDidKeyset, paginate } from '../../../../db/pagination'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getMutes'
 import AppContext from '../../../../context'
-import { notSoftDeletedClause } from '../../../../db/util'
+import { Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import {
+  HydrationFnInput,
+  PresentationFnInput,
+  SkeletonFnInput,
+  createPipeline,
+  noRules,
+} from '../../../../pipeline'
 
 export default function (server: Server, ctx: AppContext) {
+  const getMutes = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.graph.getMutes({
     auth: ctx.authVerifier,
     handler: async ({ params, auth }) => {
-      const { limit, cursor } = params
-      const requester = auth.credentials.did
-      const db = ctx.db.getReplica()
-      const { ref } = db.db.dynamic
-
-      let mutesReq = db.db
-        .selectFrom('mute')
-        .innerJoin('actor', 'actor.did', 'mute.subjectDid')
-        .where(notSoftDeletedClause(ref('actor')))
-        .where('mute.mutedByDid', '=', requester)
-        .selectAll('actor')
-        .select('mute.createdAt as createdAt')
-
-      const keyset = new CreatedAtDidKeyset(
-        ref('mute.createdAt'),
-        ref('mute.subjectDid'),
-      )
-      mutesReq = paginate(mutesReq, {
-        limit,
-        cursor,
-        keyset,
-      })
-
-      const mutesRes = await mutesReq.execute()
-
-      const actorService = ctx.services.actor(db)
-
+      const viewer = auth.credentials.did
+      const result = await getMutes({ ...params, viewer }, ctx)
       return {
         encoding: 'application/json',
-        body: {
-          cursor: keyset.packFromResult(mutesRes),
-          mutes: await actorService.views.profilesList(mutesRes, requester),
-        },
+        body: result,
       }
     },
   })
+}
+
+const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+  const { params, ctx } = input
+  const { dids, cursor } = await ctx.hydrator.dataplane.getMutes({
+    actorDid: params.viewer,
+    cursor: params.cursor,
+    limit: params.limit,
+  })
+  return {
+    mutedDids: dids,
+    cursor: cursor || undefined,
+  }
+}
+
+const hydration = async (
+  input: HydrationFnInput<Context, Params, SkeletonState>,
+) => {
+  const { ctx, params, skeleton } = input
+  const { viewer } = params
+  const { mutedDids } = skeleton
+  return ctx.hydrator.hydrateProfiles(mutedDids, viewer)
+}
+
+const presentation = (
+  input: PresentationFnInput<Context, Params, SkeletonState>,
+) => {
+  const { ctx, hydration, skeleton } = input
+  const { mutedDids, cursor } = skeleton
+  const mutes = mapDefined(mutedDids, (did) => {
+    return ctx.views.profile(did, hydration)
+  })
+  return { mutes, cursor }
+}
+
+type Context = {
+  hydrator: Hydrator
+  views: Views
+}
+
+type Params = QueryParams & {
+  viewer: string
+}
+
+type SkeletonState = {
+  mutedDids: string[]
+  cursor?: string
 }

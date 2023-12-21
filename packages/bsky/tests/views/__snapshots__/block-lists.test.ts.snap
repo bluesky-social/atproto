@@ -263,11 +263,11 @@ Object {
           "did": "user(2)",
           "viewer": Object {
             "blockedBy": false,
-            "blocking": "record(6)",
+            "blocking": "record(5)",
           },
         },
         "blocked": true,
-        "uri": "record(5)",
+        "uri": "record(0)",
       },
       Object {
         "$type": "app.bsky.feed.defs#blockedPost",
@@ -275,11 +275,11 @@ Object {
           "did": "user(3)",
           "viewer": Object {
             "blockedBy": false,
-            "blocking": "record(6)",
+            "blocking": "record(5)",
           },
         },
         "blocked": true,
-        "uri": "record(7)",
+        "uri": "record(0)",
       },
     ],
   },

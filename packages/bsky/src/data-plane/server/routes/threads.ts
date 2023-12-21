@@ -1,8 +1,6 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../gen/bsky_connect'
-import * as ui8 from 'uint8arrays'
 import { Database } from '../../../db'
-import { keyBy } from '@atproto/common'
 import {
   getAncestorsAndSelfQb,
   getDescendentsQb,
@@ -24,6 +22,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         depth: below,
       })
         .selectFrom('descendent')
+        .innerJoin('post', 'post.uri', 'descendent.uri')
+        .orderBy('post.sortAt', 'desc')
         .selectAll()
         .execute(),
     ])
@@ -32,23 +32,5 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       ...descendents.map((p) => p.uri),
     ]
     return { uris }
-  },
-
-  async getThreadgates(req) {
-    if (req.uris.length === 0) {
-      return { records: [] }
-    }
-    const res = await db.db
-      .selectFrom('record')
-      .selectAll()
-      .where('uri', 'in', req.uris)
-      .execute()
-    const byUri = keyBy(res, 'uri')
-    const records = req.uris.map((uri) => {
-      const row = byUri[uri]
-      const json = row ? row.json : JSON.stringify(null)
-      return ui8.fromString(json, 'utf8')
-    })
-    return { records }
   },
 })

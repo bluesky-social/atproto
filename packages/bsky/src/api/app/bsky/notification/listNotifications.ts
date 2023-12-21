@@ -1,16 +1,19 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { jsonStringToLex } from '@atproto/lexicon'
 import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/listNotifications'
 import AppContext from '../../../../context'
-import { Database } from '../../../../db'
-import { notSoftDeletedClause } from '../../../../db/util'
-import { paginate, TimeCidKeyset } from '../../../../db/pagination'
-import { BlockAndMuteState, GraphService } from '../../../../services/graph'
-import { ActorInfoMap, ActorService } from '../../../../services/actor'
-import { getSelfLabels, Labels, LabelService } from '../../../../services/label'
-import { createPipeline } from '../../../../pipeline'
+import {
+  createPipeline,
+  HydrationFnInput,
+  PresentationFnInput,
+  RulesFnInput,
+  SkeletonFnInput,
+} from '../../../../pipeline'
+import { Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { Notification } from '../../../../data-plane/gen/bsky_pb'
+import { didFromUri } from '../../../../hydration/util'
 
 export default function (server: Server, ctx: AppContext) {
   const listNotifications = createPipeline(
@@ -22,17 +25,8 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.listNotifications({
     auth: ctx.authVerifier,
     handler: async ({ params, auth }) => {
-      const db = ctx.db.getReplica()
-      const actorService = ctx.services.actor(db)
-      const graphService = ctx.services.graph(db)
-      const labelService = ctx.services.label(db)
       const viewer = auth.credentials.did
-
-      const result = await listNotifications(
-        { ...params, viewer },
-        { db, actorService, graphService, labelService },
-      )
-
+      const result = await listNotifications({ ...params, viewer }, ctx)
       return {
         encoding: 'application/json',
         body: result,
@@ -42,138 +36,64 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const skeleton = async (
-  params: Params,
-  ctx: Context,
+  input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
-  const { db } = ctx
-  const { limit, cursor, viewer } = params
-  const { ref } = db.db.dynamic
+  const { params, ctx } = input
   if (params.seenAt) {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
-  let notifBuilder = db.db
-    .selectFrom('notification as notif')
-    .where('notif.did', '=', viewer)
-    .where((clause) =>
-      clause
-        .where('reasonSubject', 'is', null)
-        .orWhereExists(
-          db.db
-            .selectFrom('record as subject')
-            .selectAll()
-            .whereRef('subject.uri', '=', ref('notif.reasonSubject')),
-        ),
-    )
-    .select([
-      'notif.author as authorDid',
-      'notif.recordUri as uri',
-      'notif.recordCid as cid',
-      'notif.reason as reason',
-      'notif.reasonSubject as reasonSubject',
-      'notif.sortAt as indexedAt',
-    ])
-
-  const keyset = new NotifsKeyset(ref('notif.sortAt'), ref('notif.recordCid'))
-  notifBuilder = paginate(notifBuilder, {
-    cursor,
-    limit,
-    keyset,
-    tryIndex: true,
-  })
-
-  const actorStateQuery = db.db
-    .selectFrom('actor_state')
-    .selectAll()
-    .where('did', '=', viewer)
-
-  const [notifs, actorState] = await Promise.all([
-    notifBuilder.execute(),
-    actorStateQuery.executeTakeFirst(),
+  const [res, lastSeenRes] = await Promise.all([
+    ctx.hydrator.dataplane.getNotifications({
+      actorDid: params.viewer,
+      cursor: params.cursor,
+      limit: params.limit,
+    }),
+    ctx.hydrator.dataplane.getNotificationSeen({
+      actorDid: params.viewer,
+    }),
   ])
-
   return {
-    params,
-    notifs,
-    cursor: keyset.packFromResult(notifs),
-    lastSeenNotifs: actorState?.lastSeenNotifs,
+    notifs: res.notifications,
+    cursor: res.cursor,
+    lastSeenNotifs: lastSeenRes.timestamp?.toDate().toISOString(),
   }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { graphService, actorService, labelService, db } = ctx
-  const { params, notifs } = state
-  const { viewer } = params
-  const dids = notifs.map((notif) => notif.authorDid)
-  const uris = notifs.map((notif) => notif.uri)
-  const [actors, records, labels, bam] = await Promise.all([
-    actorService.views.profiles(dids, viewer),
-    getRecordMap(db, uris),
-    labelService.getLabelsForUris(uris),
-    graphService.getBlockAndMuteState(dids.map((did) => [viewer, did])),
-  ])
-  return { ...state, actors, records, labels, bam }
+const hydration = async (
+  input: HydrationFnInput<Context, Params, SkeletonState>,
+) => {
+  const { skeleton, params, ctx } = input
+  return ctx.hydrator.hydrateNotifications(skeleton.notifs, params.viewer)
 }
 
-const noBlockOrMutes = (state: HydrationState) => {
-  const { viewer } = state.params
-  state.notifs = state.notifs.filter(
-    (item) =>
-      !state.bam.block([viewer, item.authorDid]) &&
-      !state.bam.mute([viewer, item.authorDid]),
-  )
-  return state
-}
-
-const presentation = (state: HydrationState) => {
-  const { notifs, cursor, actors, records, labels, lastSeenNotifs } = state
-  const notifications = mapDefined(notifs, (notif) => {
-    const author = actors[notif.authorDid]
-    const record = records[notif.uri]
-    if (!author || !record) return undefined
-    const recordLabels = labels[notif.uri] ?? []
-    const recordSelfLabels = getSelfLabels({
-      uri: notif.uri,
-      cid: notif.cid,
-      record,
-    })
-    return {
-      uri: notif.uri,
-      cid: notif.cid,
-      author,
-      reason: notif.reason,
-      reasonSubject: notif.reasonSubject || undefined,
-      record,
-      isRead: lastSeenNotifs ? notif.indexedAt <= lastSeenNotifs : false,
-      indexedAt: notif.indexedAt,
-      labels: [...recordLabels, ...recordSelfLabels],
-    }
+const noBlockOrMutes = (
+  input: RulesFnInput<Context, Params, SkeletonState>,
+) => {
+  const { skeleton, hydration, ctx } = input
+  skeleton.notifs = skeleton.notifs.filter((item) => {
+    const did = didFromUri(item.uri)
+    return (
+      !ctx.views.viewerBlockExists(did, hydration) &&
+      !ctx.views.viewerMuteExists(did, hydration)
+    )
   })
+  return skeleton
+}
+
+const presentation = (
+  input: PresentationFnInput<Context, Params, SkeletonState>,
+) => {
+  const { skeleton, hydration, ctx } = input
+  const { notifs, lastSeenNotifs, cursor } = skeleton
+  const notifications = mapDefined(notifs, (notif) =>
+    ctx.views.notification(notif, lastSeenNotifs, hydration),
+  )
   return { notifications, cursor }
 }
 
-const getRecordMap = async (
-  db: Database,
-  uris: string[],
-): Promise<RecordMap> => {
-  if (!uris.length) return {}
-  const { ref } = db.db.dynamic
-  const recordRows = await db.db
-    .selectFrom('record')
-    .select(['uri', 'json'])
-    .where('uri', 'in', uris)
-    .where(notSoftDeletedClause(ref('record')))
-    .execute()
-  return recordRows.reduce((acc, { uri, json }) => {
-    acc[uri] = jsonStringToLex(json) as Record<string, unknown>
-    return acc
-  }, {} as RecordMap)
-}
-
 type Context = {
-  db: Database
-  actorService: ActorService
-  graphService: GraphService
-  labelService: LabelService
+  hydrator: Hydrator
+  views: Views
 }
 
 type Params = QueryParams & {
@@ -181,32 +101,7 @@ type Params = QueryParams & {
 }
 
 type SkeletonState = {
-  params: Params
-  notifs: NotifRow[]
+  notifs: Notification[]
   lastSeenNotifs?: string
   cursor?: string
-}
-
-type HydrationState = SkeletonState & {
-  bam: BlockAndMuteState
-  actors: ActorInfoMap
-  records: RecordMap
-  labels: Labels
-}
-
-type RecordMap = { [uri: string]: Record<string, unknown> }
-
-type NotifRow = {
-  authorDid: string
-  uri: string
-  cid: string
-  reason: string
-  reasonSubject: string | null
-  indexedAt: string
-}
-
-class NotifsKeyset extends TimeCidKeyset<NotifRow> {
-  labelResult(result: NotifRow) {
-    return { primary: result.indexedAt, secondary: result.cid }
-  }
 }

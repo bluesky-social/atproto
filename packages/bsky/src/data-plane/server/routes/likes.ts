@@ -2,15 +2,21 @@ import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../gen/bsky_connect'
 import { Database } from '../../../db'
 import { TimeCidKeyset, paginate } from '../../../db/pagination'
+import { keyBy } from '@atproto/common'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getLikesBySubject(req) {
-    const { subjectUri, cursor, limit } = req
+    const { subject, cursor, limit } = req
     const { ref } = db.db.dynamic
 
+    if (!subject?.uri) {
+      return { uris: [] }
+    }
+
+    // @NOTE ignoring subject.cid
     let builder = db.db
       .selectFrom('like')
-      .where('like.subject', '=', subjectUri)
+      .where('like.subject', '=', subject?.uri)
       .selectAll('like')
 
     const keyset = new TimeCidKeyset(ref('like.sortAt'), ref('like.cid'))
@@ -28,15 +34,26 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }
   },
 
-  async getLikeByActorAndSubject(req) {
-    const { actorDid, subjectUri } = req
+  async getLikesByActorAndSubjects(req) {
+    const { actorDid, refs } = req
+    if (refs.length === 0) {
+      return { uris: [] }
+    }
+    // @NOTE ignoring ref.cid
     const res = await db.db
       .selectFrom('like')
       .where('creator', '=', actorDid)
-      .where('subject', '=', subjectUri)
-      .select('uri')
-      .executeTakeFirst()
-    return { uri: res?.uri }
+      .where(
+        'subject',
+        'in',
+        refs.map(({ uri }) => uri),
+      )
+      .selectAll()
+      .execute()
+    const bySubject = keyBy(res, 'subject')
+    // @TODO handling undefineds properly, or do we need to turn them into empty strings?
+    const uris = refs.map(({ uri }) => bySubject[uri]?.uri)
+    return { uris }
   },
 
   async getActorLikes(req) {
@@ -59,19 +76,25 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const likes = await builder.execute()
 
     return {
-      uris: likes.map((l) => l.uri),
+      likes: likes.map((l) => ({
+        uri: l.uri,
+        subject: l.subject,
+      })),
       cursor: keyset.packFromResult(likes),
     }
   },
 
-  async getLikesCount(req) {
+  async getLikeCounts(req) {
+    if (req.uris.length === 0) {
+      return { counts: [] }
+    }
     const res = await db.db
       .selectFrom('post_agg')
-      .where('uri', '=', req.subjectUri)
-      .select('likeCount')
-      .executeTakeFirst()
-    return {
-      count: res?.likeCount,
-    }
+      .where('uri', 'in', req.uris)
+      .selectAll()
+      .execute()
+    const byUri = keyBy(res, 'uri')
+    const counts = req.uris.map((uri) => byUri[uri]?.likeCount ?? 0)
+    return { counts }
   },
 })

@@ -93,7 +93,6 @@ describe('bsky views with mutes from mute lists', () => {
   })
 
   it('uses a list for mutes', async () => {
-    // @TODO proxy through appview
     await agent.api.app.bsky.graph.muteActorList(
       {
         list: listUri,

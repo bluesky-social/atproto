@@ -1,12 +1,32 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../gen/bsky_connect'
-import * as ui8 from 'uint8arrays'
 import { Database } from '../../../db'
 import { countAll } from '../../../db/util'
 import { keyBy } from '@atproto/common'
 import { TimeCidKeyset, paginate } from '../../../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
+  async getActorLists(req) {
+    const { actorDid, cursor, limit } = req
+    const { ref } = db.db.dynamic
+    let builder = db.db
+      .selectFrom('list')
+      .where('creator', '=', actorDid)
+      .selectAll()
+    const keyset = new TimeCidKeyset(ref('list.sortAt'), ref('list.cid'))
+    builder = paginate(builder, {
+      limit,
+      cursor,
+      keyset,
+      tryIndex: true,
+    })
+    const lists = await builder.execute()
+    return {
+      listUris: lists.map((item) => item.uri),
+      cursor: keyset.packFromResult(lists),
+    }
+  },
+
   async getListMembers(req) {
     const { listUri, cursor, limit } = req
     const { ref } = db.db.dynamic
@@ -24,11 +44,15 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       limit,
       cursor,
       keyset,
+      tryIndex: true,
     })
 
     const listItems = await builder.execute()
     return {
-      dids: listItems.map((item) => item.subjectDid),
+      listitems: listItems.map((item) => ({
+        uri: item.uri,
+        did: item.subjectDid,
+      })),
       cursor: keyset.packFromResult(listItems),
     }
   },
@@ -48,18 +72,6 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const listitemUris = listUris.map((uri) => byListUri[uri]?.uri ?? '')
     return {
       listitemUris,
-    }
-  },
-
-  async getList(req) {
-    const res = await db.db
-      .selectFrom('record')
-      .where('uri', '=', req.listUri)
-      .select('json')
-      .executeTakeFirst()
-    const record = res ? ui8.fromString(res.json, 'utf8') : undefined
-    return {
-      record,
     }
   },
 

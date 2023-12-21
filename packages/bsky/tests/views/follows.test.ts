@@ -19,7 +19,6 @@ describe('pds follow views', () => {
     sc = network.getSeedClient()
     await followsSeed(sc)
     await network.processAll()
-    await network.bsky.processAll()
     alice = sc.dids.alice
   })
 

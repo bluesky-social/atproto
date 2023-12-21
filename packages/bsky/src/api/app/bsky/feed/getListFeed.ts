@@ -1,18 +1,13 @@
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getListFeed'
-import { FeedKeyset, getFeedDateThreshold } from '../util/feed'
-import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { setRepoRev } from '../../../util'
-import { Database } from '../../../../db'
-import {
-  FeedHydrationState,
-  FeedRow,
-  FeedService,
-} from '../../../../services/feed'
-import { ActorService } from '../../../../services/actor'
-import { GraphService } from '../../../../services/graph'
 import { createPipeline } from '../../../../pipeline'
+import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { DataPlaneClient } from '../../../../data-plane'
+import { mapDefined } from '@atproto/common'
+import { parseString } from '../../../../hydration/util'
 
 export default function (server: Server, ctx: AppContext) {
   const getListFeed = createPipeline(
@@ -25,17 +20,10 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth, res }) => {
       const viewer = auth.credentials.did
-      const db = ctx.db.getReplica()
-      const actorService = ctx.services.actor(db)
-      const feedService = ctx.services.feed(db)
-      const graphService = ctx.services.graph(db)
 
       const [result, repoRev] = await Promise.all([
-        getListFeed(
-          { ...params, viewer },
-          { db, actorService, feedService, graphService },
-        ),
-        actorService.getRepoRev(viewer),
+        getListFeed({ ...params, viewer }, ctx),
+        ctx.hydrator.actor.getRepoRevSafe(viewer),
       ])
 
       setRepoRev(res, repoRev)
@@ -48,80 +36,70 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-export const skeleton = async (
-  params: Params,
-  ctx: Context,
-): Promise<SkeletonState> => {
-  const { list, cursor, limit } = params
-  const { db } = ctx
-  const { ref } = db.db.dynamic
-
-  const keyset = new FeedKeyset(ref('post.sortAt'), ref('post.cid'))
-  const sortFrom = keyset.unpack(cursor)?.primary
-
-  let builder = ctx.feedService
-    .selectPostQb()
-    .innerJoin('list_item', 'list_item.subjectDid', 'post.creator')
-    .where('list_item.listUri', '=', list)
-    .where('post.sortAt', '>', getFeedDateThreshold(sortFrom, 3))
-
-  builder = paginate(builder, {
-    limit,
-    cursor,
-    keyset,
-    tryIndex: true,
+export const skeleton = async (inputs: {
+  ctx: Context
+  params: Params
+}): Promise<Skeleton> => {
+  const { ctx, params } = inputs
+  const res = await ctx.dataplane.getListFeed({
+    listUri: params.list,
+    limit: params.limit,
+    cursor: params.cursor,
   })
-  const feedItems = await builder.execute()
-
   return {
-    params,
-    feedItems,
-    cursor: keyset.packFromResult(feedItems),
+    uris: res.uris,
+    cursor: parseString(res.cursor),
   }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { feedService } = ctx
-  const { params, feedItems } = state
-  const refs = feedService.feedItemRefs(feedItems)
-  const hydrated = await feedService.feedHydration({
-    ...refs,
-    viewer: params.viewer,
+const hydration = async (inputs: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+}): Promise<HydrationState> => {
+  const { ctx, params, skeleton } = inputs
+  return ctx.hydrator.hydrateFeedPosts(skeleton.uris, params.viewer)
+}
+
+const noBlocksOrMutes = (inputs: {
+  ctx: Context
+  skeleton: Skeleton
+  hydration: HydrationState
+}): Skeleton => {
+  const { ctx, skeleton, hydration } = inputs
+  skeleton.uris = skeleton.uris.filter((uri) => {
+    const bam = ctx.views.feedItemBlocksAndMutes(uri, hydration)
+    return (
+      !bam.authorBlocked &&
+      !bam.authorMuted &&
+      !bam.originatorBlocked &&
+      !bam.originatorMuted
+    )
   })
-  return { ...state, ...hydrated }
+  return skeleton
 }
 
-const noBlocksOrMutes = (state: HydrationState) => {
-  const { viewer } = state.params
-  if (!viewer) return state
-  state.feedItems = state.feedItems.filter(
-    (item) =>
-      !state.bam.block([viewer, item.postAuthorDid]) &&
-      !state.bam.mute([viewer, item.postAuthorDid]),
+const presentation = (inputs: {
+  ctx: Context
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, skeleton, hydration } = inputs
+  const feed = mapDefined(skeleton.uris, (uri) =>
+    ctx.views.feedViewPost(uri, hydration),
   )
-  return state
-}
-
-const presentation = (state: HydrationState, ctx: Context) => {
-  const { feedService } = ctx
-  const { feedItems, cursor, params } = state
-  const feed = feedService.views.formatFeed(feedItems, state, params.viewer)
-  return { feed, cursor }
+  return { feed, cursor: skeleton.cursor }
 }
 
 type Context = {
-  db: Database
-  actorService: ActorService
-  feedService: FeedService
-  graphService: GraphService
+  hydrator: Hydrator
+  views: Views
+  dataplane: DataPlaneClient
 }
 
 type Params = QueryParams & { viewer: string | null }
 
-type SkeletonState = {
-  params: Params
-  feedItems: FeedRow[]
+type Skeleton = {
+  uris: string[]
   cursor?: string
 }
-
-type HydrationState = SkeletonState & FeedHydrationState

@@ -13,17 +13,17 @@ import {
 import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
 import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky/feed/getFeed'
 import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { SkeletonFeedPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { AlgoResponse } from '../../../../feed-gen/types'
-import { Database } from '../../../../db'
+import { AlgoResponse, AlgoResponseItem } from '../../../../feed-gen/types'
 import {
-  FeedHydrationState,
-  FeedRow,
-  FeedService,
-} from '../../../../services/feed'
-import { createPipeline } from '../../../../pipeline'
+  HydrationFnInput,
+  PresentationFnInput,
+  RulesFnInput,
+  SkeletonFnInput,
+  createPipeline,
+} from '../../../../pipeline'
+import { mapDefined } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeed = createPipeline(
@@ -35,18 +35,11 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeed({
     auth: ctx.authOptionalVerifierAnyAudience,
     handler: async ({ params, auth, req }) => {
-      const db = ctx.db.getReplica()
-      const feedService = ctx.services.feed(db)
       const viewer = auth.credentials.did
 
       const { timerSkele, timerHydr, ...result } = await getFeed(
-        { ...params, viewer },
-        {
-          db,
-          feedService,
-          appCtx: ctx,
-          authorization: req.headers['authorization'],
-        },
+        { ...params, viewer, authorization: req.headers['authorization'] },
+        ctx,
       )
 
       return {
@@ -61,108 +54,99 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const skeleton = async (
-  params: Params,
-  ctx: Context,
-): Promise<SkeletonState> => {
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
+  const { ctx, params } = inputs
   const timerSkele = new ServerTimer('skele').start()
-  const localAlgo = ctx.appCtx.algos[params.feed]
-  const feedParams: GetFeedParams = {
-    feed: params.feed,
-    limit: params.limit,
-    cursor: params.cursor,
-  }
+  const localAlgo = ctx.algos[params.feed]
   const { feedItems, cursor, ...passthrough } =
     localAlgo !== undefined
-      ? await localAlgo(ctx.appCtx, params, params.viewer)
-      : await skeletonFromFeedGen(ctx, feedParams)
+      ? await localAlgo(ctx, params, params.viewer)
+      : await skeletonFromFeedGen(ctx, params)
   return {
-    params,
     cursor,
     feedItems,
     timerSkele: timerSkele.stop(),
+    timerHydr: new ServerTimer('hydr').start(),
     passthrough,
   }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
+const hydration = async (
+  inputs: HydrationFnInput<Context, Params, Skeleton>,
+) => {
+  const { ctx, params, skeleton } = inputs
   const timerHydr = new ServerTimer('hydr').start()
-  const { feedService } = ctx
-  const { params, feedItems } = state
-  const refs = feedService.feedItemRefs(feedItems)
-  const hydrated = await feedService.feedHydration({
-    ...refs,
-    viewer: params.viewer,
-  })
-  return { ...state, ...hydrated, timerHydr: timerHydr.stop() }
+  const feedItemUris = skeleton.feedItems.map((item) => item.itemUri)
+  const hydration = await ctx.hydrator.hydrateFeedPosts(
+    feedItemUris,
+    params.viewer,
+  )
+  skeleton.timerHydr = timerHydr.stop()
+  return hydration
 }
 
-const noBlocksOrMutes = (state: HydrationState) => {
-  const { viewer } = state.params
-  state.feedItems = state.feedItems.filter((item) => {
-    if (!viewer) return true
+const noBlocksOrMutes = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
+  const { ctx, skeleton, hydration } = inputs
+  skeleton.feedItems = skeleton.feedItems.filter((item) => {
+    const bam = ctx.views.feedItemBlocksAndMutes(item.itemUri, hydration)
     return (
-      !state.bam.block([viewer, item.postAuthorDid]) &&
-      !state.bam.block([viewer, item.originatorDid]) &&
-      !state.bam.mute([viewer, item.postAuthorDid]) &&
-      !state.bam.mute([viewer, item.originatorDid])
+      !bam.authorBlocked &&
+      !bam.authorMuted &&
+      !bam.originatorBlocked &&
+      !bam.originatorMuted
     )
   })
-  return state
+  return skeleton
 }
 
-const presentation = (state: HydrationState, ctx: Context) => {
-  const { feedService } = ctx
-  const { feedItems, cursor, passthrough, params } = state
-  const feed = feedService.views.formatFeed(feedItems, state, params.viewer)
+const presentation = (
+  inputs: PresentationFnInput<Context, Params, Skeleton>,
+) => {
+  const { ctx, params, skeleton, hydration } = inputs
+  const feed = mapDefined(skeleton.feedItems, (item) => {
+    const view = ctx.views.feedViewPost(item.itemUri, hydration)
+    if (view?.post.uri !== item.postUri) {
+      return undefined
+    } else {
+      return view
+    }
+  }).slice(0, params.limit)
   return {
     feed,
-    cursor,
-    timerSkele: state.timerSkele,
-    timerHydr: state.timerHydr,
-    ...passthrough,
+    cursor: skeleton.cursor,
+    timerSkele: skeleton.timerSkele,
+    timerHydr: skeleton.timerHydr,
+    ...skeleton.passthrough,
   }
 }
 
-type Context = {
-  db: Database
-  feedService: FeedService
-  appCtx: AppContext
-  authorization?: string
-}
+type Context = AppContext
 
-type Params = GetFeedParams & { viewer: string | null }
+type Params = GetFeedParams & { viewer: string | null; authorization?: string }
 
-type SkeletonState = {
-  params: Params
-  feedItems: FeedRow[]
+type Skeleton = {
+  feedItems: AlgoResponseItem[]
   passthrough: Record<string, unknown> // pass through additional items in feedgen response
   cursor?: string
   timerSkele: ServerTimer
+  timerHydr: ServerTimer
 }
-
-type HydrationState = SkeletonState &
-  FeedHydrationState & { feedItems: FeedRow[]; timerHydr: ServerTimer }
 
 const skeletonFromFeedGen = async (
   ctx: Context,
-  params: GetFeedParams,
+  params: Params,
 ): Promise<AlgoResponse> => {
-  const { db, appCtx, authorization } = ctx
   const { feed } = params
-  // Resolve and fetch feed skeleton
-  const found = await db.db
-    .selectFrom('feed_generator')
-    .where('uri', '=', feed)
-    .select('feedDid')
-    .executeTakeFirst()
-  if (!found) {
+  const found = await ctx.hydrator.feed.getFeedGens([feed], true)
+  const feedDid = await found.get(feed)?.record.did
+  if (!feedDid) {
     throw new InvalidRequestError('could not find feed')
   }
-  const feedDid = found.feedDid
 
   let resolved: DidDocument | null
   try {
-    resolved = await appCtx.idResolver.did.resolve(feedDid)
+    resolved = await ctx.idResolver.did.resolve(feedDid)
   } catch (err) {
     if (err instanceof PoorlyFormattedDidDocumentError) {
       throw new InvalidRequestError(`invalid did document: ${feedDid}`)
@@ -185,12 +169,19 @@ const skeletonFromFeedGen = async (
   let skeleton: SkeletonOutput
   try {
     // @TODO currently passthrough auth headers from pds
-    const headers: Record<string, string> = authorization
-      ? { authorization: authorization }
+    const headers: Record<string, string> = params.authorization
+      ? { authorization: params.authorization }
       : {}
-    const result = await agent.api.app.bsky.feed.getFeedSkeleton(params, {
-      headers,
-    })
+    const result = await agent.api.app.bsky.feed.getFeedSkeleton(
+      {
+        feed: params.feed,
+        limit: params.limit,
+        cursor: params.cursor,
+      },
+      {
+        headers,
+      },
+    )
     skeleton = result.data
   } catch (err) {
     if (err instanceof AppBskyFeedGetFeedSkeleton.UnknownFeedError) {
@@ -211,33 +202,11 @@ const skeletonFromFeedGen = async (
   }
 
   const { feed: feedSkele, ...skele } = skeleton
-  const feedItems = await skeletonToFeedItems(
-    feedSkele.slice(0, params.limit),
-    ctx,
-  )
+  const feedItems = feedSkele.map((item) => ({
+    itemUri:
+      typeof item.reason?.repost === 'string' ? item.reason.repost : item.post,
+    postUri: item.post,
+  }))
 
   return { ...skele, feedItems }
-}
-
-const skeletonToFeedItems = async (
-  skeleton: SkeletonFeedPost[],
-  ctx: Context,
-): Promise<FeedRow[]> => {
-  const { feedService } = ctx
-  const feedItemUris = skeleton.map(getSkeleFeedItemUri)
-  const feedItemsRaw = await feedService.getFeedItems(feedItemUris)
-  const results: FeedRow[] = []
-  for (const skeleItem of skeleton) {
-    const feedItem = feedItemsRaw[getSkeleFeedItemUri(skeleItem)]
-    if (feedItem && feedItem.postUri === skeleItem.post) {
-      results.push(feedItem)
-    }
-  }
-  return results
-}
-
-const getSkeleFeedItemUri = (item: SkeletonFeedPost) => {
-  return typeof item.reason?.repost === 'string'
-    ? item.reason.repost
-    : item.post
 }

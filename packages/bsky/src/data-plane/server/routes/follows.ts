@@ -33,6 +33,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .select([
         'follow.uri as uri',
         'follow.cid as cid',
+        'follow.subjectDid as subjectDid',
         'follow.sortAt as sortAt',
       ])
 
@@ -41,11 +42,12 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       limit,
       cursor,
       keyset,
+      tryIndex: true,
     })
 
     const followers = await followersReq.execute()
     return {
-      uris: followers.map((f) => f.uri),
+      followers: followers.map((f) => ({ uri: f.uri, did: f.subjectDid })),
       cursor: keyset.packFromResult(followers),
     }
   },
@@ -61,6 +63,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .select([
         'follow.uri as uri',
         'follow.cid as cid',
+        'follow.subjectDid as subjectDid',
         'follow.sortAt as sortAt',
       ])
 
@@ -69,33 +72,40 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       limit,
       cursor,
       keyset,
+      tryIndex: true,
     })
 
     const follows = await followsReq.execute()
 
     return {
-      uris: follows.map((f) => f.uri),
+      follows: follows.map((f) => ({ uri: f.uri, did: f.subjectDid })),
       cursor: keyset.packFromResult(follows),
     }
   },
-  async getFollowersCount(req) {
+  async getFollowerCounts(req) {
+    if (req.dids.length === 0) {
+      return { counts: [] }
+    }
     const res = await db.db
       .selectFrom('profile_agg')
-      .select('followersCount')
-      .where('did', '=', req.actorDid)
-      .executeTakeFirst()
-    return {
-      count: res?.followersCount,
-    }
+      .selectAll()
+      .where('did', 'in', req.dids)
+      .execute()
+    const byDid = keyBy(res, 'did')
+    const counts = req.dids.map((did) => byDid[did]?.followersCount ?? 0)
+    return { counts }
   },
-  async getFollowsCount(req) {
+  async getFollowCounts(req) {
+    if (req.dids.length === 0) {
+      return { counts: [] }
+    }
     const res = await db.db
       .selectFrom('profile_agg')
-      .select('followsCount')
-      .where('did', '=', req.actorDid)
-      .executeTakeFirst()
-    return {
-      count: res?.followsCount,
-    }
+      .selectAll()
+      .where('did', 'in', req.dids)
+      .execute()
+    const byDid = keyBy(res, 'did')
+    const counts = req.dids.map((did) => byDid[did]?.followsCount ?? 0)
+    return { counts }
   },
 })

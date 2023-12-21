@@ -5,12 +5,13 @@ import { TimeCidKeyset, paginate } from '../../../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getAuthorFeed(req) {
-    const { actorDid, limit, cursor, repliesOnly, mediaOnly } = req
+    const { actorDid, limit, cursor, noReplies, mediaOnly } = req
     const { ref } = db.db.dynamic
 
     // defaults to posts, reposts, and replies
     let builder = db.db
       .selectFrom('feed_item')
+      .innerJoin('post', 'post.uri', 'feed_item.postUri')
       .selectAll('feed_item')
       .where('originatorDid', '=', actorDid)
 
@@ -25,8 +26,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
             .select('post_embed_image.postUri')
             .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
         )
-    } else if (repliesOnly) {
-      // @TODO
+    } else if (noReplies) {
+      builder = builder.where((qb) =>
+        qb.where('post.replyParent', 'is', null).orWhere('type', '=', 'repost'),
+      )
     }
 
     const keyset = new TimeCidKeyset(
@@ -43,7 +46,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const feedItems = await builder.execute()
 
     return {
-      uris: feedItems.map((row) => row.uri),
+      items: feedItems.map(feedItemFromRow),
       cursor: keyset.packFromResult(feedItems),
     }
   },
@@ -96,7 +99,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .slice(0, limit)
 
     return {
-      uris: feedItems.map((item) => item.uri),
+      items: feedItems.map(feedItemFromRow),
       cursor: keyset.packFromResult(feedItems),
     }
   },
@@ -107,7 +110,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     let builder = db.db
       .selectFrom('post')
-      .selectAll()
+      .selectAll('post')
       .innerJoin('list_item', 'list_item.subjectDid', 'post.creator')
       .where('list_item.listUri', '=', listUri)
 
@@ -121,8 +124,15 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const feedItems = await builder.execute()
 
     return {
-      uris: feedItems.map((item) => item.uri),
+      uris: feedItems.map((item) => item.uri), // @TODO consider switching to FeedItemInfo[]
       cursor: keyset.packFromResult(feedItems),
     }
   },
 })
+
+const feedItemFromRow = (row: { postUri: string; uri: string }) => {
+  return {
+    uri: row.postUri,
+    repost: row.uri === row.postUri ? undefined : row.uri,
+  }
+}

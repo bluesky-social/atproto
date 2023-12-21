@@ -54,7 +54,6 @@ Object {
           "like": "record(7)",
         },
       },
-      "replies": Array [],
     },
     "post": Object {
       "author": Object {
@@ -135,7 +134,6 @@ Object {
       "uri": "record(5)",
       "viewer": Object {},
     },
-    "replies": Array [],
   },
   "post": Object {
     "author": Object {
@@ -1073,6 +1071,11 @@ Object {
     },
   },
   "replies": Array [
+    Object {
+      "$type": "app.bsky.feed.defs#notFoundPost",
+      "notFound": true,
+      "uri": "record(0)",
+    },
     Object {
       "$type": "app.bsky.feed.defs#threadViewPost",
       "post": Object {

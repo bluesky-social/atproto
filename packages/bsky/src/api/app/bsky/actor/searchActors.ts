@@ -1,64 +1,97 @@
-import { sql } from 'kysely'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
+import { mapDefined } from '@atproto/common'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/searchActors'
 import {
-  cleanQuery,
-  getUserSearchQuery,
-  SearchKeyset,
-} from '../../../../services/util/search'
+  HydrationFnInput,
+  PresentationFnInput,
+  RulesFnInput,
+  SkeletonFnInput,
+  createPipeline,
+} from '../../../../pipeline'
+import { Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { DataPlaneClient } from '../../../../data-plane'
+import { parseString } from '../../../../hydration/util'
+import { cleanQuery } from '../../../../services/util/search'
 
 export default function (server: Server, ctx: AppContext) {
+  const searchActors = createPipeline(
+    skeleton,
+    hydration,
+    noBlocks,
+    presentation,
+  )
   server.app.bsky.actor.searchActors({
     auth: ctx.authOptionalVerifier,
     handler: async ({ auth, params }) => {
-      const { cursor, limit } = params
-      const requester = auth.credentials.did
-      const rawQuery = params.q ?? params.term
-      const query = cleanQuery(rawQuery || '')
-      const db = ctx.db.getReplica('search')
-
-      let results: string[]
-      let resCursor: string | undefined
-      if (ctx.searchAgent) {
-        const res =
-          await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
-            q: query,
-            cursor,
-            limit,
-          })
-        results = res.data.actors.map((a) => a.did)
-        resCursor = res.data.cursor
-      } else {
-        const res = query
-          ? await getUserSearchQuery(db, { query, limit, cursor })
-              .select('distance')
-              .selectAll('actor')
-              .execute()
-          : []
-        results = res.map((a) => a.did)
-        const keyset = new SearchKeyset(sql``, sql``)
-        resCursor = keyset.packFromResult(res)
-      }
-
-      const actors = await ctx.services
-        .actor(db)
-        .views.profiles(results, requester)
-
-      const SKIP = []
-      const filtered = results.flatMap((did) => {
-        const actor = actors[did]
-        if (!actor) return SKIP
-        if (actor.viewer?.blocking || actor.viewer?.blockedBy) return SKIP
-        return actor
-      })
-
+      const viewer = auth.credentials.did
+      const results = await searchActors({ ...params, viewer }, ctx)
       return {
         encoding: 'application/json',
-        body: {
-          cursor: resCursor,
-          actors: filtered,
-        },
+        body: results,
       }
     },
   })
+}
+
+const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
+  const { ctx, params } = inputs
+  const rawQuery = params.q ?? params.term
+  const term = cleanQuery(rawQuery || '')
+
+  // @TODO
+  // add hits total
+
+  const res = await ctx.dataplane.searchActors({
+    term,
+    limit: params.limit,
+    cursor: params.cursor,
+  })
+  return {
+    dids: res.dids,
+    cursor: parseString(res.cursor),
+  }
+}
+
+const hydration = async (
+  inputs: HydrationFnInput<Context, Params, Skeleton>,
+) => {
+  const { ctx, params, skeleton } = inputs
+  return ctx.hydrator.hydrateProfiles(skeleton.dids, params.viewer)
+}
+
+const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
+  const { ctx, skeleton, hydration } = inputs
+  skeleton.dids = skeleton.dids.filter(
+    (did) => !ctx.views.viewerBlockExists(did, hydration),
+  )
+  return skeleton
+}
+
+const presentation = (
+  inputs: PresentationFnInput<Context, Params, Skeleton>,
+) => {
+  const { ctx, skeleton, hydration } = inputs
+  const actors = mapDefined(skeleton.dids, (did) =>
+    ctx.views.profile(did, hydration),
+  )
+  return {
+    actors,
+    cursor: skeleton.cursor,
+  }
+}
+
+type Context = {
+  dataplane: DataPlaneClient
+  hydrator: Hydrator
+  views: Views
+}
+
+type Params = QueryParams & { viewer: string | null }
+
+type Skeleton = {
+  dids: string[]
+  hitsTotal?: number
+  cursor?: string
 }

@@ -2,13 +2,10 @@ import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfiles'
 import AppContext from '../../../../context'
-import { Database } from '../../../../db'
-import {
-  ActorService,
-  ProfileDetailHydrationState,
-} from '../../../../services/actor'
 import { setRepoRev } from '../../../util'
 import { createPipeline, noRules } from '../../../../pipeline'
+import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
@@ -20,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.did
 
       const [result, repoRev] = await Promise.all([
-        getProfile({ ...params, viewer }, { db, actorService }),
+        getProfile({ ...params, viewer }, ctx),
         actorService.getRepoRev(viewer),
       ])
 
@@ -34,45 +31,44 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (
-  params: Params,
-  ctx: Context,
-): Promise<SkeletonState> => {
-  const { actorService } = ctx
-  const actors = await actorService.getActors(params.actors)
-  return { params, dids: actors.map((a) => a.did) }
+const skeleton = async (input: {
+  ctx: Context
+  params: Params
+}): Promise<SkeletonState> => {
+  const { ctx, params } = input
+  const dids = await ctx.hydrator.actor.getDidsDefined(params.actors)
+  return { dids }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { actorService } = ctx
-  const { params, dids } = state
-  const { viewer } = params
-  const hydration = await actorService.views.profileDetailHydration(dids, {
-    viewer,
-  })
-  return { ...state, ...hydration }
+const hydration = async (input: {
+  ctx: Context
+  params: Params
+  skeleton: SkeletonState
+}) => {
+  const { ctx, params, skeleton } = input
+  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, params.viewer)
 }
 
-const presentation = (state: HydrationState, ctx: Context) => {
-  const { actorService } = ctx
-  const { params, dids } = state
-  const { viewer } = params
-  const profiles = actorService.views.profileDetailPresentation(dids, state, {
-    viewer,
-  })
-  const profileViews = mapDefined(dids, (did) => profiles[did])
-  return { profiles: profileViews }
+const presentation = (input: {
+  ctx: Context
+  params: Params
+  skeleton: SkeletonState
+  hydration: HydrationState
+}) => {
+  const { ctx, skeleton, hydration } = input
+  const profiles = mapDefined(skeleton.dids, (did) =>
+    ctx.views.profileDetailed(did, hydration),
+  )
+  return { profiles }
 }
 
 type Context = {
-  db: Database
-  actorService: ActorService
+  hydrator: Hydrator
+  views: Views
 }
 
 type Params = QueryParams & {
   viewer: string | null
 }
 
-type SkeletonState = { params: Params; dids: string[] }
-
-type HydrationState = SkeletonState & ProfileDetailHydrationState
+type SkeletonState = { dids: string[] }

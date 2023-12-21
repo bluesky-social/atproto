@@ -1,19 +1,19 @@
+import { mapDefined } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
-import { FeedKeyset } from '../util/feed'
-import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { setRepoRev } from '../../../util'
-import { Database } from '../../../../db'
-import {
-  FeedHydrationState,
-  FeedRow,
-  FeedService,
-} from '../../../../services/feed'
-import { ActorService } from '../../../../services/actor'
-import { GraphService } from '../../../../services/graph'
 import { createPipeline } from '../../../../pipeline'
+import {
+  HydrationState,
+  Hydrator,
+  mergeStates,
+} from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { DataPlaneClient } from '../../../../data-plane'
+import { parseString } from '../../../../hydration/util'
+import { Actor } from '../../../../hydration/actor'
 
 export default function (server: Server, ctx: AppContext) {
   const getAuthorFeed = createPipeline(
@@ -25,19 +25,12 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
     auth: ctx.authOptionalAccessOrRoleVerifier,
     handler: async ({ params, auth, res }) => {
-      const db = ctx.db.getReplica()
-      const actorService = ctx.services.actor(db)
-      const feedService = ctx.services.feed(db)
-      const graphService = ctx.services.graph(db)
       const viewer =
         auth.credentials.type === 'access' ? auth.credentials.did : null
 
       const [result, repoRev] = await Promise.all([
-        getAuthorFeed(
-          { ...params, viewer },
-          { db, actorService, feedService, graphService },
-        ),
-        actorService.getRepoRev(viewer),
+        getAuthorFeed({ ...params, viewer }, ctx),
+        ctx.hydrator.actor.getRepoRevSafe(viewer),
       ])
 
       setRepoRev(res, repoRev)
@@ -50,120 +43,104 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-export const skeleton = async (
-  params: Params,
-  ctx: Context,
-): Promise<SkeletonState> => {
-  const { cursor, limit, actor, filter, viewer } = params
-  const { db, actorService, feedService, graphService } = ctx
-  const { ref } = db.db.dynamic
-
-  // maybe resolve did first
-  const actorRes = await actorService.getActor(actor)
-  if (!actorRes) {
+export const skeleton = async (inputs: {
+  ctx: Context
+  params: Params
+}): Promise<Skeleton> => {
+  const { ctx, params } = inputs
+  const [did] = await ctx.hydrator.actor.getDids([params.actor])
+  if (!did) {
     throw new InvalidRequestError('Profile not found')
   }
-  const actorDid = actorRes.did
-
-  // verify there is not a block between requester & subject
-  if (viewer !== null) {
-    const blocks = await graphService.getBlockState([[viewer, actorDid]])
-    if (blocks.blocking([viewer, actorDid])) {
-      throw new InvalidRequestError(
-        `Requester has blocked actor: ${actor}`,
-        'BlockedActor',
-      )
-    }
-    if (blocks.blockedBy([viewer, actorDid])) {
-      throw new InvalidRequestError(
-        `Requester is blocked by actor: $${actor}`,
-        'BlockedByActor',
-      )
-    }
+  const actors = await ctx.hydrator.actor.getActors([did])
+  const actor = actors.get(did)
+  if (!actor || actor.takendown) {
+    throw new InvalidRequestError('Profile not found')
   }
-
-  // defaults to posts, reposts, and replies
-  let feedItemsQb = feedService
-    .selectFeedItemQb()
-    .where('originatorDid', '=', actorDid)
-
-  if (filter === 'posts_with_media') {
-    feedItemsQb = feedItemsQb
-      // only your own posts
-      .where('type', '=', 'post')
-      // only posts with media
-      .whereExists((qb) =>
-        qb
-          .selectFrom('post_embed_image')
-          .select('post_embed_image.postUri')
-          .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
-      )
-  } else if (filter === 'posts_no_replies') {
-    feedItemsQb = feedItemsQb.where((qb) =>
-      qb.where('post.replyParent', 'is', null).orWhere('type', '=', 'repost'),
-    )
-  }
-
-  const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
-
-  feedItemsQb = paginate(feedItemsQb, {
-    limit,
-    cursor,
-    keyset,
+  const res = await ctx.dataplane.getAuthorFeed({
+    actorDid: did,
+    limit: params.limit,
+    cursor: params.cursor,
+    noReplies: params.filter === 'posts_no_replies',
+    mediaOnly: params.filter === 'posts_with_media',
   })
-
-  const feedItems = await feedItemsQb.execute()
-
   return {
-    params,
-    feedItems,
-    cursor: keyset.packFromResult(feedItems),
+    actor,
+    uris: res.items.map((item) => item.repost || item.uri),
+    cursor: parseString(res.cursor),
   }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { feedService } = ctx
-  const { params, feedItems } = state
-  const refs = feedService.feedItemRefs(feedItems)
-  const hydrated = await feedService.feedHydration({
-    ...refs,
-    viewer: params.viewer,
-  })
-  return { ...state, ...hydrated }
+const hydration = async (inputs: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+}): Promise<HydrationState> => {
+  const { ctx, params, skeleton } = inputs
+  const [feedPostState, profileViewerState = {}] = await Promise.all([
+    ctx.hydrator.hydrateFeedPosts(skeleton.uris, params.viewer),
+    params.viewer
+      ? ctx.hydrator.actor.getProfileViewerStates(
+          [skeleton.actor.did],
+          params.viewer,
+        )
+      : undefined,
+  ])
+  return mergeStates(feedPostState, profileViewerState)
 }
 
-const noBlocksOrMutedReposts = (state: HydrationState) => {
-  const { viewer } = state.params
-  state.feedItems = state.feedItems.filter((item) => {
-    if (!viewer) return true
+const noBlocksOrMutedReposts = (inputs: {
+  ctx: Context
+  skeleton: Skeleton
+  hydration: HydrationState
+}): Skeleton => {
+  const { ctx, skeleton, hydration } = inputs
+  const relationship = hydration.profileViewers?.get(skeleton.actor.did)
+  if (relationship?.blocking || relationship?.blockingByList) {
+    throw new InvalidRequestError(
+      `Requester has blocked actor: ${skeleton.actor.did}`,
+      'BlockedActor',
+    )
+  }
+  if (relationship?.blockedBy || relationship?.blockedByList) {
+    throw new InvalidRequestError(
+      `Requester is blocked by actor: ${skeleton.actor.did}`,
+      'BlockedByActor',
+    )
+  }
+  skeleton.uris = skeleton.uris.filter((uri) => {
+    const bam = ctx.views.feedItemBlocksAndMutes(uri, hydration)
     return (
-      !state.bam.block([viewer, item.postAuthorDid]) &&
-      (item.type === 'post' || !state.bam.mute([viewer, item.postAuthorDid]))
+      !bam.authorBlocked &&
+      !bam.originatorBlocked &&
+      !(bam.authorMuted && !bam.originatorMuted)
     )
   })
-  return state
+  return skeleton
 }
 
-const presentation = (state: HydrationState, ctx: Context) => {
-  const { feedService } = ctx
-  const { feedItems, cursor, params } = state
-  const feed = feedService.views.formatFeed(feedItems, state, params.viewer)
-  return { feed, cursor }
+const presentation = (inputs: {
+  ctx: Context
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, skeleton, hydration } = inputs
+  const feed = mapDefined(skeleton.uris, (uri) =>
+    ctx.views.feedViewPost(uri, hydration),
+  )
+  return { feed, cursor: skeleton.cursor }
 }
 
 type Context = {
-  db: Database
-  actorService: ActorService
-  feedService: FeedService
-  graphService: GraphService
+  hydrator: Hydrator
+  views: Views
+  dataplane: DataPlaneClient
 }
 
 type Params = QueryParams & { viewer: string | null }
 
-type SkeletonState = {
-  params: Params
-  feedItems: FeedRow[]
+type Skeleton = {
+  actor: Actor
+  uris: string[]
   cursor?: string
 }
-
-type HydrationState = SkeletonState & FeedHydrationState

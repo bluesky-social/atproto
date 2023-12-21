@@ -18,6 +18,7 @@ export class TestBsky {
     public server: bsky.BskyAppView,
     public indexer: bsky.BskyIndexer,
     public ingester: bsky.BskyIngester,
+    public dataplane: bsky.DataPlaneServer,
   ) {}
 
   static async create(cfg: BskyConfig): Promise<TestBsky> {
@@ -34,23 +35,6 @@ export class TestBsky {
       signer: serviceKeypair,
     })
 
-    const config = new bsky.ServerConfig({
-      version: '0.0.0',
-      port,
-      didPlcUrl: cfg.plcUrl,
-      publicUrl: 'https://bsky.public.url',
-      serverDid,
-      didCacheStaleTTL: HOUR,
-      didCacheMaxTTL: DAY,
-      ...cfg,
-      // Each test suite gets its own lock id for the repo subscription
-      adminPassword: ADMIN_PASSWORD,
-      moderatorPassword: MOD_PASSWORD,
-      triagePassword: TRIAGE_PASSWORD,
-      labelerDid: 'did:example:labeler',
-      feedGenDid: 'did:example:feedGen',
-    })
-
     // shared across server, ingester, and indexer in order to share pool, avoid too many pg connections.
     const db = new bsky.DatabaseCoordinator({
       schema: cfg.dbPostgresSchema,
@@ -59,6 +43,30 @@ export class TestBsky {
         poolSize: 10,
       },
       replicas: [],
+    })
+
+    const dataplanePort = await getPort()
+    const dataplane = await bsky.DataPlaneServer.create(
+      db.getPrimary(),
+      dataplanePort,
+    )
+
+    const config = new bsky.ServerConfig({
+      version: '0.0.0',
+      port,
+      didPlcUrl: cfg.plcUrl,
+      publicUrl: 'https://bsky.public.url',
+      serverDid,
+      didCacheStaleTTL: HOUR,
+      didCacheMaxTTL: DAY,
+      dataplaneUrl: `http://localhost:${dataplanePort}`,
+      ...cfg,
+      // Each test suite gets its own lock id for the repo subscription
+      adminPassword: ADMIN_PASSWORD,
+      moderatorPassword: MOD_PASSWORD,
+      triagePassword: TRIAGE_PASSWORD,
+      labelerDid: 'did:example:labeler',
+      feedGenDid: 'did:example:feedGen',
     })
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
@@ -146,7 +154,7 @@ export class TestBsky {
 
     // we refresh label cache by hand in `processAll` instead of on a timer
     server.ctx.labelCache.stop()
-    return new TestBsky(url, port, server, indexer, ingester)
+    return new TestBsky(url, port, server, indexer, ingester, dataplane)
   }
 
   get ctx(): bsky.AppContext {
@@ -190,6 +198,7 @@ export class TestBsky {
 
   async close() {
     await this.server.destroy({ skipDb: true })
+    await this.dataplane.destroy()
     await this.ingester.destroy({ skipDb: true })
     await this.indexer.destroy() // closes shared db
   }

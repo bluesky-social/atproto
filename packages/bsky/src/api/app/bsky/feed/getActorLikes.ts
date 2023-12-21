@@ -1,19 +1,15 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
-import { FeedKeyset } from '../util/feed'
-import { paginate } from '../../../../db/pagination'
 import AppContext from '../../../../context'
 import { setRepoRev } from '../../../util'
-import {
-  FeedHydrationState,
-  FeedRow,
-  FeedService,
-} from '../../../../services/feed'
-import { Database } from '../../../../db'
-import { ActorService } from '../../../../services/actor'
-import { GraphService } from '../../../../services/graph'
 import { createPipeline } from '../../../../pipeline'
+import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
+import { DataPlaneClient } from '../../../../data-plane'
+import { parseString } from '../../../../hydration/util'
+import { creatorFromUri } from '../../../../views/util'
 
 export default function (server: Server, ctx: AppContext) {
   const getActorLikes = createPipeline(
@@ -26,17 +22,10 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authOptionalVerifier,
     handler: async ({ params, auth, res }) => {
       const viewer = auth.credentials.did
-      const db = ctx.db.getReplica()
-      const actorService = ctx.services.actor(db)
-      const feedService = ctx.services.feed(db)
-      const graphService = ctx.services.graph(db)
 
       const [result, repoRev] = await Promise.all([
-        getActorLikes(
-          { ...params, viewer },
-          { db, actorService, feedService, graphService },
-        ),
-        actorService.getRepoRev(viewer),
+        getActorLikes({ ...params, viewer }, ctx),
+        ctx.hydrator.actor.getRepoRevSafe(viewer),
       ])
 
       setRepoRev(res, repoRev)
@@ -49,77 +38,78 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (
-  params: Params,
-  ctx: Context,
-): Promise<SkeletonState> => {
-  const { db, actorService, feedService } = ctx
+const skeleton = async (inputs: {
+  ctx: Context
+  params: Params
+}): Promise<Skeleton> => {
+  const { ctx, params } = inputs
   const { actor, limit, cursor, viewer } = params
-  const { ref } = db.db.dynamic
 
-  const actorRes = await actorService.getActor(actor)
-  if (!actorRes) {
-    throw new InvalidRequestError('Profile not found')
-  }
-  const actorDid = actorRes.did
-
-  if (!viewer || viewer !== actorDid) {
+  const [actorDid] = await ctx.hydrator.actor.getDids([actor])
+  if (!actorDid || !viewer || viewer !== actorDid) {
     throw new InvalidRequestError('Profile not found')
   }
 
-  let feedItemsQb = feedService
-    .selectFeedItemQb()
-    .innerJoin('like', 'like.subject', 'feed_item.uri')
-    .where('like.creator', '=', actorDid)
-
-  const keyset = new FeedKeyset(ref('like.sortAt'), ref('like.cid'))
-
-  feedItemsQb = paginate(feedItemsQb, {
+  const likesRes = await ctx.dataplane.getActorLikes({
+    actorDid,
     limit,
     cursor,
-    keyset,
   })
 
-  const feedItems = await feedItemsQb.execute()
+  const postUris = likesRes.likes.map((l) => l.subject)
 
-  return { params, feedItems, cursor: keyset.packFromResult(feedItems) }
+  return {
+    postUris,
+    cursor: parseString(likesRes.cursor),
+  }
 }
 
-const hydration = async (state: SkeletonState, ctx: Context) => {
-  const { feedService } = ctx
-  const { params, feedItems } = state
-  const refs = feedService.feedItemRefs(feedItems)
-  const hydrated = await feedService.feedHydration({
-    ...refs,
-    viewer: params.viewer,
+const hydration = async (inputs: {
+  ctx: Context
+  params: Params
+  skeleton: Skeleton
+}) => {
+  const { ctx, params, skeleton } = inputs
+  return await ctx.hydrator.hydrateFeedPosts(skeleton.postUris, params.viewer)
+}
+
+const noPostBlocks = (inputs: {
+  ctx: Context
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, skeleton, hydration } = inputs
+  skeleton.postUris = skeleton.postUris.filter((uri) => {
+    const creator = creatorFromUri(uri)
+    return !ctx.views.viewerBlockExists(creator, hydration)
   })
-  return { ...state, ...hydrated }
+  return skeleton
 }
 
-const noPostBlocks = (state: HydrationState) => {
-  const { viewer } = state.params
-  state.feedItems = state.feedItems.filter(
-    (item) => !viewer || !state.bam.block([viewer, item.postAuthorDid]),
+const presentation = (inputs: {
+  ctx: Context
+  skeleton: Skeleton
+  hydration: HydrationState
+}) => {
+  const { ctx, skeleton, hydration } = inputs
+  const feed = mapDefined(skeleton.postUris, (uri) =>
+    ctx.views.feedViewPost(uri, hydration),
   )
-  return state
-}
-
-const presentation = (state: HydrationState, ctx: Context) => {
-  const { feedService } = ctx
-  const { feedItems, cursor, params } = state
-  const feed = feedService.views.formatFeed(feedItems, state, params.viewer)
-  return { feed, cursor }
+  return {
+    feed,
+    cursor: skeleton.cursor,
+  }
 }
 
 type Context = {
-  db: Database
-  feedService: FeedService
-  actorService: ActorService
-  graphService: GraphService
+  hydrator: Hydrator
+  views: Views
+  dataplane: DataPlaneClient
 }
 
 type Params = QueryParams & { viewer: string | null }
 
-type SkeletonState = { params: Params; feedItems: FeedRow[]; cursor?: string }
-
-type HydrationState = SkeletonState & FeedHydrationState
+type Skeleton = {
+  postUris: string[]
+  cursor?: string
+}

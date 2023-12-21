@@ -27,7 +27,11 @@ import { LabelCache } from './label-cache'
 import { NotificationServer } from './notifications'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
+import { createDataPlaneClient } from './data-plane/client'
+import { Hydrator } from './hydration/hydrator'
+import { Views } from './views'
 
+export * from './data-plane'
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
 export { ServerConfig } from './config'
@@ -115,10 +119,17 @@ export class BskyAppView {
       labelCache,
     })
 
+    const dataplane = createDataPlaneClient(config.dataplaneUrl, '1.1')
+    const hydrator = new Hydrator(dataplane)
+    const views = new Views(imgUriBuilder)
+
     const ctx = new AppContext({
       db,
       cfg: config,
       services,
+      dataplane,
+      hydrator,
+      views,
       imgUriBuilder,
       signingKey,
       idResolver,

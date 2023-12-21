@@ -1,51 +1,76 @@
 import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
-import { paginate, TimeCidKeyset } from '../../../../db/pagination'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getListBlocks'
 import AppContext from '../../../../context'
+import {
+  createPipeline,
+  HydrationFnInput,
+  noRules,
+  PresentationFnInput,
+  SkeletonFnInput,
+} from '../../../../pipeline'
+import { Hydrator } from '../../../../hydration/hydrator'
+import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
+  const getListMutes = createPipeline(
+    skeleton,
+    hydration,
+    noRules,
+    presentation,
+  )
   server.app.bsky.graph.getListMutes({
     auth: ctx.authVerifier,
     handler: async ({ params, auth }) => {
-      const { limit, cursor } = params
-      const requester = auth.credentials.did
-      const db = ctx.db.getReplica()
-      const { ref } = db.db.dynamic
-
-      const graphService = ctx.services.graph(db)
-
-      let listsReq = graphService
-        .getListsQb(requester)
-        .whereExists(
-          db.db
-            .selectFrom('list_mute')
-            .where('list_mute.mutedByDid', '=', requester)
-            .whereRef('list_mute.listUri', '=', ref('list.uri'))
-            .selectAll(),
-        )
-
-      const keyset = new TimeCidKeyset(ref('list.createdAt'), ref('list.cid'))
-      listsReq = paginate(listsReq, {
-        limit,
-        cursor,
-        keyset,
-      })
-      const listsRes = await listsReq.execute()
-
-      const actorService = ctx.services.actor(db)
-      const profiles = await actorService.views.profiles(listsRes, requester)
-
-      const lists = mapDefined(listsRes, (row) =>
-        graphService.formatListView(row, profiles),
-      )
-
+      const viewer = auth.credentials.did
+      const result = await getListMutes({ ...params, viewer }, ctx)
       return {
         encoding: 'application/json',
-        body: {
-          lists,
-          cursor: keyset.packFromResult(listsRes),
-        },
+        body: result,
       }
     },
   })
+}
+
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
+  const { ctx, params } = input
+  const { listUris, cursor } =
+    await ctx.hydrator.dataplane.getMutelistSubscriptions({
+      actorDid: params.viewer,
+      cursor: params.cursor,
+      limit: params.limit,
+    })
+  return { listUris, cursor: cursor || undefined }
+}
+
+const hydration = async (
+  input: HydrationFnInput<Context, Params, SkeletonState>,
+) => {
+  const { ctx, params, skeleton } = input
+  return await ctx.hydrator.hydrateLists(skeleton.listUris, params.viewer)
+}
+
+const presentation = (
+  input: PresentationFnInput<Context, Params, SkeletonState>,
+) => {
+  const { ctx, skeleton, hydration } = input
+  const { listUris, cursor } = skeleton
+  const lists = mapDefined(listUris, (uri) => ctx.views.list(uri, hydration))
+  return { lists, cursor }
+}
+
+type Context = {
+  hydrator: Hydrator
+  views: Views
+}
+
+type Params = QueryParams & {
+  viewer: string
+}
+
+type SkeletonState = {
+  listUris: string[]
+  cursor?: string
 }

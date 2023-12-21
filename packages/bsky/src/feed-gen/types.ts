@@ -1,10 +1,14 @@
 import AppContext from '../context'
 import { SkeletonFeedPost } from '../lexicon/types/app/bsky/feed/defs'
 import { QueryParams as SkeletonParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { FeedRow } from '../services/feed'
+
+export type AlgoResponseItem = {
+  itemUri: string
+  postUri: string
+}
 
 export type AlgoResponse = {
-  feedItems: FeedRow[]
+  feedItems: AlgoResponseItem[]
   cursor?: string
 }
 
@@ -17,15 +21,15 @@ export type AlgoHandler = (
 export type MountedAlgos = Record<string, AlgoHandler>
 
 export const toSkeletonItem = (feedItem: {
-  uri: string
+  itemUri: string
   postUri: string
 }): SkeletonFeedPost => ({
   post: feedItem.postUri,
   reason:
-    feedItem.uri === feedItem.postUri
+    feedItem.itemUri === feedItem.postUri
       ? undefined
       : {
           $type: 'app.bsky.feed.defs#skeletonReasonRepost',
-          repost: feedItem.uri,
+          repost: feedItem.itemUri,
         },
 })
