@@ -127,7 +127,6 @@ export const COM_ATPROTO_ADMIN = {
   DefsReviewOpen: 'com.atproto.admin.defs#reviewOpen',
   DefsReviewEscalated: 'com.atproto.admin.defs#reviewEscalated',
   DefsReviewClosed: 'com.atproto.admin.defs#reviewClosed',
-  DefsReviewAppealed: 'com.atproto.admin.defs#reviewAppealed',
 }
 export const COM_ATPROTO_MODERATION = {
   DefsReasonSpam: 'com.atproto.moderation.defs#reasonSpam',
@@ -1599,11 +1598,13 @@ type RouteRateLimitOpts<T> = {
   calcKey?: (ctx: T) => string
   calcPoints?: (ctx: T) => number
 }
+type HandlerOpts = { blobLimit?: number }
 type HandlerRateLimitOpts<T> = SharedRateLimitOpts<T> | RouteRateLimitOpts<T>
 type ConfigOf<Auth, Handler, ReqCtx> =
   | Handler
   | {
       auth?: Auth
+      opts?: HandlerOpts
       rateLimit?: HandlerRateLimitOpts<ReqCtx> | HandlerRateLimitOpts<ReqCtx>[]
       handler: Handler
     }

@@ -7,7 +7,6 @@ import {
   REVIEWOPEN,
   REVIEWCLOSED,
   REVIEWESCALATED,
-  REVIEWAPPEALED,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 import { HOUR } from '@atproto/common'
@@ -84,6 +83,10 @@ const getSubjectStatusForModerationEvent = ({
         lastReviewedBy: createdBy,
         lastReviewedAt: createdAt,
       }
+    case 'com.atproto.admin.defs#modEventResolveAppeal':
+      return {
+        appealed: false,
+      }
     default:
       return null
   }
@@ -142,31 +145,13 @@ export const adjustModerationSubjectStatus = async (
     .selectAll()
     .executeTakeFirst()
 
-  // If the incoming event is an appeal and the subject has never been appealed before, allow setting the state to appealed
-  if (isAppealEvent) {
-    if (!currentStatus?.appealedAt) {
-      subjectStatus.reviewState = REVIEWAPPEALED
-      subjectStatus.appealedAt = createdAt
-    } else {
-      // If the subject has been appealed before, we don't want to change the state to reviewOpen caused by the report event
-      // so we set the reviewState to whatever is the current state in DB
-      subjectStatus.reviewState = currentStatus.reviewState
-    }
-  } else if (
+  if (
     currentStatus?.reviewState === REVIEWESCALATED &&
     subjectStatus.reviewState === REVIEWOPEN
   ) {
     // If the current status is escalated and the incoming event is to open the review
     // We want to keep the status as escalated
     subjectStatus.reviewState = REVIEWESCALATED
-  } else if (
-    currentStatus?.reviewState === REVIEWAPPEALED &&
-    subjectStatus.reviewState !== REVIEWCLOSED
-  ) {
-    // Keep the status as appealed if the incoming event is not to close the review
-    // But don't exit here because there may be other properties that
-    // require updating such lastReportedAt or lastReviewedAt
-    subjectStatus.reviewState = REVIEWAPPEALED
   }
 
   // Set these because we don't want to override them if they're already set
@@ -189,6 +174,21 @@ export const adjustModerationSubjectStatus = async (
   ) {
     newStatus.takendown = false
     subjectStatus.takendown = false
+  }
+
+  if (isAppealEvent) {
+    newStatus.appealed = true
+    subjectStatus.appealed = true
+    newStatus.lastAppealedAt = createdAt
+    subjectStatus.lastAppealedAt = createdAt
+  }
+
+  if (
+    action === 'com.atproto.admin.defs#modEventResolveAppeal' &&
+    subjectStatus.appealed
+  ) {
+    newStatus.appealed = false
+    subjectStatus.appealed = false
   }
 
   if (action === 'com.atproto.admin.defs#modEventComment' && meta?.sticky) {

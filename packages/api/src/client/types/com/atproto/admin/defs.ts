@@ -76,6 +76,7 @@ export interface ModEventViewDetail {
     | ModEventAcknowledge
     | ModEventEscalate
     | ModEventMute
+    | ModEventResolveAppeal
     | { $type: string; [k: string]: unknown }
   subject:
     | RepoView
@@ -148,8 +149,10 @@ export interface SubjectStatusView {
   lastReviewedAt?: string
   lastReportedAt?: string
   /** Timestamp referencing when the owner of the subject appealed a moderation action */
-  appealedAt?: string
+  lastAppealedAt?: string
   takendown?: boolean
+  /** True Indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators. Null indicates no prior appeal on the subject. */
+  appealed?: boolean
   suspendUntil?: string
   [k: string]: unknown
 }
@@ -490,7 +493,6 @@ export type SubjectReviewState =
   | 'lex:com.atproto.admin.defs#reviewOpen'
   | 'lex:com.atproto.admin.defs#reviewEscalated'
   | 'lex:com.atproto.admin.defs#reviewClosed'
-  | 'lex:com.atproto.admin.defs#reviewAppealed'
   | (string & {})
 
 /** Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator */
@@ -499,8 +501,6 @@ export const REVIEWOPEN = 'com.atproto.admin.defs#reviewOpen'
 export const REVIEWESCALATED = 'com.atproto.admin.defs#reviewEscalated'
 /** Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator */
 export const REVIEWCLOSED = 'com.atproto.admin.defs#reviewClosed'
-/** Moderator review status of a subject: Appealed. Indicates that the a previously taken moderator action was appealed agains, by the author of the content */
-export const REVIEWAPPEALED = 'com.atproto.admin.defs#reviewAppealed'
 
 /** Take down a subject permanently or temporarily */
 export interface ModEventTakedown {
@@ -541,6 +541,27 @@ export function isModEventReverseTakedown(
 
 export function validateModEventReverseTakedown(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#modEventReverseTakedown', v)
+}
+
+/** Resolve appeal on a subject */
+export interface ModEventResolveAppeal {
+  /** Describe resolution. */
+  comment?: string
+  [k: string]: unknown
+}
+
+export function isModEventResolveAppeal(
+  v: unknown,
+): v is ModEventResolveAppeal {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#modEventResolveAppeal'
+  )
+}
+
+export function validateModEventResolveAppeal(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventResolveAppeal', v)
 }
 
 /** Add a comment to a subject */

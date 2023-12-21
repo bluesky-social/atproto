@@ -64,6 +64,10 @@
             "type": "boolean",
             "description": "Get subjects that were taken down"
           },
+          "appealed": {
+            "type": "boolean",
+            "description": "Get subjects in unresolved appealed status"
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,

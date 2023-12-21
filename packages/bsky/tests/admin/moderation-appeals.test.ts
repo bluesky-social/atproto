@@ -11,11 +11,11 @@ import {
   REASONSPAM,
 } from '../../src/lexicon/types/com/atproto/moderation/defs'
 import {
-  REVIEWAPPEALED,
   REVIEWCLOSED,
   REVIEWOPEN,
 } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { REASONAPPEAL } from '@atproto/api/src/client/types/com/atproto/moderation/defs'
+import { REVIEWESCALATED } from '../../src/lexicon/types/com/atproto/admin/defs'
 
 describe('moderation-appeals', () => {
   let network: TestNetwork
@@ -57,11 +57,13 @@ describe('moderation-appeals', () => {
   const assertSubjectStatus = async (
     subject: string,
     status: string,
+    appealed: boolean | undefined,
   ): Promise<ComAtprotoAdminDefs.SubjectStatusView | undefined> => {
     const { data } = await queryModerationStatuses({
       subject,
     })
     expect(data.subjectStatuses[0]?.reviewState).toEqual(status)
+    expect(data.subjectStatuses[0]?.appealed).toEqual(appealed)
     return data.subjectStatuses[0]
   }
   describe('appeals from users', () => {
@@ -70,8 +72,10 @@ describe('moderation-appeals', () => {
       uri: sc.posts[sc.dids.bob][1].ref.uriStr,
       cid: sc.posts[sc.dids.bob][1].ref.cidStr,
     })
-    const assertBobsPostStatus = async (status: string) =>
-      assertSubjectStatus(getBobsPostSubject().uri, status)
+    const assertBobsPostStatus = async (
+      status: string,
+      appealed: boolean | undefined,
+    ) => assertSubjectStatus(getBobsPostSubject().uri, status, appealed)
 
     it('only changes subject status if original author of the content is appealing', async () => {
       // Create a report by alice
@@ -84,7 +88,7 @@ describe('moderation-appeals', () => {
         createdBy: sc.dids.alice,
       })
 
-      await assertBobsPostStatus(REVIEWOPEN)
+      await assertBobsPostStatus(REVIEWOPEN, undefined)
 
       await emitModerationEvent({
         event: {
@@ -96,7 +100,7 @@ describe('moderation-appeals', () => {
       })
 
       // Verify that since the appeal was emitted by alice instead of bob, the status is still REVIEWOPEN
-      await assertBobsPostStatus(REVIEWOPEN)
+      await assertBobsPostStatus(REVIEWOPEN, undefined)
 
       await emitModerationEvent({
         event: {
@@ -107,21 +111,21 @@ describe('moderation-appeals', () => {
         createdBy: sc.dids.bob,
       })
 
-      // Verify that since the appeal was emitted by alice instead of bob, the status is still REVIEWOPEN
-      const status = await assertBobsPostStatus(REVIEWAPPEALED)
+      // Verify that since the appeal was emitted by bob, the appealed state has been set to true
+      const status = await assertBobsPostStatus(REVIEWOPEN, true)
       expect(status?.appealedAt).not.toBeNull()
     })
-    it('does not change status to appealed if an appeal was already received', async () => {
+    it('allows multiple appeals and updates last appealed timestamp', async () => {
       // Resolve appeal with acknowledge
       await emitModerationEvent({
         event: {
-          $type: 'com.atproto.admin.defs#modEventAcknowledge',
+          $type: 'com.atproto.admin.defs#modEventResolveAppeal',
         },
         subject: getBobsPostSubject(),
         createdBy: sc.dids.carol,
       })
 
-      await assertBobsPostStatus(REVIEWCLOSED)
+      const previousStatus = await assertBobsPostStatus(REVIEWOPEN, false)
 
       await emitModerationEvent({
         event: {
@@ -132,8 +136,11 @@ describe('moderation-appeals', () => {
         createdBy: sc.dids.bob,
       })
 
-      // Verify that even after the appeal event by bob for his post, the status is still REVIEWCLOSED
-      await assertBobsPostStatus(REVIEWCLOSED)
+      // Verify that even after the appeal event by bob for his post, the appeal status is true again with new timestamp
+      const newStatus = await assertBobsPostStatus(REVIEWOPEN, true)
+      expect(
+        new Date(`${previousStatus?.lastAppealedAt}`).getTime(),
+      ).toBeLessThan(new Date(`${newStatus?.lastAppealedAt}`).getTime())
     })
   })
 
@@ -143,7 +150,7 @@ describe('moderation-appeals', () => {
       uri: sc.posts[sc.dids.alice][1].ref.uriStr,
       cid: sc.posts[sc.dids.alice][1].ref.cidStr,
     })
-    it('only allows changing appealed status to closed', async () => {
+    it('appeal status is maintained while review state changes based on incoming events', async () => {
       // Bob reports alice's post
       await emitModerationEvent({
         event: {
@@ -173,9 +180,9 @@ describe('moderation-appeals', () => {
         createdBy: sc.dids.alice,
       })
 
-      await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWAPPEALED)
+      await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWOPEN, true)
 
-      // Another bob reports it again
+      // Bob reports it again
       await emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventReport',
@@ -186,7 +193,7 @@ describe('moderation-appeals', () => {
       })
 
       // Assert that the status is still REVIEWAPPEALED and not REVIEWOPEN, as report events are meant to do
-      await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWAPPEALED)
+      await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWOPEN, true)
 
       // Emit an escalation event
       await emitModerationEvent({
@@ -197,7 +204,11 @@ describe('moderation-appeals', () => {
         createdBy: sc.dids.carol,
       })
 
-      await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWAPPEALED)
+      await assertSubjectStatus(
+        getAlicesPostSubject().uri,
+        REVIEWESCALATED,
+        true,
+      )
 
       // Emit an acknowledge event
       await emitModerationEvent({
@@ -208,8 +219,21 @@ describe('moderation-appeals', () => {
         createdBy: sc.dids.carol,
       })
 
-      // Assert that status moved on to reviewClosed
-      await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWCLOSED)
+      // Assert that status moved on to reviewClosed while appealed status is still true
+      await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWCLOSED, true)
+
+      // Emit a resolveAppeal event
+      await emitModerationEvent({
+        event: {
+          $type: 'com.atproto.admin.defs#modEventResolveAppeal',
+          comment: 'lgtm',
+        },
+        subject: getAlicesPostSubject(),
+        createdBy: sc.dids.carol,
+      })
+
+      // Assert that status stayed the same while appealed status is still true
+      await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWCLOSED, false)
     })
   })
 })

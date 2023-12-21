@@ -102,6 +102,7 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#modEventAcknowledge',
               'lex:com.atproto.admin.defs#modEventEscalate',
               'lex:com.atproto.admin.defs#modEventMute',
+              'lex:com.atproto.admin.defs#modEventResolveAppeal',
             ],
           },
           subject: {
@@ -237,7 +238,7 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
-          appealedAt: {
+          lastAppealedAt: {
             type: 'string',
             format: 'datetime',
             description:
@@ -245,6 +246,11 @@ export const schemaDict = {
           },
           takendown: {
             type: 'boolean',
+          },
+          appealed: {
+            type: 'boolean',
+            description:
+              'True Indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators. Null indicates no prior appeal on the subject.',
           },
           suspendUntil: {
             type: 'string',
@@ -682,7 +688,6 @@ export const schemaDict = {
           'lex:com.atproto.admin.defs#reviewOpen',
           'lex:com.atproto.admin.defs#reviewEscalated',
           'lex:com.atproto.admin.defs#reviewClosed',
-          'lex:com.atproto.admin.defs#reviewAppealed',
         ],
       },
       reviewOpen: {
@@ -699,11 +704,6 @@ export const schemaDict = {
         type: 'token',
         description:
           'Moderator review status of a subject: Closed. Indicates that the subject was already reviewed and resolved by a moderator',
-      },
-      reviewAppealed: {
-        type: 'token',
-        description:
-          'Moderator review status of a subject: Appealed. Indicates that the a previously taken moderator action was appealed agains, by the author of the content',
       },
       modEventTakedown: {
         type: 'object',
@@ -726,6 +726,16 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Describe reasoning behind the reversal.',
+          },
+        },
+      },
+      modEventResolveAppeal: {
+        type: 'object',
+        description: 'Resolve appeal on a subject',
+        properties: {
+          comment: {
+            type: 'string',
+            description: 'Describe resolution.',
           },
         },
       },
@@ -1368,6 +1378,10 @@ export const schemaDict = {
             takendown: {
               type: 'boolean',
               description: 'Get subjects that were taken down',
+            },
+            appealed: {
+              type: 'boolean',
+              description: 'Get subjects in unresolved appealed status',
             },
             limit: {
               type: 'integer',
