@@ -192,7 +192,7 @@ describe('moderation-appeals', () => {
         createdBy: sc.dids.bob,
       })
 
-      // Assert that the status is still REVIEWAPPEALED and not REVIEWOPEN, as report events are meant to do
+      // Assert that the status is still REVIEWOPEN, as report events are meant to do
       await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWOPEN, true)
 
       // Emit an escalation event

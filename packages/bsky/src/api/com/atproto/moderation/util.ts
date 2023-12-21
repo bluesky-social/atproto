@@ -15,7 +15,6 @@ import {
   REVIEWCLOSED,
   REVIEWESCALATED,
   REVIEWOPEN,
-  REVIEWAPPEALED,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { ModerationEvent } from '../../../../db/tables/moderation'
 import { ModerationSubjectStatusRow } from '../../../../services/moderation/types'
@@ -65,12 +64,7 @@ export const getReviewState = (reviewState?: string) => {
   throw new InvalidRequestError('Invalid review state')
 }
 
-const reviewStates = new Set([
-  REVIEWCLOSED,
-  REVIEWESCALATED,
-  REVIEWOPEN,
-  REVIEWAPPEALED,
-])
+const reviewStates = new Set([REVIEWCLOSED, REVIEWESCALATED, REVIEWOPEN])
 
 const reasonTypes = new Set([
   REASONOTHER,
