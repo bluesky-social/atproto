@@ -10,7 +10,6 @@ import {
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 import { HOUR } from '@atproto/common'
-import { CID } from 'multiformats/cid'
 import { sql } from 'kysely'
 
 const getSubjectStatusForModerationEvent = ({
@@ -93,7 +92,7 @@ const getSubjectStatusForModerationEvent = ({
 export const adjustModerationSubjectStatus = async (
   db: Database,
   moderationEvent: ModerationEventRow,
-  blobCids?: CID[],
+  blobCids?: string[],
 ) => {
   const {
     action,
@@ -169,7 +168,7 @@ export const adjustModerationSubjectStatus = async (
 
   if (blobCids?.length) {
     const newBlobCids = sql<string[]>`${JSON.stringify(
-      blobCids.map((c) => c.toString()),
+      blobCids,
     )}` as unknown as ModerationSubjectStatusRow['blobCids']
     newStatus.blobCids = newBlobCids
     subjectStatus.blobCids = newBlobCids

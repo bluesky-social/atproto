@@ -1,20 +1,12 @@
-import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/syntax'
-import {
-  AuthRequiredError,
-  InvalidRequestError,
-  UpstreamFailureError,
-} from '@atproto/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { getSubject } from '../moderation/util'
 import {
   isModEventLabel,
   isModEventReverseTakedown,
   isModEventTakedown,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
-import { TakedownSubjects } from '../../../../services/moderation'
-import { retryHttp } from '../../../../util/retry'
+import { subjectFromInput } from '../../../../services/moderation/subject'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.emitModerationEvent({
@@ -23,15 +15,19 @@ export default function (server: Server, ctx: AppContext) {
       const access = auth.credentials
       const db = ctx.db
       const moderationService = ctx.services.moderation(db)
-      const { subject, createdBy, subjectBlobCids, event } = input.body
+      const { createdBy, event } = input.body
       const isTakedownEvent = isModEventTakedown(event)
       const isReverseTakedownEvent = isModEventReverseTakedown(event)
       const isLabelEvent = isModEventLabel(event)
+      const subject = subjectFromInput(
+        input.body.subject,
+        input.body.subjectBlobCids,
+      )
 
       // apply access rules
 
       // if less than moderator access then can not takedown an account
-      if (!access.moderator && isTakedownEvent && 'did' in subject) {
+      if (!access.moderator && isTakedownEvent && subject.isRepo()) {
         throw new AuthRequiredError(
           'Must be a full moderator to perform an account takedown',
         )
@@ -54,11 +50,9 @@ export default function (server: Server, ctx: AppContext) {
         ])
       }
 
-      const subjectInfo = getSubject(subject)
-
       if (isTakedownEvent || isReverseTakedownEvent) {
         const isSubjectTakendown = await moderationService.isSubjectTakendown(
-          subjectInfo,
+          subject,
         )
 
         if (isSubjectTakendown && isTakedownEvent) {
@@ -70,145 +64,51 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const { result: moderationEvent, takenDown } = await db.transaction(
-        async (dbTxn) => {
-          const moderationTxn = ctx.services.moderation(dbTxn)
+      const moderationEvent = await db.transaction(async (dbTxn) => {
+        const moderationTxn = ctx.services.moderation(dbTxn)
 
-          const result = await moderationTxn.logEvent({
-            event,
-            subject: subjectInfo,
-            subjectBlobCids:
-              subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
-            createdBy,
-          })
+        const result = await moderationTxn.logEvent({
+          event,
+          subject,
+          createdBy,
+        })
 
-          let takenDown: TakedownSubjects | undefined
+        if (subject.isRepo()) {
+          if (isTakedownEvent) {
+            await moderationTxn.takedownRepo(subject, result.id)
+          } else if (isReverseTakedownEvent) {
+            await moderationTxn.reverseTakedownRepo(subject)
+          }
+        }
 
-          if (
-            result.subjectType === 'com.atproto.admin.defs#repoRef' &&
-            result.subjectDid
-          ) {
-            // No credentials to revoke on appview
-            if (isTakedownEvent) {
-              takenDown = await moderationTxn.takedownRepo({
-                takedownId: result.id,
-                did: result.subjectDid,
-              })
-            }
-
-            if (isReverseTakedownEvent) {
-              await moderationTxn.reverseTakedownRepo({
-                did: result.subjectDid,
-              })
-              takenDown = {
-                subjects: [
-                  {
-                    $type: 'com.atproto.admin.defs#repoRef',
-                    did: result.subjectDid,
-                  },
-                ],
-                did: result.subjectDid,
-              }
-            }
+        if (subject.isRecord()) {
+          if (isTakedownEvent) {
+            await moderationTxn.takedownRecord(subject, result.id)
           }
 
-          if (
-            result.subjectType === 'com.atproto.repo.strongRef' &&
-            result.subjectUri
-          ) {
-            const subjectUri = new AtUri(result.subjectUri)
-            const blobCids = subjectBlobCids?.map((cid) => CID.parse(cid)) ?? []
-            if (isTakedownEvent) {
-              await moderationTxn.takedownRecord({
-                takedownId: result.id,
-                uri: subjectUri,
-                // TODO: I think this will always be available for strongRefs?
-                cid: CID.parse(result.subjectCid as string),
-              })
-              if (blobCids && blobCids.length > 0) {
-                await moderationTxn.takedownBlobs({
-                  takedownId: result.id,
-                  did: subjectUri.hostname,
-                  blobCids,
-                })
-              }
-            }
-
-            if (isReverseTakedownEvent) {
-              await moderationTxn.reverseTakedownRecord({
-                uri: new AtUri(result.subjectUri),
-              })
-              await moderationTxn.reverseTakedownBlobs({
-                did: subjectUri.hostname,
-                blobCids,
-              })
-              // takenDown = {
-              //   did: result.subjectDid,
-              //   subjects: [
-              //     {
-              //       $type: 'com.atproto.repo.strongRef',
-              //       uri: result.subjectUri,
-              //       cid: result.subjectCid ?? '',
-              //     },
-              //     ...blobCids.map((cid) => ({
-              //       $type: 'com.atproto.admin.defs#repoBlobRef',
-              //       did: result.subjectDid,
-              //       cid: cid.toString(),
-              //       recordUri: result.subjectUri,
-              //     })),
-              //   ],
-              // }
-            }
+          if (isReverseTakedownEvent) {
+            await moderationTxn.reverseTakedownRecord(subject)
           }
+        }
 
-          if (isLabelEvent) {
-            await moderationTxn.formatAndCreateLabels(
-              ctx.cfg.labelerDid,
-              result.subjectUri ?? result.subjectDid,
-              result.subjectCid,
-              {
-                create: result.createLabelVals?.length
-                  ? result.createLabelVals.split(' ')
-                  : undefined,
-                negate: result.negateLabelVals?.length
-                  ? result.negateLabelVals.split(' ')
-                  : undefined,
-              },
-            )
-          }
+        if (isLabelEvent) {
+          await moderationTxn.formatAndCreateLabels(
+            ctx.cfg.labelerDid,
+            result.subjectUri ?? result.subjectDid,
+            result.subjectCid,
+            {
+              create: result.createLabelVals?.length
+                ? result.createLabelVals.split(' ')
+                : undefined,
+              negate: result.negateLabelVals?.length
+                ? result.negateLabelVals.split(' ')
+                : undefined,
+            },
+          )
+        }
 
-          return { result, takenDown }
-        },
-      )
-
-      // @TODO move to commit hook on takedown method
-      // if (takenDown && ctx.moderationPushAgent) {
-      //   const { did, subjects } = takenDown
-      //   if (did && subjects.length > 0) {
-      //     const agent = ctx.moderationPushAgent
-      //     const results = await Promise.allSettled(
-      //       subjects.map((subject) =>
-      //         retryHttp(() =>
-      //           agent.api.com.atproto.admin.updateSubjectStatus({
-      //             subject,
-      //             takedown: isTakedownEvent
-      //               ? {
-      //                   applied: true,
-      //                   ref: moderationEvent.id.toString(),
-      //                 }
-      //               : {
-      //                   applied: false,
-      //                 },
-      //           }),
-      //         ),
-      //       ),
-      //     )
-      //     const hadFailure = results.some((r) => r.status === 'rejected')
-      //     if (hadFailure) {
-      //       throw new UpstreamFailureError('failed to apply action on PDS')
-      //     }
-      //   }
-      // }
+        return result
+      })
 
       return {
         encoding: 'application/json',

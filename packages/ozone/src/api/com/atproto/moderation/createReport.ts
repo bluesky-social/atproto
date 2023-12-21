@@ -1,16 +1,18 @@
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { getReasonType, getSubject } from './util'
+import { getReasonType } from './util'
 import { softDeleted } from '../../../../db/util'
+import { subjectFromInput } from '../../../../services/moderation/subject'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
     // @TODO anonymous reports w/ optional auth are a temporary measure
     auth: ctx.authOptionalVerifier,
     handler: async ({ input, auth }) => {
-      const { reasonType, reason, subject } = input.body
       const requester = auth.credentials.did
+      const { reasonType, reason } = input.body
+      const subject = subjectFromInput(input.body.subject)
 
       const db = ctx.db
 
@@ -28,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         return moderationTxn.report({
           reasonType: getReasonType(reasonType),
           reason,
-          subject: getSubject(subject),
+          subject,
           reportedBy: requester || ctx.cfg.serverDid,
         })
       })

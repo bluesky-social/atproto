@@ -24,7 +24,6 @@ import {
   ModerationEventRow,
   ModerationSubjectStatusRow,
   ReversibleModerationEvent,
-  SubjectInfo,
 } from './types'
 import { ModerationEvent } from '../../db/schema/moderation_event'
 import { paginate } from '../../db/pagination'
@@ -33,6 +32,7 @@ import AtpAgent from '@atproto/api'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import { sql } from 'kysely'
 import { dedupeStrs } from '@atproto/common'
+import { ModSubject, RecordSubject, RepoSubject } from './subject'
 
 export class ModerationService {
   constructor(public db: Database, public appviewAgent: AtpAgent) {}
@@ -171,50 +171,14 @@ export class ModerationService {
     return await builder.execute()
   }
 
-  buildSubjectInfo(
-    subject: { did: string } | { uri: AtUri; cid: CID },
-    subjectBlobCids?: CID[],
-  ): SubjectInfo {
-    if ('did' in subject) {
-      if (subjectBlobCids?.length) {
-        throw new InvalidRequestError('Blobs do not apply to repo subjects')
-      }
-      // Allowing dids that may not exist: may have been deleted but needs to remain actionable.
-      return {
-        subjectType: 'com.atproto.admin.defs#repoRef',
-        subjectDid: subject.did,
-        subjectUri: null,
-        subjectCid: null,
-      }
-    }
-
-    // Allowing records/blobs that may not exist: may have been deleted but needs to remain actionable.
-    return {
-      subjectType: 'com.atproto.repo.strongRef',
-      subjectDid: subject.uri.host,
-      subjectUri: subject.uri.toString(),
-      subjectCid: subject.cid.toString(),
-    }
-  }
-
   async logEvent(info: {
     event: ModEventType
-    subject: { did: string } | { uri: AtUri; cid: CID }
-    subjectBlobCids?: CID[]
+    subject: ModSubject
     createdBy: string
     createdAt?: Date
   }): Promise<ModerationEventRow> {
     this.db.assertTransaction()
-    const {
-      event,
-      createdBy,
-      subject,
-      subjectBlobCids,
-      createdAt = new Date(),
-    } = info
-
-    // Resolve subject info
-    const subjectInfo = this.buildSubjectInfo(subject, subjectBlobCids)
+    const { event, subject, createdBy, createdAt = new Date() } = info
 
     const createLabelVals =
       isModEventLabel(event) && event.createLabelVals.length > 0
@@ -257,47 +221,43 @@ export class ModerationService {
           event.durationInHours
             ? addHoursToDate(event.durationInHours, createdAt).toISOString()
             : undefined,
-        ...subjectInfo,
+        ...subject.info(),
       })
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    await adjustModerationSubjectStatus(this.db, modEvent, subjectBlobCids)
+    await adjustModerationSubjectStatus(this.db, modEvent, subject.blobCids)
 
     return modEvent
   }
 
-  async getLastReversibleEventForSubject({
-    did,
-    muteUntil,
-    recordPath,
-    suspendUntil,
-  }: ModerationSubjectStatusRow) {
-    const isSuspended = suspendUntil && new Date(suspendUntil) < new Date()
-    const isMuted = muteUntil && new Date(muteUntil) < new Date()
-
+  async getLastReversibleEventForSubject(subject: ReversalSubject) {
     // If the subject is neither suspended nor muted don't bother finding the last reversible event
     // Ideally, this should never happen because the caller of this method should only call this
     // after ensuring that the suspended or muted subjects are being reversed
-    if (!isSuspended && !isMuted) {
+    if (!subject.reverseMute && !subject.reverseSuspend) {
       return null
     }
 
     let builder = this.db.db
       .selectFrom('moderation_event')
-      .where('subjectDid', '=', did)
+      .where('subjectDid', '=', subject.subject.did)
 
-    if (recordPath) {
-      builder = builder.where('subjectUri', 'like', `%${recordPath}%`)
+    if (subject.subject.recordPath) {
+      builder = builder.where(
+        'subjectUri',
+        'like',
+        `%${subject.subject.recordPath}%`,
+      )
     }
 
     // Means the subject was suspended and needs to be unsuspended
-    if (isSuspended) {
+    if (subject.reverseSuspend) {
       builder = builder
         .where('action', '=', 'com.atproto.admin.defs#modEventTakedown')
         .where('durationInHours', 'is not', null)
     }
-    if (isMuted) {
+    if (subject.reverseMute) {
       builder = builder
         .where('action', '=', 'com.atproto.admin.defs#modEventMute')
         .where('durationInHours', 'is not', null)
@@ -310,15 +270,33 @@ export class ModerationService {
       .executeTakeFirst()
   }
 
-  async getSubjectsDueForReversal(): Promise<ModerationSubjectStatusRow[]> {
-    const subjectsDueForReversal = await this.db.db
+  async getSubjectsDueForReversal(): Promise<ReversalSubject[]> {
+    const now = new Date().toISOString()
+    const subjects = await this.db.db
       .selectFrom('moderation_subject_status')
-      .where('suspendUntil', '<', new Date().toISOString())
-      .orWhere('muteUntil', '<', new Date().toISOString())
+      .where('suspendUntil', '<', now)
+      .orWhere('muteUntil', '<', now)
       .selectAll()
       .execute()
 
-    return subjectsDueForReversal
+    return subjects.map((row) => {
+      let subject: ModSubject
+      if (row.recordPath && row.recordCid) {
+        const uri = AtUri.make(row.did, ...row.recordPath.split('/')).toString()
+        subject = new RecordSubject(
+          uri,
+          row.recordCid,
+          row.blobCids ?? undefined,
+        )
+      } else {
+        subject = new RepoSubject(row.did)
+      }
+      return {
+        subject,
+        reverseSuspend: !!row.suspendUntil && row.suspendUntil < now,
+        reverseMute: !!row.muteUntil && row.muteUntil < now,
+      }
+    })
   }
 
   async isSubjectSuspended(did: string): Promise<boolean> {
@@ -364,13 +342,8 @@ export class ModerationService {
       return { result, restored }
     }
 
-    if (
-      result.subjectType === 'com.atproto.admin.defs#repoRef' &&
-      result.subjectDid
-    ) {
-      await this.reverseTakedownRepo({
-        did: result.subjectDid,
-      })
+    if (subject.isRepo()) {
+      await this.reverseTakedownRepo(subject)
       restored = {
         did: result.subjectDid,
         subjects: [
@@ -382,20 +355,14 @@ export class ModerationService {
       }
     }
 
-    if (
-      result.subjectType === 'com.atproto.repo.strongRef' &&
-      result.subjectUri
-    ) {
-      const uri = new AtUri(result.subjectUri)
-      await this.reverseTakedownRecord({
-        uri,
-      })
-      const did = uri.hostname
+    if (subject.isRecord()) {
+      await this.reverseTakedownRecord(subject)
       // TODO: MOD_EVENT This bit needs testing
+      const did = subject.did
       const subjectStatus = await this.db.db
         .selectFrom('moderation_subject_status')
-        .where('did', '=', uri.host)
-        .where('recordPath', '=', `${uri.collection}/${uri.rkey}`)
+        .where('did', '=', did)
+        .where('recordPath', '=', subject.recordPath)
         .select('blobCids')
         .executeTakeFirst()
       const blobCids = subjectStatus?.blobCids || []
@@ -404,8 +371,8 @@ export class ModerationService {
         subjects: [
           {
             $type: 'com.atproto.repo.strongRef',
-            uri: result.subjectUri,
-            cid: result.subjectCid ?? '',
+            uri: subject.uri,
+            cid: subject.cid,
           },
           ...blobCids.map((cid) => ({
             $type: 'com.atproto.admin.defs#repoBlobRef',
@@ -420,16 +387,12 @@ export class ModerationService {
     return { result, restored }
   }
 
-  async takedownRepo(info: {
-    takedownId: number
-    did: string
-  }): Promise<TakedownSubjects> {
-    const { takedownId, did } = info
+  async takedownRepo(subject: RepoSubject, takedownId: number) {
     await this.db.db
       .insertInto('repo_push_event')
       .values({
         eventType: 'takedown',
-        subjectDid: did,
+        subjectDid: subject.did,
         takedownId,
       })
       .onConflict((oc) =>
@@ -438,42 +401,26 @@ export class ModerationService {
           .doUpdateSet({ confirmedAt: null, takedownId }),
       )
       .execute()
-
-    return {
-      did,
-      subjects: [
-        {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did,
-        },
-      ],
-    }
   }
 
-  async reverseTakedownRepo(info: { did: string }) {
+  async reverseTakedownRepo(subject: RepoSubject) {
     await this.db.db
       .updateTable('repo_push_event')
       .where('eventType', '=', 'takedown')
-      .where('subjectDid', '=', info.did)
+      .where('subjectDid', '=', subject.did)
       .set({ takedownId: null, confirmedAt: null })
       .execute()
   }
 
-  async takedownRecord(info: {
-    takedownId: number
-    uri: AtUri
-    cid: CID
-  }): Promise<TakedownSubjects> {
-    const { takedownId, uri, cid } = info
-    const did = uri.hostname
+  async takedownRecord(subject: RecordSubject, takedownId: number) {
     this.db.assertTransaction()
     await this.db.db
       .insertInto('record_push_event')
       .values({
         eventType: 'takedown',
-        subjectDid: uri.hostname,
-        subjectUri: uri.toString(),
-        subjectCid: cid.toString(),
+        subjectDid: subject.did,
+        subjectUri: subject.uri,
+        subjectCid: subject.cid,
         takedownId,
       })
       .onConflict((oc) =>
@@ -482,44 +429,15 @@ export class ModerationService {
           .doUpdateSet({ confirmedAt: null, takedownId }),
       )
       .execute()
-    return {
-      did,
-      subjects: [
-        {
-          $type: 'com.atproto.repo.strongRef',
-          uri: uri.toString(),
-          cid: cid.toString(),
-        },
-      ],
-    }
-  }
 
-  async reverseTakedownRecord(info: { uri: AtUri }) {
-    this.db.assertTransaction()
-    await this.db.db
-      .updateTable('record_push_event')
-      .where('eventType', '=', 'takedown')
-      .where('subjectDid', '=', info.uri.hostname)
-      .where('subjectUri', '=', info.uri.toString())
-      .set({ takedownId: null, confirmedAt: null })
-      .execute()
-  }
-
-  async takedownBlobs(info: {
-    takedownId: number
-    did: string
-    blobCids: CID[]
-  }): Promise<TakedownSubjects> {
-    const { takedownId, did, blobCids } = info
-    this.db.assertTransaction()
-
-    if (blobCids.length > 0) {
+    const blobCids = subject.blobCids
+    if (blobCids && blobCids.length > 0) {
       await this.db.db
         .insertInto('blob_push_event')
         .values(
           blobCids.map((cid) => ({
             eventType: 'takedown' as const,
-            subjectDid: did,
+            subjectDid: subject.did,
             subjectBlobCid: cid.toString(),
             takedownId,
           })),
@@ -531,37 +449,37 @@ export class ModerationService {
         )
         .execute()
     }
-    return {
-      did,
-      subjects: blobCids.map((cid) => ({
-        $type: 'com.atproto.admin.defs#repoBlobRef',
-        did,
-        cid: cid.toString(),
-      })),
-    }
   }
 
-  async reverseTakedownBlobs(info: { did: string; blobCids: CID[] }) {
+  async reverseTakedownRecord(subject: RecordSubject) {
     this.db.assertTransaction()
-    const { did, blobCids } = info
-    if (blobCids.length < 1) return
     await this.db.db
-      .updateTable('blob_push_event')
+      .updateTable('record_push_event')
       .where('eventType', '=', 'takedown')
-      .where('subjectDid', '=', did)
-      .where(
-        'subjectBlobCid',
-        'in',
-        blobCids.map((c) => c.toString()),
-      )
+      .where('subjectDid', '=', subject.did)
+      .where('subjectUri', '=', subject.uri)
       .set({ takedownId: null, confirmedAt: null })
       .execute()
+    const blobCids = subject.blobCids
+    if (blobCids && blobCids.length > 0) {
+      await this.db.db
+        .updateTable('blob_push_event')
+        .where('eventType', '=', 'takedown')
+        .where('subjectDid', '=', subject.did)
+        .where(
+          'subjectBlobCid',
+          'in',
+          blobCids.map((c) => c.toString()),
+        )
+        .set({ takedownId: null, confirmedAt: null })
+        .execute()
+    }
   }
 
   async report(info: {
     reasonType: NonNullable<ModerationEventRow['meta']>['reportType']
     reason?: string
-    subject: { did: string } | { uri: AtUri; cid: CID }
+    subject: ModSubject
     reportedBy: string
     createdAt?: Date
   }): Promise<ModerationEventRow> {
@@ -702,16 +620,11 @@ export class ModerationService {
     }
   }
 
-  async isSubjectTakendown(
-    subject: { did: string } | { uri: AtUri },
-  ): Promise<boolean> {
-    const { did, recordPath } = getStatusIdentifierFromSubject(
-      'did' in subject ? subject.did : subject.uri,
-    )
+  async isSubjectTakendown(subject: ModSubject): Promise<boolean> {
     const builder = this.db.db
       .selectFrom('moderation_subject_status')
-      .where('did', '=', did)
-      .where('recordPath', '=', recordPath || '')
+      .where('did', '=', subject.did)
+      .where('recordPath', '=', subject.recordPath || '')
 
     const result = await builder.select('takendown').executeTakeFirst()
 
@@ -771,4 +684,10 @@ export class ModerationService {
 export type TakedownSubjects = {
   did: string
   subjects: (RepoRef | RepoBlobRef | StrongRef)[]
+}
+
+export type ReversalSubject = {
+  subject: ModSubject
+  reverseSuspend: boolean
+  reverseMute: boolean
 }

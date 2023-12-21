@@ -1,23 +1,8 @@
 import { Selectable } from 'kysely'
 import { ModerationEvent } from '../../db/schema/moderation_event'
 import { ModerationSubjectStatus } from '../../db/schema/moderation_subject_status'
-import { AtUri } from '@atproto/syntax'
-import { CID } from 'multiformats/cid'
 import { ComAtprotoAdminDefs } from '@atproto/api'
-
-export type SubjectInfo =
-  | {
-      subjectType: 'com.atproto.admin.defs#repoRef'
-      subjectDid: string
-      subjectUri: null
-      subjectCid: null
-    }
-  | {
-      subjectType: 'com.atproto.repo.strongRef'
-      subjectDid: string
-      subjectUri: string
-      subjectCid: string
-    }
+import { ModSubject } from './subject'
 
 export type ModerationEventRow = Selectable<ModerationEvent>
 export type ReversibleModerationEvent = Pick<
@@ -25,7 +10,7 @@ export type ReversibleModerationEvent = Pick<
   'createdBy' | 'comment' | 'action'
 > & {
   createdAt?: Date
-  subject: { did: string } | { uri: AtUri; cid: CID }
+  subject: ModSubject
 }
 
 export type ModerationEventRowWithHandle = ModerationEventRow & {

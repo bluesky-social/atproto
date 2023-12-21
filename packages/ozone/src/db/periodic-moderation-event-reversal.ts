@@ -2,11 +2,9 @@ import { wait } from '@atproto/common'
 import { Leader } from './leader'
 import { dbLogger } from '../logger'
 import AppContext from '../context'
-import { AtUri } from '@atproto/api'
-import { ModerationSubjectStatusRow } from '../services/moderation/types'
-import { CID } from 'multiformats/cid'
 import AtpAgent from '@atproto/api'
 import { retryHttp } from '../util/retry'
+import { ReversalSubject } from '../services/moderation'
 
 export const MODERATION_ACTION_REVERSAL_ID = 1011
 
@@ -19,27 +17,18 @@ export class PeriodicModerationEventReversal {
     this.pushAgent = appContext.moderationPushAgent
   }
 
-  async revertState(eventRow: ModerationSubjectStatusRow) {
+  async revertState(subject: ReversalSubject) {
     await this.appContext.db.transaction(async (dbTxn) => {
       const moderationTxn = this.appContext.services.moderation(dbTxn)
       const originalEvent =
-        await moderationTxn.getLastReversibleEventForSubject(eventRow)
+        await moderationTxn.getLastReversibleEventForSubject(subject)
       if (originalEvent) {
         const { restored } = await moderationTxn.revertState({
           action: originalEvent.action,
           createdBy: originalEvent.createdBy,
           comment:
             '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
-          subject:
-            eventRow.recordPath && eventRow.recordCid
-              ? {
-                  uri: AtUri.make(
-                    eventRow.did,
-                    ...eventRow.recordPath.split('/'),
-                  ),
-                  cid: CID.parse(eventRow.recordCid),
-                }
-              : { did: eventRow.did },
+          subject: subject.subject,
           createdAt: new Date(),
         })
 
