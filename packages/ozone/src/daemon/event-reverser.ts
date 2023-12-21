@@ -1,14 +1,16 @@
 import { MINUTE, wait } from '@atproto/common'
 import { dbLogger } from '../logger'
-import { ReversalSubject } from '../services/moderation'
+import { ModerationServiceCreator, ReversalSubject } from '../mod-service'
 import Database from '../db'
-import { Services } from '../services'
 
 export class EventReverser {
   destroyed = false
   reversalPromise: Promise<void> = Promise.resolve()
 
-  constructor(private db: Database, private services: Services) {}
+  constructor(
+    private db: Database,
+    private modService: ModerationServiceCreator,
+  ) {}
 
   start() {
     this.reversalPromise = this.poll()
@@ -32,7 +34,7 @@ export class EventReverser {
 
   async revertState(subject: ReversalSubject) {
     await this.db.transaction(async (dbTxn) => {
-      const moderationTxn = this.services.moderation(dbTxn)
+      const moderationTxn = this.modService(dbTxn)
       const originalEvent =
         await moderationTxn.getLastReversibleEventForSubject(subject)
       if (originalEvent) {
@@ -49,7 +51,7 @@ export class EventReverser {
   }
 
   async findAndRevertDueActions() {
-    const moderationService = this.services.moderation(this.db)
+    const moderationService = this.modService(this.db)
     const subjectsDueForReversal =
       await moderationService.getSubjectsDueForReversal()
 

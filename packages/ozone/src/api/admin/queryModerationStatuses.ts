@@ -23,8 +23,8 @@ export default function (server: Server, ctx: AppContext) {
         cursor,
       } = params
       const db = ctx.db
-      const moderationService = ctx.services.moderation(db)
-      const results = await moderationService.getSubjectStatuses({
+      const modService = ctx.modService(db)
+      const results = await modService.getSubjectStatuses({
         reviewState: getReviewState(reviewState),
         subject,
         takendown,
@@ -41,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
         cursor,
       })
       const subjectStatuses = results.statuses.map((status) =>
-        moderationService.views.formatSubjectStatus(status),
+        modService.views.formatSubjectStatus(status),
       )
       return {
         encoding: 'application/json',

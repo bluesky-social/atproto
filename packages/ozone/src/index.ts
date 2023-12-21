@@ -11,7 +11,7 @@ import * as error from './error'
 import { dbLogger, loggerMiddleware } from './logger'
 import { ServerConfig } from './config'
 import { createServer } from './lexicon'
-import { createServices } from './services'
+import { ModerationService } from './mod-service'
 import AppContext from './context'
 import { BackgroundQueue } from './background'
 import { AtpAgent } from '@atproto/api'
@@ -63,7 +63,7 @@ export class OzoneService {
       auth.buildBasicAuth('admin', config.adminPassword),
     )
 
-    const services = createServices(appviewAgent)
+    const modService = ModerationService.creator(appviewAgent)
 
     const daemon = OzoneDaemon.create({
       db,
@@ -81,7 +81,7 @@ export class OzoneService {
       db,
       cfg: config,
       appviewAgent,
-      services,
+      modService,
       signingKey,
       idResolver,
       backgroundQueue,

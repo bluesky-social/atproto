@@ -1,13 +1,13 @@
 // This may require better organization but for now, just dumping functions here containing DB queries for moderation status
 
 import { AtUri } from '@atproto/syntax'
-import { Database } from '../../db'
-import { ModerationSubjectStatus } from '../../db/schema/moderation_subject_status'
+import { Database } from '../db'
+import { ModerationSubjectStatus } from '../db/schema/moderation_subject_status'
 import {
   REVIEWOPEN,
   REVIEWCLOSED,
   REVIEWESCALATED,
-} from '../../lexicon/types/com/atproto/admin/defs'
+} from '../lexicon/types/com/atproto/admin/defs'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 import { HOUR } from '@atproto/common'
 import { sql } from 'kysely'

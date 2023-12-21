@@ -1,6 +1,6 @@
 import { Selectable } from 'kysely'
-import { ModerationEvent } from '../../db/schema/moderation_event'
-import { ModerationSubjectStatus } from '../../db/schema/moderation_subject_status'
+import { ModerationEvent } from '../db/schema/moderation_event'
+import { ModerationSubjectStatus } from '../db/schema/moderation_subject_status'
 import { ComAtprotoAdminDefs } from '@atproto/api'
 import { ModSubject } from './subject'
 

@@ -5,7 +5,7 @@ import { Keypair } from '@atproto/crypto'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { Database } from './db'
 import { ServerConfig } from './config'
-import { Services } from './services'
+import { ModerationServiceCreator } from './mod-service'
 import * as auth from './auth'
 import { BackgroundQueue } from './background'
 import { OzoneDaemon } from './daemon'
@@ -17,7 +17,7 @@ export class AppContext {
       db: Database
       appviewAgent: AtpAgent
       cfg: ServerConfig
-      services: Services
+      modService: ModerationServiceCreator
       signingKey: Keypair
       idResolver: IdResolver
       backgroundQueue: BackgroundQueue
@@ -42,8 +42,8 @@ export class AppContext {
     return this.opts.cfg
   }
 
-  get services(): Services {
-    return this.opts.services
+  get modService(): ModerationServiceCreator {
+    return this.opts.modService
   }
 
   get appviewAgent(): AtpAgent {

@@ -16,8 +16,8 @@ export default function (server: Server, ctx: AppContext) {
         createdBy,
       } = params
       const db = ctx.db
-      const moderationService = ctx.services.moderation(db)
-      const results = await moderationService.getEvents({
+      const modService = ctx.modService(db)
+      const results = await modService.getEvents({
         types: types?.length ? types.map(getEventType) : [],
         subject,
         createdBy,
@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           cursor: results.cursor,
           events: results.events.map((evt) =>
-            moderationService.views.formatEvent(evt),
+            modService.views.formatEvent(evt),
           ),
         },
       }

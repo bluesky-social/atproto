@@ -1,15 +1,15 @@
 import { DaemonConfig } from './config'
 import { Database } from '../db'
-import { Services } from '../services'
 import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
+import { ModerationServiceCreator } from '../mod-service'
 
 export class DaemonContext {
   constructor(
     private opts: {
       db: Database
       cfg: DaemonConfig
-      services: Services
+      modService: ModerationServiceCreator
       eventPusher: EventPusher
       eventReverser: EventReverser
     },
@@ -23,8 +23,8 @@ export class DaemonContext {
     return this.opts.cfg
   }
 
-  get services(): Services {
-    return this.opts.services
+  get modService(): ModerationServiceCreator {
+    return this.opts.modService
   }
 
   get eventPusher(): EventPusher {

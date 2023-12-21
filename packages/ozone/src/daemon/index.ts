@@ -1,11 +1,11 @@
 import AtpAgent from '@atproto/api'
 import Database from '../db'
-import { createServices } from '../services'
 import { DaemonConfig } from './config'
 import DaemonContext from './context'
 import * as auth from '../auth'
 import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
+import { ModerationService } from '../mod-service'
 
 export { EventPusher } from './event-pusher'
 export { EventReverser } from './event-reverser'
@@ -26,13 +26,13 @@ export class OzoneDaemon {
       auth.buildBasicAuth(url.username, url.password),
     )
 
-    const services = createServices(appviewAgent)
+    const modService = ModerationService.creator(appviewAgent)
     const eventPusher = new EventPusher(db, appviewAgent, moderationPushAgent)
-    const eventReverser = new EventReverser(db, services)
+    const eventReverser = new EventReverser(db, modService)
     const ctx = new DaemonContext({
       db,
       cfg,
-      services,
+      modService,
       eventPusher,
       eventReverser,
     })

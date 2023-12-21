@@ -9,8 +9,8 @@ export default function (server: Server, ctx: AppContext) {
         params,
       )
       const db = ctx.db
-      const moderationService = ctx.services.moderation(db)
-      const views = await moderationService.views.repos(
+      const modService = ctx.modService(db)
+      const views = await modService.views.repos(
         res.data.repos.map((r) => r.did),
       )
       const repos = res.data.repos.map((r) => ({

@@ -2,9 +2,9 @@ import { CID } from 'multiformats/cid'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { addHoursToDate } from '@atproto/common'
-import { Database } from '../../db'
+import { Database } from '../db'
 import { ModerationViews } from './views'
-import { Main as StrongRef } from '../../lexicon/types/com/atproto/repo/strongRef'
+import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
 import {
   isModEventComment,
   isModEventLabel,
@@ -14,7 +14,7 @@ import {
   isModEventEmail,
   RepoRef,
   RepoBlobRef,
-} from '../../lexicon/types/com/atproto/admin/defs'
+} from '../lexicon/types/com/atproto/admin/defs'
 import {
   adjustModerationSubjectStatus,
   getStatusIdentifierFromSubject,
@@ -25,10 +25,10 @@ import {
   ModerationSubjectStatusRow,
   ReversibleModerationEvent,
 } from './types'
-import { ModerationEvent } from '../../db/schema/moderation_event'
-import { StatusKeyset, TimeIdKeyset, paginate } from '../../db/pagination'
+import { ModerationEvent } from '../db/schema/moderation_event'
+import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination'
 import AtpAgent from '@atproto/api'
-import { Label } from '../../lexicon/types/com/atproto/label/defs'
+import { Label } from '../lexicon/types/com/atproto/label/defs'
 import { sql } from 'kysely'
 import {
   ModSubject,
@@ -36,6 +36,8 @@ import {
   RepoSubject,
   subjectFromStatusRow,
 } from './subject'
+
+export type ModerationServiceCreator = (db: Database) => ModerationService
 
 export class ModerationService {
   constructor(public db: Database, public appviewAgent: AtpAgent) {}

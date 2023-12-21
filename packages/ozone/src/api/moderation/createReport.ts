@@ -1,7 +1,7 @@
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
-import { subjectFromInput } from '../../services/moderation/subject'
 import { getReasonType } from './util'
+import { subjectFromInput } from '../../mod-service/subject'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db
 
       const report = await db.transaction(async (dbTxn) => {
-        const moderationTxn = ctx.services.moderation(dbTxn)
+        const moderationTxn = ctx.modService(dbTxn)
         return moderationTxn.report({
           reasonType: getReasonType(reasonType),
           reason,
@@ -23,10 +23,10 @@ export default function (server: Server, ctx: AppContext) {
         })
       })
 
-      const moderationService = ctx.services.moderation(db)
+      const body = ctx.modService(db).views.formatReport(report)
       return {
         encoding: 'application/json',
-        body: moderationService.views.formatReport(report),
+        body,
       }
     },
   })

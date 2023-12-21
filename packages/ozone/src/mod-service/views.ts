@@ -3,7 +3,7 @@ import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import AtpAgent from '@atproto/api'
 import { dedupeStrs } from '@atproto/common'
 import { BlobRef } from '@atproto/lexicon'
-import { Database } from '../../db'
+import { Database } from '../db'
 import {
   ModEventView,
   RepoView,
@@ -15,14 +15,14 @@ import {
   SubjectStatusView,
   ModEventViewDetail,
   AccountView,
-} from '../../lexicon/types/com/atproto/admin/defs'
-import { OutputSchema as ReportOutput } from '../../lexicon/types/com/atproto/moderation/createReport'
-import { Label, isSelfLabels } from '../../lexicon/types/com/atproto/label/defs'
+} from '../lexicon/types/com/atproto/admin/defs'
+import { OutputSchema as ReportOutput } from '../lexicon/types/com/atproto/moderation/createReport'
+import { Label, isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
   ModerationEventRowWithHandle,
   ModerationSubjectStatusRowWithHandle,
 } from './types'
-import { REASONOTHER } from '../../lexicon/types/com/atproto/moderation/defs'
+import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
 import { subjectFromEventRow, subjectFromStatusRow } from './subject'
 
 export class ModerationViews {

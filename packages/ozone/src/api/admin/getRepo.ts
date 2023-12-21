@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
       const { did } = params
       const db = ctx.db
       const [partialRepo, accountInfo] = await Promise.all([
-        ctx.services.moderation(db).views.repoDetail(did),
+        ctx.modService(db).views.repoDetail(did),
         getPdsAccountInfo(ctx, did),
       ])
       if (!partialRepo) {

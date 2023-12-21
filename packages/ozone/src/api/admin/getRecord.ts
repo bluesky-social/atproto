@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db
 
       const [record, accountInfo] = await Promise.all([
-        ctx.services.moderation(db).views.recordDetail(params),
+        ctx.modService(db).views.recordDetail(params),
         getPdsAccountInfo(ctx, new AtUri(params.uri).hostname),
       ])
 

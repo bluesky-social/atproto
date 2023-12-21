@@ -14,7 +14,7 @@ import {
   REVIEWOPEN,
 } from '../../lexicon/types/com/atproto/admin/defs'
 import { ModerationEvent } from '../../db/schema/moderation_event'
-import { ModerationSubjectStatusRow } from '../../services/moderation/types'
+import { ModerationSubjectStatusRow } from '../../mod-service/types'
 
 export const getReasonType = (reasonType: ReportInput['reasonType']) => {
   if (reasonTypes.has(reasonType)) {

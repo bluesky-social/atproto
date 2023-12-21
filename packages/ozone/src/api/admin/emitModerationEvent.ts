@@ -6,7 +6,7 @@ import {
   isModEventReverseTakedown,
   isModEventTakedown,
 } from '../../lexicon/types/com/atproto/admin/defs'
-import { subjectFromInput } from '../../services/moderation/subject'
+import { subjectFromInput } from '../../mod-service/subject'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.emitModerationEvent({
@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ input, auth }) => {
       const access = auth.credentials
       const db = ctx.db
-      const moderationService = ctx.services.moderation(db)
+      const moderationService = ctx.modService(db)
       const { createdBy, event } = input.body
       const isTakedownEvent = isModEventTakedown(event)
       const isReverseTakedownEvent = isModEventReverseTakedown(event)
@@ -65,7 +65,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const moderationEvent = await db.transaction(async (dbTxn) => {
-        const moderationTxn = ctx.services.moderation(dbTxn)
+        const moderationTxn = ctx.modService(dbTxn)
 
         const result = await moderationTxn.logEvent({
           event,

@@ -1,10 +1,10 @@
 import { AtUri } from '@atproto/syntax'
-import { InputSchema as ReportInput } from '../../lexicon/types/com/atproto/moderation/createReport'
-import { InputSchema as ActionInput } from '../../lexicon/types/com/atproto/admin/emitModerationEvent'
+import { InputSchema as ReportInput } from '../lexicon/types/com/atproto/moderation/createReport'
+import { InputSchema as ActionInput } from '../lexicon/types/com/atproto/admin/emitModerationEvent'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
-import { RepoRef } from '../../lexicon/types/com/atproto/admin/defs'
-import { Main as StrongRef } from '../../lexicon/types/com/atproto/repo/strongRef'
+import { RepoRef } from '../lexicon/types/com/atproto/admin/defs'
+import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
 
 type SubjectInput = ReportInput['subject'] | ActionInput['subject']
 

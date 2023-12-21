@@ -7,9 +7,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params }) => {
       const { id } = params
       const db = ctx.db
-      const moderationService = ctx.services.moderation(db)
-      const event = await moderationService.getEventOrThrow(id)
-      const eventDetail = await moderationService.views.eventDetail(event)
+      const modService = ctx.modService(db)
+      const event = await modService.getEventOrThrow(id)
+      const eventDetail = await modService.views.eventDetail(event)
       return {
         encoding: 'application/json',
         body: eventDetail,
