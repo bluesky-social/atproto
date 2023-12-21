@@ -57,7 +57,6 @@ export class TestBsky {
       serverDid,
       dataplaneUrl: `http://localhost:${dataplanePort}`,
       ...cfg,
-      // Each test suite gets its own lock id for the repo subscription
       adminPassword: ADMIN_PASSWORD,
       moderatorPassword: MOD_PASSWORD,
       triagePassword: TRIAGE_PASSWORD,
@@ -83,6 +82,7 @@ export class TestBsky {
       config,
       didCache,
       signingKey: serviceKeypair,
+      algos: cfg.algos,
     })
 
     const sub = new bsky.RepoSubscription({

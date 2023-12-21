@@ -17,7 +17,7 @@ describe('proxies appview procedures', () => {
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()
-    await basicSeed(sc, { addModLabels: true })
+    await basicSeed(sc, { addModLabels: network.bsky })
     await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob

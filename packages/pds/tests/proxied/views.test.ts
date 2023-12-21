@@ -19,7 +19,7 @@ describe('proxies view requests', () => {
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()
-    await basicSeed(sc, { addModLabels: true })
+    await basicSeed(sc, { addModLabels: network.bsky })
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
@@ -79,7 +79,7 @@ describe('proxies view requests', () => {
       { did: sc.dids.carol, order: 2 },
       { did: sc.dids.dan, order: 3 },
     ]
-    await network.bsky.ctx.db
+    await network.bsky.db
       .getPrimary()
       .db.insertInto('suggested_follow')
       .values(suggestions)
