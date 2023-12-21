@@ -7,6 +7,7 @@ import RecordProcessor from '../processor'
 import { PrimaryDatabase } from '../../db'
 import { countAll, excluded } from '../../db/util'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
+import { BackgroundQueue } from '../../background'
 
 const lexId = lex.ids.AppBskyFeedRepost
 type IndexedRepost = Selectable<DatabaseSchemaType['repost']>
@@ -131,8 +132,11 @@ const updateAggregates = async (db: DatabaseSchema, repost: IndexedRepost) => {
 
 export type PluginType = RecordProcessor<Repost.Record, IndexedRepost>
 
-export const makePlugin = (db: PrimaryDatabase): PluginType => {
-  return new RecordProcessor(db, {
+export const makePlugin = (
+  db: PrimaryDatabase,
+  background: BackgroundQueue,
+): PluginType => {
+  return new RecordProcessor(db, background, {
     lexId,
     insertFn,
     findDuplicate,

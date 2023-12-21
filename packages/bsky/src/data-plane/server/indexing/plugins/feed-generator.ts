@@ -6,6 +6,7 @@ import * as lex from '../../../../lexicon/lexicons'
 import { PrimaryDatabase } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import RecordProcessor from '../processor'
+import { BackgroundQueue } from '../../background'
 
 const lexId = lex.ids.AppBskyFeedGenerator
 type IndexedFeedGenerator = Selectable<DatabaseSchemaType['feed_generator']>
@@ -68,8 +69,11 @@ export type PluginType = RecordProcessor<
   IndexedFeedGenerator
 >
 
-export const makePlugin = (db: PrimaryDatabase): PluginType => {
-  return new RecordProcessor(db, {
+export const makePlugin = (
+  db: PrimaryDatabase,
+  background: BackgroundQueue,
+): PluginType => {
+  return new RecordProcessor(db, background, {
     lexId,
     insertFn,
     findDuplicate,

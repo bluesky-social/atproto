@@ -7,6 +7,7 @@ import RecordProcessor from '../processor'
 import { PrimaryDatabase } from '../../db'
 import { countAll, excluded } from '../../db/util'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
+import { BackgroundQueue } from '../../background'
 
 const lexId = lex.ids.AppBskyGraphFollow
 type IndexedFollow = Selectable<DatabaseSchemaType['follow']>
@@ -116,8 +117,11 @@ const updateAggregates = async (db: DatabaseSchema, follow: IndexedFollow) => {
 
 export type PluginType = RecordProcessor<Follow.Record, IndexedFollow>
 
-export const makePlugin = (db: PrimaryDatabase): PluginType => {
-  return new RecordProcessor(db, {
+export const makePlugin = (
+  db: PrimaryDatabase,
+  background: BackgroundQueue,
+): PluginType => {
+  return new RecordProcessor(db, background, {
     lexId,
     insertFn,
     findDuplicate,

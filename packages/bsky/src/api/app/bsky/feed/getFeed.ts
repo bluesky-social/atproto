@@ -15,7 +15,7 @@ import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky
 import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { AlgoResponse, AlgoResponseItem } from '../../../../feed-gen/types'
+import { AlgoResponse, AlgoResponseItem } from '../../../feed-gen/types'
 import {
   HydrationFnInput,
   PresentationFnInput,

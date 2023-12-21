@@ -119,21 +119,10 @@ describe('pds follow views', () => {
   })
 
   it('blocks followers by actor takedown', async () => {
-    await agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.dan,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.updateTakedown({
+      actorDid: sc.dids.dan,
+      takenDown: true,
+    })
 
     const aliceFollowers = await agent.api.app.bsky.graph.getFollowers(
       { actor: sc.dids.alice },
@@ -144,21 +133,10 @@ describe('pds follow views', () => {
       sc.dids.dan,
     )
 
-    await agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.dan,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.updateTakedown({
+      actorDid: sc.dids.dan,
+      takenDown: false,
+    })
   })
 
   it('fetches follows', async () => {
@@ -251,21 +229,10 @@ describe('pds follow views', () => {
   })
 
   it('blocks follows by actor takedown', async () => {
-    await agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.dan,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.updateTakedown({
+      actorDid: sc.dids.dan,
+      takenDown: true,
+    })
 
     const aliceFollows = await agent.api.app.bsky.graph.getFollows(
       { actor: sc.dids.alice },
@@ -276,20 +243,9 @@ describe('pds follow views', () => {
       sc.dids.dan,
     )
 
-    await agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids.dan,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.updateTakedown({
+      actorDid: sc.dids.dan,
+      takenDown: false,
+    })
   })
 })

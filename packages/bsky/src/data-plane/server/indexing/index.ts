@@ -29,6 +29,7 @@ import * as FeedGenerator from './plugins/feed-generator'
 import RecordProcessor from './processor'
 import { subLogger } from '../../../logger'
 import { retryHttp } from '../../../util/retry'
+import { BackgroundQueue } from '../background'
 
 export class IndexingService {
   records: {
@@ -45,29 +46,29 @@ export class IndexingService {
     feedGenerator: FeedGenerator.PluginType
   }
 
-  constructor(public db: PrimaryDatabase, public idResolver: IdResolver) {
+  constructor(
+    public db: PrimaryDatabase,
+    public idResolver: IdResolver,
+    public background: BackgroundQueue,
+  ) {
     this.records = {
-      post: Post.makePlugin(this.db),
-      threadGate: Threadgate.makePlugin(this.db),
-      like: Like.makePlugin(this.db),
-      repost: Repost.makePlugin(this.db),
-      follow: Follow.makePlugin(this.db),
-      profile: Profile.makePlugin(this.db),
-      list: List.makePlugin(this.db),
-      listItem: ListItem.makePlugin(this.db),
-      listBlock: ListBlock.makePlugin(this.db),
-      block: Block.makePlugin(this.db),
-      feedGenerator: FeedGenerator.makePlugin(this.db),
+      post: Post.makePlugin(this.db, this.background),
+      threadGate: Threadgate.makePlugin(this.db, this.background),
+      like: Like.makePlugin(this.db, this.background),
+      repost: Repost.makePlugin(this.db, this.background),
+      follow: Follow.makePlugin(this.db, this.background),
+      profile: Profile.makePlugin(this.db, this.background),
+      list: List.makePlugin(this.db, this.background),
+      listItem: ListItem.makePlugin(this.db, this.background),
+      listBlock: ListBlock.makePlugin(this.db, this.background),
+      block: Block.makePlugin(this.db, this.background),
+      feedGenerator: FeedGenerator.makePlugin(this.db, this.background),
     }
   }
 
   transact(txn: PrimaryDatabase) {
     txn.assertTransaction()
-    return new IndexingService(txn, this.idResolver)
-  }
-
-  static creator(idResolver: IdResolver) {
-    return (db: PrimaryDatabase) => new IndexingService(db, idResolver)
+    return new IndexingService(txn, this.idResolver, this.background)
   }
 
   async indexRecord(

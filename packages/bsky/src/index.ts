@@ -87,6 +87,7 @@ export class BskyAppView {
       views,
       signingKey,
       idResolver,
+      didCache,
       algos,
     })
 

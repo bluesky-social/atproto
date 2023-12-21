@@ -7,6 +7,7 @@ import { lexicons } from '../../../lexicon/lexicons'
 import { PrimaryDatabase } from '../db'
 import DatabaseSchema from '../db/database-schema'
 import { Notification } from '../db/tables/notification'
+import { BackgroundQueue } from '../background'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).
@@ -40,6 +41,7 @@ export class RecordProcessor<T, S> {
   db: DatabaseSchema
   constructor(
     private appDb: PrimaryDatabase,
+    private background: BackgroundQueue,
     private params: RecordProcessorParams<T, S>,
   ) {
     this.db = appDb.db
@@ -86,7 +88,7 @@ export class RecordProcessor<T, S> {
       timestamp,
     )
     if (inserted) {
-      await this.aggregateOnCommit(inserted)
+      this.aggregateOnCommit(inserted)
       if (!opts?.disableNotifs) {
         await this.handleNotifs({ inserted })
       }
@@ -153,7 +155,7 @@ export class RecordProcessor<T, S> {
       // If a record was updated but hadn't been indexed yet, treat it like a plain insert.
       return this.insertRecord(uri, cid, obj, timestamp)
     }
-    await this.aggregateOnCommit(deleted)
+    this.aggregateOnCommit(deleted)
     const inserted = await this.params.insertFn(
       this.db,
       uri,
@@ -166,7 +168,7 @@ export class RecordProcessor<T, S> {
         'Record update failed: removed from index but could not be replaced',
       )
     }
-    await this.aggregateOnCommit(inserted)
+    this.aggregateOnCommit(inserted)
     if (!opts?.disableNotifs) {
       await this.handleNotifs({ inserted, deleted })
     }
@@ -183,7 +185,7 @@ export class RecordProcessor<T, S> {
       .execute()
     const deleted = await this.params.deleteFn(this.db, uri)
     if (!deleted) return
-    await this.aggregateOnCommit(deleted)
+    this.aggregateOnCommit(deleted)
     if (cascading) {
       await this.db
         .deleteFrom('duplicate_record')
@@ -215,7 +217,7 @@ export class RecordProcessor<T, S> {
         found.indexedAt,
       )
       if (inserted) {
-        await this.aggregateOnCommit(inserted)
+        this.aggregateOnCommit(inserted)
       }
       await this.handleNotifs({ deleted, inserted: inserted ?? undefined })
     }
@@ -254,9 +256,12 @@ export class RecordProcessor<T, S> {
     }
   }
 
-  async aggregateOnCommit(indexed: S) {
+  aggregateOnCommit(indexed: S) {
     const { updateAggregates } = this.params
-    await updateAggregates?.(this.db, indexed)
+    if (!updateAggregates) return
+    this.appDb.onCommit(() => {
+      this.background.add((db) => updateAggregates(db.db, indexed))
+    })
   }
 }
 

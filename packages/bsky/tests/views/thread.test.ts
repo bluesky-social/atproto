@@ -114,7 +114,6 @@ describe('pds thread views', () => {
     )
     indexes.aliceReplyReply = sc.replies[alice].length - 1
     await network.processAll()
-    await network.bsky.processAll()
 
     const thread1 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
@@ -124,7 +123,6 @@ describe('pds thread views', () => {
 
     await sc.deletePost(bob, sc.replies[bob][indexes.bobReply].ref.uri)
     await network.processAll()
-    await network.bsky.processAll()
 
     const thread2 = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][indexes.aliceRoot].ref.uriStr },
@@ -164,21 +162,10 @@ describe('pds thread views', () => {
 
   describe('takedown', () => {
     it('blocks post by actor', async () => {
-      await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: alice,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.updateTakedown({
+        actorDid: alice,
+        takenDown: true,
+      })
 
       // Same as shallow post thread test, minus alice
       const promise = agent.api.app.bsky.feed.getPostThread(
@@ -191,39 +178,17 @@ describe('pds thread views', () => {
       )
 
       // Cleanup
-      await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: alice,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.updateTakedown({
+        actorDid: alice,
+        takenDown: false,
+      })
     })
 
     it('blocks replies by actor', async () => {
-      await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: carol,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.updateTakedown({
+        actorDid: carol,
+        takenDown: true,
+      })
 
       // Same as deep post thread test, minus carol
       const thread = await agent.api.app.bsky.feed.getPostThread(
@@ -234,39 +199,17 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: carol,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.updateTakedown({
+        actorDid: carol,
+        takenDown: false,
+      })
     })
 
     it('blocks ancestors by actor', async () => {
-      await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: bob,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.updateTakedown({
+        actorDid: bob,
+        takenDown: true,
+      })
 
       // Same as ancestor post thread test, minus bob
       const thread = await agent.api.app.bsky.feed.getPostThread(
@@ -277,41 +220,18 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: bob,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.updateTakedown({
+        actorDid: bob,
+        takenDown: false,
+      })
     })
 
     it('blocks post by record', async () => {
       const postRef = sc.posts[alice][1].ref
-      await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: postRef.uriStr,
-            cid: postRef.cidStr,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.updateTakedown({
+        recordUri: postRef.uriStr,
+        takenDown: true,
+      })
 
       const promise = agent.api.app.bsky.feed.getPostThread(
         { depth: 1, uri: postRef.uriStr },
@@ -323,22 +243,10 @@ describe('pds thread views', () => {
       )
 
       // Cleanup
-      await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: postRef.uriStr,
-            cid: postRef.cidStr,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.updateTakedown({
+        recordUri: postRef.uriStr,
+        takenDown: false,
+      })
     })
 
     it('blocks ancestors by record', async () => {
@@ -349,22 +257,10 @@ describe('pds thread views', () => {
 
       const parent = threadPreTakedown.data.thread.parent?.['post']
 
-      await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: parent.uri,
-            cid: parent.cid,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.updateTakedown({
+        recordUri: parent.uri,
+        takenDown: true,
+      })
 
       // Same as ancestor post thread test, minus parent post
       const thread = await agent.api.app.bsky.feed.getPostThread(
@@ -375,22 +271,10 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.emitModerationEvent(
-        {
-          event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
-          subject: {
-            $type: 'com.atproto.repo.strongRef',
-            uri: parent.uri,
-            cid: parent.cid,
-          },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
-        },
-        {
-          encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
-        },
-      )
+      await network.bsky.ctx.dataplane.updateTakedown({
+        recordUri: parent.uri,
+        takenDown: false,
+      })
     })
 
     it('blocks replies by record', async () => {
@@ -403,22 +287,10 @@ describe('pds thread views', () => {
 
       await Promise.all(
         [post1, post2].map((post) =>
-          agent.api.com.atproto.admin.emitModerationEvent(
-            {
-              event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-              subject: {
-                $type: 'com.atproto.repo.strongRef',
-                uri: post.uri,
-                cid: post.cid,
-              },
-              createdBy: 'did:example:admin',
-              reason: 'Y',
-            },
-            {
-              encoding: 'application/json',
-              headers: network.pds.adminAuthHeaders(),
-            },
-          ),
+          network.bsky.ctx.dataplane.updateTakedown({
+            recordUri: post.uri,
+            takenDown: true,
+          }),
         ),
       )
 
@@ -433,24 +305,10 @@ describe('pds thread views', () => {
       // Cleanup
       await Promise.all(
         [post1, post2].map((post) =>
-          agent.api.com.atproto.admin.emitModerationEvent(
-            {
-              event: {
-                $type: 'com.atproto.admin.defs#modEventReverseTakedown',
-              },
-              subject: {
-                $type: 'com.atproto.repo.strongRef',
-                uri: post.uri,
-                cid: post.cid,
-              },
-              createdBy: 'did:example:admin',
-              reason: 'Y',
-            },
-            {
-              encoding: 'application/json',
-              headers: network.pds.adminAuthHeaders(),
-            },
-          ),
+          network.bsky.ctx.dataplane.updateTakedown({
+            recordUri: post.uri,
+            takenDown: false,
+          }),
         ),
       )
     })

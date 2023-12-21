@@ -1,8 +1,8 @@
+import { wait } from '@atproto/common'
+import { IdResolver } from '@atproto/identity'
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import userSeed from './seeds/users'
-import { IdResolver } from '@atproto/identity'
-import DidSqlCache from '../src/did-cache'
-import { wait } from '@atproto/common'
+import { DidSqlCache } from '../src'
 
 describe('did cache', () => {
   let network: TestNetwork
@@ -19,8 +19,8 @@ describe('did cache', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_did_cache',
     })
-    idResolver = network.bsky.indexer.ctx.idResolver
-    didCache = network.bsky.indexer.ctx.didCache
+    idResolver = network.bsky.ctx.idResolver
+    didCache = network.bsky.ctx.didCache as DidSqlCache
     sc = network.getSeedClient()
     await userSeed(sc)
     await network.processAll()
@@ -81,7 +81,7 @@ describe('did cache', () => {
   })
 
   it('accurately reports expired dids & refreshes the cache', async () => {
-    const didCache = new DidSqlCache(network.bsky.ctx.db.getPrimary(), 1, 60000)
+    const didCache = new DidSqlCache(network.bsky.db.getPrimary(), 1, 60000)
     const shortCacheResolver = new IdResolver({
       plcUrl: network.bsky.ctx.cfg.didPlcUrl,
       didCache,
@@ -110,7 +110,7 @@ describe('did cache', () => {
   })
 
   it('does not return expired dids & refreshes the cache', async () => {
-    const didCache = new DidSqlCache(network.bsky.ctx.db.getPrimary(), 0, 1)
+    const didCache = new DidSqlCache(network.bsky.db.getPrimary(), 0, 1)
     const shortExpireResolver = new IdResolver({
       plcUrl: network.bsky.ctx.cfg.didPlcUrl,
       didCache,

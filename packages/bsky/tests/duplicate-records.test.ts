@@ -2,23 +2,19 @@ import { AtUri } from '@atproto/syntax'
 import { cidForCbor, TID } from '@atproto/common'
 import { WriteOpAction } from '@atproto/repo'
 import { TestNetwork } from '@atproto/dev-env'
-import { Database } from '../src'
-import { PrimaryDatabase } from '../src/db'
 import * as lex from '../src/lexicon/lexicons'
-import { Services } from '../src/indexer/services'
+import { Database, PrimaryDatabase } from '../src'
 
 describe('duplicate record', () => {
   let network: TestNetwork
   let did: string
   let db: PrimaryDatabase
-  let services: Services
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_duplicates',
     })
-    db = network.bsky.indexer.ctx.db
-    services = network.bsky.indexer.ctx.services
+    db = network.bsky.db.getPrimary()
     did = 'did:example:alice'
   })
 
@@ -51,21 +47,25 @@ describe('duplicate record', () => {
       }
       const uri = AtUri.make(did, coll, TID.nextStr())
       const cid = await cidForCbor(repost)
-      await services
-        .indexing(db)
-        .indexRecord(uri, cid, repost, WriteOpAction.Create, repost.createdAt)
+      await network.bsky.sub.indexingSvc.indexRecord(
+        uri,
+        cid,
+        repost,
+        WriteOpAction.Create,
+        repost.createdAt,
+      )
       uris.push(uri)
     }
 
     let count = await countRecords(db, 'repost')
     expect(count).toBe(1)
 
-    await services.indexing(db).deleteRecord(uris[0], false)
+    await network.bsky.sub.indexingSvc.deleteRecord(uris[0], false)
 
     count = await countRecords(db, 'repost')
     expect(count).toBe(1)
 
-    await services.indexing(db).deleteRecord(uris[1], true)
+    await network.bsky.sub.indexingSvc.deleteRecord(uris[1], true)
 
     count = await countRecords(db, 'repost')
     expect(count).toBe(0)
@@ -87,16 +87,20 @@ describe('duplicate record', () => {
       }
       const uri = AtUri.make(did, coll, TID.nextStr())
       const cid = await cidForCbor(like)
-      await services
-        .indexing(db)
-        .indexRecord(uri, cid, like, WriteOpAction.Create, like.createdAt)
+      await network.bsky.sub.indexingSvc.indexRecord(
+        uri,
+        cid,
+        like,
+        WriteOpAction.Create,
+        like.createdAt,
+      )
       uris.push(uri)
     }
 
     let count = await countRecords(db, 'like')
     expect(count).toBe(1)
 
-    await services.indexing(db).deleteRecord(uris[0], false)
+    await network.bsky.sub.indexingSvc.deleteRecord(uris[0], false)
 
     count = await countRecords(db, 'like')
     expect(count).toBe(1)
@@ -107,7 +111,7 @@ describe('duplicate record', () => {
       .executeTakeFirst()
     expect(got?.uri).toEqual(uris[1].toString())
 
-    await services.indexing(db).deleteRecord(uris[1], true)
+    await network.bsky.sub.indexingSvc.deleteRecord(uris[1], true)
 
     count = await countRecords(db, 'like')
     expect(count).toBe(0)
@@ -124,21 +128,25 @@ describe('duplicate record', () => {
       }
       const uri = AtUri.make(did, coll, TID.nextStr())
       const cid = await cidForCbor(follow)
-      await services
-        .indexing(db)
-        .indexRecord(uri, cid, follow, WriteOpAction.Create, follow.createdAt)
+      await network.bsky.sub.indexingSvc.indexRecord(
+        uri,
+        cid,
+        follow,
+        WriteOpAction.Create,
+        follow.createdAt,
+      )
       uris.push(uri)
     }
 
     let count = await countRecords(db, 'follow')
     expect(count).toBe(1)
 
-    await services.indexing(db).deleteRecord(uris[0], false)
+    await network.bsky.sub.indexingSvc.deleteRecord(uris[0], false)
 
     count = await countRecords(db, 'follow')
     expect(count).toBe(1)
 
-    await services.indexing(db).deleteRecord(uris[1], true)
+    await network.bsky.sub.indexingSvc.deleteRecord(uris[1], true)
 
     count = await countRecords(db, 'follow')
     expect(count).toBe(0)

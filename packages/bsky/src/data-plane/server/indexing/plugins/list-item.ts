@@ -7,6 +7,7 @@ import * as lex from '../../../../lexicon/lexicons'
 import RecordProcessor from '../processor'
 import { PrimaryDatabase } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
+import { BackgroundQueue } from '../../background'
 
 const lexId = lex.ids.AppBskyGraphListitem
 type IndexedListItem = Selectable<DatabaseSchemaType['list_item']>
@@ -77,8 +78,11 @@ const notifsForDelete = () => {
 
 export type PluginType = RecordProcessor<ListItem.Record, IndexedListItem>
 
-export const makePlugin = (db: PrimaryDatabase): PluginType => {
-  return new RecordProcessor(db, {
+export const makePlugin = (
+  db: PrimaryDatabase,
+  background: BackgroundQueue,
+): PluginType => {
+  return new RecordProcessor(db, background, {
     lexId,
     insertFn,
     findDuplicate,

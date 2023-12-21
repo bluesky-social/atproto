@@ -20,11 +20,11 @@ describe.skip('pds actor search views', () => {
     sc = network.getSeedClient()
 
     await wait(50) // allow pending sub to be established
-    await network.bsky.ingester.sub.destroy()
+    await network.bsky.sub.destroy()
     await usersBulkSeed(sc)
 
     // Skip did/handle resolution for expediency
-    const db = network.bsky.ctx.db.getPrimary()
+    const db = network.bsky.db.getPrimary()
     const now = new Date().toISOString()
     await db.db
       .insertInto('actor')
@@ -39,9 +39,8 @@ describe.skip('pds actor search views', () => {
       .execute()
 
     // Process remaining profiles
-    network.bsky.ingester.sub.resume()
+    network.bsky.sub.run()
     await network.processAll(50000)
-    await network.bsky.processAll()
     headers = await network.serviceHeaders(Object.values(sc.dids)[0])
   })
 
@@ -239,21 +238,10 @@ describe.skip('pds actor search views', () => {
   })
 
   it('search blocks by actor takedown', async () => {
-    await agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: sc.dids['cara-wiegand69.test'],
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.server.ctx.dataplane.updateTakedown({
+      actorDid: sc.dids['cara-wiegand69.test'],
+      takenDown: true,
+    })
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'car' },
       { headers },

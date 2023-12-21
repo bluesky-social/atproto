@@ -7,6 +7,7 @@ import RecordProcessor from '../processor'
 import { countAll, excluded } from '../../db/util'
 import { PrimaryDatabase } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
+import { BackgroundQueue } from '../../background'
 
 const lexId = lex.ids.AppBskyFeedLike
 type IndexedLike = Selectable<DatabaseSchemaType['like']>
@@ -106,8 +107,11 @@ const updateAggregates = async (db: DatabaseSchema, like: IndexedLike) => {
 
 export type PluginType = RecordProcessor<Like.Record, IndexedLike>
 
-export const makePlugin = (db: PrimaryDatabase): PluginType => {
-  return new RecordProcessor(db, {
+export const makePlugin = (
+  db: PrimaryDatabase,
+  background: BackgroundQueue,
+): PluginType => {
+  return new RecordProcessor(db, background, {
     lexId,
     insertFn,
     findDuplicate,

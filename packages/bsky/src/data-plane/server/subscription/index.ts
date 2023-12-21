@@ -25,13 +25,16 @@ import {
   ProcessableMessage,
   loggableMessage,
 } from './util'
+import { BackgroundQueue } from '../background'
 
 export class RepoSubscription {
   ac = new AbortController()
   running: Promise<void> | undefined
   cursor = 0
+  seenSeq: number | null = null
   repoQueue = new PartitionedQueue({ concurrency: Infinity })
   consecutive = new ConsecutiveList<number>()
+  background: BackgroundQueue
   indexingSvc: IndexingService
 
   constructor(
@@ -39,9 +42,15 @@ export class RepoSubscription {
       service: string
       db: PrimaryDatabase
       idResolver: IdResolver
+      background: BackgroundQueue
     },
   ) {
-    this.indexingSvc = new IndexingService(this.opts.db, this.opts.idResolver)
+    this.background = new BackgroundQueue(this.opts.db)
+    this.indexingSvc = new IndexingService(
+      this.opts.db,
+      this.opts.idResolver,
+      this.background,
+    )
   }
 
   run() {
@@ -51,9 +60,11 @@ export class RepoSubscription {
     this.consecutive = new ConsecutiveList<number>()
     this.running = this.process()
       .catch((err) => {
-        // allow this to cause an unhandled rejection, let deployment handle the crash.
-        log.error({ err }, 'subscription crashed')
-        throw err
+        if (err.name !== 'AbortError') {
+          // allow this to cause an unhandled rejection, let deployment handle the crash.
+          log.error({ err }, 'subscription crashed')
+          throw err
+        }
       })
       .finally(() => (this.running = undefined))
   }
@@ -74,6 +85,7 @@ export class RepoSubscription {
       this.repoQueue.add(details.repo, async () => {
         await this.handleMessage(item, details)
       })
+      this.seenSeq = details.seq
       await this.repoQueue.main.onEmpty() // backpressure
     }
   }
@@ -222,6 +234,7 @@ export class RepoSubscription {
     this.ac.abort()
     await this.running
     await this.repoQueue.destroy()
+    await this.background.processAll()
   }
 }
 

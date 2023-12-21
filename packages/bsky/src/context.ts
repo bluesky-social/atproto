@@ -1,5 +1,5 @@
 import * as plc from '@did-plc/lib'
-import { IdResolver } from '@atproto/identity'
+import { DidCache, IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { createServiceJwt } from '@atproto/xrpc-server'
@@ -20,6 +20,7 @@ export class AppContext {
       views: Views
       signingKey: Keypair
       idResolver: IdResolver
+      didCache?: DidCache
       algos: MountedAlgos
     },
   ) {}
@@ -50,6 +51,10 @@ export class AppContext {
 
   get idResolver(): IdResolver {
     return this.opts.idResolver
+  }
+
+  get didCache(): DidCache | undefined {
+    return this.opts.didCache
   }
 
   get authVerifier() {

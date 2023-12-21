@@ -7,12 +7,11 @@ import { cborDecode, cborEncode } from '@atproto/common'
 import { DatabaseSchemaType } from '../../src/data-plane/server/db/database-schema'
 import { ids } from '../../src/lexicon/lexicons'
 import { forSnapshot } from '../_util'
-import { AppContext, Database } from '../../src'
+import { Database } from '../../src'
 import basicSeed from '../seeds/basic'
 
 describe('sync', () => {
   let network: TestNetwork
-  let ctx: AppContext
   let pdsAgent: AtpAgent
   let sc: SeedClient
 
@@ -20,7 +19,6 @@ describe('sync', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_subscription_repo',
     })
-    ctx = network.bsky.ctx
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
@@ -31,7 +29,7 @@ describe('sync', () => {
   })
 
   it('indexes permit history being replayed.', async () => {
-    const db = ctx.db.getPrimary()
+    const db = network.bsky.db.getPrimary()
 
     // Generate some modifications and dupes
     const { alice, bob, carol, dan } = sc.dids
@@ -63,16 +61,12 @@ describe('sync', () => {
     const originalTableDump = await getTableDump()
 
     // Reprocess repos via sync subscription, on top of existing indices
-    await network.bsky.ingester.sub.destroy()
-    await network.bsky.indexer.sub.destroy()
-    // Hard reset of state in redis
-    await network.bsky.ingester.sub.resetCursor()
-    const indexerSub = network.bsky.indexer.sub
-    const partition = indexerSub.partitions.get(0)
-    await network.bsky.indexer.ctx.redis.del(partition.key)
+    await network.bsky.sub.destroy()
+    // Hard reset of state
+    network.bsky.sub.cursor = 0
+    network.bsky.sub.seenSeq = null
     // Boot streams back up
-    network.bsky.indexer.sub.resume()
-    network.bsky.ingester.sub.resume()
+    network.bsky.sub.run()
     await network.processAll()
 
     // Permissive of indexedAt times changing
@@ -103,7 +97,9 @@ describe('sync', () => {
     })
     await network.processAll()
     // confirm jack was indexed as an actor despite the bad event
-    const actors = await dumpTable(ctx.db.getPrimary(), 'actor', ['did'])
+    const actors = await dumpTable(network.bsky.db.getPrimary(), 'actor', [
+      'did',
+    ])
     expect(actors.map((a) => a.handle)).toContain('jack.test')
     network.pds.ctx.sequencer.sequenceCommit = sequenceCommitOrig
   })

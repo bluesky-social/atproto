@@ -3,7 +3,7 @@ import {
   REVIEWCLOSED,
   REVIEWOPEN,
   REVIEWESCALATED,
-} from '../../lexicon/types/com/atproto/admin/defs'
+} from '../../../../lexicon/types/com/atproto/admin/defs'
 
 export const eventTableName = 'moderation_event'
 export const subjectStatusTableName = 'moderation_subject_status'

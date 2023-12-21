@@ -28,6 +28,7 @@ import {
   violatesThreadGate as checkViolatesThreadGate,
   postToThreadgateUri,
 } from '../../util'
+import { BackgroundQueue } from '../../background'
 
 type Notif = Insertable<Notification>
 type Post = Selectable<DatabaseSchemaType['post']>
@@ -393,8 +394,11 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
 
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
 
-export const makePlugin = (db: PrimaryDatabase): PluginType => {
-  return new RecordProcessor(db, {
+export const makePlugin = (
+  db: PrimaryDatabase,
+  background: BackgroundQueue,
+): PluginType => {
+  return new RecordProcessor(db, background, {
     lexId,
     insertFn,
     findDuplicate,

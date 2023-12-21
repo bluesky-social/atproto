@@ -108,7 +108,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
   async muteActor(req) {
     const { actorDid, subjectDid } = req
-    assert(actorDid !== subjectDid, 'cannot mute yourself')
+    assert(actorDid !== subjectDid, 'cannot mute yourself') // @TODO pass message through in http error
     await db.db
       .insertInto('mute')
       .values({

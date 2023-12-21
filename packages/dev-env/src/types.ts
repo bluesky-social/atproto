@@ -15,14 +15,12 @@ export type PdsConfig = Partial<pds.ServerEnvironment> & {
 export type BskyConfig = Partial<bsky.ServerConfig> & {
   plcUrl: string
   repoProvider: string
-  dbPrimaryPostgresUrl: string
+  dbPostgresUrl: string
+  dbPostgresSchema: string
   redisHost: string
   pdsPort: number
   imgInvalidator?: ImageInvalidator
   migration?: string
-  algos?: bsky.MountedAlgos
-  indexer?: Partial<bsky.IndexerConfig>
-  ingester?: Partial<bsky.IngesterConfig>
 }
 
 export type TestServerParams = {
