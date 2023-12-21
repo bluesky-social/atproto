@@ -1,7 +1,7 @@
 import AtpAgent from '@atproto/api'
 import { SECOND, wait } from '@atproto/common'
 import Database from '../db'
-import { retryHttp } from '../util/retry'
+import { retryHttp } from '../util'
 import { RepoPushEvent } from '../db/schema/repo_push_event'
 import { RecordPushEvent } from '../db/schema/record_push_event'
 import { BlobPushEvent } from '../db/schema/blob_push_event'

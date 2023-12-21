@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { InputSchema as ReportInput } from '../../../../lexicon/types/com/atproto/moderation/createReport'
+import { InputSchema as ReportInput } from '../../lexicon/types/com/atproto/moderation/createReport'
 import {
   REASONOTHER,
   REASONSPAM,
@@ -7,14 +7,14 @@ import {
   REASONRUDE,
   REASONSEXUAL,
   REASONVIOLATION,
-} from '../../../../lexicon/types/com/atproto/moderation/defs'
+} from '../../lexicon/types/com/atproto/moderation/defs'
 import {
   REVIEWCLOSED,
   REVIEWESCALATED,
   REVIEWOPEN,
-} from '../../../../lexicon/types/com/atproto/admin/defs'
-import { ModerationEvent } from '../../../../db/schema/moderation_event'
-import { ModerationSubjectStatusRow } from '../../../../services/moderation/types'
+} from '../../lexicon/types/com/atproto/admin/defs'
+import { ModerationEvent } from '../../db/schema/moderation_event'
+import { ModerationSubjectStatusRow } from '../../services/moderation/types'
 
 export const getReasonType = (reasonType: ReportInput['reasonType']) => {
   if (reasonTypes.has(reasonType)) {

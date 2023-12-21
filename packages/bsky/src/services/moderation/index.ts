@@ -1,6 +1,7 @@
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { addHoursToDate } from '@atproto/common'
 import { PrimaryDatabase } from '../../db'
 import { ModerationViews } from './views'
 import { ImageUriBuilder } from '../../image/uri'
@@ -17,7 +18,6 @@ import {
   RepoBlobRef,
   StatusAttr,
 } from '../../lexicon/types/com/atproto/admin/defs'
-import { addHoursToDate } from '../../util/date'
 import {
   adjustModerationSubjectStatus,
   getStatusIdentifierFromSubject,

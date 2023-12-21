@@ -1,9 +1,9 @@
-import AppContext from '../../../../context'
+import AppContext from '../../context'
 import {
   RepoView,
   RepoViewDetail,
   AccountView,
-} from '../../../../lexicon/types/com/atproto/admin/defs'
+} from '../../lexicon/types/com/atproto/admin/defs'
 
 export const getPdsAccountInfo = async (
   ctx: AppContext,

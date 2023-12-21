@@ -1,6 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
+import { Server } from '../../lexicon'
+import AppContext from '../../context'
 import { addAccountInfoToRepoView, getPdsAccountInfo } from './util'
 import { AtUri } from '@atproto/syntax'
 

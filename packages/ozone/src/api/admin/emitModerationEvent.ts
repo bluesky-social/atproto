@@ -1,12 +1,12 @@
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
+import { Server } from '../../lexicon'
+import AppContext from '../../context'
 import {
   isModEventLabel,
   isModEventReverseTakedown,
   isModEventTakedown,
-} from '../../../../lexicon/types/com/atproto/admin/defs'
-import { subjectFromInput } from '../../../../services/moderation/subject'
+} from '../../lexicon/types/com/atproto/admin/defs'
+import { subjectFromInput } from '../../services/moderation/subject'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.emitModerationEvent({

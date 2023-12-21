@@ -1,6 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
+import { Server } from '../../lexicon'
+import AppContext from '../../context'
 import { addAccountInfoToRepoViewDetail, getPdsAccountInfo } from './util'
 
 export default function (server: Server, ctx: AppContext) {

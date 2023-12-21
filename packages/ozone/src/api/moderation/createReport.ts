@@ -1,7 +1,7 @@
-import { Server } from '../../../../lexicon'
-import AppContext from '../../../../context'
+import { Server } from '../../lexicon'
+import AppContext from '../../context'
+import { subjectFromInput } from '../../services/moderation/subject'
 import { getReasonType } from './util'
-import { subjectFromInput } from '../../../../services/moderation/subject'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
