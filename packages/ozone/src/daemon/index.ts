@@ -5,9 +5,13 @@ import { DaemonConfig } from './config'
 import DaemonContext from './context'
 import * as auth from '../auth'
 import { EventPusher } from './event-pusher'
+import { EventReverser } from './event-reverser'
+
+export { EventPusher } from './event-pusher'
+export { EventReverser } from './event-reverser'
 
 export class OzoneDaemon {
-  constructor(private ctx: DaemonContext) {}
+  constructor(public ctx: DaemonContext) {}
   static create(opts: { db: Database; cfg: DaemonConfig }): OzoneDaemon {
     const { db, cfg } = opts
     const appviewAgent = new AtpAgent({ service: cfg.appviewUrl })
@@ -24,17 +28,20 @@ export class OzoneDaemon {
 
     const services = createServices(appviewAgent)
     const eventPusher = new EventPusher(db, appviewAgent, moderationPushAgent)
+    const eventReverser = new EventReverser(db, services)
     const ctx = new DaemonContext({
       db,
       cfg,
       services,
       eventPusher,
+      eventReverser,
     })
     return new OzoneDaemon(ctx)
   }
 
   async start() {
     this.ctx.eventPusher.start()
+    this.ctx.eventReverser.start()
   }
 
   async processAll() {
@@ -42,6 +49,7 @@ export class OzoneDaemon {
   }
 
   async destroy() {
+    await this.ctx.eventReverser.destroy()
     await this.ctx.eventPusher.destroy()
     await this.ctx.db.close()
   }

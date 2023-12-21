@@ -75,6 +75,9 @@ export class TestOzone {
 
     await server.start()
 
+    // don't do event reversal in dev-env
+    await server.ctx.daemon?.ctx.eventReverser.destroy()
+
     return new TestOzone(url, port, server)
   }
 

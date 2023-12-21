@@ -2,6 +2,7 @@ import { DaemonConfig } from './config'
 import { Database } from '../db'
 import { Services } from '../services'
 import { EventPusher } from './event-pusher'
+import { EventReverser } from './event-reverser'
 
 export class DaemonContext {
   constructor(
@@ -10,6 +11,7 @@ export class DaemonContext {
       cfg: DaemonConfig
       services: Services
       eventPusher: EventPusher
+      eventReverser: EventReverser
     },
   ) {}
 
@@ -27,6 +29,10 @@ export class DaemonContext {
 
   get eventPusher(): EventPusher {
     return this.opts.eventPusher
+  }
+
+  get eventReverser(): EventReverser {
+    return this.opts.eventReverser
   }
 }
 

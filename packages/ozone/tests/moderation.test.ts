@@ -18,7 +18,7 @@ import {
   REVIEWCLOSED,
   REVIEWESCALATED,
 } from '../src/lexicon/types/com/atproto/admin/defs'
-import { PeriodicModerationEventReversal } from '../src'
+import { EventReverser } from '../src'
 import assert from 'assert'
 import { TestOzone } from '@atproto/dev-env/src/ozone'
 
@@ -756,10 +756,11 @@ describe('moderation', () => {
 
       assert(network.ozone)
       // In the actual app, this will be instantiated and run on server startup
-      const periodicReversal = new PeriodicModerationEventReversal(
-        network.ozone.ctx,
+      const reverser = new EventReverser(
+        network.ozone.ctx.db,
+        network.ozone.ctx.services,
       )
-      await periodicReversal.findAndRevertDueActions()
+      await reverser.findAndRevertDueActions()
       await ozone.processAll()
 
       const [{ data: eventList }, { data: statuses }] = await Promise.all([

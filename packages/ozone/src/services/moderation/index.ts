@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Database } from '../../db'
 import { ModerationViews } from './views'
@@ -549,7 +549,7 @@ export class ModerationService {
     )
     const resultsWithHandles = results.map((r) => ({
       ...r,
-      handle: infos.get(r.did)?.handle,
+      handle: infos.get(r.did)?.handle ?? INVALID_HANDLE,
     }))
 
     return {
