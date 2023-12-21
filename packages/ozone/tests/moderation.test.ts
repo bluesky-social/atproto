@@ -441,7 +441,7 @@ describe('moderation', () => {
         uri: post.uriStr,
         cid: post.cidStr,
       }
-      const modService = ctx.services.moderation(ctx.db)
+      const modService = ctx.modService(ctx.db)
       await modService.formatAndCreateLabels(
         ctx.cfg.labelerDid,
         post.uriStr,
@@ -473,7 +473,7 @@ describe('moderation', () => {
     it('no-ops when negating an already-negated label and reverses.', async () => {
       const { ctx } = ozone
       const post = sc.posts[sc.dids.bob][0].ref
-      const modService = ctx.services.moderation(ctx.db)
+      const modService = ctx.modService(ctx.db)
       await emitLabelEvent({
         negateLabelVals: ['bears'],
         createLabelVals: [],
@@ -556,7 +556,7 @@ describe('moderation', () => {
 
     it('creates and negates labels on a repo and reverses.', async () => {
       const { ctx } = ozone
-      const modService = ctx.services.moderation(ctx.db)
+      const modService = ctx.modService(ctx.db)
       await modService.formatAndCreateLabels(
         ctx.cfg.labelerDid,
         sc.dids.bob,
@@ -758,7 +758,7 @@ describe('moderation', () => {
       // In the actual app, this will be instantiated and run on server startup
       const reverser = new EventReverser(
         network.ozone.ctx.db,
-        network.ozone.ctx.services,
+        network.ozone.ctx.modService,
       )
       await reverser.findAndRevertDueActions()
       await ozone.processAll()
