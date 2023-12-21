@@ -10,7 +10,7 @@ This is the service entrypoint for the bsky appview. The entrypoint command shou
 - `NODE_ENV` - (recommended) for production usage, should be set to `production`. Otherwise all responses are validated on their way out. There may be other effects of not setting this to `production`, as dependencies may also implement debug modes based on its value.
 - `BSKY_VERSION` - (recommended) version of the bsky service. This is advertised by the health endpoint.
 - `BSKY_PORT` - (recommended) the port that the service will run on.
-- `BSKY_IMG_URI_ENDPOINT` - (recommended) the base url for resized images, e.g. `https://https://cdn.bsky.app/img`. When not set, sets-up an image resizing service directly on the appview.
+- `BSKY_IMG_URI_ENDPOINT` - (recommended) the base url for resized images, e.g. `https://cdn.bsky.app/img`. When not set, sets-up an image resizing service directly on the appview.
 - `BSKY_SERVER_DID` - (recommended) the did of the appview service. When this is a `did:web` that matches the appview's public url, a `did:web` document is served.
 - `BSKY_FEED_PUBLISHER_DID` - indicates the publisher did of any feedgen records which the appview supports.
 - `BSKY_FEED_GEN_DID` - the did of the appview's feed generator service. When present the appview implements `app.bsky.feed.describeFeedGenerator`.
