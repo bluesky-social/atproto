@@ -26,8 +26,7 @@ import {
   ReversibleModerationEvent,
 } from './types'
 import { ModerationEvent } from '../../db/schema/moderation_event'
-import { paginate } from '../../db/pagination'
-import { StatusKeyset, TimeIdKeyset } from './pagination'
+import { StatusKeyset, TimeIdKeyset, paginate } from '../../db/pagination'
 import AtpAgent from '@atproto/api'
 import { Label } from '../../lexicon/types/com/atproto/label/defs'
 import { sql } from 'kysely'
