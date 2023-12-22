@@ -6,10 +6,10 @@ import { AtUri } from '@atproto/syntax'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.muteActorList({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       const { list } = input.body
-      const requester = auth.credentials.did
+      const requester = auth.credentials.iss
 
       const db = ctx.db.getPrimary()
 

@@ -6,7 +6,7 @@ import { subjectFromInput } from '../../mod-service/subject'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
     // @TODO anonymous reports w/ optional auth are a temporary measure
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ input, auth }) => {
       const requester = auth.credentials.did
       const { reasonType, reason } = input.body

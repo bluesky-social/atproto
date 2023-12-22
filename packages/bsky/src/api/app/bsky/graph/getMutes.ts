@@ -5,10 +5,10 @@ import { notSoftDeletedClause } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getMutes({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ params, auth }) => {
       const { limit, cursor } = params
-      const requester = auth.credentials.did
+      const requester = auth.credentials.iss
       const db = ctx.db.getReplica()
       const { ref } = db.db.dynamic
 

@@ -165,19 +165,20 @@ describe('pds thread views', () => {
 
   describe('takedown', () => {
     it('blocks post by actor', async () => {
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await agent.api.com.atproto.admin.updateSubjectStatus(
         {
-          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
             did: alice,
           },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+          takedown: {
+            applied: true,
+            ref: 'test',
+          },
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
 
@@ -192,37 +193,38 @@ describe('pds thread views', () => {
       )
 
       // Cleanup
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await agent.api.com.atproto.admin.updateSubjectStatus(
         {
-          event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
             did: alice,
           },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+          takedown: {
+            applied: false,
+          },
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
 
     it('blocks replies by actor', async () => {
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await agent.api.com.atproto.admin.updateSubjectStatus(
         {
-          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
             did: carol,
           },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+          takedown: {
+            applied: true,
+            ref: 'test',
+          },
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
 
@@ -235,37 +237,38 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await agent.api.com.atproto.admin.updateSubjectStatus(
         {
-          event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
             did: carol,
           },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+          takedown: {
+            applied: false,
+          },
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
 
     it('blocks ancestors by actor', async () => {
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await agent.api.com.atproto.admin.updateSubjectStatus(
         {
-          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
             did: bob,
           },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+          takedown: {
+            applied: true,
+            ref: 'test',
+          },
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
 
@@ -278,39 +281,40 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await agent.api.com.atproto.admin.updateSubjectStatus(
         {
-          event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
             did: bob,
           },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+          takedown: {
+            applied: false,
+          },
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
 
     it('blocks post by record', async () => {
       const postRef = sc.posts[alice][1].ref
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await agent.api.com.atproto.admin.updateSubjectStatus(
         {
-          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
           subject: {
             $type: 'com.atproto.repo.strongRef',
             uri: postRef.uriStr,
             cid: postRef.cidStr,
           },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+          takedown: {
+            applied: true,
+            ref: 'test',
+          },
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
 
@@ -324,20 +328,20 @@ describe('pds thread views', () => {
       )
 
       // Cleanup
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await agent.api.com.atproto.admin.updateSubjectStatus(
         {
-          event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
           subject: {
             $type: 'com.atproto.repo.strongRef',
             uri: postRef.uriStr,
             cid: postRef.cidStr,
           },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+          takedown: {
+            applied: false,
+          },
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
@@ -350,20 +354,21 @@ describe('pds thread views', () => {
 
       const parent = threadPreTakedown.data.thread.parent?.['post']
 
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await agent.api.com.atproto.admin.updateSubjectStatus(
         {
-          event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
           subject: {
             $type: 'com.atproto.repo.strongRef',
             uri: parent.uri,
             cid: parent.cid,
           },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+          takedown: {
+            applied: true,
+            ref: 'test',
+          },
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
 
@@ -376,20 +381,20 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await agent.api.com.atproto.admin.emitModerationEvent(
+      await agent.api.com.atproto.admin.updateSubjectStatus(
         {
-          event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
           subject: {
             $type: 'com.atproto.repo.strongRef',
             uri: parent.uri,
             cid: parent.cid,
           },
-          createdBy: 'did:example:admin',
-          reason: 'Y',
+          takedown: {
+            applied: false,
+          },
         },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders(),
+          headers: network.bsky.adminAuthHeaders(),
         },
       )
     })
@@ -404,20 +409,21 @@ describe('pds thread views', () => {
 
       await Promise.all(
         [post1, post2].map((post) =>
-          agent.api.com.atproto.admin.emitModerationEvent(
+          agent.api.com.atproto.admin.updateSubjectStatus(
             {
-              event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
               subject: {
                 $type: 'com.atproto.repo.strongRef',
                 uri: post.uri,
                 cid: post.cid,
               },
-              createdBy: 'did:example:admin',
-              reason: 'Y',
+              takedown: {
+                applied: true,
+                ref: 'test',
+              },
             },
             {
               encoding: 'application/json',
-              headers: network.pds.adminAuthHeaders(),
+              headers: network.bsky.adminAuthHeaders(),
             },
           ),
         ),
@@ -434,7 +440,7 @@ describe('pds thread views', () => {
       // Cleanup
       await Promise.all(
         [post1, post2].map((post) =>
-          agent.api.com.atproto.admin.emitModerationEvent(
+          agent.api.com.atproto.admin.updateSubjectStatus(
             {
               event: {
                 $type: 'com.atproto.admin.defs#modEventReverseTakedown',
@@ -444,12 +450,13 @@ describe('pds thread views', () => {
                 uri: post.uri,
                 cid: post.cid,
               },
-              createdBy: 'did:example:admin',
-              reason: 'Y',
+              takedown: {
+                applied: false,
+              },
             },
             {
               encoding: 'application/json',
-              headers: network.pds.adminAuthHeaders(),
+              headers: network.bsky.adminAuthHeaders(),
             },
           ),
         ),

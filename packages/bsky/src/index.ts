@@ -33,6 +33,7 @@ import { NotificationServer } from './notifications'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { Redis } from './redis'
+import { AuthVerifier } from './auth-verifier'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
@@ -127,6 +128,14 @@ export class BskyAppView {
       },
     })
 
+    const authVerifier = new AuthVerifier(idResolver, {
+      ownDid: config.serverDid,
+      adminDid: 'did:example:admin',
+      adminPass: config.adminPassword,
+      moderatorPass: config.moderatorPassword,
+      triagePass: config.triagePassword,
+    })
+
     const ctx = new AppContext({
       db,
       cfg: config,
@@ -140,6 +149,7 @@ export class BskyAppView {
       searchAgent,
       algos,
       notifServer,
+      authVerifier,
     })
 
     const xrpcOpts: XrpcServerOptions = {

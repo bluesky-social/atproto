@@ -241,16 +241,17 @@ describe('notification views', () => {
     const postRef2 = sc.posts[sc.dids.dan][1].ref // Mention
     await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        agent.api.com.atproto.admin.emitModerationEvent(
+        agent.api.com.atproto.admin.updateSubjectStatus(
           {
-            event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
             subject: {
               $type: 'com.atproto.repo.strongRef',
               uri: postRef.uriStr,
               cid: postRef.cidStr,
             },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
+            takedown: {
+              applied: true,
+              ref: 'test',
+            },
           },
           {
             encoding: 'application/json',
@@ -277,16 +278,16 @@ describe('notification views', () => {
     // Cleanup
     await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        agent.api.com.atproto.admin.emitModerationEvent(
+        agent.api.com.atproto.admin.updateSubjectStatus(
           {
-            event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
             subject: {
               $type: 'com.atproto.repo.strongRef',
               uri: postRef.uriStr,
               cid: postRef.cidStr,
             },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
+            takedown: {
+              applied: false,
+            },
           },
           {
             encoding: 'application/json',

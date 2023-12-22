@@ -14,12 +14,12 @@ import { ActorService } from '../../../../services/actor'
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.feed.getPosts({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
       const db = ctx.db.getReplica()
       const feedService = ctx.services.feed(db)
       const actorService = ctx.services.actor(db)
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
 
       const results = await getPosts(
         { ...params, viewer },

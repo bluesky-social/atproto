@@ -4,10 +4,10 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.muteActor({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       const { actor } = input.body
-      const requester = auth.credentials.did
+      const requester = auth.credentials.iss
       const db = ctx.db.getPrimary()
 
       const subjectDid = await ctx.services.actor(db).getActorDid(actor)

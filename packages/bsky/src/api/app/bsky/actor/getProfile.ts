@@ -16,18 +16,16 @@ import { ModerationService } from '../../../../services/moderation'
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.actor.getProfile({
-    auth: ctx.authOptionalAccessOrRoleVerifier,
+    auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ auth, params, res }) => {
       const db = ctx.db.getReplica()
       const actorService = ctx.services.actor(db)
       const modService = ctx.services.moderation(ctx.db.getPrimary())
-      const viewer = 'did' in auth.credentials ? auth.credentials.did : null
-      const canViewTakendownProfile =
-        auth.credentials.type === 'role' && auth.credentials.triage
+      const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
 
       const [result, repoRev] = await Promise.allSettled([
         getProfile(
-          { ...params, viewer, canViewTakendownProfile },
+          { ...params, viewer, canViewTakedowns },
           { db, actorService, modService },
         ),
         actorService.getRepoRev(viewer),
@@ -53,12 +51,12 @@ const skeleton = async (
   ctx: Context,
 ): Promise<SkeletonState> => {
   const { actorService, modService } = ctx
-  const { canViewTakendownProfile } = params
+  const { canViewTakedowns } = params
   const actor = await actorService.getActor(params.actor, true)
   if (!actor) {
     throw new InvalidRequestError('Profile not found')
   }
-  if (!canViewTakendownProfile && softDeleted(actor)) {
+  if (!canViewTakedowns && softDeleted(actor)) {
     const isSuspended = await modService.isSubjectSuspended(actor.did)
     if (isSuspended) {
       throw new InvalidRequestError(
@@ -78,10 +76,10 @@ const skeleton = async (
 const hydration = async (state: SkeletonState, ctx: Context) => {
   const { actorService } = ctx
   const { params, actor } = state
-  const { viewer, canViewTakendownProfile } = params
+  const { viewer, canViewTakedowns } = params
   const hydration = await actorService.views.profileDetailHydration(
     [actor.did],
-    { viewer, includeSoftDeleted: canViewTakendownProfile },
+    { viewer, includeSoftDeleted: canViewTakedowns },
   )
   return { ...state, ...hydration }
 }
@@ -110,7 +108,7 @@ type Context = {
 
 type Params = QueryParams & {
   viewer: string | null
-  canViewTakendownProfile: boolean
+  canViewTakedowns: boolean
 }
 
 type SkeletonState = { params: Params; actor: Actor }

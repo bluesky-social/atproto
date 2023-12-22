@@ -239,15 +239,16 @@ describe.skip('pds actor search views', () => {
   })
 
   it('search blocks by actor takedown', async () => {
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids['cara-wiegand69.test'],
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: true,
+          ref: 'test',
+        },
       },
       {
         encoding: 'application/json',

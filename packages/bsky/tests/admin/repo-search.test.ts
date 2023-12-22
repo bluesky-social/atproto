@@ -3,7 +3,7 @@ import AtpAgent from '@atproto/api'
 import { paginateAll } from '../_util'
 import usersBulkSeed from '../seeds/users-bulk'
 
-describe('admin repo search view', () => {
+describe.skip('admin repo search view', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient

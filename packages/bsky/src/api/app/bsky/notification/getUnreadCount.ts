@@ -6,9 +6,9 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.getUnreadCount({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ auth, params }) => {
-      const requester = auth.credentials.did
+      const requester = auth.credentials.iss
       if (params.seenAt) {
         throw new InvalidRequestError('The seenAt parameter is unsupported')
       }

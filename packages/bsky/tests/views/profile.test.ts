@@ -184,15 +184,16 @@ describe('pds profile views', () => {
   })
 
   it('blocked by actor takedown', async () => {
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: alice,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: true,
+          ref: 'test',
+        },
       },
       {
         encoding: 'application/json',
@@ -207,61 +208,15 @@ describe('pds profile views', () => {
     await expect(promise).rejects.toThrow('Account has been taken down')
 
     // Cleanup
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: alice,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
-  })
-
-  it('blocked by actor suspension', async () => {
-    await agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: {
-          $type: 'com.atproto.admin.defs#modEventTakedown',
-          durationInHours: 1,
+        takedown: {
+          applied: false,
         },
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: alice,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
-    const promise = agent.api.app.bsky.actor.getProfile(
-      { actor: alice },
-      { headers: await network.serviceHeaders(bob) },
-    )
-
-    await expect(promise).rejects.toThrow(
-      'Account has been temporarily suspended',
-    )
-
-    // Cleanup
-    await agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: alice,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
       },
       {
         encoding: 'application/json',

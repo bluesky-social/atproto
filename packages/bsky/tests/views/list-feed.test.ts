@@ -112,15 +112,16 @@ describe('list feed views', () => {
   })
 
   it('blocks posts by actor takedown', async () => {
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: bob,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: true,
+          ref: 'test',
+        },
       },
       {
         encoding: 'application/json',
@@ -135,15 +136,15 @@ describe('list feed views', () => {
     expect(hasBob).toBe(false)
 
     // Cleanup
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: bob,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: false,
+        },
       },
       {
         encoding: 'application/json',
@@ -154,16 +155,17 @@ describe('list feed views', () => {
 
   it('blocks posts by record takedown.', async () => {
     const postRef = sc.replies[bob][0].ref // Post and reply parent
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: postRef.uriStr,
           cid: postRef.cidStr,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: true,
+          ref: 'test',
+        },
       },
       {
         encoding: 'application/json',
@@ -180,16 +182,16 @@ describe('list feed views', () => {
     expect(hasPost).toBe(false)
 
     // Cleanup
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
         subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: postRef.uriStr,
           cid: postRef.cidStr,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: false,
+        },
       },
       {
         encoding: 'application/json',

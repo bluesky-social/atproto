@@ -11,10 +11,10 @@ import { CID } from 'multiformats/cid'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateSubjectStatus({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.roleOrAdminService,
     handler: async ({ input, auth }) => {
-      // if less than moderator access then cannot perform a takedown
-      if (!auth.credentials.moderator) {
+      const { canPerformTakedown } = ctx.authVerifier.parseCreds(auth)
+      if (!canPerformTakedown) {
         throw new AuthRequiredError(
           'Must be a full moderator to update subject state',
         )

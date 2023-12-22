@@ -5,13 +5,11 @@ import { Platform } from '../../../../notifications'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.registerPush({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       const { token, platform, serviceDid, appId } = input.body
-      const {
-        credentials: { did },
-      } = auth
-      if (serviceDid !== auth.artifacts.aud) {
+      const did = auth.credentials.iss
+      if (serviceDid !== auth.credentials.aud) {
         throw new InvalidRequestError('Invalid serviceDid.')
       }
       const { notifServer } = ctx

@@ -157,16 +157,17 @@ describe('feed generation', () => {
       sc.getHeaders(alice),
     )
     await network.processAll()
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: prime.uri,
           cid: prime.cid,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: true,
+          ref: 'test',
+        },
       },
       {
         encoding: 'application/json',

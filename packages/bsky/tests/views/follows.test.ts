@@ -120,15 +120,16 @@ describe('pds follow views', () => {
   })
 
   it('blocks followers by actor takedown', async () => {
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.dan,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: true,
+          ref: 'test',
+        },
       },
       {
         encoding: 'application/json',
@@ -145,15 +146,15 @@ describe('pds follow views', () => {
       sc.dids.dan,
     )
 
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.dan,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: false,
+        },
       },
       {
         encoding: 'application/json',
@@ -252,15 +253,16 @@ describe('pds follow views', () => {
   })
 
   it('blocks follows by actor takedown', async () => {
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.dan,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: true,
+          ref: 'test',
+        },
       },
       {
         encoding: 'application/json',
@@ -277,15 +279,15 @@ describe('pds follow views', () => {
       sc.dids.dan,
     )
 
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.dan,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: false,
+        },
       },
       {
         encoding: 'application/json',

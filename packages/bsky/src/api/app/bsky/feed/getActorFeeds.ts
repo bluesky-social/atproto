@@ -6,10 +6,10 @@ import { TimeCidKeyset, paginate } from '../../../../db/pagination'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getActorFeeds({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params }) => {
       const { actor, limit, cursor } = params
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
 
       const db = ctx.db.getReplica()
       const actorService = ctx.services.actor(db)

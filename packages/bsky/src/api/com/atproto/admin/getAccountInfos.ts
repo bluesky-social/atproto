@@ -6,7 +6,7 @@ import { INVALID_HANDLE } from '@atproto/syntax'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getAccountInfos({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.roleOrAdminService,
     handler: async ({ params }) => {
       const { dids } = params
       const db = ctx.db.getPrimary()

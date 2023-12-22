@@ -3,7 +3,7 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.searchRepos({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.roleOrAdminService,
     handler: async ({ params }) => {
       const db = ctx.db.getPrimary()
       const moderationService = ctx.services.moderation(db)

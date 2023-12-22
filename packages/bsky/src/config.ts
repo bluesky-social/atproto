@@ -33,8 +33,8 @@ export interface ServerConfigValues {
   searchEndpoint?: string
   labelerDid: string
   adminPassword: string
-  moderatorPassword?: string
-  triagePassword?: string
+  moderatorPassword: string
+  triagePassword: string
   moderationPushUrl?: string
   rateLimitsEnabled: boolean
   rateLimitBypassKey?: string
@@ -110,9 +110,12 @@ export class ServerConfig {
     )
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
     assert(dbPrimaryPostgresUrl)
-    const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
+    const adminPassword = process.env.ADMIN_PASSWORD || undefined
+    assert(adminPassword)
     const moderatorPassword = process.env.MODERATOR_PASSWORD || undefined
+    assert(moderatorPassword)
     const triagePassword = process.env.TRIAGE_PASSWORD || undefined
+    assert(triagePassword)
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const moderationPushUrl =
       overrides?.moderationPushUrl ||

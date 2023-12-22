@@ -33,11 +33,11 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.feed.getFeed({
-    auth: ctx.authOptionalVerifierAnyAudience,
+    auth: ctx.authVerifier.standardOptionalAnyAud,
     handler: async ({ params, auth, req }) => {
       const db = ctx.db.getReplica()
       const feedService = ctx.services.feed(db)
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
 
       const { timerSkele, timerHydr, ...result } = await getFeed(
         { ...params, viewer },
