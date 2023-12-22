@@ -5,6 +5,7 @@ import {
   TestFeedGen,
   SeedClient,
   RecordRef,
+  basicSeed,
 } from '@atproto/dev-env'
 import { Handler as SkeletonHandler } from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { GeneratorView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
@@ -14,7 +15,6 @@ import {
   FeedViewPost,
   SkeletonFeedPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
-import basicSeed from './seeds/basic'
 import { forSnapshot, paginateAll } from './_util'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import assert from 'assert'

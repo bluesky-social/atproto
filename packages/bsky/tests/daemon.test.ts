@@ -1,8 +1,7 @@
 import assert from 'assert'
 import { AtUri } from '@atproto/api'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, usersSeed } from '@atproto/dev-env'
 import { BskyDaemon, DaemonConfig, PrimaryDatabase } from '../src'
-import usersSeed from './seeds/users'
 import { countAll, excluded } from '../src/db/util'
 import { NotificationsDaemon } from '../src/daemon/notifications'
 import {

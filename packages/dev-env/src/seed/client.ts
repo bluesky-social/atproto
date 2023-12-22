@@ -9,7 +9,7 @@ import { Record as LikeRecord } from '@atproto/api/src/client/types/app/bsky/fee
 import { Record as FollowRecord } from '@atproto/api/src/client/types/app/bsky/graph/follow'
 import { AtUri } from '@atproto/syntax'
 import { BlobRef } from '@atproto/lexicon'
-import { TestNetworkNoAppView } from './network-no-appview'
+import { TestNetworkNoAppView } from '../network-no-appview'
 
 // Makes it simple to create data via the XRPC client,
 // and keeps track of all created data in memory for convenience.
@@ -448,7 +448,7 @@ export class SeedClient {
     reason?: string
     createdBy?: string
   }) {
-    const { id, subject, reason = 'X', createdBy = 'did:example:admin' } = opts
+    const { subject, reason = 'X', createdBy = 'did:example:admin' } = opts
     const result = await this.agent.api.com.atproto.admin.emitModerationEvent(
       {
         subject,

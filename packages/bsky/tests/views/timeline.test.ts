@@ -1,8 +1,7 @@
 import assert from 'assert'
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, getOriginator, paginateAll } from '../_util'
-import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
 import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 

@@ -1,7 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { stripViewer } from '../_util'
-import basicSeed from '../seeds/basic'
 
 describe('pds user search views', () => {
   let network: TestNetwork

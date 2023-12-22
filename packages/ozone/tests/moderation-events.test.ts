@@ -1,7 +1,6 @@
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import AtpAgent, { ComAtprotoAdminDefs } from '@atproto/api'
 import { forSnapshot } from './_util'
-import basicSeed from './seeds/basic'
 import {
   REASONMISLEADING,
   REASONSPAM,

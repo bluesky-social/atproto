@@ -1,7 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewerFromPost } from '../_util'
-import basicSeed from '../seeds/basic'
 
 describe('list feed views', () => {
   let network: TestNetwork

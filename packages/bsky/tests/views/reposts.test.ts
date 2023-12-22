@@ -1,7 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, repostsSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewer } from '../_util'
-import repostsSeed from '../seeds/reposts'
 
 describe('pds repost views', () => {
   let network: TestNetwork

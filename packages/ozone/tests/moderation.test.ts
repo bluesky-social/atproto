@@ -1,4 +1,10 @@
-import { TestNetwork, ImageRef, RecordRef, SeedClient } from '@atproto/dev-env'
+import {
+  TestNetwork,
+  ImageRef,
+  RecordRef,
+  SeedClient,
+  basicSeed,
+} from '@atproto/dev-env'
 import AtpAgent, {
   ComAtprotoAdminEmitModerationEvent,
   ComAtprotoAdminQueryModerationStatuses,
@@ -6,7 +12,6 @@ import AtpAgent, {
 } from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import { forSnapshot } from './_util'
-import basicSeed from './seeds/basic'
 import {
   REASONMISLEADING,
   REASONOTHER,

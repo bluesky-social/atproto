@@ -1,4 +1,4 @@
-import { SeedClient } from '@atproto/dev-env'
+import { SeedClient } from './client'
 import basicSeed from './basic'
 
 export default async (sc: SeedClient) => {

@@ -1,9 +1,8 @@
 import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, stripViewer } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
-import basicSeed from '../seeds/basic'
 
 describe('pds profile views', () => {
   let network: TestNetwork

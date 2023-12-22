@@ -1,7 +1,6 @@
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
+import { SeedClient, TestNetwork, usersBulkSeed } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { paginateAll } from './_util'
-import usersBulkSeed from './seeds/users-bulk'
 
 describe('admin repo search view', () => {
   let network: TestNetwork
@@ -12,7 +11,6 @@ describe('admin repo search view', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'views_admin_repo_search',
-      ozone: { enabled: true },
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()

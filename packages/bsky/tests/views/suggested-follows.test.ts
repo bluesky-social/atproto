@@ -1,6 +1,5 @@
 import AtpAgent, { AtUri } from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
-import likesSeed from '../seeds/likes'
+import { TestNetwork, SeedClient, likesSeed } from '@atproto/dev-env'
 
 describe('suggested follows', () => {
   let network: TestNetwork

@@ -1,5 +1,4 @@
-import { SeedClient } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
+import { SeedClient } from './client'
 import usersSeed from './users'
 
 export default async (sc: SeedClient, users = true) => {
@@ -58,7 +57,7 @@ export default async (sc: SeedClient, users = true) => {
         index: { byteStart: 0, byteEnd: 18 },
         features: [
           {
-            $type: `${ids.AppBskyRichtextFacet}#mention`,
+            $type: `app.bsky.richtext.facet#mention`,
             did: alice,
           },
         ],

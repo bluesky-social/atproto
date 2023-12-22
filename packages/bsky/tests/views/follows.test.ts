@@ -1,7 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, followsSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewer } from '../_util'
-import followsSeed from '../seeds/follows'
 
 describe('pds follow views', () => {
   let agent: AtpAgent

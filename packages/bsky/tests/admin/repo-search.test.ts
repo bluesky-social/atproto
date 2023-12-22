@@ -1,7 +1,6 @@
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
+import { SeedClient, TestNetwork, usersBulkSeed } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { paginateAll } from '../_util'
-import usersBulkSeed from '../seeds/users-bulk'
 
 describe.skip('admin repo search view', () => {
   let network: TestNetwork

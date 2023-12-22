@@ -1,7 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
-import basicSeed from '../seeds/basic'
 import { BlockedActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
 import { BlockedByActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
 

@@ -1,11 +1,10 @@
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import {
   REASONOTHER,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 import { forSnapshot } from './_util'
-import basicSeed from './seeds/basic'
 
 describe('admin get repo view', () => {
   let network: TestNetwork
@@ -15,7 +14,6 @@ describe('admin get repo view', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'views_admin_get_repo',
-      ozone: { enabled: true },
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()

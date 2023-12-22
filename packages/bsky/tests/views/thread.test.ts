@@ -1,7 +1,6 @@
 import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, stripViewerFromThread } from '../_util'
-import basicSeed from '../seeds/basic'
 import assert from 'assert'
 import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
 

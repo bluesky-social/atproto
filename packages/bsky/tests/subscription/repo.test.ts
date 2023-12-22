@@ -1,5 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { CommitData } from '@atproto/repo'
 import { PreparedWrite } from '@atproto/pds/src/repo'
 import * as sequencer from '@atproto/pds/src/sequencer'
@@ -8,7 +8,6 @@ import { DatabaseSchemaType } from '../../src/db/database-schema'
 import { ids } from '../../src/lexicon/lexicons'
 import { forSnapshot } from '../_util'
 import { AppContext, Database } from '../../src'
-import basicSeed from '../seeds/basic'
 
 describe('sync', () => {
   let network: TestNetwork

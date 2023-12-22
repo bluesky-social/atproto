@@ -1,7 +1,6 @@
 import AtpAgent, { ComAtprotoAdminSearchRepos } from '@atproto/api'
 import { wait } from '@atproto/common'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
-import usersBulkSeed from '../../seeds/users-bulk'
+import { TestNetwork, SeedClient, usersBulkSeed } from '@atproto/dev-env'
 
 describe('pds admin repo search views', () => {
   let network: TestNetwork

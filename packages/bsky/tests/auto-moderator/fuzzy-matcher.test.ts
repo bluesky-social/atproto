@@ -1,6 +1,5 @@
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { FuzzyMatcher, encode } from '../../src/auto-moderator/fuzzy-matcher'
-import basicSeed from '../seeds/basic'
 import { AtpAgent } from '@atproto/api'
 import { ImageInvalidator } from '../../src/image/invalidator'
 
