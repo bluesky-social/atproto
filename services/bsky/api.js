@@ -11,7 +11,7 @@ require('dd-trace') // Only works with commonjs
   })
 
 // Tracer code above must come before anything else
-const path = require('nose:path')
+const path = require('node:path')
 const assert = require('node:assert')
 const { Secp256k1Keypair } = require('@atproto/crypto')
 const { ServerConfig, BskyAppView, makeAlgos } = require('@atproto/bsky')
