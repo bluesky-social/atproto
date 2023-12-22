@@ -1,4 +1,4 @@
-import { MINUTE, wait } from '@atproto/common'
+import { MINUTE } from '@atproto/common'
 import { dbLogger } from '../logger'
 import { ModerationServiceCreator, ReversalSubject } from '../mod-service'
 import Database from '../db'
@@ -6,6 +6,7 @@ import Database from '../db'
 export class EventReverser {
   destroyed = false
   reversalPromise: Promise<void> = Promise.resolve()
+  timer: NodeJS.Timer | undefined
 
   constructor(
     private db: Database,
@@ -13,22 +14,25 @@ export class EventReverser {
   ) {}
 
   start() {
-    this.reversalPromise = this.poll()
+    this.poll()
   }
 
-  async poll() {
+  poll() {
     if (this.destroyed) return
-    try {
-      await this.findAndRevertDueActions()
-    } catch (err) {
-      dbLogger.error({ err }, 'moderation action reversal errored')
-    }
-    await waitForInterval()
-    this.reversalPromise = this.poll()
+    this.reversalPromise = this.findAndRevertDueActions()
+      .then(() => {
+        this.timer = setTimeout(() => this.poll(), getInterval())
+      })
+      .catch((err) =>
+        dbLogger.error({ err }, 'moderation action reversal errored'),
+      )
   }
 
   async destroy() {
     this.destroyed = true
+    if (this.timer) {
+      clearTimeout(this.timer)
+    }
     await this.reversalPromise
   }
 
@@ -61,11 +65,10 @@ export class EventReverser {
   }
 }
 
-const waitForInterval = async () => {
+const getInterval = (): number => {
   // super basic synchronization by agreeing when the intervals land relative to unix timestamp
   const now = Date.now()
   const intervalMs = MINUTE
   const nextIteration = Math.ceil(now / intervalMs)
-  const nextInMs = nextIteration * intervalMs - now
-  await wait(nextInMs)
+  return nextIteration * intervalMs - now
 }

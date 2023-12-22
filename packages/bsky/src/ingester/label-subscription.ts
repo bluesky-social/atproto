@@ -2,11 +2,12 @@ import AtpAgent from '@atproto/api'
 import { PrimaryDatabase } from '../db'
 import { sql } from 'kysely'
 import { dbLogger } from '../logger'
-import { SECOND, wait } from '@atproto/common'
+import { SECOND } from '@atproto/common'
 
 export class LabelSubscription {
   destroyed = false
   promise: Promise<void> = Promise.resolve()
+  timer: NodeJS.Timer | undefined
   lastLabel: number | undefined
 
   constructor(public db: PrimaryDatabase, public labelAgent: AtpAgent) {}
@@ -19,7 +20,18 @@ export class LabelSubscription {
       .limit(1)
       .executeTakeFirst()
     this.lastLabel = res ? new Date(res.cts).getTime() : undefined
-    this.promise = this.poll()
+    this.poll()
+  }
+
+  async poll() {
+    if (this.destroyed) return
+    this.promise = this.fetchLabels()
+      .then(() => {
+        this.timer = setTimeout(() => this.poll(), SECOND)
+      })
+      .catch((err) =>
+        dbLogger.error({ err }, 'failed to fetch and store labels'),
+      )
   }
 
   async fetchLabels() {
@@ -51,19 +63,11 @@ export class LabelSubscription {
     this.lastLabel = new Date(last.cts).getTime()
   }
 
-  async poll() {
-    if (this.destroyed) return
-    try {
-      await this.fetchLabels()
-    } catch (err) {
-      dbLogger.error({ err }, 'failed to fetch and store labels')
-    }
-    await wait(SECOND)
-    this.promise = this.poll()
-  }
-
   async destroy() {
     this.destroyed = true
+    if (this.timer) {
+      clearTimeout(this.timer)
+    }
     await this.promise
   }
 }

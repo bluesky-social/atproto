@@ -79,8 +79,6 @@ describe('takedowner', () => {
   it('takes down flagged content in posts', async () => {
     const post = await sc.post(alice, 'blah', undefined, [goodBlob, badBlob1])
     await network.processAll()
-    await autoMod.processAll()
-    await ozone.processAll()
     const [modStatus, takedownEvent] = await Promise.all([
       ozone.ctx.db.db
         .selectFrom('moderation_subject_status')

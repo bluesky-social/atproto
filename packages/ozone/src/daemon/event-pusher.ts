@@ -1,12 +1,14 @@
 import AtpAgent from '@atproto/api'
-import { SECOND, wait } from '@atproto/common'
+import { SECOND } from '@atproto/common'
 import Database from '../db'
 import { retryHttp } from '../util'
 import { RepoPushEvent } from '../db/schema/repo_push_event'
 import { RecordPushEvent } from '../db/schema/record_push_event'
 import { BlobPushEvent } from '../db/schema/blob_push_event'
+import { dbLogger } from '../logger'
 
 type PollState = {
+  timer?: NodeJS.Timer
   promise: Promise<void>
   tries: number
 }
@@ -55,28 +57,37 @@ export class EventPusher {
 
   async destroy() {
     this.destroyed = true
+    const destroyState = (state: PollState) => {
+      if (state.timer) {
+        clearTimeout(state.timer)
+      }
+      return state.promise
+    }
     await Promise.all([
-      this.repoPollState.promise,
-      this.recordPollState.promise,
-      this.blobPollState.promise,
+      destroyState(this.repoPollState),
+      destroyState(this.recordPollState),
+      destroyState(this.blobPollState),
     ])
   }
 
   async poll(state: PollState, fn: () => Promise<boolean>) {
     if (this.destroyed) return
-    let hadEvts: boolean
-    try {
-      hadEvts = await fn()
-    } catch {
-      hadEvts = false
-    }
-    if (hadEvts) {
-      state.tries = 0
-    } else {
-      state.tries++
-    }
-    await exponentialBackoff(state.tries)
-    state.promise = this.poll(state, fn)
+    state.promise = fn()
+      .then((hadEvts: boolean) => {
+        if (hadEvts) {
+          state.tries = 0
+        } else {
+          state.tries++
+        }
+        state.timer = setTimeout(
+          () => this.poll(state, fn),
+          exponentialBackoff(state.tries),
+        )
+      })
+      .catch((err) => {
+        dbLogger.error({ err }, 'event push failed')
+        state.tries++
+      })
   }
 
   async pushRepoEvents() {
@@ -245,7 +256,6 @@ export class EventPusher {
   }
 }
 
-const exponentialBackoff = async (tries: number) => {
-  const waitTime = Math.min(Math.pow(10, tries), 30 * SECOND)
-  await wait(waitTime)
+const exponentialBackoff = (tries: number): number => {
+  return Math.min(Math.pow(10, tries), 30 * SECOND)
 }

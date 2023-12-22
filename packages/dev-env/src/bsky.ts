@@ -158,7 +158,7 @@ export class TestBsky {
     await server.start()
 
     // manually process labels in dev-env (in network.processAll)
-    await ingester.ctx.labelSubscription.destroy()
+    ingester.ctx.labelSubscription.destroy()
 
     return new TestBsky(url, port, server, indexer, ingester)
   }
