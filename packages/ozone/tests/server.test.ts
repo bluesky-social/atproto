@@ -4,7 +4,6 @@ import axios, { AxiosError } from 'axios'
 import { TestNetwork } from '@atproto/dev-env'
 import { handler as errorHandler } from '../src/error'
 import { TestOzone } from '@atproto/dev-env/src/ozone'
-import assert from 'assert'
 
 describe('server', () => {
   let network: TestNetwork
@@ -13,9 +12,7 @@ describe('server', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_server',
-      ozone: { enabled: true },
     })
-    assert(network.ozone)
     ozone = network.ozone
   })
 

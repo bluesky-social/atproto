@@ -2,7 +2,6 @@ import fs from 'fs/promises'
 import { TestNetwork, SeedClient, ImageRef } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
 import { AutoModerator } from '../../src/auto-moderator'
-import IndexerContext from '../../src/indexer/context'
 import { sha256RawToCid } from '@atproto/common'
 import usersSeed from '../seeds/users'
 import { CID } from 'multiformats/cid'
@@ -11,6 +10,8 @@ import { ImageFlagger } from '../../src/auto-moderator/abyss'
 import { ImageInvalidator } from '../../src/image/invalidator'
 import { sha256 } from '@atproto/crypto'
 import { ids } from '../../src/lexicon/lexicons'
+import { TestOzone } from '@atproto/dev-env/src/ozone'
+import { PrimaryDatabase } from '../../src'
 
 // outside of test suite so that TestLabeler can access them
 let badCid1: CID | undefined = undefined
@@ -18,9 +19,10 @@ let badCid2: CID | undefined = undefined
 
 describe('takedowner', () => {
   let network: TestNetwork
+  let ozone: TestOzone
+  let bskyDb: PrimaryDatabase
   let autoMod: AutoModerator
   let testInvalidator: TestInvalidator
-  let ctx: IndexerContext
   let pdsAgent: AtpAgent
   let sc: SeedClient
   let alice: string
@@ -36,8 +38,9 @@ describe('takedowner', () => {
         imgInvalidator: testInvalidator,
       },
     })
-    ctx = network.bsky.indexer.ctx
-    autoMod = ctx.autoMod
+    ozone = network.ozone
+    bskyDb = network.bsky.ctx.db.getPrimary()
+    autoMod = network.bsky.indexer.ctx.autoMod
     autoMod.imageFlagger = new TestFlagger()
     pdsAgent = new AtpAgent({ service: network.pds.url })
     sc = network.getSeedClient()
@@ -77,8 +80,9 @@ describe('takedowner', () => {
     const post = await sc.post(alice, 'blah', undefined, [goodBlob, badBlob1])
     await network.processAll()
     await autoMod.processAll()
+    await ozone.processAll()
     const [modStatus, takedownEvent] = await Promise.all([
-      ctx.db.db
+      ozone.ctx.db.db
         .selectFrom('moderation_subject_status')
         .where('did', '=', alice)
         .where(
@@ -88,7 +92,7 @@ describe('takedowner', () => {
         )
         .select(['takendown', 'id'])
         .executeTakeFirst(),
-      ctx.db.db
+      ozone.ctx.db.db
         .selectFrom('moderation_event')
         .where('subjectDid', '=', alice)
         .where('action', '=', 'com.atproto.admin.defs#modEventTakedown')
@@ -99,12 +103,12 @@ describe('takedowner', () => {
       throw new Error('expected mod action')
     }
     expect(modStatus.takendown).toEqual(true)
-    const record = await ctx.db.db
+    const record = await bskyDb.db
       .selectFrom('record')
       .where('uri', '=', post.ref.uriStr)
       .select('takedownId')
       .executeTakeFirst()
-    expect(record?.takedownId).toBeGreaterThan(0)
+    expect(record?.takedownId).toEqual(takedownEvent.id.toString())
 
     const recordPds = await network.pds.ctx.actorStore.read(
       post.ref.uri.hostname,
@@ -137,13 +141,13 @@ describe('takedowner', () => {
     )
     await network.processAll()
     const [modStatus, takedownEvent] = await Promise.all([
-      ctx.db.db
+      ozone.ctx.db.db
         .selectFrom('moderation_subject_status')
         .where('did', '=', alice)
         .where('recordPath', '=', `${ids.AppBskyActorProfile}/self`)
         .select(['takendown', 'id'])
         .executeTakeFirst(),
-      ctx.db.db
+      ozone.ctx.db.db
         .selectFrom('moderation_event')
         .where('subjectDid', '=', alice)
         .where(
@@ -159,12 +163,12 @@ describe('takedowner', () => {
       throw new Error('expected mod action')
     }
     expect(modStatus.takendown).toEqual(true)
-    const record = await ctx.db.db
+    const recordBsky = await bskyDb.db
       .selectFrom('record')
       .where('uri', '=', res.data.uri)
       .select('takedownId')
       .executeTakeFirst()
-    expect(record?.takedownId).toBeGreaterThan(0)
+    expect(recordBsky?.takedownId).toEqual(takedownEvent.id.toString())
 
     const recordPds = await network.pds.ctx.actorStore.read(alice, (store) =>
       store.db.db

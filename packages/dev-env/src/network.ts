@@ -19,7 +19,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     public plc: TestPlc,
     public pds: TestPds,
     public bsky: TestBsky,
-    public ozone?: TestOzone,
+    public ozone: TestOzone,
   ) {
     super(plc, pds)
   }
@@ -38,6 +38,7 @@ export class TestNetwork extends TestNetworkNoAppView {
 
     const bskyPort = params.bsky?.port ?? (await getPort())
     const pdsPort = params.pds?.port ?? (await getPort())
+    const ozonePort = params.ozone?.port ?? (await getPort())
     const bsky = await TestBsky.create({
       port: bskyPort,
       plcUrl: plc.url,
@@ -46,29 +47,27 @@ export class TestNetwork extends TestNetworkNoAppView {
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
       dbPrimaryPostgresUrl: dbPostgresUrl,
       redisHost,
-      moderationPushUrl: `http://admin:${ADMIN_PASSWORD}@localhost:${pdsPort}`,
+      moderationPushUrl: `http://admin:${ADMIN_PASSWORD}@localhost:${ozonePort}`,
       ...params.bsky,
     })
 
-    let ozone: TestOzone | undefined = undefined
-    if (params.ozone?.enabled) {
-      ozone = await TestOzone.create({
-        plcUrl: plc.url,
-        dbPostgresSchema: `ozone_${dbPostgresSchema}`,
-        dbPostgresUrl,
-        appviewUrl: bsky.url,
-        moderationPushUrl: `http://admin:${ADMIN_PASSWORD}@localhost:${pdsPort}`, // @TODO fix this
-        ...params.ozone,
-      })
-    }
+    const ozone = await TestOzone.create({
+      port: ozonePort,
+      plcUrl: plc.url,
+      dbPostgresSchema: `ozone_${dbPostgresSchema}`,
+      dbPostgresUrl,
+      appviewUrl: bsky.url,
+      moderationPushUrl: `http://admin:${ADMIN_PASSWORD}@localhost:${pdsPort}`, // @TODO fix this
+      ...params.ozone,
+    })
 
     const pds = await TestPds.create({
       port: pdsPort,
       didPlcUrl: plc.url,
       bskyAppViewUrl: bsky.url,
       bskyAppViewDid: bsky.ctx.cfg.serverDid,
-      modServiceUrl: ozone?.url ?? 'https://admin.invalid',
-      modServiceDid: ozone?.ctx.cfg.serverDid ?? 'did:example:admin_invalid',
+      modServiceUrl: ozone.url,
+      modServiceDid: ozone.ctx.cfg.serverDid,
       ...params.pds,
     })
 
@@ -98,6 +97,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     await this.pds.processAll()
     await this.processFullSubscription(timeout)
     await this.bsky.processAll()
+    await this.ozone.processAll()
   }
 
   async serviceHeaders(did: string, aud?: string) {
@@ -129,7 +129,7 @@ export class TestNetwork extends TestNetworkNoAppView {
 
   async close() {
     await Promise.all(this.feedGens.map((fg) => fg.close()))
-    await this.ozone?.close()
+    await this.ozone.close()
     await this.bsky.close()
     await this.pds.close()
     await this.plc.close()

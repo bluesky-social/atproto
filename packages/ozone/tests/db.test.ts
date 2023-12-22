@@ -2,7 +2,6 @@ import { sql } from 'kysely'
 import { wait } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
 import { Database } from '../src'
-import assert from 'assert'
 
 describe('db', () => {
   let network: TestNetwork
@@ -11,9 +10,7 @@ describe('db', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_db',
-      ozone: { enabled: true },
     })
-    assert(network.ozone)
     db = network.ozone.ctx.db
   })
 

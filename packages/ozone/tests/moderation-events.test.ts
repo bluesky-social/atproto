@@ -6,7 +6,6 @@ import {
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
-import assert from 'assert'
 
 describe('moderation-events', () => {
   let network: TestNetwork
@@ -73,10 +72,8 @@ describe('moderation-events', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_moderation_events',
-      ozone: { enabled: true },
     })
-    assert(network.ozone)
-    agent = network.ozone?.getClient()
+    agent = network.ozone.getClient()
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)

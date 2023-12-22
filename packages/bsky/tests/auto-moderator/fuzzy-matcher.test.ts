@@ -35,9 +35,8 @@ describe('fuzzy matcher', () => {
   })
 
   const getAllReports = () => {
-    return network.bsky.ctx.db
-      .getPrimary()
-      .db.selectFrom('moderation_event')
+    return network.ozone.ctx.db.db
+      .selectFrom('moderation_event')
       .where('action', '=', 'com.atproto.admin.defs#modEventReport')
       .selectAll()
       .orderBy('id', 'asc')

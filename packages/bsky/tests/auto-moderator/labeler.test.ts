@@ -5,10 +5,10 @@ import { AutoModerator } from '../../src/auto-moderator'
 import IndexerContext from '../../src/indexer/context'
 import { cidForRecord } from '@atproto/repo'
 import { TID } from '@atproto/common'
-import { LabelService } from '../../src/services/label'
 import usersSeed from '../seeds/users'
 import { CID } from 'multiformats/cid'
 import { ImgLabeler } from '../../src/auto-moderator/hive'
+import { TestOzone } from '@atproto/dev-env/src/ozone'
 
 // outside of test suite so that TestLabeler can access them
 let badCid1: CID | undefined = undefined
@@ -16,8 +16,8 @@ let badCid2: CID | undefined = undefined
 
 describe('labeler', () => {
   let network: TestNetwork
+  let ozone: TestOzone
   let autoMod: AutoModerator
-  let labelSrvc: LabelService
   let ctx: IndexerContext
   let labelerDid: string
   let badBlob1: BlobRef
@@ -30,12 +30,12 @@ describe('labeler', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_labeler',
     })
+    ozone = network.ozone
     ctx = network.bsky.indexer.ctx
     const pdsCtx = network.pds.ctx
     labelerDid = ctx.cfg.labelerDid
     autoMod = ctx.autoMod
     autoMod.imgLabeler = new TestImgLabeler()
-    labelSrvc = ctx.services.label(ctx.db)
     const sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
@@ -52,11 +52,7 @@ describe('labeler', () => {
           constraints: {},
         }
         await store.repo.blob.verifyBlobAndMakePermanent(preparedBlobRef)
-        await store.repo.blob.associateBlob(
-          preparedBlobRef,
-          postUri(),
-          TID.nextStr(),
-        )
+        await store.repo.blob.associateBlob(preparedBlobRef, postUri())
         return blobRef
       })
     }
@@ -74,6 +70,14 @@ describe('labeler', () => {
     await network.close()
   })
 
+  const getLabels = async (subject: string) => {
+    return ozone.ctx.db.db
+      .selectFrom('label')
+      .selectAll()
+      .where('uri', '=', subject)
+      .execute()
+  }
+
   it('labels text in posts', async () => {
     const post = {
       $type: 'app.bsky.feed.post',
@@ -84,7 +88,7 @@ describe('labeler', () => {
     const uri = postUri()
     autoMod.processRecord(uri, cid, post)
     await autoMod.processAll()
-    const labels = await labelSrvc.getLabels(uri.toString())
+    const labels = await getLabels(uri.toString())
     expect(labels.length).toBe(1)
     expect(labels[0]).toMatchObject({
       src: labelerDid,
@@ -122,35 +126,11 @@ describe('labeler', () => {
     const cid = await cidForRecord(post)
     autoMod.processRecord(uri, cid, post)
     await autoMod.processAll()
-    const dbLabels = await labelSrvc.getLabels(uri.toString())
+    const dbLabels = await getLabels(uri.toString())
     const labels = dbLabels.map((row) => row.val).sort()
     expect(labels).toEqual(
       ['test-label', 'test-label-2', 'img-label', 'other-img-label'].sort(),
     )
-  })
-
-  it('retrieves repo labels on profile views', async () => {
-    await ctx.db.db
-      .insertInto('label')
-      .values({
-        src: labelerDid,
-        uri: alice,
-        cid: '',
-        val: 'repo-label',
-        neg: false,
-        cts: new Date().toISOString(),
-      })
-      .execute()
-
-    const labels = await labelSrvc.getLabelsForProfile(alice)
-
-    expect(labels.length).toBe(1)
-    expect(labels[0]).toMatchObject({
-      src: labelerDid,
-      uri: alice,
-      val: 'repo-label',
-      neg: false,
-    })
   })
 })
 

@@ -6,9 +6,10 @@ import { subjectFromInput } from '../../mod-service/subject'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
     // @TODO anonymous reports w/ optional auth are a temporary measure
-    auth: ctx.authVerifier.standardOptional,
+    auth: ctx.authOptionalAccessOrRoleVerifier,
     handler: async ({ input, auth }) => {
-      const requester = auth.credentials.did
+      const requester =
+        'did' in auth.credentials ? auth.credentials.did : ctx.cfg.labelerDid
       const { reasonType, reason } = input.body
       const subject = subjectFromInput(input.body.subject)
       const db = ctx.db

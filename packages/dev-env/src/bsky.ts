@@ -109,7 +109,7 @@ export class TestBsky {
       abyssEndpoint: '',
       abyssPassword: '',
       imgUriEndpoint: 'img.example.com',
-      moderationPushUrl: `http://admin:${config.adminPassword}@localhost:${cfg.pdsPort}`,
+      moderationPushUrl: cfg.moderationPushUrl,
       indexerPartitionIds: [0],
       indexerNamespace: `ns${ns}`,
       indexerSubLockId: uniqueLockId(),

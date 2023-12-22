@@ -19,7 +19,6 @@ import {
   REVIEWESCALATED,
 } from '../src/lexicon/types/com/atproto/admin/defs'
 import { EventReverser } from '../src'
-import assert from 'assert'
 import { TestOzone } from '@atproto/dev-env/src/ozone'
 
 type BaseCreateReportParams =
@@ -61,7 +60,7 @@ describe('moderation', () => {
       {
         headers: await network.serviceHeaders(
           author,
-          network.ozone?.ctx.cfg.serverDid,
+          network.ozone.ctx.cfg.serverDid,
         ),
         encoding: 'application/json',
       },
@@ -138,9 +137,7 @@ describe('moderation', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_moderation',
-      ozone: { enabled: true },
     })
-    assert(network.ozone)
     ozone = network.ozone
     agent = network.ozone.getClient()
     pdsAgent = network.pds.getClient()
@@ -754,7 +751,6 @@ describe('moderation', () => {
         takendown: true,
       })
 
-      assert(network.ozone)
       // In the actual app, this will be instantiated and run on server startup
       const reverser = new EventReverser(
         network.ozone.ctx.db,
