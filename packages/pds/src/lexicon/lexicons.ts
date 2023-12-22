@@ -250,7 +250,7 @@ export const schemaDict = {
           appealed: {
             type: 'boolean',
             description:
-              'True Indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators. Null indicates no prior appeal on the subject.',
+              'True Indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators.',
           },
           suspendUntil: {
             type: 'string',

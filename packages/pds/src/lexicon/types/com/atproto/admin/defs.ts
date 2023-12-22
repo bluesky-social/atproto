@@ -151,7 +151,7 @@ export interface SubjectStatusView {
   /** Timestamp referencing when the owner of the subject appealed a moderation action */
   lastAppealedAt?: string
   takendown?: boolean
-  /** True Indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators. Null indicates no prior appeal on the subject. */
+  /** True Indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators. */
   appealed?: boolean
   suspendUntil?: string
   [k: string]: unknown

@@ -4,7 +4,6 @@ import AtpAgent, {
   ComAtprotoAdminEmitModerationEvent,
   ComAtprotoAdminQueryModerationStatuses,
 } from '@atproto/api'
-import { forSnapshot } from '../_util'
 import basicSeed from '../seeds/basic'
 import {
   REASONMISLEADING,
@@ -72,12 +71,17 @@ describe('moderation-appeals', () => {
       uri: sc.posts[sc.dids.bob][1].ref.uriStr,
       cid: sc.posts[sc.dids.bob][1].ref.cidStr,
     })
+    const getCarolPostSubject = () => ({
+      $type: 'com.atproto.repo.strongRef',
+      uri: sc.posts[sc.dids.carol][0].ref.uriStr,
+      cid: sc.posts[sc.dids.carol][0].ref.cidStr,
+    })
     const assertBobsPostStatus = async (
       status: string,
       appealed: boolean | undefined,
     ) => assertSubjectStatus(getBobsPostSubject().uri, status, appealed)
 
-    it('only changes subject status if original author of the content is appealing', async () => {
+    it('only changes subject status if original author of the content or a moderator is appealing', async () => {
       // Create a report by alice
       await emitModerationEvent({
         event: {
@@ -90,6 +94,18 @@ describe('moderation-appeals', () => {
 
       await assertBobsPostStatus(REVIEWOPEN, undefined)
 
+      // Create a report as normal user with appeal type
+      await sc.createReport({
+        reportedBy: sc.dids.carol,
+        reasonType: REASONAPPEAL,
+        reason: 'appealing',
+        subject: getBobsPostSubject(),
+      })
+
+      // Verify that the appeal status did not change
+      await assertBobsPostStatus(REVIEWOPEN, undefined)
+
+      // Emit report event as moderator
       await emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventReport',
@@ -99,21 +115,33 @@ describe('moderation-appeals', () => {
         createdBy: sc.dids.alice,
       })
 
-      // Verify that since the appeal was emitted by alice instead of bob, the status is still REVIEWOPEN
-      await assertBobsPostStatus(REVIEWOPEN, undefined)
-
-      await emitModerationEvent({
-        event: {
-          $type: 'com.atproto.admin.defs#modEventReport',
-          reportType: REASONAPPEAL,
-        },
-        subject: getBobsPostSubject(),
-        createdBy: sc.dids.bob,
-      })
-
-      // Verify that since the appeal was emitted by bob, the appealed state has been set to true
+      // Verify that appeal status changed when appeal report was emitted by moderator
       const status = await assertBobsPostStatus(REVIEWOPEN, true)
       expect(status?.appealedAt).not.toBeNull()
+
+      // Create a report as normal user for carol's post
+      await sc.createReport({
+        reportedBy: sc.dids.alice,
+        reasonType: REASONMISLEADING,
+        reason: 'lies!',
+        subject: getCarolPostSubject(),
+      })
+
+      // Verify that the appeal status on carol's post is undefined
+      await assertSubjectStatus(
+        getCarolPostSubject().uri,
+        REVIEWOPEN,
+        undefined,
+      )
+
+      await sc.createReport({
+        reportedBy: sc.dids.carol,
+        reasonType: REASONAPPEAL,
+        reason: 'appealing',
+        subject: getCarolPostSubject(),
+      })
+      // Verify that the appeal status on carol's post is true
+      await assertSubjectStatus(getCarolPostSubject().uri, REVIEWOPEN, true)
     })
     it('allows multiple appeals and updates last appealed timestamp', async () => {
       // Resolve appeal with acknowledge
