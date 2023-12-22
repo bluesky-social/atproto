@@ -6,7 +6,7 @@ Object {
   "createdBy": "did:example:labeler",
   "event": Object {
     "$type": "com.atproto.admin.defs#modEventLabel",
-    "comment": "automated label",
+    "comment": "[AutoModerator]: Applying labels",
     "createLabelVals": Array [
       "test-label",
     ],

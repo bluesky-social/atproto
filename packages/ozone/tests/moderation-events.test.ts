@@ -200,7 +200,7 @@ describe('moderation-events', () => {
       expect(allEvents.data.events.length).toEqual(5)
       expect(defaultEvents.length).toEqual(allEvents.data.events.length)
       expect(reversedEvents.length).toEqual(allEvents.data.events.length)
-      expect(reversedEvents[0].id).toEqual(defaultEvents[3].id)
+      expect(reversedEvents[0].id).toEqual(defaultEvents[4].id)
     })
   })
 
