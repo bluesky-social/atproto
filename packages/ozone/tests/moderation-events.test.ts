@@ -70,7 +70,7 @@ describe('moderation-events', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_moderation_events',
+      dbPostgresSchema: 'ozone_moderation_events',
     })
     agent = network.ozone.getClient()
     pdsAgent = network.pds.getClient()

@@ -9,7 +9,7 @@ describe('db', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_db',
+      dbPostgresSchema: 'ozone_db',
     })
     db = network.ozone.ctx.db
   })

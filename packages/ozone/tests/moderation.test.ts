@@ -141,7 +141,7 @@ describe('moderation', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_moderation',
+      dbPostgresSchema: 'ozone_moderation',
     })
     ozone = network.ozone
     agent = network.ozone.getClient()

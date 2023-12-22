@@ -10,7 +10,7 @@ describe('admin repo search view', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'views_admin_repo_search',
+      dbPostgresSchema: 'ozone_admin_repo_search',
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()

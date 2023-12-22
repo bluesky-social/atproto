@@ -11,7 +11,7 @@ describe('server', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'bsky_server',
+      dbPostgresSchema: 'ozone_server',
     })
     ozone = network.ozone
   })
