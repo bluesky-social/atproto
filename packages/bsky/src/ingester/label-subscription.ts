@@ -23,15 +23,15 @@ export class LabelSubscription {
     this.poll()
   }
 
-  async poll() {
+  poll() {
     if (this.destroyed) return
     this.promise = this.fetchLabels()
-      .then(() => {
-        this.timer = setTimeout(() => this.poll(), SECOND)
-      })
       .catch((err) =>
         dbLogger.error({ err }, 'failed to fetch and store labels'),
       )
+      .finally(() => {
+        this.timer = setTimeout(() => this.poll(), SECOND)
+      })
   }
 
   async fetchLabels() {

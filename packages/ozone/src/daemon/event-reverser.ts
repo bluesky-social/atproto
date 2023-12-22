@@ -20,12 +20,12 @@ export class EventReverser {
   poll() {
     if (this.destroyed) return
     this.reversalPromise = this.findAndRevertDueActions()
-      .then(() => {
-        this.timer = setTimeout(() => this.poll(), getInterval())
-      })
       .catch((err) =>
         dbLogger.error({ err }, 'moderation action reversal errored'),
       )
+      .finally(() => {
+        this.timer = setTimeout(() => this.poll(), getInterval())
+      })
   }
 
   async destroy() {

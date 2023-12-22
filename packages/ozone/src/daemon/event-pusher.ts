@@ -36,15 +36,31 @@ export class EventPusher {
   ) {}
 
   start() {
-    this.repoPollState.promise = this.poll(this.repoPollState, () =>
-      this.pushRepoEvents(),
-    )
-    this.recordPollState.promise = this.poll(this.recordPollState, () =>
-      this.pushRecordEvents(),
-    )
-    this.blobPollState.promise = this.poll(this.blobPollState, () =>
-      this.pushBlobEvents(),
-    )
+    this.poll(this.repoPollState, () => this.pushRepoEvents())
+    this.poll(this.recordPollState, () => this.pushRecordEvents())
+    this.poll(this.blobPollState, () => this.pushBlobEvents())
+  }
+
+  poll(state: PollState, fn: () => Promise<boolean>) {
+    if (this.destroyed) return
+    state.promise = fn()
+      .then((hadEvts: boolean) => {
+        if (hadEvts) {
+          state.tries = 0
+        } else {
+          state.tries++
+        }
+      })
+      .catch((err) => {
+        dbLogger.error({ err }, 'event push failed')
+        state.tries++
+      })
+      .finally(() => {
+        state.timer = setTimeout(
+          () => this.poll(state, fn),
+          exponentialBackoff(state.tries),
+        )
+      })
   }
 
   async processAll() {
@@ -68,26 +84,6 @@ export class EventPusher {
       destroyState(this.recordPollState),
       destroyState(this.blobPollState),
     ])
-  }
-
-  async poll(state: PollState, fn: () => Promise<boolean>) {
-    if (this.destroyed) return
-    state.promise = fn()
-      .then((hadEvts: boolean) => {
-        if (hadEvts) {
-          state.tries = 0
-        } else {
-          state.tries++
-        }
-        state.timer = setTimeout(
-          () => this.poll(state, fn),
-          exponentialBackoff(state.tries),
-        )
-      })
-      .catch((err) => {
-        dbLogger.error({ err }, 'event push failed')
-        state.tries++
-      })
   }
 
   async pushRepoEvents() {
