@@ -47,26 +47,26 @@ describe('takedowner', () => {
     await network.processAll()
     alice = sc.dids.alice
     const fileBytes1 = await fs.readFile(
-      'tests/sample-img/key-portrait-small.jpg',
+      '../dev-env/src/seed/img/key-portrait-small.jpg',
     )
     const fileBytes2 = await fs.readFile(
-      'tests/sample-img/key-portrait-large.jpg',
+      '../dev-env/src/seed/img/key-portrait-large.jpg',
     )
     badCid1 = sha256RawToCid(await sha256(fileBytes1))
     badCid2 = sha256RawToCid(await sha256(fileBytes2))
     goodBlob = await sc.uploadFile(
       alice,
-      'tests/sample-img/key-landscape-small.jpg',
+      '../dev-env/src/seed/img/key-landscape-small.jpg',
       'image/jpeg',
     )
     badBlob1 = await sc.uploadFile(
       alice,
-      'tests/sample-img/key-portrait-small.jpg',
+      '../dev-env/src/seed/img/key-portrait-small.jpg',
       'image/jpeg',
     )
     badBlob2 = await sc.uploadFile(
       alice,
-      'tests/sample-img/key-portrait-large.jpg',
+      '../dev-env/src/seed/img/key-portrait-large.jpg',
       'image/jpeg',
     )
   })

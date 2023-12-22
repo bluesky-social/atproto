@@ -37,12 +37,12 @@ export default async (
   })
   const img1 = await sc.uploadFile(
     carol,
-    'tests/sample-img/key-landscape-small.jpg',
+    '../dev-env/src/seed/img/key-landscape-small.jpg',
     'image/jpeg',
   )
   const img2 = await sc.uploadFile(
     carol,
-    'tests/sample-img/key-alt.jpg',
+    '../dev-env/src/seed/img/key-alt.jpg',
     'image/jpeg',
   )
   await sc.post(
@@ -103,7 +103,7 @@ export default async (
 
   const replyImg = await sc.uploadFile(
     bob,
-    'tests/sample-img/key-landscape-small.jpg',
+    '../dev-env/src/seed/img/key-landscape-small.jpg',
     'image/jpeg',
   )
   // must ensure ordering of replies in indexing

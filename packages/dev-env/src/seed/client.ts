@@ -128,7 +128,9 @@ export class SeedClient {
     description: string,
     selfLabels?: string[],
   ) {
-    AVATAR_IMG ??= await fs.readFile('tests/sample-img/key-portrait-small.jpg')
+    AVATAR_IMG ??= await fs.readFile(
+      '../dev-env/src/seed/img/key-portrait-small.jpg',
+    )
 
     let avatarBlob
     {

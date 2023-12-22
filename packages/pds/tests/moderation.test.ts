@@ -221,7 +221,7 @@ describe('moderation', () => {
     it('prevents blob from being referenced again.', async () => {
       const uploaded = await sc.uploadFile(
         sc.dids.carol,
-        'tests/sample-img/key-alt.jpg',
+        '../dev-env/src/seed/img/key-alt.jpg',
         'image/jpeg',
       )
       expect(uploaded.image.ref.equals(blobRef.image.ref)).toBeTruthy()
