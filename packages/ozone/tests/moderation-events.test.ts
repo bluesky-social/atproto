@@ -197,7 +197,7 @@ describe('moderation-events', () => {
       const defaultEvents = await getPaginatedEvents()
       const reversedEvents = await getPaginatedEvents('asc')
 
-      expect(allEvents.data.events.length).toEqual(4)
+      expect(allEvents.data.events.length).toEqual(5)
       expect(defaultEvents.length).toEqual(allEvents.data.events.length)
       expect(reversedEvents.length).toEqual(allEvents.data.events.length)
       expect(reversedEvents[0].id).toEqual(defaultEvents[3].id)
