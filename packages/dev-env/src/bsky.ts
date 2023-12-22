@@ -129,7 +129,6 @@ export class TestBsky {
       db: db.getPrimary(),
       redis: indexerRedis,
       redisCache,
-      imgInvalidator: cfg.imgInvalidator,
     })
     // ingester
     const ingesterCfg = new bsky.IngesterConfig({

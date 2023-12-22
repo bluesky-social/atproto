@@ -13,8 +13,6 @@ import { AutoModerator } from '../auto-moderator'
 import { Redis } from '../redis'
 import { NotificationServer } from '../notifications'
 import { CloseFn, createServer, startServer } from './server'
-import { ImageUriBuilder } from '../image/uri'
-import { ImageInvalidator } from '../image/invalidator'
 
 export { IndexerConfig } from './config'
 export type { IndexerConfigValues } from './config'
@@ -42,7 +40,6 @@ export class BskyIndexer {
     redis: Redis
     redisCache: Redis
     cfg: IndexerConfig
-    imgInvalidator?: ImageInvalidator
   }): BskyIndexer {
     const { db, redis, redisCache, cfg } = opts
     const didCache = new DidRedisCache(redisCache.withNamespace('did-doc'), {
@@ -56,17 +53,11 @@ export class BskyIndexer {
     })
     const backgroundQueue = new BackgroundQueue(db)
 
-    const imgUriBuilder = cfg.imgUriEndpoint
-      ? new ImageUriBuilder(cfg.imgUriEndpoint)
-      : undefined
-    const imgInvalidator = opts.imgInvalidator
     const autoMod = new AutoModerator({
       db,
       idResolver,
       cfg,
       backgroundQueue,
-      imgUriBuilder,
-      imgInvalidator,
     })
 
     const notifServer = cfg.pushNotificationEndpoint
