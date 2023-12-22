@@ -422,7 +422,7 @@ importers:
     devDependencies:
       ts-node:
         specifier: ^10.8.1
-        version: 10.8.2(@swc/core@1.3.42)(@types/node@20.10.4)(typescript@5.3.3)
+        version: 10.8.2(@swc/core@1.3.42)(@types/node@18.17.8)(typescript@5.3.3)
 
   packages/identity:
     dependencies:
@@ -774,12 +774,15 @@ importers:
 
   services/bsky:
     dependencies:
-      '@atproto/aws':
-        specifier: workspace:^
-        version: link:../../packages/aws
       '@atproto/bsky':
         specifier: workspace:^
         version: link:../../packages/bsky
+      '@atproto/crypto':
+        specifier: workspace:^
+        version: link:../../packages/crypto
+      '@atproto/identity':
+        specifier: workspace:^
+        version: link:../../packages/identity
       dd-trace:
         specifier: 3.13.2
         version: 3.13.2
@@ -803,7 +806,7 @@ importers:
         version: 4.20.0
       opentelemetry-plugin-better-sqlite3:
         specifier: ^1.1.0
-        version: 1.1.0(better-sqlite3@9.2.2)
+        version: 1.1.0(better-sqlite3@7.6.2)
 
 packages:
 
@@ -5761,12 +5764,6 @@ packages:
   /@types/node@18.17.8:
     resolution: {integrity: sha512-Av/7MqX/iNKwT9Tr60V85NqMnsmh8ilfJoBlIVibkXfitk9Q22D9Y5mSpm+FvG5DET7EbVfB40bOiLzKgYFgPw==}
 
-  /@types/node@20.10.4:
-    resolution: {integrity: sha512-D08YG6rr8X90YB56tSIuBaddy/UXAA9RKJoFvrsnogAum/0pmjkgi4+2nx96A330FmioegBWmEYQ+syqCFaveg==}
-    dependencies:
-      undici-types: 5.26.5
-    dev: true
-
   /@types/nodemailer@6.4.6:
     resolution: {integrity: sha512-pD6fL5GQtUKvD2WnPmg5bC2e8kWCAPDwMPmHe/ohQbW+Dy0EcHgZ2oCSuPlWNqk74LS5BVMig1SymQbFMPPK3w==}
     dependencies:
@@ -6377,14 +6374,6 @@ packages:
     dependencies:
       bindings: 1.5.0
       prebuild-install: 7.1.1
-
-  /better-sqlite3@9.2.2:
-    resolution: {integrity: sha512-qwjWB46il0lsDkeB4rSRI96HyDQr8sxeu1MkBVLMrwusq1KRu4Bpt1TMI+8zIJkDUtZ3umjAkaEjIlokZKWCQw==}
-    requiresBuild: true
-    dependencies:
-      bindings: 1.5.0
-      prebuild-install: 7.1.1
-    dev: false
 
   /big-integer@1.6.51:
     resolution: {integrity: sha512-GPEid2Y9QU1Exl1rpO9B2IPJGHPSupF5GnVIP0blYvNOMer2bTvSWs1jGOUg04hTmu67nmLsQ9TBo1puaotBHg==}
@@ -9828,7 +9817,7 @@ packages:
       mimic-fn: 2.1.0
     dev: true
 
-  /opentelemetry-plugin-better-sqlite3@1.1.0(better-sqlite3@9.2.2):
+  /opentelemetry-plugin-better-sqlite3@1.1.0(better-sqlite3@7.6.2):
     resolution: {integrity: sha512-yd+mgaB5W5JxzcQt9TvX1VIrusqtbbeuxSoZ6KQe4Ra0J/Kqkp6kz7dg0VQUU5+cenOWkza6xtvsT0KGXI03HA==}
     peerDependencies:
       better-sqlite3: ^7.1.1 || ^8.0.0 || ^9.0.0
@@ -9837,7 +9826,7 @@ packages:
       '@opentelemetry/core': 1.18.1(@opentelemetry/api@1.7.0)
       '@opentelemetry/instrumentation': 0.44.0(@opentelemetry/api@1.7.0)
       '@opentelemetry/semantic-conventions': 1.18.1
-      better-sqlite3: 9.2.2
+      better-sqlite3: 7.6.2
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -11249,7 +11238,7 @@ packages:
       yn: 3.1.1
     dev: true
 
-  /ts-node@10.8.2(@swc/core@1.3.42)(@types/node@20.10.4)(typescript@5.3.3):
+  /ts-node@10.8.2(@swc/core@1.3.42)(@types/node@18.17.8)(typescript@5.3.3):
     resolution: {integrity: sha512-LYdGnoGddf1D6v8REPtIH+5iq/gTDuZqv2/UJUU7tKjuEU8xVZorBM+buCGNjj+pGEud+sOoM4CX3/YzINpENA==}
     hasBin: true
     peerDependencies:
@@ -11269,7 +11258,7 @@ packages:
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 20.10.4
+      '@types/node': 18.17.8
       acorn: 8.10.0
       acorn-walk: 8.2.0
       arg: 4.1.3
@@ -11434,10 +11423,6 @@ packages:
       has-bigints: 1.0.2
       has-symbols: 1.0.3
       which-boxed-primitive: 1.0.2
-    dev: true
-
-  /undici-types@5.26.5:
-    resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
     dev: true
 
   /undici@5.28.2:
