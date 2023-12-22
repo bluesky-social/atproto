@@ -233,7 +233,7 @@ export class AutoModerator {
     await this.pushAgent?.com.atproto.admin.emitModerationEvent({
       event: {
         $type: 'com.atproto.admin.defs#modEventLabel',
-        comment: 'automated label',
+        comment: '[AutoModerator]: Applying labels',
         createLabelVals: labels,
         negateLabelVals: [],
       },

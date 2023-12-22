@@ -154,6 +154,20 @@ describe('timeline views', () => {
     expect(results(paginatedAll)).toEqual(results([full.data]))
   })
 
+  it('agrees what the first item is for limit=1 and other limits', async () => {
+    const { data: timeline } = await agent.api.app.bsky.feed.getTimeline(
+      { limit: 10 },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    const { data: timelineLimit1 } = await agent.api.app.bsky.feed.getTimeline(
+      { limit: 1 },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(timeline.feed.length).toBeGreaterThan(1)
+    expect(timelineLimit1.feed.length).toEqual(1)
+    expect(timelineLimit1.feed[0].post.uri).toBe(timeline.feed[0].post.uri)
+  })
+
   it('reflects self-labels', async () => {
     const carolTL = await agent.api.app.bsky.feed.getTimeline(
       {},

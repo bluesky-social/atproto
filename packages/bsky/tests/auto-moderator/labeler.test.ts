@@ -87,7 +87,7 @@ describe('labeler', () => {
     const cid = await cidForRecord(post)
     const uri = postUri()
     autoMod.processRecord(uri, cid, post)
-    await autoMod.processAll()
+    await network.processAll()
     const labels = await getLabels(uri.toString())
     expect(labels.length).toBe(1)
     expect(labels[0]).toMatchObject({
@@ -96,6 +96,25 @@ describe('labeler', () => {
       cid: cid.toString(),
       val: 'test-label',
       neg: false,
+    })
+
+    // Verify that along with applying the labels, we are also leaving trace of the label as moderation event
+    // Temporarily assign an instance of moderation service to the autoMod so that we can validate label event
+    const modSrvc = ozone.ctx.modService(ozone.ctx.db)
+    const { events } = await modSrvc.getEvents({
+      includeAllUserRecords: false,
+      subject: uri.toString(),
+      limit: 10,
+      types: [],
+    })
+    expect(events.length).toBe(1)
+    expect(events[0]).toMatchObject({
+      action: 'com.atproto.admin.defs#modEventLabel',
+      subjectUri: uri.toString(),
+      createLabelVals: 'test-label',
+      negateLabelVals: null,
+      comment: `[AutoModerator]: Applying labels`,
+      createdBy: labelerDid,
     })
   })
 

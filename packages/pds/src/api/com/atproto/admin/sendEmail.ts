@@ -16,6 +16,7 @@ export default function (server: Server, ctx: AppContext) {
         recipientDid,
         senderDid,
         subject = 'Message from Bluesky moderator',
+        comment,
       } = input.body
       const account = await ctx.accountManager.getAccount(recipientDid)
       if (!account) {
@@ -44,6 +45,7 @@ export default function (server: Server, ctx: AppContext) {
           event: {
             $type: 'com.atproto.admin.defs#modEventEmail',
             subjectLine: subject,
+            comment,
           },
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',

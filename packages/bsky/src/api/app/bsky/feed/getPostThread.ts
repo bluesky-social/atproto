@@ -128,9 +128,10 @@ const composeThread = (
   // @TODO re-enable invalidReplyRoot check
   // const badReply = !!info?.invalidReplyRoot || !!info?.violatesThreadGate
   const badReply = !!info?.violatesThreadGate
-  const omitBadReply = !isAnchorPost && badReply
+  const violatesBlock = (post && blocks[post.uri]?.reply) ?? false
+  const omitBadReply = !isAnchorPost && (badReply || violatesBlock)
 
-  if (!post || blocks[post.uri]?.reply || omitBadReply) {
+  if (!post || omitBadReply) {
     return {
       $type: 'app.bsky.feed.defs#notFoundPost',
       uri: threadData.post.postUri,
@@ -156,7 +157,7 @@ const composeThread = (
   }
 
   let parent
-  if (threadData.parent && !badReply) {
+  if (threadData.parent && !badReply && !violatesBlock) {
     if (threadData.parent instanceof ParentNotFoundError) {
       parent = {
         $type: 'app.bsky.feed.defs#notFoundPost',

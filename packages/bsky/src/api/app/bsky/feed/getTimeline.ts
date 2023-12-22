@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { FeedAlgorithm, FeedKeyset, getFeedDateThreshold } from '../util/feed'
@@ -55,6 +56,11 @@ export const skeleton = async (
     throw new InvalidRequestError(`Unsupported algorithm: ${algorithm}`)
   }
 
+  if (limit === 1 && !cursor) {
+    // special case for limit=1, which is often used to check if there are new items at the top of the timeline.
+    return skeletonLimit1(params, ctx)
+  }
+
   const keyset = new FeedKeyset(ref('feed_item.sortAt'), ref('feed_item.cid'))
   const sortFrom = keyset.unpack(cursor)?.primary
 
@@ -110,6 +116,54 @@ export const skeleton = async (
     })
     .slice(0, limit)
 
+  return {
+    params,
+    feedItems,
+    cursor: keyset.packFromResult(feedItems),
+  }
+}
+
+// The limit=1 case is used commonly to check if there are new items at the top of the timeline.
+// Since it's so common, it's optimized here.  The most common strategy that postgres takes to
+// build a timeline is to grab all recent content from each of the user's follow, then paginate it.
+// The downside here is that it requires grabbing all recent content from all follows, even if you
+// only want a single result.  The approach here instead takes the single most recent post from
+// each of the user's follows, then sorts only those and takes the top item.
+const skeletonLimit1 = async (params: Params, ctx: Context) => {
+  const { viewer } = params
+  const { db } = ctx
+  const { ref } = db.db.dynamic
+  const creatorsQb = db.db
+    .selectFrom('follow')
+    .where('creator', '=', viewer)
+    .select('subjectDid as did')
+    .unionAll(sql`select ${viewer} as did`)
+  const feedItemsQb = db.db
+    .selectFrom(creatorsQb.as('creator'))
+    .innerJoinLateral(
+      (eb) => {
+        const keyset = new FeedKeyset(
+          ref('feed_item.sortAt'),
+          ref('feed_item.cid'),
+        )
+        const creatorFeedItemQb = eb
+          .selectFrom('feed_item')
+          .innerJoin('post', 'post.uri', 'feed_item.postUri')
+          .whereRef('feed_item.originatorDid', '=', 'creator.did')
+          .where('feed_item.sortAt', '>', getFeedDateThreshold(undefined, 2))
+          .selectAll('feed_item')
+          .select([
+            'post.replyRoot',
+            'post.replyParent',
+            'post.creator as postAuthorDid',
+          ])
+        return paginate(creatorFeedItemQb, { limit: 1, keyset }).as('result')
+      },
+      (join) => join.onTrue(),
+    )
+    .selectAll('result')
+  const keyset = new FeedKeyset(ref('result.sortAt'), ref('result.cid'))
+  const feedItems = await paginate(feedItemsQb, { limit: 1, keyset }).execute()
   return {
     params,
     feedItems,
