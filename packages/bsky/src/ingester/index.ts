@@ -5,6 +5,8 @@ import { Redis } from '../redis'
 import { IngesterConfig } from './config'
 import { IngesterContext } from './context'
 import { IngesterSubscription } from './subscription'
+import AtpAgent from '@atproto/api'
+import { LabelSubscription } from './label-subscription'
 
 export { IngesterConfig } from './config'
 export type { IngesterConfigValues } from './config'
@@ -26,7 +28,15 @@ export class BskyIngester {
     cfg: IngesterConfig
   }): BskyIngester {
     const { db, redis, cfg } = opts
-    const ctx = new IngesterContext({ db, redis, cfg })
+    const labelAgent = new AtpAgent({ service: cfg.labelProvider })
+    const labelSubscription = new LabelSubscription(db, labelAgent)
+    const ctx = new IngesterContext({
+      db,
+      redis,
+      cfg,
+      labelAgent,
+      labelSubscription,
+    })
     const sub = new IngesterSubscription(ctx, {
       service: cfg.repoProvider,
       subLockId: cfg.ingesterSubLockId,
@@ -63,11 +73,13 @@ export class BskyIngester {
         'ingester stats',
       )
     }, 500)
+    await this.ctx.labelSubscription.start()
     this.sub.run()
     return this
   }
 
   async destroy(opts?: { skipDb: boolean }): Promise<void> {
+    await this.ctx.labelSubscription.destroy()
     await this.sub.destroy()
     clearInterval(this.subStatsInterval)
     await this.ctx.redis.destroy()

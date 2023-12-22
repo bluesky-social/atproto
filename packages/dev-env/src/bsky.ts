@@ -138,6 +138,7 @@ export class TestBsky {
       dbPostgresUrl: cfg.dbPrimaryPostgresUrl,
       dbPostgresSchema: cfg.dbPostgresSchema,
       repoProvider: cfg.repoProvider,
+      labelProvider: cfg.labelProvider,
       ingesterNamespace: `ns${ns}`,
       ingesterSubLockId: uniqueLockId(),
       ingesterPartitionCount: 1,
@@ -156,6 +157,9 @@ export class TestBsky {
     await ingester.start()
     await indexer.start()
     await server.start()
+
+    // manually process labels in dev-env (in network.processAll)
+    await ingester.ctx.labelSubscription.destroy()
 
     return new TestBsky(url, port, server, indexer, ingester)
   }
@@ -219,6 +223,7 @@ export async function getIngester(
     dbPostgresUrl: process.env.DB_POSTGRES_URL || '',
     dbPostgresSchema: `appview_${name}`,
     repoProvider: network.pds.url.replace('http://', 'ws://'),
+    labelProvider: 'http://labeler.invalid',
     ingesterSubLockId: uniqueLockId(),
     ingesterPartitionCount: config.ingesterPartitionCount ?? 1,
     ingesterNamespace: `ns${ns}`,
@@ -234,7 +239,9 @@ export async function getIngester(
     namespace: cfg.ingesterNamespace,
   })
   await db.migrateToLatestOrThrow()
-  return bsky.BskyIngester.create({ cfg, db, redis })
+  const ingester = await bsky.BskyIngester.create({ cfg, db, redis })
+  await ingester.ctx.labelSubscription.destroy()
+  return ingester
 }
 
 // get multiple indexers for separate partitions, sharing db and redis instance.

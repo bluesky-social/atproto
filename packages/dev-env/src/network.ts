@@ -44,6 +44,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       plcUrl: plc.url,
       pdsPort,
       repoProvider: `ws://localhost:${pdsPort}`,
+      labelProvider: `http://localhost:${ozonePort}`,
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
       dbPrimaryPostgresUrl: dbPostgresUrl,
       redisHost,
@@ -98,6 +99,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     await this.processFullSubscription(timeout)
     await this.bsky.processAll()
     await this.ozone.processAll()
+    await this.bsky.ingester.ctx.labelSubscription.fetchLabels()
   }
 
   async serviceHeaders(did: string, aud?: string) {
