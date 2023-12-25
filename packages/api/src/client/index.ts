@@ -140,7 +140,6 @@ import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
-import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
@@ -279,7 +278,6 @@ export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
-export * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 export * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
@@ -2393,17 +2391,6 @@ export class UnspeccedNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
-  }
-
-  getPopular(
-    params?: AppBskyUnspeccedGetPopular.QueryParams,
-    opts?: AppBskyUnspeccedGetPopular.CallOptions,
-  ): Promise<AppBskyUnspeccedGetPopular.Response> {
-    return this._service.xrpc
-      .call('app.bsky.unspecced.getPopular', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyUnspeccedGetPopular.toKnownErr(e)
-      })
   }
 
   getPopularFeedGenerators(
