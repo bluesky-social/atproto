@@ -62,10 +62,11 @@ export class TestNetwork extends TestNetworkNoAppView {
       redisHost,
       modServiceUrl: `http://localhost:${ozonePort}`,
       modServiceDid: ozoneDid,
+      ...params.bsky,
       indexer: {
+        ...params.bsky?.indexer,
         moderationPushUrl: `http://admin:${ADMIN_PASSWORD}@localhost:${ozonePort}`,
       },
-      ...params.bsky,
     })
 
     const pds = await TestPds.create({

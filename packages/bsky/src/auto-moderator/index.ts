@@ -20,7 +20,7 @@ import {
 } from '../lexicon/types/com/atproto/moderation/defs'
 
 export class AutoModerator {
-  public pushAgent?: AtpAgent
+  public pushAgent: AtpAgent
   public imageFlagger?: ImageFlagger
   public textFlagger?: TextFlagger
   public imgLabeler?: ImgLabeler
@@ -66,7 +66,6 @@ export class AutoModerator {
       const { text, imgs } = getFieldsFromRecord(obj, uri)
       await Promise.all([
         this.labelRecord(uri, cid, text, imgs).catch((err) => {
-          console.log('ERR: ', err)
           log.error(
             { err, uri: uri.toString(), record: obj },
             'failed to label record',
@@ -140,7 +139,7 @@ export class AutoModerator {
             uri: subject.uri.toString(),
             cid: subject.cid.toString(),
           }
-    await this.pushAgent?.api.com.atproto.moderation.createReport({
+    await this.pushAgent.api.com.atproto.moderation.createReport({
       reasonType: REASONOTHER,
       reason: `Automatically flagged for possible slurs: ${matches.join(', ')}`,
       subject: formattedSubject,
@@ -199,7 +198,7 @@ export class AutoModerator {
       'hard takedown of record (and blobs) based on auto-matching',
     )
 
-    await this.pushAgent?.com.atproto.moderation.createReport({
+    await this.pushAgent.com.atproto.moderation.createReport({
       reportedBy: this.ctx.cfg.labelerDid,
       reasonType: REASONVIOLATION,
       subject: {
@@ -210,7 +209,7 @@ export class AutoModerator {
       reason: reportReason,
     })
 
-    await this.pushAgent?.com.atproto.admin.emitModerationEvent({
+    await this.pushAgent.com.atproto.admin.emitModerationEvent({
       event: {
         $type: 'com.atproto.admin.defs#modEventTakedown',
         comment: takedownReason,
@@ -228,7 +227,7 @@ export class AutoModerator {
   async pushLabels(uri: AtUri, cid: CID, labels: string[]): Promise<void> {
     if (labels.length < 1) return
 
-    await this.pushAgent?.com.atproto.admin.emitModerationEvent({
+    await this.pushAgent.com.atproto.admin.emitModerationEvent({
       event: {
         $type: 'com.atproto.admin.defs#modEventLabel',
         comment: '[AutoModerator]: Applying labels',

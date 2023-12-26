@@ -20,26 +20,29 @@ describe('moderation', () => {
   let blobSubject: RepoBlobRef
   let blobRef: ImageRef
 
-  const appviewDid = 'did:example:appview'
-  const altAppviewDid = 'did:example:alt'
-  let appviewKey: Secp256k1Keypair
+  const modServiceDid = 'did:example:mod'
+  const altModDid = 'did:example:alt'
+  let modServiceKey: Secp256k1Keypair
+  let pdsDid: string
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'moderation',
       pds: {
-        bskyAppViewDid: appviewDid,
+        modServiceDid,
       },
     })
 
-    appviewKey = await Secp256k1Keypair.create()
+    pdsDid = network.pds.ctx.cfg.service.did
+
+    modServiceKey = await Secp256k1Keypair.create()
     const origResolve = network.pds.ctx.idResolver.did.resolveAtprotoKey
     network.pds.ctx.idResolver.did.resolveAtprotoKey = async (
       did: string,
       forceRefresh?: boolean,
     ) => {
-      if (did === appviewDid || did === altAppviewDid) {
-        return appviewKey.did()
+      if (did === modServiceDid || did === altModDid) {
+        return modServiceKey.did()
       }
       return origResolve(did, forceRefresh)
     }
@@ -323,9 +326,9 @@ describe('moderation', () => {
   describe('auth', () => {
     it('allows service auth requests from the configured appview did', async () => {
       const headers = await createServiceAuthHeaders({
-        iss: appviewDid,
-        aud: repoSubject.did,
-        keypair: appviewKey,
+        iss: modServiceDid,
+        aud: pdsDid,
+        keypair: modServiceKey,
       })
       await agent.api.com.atproto.admin.updateSubjectStatus(
         {
@@ -350,9 +353,9 @@ describe('moderation', () => {
 
     it('does not allow requests from another did', async () => {
       const headers = await createServiceAuthHeaders({
-        iss: altAppviewDid,
-        aud: repoSubject.did,
-        keypair: appviewKey,
+        iss: altModDid,
+        aud: pdsDid,
+        keypair: modServiceKey,
       })
       const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
         {
@@ -372,8 +375,8 @@ describe('moderation', () => {
     it('does not allow requests with a bad signature', async () => {
       const badKey = await Secp256k1Keypair.create()
       const headers = await createServiceAuthHeaders({
-        iss: appviewDid,
-        aud: repoSubject.did,
+        iss: modServiceDid,
+        aud: pdsDid,
         keypair: badKey,
       })
       const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -391,12 +394,12 @@ describe('moderation', () => {
       )
     })
 
-    it('does not allow requests with a bad signature', async () => {
+    it('does not allow requests with a bad aud', async () => {
       // repo subject is bob, so we set alice as the audience
       const headers = await createServiceAuthHeaders({
-        iss: appviewDid,
+        iss: modServiceDid,
         aud: sc.dids.alice,
-        keypair: appviewKey,
+        keypair: modServiceKey,
       })
       const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
         {
@@ -409,7 +412,7 @@ describe('moderation', () => {
         },
       )
       await expect(attempt).rejects.toThrow(
-        'jwt audience does not match account did',
+        'jwt audience does not match service did',
       )
     })
   })
