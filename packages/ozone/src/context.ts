@@ -2,7 +2,7 @@ import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
-import { createServiceJwt } from '@atproto/xrpc-server'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { Database } from './db'
 import { ServerConfig } from './config'
 import { ModerationServiceCreator } from './mod-service'
@@ -11,28 +11,19 @@ import { BackgroundQueue } from './background'
 import { OzoneDaemon } from './daemon'
 
 export class AppContext {
-  public moderationPushAgent: AtpAgent | undefined
   constructor(
     private opts: {
       db: Database
-      appviewAgent: AtpAgent
       cfg: ServerConfig
       modService: ModerationServiceCreator
+      appviewAgent: AtpAgent
+      pdsAgent: AtpAgent | undefined
       signingKey: Keypair
       idResolver: IdResolver
       backgroundQueue: BackgroundQueue
       daemon?: OzoneDaemon
     },
-  ) {
-    if (opts.cfg.moderationPushUrl) {
-      const url = new URL(opts.cfg.moderationPushUrl)
-      this.moderationPushAgent = new AtpAgent({ service: url.origin })
-      this.moderationPushAgent.api.setHeader(
-        'authorization',
-        auth.buildBasicAuth(url.username, url.password),
-      )
-    }
-  }
+  ) {}
 
   get db(): Database {
     return this.opts.db
@@ -48,6 +39,10 @@ export class AppContext {
 
   get appviewAgent(): AtpAgent {
     return this.opts.appviewAgent
+  }
+
+  get pdsAgent(): AtpAgent | undefined {
+    return this.opts.pdsAgent
   }
 
   get signingKey(): Keypair {
@@ -96,13 +91,27 @@ export class AppContext {
     return auth.roleVerifier(this.cfg)
   }
 
-  async serviceAuthJwt(aud: string) {
+  async serviceAuthHeaders(aud: string) {
     const iss = this.cfg.serverDid
-    return createServiceJwt({
+    return createServiceAuthHeaders({
       iss,
       aud,
       keypair: this.signingKey,
     })
+  }
+
+  async pdsAuth() {
+    if (!this.cfg.pdsDid) {
+      return undefined
+    }
+    return this.serviceAuthHeaders(this.cfg.pdsDid)
+  }
+
+  async appviewAuth() {
+    if (!this.cfg.appviewDid) {
+      return undefined
+    }
+    return this.serviceAuthHeaders(this.cfg.appviewDid)
   }
 }
 

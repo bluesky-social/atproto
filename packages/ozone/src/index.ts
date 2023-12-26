@@ -17,9 +17,9 @@ import { BackgroundQueue } from './background'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import Database from './db'
-import * as auth from './auth'
 import { OzoneDaemon } from './daemon'
 import { DaemonConfig } from './daemon/config'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
@@ -57,30 +57,42 @@ export class OzoneService {
 
     const backgroundQueue = new BackgroundQueue(db)
     const appviewAgent = new AtpAgent({ service: config.appviewUrl })
-    appviewAgent.api.setHeader(
-      'authorization',
-      auth.buildBasicAuth('admin', config.adminPassword),
-    )
+    const pdsAgent = config.pdsUrl
+      ? new AtpAgent({ service: config.pdsUrl })
+      : undefined
 
-    const modService = ModerationService.creator(appviewAgent)
+    const appviewAuth = async () => {
+      if (!config.appviewDid) return undefined
+      return createServiceAuthHeaders({
+        iss: config.serverDid,
+        aud: config.appviewDid,
+        keypair: signingKey,
+      })
+    }
+
+    const modService = ModerationService.creator(appviewAgent, appviewAuth)
 
     const daemon = OzoneDaemon.create({
       db,
+      signingKey,
       cfg: new DaemonConfig({
         version: config.version,
         dbPostgresUrl: config.dbPostgresUrl,
         dbPostgresSchema: config.dbPostgresSchema,
-        moderationPushUrl: config.moderationPushUrl ?? '',
+        serverDid: config.serverDid,
         appviewUrl: config.appviewUrl,
-        adminPassword: config.adminPassword,
+        appviewDid: config.appviewDid,
+        pdsUrl: config.pdsUrl,
+        pdsDid: config.pdsDid,
       }),
     })
 
     const ctx = new AppContext({
       db,
       cfg: config,
-      appviewAgent,
       modService,
+      appviewAgent,
+      pdsAgent,
       signingKey,
       idResolver,
       backgroundQueue,

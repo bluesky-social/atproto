@@ -35,7 +35,8 @@ export interface ServerConfigValues {
   adminPassword: string
   moderatorPassword: string
   triagePassword: string
-  moderationPushUrl?: string
+  modServiceDid: string
+  modServiceUrl: string
   rateLimitsEnabled: boolean
   rateLimitBypassKey?: string
   rateLimitBypassIps?: string[]
@@ -117,10 +118,12 @@ export class ServerConfig {
     const triagePassword = process.env.TRIAGE_PASSWORD || undefined
     assert(triagePassword)
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
-    const moderationPushUrl =
-      overrides?.moderationPushUrl ||
-      process.env.MODERATION_PUSH_URL ||
-      undefined
+    const modServiceUrl =
+      overrides?.modServiceUrl || process.env.MODERATION_PUSH_URL || undefined
+    const modServiceDid =
+      overrides?.modServiceDid || process.env.MODERATION_PUSH_DID || undefined
+    assert(modServiceUrl)
+    assert(modServiceDid)
     const rateLimitsEnabled = process.env.RATE_LIMITS_ENABLED === 'true'
     const rateLimitBypassKey = process.env.RATE_LIMIT_BYPASS_KEY
     const rateLimitBypassIps = process.env.RATE_LIMIT_BYPASS_IPS
@@ -157,7 +160,8 @@ export class ServerConfig {
       adminPassword,
       moderatorPassword,
       triagePassword,
-      moderationPushUrl,
+      modServiceUrl,
+      modServiceDid,
       rateLimitsEnabled,
       rateLimitBypassKey,
       rateLimitBypassIps,
@@ -286,8 +290,12 @@ export class ServerConfig {
     return this.cfg.triagePassword
   }
 
-  get moderationPushUrl() {
-    return this.cfg.moderationPushUrl
+  get modServiceUrl() {
+    return this.cfg.modServiceUrl
+  }
+
+  get modServiceDid() {
+    return this.cfg.modServiceDid
   }
 
   get rateLimitsEnabled() {

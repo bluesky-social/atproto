@@ -25,14 +25,32 @@ import {
 import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
 import { subjectFromEventRow, subjectFromStatusRow } from './subject'
 
+export type AppviewAuth = () => Promise<
+  | {
+      headers: {
+        authorization: string
+      }
+    }
+  | undefined
+>
+
 export class ModerationViews {
-  constructor(private db: Database, private appviewAgent: AtpAgent) {}
+  constructor(
+    private db: Database,
+    private appviewAgent: AtpAgent,
+    private appviewAuth: AppviewAuth,
+  ) {}
 
   async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {
     if (dids.length === 0) return new Map()
-    const res = await this.appviewAgent.api.com.atproto.admin.getAccountInfos({
-      dids: dedupeStrs(dids),
-    })
+    const auth = await this.appviewAuth()
+    if (!auth) return new Map()
+    const res = await this.appviewAgent.api.com.atproto.admin.getAccountInfos(
+      {
+        dids: dedupeStrs(dids),
+      },
+      auth,
+    )
     return res.data.infos.reduce((acc, cur) => {
       return acc.set(cur.did, cur)
     }, new Map<string, AccountView>())
@@ -201,16 +219,21 @@ export class ModerationViews {
       }
     >
   > {
+    const auth = await this.appviewAuth()
+    if (!auth) return new Map()
     const fetched = await Promise.all(
       subjects.map(async (subject) => {
         const uri = new AtUri(subject.uri)
         try {
-          return await this.appviewAgent.api.com.atproto.repo.getRecord({
-            repo: uri.hostname,
-            collection: uri.collection,
-            rkey: uri.rkey,
-            cid: subject.cid,
-          })
+          return await this.appviewAgent.api.com.atproto.repo.getRecord(
+            {
+              repo: uri.hostname,
+              collection: uri.collection,
+              rkey: uri.rkey,
+              cid: subject.cid,
+            },
+            auth,
+          )
         } catch {
           return null
         }
@@ -425,16 +448,10 @@ export class ModerationViews {
       })
       .selectAll()
 
-    const [statusRes, accountsRes] = await Promise.all([
+    const [statusRes, accountsByDid] = await Promise.all([
       builder.execute(),
-      this.appviewAgent.api.com.atproto.admin.getAccountInfos({
-        dids: parsedSubjects.map((s) => s.did),
-      }),
+      this.getAccoutInfosByDid(parsedSubjects.map((s) => s.did)),
     ])
-
-    const accountsByDid = accountsRes.data.infos.reduce((acc, cur) => {
-      return acc.set(cur.did, cur)
-    }, new Map<string, AccountView>())
 
     return statusRes.reduce((acc, cur) => {
       const subject = cur.recordPath

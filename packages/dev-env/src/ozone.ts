@@ -15,19 +15,21 @@ export class TestOzone {
   ) {}
 
   static async create(cfg: OzoneConfig): Promise<TestOzone> {
-    const serviceKeypair = await Secp256k1Keypair.create()
-    const plcClient = new PlcClient(cfg.plcUrl)
+    const serviceKeypair = cfg.signingKey ?? (await Secp256k1Keypair.create())
+    let serverDid = cfg.serverDid
+    if (!serverDid) {
+      const plcClient = new PlcClient(cfg.plcUrl)
+      serverDid = await plcClient.createDid({
+        signingKey: serviceKeypair.did(),
+        rotationKeys: [serviceKeypair.did()],
+        handle: 'ozone.test',
+        pds: `https://pds.invalid`,
+        signer: serviceKeypair,
+      })
+    }
 
     const port = cfg.port || (await getPort())
     const url = `http://localhost:${port}`
-    const serverDid = await plcClient.createDid({
-      signingKey: serviceKeypair.did(),
-      rotationKeys: [serviceKeypair.did()],
-      handle: 'bsky.test',
-      pds: `http://localhost:${port}`,
-      signer: serviceKeypair,
-    })
-
     const config = new ozone.ServerConfig({
       version: '0.0.0',
       port,

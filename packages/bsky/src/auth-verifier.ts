@@ -284,21 +284,6 @@ export const parseBasicAuth = (
   return { username, password }
 }
 
-export const ensureValidAdminAud = (
-  auth: RoleOutput | AdminServiceOutput,
-  subjectDid: string,
-) => {
-  if (
-    auth.credentials.type === 'admin_service' &&
-    auth.credentials.aud !== subjectDid
-  ) {
-    throw new AuthRequiredError(
-      'jwt audience does not match account did',
-      'BadJwtAudience',
-    )
-  }
-}
-
 export const buildBasicAuth = (username: string, password: string): string => {
   return (
     BASIC +

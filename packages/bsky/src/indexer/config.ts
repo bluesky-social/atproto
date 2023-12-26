@@ -21,7 +21,7 @@ export interface IndexerConfigValues {
   fuzzyMatchB64?: string
   fuzzyFalsePositiveB64?: string
   labelerKeywords: Record<string, string>
-  moderationPushUrl?: string
+  moderationPushUrl: string
   indexerConcurrency?: number
   indexerPartitionIds: number[]
   indexerPartitionBatchSize?: number
@@ -71,6 +71,7 @@ export class IndexerConfig {
       overrides?.moderationPushUrl ||
       process.env.MODERATION_PUSH_URL ||
       undefined
+    assert(moderationPushUrl)
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
     const abyssEndpoint = process.env.ABYSS_ENDPOINT
     const abyssPassword = process.env.ABYSS_PASSWORD

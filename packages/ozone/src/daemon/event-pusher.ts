@@ -6,11 +6,25 @@ import { RepoPushEvent } from '../db/schema/repo_push_event'
 import { RecordPushEvent } from '../db/schema/record_push_event'
 import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { dbLogger } from '../logger'
+import { InputSchema } from '../lexicon/types/com/atproto/admin/updateSubjectStatus'
+
+type EventSubject = InputSchema['subject']
 
 type PollState = {
   timer?: NodeJS.Timer
   promise: Promise<void>
   tries: number
+}
+
+type AuthHeaders = {
+  headers: {
+    authorization: string
+  }
+}
+
+type Service = {
+  agent: AtpAgent
+  did: string
 }
 
 export class EventPusher {
@@ -29,11 +43,36 @@ export class EventPusher {
     tries: 0,
   }
 
+  appview: Service | undefined
+  pds: Service | undefined
+
   constructor(
     public db: Database,
-    public appviewAgent: AtpAgent,
-    public moderationPushAgent: AtpAgent,
-  ) {}
+    public createAuthHeaders: (aud: string) => Promise<AuthHeaders>,
+    services: {
+      appview?: {
+        url: string
+        did: string
+      }
+      pds?: {
+        url: string
+        did: string
+      }
+    },
+  ) {
+    if (services.appview) {
+      this.appview = {
+        agent: new AtpAgent({ service: services.appview.url }),
+        did: services.appview.did,
+      }
+    }
+    if (services.pds) {
+      this.pds = {
+        agent: new AtpAgent({ service: services.pds.url }),
+        did: services.pds.did,
+      }
+    }
+  }
 
   start() {
     this.poll(this.repoPollState, () => this.pushRepoEvents())
@@ -133,122 +172,119 @@ export class EventPusher {
     })
   }
 
-  private async pushToBoth(
-    fn: (agent: AtpAgent) => Promise<unknown>,
+  private async updateSubjectOnAll(
+    subject: EventSubject,
+    takedownId: number | null,
   ): Promise<boolean> {
     try {
       await Promise.all([
-        retryHttp(() => fn(this.appviewAgent)),
-        retryHttp(() => fn(this.moderationPushAgent)),
+        this.appview
+          ? this.updateSubjectOnService(this.appview, subject, takedownId)
+          : Promise.resolve(),
+        this.pds
+          ? this.updateSubjectOnService(this.pds, subject, takedownId)
+          : Promise.resolve(),
       ])
       return true
     } catch (err) {
-      console.log(err)
+      console.log('ERR: ', err)
       return false
     }
   }
 
-  async attemptRepoEvent(txn: Database, evt: RepoPushEvent) {
-    const succeeded = await this.pushToBoth((agent) =>
-      agent.com.atproto.admin.updateSubjectStatus({
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: evt.subjectDid,
+  private async updateSubjectOnService(
+    service: Service,
+    subject: EventSubject,
+    takedownId: number | null,
+  ) {
+    const auth = await this.createAuthHeaders(service.did)
+    return retryHttp(() =>
+      service.agent.com.atproto.admin.updateSubjectStatus(
+        {
+          subject,
+          takedown: {
+            applied: !!takedownId,
+            ref: takedownId?.toString(),
+          },
         },
-        takedown: {
-          applied: !!evt.takedownId,
-          ref: evt.takedownId?.toString(),
+        {
+          ...auth,
+          encoding: 'application/json',
         },
-      }),
+      ),
     )
-    if (succeeded) {
-      await txn.db
-        .updateTable('repo_push_event')
-        .set({ confirmedAt: new Date() })
-        .where('subjectDid', '=', evt.subjectDid)
-        .where('eventType', '=', evt.eventType)
-        .execute()
-    } else {
-      await txn.db
-        .updateTable('repo_push_event')
-        .set({
-          lastAttempted: new Date(),
-          attempts: evt.attempts ?? 0 + 1,
-        })
-        .where('subjectDid', '=', evt.subjectDid)
-        .where('eventType', '=', evt.eventType)
-        .execute()
-    }
+  }
+
+  async attemptRepoEvent(txn: Database, evt: RepoPushEvent) {
+    const succeeded = await this.updateSubjectOnAll(
+      {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: evt.subjectDid,
+      },
+      evt.takedownId,
+    )
+    await txn.db
+      .updateTable('repo_push_event')
+      .set(
+        succeeded
+          ? { confirmedAt: new Date() }
+          : {
+              lastAttempted: new Date(),
+              attempts: evt.attempts ?? 0 + 1,
+            },
+      )
+      .where('subjectDid', '=', evt.subjectDid)
+      .where('eventType', '=', evt.eventType)
+      .execute()
   }
 
   async attemptRecordEvent(txn: Database, evt: RecordPushEvent) {
-    const succeeded = await this.pushToBoth((agent) =>
-      agent.com.atproto.admin.updateSubjectStatus({
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: evt.subjectUri,
-          cid: evt.subjectCid,
-        },
-        takedown: {
-          applied: !!evt.takedownId,
-          ref: evt.takedownId?.toString(),
-        },
-      }),
+    const succeeded = await this.updateSubjectOnAll(
+      {
+        $type: 'com.atproto.repo.strongRef',
+        uri: evt.subjectUri,
+        cid: evt.subjectCid,
+      },
+      evt.takedownId,
     )
-    if (succeeded) {
-      await txn.db
-        .updateTable('record_push_event')
-        .set({ confirmedAt: new Date() })
-        .where('subjectUri', '=', evt.subjectUri)
-        .where('eventType', '=', evt.eventType)
-        .execute()
-    } else {
-      await txn.db
-        .updateTable('record_push_event')
-        .set({
-          lastAttempted: new Date(),
-          attempts: evt.attempts ?? 0 + 1,
-        })
-        .where('subjectUri', '=', evt.subjectUri)
-        .where('eventType', '=', evt.eventType)
-        .execute()
-    }
+    await txn.db
+      .updateTable('record_push_event')
+      .set(
+        succeeded
+          ? { confirmedAt: new Date() }
+          : {
+              lastAttempted: new Date(),
+              attempts: evt.attempts ?? 0 + 1,
+            },
+      )
+      .where('subjectUri', '=', evt.subjectUri)
+      .where('eventType', '=', evt.eventType)
+      .execute()
   }
 
   async attemptBlobEvent(txn: Database, evt: BlobPushEvent) {
-    const succeeded = await this.pushToBoth((agent) =>
-      agent.com.atproto.admin.updateSubjectStatus({
-        subject: {
-          $type: 'com.atproto.admin.defs#repoBlobRef',
-          did: evt.subjectDid,
-          cid: evt.subjectBlobCid,
-        },
-        takedown: {
-          applied: !!evt.takedownId,
-          ref: evt.takedownId?.toString(),
-        },
-      }),
+    const succeeded = await this.updateSubjectOnAll(
+      {
+        $type: 'com.atproto.admin.defs#repoBlobRef',
+        did: evt.subjectDid,
+        cid: evt.subjectBlobCid,
+      },
+      evt.takedownId,
     )
-    if (succeeded) {
-      await txn.db
-        .updateTable('blob_push_event')
-        .set({ confirmedAt: new Date() })
-        .where('subjectDid', '=', evt.subjectDid)
-        .where('subjectBlobCid', '=', evt.subjectBlobCid)
-        .where('eventType', '=', evt.eventType)
-        .execute()
-    } else {
-      await txn.db
-        .updateTable('blob_push_event')
-        .set({
-          lastAttempted: new Date(),
-          attempts: evt.attempts ?? 0 + 1,
-        })
-        .where('subjectDid', '=', evt.subjectDid)
-        .where('subjectBlobCid', '=', evt.subjectBlobCid)
-        .where('eventType', '=', evt.eventType)
-        .execute()
-    }
+    await txn.db
+      .updateTable('blob_push_event')
+      .set(
+        succeeded
+          ? { confirmedAt: new Date() }
+          : {
+              lastAttempted: new Date(),
+              attempts: evt.attempts ?? 0 + 1,
+            },
+      )
+      .where('subjectDid', '=', evt.subjectDid)
+      .where('subjectBlobCid', '=', evt.subjectBlobCid)
+      .where('eventType', '=', evt.eventType)
+      .execute()
   }
 }
 

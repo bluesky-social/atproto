@@ -4,9 +4,11 @@ export interface DaemonConfigValues {
   version: string
   dbPostgresUrl: string
   dbPostgresSchema?: string
-  moderationPushUrl: string
+  serverDid: string
   appviewUrl: string
-  adminPassword: string
+  appviewDid?: string
+  pdsUrl?: string
+  pdsDid?: string
 }
 
 export class DaemonConfig {
@@ -19,21 +21,23 @@ export class DaemonConfig {
     const dbPostgresSchema =
       overrides?.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
     assert(dbPostgresUrl)
-    const moderationPushUrl =
-      overrides?.moderationPushUrl || process.env.MODERATION_PUSH_URL
-    assert(moderationPushUrl)
+    const serverDid = overrides?.serverDid || process.env.SERVER_DID
+    assert(serverDid)
     const appviewUrl = overrides?.appviewUrl || process.env.APPVIEW_URL
     assert(appviewUrl)
-    const adminPassword = overrides?.adminPassword || process.env.ADMIN_PASSWORD
-    assert(adminPassword)
+    const appviewDid = process.env.APPVIEW_DID
+    const pdsUrl = process.env.PDS_URL
+    const pdsDid = process.env.PDS_DID
 
     return new DaemonConfig({
       version,
       dbPostgresUrl,
       dbPostgresSchema,
-      moderationPushUrl,
+      serverDid,
       appviewUrl,
-      adminPassword,
+      appviewDid,
+      pdsUrl,
+      pdsDid,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -50,16 +54,24 @@ export class DaemonConfig {
     return this.cfg.dbPostgresSchema
   }
 
-  get moderationPushUrl() {
-    return this.cfg.moderationPushUrl
+  get serverDid() {
+    return this.cfg.serverDid
   }
 
   get appviewUrl() {
     return this.cfg.appviewUrl
   }
 
-  get adminPassword() {
-    return this.cfg.adminPassword
+  get appviewDid() {
+    return this.cfg.appviewDid
+  }
+
+  get pdsUrl() {
+    return this.cfg.pdsUrl
+  }
+
+  get pdsDid() {
+    return this.cfg.pdsDid
   }
 }
 

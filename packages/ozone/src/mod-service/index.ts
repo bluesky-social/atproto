@@ -3,7 +3,7 @@ import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { addHoursToDate } from '@atproto/common'
 import { Database } from '../db'
-import { ModerationViews } from './views'
+import { AppviewAuth, ModerationViews } from './views'
 import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
 import {
   isModEventComment,
@@ -40,13 +40,18 @@ import {
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
 export class ModerationService {
-  constructor(public db: Database, public appviewAgent: AtpAgent) {}
+  constructor(
+    public db: Database,
+    public appviewAgent: AtpAgent,
+    private appviewAuth: AppviewAuth,
+  ) {}
 
-  static creator(appviewAgent: AtpAgent) {
-    return (db: Database) => new ModerationService(db, appviewAgent)
+  static creator(appviewAgent: AtpAgent, appviewAuth: AppviewAuth) {
+    return (db: Database) =>
+      new ModerationService(db, appviewAgent, appviewAuth)
   }
 
-  views = new ModerationViews(this.db, this.appviewAgent)
+  views = new ModerationViews(this.db, this.appviewAgent, this.appviewAuth)
 
   async getEvent(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db

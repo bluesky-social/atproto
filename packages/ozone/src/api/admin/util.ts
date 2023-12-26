@@ -9,12 +9,15 @@ export const getPdsAccountInfo = async (
   ctx: AppContext,
   did: string,
 ): Promise<AccountView | null> => {
-  const agent = ctx.moderationPushAgent
+  const agent = ctx.pdsAgent
   if (!agent) return null
+  const auth = await ctx.pdsAuth()
+  if (!auth) return null
   try {
-    const res = await agent.api.com.atproto.admin.getAccountInfo({ did })
+    const res = await agent.api.com.atproto.admin.getAccountInfo({ did }, auth)
     return res.data
   } catch (err) {
+    console.log('ERR: ', err)
     return null
   }
 }

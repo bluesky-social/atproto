@@ -44,6 +44,8 @@ export class TestBsky {
       didCacheMaxTTL: DAY,
       labelCacheStaleTTL: 30 * SECOND,
       labelCacheMaxTTL: MINUTE,
+      modServiceUrl: cfg.modServiceUrl ?? 'https://modservice.handle',
+      modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       ...cfg,
       // Each test suite gets its own lock id for the repo subscription
       adminPassword: ADMIN_PASSWORD,
@@ -109,7 +111,8 @@ export class TestBsky {
       abyssEndpoint: '',
       abyssPassword: '',
       imgUriEndpoint: 'img.example.com',
-      moderationPushUrl: cfg.moderationPushUrl,
+      moderationPushUrl:
+        cfg.indexer?.moderationPushUrl ?? 'https://modservice.invalid',
       indexerPartitionIds: [0],
       indexerNamespace: `ns${ns}`,
       indexerSubLockId: uniqueLockId(),
@@ -269,6 +272,7 @@ export async function getIndexers(
     indexerPartitionIds: [0],
     indexerNamespace: `ns${ns}`,
     ingesterPartitionCount: config.ingesterPartitionCount ?? 1,
+    moderationPushUrl: config.moderationPushUrl ?? 'https://modservice.invalid',
     ...config,
   }
   const db = new bsky.PrimaryDatabase({

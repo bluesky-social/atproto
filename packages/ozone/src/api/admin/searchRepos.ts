@@ -7,6 +7,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params }) => {
       const res = await ctx.appviewAgent.api.com.atproto.admin.searchRepos(
         params,
+        await ctx.appviewAuth(),
       )
       const db = ctx.db
       const modService = ctx.modService(db)

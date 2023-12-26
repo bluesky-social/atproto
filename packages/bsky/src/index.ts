@@ -43,6 +43,7 @@ export { PeriodicModerationEventReversal } from './db/periodic-moderation-event-
 export { Redis } from './redis'
 export { ViewMaintainer } from './db/views'
 export { AppContext } from './context'
+export type { ImageInvalidator } from './image/invalidator'
 export { makeAlgos } from './feed-gen'
 export * from './daemon'
 export * from './indexer'
@@ -130,7 +131,7 @@ export class BskyAppView {
 
     const authVerifier = new AuthVerifier(idResolver, {
       ownDid: config.serverDid,
-      adminDid: 'did:example:admin',
+      adminDid: config.modServiceDid,
       adminPass: config.adminPassword,
       moderatorPass: config.moderatorPassword,
       triagePass: config.triagePassword,

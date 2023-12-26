@@ -53,14 +53,12 @@ export class AutoModerator {
       )
     }
 
-    if (ctx.cfg.moderationPushUrl) {
-      const url = new URL(ctx.cfg.moderationPushUrl)
-      this.pushAgent = new AtpAgent({ service: url.origin })
-      this.pushAgent.api.setHeader(
-        'authorization',
-        buildBasicAuth(url.username, url.password),
-      )
-    }
+    const url = new URL(ctx.cfg.moderationPushUrl)
+    this.pushAgent = new AtpAgent({ service: url.origin })
+    this.pushAgent.api.setHeader(
+      'authorization',
+      buildBasicAuth(url.username, url.password),
+    )
   }
 
   processRecord(uri: AtUri, cid: CID, obj: unknown) {

@@ -8,7 +8,6 @@ import {
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { ensureValidAdminAud } from '../../../../auth-verifier'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateSubjectStatus({
@@ -24,16 +23,13 @@ export default function (server: Server, ctx: AppContext) {
       const { subject, takedown } = input.body
       if (takedown) {
         if (isRepoRef(subject)) {
-          ensureValidAdminAud(auth, subject.did)
           await ctx.accountManager.takedownAccount(subject.did, takedown)
         } else if (isStrongRef(subject)) {
           const uri = new AtUri(subject.uri)
-          ensureValidAdminAud(auth, uri.hostname)
           await ctx.actorStore.transact(uri.hostname, (store) =>
             store.record.updateRecordTakedownStatus(uri, takedown),
           )
         } else if (isRepoBlobRef(subject)) {
-          ensureValidAdminAud(auth, subject.did)
           await ctx.actorStore.transact(subject.did, (store) =>
             store.repo.blob.updateBlobTakedownStatus(
               CID.parse(subject.cid),

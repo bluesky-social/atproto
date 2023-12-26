@@ -3,6 +3,7 @@ import * as uint8arrays from 'uint8arrays'
 import getPort from 'get-port'
 import { wait } from '@atproto/common-web'
 import { createServiceJwt } from '@atproto/xrpc-server'
+import { Client as PlcClient } from '@did-plc/lib'
 import { TestServerParams } from './types'
 import { TestPlc } from './plc'
 import { TestPds } from './pds'
@@ -10,6 +11,7 @@ import { TestBsky } from './bsky'
 import { TestOzone } from './ozone'
 import { mockNetworkUtilities } from './util'
 import { TestNetworkNoAppView } from './network-no-appview'
+import { Secp256k1Keypair } from '@atproto/crypto'
 
 const ADMIN_USERNAME = 'admin'
 const ADMIN_PASSWORD = 'admin-pass'
@@ -39,6 +41,16 @@ export class TestNetwork extends TestNetworkNoAppView {
     const bskyPort = params.bsky?.port ?? (await getPort())
     const pdsPort = params.pds?.port ?? (await getPort())
     const ozonePort = params.ozone?.port ?? (await getPort())
+
+    const ozoneKey = await Secp256k1Keypair.create()
+    const ozoneDid = await new PlcClient(plc.url).createDid({
+      signingKey: ozoneKey.did(),
+      rotationKeys: [ozoneKey.did()],
+      handle: 'ozone.test',
+      pds: `http://pds.invalid`,
+      signer: ozoneKey,
+    })
+
     const bsky = await TestBsky.create({
       port: bskyPort,
       plcUrl: plc.url,
@@ -48,18 +60,12 @@ export class TestNetwork extends TestNetworkNoAppView {
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
       dbPrimaryPostgresUrl: dbPostgresUrl,
       redisHost,
-      moderationPushUrl: `http://admin:${ADMIN_PASSWORD}@localhost:${ozonePort}`,
+      modServiceUrl: `http://localhost:${ozonePort}`,
+      modServiceDid: ozoneDid,
+      indexer: {
+        moderationPushUrl: `http://admin:${ADMIN_PASSWORD}@localhost:${ozonePort}`,
+      },
       ...params.bsky,
-    })
-
-    const ozone = await TestOzone.create({
-      port: ozonePort,
-      plcUrl: plc.url,
-      dbPostgresSchema: `ozone_${dbPostgresSchema}`,
-      dbPostgresUrl,
-      appviewUrl: bsky.url,
-      moderationPushUrl: `http://admin:${ADMIN_PASSWORD}@localhost:${pdsPort}`, // @TODO fix this
-      ...params.ozone,
     })
 
     const pds = await TestPds.create({
@@ -67,9 +73,23 @@ export class TestNetwork extends TestNetworkNoAppView {
       didPlcUrl: plc.url,
       bskyAppViewUrl: bsky.url,
       bskyAppViewDid: bsky.ctx.cfg.serverDid,
-      modServiceUrl: ozone.url,
-      modServiceDid: ozone.ctx.cfg.serverDid,
+      modServiceUrl: `http://localhost:${ozonePort}`,
+      modServiceDid: ozoneDid,
       ...params.pds,
+    })
+
+    const ozone = await TestOzone.create({
+      port: ozonePort,
+      plcUrl: plc.url,
+      signingKey: ozoneKey,
+      serverDid: ozoneDid,
+      dbPostgresSchema: `ozone_${dbPostgresSchema}`,
+      dbPostgresUrl,
+      appviewUrl: bsky.url,
+      appviewDid: bsky.ctx.cfg.serverDid,
+      pdsUrl: pds.url,
+      pdsDid: pds.ctx.cfg.service.did,
+      ...params.ozone,
     })
 
     mockNetworkUtilities(pds, bsky)

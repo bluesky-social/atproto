@@ -189,7 +189,7 @@ export class AppContext {
       dids: {
         pds: cfg.service.did,
         entryway: cfg.entryway?.did,
-        admin: cfg.bskyAppView.did,
+        admin: cfg.modService.did,
       },
     })
 

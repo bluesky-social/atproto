@@ -7,6 +7,9 @@ export interface ServerConfigValues {
   publicUrl?: string
   serverDid: string
   appviewUrl: string
+  appviewDid?: string
+  pdsUrl?: string
+  pdsDid?: string
   dbPostgresUrl: string
   dbPostgresSchema?: string
   didPlcUrl: string
@@ -14,7 +17,6 @@ export interface ServerConfigValues {
   adminPassword: string
   moderatorPassword?: string
   triagePassword?: string
-  moderationPushUrl?: string
 }
 
 export class ServerConfig {
@@ -30,6 +32,9 @@ export class ServerConfig {
     const port = isNaN(envPort) ? 2584 : envPort
     const appviewUrl = process.env.APPVIEW_URL
     assert(appviewUrl)
+    const appviewDid = process.env.APPVIEW_DID
+    const pdsUrl = process.env.PDS_URL
+    const pdsDid = process.env.PDS_DID
     const dbPostgresUrl =
       overrides?.dbPostgresUrl || process.env.DB_POSTGRES_URL
     assert(dbPostgresUrl)
@@ -39,10 +44,6 @@ export class ServerConfig {
     const moderatorPassword = process.env.MODERATOR_PASSWORD || undefined
     const triagePassword = process.env.TRIAGE_PASSWORD || undefined
     const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
-    const moderationPushUrl =
-      overrides?.moderationPushUrl ||
-      process.env.MODERATION_PUSH_URL ||
-      undefined
 
     return new ServerConfig({
       version,
@@ -51,6 +52,9 @@ export class ServerConfig {
       publicUrl,
       serverDid,
       appviewUrl,
+      appviewDid,
+      pdsUrl,
+      pdsDid,
       dbPostgresUrl,
       dbPostgresSchema,
       didPlcUrl,
@@ -58,7 +62,6 @@ export class ServerConfig {
       adminPassword,
       moderatorPassword,
       triagePassword,
-      moderationPushUrl,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -100,6 +103,18 @@ export class ServerConfig {
     return this.cfg.appviewUrl
   }
 
+  get appviewDid() {
+    return this.cfg.appviewDid
+  }
+
+  get pdsUrl() {
+    return this.cfg.pdsUrl
+  }
+
+  get pdsDid() {
+    return this.cfg.pdsDid
+  }
+
   get dbPostgresUrl() {
     return this.cfg.dbPostgresUrl
   }
@@ -126,10 +141,6 @@ export class ServerConfig {
 
   get triagePassword() {
     return this.cfg.triagePassword
-  }
-
-  get moderationPushUrl() {
-    return this.cfg.moderationPushUrl
   }
 }
 

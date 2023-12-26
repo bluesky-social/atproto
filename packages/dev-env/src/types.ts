@@ -1,7 +1,8 @@
 import * as pds from '@atproto/pds'
 import * as bsky from '@atproto/bsky'
 import * as ozone from '@atproto/ozone'
-import { ImageInvalidator } from '@atproto/bsky/src/image/invalidator'
+import { ImageInvalidator } from '@atproto/bsky'
+import { Keypair } from '@atproto/crypto'
 
 export type PlcConfig = {
   port?: number
@@ -32,6 +33,7 @@ export type OzoneConfig = Partial<ozone.ServerConfig> & {
   appviewUrl: string
   dbPostgresUrl: string
   migration?: string
+  signingKey?: Keypair
 }
 
 export type TestServerParams = {
