@@ -42,7 +42,6 @@ import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerat
 import getTimelineSkeleton from './app/bsky/unspecced/getTimelineSkeleton'
 import getSubjectStatus from './com/atproto/admin/getSubjectStatus'
 import updateSubjectStatus from './com/atproto/admin/updateSubjectStatus'
-import searchRepos from './com/atproto/admin/searchRepos'
 import getAccountInfos from './com/atproto/admin/getAccountInfos'
 import resolveHandle from './com/atproto/identity/resolveHandle'
 import getRecord from './com/atproto/repo/getRecord'
@@ -99,7 +98,6 @@ export default function (server: Server, ctx: AppContext) {
   // com.atproto
   getSubjectStatus(server, ctx)
   updateSubjectStatus(server, ctx)
-  searchRepos(server, ctx)
   getAccountInfos(server, ctx)
   resolveHandle(server, ctx)
   getRecord(server, ctx)
