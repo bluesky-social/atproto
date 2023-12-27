@@ -1,6 +1,6 @@
 {
   "name": "@atproto/ozone",
-  "version": "0.0.21",
+  "version": "0.0.1",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
   "keywords": [

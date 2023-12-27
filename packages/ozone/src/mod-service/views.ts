@@ -208,17 +208,9 @@ export class ModerationViews {
     }
   }
 
-  async fetchRecords(subjects: RecordSubject[]): Promise<
-    Map<
-      string,
-      {
-        uri: string
-        cid: string
-        value: Record<string, unknown>
-        indexedAt: string
-      }
-    >
-  > {
+  async fetchRecords(
+    subjects: RecordSubject[],
+  ): Promise<Map<string, RecordInfo>> {
     const auth = await this.appviewAuth()
     if (!auth) return new Map()
     const fetched = await Promise.all(
@@ -241,12 +233,10 @@ export class ModerationViews {
     )
     return fetched.reduce((acc, cur) => {
       if (!cur) return acc
-      // @TODO fix this up
-      // @ts-ignore
       const data = cur.data
       const indexedAt = new Date().toISOString()
       return acc.set(data.uri, { ...data, cid: data.cid ?? '', indexedAt })
-    }, new Map<string, { uri: string; cid: string; value: Record<string, unknown>; indexedAt: string }>())
+    }, new Map<string, RecordInfo>())
   }
 
   async records(subjects: RecordSubject[]): Promise<Map<string, RecordView>> {
@@ -414,7 +404,6 @@ export class ModerationViews {
     }))
   }
 
-  // @TODO hydrate handles
   async getSubjectStatus(
     subjects: string[],
   ): Promise<Map<string, ModerationSubjectStatusRowWithHandle>> {
@@ -490,6 +479,13 @@ export class ModerationViews {
 type RecordSubject = { uri: string; cid?: string }
 
 type SubjectView = ModEventViewDetail['subject'] & ReportViewDetail['subject']
+
+type RecordInfo = {
+  uri: string
+  cid: string
+  value: Record<string, unknown>
+  indexedAt: string
+}
 
 function parseSubjectId(subject: string) {
   if (subject.startsWith('did:')) {

@@ -83,9 +83,6 @@ export class RepoSubject implements ModSubject {
   isRecord() {
     return false
   }
-  isWeakRecord() {
-    return false
-  }
   info() {
     return {
       subjectType: 'com.atproto.admin.defs#repoRef' as const,

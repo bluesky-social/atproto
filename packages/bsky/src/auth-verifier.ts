@@ -233,19 +233,6 @@ export class AuthVerifier {
       canPerformTakedown,
     }
   }
-
-  // isUserOrAdmin(
-  //   auth: AccessOutput | RoleOutput | NullOutput,
-  //   did: string,
-  // ): boolean {
-  //   if (!auth.credentials) {
-  //     return false
-  //   }
-  //   if ('did' in auth.credentials) {
-  //     return auth.credentials.did === did
-  //   }
-  //   return auth.credentials.admin
-  // }
 }
 
 // HELPERS

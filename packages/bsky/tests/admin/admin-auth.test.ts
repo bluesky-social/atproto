@@ -4,7 +4,7 @@ import { Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { RepoRef } from '../../src/lexicon/types/com/atproto/admin/defs'
 
-describe('moderation', () => {
+describe('admin auth', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient

@@ -84,9 +84,7 @@ export default function (server: Server, ctx: AppContext) {
         if (subject.isRecord()) {
           if (isTakedownEvent) {
             await moderationTxn.takedownRecord(subject, result.id)
-          }
-
-          if (isReverseTakedownEvent) {
+          } else if (isReverseTakedownEvent) {
             await moderationTxn.reverseTakedownRecord(subject)
           }
         }

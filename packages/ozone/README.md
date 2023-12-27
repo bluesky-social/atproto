@@ -1,8 +1,8 @@
-# @atproto/bsky: Bluesky AppView Service
+# @atproto/ozone: Bluesky Moderation Service
 
-TypeScript implementation of the `app.bsky` Lexicons backing the https://bsky.app microblogging application.
+Backend service for moderating the Bluesky network.
 
-[![NPM](https://img.shields.io/npm/v/@atproto/bsky)](https://www.npmjs.com/package/@atproto/bsky)
+[![NPM](https://img.shields.io/npm/v/@atproto/ozone)](https://www.npmjs.com/package/@atproto/ozone)
 [![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
 
 ## License

@@ -5,7 +5,7 @@ import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import usersSeed from './seeds/users'
 import { RepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
 
-describe('moderation', () => {
+describe('admin auth', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient

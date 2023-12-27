@@ -15,7 +15,6 @@ import { Redis } from './redis'
 import { AuthVerifier } from './auth-verifier'
 
 export class AppContext {
-  public moderationPushAgent: AtpAgent | undefined
   constructor(
     private opts: {
       db: DatabaseCoordinator
