@@ -75,7 +75,7 @@ export class BskyAppView {
       )
     }
 
-    const dataplane = createDataPlaneClient(config.dataplaneUrl, {
+    const dataplane = createDataPlaneClient(config.dataplaneUrls, {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
