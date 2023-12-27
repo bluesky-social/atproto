@@ -133,6 +133,7 @@ export class EventPusher {
         .forUpdate()
         .skipLocked()
         .where('confirmedAt', 'is', null)
+        .where('attempts', '<', 10)
         .execute()
       if (toPush.length === 0) return false
       await Promise.all(toPush.map((evt) => this.attemptRepoEvent(dbTxn, evt)))
@@ -187,7 +188,7 @@ export class EventPusher {
       ])
       return true
     } catch (err) {
-      console.log('ERR: ', err)
+      dbLogger.error({ err, subject, takedownId }, 'failed to push out event')
       return false
     }
   }

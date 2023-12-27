@@ -22,8 +22,8 @@ export const createRouter = (ctx: AppContext): express.Router => {
       ],
       service: [
         {
-          id: '#bsky_notif',
-          type: 'BskyNotificationService',
+          id: '#atproto_mod',
+          type: 'AtprotoModerationService',
           serviceEndpoint: `https://${hostname}`,
         },
       ],
