@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - bav-v2-drop-pg
+      - bav-v2-config-pass1
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
