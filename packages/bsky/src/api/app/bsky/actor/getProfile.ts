@@ -50,25 +50,18 @@ const skeleton = async (
   params: Params,
   ctx: Context,
 ): Promise<SkeletonState> => {
-  const { actorService, modService } = ctx
+  const { actorService } = ctx
   const { canViewTakedowns } = params
   const actor = await actorService.getActor(params.actor, true)
   if (!actor) {
     throw new InvalidRequestError('Profile not found')
   }
   if (!canViewTakedowns && softDeleted(actor)) {
-    const isSuspended = await modService.isSubjectSuspended(actor.did)
-    if (isSuspended) {
-      throw new InvalidRequestError(
-        'Account has been temporarily suspended',
-        'AccountTakedown',
-      )
-    } else {
-      throw new InvalidRequestError(
-        'Account has been taken down',
-        'AccountTakedown',
-      )
-    }
+    // @TODO throw a different error if the accoutn is suspended
+    throw new InvalidRequestError(
+      'Account has been taken down',
+      'AccountTakedown',
+    )
   }
   return { params, actor }
 }
