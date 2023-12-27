@@ -9,7 +9,7 @@ export const createDataPlaneClient = (
   baseUrl: string,
   opts: { httpVersion?: HttpVersion; rejectUnauthorized?: boolean },
 ) => {
-  const { httpVersion = '2', rejectUnauthorized = false } = opts
+  const { httpVersion = '2', rejectUnauthorized = true } = opts
   const transport = createConnectTransport({
     baseUrl,
     httpVersion,
