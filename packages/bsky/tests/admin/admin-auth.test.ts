@@ -98,6 +98,26 @@ describe('moderation', () => {
     await expect(attempt).rejects.toThrow('Untrusted issuer')
   })
 
+  it('does not allow requests from an authenticated user', async () => {
+    const aliceKey = await network.pds.ctx.actorStore.keypair(sc.dids.alice)
+    const headers = await createServiceAuthHeaders({
+      iss: sc.dids.alice,
+      aud: bskyDid,
+      keypair: aliceKey,
+    })
+    const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
+      {
+        subject: repoSubject,
+        takedown: { applied: true, ref: 'test-repo' },
+      },
+      {
+        ...headers,
+        encoding: 'application/json',
+      },
+    )
+    await expect(attempt).rejects.toThrow('Untrusted issuer')
+  })
+
   it('does not allow requests with a bad signature', async () => {
     const badKey = await Secp256k1Keypair.create()
     const headers = await createServiceAuthHeaders({
