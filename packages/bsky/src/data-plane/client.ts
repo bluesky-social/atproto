@@ -17,8 +17,8 @@ export const createDataPlaneClient = (
   baseUrls: string[],
   opts: { httpVersion?: HttpVersion; rejectUnauthorized?: boolean },
 ) => {
-  assert(baseUrls.length > 0, 'no clients available')
   const clients = baseUrls.map((baseUrl) => createBaseClient(baseUrl, opts))
+  assert(clients.length > 0, 'no clients available')
   return makeAnyClient(Service, (method) => {
     return async (...args) => {
       let client = randomElement(clients)
@@ -31,7 +31,7 @@ export const createDataPlaneClient = (
           const remainingClients = clients.filter((c) => c !== client)
           client = randomElement(remainingClients)
           if (client) {
-            return await client[method.localName](client)
+            return await client[method.localName](...args)
           }
         }
         throw err
@@ -43,7 +43,7 @@ export const createDataPlaneClient = (
 const createBaseClient = (
   baseUrl: string,
   opts: { httpVersion?: HttpVersion; rejectUnauthorized?: boolean },
-) => {
+): DataPlaneClient => {
   const { httpVersion = '2', rejectUnauthorized = true } = opts
   const transport = createConnectTransport({
     baseUrl,
