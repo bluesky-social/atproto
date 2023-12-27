@@ -1,3 +1,5 @@
+import { Generated } from 'kysely'
+
 export const eventTableName = 'record_push_event'
 
 export type RecordPushEventType = 'takedown'
@@ -10,7 +12,7 @@ export interface RecordPushEvent {
   takedownId: number | null
   confirmedAt: Date | null
   lastAttempted: Date | null
-  attempts: number | null
+  attempts: Generated<number>
 }
 
 export type PartialDB = {

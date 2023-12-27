@@ -88,7 +88,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('takedownId', 'integer')
     .addColumn('confirmedAt', 'timestamptz')
     .addColumn('lastAttempted', 'timestamptz')
-    .addColumn('attempts', 'integer')
+    .addColumn('attempts', 'integer', (col) => col.notNull().defaultTo(0))
     .addPrimaryKeyConstraint('repo_push_event_pkey', [
       'subjectDid',
       'eventType',
@@ -104,7 +104,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('takedownId', 'integer')
     .addColumn('confirmedAt', 'timestamptz')
     .addColumn('lastAttempted', 'timestamptz')
-    .addColumn('attempts', 'integer')
+    .addColumn('attempts', 'integer', (col) => col.notNull().defaultTo(0))
     .addPrimaryKeyConstraint('record_push_event_pkey', [
       'subjectUri',
       'eventType',
@@ -125,7 +125,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('takedownId', 'integer')
     .addColumn('confirmedAt', 'timestamptz')
     .addColumn('lastAttempted', 'timestamptz')
-    .addColumn('attempts', 'integer')
+    .addColumn('attempts', 'integer', (col) => col.notNull().defaultTo(0))
     .addPrimaryKeyConstraint('blob_push_event_pkey', [
       'subjectDid',
       'subjectBlobCid',

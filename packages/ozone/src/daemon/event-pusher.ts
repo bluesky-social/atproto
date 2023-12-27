@@ -7,6 +7,7 @@ import { RecordPushEvent } from '../db/schema/record_push_event'
 import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { dbLogger } from '../logger'
 import { InputSchema } from '../lexicon/types/com/atproto/admin/updateSubjectStatus'
+import { Selectable } from 'kysely'
 
 type EventSubject = InputSchema['subject']
 
@@ -216,7 +217,7 @@ export class EventPusher {
     )
   }
 
-  async attemptRepoEvent(txn: Database, evt: RepoPushEvent) {
+  async attemptRepoEvent(txn: Database, evt: Selectable<RepoPushEvent>) {
     const succeeded = await this.updateSubjectOnAll(
       {
         $type: 'com.atproto.admin.defs#repoRef',
@@ -239,7 +240,7 @@ export class EventPusher {
       .execute()
   }
 
-  async attemptRecordEvent(txn: Database, evt: RecordPushEvent) {
+  async attemptRecordEvent(txn: Database, evt: Selectable<RecordPushEvent>) {
     const succeeded = await this.updateSubjectOnAll(
       {
         $type: 'com.atproto.repo.strongRef',
@@ -263,7 +264,7 @@ export class EventPusher {
       .execute()
   }
 
-  async attemptBlobEvent(txn: Database, evt: BlobPushEvent) {
+  async attemptBlobEvent(txn: Database, evt: Selectable<BlobPushEvent>) {
     const succeeded = await this.updateSubjectOnAll(
       {
         $type: 'com.atproto.admin.defs#repoBlobRef',
