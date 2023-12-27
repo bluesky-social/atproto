@@ -196,11 +196,7 @@ export class AuthVerifier {
       if (opts.iss !== null && !opts.iss.includes(did)) {
         throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
       }
-      const atprotoData = await this.idResolver.did.resolveAtprotoData(
-        did,
-        forceRefresh,
-      )
-      return atprotoData.signingKey
+      return this.idResolver.did.resolveAtprotoKey(did, forceRefresh)
     }
 
     const jwtStr = bearerTokenFromReq(reqCtx.req)
