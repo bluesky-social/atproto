@@ -60,7 +60,7 @@
           "maxGraphemes": 1000,
           "maxLength": 10000
         },
-        "thumb": { "type": "string" }
+        "thumb": { "type": "string", "format": "uri" }
       }
     }
   }
