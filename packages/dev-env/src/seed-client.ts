@@ -448,7 +448,7 @@ export class SeedClient {
     reason?: string
     createdBy?: string
   }) {
-    const { id, subject, reason = 'X', createdBy = 'did:example:admin' } = opts
+    const { subject, reason = 'X', createdBy = 'did:example:admin' } = opts
     const result = await this.agent.api.com.atproto.admin.emitModerationEvent(
       {
         subject,
