@@ -23,7 +23,11 @@
           "accept": ["image/*"],
           "maxSize": 1000000
         },
-        "alt": { "type": "string" },
+        "alt": {
+          "type": "string",
+          "maxGraphemes": 5000,
+          "maxLength": 50000
+        },
         "aspectRatio": { "type": "ref", "ref": "#aspectRatio" }
       }
     },
@@ -53,7 +57,11 @@
       "properties": {
         "thumb": { "type": "string" },
         "fullsize": { "type": "string" },
-        "alt": { "type": "string" },
+        "alt": {
+          "type": "string",
+          "maxGraphemes": 5000,
+          "maxLength": 50000
+        },
         "aspectRatio": { "type": "ref", "ref": "#aspectRatio" }
       }
     }
