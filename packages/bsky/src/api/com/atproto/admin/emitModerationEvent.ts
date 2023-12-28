@@ -15,7 +15,6 @@ import {
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { TakedownSubjects } from '../../../../services/moderation'
 import { retryHttp } from '../../../../util/retry'
-import { REASONAPPEAL } from '../../../../lexicon/types/com/atproto/moderation/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.emitModerationEvent({
@@ -75,27 +74,13 @@ export default function (server: Server, ctx: AppContext) {
         async (dbTxn) => {
           const moderationTxn = ctx.services.moderation(dbTxn)
           const labelTxn = ctx.services.label(dbTxn)
-          // If an appeal report is coming in from a moderator, we need to override the createdBy
-          // so that the appeal is attributed to the author of the content
-          const isAppealEvent =
-            event.$type === 'com.atproto.admin.defs#modEventReport' &&
-            event.reportType === REASONAPPEAL
-          const proxiedCreatedBy = isAppealEvent
-            ? 'uri' in subjectInfo && subjectInfo.uri
-              ? subjectInfo.uri.host
-              : subjectInfo.did
-            : createdBy
-
-          if (isAppealEvent) {
-            event.comment = `${event.comment || ''} [MOD DID: ${createdBy}]`
-          }
 
           const result = await moderationTxn.logEvent({
             event,
             subject: subjectInfo,
             subjectBlobCids:
               subjectBlobCids?.map((cid) => CID.parse(cid)) ?? [],
-            createdBy: proxiedCreatedBy,
+            createdBy,
           })
 
           let takenDown: TakedownSubjects | undefined

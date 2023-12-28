@@ -1,8 +1,9 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
+import { AuthRequiredError, ForbiddenError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { getReasonType, getSubject } from './util'
 import { softDeleted } from '../../../../db/util'
+import { REASONAPPEAL } from '../../../../lexicon/types/com/atproto/moderation/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
@@ -22,12 +23,22 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
+      const reportReasonType = getReasonType(reasonType)
+      const reportSubject = getSubject(subject)
+      const subjectDid =
+        'did' in reportSubject ? reportSubject.did : reportSubject.uri.host
+
+      // If the report is an appeal, the requester must be the author of the subject
+      if (reasonType === REASONAPPEAL && requester !== subjectDid) {
+        throw new ForbiddenError('You cannot appeal this report')
+      }
+
       const report = await db.transaction(async (dbTxn) => {
         const moderationTxn = ctx.services.moderation(dbTxn)
         return moderationTxn.report({
-          reasonType: getReasonType(reasonType),
+          reasonType: reportReasonType,
           reason,
-          subject: getSubject(subject),
+          subject: reportSubject,
           reportedBy: requester || ctx.cfg.serverDid,
         })
       })

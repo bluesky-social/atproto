@@ -127,11 +127,6 @@ export const adjustModerationSubjectStatus = async (
     return null
   }
 
-  // Exit early if someone is trying to game the system by appealing someone else's content
-  if (isAppealEvent && createdBy !== subjectDid) {
-    return null
-  }
-
   const now = new Date().toISOString()
   // If subjectUri exists, it's not a repoRef so pass along the uri to get identifier back
   const identifier = getStatusIdentifierFromSubject(subjectUri || subjectDid)

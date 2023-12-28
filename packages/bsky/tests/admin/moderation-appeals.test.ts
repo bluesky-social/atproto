@@ -95,12 +95,14 @@ describe('moderation-appeals', () => {
       await assertBobsPostStatus(REVIEWOPEN, undefined)
 
       // Create a report as normal user with appeal type
-      await sc.createReport({
-        reportedBy: sc.dids.carol,
-        reasonType: REASONAPPEAL,
-        reason: 'appealing',
-        subject: getBobsPostSubject(),
-      })
+      expect(
+        sc.createReport({
+          reportedBy: sc.dids.carol,
+          reasonType: REASONAPPEAL,
+          reason: 'appealing',
+          subject: getBobsPostSubject(),
+        }),
+      ).rejects.toThrow('You cannot appeal this report')
 
       // Verify that the appeal status did not change
       await assertBobsPostStatus(REVIEWOPEN, undefined)

@@ -242,7 +242,7 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
             description:
-              'Timestamp referencing when the owner of the subject appealed a moderation action',
+              'Timestamp referencing when the author of the subject appealed a moderation action',
           },
           takendown: {
             type: 'boolean',
@@ -250,7 +250,7 @@ export const schemaDict = {
           appealed: {
             type: 'boolean',
             description:
-              'True Indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators.',
+              'True indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators.',
           },
           suspendUntil: {
             type: 'string',
