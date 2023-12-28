@@ -8,7 +8,6 @@ import { ServerConfig } from './config'
 import { ModerationServiceCreator } from './mod-service'
 import * as auth from './auth'
 import { BackgroundQueue } from './background'
-import { OzoneDaemon } from './daemon'
 
 export class AppContext {
   constructor(
@@ -21,7 +20,6 @@ export class AppContext {
       signingKey: Keypair
       idResolver: IdResolver
       backgroundQueue: BackgroundQueue
-      daemon?: OzoneDaemon
     },
   ) {}
 
@@ -59,10 +57,6 @@ export class AppContext {
 
   get backgroundQueue(): BackgroundQueue {
     return this.opts.backgroundQueue
-  }
-
-  get daemon(): OzoneDaemon | undefined {
-    return this.opts.daemon
   }
 
   get authVerifier() {

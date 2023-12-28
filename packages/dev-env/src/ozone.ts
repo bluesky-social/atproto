@@ -12,6 +12,7 @@ export class TestOzone {
     public url: string,
     public port: number,
     public server: ozone.OzoneService,
+    public daemon: ozone.OzoneDaemon,
   ) {}
 
   static async create(cfg: OzoneConfig): Promise<TestOzone> {
@@ -67,13 +68,33 @@ export class TestOzone {
       config,
       signingKey: serviceKeypair,
     })
-
     await server.start()
 
+    const daemonDb = new ozone.Database({
+      schema: cfg.dbPostgresSchema,
+      url: cfg.dbPostgresUrl,
+      poolSize: 10,
+    })
+    const daemonConfig = new ozone.DaemonConfig({
+      version: config.version,
+      dbPostgresUrl: config.dbPostgresUrl,
+      dbPostgresSchema: config.dbPostgresSchema,
+      serverDid: config.serverDid,
+      appviewUrl: config.appviewUrl,
+      appviewDid: config.appviewDid,
+      pdsUrl: config.pdsUrl,
+      pdsDid: config.pdsDid,
+    })
+    const daemon = ozone.OzoneDaemon.create({
+      db: daemonDb,
+      signingKey: serviceKeypair,
+      cfg: daemonConfig,
+    })
+    await daemon.start()
     // don't do event reversal in dev-env
-    server.ctx.daemon?.ctx.eventReverser.destroy()
+    await daemon.ctx.eventReverser.destroy()
 
-    return new TestOzone(url, port, server)
+    return new TestOzone(url, port, server, daemon)
   }
 
   get ctx(): ozone.AppContext {
@@ -105,10 +126,11 @@ export class TestOzone {
 
   async processAll() {
     await this.ctx.backgroundQueue.processAll()
-    await this.ctx.daemon?.processAll()
+    await this.daemon.processAll()
   }
 
   async close() {
+    await this.daemon.destroy()
     await this.server.destroy()
   }
 }

@@ -17,14 +17,12 @@ import { BackgroundQueue } from './background'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import Database from './db'
-import { OzoneDaemon } from './daemon'
-import { DaemonConfig } from './daemon/config'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 
 export type { ServerConfigValues } from './config'
 export { ServerConfig } from './config'
 export { Database } from './db'
-export { OzoneDaemon, EventPusher, EventReverser } from './daemon'
+export { OzoneDaemon, DaemonConfig, EventPusher, EventReverser } from './daemon'
 export { AppContext } from './context'
 
 export class OzoneService {
@@ -72,21 +70,6 @@ export class OzoneService {
 
     const modService = ModerationService.creator(appviewAgent, appviewAuth)
 
-    const daemon = OzoneDaemon.create({
-      db,
-      signingKey,
-      cfg: new DaemonConfig({
-        version: config.version,
-        dbPostgresUrl: config.dbPostgresUrl,
-        dbPostgresSchema: config.dbPostgresSchema,
-        serverDid: config.serverDid,
-        appviewUrl: config.appviewUrl,
-        appviewDid: config.appviewDid,
-        pdsUrl: config.pdsUrl,
-        pdsDid: config.pdsDid,
-      }),
-    })
-
     const ctx = new AppContext({
       db,
       cfg: config,
@@ -96,7 +79,6 @@ export class OzoneService {
       signingKey,
       idResolver,
       backgroundQueue,
-      daemon,
     })
 
     let server = createServer({
@@ -137,7 +119,6 @@ export class OzoneService {
         'background queue stats',
       )
     }, 10000)
-    await this.ctx.daemon?.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -151,7 +132,6 @@ export class OzoneService {
   async destroy(): Promise<void> {
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
-    await this.ctx.daemon?.destroy()
     await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
   }

@@ -8,6 +8,7 @@ import { ModerationService } from '../mod-service'
 import { Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 
+export { DaemonConfig } from './config'
 export { EventPusher } from './event-pusher'
 export { EventReverser } from './event-reverser'
 
