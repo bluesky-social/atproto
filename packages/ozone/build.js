@@ -13,7 +13,6 @@ require('esbuild').build({
   external: [
     // Referenced in pg driver, but optional and we don't use it
     'pg-native',
-    'sharp',
   ],
   plugins: buildShallow ? [nodeExternalsPlugin()] : [],
 })

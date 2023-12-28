@@ -10,7 +10,6 @@ import AppContext from '../context'
 import { httpLogger as log } from '../logger'
 import { retryHttp } from '../util/retry'
 import { Database } from '../db'
-import { sql } from 'kysely'
 
 // Resolve and verify blob from its origin host
 
@@ -85,14 +84,8 @@ export async function resolveBlob(
 ) {
   const cidStr = cid.toString()
 
-  const [{ pds }, takedownStatus, takedown] = await Promise.all([
+  const [{ pds }, takedown] = await Promise.all([
     idResolver.did.resolveAtprotoData(did), // @TODO cache did info
-    db.db
-      .selectFrom('moderation_subject_status')
-      .select('id')
-      .where('blobCids', '@>', sql`CAST(${JSON.stringify([cidStr])} AS JSONB)`)
-      .where('takendown', 'is', true)
-      .executeTakeFirst(),
     db.db
       .selectFrom('blob_takedown')
       .select('takedownRef')
@@ -100,7 +93,7 @@ export async function resolveBlob(
       .where('cid', '=', cid.toString())
       .executeTakeFirst(),
   ])
-  if (takedownStatus || takedown) {
+  if (takedown) {
     throw createError(404, 'Blob not found')
   }
 

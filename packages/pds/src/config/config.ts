@@ -167,23 +167,16 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     repoBackfillLimitMs: env.repoBackfillLimitMs ?? DAY,
   }
 
-  if (!env.bskyAppViewUrl) {
-    throw new Error('Must configure PDS_BSKY_APP_VIEW_URL')
-  } else if (!env.bskyAppViewDid) {
-    throw new Error('Must configure PDS_BSKY_APP_VIEW_DID')
-  }
+  assert(env.bskyAppViewUrl)
+  assert(env.bskyAppViewDid)
   const bskyAppViewCfg: ServerConfig['bskyAppView'] = {
     url: env.bskyAppViewUrl,
     did: env.bskyAppViewDid,
     cdnUrlPattern: env.bskyAppViewCdnUrlPattern,
   }
 
-  if (!env.modServiceUrl) {
-    throw new Error('Must configure PDS_MOD_SERVICE_URL')
-  } else if (!env.modServiceDid) {
-    throw new Error('Must configure PDS_MOD_SERVICE_DID')
-  }
-
+  assert(env.modServiceUrl)
+  assert(env.modServiceDid)
   const modServiceCfg: ServerConfig['modService'] = {
     url: env.modServiceUrl,
     did: env.modServiceDid,
