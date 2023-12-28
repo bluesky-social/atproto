@@ -1,7 +1,7 @@
 export interface BlobTakedown {
   did: string
   cid: string
-  takedownId: string
+  takedownRef: string
 }
 
 export const tableName = 'blob_takedown'

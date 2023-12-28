@@ -103,9 +103,9 @@ describe('takedowner', () => {
     const record = await bskyDb.db
       .selectFrom('record')
       .where('uri', '=', post.ref.uriStr)
-      .select('takedownId')
+      .select('takedownRef')
       .executeTakeFirst()
-    expect(record?.takedownId).toEqual(takedownEvent.id.toString())
+    expect(record?.takedownRef).toEqual(takedownEvent.id.toString())
 
     const recordPds = await network.pds.ctx.actorStore.read(
       post.ref.uri.hostname,
@@ -163,9 +163,9 @@ describe('takedowner', () => {
     const recordBsky = await bskyDb.db
       .selectFrom('record')
       .where('uri', '=', res.data.uri)
-      .select('takedownId')
+      .select('takedownRef')
       .executeTakeFirst()
-    expect(recordBsky?.takedownId).toEqual(takedownEvent.id.toString())
+    expect(recordBsky?.takedownRef).toEqual(takedownEvent.id.toString())
 
     const recordPds = await network.pds.ctx.actorStore.read(alice, (store) =>
       store.db.db

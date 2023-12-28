@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
           const did = subject.did
           if (takedown.applied) {
             await modService.takedownRepo({
-              takedownId: takedown.ref ?? new Date().toISOString(),
+              takedownRef: takedown.ref ?? new Date().toISOString(),
               did,
             })
           } else {
@@ -39,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
           const cid = CID.parse(subject.cid)
           if (takedown.applied) {
             await modService.takedownRecord({
-              takedownId: takedown.ref ?? new Date().toISOString(),
+              takedownRef: takedown.ref ?? new Date().toISOString(),
               uri,
               cid,
             })
@@ -50,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
           const { did, cid } = subject
           if (takedown.applied) {
             await modService.takedownBlob({
-              takedownId: takedown.ref ?? new Date().toISOString(),
+              takedownRef: takedown.ref ?? new Date().toISOString(),
               did,
               cid,
             })

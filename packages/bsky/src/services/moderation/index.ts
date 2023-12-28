@@ -20,47 +20,47 @@ export class ModerationService {
       new ModerationService(db, imgUriBuilder, imgInvalidator)
   }
 
-  async takedownRepo(info: { takedownId: string; did: string }) {
-    const { takedownId, did } = info
+  async takedownRepo(info: { takedownRef: string; did: string }) {
+    const { takedownRef, did } = info
     await this.db.db
       .updateTable('actor')
-      .set({ takedownId })
+      .set({ takedownRef })
       .where('did', '=', did)
-      .where('takedownId', 'is', null)
+      .where('takedownRef', 'is', null)
       .executeTakeFirst()
   }
 
   async reverseTakedownRepo(info: { did: string }) {
     await this.db.db
       .updateTable('actor')
-      .set({ takedownId: null })
+      .set({ takedownRef: null })
       .where('did', '=', info.did)
       .execute()
   }
 
-  async takedownRecord(info: { takedownId: string; uri: AtUri; cid: CID }) {
-    const { takedownId, uri } = info
+  async takedownRecord(info: { takedownRef: string; uri: AtUri; cid: CID }) {
+    const { takedownRef, uri } = info
     await this.db.db
       .updateTable('record')
-      .set({ takedownId })
+      .set({ takedownRef })
       .where('uri', '=', uri.toString())
-      .where('takedownId', 'is', null)
+      .where('takedownRef', 'is', null)
       .executeTakeFirst()
   }
 
   async reverseTakedownRecord(info: { uri: AtUri }) {
     await this.db.db
       .updateTable('record')
-      .set({ takedownId: null })
+      .set({ takedownRef: null })
       .where('uri', '=', info.uri.toString())
       .execute()
   }
 
-  async takedownBlob(info: { takedownId: string; did: string; cid: string }) {
-    const { takedownId, did, cid } = info
+  async takedownBlob(info: { takedownRef: string; did: string; cid: string }) {
+    const { takedownRef, did, cid } = info
     await this.db.db
       .insertInto('blob_takedown')
-      .values({ did, cid, takedownId })
+      .values({ did, cid, takedownRef })
       .onConflict((oc) => oc.doNothing())
       .execute()
     const paths = ImageUriBuilder.presets.map((id) => {
@@ -85,7 +85,7 @@ export class ModerationService {
       .where('did', '=', did)
       .selectAll()
       .executeTakeFirst()
-    return res ? formatStatus(res.takedownId) : null
+    return res ? formatStatus(res.takedownRef) : null
   }
 
   async getRecordTakedownRef(uri: string): Promise<StatusAttr | null> {
@@ -94,7 +94,7 @@ export class ModerationService {
       .where('uri', '=', uri)
       .selectAll()
       .executeTakeFirst()
-    return res ? formatStatus(res.takedownId) : null
+    return res ? formatStatus(res.takedownRef) : null
   }
 
   async getBlobTakedownRef(
@@ -109,7 +109,7 @@ export class ModerationService {
       .executeTakeFirst()
     // this table only tracks takedowns not all blobs
     // so if no result is returned then the blob is not taken down (rather than not found)
-    return formatStatus(res?.takedownId ?? null)
+    return formatStatus(res?.takedownRef ?? null)
   }
 }
 

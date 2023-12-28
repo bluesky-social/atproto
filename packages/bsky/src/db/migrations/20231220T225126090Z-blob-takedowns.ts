@@ -8,28 +8,37 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('takedownId', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint('blob_takedown_pkey', ['did', 'cid'])
     .execute()
+
   await db.schema
     .alterTable('actor')
     .dropConstraint('actor_takedown_id_fkey')
     .execute()
+  await db.schema.alterTable('actor').dropColumn('takedownId').execute()
+  await db.schema
+    .alterTable('actor')
+    .addColumn('takedownRef', 'varchar')
+    .execute()
+
   await db.schema
     .alterTable('record')
     .dropConstraint('record_takedown_id_fkey')
     .execute()
-  await db.schema
-    .alterTable('actor')
-    .alterColumn('takedownId')
-    .setDataType('varchar')
-    .execute()
+  await db.schema.alterTable('record').dropColumn('takedownId').execute()
   await db.schema
     .alterTable('record')
-    .alterColumn('takedownId')
-    .setDataType('varchar')
+    .addColumn('takedownRef', 'varchar')
     .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('blob_takedown').execute()
+
+  await db.schema.alterTable('actor').dropColumn('takedownRef').execute()
+  await db.schema
+    .alterTable('actor')
+    .addColumn('takedownId', 'integer')
+    .execute()
+
   await db.schema
     .alterTable('actor')
     .addForeignKeyConstraint(
@@ -39,6 +48,12 @@ export async function down(db: Kysely<unknown>): Promise<void> {
       ['id'],
     )
     .execute()
+
+  await db.schema.alterTable('record').dropColumn('takedownRef').execute()
+  await db.schema
+    .alterTable('record')
+    .addColumn('takedownId', 'integer')
+    .execute()
   await db.schema
     .alterTable('record')
     .addForeignKeyConstraint(
@@ -47,15 +62,5 @@ export async function down(db: Kysely<unknown>): Promise<void> {
       'moderation_event',
       ['id'],
     )
-    .execute()
-  await db.schema
-    .alterTable('actor')
-    .alterColumn('takedownId')
-    .setDataType('integer')
-    .execute()
-  await db.schema
-    .alterTable('record')
-    .alterColumn('takedownId')
-    .setDataType('integer')
     .execute()
 }

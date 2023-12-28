@@ -75,7 +75,7 @@ describe('db', () => {
         did: 'x',
         handle: 'x',
         indexedAt: 'bad-date',
-        takedownId: null,
+        takedownRef: null,
       })
     })
 

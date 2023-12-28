@@ -95,7 +95,7 @@ export async function resolveBlob(
       .executeTakeFirst(),
     db.db
       .selectFrom('blob_takedown')
-      .select('takedownId')
+      .select('takedownRef')
       .where('did', '=', did)
       .where('cid', '=', cid.toString())
       .executeTakeFirst(),
