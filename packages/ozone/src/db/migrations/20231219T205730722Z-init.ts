@@ -94,6 +94,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
       'eventType',
     ])
     .execute()
+  await db.schema
+    .createIndex('repo_push_confirmation_idx')
+    .on('repo_push_event')
+    .columns(['confirmedAt', 'attempts'])
+    .execute()
 
   await db.schema
     .createTable('record_push_event')
@@ -115,6 +120,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .on('record_push_event')
     .columns(['subjectDid', 'eventType'])
     .execute()
+  await db.schema
+    .createIndex('record_push_confirmation_idx')
+    .on('record_push_event')
+    .columns(['confirmedAt', 'attempts'])
+    .execute()
 
   await db.schema
     .createTable('blob_push_event')
@@ -131,6 +141,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
       'subjectBlobCid',
       'eventType',
     ])
+    .execute()
+  await db.schema
+    .createIndex('blob_push_confirmation_idx')
+    .on('blob_push_event')
+    .columns(['confirmedAt', 'attempts'])
     .execute()
 }
 

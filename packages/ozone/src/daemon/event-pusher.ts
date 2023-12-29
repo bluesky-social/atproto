@@ -151,6 +151,7 @@ export class EventPusher {
         .forUpdate()
         .skipLocked()
         .where('confirmedAt', 'is', null)
+        .where('attempts', '<', 10)
         .execute()
       if (toPush.length === 0) return false
       await Promise.all(
@@ -168,6 +169,7 @@ export class EventPusher {
         .forUpdate()
         .skipLocked()
         .where('confirmedAt', 'is', null)
+        .where('attempts', '<', 10)
         .execute()
       if (toPush.length === 0) return false
       await Promise.all(toPush.map((evt) => this.attemptBlobEvent(dbTxn, evt)))
