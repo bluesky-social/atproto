@@ -57,11 +57,17 @@ const skeleton = async (
     throw new InvalidRequestError('Profile not found')
   }
   if (!canViewTakedowns && softDeleted(actor)) {
-    // @TODO throw a different error if the accoutn is suspended
-    throw new InvalidRequestError(
-      'Account has been taken down',
-      'AccountTakedown',
-    )
+    if (actor.takedownRef?.includes('SUSPEND')) {
+      throw new InvalidRequestError(
+        'Account has been temporarily suspended',
+        'AccountTakedown',
+      )
+    } else {
+      throw new InvalidRequestError(
+        'Account has been taken down',
+        'AccountTakedown',
+      )
+    }
   }
   return { params, actor }
 }

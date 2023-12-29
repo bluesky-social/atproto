@@ -75,7 +75,8 @@ export default function (server: Server, ctx: AppContext) {
 
         if (subject.isRepo()) {
           if (isTakedownEvent) {
-            await moderationTxn.takedownRepo(subject, result.id)
+            const isSuspend = !!result.durationInHours
+            await moderationTxn.takedownRepo(subject, result.id, isSuspend)
           } else if (isReverseTakedownEvent) {
             await moderationTxn.reverseTakedownRepo(subject)
           }
