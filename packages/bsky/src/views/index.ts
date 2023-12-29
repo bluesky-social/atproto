@@ -19,7 +19,7 @@ import {
   ThreadgateView,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { ListView, ListViewBasic } from '../lexicon/types/app/bsky/graph/defs'
-import { compositeTime, creatorFromUri } from './util'
+import { compositeTime, creatorFromUri, parseThreadGate } from './util'
 import { mapDefined } from '@atproto/common'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
@@ -49,7 +49,6 @@ import { Label } from '../hydration/label'
 import { Repost } from '../hydration/feed'
 import { RecordInfo } from '../hydration/util'
 import { Notification } from '../data-plane/gen/bsky_pb'
-import { parseThreadGate } from '../services/feed/util'
 
 export class Views {
   constructor(public imgUriBuilder: ImageUriBuilder) {}

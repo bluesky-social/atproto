@@ -145,21 +145,10 @@ describe('pds author feed views', () => {
 
     expect(preBlock.feed.length).toBeGreaterThan(0)
 
-    await agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: alice,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.updateTakedown({
+      actorDid: alice,
+      takenDown: true,
+    })
 
     const attempt = agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
@@ -168,21 +157,10 @@ describe('pds author feed views', () => {
     await expect(attempt).rejects.toThrow('Profile not found')
 
     // Cleanup
-    await agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: alice,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.updateTakedown({
+      actorDid: alice,
+      takenDown: false,
+    })
   })
 
   it('blocked by record takedown.', async () => {
@@ -195,22 +173,10 @@ describe('pds author feed views', () => {
 
     const post = preBlock.feed[0].post
 
-    await agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.uri,
-          cid: post.cid,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.updateTakedown({
+      recordUri: post.uri,
+      takenDown: true,
+    })
 
     const { data: postBlock } = await agent.api.app.bsky.feed.getAuthorFeed(
       { actor: alice },
@@ -221,22 +187,10 @@ describe('pds author feed views', () => {
     expect(postBlock.feed.map((item) => item.post.uri)).not.toContain(post.uri)
 
     // Cleanup
-    await agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: post.uri,
-          cid: post.cid,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.updateTakedown({
+      recordUri: post.uri,
+      takenDown: false,
+    })
   })
 
   it('can filter by posts_with_media', async () => {

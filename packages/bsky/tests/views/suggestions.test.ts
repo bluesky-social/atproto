@@ -16,7 +16,6 @@ describe('pds user search views', () => {
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.processAll()
 
     const suggestions = [
       { did: sc.dids.alice, order: 1 },
@@ -25,9 +24,8 @@ describe('pds user search views', () => {
       { did: sc.dids.dan, order: 4 },
     ]
 
-    await network.bsky.ctx.db
-      .getPrimary()
-      .db.insertInto('suggested_follow')
+    await network.bsky.db.db
+      .insertInto('suggested_follow')
       .values(suggestions)
       .execute()
   })

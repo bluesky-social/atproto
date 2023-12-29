@@ -5,12 +5,10 @@ import axios, { AxiosError } from 'axios'
 import { CID } from 'multiformats/cid'
 import { ensureValidDid } from '@atproto/syntax'
 import { forwardStreamErrors, VerifyCidTransform } from '@atproto/common'
-import { IdResolver, DidNotFoundError } from '@atproto/identity'
+import { DidNotFoundError } from '@atproto/identity'
 import AppContext from '../context'
 import { httpLogger as log } from '../logger'
 import { retryHttp } from '../util/retry'
-import { Database } from '../db'
-import { sql } from 'kysely'
 
 // Resolve and verify blob from its origin host
 
@@ -32,8 +30,7 @@ export const createRouter = (ctx: AppContext): express.Router => {
         return next(createError(400, 'Invalid cid'))
       }
 
-      const db = ctx.db.getReplica()
-      const verifiedImage = await resolveBlob(did, cid, db, ctx.idResolver)
+      const verifiedImage = await resolveBlob(ctx, did, cid)
 
       // Send chunked response, destroying stream early (before
       // closing chunk) if the bytes don't match the expected cid.
@@ -77,24 +74,14 @@ export const createRouter = (ctx: AppContext): express.Router => {
   return router
 }
 
-export async function resolveBlob(
-  did: string,
-  cid: CID,
-  db: Database,
-  idResolver: IdResolver,
-) {
+export async function resolveBlob(ctx: AppContext, did: string, cid: CID) {
   const cidStr = cid.toString()
 
-  const [{ pds }, takedown] = await Promise.all([
-    idResolver.did.resolveAtprotoData(did), // @TODO cache did info
-    db.db
-      .selectFrom('moderation_subject_status')
-      .select('id')
-      .where('blobCids', '@>', sql`CAST(${JSON.stringify([cidStr])} AS JSONB)`)
-      .where('takendown', 'is', true)
-      .executeTakeFirst(),
+  const [{ pds }, { takenDown }] = await Promise.all([
+    ctx.idResolver.did.resolveAtprotoData(did),
+    ctx.dataplane.getBlobTakedown({ actorDid: did, cid: cid.toString() }),
   ])
-  if (takedown) {
+  if (takenDown) {
     throw createError(404, 'Blob not found')
   }
 

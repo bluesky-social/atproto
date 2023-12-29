@@ -1,11 +1,10 @@
+import assert from 'assert'
 import { ServiceImpl } from '@connectrpc/connect'
+import { AtUri } from '@atproto/syntax'
+import { ids } from '../../../lexicon/lexicons'
 import { Service } from '../../gen/bsky_connect'
-import { Database } from '../../../db'
-import {
-  CreatedAtDidKeyset,
-  TimeCidKeyset,
-  paginate,
-} from '../../../db/pagination'
+import { Database } from '../db'
+import { CreatedAtDidKeyset, TimeCidKeyset, paginate } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActorMutesActor(req) {
@@ -106,4 +105,55 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor: keyset.packFromResult(lists),
     }
   },
+
+  async muteActor(req) {
+    const { actorDid, subjectDid } = req
+    assert(actorDid !== subjectDid, 'cannot mute yourself') // @TODO pass message through in http error
+    await db.db
+      .insertInto('mute')
+      .values({
+        subjectDid,
+        mutedByDid: actorDid,
+        createdAt: new Date().toISOString(),
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+  },
+
+  async unmuteActor(req) {
+    const { actorDid, subjectDid } = req
+    assert(actorDid !== subjectDid, 'cannot mute yourself')
+    await db.db
+      .deleteFrom('mute')
+      .where('subjectDid', '=', subjectDid)
+      .where('mutedByDid', '=', actorDid)
+      .execute()
+  },
+
+  async muteActorList(req) {
+    const { actorDid, listUri } = req
+    assert(isListUri(listUri), 'must mute a list')
+    await db.db
+      .insertInto('list_mute')
+      .values({
+        listUri,
+        mutedByDid: actorDid,
+        createdAt: new Date().toISOString(),
+      })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+  },
+
+  async unmuteActorList(req) {
+    const { actorDid, listUri } = req
+    assert(isListUri(listUri), 'must mute a list')
+    await db.db
+      .deleteFrom('list_mute')
+      .where('listUri', '=', listUri)
+      .where('mutedByDid', '=', actorDid)
+      .execute()
+  },
 })
+
+const isListUri = (uri: string) =>
+  new AtUri(uri).collection === ids.AppBskyGraphList

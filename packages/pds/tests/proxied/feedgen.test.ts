@@ -1,4 +1,3 @@
-import { makeAlgos } from '@atproto/bsky'
 import AtpAgent, { AtUri, FeedNS } from '@atproto/api'
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import basicSeed from '../seeds/basic'
@@ -19,11 +18,16 @@ describe('feedgen proxy view', () => {
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_feedgen',
-      bsky: { algos: makeAlgos(feedUri.host) },
+      bsky: {
+        // @TODO consider using makeAlgos() here if the appview begins supporting any feeds out of the box
+        algos: {
+          [feedUri.toString()]: async () => ({ feedItems: [] }),
+        },
+      },
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()
-    await basicSeed(sc, { addModLabels: true })
+    await basicSeed(sc, { addModLabels: network.bsky })
     // publish feed
     const feed = await agent.api.app.bsky.feed.generator.create(
       { repo: sc.dids.alice, rkey: feedUri.rkey },

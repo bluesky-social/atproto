@@ -13,7 +13,6 @@ import { Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
-import { cleanQuery } from '../../../../services/util/search'
 
 export default function (server: Server, ctx: AppContext) {
   const searchActors = createPipeline(
@@ -37,8 +36,7 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
-  const rawQuery = params.q ?? params.term
-  const term = cleanQuery(rawQuery || '')
+  const term = params.q ?? params.term
 
   // @TODO
   // add hits total

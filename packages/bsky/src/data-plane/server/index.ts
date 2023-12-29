@@ -3,7 +3,10 @@ import events from 'events'
 import express from 'express'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import createRoutes from './routes'
-import { Database } from '../../db'
+import { Database } from './db'
+
+export { DidSqlCache } from './did-cache'
+export { RepoSubscription } from './subscription'
 
 export class DataPlaneServer {
   constructor(public server: http.Server) {}

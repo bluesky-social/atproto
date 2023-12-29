@@ -20,7 +20,7 @@ import search from './search'
 import suggestions from './suggestions'
 import sync from './sync'
 import threads from './threads'
-import { Database } from '../../../db'
+import { Database } from '../db'
 
 export default (db: Database) => (router: ConnectRouter) =>
   router.service(Service, {

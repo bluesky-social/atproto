@@ -3246,6 +3246,158 @@ export class GetMutesResponse extends Message<GetMutesResponse> {
 }
 
 /**
+ * mute another user
+ *
+ * @generated from message bsky.MuteActorRequest
+ */
+export class MuteActorRequest extends Message<MuteActorRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = "";
+
+  /**
+   * @generated from field: string subject_did = 2;
+   */
+  subjectDid = "";
+
+  constructor(data?: PartialMessage<MuteActorRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.MuteActorRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "subject_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MuteActorRequest {
+    return new MuteActorRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MuteActorRequest {
+    return new MuteActorRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MuteActorRequest {
+    return new MuteActorRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: MuteActorRequest | PlainMessage<MuteActorRequest> | undefined, b: MuteActorRequest | PlainMessage<MuteActorRequest> | undefined): boolean {
+    return proto3.util.equals(MuteActorRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.MuteActorResponse
+ */
+export class MuteActorResponse extends Message<MuteActorResponse> {
+  constructor(data?: PartialMessage<MuteActorResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.MuteActorResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MuteActorResponse {
+    return new MuteActorResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MuteActorResponse {
+    return new MuteActorResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MuteActorResponse {
+    return new MuteActorResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: MuteActorResponse | PlainMessage<MuteActorResponse> | undefined, b: MuteActorResponse | PlainMessage<MuteActorResponse> | undefined): boolean {
+    return proto3.util.equals(MuteActorResponse, a, b);
+  }
+}
+
+/**
+ * unmute another user
+ *
+ * @generated from message bsky.UnmuteActorRequest
+ */
+export class UnmuteActorRequest extends Message<UnmuteActorRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = "";
+
+  /**
+   * @generated from field: string subject_did = 2;
+   */
+  subjectDid = "";
+
+  constructor(data?: PartialMessage<UnmuteActorRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.UnmuteActorRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "subject_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UnmuteActorRequest {
+    return new UnmuteActorRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UnmuteActorRequest {
+    return new UnmuteActorRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UnmuteActorRequest {
+    return new UnmuteActorRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: UnmuteActorRequest | PlainMessage<UnmuteActorRequest> | undefined, b: UnmuteActorRequest | PlainMessage<UnmuteActorRequest> | undefined): boolean {
+    return proto3.util.equals(UnmuteActorRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.UnmuteActorResponse
+ */
+export class UnmuteActorResponse extends Message<UnmuteActorResponse> {
+  constructor(data?: PartialMessage<UnmuteActorResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.UnmuteActorResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UnmuteActorResponse {
+    return new UnmuteActorResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UnmuteActorResponse {
+    return new UnmuteActorResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UnmuteActorResponse {
+    return new UnmuteActorResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: UnmuteActorResponse | PlainMessage<UnmuteActorResponse> | undefined, b: UnmuteActorResponse | PlainMessage<UnmuteActorResponse> | undefined): boolean {
+    return proto3.util.equals(UnmuteActorResponse, a, b);
+  }
+}
+
+/**
  * - return list uri of *any* list through which user A has muted user B
  *     - hydrating mute state onto profiles
  *     - note: we only need *one* uri even if a user is muted by multiple lists
@@ -3504,6 +3656,158 @@ export class GetMutelistSubscriptionsResponse extends Message<GetMutelistSubscri
 
   static equals(a: GetMutelistSubscriptionsResponse | PlainMessage<GetMutelistSubscriptionsResponse> | undefined, b: GetMutelistSubscriptionsResponse | PlainMessage<GetMutelistSubscriptionsResponse> | undefined): boolean {
     return proto3.util.equals(GetMutelistSubscriptionsResponse, a, b);
+  }
+}
+
+/**
+ * mute a list
+ *
+ * @generated from message bsky.MuteActorListRequest
+ */
+export class MuteActorListRequest extends Message<MuteActorListRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = "";
+
+  /**
+   * @generated from field: string list_uri = 2;
+   */
+  listUri = "";
+
+  constructor(data?: PartialMessage<MuteActorListRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.MuteActorListRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "list_uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MuteActorListRequest {
+    return new MuteActorListRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MuteActorListRequest {
+    return new MuteActorListRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MuteActorListRequest {
+    return new MuteActorListRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: MuteActorListRequest | PlainMessage<MuteActorListRequest> | undefined, b: MuteActorListRequest | PlainMessage<MuteActorListRequest> | undefined): boolean {
+    return proto3.util.equals(MuteActorListRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.MuteActorListResponse
+ */
+export class MuteActorListResponse extends Message<MuteActorListResponse> {
+  constructor(data?: PartialMessage<MuteActorListResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.MuteActorListResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MuteActorListResponse {
+    return new MuteActorListResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MuteActorListResponse {
+    return new MuteActorListResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MuteActorListResponse {
+    return new MuteActorListResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: MuteActorListResponse | PlainMessage<MuteActorListResponse> | undefined, b: MuteActorListResponse | PlainMessage<MuteActorListResponse> | undefined): boolean {
+    return proto3.util.equals(MuteActorListResponse, a, b);
+  }
+}
+
+/**
+ * unmute a list
+ *
+ * @generated from message bsky.UnmuteActorListRequest
+ */
+export class UnmuteActorListRequest extends Message<UnmuteActorListRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = "";
+
+  /**
+   * @generated from field: string list_uri = 2;
+   */
+  listUri = "";
+
+  constructor(data?: PartialMessage<UnmuteActorListRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.UnmuteActorListRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "list_uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UnmuteActorListRequest {
+    return new UnmuteActorListRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UnmuteActorListRequest {
+    return new UnmuteActorListRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UnmuteActorListRequest {
+    return new UnmuteActorListRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: UnmuteActorListRequest | PlainMessage<UnmuteActorListRequest> | undefined, b: UnmuteActorListRequest | PlainMessage<UnmuteActorListRequest> | undefined): boolean {
+    return proto3.util.equals(UnmuteActorListRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.UnmuteActorListResponse
+ */
+export class UnmuteActorListResponse extends Message<UnmuteActorListResponse> {
+  constructor(data?: PartialMessage<UnmuteActorListResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.UnmuteActorListResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UnmuteActorListResponse {
+    return new UnmuteActorListResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UnmuteActorListResponse {
+    return new UnmuteActorListResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UnmuteActorListResponse {
+    return new UnmuteActorListResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: UnmuteActorListResponse | PlainMessage<UnmuteActorListResponse> | undefined, b: UnmuteActorListResponse | PlainMessage<UnmuteActorListResponse> | undefined): boolean {
+    return proto3.util.equals(UnmuteActorListResponse, a, b);
   }
 }
 

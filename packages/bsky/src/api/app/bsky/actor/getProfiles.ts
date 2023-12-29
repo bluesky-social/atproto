@@ -12,13 +12,11 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfiles({
     auth: ctx.authOptionalVerifier,
     handler: async ({ auth, params, res }) => {
-      const db = ctx.db.getReplica()
-      const actorService = ctx.services.actor(db)
       const viewer = auth.credentials.did
 
       const [result, repoRev] = await Promise.all([
         getProfile({ ...params, viewer }, ctx),
-        actorService.getRepoRev(viewer),
+        ctx.hydrator.actor.getRepoRevSafe(viewer),
       ])
 
       setRepoRev(res, repoRev)

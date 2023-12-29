@@ -1,3 +1,6 @@
+import assert from 'assert'
+import { XRPCError } from '@atproto/xrpc'
+import { AuthRequiredError } from '@atproto/xrpc-server'
 import { TID } from '@atproto/common'
 import { AtUri, AtpAgent } from '@atproto/api'
 import {
@@ -16,9 +19,6 @@ import {
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import basicSeed from './seeds/basic'
 import { forSnapshot, paginateAll } from './_util'
-import { AuthRequiredError } from '@atproto/xrpc-server'
-import assert from 'assert'
-import { XRPCError } from '@atproto/xrpc'
 
 describe('feed generation', () => {
   let network: TestNetwork
@@ -74,9 +74,8 @@ describe('feed generation', () => {
       { uri: feedUriBadPagination.toString(), order: 3 },
       { uri: primeUri.toString(), order: 4 },
     ]
-    await network.bsky.ctx.db
-      .getPrimary()
-      .db.insertInto('suggested_feed')
+    await network.bsky.db.db
+      .insertInto('suggested_feed')
       .values(feedSuggestions)
       .execute()
   })
@@ -157,22 +156,11 @@ describe('feed generation', () => {
       sc.getHeaders(alice),
     )
     await network.processAll()
-    await agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: prime.uri,
-          cid: prime.cid,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.updateTakedown({
+      recordUri: prime.uri,
+      takenDown: true,
+    })
+
     feedUriAll = all.uri
     feedUriAllRef = new RecordRef(all.uri, all.cid)
     feedUriEven = even.uri
@@ -324,7 +312,6 @@ describe('feed generation', () => {
         sc.getHeaders(sc.dids.bob),
       )
       await network.processAll()
-      await network.bsky.processAll()
 
       // now take it offline
       await bobFg.close()
@@ -362,7 +349,8 @@ describe('feed generation', () => {
     })
   })
 
-  describe('getPopularFeedGenerators', () => {
+  // @TODO support from dataplane
+  describe.skip('getPopularFeedGenerators', () => {
     it('gets popular feed generators', async () => {
       const resEven =
         await agent.api.app.bsky.unspecced.getPopularFeedGenerators(

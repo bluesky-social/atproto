@@ -1,18 +1,11 @@
 import * as plc from '@did-plc/lib'
-import { IdResolver } from '@atproto/identity'
+import { DidCache, IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { createServiceJwt } from '@atproto/xrpc-server'
-import { DatabaseCoordinator } from './db'
 import { ServerConfig } from './config'
-import { ImageUriBuilder } from './image/uri'
-import { Services } from './services'
 import * as auth from './auth'
-import DidSqlCache from './did-cache'
-import { BackgroundQueue } from './background'
-import { MountedAlgos } from './feed-gen/types'
-import { LabelCache } from './label-cache'
-import { NotificationServer } from './notifications'
+import { MountedAlgos } from './api/feed-gen/types'
 import { DataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
 import { Views } from './views'
@@ -21,47 +14,19 @@ export class AppContext {
   public moderationPushAgent: AtpAgent | undefined
   constructor(
     private opts: {
-      db: DatabaseCoordinator
-      imgUriBuilder: ImageUriBuilder
       cfg: ServerConfig
-      services: Services
       dataplane: DataPlaneClient
       hydrator: Hydrator
       views: Views
       signingKey: Keypair
       idResolver: IdResolver
-      didCache: DidSqlCache
-      labelCache: LabelCache
-      backgroundQueue: BackgroundQueue
-      searchAgent?: AtpAgent
+      didCache?: DidCache
       algos: MountedAlgos
-      notifServer: NotificationServer
     },
-  ) {
-    if (opts.cfg.moderationPushUrl) {
-      const url = new URL(opts.cfg.moderationPushUrl)
-      this.moderationPushAgent = new AtpAgent({ service: url.origin })
-      this.moderationPushAgent.api.setHeader(
-        'authorization',
-        auth.buildBasicAuth(url.username, url.password),
-      )
-    }
-  }
-
-  get db(): DatabaseCoordinator {
-    return this.opts.db
-  }
-
-  get imgUriBuilder(): ImageUriBuilder {
-    return this.opts.imgUriBuilder
-  }
+  ) {}
 
   get cfg(): ServerConfig {
     return this.opts.cfg
-  }
-
-  get services(): Services {
-    return this.opts.services
   }
 
   get dataplane(): DataPlaneClient {
@@ -88,20 +53,8 @@ export class AppContext {
     return this.opts.idResolver
   }
 
-  get didCache(): DidSqlCache {
+  get didCache(): DidCache | undefined {
     return this.opts.didCache
-  }
-
-  get labelCache(): LabelCache {
-    return this.opts.labelCache
-  }
-
-  get notifServer(): NotificationServer {
-    return this.opts.notifServer
-  }
-
-  get searchAgent(): AtpAgent | undefined {
-    return this.opts.searchAgent
   }
 
   get authVerifier() {
@@ -137,10 +90,6 @@ export class AppContext {
       aud,
       keypair: this.signingKey,
     })
-  }
-
-  get backgroundQueue(): BackgroundQueue {
-    return this.opts.backgroundQueue
   }
 
   get algos(): MountedAlgos {

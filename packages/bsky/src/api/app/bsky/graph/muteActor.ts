@@ -7,21 +7,10 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier,
     handler: async ({ auth, input }) => {
       const { actor } = input.body
-      const requester = auth.credentials.did
-      const db = ctx.db.getPrimary()
-
-      const subjectDid = await ctx.services.actor(db).getActorDid(actor)
-      if (!subjectDid) {
-        throw new InvalidRequestError(`Actor not found: ${actor}`)
-      }
-      if (subjectDid === requester) {
-        throw new InvalidRequestError('Cannot mute oneself')
-      }
-
-      await ctx.services.graph(db).muteActor({
-        subjectDid,
-        mutedByDid: requester,
-      })
+      const viewer = auth.credentials.did
+      const [did] = await ctx.hydrator.actor.getDids([actor])
+      if (!did) throw new InvalidRequestError('Actor not found')
+      await ctx.dataplane.muteActor({ actorDid: viewer, subjectDid: did })
     },
   })
 }

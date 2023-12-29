@@ -1,8 +1,8 @@
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../gen/bsky_connect'
 import { keyBy } from '@atproto/common'
-import { Database } from '../../../db'
 import { getRecords } from './records'
+import { Database } from '../db'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActors(req) {

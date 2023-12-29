@@ -20,7 +20,6 @@ describe('notification views', () => {
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
-    await network.bsky.processAll()
     alice = sc.dids.alice
   })
 
@@ -73,7 +72,6 @@ describe('notification views', () => {
       'indeed',
     )
     await network.processAll()
-    await network.bsky.processAll()
 
     const notifCountAlice =
       await agent.api.app.bsky.notification.getUnreadCount(
@@ -97,7 +95,6 @@ describe('notification views', () => {
     await sc.deletePost(sc.dids.alice, root.ref.uri)
     const second = await sc.reply(sc.dids.carol, root.ref, first.ref, 'second')
     await network.processAll()
-    await network.bsky.processAll()
 
     const notifsAlice = await agent.api.app.bsky.notification.listNotifications(
       {},
@@ -234,22 +231,10 @@ describe('notification views', () => {
     const postRef2 = sc.posts[sc.dids.dan][1].ref // Mention
     await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        agent.api.com.atproto.admin.emitModerationEvent(
-          {
-            event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: postRef.uriStr,
-              cid: postRef.cidStr,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        ),
+        network.bsky.ctx.dataplane.updateTakedown({
+          recordUri: postRef.uriStr,
+          takenDown: true,
+        }),
       ),
     )
 
@@ -270,22 +255,10 @@ describe('notification views', () => {
     // Cleanup
     await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        agent.api.com.atproto.admin.emitModerationEvent(
-          {
-            event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
-            subject: {
-              $type: 'com.atproto.repo.strongRef',
-              uri: postRef.uriStr,
-              cid: postRef.cidStr,
-            },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
-          },
-          {
-            encoding: 'application/json',
-            headers: network.pds.adminAuthHeaders(),
-          },
-        ),
+        network.bsky.ctx.dataplane.updateTakedown({
+          recordUri: postRef.uriStr,
+          takenDown: false,
+        }),
       ),
     )
   })

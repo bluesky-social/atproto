@@ -1,10 +1,10 @@
-import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../gen/bsky_connect'
-import { Database } from '../../../db'
-import { countAll, excluded, notSoftDeletedClause } from '../../../db/util'
 import { sql } from 'kysely'
-import { TimeCidKeyset, paginate } from '../../../db/pagination'
+import { ServiceImpl } from '@connectrpc/connect'
 import { Timestamp } from '@bufbuild/protobuf'
+import { Service } from '../../gen/bsky_connect'
+import { Database } from '../db'
+import { countAll, excluded, notSoftDeletedClause } from '../db/util'
+import { TimeCidKeyset, paginate } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getNotifications(req) {

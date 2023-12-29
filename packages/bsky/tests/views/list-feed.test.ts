@@ -112,21 +112,10 @@ describe('list feed views', () => {
   })
 
   it('blocks posts by actor takedown', async () => {
-    await agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: bob,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.updateTakedown({
+      actorDid: bob,
+      takenDown: true,
+    })
 
     const res = await agent.api.app.bsky.feed.getListFeed({
       list: listRef.uriStr,
@@ -135,41 +124,18 @@ describe('list feed views', () => {
     expect(hasBob).toBe(false)
 
     // Cleanup
-    await agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: bob,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.updateTakedown({
+      actorDid: bob,
+      takenDown: false,
+    })
   })
 
   it('blocks posts by record takedown.', async () => {
     const postRef = sc.replies[bob][0].ref // Post and reply parent
-    await agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: postRef.uriStr,
-          cid: postRef.cidStr,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.updateTakedown({
+      recordUri: postRef.uriStr,
+      takenDown: true,
+    })
 
     const res = await agent.api.app.bsky.feed.getListFeed({
       list: listRef.uriStr,
@@ -180,21 +146,9 @@ describe('list feed views', () => {
     expect(hasPost).toBe(false)
 
     // Cleanup
-    await agent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: postRef.uriStr,
-          cid: postRef.cidStr,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+    await network.bsky.ctx.dataplane.updateTakedown({
+      recordUri: postRef.uriStr,
+      takenDown: false,
+    })
   })
 })

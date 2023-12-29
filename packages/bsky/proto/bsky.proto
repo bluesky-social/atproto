@@ -455,6 +455,22 @@ message GetMutesResponse {
   string cursor = 2;
 }
 
+// mute another user
+message MuteActorRequest {
+  string actor_did = 1;
+  string subject_did = 2;
+}
+
+message MuteActorResponse {}
+
+// unmute another user
+message UnmuteActorRequest {
+  string actor_did = 1;
+  string subject_did = 2;
+}
+
+message UnmuteActorResponse {}
+
 //
 // Mutelists
 //
@@ -494,6 +510,22 @@ message GetMutelistSubscriptionsResponse {
   repeated string list_uris = 1;
   string cursor = 2;
 }
+
+// mute a list
+message MuteActorListRequest {
+  string actor_did = 1;
+  string list_uri = 2;
+}
+
+message MuteActorListResponse {}
+
+// unmute a list
+message UnmuteActorListRequest {
+  string actor_did = 1;
+  string list_uri = 2;
+}
+
+message UnmuteActorListResponse {}
 
 //
 // Blocks
@@ -905,11 +937,15 @@ service Service {
   // Mutes
   rpc GetActorMutesActor(GetActorMutesActorRequest) returns (GetActorMutesActorResponse);
   rpc GetMutes(GetMutesRequest) returns (GetMutesResponse);
+  rpc MuteActor(MuteActorRequest) returns (MuteActorResponse);
+  rpc UnmuteActor(UnmuteActorRequest) returns (UnmuteActorResponse);
 
   // Mutelists
   rpc GetActorMutesActorViaList(GetActorMutesActorViaListRequest) returns (GetActorMutesActorViaListResponse);
   rpc GetMutelistSubscription(GetMutelistSubscriptionRequest) returns (GetMutelistSubscriptionResponse);
   rpc GetMutelistSubscriptions(GetMutelistSubscriptionsRequest) returns (GetMutelistSubscriptionsResponse);
+  rpc MuteActorList(MuteActorListRequest) returns (MuteActorListResponse);
+  rpc UnmuteActorList(UnmuteActorListRequest) returns (UnmuteActorListResponse);
 
   // Blocks
   rpc GetBidirectionalBlock(GetBidirectionalBlockRequest) returns (GetBidirectionalBlockResponse);
