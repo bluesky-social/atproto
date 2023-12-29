@@ -50,6 +50,7 @@ export class TestBsky {
       publicUrl: 'https://bsky.public.url',
       serverDid,
       dataplaneUrl: `http://localhost:${dataplanePort}`,
+      dataplaneHttpVersion: '1.1',
       ...cfg,
       adminPassword: ADMIN_PASSWORD,
       moderatorPassword: MOD_PASSWORD,

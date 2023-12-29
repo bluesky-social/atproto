@@ -71,7 +71,10 @@ export class BskyAppView {
       )
     }
 
-    const dataplane = createDataPlaneClient(config.dataplaneUrl, '1.1')
+    const dataplane = createDataPlaneClient(config.dataplaneUrl, {
+      httpVersion: config.dataplaneHttpVersion,
+      rejectUnauthorized: !config.dataplaneIgnoreBadTls,
+    })
     const hydrator = new Hydrator(dataplane)
     const views = new Views(imgUriBuilder)
 

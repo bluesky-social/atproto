@@ -7,11 +7,13 @@ type HttpVersion = '1.1' | '2'
 
 export const createDataPlaneClient = (
   baseUrl: string,
-  httpVersion: HttpVersion = '2',
+  opts: { httpVersion?: HttpVersion; rejectUnauthorized?: boolean },
 ) => {
+  const { httpVersion = '2', rejectUnauthorized = true } = opts
   const transport = createConnectTransport({
     baseUrl,
     httpVersion,
+    nodeOptions: { rejectUnauthorized },
   })
   return createPromiseClient(Service, transport)
 }
