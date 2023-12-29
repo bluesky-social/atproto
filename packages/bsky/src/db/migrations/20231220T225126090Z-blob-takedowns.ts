@@ -5,7 +5,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createTable('blob_takedown')
     .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('cid', 'varchar', (col) => col.notNull())
-    .addColumn('takedownId', 'varchar', (col) => col.notNull())
+    .addColumn('takedownRef', 'varchar', (col) => col.notNull())
     .addPrimaryKeyConstraint('blob_takedown_pkey', ['did', 'cid'])
     .execute()
 
