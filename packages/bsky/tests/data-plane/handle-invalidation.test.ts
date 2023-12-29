@@ -1,7 +1,7 @@
 import { DAY } from '@atproto/common'
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
-import userSeed from './seeds/users'
+import userSeed from '../seeds/users'
 
 describe('handle invalidation', () => {
   let network: TestNetwork

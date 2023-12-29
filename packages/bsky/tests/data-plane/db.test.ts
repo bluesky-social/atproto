@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { wait } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
-import { Database, PrimaryDatabase } from '../src'
+import { Database, PrimaryDatabase } from '../../src'
 
 describe('db', () => {
   let network: TestNetwork

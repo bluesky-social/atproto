@@ -1,8 +1,8 @@
 import { wait } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
 import { TestNetwork, SeedClient } from '@atproto/dev-env'
-import userSeed from './seeds/users'
-import { DidSqlCache } from '../src'
+import userSeed from '../seeds/users'
+import { DidSqlCache } from '../../src'
 
 describe('did cache', () => {
   let network: TestNetwork

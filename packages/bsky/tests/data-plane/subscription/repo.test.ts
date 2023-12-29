@@ -4,11 +4,11 @@ import { CommitData } from '@atproto/repo'
 import { PreparedWrite } from '@atproto/pds/src/repo'
 import * as sequencer from '@atproto/pds/src/sequencer'
 import { cborDecode, cborEncode } from '@atproto/common'
-import { DatabaseSchemaType } from '../../src/data-plane/server/db/database-schema'
-import { ids } from '../../src/lexicon/lexicons'
-import { forSnapshot } from '../_util'
-import { Database } from '../../src'
-import basicSeed from '../seeds/basic'
+import { DatabaseSchemaType } from '../../../src/data-plane/server/db/database-schema'
+import { ids } from '../../../src/lexicon/lexicons'
+import { forSnapshot } from '../../_util'
+import { Database } from '../../../src'
+import basicSeed from '../../seeds/basic'
 
 describe('sync', () => {
   let network: TestNetwork
