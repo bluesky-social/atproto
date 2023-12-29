@@ -29,13 +29,14 @@ import { ModerationEvent } from '../db/schema/moderation_event'
 import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination'
 import AtpAgent from '@atproto/api'
 import { Label } from '../lexicon/types/com/atproto/label/defs'
-import { sql } from 'kysely'
+import { Insertable, sql } from 'kysely'
 import {
   ModSubject,
   RecordSubject,
   RepoSubject,
   subjectFromStatusRow,
 } from './subject'
+import { BlobPushEvent } from '../db/schema/blob_push_event'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -330,18 +331,26 @@ export class ModerationService {
     return result
   }
 
-  async takedownRepo(subject: RepoSubject, takedownId: number) {
+  async takedownRepo(
+    subject: RepoSubject,
+    takedownId: number,
+    isSuspend = false,
+  ) {
+    const takedownRef = `BSKY-${
+      isSuspend ? 'SUSPEND' : 'TAKEDOWN'
+    }-${takedownId}`
+    const values = TAKEDOWNS.map((eventType) => ({
+      eventType,
+      subjectDid: subject.did,
+      takedownRef,
+    }))
     await this.db.db
       .insertInto('repo_push_event')
-      .values({
-        eventType: 'takedown',
-        subjectDid: subject.did,
-        takedownId,
-      })
+      .values(values)
       .onConflict((oc) =>
         oc
           .columns(['subjectDid', 'eventType'])
-          .doUpdateSet({ confirmedAt: null, takedownId }),
+          .doUpdateSet({ confirmedAt: null, takedownRef }),
       )
       .execute()
   }
@@ -349,46 +358,52 @@ export class ModerationService {
   async reverseTakedownRepo(subject: RepoSubject) {
     await this.db.db
       .updateTable('repo_push_event')
-      .where('eventType', '=', 'takedown')
+      .where('eventType', 'in', TAKEDOWNS)
       .where('subjectDid', '=', subject.did)
-      .set({ takedownId: null, confirmedAt: null })
+      .set({ takedownRef: null, confirmedAt: null })
       .execute()
   }
 
   async takedownRecord(subject: RecordSubject, takedownId: number) {
     this.db.assertTransaction()
+    const takedownRef = `BSKY-TAKEDOWN-${takedownId}`
+    const values = TAKEDOWNS.map((eventType) => ({
+      eventType,
+      subjectDid: subject.did,
+      subjectUri: subject.uri,
+      subjectCid: subject.cid,
+      takedownRef,
+    }))
     await this.db.db
       .insertInto('record_push_event')
-      .values({
-        eventType: 'takedown',
-        subjectDid: subject.did,
-        subjectUri: subject.uri,
-        subjectCid: subject.cid,
-        takedownId,
-      })
+      .values(values)
       .onConflict((oc) =>
         oc
           .columns(['subjectUri', 'eventType'])
-          .doUpdateSet({ confirmedAt: null, takedownId }),
+          .doUpdateSet({ confirmedAt: null, takedownRef }),
       )
       .execute()
 
     const blobCids = subject.blobCids
     if (blobCids && blobCids.length > 0) {
-      await this.db.db
-        .insertInto('blob_push_event')
-        .values(
-          blobCids.map((cid) => ({
-            eventType: 'takedown' as const,
+      const blobValues: Insertable<BlobPushEvent>[] = []
+      for (const eventType of TAKEDOWNS) {
+        for (const cid of blobCids) {
+          blobValues.push({
+            eventType,
             subjectDid: subject.did,
             subjectBlobCid: cid.toString(),
-            takedownId,
-          })),
-        )
+            takedownRef,
+          })
+        }
+      }
+      await this.db.db
+        .insertInto('blob_push_event')
+        .values(blobValues)
         .onConflict((oc) =>
           oc
             .columns(['subjectDid', 'subjectBlobCid', 'eventType'])
-            .doUpdateSet({ confirmedAt: null, takedownId }),
+            .doUpdateSet({ confirmedAt: null, takedownRef }),
         )
         .execute()
     }
@@ -398,23 +413,23 @@ export class ModerationService {
     this.db.assertTransaction()
     await this.db.db
       .updateTable('record_push_event')
-      .where('eventType', '=', 'takedown')
+      .where('eventType', 'in', TAKEDOWNS)
       .where('subjectDid', '=', subject.did)
       .where('subjectUri', '=', subject.uri)
-      .set({ takedownId: null, confirmedAt: null })
+      .set({ takedownRef: null, confirmedAt: null })
       .execute()
     const blobCids = subject.blobCids
     if (blobCids && blobCids.length > 0) {
       await this.db.db
         .updateTable('blob_push_event')
-        .where('eventType', '=', 'takedown')
+        .where('eventType', 'in', TAKEDOWNS)
         .where('subjectDid', '=', subject.did)
         .where(
           'subjectBlobCid',
           'in',
           blobCids.map((c) => c.toString()),
         )
-        .set({ takedownId: null, confirmedAt: null })
+        .set({ takedownRef: null, confirmedAt: null })
         .execute()
     }
   }
@@ -624,6 +639,8 @@ export class ModerationService {
       .execute()
   }
 }
+
+const TAKEDOWNS = ['pds_takedown' as const, 'appview_takedown' as const]
 
 export type TakedownSubjects = {
   did: string

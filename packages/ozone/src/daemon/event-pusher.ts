@@ -8,6 +8,7 @@ import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { dbLogger } from '../logger'
 import { InputSchema } from '../lexicon/types/com/atproto/admin/updateSubjectStatus'
 import { Selectable } from 'kysely'
+import assert from 'assert'
 
 type EventSubject = InputSchema['subject']
 
@@ -174,56 +175,46 @@ export class EventPusher {
     })
   }
 
-  private async updateSubjectOnAll(
+  private async updateSubjectOnService(
+    service: Service,
     subject: EventSubject,
-    takedownId: number | null,
+    takedownRef: string | null,
   ): Promise<boolean> {
+    const auth = await this.createAuthHeaders(service.did)
     try {
-      await Promise.all([
-        this.appview
-          ? this.updateSubjectOnService(this.appview, subject, takedownId)
-          : Promise.resolve(),
-        this.pds
-          ? this.updateSubjectOnService(this.pds, subject, takedownId)
-          : Promise.resolve(),
-      ])
+      retryHttp(() =>
+        service.agent.com.atproto.admin.updateSubjectStatus(
+          {
+            subject,
+            takedown: {
+              applied: !!takedownRef,
+              ref: takedownRef ?? undefined,
+            },
+          },
+          {
+            ...auth,
+            encoding: 'application/json',
+          },
+        ),
+      )
       return true
     } catch (err) {
-      dbLogger.error({ err, subject, takedownId }, 'failed to push out event')
+      dbLogger.error({ err, subject, takedownRef }, 'failed to push out event')
       return false
     }
   }
 
-  private async updateSubjectOnService(
-    service: Service,
-    subject: EventSubject,
-    takedownId: number | null,
-  ) {
-    const auth = await this.createAuthHeaders(service.did)
-    return retryHttp(() =>
-      service.agent.com.atproto.admin.updateSubjectStatus(
-        {
-          subject,
-          takedown: {
-            applied: !!takedownId,
-            ref: takedownId?.toString(),
-          },
-        },
-        {
-          ...auth,
-          encoding: 'application/json',
-        },
-      ),
-    )
-  }
-
   async attemptRepoEvent(txn: Database, evt: Selectable<RepoPushEvent>) {
-    const succeeded = await this.updateSubjectOnAll(
-      {
-        $type: 'com.atproto.admin.defs#repoRef',
-        did: evt.subjectDid,
-      },
-      evt.takedownId,
+    const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
+    assert(service)
+    const subject = {
+      $type: 'com.atproto.admin.defs#repoRef',
+      did: evt.subjectDid,
+    }
+    const succeeded = await this.updateSubjectOnService(
+      service,
+      subject,
+      evt.takedownRef,
     )
     await txn.db
       .updateTable('repo_push_event')
@@ -241,13 +232,17 @@ export class EventPusher {
   }
 
   async attemptRecordEvent(txn: Database, evt: Selectable<RecordPushEvent>) {
-    const succeeded = await this.updateSubjectOnAll(
-      {
-        $type: 'com.atproto.repo.strongRef',
-        uri: evt.subjectUri,
-        cid: evt.subjectCid,
-      },
-      evt.takedownId,
+    const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
+    assert(service)
+    const subject = {
+      $type: 'com.atproto.repo.strongRef',
+      uri: evt.subjectUri,
+      cid: evt.subjectCid,
+    }
+    const succeeded = await this.updateSubjectOnService(
+      service,
+      subject,
+      evt.takedownRef,
     )
     await txn.db
       .updateTable('record_push_event')
@@ -265,13 +260,17 @@ export class EventPusher {
   }
 
   async attemptBlobEvent(txn: Database, evt: Selectable<BlobPushEvent>) {
-    const succeeded = await this.updateSubjectOnAll(
-      {
-        $type: 'com.atproto.admin.defs#repoBlobRef',
-        did: evt.subjectDid,
-        cid: evt.subjectBlobCid,
-      },
-      evt.takedownId,
+    const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
+    assert(service)
+    const subject = {
+      $type: 'com.atproto.admin.defs#repoBlobRef',
+      did: evt.subjectDid,
+      cid: evt.subjectBlobCid,
+    }
+    const succeeded = await this.updateSubjectOnService(
+      service,
+      subject,
+      evt.takedownRef,
     )
     await txn.db
       .updateTable('blob_push_event')
