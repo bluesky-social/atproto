@@ -7,7 +7,7 @@ export interface ServerConfigValues {
   publicUrl?: string
   serverDid: string
   feedGenDid?: string
-  dataplaneUrl: string
+  dataplaneUrls: string[]
   dataplaneHttpVersion?: '1.1' | '2'
   dataplaneIgnoreBadTls?: boolean
   didPlcUrl: string
@@ -37,14 +37,17 @@ export class ServerConfig {
       : []
     const imgUriEndpoint = process.env.BSKY_IMG_URI_ENDPOINT
     const blobCacheLocation = process.env.BSKY_BLOB_CACHE_LOC
-    const dataplaneUrl = process.env.BSKY_DATAPLANE_URL
+    let dataplaneUrls = overrides?.dataplaneUrls
+    dataplaneUrls ??= process.env.BSKY_DATAPLANE_URLS
+      ? process.env.BSKY_DATAPLANE_URLS.split(',')
+      : []
     const dataplaneHttpVersion = process.env.BSKY_DATAPLANE_HTTP_VERSION || '2'
     const dataplaneIgnoreBadTls =
       process.env.BSKY_DATAPLANE_IGNORE_BAD_TLS === 'true'
     const adminPassword = process.env.BSKY_ADMIN_PASSWORD || 'admin'
     const moderatorPassword = process.env.BSKY_MODERATOR_PASSWORD || undefined
     const triagePassword = process.env.BSKY_TRIAGE_PASSWORD || undefined
-    assert(dataplaneUrl)
+    assert(dataplaneUrls.length)
     assert(dataplaneHttpVersion === '1.1' || dataplaneHttpVersion === '2')
     return new ServerConfig({
       version,
@@ -53,7 +56,7 @@ export class ServerConfig {
       publicUrl,
       serverDid,
       feedGenDid,
-      dataplaneUrl,
+      dataplaneUrls,
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
       didPlcUrl,
@@ -104,8 +107,8 @@ export class ServerConfig {
     return this.cfg.feedGenDid
   }
 
-  get dataplaneUrl() {
-    return this.cfg.dataplaneUrl
+  get dataplaneUrls() {
+    return this.cfg.dataplaneUrls
   }
 
   get dataplaneHttpVersion() {

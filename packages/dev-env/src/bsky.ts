@@ -49,7 +49,7 @@ export class TestBsky {
       didPlcUrl: cfg.plcUrl,
       publicUrl: 'https://bsky.public.url',
       serverDid,
-      dataplaneUrl: `http://localhost:${dataplanePort}`,
+      dataplaneUrls: [`http://localhost:${dataplanePort}`],
       dataplaneHttpVersion: '1.1',
       ...cfg,
       adminPassword: ADMIN_PASSWORD,
