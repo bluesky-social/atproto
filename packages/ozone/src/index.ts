@@ -5,24 +5,16 @@ import events from 'events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
 import compression from 'compression'
-import { IdResolver } from '@atproto/identity'
 import API, { health, wellKnown } from './api'
 import * as error from './error'
 import { dbLogger, loggerMiddleware } from './logger'
-import { ServerConfig } from './config'
+import { OzoneConfig, OzoneSecrets } from './config'
 import { createServer } from './lexicon'
-import { ModerationService } from './mod-service'
-import AppContext from './context'
-import { BackgroundQueue } from './background'
-import { AtpAgent } from '@atproto/api'
-import { Keypair } from '@atproto/crypto'
-import Database from './db'
-import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import AppContext, { AppContextOptions } from './context'
 
-export type { ServerConfigValues } from './config'
-export { ServerConfig } from './config'
+export * from './config'
 export { Database } from './db'
-export { OzoneDaemon, DaemonConfig, EventPusher, EventReverser } from './daemon'
+export { OzoneDaemon, EventPusher, EventReverser } from './daemon'
 export { AppContext } from './context'
 
 export class OzoneService {
@@ -37,52 +29,21 @@ export class OzoneService {
     this.app = opts.app
   }
 
-  static create(opts: {
-    db: Database
-    config: ServerConfig
-    signingKey: Keypair
-  }): OzoneService {
-    const { db, config, signingKey } = opts
+  static async create(
+    cfg: OzoneConfig,
+    secrets: OzoneSecrets,
+    overrides?: Partial<AppContextOptions>,
+  ): Promise<OzoneService> {
     const app = express()
     app.set('trust proxy', true)
     app.use(cors())
     app.use(loggerMiddleware)
     app.use(compression())
 
-    const idResolver = new IdResolver({
-      plcUrl: config.didPlcUrl,
-    })
-
-    const backgroundQueue = new BackgroundQueue(db)
-    const appviewAgent = new AtpAgent({ service: config.appviewUrl })
-    const pdsAgent = config.pdsUrl
-      ? new AtpAgent({ service: config.pdsUrl })
-      : undefined
-
-    const appviewAuth = async () => {
-      if (!config.appviewDid) return undefined
-      return createServiceAuthHeaders({
-        iss: config.serverDid,
-        aud: config.appviewDid,
-        keypair: signingKey,
-      })
-    }
-
-    const modService = ModerationService.creator(appviewAgent, appviewAuth)
-
-    const ctx = new AppContext({
-      db,
-      cfg: config,
-      modService,
-      appviewAgent,
-      pdsAgent,
-      signingKey,
-      idResolver,
-      backgroundQueue,
-    })
+    const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
 
     let server = createServer({
-      validateResponse: config.debugMode,
+      validateResponse: false,
       payload: {
         jsonLimit: 100 * 1024, // 100kb
         textLimit: 100 * 1024, // 100kb
@@ -119,13 +80,13 @@ export class OzoneService {
         'background queue stats',
       )
     }, 10000)
-    const server = this.app.listen(this.ctx.cfg.port)
+    const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
     server.keepAliveTimeout = 90000
     this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
-    this.ctx.cfg.assignPort(port)
+    this.ctx.assignPort(port)
     return server
   }
 

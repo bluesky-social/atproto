@@ -1,25 +1,69 @@
-import { DaemonConfig } from './config'
+import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import AtpAgent from '@atproto/api'
+import { OzoneConfig, OzoneSecrets } from '../config'
 import { Database } from '../db'
 import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
-import { ModerationServiceCreator } from '../mod-service'
+import { ModerationService, ModerationServiceCreator } from '../mod-service'
+
+export type DaemonContextOptions = {
+  db: Database
+  cfg: OzoneConfig
+  modService: ModerationServiceCreator
+  signingKey: Keypair
+  eventPusher: EventPusher
+  eventReverser: EventReverser
+}
 
 export class DaemonContext {
-  constructor(
-    private opts: {
-      db: Database
-      cfg: DaemonConfig
-      modService: ModerationServiceCreator
-      eventPusher: EventPusher
-      eventReverser: EventReverser
-    },
-  ) {}
+  constructor(private opts: DaemonContextOptions) {}
+
+  static async fromConfig(
+    cfg: OzoneConfig,
+    secrets: OzoneSecrets,
+    overrides?: Partial<DaemonContextOptions>,
+  ): Promise<DaemonContext> {
+    const db = new Database({
+      url: cfg.db.postgresUrl,
+      schema: cfg.db.postgresSchema,
+    })
+    const signingKey = await Secp256k1Keypair.import(secrets.signingKeyHex)
+
+    const appviewAgent = new AtpAgent({ service: cfg.appview.url })
+    const createAuthHeaders = (aud: string) =>
+      createServiceAuthHeaders({
+        iss: cfg.service.did,
+        aud,
+        keypair: signingKey,
+      })
+
+    const appviewAuth = async () =>
+      cfg.appview.did ? createAuthHeaders(cfg.appview.did) : undefined
+
+    const modService = ModerationService.creator(appviewAgent, appviewAuth)
+    const eventPusher = new EventPusher(db, createAuthHeaders, {
+      appview: cfg.appview,
+      pds: cfg.pds ?? undefined,
+    })
+    const eventReverser = new EventReverser(db, modService)
+
+    return new DaemonContext({
+      db,
+      cfg,
+      modService,
+      signingKey,
+      eventPusher,
+      eventReverser,
+      ...(overrides ?? {}),
+    })
+  }
 
   get db(): Database {
     return this.opts.db
   }
 
-  get cfg(): DaemonConfig {
+  get cfg(): OzoneConfig {
     return this.opts.cfg
   }
 

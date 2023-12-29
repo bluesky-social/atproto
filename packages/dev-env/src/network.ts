@@ -42,7 +42,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     const pdsPort = params.pds?.port ?? (await getPort())
     const ozonePort = params.ozone?.port ?? (await getPort())
 
-    const ozoneKey = await Secp256k1Keypair.create()
+    const ozoneKey = await Secp256k1Keypair.create({ exportable: true })
     const ozoneDid = await new PlcClient(plc.url).createDid({
       signingKey: ozoneKey.did(),
       rotationKeys: [ozoneKey.did()],

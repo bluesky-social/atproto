@@ -2,7 +2,7 @@ import * as pds from '@atproto/pds'
 import * as bsky from '@atproto/bsky'
 import * as ozone from '@atproto/ozone'
 import { ImageInvalidator } from '@atproto/bsky'
-import { Keypair } from '@atproto/crypto'
+import { ExportableKeypair } from '@atproto/crypto'
 
 export type PlcConfig = {
   port?: number
@@ -28,12 +28,12 @@ export type BskyConfig = Partial<bsky.ServerConfig> & {
   ingester?: Partial<bsky.IngesterConfig>
 }
 
-export type OzoneConfig = Partial<ozone.ServerConfig> & {
+export type OzoneConfig = Partial<ozone.OzoneEnvironment> & {
   plcUrl: string
   appviewUrl: string
   dbPostgresUrl: string
   migration?: string
-  signingKey?: Keypair
+  signingKey?: ExportableKeypair
 }
 
 export type TestServerParams = {

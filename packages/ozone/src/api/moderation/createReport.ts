@@ -9,7 +9,9 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authOptionalAccessOrRoleVerifier,
     handler: async ({ input, auth }) => {
       const requester =
-        'did' in auth.credentials ? auth.credentials.did : ctx.cfg.labelerDid
+        'did' in auth.credentials
+          ? auth.credentials.did
+          : ctx.cfg.service.labelerDid
       const { reasonType, reason } = input.body
       const subject = subjectFromInput(input.body.subject)
       const db = ctx.db
@@ -20,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
           reasonType: getReasonType(reasonType),
           reason,
           subject,
-          reportedBy: requester || ctx.cfg.serverDid,
+          reportedBy: requester || ctx.cfg.service.did,
         })
       })
 

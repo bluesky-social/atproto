@@ -1,4 +1,4 @@
-import { parseIntWithFallback } from '@atproto/common'
+import { parseIntWithFallback } from '@atproto/common-web'
 
 export const envInt = (name: string): number | undefined => {
   const str = process.env[name]

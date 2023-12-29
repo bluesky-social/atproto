@@ -15,11 +15,13 @@ export class TestOzone {
     public daemon: ozone.OzoneDaemon,
   ) {}
 
-  static async create(cfg: OzoneConfig): Promise<TestOzone> {
-    const serviceKeypair = cfg.signingKey ?? (await Secp256k1Keypair.create())
-    let serverDid = cfg.serverDid
+  static async create(config: OzoneConfig): Promise<TestOzone> {
+    const serviceKeypair =
+      config.signingKey ?? (await Secp256k1Keypair.create({ exportable: true }))
+    const signingKeyHex = ui8.toString(await serviceKeypair.export(), 'hex')
+    let serverDid = config.serverDid
     if (!serverDid) {
-      const plcClient = new PlcClient(cfg.plcUrl)
+      const plcClient = new PlcClient(config.plcUrl)
       serverDid = await plcClient.createDid({
         signingKey: serviceKeypair.did(),
         rotationKeys: [serviceKeypair.did()],
@@ -29,67 +31,42 @@ export class TestOzone {
       })
     }
 
-    const port = cfg.port || (await getPort())
+    const port = config.port || (await getPort())
     const url = `http://localhost:${port}`
-    const config = new ozone.ServerConfig({
+    const env: ozone.OzoneEnvironment = {
       version: '0.0.0',
       port,
-      didPlcUrl: cfg.plcUrl,
-      publicUrl: 'https://bsky.public.url',
+      didPlcUrl: config.plcUrl,
+      publicUrl: 'https://ozone.public.url',
       serverDid,
-      ...cfg,
+      signingKeyHex,
+      ...config,
       adminPassword: ADMIN_PASSWORD,
       moderatorPassword: MOD_PASSWORD,
       triagePassword: TRIAGE_PASSWORD,
       labelerDid: 'did:example:labeler',
-    })
+    }
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
     const migrationDb = new ozone.Database({
-      schema: cfg.dbPostgresSchema,
-      url: cfg.dbPostgresUrl,
+      schema: config.dbPostgresSchema,
+      url: config.dbPostgresUrl,
     })
-    if (cfg.migration) {
-      await migrationDb.migrateToOrThrow(cfg.migration)
+    if (config.migration) {
+      await migrationDb.migrateToOrThrow(config.migration)
     } else {
       await migrationDb.migrateToLatestOrThrow()
     }
     await migrationDb.close()
 
-    const db = new ozone.Database({
-      schema: cfg.dbPostgresSchema,
-      url: cfg.dbPostgresUrl,
-      poolSize: 10,
-    })
+    const cfg = ozone.envToCfg(env)
+    const secrets = ozone.envToSecrets(env)
 
     // api server
-    const server = ozone.OzoneService.create({
-      db,
-      config,
-      signingKey: serviceKeypair,
-    })
+    const server = await ozone.OzoneService.create(cfg, secrets)
     await server.start()
 
-    const daemonDb = new ozone.Database({
-      schema: cfg.dbPostgresSchema,
-      url: cfg.dbPostgresUrl,
-      poolSize: 10,
-    })
-    const daemonConfig = new ozone.DaemonConfig({
-      version: config.version,
-      dbPostgresUrl: config.dbPostgresUrl,
-      dbPostgresSchema: config.dbPostgresSchema,
-      serverDid: config.serverDid,
-      appviewUrl: config.appviewUrl,
-      appviewDid: config.appviewDid,
-      pdsUrl: config.pdsUrl,
-      pdsDid: config.pdsDid,
-    })
-    const daemon = ozone.OzoneDaemon.create({
-      db: daemonDb,
-      signingKey: serviceKeypair,
-      cfg: daemonConfig,
-    })
+    const daemon = await ozone.OzoneDaemon.create(cfg, secrets)
     await daemon.start()
     // don't do event reversal in dev-env
     await daemon.ctx.eventReverser.destroy()
@@ -108,10 +85,10 @@ export class TestOzone {
   adminAuth(role: 'admin' | 'moderator' | 'triage' = 'admin'): string {
     const password =
       role === 'triage'
-        ? this.ctx.cfg.triagePassword
+        ? TRIAGE_PASSWORD
         : role === 'moderator'
-        ? this.ctx.cfg.moderatorPassword
-        : this.ctx.cfg.adminPassword
+        ? MOD_PASSWORD
+        : ADMIN_PASSWORD
     return (
       'Basic ' +
       ui8.toString(ui8.fromString(`admin:${password}`, 'utf8'), 'base64pad')

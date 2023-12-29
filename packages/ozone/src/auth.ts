@@ -2,7 +2,7 @@ import express from 'express'
 import * as uint8arrays from 'uint8arrays'
 import { AuthRequiredError, verifyJwt } from '@atproto/xrpc-server'
 import { IdResolver } from '@atproto/identity'
-import { ServerConfig } from './config'
+import { OzoneSecrets } from './config'
 
 const BASIC = 'Basic '
 const BEARER = 'Bearer '
@@ -47,10 +47,11 @@ export const authOptionalVerifier = (
 
 export const authOptionalAccessOrRoleVerifier = (
   idResolver: IdResolver,
-  cfg: ServerConfig,
+  secrets: OzoneSecrets,
+  serverDid: string,
 ) => {
-  const verifyAccess = authVerifier(idResolver, { aud: cfg.serverDid })
-  const verifyRole = roleVerifier(cfg)
+  const verifyAccess = authVerifier(idResolver, { aud: serverDid })
+  const verifyRole = roleVerifier(secrets)
   return async (ctx: { req: express.Request; res: express.Response }) => {
     const defaultUnAuthorizedCredentials = {
       credentials: { did: null, type: 'unauthed' as const },
@@ -82,25 +83,28 @@ export const authOptionalAccessOrRoleVerifier = (
 }
 
 export const roleVerifier =
-  (cfg: ServerConfig) =>
+  (secrets: OzoneSecrets) =>
   async (reqCtx: { req: express.Request; res: express.Response }) => {
-    const credentials = getRoleCredentials(cfg, reqCtx.req)
+    const credentials = getRoleCredentials(secrets, reqCtx.req)
     if (!credentials.valid) {
       throw new AuthRequiredError()
     }
     return { credentials }
   }
 
-export const getRoleCredentials = (cfg: ServerConfig, req: express.Request) => {
+export const getRoleCredentials = (
+  secrets: OzoneSecrets,
+  req: express.Request,
+) => {
   const parsed = parseBasicAuth(req.headers.authorization || '')
   const { username, password } = parsed ?? {}
-  if (username === 'admin' && password === cfg.triagePassword) {
+  if (username === 'admin' && password === secrets.triagePassword) {
     return { valid: true, admin: false, moderator: false, triage: true }
   }
-  if (username === 'admin' && password === cfg.moderatorPassword) {
+  if (username === 'admin' && password === secrets.moderatorPassword) {
     return { valid: true, admin: false, moderator: true, triage: true }
   }
-  if (username === 'admin' && password === cfg.adminPassword) {
+  if (username === 'admin' && password === secrets.adminPassword) {
     return { valid: true, admin: true, moderator: true, triage: true }
   }
   return { valid: false, admin: false, moderator: false, triage: false }

@@ -91,7 +91,7 @@ export default function (server: Server, ctx: AppContext) {
 
         if (isLabelEvent) {
           await moderationTxn.formatAndCreateLabels(
-            ctx.cfg.labelerDid,
+            ctx.cfg.service.labelerDid,
             result.subjectUri ?? result.subjectDid,
             result.subjectCid,
             {

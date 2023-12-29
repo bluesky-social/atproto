@@ -1,33 +1,89 @@
 import * as plc from '@did-plc/lib'
 import { IdResolver } from '@atproto/identity'
 import { AtpAgent } from '@atproto/api'
-import { Keypair } from '@atproto/crypto'
+import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { Database } from './db'
-import { ServerConfig } from './config'
-import { ModerationServiceCreator } from './mod-service'
+import { OzoneConfig, OzoneSecrets } from './config'
+import { ModerationService, ModerationServiceCreator } from './mod-service'
 import * as auth from './auth'
 import { BackgroundQueue } from './background'
+import assert from 'assert'
+
+export type AppContextOptions = {
+  db: Database
+  cfg: OzoneConfig
+  modService: ModerationServiceCreator
+  appviewAgent: AtpAgent
+  pdsAgent: AtpAgent | undefined
+  signingKey: Keypair
+  idResolver: IdResolver
+  backgroundQueue: BackgroundQueue
+}
 
 export class AppContext {
-  constructor(
-    private opts: {
-      db: Database
-      cfg: ServerConfig
-      modService: ModerationServiceCreator
-      appviewAgent: AtpAgent
-      pdsAgent: AtpAgent | undefined
-      signingKey: Keypair
-      idResolver: IdResolver
-      backgroundQueue: BackgroundQueue
-    },
-  ) {}
+  constructor(private opts: AppContextOptions, private secrets: OzoneSecrets) {}
+
+  static async fromConfig(
+    cfg: OzoneConfig,
+    secrets: OzoneSecrets,
+    overrides?: Partial<AppContextOptions>,
+  ): Promise<AppContext> {
+    const db = new Database({
+      url: cfg.db.postgresUrl,
+      schema: cfg.db.postgresSchema,
+    })
+    const signingKey = await Secp256k1Keypair.import(secrets.signingKeyHex)
+    const appviewAgent = new AtpAgent({ service: cfg.appview.url })
+    const pdsAgent = cfg.pds
+      ? new AtpAgent({ service: cfg.pds.url })
+      : undefined
+
+    const appviewAuth = async () => {
+      if (!cfg.appview.did) return undefined
+      return createServiceAuthHeaders({
+        iss: cfg.service.did,
+        aud: cfg.appview.did,
+        keypair: signingKey,
+      })
+    }
+
+    const modService = ModerationService.creator(appviewAgent, appviewAuth)
+
+    const idResolver = new IdResolver({
+      plcUrl: cfg.identity.plcUrl,
+    })
+
+    const backgroundQueue = new BackgroundQueue(db)
+    return new AppContext(
+      {
+        db,
+        cfg,
+        modService,
+        appviewAgent,
+        pdsAgent,
+        signingKey,
+        idResolver,
+        backgroundQueue,
+        ...(overrides ?? {}),
+      },
+      secrets,
+    )
+  }
+
+  assignPort(port: number) {
+    assert(
+      !this.cfg.service.port || this.cfg.service.port === port,
+      'Conflicting port in config',
+    )
+    this.opts.cfg.service.port = port
+  }
 
   get db(): Database {
     return this.opts.db
   }
 
-  get cfg(): ServerConfig {
+  get cfg(): OzoneConfig {
     return this.opts.cfg
   }
 
@@ -48,7 +104,7 @@ export class AppContext {
   }
 
   get plcClient(): plc.Client {
-    return new plc.Client(this.cfg.didPlcUrl)
+    return new plc.Client(this.cfg.identity.plcUrl)
   }
 
   get idResolver(): IdResolver {
@@ -60,7 +116,7 @@ export class AppContext {
   }
 
   get authVerifier() {
-    return auth.authVerifier(this.idResolver, { aud: this.cfg.serverDid })
+    return auth.authVerifier(this.idResolver, { aud: this.cfg.service.did })
   }
 
   get authVerifierAnyAudience() {
@@ -73,20 +129,24 @@ export class AppContext {
 
   get authOptionalVerifier() {
     return auth.authOptionalVerifier(this.idResolver, {
-      aud: this.cfg.serverDid,
+      aud: this.cfg.service.did,
     })
   }
 
   get authOptionalAccessOrRoleVerifier() {
-    return auth.authOptionalAccessOrRoleVerifier(this.idResolver, this.cfg)
+    return auth.authOptionalAccessOrRoleVerifier(
+      this.idResolver,
+      this.secrets,
+      this.cfg.service.did,
+    )
   }
 
   get roleVerifier() {
-    return auth.roleVerifier(this.cfg)
+    return auth.roleVerifier(this.secrets)
   }
 
   async serviceAuthHeaders(aud: string) {
-    const iss = this.cfg.serverDid
+    const iss = this.cfg.service.did
     return createServiceAuthHeaders({
       iss,
       aud,
@@ -95,17 +155,14 @@ export class AppContext {
   }
 
   async pdsAuth() {
-    if (!this.cfg.pdsDid) {
+    if (!this.cfg.pds) {
       return undefined
     }
-    return this.serviceAuthHeaders(this.cfg.pdsDid)
+    return this.serviceAuthHeaders(this.cfg.pds.did)
   }
 
   async appviewAuth() {
-    if (!this.cfg.appviewDid) {
-      return undefined
-    }
-    return this.serviceAuthHeaders(this.cfg.appviewDid)
+    return this.serviceAuthHeaders(this.cfg.appview.did)
   }
 }
 

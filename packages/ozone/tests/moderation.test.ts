@@ -65,7 +65,7 @@ describe('moderation', () => {
       {
         headers: await network.serviceHeaders(
           author,
-          network.ozone.ctx.cfg.serverDid,
+          network.ozone.ctx.cfg.service.did,
         ),
         encoding: 'application/json',
       },
@@ -445,7 +445,7 @@ describe('moderation', () => {
       }
       const modService = ctx.modService(ctx.db)
       await modService.formatAndCreateLabels(
-        ctx.cfg.labelerDid,
+        ctx.cfg.service.labelerDid,
         post.uriStr,
         post.cidStr,
         { create: ['kittens'] },
@@ -465,7 +465,7 @@ describe('moderation', () => {
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['kittens'])
       // Cleanup
       await modService.formatAndCreateLabels(
-        ctx.cfg.labelerDid,
+        ctx.cfg.service.labelerDid,
         post.uriStr,
         post.cidStr,
         { negate: ['kittens'] },
@@ -498,7 +498,7 @@ describe('moderation', () => {
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['bears'])
       // Cleanup
       await modService.formatAndCreateLabels(
-        ctx.cfg.labelerDid,
+        ctx.cfg.service.labelerDid,
         post.uriStr,
         post.cidStr,
         { negate: ['bears'] },
@@ -560,7 +560,7 @@ describe('moderation', () => {
       const { ctx } = ozone
       const modService = ctx.modService(ctx.db)
       await modService.formatAndCreateLabels(
-        ctx.cfg.labelerDid,
+        ctx.cfg.service.labelerDid,
         sc.dids.bob,
         null,
         { create: ['kittens'] },

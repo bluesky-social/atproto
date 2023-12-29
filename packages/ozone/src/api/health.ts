@@ -6,7 +6,7 @@ export const createRouter = (ctx: AppContext): express.Router => {
   const router = express.Router()
 
   router.get('/xrpc/_health', async function (req, res) {
-    const { version } = ctx.cfg
+    const { version } = ctx.cfg.service
     try {
       await sql`select 1`.execute(ctx.db.db)
     } catch (err) {
