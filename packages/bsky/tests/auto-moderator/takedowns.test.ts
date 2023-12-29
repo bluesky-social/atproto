@@ -105,7 +105,7 @@ describe('takedowner', () => {
       .where('uri', '=', post.ref.uriStr)
       .select('takedownRef')
       .executeTakeFirst()
-    expect(record?.takedownRef).toEqual(takedownEvent.id.toString())
+    expect(record?.takedownRef).toEqual(`BSKY-TAKEDOWN-${takedownEvent.id}`)
 
     const recordPds = await network.pds.ctx.actorStore.read(
       post.ref.uri.hostname,
@@ -116,7 +116,7 @@ describe('takedowner', () => {
           .select('takedownRef')
           .executeTakeFirst(),
     )
-    expect(recordPds?.takedownRef).toEqual(takedownEvent.id.toString())
+    expect(recordPds?.takedownRef).toEqual(`BSKY-TAKEDOWN-${takedownEvent.id}`)
 
     expect(testInvalidator.invalidated.length).toBe(1)
     expect(testInvalidator.invalidated[0].subject).toBe(
@@ -165,7 +165,7 @@ describe('takedowner', () => {
       .where('uri', '=', res.data.uri)
       .select('takedownRef')
       .executeTakeFirst()
-    expect(recordBsky?.takedownRef).toEqual(takedownEvent.id.toString())
+    expect(recordBsky?.takedownRef).toEqual(`BSKY-TAKEDOWN-${takedownEvent.id}`)
 
     const recordPds = await network.pds.ctx.actorStore.read(alice, (store) =>
       store.db.db
@@ -174,7 +174,7 @@ describe('takedowner', () => {
         .select('takedownRef')
         .executeTakeFirst(),
     )
-    expect(recordPds?.takedownRef).toEqual(takedownEvent.id.toString())
+    expect(recordPds?.takedownRef).toEqual(`BSKY-TAKEDOWN-${takedownEvent.id}`)
 
     expect(testInvalidator.invalidated.length).toBe(2)
     expect(testInvalidator.invalidated[1].subject).toBe(
