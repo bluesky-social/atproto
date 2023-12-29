@@ -245,7 +245,24 @@ Array [
     "cid": "cids(12)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
-    "labels": Array [],
+    "labels": Array [
+      Object {
+        "cid": "cids(12)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(14)",
+        "val": "test-label",
+      },
+      Object {
+        "cid": "cids(12)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(14)",
+        "val": "test-label-2",
+      },
+    ],
     "reason": "reply",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -672,7 +689,24 @@ Array [
     "cid": "cids(15)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
-    "labels": Array [],
+    "labels": Array [
+      Object {
+        "cid": "cids(15)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(17)",
+        "val": "test-label",
+      },
+      Object {
+        "cid": "cids(15)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(17)",
+        "val": "test-label-2",
+      },
+    ],
     "reason": "reply",
     "reasonSubject": "record(4)",
     "record": Object {
@@ -882,7 +916,16 @@ Array [
     "cid": "cids(5)",
     "indexedAt": "1970-01-01T00:00:00.000Z",
     "isRead": false,
-    "labels": Array [],
+    "labels": Array [
+      Object {
+        "cid": "cids(5)",
+        "cts": "1970-01-01T00:00:00.000Z",
+        "neg": false,
+        "src": "did:example:labeler",
+        "uri": "record(4)",
+        "val": "test-label",
+      },
+    ],
     "reason": "quote",
     "reasonSubject": "record(1)",
     "record": Object {

@@ -32,7 +32,7 @@ export class TestNetworkNoAppView {
     return fg
   }
 
-  getSeedClient(): SeedClient {
+  getSeedClient(): SeedClient<typeof this> {
     const agent = this.pds.getClient()
     return new SeedClient(this, agent)
   }

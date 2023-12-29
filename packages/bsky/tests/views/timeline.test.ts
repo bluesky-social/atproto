@@ -31,24 +31,8 @@ describe('timeline views', () => {
     bob = sc.dids.bob
     carol = sc.dids.carol
     dan = sc.dids.dan
-    // add some labels to test label hydration
-    const db = network.bsky.db.getPrimary()
-    await createLabel(db, {
-      val: 'test-label',
-      uri: sc.posts[alice][2].ref.uriStr,
-      cid: sc.posts[alice][2].ref.cidStr,
-    })
-    await createLabel(db, {
-      val: 'test-label',
-      uri: sc.replies[bob][0].ref.uriStr,
-      cid: sc.replies[bob][0].ref.cidStr,
-    })
-    await createLabel(db, {
-      val: 'test-label-2',
-      uri: sc.replies[bob][0].ref.uriStr,
-      cid: sc.replies[bob][0].ref.cidStr,
-    })
     // covers label hydration on embeds
+    const db = network.bsky.db.getPrimary()
     await createLabel(db, {
       val: 'test-label-3',
       uri: sc.posts[bob][0].ref.uriStr,
