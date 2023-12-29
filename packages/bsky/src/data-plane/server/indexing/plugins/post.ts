@@ -19,7 +19,7 @@ import * as lex from '../../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import RecordProcessor from '../processor'
 import { Notification } from '../../db/tables/notification'
-import { PrimaryDatabase } from '../../db'
+import { Database } from '../../db'
 import { countAll, excluded } from '../../db/util'
 import {
   getAncestorsAndSelfQb,
@@ -395,7 +395,7 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
 export type PluginType = RecordProcessor<PostRecord, IndexedPost>
 
 export const makePlugin = (
-  db: PrimaryDatabase,
+  db: Database,
   background: BackgroundQueue,
 ): PluginType => {
   return new RecordProcessor(db, background, {

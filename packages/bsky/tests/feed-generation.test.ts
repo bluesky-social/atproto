@@ -74,9 +74,8 @@ describe('feed generation', () => {
       { uri: feedUriBadPagination.toString(), order: 3 },
       { uri: primeUri.toString(), order: 4 },
     ]
-    await network.bsky.db
-      .getPrimary()
-      .db.insertInto('suggested_feed')
+    await network.bsky.db.db
+      .insertInto('suggested_feed')
       .values(feedSuggestions)
       .execute()
   })

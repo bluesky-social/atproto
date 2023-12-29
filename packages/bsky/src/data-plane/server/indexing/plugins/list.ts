@@ -5,7 +5,7 @@ import * as List from '../../../../lexicon/types/app/bsky/graph/list'
 import * as lex from '../../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import RecordProcessor from '../processor'
-import { PrimaryDatabase } from '../../db'
+import { Database } from '../../db'
 import { BackgroundQueue } from '../../background'
 
 const lexId = lex.ids.AppBskyGraphList
@@ -67,7 +67,7 @@ const notifsForDelete = () => {
 export type PluginType = RecordProcessor<List.Record, IndexedList>
 
 export const makePlugin = (
-  db: PrimaryDatabase,
+  db: Database,
   background: BackgroundQueue,
 ): PluginType => {
   return new RecordProcessor(db, background, {

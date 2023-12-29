@@ -13,7 +13,7 @@ import { AtUri } from '@atproto/syntax'
 import { IdResolver, getPds } from '@atproto/identity'
 import { DAY, HOUR } from '@atproto/common'
 import { ValidationError } from '@atproto/lexicon'
-import { PrimaryDatabase } from '../db'
+import { Database } from '../db'
 import { Actor } from '../db/tables/actor'
 import * as Post from './plugins/post'
 import * as Threadgate from './plugins/thread-gate'
@@ -47,7 +47,7 @@ export class IndexingService {
   }
 
   constructor(
-    public db: PrimaryDatabase,
+    public db: Database,
     public idResolver: IdResolver,
     public background: BackgroundQueue,
   ) {
@@ -66,7 +66,7 @@ export class IndexingService {
     }
   }
 
-  transact(txn: PrimaryDatabase) {
+  transact(txn: Database) {
     txn.assertTransaction()
     return new IndexingService(txn, this.idResolver, this.background)
   }

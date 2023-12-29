@@ -4,7 +4,7 @@ import { CID } from 'multiformats/cid'
 import * as Threadgate from '../../../../lexicon/types/app/bsky/feed/threadgate'
 import * as lex from '../../../../lexicon/lexicons'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
-import { PrimaryDatabase } from '../../db'
+import { Database } from '../../db'
 import RecordProcessor from '../processor'
 import { BackgroundQueue } from '../../background'
 
@@ -76,7 +76,7 @@ const notifsForDelete = () => {
 export type PluginType = RecordProcessor<Threadgate.Record, IndexedGate>
 
 export const makePlugin = (
-  db: PrimaryDatabase,
+  db: Database,
   background: BackgroundQueue,
 ): PluginType => {
   return new RecordProcessor(db, background, {

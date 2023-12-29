@@ -157,9 +157,8 @@ const createLabel = async (
   bsky: TestBsky,
   opts: { did: string; val: string },
 ) => {
-  await bsky.db
-    .getPrimary()
-    .db.insertInto('label')
+  await bsky.db.db
+    .insertInto('label')
     .values({
       uri: opts.did,
       cid: '',

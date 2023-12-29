@@ -24,9 +24,8 @@ describe('pds user search views', () => {
       { did: sc.dids.dan, order: 4 },
     ]
 
-    await network.bsky.db
-      .getPrimary()
-      .db.insertInto('suggested_follow')
+    await network.bsky.db.db
+      .insertInto('suggested_follow')
       .values(suggestions)
       .execute()
   })

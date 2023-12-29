@@ -1,7 +1,8 @@
 import { SeedClient, TestNetwork, TestNetworkNoAppView } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import usersSeed from './users'
-import { PrimaryDatabase } from '../../src'
+import { Database } from '../../src'
+import DatabaseSchema from '@atproto/pds/dist/db/database-schema'
 
 export default async (
   sc: SeedClient<TestNetwork | TestNetworkNoAppView>,
@@ -135,7 +136,7 @@ export default async (
   await sc.repost(dan, alicesReplyToBob.ref)
 
   if (sc.network instanceof TestNetwork) {
-    const db = sc.network.bsky.db.getPrimary()
+    const { db } = sc.network.bsky
     await createLabel(db, {
       val: 'test-label',
       uri: sc.posts[alice][2].ref.uriStr,
@@ -170,7 +171,7 @@ export const replies = {
 }
 
 const createLabel = async (
-  db: PrimaryDatabase,
+  db: Database,
   opts: { uri: string; cid: string; val: string },
 ) => {
   await db.db

@@ -4,7 +4,7 @@ import { CID } from 'multiformats/cid'
 import * as Follow from '../../../../lexicon/types/app/bsky/graph/follow'
 import * as lex from '../../../../lexicon/lexicons'
 import RecordProcessor from '../processor'
-import { PrimaryDatabase } from '../../db'
+import { Database } from '../../db'
 import { countAll, excluded } from '../../db/util'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { BackgroundQueue } from '../../background'
@@ -118,7 +118,7 @@ const updateAggregates = async (db: DatabaseSchema, follow: IndexedFollow) => {
 export type PluginType = RecordProcessor<Follow.Record, IndexedFollow>
 
 export const makePlugin = (
-  db: PrimaryDatabase,
+  db: Database,
   background: BackgroundQueue,
 ): PluginType => {
   return new RecordProcessor(db, background, {

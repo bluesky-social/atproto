@@ -24,11 +24,7 @@ export * from './data-plane'
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './api/feed-gen/types'
 export { ServerConfig } from './config'
-export {
-  Database,
-  PrimaryDatabase,
-  DatabaseCoordinator,
-} from './data-plane/server/db'
+export { Database } from './data-plane/server/db'
 export { Redis } from './redis'
 export { AppContext } from './context'
 export { makeAlgos } from './api/feed-gen'

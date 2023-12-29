@@ -4,7 +4,7 @@ import { AtUri } from '@atproto/syntax'
 import { chunkArray } from '@atproto/common'
 import { jsonStringToLex, stringifyLex } from '@atproto/lexicon'
 import { lexicons } from '../../../lexicon/lexicons'
-import { PrimaryDatabase } from '../db'
+import { Database } from '../db'
 import DatabaseSchema from '../db/database-schema'
 import { Notification } from '../db/tables/notification'
 import { BackgroundQueue } from '../background'
@@ -40,7 +40,7 @@ export class RecordProcessor<T, S> {
   collection: string
   db: DatabaseSchema
   constructor(
-    private appDb: PrimaryDatabase,
+    private appDb: Database,
     private background: BackgroundQueue,
     private params: RecordProcessorParams<T, S>,
   ) {
@@ -225,7 +225,7 @@ export class RecordProcessor<T, S> {
 
   async handleNotifs(op: { deleted?: S; inserted?: S }) {
     let notifs: Notif[] = []
-    const runOnCommit: ((db: PrimaryDatabase) => Promise<void>)[] = []
+    const runOnCommit: ((db: Database) => Promise<void>)[] = []
     if (op.deleted) {
       const forDelete = this.params.notifsForDelete(
         op.deleted,

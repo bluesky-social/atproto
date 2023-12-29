@@ -3,7 +3,7 @@ import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
 import * as Block from '../../../../lexicon/types/app/bsky/graph/block'
 import * as lex from '../../../../lexicon/lexicons'
-import { PrimaryDatabase } from '../../db'
+import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import RecordProcessor from '../processor'
 import { BackgroundQueue } from '../../background'
@@ -71,7 +71,7 @@ const notifsForDelete = () => {
 export type PluginType = RecordProcessor<Block.Record, IndexedBlock>
 
 export const makePlugin = (
-  db: PrimaryDatabase,
+  db: Database,
   background: BackgroundQueue,
 ): PluginType => {
   return new RecordProcessor(db, background, {

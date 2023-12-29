@@ -26,9 +26,8 @@ describe('suggested follows', () => {
       { did: sc.dids.fred, order: 5 },
       { did: sc.dids.gina, order: 6 },
     ]
-    await network.bsky.db
-      .getPrimary()
-      .db.insertInto('suggested_follow')
+    await network.bsky.db.db
+      .insertInto('suggested_follow')
       .values(suggestions)
       .execute()
   })

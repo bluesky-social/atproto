@@ -17,7 +17,7 @@ import { OutputSchema as Message } from '../../../lexicon/types/com/atproto/sync
 import * as message from '../../../lexicon/types/com/atproto/sync/subscribeRepos'
 import { subLogger as log } from '../../../logger'
 import { IndexingService } from '../indexing'
-import { PrimaryDatabase } from '../db'
+import { Database } from '../db'
 import {
   ConsecutiveItem,
   ConsecutiveList,
@@ -40,7 +40,7 @@ export class RepoSubscription {
   constructor(
     private opts: {
       service: string
-      db: PrimaryDatabase
+      db: Database
       idResolver: IdResolver
       background: BackgroundQueue
     },

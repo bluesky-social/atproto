@@ -1,17 +1,17 @@
 import { sql } from 'kysely'
 import { wait } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
-import { Database, PrimaryDatabase } from '../../src'
+import { Database } from '../../src'
 
 describe('db', () => {
   let network: TestNetwork
-  let db: PrimaryDatabase
+  let db: Database
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_db',
     })
-    db = network.bsky.db.getPrimary()
+    db = network.bsky.db
   })
 
   afterAll(async () => {

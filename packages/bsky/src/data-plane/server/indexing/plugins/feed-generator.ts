@@ -3,7 +3,7 @@ import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
 import * as FeedGenerator from '../../../../lexicon/types/app/bsky/feed/generator'
 import * as lex from '../../../../lexicon/lexicons'
-import { PrimaryDatabase } from '../../db'
+import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import RecordProcessor from '../processor'
 import { BackgroundQueue } from '../../background'
@@ -70,7 +70,7 @@ export type PluginType = RecordProcessor<
 >
 
 export const makePlugin = (
-  db: PrimaryDatabase,
+  db: Database,
   background: BackgroundQueue,
 ): PluginType => {
   return new RecordProcessor(db, background, {

@@ -29,7 +29,7 @@ describe('sync', () => {
   })
 
   it('indexes permit history being replayed.', async () => {
-    const db = network.bsky.db.getPrimary()
+    const { db } = network.bsky
 
     // Generate some modifications and dupes
     const { alice, bob, carol, dan } = sc.dids
@@ -97,9 +97,7 @@ describe('sync', () => {
     })
     await network.processAll()
     // confirm jack was indexed as an actor despite the bad event
-    const actors = await dumpTable(network.bsky.db.getPrimary(), 'actor', [
-      'did',
-    ])
+    const actors = await dumpTable(network.bsky.db, 'actor', ['did'])
     expect(actors.map((a) => a.handle)).toContain('jack.test')
     network.pds.ctx.sequencer.sequenceCommit = sequenceCommitOrig
   })

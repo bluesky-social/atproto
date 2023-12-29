@@ -5,7 +5,7 @@ import * as Like from '../../../../lexicon/types/app/bsky/feed/like'
 import * as lex from '../../../../lexicon/lexicons'
 import RecordProcessor from '../processor'
 import { countAll, excluded } from '../../db/util'
-import { PrimaryDatabase } from '../../db'
+import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { BackgroundQueue } from '../../background'
 
@@ -108,7 +108,7 @@ const updateAggregates = async (db: DatabaseSchema, like: IndexedLike) => {
 export type PluginType = RecordProcessor<Like.Record, IndexedLike>
 
 export const makePlugin = (
-  db: PrimaryDatabase,
+  db: Database,
   background: BackgroundQueue,
 ): PluginType => {
   return new RecordProcessor(db, background, {

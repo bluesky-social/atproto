@@ -13,7 +13,7 @@ export class TestBsky {
   constructor(
     public url: string,
     public port: number,
-    public db: bsky.DatabaseCoordinator,
+    public db: bsky.Database,
     public server: bsky.BskyAppView,
     public dataplane: bsky.DataPlaneServer,
     public sub: bsky.RepoSubscription,
@@ -34,20 +34,14 @@ export class TestBsky {
     })
 
     // shared across server, ingester, and indexer in order to share pool, avoid too many pg connections.
-    const db = new bsky.DatabaseCoordinator({
+    const db = new bsky.Database({
+      url: cfg.dbPostgresUrl,
       schema: cfg.dbPostgresSchema,
-      primary: {
-        url: cfg.dbPostgresUrl,
-        poolSize: 10,
-      },
-      replicas: [],
+      poolSize: 10,
     })
 
     const dataplanePort = await getPort()
-    const dataplane = await bsky.DataPlaneServer.create(
-      db.getPrimary(),
-      dataplanePort,
-    )
+    const dataplane = await bsky.DataPlaneServer.create(db, dataplanePort)
 
     const config = new bsky.ServerConfig({
       version: 'unknown',
@@ -64,7 +58,7 @@ export class TestBsky {
     })
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
-    const migrationDb = new bsky.PrimaryDatabase({
+    const migrationDb = new bsky.Database({
       url: cfg.dbPostgresUrl,
       schema: cfg.dbPostgresSchema,
     })
@@ -75,7 +69,7 @@ export class TestBsky {
     }
     await migrationDb.close()
 
-    const didCache = new bsky.DidSqlCache(db.getPrimary(), HOUR, DAY)
+    const didCache = new bsky.DidSqlCache(db, HOUR, DAY)
 
     // api server
     const server = bsky.BskyAppView.create({
@@ -87,9 +81,9 @@ export class TestBsky {
 
     const sub = new bsky.RepoSubscription({
       service: cfg.repoProvider,
-      db: db.getPrimary(),
+      db,
       idResolver: server.ctx.idResolver,
-      background: new BackgroundQueue(db.getPrimary()),
+      background: new BackgroundQueue(db),
     })
 
     await server.start()

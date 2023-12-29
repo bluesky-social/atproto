@@ -4,7 +4,7 @@ import { TestNetwork, SeedClient } from '@atproto/dev-env'
 import { forSnapshot, getOriginator, paginateAll } from '../_util'
 import basicSeed from '../seeds/basic'
 import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
-import { PrimaryDatabase } from '../../src'
+import { Database } from '../../src'
 
 const REVERSE_CHRON = 'reverse-chronological'
 
@@ -32,7 +32,7 @@ describe('timeline views', () => {
     carol = sc.dids.carol
     dan = sc.dids.dan
     // covers label hydration on embeds
-    const db = network.bsky.db.getPrimary()
+    const { db } = network.bsky
     await createLabel(db, {
       val: 'test-label-3',
       uri: sc.posts[bob][0].ref.uriStr,
@@ -234,7 +234,7 @@ describe('timeline views', () => {
 })
 
 const createLabel = async (
-  db: PrimaryDatabase,
+  db: Database,
   opts: { uri: string; cid: string; val: string },
 ) => {
   await db.db

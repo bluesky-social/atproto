@@ -24,7 +24,7 @@ describe.skip('pds actor search views', () => {
     await usersBulkSeed(sc)
 
     // Skip did/handle resolution for expediency
-    const db = network.bsky.db.getPrimary()
+    const { db } = network.bsky
     const now = new Date().toISOString()
     await db.db
       .insertInto('actor')

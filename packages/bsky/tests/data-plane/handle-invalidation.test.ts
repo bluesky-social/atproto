@@ -43,9 +43,8 @@ describe('handle invalidation', () => {
 
   const backdateIndexedAt = async (did: string) => {
     const TWO_DAYS_AGO = new Date(Date.now() - 2 * DAY).toISOString()
-    await network.bsky.db
-      .getPrimary()
-      .db.updateTable('actor')
+    await network.bsky.db.db
+      .updateTable('actor')
       .set({ indexedAt: TWO_DAYS_AGO })
       .where('did', '=', did)
       .execute()

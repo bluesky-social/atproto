@@ -3,18 +3,18 @@ import { cidForCbor, TID } from '@atproto/common'
 import { WriteOpAction } from '@atproto/repo'
 import { TestNetwork } from '@atproto/dev-env'
 import * as lex from '../../src/lexicon/lexicons'
-import { Database, PrimaryDatabase } from '../../src'
+import { Database } from '../../src'
 
 describe('duplicate record', () => {
   let network: TestNetwork
   let did: string
-  let db: PrimaryDatabase
+  let db: Database
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_duplicates',
     })
-    db = network.bsky.db.getPrimary()
+    db = network.bsky.db
     did = 'did:example:alice'
   })
 

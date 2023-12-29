@@ -32,7 +32,7 @@ describe('indexing', () => {
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
-    db = network.bsky.db.getPrimary()
+    db = network.bsky.db
     await usersSeed(sc)
     // Data in tests is not processed from subscription
     await network.processAll()

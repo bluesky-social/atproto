@@ -5,7 +5,7 @@ import { CID } from 'multiformats/cid'
 import * as ListItem from '../../../../lexicon/types/app/bsky/graph/listitem'
 import * as lex from '../../../../lexicon/lexicons'
 import RecordProcessor from '../processor'
-import { PrimaryDatabase } from '../../db'
+import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { BackgroundQueue } from '../../background'
 
@@ -79,7 +79,7 @@ const notifsForDelete = () => {
 export type PluginType = RecordProcessor<ListItem.Record, IndexedListItem>
 
 export const makePlugin = (
-  db: PrimaryDatabase,
+  db: Database,
   background: BackgroundQueue,
 ): PluginType => {
   return new RecordProcessor(db, background, {

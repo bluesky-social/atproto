@@ -3,13 +3,11 @@ import express from 'express'
 import axios, { AxiosError } from 'axios'
 import { TestNetwork } from '@atproto/dev-env'
 import { handler as errorHandler } from '../src/error'
-import { Database } from '../src'
 import basicSeed from './seeds/basic'
 import { once } from 'events'
 
 describe('server', () => {
   let network: TestNetwork
-  let db: Database
   let alice: string
 
   beforeAll(async () => {
@@ -20,7 +18,6 @@ describe('server', () => {
     await basicSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
-    db = network.bsky.db.getPrimary()
   })
 
   afterAll(async () => {

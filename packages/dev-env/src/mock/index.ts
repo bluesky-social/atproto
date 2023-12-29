@@ -1,6 +1,6 @@
 import { AtUri } from '@atproto/syntax'
 import AtpAgent from '@atproto/api'
-import { PrimaryDatabase } from '@atproto/bsky'
+import { Database } from '@atproto/bsky'
 import {
   REASONSPAM,
   REASONOTHER,
@@ -187,12 +187,12 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   )
 
-  await createLabel(env.bsky.db.getPrimary(), {
+  await createLabel(env.bsky.db, {
     uri: labeledPost.uri,
     cid: labeledPost.cid,
     val: 'nudity',
   })
-  await createLabel(env.bsky.db.getPrimary(), {
+  await createLabel(env.bsky.db, {
     uri: filteredPost.uri,
     cid: filteredPost.cid,
     val: 'dmca-violation',
@@ -332,7 +332,7 @@ function ucfirst(str: string): string {
 }
 
 const createLabel = async (
-  db: PrimaryDatabase,
+  db: Database,
   opts: { uri: string; cid: string; val: string },
 ) => {
   await db.db

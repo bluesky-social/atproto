@@ -1,6 +1,6 @@
 import PQueue from 'p-queue'
 import { CacheResult, DidCache, DidDocument } from '@atproto/identity'
-import { PrimaryDatabase } from './db'
+import { Database } from './db'
 import { excluded } from './db/util'
 import { dbLogger } from '../../logger'
 
@@ -10,7 +10,7 @@ export class DidSqlCache implements DidCache {
   constructor(
     // @TODO perhaps could use both primary and non-primary. not high enough
     // throughput to matter right now. also may just move this over to redis before long!
-    public db: PrimaryDatabase,
+    public db: Database,
     public staleTTL: number,
     public maxTTL: number,
   ) {
