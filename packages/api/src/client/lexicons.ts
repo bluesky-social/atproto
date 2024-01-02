@@ -4744,9 +4744,13 @@ export const schemaDict = {
           },
           title: {
             type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
           },
           description: {
             type: 'string',
+            maxGraphemes: 1000,
+            maxLength: 10000,
           },
           thumb: {
             type: 'blob',
@@ -4775,12 +4779,17 @@ export const schemaDict = {
           },
           title: {
             type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
           },
           description: {
             type: 'string',
+            maxGraphemes: 1000,
+            maxLength: 10000,
           },
           thumb: {
             type: 'string',
+            format: 'uri',
           },
         },
       },
@@ -4816,6 +4825,8 @@ export const schemaDict = {
           },
           alt: {
             type: 'string',
+            maxGraphemes: 5000,
+            maxLength: 50000,
           },
           aspectRatio: {
             type: 'ref',
@@ -4859,12 +4870,16 @@ export const schemaDict = {
         properties: {
           thumb: {
             type: 'string',
+            format: 'uri',
           },
           fullsize: {
             type: 'string',
+            format: 'uri',
           },
           alt: {
             type: 'string',
+            maxGraphemes: 5000,
+            maxLength: 50000,
           },
           aspectRatio: {
             type: 'ref',
