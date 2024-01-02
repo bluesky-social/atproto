@@ -5,6 +5,7 @@ import blocks from './blocks'
 import feedGens from './feed-gens'
 import feeds from './feeds'
 import follows from './follows'
+import interactions from './interactions'
 import labels from './labels'
 import likes from './likes'
 import lists from './lists'
@@ -28,6 +29,7 @@ export default (db: Database) => (router: ConnectRouter) =>
     ...feedGens(db),
     ...feeds(db),
     ...follows(db),
+    ...interactions(db),
     ...labels(db),
     ...likes(db),
     ...lists(db),

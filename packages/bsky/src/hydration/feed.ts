@@ -86,16 +86,12 @@ export class FeedHydrator {
 
   async getPostAggregates(uris: string[]): Promise<PostAggs> {
     const refs = uris.map((uri) => ({ uri }))
-    const [likes, reposts, replies] = await Promise.all([
-      this.dataplane.getLikeCounts({ refs }),
-      this.dataplane.getRepostCounts({ refs }),
-      this.dataplane.getPostReplyCounts({ refs }),
-    ])
+    const counts = await this.dataplane.getInteractionCounts({ refs })
     return uris.reduce((acc, uri, i) => {
       return acc.set(uri, {
-        likes: likes.counts[i] ?? 0,
-        reposts: reposts.counts[i] ?? 0,
-        replies: replies.counts[i] ?? 0,
+        likes: counts.likes[i] ?? 0,
+        reposts: counts.reposts[i] ?? 0,
+        replies: counts.replies[i] ?? 0,
       })
     }, new HydrationMap<PostAgg>())
   }

@@ -119,16 +119,12 @@ export class ActorHydrator {
   }
 
   async getProfileAggregates(dids: string[]): Promise<ProfileAggs> {
-    const [followers, follows, posts] = await Promise.all([
-      this.dataplane.getFollowerCounts({ dids }),
-      this.dataplane.getFollowCounts({ dids }),
-      this.dataplane.getPostCounts({ dids }),
-    ])
+    const counts = await this.dataplane.getCountsForUsers({ dids })
     return dids.reduce((acc, did, i) => {
       return acc.set(did, {
-        followers: followers.counts[i] ?? 0,
-        follows: follows.counts[i] ?? 0,
-        posts: posts.counts[i] ?? 0,
+        followers: counts.followers[i] ?? 0,
+        follows: counts.following[i] ?? 0,
+        posts: counts.posts[i] ?? 0,
       })
     }, new HydrationMap<ProfileAgg>())
   }
