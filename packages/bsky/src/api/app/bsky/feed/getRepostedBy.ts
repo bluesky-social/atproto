@@ -35,7 +35,7 @@ const skeleton = async (inputs: {
 }): Promise<Skeleton> => {
   const { ctx, params } = inputs
   const res = await ctx.hydrator.dataplane.getRepostsBySubject({
-    subjectUri: params.uri,
+    subject: { uri: params.uri, cid: params.cid },
     cursor: params.cursor,
     limit: params.limit,
   })

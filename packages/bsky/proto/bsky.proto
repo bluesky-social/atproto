@@ -140,7 +140,8 @@ message GetFollowersRequest {
 
 message FollowInfo {
   string uri = 1;
-  string did = 2;
+  string actor_did = 2;
+  string subject_did = 3;
 }
 
 message GetFollowersResponse {
@@ -230,11 +231,35 @@ message GetActorLikesResponse {
 // - return number of likes on subjects A, B, C...
 //     - post or feed generator hydration `likeCount` field
 message GetLikeCountsRequest {
-  repeated string uris = 1;
+  repeated RecordRef refs = 1;
 }
 
 message GetLikeCountsResponse {
   repeated int32 counts = 1;
+}
+
+//
+// Interactions
+//
+message GetInteractionCountsRequest {
+  repeated RecordRef refs = 1;
+}
+
+message GetInteractionCountsResponse {
+  repeated int32 likes = 1;
+  repeated int32 reposts = 2;
+  repeated int32 replies = 3;
+}
+
+message GetCountsForUsersRequest {
+  repeated string dids = 1;
+}
+
+message GetCountsForUsersResponse {
+  repeated int32 posts = 1;
+  repeated int32 reposts = 2;
+  repeated int32 following = 3;
+  repeated int32 followers = 4;
 }
 
 //
@@ -244,10 +269,9 @@ message GetLikeCountsResponse {
 // - return repost uris where subject uri is subject A
 //     - `getReposts` list for a post
 message GetRepostsBySubjectRequest {
-  string subject_uri = 1;
-  optional string subject_cid = 2;
-  int32 limit = 3;
-  string cursor = 4;
+  RecordRef subject = 1;
+  int32 limit = 2;
+  string cursor = 3;
 }
 
 message GetRepostsBySubjectResponse {
@@ -287,7 +311,7 @@ message GetActorRepostsResponse {
 // - return number of reposts on subject A
 //     - post or feed generator hydration `repostCount` field
 message GetRepostCountsRequest {
-  repeated string uris = 1;
+  repeated RecordRef refs = 1;
 }
 
 message GetRepostCountsResponse {
@@ -726,7 +750,9 @@ message GetTimelineResponse {
 
 message FeedItem {
   string uri = 1;
-  string repost = 2;
+  string cid = 2;
+  string repost = 3;
+  string repost_cid = 4;
 }
 
 // - Return recent post uris from users in list A
@@ -813,7 +839,7 @@ message GetFollowSuggestionsResponse {
 // - Return post reply count with uris A, B, C…
 //     - All feed hydration
 message GetPostReplyCountsRequest {
-  repeated string uris = 1;
+  repeated RecordRef refs = 1;
 }
 
 message GetPostReplyCountsResponse {
@@ -883,9 +909,12 @@ message UpdateTakedownRequest {
 
 message UpdateTakedownResponse {}
 
+
 // Ping
 message PingRequest {}
 message PingResponse {}
+
+
 
 service Service {
   // Records
@@ -919,6 +948,10 @@ service Service {
   rpc GetRepostsByActorAndSubjects(GetRepostsByActorAndSubjectsRequest) returns (GetRepostsByActorAndSubjectsResponse);
   rpc GetActorReposts(GetActorRepostsRequest) returns (GetActorRepostsResponse);
   rpc GetRepostCounts(GetRepostCountsRequest) returns (GetRepostCountsResponse);
+
+  // Interaction Counts
+  rpc GetInteractionCounts(GetInteractionCountsRequest) returns (GetInteractionCountsResponse);
+  rpc GetCountsForUsers(GetCountsForUsersRequest) returns (GetCountsForUsersResponse);
 
   // Profile
   rpc GetActors(GetActorsRequest) returns (GetActorsResponse);
