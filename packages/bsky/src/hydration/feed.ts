@@ -85,10 +85,11 @@ export class FeedHydrator {
   }
 
   async getPostAggregates(uris: string[]): Promise<PostAggs> {
+    const refs = uris.map((uri) => ({ uri }))
     const [likes, reposts, replies] = await Promise.all([
-      this.dataplane.getLikeCounts({ uris }),
-      this.dataplane.getRepostCounts({ uris }),
-      this.dataplane.getPostReplyCounts({ uris }),
+      this.dataplane.getLikeCounts({ refs }),
+      this.dataplane.getRepostCounts({ refs }),
+      this.dataplane.getPostReplyCounts({ refs }),
     ])
     return uris.reduce((acc, uri, i) => {
       return acc.set(uri, {
@@ -129,7 +130,8 @@ export class FeedHydrator {
   }
 
   async getFeedGenAggregates(uris: string[]): Promise<FeedGenAggs> {
-    const likes = await this.dataplane.getLikeCounts({ uris })
+    const refs = uris.map((uri) => ({ uri }))
+    const likes = await this.dataplane.getLikeCounts({ refs })
     return uris.reduce((acc, uri, i) => {
       return acc.set(uri, {
         likes: likes.counts[i] ?? 0,
