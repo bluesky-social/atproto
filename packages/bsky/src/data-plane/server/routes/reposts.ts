@@ -6,12 +6,12 @@ import { TimeCidKeyset, paginate } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getRepostsBySubject(req) {
-    const { subjectUri, cursor, limit } = req
+    const { subject, cursor, limit } = req
     const { ref } = db.db.dynamic
 
     let builder = db.db
       .selectFrom('repost')
-      .where('repost.subject', '=', subjectUri)
+      .where('repost.subject', '=', subject?.uri ?? '')
       .selectAll('repost')
 
     const keyset = new TimeCidKeyset(ref('repost.sortAt'), ref('repost.cid'))
@@ -76,16 +76,17 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async getRepostCounts(req) {
-    if (req.uris.length === 0) {
+    const uris = req.refs.map((ref) => ref.uri)
+    if (uris.length === 0) {
       return { counts: [] }
     }
     const res = await db.db
       .selectFrom('post_agg')
-      .where('uri', 'in', req.uris)
+      .where('uri', 'in', uris)
       .selectAll()
       .execute()
     const byUri = keyBy(res, 'uri')
-    const counts = req.uris.map((uri) => byUri[uri]?.repostCount ?? 0)
+    const counts = uris.map((uri) => byUri[uri]?.repostCount ?? 0)
     return { counts }
   },
 })

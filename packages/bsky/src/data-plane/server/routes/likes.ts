@@ -85,16 +85,17 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 
   async getLikeCounts(req) {
-    if (req.uris.length === 0) {
+    const uris = req.refs.map((ref) => ref.uri)
+    if (uris.length === 0) {
       return { counts: [] }
     }
     const res = await db.db
       .selectFrom('post_agg')
-      .where('uri', 'in', req.uris)
+      .where('uri', 'in', uris)
       .selectAll()
       .execute()
     const byUri = keyBy(res, 'uri')
-    const counts = req.uris.map((uri) => byUri[uri]?.likeCount ?? 0)
+    const counts = uris.map((uri) => byUri[uri]?.likeCount ?? 0)
     return { counts }
   },
 })

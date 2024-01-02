@@ -85,16 +85,13 @@ export class FeedHydrator {
   }
 
   async getPostAggregates(uris: string[]): Promise<PostAggs> {
-    const [likes, reposts, replies] = await Promise.all([
-      this.dataplane.getLikeCounts({ uris }),
-      this.dataplane.getRepostCounts({ uris }),
-      this.dataplane.getPostReplyCounts({ uris }),
-    ])
+    const refs = uris.map((uri) => ({ uri }))
+    const counts = await this.dataplane.getInteractionCounts({ refs })
     return uris.reduce((acc, uri, i) => {
       return acc.set(uri, {
-        likes: likes.counts[i] ?? 0,
-        reposts: reposts.counts[i] ?? 0,
-        replies: replies.counts[i] ?? 0,
+        likes: counts.likes[i] ?? 0,
+        reposts: counts.reposts[i] ?? 0,
+        replies: counts.replies[i] ?? 0,
       })
     }, new HydrationMap<PostAgg>())
   }
@@ -129,7 +126,8 @@ export class FeedHydrator {
   }
 
   async getFeedGenAggregates(uris: string[]): Promise<FeedGenAggs> {
-    const likes = await this.dataplane.getLikeCounts({ uris })
+    const refs = uris.map((uri) => ({ uri }))
+    const likes = await this.dataplane.getLikeCounts({ refs })
     return uris.reduce((acc, uri, i) => {
       return acc.set(uri, {
         likes: likes.counts[i] ?? 0,
