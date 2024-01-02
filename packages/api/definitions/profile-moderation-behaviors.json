@@ -185,6 +185,12 @@
       "author": "alice",
       "labels": { "profile": ["!no-unauthenticated"] },
       "behaviors": {
+        "account": {
+          "cause": "label:!no-unauthenticated",
+          "filter": true,
+          "blur": true,
+          "noOverride": true
+        },
         "profile": {
           "cause": "label:!no-unauthenticated",
           "blur": true,

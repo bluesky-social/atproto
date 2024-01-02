@@ -177,13 +177,13 @@ describe('pds admin invite views', () => {
     expect(aliceView.data.invites?.length).toBe(6)
   })
 
-  it('does not allow non-admin moderators to disable invites.', async () => {
+  it('does not allow triage moderators to disable invites.', async () => {
     const attemptDisableInvites =
       agent.api.com.atproto.admin.disableInviteCodes(
         { codes: ['x'], accounts: [alice] },
         {
           encoding: 'application/json',
-          headers: network.pds.adminAuthHeaders('moderator'),
+          headers: network.pds.adminAuthHeaders('triage'),
         },
       )
     await expect(attemptDisableInvites).rejects.toThrow(
@@ -255,12 +255,12 @@ describe('pds admin invite views', () => {
     expect(res.every((row) => row.disabled === 1))
   })
 
-  it('does not allow non-admin moderations to disable account invites', async () => {
+  it('does not allow triage moderators to disable account invites', async () => {
     const attempt = agent.api.com.atproto.admin.disableAccountInvites(
       { account: alice },
       {
         encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders('moderator'),
+        headers: network.pds.adminAuthHeaders('triage'),
       },
     )
     await expect(attempt).rejects.toThrow('Insufficient privileges')
@@ -285,12 +285,12 @@ describe('pds admin invite views', () => {
     expect(invRes.data.codes.length).toBeGreaterThan(0)
   })
 
-  it('does not allow non-admin moderations to enable account invites', async () => {
+  it('does not allow triage moderators to enable account invites', async () => {
     const attempt = agent.api.com.atproto.admin.enableAccountInvites(
       { account: alice },
       {
         encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders('moderator'),
+        headers: network.pds.adminAuthHeaders('triage'),
       },
     )
     await expect(attempt).rejects.toThrow('Insufficient privileges')

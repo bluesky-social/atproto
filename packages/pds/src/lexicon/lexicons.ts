@@ -838,6 +838,10 @@ export const schemaDict = {
             type: 'string',
             description: 'The subject line of the email sent to the user.',
           },
+          comment: {
+            type: 'string',
+            description: 'Additional comment about the outgoing comm.',
+          },
         },
       },
     },
@@ -1492,6 +1496,11 @@ export const schemaDict = {
               senderDid: {
                 type: 'string',
                 format: 'did',
+              },
+              comment: {
+                type: 'string',
+                description:
+                  "Additional comment by the sender that won't be used in the email itself but helpful to provide more context for moderators/reviewers",
               },
             },
           },
