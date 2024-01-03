@@ -254,7 +254,7 @@ export class Hydrator {
       feedGenState,
     ] = await Promise.all([
       this.feed.getPostAggregates(refs),
-      viewer ? this.feed.getPostViewerStates(uris, viewer) : undefined,
+      viewer ? this.feed.getPostViewerStates(refs, viewer) : undefined,
       this.label.getLabelsForSubjects(allPostUris),
       this.hydratePostBlocks(posts),
       this.hydrateProfiles(

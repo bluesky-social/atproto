@@ -82,21 +82,21 @@ export class FeedHydrator {
   }
 
   async getPostViewerStates(
-    uris: string[],
+    refs: ItemRef[],
     viewer: string,
   ): Promise<PostViewerStates> {
-    if (!uris.length) return new HydrationMap<PostViewerState>()
+    if (!refs.length) return new HydrationMap<PostViewerState>()
     const [likes, reposts] = await Promise.all([
       this.dataplane.getLikesByActorAndSubjects({
         actorDid: viewer,
-        refs: uris.map((uri) => ({ uri })),
+        refs,
       }),
       this.dataplane.getRepostsByActorAndSubjects({
         actorDid: viewer,
-        refs: uris.map((uri) => ({ uri })),
+        refs,
       }),
     ])
-    return uris.reduce((acc, uri, i) => {
+    return refs.reduce((acc, { uri }, i) => {
       return acc.set(uri, {
         like: parseString(likes.uris[i]),
         repost: parseString(reposts.uris[i]),
