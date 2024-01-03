@@ -109,6 +109,9 @@ export class EventPusher {
       this.pushRepoEvents(),
       this.pushRecordEvents(),
       this.pushBlobEvents(),
+      this.repoPollState.promise,
+      this.recordPollState.promise,
+      this.blobPollState.promise,
     ])
   }
 
