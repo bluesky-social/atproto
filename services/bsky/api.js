@@ -9,11 +9,11 @@ dd.tracer.startSpan = function (name, options) {
   if (
     name !== 'http.request' ||
     options?.tags?.component !== 'http2' ||
-    !options?.tags?.['http.uri']
+    !options?.tags?.['http.url']
   ) {
     return origStartSpan.call(this, name, options)
   }
-  const uri = new URL(options.tags['http.uri'])
+  const uri = new URL(options.tags['http.url'])
   if (!uri.pathname.startsWith(DATAPLANE_PREFIX)) {
     return origStartSpan.call(this, name, options)
   }
