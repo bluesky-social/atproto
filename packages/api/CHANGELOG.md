@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.7.5
+
+### Patch Changes
+
+- [#1994](https://github.com/bluesky-social/atproto/pull/1994) [`ad0d9761`](https://github.com/bluesky-social/atproto/commit/ad0d976188d1f07401b9675b5c6045c91e82a84e) Thanks [@bnewbold](https://github.com/bnewbold)! - additional app.bsky.feed.post Lexicon string format limits
+
 ## 0.7.4
 
 ### Patch Changes
