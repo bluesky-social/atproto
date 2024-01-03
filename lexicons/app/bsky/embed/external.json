@@ -18,16 +18,8 @@
       "required": ["uri", "title", "description"],
       "properties": {
         "uri": { "type": "string", "format": "uri" },
-        "title": {
-          "type": "string",
-          "maxGraphemes": 300,
-          "maxLength": 3000
-        },
-        "description": {
-          "type": "string",
-          "maxGraphemes": 1000,
-          "maxLength": 10000
-        },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
         "thumb": {
           "type": "blob",
           "accept": ["image/*"],
@@ -50,17 +42,9 @@
       "required": ["uri", "title", "description"],
       "properties": {
         "uri": { "type": "string", "format": "uri" },
-        "title": {
-          "type": "string",
-          "maxGraphemes": 300,
-          "maxLength": 3000
-        },
-        "description": {
-          "type": "string",
-          "maxGraphemes": 1000,
-          "maxLength": 10000
-        },
-        "thumb": { "type": "string", "format": "uri" }
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "thumb": { "type": "string" }
       }
     }
   }
