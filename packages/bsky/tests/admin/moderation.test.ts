@@ -18,7 +18,11 @@ import {
   REVIEWCLOSED,
   REVIEWESCALATED,
 } from '../../src/lexicon/types/com/atproto/admin/defs'
-import { PeriodicModerationEventReversal } from '../../src'
+import {
+  PeriodicModerationEventReversal,
+  PeriodicModerationSnapshotCleanup,
+} from '../../src'
+import { DAY } from '@atproto/common'
 
 type BaseCreateReportParams =
   | { account: string }
@@ -770,6 +774,62 @@ describe('moderation', () => {
             '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
         },
       })
+    })
+
+    it('automatically cleans up expired record snapshot', async () => {
+      const db = network.bsky.ctx.db.getPrimary()
+      const postA = sc.posts[sc.dids.alice][2].ref
+      const postB = sc.posts[sc.dids.carol][0].ref
+      const getSnapshots = async () =>
+        db.db
+          .selectFrom('moderation_record_snapshot')
+          .where('recordPath', '=', `${postA.uri.collection}/${postA.uri.rkey}`)
+          .orWhere(
+            'recordPath',
+            '=',
+            `${postB.uri.collection}/${postB.uri.rkey}`,
+          )
+          .selectAll()
+          .execute()
+
+      // Create an event which should trigger a snapshot
+      await db.transaction(async (dbTxn) => {
+        const moderationService = network.bsky.ctx.services.moderation(dbTxn)
+        await Promise.all([
+          moderationService.logEvent({
+            event: {
+              $type: 'com.atproto.admin.defs#modEventReport',
+              reportType: REASONSPAM,
+            },
+            subject: { uri: postB.uri, cid: postB.cid },
+            createdBy: 'did:example:admin',
+            createdAt: new Date(Date.now() - DAY * 29),
+          }),
+          moderationService.logEvent({
+            event: {
+              $type: 'com.atproto.admin.defs#modEventReport',
+              reportType: REASONSPAM,
+            },
+            subject: { uri: postA.uri, cid: postA.cid },
+            createdBy: 'did:example:admin',
+            // Explicitly set the timestamp to create expired snapshot
+            createdAt: new Date(Date.now() - DAY * 31),
+          }),
+        ])
+      })
+
+      const snapshotsBeforeCleanup = await getSnapshots()
+      expect(snapshotsBeforeCleanup.length).toBe(2)
+
+      // In the actual app, this will be instantiated and run on server startup
+      const periodicReversal = new PeriodicModerationSnapshotCleanup(
+        network.bsky.ctx,
+      )
+      await periodicReversal.findAndCleanupExpiredSnapshots()
+
+      const snapshotsAfterCleanup = await getSnapshots()
+      expect(snapshotsAfterCleanup.length).toBe(1)
+      expect(postA.uriStr).not.toContain(snapshotsAfterCleanup[0].recordPath)
     })
 
     async function emitLabelEvent(

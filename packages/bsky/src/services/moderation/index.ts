@@ -19,6 +19,7 @@ import {
 import { addHoursToDate } from '../../util/date'
 import {
   adjustModerationSubjectStatus,
+  createModerationRecordSnapshot,
   getStatusIdentifierFromSubject,
 } from './status'
 import {
@@ -32,6 +33,7 @@ import {
 import { ModerationEvent } from '../../db/tables/moderation'
 import { paginate } from '../../db/pagination'
 import { StatusKeyset, TimeIdKeyset } from './pagination'
+import { DAY } from '@atproto/common'
 
 export class ModerationService {
   constructor(
@@ -264,7 +266,11 @@ export class ModerationService {
       .returningAll()
       .executeTakeFirstOrThrow()
 
-    await adjustModerationSubjectStatus(this.db, modEvent, subjectBlobCids)
+    // These are not dependent on each other in any way and snapshots are kinda fire and forget so running them in parallel
+    await Promise.all([
+      adjustModerationSubjectStatus(this.db, modEvent, subjectBlobCids),
+      createModerationRecordSnapshot(this.db, modEvent, subjectBlobCids),
+    ])
 
     return modEvent
   }
@@ -659,6 +665,17 @@ export class ModerationService {
     const result = await builder.select('takendown').executeTakeFirst()
 
     return !!result?.takendown
+  }
+
+  async cleanupExpiredRecordSnapshots(expiryInDays: number): Promise<void> {
+    await this.db.db
+      .deleteFrom('moderation_record_snapshot')
+      .where(
+        'indexedAt',
+        '<',
+        new Date(Date.now() - expiryInDays * DAY).toISOString(),
+      )
+      .execute()
   }
 }
 
