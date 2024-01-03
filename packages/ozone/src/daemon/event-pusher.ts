@@ -106,6 +106,11 @@ export class EventPusher {
 
   async processAll() {
     await Promise.all([
+      this.repoPollState.promise,
+      this.recordPollState.promise,
+      this.blobPollState.promise,
+    ])
+    await Promise.all([
       this.pushRepoEvents(),
       this.pushRecordEvents(),
       this.pushBlobEvents(),
