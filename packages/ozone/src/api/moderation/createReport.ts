@@ -2,6 +2,8 @@ import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import { getReasonType } from './util'
 import { subjectFromInput } from '../../mod-service/subject'
+import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs'
+import { ForbiddenError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
@@ -14,8 +16,13 @@ export default function (server: Server, ctx: AppContext) {
           : ctx.cfg.service.labelerDid
       const { reasonType, reason } = input.body
       const subject = subjectFromInput(input.body.subject)
-      const db = ctx.db
 
+      // If the report is an appeal, the requester must be the author of the subject
+      if (reasonType === REASONAPPEAL && requester !== subject.did) {
+        throw new ForbiddenError('You cannot appeal this report')
+      }
+
+      const db = ctx.db
       const report = await db.transaction(async (dbTxn) => {
         const moderationTxn = ctx.modService(dbTxn)
         return moderationTxn.report({

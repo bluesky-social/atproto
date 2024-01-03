@@ -7,6 +7,7 @@ import {
   REASONRUDE,
   REASONSEXUAL,
   REASONVIOLATION,
+  REASONAPPEAL,
 } from '../../lexicon/types/com/atproto/moderation/defs'
 import {
   REVIEWCLOSED,
@@ -47,6 +48,7 @@ const reasonTypes = new Set([
   REASONRUDE,
   REASONSEXUAL,
   REASONVIOLATION,
+  REASONAPPEAL,
 ])
 
 const eventTypes = new Set([

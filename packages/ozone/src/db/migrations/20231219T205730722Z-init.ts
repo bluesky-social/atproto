@@ -45,10 +45,12 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
     // report state
     .addColumn('lastReportedAt', 'varchar')
+    .addColumn('lastAppealedAt', 'varchar')
 
     // visibility/intervention state
     .addColumn('takendown', 'boolean', (col) => col.defaultTo(false).notNull())
     .addColumn('suspendUntil', 'varchar')
+    .addColumn('appealed', 'boolean')
 
     // timestamps
     .addColumn('createdAt', 'varchar', (col) => col.notNull())

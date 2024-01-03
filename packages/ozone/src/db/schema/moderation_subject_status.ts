@@ -19,9 +19,11 @@ export interface ModerationSubjectStatus {
   lastReviewedBy: string | null
   lastReviewedAt: string | null
   lastReportedAt: string | null
+  lastAppealedAt: string | null
   muteUntil: string | null
   suspendUntil: string | null
   takendown: boolean
+  appealed: boolean | null
   comment: string | null
 }
 

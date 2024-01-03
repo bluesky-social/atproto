@@ -467,6 +467,7 @@ export class ModerationService {
     cursor,
     limit = 50,
     takendown,
+    appealed,
     reviewState,
     reviewedAfter,
     reviewedBefore,
@@ -482,6 +483,7 @@ export class ModerationService {
     cursor?: string
     limit?: number
     takendown?: boolean
+    appealed?: boolean | null
     reviewedBefore?: string
     reviewState?: ModerationSubjectStatusRow['reviewState']
     reviewedAfter?: string
@@ -539,6 +541,13 @@ export class ModerationService {
 
     if (takendown) {
       builder = builder.where('takendown', '=', true)
+    }
+
+    if (appealed !== undefined) {
+      builder =
+        appealed === null
+          ? builder.where('appealed', 'is', null)
+          : builder.where('appealed', '=', appealed)
     }
 
     if (!includeMuted) {
