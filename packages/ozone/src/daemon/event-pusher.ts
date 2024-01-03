@@ -106,11 +106,6 @@ export class EventPusher {
 
   async processAll() {
     await Promise.all([
-      this.repoPollState.promise,
-      this.recordPollState.promise,
-      this.blobPollState.promise,
-    ])
-    await Promise.all([
       this.pushRepoEvents(),
       this.pushRecordEvents(),
       this.pushBlobEvents(),
@@ -192,7 +187,7 @@ export class EventPusher {
   ): Promise<boolean> {
     const auth = await this.createAuthHeaders(service.did)
     try {
-      retryHttp(() =>
+      await retryHttp(() =>
         service.agent.com.atproto.admin.updateSubjectStatus(
           {
             subject,
