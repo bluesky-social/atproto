@@ -1,3 +1,4 @@
+import { mapDefined } from '@atproto/common'
 import {
   InvalidRequestError,
   UpstreamFailureError,
@@ -15,7 +16,7 @@ import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky
 import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { AlgoResponse, AlgoResponseItem } from '../../../feed-gen/types'
+import { AlgoResponse, toFeedItem } from '../../../feed-gen/types'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -23,7 +24,7 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import { mapDefined } from '@atproto/common'
+import { FeedItem } from '../../../../hydration/feed'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeed = createPipeline(
@@ -59,13 +60,16 @@ const skeleton = async (
   const { ctx, params } = inputs
   const timerSkele = new ServerTimer('skele').start()
   const localAlgo = ctx.algos[params.feed]
-  const { feedItems, cursor, ...passthrough } =
-    localAlgo !== undefined
-      ? await localAlgo(ctx, params, params.viewer)
-      : await skeletonFromFeedGen(ctx, params)
+  const {
+    feedItems: algoItems,
+    cursor,
+    ...passthrough
+  } = localAlgo !== undefined
+    ? await localAlgo(ctx, params, params.viewer)
+    : await skeletonFromFeedGen(ctx, params)
   return {
     cursor,
-    feedItems,
+    items: algoItems.map(toFeedItem),
     timerSkele: timerSkele.stop(),
     timerHydr: new ServerTimer('hydr').start(),
     passthrough,
@@ -77,9 +81,8 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = inputs
   const timerHydr = new ServerTimer('hydr').start()
-  const feedItemUris = skeleton.feedItems.map((item) => item.itemUri)
-  const hydration = await ctx.hydrator.hydrateFeedPosts(
-    feedItemUris,
+  const hydration = await ctx.hydrator.hydrateFeedItems(
+    skeleton.items,
     params.viewer,
   )
   skeleton.timerHydr = timerHydr.stop()
@@ -88,8 +91,8 @@ const hydration = async (
 
 const noBlocksOrMutes = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
   const { ctx, skeleton, hydration } = inputs
-  skeleton.feedItems = skeleton.feedItems.filter((item) => {
-    const bam = ctx.views.feedItemBlocksAndMutes(item.itemUri, hydration)
+  skeleton.items = skeleton.items.filter((item) => {
+    const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
     return (
       !bam.authorBlocked &&
       !bam.authorMuted &&
@@ -104,13 +107,8 @@ const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton, hydration } = inputs
-  const feed = mapDefined(skeleton.feedItems, (item) => {
-    const view = ctx.views.feedViewPost(item.itemUri, hydration)
-    if (view?.post.uri !== item.postUri) {
-      return undefined
-    } else {
-      return view
-    }
+  const feed = mapDefined(skeleton.items, (item) => {
+    return ctx.views.feedViewPost(item, hydration)
   }).slice(0, params.limit)
   return {
     feed,
@@ -126,7 +124,7 @@ type Context = AppContext
 type Params = GetFeedParams & { viewer: string | null; authorization?: string }
 
 type Skeleton = {
-  feedItems: AlgoResponseItem[]
+  items: FeedItem[]
   passthrough: Record<string, unknown> // pass through additional items in feedgen response
   cursor?: string
   timerSkele: ServerTimer

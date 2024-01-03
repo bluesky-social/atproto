@@ -50,7 +50,9 @@ export class ActorHydrator {
 
   async getDids(handleOrDids: string[]): Promise<(string | undefined)[]> {
     const handles = handleOrDids.filter((actor) => !actor.startsWith('did:'))
-    const res = await this.dataplane.getDidsByHandles({ handles })
+    const res = handles.length
+      ? await this.dataplane.getDidsByHandles({ handles })
+      : { dids: [] }
     const didByHandle = handles.reduce((acc, cur, i) => {
       const did = res.dids[i]
       if (did && did.length > 0) {
@@ -70,6 +72,7 @@ export class ActorHydrator {
   }
 
   async getActors(dids: string[], includeTakedowns = false): Promise<Actors> {
+    if (!dids.length) return new HydrationMap<Actor>()
     const res = await this.dataplane.getActors({ dids })
     return dids.reduce((acc, did, i) => {
       const actor = res.actors[i]
@@ -95,6 +98,7 @@ export class ActorHydrator {
     dids: string[],
     viewer: string,
   ): Promise<ProfileViewerStates> {
+    if (!dids.length) return new HydrationMap<ProfileViewerState>()
     const res = await this.dataplane.getRelationships({
       actorDid: viewer,
       targetDids: dids,
@@ -119,6 +123,7 @@ export class ActorHydrator {
   }
 
   async getProfileAggregates(dids: string[]): Promise<ProfileAggs> {
+    if (!dids.length) return new HydrationMap<ProfileAgg>()
     const counts = await this.dataplane.getCountsForUsers({ dids })
     return dids.reduce((acc, did, i) => {
       return acc.set(did, {

@@ -13,6 +13,7 @@ export class LabelHydrator {
     subjects: string[],
     issuers?: string[],
   ): Promise<Labels> {
+    if (!subjects.length) return new HydrationMap<Label[]>()
     const res = await this.dataplane.getLabels({ subjects, issuers })
     return res.labels.reduce((acc, cur) => {
       const label = parseJsonBytes(cur) as Label | undefined
