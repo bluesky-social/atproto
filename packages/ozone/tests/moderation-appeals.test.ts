@@ -26,7 +26,7 @@ describe('moderation-appeals', () => {
   ) => {
     return pdsAgent.api.com.atproto.admin.emitModerationEvent(eventData, {
       encoding: 'application/json',
-      headers: network.bsky.adminAuthHeaders('moderator'),
+      headers: network.ozone.adminAuthHeaders('moderator'),
     })
   }
 
@@ -34,14 +34,14 @@ describe('moderation-appeals', () => {
     statusQuery: ComAtprotoAdminQueryModerationStatuses.QueryParams,
   ) =>
     agent.api.com.atproto.admin.queryModerationStatuses(statusQuery, {
-      headers: network.bsky.adminAuthHeaders('moderator'),
+      headers: network.ozone.adminAuthHeaders('moderator'),
     })
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_moderation_statuses',
     })
-    agent = network.bsky.getClient()
+    agent = network.ozone.getClient()
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
@@ -64,6 +64,7 @@ describe('moderation-appeals', () => {
     expect(data.subjectStatuses[0]?.appealed).toEqual(appealed)
     return data.subjectStatuses[0]
   }
+
   describe('appeals from users', () => {
     const getBobsPostSubject = () => ({
       $type: 'com.atproto.repo.strongRef',
