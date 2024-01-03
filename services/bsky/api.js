@@ -23,6 +23,7 @@ dd.tracer.startSpan = function (name, options) {
 }
 
 dd.tracer
+  .init()
   .use('http2', {
     client: true, // calls into dataplane
     server: false,
