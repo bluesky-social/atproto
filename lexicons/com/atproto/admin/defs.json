@@ -69,7 +69,8 @@
             "#modEventLabel",
             "#modEventAcknowledge",
             "#modEventEscalate",
-            "#modEventMute"
+            "#modEventMute",
+            "#modEventResolveAppeal"
           ]
         },
         "subject": {
@@ -167,8 +168,17 @@
           "type": "string",
           "format": "datetime"
         },
+        "lastAppealedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Timestamp referencing when the author of the subject appealed a moderation action"
+        },
         "takendown": {
           "type": "boolean"
+        },
+        "appealed": {
+          "type": "boolean",
+          "description": "True indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators."
         },
         "suspendUntil": {
           "type": "string",
@@ -466,6 +476,16 @@
         "comment": {
           "type": "string",
           "description": "Describe reasoning behind the reversal."
+        }
+      }
+    },
+    "modEventResolveAppeal": {
+      "type": "object",
+      "description": "Resolve appeal on a subject",
+      "properties": {
+        "comment": {
+          "type": "string",
+          "description": "Describe resolution."
         }
       }
     },

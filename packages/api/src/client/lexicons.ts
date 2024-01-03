@@ -102,6 +102,7 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#modEventAcknowledge',
               'lex:com.atproto.admin.defs#modEventEscalate',
               'lex:com.atproto.admin.defs#modEventMute',
+              'lex:com.atproto.admin.defs#modEventResolveAppeal',
             ],
           },
           subject: {
@@ -237,8 +238,19 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          lastAppealedAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp referencing when the author of the subject appealed a moderation action',
+          },
           takendown: {
             type: 'boolean',
+          },
+          appealed: {
+            type: 'boolean',
+            description:
+              'True indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators.',
           },
           suspendUntil: {
             type: 'string',
@@ -714,6 +726,16 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Describe reasoning behind the reversal.',
+          },
+        },
+      },
+      modEventResolveAppeal: {
+        type: 'object',
+        description: 'Resolve appeal on a subject',
+        properties: {
+          comment: {
+            type: 'string',
+            description: 'Describe resolution.',
           },
         },
       },
@@ -1361,6 +1383,10 @@ export const schemaDict = {
               type: 'boolean',
               description: 'Get subjects that were taken down',
             },
+            appealed: {
+              type: 'boolean',
+              description: 'Get subjects in unresolved appealed status',
+            },
             limit: {
               type: 'integer',
               minimum: 1,
@@ -1946,6 +1972,7 @@ export const schemaDict = {
           'com.atproto.moderation.defs#reasonSexual',
           'com.atproto.moderation.defs#reasonRude',
           'com.atproto.moderation.defs#reasonOther',
+          'com.atproto.moderation.defs#reasonAppeal',
         ],
       },
       reasonSpam: {
@@ -1972,6 +1999,10 @@ export const schemaDict = {
       reasonOther: {
         type: 'token',
         description: 'Other: reports not falling under another report category',
+      },
+      reasonAppeal: {
+        type: 'token',
+        description: 'Appeal: appeal a previously taken moderation action',
       },
     },
   },

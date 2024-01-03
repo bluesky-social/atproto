@@ -76,6 +76,7 @@ export interface ModEventViewDetail {
     | ModEventAcknowledge
     | ModEventEscalate
     | ModEventMute
+    | ModEventResolveAppeal
     | { $type: string; [k: string]: unknown }
   subject:
     | RepoView
@@ -147,7 +148,11 @@ export interface SubjectStatusView {
   lastReviewedBy?: string
   lastReviewedAt?: string
   lastReportedAt?: string
+  /** Timestamp referencing when the author of the subject appealed a moderation action */
+  lastAppealedAt?: string
   takendown?: boolean
+  /** True indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators. */
+  appealed?: boolean
   suspendUntil?: string
   [k: string]: unknown
 }
@@ -536,6 +541,27 @@ export function isModEventReverseTakedown(
 
 export function validateModEventReverseTakedown(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#modEventReverseTakedown', v)
+}
+
+/** Resolve appeal on a subject */
+export interface ModEventResolveAppeal {
+  /** Describe resolution. */
+  comment?: string
+  [k: string]: unknown
+}
+
+export function isModEventResolveAppeal(
+  v: unknown,
+): v is ModEventResolveAppeal {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#modEventResolveAppeal'
+  )
+}
+
+export function validateModEventResolveAppeal(v: unknown): ValidationResult {
+  return lexicons.validate('com.atproto.admin.defs#modEventResolveAppeal', v)
 }
 
 /** Add a comment to a subject */

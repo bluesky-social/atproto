@@ -9,6 +9,7 @@ export default function (server: Server, ctx: AppContext) {
       const {
         subject,
         takendown,
+        appealed,
         reviewState,
         reviewedAfter,
         reviewedBefore,
@@ -28,6 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         reviewState: getReviewState(reviewState),
         subject,
         takendown,
+        appealed,
         reviewedAfter,
         reviewedBefore,
         reportedAfter,

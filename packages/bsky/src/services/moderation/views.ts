@@ -485,9 +485,11 @@ export class ModerationViews {
       lastReviewedBy: subjectStatus.lastReviewedBy ?? undefined,
       lastReviewedAt: subjectStatus.lastReviewedAt ?? undefined,
       lastReportedAt: subjectStatus.lastReportedAt ?? undefined,
+      lastAppealedAt: subjectStatus.lastAppealedAt ?? undefined,
       muteUntil: subjectStatus.muteUntil ?? undefined,
       suspendUntil: subjectStatus.suspendUntil ?? undefined,
       takendown: subjectStatus.takendown ?? undefined,
+      appealed: subjectStatus.appealed ?? undefined,
       subjectRepoHandle: subjectStatus.handle ?? undefined,
       subjectBlobCids: subjectStatus.blobCids || [],
       subject: !subjectStatus.recordPath

@@ -12,6 +12,7 @@ import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 import { HOUR } from '@atproto/common'
 import { CID } from 'multiformats/cid'
 import { sql } from 'kysely'
+import { REASONAPPEAL } from '../../lexicon/types/com/atproto/moderation/defs'
 
 const getSubjectStatusForModerationEvent = ({
   action,
@@ -82,6 +83,10 @@ const getSubjectStatusForModerationEvent = ({
         lastReviewedBy: createdBy,
         lastReviewedAt: createdAt,
       }
+    case 'com.atproto.admin.defs#modEventResolveAppeal':
+      return {
+        appealed: false,
+      }
     default:
       return null
   }
@@ -105,6 +110,10 @@ export const adjustModerationSubjectStatus = async (
     comment,
     createdAt,
   } = moderationEvent
+
+  const isAppealEvent =
+    action === 'com.atproto.admin.defs#modEventReport' &&
+    meta?.reportType === REASONAPPEAL
 
   const subjectStatus = getSubjectStatusForModerationEvent({
     action,
@@ -160,6 +169,21 @@ export const adjustModerationSubjectStatus = async (
   ) {
     newStatus.takendown = false
     subjectStatus.takendown = false
+  }
+
+  if (isAppealEvent) {
+    newStatus.appealed = true
+    subjectStatus.appealed = true
+    newStatus.lastAppealedAt = createdAt
+    subjectStatus.lastAppealedAt = createdAt
+  }
+
+  if (
+    action === 'com.atproto.admin.defs#modEventResolveAppeal' &&
+    subjectStatus.appealed
+  ) {
+    newStatus.appealed = false
+    subjectStatus.appealed = false
   }
 
   if (action === 'com.atproto.admin.defs#modEventComment' && meta?.sticky) {

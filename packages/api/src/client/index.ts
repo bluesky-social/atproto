@@ -297,6 +297,7 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonSexual: 'com.atproto.moderation.defs#reasonSexual',
   DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
+  DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
 }
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',

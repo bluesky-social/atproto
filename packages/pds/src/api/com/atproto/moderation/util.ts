@@ -10,6 +10,7 @@ import {
   REASONRUDE,
   REASONSEXUAL,
   REASONVIOLATION,
+  REASONAPPEAL,
 } from '../../../../lexicon/types/com/atproto/moderation/defs'
 import { parseCidParam } from '../../../../util/params'
 
@@ -49,4 +50,5 @@ const reasonTypes = new Set([
   REASONRUDE,
   REASONSEXUAL,
   REASONVIOLATION,
+  REASONAPPEAL,
 ])

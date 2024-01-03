@@ -4,13 +4,7 @@ import {
   SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
-import {
-  Lexicons,
-  LexiconDoc,
-  LexXrpcProcedure,
-  LexXrpcQuery,
-  LexRecord,
-} from '@atproto/lexicon'
+import { Lexicons, LexiconDoc, LexRecord } from '@atproto/lexicon'
 import { NSID } from '@atproto/syntax'
 import { gen, utilTs, lexiconsTs } from './common'
 import { GeneratedAPI } from '../types'
