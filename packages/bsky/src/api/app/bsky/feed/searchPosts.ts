@@ -52,7 +52,10 @@ const hydration = async (
   inputs: HydrationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydratePosts(skeleton.posts, params.viewer)
+  return ctx.hydrator.hydratePosts(
+    skeleton.posts.map((uri) => ({ uri })),
+    params.viewer,
+  )
 }
 
 const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {

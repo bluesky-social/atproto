@@ -36,6 +36,8 @@ import {
   PostAggs,
   PostViewerStates,
   Threadgates,
+  FeedItem,
+  ItemRef,
 } from './feed'
 
 export type HydrationState = {
@@ -195,11 +197,17 @@ export class Hydrator {
   //     - profile
   //       - list basic
   async hydratePosts(
-    uris: string[],
+    refs: ItemRef[],
     viewer: string | null,
     includeTakedowns = false,
+    state: HydrationState = {},
   ): Promise<HydrationState> {
-    const postsLayer0 = await this.feed.getPosts(uris, includeTakedowns)
+    const uris = refs.map((ref) => ref.uri)
+    const postsLayer0 = await this.feed.getPosts(
+      uris,
+      includeTakedowns,
+      state.posts,
+    )
     // first level embeds plus thread roots we haven't fetched yet
     const urisLayer1 = nestedRecordUrisFromPosts(postsLayer0)
     const additionalRootUris = rootUrisFromPosts(postsLayer0) // supports computing threadgates
@@ -245,7 +253,7 @@ export class Hydrator {
       listState,
       feedGenState,
     ] = await Promise.all([
-      this.feed.getPostAggregates(uris),
+      this.feed.getPostAggregates(refs),
       viewer ? this.feed.getPostViewerStates(uris, viewer) : undefined,
       this.label.getLabelsForSubjects(allPostUris),
       this.hydratePostBlocks(posts),
@@ -320,14 +328,13 @@ export class Hydrator {
   //     - list basic
   //   - post
   //     - ...
-  async hydrateFeedPosts(
-    uris: string[],
+  async hydrateFeedItems(
+    items: FeedItem[],
     viewer: string | null,
     includeTakedowns = false,
   ): Promise<HydrationState> {
-    const collectionUris = urisByCollection(uris)
-    const postUris = collectionUris.get(ids.AppBskyFeedPost) ?? []
-    const repostUris = collectionUris.get(ids.AppBskyFeedRepost) ?? []
+    const postUris = items.map((item) => item.post.uri)
+    const repostUris = mapDefined(items, (item) => item.repost?.uri)
     const [posts, reposts, repostProfileState] = await Promise.all([
       this.feed.getPosts(postUris, includeTakedowns),
       this.feed.getReposts(repostUris),
@@ -337,36 +344,19 @@ export class Hydrator {
         includeTakedowns,
       ),
     ])
-    const repostPostUris = mapDefined(
-      [...reposts.values()],
-      (repost) => repost?.record.subject.uri,
-    )
-    const repostPosts = await this.feed.getPosts(
-      repostPostUris,
-      includeTakedowns,
-    )
-    const repostedAndReplyUris: string[] = []
-    repostPosts.forEach((post, uri) => {
-      repostedAndReplyUris.push(uri)
-      if (post?.record.reply) {
-        repostedAndReplyUris.push(
-          post.record.reply.root.uri,
-          post.record.reply.parent.uri,
-        )
-      }
-    })
-    posts.forEach((post) => {
-      if (post?.record.reply) {
-        repostedAndReplyUris.push(
-          post.record.reply.root.uri,
-          post.record.reply.parent.uri,
-        )
+    const postAndReplyRefs: ItemRef[] = []
+    posts.forEach((post, uri) => {
+      if (!post) return
+      postAndReplyRefs.push({ uri, cid: post.cid.toString() })
+      if (post.record.reply) {
+        postAndReplyRefs.push(post.record.reply.root, post.record.reply.parent)
       }
     })
     const postState = await this.hydratePosts(
-      [...postUris, ...repostedAndReplyUris],
+      postAndReplyRefs,
       viewer,
       includeTakedowns,
+      { posts },
     )
     return mergeManyStates(postState, repostProfileState, {
       reposts,
@@ -385,10 +375,10 @@ export class Hydrator {
   //     - profile
   //       - list basic
   async hydrateThreadPosts(
-    uris: string[],
+    refs: ItemRef[],
     viewer: string | null,
   ): Promise<HydrationState> {
-    return this.hydratePosts(uris, viewer)
+    return this.hydratePosts(refs, viewer)
   }
 
   // app.bsky.feed.defs#generatorView
@@ -396,13 +386,13 @@ export class Hydrator {
   //   - profile
   //     - list basic
   async hydrateFeedGens(
-    uris: string[],
+    uris: string[], // @TODO any way to get refs here?
     viewer: string | null,
   ): Promise<HydrationState> {
     const [feedgens, feedgenAggs, feedgenViewers, profileState] =
       await Promise.all([
         this.feed.getFeedGens(uris),
-        this.feed.getFeedGenAggregates(uris),
+        this.feed.getFeedGenAggregates(uris.map((uri) => ({ uri }))),
         viewer ? this.feed.getFeedGenViewerStates(uris, viewer) : undefined,
         this.hydrateProfiles(uris.map(didFromUri), viewer),
       ])
@@ -618,4 +608,9 @@ const mergeManyStates = (...states: HydrationState[]) => {
 
 const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
   return maps.reduce(mergeMaps, undefined as HydrationMap<T> | undefined)
+}
+
+const notIn = (uris: string[], map?: HydrationMap<unknown>) => {
+  if (!map) return uris
+  return uris.filter((uri) => !map.has(uri))
 }
