@@ -34,6 +34,8 @@ export interface ServerConfigValues {
   adminPassword: string
   moderatorPassword: string
   triagePassword: string
+  labelerDid: string
+  modServiceUrl: string
   modServiceDid: string
   rateLimitsEnabled: boolean
   rateLimitBypassKey?: string
@@ -115,6 +117,15 @@ export class ServerConfig {
     assert(moderatorPassword)
     const triagePassword = process.env.TRIAGE_PASSWORD || undefined
     assert(triagePassword)
+    const labelerDid =
+      overrides?.labelerDid || process.env.LABELER_DID || undefined
+    assert(labelerDid)
+
+    const modServiceUrl =
+      overrides?.modServiceUrl ||
+      process.env.MODERATION_SERVICE_URL ||
+      undefined
+    assert(modServiceUrl)
     const modServiceDid =
       overrides?.modServiceDid ||
       process.env.MODERATION_SERVICE_DID ||
@@ -155,6 +166,8 @@ export class ServerConfig {
       adminPassword,
       moderatorPassword,
       triagePassword,
+      labelerDid,
+      modServiceUrl,
       modServiceDid,
       rateLimitsEnabled,
       rateLimitBypassKey,
@@ -278,6 +291,14 @@ export class ServerConfig {
 
   get triagePassword() {
     return this.cfg.triagePassword
+  }
+
+  get labelerDid() {
+    return this.cfg.labelerDid
+  }
+
+  get modServiceUrl() {
+    return this.cfg.modServiceUrl
   }
 
   get modServiceDid() {

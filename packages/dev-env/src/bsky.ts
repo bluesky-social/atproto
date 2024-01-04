@@ -44,6 +44,8 @@ export class TestBsky {
       didCacheMaxTTL: DAY,
       labelCacheStaleTTL: 30 * SECOND,
       labelCacheMaxTTL: MINUTE,
+      labelerDid: 'did:example:labeler',
+      modServiceUrl: 'https://mod.invalid',
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       ...cfg,
       // Each test suite gets its own lock id for the repo subscription

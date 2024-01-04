@@ -47,6 +47,14 @@ import resolveHandle from './com/atproto/identity/resolveHandle'
 import getRecord from './com/atproto/repo/getRecord'
 import fetchLabels from './com/atproto/temp/fetchLabels'
 
+import emitModerationEvent from './com/atproto/admin/emitModerationEvent'
+import getModerationEvent from './com/atproto/admin/getModerationEvent'
+import getRepo from './com/atproto/admin/getRepo'
+import queryModerationEvents from './com/atproto/admin/queryModerationEvents'
+import queryModerationStatuses from './com/atproto/admin/queryModerationStatuses'
+import searchRepos from './com/atproto/admin/searchRepos'
+import createReport from './com/atproto/moderation/createReport'
+
 export * as health from './health'
 
 export * as wellKnown from './well-known'
@@ -102,5 +110,14 @@ export default function (server: Server, ctx: AppContext) {
   resolveHandle(server, ctx)
   getRecord(server, ctx)
   fetchLabels(server, ctx)
+
+  emitModerationEvent(server, ctx)
+  getModerationEvent(server, ctx)
+  getRepo(server, ctx)
+  queryModerationEvents(server, ctx)
+  queryModerationStatuses(server, ctx)
+  searchRepos(server, ctx)
+  createReport(server, ctx)
+
   return server
 }

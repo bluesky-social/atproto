@@ -12,9 +12,11 @@ import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
 import { NotificationServer } from './notifications'
 import { Redis } from './redis'
-import { AuthVerifier } from './auth-verifier'
+import { AuthVerifier, buildBasicAuth } from './auth-verifier'
 
 export class AppContext {
+  public moderationPushAgent: AtpAgent | undefined
+
   constructor(
     private opts: {
       db: DatabaseCoordinator
@@ -31,7 +33,13 @@ export class AppContext {
       notifServer: NotificationServer
       authVerifier: AuthVerifier
     },
-  ) {}
+  ) {
+    this.moderationPushAgent = new AtpAgent({ service: this.cfg.modServiceUrl })
+    this.moderationPushAgent.api.setHeader(
+      'authorization',
+      buildBasicAuth('admin', this.cfg.adminPassword),
+    )
+  }
 
   get db(): DatabaseCoordinator {
     return this.opts.db
