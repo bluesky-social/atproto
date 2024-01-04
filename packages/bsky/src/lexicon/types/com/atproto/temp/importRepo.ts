@@ -2,45 +2,34 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import express from 'express'
+import stream from 'stream'
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyFeedDefs from './defs'
 
 export interface QueryParams {
-  actor: string
-  limit: number
-  cursor?: string
-  filter:
-    | 'posts_with_replies'
-    | 'posts_no_replies'
-    | 'posts_with_media'
-    | 'posts_and_author_threads'
-    | (string & {})
+  /** The DID of the repo. */
+  did: string
 }
 
-export type InputSchema = undefined
+export type InputSchema = string | Uint8Array
 
-export interface OutputSchema {
-  cursor?: string
-  feed: AppBskyFeedDefs.FeedViewPost[]
-  [k: string]: unknown
+export interface HandlerInput {
+  encoding: 'application/vnd.ipld.car'
+  body: stream.Readable
 }
-
-export type HandlerInput = undefined
 
 export interface HandlerSuccess {
-  encoding: 'application/json'
-  body: OutputSchema
+  encoding: 'text/plain'
+  body: Uint8Array | stream.Readable
   headers?: { [key: string]: string }
 }
 
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'BlockedActor' | 'BlockedByActor'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

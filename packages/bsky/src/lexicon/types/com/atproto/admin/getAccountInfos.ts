@@ -7,25 +7,16 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyFeedDefs from './defs'
+import * as ComAtprotoAdminDefs from './defs'
 
 export interface QueryParams {
-  actor: string
-  limit: number
-  cursor?: string
-  filter:
-    | 'posts_with_replies'
-    | 'posts_no_replies'
-    | 'posts_with_media'
-    | 'posts_and_author_threads'
-    | (string & {})
+  dids: string[]
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor?: string
-  feed: AppBskyFeedDefs.FeedViewPost[]
+  infos: ComAtprotoAdminDefs.AccountView[]
   [k: string]: unknown
 }
 
@@ -40,7 +31,6 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'BlockedActor' | 'BlockedByActor'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

@@ -10,7 +10,8 @@
         "com.atproto.moderation.defs#reasonMisleading",
         "com.atproto.moderation.defs#reasonSexual",
         "com.atproto.moderation.defs#reasonRude",
-        "com.atproto.moderation.defs#reasonOther"
+        "com.atproto.moderation.defs#reasonOther",
+        "com.atproto.moderation.defs#reasonAppeal"
       ]
     },
     "reasonSpam": {
@@ -36,6 +37,10 @@
     "reasonOther": {
       "type": "token",
       "description": "Other: reports not falling under another report category"
+    },
+    "reasonAppeal": {
+      "type": "token",
+      "description": "Appeal: appeal a previously taken moderation action"
     }
   }
 }

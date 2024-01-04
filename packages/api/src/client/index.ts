@@ -14,6 +14,7 @@ import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/di
 import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
+import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
@@ -77,6 +78,9 @@ import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
+import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
+import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
+import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -150,6 +154,7 @@ export * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/di
 export * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
 export * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 export * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
+export * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
 export * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 export * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
 export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
@@ -213,6 +218,9 @@ export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
+export * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
+export * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
+export * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 export * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 export * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -291,6 +299,7 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonSexual: 'com.atproto.moderation.defs#reasonSexual',
   DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
+  DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
 }
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
@@ -431,6 +440,17 @@ export class AdminNS {
       .call('com.atproto.admin.getAccountInfo', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoAdminGetAccountInfo.toKnownErr(e)
+      })
+  }
+
+  getAccountInfos(
+    params?: ComAtprotoAdminGetAccountInfos.QueryParams,
+    opts?: ComAtprotoAdminGetAccountInfos.CallOptions,
+  ): Promise<ComAtprotoAdminGetAccountInfos.Response> {
+    return this._service.xrpc
+      .call('com.atproto.admin.getAccountInfos', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminGetAccountInfos.toKnownErr(e)
       })
   }
 
@@ -1119,6 +1139,39 @@ export class TempNS {
       .call('com.atproto.temp.fetchLabels', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoTempFetchLabels.toKnownErr(e)
+      })
+  }
+
+  importRepo(
+    data?: ComAtprotoTempImportRepo.InputSchema,
+    opts?: ComAtprotoTempImportRepo.CallOptions,
+  ): Promise<ComAtprotoTempImportRepo.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.importRepo', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoTempImportRepo.toKnownErr(e)
+      })
+  }
+
+  pushBlob(
+    data?: ComAtprotoTempPushBlob.InputSchema,
+    opts?: ComAtprotoTempPushBlob.CallOptions,
+  ): Promise<ComAtprotoTempPushBlob.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.pushBlob', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoTempPushBlob.toKnownErr(e)
+      })
+  }
+
+  transferAccount(
+    data?: ComAtprotoTempTransferAccount.InputSchema,
+    opts?: ComAtprotoTempTransferAccount.CallOptions,
+  ): Promise<ComAtprotoTempTransferAccount.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.transferAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoTempTransferAccount.toKnownErr(e)
       })
   }
 }

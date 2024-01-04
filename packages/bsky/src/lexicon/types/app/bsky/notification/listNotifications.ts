@@ -21,6 +21,7 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   notifications: Notification[]
+  seenAt?: string
   [k: string]: unknown
 }
 

@@ -31,6 +31,8 @@ export interface QueryParams {
   sortDirection?: 'asc' | 'desc'
   /** Get subjects that were taken down */
   takendown?: boolean
+  /** Get subjects in unresolved appealed status */
+  appealed?: boolean
   limit?: number
   cursor?: string
 }

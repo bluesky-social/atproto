@@ -102,6 +102,7 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#modEventAcknowledge',
               'lex:com.atproto.admin.defs#modEventEscalate',
               'lex:com.atproto.admin.defs#modEventMute',
+              'lex:com.atproto.admin.defs#modEventResolveAppeal',
             ],
           },
           subject: {
@@ -237,8 +238,19 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
           },
+          lastAppealedAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp referencing when the author of the subject appealed a moderation action',
+          },
           takendown: {
             type: 'boolean',
+          },
+          appealed: {
+            type: 'boolean',
+            description:
+              'True indicates that the a previously taken moderator action was appealed against, by the author of the content. False indicates last appeal was resolved by moderators.',
           },
           suspendUntil: {
             type: 'string',
@@ -423,6 +435,12 @@ export const schemaDict = {
           },
           email: {
             type: 'string',
+          },
+          relatedRecords: {
+            type: 'array',
+            items: {
+              type: 'unknown',
+            },
           },
           indexedAt: {
             type: 'string',
@@ -717,6 +735,16 @@ export const schemaDict = {
           },
         },
       },
+      modEventResolveAppeal: {
+        type: 'object',
+        description: 'Resolve appeal on a subject',
+        properties: {
+          comment: {
+            type: 'string',
+            description: 'Describe resolution.',
+          },
+        },
+      },
       modEventComment: {
         type: 'object',
         description: 'Add a comment to a subject',
@@ -815,6 +843,10 @@ export const schemaDict = {
           subjectLine: {
             type: 'string',
             description: 'The subject line of the email sent to the user.',
+          },
+          comment: {
+            type: 'string',
+            description: 'Additional comment about the outgoing comm.',
           },
         },
       },
@@ -1015,6 +1047,45 @@ export const schemaDict = {
           schema: {
             type: 'ref',
             ref: 'lex:com.atproto.admin.defs#accountView',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminGetAccountInfos: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getAccountInfos',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get details about some accounts.',
+        parameters: {
+          type: 'params',
+          required: ['dids'],
+          properties: {
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['infos'],
+            properties: {
+              infos: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.defs#accountView',
+                },
+              },
+            },
           },
         },
       },
@@ -1357,6 +1428,10 @@ export const schemaDict = {
               type: 'boolean',
               description: 'Get subjects that were taken down',
             },
+            appealed: {
+              type: 'boolean',
+              description: 'Get subjects in unresolved appealed status',
+            },
             limit: {
               type: 'integer',
               minimum: 1,
@@ -1466,6 +1541,11 @@ export const schemaDict = {
               senderDid: {
                 type: 'string',
                 format: 'did',
+              },
+              comment: {
+                type: 'string',
+                description:
+                  "Additional comment by the sender that won't be used in the email itself but helpful to provide more context for moderators/reviewers",
               },
             },
           },
@@ -1937,6 +2017,7 @@ export const schemaDict = {
           'com.atproto.moderation.defs#reasonSexual',
           'com.atproto.moderation.defs#reasonRude',
           'com.atproto.moderation.defs#reasonOther',
+          'com.atproto.moderation.defs#reasonAppeal',
         ],
       },
       reasonSpam: {
@@ -1963,6 +2044,10 @@ export const schemaDict = {
       reasonOther: {
         type: 'token',
         description: 'Other: reports not falling under another report category',
+      },
+      reasonAppeal: {
+        type: 'token',
+        description: 'Appeal: appeal a previously taken moderation action',
       },
     },
   },
@@ -4002,6 +4087,135 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoTempImportRepo: {
+    lexicon: 1,
+    id: 'com.atproto.temp.importRepo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Gets the did's repo, optionally catching up from a specific revision.",
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        input: {
+          encoding: 'application/vnd.ipld.car',
+        },
+        output: {
+          encoding: 'text/plain',
+        },
+      },
+    },
+  },
+  ComAtprotoTempPushBlob: {
+    lexicon: 1,
+    id: 'com.atproto.temp.pushBlob',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Gets the did's repo, optionally catching up from a specific revision.",
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        input: {
+          encoding: '*/*',
+        },
+      },
+    },
+  },
+  ComAtprotoTempTransferAccount: {
+    lexicon: 1,
+    id: 'com.atproto.temp.transferAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Transfer an account.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle', 'did', 'plcOp'],
+            properties: {
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              plcOp: {
+                type: 'unknown',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
+            properties: {
+              accessJwt: {
+                type: 'string',
+              },
+              refreshJwt: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidHandle',
+          },
+          {
+            name: 'InvalidPassword',
+          },
+          {
+            name: 'InvalidInviteCode',
+          },
+          {
+            name: 'HandleNotAvailable',
+          },
+          {
+            name: 'UnsupportedDomain',
+          },
+          {
+            name: 'UnresolvableDid',
+          },
+          {
+            name: 'IncompatibleDidDoc',
+          },
+        ],
+      },
+    },
+  },
   AppBskyActorDefs: {
     lexicon: 1,
     id: 'app.bsky.actor.defs',
@@ -5443,6 +5657,7 @@ export const schemaDict = {
                 'posts_with_replies',
                 'posts_no_replies',
                 'posts_with_media',
+                'posts_and_author_threads',
               ],
               default: 'posts_with_replies',
             },
@@ -7195,6 +7410,10 @@ export const schemaDict = {
                   ref: 'lex:app.bsky.notification.listNotifications#notification',
                 },
               },
+              seenAt: {
+                type: 'string',
+                format: 'datetime',
+              },
             },
           },
         },
@@ -7701,6 +7920,7 @@ export const ids = {
   ComAtprotoAdminEmitModerationEvent: 'com.atproto.admin.emitModerationEvent',
   ComAtprotoAdminEnableAccountInvites: 'com.atproto.admin.enableAccountInvites',
   ComAtprotoAdminGetAccountInfo: 'com.atproto.admin.getAccountInfo',
+  ComAtprotoAdminGetAccountInfos: 'com.atproto.admin.getAccountInfos',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
   ComAtprotoAdminGetModerationEvent: 'com.atproto.admin.getModerationEvent',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
@@ -7770,6 +7990,9 @@ export const ids = {
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
+  ComAtprotoTempImportRepo: 'com.atproto.temp.importRepo',
+  ComAtprotoTempPushBlob: 'com.atproto.temp.pushBlob',
+  ComAtprotoTempTransferAccount: 'com.atproto.temp.transferAccount',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
   AppBskyActorGetProfile: 'app.bsky.actor.getProfile',

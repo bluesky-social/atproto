@@ -7,29 +7,28 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyFeedDefs from './defs'
 
-export interface QueryParams {
-  actor: string
-  limit: number
-  cursor?: string
-  filter:
-    | 'posts_with_replies'
-    | 'posts_no_replies'
-    | 'posts_with_media'
-    | 'posts_and_author_threads'
-    | (string & {})
-}
+export interface QueryParams {}
 
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  cursor?: string
-  feed: AppBskyFeedDefs.FeedViewPost[]
+export interface InputSchema {
+  handle: string
+  did: string
+  plcOp: {}
   [k: string]: unknown
 }
 
-export type HandlerInput = undefined
+export interface OutputSchema {
+  accessJwt: string
+  refreshJwt: string
+  handle: string
+  did: string
+  [k: string]: unknown
+}
+
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
 
 export interface HandlerSuccess {
   encoding: 'application/json'
@@ -40,7 +39,14 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'BlockedActor' | 'BlockedByActor'
+  error?:
+    | 'InvalidHandle'
+    | 'InvalidPassword'
+    | 'InvalidInviteCode'
+    | 'HandleNotAvailable'
+    | 'UnsupportedDomain'
+    | 'UnresolvableDid'
+    | 'IncompatibleDidDoc'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
