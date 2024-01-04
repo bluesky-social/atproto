@@ -159,7 +159,7 @@ describe('agent', () => {
 
     expect(events.length).toEqual(2)
     expect(events[0]).toEqual('create')
-    expect(events[1]).toEqual('create')
+    expect(events[1]).toEqual('update')
     expect(sessions.length).toEqual(2)
     expect(sessions[0]?.accessJwt).toEqual(agent1.session?.accessJwt)
     expect(sessions[1]?.accessJwt).toEqual(agent2.session?.accessJwt)
