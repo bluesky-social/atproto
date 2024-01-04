@@ -866,6 +866,15 @@ importers:
         specifier: 3.13.2
         version: 3.13.2
 
+  services/ozone:
+    dependencies:
+      '@atproto/ozone':
+        specifier: workspace:^
+        version: link:../../packages/ozone
+      dd-trace:
+        specifier: 3.13.2
+        version: 3.13.2
+
   services/pds:
     dependencies:
       '@atproto/aws':
