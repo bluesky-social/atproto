@@ -60,7 +60,6 @@ export class TestNetwork extends TestNetworkNoAppView {
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
       dbPrimaryPostgresUrl: dbPostgresUrl,
       redisHost,
-      modServiceUrl: `http://localhost:${ozonePort}`,
       modServiceDid: ozoneDid,
       ...params.bsky,
       indexer: {
