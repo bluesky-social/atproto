@@ -38,6 +38,7 @@ export type AppContextOptions = {
   redisScratch?: Redis
   crawlers: Crawlers
   appViewAgent: AtpAgent
+  moderationAgent: AtpAgent
   authVerifier: AuthVerifier
   pdsAgents: PdsAgents
   repoSigningKey: crypto.Keypair
@@ -61,6 +62,7 @@ export class AppContext {
   public redisScratch?: Redis
   public crawlers: Crawlers
   public appViewAgent: AtpAgent
+  public moderationAgent: AtpAgent
   public authVerifier: AuthVerifier
   public pdsAgents: PdsAgents
   public repoSigningKey: crypto.Keypair
@@ -83,6 +85,7 @@ export class AppContext {
     this.redisScratch = opts.redisScratch
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
+    this.moderationAgent = opts.moderationAgent
     this.authVerifier = opts.authVerifier
     this.pdsAgents = opts.pdsAgents
     this.repoSigningKey = opts.repoSigningKey
@@ -160,6 +163,7 @@ export class AppContext {
     const crawlers = new Crawlers(cfg.service.hostname, cfg.crawlers)
 
     const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
+    const moderationAgent = new AtpAgent({ service: cfg.modService.url })
 
     const authKeys = await getAuthKeys(secrets)
 
@@ -168,7 +172,8 @@ export class AppContext {
       adminPass: secrets.adminPassword,
       moderatorPass: secrets.moderatorPassword,
       triagePass: secrets.triagePassword,
-      adminServiceDid: cfg.bskyAppView.did,
+      pdsServiceDid: cfg.service.did,
+      modServiceDid: cfg.modService.did,
     })
 
     const repoSigningKey =
@@ -220,6 +225,7 @@ export class AppContext {
       redisScratch,
       crawlers,
       appViewAgent,
+      moderationAgent,
       authVerifier,
       repoSigningKey,
       plcRotationKey,
@@ -229,11 +235,15 @@ export class AppContext {
     })
   }
 
-  async serviceAuthHeaders(did: string, audience?: string) {
-    const aud = audience ?? this.cfg.bskyAppView.did
-    if (!aud) {
-      throw new Error('Could not find bsky appview did')
-    }
+  async appviewAuthHeaders(did: string) {
+    return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did)
+  }
+
+  async moderationAuthHeaders(did: string) {
+    return this.serviceAuthHeaders(did, this.cfg.modService.did)
+  }
+
+  async serviceAuthHeaders(did: string, aud: string) {
     return createServiceAuthHeaders({
       iss: did,
       aud,
