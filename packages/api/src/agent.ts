@@ -160,7 +160,11 @@ export class AtpAgent {
       this.session = session
       const res = await this.api.com.atproto.server.getSession()
       if (res.data.did !== this.session.did) {
-        throw new XRPCError(ResponseType.InvalidRequest, 'Invalid session', 'InvalidDID')
+        throw new XRPCError(
+          ResponseType.InvalidRequest,
+          'Invalid session',
+          'InvalidDID',
+        )
       }
       this.session.email = res.data.email
       this.session.handle = res.data.handle
