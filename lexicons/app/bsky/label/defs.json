@@ -27,6 +27,30 @@
         "indexedAt": { "type": "string", "format": "datetime" }
       }
     },
+    "labelerViewBasic": {
+      "type": "object",
+      "required": ["uri", "cid", "did", "creator", "displayName", "indexedAt"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "did": { "type": "string", "format": "did" },
+        "creator": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
+        "displayName": { "type": "string" },
+        "description": {
+          "type": "string",
+          "maxGraphemes": 300,
+          "maxLength": 3000
+        },
+        "descriptionFacets": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
+        },
+        "avatar": { "type": "string" },
+        "likeCount": { "type": "integer", "minimum": 0 },
+        "viewer": { "type": "ref", "ref": "#labelerViewerState" },
+        "indexedAt": { "type": "string", "format": "datetime" }
+      }
+    },
     "labelerViewerState": {
       "type": "object",
       "properties": {
