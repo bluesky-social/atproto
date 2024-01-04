@@ -191,7 +191,7 @@ export async function generateMockSetup(env: TestNetwork) {
     const labelSrvc = ctx.services.label(ctx.db.getPrimary())
     await labelSrvc.createLabels([
       {
-        src: ctx.cfg.labelerDid,
+        src: env.ozone.ctx.cfg.service.did,
         uri: labeledPost.uri,
         cid: labeledPost.cid,
         val: 'nudity',
@@ -199,7 +199,7 @@ export async function generateMockSetup(env: TestNetwork) {
         cts: new Date().toISOString(),
       },
       {
-        src: ctx.cfg.labelerDid,
+        src: env.ozone.ctx.cfg.service.did,
         uri: filteredPost.uri,
         cid: filteredPost.cid,
         val: 'dmca-violation',

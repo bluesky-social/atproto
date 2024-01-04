@@ -5,7 +5,7 @@ export const readEnv = (): OzoneEnvironment => {
     nodeEnv: envStr('NODE_ENV'),
     version: envStr('OZONE_VERSION'),
     port: envInt('OZONE_PORT'),
-    publicUrl: envStr('OZONE_PUBLIC_URI'),
+    publicUrl: envStr('OZONE_PUBLIC_URL'),
     serverDid: envStr('OZONE_SERVER_DID'),
     appviewUrl: envStr('OZONE_APPVIEW_URL'),
     appviewDid: envStr('OZONE_APPVIEW_DID'),
@@ -14,7 +14,6 @@ export const readEnv = (): OzoneEnvironment => {
     dbPostgresUrl: envStr('OZONE_DB_POSTGRES_URL'),
     dbPostgresSchema: envStr('OZONE_DB_POSTGRES_SCHEMA'),
     didPlcUrl: envStr('OZONE_DID_PLC_URL'),
-    labelerDid: envStr('OZONE_'),
     adminPassword: envStr('OZONE_ADMIN_PASSWORD'),
     moderatorPassword: envStr('OZONE_MODERATOR_PASSWORD'),
     triagePassword: envStr('OZONE_TRIAGE_PASSWORD'),
@@ -35,7 +34,6 @@ export type OzoneEnvironment = {
   dbPostgresUrl?: string
   dbPostgresSchema?: string
   didPlcUrl?: string
-  labelerDid?: string
   adminPassword?: string
   moderatorPassword?: string
   triagePassword?: string

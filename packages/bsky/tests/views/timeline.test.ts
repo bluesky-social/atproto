@@ -34,7 +34,7 @@ describe('timeline views', () => {
     await network.bsky.ctx.services
       .label(network.bsky.ctx.db.getPrimary())
       .formatAndCreate(
-        network.bsky.ctx.cfg.labelerDid,
+        network.ozone.ctx.cfg.service.did,
         labelPostA.uriStr,
         labelPostA.cidStr,
         { create: ['kind'] },
@@ -42,7 +42,7 @@ describe('timeline views', () => {
     await network.bsky.ctx.services
       .label(network.bsky.ctx.db.getPrimary())
       .formatAndCreate(
-        network.bsky.ctx.cfg.labelerDid,
+        network.ozone.ctx.cfg.service.did,
         labelPostB.uriStr,
         labelPostB.cidStr,
         { create: ['kind'] },

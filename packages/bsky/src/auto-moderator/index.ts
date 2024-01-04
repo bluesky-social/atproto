@@ -143,7 +143,7 @@ export class AutoModerator {
       reasonType: REASONOTHER,
       reason: `Automatically flagged for possible slurs: ${matches.join(', ')}`,
       subject: formattedSubject,
-      reportedBy: this.ctx.cfg.labelerDid,
+      reportedBy: this.ctx.cfg.serverDid,
     })
   }
 
@@ -199,7 +199,7 @@ export class AutoModerator {
     )
 
     await this.pushAgent.com.atproto.moderation.createReport({
-      reportedBy: this.ctx.cfg.labelerDid,
+      reportedBy: this.ctx.cfg.serverDid,
       reasonType: REASONVIOLATION,
       subject: {
         $type: 'com.atproto.repo.strongRef',
@@ -220,7 +220,7 @@ export class AutoModerator {
         cid: recordCid.toString(),
       },
       subjectBlobCids: takedownCids.map((c) => c.toString()),
-      createdBy: this.ctx.cfg.labelerDid,
+      createdBy: this.ctx.cfg.serverDid,
     })
   }
 
@@ -239,7 +239,7 @@ export class AutoModerator {
         uri: uri.toString(),
         cid: cid.toString(),
       },
-      createdBy: this.ctx.cfg.labelerDid,
+      createdBy: this.ctx.cfg.serverDid,
     })
   }
 

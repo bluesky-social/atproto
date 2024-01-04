@@ -3,7 +3,7 @@
 exports[`moderation-events get event gets an event by specific id 1`] = `
 Object {
   "createdAt": "1970-01-01T00:00:00.000Z",
-  "createdBy": "did:example:labeler",
+  "createdBy": "user(2)",
   "event": Object {
     "$type": "com.atproto.admin.defs#modEventLabel",
     "comment": "[AutoModerator]: Applying labels",

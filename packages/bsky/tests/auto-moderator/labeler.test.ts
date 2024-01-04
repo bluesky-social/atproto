@@ -18,7 +18,6 @@ describe('labeler', () => {
   let ozone: TestOzone
   let autoMod: AutoModerator
   let ctx: IndexerContext
-  let labelerDid: string
   let badBlob1: BlobRef
   let badBlob2: BlobRef
   let goodBlob: BlobRef
@@ -32,7 +31,6 @@ describe('labeler', () => {
     ozone = network.ozone
     ctx = network.bsky.indexer.ctx
     const pdsCtx = network.pds.ctx
-    labelerDid = ctx.cfg.labelerDid
     autoMod = ctx.autoMod
     autoMod.imgLabeler = new TestImgLabeler()
     const sc = network.getSeedClient()
@@ -90,7 +88,7 @@ describe('labeler', () => {
     const labels = await getLabels(uri.toString())
     expect(labels.length).toBe(1)
     expect(labels[0]).toMatchObject({
-      src: labelerDid,
+      src: ozone.ctx.cfg.service.did,
       uri: uri.toString(),
       cid: cid.toString(),
       val: 'test-label',
@@ -113,7 +111,7 @@ describe('labeler', () => {
       createLabelVals: 'test-label',
       negateLabelVals: null,
       comment: `[AutoModerator]: Applying labels`,
-      createdBy: labelerDid,
+      createdBy: network.bsky.indexer.ctx.cfg.serverDid,
     })
   })
 

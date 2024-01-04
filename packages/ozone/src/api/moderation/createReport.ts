@@ -11,9 +11,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authOptionalAccessOrRoleVerifier,
     handler: async ({ input, auth }) => {
       const requester =
-        'did' in auth.credentials
-          ? auth.credentials.did
-          : ctx.cfg.service.labelerDid
+        'did' in auth.credentials ? auth.credentials.did : ctx.cfg.service.did
       const { reasonType, reason } = input.body
       const subject = subjectFromInput(input.body.subject)
 

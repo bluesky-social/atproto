@@ -31,7 +31,6 @@ export interface ServerConfigValues {
   imgUriEndpoint?: string
   blobCacheLocation?: string
   searchEndpoint?: string
-  labelerDid: string
   adminPassword: string
   moderatorPassword: string
   triagePassword: string
@@ -117,7 +116,6 @@ export class ServerConfig {
     assert(moderatorPassword)
     const triagePassword = process.env.TRIAGE_PASSWORD || undefined
     assert(triagePassword)
-    const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const modServiceUrl =
       overrides?.modServiceUrl || process.env.MODERATION_PUSH_URL || undefined
     const modServiceDid =
@@ -156,7 +154,6 @@ export class ServerConfig {
       imgUriEndpoint,
       blobCacheLocation,
       searchEndpoint,
-      labelerDid,
       adminPassword,
       moderatorPassword,
       triagePassword,
@@ -272,10 +269,6 @@ export class ServerConfig {
 
   get searchEndpoint() {
     return this.cfg.searchEndpoint
-  }
-
-  get labelerDid() {
-    return this.cfg.labelerDid
   }
 
   get adminPassword() {

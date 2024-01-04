@@ -8,12 +8,10 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
   const port = env.port ?? 3000
   assert(env.publicUrl)
   assert(env.serverDid)
-  assert(env.labelerDid)
   const serviceCfg: OzoneConfig['service'] = {
     port,
     publicUrl: env.publicUrl,
     did: env.serverDid,
-    labelerDid: env.labelerDid,
     version: env.version,
   }
 
@@ -63,7 +61,6 @@ export type ServiceConfig = {
   port: number
   publicUrl: string
   did: string
-  labelerDid: string
   version?: string
 }
 

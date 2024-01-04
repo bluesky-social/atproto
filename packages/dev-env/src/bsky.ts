@@ -51,7 +51,6 @@ export class TestBsky {
       adminPassword: ADMIN_PASSWORD,
       moderatorPassword: MOD_PASSWORD,
       triagePassword: TRIAGE_PASSWORD,
-      labelerDid: 'did:example:labeler',
       feedGenDid: 'did:example:feedGen',
       rateLimitsEnabled: false,
     })
@@ -100,9 +99,9 @@ export class TestBsky {
     // indexer
     const indexerCfg = new bsky.IndexerConfig({
       version: '0.0.0',
+      serverDid,
       didCacheStaleTTL: HOUR,
       didCacheMaxTTL: DAY,
-      labelerDid: 'did:example:labeler',
       redisHost: cfg.redisHost,
       dbPostgresUrl: cfg.dbPrimaryPostgresUrl,
       dbPostgresSchema: cfg.dbPostgresSchema,
@@ -258,9 +257,9 @@ export async function getIndexers(
   const ns = name ? await randomIntFromSeed(name, 1000000) : undefined
   const baseCfg: bsky.IndexerConfigValues = {
     version: '0.0.0',
+    serverDid: 'did:example:bsky',
     didCacheStaleTTL: HOUR,
     didCacheMaxTTL: DAY,
-    labelerDid: 'did:example:labeler',
     labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
     redisHost: process.env.REDIS_HOST || '',
     dbPostgresUrl: process.env.DB_POSTGRES_URL || '',
