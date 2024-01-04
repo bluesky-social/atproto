@@ -1,0 +1,103 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.label.defs",
+  "defs": {
+    "labelerView": {
+      "type": "object",
+      "required": ["uri", "cid", "did", "creator", "displayName", "indexedAt"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "did": { "type": "string", "format": "did" },
+        "creator": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
+        "displayName": { "type": "string" },
+        "description": {
+          "type": "string",
+          "maxGraphemes": 300,
+          "maxLength": 3000
+        },
+        "descriptionFacets": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
+        },
+        "avatar": { "type": "string" },
+        "policies": {"type": "ref", "ref": "app.bsky.label.defs#labelerPolicies"},
+        "likeCount": { "type": "integer", "minimum": 0 },
+        "viewer": { "type": "ref", "ref": "#labelerViewerState" },
+        "indexedAt": { "type": "string", "format": "datetime" }
+      }
+    },
+    "labelerViewerState": {
+      "type": "object",
+      "properties": {
+        "like": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "labelerPolicies": {
+      "type": "object",
+      "required": ["reportReasons", "labelValues"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "maxGraphemes": 10000,
+          "maxLength": 100000
+        },
+        "descriptionFacets": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
+        },
+        "reportReasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "knownValues": [
+              "com.atproto.moderation.defs#reasonSpam",
+              "com.atproto.moderation.defs#reasonViolation",
+              "com.atproto.moderation.defs#reasonMisleading",
+              "com.atproto.moderation.defs#reasonSexual",
+              "com.atproto.moderation.defs#reasonRude",
+              "com.atproto.moderation.defs#reasonOther",
+              "com.atproto.moderation.defs#reasonAppeal"
+            ]
+          }
+        },
+        "labelValues": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "knownValues": [
+              "!hide",
+              "!no-promote",
+              "!warn",
+              "!no-unauthenticated",
+              "dmca-violation",
+              "doxxing",
+              "porn",
+              "sexual",
+              "nudity",
+              "nsfl",
+              "corpse",
+              "gore",
+              "torture",
+              "self-harm",
+              "intolerant-race",
+              "intolerant-gender",
+              "intolerant-sexual-orientation",
+              "intolerant-religion",
+              "intolerant",
+              "icon-intolerant",
+              "threat",
+              "spoiler",
+              "spam",
+              "account-security",
+              "net-abuse",
+              "impersonation",
+              "scam",
+              "misleading"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
