@@ -498,7 +498,6 @@ export class ModerationService {
   }
 
   async reverseTakedownRecord(info: { uri: AtUri }) {
-    this.db.assertTransaction()
     await this.db.db
       .updateTable('record')
       .set({ takedownRef: null })
