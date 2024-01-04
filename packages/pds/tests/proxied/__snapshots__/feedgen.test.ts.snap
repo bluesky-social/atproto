@@ -91,7 +91,7 @@ Object {
               "cid": "cids(4)",
               "cts": "1970-01-01T00:00:00.000Z",
               "neg": false,
-              "src": "did:example:labeler",
+              "src": "user(4)",
               "uri": "record(3)",
               "val": "test-label",
             },
@@ -99,7 +99,7 @@ Object {
               "cid": "cids(4)",
               "cts": "1970-01-01T00:00:00.000Z",
               "neg": false,
-              "src": "did:example:labeler",
+              "src": "user(4)",
               "uri": "record(3)",
               "val": "test-label-2",
             },
@@ -190,7 +190,7 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "did": "user(4)",
+          "did": "user(5)",
           "handle": "carol.test",
           "labels": Array [],
           "viewer": Object {
@@ -347,7 +347,7 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "did:example:labeler",
+            "src": "user(4)",
             "uri": "record(3)",
             "val": "test-label",
           },
@@ -355,7 +355,7 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "did:example:labeler",
+            "src": "user(4)",
             "uri": "record(3)",
             "val": "test-label-2",
           },
@@ -524,14 +524,14 @@ Object {
           "record": Object {
             "$type": "app.bsky.embed.record#viewRecord",
             "author": Object {
-              "did": "user(5)",
+              "did": "user(6)",
               "handle": "dan.test",
               "labels": Array [
                 Object {
                   "cts": "1970-01-01T00:00:00.000Z",
                   "neg": false,
-                  "src": "did:example:labeler",
-                  "uri": "user(5)",
+                  "src": "user(4)",
+                  "uri": "user(6)",
                   "val": "repo-action-label",
                 },
               ],
@@ -548,7 +548,7 @@ Object {
                 "record": Object {
                   "$type": "app.bsky.embed.record#viewRecord",
                   "author": Object {
-                    "did": "user(4)",
+                    "did": "user(5)",
                     "handle": "carol.test",
                     "labels": Array [],
                     "viewer": Object {
@@ -643,7 +643,7 @@ Object {
             "cid": "cids(7)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "did:example:labeler",
+            "src": "user(4)",
             "uri": "record(9)",
             "val": "test-label",
           },
@@ -745,7 +745,7 @@ Object {
     Object {
       "post": Object {
         "author": Object {
-          "did": "user(4)",
+          "did": "user(5)",
           "handle": "carol.test",
           "labels": Array [],
           "viewer": Object {
@@ -763,13 +763,13 @@ Object {
             "images": Array [
               Object {
                 "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
-                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(5)@jpeg",
-                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(5)@jpeg",
+                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(7)/cids(5)@jpeg",
+                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(7)/cids(5)@jpeg",
               },
               Object {
                 "alt": "../dev-env/src/seed/img/key-alt.jpg",
-                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(10)@jpeg",
-                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(10)@jpeg",
+                "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(7)/cids(10)@jpeg",
+                "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(7)/cids(10)@jpeg",
               },
             ],
           },
