@@ -190,6 +190,8 @@ export class AtpAgent {
          */
         if (['InvalidDID'].includes(e.error)) {
           this._persistSession?.('expired', undefined)
+        } else if (['InternalServerError'].includes(e.error)) {
+          this._persistSession?.('network-error', undefined)
         }
       } else {
         this._persistSession?.('network-error', undefined)
