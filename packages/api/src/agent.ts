@@ -176,11 +176,20 @@ export class AtpAgent {
       this.session = undefined
 
       if (e instanceof XRPCError && e.error) {
-        // `ExpiredToken` and `InvalidToken` are handled by the `this._refreshSession`
-        if (['AuthMissing', 'InvalidDID'].includes(e.error)) {
+        /*
+         * `ExpiredToken` and `InvalidToken` are handled in
+         * `this_refreshSession`, and emit an `expired` event there.
+         *
+         * `AuthMissing` is a respose from `getSession`, and happens AFTER the
+         * initial `expired` event is sent. If we handle that here, we'll
+         * double-emit `expired`.
+         *
+         * `InvalidDID` is emit above, and should be handled here.
+         *
+         * Everything else is unexpected.
+         */
+        if (['InvalidDID'].includes(e.error)) {
           this._persistSession?.('expired', undefined)
-        } else {
-          this._persistSession?.('network-error', undefined)
         }
       } else {
         this._persistSession?.('network-error', undefined)
