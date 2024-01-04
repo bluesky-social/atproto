@@ -4,17 +4,15 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { OutputSchema } from '../../../../lexicon/types/com/atproto/admin/getSubjectStatus'
-import { ensureValidAdminAud } from '../../../../auth-verifier'
 import { authPassthru, proxy, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getSubjectStatus({
     auth: ctx.authVerifier.roleOrAdminService,
-    handler: async ({ params, auth, req }) => {
+    handler: async ({ params, req }) => {
       const modSrvc = ctx.services.moderation(ctx.db)
       const accSrvc = ctx.services.account(ctx.db)
       const { did, uri, blob } = parseSubject(params)
-      ensureValidAdminAud(auth, did)
 
       const account = await accSrvc.getAccount(did, true)
       const proxied = await proxy(ctx, account?.pdsDid, async (agent) => {

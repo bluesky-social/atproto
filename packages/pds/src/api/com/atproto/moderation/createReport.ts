@@ -4,7 +4,6 @@ import {
   authPassthru,
   ensureThisPds,
   proxy,
-  proxyAppView,
   resultPassthru,
 } from '../../../proxy'
 
@@ -30,12 +29,14 @@ export default function (server: Server, ctx: AppContext) {
       ensureThisPds(ctx, auth.credentials.pdsDid)
 
       const requester = auth.credentials.did
-      const { data: result } = await proxyAppView(ctx, async (agent) =>
-        agent.com.atproto.moderation.createReport(input.body, {
-          ...(await ctx.serviceAuthHeaders(requester)),
-          encoding: 'application/json',
-        }),
-      )
+      const { data: result } =
+        await ctx.moderationAgent.com.atproto.moderation.createReport(
+          input.body,
+          {
+            ...(await ctx.moderationAuthHeaders(requester)),
+            encoding: 'application/json',
+          },
+        )
       return {
         encoding: 'application/json',
         body: result,

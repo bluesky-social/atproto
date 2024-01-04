@@ -9,7 +9,6 @@ import {
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { InputSchema } from '../../../../lexicon/types/com/atproto/admin/updateSubjectStatus'
 import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
-import { ensureValidAdminAud } from '../../../../auth-verifier'
 import { authPassthru, proxy, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
@@ -25,7 +24,6 @@ export default function (server: Server, ctx: AppContext) {
 
       const { subject, takedown } = input.body
       const { did, uri, blob } = parseSubject(subject)
-      ensureValidAdminAud(auth, did)
 
       const modSrvc = ctx.services.moderation(ctx.db)
       const authSrvc = ctx.services.auth(ctx.db)

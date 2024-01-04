@@ -37,7 +37,7 @@ export default function (server: Server, ctx: AppContext) {
         agent.api.app.bsky.actor.getProfile(
           params,
           requester
-            ? await ctx.serviceAuthHeaders(requester)
+            ? await ctx.appviewAuthHeaders(requester)
             : authPassthru(req),
         ),
       )

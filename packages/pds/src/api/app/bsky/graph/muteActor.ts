@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       await proxyAppView(ctx, async (agent) =>
         agent.api.app.bsky.graph.muteActor(input.body, {
-          ...(await ctx.serviceAuthHeaders(requester)),
+          ...(await ctx.appviewAuthHeaders(requester)),
           encoding: 'application/json',
         }),
       )

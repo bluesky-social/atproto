@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
       const res = await proxyAppView(ctx, async (agent) =>
         agent.api.app.bsky.graph.getSuggestedFollowsByActor(
           params,
-          await ctx.serviceAuthHeaders(requester),
+          await ctx.appviewAuthHeaders(requester),
         ),
       )
       return {
