@@ -180,18 +180,14 @@ export class AtpAgent {
          * `ExpiredToken` and `InvalidToken` are handled in
          * `this_refreshSession`, and emit an `expired` event there.
          *
-         * `AuthMissing` is a respose from `getSession`, and happens AFTER the
-         * initial `expired` event is sent. If we handle that here, we'll
-         * double-emit `expired`.
-         *
-         * `InvalidDID` is emit above, and should be handled here.
-         *
-         * Everything else is unexpected.
+         * Everything else is handled here.
          */
-        if (['InvalidDID'].includes(e.error)) {
-          this._persistSession?.('expired', undefined)
-        } else if (['InternalServerError'].includes(e.error)) {
+        if (
+          [1, 408, 425, 429, 500, 502, 503, 504, 522, 524].includes(e.status)
+        ) {
           this._persistSession?.('network-error', undefined)
+        } else {
+          this._persistSession?.('expired', undefined)
         }
       } else {
         this._persistSession?.('network-error', undefined)
