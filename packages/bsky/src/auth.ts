@@ -9,15 +9,30 @@ const BEARER = 'Bearer '
 
 // @NOTE this is not safe for production! it has been modified for testing purposes to sidestep jwt auth, allow providing a did directly.
 export const authVerifier = (
-  _idResolver: IdResolver,
+  idResolver: IdResolver,
   opts: { aud: string | null },
 ) => {
+  const getSigningKey = async (
+    did: string,
+    forceRefresh: boolean,
+  ): Promise<string> => {
+    const atprotoData = await idResolver.did.resolveAtprotoData(
+      did,
+      forceRefresh,
+    )
+    return atprotoData.signingKey
+  }
+
   return async (reqCtx: { req: express.Request; res: express.Response }) => {
-    const did = getJwtStrFromReq(reqCtx.req)
-    if (!did) {
+    const jwtStr = getJwtStrFromReq(reqCtx.req)
+    if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
     }
-    return { credentials: { did }, artifacts: { aud: opts.aud } }
+
+    const payload = jwtStr.startsWith('did:')
+      ? { iss: jwtStr }
+      : await verifyJwt(jwtStr, opts.aud, getSigningKey)
+    return { credentials: { did: payload.iss }, artifacts: { aud: opts.aud } }
   }
 }
 
