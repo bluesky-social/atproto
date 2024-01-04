@@ -170,7 +170,7 @@ export class AtpAgent {
       this.session.handle = res.data.handle
       this.session.emailConfirmed = res.data.emailConfirmed
       this._updateApiEndpoint(res.data.didDoc)
-      this._persistSession?.('create', this.session)
+      this._persistSession?.('update', this.session)
       return res
     } catch (e) {
       this.session = undefined
