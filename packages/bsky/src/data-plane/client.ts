@@ -40,6 +40,18 @@ export const createDataPlaneClient = (
   }) as DataPlaneClient
 }
 
+export { Code }
+
+export const isDataplaneError = (
+  err: unknown,
+  code?: Code,
+): err is ConnectError => {
+  if (err instanceof ConnectError) {
+    return !code || err.code === code
+  }
+  return false
+}
+
 const createBaseClient = (
   baseUrl: string,
   opts: { httpVersion?: HttpVersion; rejectUnauthorized?: boolean },
