@@ -42,7 +42,7 @@ export const createAccessToken = (opts: {
     jwtKey,
     serviceDid,
     scope = AuthScope.Access,
-    expiresIn = '5s',
+    expiresIn = '120mins',
   } = opts
   const signer = new jose.SignJWT({ scope })
     .setProtectedHeader({ alg: 'HS256' }) // only symmetric keys supported
