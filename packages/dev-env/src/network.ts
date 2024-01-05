@@ -119,7 +119,7 @@ export class TestNetwork extends TestNetworkNoAppView {
     await this.processFullSubscription(timeout)
     await this.bsky.processAll()
     await this.ozone.processAll()
-    await this.bsky.ingester.ctx.labelSubscription.fetchLabels()
+    await this.bsky.ingester.ctx.labelSubscription?.fetchLabels()
   }
 
   async serviceHeaders(did: string, aud?: string) {
