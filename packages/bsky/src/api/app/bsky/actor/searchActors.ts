@@ -1,6 +1,8 @@
+import assert from 'assert'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { mapDefined } from '@atproto/common'
+import AtpAgent from '@atproto/api'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/searchActors'
 import {
   HydrationFnInput,
@@ -36,18 +38,19 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
-  const term = params.q ?? params.term
 
   // @TODO
-  // add hits total
+  //add hits total
+  assert(ctx.searchAgent, 'unsupported without search agent')
+  const { data: res } =
+    await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
+      q: params.q ?? params.term ?? '',
+      cursor: params.cursor,
+      limit: params.limit,
+    })
 
-  const res = await ctx.dataplane.searchActors({
-    term,
-    limit: params.limit,
-    cursor: params.cursor,
-  })
   return {
-    dids: res.dids,
+    dids: res.actors.map(({ did }) => did),
     cursor: parseString(res.cursor),
   }
 }
@@ -84,6 +87,7 @@ type Context = {
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views
+  searchAgent?: AtpAgent
 }
 
 type Params = QueryParams & { viewer: string | null }

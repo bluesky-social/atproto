@@ -5,6 +5,7 @@ import events from 'events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
 import compression from 'compression'
+import AtpAgent from '@atproto/api'
 import { DidCache, IdResolver } from '@atproto/identity'
 import API, { health, wellKnown, blobResolver } from './api'
 import * as error from './error'
@@ -71,6 +72,9 @@ export class BskyAppView {
       )
     }
 
+    const searchAgent = config.searchEndpoint
+      ? new AtpAgent({ service: config.searchEndpoint })
+      : undefined
     const dataplane = createDataPlaneClient(config.dataplaneUrls, {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
@@ -81,6 +85,7 @@ export class BskyAppView {
     const ctx = new AppContext({
       cfg: config,
       dataplane,
+      searchAgent,
       hydrator,
       views,
       signingKey,
