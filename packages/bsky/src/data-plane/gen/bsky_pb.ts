@@ -5400,9 +5400,9 @@ export class GetListFeedRequest extends Message<GetListFeedRequest> {
  */
 export class GetListFeedResponse extends Message<GetListFeedResponse> {
   /**
-   * @generated from field: repeated string uris = 1;
+   * @generated from field: repeated bsky.FeedItem items = 1;
    */
-  uris: string[] = [];
+  items: FeedItem[] = [];
 
   /**
    * @generated from field: string cursor = 2;
@@ -5417,7 +5417,7 @@ export class GetListFeedResponse extends Message<GetListFeedResponse> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetListFeedResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 1, name: "items", kind: "message", T: FeedItem, repeated: true },
     { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 

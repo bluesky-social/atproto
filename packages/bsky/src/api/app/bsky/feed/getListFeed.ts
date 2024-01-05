@@ -48,7 +48,12 @@ export const skeleton = async (inputs: {
     cursor: params.cursor,
   })
   return {
-    items: res.uris.map((uri) => ({ post: { uri } })),
+    items: res.items.map((item) => ({
+      post: { uri: item.uri, cid: item.cid || undefined },
+      repost: item.repost
+        ? { uri: item.repost, cid: item.repostCid || undefined }
+        : undefined,
+    })),
     cursor: parseString(res.cursor),
   }
 }
