@@ -15,6 +15,7 @@ import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/di
 import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
+import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
@@ -74,6 +75,9 @@ import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOf
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
+import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
+import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
+import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
 import * as AppBskyActorGetProfiles from './types/app/bsky/actor/getProfiles'
@@ -132,6 +136,7 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonSexual: 'com.atproto.moderation.defs#reasonSexual',
   DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
+  DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
 }
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
@@ -258,6 +263,17 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.getAccountInfo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getAccountInfos<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminGetAccountInfos.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminGetAccountInfos.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.getAccountInfos' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -965,6 +981,39 @@ export class TempNS {
     const nsid = 'com.atproto.temp.fetchLabels' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
+
+  importRepo<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempImportRepo.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempImportRepo.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.importRepo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  pushBlob<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempPushBlob.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempPushBlob.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.pushBlob' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  transferAccount<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempTransferAccount.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempTransferAccount.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.transferAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
 }
 
 export class AppNS {
@@ -1561,11 +1610,13 @@ type RouteRateLimitOpts<T> = {
   calcKey?: (ctx: T) => string
   calcPoints?: (ctx: T) => number
 }
+type HandlerOpts = { blobLimit?: number }
 type HandlerRateLimitOpts<T> = SharedRateLimitOpts<T> | RouteRateLimitOpts<T>
 type ConfigOf<Auth, Handler, ReqCtx> =
   | Handler
   | {
       auth?: Auth
+      opts?: HandlerOpts
       rateLimit?: HandlerRateLimitOpts<ReqCtx> | HandlerRateLimitOpts<ReqCtx>[]
       handler: Handler
     }

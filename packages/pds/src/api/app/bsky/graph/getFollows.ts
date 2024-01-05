@@ -34,7 +34,7 @@ export default function (server: Server, ctx: AppContext) {
         agent.api.app.bsky.graph.getFollows(
           params,
           requester
-            ? await ctx.serviceAuthHeaders(requester)
+            ? await ctx.appviewAuthHeaders(requester)
             : authPassthru(req),
         ),
       )

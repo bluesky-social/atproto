@@ -28,7 +28,8 @@
             "notifications": {
               "type": "array",
               "items": { "type": "ref", "ref": "#notification" }
-            }
+            },
+            "seenAt": { "type": "string", "format": "datetime" }
           }
         }
       }

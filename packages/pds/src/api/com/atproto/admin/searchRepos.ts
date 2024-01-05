@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
       // @TODO merge invite details to this list view. could also add
       // support for invitedBy param, which is not supported by appview.
       const { data: result } =
-        await ctx.appViewAgent.com.atproto.admin.searchRepos(
+        await ctx.moderationAgent.com.atproto.admin.searchRepos(
           params,
           authPassthru(req),
         )

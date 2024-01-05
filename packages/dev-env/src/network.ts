@@ -51,7 +51,8 @@ export class TestNetwork extends TestNetworkNoAppView {
       didPlcUrl: plc.url,
       bskyAppViewUrl: bsky.url,
       bskyAppViewDid: bsky.ctx.cfg.serverDid,
-      bskyAppViewModeration: true,
+      modServiceUrl: bsky.url, // @TODO using appview, but will be separate service
+      modServiceDid: bsky.ctx.cfg.serverDid,
       ...params.pds,
     })
 

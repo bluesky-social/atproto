@@ -44,6 +44,8 @@ export class TestPds {
       bskyAppViewUrl: 'https://appview.invalid',
       bskyAppViewDid: 'did:example:invalid',
       bskyAppViewCdnUrlPattern: 'http://cdn.appview.com/%s/%s/%s',
+      modServiceUrl: 'https://appview.invalid',
+      modServiceDid: 'did:example:invalid',
       repoSigningKeyK256PrivateKeyHex: repoSigningPriv,
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
       inviteRequired: false,

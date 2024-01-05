@@ -99,7 +99,8 @@ export type AuthVerifierOpts = {
   adminPass: string
   moderatorPass: string
   triagePass: string
-  adminServiceDid: string
+  pdsServiceDid: string
+  modServiceDid: string
 }
 
 export class AuthVerifier {
@@ -108,7 +109,8 @@ export class AuthVerifier {
   private _adminPass: string
   private _moderatorPass: string
   private _triagePass: string
-  private _adminServiceDid: string
+  private _pdsServiceDid: string
+  private _modServiceDid: string
 
   constructor(
     public db: Database,
@@ -120,7 +122,8 @@ export class AuthVerifier {
     this._adminPass = opts.adminPass
     this._moderatorPass = opts.moderatorPass
     this._triagePass = opts.triagePass
-    this._adminServiceDid = opts.adminServiceDid
+    this._pdsServiceDid = opts.pdsServiceDid
+    this._modServiceDid = opts.modServiceDid
   }
 
   // verifiers (arrow fns to preserve scope)
@@ -235,9 +238,9 @@ export class AuthVerifier {
     }
     const payload = await verifyServiceJwt(
       jwtStr,
-      null,
+      this._pdsServiceDid,
       async (did, forceRefresh) => {
-        if (did !== this._adminServiceDid) {
+        if (did !== this._modServiceDid) {
           throw new AuthRequiredError(
             'Untrusted issuer for admin actions',
             'UntrustedIss',
@@ -452,21 +455,6 @@ export const parseBasicAuth = (
   const [username, password] = parsed
   if (!username || !password) return null
   return { username, password }
-}
-
-export const ensureValidAdminAud = (
-  auth: RoleOutput | AdminServiceOutput,
-  subjectDid: string,
-) => {
-  if (
-    auth.credentials.type === 'service' &&
-    auth.credentials.aud !== subjectDid
-  ) {
-    throw new AuthRequiredError(
-      'jwt audience does not match account did',
-      'BadJwtAudience',
-    )
-  }
 }
 
 const authScopes = new Set(Object.values(AuthScope))

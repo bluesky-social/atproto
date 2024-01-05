@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
         agent.api.app.bsky.feed.getActorLikes(
           params,
           requester
-            ? await ctx.serviceAuthHeaders(requester)
+            ? await ctx.appviewAuthHeaders(requester)
             : authPassthru(req),
         ),
       )

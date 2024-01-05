@@ -1,0 +1,27 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.temp.importRepo",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Gets the did's repo, optionally catching up from a specific revision.",
+      "parameters": {
+        "type": "params",
+        "required": ["did"],
+        "properties": {
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "The DID of the repo."
+          }
+        }
+      },
+      "input": {
+        "encoding": "application/vnd.ipld.car"
+      },
+      "output": {
+        "encoding": "text/plain"
+      }
+    }
+  }
+}
