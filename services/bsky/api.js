@@ -27,7 +27,6 @@ const {
   ServerConfig,
   BskyAppView,
   makeAlgos,
-  PeriodicModerationEventReversal,
 } = require('@atproto/bsky')
 
 const main = async () => {
@@ -133,18 +132,9 @@ const main = async () => {
     algos,
   })
 
-  const periodicModerationEventReversal = new PeriodicModerationEventReversal(
-    bsky.ctx,
-  )
-  const periodicModerationEventReversalRunning =
-    periodicModerationEventReversal.run()
-
   await bsky.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   const shutdown = async () => {
-    // Gracefully shutdown periodic-moderation-event-reversal before destroying bsky instance
-    periodicModerationEventReversal.destroy()
-    await periodicModerationEventReversalRunning
     await bsky.destroy()
   }
   process.on('SIGTERM', shutdown)
