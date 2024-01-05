@@ -175,7 +175,7 @@ export class AtpAgent {
     } catch (e) {
       this.session = undefined
 
-      if (e instanceof XRPCError && e.error) {
+      if (e instanceof XRPCError) {
         /*
          * `ExpiredToken` and `InvalidToken` are handled in
          * `this_refreshSession`, and emit an `expired` event there.
