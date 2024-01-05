@@ -12,7 +12,6 @@ const {
 
 const main = async () => {
   const env = readEnv()
-  env.version ??= package.version
   const cfg = envToCfg(env)
   const secrets = envToSecrets(env)
   const daemon = await OzoneDaemon.create(cfg, secrets)
