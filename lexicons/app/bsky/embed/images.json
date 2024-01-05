@@ -23,11 +23,7 @@
           "accept": ["image/*"],
           "maxSize": 1000000
         },
-        "alt": {
-          "type": "string",
-          "maxGraphemes": 5000,
-          "maxLength": 50000
-        },
+        "alt": { "type": "string" },
         "aspectRatio": { "type": "ref", "ref": "#aspectRatio" }
       }
     },
@@ -55,13 +51,9 @@
       "type": "object",
       "required": ["thumb", "fullsize", "alt"],
       "properties": {
-        "thumb": { "type": "string", "format": "uri" },
-        "fullsize": { "type": "string", "format": "uri" },
-        "alt": {
-          "type": "string",
-          "maxGraphemes": 5000,
-          "maxLength": 50000
-        },
+        "thumb": { "type": "string" },
+        "fullsize": { "type": "string" },
+        "alt": { "type": "string" },
         "aspectRatio": { "type": "ref", "ref": "#aspectRatio" }
       }
     }
