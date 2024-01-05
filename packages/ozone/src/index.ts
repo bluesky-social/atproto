@@ -16,6 +16,7 @@ export * from './config'
 export { Database } from './db'
 export { OzoneDaemon, EventPusher, EventReverser } from './daemon'
 export { AppContext } from './context'
+export { httpLogger } from './logger'
 
 export class OzoneService {
   public ctx: AppContext
