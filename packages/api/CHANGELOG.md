@@ -1,5 +1,14 @@
 # @atproto/api
 
+## 0.8.0
+
+### Minor Changes
+
+- [#2010](https://github.com/bluesky-social/atproto/pull/2010) [`14067733`](https://github.com/bluesky-social/atproto/commit/140677335f76b99129c1f593d9e11d64624386c6) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Improve `resumeSession` event emission. It will no longer double emit when some
+  requests fail, and the `create-failed` event has been replaced by `expired`
+  where appropriate, and with a new event `network-error` where appropriate or an
+  unknown error occurs.
+
 ## 0.7.4
 
 ### Patch Changes
