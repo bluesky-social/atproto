@@ -5,6 +5,7 @@ export const eventTableName = 'record_push_event'
 export type RecordPushEventType = 'pds_takedown' | 'appview_takedown'
 
 export interface RecordPushEvent {
+  id: Generated<number>
   eventType: RecordPushEventType
   subjectDid: string
   subjectUri: string

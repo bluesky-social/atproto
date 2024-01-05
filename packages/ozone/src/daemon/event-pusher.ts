@@ -2,12 +2,8 @@ import AtpAgent from '@atproto/api'
 import { SECOND } from '@atproto/common'
 import Database from '../db'
 import { retryHttp } from '../util'
-import { RepoPushEvent } from '../db/schema/repo_push_event'
-import { RecordPushEvent } from '../db/schema/record_push_event'
-import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { dbLogger } from '../logger'
 import { InputSchema } from '../lexicon/types/com/atproto/admin/updateSubjectStatus'
-import { Selectable } from 'kysely'
 import assert from 'assert'
 
 type EventSubject = InputSchema['subject']
@@ -15,7 +11,6 @@ type EventSubject = InputSchema['subject']
 type PollState = {
   timer?: NodeJS.Timer
   promise: Promise<void>
-  tries: number
 }
 
 type AuthHeaders = {
@@ -34,15 +29,12 @@ export class EventPusher {
 
   repoPollState: PollState = {
     promise: Promise.resolve(),
-    tries: 0,
   }
   recordPollState: PollState = {
     promise: Promise.resolve(),
-    tries: 0,
   }
   blobPollState: PollState = {
     promise: Promise.resolve(),
-    tries: 0,
   }
 
   appview: Service | undefined
@@ -82,25 +74,14 @@ export class EventPusher {
     this.poll(this.blobPollState, () => this.pushBlobEvents())
   }
 
-  poll(state: PollState, fn: () => Promise<boolean>) {
+  poll(state: PollState, fn: () => Promise<void>) {
     if (this.destroyed) return
     state.promise = fn()
-      .then((hadEvts: boolean) => {
-        if (hadEvts) {
-          state.tries = 0
-        } else {
-          state.tries++
-        }
-      })
       .catch((err) => {
         dbLogger.error({ err }, 'event push failed')
-        state.tries++
       })
       .finally(() => {
-        state.timer = setTimeout(
-          () => this.poll(state, fn),
-          exponentialBackoff(state.tries),
-        )
+        state.timer = setTimeout(() => this.poll(state, fn), 30 * SECOND)
       })
   }
 
@@ -131,53 +112,39 @@ export class EventPusher {
   }
 
   async pushRepoEvents() {
-    return await this.db.transaction(async (dbTxn) => {
-      const toPush = await dbTxn.db
-        .selectFrom('repo_push_event')
-        .selectAll()
-        .forUpdate()
-        .skipLocked()
-        .where('confirmedAt', 'is', null)
-        .where('attempts', '<', 10)
-        .execute()
-      if (toPush.length === 0) return false
-      await Promise.all(toPush.map((evt) => this.attemptRepoEvent(dbTxn, evt)))
-      return true
-    })
+    const toPush = await this.db.db
+      .selectFrom('repo_push_event')
+      .select('id')
+      .forUpdate()
+      .skipLocked()
+      .where('confirmedAt', 'is', null)
+      .where('attempts', '<', 10)
+      .execute()
+    await Promise.all(toPush.map((evt) => this.attemptRepoEvent(evt.id)))
   }
 
   async pushRecordEvents() {
-    return await this.db.transaction(async (dbTxn) => {
-      const toPush = await dbTxn.db
-        .selectFrom('record_push_event')
-        .selectAll()
-        .forUpdate()
-        .skipLocked()
-        .where('confirmedAt', 'is', null)
-        .where('attempts', '<', 10)
-        .execute()
-      if (toPush.length === 0) return false
-      await Promise.all(
-        toPush.map((evt) => this.attemptRecordEvent(dbTxn, evt)),
-      )
-      return true
-    })
+    const toPush = await this.db.db
+      .selectFrom('record_push_event')
+      .select('id')
+      .forUpdate()
+      .skipLocked()
+      .where('confirmedAt', 'is', null)
+      .where('attempts', '<', 10)
+      .execute()
+    await Promise.all(toPush.map((evt) => this.attemptRecordEvent(evt.id)))
   }
 
   async pushBlobEvents() {
-    return await this.db.transaction(async (dbTxn) => {
-      const toPush = await dbTxn.db
-        .selectFrom('blob_push_event')
-        .selectAll()
-        .forUpdate()
-        .skipLocked()
-        .where('confirmedAt', 'is', null)
-        .where('attempts', '<', 10)
-        .execute()
-      if (toPush.length === 0) return false
-      await Promise.all(toPush.map((evt) => this.attemptBlobEvent(dbTxn, evt)))
-      return true
-    })
+    const toPush = await this.db.db
+      .selectFrom('blob_push_event')
+      .select('id')
+      .forUpdate()
+      .skipLocked()
+      .where('confirmedAt', 'is', null)
+      .where('attempts', '<', 10)
+      .execute()
+    await Promise.all(toPush.map((evt) => this.attemptBlobEvent(evt.id)))
   }
 
   private async updateSubjectOnService(
@@ -209,91 +176,121 @@ export class EventPusher {
     }
   }
 
-  async attemptRepoEvent(txn: Database, evt: Selectable<RepoPushEvent>) {
-    const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
-    assert(service)
-    const subject = {
-      $type: 'com.atproto.admin.defs#repoRef',
-      did: evt.subjectDid,
-    }
-    const succeeded = await this.updateSubjectOnService(
-      service,
-      subject,
-      evt.takedownRef,
-    )
-    await txn.db
-      .updateTable('repo_push_event')
-      .set(
-        succeeded
-          ? { confirmedAt: new Date() }
-          : {
-              lastAttempted: new Date(),
-              attempts: evt.attempts ?? 0 + 1,
-            },
+  async attemptRepoEvent(id: number) {
+    await this.db.transaction(async (dbTxn) => {
+      const evt = await dbTxn.db
+        .selectFrom('repo_push_event')
+        .selectAll()
+        .forUpdate()
+        .skipLocked()
+        .where('id', '=', id)
+        .where('confirmedAt', 'is', null)
+        .executeTakeFirst()
+      if (!evt) return
+      const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
+      assert(service)
+      const subject = {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: evt.subjectDid,
+      }
+      const succeeded = await this.updateSubjectOnService(
+        service,
+        subject,
+        evt.takedownRef,
       )
-      .where('subjectDid', '=', evt.subjectDid)
-      .where('eventType', '=', evt.eventType)
-      .execute()
+      await dbTxn.db
+        .updateTable('repo_push_event')
+        .set(
+          succeeded
+            ? { confirmedAt: new Date() }
+            : {
+                lastAttempted: new Date(),
+                attempts: evt.attempts ?? 0 + 1,
+              },
+        )
+        .where('subjectDid', '=', evt.subjectDid)
+        .where('eventType', '=', evt.eventType)
+        .execute()
+    })
   }
 
-  async attemptRecordEvent(txn: Database, evt: Selectable<RecordPushEvent>) {
-    const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
-    assert(service)
-    const subject = {
-      $type: 'com.atproto.repo.strongRef',
-      uri: evt.subjectUri,
-      cid: evt.subjectCid,
-    }
-    const succeeded = await this.updateSubjectOnService(
-      service,
-      subject,
-      evt.takedownRef,
-    )
-    await txn.db
-      .updateTable('record_push_event')
-      .set(
-        succeeded
-          ? { confirmedAt: new Date() }
-          : {
-              lastAttempted: new Date(),
-              attempts: evt.attempts ?? 0 + 1,
-            },
+  async attemptRecordEvent(id: number) {
+    await this.db.transaction(async (dbTxn) => {
+      const evt = await dbTxn.db
+        .selectFrom('record_push_event')
+        .selectAll()
+        .forUpdate()
+        .skipLocked()
+        .where('id', '=', id)
+        .where('confirmedAt', 'is', null)
+        .executeTakeFirst()
+      if (!evt) return
+      const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
+      assert(service)
+      const subject = {
+        $type: 'com.atproto.repo.strongRef',
+        uri: evt.subjectUri,
+        cid: evt.subjectCid,
+      }
+      const succeeded = await this.updateSubjectOnService(
+        service,
+        subject,
+        evt.takedownRef,
       )
-      .where('subjectUri', '=', evt.subjectUri)
-      .where('eventType', '=', evt.eventType)
-      .execute()
+      await dbTxn.db
+        .updateTable('record_push_event')
+        .set(
+          succeeded
+            ? { confirmedAt: new Date() }
+            : {
+                lastAttempted: new Date(),
+                attempts: evt.attempts ?? 0 + 1,
+              },
+        )
+        .where('subjectUri', '=', evt.subjectUri)
+        .where('eventType', '=', evt.eventType)
+        .execute()
+    })
   }
 
-  async attemptBlobEvent(txn: Database, evt: Selectable<BlobPushEvent>) {
-    const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
-    assert(service)
-    const subject = {
-      $type: 'com.atproto.admin.defs#repoBlobRef',
-      did: evt.subjectDid,
-      cid: evt.subjectBlobCid,
-    }
-    const succeeded = await this.updateSubjectOnService(
-      service,
-      subject,
-      evt.takedownRef,
-    )
-    await txn.db
-      .updateTable('blob_push_event')
-      .set(
-        succeeded
-          ? { confirmedAt: new Date() }
-          : {
-              lastAttempted: new Date(),
-              attempts: evt.attempts ?? 0 + 1,
-            },
-      )
-      .where('subjectDid', '=', evt.subjectDid)
-      .where('subjectBlobCid', '=', evt.subjectBlobCid)
-      .where('eventType', '=', evt.eventType)
-      .execute()
-  }
-}
+  async attemptBlobEvent(id: number) {
+    await this.db.transaction(async (dbTxn) => {
+      const evt = await dbTxn.db
+        .selectFrom('blob_push_event')
+        .selectAll()
+        .forUpdate()
+        .skipLocked()
+        .where('id', '=', id)
+        .where('confirmedAt', 'is', null)
+        .executeTakeFirst()
+      if (!evt) return
 
-const exponentialBackoff = (tries: number): number => {
-  return Math.min(Math.pow(10, tries), 30 * SECOND)
+      const service = evt.eventType === 'pds_takedown' ? this.pds : this.appview
+      assert(service)
+      const subject = {
+        $type: 'com.atproto.admin.defs#repoBlobRef',
+        did: evt.subjectDid,
+        cid: evt.subjectBlobCid,
+      }
+      const succeeded = await this.updateSubjectOnService(
+        service,
+        subject,
+        evt.takedownRef,
+      )
+      await dbTxn.db
+        .updateTable('blob_push_event')
+        .set(
+          succeeded
+            ? { confirmedAt: new Date() }
+            : {
+                lastAttempted: new Date(),
+                attempts: evt.attempts ?? 0 + 1,
+              },
+        )
+        .where('subjectDid', '=', evt.subjectDid)
+        .where('subjectBlobCid', '=', evt.subjectBlobCid)
+        .where('eventType', '=', evt.eventType)
+        .execute()
+    })
+  }
 }

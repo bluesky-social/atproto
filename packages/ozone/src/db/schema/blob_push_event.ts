@@ -5,6 +5,7 @@ export const eventTableName = 'blob_push_event'
 export type BlobPushEventType = 'pds_takedown' | 'appview_takedown'
 
 export interface BlobPushEvent {
+  id: Generated<number>
   eventType: BlobPushEventType
   subjectDid: string
   subjectBlobCid: string

@@ -9,6 +9,7 @@ import { ModerationService, ModerationServiceCreator } from './mod-service'
 import * as auth from './auth'
 import { BackgroundQueue } from './background'
 import assert from 'assert'
+import { EventPusher } from './daemon'
 
 export type AppContextOptions = {
   db: Database
@@ -39,22 +40,32 @@ export class AppContext {
       ? new AtpAgent({ service: cfg.pds.url })
       : undefined
 
-    const appviewAuth = async () => {
-      if (!cfg.appview.did) return undefined
-      return createServiceAuthHeaders({
+    const createAuthHeaders = (aud: string) =>
+      createServiceAuthHeaders({
         iss: cfg.service.did,
-        aud: cfg.appview.did,
+        aud,
         keypair: signingKey,
       })
-    }
+    const appviewAuth = async () =>
+      cfg.appview.did ? createAuthHeaders(cfg.appview.did) : undefined
 
-    const modService = ModerationService.creator(appviewAgent, appviewAuth)
+    const backgroundQueue = new BackgroundQueue(db)
+    const eventPusher = new EventPusher(db, createAuthHeaders, {
+      appview: cfg.appview,
+      pds: cfg.pds ?? undefined,
+    })
+
+    const modService = ModerationService.creator(
+      backgroundQueue,
+      eventPusher,
+      appviewAgent,
+      appviewAuth,
+    )
 
     const idResolver = new IdResolver({
       plcUrl: cfg.identity.plcUrl,
     })
 
-    const backgroundQueue = new BackgroundQueue(db)
     return new AppContext(
       {
         db,

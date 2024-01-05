@@ -37,19 +37,34 @@ import {
   subjectFromStatusRow,
 } from './subject'
 import { BlobPushEvent } from '../db/schema/blob_push_event'
+import { BackgroundQueue } from '../background'
+import { EventPusher } from '../daemon'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
 export class ModerationService {
   constructor(
     public db: Database,
+    public backgroundQueue: BackgroundQueue,
+    public eventPusher: EventPusher,
     public appviewAgent: AtpAgent,
     private appviewAuth: AppviewAuth,
   ) {}
 
-  static creator(appviewAgent: AtpAgent, appviewAuth: AppviewAuth) {
+  static creator(
+    backgroundQueue: BackgroundQueue,
+    eventPusher: EventPusher,
+    appviewAgent: AtpAgent,
+    appviewAuth: AppviewAuth,
+  ) {
     return (db: Database) =>
-      new ModerationService(db, appviewAgent, appviewAuth)
+      new ModerationService(
+        db,
+        backgroundQueue,
+        eventPusher,
+        appviewAgent,
+        appviewAuth,
+      )
   }
 
   views = new ModerationViews(this.db, this.appviewAgent, this.appviewAuth)
@@ -344,24 +359,50 @@ export class ModerationService {
       subjectDid: subject.did,
       takedownRef,
     }))
-    await this.db.db
+    const repoEvt = await this.db.db
       .insertInto('repo_push_event')
       .values(values)
       .onConflict((oc) =>
-        oc
-          .columns(['subjectDid', 'eventType'])
-          .doUpdateSet({ confirmedAt: null, takedownRef }),
+        oc.columns(['subjectDid', 'eventType']).doUpdateSet({
+          takedownRef,
+          confirmedAt: null,
+          attempts: 0,
+          lastAttempted: null,
+        }),
       )
-      .execute()
+      .returning('id')
+      .executeTakeFirst()
+
+    if (repoEvt) {
+      this.db.onCommit(() => {
+        this.backgroundQueue.add(async () => {
+          await this.eventPusher.attemptRepoEvent(repoEvt.id)
+        })
+      })
+    }
   }
 
   async reverseTakedownRepo(subject: RepoSubject) {
-    await this.db.db
+    const repoEvt = await this.db.db
       .updateTable('repo_push_event')
       .where('eventType', 'in', TAKEDOWNS)
       .where('subjectDid', '=', subject.did)
-      .set({ takedownRef: null, confirmedAt: null })
-      .execute()
+      .set({
+        takedownRef: null,
+        confirmedAt: null,
+        attempts: 0,
+        lastAttempted: null,
+      })
+      .returning('id')
+      .executeTakeFirst()
+
+    if (repoEvt) {
+      this.db.onCommit(() => {
+        this.backgroundQueue.add(async () => {
+          await this.eventPusher.attemptRepoEvent(repoEvt.id)
+        })
+      })
+    }
   }
 
   async takedownRecord(subject: RecordSubject, takedownId: number) {
@@ -374,15 +415,27 @@ export class ModerationService {
       subjectCid: subject.cid,
       takedownRef,
     }))
-    await this.db.db
+    const recordEvt = await this.db.db
       .insertInto('record_push_event')
       .values(values)
       .onConflict((oc) =>
-        oc
-          .columns(['subjectUri', 'eventType'])
-          .doUpdateSet({ confirmedAt: null, takedownRef }),
+        oc.columns(['subjectUri', 'eventType']).doUpdateSet({
+          takedownRef,
+          confirmedAt: null,
+          attempts: 0,
+          lastAttempted: null,
+        }),
       )
-      .execute()
+      .returning('id')
+      .executeTakeFirst()
+
+    if (recordEvt) {
+      this.db.onCommit(() => {
+        this.backgroundQueue.add(async () => {
+          await this.eventPusher.attemptRecordEvent(recordEvt.id)
+        })
+      })
+    }
 
     const blobCids = subject.blobCids
     if (blobCids && blobCids.length > 0) {
@@ -397,30 +450,58 @@ export class ModerationService {
           })
         }
       }
-      await this.db.db
+      const blobEvt = await this.db.db
         .insertInto('blob_push_event')
         .values(blobValues)
         .onConflict((oc) =>
           oc
             .columns(['subjectDid', 'subjectBlobCid', 'eventType'])
-            .doUpdateSet({ confirmedAt: null, takedownRef }),
+            .doUpdateSet({
+              takedownRef,
+              confirmedAt: null,
+              attempts: 0,
+              lastAttempted: null,
+            }),
         )
-        .execute()
+        .returning('id')
+        .executeTakeFirst()
+
+      if (blobEvt) {
+        this.db.onCommit(() => {
+          this.backgroundQueue.add(async () => {
+            await this.eventPusher.attemptBlobEvent(blobEvt.id)
+          })
+        })
+      }
     }
   }
 
   async reverseTakedownRecord(subject: RecordSubject) {
     this.db.assertTransaction()
-    await this.db.db
+    const recordEvt = await this.db.db
       .updateTable('record_push_event')
       .where('eventType', 'in', TAKEDOWNS)
       .where('subjectDid', '=', subject.did)
       .where('subjectUri', '=', subject.uri)
-      .set({ takedownRef: null, confirmedAt: null })
-      .execute()
+      .set({
+        takedownRef: null,
+        confirmedAt: null,
+        attempts: 0,
+        lastAttempted: null,
+      })
+      .returning('id')
+      .executeTakeFirst()
+    if (recordEvt) {
+      this.db.onCommit(() => {
+        this.backgroundQueue.add(async () => {
+          await this.eventPusher.attemptRecordEvent(recordEvt.id)
+        })
+      })
+    }
+
     const blobCids = subject.blobCids
     if (blobCids && blobCids.length > 0) {
-      await this.db.db
+      const blobEvt = await this.db.db
         .updateTable('blob_push_event')
         .where('eventType', 'in', TAKEDOWNS)
         .where('subjectDid', '=', subject.did)
@@ -429,8 +510,22 @@ export class ModerationService {
           'in',
           blobCids.map((c) => c.toString()),
         )
-        .set({ takedownRef: null, confirmedAt: null })
-        .execute()
+        .set({
+          takedownRef: null,
+          confirmedAt: null,
+          attempts: 0,
+          lastAttempted: null,
+        })
+        .returning('id')
+        .executeTakeFirst()
+
+      if (blobEvt) {
+        this.db.onCommit(() => {
+          this.backgroundQueue.add(async () => {
+            await this.eventPusher.attemptBlobEvent(blobEvt.id)
+          })
+        })
+      }
     }
   }
 

@@ -85,13 +85,14 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   // Push Events
   await db.schema
     .createTable('repo_push_event')
+    .addColumn('id', 'serial', (col) => col.primaryKey())
     .addColumn('eventType', 'varchar', (col) => col.notNull())
     .addColumn('subjectDid', 'varchar', (col) => col.notNull())
     .addColumn('takedownRef', 'varchar')
     .addColumn('confirmedAt', 'timestamptz')
     .addColumn('lastAttempted', 'timestamptz')
     .addColumn('attempts', 'integer', (col) => col.notNull().defaultTo(0))
-    .addPrimaryKeyConstraint('repo_push_event_pkey', [
+    .addUniqueConstraint('repo_push_event_unique_evt', [
       'subjectDid',
       'eventType',
     ])
@@ -104,6 +105,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
   await db.schema
     .createTable('record_push_event')
+    .addColumn('id', 'serial', (col) => col.primaryKey())
     .addColumn('eventType', 'varchar', (col) => col.notNull())
     .addColumn('subjectDid', 'varchar', (col) => col.notNull())
     .addColumn('subjectUri', 'varchar', (col) => col.notNull())
@@ -112,7 +114,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('confirmedAt', 'timestamptz')
     .addColumn('lastAttempted', 'timestamptz')
     .addColumn('attempts', 'integer', (col) => col.notNull().defaultTo(0))
-    .addPrimaryKeyConstraint('record_push_event_pkey', [
+    .addUniqueConstraint('record_push_event_unique_evt', [
       'subjectUri',
       'eventType',
     ])
@@ -130,6 +132,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
   await db.schema
     .createTable('blob_push_event')
+    .addColumn('id', 'serial', (col) => col.primaryKey())
     .addColumn('eventType', 'varchar', (col) => col.notNull())
     .addColumn('subjectDid', 'varchar', (col) => col.notNull())
     .addColumn('subjectBlobCid', 'varchar', (col) => col.notNull())
@@ -138,7 +141,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('confirmedAt', 'timestamptz')
     .addColumn('lastAttempted', 'timestamptz')
     .addColumn('attempts', 'integer', (col) => col.notNull().defaultTo(0))
-    .addPrimaryKeyConstraint('blob_push_event_pkey', [
+    .addUniqueConstraint('blob_push_event_unique_evt', [
       'subjectDid',
       'subjectBlobCid',
       'eventType',

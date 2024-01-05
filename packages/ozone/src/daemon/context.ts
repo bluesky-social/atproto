@@ -6,6 +6,7 @@ import { Database } from '../db'
 import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
 import { ModerationService, ModerationServiceCreator } from '../mod-service'
+import { BackgroundQueue } from '../background'
 
 export type DaemonContextOptions = {
   db: Database
@@ -41,11 +42,17 @@ export class DaemonContext {
     const appviewAuth = async () =>
       cfg.appview.did ? createAuthHeaders(cfg.appview.did) : undefined
 
-    const modService = ModerationService.creator(appviewAgent, appviewAuth)
     const eventPusher = new EventPusher(db, createAuthHeaders, {
       appview: cfg.appview,
       pds: cfg.pds ?? undefined,
     })
+    const backgroundQueue = new BackgroundQueue(db)
+    const modService = ModerationService.creator(
+      backgroundQueue,
+      eventPusher,
+      appviewAgent,
+      appviewAuth,
+    )
     const eventReverser = new EventReverser(db, modService)
 
     return new DaemonContext({
