@@ -2,7 +2,7 @@
   "name": "@atproto/ozone",
   "version": "0.0.1",
   "license": "MIT",
-  "description": "Reference implementation of app.bsky App View (Bluesky API)",
+  "description": "Backend service for moderating the Bluesky network.",
   "keywords": [
     "atproto",
     "bluesky"
@@ -23,7 +23,7 @@
     "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
     "build": "node ./build.js",
     "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/bsky",
+    "update-main-to-dist": "node ../../update-main-to-dist.js packages/ozone",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "../dev-infra/with-test-redis-and-db.sh jest",
     "test:log": "tail -50 test.log | pino-pretty",

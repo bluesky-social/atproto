@@ -9,8 +9,11 @@ export class LabelSubscription {
   promise: Promise<void> = Promise.resolve()
   timer: NodeJS.Timer | undefined
   lastLabel: number | undefined
+  labelAgent: AtpAgent
 
-  constructor(public db: PrimaryDatabase, public labelAgent: AtpAgent) {}
+  constructor(public db: PrimaryDatabase, public labelProvider: string) {
+    this.labelAgent = new AtpAgent({ service: labelProvider })
+  }
 
   async start() {
     const res = await this.db.db
