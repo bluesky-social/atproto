@@ -1,4 +1,3 @@
-import AtpAgent from '@atproto/api'
 import { PrimaryDatabase } from '../db'
 import { Redis } from '../redis'
 import { IngesterConfig } from './config'
@@ -10,8 +9,7 @@ export class IngesterContext {
       db: PrimaryDatabase
       redis: Redis
       cfg: IngesterConfig
-      labelAgent: AtpAgent
-      labelSubscription: LabelSubscription
+      labelSubscription?: LabelSubscription
     },
   ) {}
 
@@ -27,11 +25,7 @@ export class IngesterContext {
     return this.opts.cfg
   }
 
-  get labelAgent(): AtpAgent {
-    return this.opts.labelAgent
-  }
-
-  get labelSubscription(): LabelSubscription {
+  get labelSubscription(): LabelSubscription | undefined {
     return this.opts.labelSubscription
   }
 }
