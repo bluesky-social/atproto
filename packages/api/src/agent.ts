@@ -1,5 +1,5 @@
 import { ErrorResponseBody, errorResponseBody } from '@atproto/xrpc'
-import { defaultFetchHandler } from '@atproto/xrpc'
+import { defaultFetchHandler, XRPCError, ResponseType } from '@atproto/xrpc'
 import { isValidDidDoc, getPdsEndpoint } from '@atproto/common-web'
 import {
   AtpBaseClient,
@@ -159,23 +159,41 @@ export class AtpAgent {
     try {
       this.session = session
       const res = await this.api.com.atproto.server.getSession()
-      if (!res.success || res.data.did !== this.session.did) {
-        throw new Error('Invalid session')
+      if (res.data.did !== this.session.did) {
+        throw new XRPCError(
+          ResponseType.InvalidRequest,
+          'Invalid session',
+          'InvalidDID',
+        )
       }
       this.session.email = res.data.email
       this.session.handle = res.data.handle
       this.session.emailConfirmed = res.data.emailConfirmed
       this._updateApiEndpoint(res.data.didDoc)
+      this._persistSession?.('update', this.session)
       return res
     } catch (e) {
       this.session = undefined
-      throw e
-    } finally {
-      if (this.session) {
-        this._persistSession?.('create', this.session)
+
+      if (e instanceof XRPCError) {
+        /*
+         * `ExpiredToken` and `InvalidToken` are handled in
+         * `this_refreshSession`, and emit an `expired` event there.
+         *
+         * Everything else is handled here.
+         */
+        if (
+          [1, 408, 425, 429, 500, 502, 503, 504, 522, 524].includes(e.status)
+        ) {
+          this._persistSession?.('network-error', undefined)
+        } else {
+          this._persistSession?.('expired', undefined)
+        }
       } else {
-        this._persistSession?.('create-failed', undefined)
+        this._persistSession?.('network-error', undefined)
       }
+
+      throw e
     }
   }
 
