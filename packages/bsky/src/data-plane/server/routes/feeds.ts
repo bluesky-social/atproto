@@ -124,7 +124,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     const feedItems = await builder.execute()
 
     return {
-      uris: feedItems.map((item) => item.uri), // @TODO consider switching to FeedItemInfo[]
+      items: feedItems.map((item) => ({ uri: item.uri, cid: item.cid })),
       cursor: keyset.packFromResult(feedItems),
     }
   },

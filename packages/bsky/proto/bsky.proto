@@ -765,7 +765,7 @@ message GetListFeedRequest {
 }
 
 message GetListFeedResponse {
-  repeated string uris = 1;
+  repeated FeedItem items = 1;
   string cursor = 2;
 }
 
