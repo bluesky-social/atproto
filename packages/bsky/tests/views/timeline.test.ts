@@ -1,8 +1,7 @@
 import assert from 'assert'
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, getOriginator, paginateAll } from '../_util'
-import basicSeed from '../seeds/basic'
 import { FeedAlgorithm } from '../../src/api/app/bsky/util/feed'
 import { FeedViewPost } from '../../src/lexicon/types/app/bsky/feed/defs'
 
@@ -35,7 +34,7 @@ describe('timeline views', () => {
     await network.bsky.ctx.services
       .label(network.bsky.ctx.db.getPrimary())
       .formatAndCreate(
-        network.bsky.ctx.cfg.labelerDid,
+        network.ozone.ctx.cfg.service.did,
         labelPostA.uriStr,
         labelPostA.cidStr,
         { create: ['kind'] },
@@ -43,7 +42,7 @@ describe('timeline views', () => {
     await network.bsky.ctx.services
       .label(network.bsky.ctx.db.getPrimary())
       .formatAndCreate(
-        network.bsky.ctx.cfg.labelerDid,
+        network.ozone.ctx.cfg.service.did,
         labelPostB.uriStr,
         labelPostB.cidStr,
         { create: ['kind'] },
@@ -197,15 +196,16 @@ describe('timeline views', () => {
   it('blocks posts, reposts, replies by actor takedown', async () => {
     await Promise.all(
       [bob, carol].map((did) =>
-        agent.api.com.atproto.admin.emitModerationEvent(
+        agent.api.com.atproto.admin.updateSubjectStatus(
           {
-            event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
             subject: {
               $type: 'com.atproto.admin.defs#repoRef',
               did,
             },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
+            takedown: {
+              applied: true,
+              ref: 'test',
+            },
           },
           {
             encoding: 'application/json',
@@ -225,15 +225,15 @@ describe('timeline views', () => {
     // Cleanup
     await Promise.all(
       [bob, carol].map((did) =>
-        agent.api.com.atproto.admin.emitModerationEvent(
+        agent.api.com.atproto.admin.updateSubjectStatus(
           {
-            event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
             subject: {
               $type: 'com.atproto.admin.defs#repoRef',
               did,
             },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
+            takedown: {
+              applied: false,
+            },
           },
           {
             encoding: 'application/json',
@@ -249,16 +249,17 @@ describe('timeline views', () => {
     const postRef2 = sc.replies[bob][0].ref // Post and reply parent
     await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        agent.api.com.atproto.admin.emitModerationEvent(
+        agent.api.com.atproto.admin.updateSubjectStatus(
           {
-            event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
             subject: {
               $type: 'com.atproto.repo.strongRef',
               uri: postRef.uriStr,
               cid: postRef.cidStr,
             },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
+            takedown: {
+              applied: true,
+              ref: 'test',
+            },
           },
           {
             encoding: 'application/json',
@@ -278,16 +279,16 @@ describe('timeline views', () => {
     // Cleanup
     await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        agent.api.com.atproto.admin.emitModerationEvent(
+        agent.api.com.atproto.admin.updateSubjectStatus(
           {
-            event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
             subject: {
               $type: 'com.atproto.repo.strongRef',
               uri: postRef.uriStr,
               cid: postRef.cidStr,
             },
-            createdBy: 'did:example:admin',
-            reason: 'Y',
+            takedown: {
+              applied: false,
+            },
           },
           {
             encoding: 'application/json',

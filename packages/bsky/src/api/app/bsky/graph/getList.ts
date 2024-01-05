@@ -13,12 +13,12 @@ import { createPipeline, noRules } from '../../../../pipeline'
 export default function (server: Server, ctx: AppContext) {
   const getList = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.graph.getList({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
       const db = ctx.db.getReplica()
       const graphService = ctx.services.graph(db)
       const actorService = ctx.services.actor(db)
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
 
       const result = await getList(
         { ...params, viewer },

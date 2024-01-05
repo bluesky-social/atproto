@@ -43,6 +43,7 @@ export type AppContextOptions = {
   redisScratch?: Redis
   crawlers: Crawlers
   appViewAgent: AtpAgent
+  moderationAgent: AtpAgent
   entrywayAgent?: AtpAgent
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
@@ -67,6 +68,7 @@ export class AppContext {
   public redisScratch?: Redis
   public crawlers: Crawlers
   public appViewAgent: AtpAgent
+  public moderationAgent: AtpAgent
   public entrywayAgent: AtpAgent | undefined
   public authVerifier: AuthVerifier
   public plcRotationKey: crypto.Keypair
@@ -87,6 +89,7 @@ export class AppContext {
     this.redisScratch = opts.redisScratch
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
+    this.moderationAgent = opts.moderationAgent
     this.entrywayAgent = opts.entrywayAgent
     this.authVerifier = opts.authVerifier
     this.plcRotationKey = opts.plcRotationKey
@@ -159,6 +162,7 @@ export class AppContext {
       : undefined
 
     const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
+    const moderationAgent = new AtpAgent({ service: cfg.modService.url })
 
     const entrywayAgent = cfg.entryway
       ? new AtpAgent({ service: cfg.entryway.url })
@@ -185,7 +189,7 @@ export class AppContext {
       dids: {
         pds: cfg.service.did,
         entryway: cfg.entryway?.did,
-        admin: cfg.bskyAppView.did,
+        admin: cfg.modService.did,
       },
     })
 
@@ -226,6 +230,7 @@ export class AppContext {
       redisScratch,
       crawlers,
       appViewAgent,
+      moderationAgent,
       entrywayAgent,
       authVerifier,
       plcRotationKey,
@@ -234,11 +239,15 @@ export class AppContext {
     })
   }
 
-  async serviceAuthHeaders(did: string, audience?: string) {
-    const aud = audience ?? this.cfg.bskyAppView.did
-    if (!aud) {
-      throw new Error('Could not find bsky appview did')
-    }
+  async appviewAuthHeaders(did: string) {
+    return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did)
+  }
+
+  async moderationAuthHeaders(did: string) {
+    return this.serviceAuthHeaders(did, this.cfg.modService.did)
+  }
+
+  async serviceAuthHeaders(did: string, aud: string) {
     const keypair = await this.actorStore.keypair(did)
     return createServiceAuthHeaders({
       iss: did,

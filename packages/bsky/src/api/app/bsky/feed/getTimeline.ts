@@ -22,9 +22,9 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.feed.getTimeline({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, res }) => {
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       const db = ctx.db.getReplica('timeline')
       const feedService = ctx.services.feed(db)
       const actorService = ctx.services.actor(db)

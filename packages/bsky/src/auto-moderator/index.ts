@@ -6,16 +6,12 @@ import { PrimaryDatabase } from '../db'
 import { IdResolver } from '@atproto/identity'
 import { BackgroundQueue } from '../background'
 import { IndexerConfig } from '../indexer/config'
-import { buildBasicAuth } from '../auth'
+import { buildBasicAuth } from '../auth-verifier'
 import { CID } from 'multiformats/cid'
-import { LabelService } from '../services/label'
-import { ModerationService } from '../services/moderation'
 import { ImageFlagger } from './abyss'
 import { HiveLabeler, ImgLabeler } from './hive'
 import { KeywordLabeler, TextLabeler } from './keyword'
 import { ids } from '../lexicon/lexicons'
-import { ImageUriBuilder } from '../image/uri'
-import { ImageInvalidator } from '../image/invalidator'
 import { Abyss } from './abyss'
 import { FuzzyMatcher, TextFlagger } from './fuzzy-matcher'
 import {
@@ -24,16 +20,11 @@ import {
 } from '../lexicon/types/com/atproto/moderation/defs'
 
 export class AutoModerator {
-  public pushAgent?: AtpAgent
+  public pushAgent: AtpAgent
   public imageFlagger?: ImageFlagger
   public textFlagger?: TextFlagger
   public imgLabeler?: ImgLabeler
   public textLabeler?: TextLabeler
-
-  services: {
-    label: (db: PrimaryDatabase) => LabelService
-    moderation?: (db: PrimaryDatabase) => ModerationService
-  }
 
   constructor(
     public ctx: {
@@ -41,26 +32,9 @@ export class AutoModerator {
       idResolver: IdResolver
       cfg: IndexerConfig
       backgroundQueue: BackgroundQueue
-      imgUriBuilder?: ImageUriBuilder
-      imgInvalidator?: ImageInvalidator
     },
   ) {
-    const { imgUriBuilder, imgInvalidator } = ctx
     const { hiveApiKey, abyssEndpoint, abyssPassword } = ctx.cfg
-    this.services = {
-      label: LabelService.creator(null),
-    }
-    if (imgUriBuilder && imgInvalidator) {
-      this.services.moderation = ModerationService.creator(
-        imgUriBuilder,
-        imgInvalidator,
-      )
-    } else {
-      log.error(
-        { imgUriBuilder, imgInvalidator },
-        'moderation service not properly configured',
-      )
-    }
     this.imgLabeler = hiveApiKey ? new HiveLabeler(hiveApiKey, ctx) : undefined
     this.textLabeler = new KeywordLabeler(ctx.cfg.labelerKeywords)
     if (abyssEndpoint && abyssPassword) {
@@ -79,14 +53,12 @@ export class AutoModerator {
       )
     }
 
-    if (ctx.cfg.moderationPushUrl) {
-      const url = new URL(ctx.cfg.moderationPushUrl)
-      this.pushAgent = new AtpAgent({ service: url.origin })
-      this.pushAgent.api.setHeader(
-        'authorization',
-        buildBasicAuth(url.username, url.password),
-      )
-    }
+    const url = new URL(ctx.cfg.moderationPushUrl)
+    this.pushAgent = new AtpAgent({ service: url.origin })
+    this.pushAgent.api.setHeader(
+      'authorization',
+      buildBasicAuth(url.username, url.password),
+    )
   }
 
   processRecord(uri: AtUri, cid: CID, obj: unknown) {
@@ -133,7 +105,7 @@ export class AutoModerator {
       ...imgs.map((cid) => this.imgLabeler?.labelImg(uri.host, cid)),
     ])
     const labels = dedupe(allLabels.flat())
-    await this.storeLabels(uri, recordCid, labels)
+    await this.pushLabels(uri, recordCid, labels)
   }
 
   async flagRecordText(uri: AtUri, cid: CID, text: string[]) {
@@ -156,22 +128,22 @@ export class AutoModerator {
     if (!this.textFlagger) return
     const matches = this.textFlagger.getMatches(text)
     if (matches.length < 1) return
-    await this.ctx.db.transaction(async (dbTxn) => {
-      if (!this.services.moderation) {
-        log.error(
-          { subject, text, matches },
-          'no moderation service setup to flag record text',
-        )
-        return
-      }
-      return this.services.moderation(dbTxn).report({
-        reasonType: REASONOTHER,
-        reason: `Automatically flagged for possible slurs: ${matches.join(
-          ', ',
-        )}`,
-        subject,
-        reportedBy: this.ctx.cfg.labelerDid,
-      })
+    const formattedSubject =
+      'did' in subject
+        ? {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: subject.did,
+          }
+        : {
+            $type: 'com.atproto.repo.strongRef',
+            uri: subject.uri.toString(),
+            cid: subject.cid.toString(),
+          }
+    await this.pushAgent.api.com.atproto.moderation.createReport({
+      reasonType: REASONOTHER,
+      reason: `Automatically flagged for possible slurs: ${matches.join(', ')}`,
+      subject: formattedSubject,
+      reportedBy: this.ctx.cfg.serverDid,
     })
   }
 
@@ -226,93 +198,49 @@ export class AutoModerator {
       'hard takedown of record (and blobs) based on auto-matching',
     )
 
-    if (this.services.moderation) {
-      await this.ctx.db.transaction(async (dbTxn) => {
-        // directly/locally create report, even if we use pushAgent for the takedown. don't have acctual account credentials for pushAgent, only admin auth
-        if (!this.services.moderation) {
-          // checked above, outside the transaction
-          return
-        }
-        const modSrvc = this.services.moderation(dbTxn)
-        await modSrvc.report({
-          reportedBy: this.ctx.cfg.labelerDid,
-          reasonType: REASONVIOLATION,
-          subject: {
-            uri: uri,
-            cid: recordCid,
-          },
-          reason: reportReason,
-        })
-      })
-    }
+    await this.pushAgent.com.atproto.moderation.createReport({
+      reportedBy: this.ctx.cfg.serverDid,
+      reasonType: REASONVIOLATION,
+      subject: {
+        $type: 'com.atproto.repo.strongRef',
+        uri: uri.toString(),
+        cid: recordCid.toString(),
+      },
+      reason: reportReason,
+    })
 
-    if (this.pushAgent) {
-      await this.pushAgent.com.atproto.admin.emitModerationEvent({
-        event: {
-          $type: 'com.atproto.admin.defs#modEventTakedown',
-          comment: takedownReason,
-        },
-        subject: {
-          $type: 'com.atproto.repo.strongRef',
-          uri: uri.toString(),
-          cid: recordCid.toString(),
-        },
-        subjectBlobCids: takedownCids.map((c) => c.toString()),
-        createdBy: this.ctx.cfg.labelerDid,
-      })
-    } else {
-      await this.ctx.db.transaction(async (dbTxn) => {
-        if (!this.services.moderation) {
-          throw new Error('no mod push agent or uri invalidator setup')
-        }
-        const modSrvc = this.services.moderation(dbTxn)
-        const action = await modSrvc.logEvent({
-          event: {
-            $type: 'com.atproto.admin.defs#modEventTakedown',
-            comment: takedownReason,
-          },
-          subject: { uri, cid: recordCid },
-          subjectBlobCids: takedownCids,
-          createdBy: this.ctx.cfg.labelerDid,
-        })
-        await modSrvc.takedownRecord({
-          takedownId: action.id,
-          uri: uri,
-          cid: recordCid,
-          blobCids: takedownCids,
-        })
-      })
-    }
+    await this.pushAgent.com.atproto.admin.emitModerationEvent({
+      event: {
+        $type: 'com.atproto.admin.defs#modEventTakedown',
+        comment: takedownReason,
+      },
+      subject: {
+        $type: 'com.atproto.repo.strongRef',
+        uri: uri.toString(),
+        cid: recordCid.toString(),
+      },
+      subjectBlobCids: takedownCids.map((c) => c.toString()),
+      createdBy: this.ctx.cfg.serverDid,
+    })
   }
 
-  async storeLabels(uri: AtUri, cid: CID, labels: string[]): Promise<void> {
+  async pushLabels(uri: AtUri, cid: CID, labels: string[]): Promise<void> {
     if (labels.length < 1) return
 
-    // Given that moderation service is available, log the labeling event for historical purposes
-    if (this.services.moderation) {
-      await this.ctx.db.transaction(async (dbTxn) => {
-        if (!this.services.moderation) return
-        const modSrvc = this.services.moderation(dbTxn)
-        await modSrvc.logEvent({
-          event: {
-            $type: 'com.atproto.admin.defs#modEventLabel',
-            createLabelVals: labels,
-            negateLabelVals: [],
-            comment: '[AutoModerator]: Applying labels',
-          },
-          subject: { uri, cid },
-          createdBy: this.ctx.cfg.labelerDid,
-        })
-      })
-    }
-
-    const labelSrvc = this.services.label(this.ctx.db)
-    await labelSrvc.formatAndCreate(
-      this.ctx.cfg.labelerDid,
-      uri.toString(),
-      cid.toString(),
-      { create: labels },
-    )
+    await this.pushAgent.com.atproto.admin.emitModerationEvent({
+      event: {
+        $type: 'com.atproto.admin.defs#modEventLabel',
+        comment: '[AutoModerator]: Applying labels',
+        createLabelVals: labels,
+        negateLabelVals: [],
+      },
+      subject: {
+        $type: 'com.atproto.repo.strongRef',
+        uri: uri.toString(),
+        cid: cid.toString(),
+      },
+      createdBy: this.ctx.cfg.serverDid,
+    })
   }
 
   async processAll() {

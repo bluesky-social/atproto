@@ -40,16 +40,11 @@ import updateSeen from './app/bsky/notification/updateSeen'
 import registerPush from './app/bsky/notification/registerPush'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
 import getTimelineSkeleton from './app/bsky/unspecced/getTimelineSkeleton'
-import createReport from './com/atproto/moderation/createReport'
-import emitModerationEvent from './com/atproto/admin/emitModerationEvent'
-import searchRepos from './com/atproto/admin/searchRepos'
-import adminGetRecord from './com/atproto/admin/getRecord'
-import getRepo from './com/atproto/admin/getRepo'
-import queryModerationStatuses from './com/atproto/admin/queryModerationStatuses'
+import getSubjectStatus from './com/atproto/admin/getSubjectStatus'
+import updateSubjectStatus from './com/atproto/admin/updateSubjectStatus'
+import getAccountInfos from './com/atproto/admin/getAccountInfos'
 import resolveHandle from './com/atproto/identity/resolveHandle'
 import getRecord from './com/atproto/repo/getRecord'
-import queryModerationEvents from './com/atproto/admin/queryModerationEvents'
-import getModerationEvent from './com/atproto/admin/getModerationEvent'
 import fetchLabels from './com/atproto/temp/fetchLabels'
 
 export * as health from './health'
@@ -101,14 +96,9 @@ export default function (server: Server, ctx: AppContext) {
   getPopularFeedGenerators(server, ctx)
   getTimelineSkeleton(server, ctx)
   // com.atproto
-  createReport(server, ctx)
-  emitModerationEvent(server, ctx)
-  searchRepos(server, ctx)
-  adminGetRecord(server, ctx)
-  getRepo(server, ctx)
-  getModerationEvent(server, ctx)
-  queryModerationEvents(server, ctx)
-  queryModerationStatuses(server, ctx)
+  getSubjectStatus(server, ctx)
+  updateSubjectStatus(server, ctx)
+  getAccountInfos(server, ctx)
   resolveHandle(server, ctx)
   getRecord(server, ctx)
   fetchLabels(server, ctx)

@@ -9,6 +9,7 @@ export interface IngesterConfigValues {
   redisSentinelHosts?: string[]
   redisPassword?: string
   repoProvider: string
+  labelProvider?: string
   ingesterPartitionCount: number
   ingesterNamespace?: string
   ingesterSubLockId?: number
@@ -40,6 +41,7 @@ export class IngesterConfig {
     const redisPassword =
       overrides?.redisPassword || process.env.REDIS_PASSWORD || undefined
     const repoProvider = overrides?.repoProvider || process.env.REPO_PROVIDER // E.g. ws://abc.com:4000
+    const labelProvider = overrides?.labelProvider || process.env.LABEL_PROVIDER
     const ingesterPartitionCount =
       overrides?.ingesterPartitionCount ||
       maybeParseInt(process.env.INGESTER_PARTITION_COUNT)
@@ -69,6 +71,7 @@ export class IngesterConfig {
       redisSentinelHosts,
       redisPassword,
       repoProvider,
+      labelProvider,
       ingesterPartitionCount,
       ingesterSubLockId,
       ingesterNamespace,
@@ -108,6 +111,10 @@ export class IngesterConfig {
 
   get repoProvider() {
     return this.cfg.repoProvider
+  }
+
+  get labelProvider() {
+    return this.cfg.labelProvider
   }
 
   get ingesterPartitionCount() {

@@ -17,8 +17,6 @@ describe('proxies admin requests', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_admin',
       pds: {
-        // @NOTE requires admin pass be the same on pds and appview, which TestNetwork is handling for us.
-        bskyAppViewModeration: true,
         inviteRequired: true,
       },
     })
@@ -222,6 +220,7 @@ describe('proxies admin requests', () => {
         encoding: 'application/json',
       },
     )
+    await network.processAll()
     // check profile and labels
     const tryGetProfileAppview = agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.alice },
@@ -250,6 +249,7 @@ describe('proxies admin requests', () => {
         encoding: 'application/json',
       },
     )
+    await network.processAll()
     // check profile and labels
     const { data: profileAppview } = await agent.api.app.bsky.actor.getProfile(
       { actor: sc.dids.alice },
@@ -283,6 +283,7 @@ describe('proxies admin requests', () => {
         encoding: 'application/json',
       },
     )
+    await network.processAll()
     // check thread and labels
     const tryGetPost = agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr, depth: 0 },
@@ -306,6 +307,7 @@ describe('proxies admin requests', () => {
         encoding: 'application/json',
       },
     )
+    await network.processAll()
     // check thread and labels
     const { data: threadAppview } = await agent.api.app.bsky.feed.getPostThread(
       { uri: post.ref.uriStr, depth: 0 },

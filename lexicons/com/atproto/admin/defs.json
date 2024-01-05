@@ -294,6 +294,7 @@
         "did": { "type": "string", "format": "did" },
         "handle": { "type": "string", "format": "handle" },
         "email": { "type": "string" },
+        "relatedRecords": { "type": "array", "items": { "type": "unknown" } },
         "indexedAt": { "type": "string", "format": "datetime" },
         "invitedBy": {
           "type": "ref",

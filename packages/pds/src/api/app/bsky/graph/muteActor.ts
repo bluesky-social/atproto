@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
 
       await ctx.appViewAgent.api.app.bsky.graph.muteActor(input.body, {
-        ...(await ctx.serviceAuthHeaders(requester)),
+        ...(await ctx.appviewAuthHeaders(requester)),
         encoding: 'application/json',
       })
     },

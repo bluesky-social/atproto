@@ -4,9 +4,9 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getSuggestedFeeds({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth }) => {
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
 
       const db = ctx.db.getReplica()
       const feedService = ctx.services.feed(db)

@@ -1,16 +1,13 @@
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, usersSeed } from '@atproto/dev-env'
 import { AtUri, BlobRef } from '@atproto/api'
 import { Readable } from 'stream'
 import { AutoModerator } from '../../src/auto-moderator'
 import IndexerContext from '../../src/indexer/context'
 import { cidForRecord } from '@atproto/repo'
 import { TID } from '@atproto/common'
-import { LabelService } from '../../src/services/label'
-import usersSeed from '../seeds/users'
 import { CID } from 'multiformats/cid'
 import { ImgLabeler } from '../../src/auto-moderator/hive'
-import { ModerationService } from '../../src/services/moderation'
-import { ImageInvalidator } from '../../src/image/invalidator'
+import { TestOzone } from '@atproto/dev-env/src/ozone'
 
 // outside of test suite so that TestLabeler can access them
 let badCid1: CID | undefined = undefined
@@ -18,10 +15,9 @@ let badCid2: CID | undefined = undefined
 
 describe('labeler', () => {
   let network: TestNetwork
+  let ozone: TestOzone
   let autoMod: AutoModerator
-  let labelSrvc: LabelService
   let ctx: IndexerContext
-  let labelerDid: string
   let badBlob1: BlobRef
   let badBlob2: BlobRef
   let goodBlob: BlobRef
@@ -32,12 +28,11 @@ describe('labeler', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_labeler',
     })
+    ozone = network.ozone
     ctx = network.bsky.indexer.ctx
     const pdsCtx = network.pds.ctx
-    labelerDid = ctx.cfg.labelerDid
     autoMod = ctx.autoMod
     autoMod.imgLabeler = new TestImgLabeler()
-    labelSrvc = ctx.services.label(ctx.db)
     const sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
@@ -54,11 +49,7 @@ describe('labeler', () => {
           constraints: {},
         }
         await store.repo.blob.verifyBlobAndMakePermanent(preparedBlobRef)
-        await store.repo.blob.associateBlob(
-          preparedBlobRef,
-          postUri(),
-          TID.nextStr(),
-        )
+        await store.repo.blob.associateBlob(preparedBlobRef, postUri())
         return blobRef
       })
     }
@@ -76,11 +67,15 @@ describe('labeler', () => {
     await network.close()
   })
 
+  const getLabels = async (subject: string) => {
+    return ozone.ctx.db.db
+      .selectFrom('label')
+      .selectAll()
+      .where('uri', '=', subject)
+      .execute()
+  }
+
   it('labels text in posts', async () => {
-    autoMod.services.moderation = ModerationService.creator(
-      new NoopImageUriBuilder(''),
-      new NoopInvalidator(),
-    )
     const post = {
       $type: 'app.bsky.feed.post',
       text: 'blah blah label_me',
@@ -89,11 +84,11 @@ describe('labeler', () => {
     const cid = await cidForRecord(post)
     const uri = postUri()
     autoMod.processRecord(uri, cid, post)
-    await autoMod.processAll()
-    const labels = await labelSrvc.getLabels(uri.toString())
+    await network.processAll()
+    const labels = await getLabels(uri.toString())
     expect(labels.length).toBe(1)
     expect(labels[0]).toMatchObject({
-      src: labelerDid,
+      src: ozone.ctx.cfg.service.did,
       uri: uri.toString(),
       cid: cid.toString(),
       val: 'test-label',
@@ -102,7 +97,7 @@ describe('labeler', () => {
 
     // Verify that along with applying the labels, we are also leaving trace of the label as moderation event
     // Temporarily assign an instance of moderation service to the autoMod so that we can validate label event
-    const modSrvc = autoMod.services.moderation(ctx.db)
+    const modSrvc = ozone.ctx.modService(ozone.ctx.db)
     const { events } = await modSrvc.getEvents({
       includeAllUserRecords: false,
       subject: uri.toString(),
@@ -116,11 +111,8 @@ describe('labeler', () => {
       createLabelVals: 'test-label',
       negateLabelVals: null,
       comment: `[AutoModerator]: Applying labels`,
-      createdBy: labelerDid,
+      createdBy: network.bsky.indexer.ctx.cfg.serverDid,
     })
-
-    // Cleanup the temporary assignment, knowing that by default, moderation service is not available
-    autoMod.services.moderation = undefined
   })
 
   it('labels embeds in posts', async () => {
@@ -150,35 +142,11 @@ describe('labeler', () => {
     const cid = await cidForRecord(post)
     autoMod.processRecord(uri, cid, post)
     await autoMod.processAll()
-    const dbLabels = await labelSrvc.getLabels(uri.toString())
+    const dbLabels = await getLabels(uri.toString())
     const labels = dbLabels.map((row) => row.val).sort()
     expect(labels).toEqual(
       ['test-label', 'test-label-2', 'img-label', 'other-img-label'].sort(),
     )
-  })
-
-  it('retrieves repo labels on profile views', async () => {
-    await ctx.db.db
-      .insertInto('label')
-      .values({
-        src: labelerDid,
-        uri: alice,
-        cid: '',
-        val: 'repo-label',
-        neg: false,
-        cts: new Date().toISOString(),
-      })
-      .execute()
-
-    const labels = await labelSrvc.getLabelsForProfile(alice)
-
-    expect(labels.length).toBe(1)
-    expect(labels[0]).toMatchObject({
-      src: labelerDid,
-      uri: alice,
-      val: 'repo-label',
-      neg: false,
-    })
   })
 })
 
@@ -191,16 +159,5 @@ class TestImgLabeler implements ImgLabeler {
       return ['other-img-label']
     }
     return []
-  }
-}
-
-class NoopInvalidator implements ImageInvalidator {
-  async invalidate() {}
-}
-class NoopImageUriBuilder {
-  constructor(public endpoint: string) {}
-
-  getPresetUri() {
-    return ''
   }
 }

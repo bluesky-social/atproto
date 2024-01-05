@@ -13,11 +13,11 @@ import { createPipeline, noRules } from '../../../../pipeline'
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.actor.getProfiles({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, res }) => {
       const db = ctx.db.getReplica()
       const actorService = ctx.services.actor(db)
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
 
       const [result, repoRev] = await Promise.all([
         getProfile({ ...params, viewer }, { db, actorService }),

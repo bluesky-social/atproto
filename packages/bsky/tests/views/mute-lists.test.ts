@@ -1,7 +1,6 @@
 import AtpAgent, { AtUri } from '@atproto/api'
-import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
-import basicSeed from '../seeds/basic'
 
 describe('bsky views with mutes from mute lists', () => {
   let network: TestNetwork
@@ -42,7 +41,7 @@ describe('bsky views with mutes from mute lists', () => {
   it('creates a list with some items', async () => {
     const avatar = await sc.uploadFile(
       alice,
-      'tests/sample-img/key-portrait-small.jpg',
+      '../dev-env/src/seed/img/key-portrait-small.jpg',
       'image/jpeg',
     )
     // alice creates mute list with bob & carol that dan uses

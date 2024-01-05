@@ -31,6 +31,7 @@ codegen: ## Re-generate packages from lexicon/ files
 	cd packages/api; pnpm run codegen
 	cd packages/pds; pnpm run codegen
 	cd packages/bsky; pnpm run codegen
+	cd packages/ozone; pnpm run codegen
 	# clean up codegen output
 	pnpm format
 

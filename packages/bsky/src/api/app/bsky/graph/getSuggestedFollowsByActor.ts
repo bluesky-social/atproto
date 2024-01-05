@@ -9,10 +9,10 @@ const RESULT_LENGTH = 10
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getSuggestedFollowsByActor({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ auth, params }) => {
       const { actor } = params
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
 
       const db = ctx.db.getReplica()
       const actorService = ctx.services.actor(db)

@@ -173,7 +173,9 @@ describe('crud operations', () => {
   })
 
   it('attaches images to a post', async () => {
-    const file = await fs.readFile('tests/sample-img/key-landscape-small.jpg')
+    const file = await fs.readFile(
+      '../dev-env/src/seed/img/key-landscape-small.jpg',
+    )
     const uploadedRes = await aliceAgent.api.com.atproto.repo.uploadBlob(file, {
       encoding: 'image/jpeg',
     })

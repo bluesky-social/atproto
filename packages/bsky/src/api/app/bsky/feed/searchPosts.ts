@@ -21,9 +21,9 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.feed.searchPosts({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params }) => {
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       const db = ctx.db.getReplica('search')
       const feedService = ctx.services.feed(db)
       const actorService = ctx.services.actor(db)

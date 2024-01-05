@@ -1,16 +1,16 @@
 import fs from 'fs/promises'
-import { TestNetwork, SeedClient, ImageRef } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, ImageRef, usersSeed } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
 import { AutoModerator } from '../../src/auto-moderator'
-import IndexerContext from '../../src/indexer/context'
 import { sha256RawToCid } from '@atproto/common'
-import usersSeed from '../seeds/users'
 import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/syntax'
 import { ImageFlagger } from '../../src/auto-moderator/abyss'
 import { ImageInvalidator } from '../../src/image/invalidator'
 import { sha256 } from '@atproto/crypto'
 import { ids } from '../../src/lexicon/lexicons'
+import { TestOzone } from '@atproto/dev-env/src/ozone'
+import { PrimaryDatabase } from '../../src'
 
 // outside of test suite so that TestLabeler can access them
 let badCid1: CID | undefined = undefined
@@ -18,9 +18,10 @@ let badCid2: CID | undefined = undefined
 
 describe('takedowner', () => {
   let network: TestNetwork
+  let ozone: TestOzone
+  let bskyDb: PrimaryDatabase
   let autoMod: AutoModerator
   let testInvalidator: TestInvalidator
-  let ctx: IndexerContext
   let pdsAgent: AtpAgent
   let sc: SeedClient
   let alice: string
@@ -36,8 +37,9 @@ describe('takedowner', () => {
         imgInvalidator: testInvalidator,
       },
     })
-    ctx = network.bsky.indexer.ctx
-    autoMod = ctx.autoMod
+    ozone = network.ozone
+    bskyDb = network.bsky.ctx.db.getPrimary()
+    autoMod = network.bsky.indexer.ctx.autoMod
     autoMod.imageFlagger = new TestFlagger()
     pdsAgent = new AtpAgent({ service: network.pds.url })
     sc = network.getSeedClient()
@@ -45,26 +47,26 @@ describe('takedowner', () => {
     await network.processAll()
     alice = sc.dids.alice
     const fileBytes1 = await fs.readFile(
-      'tests/sample-img/key-portrait-small.jpg',
+      '../dev-env/src/seed/img/key-portrait-small.jpg',
     )
     const fileBytes2 = await fs.readFile(
-      'tests/sample-img/key-portrait-large.jpg',
+      '../dev-env/src/seed/img/key-portrait-large.jpg',
     )
     badCid1 = sha256RawToCid(await sha256(fileBytes1))
     badCid2 = sha256RawToCid(await sha256(fileBytes2))
     goodBlob = await sc.uploadFile(
       alice,
-      'tests/sample-img/key-landscape-small.jpg',
+      '../dev-env/src/seed/img/key-landscape-small.jpg',
       'image/jpeg',
     )
     badBlob1 = await sc.uploadFile(
       alice,
-      'tests/sample-img/key-portrait-small.jpg',
+      '../dev-env/src/seed/img/key-portrait-small.jpg',
       'image/jpeg',
     )
     badBlob2 = await sc.uploadFile(
       alice,
-      'tests/sample-img/key-portrait-large.jpg',
+      '../dev-env/src/seed/img/key-portrait-large.jpg',
       'image/jpeg',
     )
   })
@@ -76,9 +78,8 @@ describe('takedowner', () => {
   it('takes down flagged content in posts', async () => {
     const post = await sc.post(alice, 'blah', undefined, [goodBlob, badBlob1])
     await network.processAll()
-    await autoMod.processAll()
     const [modStatus, takedownEvent] = await Promise.all([
-      ctx.db.db
+      ozone.ctx.db.db
         .selectFrom('moderation_subject_status')
         .where('did', '=', alice)
         .where(
@@ -88,7 +89,7 @@ describe('takedowner', () => {
         )
         .select(['takendown', 'id'])
         .executeTakeFirst(),
-      ctx.db.db
+      ozone.ctx.db.db
         .selectFrom('moderation_event')
         .where('subjectDid', '=', alice)
         .where('action', '=', 'com.atproto.admin.defs#modEventTakedown')
@@ -99,12 +100,12 @@ describe('takedowner', () => {
       throw new Error('expected mod action')
     }
     expect(modStatus.takendown).toEqual(true)
-    const record = await ctx.db.db
+    const record = await bskyDb.db
       .selectFrom('record')
       .where('uri', '=', post.ref.uriStr)
-      .select('takedownId')
+      .select('takedownRef')
       .executeTakeFirst()
-    expect(record?.takedownId).toBeGreaterThan(0)
+    expect(record?.takedownRef).toEqual(`BSKY-TAKEDOWN-${takedownEvent.id}`)
 
     const recordPds = await network.pds.ctx.actorStore.read(
       post.ref.uri.hostname,
@@ -115,7 +116,7 @@ describe('takedowner', () => {
           .select('takedownRef')
           .executeTakeFirst(),
     )
-    expect(recordPds?.takedownRef).toEqual(takedownEvent.id.toString())
+    expect(recordPds?.takedownRef).toEqual(`BSKY-TAKEDOWN-${takedownEvent.id}`)
 
     expect(testInvalidator.invalidated.length).toBe(1)
     expect(testInvalidator.invalidated[0].subject).toBe(
@@ -137,13 +138,13 @@ describe('takedowner', () => {
     )
     await network.processAll()
     const [modStatus, takedownEvent] = await Promise.all([
-      ctx.db.db
+      ozone.ctx.db.db
         .selectFrom('moderation_subject_status')
         .where('did', '=', alice)
         .where('recordPath', '=', `${ids.AppBskyActorProfile}/self`)
         .select(['takendown', 'id'])
         .executeTakeFirst(),
-      ctx.db.db
+      ozone.ctx.db.db
         .selectFrom('moderation_event')
         .where('subjectDid', '=', alice)
         .where(
@@ -159,12 +160,12 @@ describe('takedowner', () => {
       throw new Error('expected mod action')
     }
     expect(modStatus.takendown).toEqual(true)
-    const record = await ctx.db.db
+    const recordBsky = await bskyDb.db
       .selectFrom('record')
       .where('uri', '=', res.data.uri)
-      .select('takedownId')
+      .select('takedownRef')
       .executeTakeFirst()
-    expect(record?.takedownId).toBeGreaterThan(0)
+    expect(recordBsky?.takedownRef).toEqual(`BSKY-TAKEDOWN-${takedownEvent.id}`)
 
     const recordPds = await network.pds.ctx.actorStore.read(alice, (store) =>
       store.db.db
@@ -173,7 +174,7 @@ describe('takedowner', () => {
         .select('takedownRef')
         .executeTakeFirst(),
     )
-    expect(recordPds?.takedownRef).toEqual(takedownEvent.id.toString())
+    expect(recordPds?.takedownRef).toEqual(`BSKY-TAKEDOWN-${takedownEvent.id}`)
 
     expect(testInvalidator.invalidated.length).toBe(2)
     expect(testInvalidator.invalidated[1].subject).toBe(

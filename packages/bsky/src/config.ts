@@ -31,11 +31,10 @@ export interface ServerConfigValues {
   imgUriEndpoint?: string
   blobCacheLocation?: string
   searchEndpoint?: string
-  labelerDid: string
   adminPassword: string
-  moderatorPassword?: string
-  triagePassword?: string
-  moderationPushUrl?: string
+  moderatorPassword: string
+  triagePassword: string
+  modServiceDid: string
   rateLimitsEnabled: boolean
   rateLimitBypassKey?: string
   rateLimitBypassIps?: string[]
@@ -110,14 +109,17 @@ export class ServerConfig {
     )
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
     assert(dbPrimaryPostgresUrl)
-    const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
+    const adminPassword = process.env.ADMIN_PASSWORD || undefined
+    assert(adminPassword)
     const moderatorPassword = process.env.MODERATOR_PASSWORD || undefined
+    assert(moderatorPassword)
     const triagePassword = process.env.TRIAGE_PASSWORD || undefined
-    const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
-    const moderationPushUrl =
-      overrides?.moderationPushUrl ||
-      process.env.MODERATION_PUSH_URL ||
+    assert(triagePassword)
+    const modServiceDid =
+      overrides?.modServiceDid ||
+      process.env.MODERATION_SERVICE_DID ||
       undefined
+    assert(modServiceDid)
     const rateLimitsEnabled = process.env.RATE_LIMITS_ENABLED === 'true'
     const rateLimitBypassKey = process.env.RATE_LIMIT_BYPASS_KEY
     const rateLimitBypassIps = process.env.RATE_LIMIT_BYPASS_IPS
@@ -150,11 +152,10 @@ export class ServerConfig {
       imgUriEndpoint,
       blobCacheLocation,
       searchEndpoint,
-      labelerDid,
       adminPassword,
       moderatorPassword,
       triagePassword,
-      moderationPushUrl,
+      modServiceDid,
       rateLimitsEnabled,
       rateLimitBypassKey,
       rateLimitBypassIps,
@@ -267,10 +268,6 @@ export class ServerConfig {
     return this.cfg.searchEndpoint
   }
 
-  get labelerDid() {
-    return this.cfg.labelerDid
-  }
-
   get adminPassword() {
     return this.cfg.adminPassword
   }
@@ -283,8 +280,8 @@ export class ServerConfig {
     return this.cfg.triagePassword
   }
 
-  get moderationPushUrl() {
-    return this.cfg.moderationPushUrl
+  get modServiceDid() {
+    return this.cfg.modServiceDid
   }
 
   get rateLimitsEnabled() {

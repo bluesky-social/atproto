@@ -1,6 +1,5 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
-import likesSeed from '../seeds/likes'
+import { TestNetwork, SeedClient, likesSeed } from '@atproto/dev-env'
 import { constantDate, forSnapshot, paginateAll, stripViewer } from '../_util'
 
 describe('pds like views', () => {

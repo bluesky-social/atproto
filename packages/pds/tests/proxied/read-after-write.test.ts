@@ -45,7 +45,7 @@ describe('proxy read after write', () => {
   it('handles image formatting', async () => {
     const blob = await sc.uploadFile(
       alice,
-      'tests/sample-img/key-landscape-small.jpg',
+      '../dev-env/src/seed/img/key-landscape-small.jpg',
       'image/jpeg',
     )
     await sc.updateProfile(alice, { displayName: 'blah', avatar: blob.image })
@@ -125,7 +125,7 @@ describe('proxy read after write', () => {
   it('handles read after write on threads with record embeds', async () => {
     const img = await sc.uploadFile(
       alice,
-      'tests/sample-img/key-landscape-small.jpg',
+      '../dev-env/src/seed/img/key-landscape-small.jpg',
       'image/jpeg',
     )
     const replyRes1 = await agent.api.app.bsky.feed.post.create(

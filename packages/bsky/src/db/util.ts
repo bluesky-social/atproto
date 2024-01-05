@@ -20,11 +20,11 @@ export const actorWhereClause = (actor: string) => {
 
 // Applies to actor or record table
 export const notSoftDeletedClause = (alias: DbRef) => {
-  return sql`${alias}."takedownId" is null`
+  return sql`${alias}."takedownRef" is null`
 }
 
-export const softDeleted = (actorOrRecord: { takedownId: number | null }) => {
-  return actorOrRecord.takedownId !== null
+export const softDeleted = (actorOrRecord: { takedownRef: string | null }) => {
+  return actorOrRecord.takedownRef !== null
 }
 
 export const countAll = sql<number>`count(*)`

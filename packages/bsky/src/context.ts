@@ -7,15 +7,14 @@ import { DatabaseCoordinator } from './db'
 import { ServerConfig } from './config'
 import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
-import * as auth from './auth'
 import DidRedisCache from './did-cache'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
 import { NotificationServer } from './notifications'
 import { Redis } from './redis'
+import { AuthVerifier } from './auth-verifier'
 
 export class AppContext {
-  public moderationPushAgent: AtpAgent | undefined
   constructor(
     private opts: {
       db: DatabaseCoordinator
@@ -30,17 +29,9 @@ export class AppContext {
       searchAgent?: AtpAgent
       algos: MountedAlgos
       notifServer: NotificationServer
+      authVerifier: AuthVerifier
     },
-  ) {
-    if (opts.cfg.moderationPushUrl) {
-      const url = new URL(opts.cfg.moderationPushUrl)
-      this.moderationPushAgent = new AtpAgent({ service: url.origin })
-      this.moderationPushAgent.api.setHeader(
-        'authorization',
-        auth.buildBasicAuth(url.username, url.password),
-      )
-    }
-  }
+  ) {}
 
   get db(): DatabaseCoordinator {
     return this.opts.db
@@ -86,30 +77,8 @@ export class AppContext {
     return this.opts.searchAgent
   }
 
-  get authVerifier() {
-    return auth.authVerifier(this.idResolver, { aud: this.cfg.serverDid })
-  }
-
-  get authVerifierAnyAudience() {
-    return auth.authVerifier(this.idResolver, { aud: null })
-  }
-
-  get authOptionalVerifierAnyAudience() {
-    return auth.authOptionalVerifier(this.idResolver, { aud: null })
-  }
-
-  get authOptionalVerifier() {
-    return auth.authOptionalVerifier(this.idResolver, {
-      aud: this.cfg.serverDid,
-    })
-  }
-
-  get authOptionalAccessOrRoleVerifier() {
-    return auth.authOptionalAccessOrRoleVerifier(this.idResolver, this.cfg)
-  }
-
-  get roleVerifier() {
-    return auth.roleVerifier(this.cfg)
+  get authVerifier(): AuthVerifier {
+    return this.opts.authVerifier
   }
 
   async serviceAuthJwt(aud: string) {

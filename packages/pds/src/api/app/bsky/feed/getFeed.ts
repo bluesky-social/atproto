@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
       const { data: feed } =
         await ctx.appViewAgent.api.app.bsky.feed.getFeedGenerator(
           { feed: params.feed },
-          await ctx.serviceAuthHeaders(requester),
+          await ctx.appviewAuthHeaders(requester),
         )
       const res = await ctx.appViewAgent.api.app.bsky.feed.getFeed(
         params,

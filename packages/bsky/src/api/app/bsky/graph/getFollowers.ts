@@ -19,17 +19,15 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.graph.getFollowers({
-    auth: ctx.authOptionalAccessOrRoleVerifier,
+    auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth }) => {
       const db = ctx.db.getReplica()
       const actorService = ctx.services.actor(db)
       const graphService = ctx.services.graph(db)
-      const viewer = 'did' in auth.credentials ? auth.credentials.did : null
-      const canViewTakendownProfile =
-        auth.credentials.type === 'role' && auth.credentials.triage
+      const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
 
       const result = await getFollowers(
-        { ...params, viewer, canViewTakendownProfile },
+        { ...params, viewer, canViewTakedowns },
         { db, actorService, graphService },
       )
 
@@ -46,10 +44,10 @@ const skeleton = async (
   ctx: Context,
 ): Promise<SkeletonState> => {
   const { db, actorService } = ctx
-  const { limit, cursor, actor, canViewTakendownProfile } = params
+  const { limit, cursor, actor, canViewTakedowns } = params
   const { ref } = db.db.dynamic
 
-  const subject = await actorService.getActor(actor, canViewTakendownProfile)
+  const subject = await actorService.getActor(actor, canViewTakedowns)
   if (!subject) {
     throw new InvalidRequestError(`Actor not found: ${actor}`)
   }
@@ -58,7 +56,7 @@ const skeleton = async (
     .selectFrom('follow')
     .where('follow.subjectDid', '=', subject.did)
     .innerJoin('actor as creator', 'creator.did', 'follow.creator')
-    .if(!canViewTakendownProfile, (qb) =>
+    .if(!canViewTakedowns, (qb) =>
       qb.where(notSoftDeletedClause(ref('creator'))),
     )
     .selectAll('creator')
@@ -130,7 +128,7 @@ type Context = {
 
 type Params = QueryParams & {
   viewer: string | null
-  canViewTakendownProfile: boolean
+  canViewTakedowns: boolean
 }
 
 type SkeletonState = {

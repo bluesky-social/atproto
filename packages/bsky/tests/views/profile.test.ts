@@ -1,9 +1,8 @@
 import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, stripViewer } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
-import basicSeed from '../seeds/basic'
 
 describe('pds profile views', () => {
   let network: TestNetwork
@@ -106,10 +105,10 @@ describe('pds profile views', () => {
 
   it('presents avatars & banners', async () => {
     const avatarImg = await fs.readFile(
-      'tests/sample-img/key-portrait-small.jpg',
+      '../dev-env/src/seed/img/key-portrait-small.jpg',
     )
     const bannerImg = await fs.readFile(
-      'tests/sample-img/key-landscape-small.jpg',
+      '../dev-env/src/seed/img/key-landscape-small.jpg',
     )
     const avatarRes = await pdsAgent.api.com.atproto.repo.uploadBlob(
       avatarImg,
@@ -184,15 +183,16 @@ describe('pds profile views', () => {
   })
 
   it('blocked by actor takedown', async () => {
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: alice,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: true,
+          ref: 'test',
+        },
       },
       {
         encoding: 'application/json',
@@ -207,15 +207,15 @@ describe('pds profile views', () => {
     await expect(promise).rejects.toThrow('Account has been taken down')
 
     // Cleanup
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: alice,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: false,
+        },
       },
       {
         encoding: 'application/json',
@@ -225,7 +225,7 @@ describe('pds profile views', () => {
   })
 
   it('blocked by actor suspension', async () => {
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await pdsAgent.api.com.atproto.admin.emitModerationEvent(
       {
         event: {
           $type: 'com.atproto.admin.defs#modEventTakedown',
@@ -243,6 +243,7 @@ describe('pds profile views', () => {
         headers: network.pds.adminAuthHeaders(),
       },
     )
+    await network.processAll()
     const promise = agent.api.app.bsky.actor.getProfile(
       { actor: alice },
       { headers: await network.serviceHeaders(bob) },
@@ -253,7 +254,7 @@ describe('pds profile views', () => {
     )
 
     // Cleanup
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await pdsAgent.api.com.atproto.admin.emitModerationEvent(
       {
         event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
         subject: {
@@ -268,6 +269,7 @@ describe('pds profile views', () => {
         headers: network.pds.adminAuthHeaders(),
       },
     )
+    await network.processAll()
   })
 
   async function updateProfile(did: string, record: Record<string, unknown>) {

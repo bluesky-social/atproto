@@ -1,8 +1,11 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import {
+  TestNetwork,
+  SeedClient,
+  basicSeed,
+  usersBulkSeed,
+} from '@atproto/dev-env'
 import { forSnapshot, paginateAll } from '../_util'
-import basicSeed from '../seeds/basic'
-import usersBulkSeed from '../seeds/users-bulk'
 
 describe('mute views', () => {
   let network: TestNetwork

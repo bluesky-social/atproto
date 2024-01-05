@@ -1,18 +1,13 @@
-import { sql } from 'kysely'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
-import {
-  cleanQuery,
-  getUserSearchQuery,
-  SearchKeyset,
-} from '../../../../services/util/search'
+import { cleanQuery } from '../../../../services/util/search'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActors({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params }) => {
       const { cursor, limit } = params
-      const requester = auth.credentials.did
+      const requester = auth.credentials.iss
       const rawQuery = params.q ?? params.term
       const query = cleanQuery(rawQuery || '')
       const db = ctx.db.getReplica('search')
@@ -29,15 +24,11 @@ export default function (server: Server, ctx: AppContext) {
         results = res.data.actors.map((a) => a.did)
         resCursor = res.data.cursor
       } else {
-        const res = query
-          ? await getUserSearchQuery(db, { query, limit, cursor })
-              .select('distance')
-              .selectAll('actor')
-              .execute()
-          : []
-        results = res.map((a) => a.did)
-        const keyset = new SearchKeyset(sql``, sql``)
-        resCursor = keyset.packFromResult(res)
+        const res = await ctx.services
+          .actor(ctx.db.getReplica('search'))
+          .getSearchResults({ query, limit, cursor })
+        results = res.results.map((a) => a.did)
+        resCursor = res.cursor
       }
 
       const actors = await ctx.services
