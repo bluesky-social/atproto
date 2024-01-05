@@ -13,7 +13,7 @@ require('dd-trace') // Only works with commonjs
 // Tracer code above must come before anything else
 const path = require('path')
 const {
-  Ozone,
+  OzoneService,
   envToCfg,
   envToSecrets,
   readEnv,
@@ -24,7 +24,7 @@ const main = async () => {
   const env = readEnv()
   const cfg = envToCfg(env)
   const secrets = envToSecrets(env)
-  const ozone = await Ozone.create(cfg, secrets)
+  const ozone = await OzoneService.create(cfg, secrets)
 
   await ozone.start()
 
