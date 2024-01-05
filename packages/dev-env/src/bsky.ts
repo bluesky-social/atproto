@@ -159,7 +159,7 @@ export class TestBsky {
     await server.start()
 
     // manually process labels in dev-env (in network.processAll)
-    ingester.ctx.labelSubscription.destroy()
+    ingester.ctx.labelSubscription?.destroy()
 
     return new TestBsky(url, port, server, indexer, ingester)
   }
@@ -240,7 +240,7 @@ export async function getIngester(
   })
   await db.migrateToLatestOrThrow()
   const ingester = await bsky.BskyIngester.create({ cfg, db, redis })
-  await ingester.ctx.labelSubscription.destroy()
+  await ingester.ctx.labelSubscription?.destroy()
   return ingester
 }
 
