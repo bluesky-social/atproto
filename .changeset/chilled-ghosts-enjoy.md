@@ -1,5 +1,5 @@
 ---
-'@atproto/api': patch
+'@atproto/api': minor
 ---
 
 Improve `resumeSession` event emission. It will no longer double emit when some
