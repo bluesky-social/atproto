@@ -4,7 +4,7 @@ import { Database } from '../db'
 import { IndexedAtDidKeyset, TimeCidKeyset, paginate } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
-  // @TODO not yet in use by search endpoints
+  // @TODO actor search endpoints still fall back to search service
   async searchActors(req) {
     const { term, limit, cursor } = req
     const { ref } = db.db.dynamic
@@ -32,7 +32,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }
   },
 
-  // @TODO not yet in use by search endpoints
+  // @TODO post search endpoint still falls back to search service
   async searchPosts(req) {
     const { term, limit, cursor } = req
     const { ref } = db.db.dynamic

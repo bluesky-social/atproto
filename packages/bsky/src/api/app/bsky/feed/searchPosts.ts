@@ -1,4 +1,3 @@
-import assert from 'assert'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import AtpAgent from '@atproto/api'
@@ -40,16 +39,26 @@ export default function (server: Server, ctx: AppContext) {
 const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
 
-  assert(ctx.searchAgent, 'unsupported without search agent')
-  const { data: res } =
-    await ctx.searchAgent.api.app.bsky.unspecced.searchPostsSkeleton({
-      q: params.q,
-      cursor: params.cursor,
-      limit: params.limit,
-    })
+  if (ctx.searchAgent) {
+    const { data: res } =
+      await ctx.searchAgent.api.app.bsky.unspecced.searchPostsSkeleton({
+        q: params.q,
+        cursor: params.cursor,
+        limit: params.limit,
+      })
+    return {
+      posts: res.posts.map(({ uri }) => uri),
+      cursor: parseString(res.cursor),
+    }
+  }
 
+  const res = await ctx.dataplane.searchPosts({
+    term: params.q,
+    limit: params.limit,
+    cursor: params.cursor,
+  })
   return {
-    posts: res.posts.map(({ uri }) => uri),
+    posts: res.uris,
     cursor: parseString(res.cursor),
   }
 }

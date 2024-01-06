@@ -1,4 +1,3 @@
-import assert from 'assert'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 import AtpAgent from '@atproto/api'
@@ -38,20 +37,31 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
+  const term = params.q ?? params.term ?? ''
 
   // @TODO
   // add typeahead option
   // add hits total
-  assert(ctx.searchAgent, 'unsupported without search agent')
-  const { data: res } =
-    await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
-      typeahead: true,
-      q: params.q ?? params.term ?? '',
-      limit: params.limit,
-    })
 
+  if (ctx.searchAgent) {
+    const { data: res } =
+      await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
+        typeahead: true,
+        q: term,
+        limit: params.limit,
+      })
+    return {
+      dids: res.actors.map(({ did }) => did),
+      cursor: parseString(res.cursor),
+    }
+  }
+
+  const res = await ctx.dataplane.searchActors({
+    term,
+    limit: params.limit,
+  })
   return {
-    dids: res.actors.map(({ did }) => did),
+    dids: res.dids,
     cursor: parseString(res.cursor),
   }
 }
