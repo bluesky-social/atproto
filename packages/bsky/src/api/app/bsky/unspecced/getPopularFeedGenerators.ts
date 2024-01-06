@@ -6,13 +6,8 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopularFeedGenerators({
     auth: ctx.authOptionalVerifier,
     handler: async (_reqCtx) => {
-      // @TODO not currently supported during appview v2 buildout
-      return {
-        encoding: 'application/json',
-        body: {
-          feeds: [],
-        },
-      }
+      // @TODO for appview v2
+      throw new Error('unimplemented')
     },
   })
 }

@@ -10,6 +10,7 @@ export interface ServerConfigValues {
   dataplaneUrls: string[]
   dataplaneHttpVersion?: '1.1' | '2'
   dataplaneIgnoreBadTls?: boolean
+  searchEndpoint?: string
   didPlcUrl: string
   handleResolveNameservers?: string[]
   imgUriEndpoint?: string
@@ -44,6 +45,7 @@ export class ServerConfig {
     const dataplaneHttpVersion = process.env.BSKY_DATAPLANE_HTTP_VERSION || '2'
     const dataplaneIgnoreBadTls =
       process.env.BSKY_DATAPLANE_IGNORE_BAD_TLS === 'true'
+    const searchEndpoint = process.env.BSKY_SEARCH_ENDPOINT || undefined
     const adminPassword = process.env.BSKY_ADMIN_PASSWORD || 'admin'
     const moderatorPassword = process.env.BSKY_MODERATOR_PASSWORD || undefined
     const triagePassword = process.env.BSKY_TRIAGE_PASSWORD || undefined
@@ -59,6 +61,7 @@ export class ServerConfig {
       dataplaneUrls,
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
+      searchEndpoint,
       didPlcUrl,
       handleResolveNameservers,
       imgUriEndpoint,
@@ -117,6 +120,10 @@ export class ServerConfig {
 
   get dataplaneIgnoreBadTls() {
     return this.cfg.dataplaneIgnoreBadTls
+  }
+
+  get searchEndpoint() {
+    return this.cfg.searchEndpoint
   }
 
   get handleResolveNameservers() {
