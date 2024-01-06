@@ -40,7 +40,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
 
   // @TODO
-  //add hits total
+  // add hits total
   assert(ctx.searchAgent, 'unsupported without search agent')
   const { data: res } =
     await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
