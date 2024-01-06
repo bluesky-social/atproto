@@ -146,7 +146,7 @@ export class AutoModerator {
         comment: `Automatically flagged for possible slurs: ${matches.join(
           ', ',
         )}`,
-        reasonType: REASONOTHER,
+        reportType: REASONOTHER,
       },
       subject: formattedSubject,
       createdBy: this.ctx.cfg.serverDid,
@@ -208,7 +208,7 @@ export class AutoModerator {
       event: {
         $type: 'com.atproto.admin.defs#modEventReport',
         comment: reportReason,
-        reasonType: REASONVIOLATION,
+        reportType: REASONVIOLATION,
       },
       subject: {
         $type: 'com.atproto.repo.strongRef',
