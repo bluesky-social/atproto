@@ -139,11 +139,17 @@ export class AutoModerator {
             uri: subject.uri.toString(),
             cid: subject.cid.toString(),
           }
-    await this.pushAgent.api.com.atproto.moderation.createReport({
-      reasonType: REASONOTHER,
-      reason: `Automatically flagged for possible slurs: ${matches.join(', ')}`,
+
+    await this.pushAgent.api.com.atproto.admin.emitModerationEvent({
+      event: {
+        $type: 'com.atproto.admin.defs#modEventReport',
+        comment: `Automatically flagged for possible slurs: ${matches.join(
+          ', ',
+        )}`,
+        reportType: REASONOTHER,
+      },
       subject: formattedSubject,
-      reportedBy: this.ctx.cfg.serverDid,
+      createdBy: this.ctx.cfg.serverDid,
     })
   }
 
@@ -198,15 +204,18 @@ export class AutoModerator {
       'hard takedown of record (and blobs) based on auto-matching',
     )
 
-    await this.pushAgent.com.atproto.moderation.createReport({
-      reportedBy: this.ctx.cfg.serverDid,
-      reasonType: REASONVIOLATION,
+    await this.pushAgent.api.com.atproto.admin.emitModerationEvent({
+      event: {
+        $type: 'com.atproto.admin.defs#modEventReport',
+        comment: reportReason,
+        reportType: REASONVIOLATION,
+      },
       subject: {
         $type: 'com.atproto.repo.strongRef',
         uri: uri.toString(),
         cid: recordCid.toString(),
       },
-      reason: reportReason,
+      createdBy: this.ctx.cfg.serverDid,
     })
 
     await this.pushAgent.com.atproto.admin.emitModerationEvent({
