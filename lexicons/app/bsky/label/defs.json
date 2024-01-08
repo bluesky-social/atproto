@@ -73,52 +73,15 @@
         "reportReasons": {
           "type": "array",
           "items": {
-            "type": "string",
-            "knownValues": [
-              "com.atproto.moderation.defs#reasonSpam",
-              "com.atproto.moderation.defs#reasonViolation",
-              "com.atproto.moderation.defs#reasonMisleading",
-              "com.atproto.moderation.defs#reasonSexual",
-              "com.atproto.moderation.defs#reasonRude",
-              "com.atproto.moderation.defs#reasonOther",
-              "com.atproto.moderation.defs#reasonAppeal"
-            ]
+            "type": "ref",
+            "ref": "com.atproto.moderation.defs#reasonType"
           }
         },
         "labelValues": {
           "type": "array",
           "items": {
-            "type": "string",
-            "knownValues": [
-              "!hide",
-              "!no-promote",
-              "!warn",
-              "!no-unauthenticated",
-              "dmca-violation",
-              "doxxing",
-              "porn",
-              "sexual",
-              "nudity",
-              "nsfl",
-              "corpse",
-              "gore",
-              "torture",
-              "self-harm",
-              "intolerant-race",
-              "intolerant-gender",
-              "intolerant-sexual-orientation",
-              "intolerant-religion",
-              "intolerant",
-              "icon-intolerant",
-              "threat",
-              "spoiler",
-              "spam",
-              "account-security",
-              "net-abuse",
-              "impersonation",
-              "scam",
-              "misleading"
-            ]
+            "type": "ref",
+            "ref": "com.atproto.label.defs#labelValue"
           }
         }
       }

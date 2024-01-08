@@ -20,7 +20,7 @@
           "properties": {
             "view": {
               "type": "ref",
-              "ref": "app.bsky.label.defs#labelerView"
+              "ref": "app.bsky.label.defs#labelerViewDetailed"
             }
           }
         }
