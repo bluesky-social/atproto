@@ -30,7 +30,10 @@
             "accept": ["image/png", "image/jpeg"],
             "maxSize": 1000000
           },
-          "policies": {"type": "ref", "ref": "app.bsky.label.defs#labelerPolicies"},
+          "policies": {
+            "type": "ref",
+            "ref": "app.bsky.label.defs#labelerPolicies"
+          },
           "labels": {
             "type": "union",
             "refs": ["com.atproto.label.defs#selfLabels"]
