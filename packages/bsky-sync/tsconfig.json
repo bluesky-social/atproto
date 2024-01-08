@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "emitDeclarationOnly": true
+  },
+  "module": "nodenext",
+  "include": ["./src", "__tests__/**/**.ts"],
+  "references": []
+}

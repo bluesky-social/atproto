@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package bsky.sync;
+option go_package = "./;bsky.sync";
+
+//
+// Bsky Sync
+//
+
+
+// Ping
+message PingRequest {}
+message PingResponse {}
+
+
+service Service {
+  // Ping
+  rpc Ping(PingRequest) returns (PingResponse);
+}
