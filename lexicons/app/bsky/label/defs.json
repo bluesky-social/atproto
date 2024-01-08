@@ -21,13 +21,12 @@
           "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
         },
         "avatar": { "type": "string" },
-        "policies": {"type": "ref", "ref": "app.bsky.label.defs#labelerPolicies"},
         "likeCount": { "type": "integer", "minimum": 0 },
         "viewer": { "type": "ref", "ref": "#labelerViewerState" },
         "indexedAt": { "type": "string", "format": "datetime" }
       }
     },
-    "labelerViewBasic": {
+    "labelerViewDetailed": {
       "type": "object",
       "required": ["uri", "cid", "did", "creator", "displayName", "indexedAt"],
       "properties": {
@@ -46,6 +45,7 @@
           "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
         },
         "avatar": { "type": "string" },
+        "policies": {"type": "ref", "ref": "app.bsky.label.defs#labelerPolicies"},
         "likeCount": { "type": "integer", "minimum": 0 },
         "viewer": { "type": "ref", "ref": "#labelerViewerState" },
         "indexedAt": { "type": "string", "format": "datetime" }

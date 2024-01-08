@@ -22,7 +22,7 @@
             "#viewBlocked",
             "app.bsky.feed.defs#generatorView",
             "app.bsky.graph.defs#listView",
-            "app.bsky.label.defs#labelerViewBasic"
+            "app.bsky.label.defs#labelerView"
           ]
         }
       }
