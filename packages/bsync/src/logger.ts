@@ -8,6 +8,9 @@ export const httpLogger: ReturnType<typeof subsystemLogger> =
 
 export const loggerMiddleware = pinoHttp({
   logger: httpLogger,
+  redact: {
+    paths: ['req.headers.authorization'],
+  },
   serializers: {
     err: (err) => {
       return {
