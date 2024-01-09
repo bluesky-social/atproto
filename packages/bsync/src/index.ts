@@ -19,6 +19,7 @@ export class BsyncService {
   public server: http.Server
   private ac: AbortController
   private terminator: HttpTerminator
+  private dbStatsInterval: NodeJS.Timer
 
   constructor(opts: {
     ctx: AppContext
@@ -49,7 +50,16 @@ export class BsyncService {
   }
 
   async start(): Promise<http.Server> {
-    // @TODO db stats
+    this.dbStatsInterval = setInterval(() => {
+      dbLogger.info(
+        {
+          idleCount: this.ctx.db.pool.idleCount,
+          totalCount: this.ctx.db.pool.totalCount,
+          waitingCount: this.ctx.db.pool.waitingCount,
+        },
+        'db pool stats',
+      )
+    }, 10000)
     await this.setupAppEvents()
     this.server.listen(this.ctx.cfg.service.port)
     this.server.keepAliveTimeout = 90000
@@ -61,6 +71,7 @@ export class BsyncService {
     this.ac.abort()
     await this.terminator.terminate()
     await this.ctx.db.close()
+    clearInterval(this.dbStatsInterval)
   }
 
   async setupAppEvents() {
@@ -68,11 +79,7 @@ export class BsyncService {
     this.ac.signal.addEventListener('abort', () => conn.release(), {
       once: true,
     })
-    conn
-      .query(`listen ${createMuteOpChannel}`)
-      .catch((err) =>
-        dbLogger.error({ err }, `${createMuteOpChannel} listener failed`),
-      )
+    conn.query(`listen ${createMuteOpChannel}`) // if this errors, unhandled rejection should cause process to exit
     conn.on('notification', (notif) => {
       if (notif.channel === createMuteOpChannel) {
         this.ctx.events.emit('mute_op_create')
