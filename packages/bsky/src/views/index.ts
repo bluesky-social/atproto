@@ -398,8 +398,6 @@ export class Views {
   }
 
   feedViewPost(uri: string, state: HydrationState): FeedViewPost | undefined {
-    // no block violating posts in feeds
-    if (state.postBlocks?.get(uri)?.reply) return undefined
     const parsedUri = new AtUri(uri)
     const postInfo = state.posts?.get(uri)
     let postUri: AtUri
@@ -425,6 +423,8 @@ export class Views {
   }
 
   replyRef(uri: string, state: HydrationState, usePostViewUnion = false) {
+    // don't hydrate reply if there isn't it violates a block
+    if (state.postBlocks?.get(uri)?.reply) return undefined
     const postRecord = state.posts?.get(uri.toString())?.record
     if (!postRecord?.reply) return
     const root = this.maybePost(

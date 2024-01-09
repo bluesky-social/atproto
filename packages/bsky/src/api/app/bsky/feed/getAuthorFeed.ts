@@ -62,6 +62,7 @@ export const skeleton = async (inputs: {
     cursor: params.cursor,
     noReplies: params.filter === 'posts_no_replies',
     mediaOnly: params.filter === 'posts_with_media',
+    authorThreadsOnly: params.filter === 'posts_and_author_threads',
   })
   return {
     actor,

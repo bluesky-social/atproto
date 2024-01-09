@@ -5,7 +5,8 @@ import { TimeCidKeyset, paginate } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getAuthorFeed(req) {
-    const { actorDid, limit, cursor, noReplies, mediaOnly } = req
+    const { actorDid, limit, cursor, noReplies, mediaOnly, authorThreadsOnly } =
+      req
     const { ref } = db.db.dynamic
 
     // defaults to posts, reposts, and replies
@@ -29,6 +30,13 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     } else if (noReplies) {
       builder = builder.where((qb) =>
         qb.where('post.replyParent', 'is', null).orWhere('type', '=', 'repost'),
+      )
+    } else if (authorThreadsOnly) {
+      builder = builder.where((qb) =>
+        qb
+          .where('type', '=', 'repost')
+          .orWhere('post.replyParent', 'is', null)
+          .orWhere('post.replyRoot', 'like', `at://${actorDid}/%`),
       )
     }
 

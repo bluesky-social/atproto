@@ -88,7 +88,7 @@ const presentation = (
   const notifications = mapDefined(notifs, (notif) =>
     ctx.views.notification(notif, lastSeenNotifs, hydration),
   )
-  return { notifications, cursor }
+  return { notifications, cursor, seenAt: skeleton.lastSeenNotifs }
 }
 
 type Context = {
