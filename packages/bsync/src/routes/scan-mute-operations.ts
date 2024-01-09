@@ -13,7 +13,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
     const limit = req.limit || 1000
     const cursor = validCursor(req.cursor)
     const nextMuteOpPromise = once(events, createMuteOpChannel, {
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(ctx.cfg.service.longPollTimeoutMs),
     })
     nextMuteOpPromise.catch(() => null) // ensure timeout is always handled
 

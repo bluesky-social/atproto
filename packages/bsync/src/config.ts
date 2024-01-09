@@ -5,6 +5,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const serviceCfg: ServerConfig['service'] = {
     port: env.port ?? 2585,
     version: env.version ?? 'unknown',
+    longPollTimeoutMs: env.longPollTimeoutMs ?? 10000,
   }
 
   assert(env.dbUrl, 'missing postgres url')
@@ -37,6 +38,7 @@ export type ServerConfig = {
 type ServiceConfig = {
   port: number
   version?: string
+  longPollTimeoutMs: number
 }
 
 type DatabaseConfig = {
@@ -56,6 +58,7 @@ export const readEnv = (): ServerEnvironment => {
     // service
     port: envInt('BSYNC_PORT'),
     version: envStr('BSYNC_VERSION'),
+    longPollTimeoutMs: envInt('BSYNC_LONG_POLL_TIMEOUT_MS'),
     // database
     dbUrl: envStr('BSYNC_DB_POSTGRES_URL'),
     dbSchema: envStr('BSYNC_DB_POSTGRES_SCHEMA'),
@@ -71,6 +74,7 @@ export type ServerEnvironment = {
   // service
   port?: number
   version?: string
+  longPollTimeoutMs?: number
   // database
   dbUrl?: string
   dbSchema?: string

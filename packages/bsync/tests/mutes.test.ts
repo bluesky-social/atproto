@@ -18,6 +18,7 @@ describe('mutes', () => {
         dbUrl: process.env.DB_POSTGRES_URL,
         dbSchema: 'bsync_mutes',
         apiKeys: ['key-1'],
+        longPollTimeoutMs: 500,
       }),
     )
     await bsync.ctx.db.migrateToLatestOrThrow()
@@ -35,6 +36,7 @@ describe('mutes', () => {
   })
 
   it('xxx.', async () => {
+    await client.scanMuteOperations({})
     const scanPromise = client.scanMuteOperations({})
     await wait(100)
     const add = await client.addMuteOperation({

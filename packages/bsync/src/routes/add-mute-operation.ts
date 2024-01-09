@@ -13,7 +13,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
     const { db } = ctx
     const op = validMuteOp(req)
     const id = await db.transaction(async (txn) => {
-      // log op
+      // create mute op
       const id = await createMuteOp(txn, op)
       // update mute state
       if (op.type === MuteOperation_Type.ADD) {
@@ -39,7 +39,7 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
   },
 })
 
-const createMuteOp = async (db: Database, op: MuteOpFields) => {
+const createMuteOp = async (db: Database, op: MuteOpInfo) => {
   const { ref } = db.db.dynamic
   const { id } = await db.db
     .insertInto('mute_op')
@@ -54,7 +54,7 @@ const createMuteOp = async (db: Database, op: MuteOpFields) => {
   return id
 }
 
-const addMuteItem = async (db: Database, fromId: number, op: MuteOpFields) => {
+const addMuteItem = async (db: Database, fromId: number, op: MuteOpInfo) => {
   const { ref } = db.db.dynamic
   await db.db
     .insertInto('mute_item')
@@ -71,7 +71,7 @@ const addMuteItem = async (db: Database, fromId: number, op: MuteOpFields) => {
     .execute()
 }
 
-const removeMuteItem = async (db: Database, op: MuteOpFields) => {
+const removeMuteItem = async (db: Database, op: MuteOpInfo) => {
   await db.db
     .deleteFrom('mute_item')
     .where('actorDid', '=', op.actorDid)
@@ -79,14 +79,14 @@ const removeMuteItem = async (db: Database, op: MuteOpFields) => {
     .execute()
 }
 
-const clearMuteItems = async (db: Database, op: MuteOpFields) => {
+const clearMuteItems = async (db: Database, op: MuteOpInfo) => {
   await db.db
     .deleteFrom('mute_item')
     .where('actorDid', '=', op.actorDid)
     .execute()
 }
 
-const validMuteOp = <T extends MuteOpFields>(op: T): T => {
+const validMuteOp = (op: MuteOpInfo): MuteOpInfo => {
   if (!Object.values(MuteOperation_Type).includes(op.type)) {
     throw new ConnectError('bad mute operation type', Code.InvalidArgument)
   }
@@ -109,8 +109,7 @@ const validMuteOp = <T extends MuteOpFields>(op: T): T => {
   return op
 }
 
-type MuteOpFields = {
-  id?: string
+type MuteOpInfo = {
   type: MuteOperation_Type
   actorDid: string
   subject: string

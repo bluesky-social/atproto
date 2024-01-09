@@ -14,7 +14,7 @@ export class AppContext {
   cfg: ServerConfig
   events: TypedEventEmitter<AppEvents>
 
-  constructor(private opts: AppContextOptions) {
+  constructor(opts: AppContextOptions) {
     this.db = opts.db
     this.cfg = opts.cfg
     this.events = new EventEmitter() as TypedEventEmitter<AppEvents>
