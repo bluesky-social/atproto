@@ -199,6 +199,42 @@
           "description": "Show followed users at the top of all replies."
         }
       }
+    },
+    "labelersPref": {
+      "type": "object",
+      "required": ["labelers"],
+      "properties": {
+        "labelers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["uri", "enabled", "labelGroupSettings"],
+            "properties": {
+              "uri": {
+                "type": "string",
+                "format": "at-uri"
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "labelGroupSettings": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["labelGroup", "visibility"],
+                  "properties": {
+                    "labelGroup": { "type": "string" },
+                    "visibility": {
+                      "type": "string",
+                      "knownValues": ["show", "warn", "hide"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

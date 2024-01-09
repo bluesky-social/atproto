@@ -1,0 +1,36 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.label.getLabelers",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get information about a list of labelers.",
+      "parameters": {
+        "type": "params",
+        "required": ["labelers"],
+        "properties": {
+          "labelers": {
+            "type": "array",
+            "items": { "type": "string", "format": "at-uri" }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["labelers"],
+          "properties": {
+            "labelers": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "app.bsky.label.defs#labelerView"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
