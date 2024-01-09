@@ -72,7 +72,7 @@ Object {
         "$type": "app.bsky.embed.images#view",
         "images": Array [
           Object {
-            "alt": "tests/sample-img/key-landscape-small.jpg",
+            "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
             "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(5)@jpeg",
             "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(5)@jpeg",
           },
@@ -84,7 +84,7 @@ Object {
           "cid": "cids(4)",
           "cts": "1970-01-01T00:00:00.000Z",
           "neg": false,
-          "src": "did:example:labeler",
+          "src": "user(4)",
           "uri": "record(5)",
           "val": "test-label",
         },
@@ -92,7 +92,7 @@ Object {
           "cid": "cids(4)",
           "cts": "1970-01-01T00:00:00.000Z",
           "neg": false,
-          "src": "did:example:labeler",
+          "src": "user(4)",
           "uri": "record(5)",
           "val": "test-label-2",
         },
@@ -105,7 +105,7 @@ Object {
           "$type": "app.bsky.embed.images",
           "images": Array [
             Object {
-              "alt": "tests/sample-img/key-landscape-small.jpg",
+              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
               "image": Object {
                 "$type": "blob",
                 "mimeType": "image/jpeg",
@@ -305,7 +305,7 @@ Object {
           "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
-              "alt": "tests/sample-img/key-landscape-small.jpg",
+              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(5)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(5)@jpeg",
             },
@@ -317,7 +317,7 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "did:example:labeler",
+            "src": "user(5)",
             "uri": "record(7)",
             "val": "test-label",
           },
@@ -325,7 +325,7 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "did:example:labeler",
+            "src": "user(5)",
             "uri": "record(7)",
             "val": "test-label-2",
           },
@@ -338,7 +338,7 @@ Object {
             "$type": "app.bsky.embed.images",
             "images": Array [
               Object {
-                "alt": "tests/sample-img/key-landscape-small.jpg",
+                "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -543,7 +543,7 @@ Object {
           "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
-              "alt": "tests/sample-img/key-landscape-small.jpg",
+              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(5)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(5)@jpeg",
             },
@@ -555,7 +555,7 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "did:example:labeler",
+            "src": "user(5)",
             "uri": "record(7)",
             "val": "test-label",
           },
@@ -563,7 +563,7 @@ Object {
             "cid": "cids(4)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "did:example:labeler",
+            "src": "user(5)",
             "uri": "record(7)",
             "val": "test-label-2",
           },
@@ -576,7 +576,7 @@ Object {
             "$type": "app.bsky.embed.images",
             "images": Array [
               Object {
-                "alt": "tests/sample-img/key-landscape-small.jpg",
+                "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -1095,7 +1095,7 @@ Object {
           "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
-              "alt": "tests/sample-img/key-landscape-small.jpg",
+              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(4)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(4)@jpeg",
             },
@@ -1107,7 +1107,7 @@ Object {
             "cid": "cids(3)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "did:example:labeler",
+            "src": "user(4)",
             "uri": "record(5)",
             "val": "test-label",
           },
@@ -1115,7 +1115,7 @@ Object {
             "cid": "cids(3)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "did:example:labeler",
+            "src": "user(4)",
             "uri": "record(5)",
             "val": "test-label-2",
           },
@@ -1128,7 +1128,7 @@ Object {
             "$type": "app.bsky.embed.images",
             "images": Array [
               Object {
-                "alt": "tests/sample-img/key-landscape-small.jpg",
+                "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -1295,7 +1295,7 @@ Object {
           "$type": "app.bsky.embed.images#view",
           "images": Array [
             Object {
-              "alt": "tests/sample-img/key-landscape-small.jpg",
+              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(4)@jpeg",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(4)@jpeg",
             },
@@ -1307,7 +1307,7 @@ Object {
             "cid": "cids(3)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "did:example:labeler",
+            "src": "user(4)",
             "uri": "record(5)",
             "val": "test-label",
           },
@@ -1315,7 +1315,7 @@ Object {
             "cid": "cids(3)",
             "cts": "1970-01-01T00:00:00.000Z",
             "neg": false,
-            "src": "did:example:labeler",
+            "src": "user(4)",
             "uri": "record(5)",
             "val": "test-label-2",
           },
@@ -1328,7 +1328,7 @@ Object {
             "$type": "app.bsky.embed.images",
             "images": Array [
               Object {
-                "alt": "tests/sample-img/key-landscape-small.jpg",
+                "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
                 "image": Object {
                   "$type": "blob",
                   "mimeType": "image/jpeg",

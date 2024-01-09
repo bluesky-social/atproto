@@ -1,9 +1,8 @@
 import axios, { AxiosInstance } from 'axios'
 import { CID } from 'multiformats/cid'
 import { cidForCbor } from '@atproto/common'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, basicSeed } from '@atproto/dev-env'
 import { getInfo } from '../../src/image/sharp'
-import basicSeed from '../seeds/basic'
 import { ImageUriBuilder } from '../../src/image/uri'
 
 describe('image processing server', () => {

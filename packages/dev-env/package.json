@@ -1,6 +1,6 @@
 {
   "name": "@atproto/dev-env",
-  "version": "0.2.16",
+  "version": "0.2.22",
   "license": "MIT",
   "description": "Local development environment helper for atproto development",
   "keywords": [
@@ -31,6 +31,7 @@
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",
     "@atproto/lexicon": "workspace:^",
+    "@atproto/ozone": "workspace:^",
     "@atproto/pds": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",

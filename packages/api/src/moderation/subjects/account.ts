@@ -41,6 +41,8 @@ export function filterAccountLabels(labels?: Label[]): Label[] {
     return []
   }
   return labels.filter(
-    (label) => !label.uri.endsWith('/app.bsky.actor.profile/self'),
+    (label) =>
+      !label.uri.endsWith('/app.bsky.actor.profile/self') ||
+      label.val === '!no-unauthenticated',
   )
 }

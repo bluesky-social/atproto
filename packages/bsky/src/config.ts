@@ -15,8 +15,9 @@ export interface ServerConfigValues {
   imgUriEndpoint?: string
   blobCacheLocation?: string
   adminPassword: string
-  moderatorPassword?: string
-  triagePassword?: string
+  moderatorPassword: string
+  triagePassword: string
+  modServiceDid: string
 }
 
 export class ServerConfig {
@@ -44,11 +45,17 @@ export class ServerConfig {
     const dataplaneHttpVersion = process.env.BSKY_DATAPLANE_HTTP_VERSION || '2'
     const dataplaneIgnoreBadTls =
       process.env.BSKY_DATAPLANE_IGNORE_BAD_TLS === 'true'
-    const adminPassword = process.env.BSKY_ADMIN_PASSWORD || 'admin'
-    const moderatorPassword = process.env.BSKY_MODERATOR_PASSWORD || undefined
-    const triagePassword = process.env.BSKY_TRIAGE_PASSWORD || undefined
+    const adminPassword = process.env.BSKY_ADMIN_PASSWORD
+    assert(adminPassword)
+    const moderatorPassword = process.env.BSKY_MODERATOR_PASSWORD
+    assert(moderatorPassword)
+    const triagePassword = process.env.BSKY_TRIAGE_PASSWORD
+    assert(triagePassword)
+    const modServiceDid = process.env.MOD_SERVICE_DID
+    assert(modServiceDid)
     assert(dataplaneUrls.length)
     assert(dataplaneHttpVersion === '1.1' || dataplaneHttpVersion === '2')
+
     return new ServerConfig({
       version,
       debugMode,
@@ -66,6 +73,7 @@ export class ServerConfig {
       adminPassword,
       moderatorPassword,
       triagePassword,
+      modServiceDid,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -145,6 +153,10 @@ export class ServerConfig {
 
   get triagePassword() {
     return this.cfg.triagePassword
+  }
+
+  get modServiceDid() {
+    return this.cfg.modServiceDid
   }
 }
 

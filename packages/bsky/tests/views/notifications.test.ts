@@ -1,7 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll } from '../_util'
-import basicSeed from '../seeds/basic'
 import { Notification } from '../../src/lexicon/types/app/bsky/notification/listNotifications'
 
 describe('notification views', () => {
@@ -173,6 +172,13 @@ describe('notification views', () => {
         encoding: 'application/json',
       },
     )
+    const full2 = await agent.api.app.bsky.notification.listNotifications(
+      {},
+      { headers: await network.serviceHeaders(alice) },
+    )
+    expect(full2.data.notifications.length).toBe(full.data.notifications.length)
+    expect(full2.data.seenAt).toEqual(seenAt)
+
     const notifCount = await agent.api.app.bsky.notification.getUnreadCount(
       {},
       { headers: await network.serviceHeaders(alice) },

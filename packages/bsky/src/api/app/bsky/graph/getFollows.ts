@@ -16,15 +16,13 @@ import { Views } from '../../../../views'
 export default function (server: Server, ctx: AppContext) {
   const getFollows = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.graph.getFollows({
-    auth: ctx.authOptionalAccessOrRoleVerifier,
+    auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth }) => {
-      const viewer = 'did' in auth.credentials ? auth.credentials.did : null
-      const canViewTakendownProfile =
-        auth.credentials.type === 'role' && auth.credentials.triage
+      const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
 
-      // @TODO ensure canViewTakendownProfile gets threaded through and applied properly
+      // @TODO ensure canViewTakedowns gets threaded through and applied properly
       const result = await getFollows(
-        { ...params, viewer, canViewTakendownProfile },
+        { ...params, viewer, canViewTakedowns },
         ctx,
       )
 
@@ -97,17 +95,14 @@ const presentation = (
     ctx.views.actorIsTakendown(did, hydration)
 
   const subject = ctx.views.profile(subjectDid, hydration)
-  if (
-    !subject ||
-    (!params.canViewTakendownProfile && isTakendown(subjectDid))
-  ) {
+  if (!subject || (!params.canViewTakedowns && isTakendown(subjectDid))) {
     throw new InvalidRequestError(`Actor not found: ${params.actor}`)
   }
 
   const follows = mapDefined(followUris, (followUri) => {
     const followDid = hydration.follows?.get(followUri)?.record.subject
     if (!followDid) return
-    if (!params.canViewTakendownProfile && isTakendown(followDid)) {
+    if (!params.canViewTakedowns && isTakendown(followDid)) {
       return
     }
     return ctx.views.profile(followDid, hydration)
@@ -123,7 +118,7 @@ type Context = {
 
 type Params = QueryParams & {
   viewer: string | null
-  canViewTakendownProfile: boolean
+  canViewTakedowns: boolean
 }
 
 type SkeletonState = {

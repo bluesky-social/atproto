@@ -2,7 +2,7 @@ export interface Actor {
   did: string
   handle: string | null
   indexedAt: string
-  takedownId: number | null // @TODO(bsky)
+  takedownRef: string | null
 }
 
 export const tableName = 'actor'

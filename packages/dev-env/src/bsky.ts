@@ -51,6 +51,7 @@ export class TestBsky {
       serverDid,
       dataplaneUrls: [`http://localhost:${dataplanePort}`],
       dataplaneHttpVersion: '1.1',
+      modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       ...cfg,
       adminPassword: ADMIN_PASSWORD,
       moderatorPassword: MOD_PASSWORD,

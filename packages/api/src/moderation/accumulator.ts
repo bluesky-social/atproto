@@ -96,6 +96,11 @@ export class ModerationCauseAccumulator {
       return
     }
 
+    // ignore 'unauthed' labels when the user is authed
+    if (labelDef.flags.includes('unauthed') && !!opts.userDid) {
+      return
+    }
+
     // establish the priority of the label
     let priority: 1 | 2 | 5 | 7 | 8
     if (labelDef.flags.includes('no-override')) {

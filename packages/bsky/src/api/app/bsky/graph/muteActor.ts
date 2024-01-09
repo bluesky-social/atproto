@@ -4,10 +4,10 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.muteActor({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       const { actor } = input.body
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       const [did] = await ctx.hydrator.actor.getDids([actor])
       if (!did) throw new InvalidRequestError('Actor not found')
       await ctx.dataplane.muteActor({ actorDid: viewer, subjectDid: did })

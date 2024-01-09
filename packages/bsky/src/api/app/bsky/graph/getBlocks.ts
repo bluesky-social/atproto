@@ -15,9 +15,9 @@ import { Views } from '../../../../views'
 export default function (server: Server, ctx: AppContext) {
   const getBlocks = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.graph.getBlocks({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ params, auth }) => {
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       const result = await getBlocks({ ...params, viewer }, ctx)
       return {
         encoding: 'application/json',

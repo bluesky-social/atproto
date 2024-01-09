@@ -21,9 +21,9 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.graph.getSuggestedFollowsByActor({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ auth, params }) => {
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       const result = await getSuggestedFollowsByActor(
         { ...params, viewer },
         ctx,

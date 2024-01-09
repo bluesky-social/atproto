@@ -170,7 +170,10 @@ export class ModerationBehaviorSuiteRunner {
 
   moderationOpts(scenario: ModerationBehaviorScenario): ModerationOpts {
     return {
-      userDid: 'did:web:self.test',
+      userDid:
+        this.suite.configurations[scenario.cfg].authed === false
+          ? ''
+          : 'did:web:self.test',
       adultContentEnabled: Boolean(
         this.suite.configurations[scenario.cfg].adultContentEnabled,
       ),

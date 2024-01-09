@@ -1,6 +1,5 @@
 import AtpAgent, { AtUri } from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
-import basicSeed from '../seeds/basic'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 
 describe('bsky actor likes feed views', () => {
   let network: TestNetwork

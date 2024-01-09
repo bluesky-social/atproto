@@ -4,7 +4,7 @@ import AppContext from '../../../../context'
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getPopularFeedGenerators({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async (_reqCtx) => {
       // @TODO not currently supported during appview v2 buildout
       return {

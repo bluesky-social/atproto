@@ -1,11 +1,10 @@
 import assert from 'assert'
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import {
   isNotFoundPost,
   isThreadViewPost,
 } from '../../src/lexicon/types/app/bsky/feed/defs'
-import basicSeed from '../seeds/basic'
 import { forSnapshot } from '../_util'
 
 describe('views with thread gating', () => {

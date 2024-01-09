@@ -15,6 +15,7 @@ import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/di
 import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/emitModerationEvent'
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
+import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
@@ -135,6 +136,7 @@ export const COM_ATPROTO_MODERATION = {
   DefsReasonSexual: 'com.atproto.moderation.defs#reasonSexual',
   DefsReasonRude: 'com.atproto.moderation.defs#reasonRude',
   DefsReasonOther: 'com.atproto.moderation.defs#reasonOther',
+  DefsReasonAppeal: 'com.atproto.moderation.defs#reasonAppeal',
 }
 export const APP_BSKY_GRAPH = {
   DefsModlist: 'app.bsky.graph.defs#modlist',
@@ -261,6 +263,17 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.getAccountInfo' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getAccountInfos<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminGetAccountInfos.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminGetAccountInfos.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.getAccountInfos' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

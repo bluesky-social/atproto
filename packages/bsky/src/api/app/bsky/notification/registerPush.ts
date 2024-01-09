@@ -4,10 +4,10 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.registerPush({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       const { serviceDid } = input.body
-      if (serviceDid !== auth.artifacts.aud) {
+      if (serviceDid !== auth.credentials.aud) {
         throw new InvalidRequestError('Invalid serviceDid.')
       }
       // @TODO fix pending appview v2 buildout

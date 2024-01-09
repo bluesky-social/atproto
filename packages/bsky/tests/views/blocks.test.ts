@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { TestNetwork, RecordRef, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, RecordRef, SeedClient, basicSeed } from '@atproto/dev-env'
 import AtpAgent, { AtUri } from '@atproto/api'
 import { BlockedActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
 import { BlockedByActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
@@ -9,7 +9,6 @@ import {
   isViewBlocked as isEmbedViewBlocked,
 } from '@atproto/api/src/client/types/app/bsky/embed/record'
 import { forSnapshot } from '../_util'
-import basicSeed from '../seeds/basic'
 
 describe('pds views with blocking', () => {
   let network: TestNetwork
@@ -110,6 +109,18 @@ describe('pds views with blocking', () => {
       { headers: await network.serviceHeaders(dan) },
     )
     expect(forSnapshot(thread)).toMatchSnapshot()
+  })
+
+  it('loads blocked reply as anchor with no parent', async () => {
+    const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
+      { depth: 1, uri: carolReplyToDan.ref.uriStr },
+      { headers: await network.serviceHeaders(alice) },
+    )
+    if (!isThreadViewPost(thread.thread)) {
+      throw new Error('Expected thread view post')
+    }
+    expect(thread.thread.post.uri).toEqual(carolReplyToDan.ref.uriStr)
+    expect(thread.thread.parent).toBeUndefined()
   })
 
   it('blocks thread parent', async () => {
@@ -497,7 +508,8 @@ describe('pds views with blocking', () => {
     const replyBlockedPost = timeline.feed.find(
       (item) => item.post.uri === replyBlockedUri,
     )
-    expect(replyBlockedPost).toBeUndefined()
+    assert(replyBlockedPost)
+    expect(replyBlockedPost.reply?.parent).toBeUndefined()
     const embedBlockedPost = timeline.feed.find(
       (item) => item.post.uri === embedBlockedUri,
     )

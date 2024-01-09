@@ -23,9 +23,9 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.feed.getPostThread({
-    auth: ctx.authOptionalAccessOrRoleVerifier,
+    auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, res }) => {
-      const viewer = 'did' in auth.credentials ? auth.credentials.did : null
+      const { viewer } = ctx.authVerifier.parseCreds(auth)
 
       const [result, repoRev] = await Promise.allSettled([
         getPostThread({ ...params, viewer }, ctx),

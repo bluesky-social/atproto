@@ -1,9 +1,8 @@
 import { AddressInfo } from 'net'
 import express from 'express'
 import axios, { AxiosError } from 'axios'
-import { TestNetwork } from '@atproto/dev-env'
+import { TestNetwork, basicSeed } from '@atproto/dev-env'
 import { handler as errorHandler } from '../src/error'
-import basicSeed from './seeds/basic'
 import { once } from 'events'
 
 describe('server', () => {

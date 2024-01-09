@@ -250,7 +250,7 @@ Array [
         "cid": "cids(12)",
         "cts": "1970-01-01T00:00:00.000Z",
         "neg": false,
-        "src": "did:example:labeler",
+        "src": "user(5)",
         "uri": "record(14)",
         "val": "test-label",
       },
@@ -258,7 +258,7 @@ Array [
         "cid": "cids(12)",
         "cts": "1970-01-01T00:00:00.000Z",
         "neg": false,
-        "src": "did:example:labeler",
+        "src": "user(5)",
         "uri": "record(14)",
         "val": "test-label-2",
       },
@@ -272,7 +272,7 @@ Array [
         "$type": "app.bsky.embed.images",
         "images": Array [
           Object {
-            "alt": "tests/sample-img/key-landscape-small.jpg",
+            "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
             "image": Object {
               "$type": "blob",
               "mimeType": "image/jpeg",
@@ -694,7 +694,7 @@ Array [
         "cid": "cids(15)",
         "cts": "1970-01-01T00:00:00.000Z",
         "neg": false,
-        "src": "did:example:labeler",
+        "src": "user(5)",
         "uri": "record(17)",
         "val": "test-label",
       },
@@ -702,7 +702,7 @@ Array [
         "cid": "cids(15)",
         "cts": "1970-01-01T00:00:00.000Z",
         "neg": false,
-        "src": "did:example:labeler",
+        "src": "user(5)",
         "uri": "record(17)",
         "val": "test-label-2",
       },
@@ -716,7 +716,7 @@ Array [
         "$type": "app.bsky.embed.images",
         "images": Array [
           Object {
-            "alt": "tests/sample-img/key-landscape-small.jpg",
+            "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
             "image": Object {
               "$type": "blob",
               "mimeType": "image/jpeg",
@@ -921,7 +921,7 @@ Array [
         "cid": "cids(5)",
         "cts": "1970-01-01T00:00:00.000Z",
         "neg": false,
-        "src": "did:example:labeler",
+        "src": "user(4)",
         "uri": "record(4)",
         "val": "test-label",
       },

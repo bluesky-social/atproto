@@ -3,7 +3,12 @@ import { LabelPreference } from './moderation/types'
 /**
  * Used by the PersistSessionHandler to indicate what change occurred
  */
-export type AtpSessionEvent = 'create' | 'create-failed' | 'update' | 'expired'
+export type AtpSessionEvent =
+  | 'create'
+  | 'create-failed'
+  | 'update'
+  | 'expired'
+  | 'network-error'
 
 /**
  * Used by AtpAgent to store active sessions

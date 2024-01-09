@@ -4,13 +4,7 @@ import {
   SourceFile,
   VariableDeclarationKind,
 } from 'ts-morph'
-import {
-  Lexicons,
-  LexiconDoc,
-  LexXrpcProcedure,
-  LexXrpcQuery,
-  LexRecord,
-} from '@atproto/lexicon'
+import { Lexicons, LexiconDoc, LexRecord } from '@atproto/lexicon'
 import { NSID } from '@atproto/syntax'
 import { gen, utilTs, lexiconsTs } from './common'
 import { GeneratedAPI } from '../types'
@@ -549,9 +543,7 @@ function genClientXrpcCommon(
   lexicons: Lexicons,
   lexUri: string,
 ) {
-  const def = lexicons.getDefOrThrow(lexUri, ['query', 'procedure']) as
-    | LexXrpcQuery
-    | LexXrpcProcedure
+  const def = lexicons.getDefOrThrow(lexUri, ['query', 'procedure'])
 
   //= export interface CallOptions {...}
   const opts = file.addInterface({
@@ -635,7 +627,7 @@ function genClientRecord(
   lexicons: Lexicons,
   lexUri: string,
 ) {
-  const def = lexicons.getDefOrThrow(lexUri, ['record']) as LexRecord
+  const def = lexicons.getDefOrThrow(lexUri, ['record'])
 
   //= export interface Record {...}
   genObject(file, imports, lexUri, def.record, 'Record')

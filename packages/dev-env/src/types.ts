@@ -1,5 +1,7 @@
 import * as pds from '@atproto/pds'
 import * as bsky from '@atproto/bsky'
+import * as ozone from '@atproto/ozone'
+import { ExportableKeypair } from '@atproto/crypto'
 
 export type PlcConfig = {
   port?: number
@@ -22,10 +24,19 @@ export type BskyConfig = Partial<bsky.ServerConfig> & {
   algos?: bsky.MountedAlgos
 }
 
+export type OzoneConfig = Partial<ozone.OzoneEnvironment> & {
+  plcUrl: string
+  appviewUrl: string
+  dbPostgresUrl: string
+  migration?: string
+  signingKey?: ExportableKeypair
+}
+
 export type TestServerParams = {
   dbPostgresUrl: string
   dbPostgresSchema: string
   pds: Partial<PdsConfig>
   plc: Partial<PlcConfig>
   bsky: Partial<BskyConfig>
+  ozone: Partial<OzoneConfig>
 }

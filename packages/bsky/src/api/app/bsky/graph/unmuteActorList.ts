@@ -3,10 +3,10 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.unmuteActorList({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       const { list } = input.body
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       await ctx.dataplane.unmuteActorList({ actorDid: viewer, listUri: list })
     },
   })

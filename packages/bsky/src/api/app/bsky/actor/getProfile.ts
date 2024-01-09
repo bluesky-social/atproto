@@ -10,14 +10,12 @@ import { Views } from '../../../../views'
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.actor.getProfile({
-    auth: ctx.authOptionalAccessOrRoleVerifier,
+    auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ auth, params, res }) => {
-      const viewer = 'did' in auth.credentials ? auth.credentials.did : null
-      const canViewTakendownProfile =
-        auth.credentials.type === 'role' && auth.credentials.triage
+      const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
 
       const [result, repoRev] = await Promise.all([
-        getProfile({ ...params, viewer, canViewTakendownProfile }, ctx),
+        getProfile({ ...params, viewer, canViewTakedowns }, ctx),
         ctx.hydrator.actor.getRepoRevSafe(viewer),
       ])
 
@@ -67,7 +65,7 @@ const presentation = (input: {
   if (!profile) {
     throw new InvalidRequestError('Profile not found')
   } else if (
-    !params.canViewTakendownProfile &&
+    !params.canViewTakedowns &&
     ctx.views.actorIsTakendown(skeleton.did, hydration)
   ) {
     throw new InvalidRequestError(
@@ -85,7 +83,7 @@ type Context = {
 
 type Params = QueryParams & {
   viewer: string | null
-  canViewTakendownProfile: boolean
+  canViewTakedowns: boolean
 }
 
 type SkeletonState = { did: string }

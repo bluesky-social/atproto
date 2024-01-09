@@ -23,9 +23,9 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.feed.searchPosts({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params }) => {
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       const results = await searchPosts({ ...params, viewer }, ctx)
       return {
         encoding: 'application/json',

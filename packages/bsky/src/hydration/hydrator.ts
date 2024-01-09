@@ -23,7 +23,7 @@ import {
   RelationshipPair,
 } from './graph'
 import { LabelHydrator, Labels } from './label'
-import { HydrationMap, didFromUri, urisByCollection } from './util'
+import { HydrationMap, RecordInfo, didFromUri, urisByCollection } from './util'
 import {
   FeedGenAggs,
   FeedGens,
@@ -496,6 +496,69 @@ export class Hydrator {
       }
     }
     return { follows, followBlocks }
+  }
+
+  // ad-hoc record hydration
+  // in com.atproto.repo.getRecord
+  async getRecord(
+    uri: string,
+    includeTakedowns = false,
+  ): Promise<RecordInfo<Record<string, unknown>> | undefined> {
+    const parsed = new AtUri(uri)
+    const collection = parsed.collection
+    if (collection === ids.AppBskyFeedPost) {
+      return (
+        (await this.feed.getPosts([uri], includeTakedowns)).get(uri) ??
+        undefined
+      )
+    } else if (collection === ids.AppBskyFeedRepost) {
+      return (
+        (await this.feed.getReposts([uri], includeTakedowns)).get(uri) ??
+        undefined
+      )
+    } else if (collection === ids.AppBskyFeedLike) {
+      return (
+        (await this.feed.getLikes([uri], includeTakedowns)).get(uri) ??
+        undefined
+      )
+    } else if (collection === ids.AppBskyGraphFollow) {
+      return (
+        (await this.graph.getFollows([uri], includeTakedowns)).get(uri) ??
+        undefined
+      )
+    } else if (collection === ids.AppBskyGraphList) {
+      return (
+        (await this.graph.getLists([uri], includeTakedowns)).get(uri) ??
+        undefined
+      )
+    } else if (collection === ids.AppBskyGraphListitem) {
+      return (
+        (await this.graph.getListItems([uri], includeTakedowns)).get(uri) ??
+        undefined
+      )
+    } else if (collection === ids.AppBskyGraphBlock) {
+      return (
+        (await this.graph.getBlocks([uri], includeTakedowns)).get(uri) ??
+        undefined
+      )
+    } else if (collection === ids.AppBskyFeedGenerator) {
+      return (
+        (await this.feed.getFeedGens([uri], includeTakedowns)).get(uri) ??
+        undefined
+      )
+    } else if (collection === ids.AppBskyActorProfile) {
+      const did = parsed.hostname
+      const actor = (await this.actor.getActors([did], includeTakedowns)).get(
+        did,
+      )
+      if (!actor?.profile || !actor?.profileCid) return undefined
+      return {
+        record: actor?.profile,
+        cid: actor?.profileCid,
+        indexedAt: actor?.indexedAt,
+        takenDown: actor?.takendown,
+      }
+    }
   }
 }
 

@@ -15,10 +15,11 @@ import { Views } from '../../../../views'
 export default function (server: Server, ctx: AppContext) {
   const getLists = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.graph.getLists({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       const result = await getLists({ ...params, viewer }, ctx)
+
       return {
         encoding: 'application/json',
         body: result,

@@ -23,9 +23,9 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.notification.listNotifications({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ params, auth }) => {
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       const result = await listNotifications({ ...params, viewer }, ctx)
       return {
         encoding: 'application/json',

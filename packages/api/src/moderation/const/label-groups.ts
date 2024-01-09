@@ -6,7 +6,12 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
   system: {
     id: 'system',
     configurable: false,
-    labels: [LABELS['!hide'], LABELS['!no-promote'], LABELS['!warn']],
+    labels: [
+      LABELS['!hide'],
+      LABELS['!no-promote'],
+      LABELS['!warn'],
+      LABELS['!no-unauthenticated'],
+    ],
     strings: {
       settings: {
         en: {

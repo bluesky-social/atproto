@@ -16,9 +16,9 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.actor.getSuggestions({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       const result = await getSuggestions({ ...params, viewer }, ctx)
 
       return {

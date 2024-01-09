@@ -74,6 +74,14 @@ The kind of UI behavior used when a warning must be applied.
   <td>blur</td>
 </tr>
 <tr>
+  <td>!no-unauthenticated</td>
+  <td>system</td>
+  <td>hide</td>
+  <td>❌</td>
+  <td>no-override, unauthed</td>
+  <td>blur</td>
+</tr>
+<tr>
   <td>dmca-violation</td>
   <td>legal</td>
   <td>hide</td>
@@ -341,6 +349,14 @@ The kind of UI behavior used when a warning must be applied.
     <code>general</code><br><strong>Moderator Warn</strong><br>Moderator has chosen to set a general warning on the content.<br><br>
     <code>on an account</code><br><strong>Content Warning</strong><br>This account has received a general warning from moderators.<br><br>
     <code>on content</code><br><strong>Content Warning</strong><br>This content has received a general warning from moderators.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>!no-unauthenticated</td>
+  <td>
+    <code>general</code><br><strong>Sign-in Required</strong><br>This user has requested that their account only be shown to signed-in users.<br><br>
+    <code>on an account</code><br><strong>Sign-in Required</strong><br>This user has requested that their account only be shown to signed-in users.<br><br>
+    <code>on content</code><br><strong>Sign-in Required</strong><br>This user has requested that their content only be shown to signed-in users.<br><br>
   </td>
 </tr>
 <tr>

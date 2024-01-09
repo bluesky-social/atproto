@@ -1,9 +1,8 @@
 import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, stripViewer } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
-import basicSeed from '../seeds/basic'
 
 describe('pds profile views', () => {
   let network: TestNetwork
@@ -106,10 +105,10 @@ describe('pds profile views', () => {
 
   it('presents avatars & banners', async () => {
     const avatarImg = await fs.readFile(
-      'tests/sample-img/key-portrait-small.jpg',
+      '../dev-env/src/seed/img/key-portrait-small.jpg',
     )
     const bannerImg = await fs.readFile(
-      'tests/sample-img/key-landscape-small.jpg',
+      '../dev-env/src/seed/img/key-landscape-small.jpg',
     )
     const avatarRes = await pdsAgent.api.com.atproto.repo.uploadBlob(
       avatarImg,
@@ -188,13 +187,35 @@ describe('pds profile views', () => {
       actorDid: alice,
       takenDown: true,
     })
-
     const promise = agent.api.app.bsky.actor.getProfile(
       { actor: alice },
       { headers: await network.serviceHeaders(bob) },
     )
 
     await expect(promise).rejects.toThrow('Account has been taken down')
+
+    // Cleanup
+    await network.bsky.ctx.dataplane.updateTakedown({
+      actorDid: alice,
+      takenDown: false,
+    })
+  })
+
+  // @TODO reimplement suspension?
+  it.skip('blocked by actor suspension', async () => {
+    await network.bsky.ctx.dataplane.updateTakedown({
+      actorDid: alice,
+      takenDown: true,
+    })
+    await network.processAll()
+    const promise = agent.api.app.bsky.actor.getProfile(
+      { actor: alice },
+      { headers: await network.serviceHeaders(bob) },
+    )
+
+    await expect(promise).rejects.toThrow(
+      'Account has been temporarily suspended',
+    )
 
     // Cleanup
     await network.bsky.ctx.dataplane.updateTakedown({

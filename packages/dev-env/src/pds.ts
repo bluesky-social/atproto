@@ -47,6 +47,8 @@ export class TestPds {
       bskyAppViewUrl: 'https://appview.invalid',
       bskyAppViewDid: 'did:example:invalid',
       bskyAppViewCdnUrlPattern: 'http://cdn.appview.com/%s/%s/%s',
+      modServiceUrl: 'https://moderator.invalid',
+      modServiceDid: 'did:example:invalid',
       plcRotationKeyK256PrivateKeyHex: plcRotationPriv,
       inviteRequired: false,
       ...config,

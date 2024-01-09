@@ -47,7 +47,7 @@ export const getRecords =
         record: recordBytes,
         cid: row?.cid,
         indexedAt,
-        takenDown: !!row?.takedownId,
+        takenDown: !!row?.takedownRef,
       })
     })
     return { records }
