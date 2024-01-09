@@ -114,6 +114,14 @@ message GetThreadGateRecordsResponse {
   repeated Record records = 1;
 }
 
+message GetLabelerRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetLabelerRecordsResponse {
+  repeated Record records = 1;
+}
+
 
 //
 // Follows
@@ -861,6 +869,19 @@ message GetPostCountsResponse {
 // Labels
 //
 
+// - Return uris of labeler records created by user A
+//     - `getActorLabelers`
+message GetActorLabelersRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetActorLabelersResponse {
+  repeated string uris = 1;
+  string cursor = 2;
+}
+
 // - Get all labels on a subjects A, B, C (uri or did) issued by dids D, E, F…
 //     - label hydration on nearly every view
 message GetLabelsRequest {
@@ -930,6 +951,7 @@ service Service {
   rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
+  rpc GetLabelerRecords(GetLabelerRecordsRequest) returns (GetLabelerRecordsResponse);
 
   // Follows
   rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);
@@ -1021,6 +1043,7 @@ service Service {
   rpc GetPostCounts(GetPostCountsRequest) returns (GetPostCountsResponse);
 
   // Labels
+  rpc GetActorLabelers(GetActorLabelersRequest) returns (GetActorLabelersResponse);
   rpc GetLabels(GetLabelsRequest) returns (GetLabelsResponse);
 
   // Sync
