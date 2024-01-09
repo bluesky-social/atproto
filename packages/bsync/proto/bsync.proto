@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package bsync;
+option go_package = "./;bsync";
+
+//
+// Sync
+//
+
+
+message MuteOperation {
+  enum Type {
+    ADD = 0;
+    REMOVE = 1;
+    CLEAR = 2;
+  }
+  string id = 1;
+  Type type = 2;
+  string actor_did = 3;
+  string subject = 4;
+}
+
+message AddMuteOperationRequest {
+  MuteOperation.Type type = 1;
+  string actor_did = 2;
+  string subject = 3;
+}
+
+message AddMuteOperationResponse {
+  MuteOperation operation = 1;
+}
+
+message ScanMuteOperationsRequest {
+  string cursor = 1;
+  int32 limit = 2;
+}
+
+message ScanMuteOperationsResponse {
+  repeated MuteOperation operations = 1;
+  string cursor = 2;
+}
+
+// Ping
+message PingRequest {}
+message PingResponse {}
+
+
+service Service {
+  // Sync
+  rpc AddMuteOperation(AddMuteOperationRequest) returns (AddMuteOperationResponse);
+  rpc ScanMuteOperations(ScanMuteOperationsRequest) returns (ScanMuteOperationsResponse);
+  // Ping
+  rpc Ping(PingRequest) returns (PingResponse);
+}
