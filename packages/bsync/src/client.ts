@@ -1,4 +1,8 @@
-import { PromiseClient, createPromiseClient } from '@connectrpc/connect'
+import {
+  Interceptor,
+  PromiseClient,
+  createPromiseClient,
+} from '@connectrpc/connect'
 import {
   ConnectTransportOptions,
   createConnectTransport,
@@ -12,7 +16,10 @@ export const createClient = (opts: ConnectTransportOptions): BsyncClient => {
   return createPromiseClient(Service, transport)
 }
 
-export const authWithApiKey = (apiKey: string) => (next) => async (req) => {
-  req.header.set('authorization', `Bearer ${apiKey}`)
-  return next(req)
-}
+export const authWithApiKey =
+  (apiKey: string): Interceptor =>
+  (next) =>
+  (req) => {
+    req.header.set('authorization', `Bearer ${apiKey}`)
+    return next(req)
+  }
