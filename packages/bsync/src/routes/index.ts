@@ -4,10 +4,12 @@ import { Service } from '../gen/bsky_sync_connect'
 import {
   AddMuteOperationResponse,
   MuteOperation_Type,
+  ScanMuteOperationsResponse,
 } from '../gen/bsky_sync_pb'
 import AppContext from '../context'
 import { createMuteOpChannel } from '../db/schema/mute_op'
 import { authWithApiKey } from './auth'
+import { once } from 'node:events'
 
 export default (ctx: AppContext) => (router: ConnectRouter) => {
   return router.service(Service, {
@@ -70,8 +72,55 @@ export default (ctx: AppContext) => (router: ConnectRouter) => {
         },
       })
     },
-    async scanMuteOperations() {
-      throw new Error('unimplemented')
+    async scanMuteOperations(req, handlerCtx) {
+      authWithApiKey(ctx, handlerCtx)
+      const { db, events } = ctx
+      const limit = req.limit || 1000
+      const cursor = validCursor(req.cursor)
+      const nextMuteOpPromise = once(events, createMuteOpChannel, {
+        signal: AbortSignal.timeout(10000),
+      })
+      nextMuteOpPromise.catch(() => null) // ensure timeout is always handled
+
+      const nextMuteOpPageQb = db.db
+        .selectFrom('mute_op')
+        .selectAll()
+        .where('id', '>', cursor ?? -1)
+        .orderBy('id', 'asc')
+        .limit(limit)
+
+      let ops = await nextMuteOpPageQb.execute()
+
+      if (!ops.length) {
+        // if there were no ops on the page, wait for an event then try again.
+        try {
+          await nextMuteOpPromise
+        } catch (err) {
+          return new ScanMuteOperationsResponse({
+            operations: [],
+            cursor: req.cursor,
+          })
+        }
+        ops = await nextMuteOpPageQb.execute()
+        if (!ops.length) {
+          return new ScanMuteOperationsResponse({
+            operations: [],
+            cursor: req.cursor,
+          })
+        }
+      }
+
+      const lastOp = ops[ops.length - 1]
+
+      return new ScanMuteOperationsResponse({
+        operations: ops.map((op) => ({
+          id: op.id.toString(),
+          type: op.type,
+          actorDid: op.actorDid,
+          subject: op.subject,
+        })),
+        cursor: lastOp.id.toString(),
+      })
     },
     async ping() {
       const { db } = ctx
@@ -102,6 +151,15 @@ const validMuteOp = <T extends MuteOpFields>(op: T): T => {
     }
   }
   return op
+}
+
+const validCursor = (cursor: string): number | null => {
+  if (cursor === '') return null
+  const int = parseInt(cursor, 10)
+  if (isNaN(int) || int < 0) {
+    throw new ConnectError('invalid cursor', Code.InvalidArgument)
+  }
+  return int
 }
 
 type MuteOpFields = {

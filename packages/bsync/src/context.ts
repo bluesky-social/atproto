@@ -1,5 +1,8 @@
+import TypedEventEmitter from 'typed-emitter'
 import { ServerConfig } from './config'
 import Database from './db'
+import { createMuteOpChannel } from './db/schema/mute_op'
+import { EventEmitter } from 'stream'
 
 export type AppContextOptions = {
   db: Database
@@ -9,10 +12,12 @@ export type AppContextOptions = {
 export class AppContext {
   db: Database
   cfg: ServerConfig
+  events: TypedEventEmitter<AppEvents>
 
   constructor(private opts: AppContextOptions) {
     this.db = opts.db
     this.cfg = opts.cfg
+    this.events = new EventEmitter() as TypedEventEmitter<AppEvents>
   }
 
   static async fromConfig(
@@ -31,3 +36,7 @@ export class AppContext {
 }
 
 export default AppContext
+
+export type AppEvents = {
+  [createMuteOpChannel]: () => void
+}

@@ -37,6 +37,7 @@ message ScanMuteOperationsRequest {
 
 message ScanMuteOperationsResponse {
   repeated MuteOperation operations = 1;
+  string cursor = 2;
 }
 
 // Ping

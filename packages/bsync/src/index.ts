@@ -2,10 +2,11 @@ import http from 'node:http'
 import events from 'node:events'
 import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import { connectNodeAdapter } from '@connectrpc/connect-node'
-import { loggerMiddleware } from './logger'
+import { dbLogger, loggerMiddleware } from './logger'
 import AppContext, { AppContextOptions } from './context'
 import { ServerConfig } from './config'
 import routes from './routes'
+import { createMuteOpChannel } from './db/schema/mute_op'
 
 export * from './config'
 export { Database } from './db'
@@ -48,6 +49,7 @@ export class BsyncService {
 
   async start(): Promise<http.Server> {
     // @TODO db stats
+    await setupAppEvents(this.ctx)
     this.server.listen(this.ctx.cfg.service.port)
     this.server.keepAliveTimeout = 90000
     await events.once(this.server, 'listening')
@@ -62,3 +64,17 @@ export class BsyncService {
 }
 
 export default BsyncService
+
+const setupAppEvents = async (ctx: AppContext) => {
+  const conn = await ctx.db.pool.connect()
+  conn
+    .query(`listen ${createMuteOpChannel}`)
+    .catch((err) =>
+      dbLogger.error({ err }, `${createMuteOpChannel} listener failed`),
+    )
+  conn.on('notification', (notif) => {
+    if (notif.channel === createMuteOpChannel) {
+      ctx.events.emit('mute_op_create')
+    }
+  })
+}

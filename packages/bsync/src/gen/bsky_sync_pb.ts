@@ -225,6 +225,11 @@ export class ScanMuteOperationsResponse extends Message<ScanMuteOperationsRespon
    */
   operations: MuteOperation[] = [];
 
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = "";
+
   constructor(data?: PartialMessage<ScanMuteOperationsResponse>) {
     super();
     proto3.util.initPartial(data, this);
@@ -234,6 +239,7 @@ export class ScanMuteOperationsResponse extends Message<ScanMuteOperationsRespon
   static readonly typeName = "bsync.ScanMuteOperationsResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "operations", kind: "message", T: MuteOperation, repeated: true },
+    { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ScanMuteOperationsResponse {
