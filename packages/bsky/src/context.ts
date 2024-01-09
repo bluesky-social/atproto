@@ -1,4 +1,5 @@
 import * as plc from '@did-plc/lib'
+import AtpAgent from '@atproto/api'
 import { DidCache, IdResolver } from '@atproto/identity'
 import { Keypair } from '@atproto/crypto'
 import { createServiceJwt } from '@atproto/xrpc-server'
