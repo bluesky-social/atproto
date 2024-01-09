@@ -12,9 +12,9 @@ import { creatorFromUri } from '../../../../views/util'
 export default function (server: Server, ctx: AppContext) {
   const getLikes = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.feed.getLikes({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       const result = await getLikes({ ...params, viewer }, ctx)
 
       return {

@@ -5,9 +5,9 @@ import { parseString } from '../../../../hydration/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getSuggestedFeeds({
-    auth: ctx.authOptionalVerifier,
-    handler: async ({ params, auth }) => {
-      const viewer = auth.credentials.did
+    auth: ctx.authVerifier.standardOptional,
+    handler: async ({ auth, params }) => {
+      const viewer = auth.credentials.iss
 
       const suggestedRes = await ctx.dataplane.getSuggestedFeeds({
         actorDid: viewer ?? undefined,

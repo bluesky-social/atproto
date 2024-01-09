@@ -217,7 +217,7 @@ export class AuthVerifier {
     }
     const payload = await verifyServiceJwt(
       jwtStr,
-      null,
+      this.dids.entryway ?? this.dids.pds,
       async (did, forceRefresh) => {
         if (did !== this.dids.admin) {
           throw new AuthRequiredError(
@@ -379,21 +379,6 @@ export const parseBasicAuth = (
   const [username, password] = parsed
   if (!username || !password) return null
   return { username, password }
-}
-
-export const ensureValidAdminAud = (
-  auth: RoleOutput | AdminServiceOutput,
-  subjectDid: string,
-) => {
-  if (
-    auth.credentials.type === 'service' &&
-    auth.credentials.aud !== subjectDid
-  ) {
-    throw new AuthRequiredError(
-      'jwt audience does not match account did',
-      'BadJwtAudience',
-    )
-  }
 }
 
 const authScopes = new Set(Object.values(AuthScope))

@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
       const res =
         await ctx.appViewAgent.api.app.bsky.notification.listNotifications(
           params,
-          await ctx.serviceAuthHeaders(requester),
+          await ctx.appviewAuthHeaders(requester),
         )
       return {
         encoding: 'application/json',

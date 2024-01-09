@@ -728,6 +728,7 @@ message GetAuthorFeedRequest {
   string cursor = 3;
   bool no_replies = 4;
   bool media_only = 5;
+  bool author_threads_only = 6;
 }
 
 message GetAuthorFeedResponse {

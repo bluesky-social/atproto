@@ -39,6 +39,7 @@ dd.tracer._tracer.startSpan = function (name, options) {
 // Tracer code above must come before anything else
 const path = require('node:path')
 const assert = require('node:assert')
+const cluster = require('cluster')
 const { Secp256k1Keypair } = require('@atproto/crypto')
 const { ServerConfig, BskyAppView, makeAlgos } = require('@atproto/bsky')
 const { MemoryCache: MemoryDidCache } = require('@atproto/identity')
@@ -56,10 +57,14 @@ const main = async () => {
     didCache,
     algos,
   })
+
   await bsky.start()
-  process.on('SIGTERM', async () => {
+  // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
+  const shutdown = async () => {
     await bsky.destroy()
-  })
+  }
+  process.on('SIGTERM', shutdown)
+  process.on('disconnect', shutdown) // when clustering
 }
 
 const getEnv = () => ({
@@ -82,4 +87,31 @@ const maintainXrpcResource = (span, req) => {
   }
 }
 
-main()
+const workerCount = maybeParseInt(process.env.CLUSTER_WORKER_COUNT)
+
+if (workerCount) {
+  if (cluster.isPrimary) {
+    console.log(`primary ${process.pid} is running`)
+    const workers = new Set()
+    for (let i = 0; i < workerCount; ++i) {
+      workers.add(cluster.fork())
+    }
+    let teardown = false
+    cluster.on('exit', (worker) => {
+      workers.delete(worker)
+      if (!teardown) {
+        workers.add(cluster.fork()) // restart on crash
+      }
+    })
+    process.on('SIGTERM', () => {
+      teardown = true
+      console.log('disconnecting workers')
+      workers.forEach((w) => w.disconnect())
+    })
+  } else {
+    console.log(`worker ${process.pid} is running`)
+    main()
+  }
+} else {
+  main() // non-clustering
+}

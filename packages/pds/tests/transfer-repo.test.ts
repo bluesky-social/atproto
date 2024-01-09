@@ -75,7 +75,7 @@ describe('transfer repo', () => {
     }
     const img = await entrywaySc.uploadFile(
       did,
-      'tests/sample-img/key-landscape-small.jpg',
+      '../dev-env/src/seed/img/key-landscape-small.jpg',
       'image/jpeg',
     )
     await entrywaySc.post(did, 'img post', undefined, [img])

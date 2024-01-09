@@ -20,9 +20,9 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.feed.getActorLikes({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, res }) => {
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
 
       const [result, repoRev] = await Promise.all([
         getActorLikes({ ...params, viewer }, ctx),

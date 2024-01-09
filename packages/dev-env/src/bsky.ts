@@ -51,6 +51,8 @@ export class TestBsky {
       serverDid,
       dataplaneUrls: [`http://localhost:${dataplanePort}`],
       dataplaneHttpVersion: '1.1',
+      modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
+      labelsFromIssuerDids: ['did:example:labeler'], // this did is also used as the labeler in seeds
       ...cfg,
       adminPassword: ADMIN_PASSWORD,
       moderatorPassword: MOD_PASSWORD,

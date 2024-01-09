@@ -18,9 +18,9 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.feed.getTimeline({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, res }) => {
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
 
       const [result, repoRev] = await Promise.all([
         getTimeline({ ...params, viewer }, ctx),

@@ -9,10 +9,10 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedGenerator({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
       const { feed } = params
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
 
       const hydration = await ctx.hydrator.hydrateFeedGens([feed], viewer)
       const feedInfo = hydration.feedgens?.get(feed)

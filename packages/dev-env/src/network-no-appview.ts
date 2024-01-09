@@ -4,7 +4,7 @@ import { TestPlc } from './plc'
 import { TestPds } from './pds'
 import { mockNetworkUtilities } from './util'
 import { TestFeedGen } from './feed-gen'
-import { SeedClient } from './seed-client'
+import { SeedClient } from './seed/client'
 
 export class TestNetworkNoAppView {
   feedGens: TestFeedGen[] = []

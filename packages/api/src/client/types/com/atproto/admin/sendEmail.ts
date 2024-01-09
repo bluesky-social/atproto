@@ -14,6 +14,8 @@ export interface InputSchema {
   content: string
   subject?: string
   senderDid: string
+  /** Additional comment by the sender that won't be used in the email itself but helpful to provide more context for moderators/reviewers */
+  comment?: string
   [k: string]: unknown
 }
 

@@ -15,9 +15,9 @@ import {
 export default function (server: Server, ctx: AppContext) {
   const getMutes = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.graph.getMutes({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ params, auth }) => {
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       const result = await getMutes({ ...params, viewer }, ctx)
       return {
         encoding: 'application/json',

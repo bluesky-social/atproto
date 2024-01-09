@@ -17,9 +17,9 @@ import { ListItemInfo } from '../../../../data-plane/gen/bsky_pb'
 export default function (server: Server, ctx: AppContext) {
   const getList = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.graph.getList({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       const result = await getList({ ...params, viewer }, ctx)
       return {
         encoding: 'application/json',

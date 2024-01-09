@@ -1,4 +1,4 @@
-import { envInt, envStr, envBool, envList } from './util'
+import { envInt, envStr, envBool, envList } from '@atproto/common'
 
 export const readEnv = (): ServerEnvironment => {
   return {
@@ -69,8 +69,11 @@ export const readEnv = (): ServerEnvironment => {
     // appview
     bskyAppViewUrl: envStr('PDS_BSKY_APP_VIEW_URL'),
     bskyAppViewDid: envStr('PDS_BSKY_APP_VIEW_DID'),
-    bskyAppViewModeration: envBool('PDS_BSKY_APP_VIEW_MODERATION'),
     bskyAppViewCdnUrlPattern: envStr('PDS_BSKY_APP_VIEW_CDN_URL_PATTERN'),
+
+    // mod service
+    modServiceUrl: envStr('PDS_MOD_SERVICE_URL'),
+    modServiceDid: envStr('PDS_MOD_SERVICE_DID'),
 
     // rate limits
     rateLimitsEnabled: envBool('PDS_RATE_LIMITS_ENABLED'),
@@ -165,8 +168,11 @@ export type ServerEnvironment = {
   // appview
   bskyAppViewUrl?: string
   bskyAppViewDid?: string
-  bskyAppViewModeration?: boolean
   bskyAppViewCdnUrlPattern?: string
+
+  // mod service
+  modServiceUrl?: string
+  modServiceDid?: string
 
   // rate limits
   rateLimitsEnabled?: boolean

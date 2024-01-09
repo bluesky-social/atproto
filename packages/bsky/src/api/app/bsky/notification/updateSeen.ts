@@ -4,10 +4,10 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.updateSeen({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
       const { seenAt } = input.body
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       await ctx.dataplane.updateNotificationSeen({
         actorDid: viewer,
         timestamp: Timestamp.fromDate(new Date(seenAt)),

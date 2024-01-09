@@ -22,14 +22,12 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.graph.getFollowers({
-    auth: ctx.authOptionalAccessOrRoleVerifier,
+    auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth }) => {
-      const viewer = 'did' in auth.credentials ? auth.credentials.did : null
-      const canViewTakendownProfile =
-        auth.credentials.type === 'role' && auth.credentials.triage
+      const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
 
       const result = await getFollowers(
-        { ...params, viewer, canViewTakendownProfile },
+        { ...params, viewer, canViewTakedowns },
         ctx,
       )
 
@@ -100,16 +98,13 @@ const presentation = (
     ctx.views.actorIsTakendown(did, hydration)
 
   const subject = ctx.views.profile(subjectDid, hydration)
-  if (
-    !subject ||
-    (!params.canViewTakendownProfile && isTakendown(subjectDid))
-  ) {
+  if (!subject || (!params.canViewTakedowns && isTakendown(subjectDid))) {
     throw new InvalidRequestError(`Actor not found: ${params.actor}`)
   }
 
   const followers = mapDefined(followUris, (followUri) => {
     const followerDid = didFromUri(followUri)
-    if (!params.canViewTakendownProfile && isTakendown(followerDid)) {
+    if (!params.canViewTakedowns && isTakendown(followerDid)) {
       return
     }
     return ctx.views.profile(didFromUri(followUri), hydration)
@@ -125,7 +120,7 @@ type Context = {
 
 type Params = QueryParams & {
   viewer: string | null
-  canViewTakendownProfile: boolean
+  canViewTakedowns: boolean
 }
 
 type SkeletonState = {

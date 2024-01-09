@@ -41,6 +41,7 @@ export interface ModerationBehaviors {
   configurations: Record<
     string,
     {
+      authed?: boolean
       adultContentEnabled: boolean
       settings: Record<string, LabelPreference>
     }

@@ -20,6 +20,7 @@ import { Keypair } from '@atproto/crypto'
 import { createDataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
 import { Views } from './views'
+import { AuthVerifier } from './auth-verifier'
 
 export * from './data-plane'
 export type { ServerConfigValues } from './config'
@@ -59,6 +60,14 @@ export class BskyAppView {
       backupNameservers: config.handleResolveNameservers,
     })
 
+    const authVerifier = new AuthVerifier(idResolver, {
+      ownDid: config.serverDid,
+      adminDid: config.modServiceDid,
+      adminPass: config.adminPassword,
+      moderatorPass: config.moderatorPassword,
+      triagePass: config.triagePassword,
+    })
+
     const imgUriBuilder = new ImageUriBuilder(
       config.imgUriEndpoint || `${config.publicUrl}/img`,
     )
@@ -79,7 +88,9 @@ export class BskyAppView {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
-    const hydrator = new Hydrator(dataplane)
+    const hydrator = new Hydrator(dataplane, {
+      labelsFromIssuerDids: config.labelsFromIssuerDids,
+    })
     const views = new Views(imgUriBuilder)
 
     const ctx = new AppContext({
@@ -91,6 +102,7 @@ export class BskyAppView {
       signingKey,
       idResolver,
       didCache,
+      authVerifier,
       algos,
     })
 

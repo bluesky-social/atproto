@@ -47,7 +47,7 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
       const start = text.utf16.indexOf(match[2], match.index)
       const index = { start, end: start + match[2].length }
       // strip ending puncuation
-      if (/[.,;!?]$/.test(uri)) {
+      if (/[.,;:!?]$/.test(uri)) {
         uri = uri.slice(0, -1)
         index.end--
       }

@@ -1,8 +1,7 @@
 import axios, { AxiosInstance } from 'axios'
 import { CID } from 'multiformats/cid'
 import { verifyCidForBytes } from '@atproto/common'
-import { TestNetwork } from '@atproto/dev-env'
-import basicSeed from './seeds/basic'
+import { TestNetwork, basicSeed } from '@atproto/dev-env'
 import { randomBytes } from '@atproto/crypto'
 
 describe('blob resolver', () => {

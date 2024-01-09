@@ -1,8 +1,6 @@
 import { TestNetworkNoAppView, ImageRef, SeedClient } from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { BlobNotFoundError } from '@atproto/repo'
-import { Secp256k1Keypair } from '@atproto/crypto'
-import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import basicSeed from './seeds/basic'
 import {
   RepoBlobRef,
@@ -20,29 +18,10 @@ describe('moderation', () => {
   let blobSubject: RepoBlobRef
   let blobRef: ImageRef
 
-  const appviewDid = 'did:example:appview'
-  const altAppviewDid = 'did:example:alt'
-  let appviewKey: Secp256k1Keypair
-
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'moderation',
-      pds: {
-        bskyAppViewDid: appviewDid,
-      },
     })
-
-    appviewKey = await Secp256k1Keypair.create()
-    const origResolve = network.pds.ctx.idResolver.did.resolveAtprotoKey
-    network.pds.ctx.idResolver.did.resolveAtprotoKey = async (
-      did: string,
-      forceRefresh?: boolean,
-    ) => {
-      if (did === appviewDid || did === altAppviewDid) {
-        return appviewKey.did()
-      }
-      return origResolve(did, forceRefresh)
-    }
 
     agent = network.pds.getClient()
     sc = network.getSeedClient()
@@ -221,7 +200,7 @@ describe('moderation', () => {
     it('prevents blob from being referenced again.', async () => {
       const uploaded = await sc.uploadFile(
         sc.dids.carol,
-        'tests/sample-img/key-alt.jpg',
+        '../dev-env/src/seed/img/key-alt.jpg',
         'image/jpeg',
       )
       expect(uploaded.image.ref.equals(blobRef.image.ref)).toBeTruthy()
@@ -316,100 +295,6 @@ describe('moderation', () => {
           encoding: 'application/json',
           headers: network.pds.adminAuthHeaders(),
         },
-      )
-    })
-  })
-
-  describe('auth', () => {
-    it('allows service auth requests from the configured appview did', async () => {
-      const headers = await createServiceAuthHeaders({
-        iss: appviewDid,
-        aud: repoSubject.did,
-        keypair: appviewKey,
-      })
-      await agent.api.com.atproto.admin.updateSubjectStatus(
-        {
-          subject: repoSubject,
-          takedown: { applied: true, ref: 'test-repo' },
-        },
-        {
-          ...headers,
-          encoding: 'application/json',
-        },
-      )
-
-      const res = await agent.api.com.atproto.admin.getSubjectStatus(
-        {
-          did: repoSubject.did,
-        },
-        headers,
-      )
-      expect(res.data.subject.did).toBe(repoSubject.did)
-      expect(res.data.takedown?.applied).toBe(true)
-    })
-
-    it('does not allow requests from another did', async () => {
-      const headers = await createServiceAuthHeaders({
-        iss: altAppviewDid,
-        aud: repoSubject.did,
-        keypair: appviewKey,
-      })
-      const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
-        {
-          subject: repoSubject,
-          takedown: { applied: true, ref: 'test-repo' },
-        },
-        {
-          ...headers,
-          encoding: 'application/json',
-        },
-      )
-      await expect(attempt).rejects.toThrow(
-        'Untrusted issuer for admin actions',
-      )
-    })
-
-    it('does not allow requests with a bad signature', async () => {
-      const badKey = await Secp256k1Keypair.create()
-      const headers = await createServiceAuthHeaders({
-        iss: appviewDid,
-        aud: repoSubject.did,
-        keypair: badKey,
-      })
-      const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
-        {
-          subject: repoSubject,
-          takedown: { applied: true, ref: 'test-repo' },
-        },
-        {
-          ...headers,
-          encoding: 'application/json',
-        },
-      )
-      await expect(attempt).rejects.toThrow(
-        'jwt signature does not match jwt issuer',
-      )
-    })
-
-    it('does not allow requests with a bad signature', async () => {
-      // repo subject is bob, so we set alice as the audience
-      const headers = await createServiceAuthHeaders({
-        iss: appviewDid,
-        aud: sc.dids.alice,
-        keypair: appviewKey,
-      })
-      const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
-        {
-          subject: repoSubject,
-          takedown: { applied: true, ref: 'test-repo' },
-        },
-        {
-          ...headers,
-          encoding: 'application/json',
-        },
-      )
-      await expect(attempt).rejects.toThrow(
-        'jwt audience does not match account did',
       )
     })
   })

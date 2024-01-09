@@ -7,7 +7,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.role,
     handler: async ({ req, params }) => {
       const { data: result } =
-        await ctx.appViewAgent.com.atproto.admin.queryModerationEvents(
+        await ctx.moderationAgent.com.atproto.admin.queryModerationEvents(
           params,
           authPassthru(req),
         )

@@ -20,6 +20,12 @@
         "preferences": ["warn"],
         "flags": [],
         "onwarn": "blur"
+      },
+      {
+        "id": "!no-unauthenticated",
+        "preferences": ["hide"],
+        "flags": ["no-override", "unauthed"],
+        "onwarn": "blur"
       }
     ]
   },

@@ -1,48 +1,34 @@
-import { sql } from 'kysely'
 import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../gen/bsky_connect'
 import { Database } from '../db'
-import { didFromUri } from '../../../hydration/util'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getBlobTakedown(req) {
-    const { cid } = req
-    const takedown = await db.db
-      .selectFrom('moderation_subject_status')
-      .select('id')
-      .where('blobCids', '@>', sql`CAST(${JSON.stringify([cid])} AS JSONB)`)
-      .where('takendown', 'is', true)
+    const { actorDid, cid } = req
+    const res = await db.db
+      .selectFrom('blob_takedown')
+      .where('did', '=', actorDid)
+      .where('cid', '=', cid)
+      .selectAll()
       .executeTakeFirst()
     return {
-      takenDown: !!takedown,
+      takenDown: !!res,
     }
   },
 
   async updateTakedown(req) {
     const { actorDid, recordUri, blobCid, takenDown } = req
-    const now = new Date()
     if (actorDid && !blobCid) {
       if (takenDown) {
-        const { id } = await db.db
-          .insertInto('moderation_event')
-          .values({
-            action: 'com.atproto.admin.defs#modEventTakedown',
-            subjectDid: actorDid,
-            subjectType: 'com.atproto.admin.defs#repoRef',
-            createdAt: now.toISOString(),
-            createdBy: 'admin',
-          })
-          .returning('id')
-          .executeTakeFirstOrThrow()
         await db.db
           .updateTable('actor')
-          .set({ takedownId: id })
+          .set({ takedownRef: 'TAKEDOWN' })
           .where('did', '=', actorDid)
           .execute()
       } else {
         await db.db
           .updateTable('actor')
-          .set({ takedownId: null })
+          .set({ takedownRef: null })
           .where('did', '=', actorDid)
           .execute()
       }
@@ -51,53 +37,33 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     if (actorDid && blobCid) {
       if (takenDown) {
         await db.db
-          .insertInto('moderation_subject_status')
+          .insertInto('blob_takedown')
           .values({
             did: actorDid,
-            blobCids: [blobCid],
-            recordPath: '',
-            takendown: true,
-            createdAt: now.toISOString(),
-            updatedAt: now.toISOString(),
-            reviewState: 'com.atproto.admin.defs#reviewOpen',
+            cid: blobCid,
+            takedownRef: 'TAKEDOWN',
           })
           .execute()
       } else {
         await db.db
-          .deleteFrom('moderation_subject_status')
+          .deleteFrom('blob_takedown')
           .where('did', '=', actorDid)
-          .where(
-            'blobCids',
-            '@>',
-            sql`CAST(${JSON.stringify([blobCid])} AS JSONB)`,
-          )
+          .where('cid', '=', blobCid)
           .executeTakeFirst()
       }
     }
 
     if (recordUri) {
       if (takenDown) {
-        const { id } = await db.db
-          .insertInto('moderation_event')
-          .values({
-            action: 'com.atproto.admin.defs#modEventTakedown',
-            subjectDid: didFromUri(recordUri),
-            subjectUri: recordUri,
-            subjectType: 'com.atproto.repo.strongRef',
-            createdAt: now.toISOString(),
-            createdBy: 'admin',
-          })
-          .returning('id')
-          .executeTakeFirstOrThrow()
         await db.db
           .updateTable('record')
-          .set({ takedownId: id })
+          .set({ takedownRef: 'TAKEDOWN' })
           .where('uri', '=', recordUri)
           .execute()
       } else {
         await db.db
           .updateTable('record')
-          .set({ takedownId: null })
+          .set({ takedownRef: null })
           .where('uri', '=', recordUri)
           .execute()
       }

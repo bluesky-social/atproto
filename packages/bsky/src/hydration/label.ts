@@ -7,13 +7,19 @@ export type { Label } from '../lexicon/types/com/atproto/label/defs'
 export type Labels = HydrationMap<Label[]>
 
 export class LabelHydrator {
-  constructor(public dataplane: DataPlaneClient) {}
+  constructor(
+    public dataplane: DataPlaneClient,
+    public opts?: { labelsFromIssuerDids?: string[] },
+  ) {}
 
   async getLabelsForSubjects(
     subjects: string[],
     issuers?: string[],
   ): Promise<Labels> {
-    if (!subjects.length) return new HydrationMap<Label[]>()
+    issuers = ([] as string[])
+      .concat(issuers ?? [])
+      .concat(this.opts?.labelsFromIssuerDids ?? [])
+    if (!subjects.length || !issuers.length) return new HydrationMap<Label[]>()
     const res = await this.dataplane.getLabels({ subjects, issuers })
     return res.labels.reduce((acc, cur) => {
       const label = parseJsonBytes(cur) as Label | undefined

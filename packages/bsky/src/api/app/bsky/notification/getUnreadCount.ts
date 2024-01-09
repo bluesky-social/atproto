@@ -20,9 +20,9 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.notification.getUnreadCount({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ auth, params }) => {
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       const result = await getUnreadCount({ ...params, viewer }, ctx)
       return {
         encoding: 'application/json',

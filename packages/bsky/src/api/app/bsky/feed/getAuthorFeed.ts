@@ -24,10 +24,9 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.feed.getAuthorFeed({
-    auth: ctx.authOptionalAccessOrRoleVerifier,
+    auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, res }) => {
-      const viewer =
-        auth.credentials.type === 'access' ? auth.credentials.did : null
+      const { viewer } = ctx.authVerifier.parseCreds(auth)
 
       const [result, repoRev] = await Promise.all([
         getAuthorFeed({ ...params, viewer }, ctx),
@@ -64,6 +63,7 @@ export const skeleton = async (inputs: {
     cursor: params.cursor,
     noReplies: params.filter === 'posts_no_replies',
     mediaOnly: params.filter === 'posts_with_media',
+    authorThreadsOnly: params.filter === 'posts_and_author_threads',
   })
   return {
     actor,
