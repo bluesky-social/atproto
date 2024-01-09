@@ -38,14 +38,21 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db.getReplica()
       const feedService = ctx.services.feed(db)
       const viewer = auth.credentials.iss
-
+      const headers: Record<string, string> = {}
+      const headersToForward = ['authorization', 'accept-language']
+      for (const header of headersToForward) {
+        const value = req.headers[header]
+        if (typeof value === 'string') {
+          headers[header] = value
+        }
+      }
       const { timerSkele, timerHydr, ...result } = await getFeed(
         { ...params, viewer },
         {
           db,
           feedService,
           appCtx: ctx,
-          authorization: req.headers['authorization'],
+          headers,
         },
       )
 
@@ -127,7 +134,7 @@ type Context = {
   db: Database
   feedService: FeedService
   appCtx: AppContext
-  authorization?: string
+  headers: Record<string, string>
 }
 
 type Params = GetFeedParams & { viewer: string | null }
@@ -147,7 +154,7 @@ const skeletonFromFeedGen = async (
   ctx: Context,
   params: GetFeedParams,
 ): Promise<AlgoResponse> => {
-  const { db, appCtx, authorization } = ctx
+  const { db, appCtx, headers } = ctx
   const { feed } = params
   // Resolve and fetch feed skeleton
   const found = await db.db
@@ -185,9 +192,6 @@ const skeletonFromFeedGen = async (
   let skeleton: SkeletonOutput
   try {
     // @TODO currently passthrough auth headers from pds
-    const headers: Record<string, string> = authorization
-      ? { authorization: authorization }
-      : {}
     const result = await agent.api.app.bsky.feed.getFeedSkeleton(params, {
       headers,
     })

@@ -4,7 +4,7 @@ import AppContext from '../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeed({
     auth: ctx.authVerifier.access,
-    handler: async ({ params, auth }) => {
+    handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
 
       const { data: feed } =
@@ -12,9 +12,24 @@ export default function (server: Server, ctx: AppContext) {
           { feed: params.feed },
           await ctx.appviewAuthHeaders(requester),
         )
+      const serviceAuthHeaders = await ctx.serviceAuthHeaders(
+        requester,
+        feed.view.did,
+      )
+      const headers: Record<string, string> = {}
+      const headersToForward = ['accept-language']
+      for (const header of headersToForward) {
+        const value = req.headers[header]
+        if (typeof value === 'string') {
+          headers[header] = value
+        }
+      }
+      const feedOpts = {
+        headers: { ...headers, ...serviceAuthHeaders.headers },
+      }
       const res = await ctx.appViewAgent.api.app.bsky.feed.getFeed(
         params,
-        await ctx.serviceAuthHeaders(requester, feed.view.did),
+        feedOpts,
       )
       return {
         encoding: 'application/json',
