@@ -578,6 +578,11 @@ export class Hydrator {
         (await this.feed.getFeedGens([uri], includeTakedowns)).get(uri) ??
         undefined
       )
+    } else if (collection === ids.AppBskyModLabeler) {
+      return (
+        (await this.label.getLabelers([uri], includeTakedowns)).get(uri) ??
+        undefined
+      )
     } else if (collection === ids.AppBskyActorProfile) {
       const did = parsed.hostname
       const actor = (await this.actor.getActors([did], includeTakedowns)).get(
