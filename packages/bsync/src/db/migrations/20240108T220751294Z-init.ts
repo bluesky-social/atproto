@@ -13,10 +13,10 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
   await db.schema
     .createTable('mute_item')
-    .addColumn('actorDid', 'varchar', (col) => col.primaryKey())
+    .addColumn('actorDid', 'varchar', (col) => col.notNull())
     .addColumn('subject', 'varchar', (col) => col.notNull())
     .addColumn('fromId', 'bigint', (col) => col.notNull())
-    .addPrimaryKeyConstraint('mute_op_pkey', ['actorDid', 'subject'])
+    .addPrimaryKeyConstraint('mute_item_pkey', ['actorDid', 'subject'])
     .execute()
 }
 

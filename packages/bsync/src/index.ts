@@ -9,6 +9,7 @@ import routes from './routes'
 import { createMuteOpChannel } from './db/schema/mute_op'
 
 export * from './config'
+export * from './client'
 export { Database } from './db'
 export { AppContext } from './context'
 export { httpLogger } from './logger'
@@ -49,7 +50,7 @@ export class BsyncService {
 
   async start(): Promise<http.Server> {
     // @TODO db stats
-    await setupAppEvents(this.ctx)
+    await this.setupAppEvents()
     this.server.listen(this.ctx.cfg.service.port)
     this.server.keepAliveTimeout = 90000
     await events.once(this.server, 'listening')
@@ -61,20 +62,23 @@ export class BsyncService {
     await this.terminator.terminate()
     await this.ctx.db.close()
   }
+
+  async setupAppEvents() {
+    const conn = await this.ctx.db.pool.connect()
+    this.ac.signal.addEventListener('abort', () => conn.release(), {
+      once: true,
+    })
+    conn
+      .query(`listen ${createMuteOpChannel}`)
+      .catch((err) =>
+        dbLogger.error({ err }, `${createMuteOpChannel} listener failed`),
+      )
+    conn.on('notification', (notif) => {
+      if (notif.channel === createMuteOpChannel) {
+        this.ctx.events.emit('mute_op_create')
+      }
+    })
+  }
 }
 
 export default BsyncService
-
-const setupAppEvents = async (ctx: AppContext) => {
-  const conn = await ctx.db.pool.connect()
-  conn
-    .query(`listen ${createMuteOpChannel}`)
-    .catch((err) =>
-      dbLogger.error({ err }, `${createMuteOpChannel} listener failed`),
-    )
-  conn.on('notification', (notif) => {
-    if (notif.channel === createMuteOpChannel) {
-      ctx.events.emit('mute_op_create')
-    }
-  })
-}

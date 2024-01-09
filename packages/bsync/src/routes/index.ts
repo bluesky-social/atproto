@@ -40,7 +40,7 @@ export default (ctx: AppContext) => (router: ConnectRouter) => {
             })
             .onConflict((oc) =>
               oc
-                .constraint('mute_op_pkey')
+                .constraint('mute_item_pkey')
                 .doUpdateSet({ fromId: sql`${ref('excluded.fromId')}` }),
             )
             .execute()
@@ -60,7 +60,7 @@ export default (ctx: AppContext) => (router: ConnectRouter) => {
           throw new Error(`unreachable: ${exhaustiveCheck}`)
         }
         // notify
-        await sql`notify ${createMuteOpChannel}`.execute(txn.db)
+        await sql`notify ${ref(createMuteOpChannel)}`.execute(txn.db)
         return id
       })
       return new AddMuteOperationResponse({
