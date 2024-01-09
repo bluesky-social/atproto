@@ -182,7 +182,7 @@ const createLabel = async (
       val: opts.val,
       cts: new Date().toISOString(),
       neg: false,
-      src: 'did:example:labeler',
+      src: 'did:example:labeler', // this did is also configured on labelsFromIssuerDids
     })
     .execute()
 }

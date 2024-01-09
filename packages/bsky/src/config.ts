@@ -11,6 +11,7 @@ export interface ServerConfigValues {
   dataplaneHttpVersion?: '1.1' | '2'
   dataplaneIgnoreBadTls?: boolean
   didPlcUrl: string
+  labelsFromIssuerDids?: string[]
   handleResolveNameservers?: string[]
   imgUriEndpoint?: string
   blobCacheLocation?: string
@@ -45,6 +46,9 @@ export class ServerConfig {
     const dataplaneHttpVersion = process.env.BSKY_DATAPLANE_HTTP_VERSION || '2'
     const dataplaneIgnoreBadTls =
       process.env.BSKY_DATAPLANE_IGNORE_BAD_TLS === 'true'
+    const labelsFromIssuerDids = process.env.BSKY_LABELS_FROM_ISSUER_DIDS
+      ? process.env.BSKY_LABELS_FROM_ISSUER_DIDS.split(',')
+      : []
     const adminPassword = process.env.BSKY_ADMIN_PASSWORD
     assert(adminPassword)
     const moderatorPassword = process.env.BSKY_MODERATOR_PASSWORD
@@ -67,6 +71,7 @@ export class ServerConfig {
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
       didPlcUrl,
+      labelsFromIssuerDids,
       handleResolveNameservers,
       imgUriEndpoint,
       blobCacheLocation,
@@ -125,6 +130,10 @@ export class ServerConfig {
 
   get dataplaneIgnoreBadTls() {
     return this.cfg.dataplaneIgnoreBadTls
+  }
+
+  get labelsFromIssuerDids() {
+    return this.cfg.labelsFromIssuerDids ?? []
   }
 
   get handleResolveNameservers() {
