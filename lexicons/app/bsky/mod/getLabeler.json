@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.label.getLabeler",
+  "id": "app.bsky.mod.getLabeler",
   "defs": {
     "main": {
       "type": "query",
@@ -20,7 +20,7 @@
           "properties": {
             "view": {
               "type": "ref",
-              "ref": "app.bsky.label.defs#labelerViewDetailed"
+              "ref": "app.bsky.mod.defs#labelerViewDetailed"
             }
           }
         }

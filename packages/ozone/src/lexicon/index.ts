@@ -114,9 +114,9 @@ import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
-import * as AppBskyLabelGetActorLabelers from './types/app/bsky/label/getActorLabelers'
-import * as AppBskyLabelGetLabeler from './types/app/bsky/label/getLabeler'
-import * as AppBskyLabelGetLabelers from './types/app/bsky/label/getLabelers'
+import * as AppBskyModGetActorLabelers from './types/app/bsky/mod/getActorLabelers'
+import * as AppBskyModGetLabeler from './types/app/bsky/mod/getLabeler'
+import * as AppBskyModGetLabelers from './types/app/bsky/mod/getLabelers'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
@@ -1035,7 +1035,7 @@ export class BskyNS {
   embed: EmbedNS
   feed: FeedNS
   graph: GraphNS
-  label: LabelNS
+  mod: ModNS
   notification: NotificationNS
   richtext: RichtextNS
   unspecced: UnspeccedNS
@@ -1046,7 +1046,7 @@ export class BskyNS {
     this.embed = new EmbedNS(server)
     this.feed = new FeedNS(server)
     this.graph = new GraphNS(server)
-    this.label = new LabelNS(server)
+    this.mod = new ModNS(server)
     this.notification = new NotificationNS(server)
     this.richtext = new RichtextNS(server)
     this.unspecced = new UnspeccedNS(server)
@@ -1481,7 +1481,7 @@ export class GraphNS {
   }
 }
 
-export class LabelNS {
+export class ModNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1491,33 +1491,33 @@ export class LabelNS {
   getActorLabelers<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      AppBskyLabelGetActorLabelers.Handler<ExtractAuth<AV>>,
-      AppBskyLabelGetActorLabelers.HandlerReqCtx<ExtractAuth<AV>>
+      AppBskyModGetActorLabelers.Handler<ExtractAuth<AV>>,
+      AppBskyModGetActorLabelers.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'app.bsky.label.getActorLabelers' // @ts-ignore
+    const nsid = 'app.bsky.mod.getActorLabelers' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
   getLabeler<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      AppBskyLabelGetLabeler.Handler<ExtractAuth<AV>>,
-      AppBskyLabelGetLabeler.HandlerReqCtx<ExtractAuth<AV>>
+      AppBskyModGetLabeler.Handler<ExtractAuth<AV>>,
+      AppBskyModGetLabeler.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'app.bsky.label.getLabeler' // @ts-ignore
+    const nsid = 'app.bsky.mod.getLabeler' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
   getLabelers<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      AppBskyLabelGetLabelers.Handler<ExtractAuth<AV>>,
-      AppBskyLabelGetLabelers.HandlerReqCtx<ExtractAuth<AV>>
+      AppBskyModGetLabelers.Handler<ExtractAuth<AV>>,
+      AppBskyModGetLabelers.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'app.bsky.label.getLabelers' // @ts-ignore
+    const nsid = 'app.bsky.mod.getLabelers' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

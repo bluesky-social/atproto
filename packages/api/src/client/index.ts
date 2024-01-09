@@ -135,11 +135,11 @@ import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
-import * as AppBskyLabelDefs from './types/app/bsky/label/defs'
-import * as AppBskyLabelGetActorLabelers from './types/app/bsky/label/getActorLabelers'
-import * as AppBskyLabelGetLabeler from './types/app/bsky/label/getLabeler'
-import * as AppBskyLabelGetLabelers from './types/app/bsky/label/getLabelers'
-import * as AppBskyLabelLabeler from './types/app/bsky/label/labeler'
+import * as AppBskyModDefs from './types/app/bsky/mod/defs'
+import * as AppBskyModGetActorLabelers from './types/app/bsky/mod/getActorLabelers'
+import * as AppBskyModGetLabeler from './types/app/bsky/mod/getLabeler'
+import * as AppBskyModGetLabelers from './types/app/bsky/mod/getLabelers'
+import * as AppBskyModLabeler from './types/app/bsky/mod/labeler'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
@@ -280,11 +280,11 @@ export * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 export * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 export * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 export * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
-export * as AppBskyLabelDefs from './types/app/bsky/label/defs'
-export * as AppBskyLabelGetActorLabelers from './types/app/bsky/label/getActorLabelers'
-export * as AppBskyLabelGetLabeler from './types/app/bsky/label/getLabeler'
-export * as AppBskyLabelGetLabelers from './types/app/bsky/label/getLabelers'
-export * as AppBskyLabelLabeler from './types/app/bsky/label/labeler'
+export * as AppBskyModDefs from './types/app/bsky/mod/defs'
+export * as AppBskyModGetActorLabelers from './types/app/bsky/mod/getActorLabelers'
+export * as AppBskyModGetLabeler from './types/app/bsky/mod/getLabeler'
+export * as AppBskyModGetLabelers from './types/app/bsky/mod/getLabelers'
+export * as AppBskyModLabeler from './types/app/bsky/mod/labeler'
 export * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 export * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 export * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
@@ -1202,7 +1202,7 @@ export class BskyNS {
   embed: EmbedNS
   feed: FeedNS
   graph: GraphNS
-  label: LabelNS
+  mod: ModNS
   notification: NotificationNS
   richtext: RichtextNS
   unspecced: UnspeccedNS
@@ -1213,7 +1213,7 @@ export class BskyNS {
     this.embed = new EmbedNS(service)
     this.feed = new FeedNS(service)
     this.graph = new GraphNS(service)
-    this.label = new LabelNS(service)
+    this.mod = new ModNS(service)
     this.notification = new NotificationNS(service)
     this.richtext = new RichtextNS(service)
     this.unspecced = new UnspeccedNS(service)
@@ -2354,7 +2354,7 @@ export class ListitemRecord {
   }
 }
 
-export class LabelNS {
+export class ModNS {
   _service: AtpServiceClient
   labeler: LabelerRecord
 
@@ -2364,35 +2364,35 @@ export class LabelNS {
   }
 
   getActorLabelers(
-    params?: AppBskyLabelGetActorLabelers.QueryParams,
-    opts?: AppBskyLabelGetActorLabelers.CallOptions,
-  ): Promise<AppBskyLabelGetActorLabelers.Response> {
+    params?: AppBskyModGetActorLabelers.QueryParams,
+    opts?: AppBskyModGetActorLabelers.CallOptions,
+  ): Promise<AppBskyModGetActorLabelers.Response> {
     return this._service.xrpc
-      .call('app.bsky.label.getActorLabelers', params, undefined, opts)
+      .call('app.bsky.mod.getActorLabelers', params, undefined, opts)
       .catch((e) => {
-        throw AppBskyLabelGetActorLabelers.toKnownErr(e)
+        throw AppBskyModGetActorLabelers.toKnownErr(e)
       })
   }
 
   getLabeler(
-    params?: AppBskyLabelGetLabeler.QueryParams,
-    opts?: AppBskyLabelGetLabeler.CallOptions,
-  ): Promise<AppBskyLabelGetLabeler.Response> {
+    params?: AppBskyModGetLabeler.QueryParams,
+    opts?: AppBskyModGetLabeler.CallOptions,
+  ): Promise<AppBskyModGetLabeler.Response> {
     return this._service.xrpc
-      .call('app.bsky.label.getLabeler', params, undefined, opts)
+      .call('app.bsky.mod.getLabeler', params, undefined, opts)
       .catch((e) => {
-        throw AppBskyLabelGetLabeler.toKnownErr(e)
+        throw AppBskyModGetLabeler.toKnownErr(e)
       })
   }
 
   getLabelers(
-    params?: AppBskyLabelGetLabelers.QueryParams,
-    opts?: AppBskyLabelGetLabelers.CallOptions,
-  ): Promise<AppBskyLabelGetLabelers.Response> {
+    params?: AppBskyModGetLabelers.QueryParams,
+    opts?: AppBskyModGetLabelers.CallOptions,
+  ): Promise<AppBskyModGetLabelers.Response> {
     return this._service.xrpc
-      .call('app.bsky.label.getLabelers', params, undefined, opts)
+      .call('app.bsky.mod.getLabelers', params, undefined, opts)
       .catch((e) => {
-        throw AppBskyLabelGetLabelers.toKnownErr(e)
+        throw AppBskyModGetLabelers.toKnownErr(e)
       })
   }
 }
@@ -2408,10 +2408,10 @@ export class LabelerRecord {
     params: Omit<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
     cursor?: string
-    records: { uri: string; value: AppBskyLabelLabeler.Record }[]
+    records: { uri: string; value: AppBskyModLabeler.Record }[]
   }> {
     const res = await this._service.xrpc.call('com.atproto.repo.listRecords', {
-      collection: 'app.bsky.label.labeler',
+      collection: 'app.bsky.mod.labeler',
       ...params,
     })
     return res.data
@@ -2419,9 +2419,9 @@ export class LabelerRecord {
 
   async get(
     params: Omit<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: AppBskyLabelLabeler.Record }> {
+  ): Promise<{ uri: string; cid: string; value: AppBskyModLabeler.Record }> {
     const res = await this._service.xrpc.call('com.atproto.repo.getRecord', {
-      collection: 'app.bsky.label.labeler',
+      collection: 'app.bsky.mod.labeler',
       ...params,
     })
     return res.data
@@ -2432,14 +2432,14 @@ export class LabelerRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: AppBskyLabelLabeler.Record,
+    record: AppBskyModLabeler.Record,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
-    record.$type = 'app.bsky.label.labeler'
+    record.$type = 'app.bsky.mod.labeler'
     const res = await this._service.xrpc.call(
       'com.atproto.repo.createRecord',
       undefined,
-      { collection: 'app.bsky.label.labeler', ...params, record },
+      { collection: 'app.bsky.mod.labeler', ...params, record },
       { encoding: 'application/json', headers },
     )
     return res.data
@@ -2452,7 +2452,7 @@ export class LabelerRecord {
     await this._service.xrpc.call(
       'com.atproto.repo.deleteRecord',
       undefined,
-      { collection: 'app.bsky.label.labeler', ...params },
+      { collection: 'app.bsky.mod.labeler', ...params },
       { headers },
     )
   }

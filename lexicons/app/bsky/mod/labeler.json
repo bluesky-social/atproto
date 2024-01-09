@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.label.labeler",
+  "id": "app.bsky.mod.labeler",
   "defs": {
     "main": {
       "type": "record",
@@ -32,7 +32,7 @@
           },
           "policies": {
             "type": "ref",
-            "ref": "app.bsky.label.defs#labelerPolicies"
+            "ref": "app.bsky.mod.defs#labelerPolicies"
           },
           "labels": {
             "type": "union",

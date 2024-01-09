@@ -5057,7 +5057,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewBlocked',
               'lex:app.bsky.feed.defs#generatorView',
               'lex:app.bsky.graph.defs#listView',
-              'lex:app.bsky.label.defs#labelerView',
+              'lex:app.bsky.mod.defs#labelerView',
             ],
           },
         },
@@ -7418,9 +7418,9 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyLabelDefs: {
+  AppBskyModDefs: {
     lexicon: 1,
-    id: 'app.bsky.label.defs',
+    id: 'app.bsky.mod.defs',
     defs: {
       labelerView: {
         type: 'object',
@@ -7466,7 +7466,7 @@ export const schemaDict = {
           },
           viewer: {
             type: 'ref',
-            ref: 'lex:app.bsky.label.defs#labelerViewerState',
+            ref: 'lex:app.bsky.mod.defs#labelerViewerState',
           },
           indexedAt: {
             type: 'string',
@@ -7514,7 +7514,7 @@ export const schemaDict = {
           },
           policies: {
             type: 'ref',
-            ref: 'lex:app.bsky.label.defs#labelerPolicies',
+            ref: 'lex:app.bsky.mod.defs#labelerPolicies',
           },
           likeCount: {
             type: 'integer',
@@ -7522,7 +7522,7 @@ export const schemaDict = {
           },
           viewer: {
             type: 'ref',
-            ref: 'lex:app.bsky.label.defs#labelerViewerState',
+            ref: 'lex:app.bsky.mod.defs#labelerViewerState',
           },
           indexedAt: {
             type: 'string',
@@ -7573,9 +7573,9 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyLabelGetActorLabelers: {
+  AppBskyModGetActorLabelers: {
     lexicon: 1,
-    id: 'app.bsky.label.getActorLabelers',
+    id: 'app.bsky.mod.getActorLabelers',
     defs: {
       main: {
         type: 'query',
@@ -7612,7 +7612,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.label.defs#labelerView',
+                  ref: 'lex:app.bsky.mod.defs#labelerView',
                 },
               },
             },
@@ -7621,9 +7621,9 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyLabelGetLabeler: {
+  AppBskyModGetLabeler: {
     lexicon: 1,
-    id: 'app.bsky.label.getLabeler',
+    id: 'app.bsky.mod.getLabeler',
     defs: {
       main: {
         type: 'query',
@@ -7646,7 +7646,7 @@ export const schemaDict = {
             properties: {
               view: {
                 type: 'ref',
-                ref: 'lex:app.bsky.label.defs#labelerViewDetailed',
+                ref: 'lex:app.bsky.mod.defs#labelerViewDetailed',
               },
             },
           },
@@ -7654,9 +7654,9 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyLabelGetLabelers: {
+  AppBskyModGetLabelers: {
     lexicon: 1,
-    id: 'app.bsky.label.getLabelers',
+    id: 'app.bsky.mod.getLabelers',
     defs: {
       main: {
         type: 'query',
@@ -7684,7 +7684,7 @@ export const schemaDict = {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.label.defs#labelerView',
+                  ref: 'lex:app.bsky.mod.defs#labelerView',
                 },
               },
             },
@@ -7693,9 +7693,9 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyLabelLabeler: {
+  AppBskyModLabeler: {
     lexicon: 1,
-    id: 'app.bsky.label.labeler',
+    id: 'app.bsky.mod.labeler',
     defs: {
       main: {
         type: 'record',
@@ -7733,7 +7733,7 @@ export const schemaDict = {
             },
             policies: {
               type: 'ref',
-              ref: 'lex:app.bsky.label.defs#labelerPolicies',
+              ref: 'lex:app.bsky.mod.defs#labelerPolicies',
             },
             labels: {
               type: 'union',
@@ -8458,11 +8458,11 @@ export const ids = {
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
-  AppBskyLabelDefs: 'app.bsky.label.defs',
-  AppBskyLabelGetActorLabelers: 'app.bsky.label.getActorLabelers',
-  AppBskyLabelGetLabeler: 'app.bsky.label.getLabeler',
-  AppBskyLabelGetLabelers: 'app.bsky.label.getLabelers',
-  AppBskyLabelLabeler: 'app.bsky.label.labeler',
+  AppBskyModDefs: 'app.bsky.mod.defs',
+  AppBskyModGetActorLabelers: 'app.bsky.mod.getActorLabelers',
+  AppBskyModGetLabeler: 'app.bsky.mod.getLabeler',
+  AppBskyModGetLabelers: 'app.bsky.mod.getLabelers',
+  AppBskyModLabeler: 'app.bsky.mod.labeler',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',

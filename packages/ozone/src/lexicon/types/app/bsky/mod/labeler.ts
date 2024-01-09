@@ -6,7 +6,7 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import * as AppBskyRichtextFacet from '../richtext/facet'
-import * as AppBskyLabelDefs from './defs'
+import * as AppBskyModDefs from './defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 export interface Record {
@@ -15,7 +15,7 @@ export interface Record {
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   avatar?: BlobRef
-  policies: AppBskyLabelDefs.LabelerPolicies
+  policies: AppBskyModDefs.LabelerPolicies
   labels?:
     | ComAtprotoLabelDefs.SelfLabels
     | { $type: string; [k: string]: unknown }
@@ -27,11 +27,11 @@ export function isRecord(v: unknown): v is Record {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    (v.$type === 'app.bsky.label.labeler#main' ||
-      v.$type === 'app.bsky.label.labeler')
+    (v.$type === 'app.bsky.mod.labeler#main' ||
+      v.$type === 'app.bsky.mod.labeler')
   )
 }
 
 export function validateRecord(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.label.labeler#main', v)
+  return lexicons.validate('app.bsky.mod.labeler#main', v)
 }

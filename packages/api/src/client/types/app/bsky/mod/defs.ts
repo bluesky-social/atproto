@@ -2,8 +2,8 @@
  * GENERATED CODE - DO NOT MODIFY
  */
 import { ValidationResult, BlobRef } from '@atproto/lexicon'
-import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
+import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as AppBskyRichtextFacet from '../richtext/facet'
@@ -29,12 +29,12 @@ export function isLabelerView(v: unknown): v is LabelerView {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.label.defs#labelerView'
+    v.$type === 'app.bsky.mod.defs#labelerView'
   )
 }
 
 export function validateLabelerView(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.label.defs#labelerView', v)
+  return lexicons.validate('app.bsky.mod.defs#labelerView', v)
 }
 
 export interface LabelerViewDetailed {
@@ -57,12 +57,12 @@ export function isLabelerViewDetailed(v: unknown): v is LabelerViewDetailed {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.label.defs#labelerViewDetailed'
+    v.$type === 'app.bsky.mod.defs#labelerViewDetailed'
   )
 }
 
 export function validateLabelerViewDetailed(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.label.defs#labelerViewDetailed', v)
+  return lexicons.validate('app.bsky.mod.defs#labelerViewDetailed', v)
 }
 
 export interface LabelerViewerState {
@@ -74,12 +74,12 @@ export function isLabelerViewerState(v: unknown): v is LabelerViewerState {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.label.defs#labelerViewerState'
+    v.$type === 'app.bsky.mod.defs#labelerViewerState'
   )
 }
 
 export function validateLabelerViewerState(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.label.defs#labelerViewerState', v)
+  return lexicons.validate('app.bsky.mod.defs#labelerViewerState', v)
 }
 
 export interface LabelerPolicies {
@@ -94,10 +94,10 @@ export function isLabelerPolicies(v: unknown): v is LabelerPolicies {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.label.defs#labelerPolicies'
+    v.$type === 'app.bsky.mod.defs#labelerPolicies'
   )
 }
 
 export function validateLabelerPolicies(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.label.defs#labelerPolicies', v)
+  return lexicons.validate('app.bsky.mod.defs#labelerPolicies', v)
 }

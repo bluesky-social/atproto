@@ -6,19 +6,16 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyLabelDefs from './defs'
+import * as AppBskyModDefs from './defs'
 
 export interface QueryParams {
-  actor: string
-  limit?: number
-  cursor?: string
+  labelers: string[]
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor?: string
-  labelers: AppBskyLabelDefs.LabelerView[]
+  labelers: AppBskyModDefs.LabelerView[]
   [k: string]: unknown
 }
 
