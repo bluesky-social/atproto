@@ -7639,54 +7639,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyUnspeccedGetPopular: {
-    lexicon: 1,
-    id: 'app.bsky.unspecced.getPopular',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'DEPRECATED: will be removed soon. Use a feed generator alternative.',
-        parameters: {
-          type: 'params',
-          properties: {
-            includeNsfw: {
-              type: 'boolean',
-              default: false,
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['feed'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              feed: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyUnspeccedGetPopularFeedGenerators: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getPopularFeedGenerators',
@@ -8055,7 +8007,6 @@ export const ids = {
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
-  AppBskyUnspeccedGetPopular: 'app.bsky.unspecced.getPopular',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetTimelineSkeleton: 'app.bsky.unspecced.getTimelineSkeleton',
