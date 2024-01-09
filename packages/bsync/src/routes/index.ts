@@ -1,11 +1,11 @@
 import { sql } from 'kysely'
 import { Code, ConnectError, ConnectRouter } from '@connectrpc/connect'
-import { Service } from '../gen/bsky_sync_connect'
+import { Service } from '../gen/bsync_connect'
 import {
   AddMuteOperationResponse,
   MuteOperation_Type,
   ScanMuteOperationsResponse,
-} from '../gen/bsky_sync_pb'
+} from '../gen/bsync_pb'
 import AppContext from '../context'
 import { createMuteOpChannel } from '../db/schema/mute_op'
 import { authWithApiKey } from './auth'
