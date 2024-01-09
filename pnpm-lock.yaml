@@ -918,6 +918,15 @@ importers:
         specifier: 3.13.2
         version: 3.13.2
 
+  services/bsync:
+    dependencies:
+      '@atproto/bsync':
+        specifier: workspace:^
+        version: link:../../packages/bsync
+      dd-trace:
+        specifier: 3.13.2
+        version: 3.13.2
+
   services/ozone:
     dependencies:
       '@atproto/ozone':
