@@ -1804,6 +1804,39 @@ export const schemaDict = {
           },
         },
       },
+      labelValue: {
+        type: 'string',
+        knownValues: [
+          '!hide',
+          '!no-promote',
+          '!warn',
+          '!no-unauthenticated',
+          'dmca-violation',
+          'doxxing',
+          'porn',
+          'sexual',
+          'nudity',
+          'nsfl',
+          'corpse',
+          'gore',
+          'torture',
+          'self-harm',
+          'intolerant-race',
+          'intolerant-gender',
+          'intolerant-sexual-orientation',
+          'intolerant-religion',
+          'intolerant',
+          'icon-intolerant',
+          'threat',
+          'spoiler',
+          'spam',
+          'account-security',
+          'net-abuse',
+          'impersonation',
+          'scam',
+          'misleading',
+        ],
+      },
     },
   },
   ComAtprotoLabelQueryLabels: {
@@ -4495,6 +4528,52 @@ export const schemaDict = {
           },
         },
       },
+      labelersPref: {
+        type: 'object',
+        required: ['labelers'],
+        properties: {
+          labelers: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#labelerPrefItem',
+            },
+          },
+        },
+      },
+      labelerPrefItem: {
+        type: 'object',
+        required: ['uri', 'enabled', 'labelGroupSettings'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          enabled: {
+            type: 'boolean',
+          },
+          labelGroupSettings: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.actor.defs#labelGroupSetting',
+            },
+          },
+        },
+      },
+      labelGroupSetting: {
+        type: 'object',
+        required: ['labelGroup', 'visibility'],
+        properties: {
+          labelGroup: {
+            type: 'string',
+          },
+          visibility: {
+            type: 'string',
+            knownValues: ['show', 'warn', 'hide'],
+          },
+        },
+      },
     },
   },
   AppBskyActorGetPreferences: {
@@ -4978,6 +5057,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewBlocked',
               'lex:app.bsky.feed.defs#generatorView',
               'lex:app.bsky.graph.defs#listView',
+              'lex:app.bsky.label.defs#labelerView',
             ],
           },
         },
@@ -7338,6 +7418,336 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyLabelDefs: {
+    lexicon: 1,
+    id: 'app.bsky.label.defs',
+    defs: {
+      labelerView: {
+        type: 'object',
+        required: ['uri', 'cid', 'did', 'creator', 'displayName', 'indexedAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          displayName: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
+          },
+          descriptionFacets: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+          avatar: {
+            type: 'string',
+          },
+          likeCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.label.defs#labelerViewerState',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      labelerViewDetailed: {
+        type: 'object',
+        required: ['uri', 'cid', 'did', 'creator', 'displayName', 'indexedAt'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          creator: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          displayName: {
+            type: 'string',
+          },
+          description: {
+            type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
+          },
+          descriptionFacets: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+          avatar: {
+            type: 'string',
+          },
+          policies: {
+            type: 'ref',
+            ref: 'lex:app.bsky.label.defs#labelerPolicies',
+          },
+          likeCount: {
+            type: 'integer',
+            minimum: 0,
+          },
+          viewer: {
+            type: 'ref',
+            ref: 'lex:app.bsky.label.defs#labelerViewerState',
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      labelerViewerState: {
+        type: 'object',
+        properties: {
+          like: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+      labelerPolicies: {
+        type: 'object',
+        required: ['reportReasons', 'labelValues'],
+        properties: {
+          description: {
+            type: 'string',
+            maxGraphemes: 10000,
+            maxLength: 100000,
+          },
+          descriptionFacets: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+          reportReasons: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.moderation.defs#reasonType',
+            },
+          },
+          labelValues: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#labelValue',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyLabelGetActorLabelers: {
+    lexicon: 1,
+    id: 'app.bsky.label.getActorLabelers',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of labelers created by the actor.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['labelers'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              labelers: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.label.defs#labelerView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyLabelGetLabeler: {
+    lexicon: 1,
+    id: 'app.bsky.label.getLabeler',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get information about a labeler.',
+        parameters: {
+          type: 'params',
+          required: ['labeler'],
+          properties: {
+            labeler: {
+              type: 'string',
+              format: 'at-uri',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['view'],
+            properties: {
+              view: {
+                type: 'ref',
+                ref: 'lex:app.bsky.label.defs#labelerViewDetailed',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyLabelGetLabelers: {
+    lexicon: 1,
+    id: 'app.bsky.label.getLabelers',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get information about a list of labelers.',
+        parameters: {
+          type: 'params',
+          required: ['labelers'],
+          properties: {
+            labelers: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['labelers'],
+            properties: {
+              labelers: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.label.defs#labelerView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyLabelLabeler: {
+    lexicon: 1,
+    id: 'app.bsky.label.labeler',
+    defs: {
+      main: {
+        type: 'record',
+        description: 'A declaration of the existence of labeler.',
+        key: 'any',
+        record: {
+          type: 'object',
+          required: ['did', 'displayName', 'policies', 'createdAt'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+            },
+            displayName: {
+              type: 'string',
+              maxGraphemes: 24,
+              maxLength: 240,
+            },
+            description: {
+              type: 'string',
+              maxGraphemes: 300,
+              maxLength: 3000,
+            },
+            descriptionFacets: {
+              type: 'array',
+              items: {
+                type: 'ref',
+                ref: 'lex:app.bsky.richtext.facet',
+              },
+            },
+            avatar: {
+              type: 'blob',
+              accept: ['image/png', 'image/jpeg'],
+              maxSize: 1000000,
+            },
+            policies: {
+              type: 'ref',
+              ref: 'lex:app.bsky.label.defs#labelerPolicies',
+            },
+            labels: {
+              type: 'union',
+              refs: ['lex:com.atproto.label.defs#selfLabels'],
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationGetUnreadCount: {
     lexicon: 1,
     id: 'app.bsky.notification.getUnreadCount',
@@ -8048,6 +8458,11 @@ export const ids = {
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
+  AppBskyLabelDefs: 'app.bsky.label.defs',
+  AppBskyLabelGetActorLabelers: 'app.bsky.label.getActorLabelers',
+  AppBskyLabelGetLabeler: 'app.bsky.label.getLabeler',
+  AppBskyLabelGetLabelers: 'app.bsky.label.getLabelers',
+  AppBskyLabelLabeler: 'app.bsky.label.labeler',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',

@@ -233,3 +233,57 @@ export function isThreadViewPref(v: unknown): v is ThreadViewPref {
 export function validateThreadViewPref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#threadViewPref', v)
 }
+
+export interface LabelersPref {
+  labelers: LabelerPrefItem[]
+  [k: string]: unknown
+}
+
+export function isLabelersPref(v: unknown): v is LabelersPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#labelersPref'
+  )
+}
+
+export function validateLabelersPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#labelersPref', v)
+}
+
+export interface LabelerPrefItem {
+  uri: string
+  enabled: boolean
+  labelGroupSettings: LabelGroupSetting[]
+  [k: string]: unknown
+}
+
+export function isLabelerPrefItem(v: unknown): v is LabelerPrefItem {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#labelerPrefItem'
+  )
+}
+
+export function validateLabelerPrefItem(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#labelerPrefItem', v)
+}
+
+export interface LabelGroupSetting {
+  labelGroup: string
+  visibility: 'show' | 'warn' | 'hide' | (string & {})
+  [k: string]: unknown
+}
+
+export function isLabelGroupSetting(v: unknown): v is LabelGroupSetting {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#labelGroupSetting'
+  )
+}
+
+export function validateLabelGroupSetting(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#labelGroupSetting', v)
+}

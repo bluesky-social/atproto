@@ -114,6 +114,9 @@ import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
 import * as AppBskyGraphUnmuteActor from './types/app/bsky/graph/unmuteActor'
 import * as AppBskyGraphUnmuteActorList from './types/app/bsky/graph/unmuteActorList'
+import * as AppBskyLabelGetActorLabelers from './types/app/bsky/label/getActorLabelers'
+import * as AppBskyLabelGetLabeler from './types/app/bsky/label/getLabeler'
+import * as AppBskyLabelGetLabelers from './types/app/bsky/label/getLabelers'
 import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notification/getUnreadCount'
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
@@ -1032,6 +1035,7 @@ export class BskyNS {
   embed: EmbedNS
   feed: FeedNS
   graph: GraphNS
+  label: LabelNS
   notification: NotificationNS
   richtext: RichtextNS
   unspecced: UnspeccedNS
@@ -1042,6 +1046,7 @@ export class BskyNS {
     this.embed = new EmbedNS(server)
     this.feed = new FeedNS(server)
     this.graph = new GraphNS(server)
+    this.label = new LabelNS(server)
     this.notification = new NotificationNS(server)
     this.richtext = new RichtextNS(server)
     this.unspecced = new UnspeccedNS(server)
@@ -1472,6 +1477,47 @@ export class GraphNS {
     >,
   ) {
     const nsid = 'app.bsky.graph.unmuteActorList' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class LabelNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getActorLabelers<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyLabelGetActorLabelers.Handler<ExtractAuth<AV>>,
+      AppBskyLabelGetActorLabelers.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.label.getActorLabelers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getLabeler<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyLabelGetLabeler.Handler<ExtractAuth<AV>>,
+      AppBskyLabelGetLabeler.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.label.getLabeler' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getLabelers<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyLabelGetLabelers.Handler<ExtractAuth<AV>>,
+      AppBskyLabelGetLabelers.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.label.getLabelers' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
