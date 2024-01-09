@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
+    "@atproto/syntax": "workspace:^",
     "@bufbuild/protobuf": "^1.5.0",
     "@connectrpc/connect": "^1.1.4",
     "@connectrpc/connect-express": "^1.1.4",

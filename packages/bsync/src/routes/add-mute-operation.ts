@@ -1,4 +1,10 @@
 import { sql } from 'kysely'
+import {
+  AtUri,
+  InvalidDidError,
+  ensureValidAtUri,
+  ensureValidDid,
+} from '@atproto/syntax'
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../gen/bsync_connect'
 import { AddMuteOperationResponse, MuteOperation_Type } from '../gen/bsync_pb'
@@ -90,6 +96,12 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfo => {
   if (!Object.values(MuteOperation_Type).includes(op.type)) {
     throw new ConnectError('bad mute operation type', Code.InvalidArgument)
   }
+  if (!isValidDid(op.actorDid)) {
+    throw new ConnectError(
+      'actor_did must be a valid did',
+      Code.InvalidArgument,
+    )
+  }
   if (op.type === MuteOperation_Type.CLEAR) {
     if (op.subject !== '') {
       throw new ConnectError(
@@ -98,8 +110,17 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfo => {
       )
     }
   } else {
-    // @TODO validate with syntax package, check collection type
-    if (!op.subject.startsWith('at://') && !op.subject.startsWith('did:')) {
+    if (isValidDid(op.subject)) {
+      // all good
+    } else if (isValidAtUri(op.subject)) {
+      const uri = new AtUri(op.subject)
+      if (uri.collection !== 'app.bsky.graph.list') {
+        throw new ConnectError(
+          'subject aturis must reference a list record',
+          Code.InvalidArgument,
+        )
+      }
+    } else {
       throw new ConnectError(
         'subject must be a did or aturi on add or remove op',
         Code.InvalidArgument,
@@ -107,6 +128,27 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfo => {
     }
   }
   return op
+}
+
+const isValidDid = (did: string) => {
+  try {
+    ensureValidDid(did)
+    return true
+  } catch (err) {
+    if (err instanceof InvalidDidError) {
+      return false
+    }
+    throw err
+  }
+}
+
+const isValidAtUri = (uri: string) => {
+  try {
+    ensureValidAtUri(uri)
+    return true
+  } catch {
+    return false
+  }
 }
 
 type MuteOpInfo = {

@@ -281,11 +281,14 @@ importers:
         specifier: ^0.27.2
         version: 0.27.2
 
-  packages/bsky-sync:
+  packages/bsync:
     dependencies:
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
+      '@atproto/syntax':
+        specifier: workspace:^
+        version: link:../syntax
       '@bufbuild/protobuf':
         specifier: ^1.5.0
         version: 1.6.0

@@ -1,4 +1,5 @@
 import { wait } from '@atproto/common'
+import { Code, ConnectError } from '@connectrpc/connect'
 import {
   BsyncClient,
   BsyncService,
@@ -8,7 +9,6 @@ import {
   envToCfg,
 } from '../src'
 import { MuteOperation, MuteOperation_Type } from '../src/gen/bsync_pb'
-import { Code, ConnectError } from '@connectrpc/connect'
 
 describe('mutes', () => {
   let bsync: BsyncService
@@ -36,39 +36,12 @@ describe('mutes', () => {
     await bsync.destroy()
   })
 
-  describe('addMuteOperation', () => {
-    it('requires auth', async () => {
-      // unauthed
-      const unauthedClient = createClient({
-        httpVersion: '1.1',
-        baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
-      })
-      const tryAddMuteOperation1 = unauthedClient.addMuteOperation({
-        type: MuteOperation_Type.ADD,
-        actorDid: 'did:example:a',
-        subject: 'did:example:b',
-      })
-      await expect(tryAddMuteOperation1).rejects.toEqual(
-        new ConnectError('missing auth', Code.Unauthenticated),
-      )
-      // bad auth
-      const badauthedClient = createClient({
-        httpVersion: '1.1',
-        baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
-        interceptors: [authWithApiKey('key-bad')],
-      })
-      const tryAddMuteOperation2 = badauthedClient.addMuteOperation({
-        type: MuteOperation_Type.ADD,
-        actorDid: 'did:example:a',
-        subject: 'did:example:b',
-      })
-      await expect(tryAddMuteOperation2).rejects.toEqual(
-        new ConnectError('invalid api key', Code.Unauthenticated),
-      )
-    })
+  beforeEach(async () => {
+    await clearMutes(bsync.ctx.db)
+  })
 
+  describe('addMuteOperation', () => {
     it('adds mute operations to add mutes.', async () => {
-      await clearMutes(bsync.ctx.db)
       await client.addMuteOperation({
         type: MuteOperation_Type.ADD,
         actorDid: 'did:example:a',
@@ -103,7 +76,6 @@ describe('mutes', () => {
     })
 
     it('adds mute operations to remove mutes.', async () => {
-      await clearMutes(bsync.ctx.db)
       await client.addMuteOperation({
         type: MuteOperation_Type.ADD,
         actorDid: 'did:example:a',
@@ -137,7 +109,6 @@ describe('mutes', () => {
     })
 
     it('adds mute operations to clear mutes.', async () => {
-      await clearMutes(bsync.ctx.db)
       await client.addMuteOperation({
         type: MuteOperation_Type.ADD,
         actorDid: 'did:example:a',
@@ -160,6 +131,124 @@ describe('mutes', () => {
       expect(await dumpMuteState(bsync.ctx.db)).toEqual({
         'did:example:b': ['did:example:c'],
       })
+    })
+
+    it('fails on bad inputs', async () => {
+      await expect(
+        client.addMuteOperation({
+          type: MuteOperation_Type.ADD,
+          actorDid: 'did:example:a',
+          subject: 'invalid',
+        }),
+      ).rejects.toEqual(
+        new ConnectError(
+          'subject must be a did or aturi on add or remove op',
+          Code.InvalidArgument,
+        ),
+      )
+      await expect(
+        client.addMuteOperation({
+          type: MuteOperation_Type.ADD,
+          actorDid: 'did:example:a',
+        }),
+      ).rejects.toEqual(
+        new ConnectError(
+          'subject must be a did or aturi on add or remove op',
+          Code.InvalidArgument,
+        ),
+      )
+      await expect(
+        client.addMuteOperation({
+          type: MuteOperation_Type.ADD,
+          actorDid: 'did:example:a',
+          subject: 'at://did:example:b/bad.collection/rkey1',
+        }),
+      ).rejects.toEqual(
+        new ConnectError(
+          'subject must be a did or aturi on add or remove op',
+          Code.InvalidArgument,
+        ),
+      )
+      await expect(
+        client.addMuteOperation({
+          type: MuteOperation_Type.ADD,
+          actorDid: 'invalid',
+          subject: 'did:example:b',
+        }),
+      ).rejects.toEqual(
+        new ConnectError('actor_did must be a valid did', Code.InvalidArgument),
+      )
+      await expect(
+        client.addMuteOperation({
+          type: MuteOperation_Type.REMOVE,
+          actorDid: 'did:example:a',
+          subject: 'invalid',
+        }),
+      ).rejects.toEqual(
+        new ConnectError(
+          'subject must be a did or aturi on add or remove op',
+          Code.InvalidArgument,
+        ),
+      )
+      await expect(
+        client.addMuteOperation({
+          type: MuteOperation_Type.CLEAR,
+          actorDid: 'did:example:a',
+          subject: 'did:example:b',
+        }),
+      ).rejects.toEqual(
+        new ConnectError(
+          'subject must not be set on a clear op',
+          Code.InvalidArgument,
+        ),
+      )
+      await expect(
+        client.addMuteOperation({
+          type: MuteOperation_Type.CLEAR,
+          actorDid: 'invalid',
+        }),
+      ).rejects.toEqual(
+        new ConnectError('actor_did must be a valid did', Code.InvalidArgument),
+      )
+      await expect(
+        client.addMuteOperation({
+          type: 100 as any,
+          actorDid: 'did:example:a',
+          subject: 'did:example:b',
+        }),
+      ).rejects.toEqual(
+        new ConnectError('bad mute operation type', Code.InvalidArgument),
+      )
+    })
+
+    it('requires auth', async () => {
+      // unauthed
+      const unauthedClient = createClient({
+        httpVersion: '1.1',
+        baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
+      })
+      const tryAddMuteOperation1 = unauthedClient.addMuteOperation({
+        type: MuteOperation_Type.ADD,
+        actorDid: 'did:example:a',
+        subject: 'did:example:b',
+      })
+      await expect(tryAddMuteOperation1).rejects.toEqual(
+        new ConnectError('missing auth', Code.Unauthenticated),
+      )
+      // bad auth
+      const badauthedClient = createClient({
+        httpVersion: '1.1',
+        baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
+        interceptors: [authWithApiKey('key-bad')],
+      })
+      const tryAddMuteOperation2 = badauthedClient.addMuteOperation({
+        type: MuteOperation_Type.ADD,
+        actorDid: 'did:example:a',
+        subject: 'did:example:b',
+      })
+      await expect(tryAddMuteOperation2).rejects.toEqual(
+        new ConnectError('invalid api key', Code.Unauthenticated),
+      )
     })
   })
 
@@ -187,8 +276,6 @@ describe('mutes', () => {
     })
 
     it('pages over created mute ops.', async () => {
-      await clearMutes(bsync.ctx.db)
-
       // add 100 mute ops
       for (let i = 0; i < 10; ++i) {
         for (let j = 0; j < 8; ++j) {
@@ -225,7 +312,6 @@ describe('mutes', () => {
     })
 
     it('supports long-poll, finding an operation.', async () => {
-      await clearMutes(bsync.ctx.db)
       const scanPromise = client.scanMuteOperations({})
       await wait(100) // would be complete by now if it wasn't long-polling for an item
       const { operation } = await client.addMuteOperation({
@@ -240,7 +326,6 @@ describe('mutes', () => {
     })
 
     it('supports long-poll, not finding an operation.', async () => {
-      await clearMutes(bsync.ctx.db)
       const res = await client.scanMuteOperations({})
       expect(res.cursor).toEqual('')
       expect(res.operations).toEqual([])
