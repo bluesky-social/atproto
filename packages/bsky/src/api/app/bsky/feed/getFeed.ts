@@ -39,9 +39,11 @@ export default function (server: Server, ctx: AppContext) {
       const feedService = ctx.services.feed(db)
       const viewer = auth.credentials.iss
       const headers: Record<string, string> = {}
-      for (const [key, value] of Object.entries(req.headers)) {
+      const headersToForward = ['authorization', 'accept-language']
+      for (const header of headersToForward) {
+        const value = req.headers[header]
         if (typeof value === 'string') {
-          headers[key] = value
+          headers[header] = value
         }
       }
       const { timerSkele, timerHydr, ...result } = await getFeed(

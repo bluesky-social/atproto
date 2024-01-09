@@ -16,14 +16,16 @@ export default function (server: Server, ctx: AppContext) {
         requester,
         feed.view.did,
       )
-      const headersToPassThru: Record<string, string> = {}
-      for (const [key, value] of Object.entries(req.headers)) {
+      const headers: Record<string, string> = {}
+      const headersToForward = ['accept-language']
+      for (const header of headersToForward) {
+        const value = req.headers[header]
         if (typeof value === 'string') {
-          headersToPassThru[key] = value
+          headers[header] = value
         }
       }
       const feedOpts = {
-        headers: { ...headersToPassThru, ...serviceAuthHeaders.headers },
+        headers: { ...headers, ...serviceAuthHeaders.headers },
       }
       const res = await ctx.appViewAgent.api.app.bsky.feed.getFeed(
         params,
