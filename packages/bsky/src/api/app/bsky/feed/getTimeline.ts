@@ -18,11 +18,12 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.feed.getTimeline({
     auth: ctx.authVerifier.standard,
-    handler: async ({ params, auth, res }) => {
+    handler: async ({ params, auth, req, res }) => {
       const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
 
       const [result, repoRev] = await Promise.all([
-        getTimeline({ ...params, viewer }, ctx),
+        getTimeline({ ...params, viewer, labelers }, ctx),
         ctx.hydrator.actor.getRepoRevSafe(viewer),
       ])
 
@@ -58,7 +59,11 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateFeedPosts(skeleton.uris, params.viewer)
+  return ctx.hydrator.hydrateFeedPosts(
+    skeleton.uris,
+    params.labelers,
+    params.viewer,
+  )
 }
 
 const noBlocksOrMutes = (inputs: {
@@ -97,7 +102,7 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & { viewer: string }
+type Params = QueryParams & { viewer: string; labelers: string[] }
 
 type Skeleton = {
   uris: string[]

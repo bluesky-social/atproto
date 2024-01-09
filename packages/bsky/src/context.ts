@@ -1,3 +1,4 @@
+import express from 'express'
 import * as plc from '@did-plc/lib'
 import { DidCache, IdResolver } from '@atproto/identity'
 import { Keypair } from '@atproto/crypto'
@@ -8,6 +9,7 @@ import { DataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
 import { Views } from './views'
 import { AuthVerifier } from './auth-verifier'
+import { dedupeStrs } from '@atproto/common'
 
 export class AppContext {
   constructor(
@@ -67,6 +69,15 @@ export class AppContext {
       aud,
       keypair: this.signingKey,
     })
+  }
+
+  reqLabelers(req: express.Request): string[] {
+    const parsed =
+      req
+        .header('atproto-labelers')
+        ?.split(',')
+        .map((did) => did.trim()) ?? []
+    return dedupeStrs([this.cfg.modServiceDid, ...parsed]).slice(0, 10)
   }
 
   get algos(): MountedAlgos {

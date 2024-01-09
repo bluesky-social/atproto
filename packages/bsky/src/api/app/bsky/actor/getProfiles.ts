@@ -11,11 +11,12 @@ export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.actor.getProfiles({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ auth, params, res }) => {
+    handler: async ({ auth, params, req, res }) => {
       const viewer = auth.credentials.iss
+      const labelers = ctx.reqLabelers(req)
 
       const [result, repoRev] = await Promise.all([
-        getProfile({ ...params, viewer }, ctx),
+        getProfile({ ...params, labelers, viewer }, ctx),
         ctx.hydrator.actor.getRepoRevSafe(viewer),
       ])
 
@@ -44,7 +45,11 @@ const hydration = async (input: {
   skeleton: SkeletonState
 }) => {
   const { ctx, params, skeleton } = input
-  return ctx.hydrator.hydrateProfilesDetailed(skeleton.dids, params.viewer)
+  return ctx.hydrator.hydrateProfilesDetailed(
+    skeleton.dids,
+    params.labelers,
+    params.viewer,
+  )
 }
 
 const presentation = (input: {
@@ -66,6 +71,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
+  labelers: string[]
   viewer: string | null
 }
 

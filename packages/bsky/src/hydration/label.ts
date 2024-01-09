@@ -33,7 +33,7 @@ export class LabelHydrator {
 
   async getLabelsForSubjects(
     subjects: string[],
-    issuers?: string[],
+    issuers: string[],
   ): Promise<Labels> {
     const res = await this.dataplane.getLabels({ subjects, issuers })
     return res.labels.reduce((acc, cur) => {

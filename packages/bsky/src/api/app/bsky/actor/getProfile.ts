@@ -11,11 +11,12 @@ export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.actor.getProfile({
     auth: ctx.authVerifier.optionalStandardOrRole,
-    handler: async ({ auth, params, res }) => {
+    handler: async ({ auth, params, req, res }) => {
       const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const labelers = ctx.reqLabelers(req)
 
       const [result, repoRev] = await Promise.all([
-        getProfile({ ...params, viewer, canViewTakedowns }, ctx),
+        getProfile({ ...params, labelers, viewer, canViewTakedowns }, ctx),
         ctx.hydrator.actor.getRepoRevSafe(viewer),
       ])
 
@@ -49,6 +50,7 @@ const hydration = async (input: {
   const { ctx, params, skeleton } = input
   return ctx.hydrator.hydrateProfilesDetailed(
     [skeleton.did],
+    params.labelers,
     params.viewer,
     true,
   )
@@ -83,6 +85,7 @@ type Context = {
 
 type Params = QueryParams & {
   viewer: string | null
+  labelers: string[]
   canViewTakedowns: boolean
 }
 

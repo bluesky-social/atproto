@@ -17,9 +17,10 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.app.bsky.actor.getSuggestions({
     auth: ctx.authVerifier.standardOptional,
-    handler: async ({ params, auth }) => {
+    handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
-      const result = await getSuggestions({ ...params, viewer }, ctx)
+      const labelers = ctx.reqLabelers(req)
+      const result = await getSuggestions({ ...params, labelers, viewer }, ctx)
 
       return {
         encoding: 'application/json',
@@ -65,6 +66,7 @@ const hydration = async (input: {
   const { ctx, params, skeleton } = input
   return ctx.hydrator.hydrateProfilesDetailed(
     skeleton.dids,
+    params.labelers,
     params.viewer,
     true,
   )
@@ -108,6 +110,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
+  labelers: string[]
   viewer: string | null
 }
 
