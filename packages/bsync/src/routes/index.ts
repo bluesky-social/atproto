@@ -1,47 +1,55 @@
-import { ConnectRouter } from '@connectrpc/connect'
+import { sql } from 'kysely'
+import { Code, ConnectError, ConnectRouter } from '@connectrpc/connect'
 import { Service } from '../gen/bsky_sync_connect'
-import { Database } from '../db'
 import {
   AddMuteOperationResponse,
   MuteOperation_Type,
 } from '../gen/bsky_sync_pb'
+import { Database } from '../db'
 
-export default (db: Database) => (router: ConnectRouter) =>
-  router.service(Service, {
+export default (db: Database) => (router: ConnectRouter) => {
+  return router.service(Service, {
     async addMuteOperation(req) {
+      const { type, actorDid, subject } = validMuteOp(req)
+      const { ref } = db.db.dynamic
       const id = await db.transaction(async (txn) => {
         const { id } = await txn.db
           .insertInto('mute_op')
           .values({
-            op: opTypeProtoToDb(req.type),
-            did: req.actorDid,
-            subject: req.subject, // @ TODO empty for clear op
+            type,
+            actorDid,
+            subject,
           })
           .returning('id')
           .executeTakeFirstOrThrow()
-        if (req.type === MuteOperation_Type.ADD) {
+        if (type === MuteOperation_Type.ADD) {
           await txn.db
             .insertInto('mute_item')
             .values({
-              did: req.actorDid,
-              subject: req.subject,
+              actorDid,
+              subject,
               fromId: id,
             })
-            .onConflict((oc) => oc.doNothing()) // @TODO update fromId
+            .onConflict((oc) =>
+              oc
+                .constraint('mute_op_pkey')
+                .doUpdateSet({ fromId: sql`${ref('excluded.fromId')}` }),
+            )
             .execute()
-        } else if (req.type === MuteOperation_Type.REMOVE) {
+        } else if (type === MuteOperation_Type.REMOVE) {
           await txn.db
             .deleteFrom('mute_item')
-            .where('did', '=', req.actorDid)
-            .where('subject', '=', req.subject)
+            .where('actorDid', '=', actorDid)
+            .where('subject', '=', subject)
             .execute()
-        } else if (req.type === MuteOperation_Type.CLEAR) {
+        } else if (type === MuteOperation_Type.CLEAR) {
           await txn.db
             .deleteFrom('mute_item')
-            .where('did', '=', req.actorDid)
+            .where('actorDid', '=', actorDid)
             .execute()
         } else {
-          throw new Error('TODO')
+          const exhaustiveCheck: never = type
+          throw new Error(`unreachable: ${exhaustiveCheck}`)
         }
         return id
       })
@@ -58,18 +66,38 @@ export default (db: Database) => (router: ConnectRouter) =>
       throw new Error('unimplemented')
     },
     async ping() {
+      await sql`select 1`.execute(db.db)
       return {}
     },
   })
+}
 
-const opTypeProtoToDb = (type: MuteOperation_Type) => {
-  if (type === MuteOperation_Type.ADD) {
-    return 'add'
-  } else if (type === MuteOperation_Type.REMOVE) {
-    return 'remove'
-  } else if (type === MuteOperation_Type.CLEAR) {
-    return 'clear'
-  } else {
-    throw new Error('unreachable') // @TODO
+const validMuteOp = <T extends MuteOpFields>(op: T): T => {
+  if (!Object.values(MuteOperation_Type).includes(op.type)) {
+    throw new ConnectError('bad mute operation type', Code.InvalidArgument)
   }
+  if (op.type === MuteOperation_Type.CLEAR) {
+    if (op.subject !== '') {
+      throw new ConnectError(
+        'subject must not be set on a clear op',
+        Code.InvalidArgument,
+      )
+    }
+  } else {
+    // @TODO validate with syntax package, check collection type
+    if (!op.subject.startsWith('at://') && !op.subject.startsWith('did:')) {
+      throw new ConnectError(
+        'subject must be a did or aturi on add or remove op',
+        Code.InvalidArgument,
+      )
+    }
+  }
+  return op
+}
+
+type MuteOpFields = {
+  id?: string
+  type: MuteOperation_Type
+  actorDid: string
+  subject: string
 }

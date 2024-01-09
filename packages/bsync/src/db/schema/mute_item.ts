@@ -1,8 +1,8 @@
 import { Selectable } from 'kysely'
 
 export interface MuteItem {
-  did: string
-  subject: string
+  actorDid: string
+  subject: string // did or aturi for list
   fromId: number
 }
 

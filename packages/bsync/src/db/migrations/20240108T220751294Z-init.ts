@@ -4,19 +4,19 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('mute_op')
     .addColumn('id', 'bigserial', (col) => col.primaryKey())
-    .addColumn('did', 'varchar', (col) => col.notNull())
+    .addColumn('type', 'int2', (col) => col.notNull()) // integer enum: 0->add, 1->remove, 2->clear
+    .addColumn('actorDid', 'varchar', (col) => col.notNull())
     .addColumn('subject', 'varchar', (col) => col.notNull())
-    .addColumn('op', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'timestamptz', (col) =>
       col.notNull().defaultTo(sql`CURRENT_TIMESTAMP`),
     )
     .execute()
   await db.schema
     .createTable('mute_item')
-    .addColumn('did', 'varchar', (col) => col.primaryKey())
+    .addColumn('actorDid', 'varchar', (col) => col.primaryKey())
     .addColumn('subject', 'varchar', (col) => col.notNull())
     .addColumn('fromId', 'bigint', (col) => col.notNull())
-    .addPrimaryKeyConstraint('mute_op_pkey', ['did', 'subject'])
+    .addPrimaryKeyConstraint('mute_op_pkey', ['actorDid', 'subject'])
     .execute()
 }
 
