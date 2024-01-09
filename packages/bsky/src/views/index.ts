@@ -49,6 +49,10 @@ import { Label } from '../hydration/label'
 import { Repost } from '../hydration/feed'
 import { RecordInfo } from '../hydration/util'
 import { Notification } from '../data-plane/gen/bsky_pb'
+import {
+  LabelerView,
+  LabelerViewDetailed,
+} from '../lexicon/types/app/bsky/mod/defs'
 
 export class Views {
   constructor(public imgUriBuilder: ImageUriBuilder) {}
@@ -262,6 +266,59 @@ export class Views {
     return record.labels.values.map(({ val }) => {
       return { src, uri, cid, val, cts, neg: false }
     })
+  }
+
+  labeler(uri: string, state: HydrationState): LabelerView | undefined {
+    const labeler = state.labelers?.get(uri)
+    if (!labeler) return
+    const creatorDid = creatorFromUri(uri)
+    const creator = this.profile(creatorDid, state)
+    if (!creator) return
+    const viewer = state.labelerViewers?.get(uri)
+    const aggs = state.labelerAggs?.get(uri)
+
+    return {
+      uri,
+      cid: labeler.cid.toString(),
+      did: labeler.record.did,
+      creator,
+      displayName: labeler.record.displayName,
+      description: labeler.record.description,
+      descriptionFacets: labeler.record.descriptionFacets,
+      avatar: labeler.record.avatar
+        ? this.imgUriBuilder.getPresetUri(
+            'avatar',
+            creatorDid,
+            labeler.record.avatar.ref,
+          )
+        : undefined,
+      likeCount: aggs?.likes,
+      viewer: viewer
+        ? {
+            like: viewer.like,
+          }
+        : undefined,
+      indexedAt: compositeTime(
+        normalizeDatetimeAlways(labeler.record.createdAt),
+        labeler.indexedAt?.toISOString(),
+      ),
+    }
+  }
+
+  labelerDetailed(
+    uri: string,
+    state: HydrationState,
+  ): LabelerViewDetailed | undefined {
+    const baseView = this.labeler(uri, state)
+    if (!baseView) return
+
+    const record = state.labelers?.get(uri)
+    if (!record) return
+
+    return {
+      ...baseView,
+      policies: record.record.policies,
+    }
   }
 
   // Feed

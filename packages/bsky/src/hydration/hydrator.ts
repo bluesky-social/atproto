@@ -22,7 +22,13 @@ import {
   Lists,
   RelationshipPair,
 } from './graph'
-import { LabelHydrator, Labels } from './label'
+import {
+  LabelHydrator,
+  LabelerAggs,
+  LabelerViewerStates,
+  Labelers,
+  Labels,
+} from './label'
 import { HydrationMap, RecordInfo, didFromUri, urisByCollection } from './util'
 import {
   FeedGenAggs,
@@ -59,6 +65,9 @@ export type HydrationState = {
   feedgens?: FeedGens
   feedgenViewers?: FeedGenViewerStates
   feedgenAggs?: FeedGenAggs
+  labelers?: Labelers
+  labelerViewers?: LabelerViewerStates
+  labelerAggs?: LabelerAggs
 }
 
 export type PostBlock = { embed: boolean; reply: boolean }
@@ -498,6 +507,29 @@ export class Hydrator {
     return { follows, followBlocks }
   }
 
+  // app.bsky.mod.labeler#labelerViewDetailed
+  // - labeler
+  //   - profile
+  //     - list basic
+  async hydrateLabelers(
+    uris: string[],
+    viewer: string | null,
+  ): Promise<HydrationState> {
+    const [labelers, labelerAggs, labelerViewers, profileState] =
+      await Promise.all([
+        this.label.getLabelers(uris),
+        this.label.getLabelerAggregates(uris),
+        viewer ? this.label.getLabelerViewerStates(uris, viewer) : undefined,
+        this.hydrateProfiles(uris.map(didFromUri), viewer),
+      ])
+    return mergeStates(profileState, {
+      labelers,
+      labelerAggs,
+      labelerViewers,
+      viewer,
+    })
+  }
+
   // ad-hoc record hydration
   // in com.atproto.repo.getRecord
   async getRecord(
@@ -663,6 +695,9 @@ export const mergeStates = (
     feedgens: mergeMaps(stateA.feedgens, stateB.feedgens),
     feedgenAggs: mergeMaps(stateA.feedgenAggs, stateB.feedgenAggs),
     feedgenViewers: mergeMaps(stateA.feedgenViewers, stateB.feedgenViewers),
+    labelers: mergeMaps(stateA.labelers, stateB.labelers),
+    labelerAggs: mergeMaps(stateA.labelerAggs, stateB.labelerAggs),
+    labelerViewers: mergeMaps(stateA.labelerViewers, stateB.labelerViewers),
   }
 }
 
