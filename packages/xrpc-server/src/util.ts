@@ -11,6 +11,7 @@ import {
   LexXrpcSubscription,
 } from '@atproto/lexicon'
 import { forwardStreamErrors, MaxSizeChecker } from '@atproto/common'
+import { Headers as XrpcHeaders } from '@atproto/xrpc'
 import {
   UndecodedParams,
   Params,
@@ -266,6 +267,17 @@ function decodeBodyStream(
   }
 
   return stream
+}
+
+export function forwardResHeader(
+  res: express.Response,
+  headers: XrpcHeaders,
+  headerName: string,
+) {
+  const val = headers[headerName]
+  if (val) {
+    res.setHeader(headerName, val)
+  }
 }
 
 export function serverTimingHeader(timings: ServerTiming[]) {
