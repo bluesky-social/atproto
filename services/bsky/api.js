@@ -72,6 +72,13 @@ const getEnv = () => ({
   feedPublisherDid: process.env.BSKY_FEED_PUBLISHER_DID || undefined,
 })
 
+const maybeParseInt = (str) => {
+  if (!str) return
+  const int = parseInt(str, 10)
+  if (isNaN(int)) return
+  return int
+}
+
 const maintainXrpcResource = (span, req) => {
   // Show actual xrpc method as resource rather than the route pattern
   if (span && req.originalUrl?.startsWith('/xrpc/')) {
