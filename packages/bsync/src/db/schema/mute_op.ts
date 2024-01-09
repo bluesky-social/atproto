@@ -14,3 +14,5 @@ export type MuteOpEntry = Selectable<MuteOp>
 export const tableName = 'mute_op'
 
 export type PartialDB = { [tableName]: MuteOp }
+
+export const createMuteOpChannel = 'mute_op_create' // used with listen/notify

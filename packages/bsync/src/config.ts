@@ -11,7 +11,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const dbCfg: ServerConfig['db'] = {
     url: env.dbUrl,
     schema: env.dbSchema,
-    poolSize: env.dbPoolSize ?? 10,
+    poolSize: env.dbPoolSize,
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
   }
@@ -42,7 +42,7 @@ type ServiceConfig = {
 type DatabaseConfig = {
   url: string
   schema?: string
-  poolSize: number
+  poolSize?: number
   poolMaxUses?: number
   poolIdleTimeoutMs?: number
 }

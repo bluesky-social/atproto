@@ -5,14 +5,19 @@ import {
   AddMuteOperationResponse,
   MuteOperation_Type,
 } from '../gen/bsky_sync_pb'
-import { Database } from '../db'
+import AppContext from '../context'
+import { createMuteOpChannel } from '../db/schema/mute_op'
+import { authWithApiKey } from './auth'
 
-export default (db: Database) => (router: ConnectRouter) => {
+export default (ctx: AppContext) => (router: ConnectRouter) => {
   return router.service(Service, {
-    async addMuteOperation(req) {
+    async addMuteOperation(req, handlerCtx) {
+      authWithApiKey(ctx, handlerCtx)
+      const { db } = ctx
       const { type, actorDid, subject } = validMuteOp(req)
       const { ref } = db.db.dynamic
       const id = await db.transaction(async (txn) => {
+        // log op
         const { id } = await txn.db
           .insertInto('mute_op')
           .values({
@@ -22,6 +27,7 @@ export default (db: Database) => (router: ConnectRouter) => {
           })
           .returning('id')
           .executeTakeFirstOrThrow()
+        // update mute state
         if (type === MuteOperation_Type.ADD) {
           await txn.db
             .insertInto('mute_item')
@@ -51,6 +57,8 @@ export default (db: Database) => (router: ConnectRouter) => {
           const exhaustiveCheck: never = type
           throw new Error(`unreachable: ${exhaustiveCheck}`)
         }
+        // notify
+        await sql`notify ${createMuteOpChannel}`.execute(txn.db)
         return id
       })
       return new AddMuteOperationResponse({
@@ -66,6 +74,7 @@ export default (db: Database) => (router: ConnectRouter) => {
       throw new Error('unimplemented')
     },
     async ping() {
+      const { db } = ctx
       await sql`select 1`.execute(db.db)
       return {}
     },
