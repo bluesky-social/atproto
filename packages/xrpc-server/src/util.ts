@@ -11,7 +11,6 @@ import {
   LexXrpcSubscription,
 } from '@atproto/lexicon'
 import { forwardStreamErrors, MaxSizeChecker } from '@atproto/common'
-import { Headers as XrpcHeaders } from '@atproto/xrpc'
 import {
   UndecodedParams,
   Params,
