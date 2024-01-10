@@ -1,5 +1,6 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { noUndefinedVals } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeed({
@@ -27,9 +28,9 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: res.data,
-        headers: {
+        headers: noUndefinedVals({
           'content-language': res.headers['content-language'],
-        },
+        }),
       }
     },
   })
