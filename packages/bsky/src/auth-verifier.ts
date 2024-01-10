@@ -74,6 +74,11 @@ export class AuthVerifier {
   // verifiers (arrow fns to preserve scope)
 
   standard = async (ctx: ReqCtx): Promise<StandardOutput> => {
+    // @TODO remove! bearer dids supported just for testing.
+    const token = bearerTokenFromReq(ctx.req)
+    if (token?.startsWith('did:')) {
+      return { credentials: { type: 'standard', iss: token, aud: this.ownDid } }
+    }
     const { iss, aud } = await this.verifyServiceJwt(ctx, {
       aud: this.ownDid,
       iss: null,
