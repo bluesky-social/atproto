@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - appview-v2-testing
+      - appview-v2-testing-grpc
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
