@@ -8,7 +8,7 @@ import {
   createPromiseClient,
   makeAnyClient,
 } from '@connectrpc/connect'
-import { createConnectTransport } from '@connectrpc/connect-node'
+import { createGrpcTransport } from '@connectrpc/connect-node'
 
 export type DataPlaneClient = PromiseClient<typeof Service>
 type HttpVersion = '1.1' | '2'
@@ -57,9 +57,10 @@ const createBaseClient = (
   opts: { httpVersion?: HttpVersion; rejectUnauthorized?: boolean },
 ): DataPlaneClient => {
   const { httpVersion = '2', rejectUnauthorized = true } = opts
-  const transport = createConnectTransport({
+  const transport = createGrpcTransport({
     baseUrl,
     httpVersion,
+    acceptCompression: [],
     nodeOptions: { rejectUnauthorized },
   })
   return createPromiseClient(Service, transport)
