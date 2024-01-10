@@ -9,7 +9,7 @@ import {
   SkeletonFnInput,
   createPipeline,
 } from '../../../../pipeline'
-import { Hydrator } from '../../../../hydration/hydrator'
+import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
@@ -26,7 +26,8 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const results = await searchActors({ ...params, labelers, viewer }, ctx)
+      const hydrateCtx = { viewer, labelers }
+      const results = await searchActors({ ...params, hydrateCtx }, ctx)
       return {
         encoding: 'application/json',
         body: results,
@@ -57,11 +58,7 @@ const hydration = async (
   inputs: HydrationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateProfiles(
-    skeleton.dids,
-    params.labelers,
-    params.viewer,
-  )
+  return ctx.hydrator.hydrateProfiles(skeleton.dids, params.hydrateCtx)
 }
 
 const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
@@ -91,7 +88,7 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { labelers: string[]; viewer: string | null }
+type Params = QueryParams & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   dids: string[]
