@@ -6,14 +6,14 @@ import { TimeCidKeyset, paginate } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getLabels(req) {
-    // @TODO add in issues param
-    const { subjects } = req
-    if (subjects.length === 0) {
+    const { subjects, issuers } = req
+    if (subjects.length === 0 || issuers.length === 0) {
       return { records: [] }
     }
     const res = await db.db
       .selectFrom('label')
       .where('uri', 'in', subjects)
+      .where('src', 'in', issuers)
       .selectAll()
       .execute()
 
