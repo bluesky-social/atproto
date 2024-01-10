@@ -269,17 +269,6 @@ function decodeBodyStream(
   return stream
 }
 
-export function forwardResHeader(
-  res: express.Response,
-  headers: XrpcHeaders,
-  headerName: string,
-) {
-  const val = headers[headerName]
-  if (val) {
-    res.setHeader(headerName, val)
-  }
-}
-
 export function serverTimingHeader(timings: ServerTiming[]) {
   return timings
     .map((timing) => {

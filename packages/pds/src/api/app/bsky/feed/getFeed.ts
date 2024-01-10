@@ -1,11 +1,10 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { forwardResHeader } from '@atproto/xrpc-server/src/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeed({
     auth: ctx.authVerifier.access,
-    handler: async ({ req, res, params, auth }) => {
+    handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
 
       const { data: feed } =
@@ -20,15 +19,17 @@ export default function (server: Server, ctx: AppContext) {
       // forward accept-language header to upstream services
       serviceAuthHeaders.headers['accept-language'] =
         req.headers['accept-language']
-      const feedRes = await ctx.appViewAgent.api.app.bsky.feed.getFeed(
+      const res = await ctx.appViewAgent.api.app.bsky.feed.getFeed(
         params,
         serviceAuthHeaders,
       )
-      forwardResHeader(res, feedRes.headers, 'content-language')
 
       return {
         encoding: 'application/json',
-        body: feedRes.data,
+        body: res.data,
+        headers: {
+          'content-language': res.headers['content-language'],
+        },
       }
     },
   })
