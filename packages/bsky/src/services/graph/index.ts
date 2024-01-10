@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { Database } from '../../db'
 import { ImageUriBuilder } from '../../image/uri'
-import { valuesList } from '../../db/util'
+import { DbRef, Subquery, valuesList } from '../../db/util'
 import { ListInfo } from './types'
 import { ActorInfoMap } from '../actor'
 import {
@@ -143,6 +143,7 @@ export class GraphService {
           .innerJoin('list_block', 'list_block.subjectUri', 'list_item.listUri')
           .whereRef('list_block.creator', '=', sourceRef)
           .whereRef('list_item.subjectDid', '=', targetRef)
+          .whereExists((qb) => this.modListSubquery(qb, ref('list_item.uri')))
           .select('list_item.listUri')
           .limit(1)
           .as('blockingViaList'),
@@ -157,6 +158,7 @@ export class GraphService {
           .innerJoin('list_block', 'list_block.subjectUri', 'list_item.listUri')
           .whereRef('list_block.creator', '=', targetRef)
           .whereRef('list_item.subjectDid', '=', sourceRef)
+          .whereExists((qb) => this.modListSubquery(qb, ref('list_item.uri')))
           .select('list_item.listUri')
           .limit(1)
           .as('blockedByViaList'),
@@ -171,6 +173,7 @@ export class GraphService {
           .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
           .whereRef('list_mute.mutedByDid', '=', sourceRef)
           .whereRef('list_item.subjectDid', '=', targetRef)
+          .whereExists((qb) => this.modListSubquery(qb, ref('list_item.uri')))
           .select('list_item.listUri')
           .limit(1)
           .as('mutingViaList'),
@@ -179,6 +182,14 @@ export class GraphService {
       .execute()
     items.forEach((item) => result.add(item))
     return result
+  }
+
+  modListSubquery(qb: Subquery, ref: DbRef) {
+    return qb
+      .selectFrom('list')
+      .select('uri')
+      .where('list.purpose', '=', 'app.bsky.graph.defs#modlist')
+      .whereRef('list.uri', '=', ref)
   }
 
   async getBlockState(pairs: RelationshipPair[], bam?: BlockAndMuteState) {
@@ -205,6 +216,7 @@ export class GraphService {
           .innerJoin('list_block', 'list_block.subjectUri', 'list_item.listUri')
           .whereRef('list_block.creator', '=', sourceRef)
           .whereRef('list_item.subjectDid', '=', targetRef)
+          .whereExists((qb) => this.modListSubquery(qb, ref('list_item.uri')))
           .select('list_item.listUri')
           .limit(1)
           .as('blockingViaList'),
@@ -219,6 +231,7 @@ export class GraphService {
           .innerJoin('list_block', 'list_block.subjectUri', 'list_item.listUri')
           .whereRef('list_block.creator', '=', targetRef)
           .whereRef('list_item.subjectDid', '=', sourceRef)
+          .whereExists((qb) => this.modListSubquery(qb, ref('list_item.uri')))
           .select('list_item.listUri')
           .limit(1)
           .as('blockedByViaList'),
