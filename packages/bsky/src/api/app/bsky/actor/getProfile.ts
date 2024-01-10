@@ -4,7 +4,11 @@ import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfile
 import AppContext from '../../../../context'
 import { setRepoRev } from '../../../util'
 import { createPipeline, noRules } from '../../../../pipeline'
-import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
+import {
+  HydrateCtx,
+  HydrationState,
+  Hydrator,
+} from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
@@ -14,9 +18,10 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req, res }) => {
       const { viewer, canViewTakedowns } = ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
+      const hydrateCtx = { labelers, viewer }
 
       const [result, repoRev] = await Promise.all([
-        getProfile({ ...params, labelers, viewer, canViewTakedowns }, ctx),
+        getProfile({ ...params, hydrateCtx, canViewTakedowns }, ctx),
         ctx.hydrator.actor.getRepoRevSafe(viewer),
       ])
 
@@ -50,8 +55,7 @@ const hydration = async (input: {
   const { ctx, params, skeleton } = input
   return ctx.hydrator.hydrateProfilesDetailed(
     [skeleton.did],
-    params.labelers,
-    params.viewer,
+    params.hydrateCtx,
     true,
   )
 }
@@ -84,8 +88,7 @@ type Context = {
 }
 
 type Params = QueryParams & {
-  viewer: string | null
-  labelers: string[]
+  hydrateCtx: HydrateCtx
   canViewTakedowns: boolean
 }
 
