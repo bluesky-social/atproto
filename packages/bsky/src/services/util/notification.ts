@@ -42,7 +42,7 @@ export const tidyNotifications = async (db: PrimaryDatabase, did: string) => {
   // take most recent of read/unread cutoffs
   const cutoffAt = greatest(readCutoffAt, unreadCutoffAt)
   if (cutoffAt) {
-    // skip delete if it wont catch any notifications
+    // skip delete if it won't catch any notifications
     const earliestAt = least(readStats?.earliestAt, unreadStats?.earliestAt)
     if (earliestAt && earliestAt < cutoffAt.toISOString()) {
       await db.db
