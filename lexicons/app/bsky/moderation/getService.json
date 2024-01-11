@@ -15,14 +15,8 @@
       "output": {
         "encoding": "application/json",
         "schema": {
-          "type": "object",
-          "required": ["view"],
-          "properties": {
-            "view": {
-              "type": "ref",
-              "ref": "app.bsky.moderation.defs#modServiceViewDetailed"
-            }
-          }
+          "type": "ref",
+          "ref": "app.bsky.moderation.defs#modServiceViewDetailed"
         }
       }
     }

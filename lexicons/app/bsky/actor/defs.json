@@ -68,6 +68,14 @@
         "followersCount": { "type": "integer" },
         "followsCount": { "type": "integer" },
         "postsCount": { "type": "integer" },
+        "associated": {
+          "type": "object",
+          "properties": {
+            "lists": {"type": "number"},
+            "feedgens": {"type": "number"},
+            "modservice": {"type": "boolean"}
+          }
+        },
         "indexedAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
@@ -200,26 +208,26 @@
         }
       }
     },
-    "labelersPref": {
+    "modsPref": {
       "type": "object",
-      "required": ["labelers"],
+      "required": ["mods"],
       "properties": {
-        "labelers": {
+        "mods": {
           "type": "array",
           "items": {
             "type": "ref",
-            "ref": "#labelerPrefItem"
+            "ref": "#modPrefItem"
           }
         }
       }
     },
-    "labelerPrefItem": {
+    "modPrefItem": {
       "type": "object",
-      "required": ["uri", "enabled", "labelGroupSettings"],
+      "required": ["did", "enabled", "labelGroupSettings"],
       "properties": {
-        "uri": {
+        "did": {
           "type": "string",
-          "format": "at-uri"
+          "format": "did"
         },
         "enabled": {
           "type": "boolean"
