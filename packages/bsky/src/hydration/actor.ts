@@ -1,13 +1,12 @@
-import { CID } from 'multiformats/cid'
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
-import { HydrationMap, parseCid, parseRecordBytes, parseString } from './util'
+import { HydrationMap, parseRecordBytes, parseString } from './util'
 
 export type Actor = {
   did: string
   handle?: string
   profile?: ProfileRecord
-  profileCid?: CID
+  profileCid?: string
   indexedAt?: Date
   takendown: boolean
 }
@@ -87,7 +86,7 @@ export class ActorHydrator {
         did,
         handle: parseString(actor.handle),
         profile: parseRecordBytes<ProfileRecord>(profile?.record),
-        profileCid: parseCid(profile?.cid),
+        profileCid: profile?.cid,
         indexedAt: profile?.indexedAt?.toDate(),
         takendown: actor.takenDown ?? false,
       })

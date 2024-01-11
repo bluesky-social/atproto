@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
             subject: {
               $type: 'com.atproto.repo.strongRef',
               uri,
-              cid: res.cid.toString(),
+              cid: res.cid,
             },
             takedown: {
               applied: res.takenDown,

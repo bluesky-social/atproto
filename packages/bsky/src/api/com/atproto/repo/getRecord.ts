@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
     const uri = AtUri.make(did, collection, rkey).toString()
     const result = await ctx.hydrator.getRecord(uri, true)
 
-    if (!result || (cid && result.cid.toString() !== cid)) {
+    if (!result || (cid && result.cid !== cid)) {
       throw new InvalidRequestError(`Could not locate record: ${uri}`)
     }
 
@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       encoding: 'application/json' as const,
       body: {
         uri: uri,
-        cid: result.cid.toString(),
+        cid: result.cid,
         value: result.record,
       },
     }
