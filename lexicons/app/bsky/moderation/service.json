@@ -8,9 +8,8 @@
       "key": "literal:self",
       "record": {
         "type": "object",
-        "required": ["did", "policies", "createdAt"],
+        "required": ["policies", "createdAt"],
         "properties": {
-          "did": { "type": "string", "format": "did" },
           "description": {
             "type": "string",
             "maxGraphemes": 300,
