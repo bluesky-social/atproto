@@ -223,11 +223,11 @@
     },
     "modPrefItem": {
       "type": "object",
-      "required": ["uri", "enabled", "labelGroupSettings"],
+      "required": ["did", "enabled", "labelGroupSettings"],
       "properties": {
-        "uri": {
+        "did": {
           "type": "string",
-          "format": "at-uri"
+          "format": "did"
         },
         "enabled": {
           "type": "boolean"
