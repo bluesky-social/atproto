@@ -1,4 +1,5 @@
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
+import { mapDefined } from '@atproto/common'
 import { ImageUriBuilder } from '../image/uri'
 import { HydrationState } from '../hydration/hydrator'
 import { ids } from '../lexicon/lexicons'
@@ -19,8 +20,12 @@ import {
   ThreadgateView,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { ListView, ListViewBasic } from '../lexicon/types/app/bsky/graph/defs'
-import { compositeTime, creatorFromUri, parseThreadGate } from './util'
-import { mapDefined } from '@atproto/common'
+import {
+  compositeTime,
+  creatorFromUri,
+  parseThreadGate,
+  cidFromBlobJson,
+} from './util'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
 import {
@@ -92,7 +97,7 @@ export class Views {
         ? this.imgUriBuilder.getPresetUri(
             'banner',
             did,
-            actor.profile.banner.ref,
+            cidFromBlobJson(actor.profile.banner),
           )
         : undefined,
       followersCount: profileAggs?.followers,
@@ -141,7 +146,7 @@ export class Views {
         ? this.imgUriBuilder.getPresetUri(
             'avatar',
             did,
-            actor.profile.avatar.ref,
+            cidFromBlobJson(actor.profile.avatar),
           )
         : undefined,
       viewer: this.profileViewer(did, state),
@@ -227,7 +232,7 @@ export class Views {
         ? this.imgUriBuilder.getPresetUri(
             'avatar',
             creator,
-            list.record.avatar.ref,
+            cidFromBlobJson(list.record.avatar),
           )
         : undefined,
       indexedAt: compositeTime(
@@ -309,7 +314,7 @@ export class Views {
         ? this.imgUriBuilder.getPresetUri(
             'avatar',
             creatorDid,
-            feedgen.record.avatar.ref,
+            cidFromBlobJson(feedgen.record.avatar),
           )
         : undefined,
       likeCount: aggs?.likes,
@@ -604,12 +609,12 @@ export class Views {
       thumb: this.imgUriBuilder.getPresetUri(
         'feed_thumbnail',
         did,
-        img.image.ref,
+        cidFromBlobJson(img.image),
       ),
       fullsize: this.imgUriBuilder.getPresetUri(
         'feed_fullsize',
         did,
-        img.image.ref,
+        cidFromBlobJson(img.image),
       ),
       alt: img.alt,
       aspectRatio: img.aspectRatio,
@@ -629,7 +634,11 @@ export class Views {
         title,
         description,
         thumb: thumb
-          ? this.imgUriBuilder.getPresetUri('feed_thumbnail', did, thumb.ref)
+          ? this.imgUriBuilder.getPresetUri(
+              'feed_thumbnail',
+              did,
+              cidFromBlobJson(thumb),
+            )
           : undefined,
       },
     }

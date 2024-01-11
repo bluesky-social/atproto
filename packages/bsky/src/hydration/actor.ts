@@ -1,6 +1,6 @@
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
-import { HydrationMap, parseCid, parseRecordBytes, parseString } from './util'
+import { HydrationMap, parseRecordBytes, parseString } from './util'
 
 export type Actor = {
   did: string
