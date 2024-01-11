@@ -1,5 +1,4 @@
 import { AtUri } from '@atproto/syntax'
-import { jsonToLex } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
 import { Record } from '../data-plane/gen/bsky_pb'
@@ -15,7 +14,7 @@ export class HydrationMap<T> extends Map<string, T | null> {
 
 export type RecordInfo<T> = {
   record: T
-  cid: CID
+  cid: string
   indexedAt?: Date
   takenDown: boolean
 }
@@ -28,17 +27,17 @@ export const parseRecord = <T>(
     return undefined
   }
   const record = parseRecordBytes<T>(entry.record)
-  const cid = parseCid(entry.cid)
+  const cid = entry.cid
   const indexedAt = entry.indexedAt?.toDate()
   if (!record || !cid) return
   return { record, cid, indexedAt, takenDown: entry.takenDown }
 }
 
+// @NOTE not parsed into lex format, so will not match lexicon record types on CID and blob values.
 export const parseRecordBytes = <T>(
   bytes: Uint8Array | undefined,
 ): T | undefined => {
-  const parsed = parseJsonBytes(bytes)
-  return jsonToLex(parsed) as T
+  return parseJsonBytes(bytes) as T
 }
 
 export const parseJsonBytes = (

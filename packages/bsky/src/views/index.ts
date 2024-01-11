@@ -220,7 +220,7 @@ export class Views {
     const creator = new AtUri(uri).hostname
     return {
       uri,
-      cid: list.cid.toString(),
+      cid: list.cid,
       name: list.record.name,
       purpose: list.record.purpose,
       avatar: list.record.avatar
@@ -299,7 +299,7 @@ export class Views {
 
     return {
       uri,
-      cid: feedgen.cid.toString(),
+      cid: feedgen.cid,
       did: feedgen.record.did,
       creator,
       displayName: feedgen.record.displayName,
@@ -330,7 +330,7 @@ export class Views {
     if (!gate) return
     return {
       uri,
-      cid: gate.cid.toString(),
+      cid: gate.cid,
       record: gate.record,
       lists: mapDefined(gate.record.allow ?? [], (rule) => {
         if (!isListRule(rule)) return
@@ -357,13 +357,13 @@ export class Views {
       ...(state.labels?.get(uri) ?? []),
       ...this.selfLabels({
         uri,
-        cid: post.cid.toString(),
+        cid: post.cid,
         record: post.record,
       }),
     ]
     return {
       uri,
-      cid: post.cid.toString(),
+      cid: post.cid,
       author,
       record: post.record,
       embed:
@@ -806,13 +806,13 @@ export class Views {
     const labels = state.labels?.get(notif.uri) ?? []
     const selfLabels = this.selfLabels({
       uri: notif.uri,
-      cid: recordInfo.cid.toString(),
+      cid: recordInfo.cid,
       record: recordInfo.record,
     })
     const indexedAt = notif.timestamp.toDate().toISOString()
     return {
       uri: notif.uri,
-      cid: recordInfo.cid.toString(),
+      cid: recordInfo.cid,
       author,
       reason: notif.reason,
       reasonSubject: notif.reasonSubject || undefined,
