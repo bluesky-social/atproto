@@ -1,17 +1,17 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.mod.getLabelers",
+  "id": "app.bsky.moderation.getServices",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get information about a list of labelers.",
+      "description": "Get information about a list of moderation services.",
       "parameters": {
         "type": "params",
-        "required": ["labelers"],
+        "required": ["dids"],
         "properties": {
-          "labelers": {
+          "dids": {
             "type": "array",
-            "items": { "type": "string", "format": "at-uri" }
+            "items": { "type": "string", "format": "did" }
           }
         }
       },
@@ -19,13 +19,13 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["labelers"],
+          "required": ["views"],
           "properties": {
-            "labelers": {
+            "views": {
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "app.bsky.mod.defs#labelerView"
+                "ref": "app.bsky.moderation.defs#modServiceView"
               }
             }
           }
