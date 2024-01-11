@@ -24,9 +24,9 @@ import {
 } from './graph'
 import {
   LabelHydrator,
-  LabelerAggs,
-  LabelerViewerStates,
-  Labelers,
+  ModServiceAggs,
+  ModServiceViewerStates,
+  ModServices,
   Labels,
 } from './label'
 import { HydrationMap, RecordInfo, didFromUri, urisByCollection } from './util'
@@ -70,9 +70,9 @@ export type HydrationState = {
   feedgens?: FeedGens
   feedgenViewers?: FeedGenViewerStates
   feedgenAggs?: FeedGenAggs
-  labelers?: Labelers
-  labelerViewers?: LabelerViewerStates
-  labelerAggs?: LabelerAggs
+  modServices?: ModServices
+  modServiceViewers?: ModServiceViewerStates
+  modServiceAggs?: ModServiceAggs
 }
 
 export type PostBlock = { embed: boolean; reply: boolean }
@@ -502,27 +502,27 @@ export class Hydrator {
     return { follows, followBlocks }
   }
 
-  // app.bsky.mod.labeler#labelerViewDetailed
-  // - labeler
+  // app.bsky.moderation.def#modServiceViewDetailed
+  // - mod service
   //   - profile
   //     - list basic
-  async hydrateLabelers(
-    uris: string[],
+  async hydrateModServices(
+    dids: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const [labelerViews, labelerAggs, labelerViewers, profileState] =
+    const [modServices, modServiceAggs, modServiceViewers, profileState] =
       await Promise.all([
-        this.label.getLabelers(uris),
-        this.label.getLabelerAggregates(uris),
+        this.label.getModServices(dids),
+        this.label.getModServiceAggregates(dids),
         ctx.viewer
-          ? this.label.getLabelerViewerStates(uris, ctx.viewer)
+          ? this.label.getModServiceViewerStates(dids, ctx.viewer)
           : undefined,
-        this.hydrateProfiles(uris.map(didFromUri), ctx),
+        this.hydrateProfiles(dids.map(didFromUri), ctx),
       ])
     return mergeStates(profileState, {
-      labelers: labelerViews,
-      labelerAggs,
-      labelerViewers,
+      modServices,
+      modServiceAggs,
+      modServiceViewers,
       ctx,
     })
   }
@@ -575,9 +575,9 @@ export class Hydrator {
         (await this.feed.getFeedGens([uri], includeTakedowns)).get(uri) ??
         undefined
       )
-    } else if (collection === ids.AppBskyModLabeler) {
+    } else if (collection === ids.AppBskyModerationService) {
       return (
-        (await this.label.getLabelers([uri], includeTakedowns)).get(uri) ??
+        (await this.label.getModServices([uri], includeTakedowns)).get(uri) ??
         undefined
       )
     } else if (collection === ids.AppBskyActorProfile) {
@@ -699,9 +699,12 @@ export const mergeStates = (
     feedgens: mergeMaps(stateA.feedgens, stateB.feedgens),
     feedgenAggs: mergeMaps(stateA.feedgenAggs, stateB.feedgenAggs),
     feedgenViewers: mergeMaps(stateA.feedgenViewers, stateB.feedgenViewers),
-    labelers: mergeMaps(stateA.labelers, stateB.labelers),
-    labelerAggs: mergeMaps(stateA.labelerAggs, stateB.labelerAggs),
-    labelerViewers: mergeMaps(stateA.labelerViewers, stateB.labelerViewers),
+    modServices: mergeMaps(stateA.modServices, stateB.modServices),
+    modServiceAggs: mergeMaps(stateA.modServiceAggs, stateB.modServiceAggs),
+    modServiceViewers: mergeMaps(
+      stateA.modServiceViewers,
+      stateB.modServiceViewers,
+    ),
   }
 }
 

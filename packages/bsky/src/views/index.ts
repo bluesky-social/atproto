@@ -50,9 +50,9 @@ import { Repost } from '../hydration/feed'
 import { RecordInfo } from '../hydration/util'
 import { Notification } from '../data-plane/gen/bsky_pb'
 import {
-  LabelerView,
-  LabelerViewDetailed,
-} from '../lexicon/types/app/bsky/mod/defs'
+  ModServiceView,
+  ModServiceViewDetailed,
+} from '../lexicon/types/app/bsky/moderation/defs'
 
 export class Views {
   constructor(public imgUriBuilder: ImageUriBuilder) {}
@@ -268,30 +268,31 @@ export class Views {
     })
   }
 
-  labeler(uri: string, state: HydrationState): LabelerView | undefined {
-    const labeler = state.labelers?.get(uri)
-    if (!labeler) return
-    const creatorDid = creatorFromUri(uri)
-    const creator = this.profile(creatorDid, state)
+  modService(did: string, state: HydrationState): ModServiceView | undefined {
+    const modService = state.modServices?.get(did)
+    if (!modService) return
+    const creator = this.profile(did, state)
     if (!creator) return
-    const viewer = state.labelerViewers?.get(uri)
-    const aggs = state.labelerAggs?.get(uri)
+    const viewer = state.modServiceViewers?.get(did)
+    const aggs = state.modServiceAggs?.get(did)
+
+    const uri = AtUri.make(did, ids.AppBskyModerationService, 'self').toString()
+    const labels = [
+      ...(state.labels?.get(uri) ?? []),
+      ...this.selfLabels({
+        uri,
+        cid: modService.cid.toString(),
+        record: modService.record,
+      }),
+    ]
 
     return {
       uri,
-      cid: labeler.cid.toString(),
-      did: labeler.record.did,
+      cid: modService.cid.toString(),
+      did: modService.record.did,
       creator,
-      displayName: labeler.record.displayName,
-      description: labeler.record.description,
-      descriptionFacets: labeler.record.descriptionFacets,
-      avatar: labeler.record.avatar
-        ? this.imgUriBuilder.getPresetUri(
-            'avatar',
-            creatorDid,
-            labeler.record.avatar.ref,
-          )
-        : undefined,
+      description: modService.record.description,
+      descriptionFacets: modService.record.descriptionFacets,
       likeCount: aggs?.likes,
       viewer: viewer
         ? {
@@ -299,25 +300,31 @@ export class Views {
           }
         : undefined,
       indexedAt: compositeTime(
-        normalizeDatetimeAlways(labeler.record.createdAt),
-        labeler.indexedAt?.toISOString(),
+        normalizeDatetimeAlways(modService.record.createdAt),
+        modService.indexedAt?.toISOString(),
       ),
+      labels,
     }
   }
 
-  labelerDetailed(
-    uri: string,
+  modServiceDetailed(
+    did: string,
     state: HydrationState,
-  ): LabelerViewDetailed | undefined {
-    const baseView = this.labeler(uri, state)
+  ): ModServiceViewDetailed | undefined {
+    const baseView = this.modService(did, state)
     if (!baseView) return
-
-    const record = state.labelers?.get(uri)
+    const record = state.modServices?.get(did)
     if (!record) return
 
     return {
-      ...baseView,
-      policies: record.record.policies,
+      uri: baseView.uri,
+      cid: baseView.cid,
+      creator: baseView.creator,
+      record: record.record,
+      likeCount: baseView.likeCount,
+      viewer: baseView.viewer,
+      indexedAt: baseView.indexedAt,
+      labels: baseView.labels,
     }
   }
 

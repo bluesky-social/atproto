@@ -1,0 +1,36 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.moderation.service",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A declaration of the existence of moderation service.",
+      "key": "literal:self",
+      "record": {
+        "type": "object",
+        "required": ["did", "policies", "createdAt"],
+        "properties": {
+          "did": { "type": "string", "format": "did" },
+          "description": {
+            "type": "string",
+            "maxGraphemes": 300,
+            "maxLength": 3000
+          },
+          "descriptionFacets": {
+            "type": "array",
+            "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
+          },
+          "policies": {
+            "type": "ref",
+            "ref": "app.bsky.moderation.defs#modServicePolicies"
+          },
+          "labels": {
+            "type": "union",
+            "refs": ["com.atproto.label.defs#selfLabels"]
+          },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.moderation.defs",
+  "defs": {
+    "modServiceView": {
+      "type": "object",
+      "required": ["uri", "cid", "did", "creator", "indexedAt"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "creator": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
+        "did": { "type": "string", "format": "did" },
+        "description": {
+          "type": "string",
+          "maxGraphemes": 300,
+          "maxLength": 3000
+        },
+        "descriptionFacets": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
+        },
+        "likeCount": { "type": "integer", "minimum": 0 },
+        "viewer": { "type": "ref", "ref": "#modServiceViewerState" },
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        }
+      }
+    },
+    "modServiceViewDetailed": {
+      "type": "object",
+      "required": ["uri", "cid", "creator", "record", "indexedAt"],
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "creator": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
+        "record": { "type": "unknown" },
+        "likeCount": { "type": "integer", "minimum": 0 },
+        "viewer": { "type": "ref", "ref": "#modServiceViewerState" },
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        }
+      }
+    },
+    "modServiceViewerState": {
+      "type": "object",
+      "properties": {
+        "like": { "type": "string", "format": "at-uri" }
+      }
+    },
+    "modServicePolicies": {
+      "type": "object",
+      "required": ["reportReasons", "labelValues"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "maxGraphemes": 10000,
+          "maxLength": 100000
+        },
+        "descriptionFacets": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
+        },
+        "reportReasons": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "com.atproto.moderation.defs#reasonType"
+          }
+        },
+        "labelValues": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "com.atproto.label.defs#labelValue"
+          }
+        }
+      }
+    }
+  }
+}

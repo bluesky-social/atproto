@@ -32,7 +32,7 @@ import * as viewParam from './tables/view-param'
 import * as suggestedFollow from './tables/suggested-follow'
 import * as suggestedFeed from './tables/suggested-feed'
 import * as blobTakedown from './tables/blob-takedown'
-import * as labeler from './tables/labeler'
+import * as modService from './tables/mod-service'
 
 export type DatabaseSchemaType = duplicateRecord.PartialDB &
   profile.PartialDB &
@@ -67,7 +67,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   suggestedFollow.PartialDB &
   suggestedFeed.PartialDB &
   blobTakedown.PartialDB &
-  labeler.PartialDB
+  modService.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

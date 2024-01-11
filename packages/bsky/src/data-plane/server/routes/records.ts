@@ -20,7 +20,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   getProfileRecords: getRecords(db, ids.AppBskyActorProfile),
   getRepostRecords: getRecords(db, ids.AppBskyFeedRepost),
   getThreadGateRecords: getRecords(db, ids.AppBskyFeedThreadgate),
-  getLabelerRecords: getRecords(db, ids.AppBskyModLabeler),
+  getModServiceRecords: getRecords(db, ids.AppBskyModerationService),
 })
 
 export const getRecords =
