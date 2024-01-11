@@ -781,6 +781,11 @@ export class Views {
       if (!view) return this.embedNotFound(uri)
       view.$type = 'app.bsky.graph.defs#listView'
       return this.recordEmbedWrapper(view, withTypeTag)
+    } else if (parsedUri.collection === ids.AppBskyModerationService) {
+      const view = this.modService(parsedUri.hostname, state)
+      if (!view) return this.embedNotFound(uri)
+      view.$type = 'app.bsky.moderation.defs#modServiceView'
+      return this.recordEmbedWrapper(view, withTypeTag)
     }
     return this.embedNotFound(uri)
   }

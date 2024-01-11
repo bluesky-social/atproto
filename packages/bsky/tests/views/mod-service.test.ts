@@ -1,4 +1,4 @@
-import AtpAgent, { AtUri } from '@atproto/api'
+import AtpAgent from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed, RecordRef } from '@atproto/dev-env'
 import { forSnapshot, stripViewerFromModService } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
@@ -12,6 +12,8 @@ describe('mod service views', () => {
   // account dids, for convenience
   let alice: string
   let bob: string
+
+  let aliceService: RecordRef
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -62,7 +64,9 @@ describe('mod service views', () => {
       { headers: sc.getHeaders(bob), encoding: 'application/json' },
     )
 
-    await sc.like(bob, new RecordRef(aliceRes.data.uri, aliceRes.data.cid))
+    aliceService = new RecordRef(aliceRes.data.uri, aliceRes.data.cid)
+
+    await sc.like(bob, aliceService)
     await network.processAll()
   })
 
@@ -113,10 +117,36 @@ describe('mod service views', () => {
     expect(unauthed.views).toEqual(authed.views.map(stripViewerFromModService))
   })
 
+  it('renders a post embed of a mod service', async () => {
+    const postRes = await pdsAgent.api.app.bsky.feed.post.create(
+      { repo: sc.dids.bob },
+      {
+        text: 'check out this mod service',
+        embed: {
+          $type: 'app.bsky.embed.record',
+          record: aliceService.raw,
+        },
+        createdAt: new Date().toISOString(),
+      },
+      sc.getHeaders(sc.dids.bob),
+    )
+
+    await network.processAll()
+
+    const postViews = await agent.api.app.bsky.feed.getPosts({
+      uris: [postRes.uri],
+    })
+    const serviceViews = await agent.api.app.bsky.moderation.getServices({
+      dids: [alice],
+    })
+    expect(postViews.data.posts[0].embed?.record).toMatchObject(
+      serviceViews.data.views[0],
+    )
+  })
+
   it('blocked by mod service takedown', async () => {
-    const uri = AtUri.make(alice, ids.AppBskyModerationService, 'self')
     await network.bsky.ctx.dataplane.updateTakedown({
-      recordUri: uri.toString(),
+      recordUri: aliceService.uriStr,
       takenDown: true,
     })
     const promise = agent.api.app.bsky.moderation.getService(

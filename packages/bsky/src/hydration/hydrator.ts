@@ -203,6 +203,9 @@ export class Hydrator {
   //   - feedgen
   //     - profile
   //       - list basic
+  //   - mod service
+  //     - profile
+  //       - list basic
   async hydratePosts(
     uris: string[],
     viewer: string | null,
@@ -242,6 +245,10 @@ export class Hydrator {
       ...(urisLayer1ByCollection.get(ids.AppBskyFeedGenerator) ?? []),
       ...(urisLayer2ByCollection.get(ids.AppBskyFeedGenerator) ?? []),
     ]
+    const nestedModServiceDids = [
+      ...(urisLayer1ByCollection.get(ids.AppBskyModerationService) ?? []),
+      ...(urisLayer2ByCollection.get(ids.AppBskyModerationService) ?? []),
+    ].map((uri) => new AtUri(uri).hostname)
     const posts =
       mergeManyMaps(postsLayer0, postsLayer1, postsLayer2) ?? postsLayer0
     const allPostUris = [...posts.keys()]
@@ -253,6 +260,7 @@ export class Hydrator {
       profileState,
       listState,
       feedGenState,
+      modServiceState,
     ] = await Promise.all([
       this.feed.getPostAggregates(uris),
       viewer ? this.feed.getPostViewerStates(uris, viewer) : undefined,
@@ -265,17 +273,24 @@ export class Hydrator {
       ),
       this.hydrateLists([...nestedListUris, ...gateListUris], viewer),
       this.hydrateFeedGens(nestedFeedGenUris, viewer),
+      this.hydrateModServices(nestedModServiceDids, viewer),
     ])
     // combine all hydration state
-    return mergeManyStates(profileState, listState, feedGenState, {
-      posts,
-      postAggs,
-      postViewers,
-      postBlocks,
-      labels,
-      threadgates,
-      viewer,
-    })
+    return mergeManyStates(
+      profileState,
+      listState,
+      feedGenState,
+      modServiceState,
+      {
+        posts,
+        postAggs,
+        postViewers,
+        postBlocks,
+        labels,
+        threadgates,
+        viewer,
+      },
+    )
   }
 
   private async hydratePostBlocks(posts: Posts): Promise<PostBlocks> {
