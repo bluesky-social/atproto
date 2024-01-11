@@ -5057,7 +5057,7 @@ export const schemaDict = {
               'lex:app.bsky.embed.record#viewBlocked',
               'lex:app.bsky.feed.defs#generatorView',
               'lex:app.bsky.graph.defs#listView',
-              'lex:app.bsky.mod.defs#labelerView',
+              'lex:app.bsky.moderation.defs#modServiceView',
             ],
           },
         },
@@ -7418,13 +7418,13 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyModDefs: {
+  AppBskyModerationDefs: {
     lexicon: 1,
-    id: 'app.bsky.mod.defs',
+    id: 'app.bsky.moderation.defs',
     defs: {
-      labelerView: {
+      modServiceView: {
         type: 'object',
-        required: ['uri', 'cid', 'did', 'creator', 'displayName', 'indexedAt'],
+        required: ['uri', 'cid', 'did', 'creator', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
@@ -7434,16 +7434,13 @@ export const schemaDict = {
             type: 'string',
             format: 'cid',
           },
-          did: {
-            type: 'string',
-            format: 'did',
-          },
           creator: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileView',
           },
-          displayName: {
+          did: {
             type: 'string',
+            format: 'did',
           },
           description: {
             type: 'string',
@@ -7457,26 +7454,30 @@ export const schemaDict = {
               ref: 'lex:app.bsky.richtext.facet',
             },
           },
-          avatar: {
-            type: 'string',
-          },
           likeCount: {
             type: 'integer',
             minimum: 0,
           },
           viewer: {
             type: 'ref',
-            ref: 'lex:app.bsky.mod.defs#labelerViewerState',
+            ref: 'lex:app.bsky.moderation.defs#modServiceViewerState',
           },
           indexedAt: {
             type: 'string',
             format: 'datetime',
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
         },
       },
-      labelerViewDetailed: {
+      modServiceViewDetailed: {
         type: 'object',
-        required: ['uri', 'cid', 'did', 'creator', 'displayName', 'indexedAt'],
+        required: ['uri', 'cid', 'creator', 'record', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
@@ -7486,35 +7487,13 @@ export const schemaDict = {
             type: 'string',
             format: 'cid',
           },
-          did: {
-            type: 'string',
-            format: 'did',
-          },
           creator: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileView',
           },
-          displayName: {
-            type: 'string',
-          },
-          description: {
-            type: 'string',
-            maxGraphemes: 300,
-            maxLength: 3000,
-          },
-          descriptionFacets: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:app.bsky.richtext.facet',
-            },
-          },
-          avatar: {
-            type: 'string',
-          },
-          policies: {
+          record: {
             type: 'ref',
-            ref: 'lex:app.bsky.mod.defs#labelerPolicies',
+            ref: 'lex:app.bsky.moderation.service',
           },
           likeCount: {
             type: 'integer',
@@ -7522,15 +7501,22 @@ export const schemaDict = {
           },
           viewer: {
             type: 'ref',
-            ref: 'lex:app.bsky.mod.defs#labelerViewerState',
+            ref: 'lex:app.bsky.moderation.defs#modServiceViewerState',
           },
           indexedAt: {
             type: 'string',
             format: 'datetime',
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
         },
       },
-      labelerViewerState: {
+      modServiceViewerState: {
         type: 'object',
         properties: {
           like: {
@@ -7539,7 +7525,7 @@ export const schemaDict = {
           },
         },
       },
-      labelerPolicies: {
+      modServicePolicies: {
         type: 'object',
         required: ['reportReasons', 'labelValues'],
         properties: {
@@ -7573,68 +7559,20 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyModGetActorLabelers: {
+  AppBskyModerationGetService: {
     lexicon: 1,
-    id: 'app.bsky.mod.getActorLabelers',
+    id: 'app.bsky.moderation.getService',
     defs: {
       main: {
         type: 'query',
-        description: 'Get a list of labelers created by the actor.',
+        description: 'Get information about a moderation service.',
         parameters: {
           type: 'params',
-          required: ['actor'],
+          required: ['did'],
           properties: {
-            actor: {
+            did: {
               type: 'string',
-              format: 'at-identifier',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['labelers'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              labelers: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.mod.defs#labelerView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyModGetLabeler: {
-    lexicon: 1,
-    id: 'app.bsky.mod.getLabeler',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get information about a labeler.',
-        parameters: {
-          type: 'params',
-          required: ['labeler'],
-          properties: {
-            labeler: {
-              type: 'string',
-              format: 'at-uri',
+              format: 'did',
             },
           },
         },
@@ -7646,7 +7584,7 @@ export const schemaDict = {
             properties: {
               view: {
                 type: 'ref',
-                ref: 'lex:app.bsky.mod.defs#labelerViewDetailed',
+                ref: 'lex:app.bsky.moderation.defs#modServiceViewDetailed',
               },
             },
           },
@@ -7654,22 +7592,22 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyModGetLabelers: {
+  AppBskyModerationGetServices: {
     lexicon: 1,
-    id: 'app.bsky.mod.getLabelers',
+    id: 'app.bsky.moderation.getServices',
     defs: {
       main: {
         type: 'query',
-        description: 'Get information about a list of labelers.',
+        description: 'Get information about a list of moderation services.',
         parameters: {
           type: 'params',
-          required: ['labelers'],
+          required: ['dids'],
           properties: {
-            labelers: {
+            dids: {
               type: 'array',
               items: {
                 type: 'string',
-                format: 'at-uri',
+                format: 'did',
               },
             },
           },
@@ -7678,13 +7616,13 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['labelers'],
+            required: ['views'],
             properties: {
-              labelers: {
+              views: {
                 type: 'array',
                 items: {
                   type: 'ref',
-                  ref: 'lex:app.bsky.mod.defs#labelerView',
+                  ref: 'lex:app.bsky.moderation.defs#modServiceView',
                 },
               },
             },
@@ -7693,26 +7631,21 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyModLabeler: {
+  AppBskyModerationService: {
     lexicon: 1,
-    id: 'app.bsky.mod.labeler',
+    id: 'app.bsky.moderation.service',
     defs: {
       main: {
         type: 'record',
-        description: 'A declaration of the existence of labeler.',
-        key: 'any',
+        description: 'A declaration of the existence of moderation service.',
+        key: 'literal:self',
         record: {
           type: 'object',
-          required: ['did', 'displayName', 'policies', 'createdAt'],
+          required: ['did', 'policies', 'createdAt'],
           properties: {
             did: {
               type: 'string',
               format: 'did',
-            },
-            displayName: {
-              type: 'string',
-              maxGraphemes: 24,
-              maxLength: 240,
             },
             description: {
               type: 'string',
@@ -7726,14 +7659,9 @@ export const schemaDict = {
                 ref: 'lex:app.bsky.richtext.facet',
               },
             },
-            avatar: {
-              type: 'blob',
-              accept: ['image/png', 'image/jpeg'],
-              maxSize: 1000000,
-            },
             policies: {
               type: 'ref',
-              ref: 'lex:app.bsky.mod.defs#labelerPolicies',
+              ref: 'lex:app.bsky.moderation.defs#modServicePolicies',
             },
             labels: {
               type: 'union',
@@ -8458,11 +8386,10 @@ export const ids = {
   AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
   AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
   AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
-  AppBskyModDefs: 'app.bsky.mod.defs',
-  AppBskyModGetActorLabelers: 'app.bsky.mod.getActorLabelers',
-  AppBskyModGetLabeler: 'app.bsky.mod.getLabeler',
-  AppBskyModGetLabelers: 'app.bsky.mod.getLabelers',
-  AppBskyModLabeler: 'app.bsky.mod.labeler',
+  AppBskyModerationDefs: 'app.bsky.moderation.defs',
+  AppBskyModerationGetService: 'app.bsky.moderation.getService',
+  AppBskyModerationGetServices: 'app.bsky.moderation.getServices',
+  AppBskyModerationService: 'app.bsky.moderation.service',
   AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
   AppBskyNotificationListNotifications:
     'app.bsky.notification.listNotifications',

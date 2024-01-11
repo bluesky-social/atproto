@@ -7,16 +7,16 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyModDefs from './defs'
+import * as AppBskyModerationDefs from './defs'
 
 export interface QueryParams {
-  labelers: string[]
+  dids: string[]
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  labelers: AppBskyModDefs.LabelerView[]
+  views: AppBskyModerationDefs.ModServiceView[]
   [k: string]: unknown
 }
 
