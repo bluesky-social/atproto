@@ -29,7 +29,7 @@
     },
     "modServiceViewDetailed": {
       "type": "object",
-      "required": ["uri", "cid", "creator", "record", "indexedAt"],
+      "required": ["uri", "cid", "creator", "policies", "indexedAt"],
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
