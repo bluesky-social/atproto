@@ -208,20 +208,20 @@
         }
       }
     },
-    "labelersPref": {
+    "modsPref": {
       "type": "object",
-      "required": ["labelers"],
+      "required": ["mods"],
       "properties": {
-        "labelers": {
+        "mods": {
           "type": "array",
           "items": {
             "type": "ref",
-            "ref": "#labelerPrefItem"
+            "ref": "#modPrefItem"
           }
         }
       }
     },
-    "labelerPrefItem": {
+    "modPrefItem": {
       "type": "object",
       "required": ["uri", "enabled", "labelGroupSettings"],
       "properties": {
