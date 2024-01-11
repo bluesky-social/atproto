@@ -7424,7 +7424,7 @@ export const schemaDict = {
     defs: {
       modServiceView: {
         type: 'object',
-        required: ['uri', 'cid', 'did', 'creator', 'indexedAt'],
+        required: ['uri', 'cid', 'creator', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
@@ -7437,10 +7437,6 @@ export const schemaDict = {
           creator: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileView',
-          },
-          did: {
-            type: 'string',
-            format: 'did',
           },
           description: {
             type: 'string',
@@ -7640,12 +7636,8 @@ export const schemaDict = {
         key: 'literal:self',
         record: {
           type: 'object',
-          required: ['did', 'policies', 'createdAt'],
+          required: ['policies', 'createdAt'],
           properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-            },
             description: {
               type: 'string',
               maxGraphemes: 300,

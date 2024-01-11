@@ -6,7 +6,6 @@ export interface ModService {
   uri: string
   cid: string
   creator: string
-  serviceDid: string
   createdAt: string
   indexedAt: string
   sortAt: GeneratedAlways<string>
