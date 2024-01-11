@@ -69,12 +69,8 @@
         "followsCount": { "type": "integer" },
         "postsCount": { "type": "integer" },
         "associated": {
-          "type": "object",
-          "properties": {
-            "lists": {"type": "number"},
-            "feedgens": {"type": "number"},
-            "modservice": {"type": "boolean"}
-          }
+          "type": "ref",
+          "ref": "#profileAssociated"
         },
         "indexedAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
@@ -82,6 +78,14 @@
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         }
+      }
+    },
+    "profileAssociated": {
+      "type": "object",
+      "properties": {
+        "lists": {"type": "integer"},
+        "feedgens": {"type": "integer"},
+        "modservice": {"type": "boolean"}
       }
     },
     "viewerState": {
