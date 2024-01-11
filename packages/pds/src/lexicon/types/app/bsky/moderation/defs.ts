@@ -8,7 +8,6 @@ import { CID } from 'multiformats/cid'
 import * as AppBskyActorDefs from '../actor/defs'
 import * as AppBskyRichtextFacet from '../richtext/facet'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
-import * as AppBskyModerationService from './service'
 import * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs'
 
 export interface ModServiceView {
@@ -41,7 +40,7 @@ export interface ModServiceViewDetailed {
   uri: string
   cid: string
   creator: AppBskyActorDefs.ProfileView
-  record: AppBskyModerationService.Main
+  record: {}
   likeCount?: number
   viewer?: ModServiceViewerState
   indexedAt: string

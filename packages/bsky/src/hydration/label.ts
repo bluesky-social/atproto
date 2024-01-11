@@ -1,6 +1,6 @@
 import { DataPlaneClient } from '../data-plane/client'
 import { Label } from '../lexicon/types/com/atproto/label/defs'
-import { Record as LabelerRecord } from '../lexicon/types/app/bsky/mod/labeler'
+import { Record as ModServiceRecord } from '../lexicon/types/app/bsky/moderation/service'
 import {
   HydrationMap,
   RecordInfo,
@@ -8,25 +8,27 @@ import {
   parseRecord,
   parseString,
 } from './util'
+import { AtUri } from '@atproto/syntax'
+import { ids } from '../lexicon/lexicons'
 
 export type { Label } from '../lexicon/types/com/atproto/label/defs'
 
 export type Labels = HydrationMap<Label[]>
 
-export type LabelerAgg = {
+export type ModServiceAgg = {
   likes: number
 }
 
-export type LabelerAggs = HydrationMap<LabelerAgg>
+export type ModServiceAggs = HydrationMap<ModServiceAgg>
 
-export type Labeler = RecordInfo<LabelerRecord>
-export type Labelers = HydrationMap<Labeler>
+export type ModService = RecordInfo<ModServiceRecord>
+export type ModServices = HydrationMap<ModService>
 
-export type LabelerViewerState = {
+export type ModServiceViewerState = {
   like?: string
 }
 
-export type LabelerViewerStates = HydrationMap<LabelerViewerState>
+export type ModServiceViewerStates = HydrationMap<ModServiceViewerState>
 
 export class LabelHydrator {
   constructor(public dataplane: DataPlaneClient) {}
@@ -49,42 +51,48 @@ export class LabelHydrator {
     }, new HydrationMap<Label[]>())
   }
 
-  async getLabelers(
-    uris: string[],
+  async getModServices(
+    dids: string[],
     includeTakedowns = false,
-  ): Promise<Labelers> {
-    const res = await this.dataplane.getLabelerRecords({ uris })
-    return uris.reduce((acc, uri, i) => {
-      const record = parseRecord<LabelerRecord>(
+  ): Promise<ModServices> {
+    const res = await this.dataplane.getModServiceRecords({
+      uris: dids.map(modServiceDidToUri),
+    })
+    return dids.reduce((acc, did, i) => {
+      const record = parseRecord<ModServiceRecord>(
         res.records[i],
         includeTakedowns,
       )
-      return acc.set(uri, record ?? null)
-    }, new HydrationMap<Labeler>())
+      return acc.set(did, record ?? null)
+    }, new HydrationMap<ModService>())
   }
 
-  async getLabelerViewerStates(
-    uris: string[],
+  async getModServiceViewerStates(
+    dids: string[],
     viewer: string,
-  ): Promise<LabelerViewerStates> {
+  ): Promise<ModServiceViewerStates> {
     const likes = await this.dataplane.getLikesByActorAndSubjects({
       actorDid: viewer,
-      refs: uris.map((uri) => ({ uri })),
+      refs: dids.map((did) => ({ uri: modServiceDidToUri(did) })),
     })
-    return uris.reduce((acc, uri, i) => {
-      return acc.set(uri, {
+    return dids.reduce((acc, did, i) => {
+      return acc.set(did, {
         like: parseString(likes.uris[i]),
       })
-    }, new HydrationMap<LabelerViewerState>())
+    }, new HydrationMap<ModServiceViewerState>())
   }
 
-  async getLabelerAggregates(uris: string[]): Promise<LabelerAggs> {
-    const refs = uris.map((uri) => ({ uri }))
+  async getModServiceAggregates(dids: string[]): Promise<ModServiceAggs> {
+    const refs = dids.map((did) => ({ uri: modServiceDidToUri(did) }))
     const likes = await this.dataplane.getLikeCounts({ refs })
-    return uris.reduce((acc, uri, i) => {
-      return acc.set(uri, {
+    return dids.reduce((acc, did, i) => {
+      return acc.set(did, {
         likes: likes.counts[i] ?? 0,
       })
-    }, new HydrationMap<LabelerAgg>())
+    }, new HydrationMap<ModServiceAgg>())
   }
+}
+
+const modServiceDidToUri = (did: string): string => {
+  return AtUri.make(did, ids.AppBskyModerationService, 'self').toString()
 }

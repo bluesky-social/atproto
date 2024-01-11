@@ -1,30 +1,30 @@
 import { Selectable } from 'kysely'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
-import * as Labeler from '../../../../lexicon/types/app/bsky/mod/labeler'
+import * as ModService from '../../../../lexicon/types/app/bsky/moderation/service'
 import * as lex from '../../../../lexicon/lexicons'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import RecordProcessor from '../processor'
 import { BackgroundQueue } from '../../background'
 
-const lexId = lex.ids.AppBskyModLabeler
-type IndexedLabeler = Selectable<DatabaseSchemaType['labeler']>
+const lexId = lex.ids.AppBskyModerationService
+type IndexedModService = Selectable<DatabaseSchemaType['mod_service']>
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: CID,
-  obj: Labeler.Record,
+  obj: ModService.Record,
   timestamp: string,
-): Promise<IndexedLabeler | null> => {
+): Promise<IndexedModService | null> => {
   const inserted = await db
-    .insertInto('labeler')
+    .insertInto('mod_service')
     .values({
       uri: uri.toString(),
       cid: cid.toString(),
       creator: uri.host,
-      labelerDid: obj.did,
+      serviceDid: obj.did,
       createdAt: normalizeDatetimeAlways(obj.createdAt),
       indexedAt: timestamp,
     })
@@ -45,9 +45,9 @@ const notifsForInsert = () => {
 const deleteFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-): Promise<IndexedLabeler | null> => {
+): Promise<IndexedModService | null> => {
   const deleted = await db
-    .deleteFrom('labeler')
+    .deleteFrom('mod_service')
     .where('uri', '=', uri.toString())
     .returningAll()
     .executeTakeFirst()
@@ -58,7 +58,7 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<Labeler.Record, IndexedLabeler>
+export type PluginType = RecordProcessor<ModService.Record, IndexedModService>
 
 export const makePlugin = (
   db: Database,

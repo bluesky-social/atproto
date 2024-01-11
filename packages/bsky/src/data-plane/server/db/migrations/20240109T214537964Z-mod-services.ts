@@ -2,11 +2,11 @@ import { Kysely, sql } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
-    .createTable('labeler')
+    .createTable('mod_service')
     .addColumn('uri', 'varchar', (col) => col.primaryKey())
     .addColumn('cid', 'varchar', (col) => col.notNull())
     .addColumn('creator', 'varchar', (col) => col.notNull())
-    .addColumn('labelerDid', 'varchar', (col) => col.notNull())
+    .addColumn('serviceDid', 'varchar', (col) => col.notNull())
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('indexedAt', 'varchar', (col) => col.notNull())
     .addColumn('sortAt', 'varchar', (col) =>
@@ -17,12 +17,12 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     )
     .execute()
   await db.schema
-    .createIndex('labeler_order_by_idx')
-    .on('labeler')
+    .createIndex('mod_service_order_by_idx')
+    .on('mod_service')
     .columns(['sortAt', 'cid'])
     .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropTable('labeler').execute()
+  await db.schema.dropTable('mod_service').execute()
 }

@@ -7492,8 +7492,7 @@ export const schemaDict = {
             ref: 'lex:app.bsky.actor.defs#profileView',
           },
           record: {
-            type: 'ref',
-            ref: 'lex:app.bsky.moderation.service',
+            type: 'unknown',
           },
           likeCount: {
             type: 'integer',

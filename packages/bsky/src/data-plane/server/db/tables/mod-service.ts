@@ -1,17 +1,17 @@
 import { GeneratedAlways } from 'kysely'
 
-export const tableName = 'labeler'
+export const tableName = 'mod_service'
 
-export interface FeedGenerator {
+export interface ModService {
   uri: string
   cid: string
   creator: string
-  labelerDid: string
+  serviceDid: string
   createdAt: string
   indexedAt: string
   sortAt: GeneratedAlways<string>
 }
 
 export type PartialDB = {
-  [tableName]: FeedGenerator
+  [tableName]: ModService
 }

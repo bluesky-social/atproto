@@ -35,10 +35,7 @@
         "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
         "creator": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
-        "record": {
-          "type": "ref",
-          "ref": "app.bsky.moderation.service"
-        },
+        "record": { "type": "unknown" },
         "likeCount": { "type": "integer", "minimum": 0 },
         "viewer": { "type": "ref", "ref": "#modServiceViewerState" },
         "indexedAt": { "type": "string", "format": "datetime" },

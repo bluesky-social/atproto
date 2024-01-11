@@ -3,22 +3,22 @@ import AppContext from '../../../../context'
 import { mapDefined } from '@atproto/common'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.mod.getLabelers({
+  server.app.bsky.moderation.getServices({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
-      const { labelers } = params
+      const { dids } = params
       const viewer = auth.credentials.iss
 
-      const hydration = await ctx.hydrator.hydrateLabelers(labelers, viewer)
+      const hydration = await ctx.hydrator.hydrateModServices(dids, viewer)
 
-      const views = mapDefined(labelers, (uri) =>
-        ctx.views.labeler(uri, hydration),
+      const views = mapDefined(dids, (did) =>
+        ctx.views.modService(did, hydration),
       )
 
       return {
         encoding: 'application/json',
         body: {
-          labelers: views,
+          views,
         },
       }
     },
