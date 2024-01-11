@@ -68,12 +68,24 @@
         "followersCount": { "type": "integer" },
         "followsCount": { "type": "integer" },
         "postsCount": { "type": "integer" },
+        "associated": {
+          "type": "ref",
+          "ref": "#profileAssociated"
+        },
         "indexedAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         }
+      }
+    },
+    "profileAssociated": {
+      "type": "object",
+      "properties": {
+        "lists": { "type": "integer" },
+        "feedgens": { "type": "integer" },
+        "modservice": { "type": "boolean" }
       }
     },
     "viewerState": {
@@ -200,26 +212,26 @@
         }
       }
     },
-    "labelersPref": {
+    "modsPref": {
       "type": "object",
-      "required": ["labelers"],
+      "required": ["mods"],
       "properties": {
-        "labelers": {
+        "mods": {
           "type": "array",
           "items": {
             "type": "ref",
-            "ref": "#labelerPrefItem"
+            "ref": "#modPrefItem"
           }
         }
       }
     },
-    "labelerPrefItem": {
+    "modPrefItem": {
       "type": "object",
-      "required": ["uri", "enabled", "labelGroupSettings"],
+      "required": ["did", "enabled", "labelGroupSettings"],
       "properties": {
-        "uri": {
+        "did": {
           "type": "string",
-          "format": "at-uri"
+          "format": "did"
         },
         "enabled": {
           "type": "boolean"

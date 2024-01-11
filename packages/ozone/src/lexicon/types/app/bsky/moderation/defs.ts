@@ -39,7 +39,9 @@ export interface ModServiceViewDetailed {
   uri: string
   cid: string
   creator: AppBskyActorDefs.ProfileView
-  record: {}
+  description?: string
+  descriptionFacets?: AppBskyRichtextFacet.Main[]
+  policies: ModServicePolicies
   likeCount?: number
   viewer?: ModServiceViewerState
   indexedAt: string

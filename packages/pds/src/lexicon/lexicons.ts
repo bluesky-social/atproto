@@ -4366,6 +4366,10 @@ export const schemaDict = {
           postsCount: {
             type: 'integer',
           },
+          associated: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociated',
+          },
           indexedAt: {
             type: 'string',
             format: 'datetime',
@@ -4380,6 +4384,20 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#label',
             },
+          },
+        },
+      },
+      profileAssociated: {
+        type: 'object',
+        properties: {
+          lists: {
+            type: 'integer',
+          },
+          feedgens: {
+            type: 'integer',
+          },
+          modservice: {
+            type: 'boolean',
           },
         },
       },
@@ -4528,26 +4546,26 @@ export const schemaDict = {
           },
         },
       },
-      labelersPref: {
+      modsPref: {
         type: 'object',
-        required: ['labelers'],
+        required: ['mods'],
         properties: {
-          labelers: {
+          mods: {
             type: 'array',
             items: {
               type: 'ref',
-              ref: 'lex:app.bsky.actor.defs#labelerPrefItem',
+              ref: 'lex:app.bsky.actor.defs#modPrefItem',
             },
           },
         },
       },
-      labelerPrefItem: {
+      modPrefItem: {
         type: 'object',
-        required: ['uri', 'enabled', 'labelGroupSettings'],
+        required: ['did', 'enabled', 'labelGroupSettings'],
         properties: {
-          uri: {
+          did: {
             type: 'string',
-            format: 'at-uri',
+            format: 'did',
           },
           enabled: {
             type: 'boolean',
@@ -7473,7 +7491,7 @@ export const schemaDict = {
       },
       modServiceViewDetailed: {
         type: 'object',
-        required: ['uri', 'cid', 'creator', 'record', 'indexedAt'],
+        required: ['uri', 'cid', 'creator', 'policies', 'indexedAt'],
         properties: {
           uri: {
             type: 'string',
@@ -7487,8 +7505,21 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileView',
           },
-          record: {
-            type: 'unknown',
+          description: {
+            type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
+          },
+          descriptionFacets: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.richtext.facet',
+            },
+          },
+          policies: {
+            type: 'ref',
+            ref: 'lex:app.bsky.moderation.defs#modServicePolicies',
           },
           likeCount: {
             type: 'integer',
@@ -7574,14 +7605,8 @@ export const schemaDict = {
         output: {
           encoding: 'application/json',
           schema: {
-            type: 'object',
-            required: ['view'],
-            properties: {
-              view: {
-                type: 'ref',
-                ref: 'lex:app.bsky.moderation.defs#modServiceViewDetailed',
-              },
-            },
+            type: 'ref',
+            ref: 'lex:app.bsky.moderation.defs#modServiceViewDetailed',
           },
         },
       },

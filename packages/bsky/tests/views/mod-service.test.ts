@@ -96,7 +96,7 @@ describe('mod service views', () => {
     const { data: unauthed } = await agent.api.app.bsky.moderation.getService({
       did: alice,
     })
-    expect(unauthed.view).toEqual(stripViewerFromModService(authed.view))
+    expect(unauthed).toEqual(stripViewerFromModService(authed))
   })
 
   it('fetches multiple mod services unauthed', async () => {

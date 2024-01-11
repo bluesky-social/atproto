@@ -316,14 +316,8 @@ export class Views {
     if (!record) return
 
     return {
-      uri: baseView.uri,
-      cid: baseView.cid,
-      creator: baseView.creator,
-      record: record.record,
-      likeCount: baseView.likeCount,
-      viewer: baseView.viewer,
-      indexedAt: baseView.indexedAt,
-      labels: baseView.labels,
+      ...baseView,
+      policies: record.record.policies,
     }
   }
 

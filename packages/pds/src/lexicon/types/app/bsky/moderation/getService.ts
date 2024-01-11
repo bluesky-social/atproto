@@ -14,12 +14,7 @@ export interface QueryParams {
 }
 
 export type InputSchema = undefined
-
-export interface OutputSchema {
-  view: AppBskyModerationDefs.ModServiceViewDetailed
-  [k: string]: unknown
-}
-
+export type OutputSchema = AppBskyModerationDefs.ModServiceViewDetailed
 export type HandlerInput = undefined
 
 export interface HandlerSuccess {

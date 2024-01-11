@@ -64,6 +64,7 @@ export interface ProfileViewDetailed {
   followersCount?: number
   followsCount?: number
   postsCount?: number
+  associated?: ProfileAssociated
   indexedAt?: string
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
@@ -80,6 +81,25 @@ export function isProfileViewDetailed(v: unknown): v is ProfileViewDetailed {
 
 export function validateProfileViewDetailed(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#profileViewDetailed', v)
+}
+
+export interface ProfileAssociated {
+  lists?: number
+  feedgens?: number
+  modservice?: boolean
+  [k: string]: unknown
+}
+
+export function isProfileAssociated(v: unknown): v is ProfileAssociated {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#profileAssociated'
+  )
+}
+
+export function validateProfileAssociated(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#profileAssociated', v)
 }
 
 export interface ViewerState {
@@ -234,40 +254,40 @@ export function validateThreadViewPref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#threadViewPref', v)
 }
 
-export interface LabelersPref {
-  labelers: LabelerPrefItem[]
+export interface ModsPref {
+  mods: ModPrefItem[]
   [k: string]: unknown
 }
 
-export function isLabelersPref(v: unknown): v is LabelersPref {
+export function isModsPref(v: unknown): v is ModsPref {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.actor.defs#labelersPref'
+    v.$type === 'app.bsky.actor.defs#modsPref'
   )
 }
 
-export function validateLabelersPref(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.defs#labelersPref', v)
+export function validateModsPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#modsPref', v)
 }
 
-export interface LabelerPrefItem {
-  uri: string
+export interface ModPrefItem {
+  did: string
   enabled: boolean
   labelGroupSettings: LabelGroupSetting[]
   [k: string]: unknown
 }
 
-export function isLabelerPrefItem(v: unknown): v is LabelerPrefItem {
+export function isModPrefItem(v: unknown): v is ModPrefItem {
   return (
     isObj(v) &&
     hasProp(v, '$type') &&
-    v.$type === 'app.bsky.actor.defs#labelerPrefItem'
+    v.$type === 'app.bsky.actor.defs#modPrefItem'
   )
 }
 
-export function validateLabelerPrefItem(v: unknown): ValidationResult {
-  return lexicons.validate('app.bsky.actor.defs#labelerPrefItem', v)
+export function validateModPrefItem(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#modPrefItem', v)
 }
 
 export interface LabelGroupSetting {
