@@ -73,13 +73,8 @@ export class AppContext {
 
   reqLabelers(req: express.Request): string[] {
     const val = req.header('atproto-labelers')
-    const parsed = val
-      ? val
-          .split(',')
-          .map((did) => did.trim())
-          .slice(0, 10)
-      : []
-    return dedupeStrs([this.cfg.modServiceDid, ...parsed])
+    if (!val) return [this.cfg.modServiceDid]
+    return dedupeStrs(val.split(',').map((did) => did.trim().slice(0, 10)))
   }
 
   get algos(): MountedAlgos {
