@@ -17,7 +17,9 @@ export default function (server: Server, ctx: AppContext) {
         auth.credentials.type === 'access' ? auth.credentials.did : null
       const res = await ctx.appViewAgent.api.app.bsky.feed.getAuthorFeed(
         params,
-        requester ? await ctx.appviewAuthHeaders(requester) : authPassthru(req),
+        requester
+          ? await ctx.appviewAuthHeaders(requester, req)
+          : authPassthru(req),
       )
       if (requester) {
         return await handleReadAfterWrite(ctx, requester, res, getAuthorMunge)
