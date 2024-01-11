@@ -8,6 +8,11 @@ import {
   isThreadViewPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
 import { isViewRecord } from '../src/lexicon/types/app/bsky/embed/record'
+import {
+  ModServiceView,
+  isModServiceView,
+  isModServiceViewDetailed,
+} from '../src/lexicon/types/app/bsky/moderation/defs'
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
@@ -189,4 +194,20 @@ export const stripViewerFromThread = <T>(thread: T): T => {
     thread.replies = thread.replies.map(stripViewerFromThread)
   }
   return thread
+}
+
+// @NOTE mutates
+export const stripViewerFromModService = (
+  serviceUnknown: unknown,
+): ModServiceView => {
+  if (
+    serviceUnknown?.['$type'] &&
+    !isModServiceView(serviceUnknown) &&
+    !isModServiceViewDetailed(serviceUnknown)
+  ) {
+    throw new Error('Expected mod service view')
+  }
+  const modService = serviceUnknown as ModServiceView
+  modService.creator = stripViewer(modService.creator)
+  return stripViewer(modService)
 }

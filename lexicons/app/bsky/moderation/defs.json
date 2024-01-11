@@ -4,12 +4,11 @@
   "defs": {
     "modServiceView": {
       "type": "object",
-      "required": ["uri", "cid", "did", "creator", "indexedAt"],
+      "required": ["uri", "cid", "creator", "indexedAt"],
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
         "creator": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
-        "did": { "type": "string", "format": "did" },
         "description": {
           "type": "string",
           "maxGraphemes": 300,

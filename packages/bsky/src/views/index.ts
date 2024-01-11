@@ -289,7 +289,6 @@ export class Views {
     return {
       uri,
       cid: modService.cid.toString(),
-      did: modService.record.did,
       creator,
       description: modService.record.description,
       descriptionFacets: modService.record.descriptionFacets,

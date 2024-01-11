@@ -14,7 +14,6 @@ export interface ModServiceView {
   uri: string
   cid: string
   creator: AppBskyActorDefs.ProfileView
-  did: string
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   likeCount?: number

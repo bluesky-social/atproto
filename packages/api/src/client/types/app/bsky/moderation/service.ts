@@ -10,7 +10,6 @@ import * as AppBskyModerationDefs from './defs'
 import * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs'
 
 export interface Record {
-  did: string
   description?: string
   descriptionFacets?: AppBskyRichtextFacet.Main[]
   policies: AppBskyModerationDefs.ModServicePolicies

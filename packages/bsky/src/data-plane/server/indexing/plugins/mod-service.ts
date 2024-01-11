@@ -18,13 +18,13 @@ const insertFn = async (
   obj: ModService.Record,
   timestamp: string,
 ): Promise<IndexedModService | null> => {
+  if (uri.rkey !== 'self') return null
   const inserted = await db
     .insertInto('mod_service')
     .values({
       uri: uri.toString(),
       cid: cid.toString(),
       creator: uri.host,
-      serviceDid: obj.did,
       createdAt: normalizeDatetimeAlways(obj.createdAt),
       indexedAt: timestamp,
     })
