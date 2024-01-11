@@ -28,8 +28,8 @@ export const getKey = (doc: DidDocument): string | undefined => {
   } else if (key.type === 'EcdsaSecp256k1VerificationKey2019') {
     didKey = crypto.formatDidKey(crypto.SECP256K1_JWT_ALG, keyBytes)
   } else if (key.type === 'Multikey') {
-    const parsed = crypto.parseMultikey(key.publicKeyMultibase)
-    didKey = crypto.formatDidKey(parsed.jwtAlg, parsed.keyBytes)
+    // Multikey is compressed already
+    didKey = crypto.formatDidKeyMultikey(key.publicKeyMultibase)
   }
   return didKey
 }

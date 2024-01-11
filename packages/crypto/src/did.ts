@@ -68,6 +68,10 @@ export const formatDidKey = (jwtAlg: string, keyBytes: Uint8Array): string => {
   return DID_KEY_PREFIX + formatMultikey(jwtAlg, keyBytes)
 }
 
+export const formatDidKeyMultikey = (multikey: string): string => {
+  return DID_KEY_PREFIX + multikey
+}
+
 const hasPrefix = (bytes: Uint8Array, prefix: Uint8Array): boolean => {
   return uint8arrays.equals(prefix, bytes.subarray(0, prefix.byteLength))
 }
