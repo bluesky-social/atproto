@@ -1,15 +1,15 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.label.getLabeler",
+  "id": "app.bsky.moderation.getService",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get information about a labeler.",
+      "description": "Get information about a moderation service.",
       "parameters": {
         "type": "params",
-        "required": ["labeler"],
+        "required": ["did"],
         "properties": {
-          "labeler": { "type": "string", "format": "at-uri" }
+          "did": { "type": "string", "format": "did" }
         }
       },
       "output": {
@@ -20,7 +20,7 @@
           "properties": {
             "view": {
               "type": "ref",
-              "ref": "app.bsky.label.defs#labelerViewDetailed"
+              "ref": "app.bsky.moderation.defs#modServiceViewDetailed"
             }
           }
         }
