@@ -736,6 +736,7 @@ export class ModerationService {
       .values(dbVals)
       .onConflict((oc) =>
         oc.columns(['src', 'uri', 'cid', 'val']).doUpdateSet({
+          id: sql`${excluded('id')}`,
           neg: sql`${excluded('neg')}`,
           cts: sql`${excluded('cts')}`,
         }),

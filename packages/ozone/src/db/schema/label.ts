@@ -1,9 +1,9 @@
-import { GeneratedAlways } from 'kysely'
+import { Generated } from 'kysely'
 
 export const tableName = 'label'
 
 export interface Label {
-  id: GeneratedAlways<number>
+  id: Generated<number>
   src: string
   uri: string
   cid: string

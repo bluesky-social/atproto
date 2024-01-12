@@ -1,9 +1,9 @@
 import { TestNetwork } from '@atproto/dev-env'
-import { cborEncode, readFromGenerator, wait } from '@atproto/common'
+import { readFromGenerator, wait } from '@atproto/common'
 import { LabelsEvt, Sequencer } from '../src/sequencer'
 import Outbox from '../src/sequencer/outbox'
-import { AtUri } from '@atproto/syntax'
 import { randomStr } from '@atproto/crypto'
+import { Label } from '../src/lexicon/types/com/atproto/label/defs'
 
 describe('sequencer', () => {
   let network: TestNetwork
@@ -49,21 +49,22 @@ describe('sequencer', () => {
     }
   }
 
-  const createLabels = async (count: number) => {
+  const createLabels = async (count: number): Promise<Label[]> => {
+    const labels: Label[] = []
+    const modService = network.ozone.ctx.modService(network.ozone.ctx.db)
     for (let i = 0; i < count; i++) {
       const did = `did:example:${randomStr(10, 'base32')}`
-      await network.ozone.ctx.db.db
-        .insertInto('label')
-        .values({
-          src: 'did:example:labeler',
-          uri: did,
-          cid: '',
-          val: 'spam',
-          neg: false,
-          cts: new Date().toISOString(),
-        })
-        .execute()
+      const label = {
+        src: 'did:example:labeler',
+        uri: did,
+        val: 'spam',
+        neg: false,
+        cts: new Date().toISOString(),
+      }
+      await modService.createLabels([label])
+      labels.push(label)
     }
+    return labels
   }
 
   it('sends to outbox', async () => {
@@ -76,6 +77,34 @@ describe('sequencer', () => {
 
     const fromDb = await loadFromDb(-1)
     expect(evts.map(evtToDbRow)).toEqual(fromDb)
+
+    lastSeen = evts.at(-1)?.seq ?? lastSeen
+  })
+
+  it('sequences negative labels', async () => {
+    const count = 5
+    totalEvts += count
+    const created = await createLabels(count)
+    const toNegate = created
+      .slice(0, 2)
+      .map((l) => ({ ...l, neg: true, cts: new Date().toISOString() }))
+    await network.ozone.ctx
+      .modService(network.ozone.ctx.db)
+      .createLabels(toNegate)
+
+    const outbox = new Outbox(sequencer)
+    const evts = await readFromGenerator(
+      outbox.events(lastSeen),
+      caughtUp(outbox),
+    )
+    expect(evts.length).toBe(count)
+
+    const fromDb = await loadFromDb(lastSeen)
+    expect(evts.map(evtToDbRow)).toEqual(fromDb)
+    expect(evts[3].labels[0].uri).toEqual(toNegate[0].uri)
+    expect(evts[3].labels[0].neg).toBe(true)
+    expect(evts[4].labels[0].uri).toEqual(toNegate[1].uri)
+    expect(evts[4].labels[0].neg).toBe(true)
 
     lastSeen = evts.at(-1)?.seq ?? lastSeen
   })
