@@ -3,27 +3,25 @@ import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 
 describe('label hydration', () => {
   let network: TestNetwork
-  let agent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
 
   let alice: string
   let bob: string
   let carol: string
-  let modServiceDid: string
+  let labelerDid: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_label_hydration',
     })
-    agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
-    modServiceDid = network.bsky.ctx.cfg.modServiceDid
+    labelerDid = network.bsky.ctx.cfg.labelsFromIssuerDids[0]
     await network.bsky.db.db
       .insertInto('label')
       .values([
@@ -44,7 +42,7 @@ describe('label hydration', () => {
           cts: new Date().toISOString(),
         },
         {
-          src: modServiceDid,
+          src: labelerDid,
           uri: carol,
           cid: '',
           val: 'misleading',
@@ -76,7 +74,7 @@ describe('label hydration', () => {
       {
         headers: {
           ...sc.getHeaders(bob),
-          'atproto-labelers': `${alice},${bob}, ${modServiceDid}`,
+          'atproto-labelers': `${alice},${bob}, ${labelerDid}`,
         },
       },
     )
@@ -85,7 +83,7 @@ describe('label hydration', () => {
     expect(res.data.labels?.find((l) => l.src === bob)?.val).toEqual(
       'impersonation',
     )
-    expect(res.data.labels?.find((l) => l.src === modServiceDid)?.val).toEqual(
+    expect(res.data.labels?.find((l) => l.src === labelerDid)?.val).toEqual(
       'misleading',
     )
   })
@@ -96,7 +94,7 @@ describe('label hydration', () => {
       { headers: sc.getHeaders(bob) },
     )
     expect(res.data.labels?.length).toBe(1)
-    expect(res.data.labels?.[0].src).toBe(modServiceDid)
+    expect(res.data.labels?.[0].src).toBe(labelerDid)
     expect(res.data.labels?.[0].val).toBe('misleading')
   })
 })
