@@ -6,6 +6,7 @@ import { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscrib
 import { Label as LabelTable } from '../db/schema/label'
 import { Selectable } from 'kysely'
 
+export type { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'
 type LabelRow = Selectable<LabelTable>
 
 export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {

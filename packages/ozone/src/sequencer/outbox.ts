@@ -1,7 +1,6 @@
 import { AsyncBuffer, AsyncBufferFullError } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Sequencer } from './sequencer'
-import { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'
+import { Sequencer, LabelsEvt } from './sequencer'
 
 export type OutboxOpts = {
   maxBufferSize: number
