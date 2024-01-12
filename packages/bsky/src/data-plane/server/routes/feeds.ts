@@ -2,11 +2,11 @@ import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../gen/bsky_connect'
 import { Database } from '../db'
 import { TimeCidKeyset, paginate } from '../db/pagination'
+import { FeedType } from '../../gen/bsky_pb'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getAuthorFeed(req) {
-    const { actorDid, limit, cursor, noReplies, mediaOnly, authorThreadsOnly } =
-      req
+    const { actorDid, limit, cursor, feedType } = req
     const { ref } = db.db.dynamic
 
     // defaults to posts, reposts, and replies
@@ -16,7 +16,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectAll('feed_item')
       .where('originatorDid', '=', actorDid)
 
-    if (mediaOnly) {
+    if (feedType === FeedType.POSTS_WITH_MEDIA) {
       builder = builder
         // only your own posts
         .where('type', '=', 'post')
@@ -27,11 +27,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
             .select('post_embed_image.postUri')
             .whereRef('post_embed_image.postUri', '=', 'feed_item.postUri'),
         )
-    } else if (noReplies) {
+    } else if (feedType === FeedType.POSTS_NO_REPLIES) {
       builder = builder.where((qb) =>
         qb.where('post.replyParent', 'is', null).orWhere('type', '=', 'repost'),
       )
-    } else if (authorThreadsOnly) {
+    } else if (feedType === FeedType.POSTS_AND_AUTHOR_THREADS) {
       builder = builder.where((qb) =>
         qb
           .where('type', '=', 'repost')
@@ -138,6 +138,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   },
 })
 
+// @NOTE does not support additional fields in the protos specific to author feeds
+// and timelines. at the time of writing, hydration/view implementations do not rely on them.
 const feedItemFromRow = (row: { postUri: string; uri: string }) => {
   return {
     uri: row.postUri,

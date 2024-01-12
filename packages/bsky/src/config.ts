@@ -40,6 +40,7 @@ export class ServerConfig {
       : []
     const imgUriEndpoint = process.env.BSKY_IMG_URI_ENDPOINT
     const blobCacheLocation = process.env.BSKY_BLOB_CACHE_LOC
+    const searchEndpoint = process.env.BSKY_SEARCH_ENDPOINT || undefined
     let dataplaneUrls = overrides?.dataplaneUrls
     dataplaneUrls ??= process.env.BSKY_DATAPLANE_URLS
       ? process.env.BSKY_DATAPLANE_URLS.split(',')
@@ -50,7 +51,6 @@ export class ServerConfig {
     const labelsFromIssuerDids = process.env.BSKY_LABELS_FROM_ISSUER_DIDS
       ? process.env.BSKY_LABELS_FROM_ISSUER_DIDS.split(',')
       : []
-    const searchEndpoint = process.env.BSKY_SEARCH_ENDPOINT || undefined
     const adminPassword = process.env.BSKY_ADMIN_PASSWORD
     assert(adminPassword)
     const moderatorPassword = process.env.BSKY_MODERATOR_PASSWORD
@@ -133,6 +133,10 @@ export class ServerConfig {
 
   get dataplaneIgnoreBadTls() {
     return this.cfg.dataplaneIgnoreBadTls
+  }
+
+  get labelsFromIssuerDids() {
+    return this.cfg.labelsFromIssuerDids ?? []
   }
 
   get searchEndpoint() {
