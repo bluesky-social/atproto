@@ -326,16 +326,9 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   )
 
-  const aliceLabelerUri = AtUri.make(
-    alice.did,
-    'app.bsky.mod.labeler',
-    'my-labeler',
-  )
-  const aliceLabelerDid = 'did:example:alice-labeler'
-  await alice.agent.api.app.bsky.mod.labeler.create(
-    { repo: alice.did, rkey: aliceLabelerUri.rkey },
+  await alice.agent.api.app.bsky.moderation.service.create(
+    { repo: alice.did, rkey: 'self' },
     {
-      did: aliceLabelerDid,
       displayName: 'alices labels',
       description: 'labeling stuff',
       avatar: avatarRes.data.blob,
@@ -354,7 +347,7 @@ export async function generateMockSetup(env: TestNetwork) {
     uri: bob.did,
     cid: '',
     val: 'spam',
-    src: aliceLabelerDid,
+    src: alice.did,
   })
 }
 
