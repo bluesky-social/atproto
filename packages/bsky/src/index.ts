@@ -84,7 +84,9 @@ export class BskyAppView {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
-    const hydrator = new Hydrator(dataplane)
+    const hydrator = new Hydrator(dataplane, {
+      labelsFromIssuerDids: config.labelsFromIssuerDids,
+    })
     const views = new Views(imgUriBuilder)
 
     const ctx = new AppContext({
