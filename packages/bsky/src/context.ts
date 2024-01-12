@@ -73,7 +73,7 @@ export class AppContext {
 
   reqLabelers(req: express.Request): string[] {
     const val = req.header('atproto-labelers')
-    if (!val) return [this.cfg.modServiceDid]
+    if (!val) return this.cfg.labelsFromIssuerDids
     return dedupeStrs(
       val
         .split(',')
