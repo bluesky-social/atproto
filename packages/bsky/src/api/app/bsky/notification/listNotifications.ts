@@ -54,7 +54,7 @@ const skeleton = async (
   ])
   return {
     notifs: res.notifications,
-    cursor: res.cursor,
+    cursor: res.cursor || undefined,
     lastSeenNotifs: lastSeenRes.timestamp?.toDate().toISOString(),
   }
 }
