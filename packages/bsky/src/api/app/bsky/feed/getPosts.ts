@@ -33,7 +33,10 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydratePosts(skeleton.posts, params.viewer)
+  return ctx.hydrator.hydratePosts(
+    skeleton.posts.map((uri) => ({ uri })),
+    params.viewer,
+  )
 }
 
 const noBlocks = (inputs: {

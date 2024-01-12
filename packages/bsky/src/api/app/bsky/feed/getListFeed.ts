@@ -8,6 +8,7 @@ import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { mapDefined } from '@atproto/common'
 import { parseString } from '../../../../hydration/util'
+import { FeedItem } from '../../../../hydration/feed'
 
 export default function (server: Server, ctx: AppContext) {
   const getListFeed = createPipeline(
@@ -47,7 +48,12 @@ export const skeleton = async (inputs: {
     cursor: params.cursor,
   })
   return {
-    uris: res.uris,
+    items: res.items.map((item) => ({
+      post: { uri: item.uri, cid: item.cid || undefined },
+      repost: item.repost
+        ? { uri: item.repost, cid: item.repostCid || undefined }
+        : undefined,
+    })),
     cursor: parseString(res.cursor),
   }
 }
@@ -58,7 +64,7 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
-  return ctx.hydrator.hydrateFeedPosts(skeleton.uris, params.viewer)
+  return ctx.hydrator.hydrateFeedItems(skeleton.items, params.viewer)
 }
 
 const noBlocksOrMutes = (inputs: {
@@ -67,8 +73,8 @@ const noBlocksOrMutes = (inputs: {
   hydration: HydrationState
 }): Skeleton => {
   const { ctx, skeleton, hydration } = inputs
-  skeleton.uris = skeleton.uris.filter((uri) => {
-    const bam = ctx.views.feedItemBlocksAndMutes(uri, hydration)
+  skeleton.items = skeleton.items.filter((item) => {
+    const bam = ctx.views.feedItemBlocksAndMutes(item, hydration)
     return (
       !bam.authorBlocked &&
       !bam.authorMuted &&
@@ -85,8 +91,8 @@ const presentation = (inputs: {
   hydration: HydrationState
 }) => {
   const { ctx, skeleton, hydration } = inputs
-  const feed = mapDefined(skeleton.uris, (uri) =>
-    ctx.views.feedViewPost(uri, hydration),
+  const feed = mapDefined(skeleton.items, (item) =>
+    ctx.views.feedViewPost(item, hydration),
   )
   return { feed, cursor: skeleton.cursor }
 }
@@ -100,6 +106,6 @@ type Context = {
 type Params = QueryParams & { viewer: string | null }
 
 type Skeleton = {
-  uris: string[]
+  items: FeedItem[]
   cursor?: string
 }

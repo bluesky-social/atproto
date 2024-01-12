@@ -46,7 +46,7 @@ import {
   isRecordWithMedia,
 } from './types'
 import { Label } from '../hydration/label'
-import { Repost } from '../hydration/feed'
+import { FeedItem, Repost } from '../hydration/feed'
 import { RecordInfo } from '../hydration/util'
 import { Notification } from '../data-plane/gen/bsky_pb'
 
@@ -268,7 +268,7 @@ export class Views {
   // ------------
 
   feedItemBlocksAndMutes(
-    uri: string,
+    item: FeedItem,
     state: HydrationState,
   ): {
     originatorMuted: boolean
@@ -276,24 +276,15 @@ export class Views {
     authorMuted: boolean
     authorBlocked: boolean
   } {
-    const parsed = new AtUri(uri)
-    if (parsed.collection === ids.AppBskyFeedRepost) {
-      const repost = state.reposts?.get(uri)
-      const postUri = repost?.record.subject.uri
-      const postDid = postUri ? creatorFromUri(postUri) : undefined
-      return {
-        originatorMuted: this.viewerMuteExists(parsed.hostname, state),
-        originatorBlocked: this.viewerBlockExists(parsed.hostname, state),
-        authorMuted: !!postDid && this.viewerMuteExists(postDid, state),
-        authorBlocked: !!postDid && this.viewerBlockExists(postDid, state),
-      }
-    } else {
-      return {
-        originatorMuted: this.viewerMuteExists(parsed.hostname, state),
-        originatorBlocked: this.viewerBlockExists(parsed.hostname, state),
-        authorMuted: this.viewerMuteExists(parsed.hostname, state),
-        authorBlocked: this.viewerBlockExists(parsed.hostname, state),
-      }
+    const authorDid = creatorFromUri(item.post.uri)
+    const originatorDid = item.repost
+      ? creatorFromUri(item.repost.uri)
+      : authorDid
+    return {
+      originatorMuted: this.viewerMuteExists(originatorDid, state),
+      originatorBlocked: this.viewerBlockExists(originatorDid, state),
+      authorMuted: this.viewerMuteExists(authorDid, state),
+      authorBlocked: this.viewerBlockExists(authorDid, state),
     }
   }
 
@@ -397,27 +388,26 @@ export class Views {
     }
   }
 
-  feedViewPost(uri: string, state: HydrationState): FeedViewPost | undefined {
-    const parsedUri = new AtUri(uri)
-    const postInfo = state.posts?.get(uri)
-    let postUri: AtUri
+  feedViewPost(
+    item: FeedItem,
+    state: HydrationState,
+  ): FeedViewPost | undefined {
+    const postInfo = state.posts?.get(item.post.uri)
     let reason: ReasonRepost | undefined
-    if (parsedUri.collection === ids.AppBskyFeedRepost) {
-      const repost = state.reposts?.get(uri)
+    if (item.repost) {
+      const repost = state.reposts?.get(item.repost.uri)
       if (!repost) return
-      reason = this.reasonRepost(parsedUri.hostname, repost, state)
+      if (repost.record.subject.uri !== item.post.uri) return
+      reason = this.reasonRepost(creatorFromUri(item.repost.uri), repost, state)
       if (!reason) return
-      postUri = new AtUri(repost.record.subject.uri)
-    } else {
-      postUri = parsedUri
     }
-    const post = this.post(postUri.toString(), state)
+    const post = this.post(item.post.uri, state)
     if (!post) return
     return {
       post,
       reason,
       reply: !postInfo?.violatesThreadGate
-        ? this.replyRef(postUri.toString(), state)
+        ? this.replyRef(item.post.uri, state)
         : undefined,
     }
   }

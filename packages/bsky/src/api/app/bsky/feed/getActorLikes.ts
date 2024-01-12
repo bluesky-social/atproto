@@ -10,6 +10,7 @@ import { Views } from '../../../../views'
 import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
 import { creatorFromUri } from '../../../../views/util'
+import { FeedItem } from '../../../../hydration/feed'
 
 export default function (server: Server, ctx: AppContext) {
   const getActorLikes = createPipeline(
@@ -56,10 +57,10 @@ const skeleton = async (inputs: {
     cursor,
   })
 
-  const postUris = likesRes.likes.map((l) => l.subject)
+  const items = likesRes.likes.map((l) => ({ post: { uri: l.subject } }))
 
   return {
-    postUris,
+    items,
     cursor: parseString(likesRes.cursor),
   }
 }
@@ -70,7 +71,7 @@ const hydration = async (inputs: {
   skeleton: Skeleton
 }) => {
   const { ctx, params, skeleton } = inputs
-  return await ctx.hydrator.hydrateFeedPosts(skeleton.postUris, params.viewer)
+  return await ctx.hydrator.hydrateFeedItems(skeleton.items, params.viewer)
 }
 
 const noPostBlocks = (inputs: {
@@ -79,8 +80,8 @@ const noPostBlocks = (inputs: {
   hydration: HydrationState
 }) => {
   const { ctx, skeleton, hydration } = inputs
-  skeleton.postUris = skeleton.postUris.filter((uri) => {
-    const creator = creatorFromUri(uri)
+  skeleton.items = skeleton.items.filter((item) => {
+    const creator = creatorFromUri(item.post.uri)
     return !ctx.views.viewerBlockExists(creator, hydration)
   })
   return skeleton
@@ -92,8 +93,8 @@ const presentation = (inputs: {
   hydration: HydrationState
 }) => {
   const { ctx, skeleton, hydration } = inputs
-  const feed = mapDefined(skeleton.postUris, (uri) =>
-    ctx.views.feedViewPost(uri, hydration),
+  const feed = mapDefined(skeleton.items, (item) =>
+    ctx.views.feedViewPost(item, hydration),
   )
   return {
     feed,
@@ -110,6 +111,6 @@ type Context = {
 type Params = QueryParams & { viewer: string | null }
 
 type Skeleton = {
-  postUris: string[]
+  items: FeedItem[]
   cursor?: string
 }

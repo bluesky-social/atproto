@@ -1,4 +1,5 @@
 import AppContext from '../../context'
+import { FeedItem } from '../../hydration/feed'
 import { SkeletonFeedPost } from '../../lexicon/types/app/bsky/feed/defs'
 import { QueryParams as SkeletonParams } from '../../lexicon/types/app/bsky/feed/getFeedSkeleton'
 
@@ -32,4 +33,12 @@ export const toSkeletonItem = (feedItem: {
           $type: 'app.bsky.feed.defs#skeletonReasonRepost',
           repost: feedItem.itemUri,
         },
+})
+
+export const toFeedItem = (feedItem: AlgoResponseItem): FeedItem => ({
+  post: { uri: feedItem.postUri },
+  repost:
+    feedItem.itemUri === feedItem.postUri
+      ? undefined
+      : { uri: feedItem.itemUri },
 })

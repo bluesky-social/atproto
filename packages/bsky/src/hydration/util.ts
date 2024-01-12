@@ -76,3 +76,19 @@ export const urisByCollection = (uris: string[]): Map<string, string[]> => {
   }
   return result
 }
+
+export const split = <T>(
+  items: T[],
+  predicate: (item: T) => boolean,
+): [T[], T[]] => {
+  const yes: T[] = []
+  const no: T[] = []
+  for (const item of items) {
+    if (predicate(item)) {
+      yes.push(item)
+    } else {
+      no.push(item)
+    }
+  }
+  return [yes, no]
+}
