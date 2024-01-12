@@ -1,7 +1,6 @@
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 import Outbox from '../../sequencer/outbox'
-import Sequencer from '../../sequencer/sequencer'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
@@ -10,11 +9,10 @@ export default function (server: Server, ctx: AppContext) {
     signal,
   }) {
     const { cursor } = params
-    const sequencer = new Sequencer(ctx.db)
-    const outbox = new Outbox(sequencer)
+    const outbox = new Outbox(ctx.sequencer)
 
     if (cursor !== undefined) {
-      const curr = await sequencer.curr()
+      const curr = await ctx.sequencer.curr()
       if (cursor > (curr ?? 0)) {
         throw new InvalidRequestError('Cursor in the future.', 'FutureCursor')
       }

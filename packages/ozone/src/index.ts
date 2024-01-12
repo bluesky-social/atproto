@@ -81,6 +81,7 @@ export class OzoneService {
         'background queue stats',
       )
     }, 10000)
+    await this.ctx.sequencer.start()
     const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
     server.keepAliveTimeout = 90000

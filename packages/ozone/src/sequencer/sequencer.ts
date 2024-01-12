@@ -1,7 +1,6 @@
 import EventEmitter from 'events'
 import TypedEmitter from 'typed-emitter'
 import { seqLogger as log } from '../logger'
-import { SECOND, wait } from '@atproto/common'
 import Database from '../db'
 import { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'
 import { Label as LabelTable } from '../db/schema/label'
@@ -11,7 +10,8 @@ type LabelRow = Selectable<LabelTable>
 
 export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   destroyed = false
-  pollPromise: Promise<void> | null = null
+  pollPromise: Promise<void> = Promise.resolve()
+  pollTimer: NodeJS.Timer | undefined
   triesWithNoResults = 0
 
   constructor(public db: Database, public lastSeen = 0) {
@@ -23,16 +23,15 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   async start() {
     const curr = await this.curr()
     this.lastSeen = curr ?? 0
-    if (this.pollPromise === null) {
-      this.pollPromise = this.pollDb()
-    }
+    this.poll()
   }
 
   async destroy() {
     this.destroyed = true
-    if (this.pollPromise) {
-      await this.pollPromise
+    if (this.pollTimer) {
+      clearTimeout(this.pollTimer)
     }
+    await this.pollPromise
     this.emit('close')
   }
 
@@ -96,34 +95,25 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     return evts
   }
 
-  private async pollDb(): Promise<void> {
+  private poll() {
     if (this.destroyed) return
-    // if already polling, do not start another poll
-    try {
-      const evts = await this.requestLabelRange({
-        earliestId: this.lastSeen,
-        limit: 500,
-      })
-      if (evts.length > 0) {
-        this.triesWithNoResults = 0
+    this.requestLabelRange({
+      earliestId: this.lastSeen,
+      limit: 500,
+    })
+      .then((evts) => {
         this.emit('events', evts)
         this.lastSeen = evts.at(-1)?.seq ?? this.lastSeen
-      } else {
-        await this.exponentialBackoff()
-      }
-      this.pollPromise = this.pollDb()
-    } catch (err) {
-      log.error({ err, lastSeen: this.lastSeen }, 'sequencer failed to poll db')
-      await this.exponentialBackoff()
-      this.pollPromise = this.pollDb()
-    }
-  }
-
-  // when no results, exponential backoff on pulling, with a max of a second wait
-  private async exponentialBackoff(): Promise<void> {
-    this.triesWithNoResults++
-    const waitTime = Math.min(Math.pow(2, this.triesWithNoResults), SECOND)
-    await wait(waitTime)
+      })
+      .catch((err) => {
+        log.error(
+          { err, lastSeen: this.lastSeen },
+          'sequencer failed to poll db',
+        )
+      })
+      .finally(() => {
+        this.pollTimer = setTimeout(() => this.poll(), 100)
+      })
   }
 }
 
