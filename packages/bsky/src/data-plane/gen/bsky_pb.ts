@@ -7,6 +7,38 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3, Timestamp } from "@bufbuild/protobuf";
 
 /**
+ * @generated from enum bsky.FeedType
+ */
+export enum FeedType {
+  /**
+   * @generated from enum value: FEED_TYPE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: FEED_TYPE_POSTS_AND_AUTHOR_THREADS = 1;
+   */
+  POSTS_AND_AUTHOR_THREADS = 1,
+
+  /**
+   * @generated from enum value: FEED_TYPE_POSTS_NO_REPLIES = 2;
+   */
+  POSTS_NO_REPLIES = 2,
+
+  /**
+   * @generated from enum value: FEED_TYPE_POSTS_WITH_MEDIA = 3;
+   */
+  POSTS_WITH_MEDIA = 3,
+}
+// Retrieve enum metadata with: proto3.getEnumType(FeedType)
+proto3.util.setEnumType(FeedType, "bsky.FeedType", [
+  { no: 0, name: "FEED_TYPE_UNSPECIFIED" },
+  { no: 1, name: "FEED_TYPE_POSTS_AND_AUTHOR_THREADS" },
+  { no: 2, name: "FEED_TYPE_POSTS_NO_REPLIES" },
+  { no: 3, name: "FEED_TYPE_POSTS_WITH_MEDIA" },
+]);
+
+/**
  * @generated from message bsky.Record
  */
 export class Record extends Message<Record> {
@@ -30,6 +62,16 @@ export class Record extends Message<Record> {
    */
   takenDown = false;
 
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 6;
+   */
+  createdAt?: Timestamp;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp sorted_at = 7;
+   */
+  sortedAt?: Timestamp;
+
   constructor(data?: PartialMessage<Record>) {
     super();
     proto3.util.initPartial(data, this);
@@ -42,6 +84,8 @@ export class Record extends Message<Record> {
     { no: 2, name: "cid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "indexed_at", kind: "message", T: Timestamp },
     { no: 5, name: "taken_down", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 6, name: "created_at", kind: "message", T: Timestamp },
+    { no: 7, name: "sorted_at", kind: "message", T: Timestamp },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Record {
@@ -588,6 +632,16 @@ export class PostRecordMeta extends Message<PostRecordMeta> {
    */
   violatesThreadGate = false;
 
+  /**
+   * @generated from field: bool has_media = 2;
+   */
+  hasMedia = false;
+
+  /**
+   * @generated from field: bool is_reply = 3;
+   */
+  isReply = false;
+
   constructor(data?: PartialMessage<PostRecordMeta>) {
     super();
     proto3.util.initPartial(data, this);
@@ -597,6 +651,8 @@ export class PostRecordMeta extends Message<PostRecordMeta> {
   static readonly typeName = "bsky.PostRecordMeta";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "violates_thread_gate", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 2, name: "has_media", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 3, name: "is_reply", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PostRecordMeta {
@@ -5108,19 +5164,9 @@ export class GetAuthorFeedRequest extends Message<GetAuthorFeedRequest> {
   cursor = "";
 
   /**
-   * @generated from field: bool no_replies = 4;
+   * @generated from field: bsky.FeedType feed_type = 4;
    */
-  noReplies = false;
-
-  /**
-   * @generated from field: bool media_only = 5;
-   */
-  mediaOnly = false;
-
-  /**
-   * @generated from field: bool author_threads_only = 6;
-   */
-  authorThreadsOnly = false;
+  feedType = FeedType.UNSPECIFIED;
 
   constructor(data?: PartialMessage<GetAuthorFeedRequest>) {
     super();
@@ -5133,9 +5179,7 @@ export class GetAuthorFeedRequest extends Message<GetAuthorFeedRequest> {
     { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 3, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "no_replies", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 5, name: "media_only", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 6, name: "author_threads_only", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 4, name: "feed_type", kind: "enum", T: proto3.getEnumType(FeedType) },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetAuthorFeedRequest {
@@ -5156,13 +5200,104 @@ export class GetAuthorFeedRequest extends Message<GetAuthorFeedRequest> {
 }
 
 /**
+ * @generated from message bsky.AuthorFeedItem
+ */
+export class AuthorFeedItem extends Message<AuthorFeedItem> {
+  /**
+   * @generated from field: string uri = 1;
+   */
+  uri = "";
+
+  /**
+   * @generated from field: string cid = 2;
+   */
+  cid = "";
+
+  /**
+   * @generated from field: string repost = 3;
+   */
+  repost = "";
+
+  /**
+   * @generated from field: string repost_cid = 4;
+   */
+  repostCid = "";
+
+  /**
+   * @generated from field: bool posts_and_author_threads = 5;
+   */
+  postsAndAuthorThreads = false;
+
+  /**
+   * @generated from field: bool posts_no_replies = 6;
+   */
+  postsNoReplies = false;
+
+  /**
+   * @generated from field: bool posts_with_media = 7;
+   */
+  postsWithMedia = false;
+
+  /**
+   * @generated from field: bool is_reply = 8;
+   */
+  isReply = false;
+
+  /**
+   * @generated from field: bool is_repost = 9;
+   */
+  isRepost = false;
+
+  /**
+   * @generated from field: bool is_quote_post = 10;
+   */
+  isQuotePost = false;
+
+  constructor(data?: PartialMessage<AuthorFeedItem>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.AuthorFeedItem";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "cid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "repost", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "repost_cid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "posts_and_author_threads", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 6, name: "posts_no_replies", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 7, name: "posts_with_media", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 8, name: "is_reply", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 9, name: "is_repost", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 10, name: "is_quote_post", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AuthorFeedItem {
+    return new AuthorFeedItem().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): AuthorFeedItem {
+    return new AuthorFeedItem().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): AuthorFeedItem {
+    return new AuthorFeedItem().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: AuthorFeedItem | PlainMessage<AuthorFeedItem> | undefined, b: AuthorFeedItem | PlainMessage<AuthorFeedItem> | undefined): boolean {
+    return proto3.util.equals(AuthorFeedItem, a, b);
+  }
+}
+
+/**
  * @generated from message bsky.GetAuthorFeedResponse
  */
 export class GetAuthorFeedResponse extends Message<GetAuthorFeedResponse> {
   /**
-   * @generated from field: repeated bsky.FeedItem items = 1;
+   * @generated from field: repeated bsky.AuthorFeedItem items = 1;
    */
-  items: FeedItem[] = [];
+  items: AuthorFeedItem[] = [];
 
   /**
    * @generated from field: string cursor = 2;
@@ -5177,7 +5312,7 @@ export class GetAuthorFeedResponse extends Message<GetAuthorFeedResponse> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetAuthorFeedResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "items", kind: "message", T: FeedItem, repeated: true },
+    { no: 1, name: "items", kind: "message", T: AuthorFeedItem, repeated: true },
     { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
@@ -5220,6 +5355,21 @@ export class GetTimelineRequest extends Message<GetTimelineRequest> {
    */
   cursor = "";
 
+  /**
+   * @generated from field: bool exclude_replies = 4;
+   */
+  excludeReplies = false;
+
+  /**
+   * @generated from field: bool exclude_reposts = 5;
+   */
+  excludeReposts = false;
+
+  /**
+   * @generated from field: bool exclude_quotes = 6;
+   */
+  excludeQuotes = false;
+
   constructor(data?: PartialMessage<GetTimelineRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -5231,6 +5381,9 @@ export class GetTimelineRequest extends Message<GetTimelineRequest> {
     { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 3, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "exclude_replies", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 5, name: "exclude_reposts", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 6, name: "exclude_quotes", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetTimelineRequest {
@@ -5255,9 +5408,9 @@ export class GetTimelineRequest extends Message<GetTimelineRequest> {
  */
 export class GetTimelineResponse extends Message<GetTimelineResponse> {
   /**
-   * @generated from field: repeated bsky.FeedItem items = 1;
+   * @generated from field: repeated bsky.TimelineFeedItem items = 1;
    */
-  items: FeedItem[] = [];
+  items: TimelineFeedItem[] = [];
 
   /**
    * @generated from field: string cursor = 2;
@@ -5272,7 +5425,7 @@ export class GetTimelineResponse extends Message<GetTimelineResponse> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetTimelineResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "items", kind: "message", T: FeedItem, repeated: true },
+    { no: 1, name: "items", kind: "message", T: TimelineFeedItem, repeated: true },
     { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
@@ -5294,9 +5447,9 @@ export class GetTimelineResponse extends Message<GetTimelineResponse> {
 }
 
 /**
- * @generated from message bsky.FeedItem
+ * @generated from message bsky.TimelineFeedItem
  */
-export class FeedItem extends Message<FeedItem> {
+export class TimelineFeedItem extends Message<TimelineFeedItem> {
   /**
    * @generated from field: string uri = 1;
    */
@@ -5317,34 +5470,52 @@ export class FeedItem extends Message<FeedItem> {
    */
   repostCid = "";
 
-  constructor(data?: PartialMessage<FeedItem>) {
+  /**
+   * @generated from field: bool is_reply = 5;
+   */
+  isReply = false;
+
+  /**
+   * @generated from field: bool is_repost = 6;
+   */
+  isRepost = false;
+
+  /**
+   * @generated from field: bool is_quote_post = 7;
+   */
+  isQuotePost = false;
+
+  constructor(data?: PartialMessage<TimelineFeedItem>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "bsky.FeedItem";
+  static readonly typeName = "bsky.TimelineFeedItem";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "cid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "repost", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "repost_cid", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "is_reply", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 6, name: "is_repost", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 7, name: "is_quote_post", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): FeedItem {
-    return new FeedItem().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): TimelineFeedItem {
+    return new TimelineFeedItem().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): FeedItem {
-    return new FeedItem().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): TimelineFeedItem {
+    return new TimelineFeedItem().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): FeedItem {
-    return new FeedItem().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): TimelineFeedItem {
+    return new TimelineFeedItem().fromJsonString(jsonString, options);
   }
 
-  static equals(a: FeedItem | PlainMessage<FeedItem> | undefined, b: FeedItem | PlainMessage<FeedItem> | undefined): boolean {
-    return proto3.util.equals(FeedItem, a, b);
+  static equals(a: TimelineFeedItem | PlainMessage<TimelineFeedItem> | undefined, b: TimelineFeedItem | PlainMessage<TimelineFeedItem> | undefined): boolean {
+    return proto3.util.equals(TimelineFeedItem, a, b);
   }
 }
 
@@ -5371,6 +5542,21 @@ export class GetListFeedRequest extends Message<GetListFeedRequest> {
    */
   cursor = "";
 
+  /**
+   * @generated from field: bool exclude_replies = 4;
+   */
+  excludeReplies = false;
+
+  /**
+   * @generated from field: bool exclude_reposts = 5;
+   */
+  excludeReposts = false;
+
+  /**
+   * @generated from field: bool exclude_quotes = 6;
+   */
+  excludeQuotes = false;
+
   constructor(data?: PartialMessage<GetListFeedRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -5382,6 +5568,9 @@ export class GetListFeedRequest extends Message<GetListFeedRequest> {
     { no: 1, name: "list_uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
     { no: 3, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "exclude_replies", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 5, name: "exclude_reposts", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 6, name: "exclude_quotes", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetListFeedRequest {
@@ -5406,9 +5595,9 @@ export class GetListFeedRequest extends Message<GetListFeedRequest> {
  */
 export class GetListFeedResponse extends Message<GetListFeedResponse> {
   /**
-   * @generated from field: repeated bsky.FeedItem items = 1;
+   * @generated from field: repeated bsky.TimelineFeedItem items = 1;
    */
-  items: FeedItem[] = [];
+  items: TimelineFeedItem[] = [];
 
   /**
    * @generated from field: string cursor = 2;
@@ -5423,7 +5612,7 @@ export class GetListFeedResponse extends Message<GetListFeedResponse> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "bsky.GetListFeedResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "items", kind: "message", T: FeedItem, repeated: true },
+    { no: 1, name: "items", kind: "message", T: TimelineFeedItem, repeated: true },
     { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
