@@ -68,12 +68,24 @@
         "followersCount": { "type": "integer" },
         "followsCount": { "type": "integer" },
         "postsCount": { "type": "integer" },
+        "associated": {
+          "type": "ref",
+          "ref": "#profileAssociated"
+        },
         "indexedAt": { "type": "string", "format": "datetime" },
         "viewer": { "type": "ref", "ref": "#viewerState" },
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         }
+      }
+    },
+    "profileAssociated": {
+      "type": "object",
+      "properties": {
+        "lists": { "type": "integer" },
+        "feedgens": { "type": "integer" },
+        "modservice": { "type": "boolean" }
       }
     },
     "viewerState": {
@@ -200,39 +212,47 @@
         }
       }
     },
-    "labelersPref": {
+    "modsPref": {
       "type": "object",
-      "required": ["labelers"],
+      "required": ["mods"],
       "properties": {
-        "labelers": {
+        "mods": {
           "type": "array",
           "items": {
-            "type": "object",
-            "required": ["uri", "enabled", "labelGroupSettings"],
-            "properties": {
-              "uri": {
-                "type": "string",
-                "format": "at-uri"
-              },
-              "enabled": {
-                "type": "boolean"
-              },
-              "labelGroupSettings": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "required": ["labelGroup", "visibility"],
-                  "properties": {
-                    "labelGroup": { "type": "string" },
-                    "visibility": {
-                      "type": "string",
-                      "knownValues": ["show", "warn", "hide"]
-                    }
-                  }
-                }
-              }
-            }
+            "type": "ref",
+            "ref": "#modPrefItem"
           }
+        }
+      }
+    },
+    "modPrefItem": {
+      "type": "object",
+      "required": ["did", "enabled", "labelGroupSettings"],
+      "properties": {
+        "did": {
+          "type": "string",
+          "format": "did"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "labelGroupSettings": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "#labelGroupSetting"
+          }
+        }
+      }
+    },
+    "labelGroupSetting": {
+      "type": "object",
+      "required": ["labelGroup", "visibility"],
+      "properties": {
+        "labelGroup": { "type": "string" },
+        "visibility": {
+          "type": "string",
+          "knownValues": ["show", "warn", "hide"]
         }
       }
     }

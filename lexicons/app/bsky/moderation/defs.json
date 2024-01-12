@@ -1,16 +1,14 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.label.defs",
+  "id": "app.bsky.moderation.defs",
   "defs": {
-    "labelerView": {
+    "modServiceView": {
       "type": "object",
-      "required": ["uri", "cid", "did", "creator", "displayName", "indexedAt"],
+      "required": ["uri", "cid", "creator", "indexedAt"],
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
-        "did": { "type": "string", "format": "did" },
         "creator": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
-        "displayName": { "type": "string" },
         "description": {
           "type": "string",
           "maxGraphemes": 300,
@@ -20,21 +18,22 @@
           "type": "array",
           "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
         },
-        "avatar": { "type": "string" },
         "likeCount": { "type": "integer", "minimum": 0 },
-        "viewer": { "type": "ref", "ref": "#labelerViewerState" },
-        "indexedAt": { "type": "string", "format": "datetime" }
+        "viewer": { "type": "ref", "ref": "#modServiceViewerState" },
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        }
       }
     },
-    "labelerViewDetailed": {
+    "modServiceViewDetailed": {
       "type": "object",
-      "required": ["uri", "cid", "did", "creator", "displayName", "indexedAt"],
+      "required": ["uri", "cid", "creator", "policies", "indexedAt"],
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
-        "did": { "type": "string", "format": "did" },
         "creator": { "type": "ref", "ref": "app.bsky.actor.defs#profileView" },
-        "displayName": { "type": "string" },
         "description": {
           "type": "string",
           "maxGraphemes": 300,
@@ -44,23 +43,26 @@
           "type": "array",
           "items": { "type": "ref", "ref": "app.bsky.richtext.facet" }
         },
-        "avatar": { "type": "string" },
         "policies": {
           "type": "ref",
-          "ref": "app.bsky.label.defs#labelerPolicies"
+          "ref": "app.bsky.moderation.defs#modServicePolicies"
         },
         "likeCount": { "type": "integer", "minimum": 0 },
-        "viewer": { "type": "ref", "ref": "#labelerViewerState" },
-        "indexedAt": { "type": "string", "format": "datetime" }
+        "viewer": { "type": "ref", "ref": "#modServiceViewerState" },
+        "indexedAt": { "type": "string", "format": "datetime" },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        }
       }
     },
-    "labelerViewerState": {
+    "modServiceViewerState": {
       "type": "object",
       "properties": {
         "like": { "type": "string", "format": "at-uri" }
       }
     },
-    "labelerPolicies": {
+    "modServicePolicies": {
       "type": "object",
       "required": ["reportReasons", "labelValues"],
       "properties": {
