@@ -135,10 +135,6 @@ export class ServerConfig {
     return this.cfg.dataplaneIgnoreBadTls
   }
 
-  get labelsFromIssuerDids() {
-    return this.cfg.labelsFromIssuerDids ?? []
-  }
-
   get searchEndpoint() {
     return this.cfg.searchEndpoint
   }
