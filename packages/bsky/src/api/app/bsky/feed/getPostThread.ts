@@ -13,7 +13,7 @@ import {
 } from '../../../../pipeline'
 import { Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
-import { DataPlaneClient } from '../../../../data-plane'
+import { DataPlaneClient, isDataplaneError, Code } from '../../../../data-plane'
 
 export default function (server: Server, ctx: AppContext) {
   const getPostThread = createPipeline(
@@ -49,14 +49,25 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
-  const res = await ctx.dataplane.getThread({
-    postUri: params.uri,
-    above: params.parentHeight,
-    below: params.depth,
-  })
-  return {
-    anchor: params.uri,
-    uris: res.uris,
+  try {
+    const res = await ctx.dataplane.getThread({
+      postUri: params.uri,
+      above: params.parentHeight,
+      below: params.depth,
+    })
+    return {
+      anchor: params.uri,
+      uris: res.uris,
+    }
+  } catch (err) {
+    if (isDataplaneError(err, Code.NotFound)) {
+      return {
+        anchor: params.uri,
+        uris: [],
+      }
+    } else {
+      throw err
+    }
   }
 }
 

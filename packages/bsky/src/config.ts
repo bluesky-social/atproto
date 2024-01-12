@@ -10,6 +10,7 @@ export interface ServerConfigValues {
   dataplaneUrls: string[]
   dataplaneHttpVersion?: '1.1' | '2'
   dataplaneIgnoreBadTls?: boolean
+  searchEndpoint?: string
   didPlcUrl: string
   labelsFromIssuerDids?: string[]
   handleResolveNameservers?: string[]
@@ -39,6 +40,7 @@ export class ServerConfig {
       : []
     const imgUriEndpoint = process.env.BSKY_IMG_URI_ENDPOINT
     const blobCacheLocation = process.env.BSKY_BLOB_CACHE_LOC
+    const searchEndpoint = process.env.BSKY_SEARCH_ENDPOINT || undefined
     let dataplaneUrls = overrides?.dataplaneUrls
     dataplaneUrls ??= process.env.BSKY_DATAPLANE_URLS
       ? process.env.BSKY_DATAPLANE_URLS.split(',')
@@ -70,6 +72,7 @@ export class ServerConfig {
       dataplaneUrls,
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
+      searchEndpoint,
       didPlcUrl,
       labelsFromIssuerDids,
       handleResolveNameservers,
@@ -134,6 +137,10 @@ export class ServerConfig {
 
   get labelsFromIssuerDids() {
     return this.cfg.labelsFromIssuerDids ?? []
+  }
+
+  get searchEndpoint() {
+    return this.cfg.searchEndpoint
   }
 
   get handleResolveNameservers() {
