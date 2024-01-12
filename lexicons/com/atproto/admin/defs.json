@@ -584,6 +584,27 @@
           "description": "Additional comment about the outgoing comm."
         }
       }
+    },
+    "communicationTemplate": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "subject",
+        "content",
+        "disabled",
+        "createdBy",
+        "createdAt"
+      ],
+      "properties": {
+        "id": { "type": "integer" },
+        "name": { "type": "string" },
+        "subject": { "type": "string" },
+        "content": { "type": "string" },
+        "disabled": { "type": "boolean" },
+        "createdBy": { "type": "string", "format": "did" },
+        "createdAt": { "type": "string", "format": "datetime" }
+      }
     }
   }
 }

@@ -1,0 +1,38 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.admin.updateCommunicationTemplate",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Administrative action to update an an existing communication template.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["id", "email"],
+          "properties": {
+            "id": {
+              "type": "integer",
+              "description": "ID of the template to be updated."
+            },
+            "name": {
+              "type": "string",
+              "description": "Name of the template."
+            },
+            "content": {
+              "type": "string",
+              "description": "Content of the template, markdown supported, can contain variable placeholder."
+            },
+            "subject": {
+              "type": "string",
+              "description": "Subject of the message, used in emails."
+            },
+            "disabled": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  }
+}
