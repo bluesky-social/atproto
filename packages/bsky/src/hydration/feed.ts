@@ -57,6 +57,9 @@ export type Threadgate = RecordInfo<ThreadgateRecord>
 export type Threadgates = HydrationMap<Threadgate>
 
 export type ItemRef = { uri: string; cid?: string }
+
+// @NOTE the feed item types in the protos for author feeds and timelines
+// technically have additional fields, not supported by the mock dataplane.
 export type FeedItem = { post: ItemRef; repost?: ItemRef }
 
 export class FeedHydrator {
