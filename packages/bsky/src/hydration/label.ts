@@ -31,12 +31,18 @@ export type ModServiceViewerState = {
 export type ModServiceViewerStates = HydrationMap<ModServiceViewerState>
 
 export class LabelHydrator {
-  constructor(public dataplane: DataPlaneClient) {}
+  constructor(
+    public dataplane: DataPlaneClient,
+    public opts?: { labelsFromIssuerDids?: string[] },
+  ) {}
 
   async getLabelsForSubjects(
     subjects: string[],
     issuers: string[],
   ): Promise<Labels> {
+    issuers = ([] as string[])
+      .concat(issuers ?? [])
+      .concat(this.opts?.labelsFromIssuerDids ?? [])
     const res = await this.dataplane.getLabels({ subjects, issuers })
     return res.labels.reduce((acc, cur) => {
       const label = parseJsonBytes(cur) as Label | undefined

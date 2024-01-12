@@ -88,11 +88,14 @@ export class Hydrator {
   graph: GraphHydrator
   label: LabelHydrator
 
-  constructor(public dataplane: DataPlaneClient) {
+  constructor(
+    public dataplane: DataPlaneClient,
+    public opts?: { labelsFromIssuerDids?: string[] },
+  ) {
     this.actor = new ActorHydrator(dataplane)
     this.feed = new FeedHydrator(dataplane)
     this.graph = new GraphHydrator(dataplane)
-    this.label = new LabelHydrator(dataplane)
+    this.label = new LabelHydrator(dataplane, opts)
   }
 
   // app.bsky.actor.defs#profileView
