@@ -50,7 +50,7 @@ const skeleton = async (
   ctx: Context,
 ): Promise<SkeletonState> => {
   const res = await ctx.searchAgent.api.app.bsky.unspecced.searchPostsSkeleton({
-    q: params.q,
+    q: augmentSearchQuery(params.q, { viewer: params.viewer }),
     cursor: params.cursor,
     limit: params.limit,
   })
@@ -109,6 +109,33 @@ const presentation = (state: HydrationState, ctx: Context) => {
     ),
   )
   return { posts: postViews, cursor: state.cursor, hitsTotal: state.hitsTotal }
+}
+
+// Adds additional search syntax like `from:me`
+const augmentSearchQuery = (
+  query: string,
+  { viewer }: { viewer: string | null },
+) => {
+  // Don't do anything if there's no viewer
+  if (!viewer) {
+    return query
+  }
+
+  // We don't want to replace substrings that are being "quoted" because those
+  // are exact string matches, so what we'll do here is to split them apart
+
+  // Even-indexed strings are unquoted, odd-indexed strings are quoted
+  const splits = query.split(/("(?:[^"\\]|\\.)*")/g)
+
+  return splits
+    .map((str, idx) => {
+      if (idx % 2 === 0) {
+        return str.replaceAll(/(^|\s)from:me(\s|$)/g, `$1${viewer}$2`)
+      }
+
+      return str
+    })
+    .join('')
 }
 
 type Context = {
