@@ -15,8 +15,12 @@ export default function (server: Server, ctx: AppContext) {
       .execute()
 
     const labels = labelRes.map((l) => ({
-      ...l,
+      src: l.src,
+      uri: l.uri,
       cid: l.cid === '' ? undefined : l.cid,
+      val: l.val,
+      neg: l.neg,
+      cts: l.cts,
     }))
 
     return {
