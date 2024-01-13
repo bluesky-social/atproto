@@ -14,7 +14,7 @@ describe('sequencer', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'sequencer',
+      dbPostgresSchema: 'ozone_sequencer',
     })
     sequencer = network.ozone.ctx.sequencer
   })

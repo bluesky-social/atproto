@@ -8,6 +8,8 @@ import getRepo from './admin/getRepo'
 import queryModerationStatuses from './admin/queryModerationStatuses'
 import queryModerationEvents from './admin/queryModerationEvents'
 import getModerationEvent from './admin/getModerationEvent'
+import queryLabels from './label/queryLabels'
+import subscribeLabels from './label/subscribeLabels'
 import fetchLabels from './temp/fetchLabels'
 
 export * as health from './health'
@@ -23,6 +25,8 @@ export default function (server: Server, ctx: AppContext) {
   getModerationEvent(server, ctx)
   queryModerationEvents(server, ctx)
   queryModerationStatuses(server, ctx)
+  queryLabels(server, ctx)
+  subscribeLabels(server, ctx)
   fetchLabels(server, ctx)
   return server
 }
