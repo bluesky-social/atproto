@@ -105,4 +105,20 @@ describe('ozone query labels', () => {
     })
     expect(res.data.labels).toEqual(labels.slice(0, 5))
   })
+
+  it('paginates', async () => {
+    const res1 = await agent.api.com.atproto.label.queryLabels({
+      uriPatterns: ['at://did:example:blah/app.bsky*', 'did:example:blah'],
+      limit: 3,
+    })
+    const res2 = await agent.api.com.atproto.label.queryLabels({
+      uriPatterns: ['at://did:example:blah/app.bsky*', 'did:example:blah'],
+      limit: 3,
+      cursor: res1.data.cursor,
+    })
+
+    expect([...res1.data.labels, ...res2.data.labels]).toEqual(
+      labels.slice(0, 5),
+    )
+  })
 })
