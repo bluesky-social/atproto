@@ -19,7 +19,7 @@ import {
   ThreadgateView,
 } from '../lexicon/types/app/bsky/feed/defs'
 import { ListView, ListViewBasic } from '../lexicon/types/app/bsky/graph/defs'
-import { compositeTime, creatorFromUri, parseThreadGate } from './util'
+import { creatorFromUri, parseThreadGate } from './util'
 import { mapDefined } from '@atproto/common'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isSelfLabels } from '../lexicon/types/com/atproto/label/defs'
@@ -109,7 +109,7 @@ export class Views {
     return {
       ...basicView,
       description: actor.profile?.description || undefined,
-      indexedAt: actor.indexedAt?.toISOString(),
+      indexedAt: actor.sortedAt?.toISOString(),
     }
   }
 
@@ -204,10 +204,7 @@ export class Views {
       creator,
       description: list.record.description,
       descriptionFacets: list.record.descriptionFacets,
-      indexedAt: compositeTime(
-        normalizeDatetimeAlways(list.record.createdAt),
-        list.indexedAt?.toISOString(),
-      ),
+      indexedAt: list.sortedAt.toISOString(),
     }
   }
 
@@ -230,10 +227,7 @@ export class Views {
             list.record.avatar.ref,
           )
         : undefined,
-      indexedAt: compositeTime(
-        normalizeDatetimeAlways(list.record.createdAt),
-        list.indexedAt?.toISOString(),
-      ),
+      indexedAt: list.sortedAt.toISOString(),
       viewer: listViewer
         ? {
             muted: !!listViewer.viewerMuted,
@@ -318,10 +312,7 @@ export class Views {
             like: viewer.like,
           }
         : undefined,
-      indexedAt: compositeTime(
-        normalizeDatetimeAlways(feedgen.record.createdAt),
-        feedgen.indexedAt?.toISOString(),
-      ),
+      indexedAt: feedgen.sortedAt.toISOString(),
     }
   }
 
@@ -373,7 +364,7 @@ export class Views {
       replyCount: aggs?.replies,
       repostCount: aggs?.reposts,
       likeCount: aggs?.likes,
-      indexedAt: (post.indexedAt ?? new Date()).toISOString(),
+      indexedAt: post.sortedAt.toISOString(),
       viewer: viewer
         ? {
             repost: viewer.repost,
@@ -479,11 +470,10 @@ export class Views {
   ): ReasonRepost | undefined {
     const creator = this.profileBasic(creatorDid, state)
     if (!creator) return
-    if (!repost.indexedAt) return
     return {
       $type: 'app.bsky.feed.defs#reasonRepost',
       by: creator,
-      indexedAt: repost.indexedAt.toISOString(),
+      indexedAt: repost.sortedAt.toISOString(),
     }
   }
 

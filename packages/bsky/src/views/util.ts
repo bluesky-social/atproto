@@ -8,14 +8,6 @@ import {
 } from '../lexicon/types/app/bsky/feed/threadgate'
 import { isMention } from '../lexicon/types/app/bsky/richtext/facet'
 
-const now = () => {
-  return new Date().toISOString()
-}
-
-export const compositeTime = (createdAt = now(), indexedAt = now()): string => {
-  return createdAt < indexedAt ? createdAt : indexedAt
-}
-
 export const creatorFromUri = (uri: string): string => {
   return new AtUri(uri).hostname
 }
