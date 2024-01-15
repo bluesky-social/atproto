@@ -47,11 +47,11 @@ export class AppContext {
         keypair: signingKey,
       })
     const appviewAuth = async () =>
-      cfg.appview.did ? createAuthHeaders(cfg.appview.did) : undefined
+      cfg.appview.isAdmin ? createAuthHeaders(cfg.appview.did) : undefined
 
     const backgroundQueue = new BackgroundQueue(db)
     const eventPusher = new EventPusher(db, createAuthHeaders, {
-      appview: cfg.appview,
+      appview: cfg.appview.isAdmin ? cfg.appview : undefined,
       pds: cfg.pds ?? undefined,
     })
 

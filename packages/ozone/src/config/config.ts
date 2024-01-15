@@ -26,6 +26,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
   const appviewCfg: OzoneConfig['appview'] = {
     url: env.appviewUrl,
     did: env.appviewDid,
+    isAdmin: env.appviewIsAdmin ?? false,
   }
 
   assert(env.pdsUrl)
@@ -72,6 +73,7 @@ export type DatabaseConfig = {
 export type AppviewConfig = {
   url: string
   did: string
+  isAdmin: boolean
 }
 
 export type PdsConfig = {

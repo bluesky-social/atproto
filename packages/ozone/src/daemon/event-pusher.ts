@@ -5,6 +5,7 @@ import { retryHttp } from '../util'
 import { dbLogger } from '../logger'
 import { InputSchema } from '../lexicon/types/com/atproto/admin/updateSubjectStatus'
 import assert from 'assert'
+import { RepoPushEventType } from '../db/schema/repo_push_event'
 
 type EventSubject = InputSchema['subject']
 
@@ -40,6 +41,8 @@ export class EventPusher {
   appview: Service | undefined
   pds: Service | undefined
 
+  eventTypes: RepoPushEventType[]
+
   constructor(
     public db: Database,
     public createAuthHeaders: (aud: string) => Promise<AuthHeaders>,
@@ -54,17 +57,20 @@ export class EventPusher {
       }
     },
   ) {
+    this.eventTypes = []
     if (services.appview) {
       this.appview = {
         agent: new AtpAgent({ service: services.appview.url }),
         did: services.appview.did,
       }
+      this.eventTypes.push('appview_takedown')
     }
     if (services.pds) {
       this.pds = {
         agent: new AtpAgent({ service: services.pds.url }),
         did: services.pds.did,
       }
+      this.eventTypes.push('pds_takedown')
     }
   }
 

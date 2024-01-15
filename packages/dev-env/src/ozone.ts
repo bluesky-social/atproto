@@ -40,6 +40,7 @@ export class TestOzone {
       publicUrl: 'https://ozone.public.url',
       serverDid,
       signingKeyHex,
+      appviewIsAdmin: true,
       ...config,
       adminPassword: ADMIN_PASSWORD,
       moderatorPassword: MOD_PASSWORD,

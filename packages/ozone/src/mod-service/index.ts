@@ -351,10 +351,11 @@ export class ModerationService {
     takedownId: number,
     isSuspend = false,
   ) {
+    if (this.eventPusher.eventTypes.length === 0) return
     const takedownRef = `BSKY-${
       isSuspend ? 'SUSPEND' : 'TAKEDOWN'
     }-${takedownId}`
-    const values = TAKEDOWNS.map((eventType) => ({
+    const values = this.eventPusher.eventTypes.map((eventType) => ({
       eventType,
       subjectDid: subject.did,
       takedownRef,
@@ -383,9 +384,10 @@ export class ModerationService {
   }
 
   async reverseTakedownRepo(subject: RepoSubject) {
+    if (this.eventPusher.eventTypes.length === 0) return
     const repoEvts = await this.db.db
       .updateTable('repo_push_event')
-      .where('eventType', 'in', TAKEDOWNS)
+      .where('eventType', 'in', this.eventPusher.eventTypes)
       .where('subjectDid', '=', subject.did)
       .set({
         takedownRef: null,
@@ -407,8 +409,9 @@ export class ModerationService {
 
   async takedownRecord(subject: RecordSubject, takedownId: number) {
     this.db.assertTransaction()
+    if (this.eventPusher.eventTypes.length === 0) return
     const takedownRef = `BSKY-TAKEDOWN-${takedownId}`
-    const values = TAKEDOWNS.map((eventType) => ({
+    const values = this.eventPusher.eventTypes.map((eventType) => ({
       eventType,
       subjectDid: subject.did,
       subjectUri: subject.uri,
@@ -440,7 +443,7 @@ export class ModerationService {
     const blobCids = subject.blobCids
     if (blobCids && blobCids.length > 0) {
       const blobValues: Insertable<BlobPushEvent>[] = []
-      for (const eventType of TAKEDOWNS) {
+      for (const eventType of this.eventPusher.eventTypes) {
         for (const cid of blobCids) {
           blobValues.push({
             eventType,
@@ -478,9 +481,10 @@ export class ModerationService {
 
   async reverseTakedownRecord(subject: RecordSubject) {
     this.db.assertTransaction()
+    if (this.eventPusher.eventTypes.length === 0) return
     const recordEvts = await this.db.db
       .updateTable('record_push_event')
-      .where('eventType', 'in', TAKEDOWNS)
+      .where('eventType', 'in', this.eventPusher.eventTypes)
       .where('subjectDid', '=', subject.did)
       .where('subjectUri', '=', subject.uri)
       .set({
@@ -503,7 +507,7 @@ export class ModerationService {
     if (blobCids && blobCids.length > 0) {
       const blobEvts = await this.db.db
         .updateTable('blob_push_event')
-        .where('eventType', 'in', TAKEDOWNS)
+        .where('eventType', 'in', this.eventPusher.eventTypes)
         .where('subjectDid', '=', subject.did)
         .where(
           'subjectBlobCid',
@@ -743,8 +747,6 @@ export class ModerationService {
       .execute()
   }
 }
-
-const TAKEDOWNS = ['pds_takedown' as const, 'appview_takedown' as const]
 
 export type TakedownSubjects = {
   did: string

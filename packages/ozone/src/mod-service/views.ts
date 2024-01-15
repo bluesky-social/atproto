@@ -44,7 +44,6 @@ export class ModerationViews {
   async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {
     if (dids.length === 0) return new Map()
     const auth = await this.appviewAuth()
-    if (!auth) return new Map()
     const res = await this.appviewAgent.api.com.atproto.admin.getAccountInfos(
       {
         dids: dedupeStrs(dids),
@@ -212,7 +211,6 @@ export class ModerationViews {
     subjects: RecordSubject[],
   ): Promise<Map<string, RecordInfo>> {
     const auth = await this.appviewAuth()
-    if (!auth) return new Map()
     const fetched = await Promise.all(
       subjects.map(async (subject) => {
         const uri = new AtUri(subject.uri)

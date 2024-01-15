@@ -1,4 +1,4 @@
-import { envInt, envStr } from '@atproto/common'
+import { envBool, envInt, envStr } from '@atproto/common'
 
 export const readEnv = (): OzoneEnvironment => {
   return {
@@ -9,6 +9,7 @@ export const readEnv = (): OzoneEnvironment => {
     serverDid: envStr('OZONE_SERVER_DID'),
     appviewUrl: envStr('OZONE_APPVIEW_URL'),
     appviewDid: envStr('OZONE_APPVIEW_DID'),
+    appviewIsAdmin: envBool('OZONE_APPVIEW_IS_ADMIN'),
     pdsUrl: envStr('OZONE_PDS_URL'),
     pdsDid: envStr('OZONE_PDS_DID'),
     dbPostgresUrl: envStr('OZONE_DB_POSTGRES_URL'),
@@ -29,6 +30,7 @@ export type OzoneEnvironment = {
   serverDid?: string
   appviewUrl?: string
   appviewDid?: string
+  appviewIsAdmin?: boolean
   pdsUrl?: string
   pdsDid?: string
   dbPostgresUrl?: string
