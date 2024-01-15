@@ -1,4 +1,4 @@
-import { Generated } from 'kysely'
+import { Generated, Selectable } from 'kysely'
 
 export const tableName = 'label'
 
@@ -11,5 +11,7 @@ export interface Label {
   neg: boolean
   cts: string
 }
+
+export type LabelRow = Selectable<Label>
 
 export type PartialDB = { [tableName]: Label }

@@ -5,6 +5,7 @@ import Database from '../db'
 import { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'
 import { Label as LabelTable } from '../db/schema/label'
 import { Selectable } from 'kysely'
+import { formatLabel } from '../mod-service/util'
 
 export type { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'
 type LabelRow = Selectable<LabelTable>
@@ -80,16 +81,7 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
     for (const row of rows) {
       evts.push({
         seq: row.id,
-        labels: [
-          {
-            src: row.src,
-            uri: row.uri,
-            cid: row.cid === '' ? undefined : row.cid,
-            val: row.val,
-            neg: row.neg,
-            cts: row.cts,
-          },
-        ],
+        labels: [formatLabel(row)],
       })
     }
 
