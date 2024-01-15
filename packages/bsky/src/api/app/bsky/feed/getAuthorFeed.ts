@@ -15,6 +15,7 @@ import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
 import { Actor } from '../../../../hydration/actor'
 import { FeedItem } from '../../../../hydration/feed'
+import { FeedType } from '../../../../data-plane/gen/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
   const getAuthorFeed = createPipeline(
@@ -43,6 +44,13 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
+const FILTER_TO_FEED_TYPE = {
+  posts_with_replies: undefined, // default: all posts, replies, and reposts
+  posts_no_replies: FeedType.POSTS_NO_REPLIES,
+  posts_with_media: FeedType.POSTS_WITH_MEDIA,
+  posts_and_author_threads: FeedType.POSTS_AND_AUTHOR_THREADS,
+}
+
 export const skeleton = async (inputs: {
   ctx: Context
   params: Params
@@ -61,9 +69,7 @@ export const skeleton = async (inputs: {
     actorDid: did,
     limit: params.limit,
     cursor: params.cursor,
-    noReplies: params.filter === 'posts_no_replies',
-    mediaOnly: params.filter === 'posts_with_media',
-    authorThreadsOnly: params.filter === 'posts_and_author_threads',
+    feedType: FILTER_TO_FEED_TYPE[params.filter],
   })
   return {
     actor,

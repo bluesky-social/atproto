@@ -18,6 +18,8 @@ message Record {
   string cid = 2;
   google.protobuf.Timestamp indexed_at = 4;
   bool taken_down = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp sorted_at = 7;
 }
 
 
@@ -79,6 +81,8 @@ message GetListRecordsResponse {
 
 message PostRecordMeta {
   bool violates_thread_gate = 1;
+  bool has_media = 2;
+  bool is_reply = 3;
 }
 
 message GetPostRecordsRequest {
@@ -719,6 +723,13 @@ message GetFeedGeneratorStatusResponse {
 // Feeds
 //
 
+enum FeedType {
+  FEED_TYPE_UNSPECIFIED = 0;
+  FEED_TYPE_POSTS_AND_AUTHOR_THREADS = 1;
+  FEED_TYPE_POSTS_NO_REPLIES = 2;
+  FEED_TYPE_POSTS_WITH_MEDIA = 3;
+}
+
 // - Returns recent posts authored by a given DID, paginated
 //     - `getAuthorFeed`
 //     - Optionally: filter by if a post is/isn’t a reply and if a post has a media object in it
@@ -726,13 +737,24 @@ message GetAuthorFeedRequest {
   string actor_did = 1;
   int32 limit = 2;
   string cursor = 3;
-  bool no_replies = 4;
-  bool media_only = 5;
-  bool author_threads_only = 6;
+  FeedType feed_type = 4;
+}
+
+message AuthorFeedItem {
+  string uri = 1;
+  string cid = 2;
+  string repost = 3;
+  string repost_cid = 4;
+  bool posts_and_author_threads = 5;
+  bool posts_no_replies = 6;
+  bool posts_with_media = 7;
+  bool is_reply = 8;
+  bool is_repost = 9;
+  bool is_quote_post = 10;
 }
 
 message GetAuthorFeedResponse {
-  repeated FeedItem items = 1;
+  repeated AuthorFeedItem items = 1;
   string cursor = 2;
 }
 
@@ -742,18 +764,24 @@ message GetTimelineRequest {
   string actor_did = 1;
   int32 limit = 2;
   string cursor = 3;
+  bool exclude_replies = 4;
+  bool exclude_reposts = 5;
+  bool exclude_quotes = 6;
 }
 
 message GetTimelineResponse {
-  repeated FeedItem items = 1;
+  repeated TimelineFeedItem items = 1;
   string cursor = 2;
 }
 
-message FeedItem {
+message TimelineFeedItem {
   string uri = 1;
   string cid = 2;
   string repost = 3;
   string repost_cid = 4;
+  bool is_reply = 5;
+  bool is_repost = 6;
+  bool is_quote_post = 7;
 }
 
 // - Return recent post uris from users in list A
@@ -763,10 +791,13 @@ message GetListFeedRequest {
   string list_uri = 1;
   int32 limit = 2;
   string cursor = 3;
+  bool exclude_replies = 4;
+  bool exclude_reposts = 5;
+  bool exclude_quotes = 6;
 }
 
 message GetListFeedResponse {
-  repeated FeedItem items = 1;
+  repeated TimelineFeedItem items = 1;
   string cursor = 2;
 }
 
