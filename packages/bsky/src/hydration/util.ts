@@ -16,7 +16,7 @@ export class HydrationMap<T> extends Map<string, T | null> {
 export type RecordInfo<T> = {
   record: T
   cid: CID
-  indexedAt?: Date
+  sortedAt: Date
   takenDown: boolean
 }
 
@@ -29,9 +29,9 @@ export const parseRecord = <T>(
   }
   const record = parseRecordBytes<T>(entry.record)
   const cid = parseCid(entry.cid)
-  const indexedAt = entry.indexedAt?.toDate()
+  const sortedAt = entry.sortedAt?.toDate() ?? new Date(0)
   if (!record || !cid) return
-  return { record, cid, indexedAt, takenDown: entry.takenDown }
+  return { record, cid, sortedAt, takenDown: entry.takenDown }
 }
 
 export const parseRecordBytes = <T>(

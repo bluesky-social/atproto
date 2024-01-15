@@ -72,7 +72,7 @@ const presentation = (inputs: {
   const { ctx, params, skeleton, hydration } = inputs
   const likeViews = mapDefined(skeleton.likes, (uri) => {
     const like = hydration.likes?.get(uri)
-    if (!like || !like.indexedAt || !like.record) {
+    if (!like || !like.record) {
       return
     }
     const creatorDid = creatorFromUri(uri)
@@ -83,7 +83,7 @@ const presentation = (inputs: {
     return {
       actor,
       createdAt: normalizeDatetimeAlways(like.record.createdAt),
-      indexedAt: like.indexedAt.toISOString(),
+      indexedAt: like.sortedAt.toISOString(),
     }
   })
   return {

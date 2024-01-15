@@ -39,6 +39,10 @@ export const getRecords =
     const records: Record[] = req.uris.map((uri) => {
       const row = byUri[uri]
       const json = row ? row.json : JSON.stringify(null)
+      const createdAtRaw = new Date(JSON.parse(json)?.['createdAt'])
+      const createdAt = !isNaN(createdAtRaw.getTime())
+        ? Timestamp.fromDate(createdAtRaw)
+        : undefined
       const indexedAt = row?.indexedAt
         ? Timestamp.fromDate(new Date(row?.indexedAt))
         : undefined
@@ -46,7 +50,9 @@ export const getRecords =
       return new Record({
         record: recordBytes,
         cid: row?.cid,
+        createdAt,
         indexedAt,
+        sortedAt: compositeTime(createdAt, indexedAt),
         takenDown: !!row?.takedownRef,
       })
     })
@@ -76,4 +82,13 @@ export const getPostRecords = (db: Database) => {
     })
     return { records, meta }
   }
+}
+
+const compositeTime = (
+  ts1: Timestamp | undefined,
+  ts2: Timestamp | undefined,
+) => {
+  if (!ts1) return ts2
+  if (!ts2) return ts1
+  return ts1.toDate() < ts2.toDate() ? ts1 : ts2
 }
