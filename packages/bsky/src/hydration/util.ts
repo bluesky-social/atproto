@@ -15,7 +15,7 @@ export class HydrationMap<T> extends Map<string, T | null> {
 export type RecordInfo<T> = {
   record: T
   cid: string
-  indexedAt?: Date
+  sortedAt: Date
   takenDown: boolean
 }
 
@@ -28,9 +28,9 @@ export const parseRecord = <T>(
   }
   const record = parseRecordBytes<T>(entry.record)
   const cid = entry.cid
-  const indexedAt = entry.indexedAt?.toDate()
+  const sortedAt = entry.sortedAt?.toDate() ?? new Date(0)
   if (!record || !cid) return
-  return { record, cid, indexedAt, takenDown: entry.takenDown }
+  return { record, cid, sortedAt, takenDown: entry.takenDown }
 }
 
 // @NOTE not parsed into lex format, so will not match lexicon record types on CID and blob values.

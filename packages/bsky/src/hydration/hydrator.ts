@@ -546,10 +546,10 @@ export class Hydrator {
       )
       if (!actor?.profile || !actor?.profileCid) return undefined
       return {
-        record: actor?.profile,
-        cid: actor?.profileCid,
-        indexedAt: actor?.indexedAt,
-        takenDown: actor?.takendown,
+        record: actor.profile,
+        cid: actor.profileCid,
+        sortedAt: actor.sortedAt ?? new Date(0), // @NOTE will be present since profile record is present
+        takenDown: actor.takendown,
       }
     }
   }
@@ -674,9 +674,4 @@ const mergeManyStates = (...states: HydrationState[]) => {
 
 const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
   return maps.reduce(mergeMaps, undefined as HydrationMap<T> | undefined)
-}
-
-const notIn = (uris: string[], map?: HydrationMap<unknown>) => {
-  if (!map) return uris
-  return uris.filter((uri) => !map.has(uri))
 }

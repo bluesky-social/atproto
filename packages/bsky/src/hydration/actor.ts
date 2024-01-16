@@ -7,7 +7,7 @@ export type Actor = {
   handle?: string
   profile?: ProfileRecord
   profileCid?: string
-  indexedAt?: Date
+  sortedAt?: Date
   takendown: boolean
 }
 
@@ -87,7 +87,7 @@ export class ActorHydrator {
         handle: parseString(actor.handle),
         profile: parseRecordBytes<ProfileRecord>(profile?.record),
         profileCid: profile?.cid,
-        indexedAt: profile?.indexedAt?.toDate(),
+        sortedAt: profile?.sortedAt?.toDate(),
         takendown: actor.takenDown ?? false,
       })
     }, new HydrationMap<Actor>())
