@@ -152,10 +152,10 @@ export class FeedHydrator {
 
   async getFeedGenAggregates(refs: ItemRef[]): Promise<FeedGenAggs> {
     if (!refs.length) return new HydrationMap<FeedGenAgg>()
-    const likes = await this.dataplane.getLikeCounts({ refs })
+    const counts = await this.dataplane.getInteractionCounts({ refs })
     return refs.reduce((acc, { uri }, i) => {
       return acc.set(uri, {
-        likes: likes.counts[i] ?? 0,
+        likes: counts.likes[i] ?? 0,
       })
     }, new HydrationMap<FeedGenAgg>())
   }
