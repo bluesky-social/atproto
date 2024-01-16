@@ -14,6 +14,15 @@ export class CommunicationTemplateService {
     return (db: Database) => new CommunicationTemplateService(db)
   }
 
+  async list(): Promise<Selectable<CommunicationTemplate>[]> {
+    const list = await this.db.db
+      .selectFrom('communication_template')
+      .selectAll()
+      .execute()
+
+    return list
+  }
+
   async create(
     template: Omit<Selectable<CommunicationTemplate>, 'id'>,
   ): Promise<Selectable<CommunicationTemplate>> {

@@ -18,12 +18,12 @@ import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/e
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
-import * as ComAtprotoAdminGetCommunicationTemplates from './types/com/atproto/admin/getCommunicationTemplates'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+import * as ComAtprotoAdminListCommunicationTemplates from './types/com/atproto/admin/listCommunicationTemplates'
 import * as ComAtprotoAdminQueryModerationEvents from './types/com/atproto/admin/queryModerationEvents'
 import * as ComAtprotoAdminQueryModerationStatuses from './types/com/atproto/admin/queryModerationStatuses'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -302,17 +302,6 @@ export class AdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getCommunicationTemplates<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoAdminGetCommunicationTemplates.Handler<ExtractAuth<AV>>,
-      ComAtprotoAdminGetCommunicationTemplates.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.admin.getCommunicationTemplates' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   getInviteCodes<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -365,6 +354,17 @@ export class AdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.getSubjectStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listCommunicationTemplates<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoAdminListCommunicationTemplates.Handler<ExtractAuth<AV>>,
+      ComAtprotoAdminListCommunicationTemplates.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.listCommunicationTemplates' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

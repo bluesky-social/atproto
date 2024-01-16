@@ -1198,32 +1198,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoAdminGetCommunicationTemplates: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getCommunicationTemplates',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get list of all communication templates.',
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['communicationTemplates'],
-            properties: {
-              communicationTemplates: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.admin.defs#communicationTemplateView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   ComAtprotoAdminGetInviteCodes: {
     lexicon: 1,
     id: 'com.atproto.admin.getInviteCodes',
@@ -1408,6 +1382,32 @@ export const schemaDict = {
               takedown: {
                 type: 'ref',
                 ref: 'lex:com.atproto.admin.defs#statusAttr',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminListCommunicationTemplates: {
+    lexicon: 1,
+    id: 'com.atproto.admin.listCommunicationTemplates',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get list of all communication templates.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['communicationTemplates'],
+            properties: {
+              communicationTemplates: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.defs#communicationTemplateView',
+                },
               },
             },
           },
@@ -8061,13 +8061,13 @@ export const ids = {
   ComAtprotoAdminEnableAccountInvites: 'com.atproto.admin.enableAccountInvites',
   ComAtprotoAdminGetAccountInfo: 'com.atproto.admin.getAccountInfo',
   ComAtprotoAdminGetAccountInfos: 'com.atproto.admin.getAccountInfos',
-  ComAtprotoAdminGetCommunicationTemplates:
-    'com.atproto.admin.getCommunicationTemplates',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
   ComAtprotoAdminGetModerationEvent: 'com.atproto.admin.getModerationEvent',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
   ComAtprotoAdminGetRepo: 'com.atproto.admin.getRepo',
   ComAtprotoAdminGetSubjectStatus: 'com.atproto.admin.getSubjectStatus',
+  ComAtprotoAdminListCommunicationTemplates:
+    'com.atproto.admin.listCommunicationTemplates',
   ComAtprotoAdminQueryModerationEvents:
     'com.atproto.admin.queryModerationEvents',
   ComAtprotoAdminQueryModerationStatuses:

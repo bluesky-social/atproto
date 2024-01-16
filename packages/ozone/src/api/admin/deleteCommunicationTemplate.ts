@@ -10,7 +10,6 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db
       const { id } = input.body
 
-      // if less than moderator access then can not takedown an account
       if (!access.admin) {
         throw new AuthRequiredError(
           'Must be an admin to delete a communication template',

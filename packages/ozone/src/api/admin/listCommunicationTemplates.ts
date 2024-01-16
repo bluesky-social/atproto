@@ -3,31 +3,28 @@ import { Server } from '../../lexicon'
 import AppContext from '../../context'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.createCommunicationTemplate({
+  server.com.atproto.admin.listCommunicationTemplates({
     auth: ctx.roleVerifier,
-    handler: async ({ input, auth }) => {
+    handler: async ({ auth }) => {
       const access = auth.credentials
       const db = ctx.db
-      const { createdBy, ...template } = input.body
 
       if (!access.moderator) {
         throw new AuthRequiredError(
-          'Must be a full moderator to create a communication template',
+          'Must be a full moderator to view list of communication template',
         )
       }
 
       const communicationTemplate = ctx.communicationTemplateService(db)
-      const newTemplate = await communicationTemplate.create({
-        ...template,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        disabled: false,
-        lastUpdatedBy: createdBy,
-      })
+      const list = await communicationTemplate.list()
 
       return {
         encoding: 'application/json',
-        body: communicationTemplate.view(newTemplate),
+        body: {
+          communicationTemplates: list.map((item) =>
+            communicationTemplate.view(item),
+          ),
+        },
       }
     },
   })

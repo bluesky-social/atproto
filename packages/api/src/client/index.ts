@@ -17,12 +17,12 @@ import * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/e
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
-import * as ComAtprotoAdminGetCommunicationTemplates from './types/com/atproto/admin/getCommunicationTemplates'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 import * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
 import * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 import * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+import * as ComAtprotoAdminListCommunicationTemplates from './types/com/atproto/admin/listCommunicationTemplates'
 import * as ComAtprotoAdminQueryModerationEvents from './types/com/atproto/admin/queryModerationEvents'
 import * as ComAtprotoAdminQueryModerationStatuses from './types/com/atproto/admin/queryModerationStatuses'
 import * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -160,12 +160,12 @@ export * as ComAtprotoAdminEmitModerationEvent from './types/com/atproto/admin/e
 export * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites'
 export * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo'
 export * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos'
-export * as ComAtprotoAdminGetCommunicationTemplates from './types/com/atproto/admin/getCommunicationTemplates'
 export * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes'
 export * as ComAtprotoAdminGetModerationEvent from './types/com/atproto/admin/getModerationEvent'
 export * as ComAtprotoAdminGetRecord from './types/com/atproto/admin/getRecord'
 export * as ComAtprotoAdminGetRepo from './types/com/atproto/admin/getRepo'
 export * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus'
+export * as ComAtprotoAdminListCommunicationTemplates from './types/com/atproto/admin/listCommunicationTemplates'
 export * as ComAtprotoAdminQueryModerationEvents from './types/com/atproto/admin/queryModerationEvents'
 export * as ComAtprotoAdminQueryModerationStatuses from './types/com/atproto/admin/queryModerationStatuses'
 export * as ComAtprotoAdminSearchRepos from './types/com/atproto/admin/searchRepos'
@@ -492,22 +492,6 @@ export class AdminNS {
       })
   }
 
-  getCommunicationTemplates(
-    params?: ComAtprotoAdminGetCommunicationTemplates.QueryParams,
-    opts?: ComAtprotoAdminGetCommunicationTemplates.CallOptions,
-  ): Promise<ComAtprotoAdminGetCommunicationTemplates.Response> {
-    return this._service.xrpc
-      .call(
-        'com.atproto.admin.getCommunicationTemplates',
-        params,
-        undefined,
-        opts,
-      )
-      .catch((e) => {
-        throw ComAtprotoAdminGetCommunicationTemplates.toKnownErr(e)
-      })
-  }
-
   getInviteCodes(
     params?: ComAtprotoAdminGetInviteCodes.QueryParams,
     opts?: ComAtprotoAdminGetInviteCodes.CallOptions,
@@ -560,6 +544,22 @@ export class AdminNS {
       .call('com.atproto.admin.getSubjectStatus', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoAdminGetSubjectStatus.toKnownErr(e)
+      })
+  }
+
+  listCommunicationTemplates(
+    params?: ComAtprotoAdminListCommunicationTemplates.QueryParams,
+    opts?: ComAtprotoAdminListCommunicationTemplates.CallOptions,
+  ): Promise<ComAtprotoAdminListCommunicationTemplates.Response> {
+    return this._service.xrpc
+      .call(
+        'com.atproto.admin.listCommunicationTemplates',
+        params,
+        undefined,
+        opts,
+      )
+      .catch((e) => {
+        throw ComAtprotoAdminListCommunicationTemplates.toKnownErr(e)
       })
   }
 

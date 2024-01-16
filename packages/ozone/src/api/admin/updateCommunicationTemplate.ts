@@ -10,7 +10,6 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db
       const { id, updatedBy, ...template } = input.body
 
-      // if less than moderator access then can not takedown an account
       if (!access.moderator) {
         throw new AuthRequiredError(
           'Must be a full moderator to update a communication template',
