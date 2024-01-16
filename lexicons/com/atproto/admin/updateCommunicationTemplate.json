@@ -9,7 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["id", "email"],
+          "required": ["id", "updatedBy"],
           "properties": {
             "id": {
               "type": "integer",
@@ -27,10 +27,21 @@
               "type": "string",
               "description": "Subject of the message, used in emails."
             },
+            "updatedBy": {
+              "type": "string",
+              "description": "DID of the user who is updating the template."
+            },
             "disabled": {
               "type": "boolean"
             }
           }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "com.atproto.admin.defs#communicationTemplateView"
         }
       }
     }

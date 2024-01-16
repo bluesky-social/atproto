@@ -585,16 +585,16 @@
         }
       }
     },
-    "communicationTemplate": {
+    "communicationTemplateView": {
       "type": "object",
       "required": [
         "id",
         "name",
-        "subject",
         "content",
         "disabled",
-        "createdBy",
-        "createdAt"
+        "lastUpdatedBy",
+        "createdAt",
+        "updatedAt"
       ],
       "properties": {
         "id": { "type": "integer" },
@@ -602,8 +602,9 @@
         "subject": { "type": "string" },
         "content": { "type": "string" },
         "disabled": { "type": "boolean" },
-        "createdBy": { "type": "string", "format": "did" },
-        "createdAt": { "type": "string", "format": "datetime" }
+        "lastUpdatedBy": { "type": "string", "format": "did" },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "updatedAt": { "type": "string", "format": "datetime" }
       }
     }
   }

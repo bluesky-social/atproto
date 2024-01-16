@@ -4,6 +4,50 @@
 import { LexiconDoc, Lexicons } from '@atproto/lexicon'
 
 export const schemaDict = {
+  ComAtprotoAdminCreateCommunicationTemplate: {
+    lexicon: 1,
+    id: 'com.atproto.admin.createCommunicationTemplate',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Administrative action to create a new, re-usable communication (email for now) template.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject', 'content', 'name', 'createdBy'],
+            properties: {
+              name: {
+                type: 'string',
+                description: 'Name of the template.',
+              },
+              content: {
+                type: 'string',
+                description:
+                  'Content of the template, markdown supported, can contain variable placeholder.',
+              },
+              subject: {
+                type: 'string',
+                description: 'Subject of the message, used in emails.',
+              },
+              createdBy: {
+                type: 'string',
+                description: 'DID of the user who is creating the template.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#communicationTemplateView',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminDefs: {
     lexicon: 1,
     id: 'com.atproto.admin.defs',
@@ -850,6 +894,47 @@ export const schemaDict = {
           },
         },
       },
+      communicationTemplateView: {
+        type: 'object',
+        required: [
+          'id',
+          'name',
+          'content',
+          'disabled',
+          'lastUpdatedBy',
+          'createdAt',
+          'updatedAt',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          name: {
+            type: 'string',
+          },
+          subject: {
+            type: 'string',
+          },
+          content: {
+            type: 'string',
+          },
+          disabled: {
+            type: 'boolean',
+          },
+          lastUpdatedBy: {
+            type: 'string',
+            format: 'did',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
     },
   },
   ComAtprotoAdminDeleteAccount: {
@@ -868,6 +953,28 @@ export const schemaDict = {
               did: {
                 type: 'string',
                 format: 'did',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminDeleteCommunicationTemplate: {
+    lexicon: 1,
+    id: 'com.atproto.admin.deleteCommunicationTemplate',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Delete a communication template.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['id'],
+            properties: {
+              id: {
+                type: 'integer',
               },
             },
           },
@@ -1083,6 +1190,32 @@ export const schemaDict = {
                 items: {
                   type: 'ref',
                   ref: 'lex:com.atproto.admin.defs#accountView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminGetCommunicationTemplates: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getCommunicationTemplates',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get list of all communication templates.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['communicationTemplates'],
+            properties: {
+              communicationTemplates: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.defs#communicationTemplateView',
                 },
               },
             },
@@ -1614,6 +1747,57 @@ export const schemaDict = {
                 format: 'handle',
               },
             },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminUpdateCommunicationTemplate: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateCommunicationTemplate',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Administrative action to update an an existing communication template.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['id', 'updatedBy'],
+            properties: {
+              id: {
+                type: 'integer',
+                description: 'ID of the template to be updated.',
+              },
+              name: {
+                type: 'string',
+                description: 'Name of the template.',
+              },
+              content: {
+                type: 'string',
+                description:
+                  'Content of the template, markdown supported, can contain variable placeholder.',
+              },
+              subject: {
+                type: 'string',
+                description: 'Subject of the message, used in emails.',
+              },
+              updatedBy: {
+                type: 'string',
+                description: 'DID of the user who is updating the template.',
+              },
+              disabled: {
+                type: 'boolean',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#communicationTemplateView',
           },
         },
       },
@@ -7639,54 +7823,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyUnspeccedGetPopular: {
-    lexicon: 1,
-    id: 'app.bsky.unspecced.getPopular',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'DEPRECATED: will be removed soon. Use a feed generator alternative.',
-        parameters: {
-          type: 'params',
-          properties: {
-            includeNsfw: {
-              type: 'boolean',
-              default: false,
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['feed'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              feed: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyUnspeccedGetPopularFeedGenerators: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getPopularFeedGenerators',
@@ -7912,8 +8048,12 @@ export const schemaDict = {
 export const schemas: LexiconDoc[] = Object.values(schemaDict) as LexiconDoc[]
 export const lexicons: Lexicons = new Lexicons(schemas)
 export const ids = {
+  ComAtprotoAdminCreateCommunicationTemplate:
+    'com.atproto.admin.createCommunicationTemplate',
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
   ComAtprotoAdminDeleteAccount: 'com.atproto.admin.deleteAccount',
+  ComAtprotoAdminDeleteCommunicationTemplate:
+    'com.atproto.admin.deleteCommunicationTemplate',
   ComAtprotoAdminDisableAccountInvites:
     'com.atproto.admin.disableAccountInvites',
   ComAtprotoAdminDisableInviteCodes: 'com.atproto.admin.disableInviteCodes',
@@ -7921,6 +8061,8 @@ export const ids = {
   ComAtprotoAdminEnableAccountInvites: 'com.atproto.admin.enableAccountInvites',
   ComAtprotoAdminGetAccountInfo: 'com.atproto.admin.getAccountInfo',
   ComAtprotoAdminGetAccountInfos: 'com.atproto.admin.getAccountInfos',
+  ComAtprotoAdminGetCommunicationTemplates:
+    'com.atproto.admin.getCommunicationTemplates',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
   ComAtprotoAdminGetModerationEvent: 'com.atproto.admin.getModerationEvent',
   ComAtprotoAdminGetRecord: 'com.atproto.admin.getRecord',
@@ -7934,6 +8076,8 @@ export const ids = {
   ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
   ComAtprotoAdminUpdateAccountHandle: 'com.atproto.admin.updateAccountHandle',
+  ComAtprotoAdminUpdateCommunicationTemplate:
+    'com.atproto.admin.updateCommunicationTemplate',
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
   ComAtprotoIdentityResolveHandle: 'com.atproto.identity.resolveHandle',
   ComAtprotoIdentityUpdateHandle: 'com.atproto.identity.updateHandle',
@@ -8055,7 +8199,6 @@ export const ids = {
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
-  AppBskyUnspeccedGetPopular: 'app.bsky.unspecced.getPopular',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetTimelineSkeleton: 'app.bsky.unspecced.getTimelineSkeleton',

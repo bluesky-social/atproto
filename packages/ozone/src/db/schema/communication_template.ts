@@ -1,0 +1,18 @@
+import { Generated } from 'kysely'
+
+export const communicationTemplateTableName = 'communication_template'
+
+export interface CommunicationTemplate {
+  id: Generated<number>
+  name: string
+  content: string
+  subject: string | null
+  disabled: boolean
+  createdAt: Date
+  updatedAt: Date
+  lastUpdatedBy: string
+}
+
+export type PartialDB = {
+  [communicationTemplateTableName]: CommunicationTemplate
+}

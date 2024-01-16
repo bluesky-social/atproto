@@ -7,23 +7,31 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyFeedDefs from '../feed/defs'
+import * as ComAtprotoAdminDefs from './defs'
 
-export interface QueryParams {
-  includeNsfw: boolean
-  limit: number
-  cursor?: string
-}
+export interface QueryParams {}
 
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  cursor?: string
-  feed: AppBskyFeedDefs.FeedViewPost[]
+export interface InputSchema {
+  /** ID of the template to be updated. */
+  id: number
+  /** Name of the template. */
+  name?: string
+  /** Content of the template, markdown supported, can contain variable placeholder. */
+  content?: string
+  /** Subject of the message, used in emails. */
+  subject?: string
+  /** DID of the user who is updating the template. */
+  updatedBy: string
+  disabled?: boolean
   [k: string]: unknown
 }
 
-export type HandlerInput = undefined
+export type OutputSchema = ComAtprotoAdminDefs.CommunicationTemplateView
+
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
 
 export interface HandlerSuccess {
   encoding: 'application/json'

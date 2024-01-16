@@ -717,3 +717,34 @@ export function isModEventEmail(v: unknown): v is ModEventEmail {
 export function validateModEventEmail(v: unknown): ValidationResult {
   return lexicons.validate('com.atproto.admin.defs#modEventEmail', v)
 }
+
+export interface CommunicationTemplateView {
+  id: number
+  name: string
+  subject?: string
+  content: string
+  disabled: boolean
+  lastUpdatedBy: string
+  createdAt: string
+  updatedAt: string
+  [k: string]: unknown
+}
+
+export function isCommunicationTemplateView(
+  v: unknown,
+): v is CommunicationTemplateView {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'com.atproto.admin.defs#communicationTemplateView'
+  )
+}
+
+export function validateCommunicationTemplateView(
+  v: unknown,
+): ValidationResult {
+  return lexicons.validate(
+    'com.atproto.admin.defs#communicationTemplateView',
+    v,
+  )
+}

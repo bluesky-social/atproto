@@ -15,7 +15,7 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "com.atproto.admin.defs#communicationTemplate"
+                "ref": "com.atproto.admin.defs#communicationTemplateView"
               }
             }
           }

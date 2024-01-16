@@ -10,11 +10,16 @@ import * as auth from './auth'
 import { BackgroundQueue } from './background'
 import assert from 'assert'
 import { EventPusher } from './daemon'
+import {
+  CommunicationTemplateService,
+  CommunicationTemplateServiceCreator,
+} from './communication-service/template'
 
 export type AppContextOptions = {
   db: Database
   cfg: OzoneConfig
   modService: ModerationServiceCreator
+  communicationTemplateService: CommunicationTemplateServiceCreator
   appviewAgent: AtpAgent
   pdsAgent: AtpAgent | undefined
   signingKey: Keypair
@@ -62,6 +67,8 @@ export class AppContext {
       appviewAuth,
     )
 
+    const communicationTemplateService = CommunicationTemplateService.creator()
+
     const idResolver = new IdResolver({
       plcUrl: cfg.identity.plcUrl,
     })
@@ -71,6 +78,7 @@ export class AppContext {
         db,
         cfg,
         modService,
+        communicationTemplateService,
         appviewAgent,
         pdsAgent,
         signingKey,
@@ -100,6 +108,10 @@ export class AppContext {
 
   get modService(): ModerationServiceCreator {
     return this.opts.modService
+  }
+
+  get communicationTemplateService(): CommunicationTemplateServiceCreator {
+    return this.opts.communicationTemplateService
   }
 
   get appviewAgent(): AtpAgent {
