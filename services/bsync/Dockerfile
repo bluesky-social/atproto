@@ -10,6 +10,7 @@ COPY ./packages/bsync ./packages/bsync
 COPY ./packages/common ./packages/common
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/syntax ./packages/syntax
+COPY ./services/bsync ./services/bsync
 
 
 # install all deps
@@ -37,7 +38,7 @@ WORKDIR /app/services/bsync
 COPY --from=build /app /app
 
 EXPOSE 3000
-ENV PORT=3000
+ENV BSYNC_PORT=3000
 ENV NODE_ENV=production
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user

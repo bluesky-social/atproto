@@ -1,5 +1,5 @@
 import assert from 'node:assert'
-import { envInt, envStr, envList } from '@atproto/common'
+import { envInt, envStr, envList, envBool } from '@atproto/common'
 
 export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const serviceCfg: ServerConfig['service'] = {
@@ -15,6 +15,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     poolSize: env.dbPoolSize,
     poolMaxUses: env.dbPoolMaxUses,
     poolIdleTimeoutMs: env.dbPoolIdleTimeoutMs,
+    migrate: env.dbMigrate,
   }
 
   assert(env.apiKeys.length > 0, 'missing api keys')
@@ -47,6 +48,7 @@ type DatabaseConfig = {
   poolSize?: number
   poolMaxUses?: number
   poolIdleTimeoutMs?: number
+  migrate?: boolean
 }
 
 type AuthConfig = {
@@ -65,6 +67,7 @@ export const readEnv = (): ServerEnvironment => {
     dbPoolSize: envInt('BSYNC_DB_POOL_SIZE'),
     dbPoolMaxUses: envInt('BSYNC_DB_POOL_MAX_USES'),
     dbPoolIdleTimeoutMs: envInt('BSYNC_DB_POOL_IDLE_TIMEOUT_MS'),
+    dbMigrate: envBool('BSYNC_DB_MIGRATE'),
     // secrets
     apiKeys: envList('BSYNC_API_KEYS'),
   }
@@ -81,6 +84,7 @@ export type ServerEnvironment = {
   dbPoolSize?: number
   dbPoolMaxUses?: number
   dbPoolIdleTimeoutMs?: number
+  dbMigrate?: boolean
   // secrets
   apiKeys: string[]
 }
