@@ -186,7 +186,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: ['adult'],
     onwarn: 'blur-media',
-    groupId: 'sexual',
+    groupId: 'porn',
     configurable: true,
     strings: {
       settings: {
@@ -217,7 +217,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: ['adult'],
     onwarn: 'blur-media',
-    groupId: 'sexual',
+    groupId: 'suggestive',
     configurable: true,
     strings: {
       settings: {
@@ -248,7 +248,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: ['adult'],
     onwarn: 'blur-media',
-    groupId: 'sexual',
+    groupId: 'nudity',
     configurable: true,
     strings: {
       settings: {
@@ -434,7 +434,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'blur',
-    groupId: 'intolerance',
+    groupId: 'hate',
     configurable: true,
     strings: {
       settings: {
@@ -464,7 +464,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'blur',
-    groupId: 'intolerance',
+    groupId: 'hate',
     configurable: true,
     strings: {
       settings: {
@@ -495,7 +495,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'blur',
-    groupId: 'intolerance',
+    groupId: 'hate',
     configurable: true,
     strings: {
       settings: {
@@ -526,7 +526,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'blur',
-    groupId: 'intolerance',
+    groupId: 'hate',
     configurable: true,
     strings: {
       settings: {
@@ -557,7 +557,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'blur',
-    groupId: 'intolerance',
+    groupId: 'hate',
     configurable: true,
     strings: {
       settings: {
@@ -586,7 +586,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'blur-media',
-    groupId: 'intolerance',
+    groupId: 'hate',
     configurable: true,
     strings: {
       settings: {

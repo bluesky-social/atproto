@@ -99,7 +99,7 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>porn</td>
-  <td>sexual</td>
+  <td>porn</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td>adult</td>
@@ -107,7 +107,7 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>sexual</td>
-  <td>sexual</td>
+  <td>suggestive</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td>adult</td>
@@ -115,7 +115,7 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>nudity</td>
-  <td>sexual</td>
+  <td>nudity</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td>adult</td>
@@ -163,7 +163,7 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>intolerant-race</td>
-  <td>intolerance</td>
+  <td>hate</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
@@ -171,7 +171,7 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>intolerant-gender</td>
-  <td>intolerance</td>
+  <td>hate</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
@@ -179,7 +179,7 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>intolerant-sexual-orientation</td>
-  <td>intolerance</td>
+  <td>hate</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
@@ -187,7 +187,7 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>intolerant-religion</td>
-  <td>intolerance</td>
+  <td>hate</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
@@ -195,7 +195,7 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>intolerant</td>
-  <td>intolerance</td>
+  <td>hate</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
@@ -203,7 +203,7 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>icon-intolerant</td>
-  <td>intolerance</td>
+  <td>hate</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
@@ -291,15 +291,23 @@ The kind of UI behavior used when a warning must be applied.
   <td><code>general</code><br><strong>Legal</strong><br>Content removed for legal reasons.</td>
 </tr>
 <tr>
-  <td>sexual</td>
-  <td><code>general</code><br><strong>Adult Content</strong><br>Content which is sexual in nature.</td>
+  <td>porn</td>
+  <td><code>general</code><br><strong>Explicit Sexual Images</strong><br>i.e. pornography.</td>
+</tr>
+<tr>
+  <td>suggestive</td>
+  <td><code>general</code><br><strong>Sexually Suggestive</strong><br>Does not include nudity.</td>
+</tr>
+<tr>
+  <td>nudity</td>
+  <td><code>general</code><br><strong>Other Nudity</strong><br>Including non-sexual and artistic.</td>
 </tr>
 <tr>
   <td>violence</td>
   <td><code>general</code><br><strong>Violence</strong><br>Content which is violent or deeply disturbing.</td>
 </tr>
 <tr>
-  <td>intolerance</td>
+  <td>hate</td>
   <td><code>general</code><br><strong>Intolerance</strong><br>Content or behavior which is hateful or intolerant toward a group of people.</td>
 </tr>
 <tr>

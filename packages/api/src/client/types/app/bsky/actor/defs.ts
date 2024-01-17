@@ -154,7 +154,7 @@ export function validateAdultContentPref(v: unknown): ValidationResult {
 
 export interface ContentLabelPref {
   label: string
-  visibility: 'show' | 'warn' | 'hide' | (string & {})
+  visibility: 'ignore' | 'show' | 'warn' | 'hide' | (string & {})
   [k: string]: unknown
 }
 
@@ -292,7 +292,7 @@ export function validateModPrefItem(v: unknown): ValidationResult {
 
 export interface LabelGroupSetting {
   labelGroup: string
-  visibility: 'show' | 'warn' | 'hide' | (string & {})
+  setting: 'ignore' | 'warn' | 'hide' | (string & {})
   [k: string]: unknown
 }
 

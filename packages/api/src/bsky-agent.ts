@@ -8,10 +8,11 @@ import {
 } from './client'
 import {
   BskyPreferences,
-  BskyLabelPreference,
   BskyFeedViewPreference,
   BskyThreadViewPreference,
 } from './types'
+import { LabelPreference } from './moderation/types'
+import { BSKY_MODSERVICE_DID, DEFAULT_LABELGROUP_PREFERENCES } from './const'
 
 const FEED_VIEW_PREF_DEFAULTS = {
   hideReplies: false,
@@ -320,8 +321,12 @@ export class BskyAgent extends AtpAgent {
         },
       },
       threadViewPrefs: { ...THREAD_VIEW_PREF_DEFAULTS },
-      adultContentEnabled: false,
-      contentLabels: {},
+      moderationPrefs: {
+        userDid: this.session?.did || '',
+        adultContentEnabled: false,
+        labelGroups: {},
+        labelers: [],
+      },
       birthDate: undefined,
     }
     const res = await this.app.bsky.actor.getPreferences({})
@@ -330,28 +335,38 @@ export class BskyAgent extends AtpAgent {
         AppBskyActorDefs.isAdultContentPref(pref) &&
         AppBskyActorDefs.validateAdultContentPref(pref).success
       ) {
-        prefs.adultContentEnabled = pref.enabled
+        // adult content preferences
+        prefs.moderationPrefs.adultContentEnabled = pref.enabled
       } else if (
-        AppBskyActorDefs.isContentLabelPref(pref) &&
-        AppBskyActorDefs.validateAdultContentPref(pref).success
+        AppBskyActorDefs.isModsPref(pref) &&
+        AppBskyActorDefs.validateModsPref(pref).success
       ) {
-        let value = pref.visibility
-        if (value === 'show') {
-          value = 'ignore'
-        }
-        if (value === 'ignore' || value === 'warn' || value === 'hide') {
-          prefs.contentLabels[pref.label] = value as BskyLabelPreference
-        }
+        // mods preferencess
+        prefs.moderationPrefs.labelers = pref.mods
+          .filter((mod) => mod.enabled)
+          .map((mod) => ({
+            labeler: { did: mod.did },
+            labelGroups: Object.fromEntries(
+              mod.labelGroupSettings.map((item) => [
+                item.labelGroup,
+                ['ignore', 'warn', 'hide'].includes(item.setting)
+                  ? (item.setting as LabelPreference)
+                  : 'ignore',
+              ]),
+            ),
+          }))
       } else if (
         AppBskyActorDefs.isSavedFeedsPref(pref) &&
         AppBskyActorDefs.validateSavedFeedsPref(pref).success
       ) {
+        // saved and pinned feeds
         prefs.feeds.saved = pref.saved
         prefs.feeds.pinned = pref.pinned
       } else if (
         AppBskyActorDefs.isPersonalDetailsPref(pref) &&
         AppBskyActorDefs.validatePersonalDetailsPref(pref).success
       ) {
+        // birth date (irl)
         if (pref.birthDate) {
           prefs.birthDate = new Date(pref.birthDate)
         }
@@ -359,6 +374,7 @@ export class BskyAgent extends AtpAgent {
         AppBskyActorDefs.isFeedViewPref(pref) &&
         AppBskyActorDefs.validateFeedViewPref(pref).success
       ) {
+        // feed view preferences
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, feed, ...v } = pref
         prefs.feedViewPrefs[pref.feed] = { ...FEED_VIEW_PREF_DEFAULTS, ...v }
@@ -366,11 +382,29 @@ export class BskyAgent extends AtpAgent {
         AppBskyActorDefs.isThreadViewPref(pref) &&
         AppBskyActorDefs.validateThreadViewPref(pref).success
       ) {
+        // thread view preferences
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, ...v } = pref
         prefs.threadViewPrefs = { ...prefs.threadViewPrefs, ...v }
       }
     }
+
+    // ensure the bluesky moderation is configured
+    // also migrate the legacy settings
+    const bskyModeration = prefs.moderationPrefs.labelers.find(
+      (labelerPref) => labelerPref.labeler.did === BSKY_MODSERVICE_DID,
+    )
+    if (!bskyModeration) {
+      const legacyPrefs = gatherLegacyLabelerPrefs(res.data.preferences)
+      prefs.moderationPrefs.labelers.push({
+        labeler: { did: BSKY_MODSERVICE_DID },
+        labelGroups: {
+          ...DEFAULT_LABELGROUP_PREFERENCES,
+          ...legacyPrefs,
+        },
+      })
+    }
+
     return prefs
   }
 
@@ -430,34 +464,98 @@ export class BskyAgent extends AtpAgent {
     })
   }
 
-  async setContentLabelPref(key: string, value: BskyLabelPreference) {
-    // TEMP update old value
-    if (value === 'show') {
-      value = 'ignore'
-    }
-
+  async addModService(did: string) {
     await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
-      let labelPref = prefs.findLast(
+      let modsPref = prefs.findLast(
         (pref) =>
-          AppBskyActorDefs.isContentLabelPref(pref) &&
-          AppBskyActorDefs.validateAdultContentPref(pref).success &&
-          pref.label === key,
+          AppBskyActorDefs.isModsPref(pref) &&
+          AppBskyActorDefs.validateModsPref(pref).success,
       )
-      if (labelPref) {
-        labelPref.visibility = value
-      } else {
-        labelPref = {
-          $type: 'app.bsky.actor.defs#contentLabelPref',
-          label: key,
-          visibility: value,
+      if (!modsPref) {
+        modsPref = {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [],
+        }
+      }
+      if (AppBskyActorDefs.isModsPref(modsPref)) {
+        const modPref = modsPref.mods.find((mod) => mod.did === did)
+        if (!modPref) {
+          modsPref.mods.push({
+            did,
+            enabled: true,
+            labelGroupSettings: getDefaultLabelGroupSettings(did, prefs),
+          })
+        } else {
+          modPref.enabled = true
         }
       }
       return prefs
-        .filter(
-          (pref) =>
-            !AppBskyActorDefs.isContentLabelPref(pref) || pref.label !== key,
+        .filter((pref) => !AppBskyActorDefs.isModsPref(pref))
+        .concat([modsPref])
+    })
+  }
+
+  async removeModService(did: string) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      let modsPref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isModsPref(pref) &&
+          AppBskyActorDefs.validateModsPref(pref).success,
+      )
+      if (!modsPref) {
+        modsPref = {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [],
+        }
+      }
+      if (AppBskyActorDefs.isModsPref(modsPref)) {
+        modsPref.mods = modsPref.mods.filter((mod) => mod.did !== did)
+      }
+      return prefs
+        .filter((pref) => !AppBskyActorDefs.isModsPref(pref))
+        .concat([modsPref])
+    })
+  }
+
+  async setModServiceLabelGroupPref(
+    did: string,
+    labelGroup: string,
+    setting: LabelPreference,
+  ) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      let modsPref = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isModsPref(pref) &&
+          AppBskyActorDefs.validateModsPref(pref).success,
+      )
+      if (!modsPref) {
+        modsPref = {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [],
+        }
+      }
+      if (AppBskyActorDefs.isModsPref(modsPref)) {
+        let modPref = modsPref.mods.find((mod) => mod.did === did)
+        if (!modPref) {
+          modPref = {
+            did,
+            enabled: true,
+            labelGroupSettings: getDefaultLabelGroupSettings(did, prefs),
+          }
+          modsPref.mods.push(modPref)
+        }
+        const labelGroupSetting = modPref.labelGroupSettings.find(
+          (setting) => setting.labelGroup === labelGroup,
         )
-        .concat([labelPref])
+        if (labelGroupSetting) {
+          labelGroupSetting.setting = setting
+        } else {
+          modPref.labelGroupSettings.push({ labelGroup, setting })
+        }
+      }
+      return prefs
+        .filter((pref) => !AppBskyActorDefs.isModsPref(pref))
+        .concat([modsPref])
     })
   }
 
@@ -581,4 +679,69 @@ async function updateFeedPreferences(
       .concat([feedsPref])
   })
   return res
+}
+
+/**
+ * Helper to extract and transform the legacy content preferences
+ * to be used by the modServices preference.
+ */
+function gatherLegacyLabelerPrefs(
+  prefs: AppBskyActorDefs.Preferences,
+): Record<string, LabelPreference> {
+  const legacyLabelerPrefs: Record<string, LabelPreference> = {}
+  for (const pref of prefs) {
+    if (
+      AppBskyActorDefs.isContentLabelPref(pref) &&
+      AppBskyActorDefs.validateAdultContentPref(pref).success
+    ) {
+      // content label preference (LEGACY)
+      // replaced by moderators preference
+      let labelGroup = pref.label
+      let value = pref.visibility
+
+      // adjust legacy values
+      if (value === 'show') {
+        value = 'ignore'
+      }
+      if (labelGroup === 'nsfw') {
+        labelGroup = 'porn'
+      }
+      if (labelGroup === 'gore') {
+        labelGroup = 'violence'
+      }
+      if (labelGroup === 'impersonation') {
+        labelGroup = 'misinfo'
+      }
+
+      if (value === 'ignore' || value === 'warn' || value === 'hide') {
+        legacyLabelerPrefs[labelGroup] = value as LabelPreference
+      }
+    }
+  }
+  return legacyLabelerPrefs
+}
+
+/**
+ * A helper to set the default label group settings for a labeler
+ *
+ * Essentially incorporates legacy labeler prefs into the defaults when
+ * looking at the default labeler.
+ */
+function getDefaultLabelGroupSettings(
+  did: string,
+  prefs: AppBskyActorDefs.Preferences,
+): AppBskyActorDefs.LabelGroupSetting[] {
+  let settings = DEFAULT_LABELGROUP_PREFERENCES
+  if (did === BSKY_MODSERVICE_DID) {
+    // if targeting the default service, include the legacy preferences
+    const legacyPrefs = gatherLegacyLabelerPrefs(prefs)
+    settings = {
+      ...DEFAULT_LABELGROUP_PREFERENCES,
+      ...legacyPrefs,
+    }
+  }
+  return Object.entries(settings).map(([labelGroup, setting]) => ({
+    labelGroup,
+    setting,
+  }))
 }

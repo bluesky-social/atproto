@@ -34,15 +34,41 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
       },
     },
   },
-  sexual: {
-    id: 'sexual',
+  porn: {
+    id: 'porn',
     configurable: true,
-    labels: [LABELS['porn'], LABELS['sexual'], LABELS['nudity']],
+    labels: [LABELS['porn']],
     strings: {
       settings: {
         en: {
-          name: 'Adult Content',
-          description: 'Content which is sexual in nature.',
+          name: 'Explicit Sexual Images',
+          description: 'i.e. pornography.',
+        },
+      },
+    },
+  },
+  suggestive: {
+    id: 'suggestive',
+    configurable: true,
+    labels: [LABELS['sexual']],
+    strings: {
+      settings: {
+        en: {
+          name: 'Sexually Suggestive',
+          description: 'Does not include nudity.',
+        },
+      },
+    },
+  },
+  nudity: {
+    id: 'nudity',
+    configurable: true,
+    labels: [LABELS['nudity']],
+    strings: {
+      settings: {
+        en: {
+          name: 'Other Nudity',
+          description: 'Including non-sexual and artistic.',
         },
       },
     },
@@ -66,8 +92,8 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
       },
     },
   },
-  intolerance: {
-    id: 'intolerance',
+  hate: {
+    id: 'hate',
     configurable: true,
     labels: [
       LABELS['intolerant-race'],

@@ -48,7 +48,7 @@
     ]
   },
   {
-    "id": "sexual",
+    "id": "porn",
     "configurable": true,
     "labels": [
       {
@@ -56,13 +56,25 @@
         "preferences": ["ignore", "warn", "hide"],
         "flags": ["adult"],
         "onwarn": "blur-media"
-      },
+      }
+    ]
+  },
+  {
+    "id": "suggestive",
+    "configurable": true,
+    "labels": [
       {
         "id": "sexual",
         "preferences": ["ignore", "warn", "hide"],
         "flags": ["adult"],
         "onwarn": "blur-media"
-      },
+      }
+    ]
+  },
+  {
+    "id": "nudity",
+    "configurable": true,
+    "labels": [
       {
         "id": "nudity",
         "preferences": ["ignore", "warn", "hide"],
@@ -108,7 +120,7 @@
     ]
   },
   {
-    "id": "intolerance",
+    "id": "hate",
     "configurable": true,
     "labels": [
       {

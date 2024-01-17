@@ -21,7 +21,7 @@ describe('Moderation', () => {
       {
         userDid: 'did:web:alice.test',
         adultContentEnabled: true,
-        labels: {
+        labelGroups: {
           porn: 'hide',
         },
         labelers: [],
@@ -61,7 +61,7 @@ describe('Moderation', () => {
       {
         userDid: 'did:web:alice.test',
         adultContentEnabled: true,
-        labels: {
+        labelGroups: {
           porn: 'ignore',
         },
         labelers: [],
@@ -109,7 +109,7 @@ describe('Moderation', () => {
       {
         userDid: 'did:web:alice.test',
         adultContentEnabled: true,
-        labels: {
+        labelGroups: {
           porn: 'hide',
         },
         labelers: [],
@@ -155,7 +155,7 @@ describe('Moderation', () => {
       {
         userDid: 'did:web:alice.test',
         adultContentEnabled: true,
-        labels: {
+        labelGroups: {
           porn: 'ignore',
         },
         labelers: [],
@@ -197,16 +197,15 @@ describe('Moderation', () => {
       {
         userDid: 'did:web:alice.test',
         adultContentEnabled: true,
-        labels: {
+        labelGroups: {
           porn: 'hide',
         },
         labelers: [
           {
             labeler: {
               did: 'did:web:labeler.test',
-              displayName: 'Labeler',
             },
-            labels: {
+            labelGroups: {
               porn: 'ignore',
             },
           },
@@ -237,16 +236,15 @@ describe('Moderation', () => {
       {
         userDid: 'did:web:alice.test',
         adultContentEnabled: true,
-        labels: {
+        labelGroups: {
           porn: 'ignore',
         },
         labelers: [
           {
             labeler: {
               did: 'did:web:labeler.test',
-              displayName: 'Labeler',
             },
-            labels: {
+            labelGroups: {
               porn: 'hide',
             },
           },
@@ -277,16 +275,15 @@ describe('Moderation', () => {
       {
         userDid: 'did:web:alice.test',
         adultContentEnabled: true,
-        labels: {
+        labelGroups: {
           porn: 'hide',
         },
         labelers: [
           {
             labeler: {
               did: 'did:web:labeler.test',
-              displayName: 'Labeler',
             },
-            labels: {},
+            labelGroups: {},
           },
         ],
       },

@@ -59,12 +59,11 @@ export type LabelGroupDefinitionMap = Record<string, LabelGroupDefinition>
 
 interface Labeler {
   did: string
-  displayName: string
 }
 
 export interface LabelerSettings {
   labeler: Labeler
-  labels: Record<string, LabelPreference>
+  labelGroups: Record<string, LabelPreference>
 }
 
 // subjects
@@ -114,7 +113,7 @@ export type ModerationCause =
 export interface ModerationOpts {
   userDid: string
   adultContentEnabled: boolean
-  labels: Record<string, LabelPreference>
+  labelGroups: Record<string, LabelPreference>
   labelers: LabelerSettings[]
 }
 

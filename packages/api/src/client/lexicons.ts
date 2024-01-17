@@ -4465,7 +4465,7 @@ export const schemaDict = {
           },
           visibility: {
             type: 'string',
-            knownValues: ['show', 'warn', 'hide'],
+            knownValues: ['ignore', 'show', 'warn', 'hide'],
           },
         },
       },
@@ -4581,14 +4581,14 @@ export const schemaDict = {
       },
       labelGroupSetting: {
         type: 'object',
-        required: ['labelGroup', 'visibility'],
+        required: ['labelGroup', 'setting'],
         properties: {
           labelGroup: {
             type: 'string',
           },
-          visibility: {
+          setting: {
             type: 'string',
-            knownValues: ['show', 'warn', 'hide'],
+            knownValues: ['ignore', 'warn', 'hide'],
           },
         },
       },

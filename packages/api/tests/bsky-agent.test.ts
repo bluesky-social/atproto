@@ -1,5 +1,11 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { BskyAgent, ComAtprotoRepoPutRecord, AppBskyActorProfile } from '..'
+import {
+  BskyAgent,
+  ComAtprotoRepoPutRecord,
+  AppBskyActorProfile,
+  BSKY_MODSERVICE_DID,
+  DEFAULT_LABELGROUP_PREFERENCES,
+} from '..'
 
 describe('agent', () => {
   let network: TestNetworkNoAppView
@@ -212,7 +218,7 @@ describe('agent', () => {
     it('gets and sets preferences correctly', async () => {
       const agent = new BskyAgent({ service: network.pds.url })
 
-      await agent.createAccount({
+      const res = await agent.createAccount({
         handle: 'user5.test',
         email: 'user5@test.com',
         password: 'password',
@@ -220,8 +226,17 @@ describe('agent', () => {
 
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
-        adultContentEnabled: false,
-        contentLabels: {},
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            },
+          ],
+        },
         birthDate: undefined,
         feedViewPrefs: {
           home: {
@@ -241,8 +256,17 @@ describe('agent', () => {
       await agent.setAdultContentEnabled(true)
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
-        adultContentEnabled: true,
-        contentLabels: {},
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: true,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            },
+          ],
+        },
         birthDate: undefined,
         feedViewPrefs: {
           home: {
@@ -262,30 +286,16 @@ describe('agent', () => {
       await agent.setAdultContentEnabled(false)
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
-        adultContentEnabled: false,
-        contentLabels: {},
-        birthDate: undefined,
-        feedViewPrefs: {
-          home: {
-            hideReplies: false,
-            hideRepliesByUnfollowed: false,
-            hideRepliesByLikeCount: 0,
-            hideReposts: false,
-            hideQuotePosts: false,
-          },
-        },
-        threadViewPrefs: {
-          sort: 'oldest',
-          prioritizeFollowedUsers: true,
-        },
-      })
-
-      await agent.setContentLabelPref('impersonation', 'warn')
-      await expect(agent.getPreferences()).resolves.toStrictEqual({
-        feeds: { pinned: undefined, saved: undefined },
-        adultContentEnabled: false,
-        contentLabels: {
-          impersonation: 'warn',
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            },
+          ],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -303,14 +313,63 @@ describe('agent', () => {
         },
       })
 
-      await agent.setContentLabelPref('spam', 'show') // will convert to 'ignore'
-      await agent.setContentLabelPref('impersonation', 'hide')
+      await agent.setModServiceLabelGroupPref(
+        BSKY_MODSERVICE_DID,
+        'misinfo',
+        'hide',
+      )
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
-        adultContentEnabled: false,
-        contentLabels: {
-          impersonation: 'hide',
-          spam: 'ignore',
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide' },
+              },
+            },
+          ],
+        },
+        birthDate: undefined,
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
+      })
+
+      await agent.setModServiceLabelGroupPref(
+        BSKY_MODSERVICE_DID,
+        'spam',
+        'ignore',
+      )
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: { pinned: undefined, saved: undefined },
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              },
+            },
+          ],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -334,10 +393,19 @@ describe('agent', () => {
           pinned: [],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          impersonation: 'hide',
-          spam: 'ignore',
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              },
+            },
+          ],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -361,10 +429,19 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          impersonation: 'hide',
-          spam: 'ignore',
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              },
+            },
+          ],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -388,10 +465,19 @@ describe('agent', () => {
           pinned: [],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          impersonation: 'hide',
-          spam: 'ignore',
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              },
+            },
+          ],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -415,10 +501,19 @@ describe('agent', () => {
           pinned: [],
           saved: [],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          impersonation: 'hide',
-          spam: 'ignore',
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              },
+            },
+          ],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -442,10 +537,19 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          impersonation: 'hide',
-          spam: 'ignore',
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              },
+            },
+          ],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -475,10 +579,19 @@ describe('agent', () => {
             'at://bob.com/app.bsky.feed.generator/fake2',
           ],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          impersonation: 'hide',
-          spam: 'ignore',
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              },
+            },
+          ],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -502,10 +615,19 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          impersonation: 'hide',
-          spam: 'ignore',
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              },
+            },
+          ],
         },
         birthDate: undefined,
         feedViewPrefs: {
@@ -529,10 +651,19 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          impersonation: 'hide',
-          spam: 'ignore',
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              },
+            },
+          ],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -556,10 +687,19 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          impersonation: 'hide',
-          spam: 'ignore',
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              },
+            },
+          ],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -583,10 +723,19 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          impersonation: 'hide',
-          spam: 'ignore',
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              },
+            },
+          ],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -610,10 +759,19 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          impersonation: 'hide',
-          spam: 'ignore',
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              },
+            },
+          ],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -644,10 +802,19 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          impersonation: 'hide',
-          spam: 'ignore',
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              },
+            },
+          ],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -678,10 +845,19 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          impersonation: 'hide',
-          spam: 'ignore',
+        moderationPrefs: {
+          userDid: res.data.did,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              },
+            },
+          ],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -710,33 +886,63 @@ describe('agent', () => {
     it('resolves duplicates correctly', async () => {
       const agent = new BskyAgent({ service: network.pds.url })
 
-      await agent.createAccount({
+      const userRes = await agent.createAccount({
         handle: 'user6.test',
         email: 'user6@test.com',
         password: 'password',
       })
+      const userDid = userRes.data.did
 
       await agent.app.bsky.actor.putPreferences({
         preferences: [
           {
-            $type: 'app.bsky.actor.defs#contentLabelPref',
-            label: 'nsfw',
-            visibility: 'show',
+            $type: 'app.bsky.actor.defs#modsPref',
+            mods: [
+              {
+                did: BSKY_MODSERVICE_DID,
+                enabled: true,
+                labelGroupSettings: [
+                  { labelGroup: 'porn', setting: 'ignore' },
+                  { labelGroup: 'nudity', setting: 'ignore' },
+                  { labelGroup: 'suggestive', setting: 'ignore' },
+                  { labelGroup: 'violence', setting: 'ignore' },
+                  { labelGroup: 'hate', setting: 'ignore' },
+                  { labelGroup: 'spam', setting: 'ignore' },
+                  { labelGroup: 'misinfo', setting: 'ignore' },
+                ],
+              },
+            ],
           },
           {
-            $type: 'app.bsky.actor.defs#contentLabelPref',
-            label: 'nsfw',
-            visibility: 'hide',
-          },
-          {
-            $type: 'app.bsky.actor.defs#contentLabelPref',
-            label: 'nsfw',
-            visibility: 'show',
-          },
-          {
-            $type: 'app.bsky.actor.defs#contentLabelPref',
-            label: 'nsfw',
-            visibility: 'warn',
+            $type: 'app.bsky.actor.defs#modsPref',
+            mods: [
+              {
+                did: BSKY_MODSERVICE_DID,
+                enabled: true,
+                labelGroupSettings: [
+                  { labelGroup: 'porn', setting: 'hide' },
+                  { labelGroup: 'nudity', setting: 'warn' },
+                  { labelGroup: 'suggestive', setting: 'warn' },
+                  { labelGroup: 'violence', setting: 'warn' },
+                  { labelGroup: 'hate', setting: 'hide' },
+                  { labelGroup: 'spam', setting: 'hide' },
+                  { labelGroup: 'misinfo', setting: 'warn' },
+                ],
+              },
+              {
+                did: 'did:plc:othermod',
+                enabled: true,
+                labelGroupSettings: [
+                  { labelGroup: 'porn', setting: 'hide' },
+                  { labelGroup: 'nudity', setting: 'warn' },
+                  { labelGroup: 'suggestive', setting: 'warn' },
+                  { labelGroup: 'violence', setting: 'warn' },
+                  { labelGroup: 'hate', setting: 'hide' },
+                  { labelGroup: 'spam', setting: 'hide' },
+                  { labelGroup: 'misinfo', setting: 'warn' },
+                ],
+              },
+            ],
           },
           {
             $type: 'app.bsky.actor.defs#adultContentPref',
@@ -809,9 +1015,20 @@ describe('agent', () => {
           pinned: [],
           saved: [],
         },
-        adultContentEnabled: true,
-        contentLabels: {
-          nsfw: 'warn',
+        moderationPrefs: {
+          userDid,
+          adultContentEnabled: true,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            },
+            {
+              labeler: { did: 'did:plc:othermod' },
+              labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            },
+          ],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -835,9 +1052,20 @@ describe('agent', () => {
           pinned: [],
           saved: [],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          nsfw: 'warn',
+        moderationPrefs: {
+          userDid,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            },
+            {
+              labeler: { did: 'did:plc:othermod' },
+              labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            },
+          ],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -855,15 +1083,106 @@ describe('agent', () => {
         },
       })
 
-      await agent.setContentLabelPref('nsfw', 'hide')
+      await agent.setModServiceLabelGroupPref(
+        BSKY_MODSERVICE_DID,
+        'porn',
+        'ignore',
+      )
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: {
           pinned: [],
           saved: [],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          nsfw: 'hide',
+        moderationPrefs: {
+          userDid,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ porn: 'ignore' },
+              },
+            },
+            {
+              labeler: { did: 'did:plc:othermod' },
+              labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            },
+          ],
+        },
+        birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        feedViewPrefs: {
+          home: {
+            hideReplies: true,
+            hideRepliesByUnfollowed: true,
+            hideRepliesByLikeCount: 10,
+            hideReposts: true,
+            hideQuotePosts: true,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'newest',
+          prioritizeFollowedUsers: false,
+        },
+      })
+
+      await agent.removeModService('did:plc:othermod')
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: [],
+          saved: [],
+        },
+        moderationPrefs: {
+          userDid,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: {
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ porn: 'ignore' },
+              },
+            },
+          ],
+        },
+        birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        feedViewPrefs: {
+          home: {
+            hideReplies: true,
+            hideRepliesByUnfollowed: true,
+            hideRepliesByLikeCount: 10,
+            hideReposts: true,
+            hideQuotePosts: true,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'newest',
+          prioritizeFollowedUsers: false,
+        },
+      })
+
+      await agent.setModServiceLabelGroupPref(
+        BSKY_MODSERVICE_DID,
+        'porn',
+        'hide',
+      )
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: [],
+          saved: [],
+        },
+        moderationPrefs: {
+          userDid,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            },
+          ],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -887,9 +1206,16 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          nsfw: 'hide',
+        moderationPrefs: {
+          userDid,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            },
+          ],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -913,9 +1239,16 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          nsfw: 'hide',
+        moderationPrefs: {
+          userDid,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            },
+          ],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -950,9 +1283,16 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        adultContentEnabled: false,
-        contentLabels: {
-          nsfw: 'hide',
+        moderationPrefs: {
+          userDid,
+          adultContentEnabled: false,
+          labelGroups: {},
+          labelers: [
+            {
+              labeler: { did: BSKY_MODSERVICE_DID },
+              labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+            },
+          ],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
         feedViewPrefs: {
@@ -978,9 +1318,22 @@ describe('agent', () => {
             enabled: false,
           },
           {
-            $type: 'app.bsky.actor.defs#contentLabelPref',
-            label: 'nsfw',
-            visibility: 'hide',
+            $type: 'app.bsky.actor.defs#modsPref',
+            mods: [
+              {
+                did: BSKY_MODSERVICE_DID,
+                enabled: true,
+                labelGroupSettings: [
+                  { labelGroup: 'porn', setting: 'hide' },
+                  { labelGroup: 'nudity', setting: 'warn' },
+                  { labelGroup: 'suggestive', setting: 'warn' },
+                  { labelGroup: 'violence', setting: 'warn' },
+                  { labelGroup: 'hate', setting: 'hide' },
+                  { labelGroup: 'spam', setting: 'hide' },
+                  { labelGroup: 'misinfo', setting: 'warn' },
+                ],
+              },
+            ],
           },
           {
             $type: 'app.bsky.actor.defs#savedFeedsPref',

@@ -85,10 +85,10 @@ export class ModerationCauseAccumulator {
       labelPref = labelDef.preferences[0]
     } else if (labelDef.flags.includes('adult') && !opts.adultContentEnabled) {
       labelPref = 'hide'
-    } else if (labeler?.labels[label.val]) {
-      labelPref = labeler.labels[label.val]
-    } else if (opts.labels[label.val]) {
-      labelPref = opts.labels[label.val]
+    } else if (labeler?.labelGroups[labelDef.groupId]) {
+      labelPref = labeler.labelGroups[labelDef.groupId]
+    } else if (opts.labelGroups[labelDef.groupId]) {
+      labelPref = opts.labelGroups[labelDef.groupId]
     }
 
     // ignore labels the user has asked to ignore
