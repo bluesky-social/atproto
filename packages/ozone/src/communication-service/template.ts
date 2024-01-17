@@ -23,12 +23,32 @@ export class CommunicationTemplateService {
     return list
   }
 
-  async create(
-    template: Omit<Selectable<CommunicationTemplate>, 'id'>,
-  ): Promise<Selectable<CommunicationTemplate>> {
+  async create({
+    name,
+    content,
+    subject,
+    disabled,
+    updatedAt,
+    createdAt,
+    lastUpdatedBy,
+  }: Omit<
+    Selectable<CommunicationTemplate>,
+    'id' | 'createdAt' | 'updatedAt'
+  > & {
+    createdAt?: Date
+    updatedAt?: Date
+  }): Promise<Selectable<CommunicationTemplate>> {
     const newTemplate = await this.db.db
       .insertInto('communication_template')
-      .values(template)
+      .values({
+        name,
+        content,
+        subject,
+        disabled,
+        lastUpdatedBy,
+        updatedAt: updatedAt || new Date(),
+        createdAt: createdAt || new Date(),
+      })
       .returningAll()
       .executeTakeFirstOrThrow()
 
@@ -37,14 +57,26 @@ export class CommunicationTemplateService {
 
   async update(
     id: number,
-    template: Partial<
-      Omit<Selectable<CommunicationTemplate>, 'id' | 'createdAt'>
-    >,
+    {
+      name,
+      content,
+      subject,
+      disabled,
+      updatedAt,
+      lastUpdatedBy,
+    }: Partial<Omit<Selectable<CommunicationTemplate>, 'id' | 'createdAt'>>,
   ): Promise<Selectable<CommunicationTemplate>> {
     const updatedTemplate = await this.db.db
       .updateTable('communication_template')
       .where('id', '=', id)
-      .set(template)
+      .set({
+        name,
+        content,
+        subject,
+        disabled,
+        lastUpdatedBy,
+        updatedAt: updatedAt || new Date(),
+      })
       .returningAll()
       .executeTakeFirstOrThrow()
 

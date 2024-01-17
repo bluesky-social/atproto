@@ -25,6 +25,7 @@
             },
             "createdBy": {
               "type": "string",
+              "format": "did",
               "description": "DID of the user who is creating the template."
             }
           }

@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Administrative action to update an an existing communication template.",
+      "description": "Administrative action to update an existing communication template. Allows passing partial fields to patch specific fields only.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -29,6 +29,7 @@
             },
             "updatedBy": {
               "type": "string",
+              "format": "did",
               "description": "DID of the user who is updating the template."
             },
             "disabled": {

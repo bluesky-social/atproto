@@ -19,8 +19,6 @@ export default function (server: Server, ctx: AppContext) {
       const communicationTemplate = ctx.communicationTemplateService(db)
       const newTemplate = await communicationTemplate.create({
         ...template,
-        createdAt: new Date(),
-        updatedAt: new Date(),
         disabled: false,
         lastUpdatedBy: createdBy,
       })

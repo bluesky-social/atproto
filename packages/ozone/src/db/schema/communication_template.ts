@@ -1,13 +1,13 @@
-import { Generated } from 'kysely'
+import { Generated, GeneratedAlways } from 'kysely'
 
 export const communicationTemplateTableName = 'communication_template'
 
 export interface CommunicationTemplate {
-  id: Generated<number>
+  id: GeneratedAlways<number>
   name: string
   content: string
   subject: string | null
-  disabled: boolean
+  disabled: Generated<boolean>
   createdAt: Date
   updatedAt: Date
   lastUpdatedBy: string
