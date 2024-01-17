@@ -1,8 +1,10 @@
 import { sql } from 'kysely'
+import * as ui8 from 'uint8arrays'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import AtpAgent from '@atproto/api'
-import { dedupeStrs } from '@atproto/common'
+import { cborEncode, dedupeStrs } from '@atproto/common'
 import { BlobRef } from '@atproto/lexicon'
+import { Keypair } from '@atproto/crypto'
 import { Database } from '../db'
 import {
   ModEventView,
@@ -24,6 +26,9 @@ import {
 } from './types'
 import { REASONOTHER } from '../lexicon/types/com/atproto/moderation/defs'
 import { subjectFromEventRow, subjectFromStatusRow } from './subject'
+import { LabelRow } from '../db/schema/label'
+import { BackgroundQueue } from '../background'
+import { dbLogger as log } from '../logger'
 
 export type AppviewAuth = () => Promise<
   | {
@@ -37,6 +42,8 @@ export type AppviewAuth = () => Promise<
 export class ModerationViews {
   constructor(
     private db: Database,
+    private signingKey: Keypair,
+    private backgroundQueue: BackgroundQueue,
     private appviewAgent: AtpAgent,
     private appviewAuth: AppviewAuth,
   ) {}
@@ -397,11 +404,7 @@ export class ModerationViews {
       .if(!includeNeg, (qb) => qb.where('neg', '=', false))
       .selectAll()
       .execute()
-    return res.map((l) => ({
-      ...l,
-      cid: l.cid === '' ? undefined : l.cid,
-      neg: l.neg,
-    }))
+    return this.formatLabels(res)
   }
 
   async getSubjectStatus(
@@ -452,6 +455,51 @@ export class ModerationViews {
         handle: handle ?? INVALID_HANDLE,
       })
     }, new Map<string, ModerationSubjectStatusRowWithHandle>())
+  }
+
+  async formatLabel(row: LabelRow): Promise<Label> {
+    const label: Label = {
+      src: row.src,
+      uri: row.uri,
+      cid: row.cid === '' ? undefined : row.cid,
+      val: row.val,
+      neg: row.neg,
+      cts: row.cts,
+    }
+    let sig: string | undefined = row.sig ?? undefined
+    try {
+      if (!row.sig || row.signer !== this.signingKey.did()) {
+        const encoded = cborEncode(label)
+        const sigBytes = await this.signingKey.sign(encoded)
+        sig = ui8.toString(sigBytes, 'base64')
+        this.backgroundQueue.add(async () => {
+          await this.db.db
+            .updateTable('label')
+            .set({ sig, signer: this.signingKey.did() })
+            .where('id', '=', row.id)
+            .execute()
+            .catch((err) => {
+              log.error(
+                { err, label, sig, signingKey: this.signingKey.did() },
+                'failed to store resigned label',
+              )
+            })
+        })
+      }
+    } catch (err) {
+      log.error(
+        { err, label, signingKey: this.signingKey.did() },
+        'failed to sign label',
+      )
+    }
+    return {
+      ...label,
+      sig,
+    }
+  }
+
+  async formatLabels(rows: LabelRow[]): Promise<Label[]> {
+    return Promise.all(rows.map((row) => this.formatLabel(row)))
   }
 
   formatSubjectStatus(

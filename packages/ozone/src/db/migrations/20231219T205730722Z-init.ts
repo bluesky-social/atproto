@@ -75,6 +75,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('val', 'varchar', (col) => col.notNull())
     .addColumn('neg', 'boolean', (col) => col.notNull())
     .addColumn('cts', 'varchar', (col) => col.notNull())
+    .addColumn('sig', 'varchar')
+    .addColumn('signer', 'varchar')
     .execute()
   await db.schema
     .createIndex('unique_label_idx')

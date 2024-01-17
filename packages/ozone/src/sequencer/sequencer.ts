@@ -5,7 +5,7 @@ import Database from '../db'
 import { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'
 import { Label as LabelTable } from '../db/schema/label'
 import { Selectable } from 'kysely'
-import { formatLabel } from '../mod-service/util'
+import { ModerationService } from '../mod-service'
 
 export type { Labels as LabelsEvt } from '../lexicon/types/com/atproto/label/subscribeLabels'
 type LabelRow = Selectable<LabelTable>
@@ -15,11 +15,13 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   pollPromise: Promise<void> = Promise.resolve()
   pollTimer: NodeJS.Timer | undefined
   triesWithNoResults = 0
+  db: Database
 
-  constructor(public db: Database, public lastSeen = 0) {
+  constructor(public modService: ModerationService, public lastSeen = 0) {
     super()
     // note: this does not err when surpassed, just prints a warning to stderr
     this.setMaxListeners(100)
+    this.db = modService.db
   }
 
   async start() {
@@ -77,13 +79,15 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
       return []
     }
 
-    const evts: LabelsEvt[] = []
-    for (const row of rows) {
-      evts.push({
-        seq: row.id,
-        labels: [formatLabel(row)],
-      })
-    }
+    const evts: LabelsEvt[] = await Promise.all(
+      rows.map(async (row) => {
+        const label = await this.modService.views.formatLabel(row)
+        return {
+          seq: row.id,
+          labels: [label],
+        }
+      }),
+    )
 
     return evts
   }

@@ -1,6 +1,5 @@
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
-import { formatLabel } from '../../mod-service/util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.fetchLabels(async ({ params }) => {
@@ -15,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       .limit(limit)
       .execute()
 
-    const labels = labelRes.map((l) => formatLabel(l))
+    const labels = await ctx.modService(ctx.db).views.formatLabels(labelRes)
 
     return {
       encoding: 'application/json',

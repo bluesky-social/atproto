@@ -2,6 +2,7 @@ import { CID } from 'multiformats/cid'
 import { AtUri, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { addHoursToDate } from '@atproto/common'
+import { Keypair } from '@atproto/crypto'
 import { Database } from '../db'
 import { AppviewAuth, ModerationViews } from './views'
 import { Main as StrongRef } from '../lexicon/types/com/atproto/repo/strongRef'
@@ -45,6 +46,7 @@ export type ModerationServiceCreator = (db: Database) => ModerationService
 export class ModerationService {
   constructor(
     public db: Database,
+    public signingKey: Keypair,
     public backgroundQueue: BackgroundQueue,
     public eventPusher: EventPusher,
     public appviewAgent: AtpAgent,
@@ -52,6 +54,7 @@ export class ModerationService {
   ) {}
 
   static creator(
+    signingKey: Keypair,
     backgroundQueue: BackgroundQueue,
     eventPusher: EventPusher,
     appviewAgent: AtpAgent,
@@ -60,6 +63,7 @@ export class ModerationService {
     return (db: Database) =>
       new ModerationService(
         db,
+        signingKey,
         backgroundQueue,
         eventPusher,
         appviewAgent,
@@ -67,7 +71,13 @@ export class ModerationService {
       )
   }
 
-  views = new ModerationViews(this.db, this.appviewAgent, this.appviewAuth)
+  views = new ModerationViews(
+    this.db,
+    this.signingKey,
+    this.backgroundQueue,
+    this.appviewAgent,
+    this.appviewAuth,
+  )
 
   async getEvent(id: number): Promise<ModerationEventRow | undefined> {
     return await this.db.db
@@ -694,6 +704,7 @@ export class ModerationService {
     return !!result?.takendown
   }
 
+  // @TODO sign labels here
   async formatAndCreateLabels(
     src: string,
     uri: string,
