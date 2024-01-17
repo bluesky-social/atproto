@@ -1,4 +1,4 @@
-import { envInt, envStr } from '@atproto/common'
+import { envInt, envList, envStr } from '@atproto/common'
 
 export const readEnv = (): OzoneEnvironment => {
   return {
@@ -14,9 +14,8 @@ export const readEnv = (): OzoneEnvironment => {
     dbPostgresUrl: envStr('OZONE_DB_POSTGRES_URL'),
     dbPostgresSchema: envStr('OZONE_DB_POSTGRES_SCHEMA'),
     didPlcUrl: envStr('OZONE_DID_PLC_URL'),
-    adminPassword: envStr('OZONE_ADMIN_PASSWORD'),
-    moderatorPassword: envStr('OZONE_MODERATOR_PASSWORD'),
-    triagePassword: envStr('OZONE_TRIAGE_PASSWORD'),
+    moderatorDids: envList('OZONE_MODERATOR_DIDS'),
+    triageDids: envList('OZONE_TRIAGE_DIDS'),
     signingKeyHex: envStr('OZONE_SIGNING_KEY_HEX'),
   }
 }
@@ -34,8 +33,7 @@ export type OzoneEnvironment = {
   dbPostgresUrl?: string
   dbPostgresSchema?: string
   didPlcUrl?: string
-  adminPassword?: string
-  moderatorPassword?: string
-  triagePassword?: string
+  moderatorDids: string[]
+  triageDids: string[]
   signingKeyHex?: string
 }

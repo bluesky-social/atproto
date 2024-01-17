@@ -6,10 +6,10 @@ import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 import { Database } from './db'
 import { OzoneConfig, OzoneSecrets } from './config'
 import { ModerationService, ModerationServiceCreator } from './mod-service'
-import * as auth from './auth'
 import { BackgroundQueue } from './background'
 import assert from 'assert'
 import { EventPusher } from './daemon'
+import { AuthVerifier } from './auth-verifier'
 
 export type AppContextOptions = {
   db: Database
@@ -20,6 +20,7 @@ export type AppContextOptions = {
   signingKey: Keypair
   idResolver: IdResolver
   backgroundQueue: BackgroundQueue
+  authVerifier: AuthVerifier
 }
 
 export class AppContext {
@@ -66,6 +67,8 @@ export class AppContext {
       plcUrl: cfg.identity.plcUrl,
     })
 
+    const authVerifier = new AuthVerifier()
+
     return new AppContext(
       {
         db,
@@ -76,6 +79,7 @@ export class AppContext {
         signingKey,
         idResolver,
         backgroundQueue,
+        authVerifier,
         ...(overrides ?? {}),
       },
       secrets,
@@ -127,33 +131,7 @@ export class AppContext {
   }
 
   get authVerifier() {
-    return auth.authVerifier(this.idResolver, { aud: this.cfg.service.did })
-  }
-
-  get authVerifierAnyAudience() {
-    return auth.authVerifier(this.idResolver, { aud: null })
-  }
-
-  get authOptionalVerifierAnyAudience() {
-    return auth.authOptionalVerifier(this.idResolver, { aud: null })
-  }
-
-  get authOptionalVerifier() {
-    return auth.authOptionalVerifier(this.idResolver, {
-      aud: this.cfg.service.did,
-    })
-  }
-
-  get authOptionalAccessOrRoleVerifier() {
-    return auth.authOptionalAccessOrRoleVerifier(
-      this.idResolver,
-      this.secrets,
-      this.cfg.service.did,
-    )
-  }
-
-  get roleVerifier() {
-    return auth.roleVerifier(this.secrets)
+    return this.opts.authVerifier
   }
 
   async serviceAuthHeaders(aud: string) {

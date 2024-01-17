@@ -10,9 +10,9 @@ import { subjectFromInput } from '../../mod-service/subject'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.emitModerationEvent({
-    auth: ctx.roleVerifier,
+    auth: ctx.authVerifier.admin,
     handler: async ({ input, auth }) => {
-      const access = auth.credentials
+      const { isModerator } = auth.credentials
       const db = ctx.db
       const moderationService = ctx.modService(db)
       const { createdBy, event } = input.body
@@ -27,19 +27,19 @@ export default function (server: Server, ctx: AppContext) {
       // apply access rules
 
       // if less than moderator access then can not takedown an account
-      if (!access.moderator && isTakedownEvent && subject.isRepo()) {
+      if (!isModerator && isTakedownEvent && subject.isRepo()) {
         throw new AuthRequiredError(
           'Must be a full moderator to perform an account takedown',
         )
       }
       // if less than moderator access then can only take ack and escalation actions
-      if (!access.moderator && (isTakedownEvent || isReverseTakedownEvent)) {
+      if (!isModerator && (isTakedownEvent || isReverseTakedownEvent)) {
         throw new AuthRequiredError(
           'Must be a full moderator to take this type of action',
         )
       }
       // if less than moderator access then can not apply labels
-      if (!access.moderator && isLabelEvent) {
+      if (!isModerator && isLabelEvent) {
         throw new AuthRequiredError('Must be a full moderator to label content')
       }
 

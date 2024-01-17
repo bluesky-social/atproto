@@ -40,12 +40,18 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     plcUrl: env.didPlcUrl,
   }
 
+  const accessCfg: OzoneConfig['access'] = {
+    moderators: env.moderatorDids,
+    triage: env.triageDids,
+  }
+
   return {
     service: serviceCfg,
     db: dbCfg,
     appview: appviewCfg,
     pds: pdsCfg,
     identity: identityCfg,
+    access: accessCfg,
   }
 }
 
@@ -55,6 +61,7 @@ export type OzoneConfig = {
   appview: AppviewConfig
   pds: PdsConfig | null
   identity: IdentityConfig
+  access: AccessConfig
 }
 
 export type ServiceConfig = {
@@ -81,4 +88,9 @@ export type PdsConfig = {
 
 export type IdentityConfig = {
   plcUrl: string
+}
+
+export type AccessConfig = {
+  moderators: string[]
+  triage: string[]
 }

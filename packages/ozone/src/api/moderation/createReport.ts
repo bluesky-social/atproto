@@ -8,10 +8,9 @@ import { ForbiddenError } from '@atproto/xrpc-server'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
     // @TODO anonymous reports w/ optional auth are a temporary measure
-    auth: ctx.authOptionalAccessOrRoleVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ input, auth }) => {
-      const requester =
-        'did' in auth.credentials ? auth.credentials.did : ctx.cfg.service.did
+      const requester = auth.credentials.iss
       const { reasonType, reason } = input.body
       const subject = subjectFromInput(input.body.subject)
 
