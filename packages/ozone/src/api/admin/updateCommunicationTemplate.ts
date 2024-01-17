@@ -10,9 +10,9 @@ export default function (server: Server, ctx: AppContext) {
       const db = ctx.db
       const { id, updatedBy, ...template } = input.body
 
-      if (!access.moderator) {
+      if (!access.admin) {
         throw new AuthRequiredError(
-          'Must be a full moderator to update a communication template',
+          'Must be an admin to update a communication template',
         )
       }
 

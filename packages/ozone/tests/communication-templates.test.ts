@@ -1,14 +1,9 @@
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import AtpAgent, {
-  ComAtprotoAdminDefs,
-  ComAtprotoAdminEmitModerationEvent,
-  ComAtprotoAdminQueryModerationStatuses,
-} from '@atproto/api'
+import AtpAgent from '@atproto/api'
 
 describe('communication-templates', () => {
   let network: TestNetwork
   let agent: AtpAgent
-  let pdsAgent: AtpAgent
   let sc: SeedClient
 
   beforeAll(async () => {
@@ -16,7 +11,6 @@ describe('communication-templates', () => {
       dbPostgresSchema: 'ozone_communication_templates',
     })
     agent = network.ozone.getClient()
-    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -44,23 +38,24 @@ describe('communication-templates', () => {
   }
 
   describe('create templates', () => {
-    it('only allows moderators to create new templates', async () => {
-      const triageReq = agent.api.com.atproto.admin.createCommunicationTemplate(
-        { ...templateOne, createdBy: sc.dids.bob },
-        {
-          encoding: 'application/json',
-          headers: network.ozone.adminAuthHeaders('triage'),
-        },
-      )
-      await expect(triageReq).rejects.toThrow(
-        'Must be a full moderator to create a communication template',
+    it('only allows admins to create new templates', async () => {
+      const moderatorReq =
+        agent.api.com.atproto.admin.createCommunicationTemplate(
+          { ...templateOne, createdBy: sc.dids.bob },
+          {
+            encoding: 'application/json',
+            headers: network.ozone.adminAuthHeaders('moderator'),
+          },
+        )
+      await expect(moderatorReq).rejects.toThrow(
+        'Must be an admin to create a communication template',
       )
       const modReq =
         await agent.api.com.atproto.admin.createCommunicationTemplate(
           { ...templateOne, createdBy: sc.dids.bob },
           {
             encoding: 'application/json',
-            headers: network.ozone.adminAuthHeaders('moderator'),
+            headers: network.ozone.adminAuthHeaders('admin'),
           },
         )
 
@@ -84,7 +79,7 @@ describe('communication-templates', () => {
         { ...templateTwo, createdBy: sc.dids.bob },
         {
           encoding: 'application/json',
-          headers: network.ozone.adminAuthHeaders('moderator'),
+          headers: network.ozone.adminAuthHeaders('admin'),
         },
       )
 
@@ -100,7 +95,7 @@ describe('communication-templates', () => {
           { id: 1, updatedBy: sc.dids.bob, name: '1 Test template' },
           {
             encoding: 'application/json',
-            headers: network.ozone.adminAuthHeaders('moderator'),
+            headers: network.ozone.adminAuthHeaders('admin'),
           },
         )
 
