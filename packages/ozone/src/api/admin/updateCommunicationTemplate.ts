@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // Once auth starts providing us with the caller's DID, we can get rid of this check
-      if (updatedBy) {
+      if (!updatedBy) {
         throw new InvalidRequestError('updatedBy field is required')
       }
 
