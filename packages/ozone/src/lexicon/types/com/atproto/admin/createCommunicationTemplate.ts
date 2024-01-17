@@ -19,7 +19,7 @@ export interface InputSchema {
   /** Subject of the message, used in emails. */
   subject: string
   /** DID of the user who is creating the template. */
-  createdBy: string
+  createdBy?: string
   [k: string]: unknown
 }
 

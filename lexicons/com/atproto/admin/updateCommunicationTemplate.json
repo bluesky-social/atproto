@@ -9,7 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["id", "updatedBy"],
+          "required": ["id"],
           "properties": {
             "id": {
               "type": "integer",

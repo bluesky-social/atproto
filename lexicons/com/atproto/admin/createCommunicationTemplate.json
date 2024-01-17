@@ -9,7 +9,7 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["subject", "content", "name", "createdBy"],
+          "required": ["subject", "content", "name"],
           "properties": {
             "name": {
               "type": "string",

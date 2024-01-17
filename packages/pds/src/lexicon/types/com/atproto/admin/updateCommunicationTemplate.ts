@@ -21,7 +21,7 @@ export interface InputSchema {
   /** Subject of the message, used in emails. */
   subject?: string
   /** DID of the user who is updating the template. */
-  updatedBy: string
+  updatedBy?: string
   disabled?: boolean
   [k: string]: unknown
 }

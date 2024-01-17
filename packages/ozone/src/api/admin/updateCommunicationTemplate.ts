@@ -16,6 +16,11 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      // Once auth starts providing us with the caller's DID, we can get rid of this check
+      if (updatedBy) {
+        throw new InvalidRequestError('updatedBy field is required')
+      }
+
       if (!Object.keys(template).length) {
         throw new InvalidRequestError('Missing update data in request body')
       }

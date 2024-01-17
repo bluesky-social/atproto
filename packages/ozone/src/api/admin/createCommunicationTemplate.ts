@@ -1,4 +1,4 @@
-import { AuthRequiredError } from '@atproto/xrpc-server'
+import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../lexicon'
 import AppContext from '../../context'
 
@@ -14,6 +14,11 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError(
           'Must be an admin to create a communication template',
         )
+      }
+
+      // Once auth starts providing us with the caller's DID, we can get rid of this check
+      if (!createdBy) {
+        throw new InvalidRequestError('createdBy field is required')
       }
 
       const communicationTemplate = ctx.communicationTemplateService(db)

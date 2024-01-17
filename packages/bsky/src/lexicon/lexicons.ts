@@ -16,7 +16,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['subject', 'content', 'name', 'createdBy'],
+            required: ['subject', 'content', 'name'],
             properties: {
               name: {
                 type: 'string',
@@ -33,6 +33,7 @@ export const schemaDict = {
               },
               createdBy: {
                 type: 'string',
+                format: 'did',
                 description: 'DID of the user who is creating the template.',
               },
             },
@@ -1759,12 +1760,12 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Administrative action to update an an existing communication template.',
+          'Administrative action to update an existing communication template. Allows passing partial fields to patch specific fields only.',
         input: {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['id', 'updatedBy'],
+            required: ['id'],
             properties: {
               id: {
                 type: 'integer',
@@ -1785,6 +1786,7 @@ export const schemaDict = {
               },
               updatedBy: {
                 type: 'string',
+                format: 'did',
                 description: 'DID of the user who is updating the template.',
               },
               disabled: {
