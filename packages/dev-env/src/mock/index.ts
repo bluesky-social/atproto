@@ -76,10 +76,21 @@ export async function generateMockSetup(env: TestNetwork) {
 
   let _i = 1
   for (const user of users) {
+    let verificationCode: string | undefined = undefined
+    let verificationPhone: string | undefined = undefined
+    if (env.pds.ctx.twilio) {
+      verificationPhone = `+1111111111${_i}`
+      await clients.loggedout.api.com.atproto.temp.requestPhoneVerification({
+        phoneNumber: verificationPhone,
+      })
+      verificationCode = env.pds.mockedPhoneCodes[verificationPhone]
+    }
     const res = await clients.loggedout.api.com.atproto.server.createAccount({
       email: user.email,
       handle: user.handle,
       password: user.password,
+      verificationCode,
+      verificationPhone,
     })
     user.agent.api.setHeader('Authorization', `Bearer ${res.data.accessJwt}`)
     user.did = res.data.did
