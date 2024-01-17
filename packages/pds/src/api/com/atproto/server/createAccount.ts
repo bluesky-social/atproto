@@ -121,6 +121,19 @@ export default function (server: Server, ctx: AppContext) {
             .execute()
         }
 
+        if (
+          ctx.cfg.phoneVerification.required &&
+          input.body.verificationPhone
+        ) {
+          await dbTxn.db
+            .insertInto('phone_verification')
+            .values({
+              did,
+              phoneNumber: input.body.verificationPhone,
+            })
+            .execute()
+        }
+
         const { access, refresh } = await ctx.services
           .auth(dbTxn)
           .createSession({
