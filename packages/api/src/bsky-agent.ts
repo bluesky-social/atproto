@@ -709,6 +709,9 @@ function gatherLegacyLabelerPrefs(
       if (labelGroup === 'gore') {
         labelGroup = 'violence'
       }
+      if (labelGroup === 'hate') {
+        labelGroup = 'intolerance'
+      }
       if (labelGroup === 'impersonation') {
         labelGroup = 'misinfo'
       }

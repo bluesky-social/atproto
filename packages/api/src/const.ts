@@ -7,7 +7,7 @@ export const DEFAULT_LABELGROUP_PREFERENCES: Record<string, LabelPreference> = {
   nudity: 'warn',
   suggestive: 'warn',
   violence: 'warn',
-  hate: 'hide',
+  intolerance: 'hide',
   spam: 'hide',
   misinfo: 'warn',
 }

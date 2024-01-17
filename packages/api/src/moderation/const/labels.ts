@@ -434,7 +434,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'blur',
-    groupId: 'hate',
+    groupId: 'intolerance',
     configurable: true,
     strings: {
       settings: {
@@ -464,7 +464,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'blur',
-    groupId: 'hate',
+    groupId: 'intolerance',
     configurable: true,
     strings: {
       settings: {
@@ -495,7 +495,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'blur',
-    groupId: 'hate',
+    groupId: 'intolerance',
     configurable: true,
     strings: {
       settings: {
@@ -526,7 +526,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'blur',
-    groupId: 'hate',
+    groupId: 'intolerance',
     configurable: true,
     strings: {
       settings: {
@@ -557,7 +557,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'blur',
-    groupId: 'hate',
+    groupId: 'intolerance',
     configurable: true,
     strings: {
       settings: {
@@ -586,7 +586,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'blur-media',
-    groupId: 'hate',
+    groupId: 'intolerance',
     configurable: true,
     strings: {
       settings: {

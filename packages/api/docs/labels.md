@@ -163,7 +163,7 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>intolerant-race</td>
-  <td>hate</td>
+  <td>intolerance</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
@@ -171,7 +171,7 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>intolerant-gender</td>
-  <td>hate</td>
+  <td>intolerance</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
@@ -179,7 +179,7 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>intolerant-sexual-orientation</td>
-  <td>hate</td>
+  <td>intolerance</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
@@ -187,7 +187,7 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>intolerant-religion</td>
-  <td>hate</td>
+  <td>intolerance</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
@@ -195,7 +195,7 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>intolerant</td>
-  <td>hate</td>
+  <td>intolerance</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
@@ -203,7 +203,7 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>icon-intolerant</td>
-  <td>hate</td>
+  <td>intolerance</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
@@ -307,7 +307,7 @@ The kind of UI behavior used when a warning must be applied.
   <td><code>general</code><br><strong>Violence</strong><br>Content which is violent or deeply disturbing.</td>
 </tr>
 <tr>
-  <td>hate</td>
+  <td>intolerance</td>
   <td><code>general</code><br><strong>Intolerance</strong><br>Content or behavior which is hateful or intolerant toward a group of people.</td>
 </tr>
 <tr>

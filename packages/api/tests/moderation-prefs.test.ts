@@ -1,8 +1,6 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import {
   BskyAgent,
-  ComAtprotoRepoPutRecord,
-  AppBskyActorProfile,
   BSKY_MODSERVICE_DID,
   DEFAULT_LABELGROUP_PREFERENCES,
 } from '..'
@@ -86,7 +84,7 @@ describe('agent', () => {
               nudity: 'ignore',
               suggestive: 'ignore',
               violence: 'ignore',
-              hate: 'ignore',
+              intolerance: 'ignore',
               spam: 'ignore',
               misinfo: 'ignore',
             },
@@ -177,7 +175,7 @@ describe('agent', () => {
               nudity: 'ignore',
               suggestive: 'ignore',
               violence: 'ignore',
-              hate: 'ignore',
+              intolerance: 'ignore',
               spam: 'ignore',
               misinfo: 'ignore',
             },
@@ -199,7 +197,11 @@ describe('agent', () => {
         sort: 'oldest',
       },
     })
-    await agent.setModServiceLabelGroupPref(BSKY_MODSERVICE_DID, 'hate', 'hide')
+    await agent.setModServiceLabelGroupPref(
+      BSKY_MODSERVICE_DID,
+      'intolerance',
+      'hide',
+    )
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: {
         pinned: undefined,
@@ -217,7 +219,7 @@ describe('agent', () => {
               nudity: 'ignore',
               suggestive: 'ignore',
               violence: 'ignore',
-              hate: 'hide',
+              intolerance: 'hide',
               spam: 'ignore',
               misinfo: 'ignore',
             },
@@ -312,7 +314,7 @@ describe('agent', () => {
               nudity: 'ignore',
               suggestive: 'ignore',
               violence: 'ignore',
-              hate: 'ignore',
+              intolerance: 'ignore',
               spam: 'ignore',
               misinfo: 'ignore',
             },
@@ -385,7 +387,11 @@ describe('agent', () => {
         },
       ],
     })
-    await agent.setModServiceLabelGroupPref(BSKY_MODSERVICE_DID, 'hate', 'hide')
+    await agent.setModServiceLabelGroupPref(
+      BSKY_MODSERVICE_DID,
+      'intolerance',
+      'hide',
+    )
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: {
         pinned: undefined,
@@ -403,7 +409,7 @@ describe('agent', () => {
               nudity: 'ignore',
               suggestive: 'ignore',
               violence: 'ignore',
-              hate: 'hide',
+              intolerance: 'hide',
               spam: 'ignore',
               misinfo: 'ignore',
             },

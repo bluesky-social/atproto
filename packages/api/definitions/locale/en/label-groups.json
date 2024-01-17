@@ -23,7 +23,7 @@
     "name": "Violence",
     "description": "Content which is violent or deeply disturbing."
   },
-  "hate": {
+  "intolerance": {
     "name": "Intolerance",
     "description": "Content or behavior which is hateful or intolerant toward a group of people."
   },

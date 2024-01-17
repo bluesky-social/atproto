@@ -92,8 +92,8 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
       },
     },
   },
-  hate: {
-    id: 'hate',
+  intolerance: {
+    id: 'intolerance',
     configurable: true,
     labels: [
       LABELS['intolerant-race'],
