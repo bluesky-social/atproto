@@ -77,6 +77,7 @@ import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscrib
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
+import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
 import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -161,39 +162,39 @@ export class Server {
 
 export class ComNS {
   _server: Server
-  atproto: AtprotoNS
+  atproto: ComAtprotoNS
 
   constructor(server: Server) {
     this._server = server
-    this.atproto = new AtprotoNS(server)
+    this.atproto = new ComAtprotoNS(server)
   }
 }
 
-export class AtprotoNS {
+export class ComAtprotoNS {
   _server: Server
-  admin: AdminNS
-  identity: IdentityNS
-  label: LabelNS
-  moderation: ModerationNS
-  repo: RepoNS
-  server: ServerNS
-  sync: SyncNS
-  temp: TempNS
+  admin: ComAtprotoAdminNS
+  identity: ComAtprotoIdentityNS
+  label: ComAtprotoLabelNS
+  moderation: ComAtprotoModerationNS
+  repo: ComAtprotoRepoNS
+  server: ComAtprotoServerNS
+  sync: ComAtprotoSyncNS
+  temp: ComAtprotoTempNS
 
   constructor(server: Server) {
     this._server = server
-    this.admin = new AdminNS(server)
-    this.identity = new IdentityNS(server)
-    this.label = new LabelNS(server)
-    this.moderation = new ModerationNS(server)
-    this.repo = new RepoNS(server)
-    this.server = new ServerNS(server)
-    this.sync = new SyncNS(server)
-    this.temp = new TempNS(server)
+    this.admin = new ComAtprotoAdminNS(server)
+    this.identity = new ComAtprotoIdentityNS(server)
+    this.label = new ComAtprotoLabelNS(server)
+    this.moderation = new ComAtprotoModerationNS(server)
+    this.repo = new ComAtprotoRepoNS(server)
+    this.server = new ComAtprotoServerNS(server)
+    this.sync = new ComAtprotoSyncNS(server)
+    this.temp = new ComAtprotoTempNS(server)
   }
 }
 
-export class AdminNS {
+export class ComAtprotoAdminNS {
   _server: Server
 
   constructor(server: Server) {
@@ -410,7 +411,7 @@ export class AdminNS {
   }
 }
 
-export class IdentityNS {
+export class ComAtprotoIdentityNS {
   _server: Server
 
   constructor(server: Server) {
@@ -440,7 +441,7 @@ export class IdentityNS {
   }
 }
 
-export class LabelNS {
+export class ComAtprotoLabelNS {
   _server: Server
 
   constructor(server: Server) {
@@ -470,7 +471,7 @@ export class LabelNS {
   }
 }
 
-export class ModerationNS {
+export class ComAtprotoModerationNS {
   _server: Server
 
   constructor(server: Server) {
@@ -489,7 +490,7 @@ export class ModerationNS {
   }
 }
 
-export class RepoNS {
+export class ComAtprotoRepoNS {
   _server: Server
 
   constructor(server: Server) {
@@ -585,7 +586,7 @@ export class RepoNS {
   }
 }
 
-export class ServerNS {
+export class ComAtprotoServerNS {
   _server: Server
 
   constructor(server: Server) {
@@ -824,7 +825,7 @@ export class ServerNS {
   }
 }
 
-export class SyncNS {
+export class ComAtprotoSyncNS {
   _server: Server
 
   constructor(server: Server) {
@@ -964,7 +965,7 @@ export class SyncNS {
   }
 }
 
-export class TempNS {
+export class ComAtprotoTempNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1004,6 +1005,17 @@ export class TempNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  requestPhoneVerification<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempRequestPhoneVerification.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempRequestPhoneVerification.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.requestPhoneVerification' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   transferAccount<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1018,37 +1030,37 @@ export class TempNS {
 
 export class AppNS {
   _server: Server
-  bsky: BskyNS
+  bsky: AppBskyNS
 
   constructor(server: Server) {
     this._server = server
-    this.bsky = new BskyNS(server)
+    this.bsky = new AppBskyNS(server)
   }
 }
 
-export class BskyNS {
+export class AppBskyNS {
   _server: Server
-  actor: ActorNS
-  embed: EmbedNS
-  feed: FeedNS
-  graph: GraphNS
-  notification: NotificationNS
-  richtext: RichtextNS
-  unspecced: UnspeccedNS
+  actor: AppBskyActorNS
+  embed: AppBskyEmbedNS
+  feed: AppBskyFeedNS
+  graph: AppBskyGraphNS
+  notification: AppBskyNotificationNS
+  richtext: AppBskyRichtextNS
+  unspecced: AppBskyUnspeccedNS
 
   constructor(server: Server) {
     this._server = server
-    this.actor = new ActorNS(server)
-    this.embed = new EmbedNS(server)
-    this.feed = new FeedNS(server)
-    this.graph = new GraphNS(server)
-    this.notification = new NotificationNS(server)
-    this.richtext = new RichtextNS(server)
-    this.unspecced = new UnspeccedNS(server)
+    this.actor = new AppBskyActorNS(server)
+    this.embed = new AppBskyEmbedNS(server)
+    this.feed = new AppBskyFeedNS(server)
+    this.graph = new AppBskyGraphNS(server)
+    this.notification = new AppBskyNotificationNS(server)
+    this.richtext = new AppBskyRichtextNS(server)
+    this.unspecced = new AppBskyUnspeccedNS(server)
   }
 }
 
-export class ActorNS {
+export class AppBskyActorNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1133,7 +1145,7 @@ export class ActorNS {
   }
 }
 
-export class EmbedNS {
+export class AppBskyEmbedNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1141,7 +1153,7 @@ export class EmbedNS {
   }
 }
 
-export class FeedNS {
+export class AppBskyFeedNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1325,7 +1337,7 @@ export class FeedNS {
   }
 }
 
-export class GraphNS {
+export class AppBskyGraphNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1476,7 +1488,7 @@ export class GraphNS {
   }
 }
 
-export class NotificationNS {
+export class AppBskyNotificationNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1528,7 +1540,7 @@ export class NotificationNS {
   }
 }
 
-export class RichtextNS {
+export class AppBskyRichtextNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1536,7 +1548,7 @@ export class RichtextNS {
   }
 }
 
-export class UnspeccedNS {
+export class AppBskyUnspeccedNS {
   _server: Server
 
   constructor(server: Server) {

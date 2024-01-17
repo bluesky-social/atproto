@@ -40,6 +40,30 @@ export default function (server: Server, ctx: AppContext) {
       const now = new Date().toISOString()
       const passwordScrypt = await scrypt.genSaltAndHash(password)
 
+      if (ctx.cfg.phoneVerification.required && ctx.twilio) {
+        if (!input.body.verificationPhone) {
+          throw new InvalidRequestError(
+            'Phone number verification is required on this server and none was provided.',
+            'InvalidPhoneVerification',
+          )
+        } else if (!input.body.verificationCode) {
+          throw new InvalidRequestError(
+            'Phone number verification is required on this server and none was provided.',
+            'InvalidPhoneVerification',
+          )
+        }
+        const verified = await ctx.twilio.verifyCode(
+          input.body.verificationPhone,
+          input.body.verificationCode,
+        )
+        if (!verified) {
+          throw new InvalidRequestError(
+            'Could not verify phone number. Please try again.',
+            'InvalidPhoneVerification',
+          )
+        }
+      }
+
       const result = await ctx.db.transaction(async (dbTxn) => {
         const actorTxn = ctx.services.account(dbTxn)
         const repoTxn = ctx.services.repo(dbTxn)

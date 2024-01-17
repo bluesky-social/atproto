@@ -65,6 +65,7 @@ export const envToSecrets = (env: ServerEnvironment): ServerSecrets => {
     moderatorPassword: env.moderatorPassword ?? env.adminPassword,
     triagePassword:
       env.triagePassword ?? env.moderatorPassword ?? env.adminPassword,
+    twilioAuthToken: env.twilioAuthToken,
     repoSigningKey,
     plcRotationKey,
   }
@@ -77,6 +78,7 @@ export type ServerSecrets = {
   adminPassword: string
   moderatorPassword: string
   triagePassword: string
+  twilioAuthToken?: string
   repoSigningKey: SigningKeyKms | SigningKeyMemory
   plcRotationKey: SigningKeyKms | SigningKeyMemory
 }

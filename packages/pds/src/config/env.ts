@@ -49,6 +49,12 @@ export const readEnv = (): ServerEnvironment => {
     inviteInterval: envInt('PDS_INVITE_INTERVAL'),
     inviteEpoch: envInt('PDS_INVITE_EPOCH'),
 
+    // phone verification
+    phoneVerificationRequired: envBool('PDS_PHONE_VERIFICATION_REQUIRED'),
+    twilioAccountSid: envStr('PDS_TWILIO_ACCOUNT_SID'),
+    twilioAuthToken: envStr('PDS_TWILIO_AUTH_TOKEN'),
+    twilioServiceSid: envStr('TWILIO_SERVICE_SID'),
+
     // email
     emailSmtpUrl: envStr('PDS_EMAIL_SMTP_URL'),
     emailFromAddress: envStr('PDS_EMAIL_FROM_ADDRESS'),
@@ -155,6 +161,12 @@ export type ServerEnvironment = {
   inviteRequired?: boolean
   inviteInterval?: number
   inviteEpoch?: number
+
+  // phone verification
+  phoneVerificationRequired?: boolean
+  twilioAccountSid?: string
+  twilioAuthToken?: string
+  twilioServiceSid?: string
 
   // email
   emailSmtpUrl?: string

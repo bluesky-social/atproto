@@ -21,6 +21,8 @@ import { DiskBlobStore } from './storage'
 import { getRedisClient } from './redis'
 import { RuntimeFlags } from './runtime-flags'
 import { PdsAgents } from './pds-agents'
+import { TwilioClient } from './twilio'
+import assert from 'assert'
 
 export type AppContextOptions = {
   db: Database
@@ -43,6 +45,7 @@ export type AppContextOptions = {
   pdsAgents: PdsAgents
   repoSigningKey: crypto.Keypair
   plcRotationKey: crypto.Keypair
+  twilio?: TwilioClient
   cfg: ServerConfig
 }
 
@@ -67,6 +70,7 @@ export class AppContext {
   public pdsAgents: PdsAgents
   public repoSigningKey: crypto.Keypair
   public plcRotationKey: crypto.Keypair
+  public twilio?: TwilioClient
   public cfg: ServerConfig
 
   constructor(opts: AppContextOptions) {
@@ -90,6 +94,7 @@ export class AppContext {
     this.pdsAgents = opts.pdsAgents
     this.repoSigningKey = opts.repoSigningKey
     this.plcRotationKey = opts.plcRotationKey
+    this.twilio = opts.twilio
     this.cfg = opts.cfg
   }
 
@@ -207,6 +212,16 @@ export class AppContext {
       crawlers,
     })
 
+    let twilio: TwilioClient | undefined = undefined
+    if (cfg.phoneVerification.required) {
+      assert(secrets.twilioAuthToken)
+      twilio = new TwilioClient({
+        accountSid: cfg.phoneVerification.twilioAccountSid,
+        serviceSid: cfg.phoneVerification.twilioServiceSid,
+        authToken: secrets.twilioAuthToken,
+      })
+    }
+
     const pdsAgents = new PdsAgents()
 
     return new AppContext({
@@ -230,6 +245,7 @@ export class AppContext {
       repoSigningKey,
       plcRotationKey,
       pdsAgents,
+      twilio,
       cfg,
       ...(overrides ?? {}),
     })
