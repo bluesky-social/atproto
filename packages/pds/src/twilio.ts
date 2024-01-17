@@ -6,25 +6,30 @@ type Opts = {
   authToken: string
 }
 
+type VerifyClient = ReturnType<twilio.Twilio['verify']['v2']['services']>
+
 export class TwilioClient {
-  client: twilio.Twilio
-  serviceSid: string
+  verifyClient: VerifyClient
 
   constructor(opts: Opts) {
-    this.client = twilio(opts.accountSid, opts.authToken)
-    this.serviceSid = opts.serviceSid
+    this.verifyClient = twilio(
+      opts.accountSid,
+      opts.authToken,
+    ).verify.v2.services(opts.serviceSid)
   }
 
   async sendCode(phoneNumber: string) {
-    await this.client.verify.v2
-      .services(this.serviceSid)
-      .verifications.create({ to: phoneNumber, channel: 'sms' })
+    await this.verifyClient.verifications.create({
+      to: phoneNumber,
+      channel: 'sms',
+    })
   }
 
   async verifyCode(phoneNumber: string, code: string) {
-    const res = await this.client.verify.v2
-      .services(this.serviceSid)
-      .verificationChecks.create({ to: phoneNumber, code })
+    const res = await this.verifyClient.verificationChecks.create({
+      to: phoneNumber,
+      code,
+    })
     return res.status === 'approved'
   }
 }

@@ -2667,6 +2667,9 @@ export const schemaDict = {
               verificationCode: {
                 type: 'string',
               },
+              verificationPhone: {
+                type: 'string',
+              },
               password: {
                 type: 'string',
               },
@@ -4158,9 +4161,9 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['phonenumber'],
+            required: ['phoneNumber'],
             properties: {
-              phonenumber: {
+              phoneNumber: {
                 type: 'string',
               },
             },

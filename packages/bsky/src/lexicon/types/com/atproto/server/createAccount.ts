@@ -16,6 +16,7 @@ export interface InputSchema {
   did?: string
   inviteCode?: string
   verificationCode?: string
+  verificationPhone?: string
   password?: string
   recoveryKey?: string
   plcOp?: {}

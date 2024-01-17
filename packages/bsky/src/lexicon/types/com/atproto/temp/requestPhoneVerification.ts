@@ -11,7 +11,7 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
-  phonenumber: string
+  phoneNumber: string
   [k: string]: unknown
 }
 
