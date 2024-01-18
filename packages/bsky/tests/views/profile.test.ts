@@ -1,6 +1,11 @@
 import fs from 'fs/promises'
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
+import {
+  TestNetwork,
+  SeedClient,
+  basicSeed,
+  ModeratorClient,
+} from '@atproto/dev-env'
 import { forSnapshot, stripViewer } from '../_util'
 import { ids } from '../../src/lexicon/lexicons'
 
@@ -9,6 +14,7 @@ describe('pds profile views', () => {
   let agent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
+  let modClient: ModeratorClient
 
   // account dids, for convenience
   let alice: string
@@ -22,6 +28,7 @@ describe('pds profile views', () => {
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
+    modClient = network.ozone.getModClient()
     await basicSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
@@ -225,24 +232,18 @@ describe('pds profile views', () => {
   })
 
   it('blocked by actor suspension', async () => {
-    await pdsAgent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: {
-          $type: 'com.atproto.admin.defs#modEventTakedown',
-          durationInHours: 1,
-        },
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: alice,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+    await modClient.emitModerationEvent({
+      event: {
+        $type: 'com.atproto.admin.defs#modEventTakedown',
+        durationInHours: 1,
       },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: alice,
       },
-    )
+      createdBy: 'did:example:admin',
+      reason: 'Y',
+    })
     await network.processAll()
     const promise = agent.api.app.bsky.actor.getProfile(
       { actor: alice },
@@ -254,21 +255,15 @@ describe('pds profile views', () => {
     )
 
     // Cleanup
-    await pdsAgent.api.com.atproto.admin.emitModerationEvent(
-      {
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
-        subject: {
-          $type: 'com.atproto.admin.defs#repoRef',
-          did: alice,
-        },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+    await modClient.emitModerationEvent({
+      event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: alice,
       },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
-    )
+      createdBy: 'did:example:admin',
+      reason: 'Y',
+    })
     await network.processAll()
   })
 
