@@ -112,7 +112,7 @@ export class AuthVerifier {
     return { credentials: { type: 'admin_service', aud, iss } }
   }
 
-  adminToken(reqCtx: ReqCtx): AdminTokenOutput {
+  adminToken = (reqCtx: ReqCtx): AdminTokenOutput => {
     const parsed = parseBasicAuth(reqCtx.req.headers.authorization || '')
     if (
       !parsed ||
