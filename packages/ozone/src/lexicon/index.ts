@@ -77,6 +77,7 @@ import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscrib
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
+import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
 import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -118,7 +119,6 @@ import * as AppBskyNotificationGetUnreadCount from './types/app/bsky/notificatio
 import * as AppBskyNotificationListNotifications from './types/app/bsky/notification/listNotifications'
 import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/registerPush'
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
-import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
@@ -1004,6 +1004,17 @@ export class TempNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  requestPhoneVerification<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempRequestPhoneVerification.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempRequestPhoneVerification.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.requestPhoneVerification' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   transferAccount<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1541,17 +1552,6 @@ export class UnspeccedNS {
 
   constructor(server: Server) {
     this._server = server
-  }
-
-  getPopular<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyUnspeccedGetPopular.Handler<ExtractAuth<AV>>,
-      AppBskyUnspeccedGetPopular.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getPopular' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
   }
 
   getPopularFeedGenerators<AV extends AuthVerifier>(

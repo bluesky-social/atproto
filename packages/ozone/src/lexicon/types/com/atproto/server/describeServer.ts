@@ -14,6 +14,7 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   inviteCodeRequired?: boolean
+  phoneVerificationRequired?: boolean
   availableUserDomains: string[]
   links?: Links
   [k: string]: unknown

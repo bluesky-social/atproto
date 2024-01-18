@@ -7,28 +7,17 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyFeedDefs from '../feed/defs'
 
-export interface QueryParams {
-  includeNsfw: boolean
-  limit: number
-  cursor?: string
-}
+export interface QueryParams {}
 
-export type InputSchema = undefined
-
-export interface OutputSchema {
-  cursor?: string
-  feed: AppBskyFeedDefs.FeedViewPost[]
+export interface InputSchema {
+  phoneNumber: string
   [k: string]: unknown
 }
 
-export type HandlerInput = undefined
-
-export interface HandlerSuccess {
+export interface HandlerInput {
   encoding: 'application/json'
-  body: OutputSchema
-  headers?: { [key: string]: string }
+  body: InputSchema
 }
 
 export interface HandlerError {
@@ -36,7 +25,7 @@ export interface HandlerError {
   message?: string
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type HandlerOutput = HandlerError | void
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams
