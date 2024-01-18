@@ -6,6 +6,7 @@ import { BackgroundQueue } from '../background'
 import DidSqlCache from '../did-cache'
 import { Redis } from '../redis'
 import { AutoModerator } from '../auto-moderator'
+import { Keypair } from '@atproto/crypto'
 
 export class IndexerContext {
   constructor(
@@ -19,6 +20,7 @@ export class IndexerContext {
       didCache: DidSqlCache
       backgroundQueue: BackgroundQueue
       autoMod: AutoModerator
+      signingKey: Keypair
     },
   ) {}
 
@@ -56,6 +58,10 @@ export class IndexerContext {
 
   get autoMod(): AutoModerator {
     return this.opts.autoMod
+  }
+
+  get signingKey(): Keypair {
+    return this.opts.signingKey
   }
 }
 

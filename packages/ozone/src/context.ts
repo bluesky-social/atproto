@@ -67,7 +67,11 @@ export class AppContext {
       plcUrl: cfg.identity.plcUrl,
     })
 
-    const authVerifier = new AuthVerifier()
+    const authVerifier = new AuthVerifier(idResolver, {
+      serviceDid: cfg.service.did,
+      moderators: cfg.access.moderators,
+      triage: cfg.access.triage,
+    })
 
     return new AppContext(
       {

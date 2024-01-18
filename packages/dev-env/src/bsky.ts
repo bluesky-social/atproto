@@ -45,6 +45,7 @@ export class TestBsky {
       labelCacheStaleTTL: 30 * SECOND,
       labelCacheMaxTTL: MINUTE,
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
+      moderatorDids: [],
       ...cfg,
       // Each test suite gets its own lock id for the repo subscription
       adminPassword: ADMIN_PASSWORD,
@@ -109,8 +110,8 @@ export class TestBsky {
       abyssEndpoint: '',
       abyssPassword: '',
       imgUriEndpoint: 'img.example.com',
-      moderationPushUrl:
-        cfg.indexer?.moderationPushUrl ?? 'https://modservice.invalid',
+      modServiceUrl: cfg.indexer?.modServiceUrl ?? 'https://modservice.invalid',
+      modServiceDid: cfg.indexer?.modServiceDid ?? 'did:example:modservice',
       indexerPartitionIds: [0],
       indexerNamespace: `ns${ns}`,
       indexerSubLockId: uniqueLockId(),
@@ -130,6 +131,7 @@ export class TestBsky {
       db: db.getPrimary(),
       redis: indexerRedis,
       redisCache,
+      signingKey: serviceKeypair,
     })
     // ingester
     const ingesterCfg = new bsky.IngesterConfig({
@@ -270,7 +272,8 @@ export async function getIndexers(
     indexerPartitionIds: [0],
     indexerNamespace: `ns${ns}`,
     ingesterPartitionCount: config.ingesterPartitionCount ?? 1,
-    moderationPushUrl: config.moderationPushUrl ?? 'https://modservice.invalid',
+    modServiceUrl: config.modServiceUrl ?? 'https://modservice.invalid',
+    modServiceDid: config.modServiceDid ?? 'https://modservice.invalid',
     ...config,
   }
   const db = new bsky.PrimaryDatabase({
@@ -288,6 +291,8 @@ export async function getIndexers(
     db: 1,
   })
 
+  const signingKey = await Secp256k1Keypair.create()
+
   const indexers = await Promise.all(
     opts.partitionIdsByIndexer.map(async (indexerPartitionIds) => {
       const cfg = new bsky.IndexerConfig({
@@ -296,7 +301,7 @@ export async function getIndexers(
         indexerSubLockId: uniqueLockId(),
         indexerPort: await getPort(),
       })
-      return bsky.BskyIndexer.create({ cfg, db, redis, redisCache })
+      return bsky.BskyIndexer.create({ cfg, db, redis, redisCache, signingKey })
     }),
   )
   await db.migrateToLatestOrThrow()

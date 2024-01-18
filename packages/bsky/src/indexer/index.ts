@@ -13,6 +13,7 @@ import { AutoModerator } from '../auto-moderator'
 import { Redis } from '../redis'
 import { NotificationServer } from '../notifications'
 import { CloseFn, createServer, startServer } from './server'
+import { Keypair } from '@atproto/crypto'
 
 export { IndexerConfig } from './config'
 export type { IndexerConfigValues } from './config'
@@ -39,9 +40,10 @@ export class BskyIndexer {
     db: PrimaryDatabase
     redis: Redis
     redisCache: Redis
+    signingKey: Keypair
     cfg: IndexerConfig
   }): BskyIndexer {
-    const { db, redis, redisCache, cfg } = opts
+    const { db, redis, redisCache, signingKey, cfg } = opts
     const didCache = new DidRedisCache(redisCache.withNamespace('did-doc'), {
       staleTTL: cfg.didCacheStaleTTL,
       maxTTL: cfg.didCacheMaxTTL,
@@ -58,6 +60,7 @@ export class BskyIndexer {
       idResolver,
       cfg,
       backgroundQueue,
+      signingKey,
     })
 
     const notifServer = cfg.pushNotificationEndpoint
@@ -79,6 +82,7 @@ export class BskyIndexer {
       didCache,
       backgroundQueue,
       autoMod,
+      signingKey,
     })
     const sub = new IndexerSubscription(ctx, {
       partitionIds: cfg.indexerPartitionIds,

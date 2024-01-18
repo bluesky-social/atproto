@@ -21,7 +21,8 @@ export interface IndexerConfigValues {
   fuzzyMatchB64?: string
   fuzzyFalsePositiveB64?: string
   labelerKeywords: Record<string, string>
-  moderationPushUrl: string
+  modServiceUrl: string
+  modServiceDid: string
   indexerConcurrency?: number
   indexerPartitionIds: number[]
   indexerPartitionBatchSize?: number
@@ -67,11 +68,16 @@ export class IndexerConfig {
     const handleResolveNameservers = process.env.HANDLE_RESOLVE_NAMESERVERS
       ? process.env.HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
-    const moderationPushUrl =
-      overrides?.moderationPushUrl ||
-      process.env.MODERATION_PUSH_URL ||
+    const modServiceUrl =
+      overrides?.modServiceUrl ||
+      process.env.MODERATION_SERVICE_URL ||
       undefined
-    assert(moderationPushUrl)
+    assert(modServiceUrl)
+    const modServiceDid =
+      overrides?.modServiceDid ||
+      process.env.MODERATION_SERVICE_DID ||
+      undefined
+    assert(modServiceDid)
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
     const abyssEndpoint = process.env.ABYSS_ENDPOINT
     const abyssPassword = process.env.ABYSS_PASSWORD
@@ -113,7 +119,8 @@ export class IndexerConfig {
       didCacheStaleTTL,
       didCacheMaxTTL,
       handleResolveNameservers,
-      moderationPushUrl,
+      modServiceUrl,
+      modServiceDid,
       hiveApiKey,
       abyssEndpoint,
       abyssPassword,
@@ -181,8 +188,12 @@ export class IndexerConfig {
     return this.cfg.handleResolveNameservers
   }
 
-  get moderationPushUrl() {
-    return this.cfg.moderationPushUrl
+  get modServiceUrl() {
+    return this.cfg.modServiceUrl
+  }
+
+  get modServiceDid() {
+    return this.cfg.modServiceDid
   }
 
   get hiveApiKey() {

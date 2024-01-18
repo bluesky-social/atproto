@@ -1,8 +1,8 @@
 import assert from 'assert'
-import * as uint8arrays from 'uint8arrays'
 import getPort from 'get-port'
 import { wait } from '@atproto/common-web'
 import { createServiceJwt } from '@atproto/xrpc-server'
+import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client as PlcClient } from '@did-plc/lib'
 import { TestServerParams } from './types'
 import { TestPlc } from './plc'
@@ -11,10 +11,6 @@ import { TestBsky } from './bsky'
 import { TestOzone } from './ozone'
 import { mockNetworkUtilities } from './util'
 import { TestNetworkNoAppView } from './network-no-appview'
-import { Secp256k1Keypair } from '@atproto/crypto'
-
-const ADMIN_USERNAME = 'admin'
-const ADMIN_PASSWORD = 'admin-pass'
 
 export class TestNetwork extends TestNetworkNoAppView {
   constructor(
@@ -64,7 +60,8 @@ export class TestNetwork extends TestNetworkNoAppView {
       ...params.bsky,
       indexer: {
         ...params.bsky?.indexer,
-        moderationPushUrl: `http://admin:${ADMIN_PASSWORD}@localhost:${ozonePort}`,
+        modServiceUrl: `http://localhost:${ozonePort}`,
+        modServiceDid: ozoneDid,
       },
     })
 
@@ -130,23 +127,6 @@ export class TestNetwork extends TestNetworkNoAppView {
       keypair,
     })
     return { authorization: `Bearer ${jwt}` }
-  }
-
-  async adminHeaders({
-    username = ADMIN_USERNAME,
-    password = ADMIN_PASSWORD,
-  }: {
-    username?: string
-    password?: string
-  }) {
-    return {
-      authorization:
-        'Basic ' +
-        uint8arrays.toString(
-          uint8arrays.fromString(`${username}:${password}`, 'utf8'),
-          'base64pad',
-        ),
-    }
   }
 
   async close() {

@@ -33,11 +33,22 @@ type NullOutput = {
   }
 }
 
-export class AuthVerifier {
-  idResolver: IdResolver
+export type AuthVerifierOpts = {
   serviceDid: string
   moderators: string[]
   triage: string[]
+}
+
+export class AuthVerifier {
+  serviceDid: string
+  moderators: string[]
+  triage: string[]
+
+  constructor(public idResolver: IdResolver, opts: AuthVerifierOpts) {
+    this.serviceDid = opts.serviceDid
+    this.moderators = opts.moderators
+    this.triage = opts.triage
+  }
 
   admin = async (reqCtx: ReqCtx): Promise<AdminOutput> => {
     const creds = await this.standard(reqCtx)

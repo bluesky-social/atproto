@@ -4,8 +4,9 @@ import * as ozone from '@atproto/ozone'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client as PlcClient } from '@did-plc/lib'
-import { OzoneConfig } from './types'
-import { ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD } from './const'
+import { DidAndKey, OzoneConfig } from './types'
+import { createDidAndKey } from './util'
+import { createServiceJwt } from '@atproto/xrpc-server'
 
 export class TestOzone {
   constructor(
@@ -13,6 +14,8 @@ export class TestOzone {
     public port: number,
     public server: ozone.OzoneService,
     public daemon: ozone.OzoneDaemon,
+    public moderatorAccnt: DidAndKey,
+    public triageAccnt: DidAndKey,
   ) {}
 
   static async create(config: OzoneConfig): Promise<TestOzone> {
@@ -31,6 +34,18 @@ export class TestOzone {
       })
     }
 
+    const moderator = await createDidAndKey({
+      plcUrl: config.plcUrl,
+      handle: 'moderator.ozone',
+      pds: 'https://pds.invalid',
+    })
+
+    const triage = await createDidAndKey({
+      plcUrl: config.plcUrl,
+      handle: 'triage.ozone',
+      pds: 'https://pds.invalid',
+    })
+
     const port = config.port || (await getPort())
     const url = `http://localhost:${port}`
     const env: ozone.OzoneEnvironment = {
@@ -41,9 +56,12 @@ export class TestOzone {
       serverDid,
       signingKeyHex,
       ...config,
-      adminPassword: ADMIN_PASSWORD,
-      moderatorPassword: MOD_PASSWORD,
-      triagePassword: TRIAGE_PASSWORD,
+      moderatorDids: [
+        ...(config.moderatorDids ?? []),
+        config.appviewDid,
+        moderator.did,
+      ],
+      triageDids: [...(config.triageDids ?? []), triage.did],
     }
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
@@ -70,7 +88,7 @@ export class TestOzone {
     // don't do event reversal in dev-env
     await daemon.ctx.eventReverser.destroy()
 
-    return new TestOzone(url, port, server, daemon)
+    return new TestOzone(url, port, server, daemon, moderator, triage)
   }
 
   get ctx(): ozone.AppContext {
@@ -81,23 +99,14 @@ export class TestOzone {
     return new AtpAgent({ service: this.url })
   }
 
-  adminAuth(role: 'admin' | 'moderator' | 'triage' = 'admin'): string {
-    const password =
-      role === 'triage'
-        ? TRIAGE_PASSWORD
-        : role === 'moderator'
-        ? MOD_PASSWORD
-        : ADMIN_PASSWORD
-    return (
-      'Basic ' +
-      ui8.toString(ui8.fromString(`admin:${password}`, 'utf8'), 'base64pad')
-    )
-  }
-
-  adminAuthHeaders(role?: 'admin' | 'moderator' | 'triage') {
-    return {
-      authorization: this.adminAuth(role),
-    }
+  async adminHeaders(role?: 'moderator' | 'triage') {
+    const account = role === 'triage' ? this.triageAccnt : this.moderatorAccnt
+    const jwt = await createServiceJwt({
+      iss: account.did,
+      aud: this.ctx.cfg.service.did,
+      keypair: account.key,
+    })
+    return { authorization: `Bearer ${jwt}` }
   }
 
   async processAll() {

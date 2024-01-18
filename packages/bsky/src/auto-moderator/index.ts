@@ -6,7 +6,6 @@ import { PrimaryDatabase } from '../db'
 import { IdResolver } from '@atproto/identity'
 import { BackgroundQueue } from '../background'
 import { IndexerConfig } from '../indexer/config'
-import { buildBasicAuth } from '../auth-verifier'
 import { CID } from 'multiformats/cid'
 import { ImageFlagger } from './abyss'
 import { HiveLabeler, ImgLabeler } from './hive'
@@ -18,6 +17,8 @@ import {
   REASONOTHER,
   REASONVIOLATION,
 } from '../lexicon/types/com/atproto/moderation/defs'
+import { Keypair } from '@atproto/crypto'
+import { createServiceAuthHeaders } from '@atproto/xrpc-server'
 
 export class AutoModerator {
   public pushAgent: AtpAgent
@@ -32,6 +33,7 @@ export class AutoModerator {
       idResolver: IdResolver
       cfg: IndexerConfig
       backgroundQueue: BackgroundQueue
+      signingKey: Keypair
     },
   ) {
     const { hiveApiKey, abyssEndpoint, abyssPassword } = ctx.cfg
@@ -53,12 +55,7 @@ export class AutoModerator {
       )
     }
 
-    const url = new URL(ctx.cfg.moderationPushUrl)
-    this.pushAgent = new AtpAgent({ service: url.origin })
-    this.pushAgent.api.setHeader(
-      'authorization',
-      buildBasicAuth(url.username, url.password),
-    )
+    this.pushAgent = new AtpAgent({ service: ctx.cfg.modServiceUrl })
   }
 
   processRecord(uri: AtUri, cid: CID, obj: unknown) {
@@ -140,17 +137,20 @@ export class AutoModerator {
             cid: subject.cid.toString(),
           }
 
-    await this.pushAgent.api.com.atproto.admin.emitModerationEvent({
-      event: {
-        $type: 'com.atproto.admin.defs#modEventReport',
-        comment: `Automatically flagged for possible slurs: ${matches.join(
-          ', ',
-        )}`,
-        reportType: REASONOTHER,
+    await this.pushAgent.api.com.atproto.admin.emitModerationEvent(
+      {
+        event: {
+          $type: 'com.atproto.admin.defs#modEventReport',
+          comment: `Automatically flagged for possible slurs: ${matches.join(
+            ', ',
+          )}`,
+          reportType: REASONOTHER,
+        },
+        subject: formattedSubject,
+        createdBy: this.ctx.cfg.serverDid,
       },
-      subject: formattedSubject,
-      createdBy: this.ctx.cfg.serverDid,
-    })
+      { ...(await this.createModHeaders()), encoding: 'application/json' },
+    )
   }
 
   async checkImgForTakedown(uri: AtUri, recordCid: CID, imgCids: CID[]) {
@@ -204,51 +204,68 @@ export class AutoModerator {
       'hard takedown of record (and blobs) based on auto-matching',
     )
 
-    await this.pushAgent.api.com.atproto.admin.emitModerationEvent({
-      event: {
-        $type: 'com.atproto.admin.defs#modEventReport',
-        comment: reportReason,
-        reportType: REASONVIOLATION,
+    await this.pushAgent.api.com.atproto.admin.emitModerationEvent(
+      {
+        event: {
+          $type: 'com.atproto.admin.defs#modEventReport',
+          comment: reportReason,
+          reportType: REASONVIOLATION,
+        },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: uri.toString(),
+          cid: recordCid.toString(),
+        },
+        createdBy: this.ctx.cfg.serverDid,
       },
-      subject: {
-        $type: 'com.atproto.repo.strongRef',
-        uri: uri.toString(),
-        cid: recordCid.toString(),
-      },
-      createdBy: this.ctx.cfg.serverDid,
-    })
+      { ...(await this.createModHeaders()), encoding: 'application/json' },
+    )
 
-    await this.pushAgent.com.atproto.admin.emitModerationEvent({
-      event: {
-        $type: 'com.atproto.admin.defs#modEventTakedown',
-        comment: takedownReason,
+    await this.pushAgent.com.atproto.admin.emitModerationEvent(
+      {
+        event: {
+          $type: 'com.atproto.admin.defs#modEventTakedown',
+          comment: takedownReason,
+        },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: uri.toString(),
+          cid: recordCid.toString(),
+        },
+        subjectBlobCids: takedownCids.map((c) => c.toString()),
+        createdBy: this.ctx.cfg.serverDid,
       },
-      subject: {
-        $type: 'com.atproto.repo.strongRef',
-        uri: uri.toString(),
-        cid: recordCid.toString(),
-      },
-      subjectBlobCids: takedownCids.map((c) => c.toString()),
-      createdBy: this.ctx.cfg.serverDid,
-    })
+      { ...(await this.createModHeaders()), encoding: 'application/json' },
+    )
   }
 
   async pushLabels(uri: AtUri, cid: CID, labels: string[]): Promise<void> {
     if (labels.length < 1) return
 
-    await this.pushAgent.com.atproto.admin.emitModerationEvent({
-      event: {
-        $type: 'com.atproto.admin.defs#modEventLabel',
-        comment: '[AutoModerator]: Applying labels',
-        createLabelVals: labels,
-        negateLabelVals: [],
+    await this.pushAgent.com.atproto.admin.emitModerationEvent(
+      {
+        event: {
+          $type: 'com.atproto.admin.defs#modEventLabel',
+          comment: '[AutoModerator]: Applying labels',
+          createLabelVals: labels,
+          negateLabelVals: [],
+        },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: uri.toString(),
+          cid: cid.toString(),
+        },
+        createdBy: this.ctx.cfg.serverDid,
       },
-      subject: {
-        $type: 'com.atproto.repo.strongRef',
-        uri: uri.toString(),
-        cid: cid.toString(),
-      },
-      createdBy: this.ctx.cfg.serverDid,
+      { ...(await this.createModHeaders()), encoding: 'application/json' },
+    )
+  }
+
+  async createModHeaders() {
+    return createServiceAuthHeaders({
+      iss: this.ctx.cfg.serverDid,
+      aud: this.ctx.cfg.modServiceDid,
+      keypair: this.ctx.signingKey,
     })
   }
 

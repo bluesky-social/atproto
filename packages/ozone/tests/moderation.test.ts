@@ -65,7 +65,7 @@ describe('moderation', () => {
       {
         headers: await network.serviceHeaders(
           author,
-          network.ozone.ctx.cfg.service.did,
+          ozone.ctx.cfg.service.did,
         ),
         encoding: 'application/json',
       },
@@ -98,7 +98,7 @@ describe('moderation', () => {
       },
       {
         encoding: 'application/json',
-        headers: ozone.adminAuthHeaders(),
+        headers: await ozone.adminHeaders(),
       },
     )
 
@@ -124,7 +124,7 @@ describe('moderation', () => {
       },
       {
         encoding: 'application/json',
-        headers: ozone.adminAuthHeaders(),
+        headers: await ozone.adminHeaders(),
       },
     )
 
@@ -133,7 +133,7 @@ describe('moderation', () => {
   ) => {
     const { data } = await agent.api.com.atproto.admin.queryModerationStatuses(
       params,
-      { headers: ozone.adminAuthHeaders() },
+      { headers: await ozone.adminHeaders() },
     )
 
     return data
@@ -299,7 +299,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: ozone.adminAuthHeaders('triage'),
+          headers: await ozone.adminHeaders('triage'),
         },
       )
 
@@ -333,7 +333,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: ozone.adminAuthHeaders('triage'),
+          headers: await ozone.adminHeaders('triage'),
         },
       )
 
@@ -368,7 +368,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: ozone.adminAuthHeaders(),
+            headers: await ozone.adminHeaders(),
           },
         )
       }
@@ -603,7 +603,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders('triage'),
+          headers: await ozone.adminHeaders('triage'),
         },
       )
       await expect(attemptLabel).rejects.toThrow(
@@ -698,7 +698,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders('moderator'),
+          headers: await ozone.adminHeaders(),
         },
       )
       // cleanup
@@ -725,7 +725,7 @@ describe('moderation', () => {
           },
           {
             encoding: 'application/json',
-            headers: network.bsky.adminAuthHeaders('triage'),
+            headers: await ozone.adminHeaders('triage'),
           },
         )
       await expect(attemptTakedownTriage).rejects.toThrow(
@@ -749,7 +749,7 @@ describe('moderation', () => {
       const { data: statusesAfterTakedown } =
         await agent.api.com.atproto.admin.queryModerationStatuses(
           { subject: sc.dids.bob },
-          { headers: network.bsky.adminAuthHeaders('moderator') },
+          { headers: await ozone.adminHeaders() },
         )
 
       expect(statusesAfterTakedown.subjectStatuses[0]).toMatchObject({
@@ -767,11 +767,11 @@ describe('moderation', () => {
       const [{ data: eventList }, { data: statuses }] = await Promise.all([
         agent.api.com.atproto.admin.queryModerationEvents(
           { subject: sc.dids.bob },
-          { headers: network.bsky.adminAuthHeaders('moderator') },
+          { headers: await ozone.adminHeaders() },
         ),
         agent.api.com.atproto.admin.queryModerationStatuses(
           { subject: sc.dids.bob },
-          { headers: network.bsky.adminAuthHeaders('moderator') },
+          { headers: await ozone.adminHeaders() },
         ),
       ])
 
@@ -812,7 +812,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
+          headers: await ozone.adminHeaders(),
         },
       )
       return result.data
@@ -834,7 +834,7 @@ describe('moderation', () => {
         },
         {
           encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders(),
+          headers: await ozone.adminHeaders(),
         },
       )
     }
@@ -842,7 +842,7 @@ describe('moderation', () => {
     async function getRecordLabels(uri: string) {
       const result = await agent.api.com.atproto.admin.getRecord(
         { uri },
-        { headers: network.bsky.adminAuthHeaders() },
+        { headers: await ozone.adminHeaders() },
       )
       const labels = result.data.labels ?? []
       return labels.map((l) => l.val)
@@ -851,7 +851,7 @@ describe('moderation', () => {
     async function getRepoLabels(did: string) {
       const result = await agent.api.com.atproto.admin.getRepo(
         { did },
-        { headers: network.bsky.adminAuthHeaders() },
+        { headers: await ozone.adminHeaders() },
       )
       const labels = result.data.labels ?? []
       return labels.map((l) => l.val)
