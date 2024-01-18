@@ -1,5 +1,17 @@
 # @atproto/api
 
+## 0.9.0
+
+### Minor Changes
+
+- [#2039](https://github.com/bluesky-social/atproto/pull/2039) [`bf8d718c`](https://github.com/bluesky-social/atproto/commit/bf8d718cf918ac8d8a2cb1f57fde80535284642d) Thanks [@dholms](https://github.com/dholms)! - Namespace lexicon codegen
+
+### Patch Changes
+
+- [#2056](https://github.com/bluesky-social/atproto/pull/2056) [`e43396af`](https://github.com/bluesky-social/atproto/commit/e43396af0973748dd2d034e88d35cf7ae8b4df2c) Thanks [@dholms](https://github.com/dholms)! - Added phone verification methods/schemas to agent.
+
+- [#1988](https://github.com/bluesky-social/atproto/pull/1988) [`51fcba7a`](https://github.com/bluesky-social/atproto/commit/51fcba7a7945c604fc50e9545850a12ef0ee6da6) Thanks [@bnewbold](https://github.com/bnewbold)! - remove deprecated app.bsky.unspecced.getPopular endpoint
+
 ## 0.8.0
 
 ### Minor Changes

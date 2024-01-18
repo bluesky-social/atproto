@@ -1,6 +1,6 @@
 {
   "name": "@atproto/ozone",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "MIT",
   "description": "Backend service for moderating the Bluesky network.",
   "keywords": [
