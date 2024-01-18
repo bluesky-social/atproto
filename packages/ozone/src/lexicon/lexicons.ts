@@ -2664,6 +2664,12 @@ export const schemaDict = {
               inviteCode: {
                 type: 'string',
               },
+              verificationCode: {
+                type: 'string',
+              },
+              verificationPhone: {
+                type: 'string',
+              },
               password: {
                 type: 'string',
               },
@@ -3066,6 +3072,9 @@ export const schemaDict = {
             required: ['availableUserDomains'],
             properties: {
               inviteCodeRequired: {
+                type: 'boolean',
+              },
+              phoneVerificationRequired: {
                 type: 'boolean',
               },
               availableUserDomains: {
@@ -4136,6 +4145,29 @@ export const schemaDict = {
         },
         input: {
           encoding: '*/*',
+        },
+      },
+    },
+  },
+  ComAtprotoTempRequestPhoneVerification: {
+    lexicon: 1,
+    id: 'com.atproto.temp.requestPhoneVerification',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Request a verification code to be sent to the supplied phone number',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['phoneNumber'],
+            properties: {
+              phoneNumber: {
+                type: 'string',
+              },
+            },
+          },
         },
       },
     },
@@ -7639,54 +7671,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyUnspeccedGetPopular: {
-    lexicon: 1,
-    id: 'app.bsky.unspecced.getPopular',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'DEPRECATED: will be removed soon. Use a feed generator alternative.',
-        parameters: {
-          type: 'params',
-          properties: {
-            includeNsfw: {
-              type: 'boolean',
-              default: false,
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['feed'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              feed: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#feedViewPost',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyUnspeccedGetPopularFeedGenerators: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getPopularFeedGenerators',
@@ -7992,6 +7976,8 @@ export const ids = {
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   ComAtprotoTempImportRepo: 'com.atproto.temp.importRepo',
   ComAtprotoTempPushBlob: 'com.atproto.temp.pushBlob',
+  ComAtprotoTempRequestPhoneVerification:
+    'com.atproto.temp.requestPhoneVerification',
   ComAtprotoTempTransferAccount: 'com.atproto.temp.transferAccount',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
@@ -8055,7 +8041,6 @@ export const ids = {
   AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
   AppBskyRichtextFacet: 'app.bsky.richtext.facet',
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
-  AppBskyUnspeccedGetPopular: 'app.bsky.unspecced.getPopular',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetTimelineSkeleton: 'app.bsky.unspecced.getTimelineSkeleton',

@@ -80,6 +80,7 @@ import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscrib
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
+import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
 import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
@@ -219,6 +220,7 @@ export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscrib
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 export * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 export * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
+export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
 export * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 export * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
@@ -1159,6 +1161,17 @@ export class TempNS {
       .call('com.atproto.temp.pushBlob', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoTempPushBlob.toKnownErr(e)
+      })
+  }
+
+  requestPhoneVerification(
+    data?: ComAtprotoTempRequestPhoneVerification.InputSchema,
+    opts?: ComAtprotoTempRequestPhoneVerification.CallOptions,
+  ): Promise<ComAtprotoTempRequestPhoneVerification.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.requestPhoneVerification', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoTempRequestPhoneVerification.toKnownErr(e)
       })
   }
 
