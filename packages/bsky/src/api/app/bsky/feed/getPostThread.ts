@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.feed.getPostThread({
-    auth: ctx.authVerifier.optionalStandardOrRole,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, res }) => {
       const { viewer } = ctx.authVerifier.parseCreds(auth)
       const db = ctx.db.getReplica('thread')

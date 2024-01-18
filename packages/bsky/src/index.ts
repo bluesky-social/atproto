@@ -131,8 +131,6 @@ export class BskyAppView {
       ownDid: config.serverDid,
       adminDid: config.modServiceDid,
       adminPass: config.adminPassword,
-      moderatorPass: config.moderatorPassword,
-      triagePass: config.triagePassword,
       moderatorDids: config.moderatorDids,
     })
 

@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.feed.getAuthorFeed({
-    auth: ctx.authVerifier.optionalStandardOrRole,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, res }) => {
       const db = ctx.db.getReplica()
       const actorService = ctx.services.actor(db)
