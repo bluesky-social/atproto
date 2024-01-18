@@ -17,7 +17,7 @@
             },
             "content": {
               "type": "string",
-              "description": "Content of the template, markdown supported, can contain variable placeholder."
+              "description": "Content of the template, markdown supported, can contain variable placeholders."
             },
             "subject": {
               "type": "string",

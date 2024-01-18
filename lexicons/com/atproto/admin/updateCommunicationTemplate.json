@@ -12,7 +12,7 @@
           "required": ["id"],
           "properties": {
             "id": {
-              "type": "integer",
+              "type": "string",
               "description": "ID of the template to be updated."
             },
             "name": {
@@ -21,7 +21,7 @@
             },
             "content": {
               "type": "string",
-              "description": "Content of the template, markdown supported, can contain variable placeholder."
+              "description": "Content of the template, markdown supported, can contain variable placeholders."
             },
             "subject": {
               "type": "string",

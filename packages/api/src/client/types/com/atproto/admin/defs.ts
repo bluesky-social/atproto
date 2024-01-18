@@ -719,11 +719,15 @@ export function validateModEventEmail(v: unknown): ValidationResult {
 }
 
 export interface CommunicationTemplateView {
-  id: number
+  id: string
+  /** Name of the template. */
   name: string
+  /** Content of the template, can contain markdown and variable placeholders. */
   subject?: string
+  /** Subject of the message, used in emails. */
   content: string
   disabled: boolean
+  /** DID of the user who last updated the template. */
   lastUpdatedBy: string
   createdAt: string
   updatedAt: string

@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const communicationTemplate = ctx.communicationTemplateService(db)
-      const updatedTemplate = await communicationTemplate.update(id, {
+      const updatedTemplate = await communicationTemplate.update(Number(id), {
         ...template,
         lastUpdatedBy: updatedBy,
       })

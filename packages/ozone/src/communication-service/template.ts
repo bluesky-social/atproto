@@ -92,7 +92,7 @@ export class CommunicationTemplateService {
 
   view(template: Selectable<CommunicationTemplate>): CommunicationTemplateView {
     return {
-      id: template.id,
+      id: `${template.id}`,
       name: template.name,
       content: template.content,
       disabled: template.disabled,

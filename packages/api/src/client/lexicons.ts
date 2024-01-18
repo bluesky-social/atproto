@@ -25,7 +25,7 @@ export const schemaDict = {
               content: {
                 type: 'string',
                 description:
-                  'Content of the template, markdown supported, can contain variable placeholder.',
+                  'Content of the template, markdown supported, can contain variable placeholders.',
               },
               subject: {
                 type: 'string',
@@ -908,16 +908,20 @@ export const schemaDict = {
         ],
         properties: {
           id: {
-            type: 'integer',
+            type: 'string',
           },
           name: {
             type: 'string',
+            description: 'Name of the template.',
           },
           subject: {
             type: 'string',
+            description:
+              'Content of the template, can contain markdown and variable placeholders.',
           },
           content: {
             type: 'string',
+            description: 'Subject of the message, used in emails.',
           },
           disabled: {
             type: 'boolean',
@@ -925,6 +929,7 @@ export const schemaDict = {
           lastUpdatedBy: {
             type: 'string',
             format: 'did',
+            description: 'DID of the user who last updated the template.',
           },
           createdAt: {
             type: 'string',
@@ -1768,7 +1773,7 @@ export const schemaDict = {
             required: ['id'],
             properties: {
               id: {
-                type: 'integer',
+                type: 'string',
                 description: 'ID of the template to be updated.',
               },
               name: {
@@ -1778,7 +1783,7 @@ export const schemaDict = {
               content: {
                 type: 'string',
                 description:
-                  'Content of the template, markdown supported, can contain variable placeholder.',
+                  'Content of the template, markdown supported, can contain variable placeholders.',
               },
               subject: {
                 type: 'string',

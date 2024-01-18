@@ -14,7 +14,7 @@ export interface QueryParams {}
 export interface InputSchema {
   /** Name of the template. */
   name: string
-  /** Content of the template, markdown supported, can contain variable placeholder. */
+  /** Content of the template, markdown supported, can contain variable placeholders. */
   content: string
   /** Subject of the message, used in emails. */
   subject: string
