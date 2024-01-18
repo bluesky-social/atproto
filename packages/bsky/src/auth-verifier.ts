@@ -10,12 +10,6 @@ type ReqCtx = {
   req: express.Request
 }
 
-export enum RoleStatus {
-  Valid,
-  Invalid,
-  Missing,
-}
-
 type NullOutput = {
   credentials: {
     type: 'null'
@@ -32,15 +26,6 @@ type StandardOutput = {
   }
 }
 
-type RoleOutput = {
-  credentials: {
-    type: 'role'
-    admin: boolean
-    moderator: boolean
-    triage: boolean
-  }
-}
-
 type AdminServiceOutput = {
   credentials: {
     type: 'admin_service'
@@ -49,27 +34,27 @@ type AdminServiceOutput = {
   }
 }
 
+type AdminTokenOutput = {
+  credentials: {
+    type: 'admin_token'
+  }
+}
+
 export type AuthVerifierOpts = {
   ownDid: string
-  adminDid: string
+  modServiceDid: string
   adminPass: string
-  moderatorPass: string
-  triagePass: string
 }
 
 export class AuthVerifier {
   private _adminPass: string
-  private _moderatorPass: string
-  private _triagePass: string
   public ownDid: string
-  public adminDid: string
+  public modServiceDid: string
 
   constructor(public idResolver: IdResolver, opts: AuthVerifierOpts) {
     this._adminPass = opts.adminPass
-    this._moderatorPass = opts.moderatorPass
-    this._triagePass = opts.triagePass
     this.ownDid = opts.ownDid
-    this.adminDid = opts.adminDid
+    this.modServiceDid = opts.modServiceDid
   }
 
   // verifiers (arrow fns to preserve scope)
@@ -79,7 +64,7 @@ export class AuthVerifier {
       aud: this.ownDid,
       iss: null,
     })
-    const includeTakedowns = iss === this.adminDid
+    const includeTakedowns = iss === this.modServiceDid
     return { credentials: { type: 'standard', iss, aud, includeTakedowns } }
   }
 
@@ -102,90 +87,38 @@ export class AuthVerifier {
       aud: null,
       iss: null,
     })
-    const includeTakedowns = iss === this.adminDid
+    const includeTakedowns = iss === this.modServiceDid
     return { credentials: { type: 'standard', iss, aud, includeTakedowns } }
   }
 
-  role = (ctx: ReqCtx): RoleOutput => {
-    const creds = this.parseRoleCreds(ctx.req)
-    if (creds.status !== RoleStatus.Valid) {
-      throw new AuthRequiredError()
-    }
-    return {
-      credentials: {
-        ...creds,
-        type: 'role',
-      },
-    }
-  }
-
-  standardOrRole = async (
-    ctx: ReqCtx,
-  ): Promise<StandardOutput | RoleOutput> => {
-    if (isBearerToken(ctx.req)) {
-      return this.standard(ctx)
+  admin = async (
+    reqCtx: ReqCtx,
+  ): Promise<AdminServiceOutput | AdminTokenOutput> => {
+    if (isBearerToken(reqCtx.req)) {
+      return this.adminService(reqCtx)
     } else {
-      return this.role(ctx)
-    }
-  }
-
-  optionalStandardOrRole = async (
-    ctx: ReqCtx,
-  ): Promise<StandardOutput | RoleOutput | NullOutput> => {
-    if (isBearerToken(ctx.req)) {
-      return await this.standard(ctx)
-    } else {
-      const creds = this.parseRoleCreds(ctx.req)
-      if (creds.status === RoleStatus.Valid) {
-        return {
-          credentials: {
-            ...creds,
-            type: 'role',
-          },
-        }
-      } else if (creds.status === RoleStatus.Missing) {
-        return this.nullCreds()
-      } else {
-        throw new AuthRequiredError()
-      }
+      return this.adminToken(reqCtx)
     }
   }
 
   adminService = async (reqCtx: ReqCtx): Promise<AdminServiceOutput> => {
     const { iss, aud } = await this.verifyServiceJwt(reqCtx, {
       aud: this.ownDid,
-      iss: [this.adminDid],
+      iss: [this.modServiceDid],
     })
     return { credentials: { type: 'admin_service', aud, iss } }
   }
 
-  roleOrAdminService = async (
-    reqCtx: ReqCtx,
-  ): Promise<RoleOutput | AdminServiceOutput> => {
-    if (isBearerToken(reqCtx.req)) {
-      return this.adminService(reqCtx)
-    } else {
-      return this.role(reqCtx)
+  adminToken = (reqCtx: ReqCtx): AdminTokenOutput => {
+    const parsed = parseBasicAuth(reqCtx.req.headers.authorization || '')
+    if (
+      !parsed ||
+      parsed.username !== 'admin' ||
+      parsed.password !== this._adminPass
+    ) {
+      throw new AuthRequiredError()
     }
-  }
-
-  parseRoleCreds(req: express.Request) {
-    const parsed = parseBasicAuth(req.headers.authorization || '')
-    const { Missing, Valid, Invalid } = RoleStatus
-    if (!parsed) {
-      return { status: Missing, admin: false, moderator: false, triage: false }
-    }
-    const { username, password } = parsed
-    if (username === 'admin' && password === this._adminPass) {
-      return { status: Valid, admin: true, moderator: true, triage: true }
-    }
-    if (username === 'admin' && password === this._moderatorPass) {
-      return { status: Valid, admin: false, moderator: true, triage: true }
-    }
-    if (username === 'admin' && password === this._triagePass) {
-      return { status: Valid, admin: false, moderator: false, triage: true }
-    }
-    return { status: Invalid, admin: false, moderator: false, triage: false }
+    return { credentials: { type: 'admin_token' } }
   }
 
   async verifyServiceJwt(
@@ -220,18 +153,18 @@ export class AuthVerifier {
   }
 
   parseCreds(
-    creds: StandardOutput | RoleOutput | AdminServiceOutput | NullOutput,
+    creds: StandardOutput | AdminServiceOutput | AdminTokenOutput | NullOutput,
   ) {
     const viewer =
       creds.credentials.type === 'standard' ? creds.credentials.iss : null
     const canViewTakedowns =
-      (creds.credentials.type === 'role' && creds.credentials.triage) ||
       (creds.credentials.type === 'standard' &&
         creds.credentials.includeTakedowns) ||
+      creds.credentials.type === 'admin_token' ||
       creds.credentials.type === 'admin_service'
     const canPerformTakedown =
-      (creds.credentials.type === 'role' && creds.credentials.moderator) ||
-      creds.credentials.type === 'admin_service'
+      creds.credentials.type === 'admin_service' ||
+      creds.credentials.type === 'admin_token'
     return {
       viewer,
       canViewTakedowns,

@@ -16,7 +16,7 @@ import { ModerationService } from '../../../../services/moderation'
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
   server.app.bsky.actor.getProfile({
-    auth: ctx.authVerifier.optionalStandardOrRole,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, res }) => {
       const db = ctx.db.getReplica()
       const actorService = ctx.services.actor(db)

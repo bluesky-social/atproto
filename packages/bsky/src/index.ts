@@ -129,10 +129,8 @@ export class BskyAppView {
 
     const authVerifier = new AuthVerifier(idResolver, {
       ownDid: config.serverDid,
-      adminDid: config.modServiceDid,
+      modServiceDid: config.modServiceDid,
       adminPass: config.adminPassword,
-      moderatorPass: config.moderatorPassword,
-      triagePass: config.triagePassword,
     })
 
     const ctx = new AppContext({

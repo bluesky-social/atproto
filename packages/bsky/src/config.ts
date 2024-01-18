@@ -32,8 +32,6 @@ export interface ServerConfigValues {
   blobCacheLocation?: string
   searchEndpoint?: string
   adminPassword: string
-  moderatorPassword: string
-  triagePassword: string
   modServiceDid: string
   rateLimitsEnabled: boolean
   rateLimitBypassKey?: string
@@ -111,10 +109,6 @@ export class ServerConfig {
     assert(dbPrimaryPostgresUrl)
     const adminPassword = process.env.ADMIN_PASSWORD || undefined
     assert(adminPassword)
-    const moderatorPassword = process.env.MODERATOR_PASSWORD || undefined
-    assert(moderatorPassword)
-    const triagePassword = process.env.TRIAGE_PASSWORD || undefined
-    assert(triagePassword)
 
     const modServiceDid =
       overrides?.modServiceDid ||
@@ -154,8 +148,6 @@ export class ServerConfig {
       blobCacheLocation,
       searchEndpoint,
       adminPassword,
-      moderatorPassword,
-      triagePassword,
       modServiceDid,
       rateLimitsEnabled,
       rateLimitBypassKey,
@@ -271,14 +263,6 @@ export class ServerConfig {
 
   get adminPassword() {
     return this.cfg.adminPassword
-  }
-
-  get moderatorPassword() {
-    return this.cfg.moderatorPassword
-  }
-
-  get triagePassword() {
-    return this.cfg.triagePassword
   }
 
   get modServiceDid() {

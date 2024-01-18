@@ -24,28 +24,19 @@ export enum AuthScope {
   AppPass = 'com.atproto.appPass',
 }
 
-export enum RoleStatus {
-  Valid,
-  Invalid,
-  Missing,
-}
-
 type NullOutput = {
   credentials: null
 }
 
-type RoleOutput = {
+type AdminTokenOutput = {
   credentials: {
-    type: 'role'
-    admin: boolean
-    moderator: boolean
-    triage: boolean
+    type: 'admin_token'
   }
 }
 
 type AdminServiceOutput = {
   credentials: {
-    type: 'service'
+    type: 'admin_service'
     aud: string
     iss: string
   }
@@ -83,8 +74,6 @@ type ValidatedBearer = {
 export type AuthVerifierOpts = {
   jwtKey: KeyObject
   adminPass: string
-  moderatorPass: string
-  triagePass: string
   dids: {
     pds: string
     entryway?: string
@@ -95,8 +84,6 @@ export type AuthVerifierOpts = {
 export class AuthVerifier {
   private _jwtKey: KeyObject
   private _adminPass: string
-  private _moderatorPass: string
-  private _triagePass: string
   public dids: AuthVerifierOpts['dids']
 
   constructor(
@@ -106,8 +93,6 @@ export class AuthVerifier {
   ) {
     this._jwtKey = opts.jwtKey
     this._adminPass = opts.adminPass
-    this._moderatorPass = opts.moderatorPass
-    this._triagePass = opts.triagePass
     this.dids = opts.dids
   }
 
@@ -167,46 +152,13 @@ export class AuthVerifier {
     }
   }
 
-  role = (ctx: ReqCtx): RoleOutput => {
-    const creds = this.parseRoleCreds(ctx.req)
-    if (creds.status !== RoleStatus.Valid) {
-      throw new AuthRequiredError()
-    }
-    return {
-      credentials: {
-        ...creds,
-        type: 'role',
-      },
-    }
-  }
-
-  accessOrRole = async (ctx: ReqCtx): Promise<AccessOutput | RoleOutput> => {
-    if (isBearerToken(ctx.req)) {
-      return this.access(ctx)
+  admin = async (
+    reqCtx: ReqCtx,
+  ): Promise<AdminServiceOutput | AdminTokenOutput> => {
+    if (isBearerToken(reqCtx.req)) {
+      return this.adminService(reqCtx)
     } else {
-      return this.role(ctx)
-    }
-  }
-
-  optionalAccessOrRole = async (
-    ctx: ReqCtx,
-  ): Promise<AccessOutput | RoleOutput | NullOutput> => {
-    if (isBearerToken(ctx.req)) {
-      return await this.access(ctx)
-    } else {
-      const creds = this.parseRoleCreds(ctx.req)
-      if (creds.status === RoleStatus.Valid) {
-        return {
-          credentials: {
-            ...creds,
-            type: 'role',
-          },
-        }
-      } else if (creds.status === RoleStatus.Missing) {
-        return { credentials: null }
-      } else {
-        throw new AuthRequiredError()
-      }
+      return this.adminToken(reqCtx)
     }
   }
 
@@ -230,21 +182,23 @@ export class AuthVerifier {
     )
     return {
       credentials: {
-        type: 'service',
+        type: 'admin_service',
         aud: payload.aud,
         iss: payload.iss,
       },
     }
   }
 
-  roleOrAdminService = async (
-    reqCtx: ReqCtx,
-  ): Promise<RoleOutput | AdminServiceOutput> => {
-    if (isBearerToken(reqCtx.req)) {
-      return this.adminService(reqCtx)
-    } else {
-      return this.role(reqCtx)
+  adminToken = (reqCtx: ReqCtx): AdminTokenOutput => {
+    const parsed = parseBasicAuth(reqCtx.req.headers.authorization || '')
+    if (
+      !parsed ||
+      parsed.username !== 'admin' ||
+      parsed.password !== this._adminPass
+    ) {
+      throw new AuthRequiredError()
     }
+    return { credentials: { type: 'admin_token' } }
   }
 
   async validateBearerToken(
@@ -299,27 +253,8 @@ export class AuthVerifier {
     }
   }
 
-  parseRoleCreds(req: express.Request) {
-    const parsed = parseBasicAuth(req.headers.authorization || '')
-    const { Missing, Valid, Invalid } = RoleStatus
-    if (!parsed) {
-      return { status: Missing, admin: false, moderator: false, triage: false }
-    }
-    const { username, password } = parsed
-    if (username === 'admin' && password === this._adminPass) {
-      return { status: Valid, admin: true, moderator: true, triage: true }
-    }
-    if (username === 'admin' && password === this._moderatorPass) {
-      return { status: Valid, admin: false, moderator: true, triage: true }
-    }
-    if (username === 'admin' && password === this._triagePass) {
-      return { status: Valid, admin: false, moderator: false, triage: true }
-    }
-    return { status: Invalid, admin: false, moderator: false, triage: false }
-  }
-
   isUserOrAdmin(
-    auth: AccessOutput | RoleOutput | NullOutput,
+    auth: AccessOutput | AdminTokenOutput | NullOutput,
     did: string,
   ): boolean {
     if (!auth.credentials) {
@@ -328,7 +263,7 @@ export class AuthVerifier {
     if ('did' in auth.credentials) {
       return auth.credentials.did === did
     }
-    return auth.credentials.admin
+    return auth.credentials.type === 'admin_token'
   }
 }
 

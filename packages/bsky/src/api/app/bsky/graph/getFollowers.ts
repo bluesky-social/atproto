@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.graph.getFollowers({
-    auth: ctx.authVerifier.optionalStandardOrRole,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
       const db = ctx.db.getReplica()
       const actorService = ctx.services.actor(db)
