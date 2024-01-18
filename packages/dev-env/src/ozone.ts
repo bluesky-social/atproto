@@ -7,6 +7,7 @@ import { Client as PlcClient } from '@did-plc/lib'
 import { DidAndKey, OzoneConfig } from './types'
 import { createDidAndKey } from './util'
 import { createServiceJwt } from '@atproto/xrpc-server'
+import { ModeratorClient } from './moderator-client'
 
 export class TestOzone {
   constructor(
@@ -97,6 +98,10 @@ export class TestOzone {
 
   getClient() {
     return new AtpAgent({ service: this.url })
+  }
+
+  getModClient() {
+    return new ModeratorClient(this)
   }
 
   async adminHeaders(role?: 'moderator' | 'triage') {

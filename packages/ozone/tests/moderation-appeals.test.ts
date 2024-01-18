@@ -1,9 +1,5 @@
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import AtpAgent, {
-  ComAtprotoAdminDefs,
-  ComAtprotoAdminEmitModerationEvent,
-  ComAtprotoAdminQueryModerationStatuses,
-} from '@atproto/api'
+import { ComAtprotoAdminDefs } from '@atproto/api'
 import {
   REASONMISLEADING,
   REASONSPAM,
@@ -14,36 +10,19 @@ import {
 } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { REASONAPPEAL } from '@atproto/api/src/client/types/com/atproto/moderation/defs'
 import { REVIEWESCALATED } from '../src/lexicon/types/com/atproto/admin/defs'
+import { ModeratorClient } from '@atproto/dev-env/src/moderator-client'
 
 describe('moderation-appeals', () => {
   let network: TestNetwork
-  let agent: AtpAgent
-  let pdsAgent: AtpAgent
   let sc: SeedClient
-
-  const emitModerationEvent = async (
-    eventData: ComAtprotoAdminEmitModerationEvent.InputSchema,
-  ) => {
-    return pdsAgent.api.com.atproto.admin.emitModerationEvent(eventData, {
-      encoding: 'application/json',
-      headers: network.ozone.adminAuthHeaders('moderator'),
-    })
-  }
-
-  const queryModerationStatuses = (
-    statusQuery: ComAtprotoAdminQueryModerationStatuses.QueryParams,
-  ) =>
-    agent.api.com.atproto.admin.queryModerationStatuses(statusQuery, {
-      headers: network.ozone.adminAuthHeaders('moderator'),
-    })
+  let modClient: ModeratorClient
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'ozone_moderation_statuses',
+      dbPostgresSchema: 'ozone_moderation_appeals',
     })
-    agent = network.ozone.getClient()
-    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
+    modClient = network.ozone.getModClient()
     await basicSeed(sc)
     await network.processAll()
   })
@@ -57,12 +36,12 @@ describe('moderation-appeals', () => {
     status: string,
     appealed: boolean | undefined,
   ): Promise<ComAtprotoAdminDefs.SubjectStatusView | undefined> => {
-    const { data } = await queryModerationStatuses({
+    const res = await modClient.queryModerationStatuses({
       subject,
     })
-    expect(data.subjectStatuses[0]?.reviewState).toEqual(status)
-    expect(data.subjectStatuses[0]?.appealed).toEqual(appealed)
-    return data.subjectStatuses[0]
+    expect(res.subjectStatuses[0]?.reviewState).toEqual(status)
+    expect(res.subjectStatuses[0]?.appealed).toEqual(appealed)
+    return res.subjectStatuses[0]
   }
 
   describe('appeals from users', () => {
@@ -83,7 +62,7 @@ describe('moderation-appeals', () => {
 
     it('only changes subject status if original author of the content or a moderator is appealing', async () => {
       // Create a report by alice
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventReport',
           reportType: REASONMISLEADING,
@@ -108,7 +87,7 @@ describe('moderation-appeals', () => {
       await assertBobsPostStatus(REVIEWOPEN, undefined)
 
       // Emit report event as moderator
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventReport',
           reportType: REASONAPPEAL,
@@ -147,7 +126,7 @@ describe('moderation-appeals', () => {
     })
     it('allows multiple appeals and updates last appealed timestamp', async () => {
       // Resolve appeal with acknowledge
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventResolveAppeal',
         },
@@ -157,7 +136,7 @@ describe('moderation-appeals', () => {
 
       const previousStatus = await assertBobsPostStatus(REVIEWOPEN, false)
 
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventReport',
           reportType: REASONAPPEAL,
@@ -182,7 +161,7 @@ describe('moderation-appeals', () => {
     })
     it('appeal status is maintained while review state changes based on incoming events', async () => {
       // Bob reports alice's post
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventReport',
           reportType: REASONMISLEADING,
@@ -192,7 +171,7 @@ describe('moderation-appeals', () => {
       })
 
       // Moderator acknowledges the report, assume a label was applied too
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventAcknowledge',
         },
@@ -201,7 +180,7 @@ describe('moderation-appeals', () => {
       })
 
       // Alice appeals the report
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventReport',
           reportType: REASONAPPEAL,
@@ -213,7 +192,7 @@ describe('moderation-appeals', () => {
       await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWOPEN, true)
 
       // Bob reports it again
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventReport',
           reportType: REASONSPAM,
@@ -226,7 +205,7 @@ describe('moderation-appeals', () => {
       await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWOPEN, true)
 
       // Emit an escalation event
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventEscalate',
         },
@@ -241,7 +220,7 @@ describe('moderation-appeals', () => {
       )
 
       // Emit an acknowledge event
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventAcknowledge',
         },
@@ -253,7 +232,7 @@ describe('moderation-appeals', () => {
       await assertSubjectStatus(getAlicesPostSubject().uri, REVIEWCLOSED, true)
 
       // Emit a resolveAppeal event
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventResolveAppeal',
           comment: 'lgtm',

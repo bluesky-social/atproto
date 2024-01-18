@@ -1,5 +1,5 @@
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import AtpAgent, {
+import {
   ComAtprotoAdminDefs,
   ComAtprotoAdminQueryModerationStatuses,
 } from '@atproto/api'
@@ -8,24 +8,12 @@ import {
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { ModeratorClient } from '@atproto/dev-env/src/moderator-client'
 
 describe('moderation-statuses', () => {
   let network: TestNetwork
-  let agent: AtpAgent
-  let pdsAgent: AtpAgent
   let sc: SeedClient
-
-  const emitModerationEvent = async (eventData) => {
-    return pdsAgent.api.com.atproto.admin.emitModerationEvent(eventData, {
-      encoding: 'application/json',
-      headers: network.bsky.adminAuthHeaders('moderator'),
-    })
-  }
-
-  const queryModerationStatuses = (statusQuery) =>
-    agent.api.com.atproto.admin.queryModerationStatuses(statusQuery, {
-      headers: network.bsky.adminAuthHeaders('moderator'),
-    })
+  let modClient: ModeratorClient
 
   const seedEvents = async () => {
     const bobsAccount = {
@@ -48,7 +36,7 @@ describe('moderation-statuses', () => {
     }
 
     for (let i = 0; i < 4; i++) {
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventReport',
           reportType: i % 2 ? REASONSPAM : REASONMISLEADING,
@@ -58,7 +46,7 @@ describe('moderation-statuses', () => {
         subject: i % 2 ? bobsAccount : carlasAccount,
         createdBy: i % 2 ? sc.dids.alice : sc.dids.bob,
       })
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         event: {
           $type: 'com.atproto.admin.defs#modEventReport',
           reportType: REASONSPAM,
@@ -75,9 +63,8 @@ describe('moderation-statuses', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_moderation_statuses',
     })
-    agent = network.ozone.getClient()
-    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
+    modClient = network.ozone.getModClient()
     await basicSeed(sc)
     await network.processAll()
     await seedEvents()
@@ -89,9 +76,9 @@ describe('moderation-statuses', () => {
 
   describe('query statuses', () => {
     it('returns statuses for subjects that received moderation events', async () => {
-      const response = await queryModerationStatuses({})
+      const response = await modClient.queryModerationStatuses({})
 
-      expect(forSnapshot(response.data.subjectStatuses)).toMatchSnapshot()
+      expect(forSnapshot(response.subjectStatuses)).toMatchSnapshot()
     })
 
     it('returns paginated statuses', async () => {
@@ -103,13 +90,13 @@ describe('moderation-statuses', () => {
         const statuses: ComAtprotoAdminDefs.SubjectStatusView[] = []
         let count = 0
         do {
-          const results = await queryModerationStatuses({
+          const results = await modClient.queryModerationStatuses({
             limit: 1,
             cursor,
             ...params,
           })
-          cursor = results.data.cursor
-          statuses.push(...results.data.subjectStatuses)
+          cursor = results.cursor
+          statuses.push(...results.subjectStatuses)
           count++
           // The count is just a brake-check to prevent infinite loop
         } while (cursor && count < 10)
@@ -121,7 +108,7 @@ describe('moderation-statuses', () => {
       expect(list[0].id).toEqual(4)
       expect(list[list.length - 1].id).toEqual(1)
 
-      await emitModerationEvent({
+      await modClient.emitModerationEvent({
         subject: list[1].subject,
         event: {
           $type: 'com.atproto.admin.defs#modEventAcknowledge',
