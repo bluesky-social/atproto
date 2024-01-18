@@ -5,7 +5,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createTable('communication_template')
     .addColumn('id', 'serial', (col) => col.primaryKey())
     .addColumn('name', 'varchar', (col) => col.notNull())
-    .addColumn('content', 'varchar', (col) => col.notNull())
+    .addColumn('contentMarkdown', 'varchar', (col) => col.notNull())
     .addColumn('subject', 'varchar')
     .addColumn('disabled', 'boolean', (col) => col.defaultTo(false).notNull())
     .addColumn('createdAt', 'timestamptz')
