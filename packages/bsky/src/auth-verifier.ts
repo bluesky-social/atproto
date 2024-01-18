@@ -64,7 +64,7 @@ export class AuthVerifier {
   private _triagePass: string
   public ownDid: string
   public adminDid: string
-  public moderatorDids: string
+  public moderatorDids: string[]
 
   constructor(public idResolver: IdResolver, opts: AuthVerifierOpts) {
     this._adminPass = opts.adminPass
@@ -72,6 +72,7 @@ export class AuthVerifier {
     this._triagePass = opts.triagePass
     this.ownDid = opts.ownDid
     this.adminDid = opts.adminDid
+    this.moderatorDids = opts.moderatorDids
   }
 
   // verifiers (arrow fns to preserve scope)
