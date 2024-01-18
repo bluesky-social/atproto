@@ -133,7 +133,6 @@ export class BskyAppView {
       adminPass: config.adminPassword,
       moderatorPass: config.moderatorPassword,
       triagePass: config.triagePassword,
-      moderatorDids: config.moderatorDids,
     })
 
     const ctx = new AppContext({

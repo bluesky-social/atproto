@@ -55,7 +55,6 @@ export type AuthVerifierOpts = {
   adminPass: string
   moderatorPass: string
   triagePass: string
-  moderatorDids: string[]
 }
 
 export class AuthVerifier {
@@ -64,7 +63,6 @@ export class AuthVerifier {
   private _triagePass: string
   public ownDid: string
   public adminDid: string
-  public moderatorDids: string[]
 
   constructor(public idResolver: IdResolver, opts: AuthVerifierOpts) {
     this._adminPass = opts.adminPass
@@ -72,7 +70,6 @@ export class AuthVerifier {
     this._triagePass = opts.triagePass
     this.ownDid = opts.ownDid
     this.adminDid = opts.adminDid
-    this.moderatorDids = opts.moderatorDids
   }
 
   // verifiers (arrow fns to preserve scope)
@@ -82,7 +79,7 @@ export class AuthVerifier {
       aud: this.ownDid,
       iss: null,
     })
-    const includeTakedowns = this.standardIncludeTakedowns(ctx, iss)
+    const includeTakedowns = iss === this.adminDid
     return { credentials: { type: 'standard', iss, aud, includeTakedowns } }
   }
 
@@ -105,7 +102,7 @@ export class AuthVerifier {
       aud: null,
       iss: null,
     })
-    const includeTakedowns = this.standardIncludeTakedowns(ctx, iss)
+    const includeTakedowns = iss === this.adminDid
     return { credentials: { type: 'standard', iss, aud, includeTakedowns } }
   }
 
@@ -240,13 +237,6 @@ export class AuthVerifier {
       canViewTakedowns,
       canPerformTakedown,
     }
-  }
-
-  standardIncludeTakedowns(ctx: ReqCtx, iss: string) {
-    return (
-      this.moderatorDids.includes(iss) &&
-      ctx.req.headers['include-takedowns'] === 'true'
-    )
   }
 }
 

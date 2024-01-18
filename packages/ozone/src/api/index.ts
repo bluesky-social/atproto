@@ -9,6 +9,7 @@ import queryModerationStatuses from './admin/queryModerationStatuses'
 import queryModerationEvents from './admin/queryModerationEvents'
 import getModerationEvent from './admin/getModerationEvent'
 import fetchLabels from './temp/fetchLabels'
+import proxied from './proxied'
 
 export * as health from './health'
 
@@ -24,5 +25,6 @@ export default function (server: Server, ctx: AppContext) {
   queryModerationEvents(server, ctx)
   queryModerationStatuses(server, ctx)
   fetchLabels(server, ctx)
+  proxied(server, ctx)
   return server
 }
