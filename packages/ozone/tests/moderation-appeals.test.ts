@@ -1,4 +1,9 @@
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
+import {
+  TestNetwork,
+  SeedClient,
+  basicSeed,
+  ModeratorClient,
+} from '@atproto/dev-env'
 import { ComAtprotoAdminDefs } from '@atproto/api'
 import {
   REASONMISLEADING,
@@ -10,7 +15,6 @@ import {
 } from '@atproto/api/src/client/types/com/atproto/admin/defs'
 import { REASONAPPEAL } from '@atproto/api/src/client/types/com/atproto/moderation/defs'
 import { REVIEWESCALATED } from '../src/lexicon/types/com/atproto/admin/defs'
-import { ModeratorClient } from '@atproto/dev-env/src/moderator-client'
 
 describe('moderation-appeals', () => {
   let network: TestNetwork

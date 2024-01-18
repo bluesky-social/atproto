@@ -1,4 +1,9 @@
-import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
+import {
+  TestNetwork,
+  SeedClient,
+  basicSeed,
+  ModeratorClient,
+} from '@atproto/dev-env'
 import {
   ComAtprotoAdminDefs,
   ComAtprotoAdminQueryModerationStatuses,
@@ -8,7 +13,6 @@ import {
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
-import { ModeratorClient } from '@atproto/dev-env/src/moderator-client'
 
 describe('moderation-statuses', () => {
   let network: TestNetwork

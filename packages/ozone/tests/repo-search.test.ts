@@ -1,7 +1,11 @@
-import { SeedClient, TestNetwork, usersBulkSeed } from '@atproto/dev-env'
+import {
+  SeedClient,
+  TestNetwork,
+  usersBulkSeed,
+  ModeratorClient,
+} from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { paginateAll } from './_util'
-import { ModeratorClient } from '@atproto/dev-env/src/moderator-client'
 
 describe('admin repo search view', () => {
   let network: TestNetwork

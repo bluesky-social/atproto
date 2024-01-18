@@ -1,4 +1,9 @@
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  SeedClient,
+  TestNetwork,
+  basicSeed,
+  ModeratorClient,
+} from '@atproto/dev-env'
 import AtpAgent from '@atproto/api'
 import { AtUri } from '@atproto/syntax'
 import {
@@ -6,7 +11,6 @@ import {
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
 import { forSnapshot } from './_util'
-import { ModeratorClient } from '@atproto/dev-env/src/moderator-client'
 import { TestOzone } from '@atproto/dev-env/src/ozone'
 
 describe('admin get record view', () => {
