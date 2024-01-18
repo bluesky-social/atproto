@@ -8,13 +8,13 @@ import { getDidDoc } from '../util/resolver'
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.registerPush({
     auth: ctx.authVerifier.access,
-    handler: async ({ auth, input }) => {
+    handler: async ({ auth, input, req }) => {
       const { serviceDid } = input.body
       const {
         credentials: { did },
       } = auth
 
-      const authHeaders = await ctx.serviceAuthHeaders(did, serviceDid)
+      const authHeaders = await ctx.serviceAuthHeaders(did, serviceDid, req)
 
       if (ctx.cfg.bskyAppView.did === serviceDid) {
         await ctx.appViewAgent.api.app.bsky.notification.registerPush(

@@ -1,3 +1,4 @@
+import express from 'express'
 import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
 import * as plc from '@did-plc/lib'
@@ -239,22 +240,37 @@ export class AppContext {
     })
   }
 
-  async appviewAuthHeaders(did: string) {
-    return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did)
+  async appviewAuthHeaders(did: string, req: express.Request | null) {
+    return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did, req)
   }
 
-  async moderationAuthHeaders(did: string) {
-    return this.serviceAuthHeaders(did, this.cfg.modService.did)
+  async moderationAuthHeaders(did: string, req: express.Request | null) {
+    return this.serviceAuthHeaders(did, this.cfg.modService.did, req)
   }
 
-  async serviceAuthHeaders(did: string, aud: string) {
+  async serviceAuthHeaders(
+    did: string,
+    aud: string,
+    req: express.Request | null,
+  ) {
     const keypair = await this.actorStore.keypair(did)
-    return createServiceAuthHeaders({
+    const headers = await createServiceAuthHeaders({
       iss: did,
       aud,
       keypair,
     })
+    if (req) {
+      for (const header of FORWARDED_HEADERS) {
+        const val = req.header(header)
+        if (val) {
+          headers.headers[header] = val
+        }
+      }
+    }
+    return headers
   }
 }
+
+const FORWARDED_HEADERS = ['accept-language', 'include-takedowns']
 
 export default AppContext

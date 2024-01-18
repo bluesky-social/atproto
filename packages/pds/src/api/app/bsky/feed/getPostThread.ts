@@ -1,3 +1,4 @@
+import express from 'express'
 import { AtUri } from '@atproto/syntax'
 import { AppBskyFeedGetPostThread } from '@atproto/api'
 import { Headers } from '@atproto/xrpc'
@@ -44,7 +45,7 @@ export default function (server: Server, ctx: AppContext) {
       try {
         const res = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
           params,
-          await ctx.appviewAuthHeaders(requester),
+          await ctx.appviewAuthHeaders(requester, req),
         )
 
         return await handleReadAfterWrite(
@@ -61,6 +62,7 @@ export default function (server: Server, ctx: AppContext) {
             const localViewer = ctx.localViewer(store, keypair)
             return readAfterWriteNotFound(
               ctx,
+              req,
               localViewer,
               params,
               requester,
@@ -183,6 +185,7 @@ const threadPostView = async (
 
 const readAfterWriteNotFound = async (
   ctx: AppContext,
+  req: express.Request,
   localViewer: LocalViewer,
   params: QueryParams,
   requester: string,
@@ -207,7 +210,7 @@ const readAfterWriteNotFound = async (
     try {
       const parentsRes = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
         { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
-        await ctx.appviewAuthHeaders(requester),
+        await ctx.appviewAuthHeaders(requester, req),
       )
       thread.parent = parentsRes.data.thread
     } catch (err) {

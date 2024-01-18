@@ -28,6 +28,7 @@ type StandardOutput = {
     type: 'standard'
     aud: string
     iss: string
+    includeTakedowns: boolean
   }
 }
 
@@ -54,6 +55,7 @@ export type AuthVerifierOpts = {
   adminPass: string
   moderatorPass: string
   triagePass: string
+  moderatorDids: string[]
 }
 
 export class AuthVerifier {
@@ -62,6 +64,7 @@ export class AuthVerifier {
   private _triagePass: string
   public ownDid: string
   public adminDid: string
+  public moderatorDids: string
 
   constructor(public idResolver: IdResolver, opts: AuthVerifierOpts) {
     this._adminPass = opts.adminPass
@@ -78,7 +81,8 @@ export class AuthVerifier {
       aud: this.ownDid,
       iss: null,
     })
-    return { credentials: { type: 'standard', iss, aud } }
+    const includeTakedowns = this.standardIncludeTakedowns(ctx, iss)
+    return { credentials: { type: 'standard', iss, aud, includeTakedowns } }
   }
 
   standardOptional = async (
@@ -100,7 +104,8 @@ export class AuthVerifier {
       aud: null,
       iss: null,
     })
-    return { credentials: { type: 'standard', iss, aud } }
+    const includeTakedowns = this.standardIncludeTakedowns(ctx, iss)
+    return { credentials: { type: 'standard', iss, aud, includeTakedowns } }
   }
 
   role = (ctx: ReqCtx): RoleOutput => {
@@ -223,6 +228,8 @@ export class AuthVerifier {
       creds.credentials.type === 'standard' ? creds.credentials.iss : null
     const canViewTakedowns =
       (creds.credentials.type === 'role' && creds.credentials.triage) ||
+      (creds.credentials.type === 'standard' &&
+        creds.credentials.includeTakedowns) ||
       creds.credentials.type === 'admin_service'
     const canPerformTakedown =
       (creds.credentials.type === 'role' && creds.credentials.moderator) ||
@@ -232,6 +239,13 @@ export class AuthVerifier {
       canViewTakedowns,
       canPerformTakedown,
     }
+  }
+
+  standardIncludeTakedowns(ctx: ReqCtx, iss: string) {
+    return (
+      this.moderatorDids.includes(iss) &&
+      ctx.req.headers['include-takedowns'] === 'true'
+    )
   }
 }
 
