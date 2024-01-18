@@ -11,7 +11,6 @@ import {
 } from './client'
 import {
   AtpSessionData,
-  AtpAgentCreateAccountOpts,
   AtpAgentLoginOpts,
   AtpAgentFetchHandler,
   AtpAgentFetchHandlerResponse,
@@ -86,15 +85,10 @@ export class AtpAgent {
    * Create a new account and hydrate its session in this agent.
    */
   async createAccount(
-    opts: AtpAgentCreateAccountOpts,
+    opts: ComAtprotoServerCreateAccount.InputSchema,
   ): Promise<ComAtprotoServerCreateAccount.Response> {
     try {
-      const res = await this.api.com.atproto.server.createAccount({
-        handle: opts.handle,
-        password: opts.password,
-        email: opts.email,
-        inviteCode: opts.inviteCode,
-      })
+      const res = await this.api.com.atproto.server.createAccount(opts)
       this.session = {
         accessJwt: res.data.accessJwt,
         refreshJwt: res.data.refreshJwt,
