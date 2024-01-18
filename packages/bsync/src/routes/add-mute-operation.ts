@@ -92,9 +92,15 @@ const clearMuteItems = async (db: Database, op: MuteOpInfo) => {
     .execute()
 }
 
-const validMuteOp = (op: MuteOpInfo): MuteOpInfo => {
+const validMuteOp = (op: MuteOpInfo): MuteOpInfoValid => {
   if (!Object.values(MuteOperation_Type).includes(op.type)) {
     throw new ConnectError('bad mute operation type', Code.InvalidArgument)
+  }
+  if (op.type === MuteOperation_Type.UNSPECIFIED) {
+    throw new ConnectError(
+      'unspecified mute operation type',
+      Code.InvalidArgument,
+    )
   }
   if (!isValidDid(op.actorDid)) {
     throw new ConnectError(
@@ -127,7 +133,7 @@ const validMuteOp = (op: MuteOpInfo): MuteOpInfo => {
       )
     }
   }
-  return op
+  return op as MuteOpInfoValid // op.type has been checked
 }
 
 const isValidDid = (did: string) => {
@@ -153,6 +159,15 @@ const isValidAtUri = (uri: string) => {
 
 type MuteOpInfo = {
   type: MuteOperation_Type
+  actorDid: string
+  subject: string
+}
+
+type MuteOpInfoValid = {
+  type:
+    | MuteOperation_Type.ADD
+    | MuteOperation_Type.REMOVE
+    | MuteOperation_Type.CLEAR
   actorDid: string
   subject: string
 }

@@ -5,6 +5,7 @@ import { FeedRow } from '../services/feed'
 
 export type AlgoResponse = {
   feedItems: FeedRow[]
+  resHeaders?: Record<string, string>
   cursor?: string
 }
 

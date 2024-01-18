@@ -1,12 +1,12 @@
 export const noUndefinedVals = <T>(
-  obj: Record<string, T>,
+  obj: Record<string, T | undefined>,
 ): Record<string, T> => {
   Object.keys(obj).forEach((k) => {
     if (obj[k] === undefined) {
       delete obj[k]
     }
   })
-  return obj
+  return obj as Record<string, T>
 }
 
 export const jitter = (maxMs: number) => {

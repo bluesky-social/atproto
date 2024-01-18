@@ -10,9 +10,10 @@ option go_package = "./;bsync";
 
 message MuteOperation {
   enum Type {
-    ADD = 0;
-    REMOVE = 1;
-    CLEAR = 2;
+    TYPE_UNSPECIFIED = 0;
+    TYPE_ADD = 1;
+    TYPE_REMOVE = 2;
+    TYPE_CLEAR = 3;
   }
   string id = 1;
   Type type = 2;

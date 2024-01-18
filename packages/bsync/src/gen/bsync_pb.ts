@@ -25,7 +25,7 @@ export class MuteOperation extends Message<MuteOperation> {
   /**
    * @generated from field: bsync.MuteOperation.Type type = 2;
    */
-  type = MuteOperation_Type.ADD
+  type = MuteOperation_Type.UNSPECIFIED
 
   /**
    * @generated from field: string actor_did = 3;
@@ -90,25 +90,31 @@ export class MuteOperation extends Message<MuteOperation> {
  */
 export enum MuteOperation_Type {
   /**
-   * @generated from enum value: ADD = 0;
+   * @generated from enum value: TYPE_UNSPECIFIED = 0;
    */
-  ADD = 0,
+  UNSPECIFIED = 0,
 
   /**
-   * @generated from enum value: REMOVE = 1;
+   * @generated from enum value: TYPE_ADD = 1;
    */
-  REMOVE = 1,
+  ADD = 1,
 
   /**
-   * @generated from enum value: CLEAR = 2;
+   * @generated from enum value: TYPE_REMOVE = 2;
    */
-  CLEAR = 2,
+  REMOVE = 2,
+
+  /**
+   * @generated from enum value: TYPE_CLEAR = 3;
+   */
+  CLEAR = 3,
 }
 // Retrieve enum metadata with: proto3.getEnumType(MuteOperation_Type)
 proto3.util.setEnumType(MuteOperation_Type, 'bsync.MuteOperation.Type', [
-  { no: 0, name: 'ADD' },
-  { no: 1, name: 'REMOVE' },
-  { no: 2, name: 'CLEAR' },
+  { no: 0, name: 'TYPE_UNSPECIFIED' },
+  { no: 1, name: 'TYPE_ADD' },
+  { no: 2, name: 'TYPE_REMOVE' },
+  { no: 3, name: 'TYPE_CLEAR' },
 ])
 
 /**
@@ -118,7 +124,7 @@ export class AddMuteOperationRequest extends Message<AddMuteOperationRequest> {
   /**
    * @generated from field: bsync.MuteOperation.Type type = 1;
    */
-  type = MuteOperation_Type.ADD
+  type = MuteOperation_Type.UNSPECIFIED
 
   /**
    * @generated from field: string actor_did = 2;
