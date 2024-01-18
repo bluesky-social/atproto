@@ -980,7 +980,7 @@ export const schemaDict = {
             required: ['id'],
             properties: {
               id: {
-                type: 'integer',
+                type: 'string',
               },
             },
           },

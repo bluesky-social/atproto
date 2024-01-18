@@ -92,7 +92,7 @@ describe('communication-templates', () => {
     it('allows moderators to update a template by id', async () => {
       const { data } =
         await agent.api.com.atproto.admin.updateCommunicationTemplate(
-          { id: 1, updatedBy: sc.dids.bob, name: '1 Test template' },
+          { id: '1', updatedBy: sc.dids.bob, name: '1 Test template' },
           {
             encoding: 'application/json',
             headers: network.ozone.adminAuthHeaders('admin'),
@@ -106,7 +106,7 @@ describe('communication-templates', () => {
   describe('delete template', () => {
     it('allows admins to remove a template by id', async () => {
       const modReq = agent.api.com.atproto.admin.deleteCommunicationTemplate(
-        { id: 1 },
+        { id: '1' },
         {
           encoding: 'application/json',
           headers: network.ozone.adminAuthHeaders('moderator'),
@@ -118,7 +118,7 @@ describe('communication-templates', () => {
       )
 
       await agent.api.com.atproto.admin.deleteCommunicationTemplate(
-        { id: 1 },
+        { id: '1' },
         {
           encoding: 'application/json',
           headers: network.ozone.adminAuthHeaders('admin'),

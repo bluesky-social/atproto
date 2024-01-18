@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const communicationTemplate = ctx.communicationTemplateService(db)
-      await communicationTemplate.delete(id)
+      await communicationTemplate.delete(Number(id))
     },
   })
 }
