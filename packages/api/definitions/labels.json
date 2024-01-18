@@ -120,6 +120,30 @@
     ]
   },
   {
+    "id": "drugs-alcohol",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "substance-abuse",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      }
+    ]
+  },
+  {
+    "id": "eating-disorder",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "eating-disorder",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      }
+    ]
+  },
+  {
     "id": "intolerance",
     "configurable": true,
     "labels": [
@@ -152,12 +176,30 @@
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
-      },
+      }
+    ]
+  },
+  {
+    "id": "bad-behavior",
+    "configurable": true,
+    "labels": [
       {
-        "id": "icon-intolerant",
+        "id": "harassment",
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
-        "onwarn": "blur-media"
+        "onwarn": "blur"
+      },
+      {
+        "id": "bullying",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "threat",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
       }
     ]
   },
@@ -166,7 +208,91 @@
     "configurable": true,
     "labels": [
       {
-        "id": "threat",
+        "id": "rude",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      }
+    ]
+  },
+  {
+    "id": "upsetting",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "disgusting",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "upsetting",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      }
+    ]
+  },
+  {
+    "id": "troubling",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "troubling",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "dispiriting",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "bad-news",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      }
+    ]
+  },
+  {
+    "id": "hate-group-reference",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "icon-intolerant",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur-media"
+      },
+      {
+        "id": "icon-kkk",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur-media"
+      },
+      {
+        "id": "icon-nazi",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur-media"
+      }
+    ]
+  },
+  {
+    "id": "discourse",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "discourse",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "drama",
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
@@ -178,7 +304,7 @@
     "configurable": true,
     "labels": [
       {
-        "id": "spoiler",
+        "id": "dislike",
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
@@ -198,7 +324,7 @@
     ]
   },
   {
-    "id": "misinfo",
+    "id": "security",
     "configurable": true,
     "labels": [
       {
@@ -224,10 +350,58 @@
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "alert"
+      }
+    ]
+  },
+  {
+    "id": "misinfo",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "misinfo",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
       },
       {
         "id": "misleading",
         "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
+      },
+      {
+        "id": "unverified",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
+      },
+      {
+        "id": "manipulated",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
+      },
+      {
+        "id": "fringe",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
+      }
+    ]
+  },
+  {
+    "id": "context",
+    "configurable": false,
+    "labels": [
+      {
+        "id": "satire",
+        "preferences": ["warn"],
+        "flags": [],
+        "onwarn": "alert"
+      },
+      {
+        "id": "parody",
+        "preferences": ["warn"],
         "flags": [],
         "onwarn": "alert"
       }

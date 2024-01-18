@@ -20,27 +20,63 @@
     "description": "Including non-sexual and artistic."
   },
   "violence": {
-    "name": "Violence",
-    "description": "Content which is violent or deeply disturbing."
+    "name": "Violent / Bloody",
+    "description": "Gore, self-harm, torture."
+  },
+  "drugs-alcohol": {
+    "name": "Substance Abuse",
+    "description": "Use of drugs or alcohol."
+  },
+  "eating-disorder": {
+    "name": "Eating Disorders",
+    "description": "Discussion of eating disorders."
   },
   "intolerance": {
     "name": "Intolerance",
     "description": "Content or behavior which is hateful or intolerant toward a group of people."
   },
+  "bad-behavior": {
+    "name": "Bad Behavior",
+    "description": "Harassment, bullying, and threats toward other users."
+  },
   "rude": {
     "name": "Rude",
     "description": "Behavior which is rude toward other users."
   },
+  "upsetting": {
+    "name": "Upsetting",
+    "description": "Shocking, disgusting, or generally upsetting content."
+  },
+  "troubling": {
+    "name": "Troubling",
+    "description": "Bad news, troubling information, or dispiriting content."
+  },
+  "hate-group-reference": {
+    "name": "Hate Group Coverge",
+    "description": "Images of terror groups, articles covering events, etc."
+  },
+  "discourse": {
+    "name": "Discourse / Drama",
+    "description": "On-going discussions or debates that may be frustrating."
+  },
   "curation": {
-    "name": "Curational",
-    "description": "Subjective moderation geared towards curating a more positive environment."
+    "name": "Curation",
+    "description": "Judgment of the moderators to remove content not worth showing."
   },
   "spam": {
     "name": "Spam",
     "description": "Content which doesn't add to the conversation."
   },
+  "misrepresentation": {
+    "name": "Security",
+    "description": "Impersonations, scams, and potential security attacks."
+  },
   "misinfo": {
     "name": "Misinformation",
     "description": "Content which misleads or defrauds users."
+  },
+  "context": {
+    "name": "Context",
+    "description": "Helpful annotations to explain intent, such as satire or parody."
   }
 }
