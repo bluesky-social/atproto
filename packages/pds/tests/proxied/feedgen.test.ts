@@ -23,7 +23,7 @@ describe('feedgen proxy view', () => {
     })
     agent = network.pds.getClient()
     sc = network.getSeedClient()
-    await basicSeed(sc, { addModLabels: true })
+    await basicSeed(sc)
     // publish feed
     const feed = await agent.api.app.bsky.feed.generator.create(
       { repo: sc.dids.alice, rkey: feedUri.rkey },

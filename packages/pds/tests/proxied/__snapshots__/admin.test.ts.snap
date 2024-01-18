@@ -4,7 +4,7 @@ exports[`proxies admin requests creates reports of a repo. 1`] = `
 Array [
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "id": 4,
+    "id": 3,
     "reasonType": "com.atproto.moderation.defs#reasonSpam",
     "reportedBy": "user(0)",
     "subject": Object {
@@ -14,7 +14,7 @@ Array [
   },
   Object {
     "createdAt": "1970-01-01T00:00:00.000Z",
-    "id": 5,
+    "id": 4,
     "reason": "impersonation",
     "reasonType": "com.atproto.moderation.defs#reasonOther",
     "reportedBy": "user(2)",

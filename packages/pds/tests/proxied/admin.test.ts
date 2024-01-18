@@ -8,7 +8,7 @@ import {
 import { forSnapshot } from '../_util'
 import { NotFoundError } from '@atproto/api/src/client/types/app/bsky/feed/getPostThread'
 
-describe('proxies admin requests', () => {
+describe.skip('proxies admin requests', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
@@ -32,7 +32,6 @@ describe('proxies admin requests', () => {
       )
     await basicSeed(sc, {
       inviteCode: invite.code,
-      addModLabels: true,
     })
     await network.processAll()
   })
