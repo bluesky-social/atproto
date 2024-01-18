@@ -17,7 +17,7 @@ export interface InputSchema {
   /** Name of the template. */
   name?: string
   /** Content of the template, markdown supported, can contain variable placeholders. */
-  content?: string
+  contentMarkdown?: string
   /** Subject of the message, used in emails. */
   subject?: string
   /** DID of the user who is updating the template. */

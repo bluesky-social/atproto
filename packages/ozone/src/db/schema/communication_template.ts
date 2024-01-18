@@ -5,7 +5,7 @@ export const communicationTemplateTableName = 'communication_template'
 export interface CommunicationTemplate {
   id: GeneratedAlways<number>
   name: string
-  content: string
+  contentMarkdown: string
   subject: string | null
   disabled: Generated<boolean>
   createdAt: Date

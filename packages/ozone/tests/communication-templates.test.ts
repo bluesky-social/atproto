@@ -23,7 +23,7 @@ describe('communication-templates', () => {
   const templateOne = {
     name: 'Test name 1',
     subject: 'Test subject 1',
-    content: 'Test content 1',
+    contentMarkdown: 'Test content 1',
   }
 
   const listTemplates = async () => {

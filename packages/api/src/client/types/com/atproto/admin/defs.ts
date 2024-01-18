@@ -725,7 +725,7 @@ export interface CommunicationTemplateView {
   /** Content of the template, can contain markdown and variable placeholders. */
   subject?: string
   /** Subject of the message, used in emails. */
-  content: string
+  contentMarkdown: string
   disabled: boolean
   /** DID of the user who last updated the template. */
   lastUpdatedBy: string

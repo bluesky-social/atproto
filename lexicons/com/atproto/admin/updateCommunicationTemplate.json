@@ -19,7 +19,7 @@
               "type": "string",
               "description": "Name of the template."
             },
-            "content": {
+            "contentMarkdown": {
               "type": "string",
               "description": "Content of the template, markdown supported, can contain variable placeholders."
             },

@@ -590,7 +590,7 @@
       "required": [
         "id",
         "name",
-        "content",
+        "contentMarkdown",
         "disabled",
         "lastUpdatedBy",
         "createdAt",
@@ -603,7 +603,7 @@
           "type": "string",
           "description": "Content of the template, can contain markdown and variable placeholders."
         },
-        "content": {
+        "contentMarkdown": {
           "type": "string",
           "description": "Subject of the message, used in emails."
         },

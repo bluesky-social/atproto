@@ -25,7 +25,7 @@ export class CommunicationTemplateService {
 
   async create({
     name,
-    content,
+    contentMarkdown,
     subject,
     disabled,
     updatedAt,
@@ -42,7 +42,7 @@ export class CommunicationTemplateService {
       .insertInto('communication_template')
       .values({
         name,
-        content,
+        contentMarkdown,
         subject,
         disabled,
         lastUpdatedBy,
@@ -59,7 +59,7 @@ export class CommunicationTemplateService {
     id: number,
     {
       name,
-      content,
+      contentMarkdown,
       subject,
       disabled,
       updatedAt,
@@ -71,7 +71,7 @@ export class CommunicationTemplateService {
       .where('id', '=', id)
       .set({
         name,
-        content,
+        contentMarkdown,
         subject,
         disabled,
         lastUpdatedBy,
@@ -94,7 +94,7 @@ export class CommunicationTemplateService {
     return {
       id: `${template.id}`,
       name: template.name,
-      content: template.content,
+      contentMarkdown: template.contentMarkdown,
       disabled: template.disabled,
       subject: template.subject || undefined,
       createdAt: template.createdAt.toISOString(),

@@ -16,13 +16,13 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['subject', 'content', 'name'],
+            required: ['subject', 'contentMarkdown', 'name'],
             properties: {
               name: {
                 type: 'string',
                 description: 'Name of the template.',
               },
-              content: {
+              contentMarkdown: {
                 type: 'string',
                 description:
                   'Content of the template, markdown supported, can contain variable placeholders.',
@@ -900,7 +900,7 @@ export const schemaDict = {
         required: [
           'id',
           'name',
-          'content',
+          'contentMarkdown',
           'disabled',
           'lastUpdatedBy',
           'createdAt',
@@ -919,7 +919,7 @@ export const schemaDict = {
             description:
               'Content of the template, can contain markdown and variable placeholders.',
           },
-          content: {
+          contentMarkdown: {
             type: 'string',
             description: 'Subject of the message, used in emails.',
           },
@@ -1780,7 +1780,7 @@ export const schemaDict = {
                 type: 'string',
                 description: 'Name of the template.',
               },
-              content: {
+              contentMarkdown: {
                 type: 'string',
                 description:
                   'Content of the template, markdown supported, can contain variable placeholders.',
