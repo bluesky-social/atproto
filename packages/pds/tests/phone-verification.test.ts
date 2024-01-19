@@ -143,7 +143,7 @@ describe('phone verification', () => {
   })
 
   it('does not allow more than the configured number of signups from the same code', async () => {
-    const danNumber = '+3333333333'
+    const danNumber = '+13333333333'
     for (let i = 0; i < 3; i++) {
       const danCode = await requestCode(danNumber)
       await createAccountWithCode(danNumber, danCode)
@@ -151,6 +151,13 @@ describe('phone verification', () => {
     const attempt = requestCode(danNumber)
     await expect(attempt).rejects.toThrow(
       `There are too many accounts currently using this phone number. Max: 3`,
+    )
+  })
+
+  it('does not allow invalidly formatted phone numbers', async () => {
+    const eveNumber = '+1-444-444-4444'
+    expect(() => ctx.twilio?.ensureValidPhoneNumber(eveNumber)).toThrow(
+      'Invalid phone number',
     )
   })
 })
