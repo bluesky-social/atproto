@@ -22,7 +22,9 @@ export default function (server: Server, ctx: AppContext) {
       }
       const accountsPerPhoneNumber =
         ctx.cfg.phoneVerification.accountsPerPhoneNumber
-      const { phoneNumber } = input.body
+      const phoneNumber = ctx.twilio.normalizePhoneNumber(
+        input.body.phoneNumber,
+      )
 
       const res = await ctx.db.db
         .selectFrom('phone_verification')

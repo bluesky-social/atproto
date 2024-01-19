@@ -55,7 +55,6 @@ describe('phone verification', () => {
     })
     const sent = sentCodes.at(-1)
     assert(sent)
-    assert(sent.number === phoneNumber)
     return sent.code
   }
 
@@ -154,15 +153,16 @@ describe('phone verification', () => {
     )
   })
 
-  it('does not allow invalidly formatted phone numbers', async () => {
-    expect(() => ctx.twilio?.ensureValidPhoneNumber('+1-444-444-4444')).toThrow(
-      'Invalid phone number',
-    )
-    expect(() => ctx.twilio?.ensureValidPhoneNumber('1-444-444-4444')).toThrow(
-      'Invalid phone number',
-    )
-    expect(() => ctx.twilio?.ensureValidPhoneNumber('444-444-4444')).toThrow(
-      'Invalid phone number',
-    )
+  it('normalizes phone numbers', async () => {
+    const code1 = await requestCode('+1 (444)444-4444')
+    expect(verificationCodes['+14444444444']).toEqual(code1)
+    const code2 = await requestCode('(555)555-5555')
+    expect(verificationCodes['+15555555555']).toEqual(code2)
+    const code3 = await requestCode('1(666)666-6666')
+    expect(verificationCodes['+16666666666']).toEqual(code3)
+    const attempt1 = requestCode('+1444444444444444')
+    await expect(attempt1).rejects.toThrow('Invalid phone number')
+    const attempt2 = requestCode('a44444444')
+    await expect(attempt2).rejects.toThrow('Invalid phone number')
   })
 })

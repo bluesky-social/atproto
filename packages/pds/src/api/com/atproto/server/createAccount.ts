@@ -40,6 +40,7 @@ export default function (server: Server, ctx: AppContext) {
       const now = new Date().toISOString()
       const passwordScrypt = await scrypt.genSaltAndHash(password)
 
+      let verificationPhone: string | undefined = undefined
       if (ctx.cfg.phoneVerification.required && ctx.twilio) {
         if (!input.body.verificationPhone) {
           throw new InvalidRequestError(
@@ -52,9 +53,12 @@ export default function (server: Server, ctx: AppContext) {
             'InvalidPhoneVerification',
           )
         }
-        const verified = await ctx.twilio.verifyCode(
+        verificationPhone = ctx.twilio.normalizePhoneNumber(
           input.body.verificationPhone,
-          input.body.verificationCode,
+        )
+        const verified = await ctx.twilio.verifyCode(
+          verificationPhone,
+          input.body.verificationCode.trim(),
         )
         if (!verified) {
           throw new InvalidRequestError(
@@ -121,15 +125,12 @@ export default function (server: Server, ctx: AppContext) {
             .execute()
         }
 
-        if (
-          ctx.cfg.phoneVerification.required &&
-          input.body.verificationPhone
-        ) {
+        if (ctx.cfg.phoneVerification.required && verificationPhone) {
           await dbTxn.db
             .insertInto('phone_verification')
             .values({
               did,
-              phoneNumber: input.body.verificationPhone,
+              phoneNumber: verificationPhone,
             })
             .execute()
         }

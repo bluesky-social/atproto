@@ -19,16 +19,24 @@ export class TwilioClient {
     ).verify.v2.services(opts.serviceSid)
   }
 
-  ensureValidPhoneNumber(phoneNumber: string) {
+  normalizePhoneNumber(phoneNumber: string) {
+    let normalized = phoneNumber.replaceAll(/\(|\)|-| /g, '')
+    if (!normalized.startsWith('+')) {
+      if (normalized.length === 10) {
+        normalized = '+1' + normalized
+      } else {
+        normalized = '+' + normalized
+      }
+    }
     // https://www.twilio.com/docs/glossary/what-e164#regex-matching-for-e164
-    const valid = /^\+[1-9]\d{1,14}$/.test(phoneNumber)
+    const valid = /^\+[1-9]\d{1,14}$/.test(normalized)
     if (!valid) {
       throw new InvalidRequestError('Invalid phone number')
     }
+    return normalized
   }
 
   async sendCode(phoneNumber: string) {
-    this.ensureValidPhoneNumber(phoneNumber)
     try {
       await this.verifyClient.verifications.create({
         to: phoneNumber,
@@ -40,7 +48,6 @@ export class TwilioClient {
   }
 
   async verifyCode(phoneNumber: string, code: string) {
-    this.ensureValidPhoneNumber(phoneNumber)
     try {
       const res = await this.verifyClient.verificationChecks.create({
         to: phoneNumber,
