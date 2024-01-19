@@ -243,7 +243,7 @@ describe('handles', () => {
         encoding: 'application/json',
       },
     )
-    await expect(attempt).rejects.toThrow('poorly formatted jwt')
+    await expect(attempt).rejects.toThrow('Authentication Required')
     const attempt2 = agent.api.com.atproto.admin.updateAccountHandle({
       did: bob,
       handle: 'bob-alt.test',
