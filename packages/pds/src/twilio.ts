@@ -1,4 +1,4 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, UpstreamFailureError } from '@atproto/xrpc-server'
 import twilio from 'twilio'
 
 type Opts = {
@@ -29,18 +29,26 @@ export class TwilioClient {
 
   async sendCode(phoneNumber: string) {
     this.ensureValidPhoneNumber(phoneNumber)
-    await this.verifyClient.verifications.create({
-      to: phoneNumber,
-      channel: 'sms',
-    })
+    try {
+      await this.verifyClient.verifications.create({
+        to: phoneNumber,
+        channel: 'sms',
+      })
+    } catch (err) {
+      throw new UpstreamFailureError('Could not send verification text')
+    }
   }
 
   async verifyCode(phoneNumber: string, code: string) {
     this.ensureValidPhoneNumber(phoneNumber)
-    const res = await this.verifyClient.verificationChecks.create({
-      to: phoneNumber,
-      code,
-    })
-    return res.status === 'approved'
+    try {
+      const res = await this.verifyClient.verificationChecks.create({
+        to: phoneNumber,
+        code,
+      })
+      return res.status === 'approved'
+    } catch (err) {
+      throw new UpstreamFailureError('Could not send verification text')
+    }
   }
 }
