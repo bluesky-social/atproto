@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.9.2
+
+### Patch Changes
+
+- [#2045](https://github.com/bluesky-social/atproto/pull/2045) [`15f38560`](https://github.com/bluesky-social/atproto/commit/15f38560b9e2dc3af8cf860826e7477234fe6a2d) Thanks [@foysalit](https://github.com/foysalit)! - support new lexicons for admin communication templates
+
 ## 0.9.1
 
 ### Patch Changes
