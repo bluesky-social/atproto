@@ -11,7 +11,7 @@ import { CID } from 'multiformats/cid'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateSubjectStatus({
-    auth: ctx.authVerifier.admin,
+    auth: ctx.authVerifier.moderator,
     handler: async ({ input, auth }) => {
       const { canPerformTakedown } = ctx.authVerifier.parseCreds(auth)
       if (!canPerformTakedown) {

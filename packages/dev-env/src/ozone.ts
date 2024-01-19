@@ -104,6 +104,14 @@ export class TestOzone {
     return new ModeratorClient(this)
   }
 
+  addModeratorDid(did: string) {
+    this.ctx.cfg.access.moderators.push(did)
+  }
+
+  addTriageDid(did: string) {
+    this.ctx.cfg.access.triage.push(did)
+  }
+
   async adminHeaders(role?: 'moderator' | 'triage') {
     const account = role === 'triage' ? this.triageAccnt : this.moderatorAccnt
     const jwt = await createServiceJwt({

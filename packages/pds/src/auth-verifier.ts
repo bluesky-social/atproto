@@ -34,9 +34,9 @@ type AdminTokenOutput = {
   }
 }
 
-type AdminServiceOutput = {
+type ModServiceOutput = {
   credentials: {
-    type: 'admin_service'
+    type: 'mod_service'
     aud: string
     iss: string
   }
@@ -128,6 +128,38 @@ export class AuthVerifier {
     return this.validateAccessToken(ctx.req, [AuthScope.Access])
   }
 
+  optionalAccessOrAdmin = async (
+    ctx: ReqCtx,
+  ): Promise<AccessOutput | AdminTokenOutput | NullOutput> => {
+    if (!ctx.req.headers.authorization) {
+      return this.nullCreds()
+    }
+    if (isBearerToken(ctx.req)) {
+      return this.access(ctx)
+    } else {
+      return this.adminToken(ctx)
+    }
+  }
+
+  accessOrModerator = async (
+    ctx: ReqCtx,
+  ): Promise<AccessOutput | ModServiceOutput | AdminTokenOutput> => {
+    if (isBearerToken(ctx.req)) {
+      const token = bearerTokenFromReq(ctx.req)
+      if (!token) {
+        throw new AuthRequiredError()
+      }
+      const parsed = jose.decodeJwt(token)
+      if (parsed.iss === this.dids.admin) {
+        return this.modService(ctx)
+      } else {
+        return this.access(ctx)
+      }
+    } else {
+      return this.adminToken(ctx)
+    }
+  }
+
   refresh = async (ctx: ReqCtx): Promise<RefreshOutput> => {
     const { did, scope, token, audience, payload } =
       await this.validateBearerToken(ctx.req, [AuthScope.Refresh], {
@@ -152,17 +184,17 @@ export class AuthVerifier {
     }
   }
 
-  admin = async (
+  moderator = async (
     reqCtx: ReqCtx,
-  ): Promise<AdminServiceOutput | AdminTokenOutput> => {
+  ): Promise<ModServiceOutput | AdminTokenOutput> => {
     if (isBearerToken(reqCtx.req)) {
-      return this.adminService(reqCtx)
+      return this.modService(reqCtx)
     } else {
       return this.adminToken(reqCtx)
     }
   }
 
-  adminService = async (reqCtx: ReqCtx): Promise<AdminServiceOutput> => {
+  modService = async (reqCtx: ReqCtx): Promise<ModServiceOutput> => {
     const jwtStr = bearerTokenFromReq(reqCtx.req)
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
@@ -182,7 +214,7 @@ export class AuthVerifier {
     )
     return {
       credentials: {
-        type: 'admin_service',
+        type: 'mod_service',
         aud: payload.aud,
         iss: payload.iss,
       },
@@ -264,6 +296,12 @@ export class AuthVerifier {
       return auth.credentials.did === did
     }
     return auth.credentials.type === 'admin_token'
+  }
+
+  nullCreds(): NullOutput {
+    return {
+      credentials: null,
+    }
   }
 }
 

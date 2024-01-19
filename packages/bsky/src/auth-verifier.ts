@@ -91,17 +91,17 @@ export class AuthVerifier {
     return { credentials: { type: 'standard', iss, aud, includeTakedowns } }
   }
 
-  admin = async (
+  moderator = async (
     reqCtx: ReqCtx,
   ): Promise<AdminServiceOutput | AdminTokenOutput> => {
     if (isBearerToken(reqCtx.req)) {
-      return this.adminService(reqCtx)
+      return this.modService(reqCtx)
     } else {
       return this.adminToken(reqCtx)
     }
   }
 
-  adminService = async (reqCtx: ReqCtx): Promise<AdminServiceOutput> => {
+  modService = async (reqCtx: ReqCtx): Promise<AdminServiceOutput> => {
     const { iss, aud } = await this.verifyServiceJwt(reqCtx, {
       aud: this.ownDid,
       iss: [this.modServiceDid],

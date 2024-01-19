@@ -9,7 +9,7 @@ import { Client as PlcClient } from '@did-plc/lib'
 import { BskyConfig } from './types'
 import { uniqueLockId } from './util'
 import { TestNetworkNoAppView } from './network-no-appview'
-import { ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD } from './const'
+import { ADMIN_PASSWORD } from './const'
 
 export class TestBsky {
   constructor(
@@ -45,12 +45,9 @@ export class TestBsky {
       labelCacheStaleTTL: 30 * SECOND,
       labelCacheMaxTTL: MINUTE,
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
-      moderatorDids: [],
       ...cfg,
       // Each test suite gets its own lock id for the repo subscription
       adminPassword: ADMIN_PASSWORD,
-      moderatorPassword: MOD_PASSWORD,
-      triagePassword: TRIAGE_PASSWORD,
       feedGenDid: 'did:example:feedGen',
       rateLimitsEnabled: false,
     })
@@ -178,22 +175,19 @@ export class TestBsky {
     return new AtpAgent({ service: this.url })
   }
 
-  adminAuth(role: 'admin' | 'moderator' | 'triage' = 'admin'): string {
-    const password =
-      role === 'triage'
-        ? this.ctx.cfg.triagePassword
-        : role === 'moderator'
-        ? this.ctx.cfg.moderatorPassword
-        : this.ctx.cfg.adminPassword
+  adminAuth(): string {
     return (
       'Basic ' +
-      ui8.toString(ui8.fromString(`admin:${password}`, 'utf8'), 'base64pad')
+      ui8.toString(
+        ui8.fromString(`admin:${ADMIN_PASSWORD}`, 'utf8'),
+        'base64pad',
+      )
     )
   }
 
-  adminAuthHeaders(role?: 'admin' | 'moderator' | 'triage') {
+  adminAuthHeaders() {
     return {
-      authorization: this.adminAuth(role),
+      authorization: this.adminAuth(),
     }
   }
 

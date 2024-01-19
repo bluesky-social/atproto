@@ -4,7 +4,6 @@ import { AppBskyFeedGetPostThread } from '@atproto/api'
 import { Headers } from '@atproto/xrpc'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru } from '../../../proxy'
 import {
   ThreadViewPost,
   isThreadViewPost,
@@ -25,17 +24,16 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
-    auth: ctx.authVerifier.accessOrRole,
+    auth: ctx.authVerifier.access,
     handler: async ({ req, params, auth }) => {
-      const requester =
-        auth.credentials.type === 'access' ? auth.credentials.did : null
+      const requester = auth.credentials.did
+      auth.credentials.type === 'access' ? auth.credentials.did : null
 
-      if (!requester) {
+      if (req.headers['atproto-forward']) {
         const res = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
           params,
-          authPassthru(req),
+          await ctx.moderationAuthHeaders(requester, req),
         )
-
         return {
           encoding: 'application/json',
           body: res.data,

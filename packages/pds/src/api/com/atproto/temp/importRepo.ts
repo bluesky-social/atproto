@@ -24,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
     opts: {
       blobLimit: 5 * 1024 * 1024 * 1024, // 5GB
     },
-    auth: ctx.authVerifier.role,
+    auth: ctx.authVerifier.adminToken,
     handler: async ({ params, input, req }) => {
       const { did } = params
       const outBuffer = new AsyncBuffer<string>()

@@ -1,14 +1,13 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRepo({
-    auth: ctx.authVerifier.role,
-    handler: async ({ req, params }) => {
+    auth: ctx.authVerifier.access,
+    handler: async ({ req, params, auth }) => {
       const res = await ctx.moderationAgent.com.atproto.admin.getRepo(
         params,
-        authPassthru(req),
+        await ctx.moderationAuthHeaders(auth.credentials.did, req),
       )
       return {
         encoding: 'application/json',

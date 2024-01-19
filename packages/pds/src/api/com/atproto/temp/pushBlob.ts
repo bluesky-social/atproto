@@ -3,7 +3,7 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.temp.pushBlob({
-    auth: ctx.authVerifier.role,
+    auth: ctx.authVerifier.adminToken,
     handler: async ({ params, input }) => {
       const { did } = params
 

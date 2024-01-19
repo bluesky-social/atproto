@@ -11,13 +11,25 @@ import { selectInviteCodesQb } from '../../../../account-manager/helpers/invite'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getInviteCodes({
-    auth: ctx.authVerifier.role,
-    handler: async ({ params }) => {
+    auth: ctx.authVerifier.accessOrModerator,
+    handler: async ({ params, auth, req }) => {
       if (ctx.cfg.entryway) {
         throw new InvalidRequestError(
           'Account invites are managed by the entryway service',
         )
       }
+      if (auth.credentials.type === 'access') {
+        const res =
+          await ctx.moderationAgent.api.com.atproto.admin.getInviteCodes(
+            params,
+            await ctx.moderationAuthHeaders(auth.credentials.did, req),
+          )
+        return {
+          encoding: 'application/json',
+          body: res.data,
+        }
+      }
+
       const { sort, limit, cursor } = params
       const db = ctx.accountManager.db
       const ref = db.db.dynamic.ref
