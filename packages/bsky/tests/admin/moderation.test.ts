@@ -55,14 +55,14 @@ describe('moderation', () => {
       },
       {
         encoding: 'application/json',
-        headers: network.bsky.adminAuthHeaders('moderator'),
+        headers: network.bsky.adminAuthHeaders(),
       },
     )
     const res = await agent.api.com.atproto.admin.getSubjectStatus(
       {
         did: repoSubject.did,
       },
-      { headers: network.bsky.adminAuthHeaders('moderator') },
+      { headers: network.bsky.adminAuthHeaders() },
     )
     expect(res.data.subject.did).toEqual(sc.dids.bob)
     expect(res.data.takedown?.applied).toBe(true)
@@ -77,14 +77,14 @@ describe('moderation', () => {
       },
       {
         encoding: 'application/json',
-        headers: network.bsky.adminAuthHeaders('moderator'),
+        headers: network.bsky.adminAuthHeaders(),
       },
     )
     const res = await agent.api.com.atproto.admin.getSubjectStatus(
       {
         did: repoSubject.did,
       },
-      { headers: network.bsky.adminAuthHeaders('moderator') },
+      { headers: network.bsky.adminAuthHeaders() },
     )
     expect(res.data.subject.did).toEqual(sc.dids.bob)
     expect(res.data.takedown?.applied).toBe(false)
@@ -99,14 +99,14 @@ describe('moderation', () => {
       },
       {
         encoding: 'application/json',
-        headers: network.bsky.adminAuthHeaders('moderator'),
+        headers: network.bsky.adminAuthHeaders(),
       },
     )
     const res = await agent.api.com.atproto.admin.getSubjectStatus(
       {
         uri: recordSubject.uri,
       },
-      { headers: network.bsky.adminAuthHeaders('moderator') },
+      { headers: network.bsky.adminAuthHeaders() },
     )
     expect(res.data.subject.uri).toEqual(recordSubject.uri)
     expect(res.data.takedown?.applied).toBe(true)
@@ -121,46 +121,18 @@ describe('moderation', () => {
       },
       {
         encoding: 'application/json',
-        headers: network.bsky.adminAuthHeaders('moderator'),
+        headers: network.bsky.adminAuthHeaders(),
       },
     )
     const res = await agent.api.com.atproto.admin.getSubjectStatus(
       {
         uri: recordSubject.uri,
       },
-      { headers: network.bsky.adminAuthHeaders('moderator') },
+      { headers: network.bsky.adminAuthHeaders() },
     )
     expect(res.data.subject.uri).toEqual(recordSubject.uri)
     expect(res.data.takedown?.applied).toBe(false)
     expect(res.data.takedown?.ref).toBeUndefined()
-  })
-
-  it('does not allow non-full moderators to update subject state', async () => {
-    const subject = {
-      $type: 'com.atproto.admin.defs#repoRef',
-      did: sc.dids.bob,
-    }
-    const attemptTakedownTriage =
-      agent.api.com.atproto.admin.updateSubjectStatus(
-        {
-          subject,
-          takedown: { applied: true },
-        },
-        {
-          encoding: 'application/json',
-          headers: network.bsky.adminAuthHeaders('triage'),
-        },
-      )
-    await expect(attemptTakedownTriage).rejects.toThrow(
-      'Must be a full moderator to update subject state',
-    )
-    const res = await agent.api.com.atproto.admin.getSubjectStatus(
-      {
-        did: subject.did,
-      },
-      { headers: network.bsky.adminAuthHeaders('moderator') },
-    )
-    expect(res.data.takedown?.applied).toBe(false)
   })
 
   describe('blob takedown', () => {
@@ -194,7 +166,7 @@ describe('moderation', () => {
           did: blobSubject.did,
           blob: blobSubject.cid,
         },
-        { headers: network.bsky.adminAuthHeaders('moderator') },
+        { headers: network.bsky.adminAuthHeaders() },
       )
       expect(res.data.subject.did).toEqual(blobSubject.did)
       expect(res.data.subject.cid).toEqual(blobSubject.cid)
