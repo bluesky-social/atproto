@@ -20,6 +20,7 @@ export class TwilioClient {
   }
 
   ensureValidPhoneNumber(phoneNumber: string) {
+    // https://www.twilio.com/docs/glossary/what-e164#regex-matching-for-e164
     const valid = /^\+[1-9]\d{1,14}$/.test(phoneNumber)
     if (!valid) {
       throw new InvalidRequestError('Invalid phone number')
