@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.9.1
+
+### Patch Changes
+
+- [#2062](https://github.com/bluesky-social/atproto/pull/2062) [`c6fc73ae`](https://github.com/bluesky-social/atproto/commit/c6fc73aee6c245d12f876abd11889b8dbd0ce2ed) Thanks [@dholms](https://github.com/dholms)! - Directly pass create account params in api agent
+
 ## 0.9.0
 
 ### Minor Changes
