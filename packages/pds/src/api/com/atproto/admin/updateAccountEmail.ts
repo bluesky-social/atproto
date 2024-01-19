@@ -5,7 +5,7 @@ import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateAccountEmail({
-    auth: ctx.authVerifier.moderator,
+    auth: ctx.authVerifier.adminToken,
     handler: async ({ input, req }) => {
       const account = await ctx.accountManager.getAccount(input.body.account)
       if (!account) {

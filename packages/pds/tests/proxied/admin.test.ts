@@ -328,4 +328,65 @@ describe('proxies admin requests', () => {
       expect.objectContaining({ uri: post.ref.uriStr, cid: post.ref.cidStr }),
     )
   })
+
+  it('can view takendown content', async () => {
+    // takedown repo
+    await agent.api.com.atproto.admin.emitModerationEvent(
+      {
+        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.alice,
+        },
+        createdBy: 'did:example:admin',
+      },
+      {
+        headers: sc.getHeaders(moderator),
+        encoding: 'application/json',
+      },
+    )
+    await network.processAll()
+    // fails as a non-moderator
+    const tryGetProfileAppview = agent.api.app.bsky.actor.getProfile(
+      { actor: sc.dids.alice },
+      {
+        headers: {
+          ...sc.getHeaders(sc.dids.carol),
+          'atproto-forward': network.ozone.ctx.cfg.service.did,
+        },
+      },
+    )
+    await expect(tryGetProfileAppview).rejects.toThrow(
+      'not a moderator account',
+    )
+    const res = await agent.api.app.bsky.actor.getProfile(
+      { actor: sc.dids.alice },
+      {
+        headers: {
+          ...sc.getHeaders(moderator),
+          'atproto-forward': network.ozone.ctx.cfg.service.did,
+        },
+      },
+    )
+    expect(res.data.did).toEqual(sc.dids.alice)
+
+    // reverse action
+    await agent.api.com.atproto.admin.emitModerationEvent(
+      {
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.alice,
+        },
+        event: {
+          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+        },
+        createdBy: 'did:example:admin',
+      },
+      {
+        headers: sc.getHeaders(moderator),
+        encoding: 'application/json',
+      },
+    )
+    await network.processAll()
+  })
 })

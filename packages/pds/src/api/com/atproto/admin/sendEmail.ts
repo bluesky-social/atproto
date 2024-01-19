@@ -5,8 +5,28 @@ import { authPassthru, resultPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.sendEmail({
-    auth: ctx.authVerifier.moderator,
-    handler: async ({ req, input }) => {
+    auth: ctx.authVerifier.accessOrModerator,
+    handler: async ({ req, input, auth }) => {
+      if (ctx.entrywayAgent) {
+        return resultPassthru(
+          await ctx.entrywayAgent.com.atproto.admin.sendEmail(
+            input.body,
+            authPassthru(req, true),
+          ),
+        )
+      }
+      if (auth.credentials.type === 'access') {
+        return resultPassthru(
+          await ctx.moderationAgent.api.com.atproto.admin.sendEmail(
+            input.body,
+            {
+              ...(await ctx.moderationAuthHeaders(auth.credentials.did, req)),
+              encoding: 'application/json',
+            },
+          ),
+        )
+      }
+
       const {
         content,
         recipientDid,
@@ -18,16 +38,6 @@ export default function (server: Server, ctx: AppContext) {
       if (!account) {
         throw new InvalidRequestError('Recipient not found')
       }
-
-      if (ctx.entrywayAgent) {
-        return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.admin.sendEmail(
-            input.body,
-            authPassthru(req, true),
-          ),
-        )
-      }
-
       if (!account.email) {
         throw new InvalidRequestError('account does not have an email address')
       }

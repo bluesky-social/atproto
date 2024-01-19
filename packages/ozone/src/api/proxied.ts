@@ -1,7 +1,72 @@
 import { Server } from '../lexicon'
 import AppContext from '../context'
+import { AuthRequiredError } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
+  server.com.atproto.admin.disableAccountInvites({
+    auth: ctx.authVerifier.admin,
+    handler: async ({ input, auth }) => {
+      if (!auth.credentials.isModerator) {
+        throw new AuthRequiredError('not a moderator account')
+      }
+      await ctx.appviewAgent.api.com.atproto.admin.disableAccountInvites(
+        input.body,
+        {
+          ...(await ctx.appviewAuth()),
+          encoding: 'application/json',
+        },
+      )
+    },
+  })
+
+  server.com.atproto.admin.disableAccountInvites({
+    auth: ctx.authVerifier.admin,
+    handler: async ({ input, auth }) => {
+      if (!auth.credentials.isModerator) {
+        throw new AuthRequiredError('not a moderator account')
+      }
+      await ctx.appviewAgent.api.com.atproto.admin.disableAccountInvites(
+        input.body,
+        {
+          ...(await ctx.appviewAuth()),
+          encoding: 'application/json',
+        },
+      )
+    },
+  })
+
+  server.com.atproto.admin.disableAccountInvites({
+    auth: ctx.authVerifier.admin,
+    handler: async ({ input, auth }) => {
+      if (!auth.credentials.isModerator) {
+        throw new AuthRequiredError('not a moderator account')
+      }
+      await ctx.appviewAgent.api.com.atproto.admin.disableAccountInvites(
+        input.body,
+        {
+          ...(await ctx.appviewAuth()),
+          encoding: 'application/json',
+        },
+      )
+    },
+  })
+
+  server.com.atproto.admin.disableAccountInvites({
+    auth: ctx.authVerifier.admin,
+    handler: async ({ input, auth }) => {
+      if (!auth.credentials.isModerator) {
+        throw new AuthRequiredError('not a moderator account')
+      }
+      await ctx.appviewAgent.api.com.atproto.admin.disableAccountInvites(
+        input.body,
+        {
+          ...(await ctx.appviewAuth()),
+          encoding: 'application/json',
+        },
+      )
+    },
+  })
+
   server.app.bsky.actor.getProfile({
     auth: ctx.authVerifier.admin,
     handler: async (request) => {

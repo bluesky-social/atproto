@@ -6,7 +6,7 @@ import { httpLogger } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.updateAccountHandle({
-    auth: ctx.authVerifier.moderator,
+    auth: ctx.authVerifier.adminToken,
     handler: async ({ input }) => {
       const { did } = input.body
       const handle = await normalizeAndValidateHandle({
