@@ -92,7 +92,6 @@ export default function (server: Server, ctx: AppContext) {
 
         if (isLabelEvent) {
           await moderationTxn.formatAndCreateLabels(
-            ctx.cfg.service.did,
             result.subjectUri ?? result.subjectDid,
             result.subjectCid,
             {
