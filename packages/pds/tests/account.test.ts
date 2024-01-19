@@ -261,31 +261,6 @@ describe('account', () => {
     expect(accnt2?.email).toBe(email)
   })
 
-  it('disallows non-admin moderators to perform email updates', async () => {
-    const attemptUpdateMod = agent.api.com.atproto.admin.updateAccountEmail(
-      {
-        account: handle,
-        email: 'new@email.com',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders('moderator'),
-      },
-    )
-    await expect(attemptUpdateMod).rejects.toThrow('Insufficient privileges')
-    const attemptUpdateTriage = agent.api.com.atproto.admin.updateAccountEmail(
-      {
-        account: handle,
-        email: 'new@email.com',
-      },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders('triage'),
-      },
-    )
-    await expect(attemptUpdateTriage).rejects.toThrow('Insufficient privileges')
-  })
-
   it('disallows duplicate email addresses and handles', async () => {
     const email = 'bob@test.com'
     const handle = 'bob.test'

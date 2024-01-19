@@ -34,7 +34,7 @@ Array [
     "event": Object {
       "$type": "com.atproto.admin.defs#modEventAcknowledge",
     },
-    "id": 7,
+    "id": 6,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -51,7 +51,7 @@ Array [
       "comment": "impersonation",
       "reportType": "com.atproto.moderation.defs#reasonOther",
     },
-    "id": 5,
+    "id": 4,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -67,7 +67,7 @@ Array [
       "$type": "com.atproto.admin.defs#modEventReport",
       "reportType": "com.atproto.moderation.defs#reasonSpam",
     },
-    "id": 4,
+    "id": 3,
     "subject": Object {
       "$type": "com.atproto.admin.defs#repoRef",
       "did": "user(0)",
@@ -184,7 +184,7 @@ Array [
     "event": Object {
       "$type": "com.atproto.admin.defs#modEventAcknowledge",
     },
-    "id": 6,
+    "id": 5,
     "subject": Object {
       "$type": "com.atproto.repo.strongRef",
       "cid": "cids(0)",
@@ -244,11 +244,15 @@ Object {
         },
         Object {
           "usedAt": "1970-01-01T00:00:00.000Z",
+          "usedBy": "user(3)",
+        },
+        Object {
+          "usedAt": "1970-01-01T00:00:00.000Z",
           "usedBy": "user(0)",
         },
         Object {
           "usedAt": "1970-01-01T00:00:00.000Z",
-          "usedBy": "user(3)",
+          "usedBy": "user(4)",
         },
       ],
     },
@@ -368,7 +372,7 @@ Object {
   "event": Object {
     "$type": "com.atproto.admin.defs#modEventAcknowledge",
   },
-  "id": 6,
+  "id": 5,
   "subject": Object {
     "$type": "com.atproto.repo.strongRef",
     "cid": "cids(0)",
@@ -385,7 +389,7 @@ Object {
   "event": Object {
     "$type": "com.atproto.admin.defs#modEventAcknowledge",
   },
-  "id": 7,
+  "id": 6,
   "subject": Object {
     "$type": "com.atproto.admin.defs#repoRef",
     "did": "user(0)",
