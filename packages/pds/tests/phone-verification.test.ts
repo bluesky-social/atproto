@@ -155,8 +155,13 @@ describe('phone verification', () => {
   })
 
   it('does not allow invalidly formatted phone numbers', async () => {
-    const eveNumber = '+1-444-444-4444'
-    expect(() => ctx.twilio?.ensureValidPhoneNumber(eveNumber)).toThrow(
+    expect(() => ctx.twilio?.ensureValidPhoneNumber('+1-444-444-4444')).toThrow(
+      'Invalid phone number',
+    )
+    expect(() => ctx.twilio?.ensureValidPhoneNumber('1-444-444-4444')).toThrow(
+      'Invalid phone number',
+    )
+    expect(() => ctx.twilio?.ensureValidPhoneNumber('444-444-4444')).toThrow(
       'Invalid phone number',
     )
   })
