@@ -50,32 +50,22 @@
       "properties": {
         "did": { "type": "string", "format": "did" },
         "handle": { "type": "string", "format": "handle" },
-        "blocks": {
+        "blocking": {
           "type": "string",
           "format": "at-uri",
-          "description": "if the actor blocks this DID, this is the AT-URI of the block record"
+          "description": "if the actor blocks this DID, this is the AT-URI of the block record or mod list record"
         },
-        "blocks_via_list": {
+        "blockedBy": {
           "type": "string",
           "format": "at-uri",
-          "description": "if the actor blocks this DID, because of a mod list, this is the AT-URI of the mod list record"
+          "description": "if the actor is blocked by this DID, this is the AT-URI of the block record or mod list record"
         },
-        "blocked_by": {
-          "type": "string",
-          "format": "at-uri",
-          "description": "if the actor is blocked by this DID, this is the AT-URI of the block record"
-        },
-        "blocked_by_via_list": {
-          "type": "string",
-          "format": "at-uri",
-          "description": "if the actor is blocked by this DID, because of a mod list, this is the AT-URI of the mod list record"
-        },
-        "follows": {
+        "following": {
           "type": "string",
           "format": "at-uri",
           "description": "if the actor follows this DID, this is the AT-URI of the follow record"
         },
-        "followed_by": {
+        "followedBy": {
           "type": "string",
           "format": "at-uri",
           "description": "if the actor is followed by this DID, contains the AT-URI of the follow record"
