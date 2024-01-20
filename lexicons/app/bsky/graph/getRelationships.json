@@ -12,6 +12,7 @@
           "actor": { "type": "string", "format": "at-identifier" },
           "others": {
             "type": "array",
+            "maxLength": 30,
             "items": {
               "type": "string",
               "format": "at-identifier"
