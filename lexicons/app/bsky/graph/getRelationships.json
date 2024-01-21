@@ -49,17 +49,6 @@
       "required": ["did"],
       "properties": {
         "did": { "type": "string", "format": "did" },
-        "handle": { "type": "string", "format": "handle" },
-        "blocking": {
-          "type": "string",
-          "format": "at-uri",
-          "description": "if the actor blocks this DID, this is the AT-URI of the block record or mod list record"
-        },
-        "blockedBy": {
-          "type": "string",
-          "format": "at-uri",
-          "description": "if the actor is blocked by this DID, this is the AT-URI of the block record or mod list record"
-        },
         "following": {
           "type": "string",
           "format": "at-uri",
