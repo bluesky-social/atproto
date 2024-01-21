@@ -414,6 +414,9 @@ importers:
       '@atproto/bsky':
         specifier: workspace:^
         version: link:../bsky
+      '@atproto/bsync':
+        specifier: workspace:^
+        version: link:../bsync
       '@atproto/common-web':
         specifier: workspace:^
         version: link:../common-web
