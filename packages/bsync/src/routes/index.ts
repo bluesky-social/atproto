@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
 import { ConnectRouter } from '@connectrpc/connect'
-import { Service } from '../gen/bsync_connect'
+import { Service } from '../proto/bsync_connect'
 import AppContext from '../context'
 import addMuteOperation from './add-mute-operation'
 import scanMuteOperations from './scan-mute-operations'

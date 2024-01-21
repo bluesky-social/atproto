@@ -6,8 +6,8 @@ import {
   ensureValidDid,
 } from '@atproto/syntax'
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../gen/bsync_connect'
-import { AddMuteOperationResponse, MuteOperation_Type } from '../gen/bsync_pb'
+import { Service } from '../proto/bsync_connect'
+import { AddMuteOperationResponse, MuteOperation_Type } from '../proto/bsync_pb'
 import AppContext from '../context'
 import { createMuteOpChannel } from '../db/schema/mute_op'
 import { authWithApiKey } from './auth'
