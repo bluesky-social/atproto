@@ -34,6 +34,7 @@ import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { Redis } from './redis'
 import { AuthVerifier } from './auth-verifier'
+import { authWithApiKey, createBsyncClient } from './bsync'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
@@ -135,6 +136,17 @@ export class BskyAppView {
       triagePass: config.triagePassword,
     })
 
+    const bsyncClient = config.bsyncUrl
+      ? createBsyncClient({
+          baseUrl: config.bsyncUrl,
+          httpVersion: config.bsyncHttpVersion ?? '2',
+          nodeOptions: { rejectUnauthorized: !config.bsyncIgnoreBadTls },
+          interceptors: config.bsyncApiKey
+            ? [authWithApiKey(config.bsyncApiKey)]
+            : [],
+        })
+      : undefined
+
     const ctx = new AppContext({
       db,
       cfg: config,
@@ -146,6 +158,7 @@ export class BskyAppView {
       redis,
       backgroundQueue,
       searchAgent,
+      bsyncClient,
       algos,
       notifServer,
       authVerifier,
