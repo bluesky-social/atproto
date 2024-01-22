@@ -40,6 +40,7 @@ describe('moderation', () => {
   let network: TestNetwork
   let ozone: TestOzone
   let agent: AtpAgent
+  let bskyAgent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
 
@@ -139,12 +140,23 @@ describe('moderation', () => {
     return data
   }
 
+  const getLabel = async (uri: string, val: string, neg = false) => {
+    return ozone.ctx.db.db
+      .selectFrom('label')
+      .selectAll()
+      .where('uri', '=', uri)
+      .where('val', '=', val)
+      .where('neg', '=', neg)
+      .executeTakeFirst()
+  }
+
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_moderation',
     })
     ozone = network.ozone
     agent = network.ozone.getClient()
+    bskyAgent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
@@ -620,34 +632,56 @@ describe('moderation', () => {
       ).rejects.toThrow('Subject is not taken down')
     })
 
-    it('fans out repo takedowns to pds', async () => {
+    it('fans out repo takedowns', async () => {
       await performTakedown({
         account: sc.dids.bob,
       })
       await ozone.processAll()
 
-      const res1 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
+      const pdsRes1 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         {
           did: sc.dids.bob,
         },
         { headers: network.pds.adminAuthHeaders() },
       )
-      expect(res1.data.takedown?.applied).toBe(true)
+      expect(pdsRes1.data.takedown?.applied).toBe(true)
+
+      const bskyRes1 = await bskyAgent.api.com.atproto.admin.getSubjectStatus(
+        {
+          did: sc.dids.bob,
+        },
+        { headers: network.pds.adminAuthHeaders() },
+      )
+      expect(bskyRes1.data.takedown?.applied).toBe(true)
+
+      const purgeLabel1 = await getLabel(sc.dids.bob, '!purge')
+      expect(purgeLabel1).toBeDefined()
 
       // cleanup
       await performReverseTakedown({ account: sc.dids.bob })
       await ozone.processAll()
 
-      const res2 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
+      const pdsRes2 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         {
           did: sc.dids.bob,
         },
         { headers: network.pds.adminAuthHeaders() },
       )
-      expect(res2.data.takedown?.applied).toBe(false)
+      expect(pdsRes2.data.takedown?.applied).toBe(false)
+
+      const bskyRes2 = await bskyAgent.api.com.atproto.admin.getSubjectStatus(
+        {
+          did: sc.dids.bob,
+        },
+        { headers: network.bsky.adminAuthHeaders() },
+      )
+      expect(bskyRes2.data.takedown?.applied).toBe(false)
+
+      const purgeLabel2 = await getLabel(sc.dids.bob, '!purge')
+      expect(purgeLabel2).toBeUndefined()
     })
 
-    it('fans out record takedowns to pds', async () => {
+    it('fans out record takedowns', async () => {
       const post = sc.posts[sc.dids.bob][0]
       const uri = post.ref.uriStr
       const cid = post.ref.cidStr
@@ -655,21 +689,39 @@ describe('moderation', () => {
         content: { uri, cid },
       })
       await ozone.processAll()
-      const res1 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
+
+      const pdsRes1 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         { uri },
         { headers: network.pds.adminAuthHeaders() },
       )
-      expect(res1.data.takedown?.applied).toBe(true)
+      expect(pdsRes1.data.takedown?.applied).toBe(true)
+
+      const bskyRes1 = await bskyAgent.api.com.atproto.admin.getSubjectStatus(
+        { uri },
+        { headers: network.bsky.adminAuthHeaders() },
+      )
+      expect(bskyRes1.data.takedown?.applied).toBe(true)
+
+      const purgeLabel1 = await getLabel(uri, '!purge')
+      expect(purgeLabel1).toBeDefined()
 
       // cleanup
       await performReverseTakedown({ content: { uri, cid } })
       await ozone.processAll()
 
-      const res2 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
+      const pdsRes2 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         { uri },
         { headers: network.pds.adminAuthHeaders() },
       )
-      expect(res2.data.takedown?.applied).toBe(false)
+      expect(pdsRes2.data.takedown?.applied).toBe(false)
+      const bskyRes2 = await bskyAgent.api.com.atproto.admin.getSubjectStatus(
+        { uri },
+        { headers: network.bsky.adminAuthHeaders() },
+      )
+      expect(bskyRes2.data.takedown?.applied).toBe(false)
+
+      const purgeLabel2 = await getLabel(uri, '!purge')
+      expect(purgeLabel2).toBeUndefined()
     })
 
     it('allows full moderators to takedown.', async () => {
@@ -720,6 +772,7 @@ describe('moderation', () => {
         'Must be a full moderator to perform an account takedown',
       )
     })
+
     it('automatically reverses actions marked with duration', async () => {
       await createReport({
         reasonType: REASONSPAM,
@@ -912,6 +965,11 @@ describe('moderation', () => {
       expect(res.data.takedown?.applied).toBe(true)
     })
 
+    it('creates a blob purge label', async () => {
+      const label = await getLabel(post.ref.uriStr, '!blob-purge')
+      expect(label).toBeDefined()
+    })
+
     it('restores blob when action is reversed.', async () => {
       await performReverseTakedown({
         content: {
@@ -944,6 +1002,11 @@ describe('moderation', () => {
         { headers: network.pds.adminAuthHeaders() },
       )
       expect(res.data.takedown?.applied).toBe(false)
+    })
+
+    it('negates blob purge label on reversal', async () => {
+      const label = await getLabel(post.ref.uriStr, '!blob-purge')
+      expect(label).toBeUndefined()
     })
   })
 })
