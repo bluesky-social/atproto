@@ -2,6 +2,7 @@ import assert from 'node:assert'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { MuteOperation_Type } from '../../../../proto/bsync_pb'
+import { BsyncClient } from '../../../../bsync'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.unmuteActorList({
@@ -11,24 +12,32 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.iss
       const db = ctx.db.getPrimary()
 
-      if (!ctx.cfg.bsyncOnlyMutes) {
+      const unmuteActorList = async () => {
         await ctx.services.graph(db).unmuteActorList({
           list,
           mutedByDid: requester,
         })
-      } else {
-        assert(ctx.bsyncClient)
       }
 
-      if (ctx.bsyncClient) {
-        try {
-          await ctx.bsyncClient.addMuteOperation({
-            type: MuteOperation_Type.REMOVE,
-            actorDid: requester,
-            subject: list,
-          })
-        } catch (err) {
-          req.log.warn(err, 'failed to sync mute op to bsync')
+      const addBsyncMuteOp = async (bsyncClient: BsyncClient) => {
+        await bsyncClient.addMuteOperation({
+          type: MuteOperation_Type.REMOVE,
+          actorDid: requester,
+          subject: list,
+        })
+      }
+
+      if (ctx.cfg.bsyncOnlyMutes) {
+        assert(ctx.bsyncClient)
+        await addBsyncMuteOp(ctx.bsyncClient)
+      } else {
+        await unmuteActorList()
+        if (ctx.bsyncClient) {
+          try {
+            await addBsyncMuteOp(ctx.bsyncClient)
+          } catch (err) {
+            req.log.warn(err, 'failed to sync mute op to bsync')
+          }
         }
       }
     },

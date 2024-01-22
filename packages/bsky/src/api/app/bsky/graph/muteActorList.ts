@@ -5,6 +5,7 @@ import * as lex from '../../../../lexicon/lexicons'
 import AppContext from '../../../../context'
 import { AtUri } from '@atproto/syntax'
 import { MuteOperation_Type } from '../../../../proto/bsync_pb'
+import { BsyncClient } from '../../../../bsync'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.muteActorList({
@@ -21,24 +22,32 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Invalid collection: expected: ${collId}`)
       }
 
-      if (!ctx.cfg.bsyncOnlyMutes) {
+      const muteActorList = async () => {
         await ctx.services.graph(db).muteActorList({
           list,
           mutedByDid: requester,
         })
-      } else {
-        assert(ctx.bsyncClient)
       }
 
-      if (ctx.bsyncClient) {
-        try {
-          await ctx.bsyncClient.addMuteOperation({
-            type: MuteOperation_Type.ADD,
-            actorDid: requester,
-            subject: list,
-          })
-        } catch (err) {
-          req.log.warn(err, 'failed to sync mute op to bsync')
+      const addBsyncMuteOp = async (bsyncClient: BsyncClient) => {
+        await bsyncClient.addMuteOperation({
+          type: MuteOperation_Type.ADD,
+          actorDid: requester,
+          subject: list,
+        })
+      }
+
+      if (ctx.cfg.bsyncOnlyMutes) {
+        assert(ctx.bsyncClient)
+        await addBsyncMuteOp(ctx.bsyncClient)
+      } else {
+        await muteActorList()
+        if (ctx.bsyncClient) {
+          try {
+            await addBsyncMuteOp(ctx.bsyncClient)
+          } catch (err) {
+            req.log.warn(err, 'failed to sync mute op to bsync')
+          }
         }
       }
     },
