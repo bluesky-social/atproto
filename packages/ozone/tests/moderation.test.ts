@@ -444,12 +444,9 @@ describe('moderation', () => {
         cid: post.cidStr,
       }
       const modService = ctx.modService(ctx.db)
-      await modService.formatAndCreateLabels(
-        ctx.cfg.service.did,
-        post.uriStr,
-        post.cidStr,
-        { create: ['kittens'] },
-      )
+      await modService.formatAndCreateLabels(post.uriStr, post.cidStr, {
+        create: ['kittens'],
+      })
       await emitLabelEvent({
         negateLabelVals: ['kittens'],
         createLabelVals: [],
@@ -464,12 +461,9 @@ describe('moderation', () => {
       })
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['kittens'])
       // Cleanup
-      await modService.formatAndCreateLabels(
-        ctx.cfg.service.did,
-        post.uriStr,
-        post.cidStr,
-        { negate: ['kittens'] },
-      )
+      await modService.formatAndCreateLabels(post.uriStr, post.cidStr, {
+        negate: ['kittens'],
+      })
     })
 
     it('no-ops when negating an already-negated label and reverses.', async () => {
@@ -497,12 +491,9 @@ describe('moderation', () => {
       })
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['bears'])
       // Cleanup
-      await modService.formatAndCreateLabels(
-        ctx.cfg.service.did,
-        post.uriStr,
-        post.cidStr,
-        { negate: ['bears'] },
-      )
+      await modService.formatAndCreateLabels(post.uriStr, post.cidStr, {
+        negate: ['bears'],
+      })
     })
 
     it('creates non-existing labels and reverses.', async () => {
@@ -559,12 +550,9 @@ describe('moderation', () => {
     it('creates and negates labels on a repo and reverses.', async () => {
       const { ctx } = ozone
       const modService = ctx.modService(ctx.db)
-      await modService.formatAndCreateLabels(
-        ctx.cfg.service.did,
-        sc.dids.bob,
-        null,
-        { create: ['kittens'] },
-      )
+      await modService.formatAndCreateLabels(sc.dids.bob, null, {
+        create: ['kittens'],
+      })
       await emitLabelEvent({
         createLabelVals: ['puppies'],
         negateLabelVals: ['kittens'],
