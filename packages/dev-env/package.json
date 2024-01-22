@@ -27,6 +27,7 @@
   "dependencies": {
     "@atproto/api": "workspace:^",
     "@atproto/bsky": "workspace:^",
+    "@atproto/bsync": "workspace:^",
     "@atproto/common-web": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",

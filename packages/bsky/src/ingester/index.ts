@@ -5,7 +5,9 @@ import { Redis } from '../redis'
 import { IngesterConfig } from './config'
 import { IngesterContext } from './context'
 import { IngesterSubscription } from './subscription'
+import { authWithApiKey, createBsyncClient } from '../bsync'
 import { LabelSubscription } from './label-subscription'
+import { MuteSubscription } from './mute-subscription'
 
 export { IngesterConfig } from './config'
 export type { IngesterConfigValues } from './config'
@@ -27,14 +29,28 @@ export class BskyIngester {
     cfg: IngesterConfig
   }): BskyIngester {
     const { db, redis, cfg } = opts
+    const bsyncClient = cfg.bsyncUrl
+      ? createBsyncClient({
+          baseUrl: cfg.bsyncUrl,
+          httpVersion: cfg.bsyncHttpVersion ?? '2',
+          nodeOptions: { rejectUnauthorized: !cfg.bsyncIgnoreBadTls },
+          interceptors: cfg.bsyncApiKey
+            ? [authWithApiKey(cfg.bsyncApiKey)]
+            : [],
+        })
+      : undefined
     const labelSubscription = cfg.labelProvider
       ? new LabelSubscription(db, cfg.labelProvider)
+      : undefined
+    const muteSubscription = bsyncClient
+      ? new MuteSubscription(db, redis, bsyncClient)
       : undefined
     const ctx = new IngesterContext({
       db,
       redis,
       cfg,
       labelSubscription,
+      muteSubscription,
     })
     const sub = new IngesterSubscription(ctx, {
       service: cfg.repoProvider,
@@ -73,11 +89,13 @@ export class BskyIngester {
       )
     }, 500)
     await this.ctx.labelSubscription?.start()
+    await this.ctx.muteSubscription?.start()
     this.sub.run()
     return this
   }
 
   async destroy(opts?: { skipDb: boolean }): Promise<void> {
+    await this.ctx.muteSubscription?.destroy()
     await this.ctx.labelSubscription?.destroy()
     await this.sub.destroy()
     clearInterval(this.subStatsInterval)

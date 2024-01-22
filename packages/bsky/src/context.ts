@@ -13,6 +13,7 @@ import { MountedAlgos } from './feed-gen/types'
 import { NotificationServer } from './notifications'
 import { Redis } from './redis'
 import { AuthVerifier } from './auth-verifier'
+import { BsyncClient } from './bsync'
 
 export class AppContext {
   constructor(
@@ -27,6 +28,7 @@ export class AppContext {
       redis: Redis
       backgroundQueue: BackgroundQueue
       searchAgent?: AtpAgent
+      bsyncClient?: BsyncClient
       algos: MountedAlgos
       notifServer: NotificationServer
       authVerifier: AuthVerifier
@@ -75,6 +77,10 @@ export class AppContext {
 
   get searchAgent(): AtpAgent | undefined {
     return this.opts.searchAgent
+  }
+
+  get bsyncClient(): BsyncClient | undefined {
+    return this.opts.bsyncClient
   }
 
   get authVerifier(): AuthVerifier {
