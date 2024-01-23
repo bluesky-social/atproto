@@ -16,7 +16,7 @@ export type RecordInfo<T> = {
   record: T
   cid: string
   sortedAt: Date
-  takenDown: boolean
+  takedownRef: string | undefined
 }
 
 export const parseRecord = <T>(
@@ -30,7 +30,12 @@ export const parseRecord = <T>(
   const cid = entry.cid
   const sortedAt = entry.sortedAt?.toDate() ?? new Date(0)
   if (!record || !cid) return
-  return { record, cid, sortedAt, takenDown: entry.takenDown }
+  return {
+    record,
+    cid,
+    sortedAt,
+    takedownRef: entry.takedownRef || undefined,
+  }
 }
 
 // @NOTE not parsed into lex format, so will not match lexicon record types on CID and blob values.

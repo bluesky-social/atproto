@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
         const res = await ctx.dataplane.getBlobTakedown({
-          actorDid: did,
+          did,
           cid: blob,
         })
         body = {
@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
           },
           takedown: {
             applied: res.takenDown,
-            ref: res.takenDown ? 'TAKEDOWN' : undefined,
+            ref: res.takedownRef ? 'TAKEDOWN' : undefined,
           },
         }
       } else if (uri) {
@@ -41,8 +41,8 @@ export default function (server: Server, ctx: AppContext) {
               cid: res.cid,
             },
             takedown: {
-              applied: res.takenDown,
-              ref: res.takenDown ? 'TAKEDOWN' : undefined,
+              applied: !!res.takedownRef,
+              ref: res.takedownRef || undefined,
             },
           }
         }
@@ -55,8 +55,8 @@ export default function (server: Server, ctx: AppContext) {
               did: did,
             },
             takedown: {
-              applied: res.takendown,
-              ref: res.takendown ? 'TAKEDOWN' : undefined,
+              applied: !!res.takedownRef,
+              ref: res.takedownRef || undefined,
             },
           }
         }

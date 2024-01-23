@@ -3,70 +3,100 @@ import { Service } from '../../gen/bsky_connect'
 import { Database } from '../db'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
-  async getBlobTakedown(req) {
-    const { actorDid, cid } = req
+  async getActorTakedown(req) {
+    const { did } = req
     const res = await db.db
-      .selectFrom('blob_takedown')
-      .where('did', '=', actorDid)
-      .where('cid', '=', cid)
-      .selectAll()
+      .selectFrom('actor')
+      .where('did', '=', did)
+      .select('takedownRef')
       .executeTakeFirst()
     return {
-      takenDown: !!res,
+      takenDown: !!res?.takedownRef,
+      takedownRef: res?.takedownRef || undefined,
     }
   },
 
-  async updateTakedown(req) {
-    const { actorDid, recordUri, blobCid, takenDown } = req
-    if (actorDid && !blobCid) {
-      if (takenDown) {
-        await db.db
-          .updateTable('actor')
-          .set({ takedownRef: 'TAKEDOWN' })
-          .where('did', '=', actorDid)
-          .execute()
-      } else {
-        await db.db
-          .updateTable('actor')
-          .set({ takedownRef: null })
-          .where('did', '=', actorDid)
-          .execute()
-      }
+  async getBlobTakedown(req) {
+    const { did, cid } = req
+    const res = await db.db
+      .selectFrom('blob_takedown')
+      .where('did', '=', did)
+      .where('cid', '=', cid)
+      .select('takedownRef')
+      .executeTakeFirst()
+    return {
+      takenDown: !!res,
+      takedownRef: res?.takedownRef || undefined,
     }
+  },
 
-    if (actorDid && blobCid) {
-      if (takenDown) {
-        await db.db
-          .insertInto('blob_takedown')
-          .values({
-            did: actorDid,
-            cid: blobCid,
-            takedownRef: 'TAKEDOWN',
-          })
-          .execute()
-      } else {
-        await db.db
-          .deleteFrom('blob_takedown')
-          .where('did', '=', actorDid)
-          .where('cid', '=', blobCid)
-          .executeTakeFirst()
-      }
+  async getRecordTakedown(req) {
+    const { recordUri } = req
+    const res = await db.db
+      .selectFrom('record')
+      .where('uri', '=', recordUri)
+      .select('takedownRef')
+      .executeTakeFirst()
+    return {
+      takenDown: !!res?.takedownRef,
+      takedownRef: res?.takedownRef || undefined,
     }
+  },
 
-    if (recordUri) {
-      if (takenDown) {
-        await db.db
-          .updateTable('record')
-          .set({ takedownRef: 'TAKEDOWN' })
-          .where('uri', '=', recordUri)
-          .execute()
-      } else {
-        await db.db
-          .updateTable('record')
-          .set({ takedownRef: null })
-          .where('uri', '=', recordUri)
-          .execute()
-      }
-    }
+  async takedownActor(req) {
+    const { did, ref } = req
+    await db.db
+      .updateTable('actor')
+      .set({ takedownRef: ref || 'TAKEDOWN' })
+      .where('did', '=', did)
+      .execute()
+  },
+
+  async takedownBlob(req) {
+    const { did, cid, ref } = req
+    await db.db
+      .insertInto('blob_takedown')
+      .values({
+        did,
+        cid,
+        takedownRef: ref || 'TAKEDOWN',
+      })
+      .execute()
+  },
+
+  async takedownRecord(req) {
+    const { recordUri, ref } = req
+    await db.db
+      .updateTable('record')
+      .set({ takedownRef: ref || 'TAKEDOWN' })
+      .where('uri', '=', recordUri)
+      .execute()
+  },
+
+  async untakedownActor(req) {
+    const { did } = req
+    await db.db
+      .updateTable('actor')
+      .set({ takedownRef: null })
+      .where('did', '=', did)
+      .execute()
+  },
+
+  async untakedownBlob(req) {
+    const { did, cid } = req
+    await db.db
+      .deleteFrom('blob_takedown')
+      .where('did', '=', did)
+      .where('cid', '=', cid)
+      .executeTakeFirst()
+  },
+
+  async untakedownRecord(req) {
+    const { recordUri } = req
+    await db.db
+      .updateTable('record')
+      .set({ takedownRef: null })
+      .where('uri', '=', recordUri)
+      .execute()
   },
 })

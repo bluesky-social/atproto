@@ -45,6 +45,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
     const notifsRes = await builder.execute()
     const notifications = notifsRes.map((notif) => ({
+      recipientDid: actorDid,
       uri: notif.uri,
       reason: notif.reason,
       reasonSubject: notif.reasonSubject ?? undefined,

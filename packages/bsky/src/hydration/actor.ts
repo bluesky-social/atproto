@@ -7,8 +7,9 @@ export type Actor = {
   handle?: string
   profile?: ProfileRecord
   profileCid?: string
+  profileTakedownRef?: string
   sortedAt?: Date
-  takendown: boolean
+  takedownRef?: string
 }
 
 export type Actors = HydrationMap<Actor>
@@ -75,7 +76,11 @@ export class ActorHydrator {
     const res = await this.dataplane.getActors({ dids })
     return dids.reduce((acc, did, i) => {
       const actor = res.actors[i]
-      if (!actor.exists || (actor.takenDown && !includeTakedowns)) {
+      if (
+        !actor.exists ||
+        (actor.takenDown && !includeTakedowns) ||
+        !!actor.tombstonedAt
+      ) {
         return acc.set(did, null)
       }
       const profile =
@@ -87,8 +92,9 @@ export class ActorHydrator {
         handle: parseString(actor.handle),
         profile: parseRecordBytes<ProfileRecord>(profile?.record),
         profileCid: profile?.cid,
+        profileTakedownRef: profile?.takedownRef || undefined,
         sortedAt: profile?.sortedAt?.toDate(),
-        takendown: actor.takenDown ?? false,
+        takedownRef: actor.takedownRef || undefined,
       })
     }, new HydrationMap<Actor>())
   }

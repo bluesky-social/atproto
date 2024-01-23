@@ -111,9 +111,8 @@ describe('list feed views', () => {
   })
 
   it('blocks posts by actor takedown', async () => {
-    await network.bsky.ctx.dataplane.updateTakedown({
-      actorDid: bob,
-      takenDown: true,
+    await network.bsky.ctx.dataplane.takedownActor({
+      did: bob,
     })
 
     const res = await agent.api.app.bsky.feed.getListFeed({
@@ -123,17 +122,15 @@ describe('list feed views', () => {
     expect(hasBob).toBe(false)
 
     // Cleanup
-    await network.bsky.ctx.dataplane.updateTakedown({
-      actorDid: bob,
-      takenDown: false,
+    await network.bsky.ctx.dataplane.untakedownActor({
+      did: bob,
     })
   })
 
   it('blocks posts by record takedown.', async () => {
     const postRef = sc.replies[bob][0].ref // Post and reply parent
-    await network.bsky.ctx.dataplane.updateTakedown({
+    await network.bsky.ctx.dataplane.takedownRecord({
       recordUri: postRef.uriStr,
-      takenDown: true,
     })
 
     const res = await agent.api.app.bsky.feed.getListFeed({
@@ -145,9 +142,8 @@ describe('list feed views', () => {
     expect(hasPost).toBe(false)
 
     // Cleanup
-    await network.bsky.ctx.dataplane.updateTakedown({
+    await network.bsky.ctx.dataplane.untakedownRecord({
       recordUri: postRef.uriStr,
-      takenDown: false,
     })
   })
 })

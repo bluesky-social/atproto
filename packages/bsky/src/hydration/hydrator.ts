@@ -549,7 +549,7 @@ export class Hydrator {
         record: actor.profile,
         cid: actor.profileCid,
         sortedAt: actor.sortedAt ?? new Date(0), // @NOTE will be present since profile record is present
-        takenDown: actor.takendown,
+        takedownRef: actor.profileTakedownRef,
       }
     }
   }

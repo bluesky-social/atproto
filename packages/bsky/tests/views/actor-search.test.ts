@@ -237,9 +237,8 @@ describe.skip('pds actor search views', () => {
   })
 
   it('search blocks by actor takedown', async () => {
-    await network.bsky.server.ctx.dataplane.updateTakedown({
-      actorDid: sc.dids['cara-wiegand69.test'],
-      takenDown: true,
+    await network.bsky.server.ctx.dataplane.takedownActor({
+      did: sc.dids['cara-wiegand69.test'],
     })
     const result = await agent.api.app.bsky.actor.searchActorsTypeahead(
       { term: 'car' },

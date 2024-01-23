@@ -237,9 +237,8 @@ describe('notification views', () => {
     const postRef2 = sc.posts[sc.dids.dan][1].ref // Mention
     await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        network.bsky.ctx.dataplane.updateTakedown({
+        network.bsky.ctx.dataplane.takedownRecord({
           recordUri: postRef.uriStr,
-          takenDown: true,
         }),
       ),
     )
@@ -261,9 +260,8 @@ describe('notification views', () => {
     // Cleanup
     await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        network.bsky.ctx.dataplane.updateTakedown({
+        network.bsky.ctx.dataplane.untakedownRecord({
           recordUri: postRef.uriStr,
-          takenDown: false,
         }),
       ),
     )
