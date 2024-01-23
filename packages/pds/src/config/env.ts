@@ -54,7 +54,7 @@ export const readEnv = (): ServerEnvironment => {
     accountsPerPhoneNumber: envInt('PDS_ACCOUNTS_PER_PHONE_NUMBER'),
     twilioAccountSid: envStr('PDS_TWILIO_ACCOUNT_SID'),
     twilioAuthToken: envStr('PDS_TWILIO_AUTH_TOKEN'),
-    twilioServiceSid: envStr('TWILIO_SERVICE_SID'),
+    twilioServiceSid: envStr('PDS_TWILIO_SERVICE_SID'),
 
     // email
     emailSmtpUrl: envStr('PDS_EMAIL_SMTP_URL'),
