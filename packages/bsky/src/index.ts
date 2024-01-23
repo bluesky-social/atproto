@@ -29,7 +29,6 @@ import {
 } from './image/invalidator'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
-import { NotificationServer } from './notifications'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { Redis } from './redis'
@@ -114,7 +113,6 @@ export class BskyAppView {
 
     const backgroundQueue = new BackgroundQueue(db.getPrimary())
 
-    const notifServer = new NotificationServer(db.getPrimary())
     const searchAgent = config.searchEndpoint
       ? new AtpAgent({ service: config.searchEndpoint })
       : undefined
@@ -173,7 +171,6 @@ export class BskyAppView {
       bsyncClient,
       courierClient,
       algos,
-      notifServer,
       authVerifier,
     })
 

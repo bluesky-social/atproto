@@ -11,7 +11,7 @@ import { createServices } from './services'
 import { IndexerSubscription } from './subscription'
 import { AutoModerator } from '../auto-moderator'
 import { Redis } from '../redis'
-import { NotificationServer } from '../notifications'
+import { GorushNotificationService, NotificationServer } from '../notifications'
 import { CloseFn, createServer, startServer } from './server'
 
 export { IndexerConfig } from './config'
@@ -60,9 +60,14 @@ export class BskyIndexer {
       backgroundQueue,
     })
 
-    const notifServer = cfg.pushNotificationEndpoint
-      ? new NotificationServer(db, cfg.pushNotificationEndpoint)
-      : undefined
+    let notifServer: NotificationServer | undefined
+    if (cfg.pushNotificationEndpoint) {
+      notifServer = new GorushNotificationService(
+        db,
+        cfg.pushNotificationEndpoint,
+      )
+    }
+
     const services = createServices({
       idResolver,
       autoMod,

@@ -15,20 +15,18 @@ export default function (server: Server, ctx: AppContext) {
       if (serviceDid !== auth.credentials.aud) {
         throw new InvalidRequestError('Invalid serviceDid.')
       }
-      const { notifServer } = ctx
       if (platform !== 'ios' && platform !== 'android' && platform !== 'web') {
         throw new InvalidRequestError(
           'Unsupported platform: must be "ios", "android", or "web".',
         )
       }
 
+      const db = ctx.db.getPrimary()
+
       const registerDeviceWithAppview = async () => {
-        await notifServer.registerDeviceForPushNotifications(
-          did,
-          token,
-          platform as Platform,
-          appId,
-        )
+        await ctx.services
+          .actor(db)
+          .registerPushDeviceToken(did, token, platform as Platform, appId)
       }
 
       const registerDeviceWithCourier = async (

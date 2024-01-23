@@ -257,7 +257,7 @@ export class RecordProcessor<T, S> {
         const notifServer = this.notifServer
         sendOnCommit.push(async () => {
           try {
-            const preparedNotifs = await notifServer.prepareNotifsToSend(chunk)
+            const preparedNotifs = await notifServer.prepareNotifications(chunk)
             await notifServer.processNotifications(preparedNotifs)
           } catch (error) {
             dbLogger.error({ error }, 'error sending push notifications')

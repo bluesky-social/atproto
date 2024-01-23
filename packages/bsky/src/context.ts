@@ -32,7 +32,6 @@ export class AppContext {
       bsyncClient?: BsyncClient
       courierClient?: CourierClient
       algos: MountedAlgos
-      notifServer: NotificationServer
       authVerifier: AuthVerifier
     },
   ) {}
@@ -71,10 +70,6 @@ export class AppContext {
 
   get redis(): Redis {
     return this.opts.redis
-  }
-
-  get notifServer(): NotificationServer {
-    return this.opts.notifServer
   }
 
   get searchAgent(): AtpAgent | undefined {
