@@ -226,7 +226,7 @@ export class AppContext {
       })
     }
 
-    const signupLimiter = new SignupLimiter()
+    const signupLimiter = new SignupLimiter(db)
 
     const pdsAgents = new PdsAgents()
 
