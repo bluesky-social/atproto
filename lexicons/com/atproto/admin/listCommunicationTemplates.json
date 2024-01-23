@@ -1,0 +1,26 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.admin.listCommunicationTemplates",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get list of all communication templates.",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["communicationTemplates"],
+          "properties": {
+            "communicationTemplates": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "com.atproto.admin.defs#communicationTemplateView"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
