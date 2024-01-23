@@ -3,10 +3,14 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { GetActorFeedsRequest, GetActorFeedsResponse, GetActorFollowsActorsRequest, GetActorFollowsActorsResponse, GetActorLikesRequest, GetActorLikesResponse, GetActorListsRequest, GetActorListsResponse, GetActorMutesActorRequest, GetActorMutesActorResponse, GetActorMutesActorViaListRequest, GetActorMutesActorViaListResponse, GetActorRepostsRequest, GetActorRepostsResponse, GetActorsRequest, GetActorsResponse, GetAuthorFeedRequest, GetAuthorFeedResponse, GetBidirectionalBlockRequest, GetBidirectionalBlockResponse, GetBidirectionalBlockViaListRequest, GetBidirectionalBlockViaListResponse, GetBlobTakedownRequest, GetBlobTakedownResponse, GetBlockExistenceRequest, GetBlockExistenceResponse, GetBlocklistSubscriptionRequest, GetBlocklistSubscriptionResponse, GetBlocklistSubscriptionsRequest, GetBlocklistSubscriptionsResponse, GetBlockRecordsRequest, GetBlockRecordsResponse, GetBlocksRequest, GetBlocksResponse, GetCountsForUsersRequest, GetCountsForUsersResponse, GetDidsByHandlesRequest, GetDidsByHandlesResponse, GetFeedGeneratorRecordsRequest, GetFeedGeneratorRecordsResponse, GetFeedGeneratorStatusRequest, GetFeedGeneratorStatusResponse, GetFollowCountsRequest, GetFollowCountsResponse, GetFollowerCountsRequest, GetFollowerCountsResponse, GetFollowersRequest, GetFollowersResponse, GetFollowRecordsRequest, GetFollowRecordsResponse, GetFollowsRequest, GetFollowsResponse, GetFollowSuggestionsRequest, GetFollowSuggestionsResponse, GetInteractionCountsRequest, GetInteractionCountsResponse, GetLabelsRequest, GetLabelsResponse, GetLatestRevRequest, GetLatestRevResponse, GetLikeCountsRequest, GetLikeCountsResponse, GetLikeRecordsRequest, GetLikeRecordsResponse, GetLikesByActorAndSubjectsRequest, GetLikesByActorAndSubjectsResponse, GetLikesBySubjectRequest, GetLikesBySubjectResponse, GetListBlockRecordsRequest, GetListBlockRecordsResponse, GetListCountRequest, GetListCountResponse, GetListFeedRequest, GetListFeedResponse, GetListItemRecordsRequest, GetListItemRecordsResponse, GetListMembershipRequest, GetListMembershipResponse, GetListMembersRequest, GetListMembersResponse, GetListRecordsRequest, GetListRecordsResponse, GetMutelistSubscriptionRequest, GetMutelistSubscriptionResponse, GetMutelistSubscriptionsRequest, GetMutelistSubscriptionsResponse, GetMutesRequest, GetMutesResponse, GetNotificationSeenRequest, GetNotificationSeenResponse, GetNotificationsRequest, GetNotificationsResponse, GetPostCountsRequest, GetPostCountsResponse, GetPostRecordsRequest, GetPostRecordsResponse, GetPostReplyCountsRequest, GetPostReplyCountsResponse, GetProfileRecordsRequest, GetProfileRecordsResponse, GetRelationshipsRequest, GetRelationshipsResponse, GetRepostCountsRequest, GetRepostCountsResponse, GetRepostRecordsRequest, GetRepostRecordsResponse, GetRepostsByActorAndSubjectsRequest, GetRepostsByActorAndSubjectsResponse, GetRepostsBySubjectRequest, GetRepostsBySubjectResponse, GetSuggestedFeedsRequest, GetSuggestedFeedsResponse, GetThreadGateRecordsRequest, GetThreadGateRecordsResponse, GetThreadRequest, GetThreadResponse, GetTimelineRequest, GetTimelineResponse, GetUnreadNotificationCountRequest, GetUnreadNotificationCountResponse, MuteActorListRequest, MuteActorListResponse, MuteActorRequest, MuteActorResponse, PingRequest, PingResponse, SearchActorsRequest, SearchActorsResponse, SearchPostsRequest, SearchPostsResponse, UnmuteActorListRequest, UnmuteActorListResponse, UnmuteActorRequest, UnmuteActorResponse, UpdateNotificationSeenRequest, UpdateNotificationSeenResponse, UpdateTakedownRequest, UpdateTakedownResponse } from "./bsky_pb.ts";
+import { ClearActorMutelistSubscriptionsRequest, ClearActorMutelistSubscriptionsResponse, ClearActorMutesRequest, ClearActorMutesResponse, CreateActorMutelistSubscriptionRequest, CreateActorMutelistSubscriptionResponse, CreateActorMuteRequest, CreateActorMuteResponse, DeleteActorMutelistSubscriptionRequest, DeleteActorMutelistSubscriptionResponse, DeleteActorMuteRequest, DeleteActorMuteResponse, GetActorFeedsRequest, GetActorFeedsResponse, GetActorFollowsActorsRequest, GetActorFollowsActorsResponse, GetActorLikesRequest, GetActorLikesResponse, GetActorListsRequest, GetActorListsResponse, GetActorMutesActorRequest, GetActorMutesActorResponse, GetActorMutesActorViaListRequest, GetActorMutesActorViaListResponse, GetActorRepostsRequest, GetActorRepostsResponse, GetActorsRequest, GetActorsResponse, GetActorTakedownRequest, GetActorTakedownResponse, GetAuthorFeedRequest, GetAuthorFeedResponse, GetBidirectionalBlockRequest, GetBidirectionalBlockResponse, GetBidirectionalBlockViaListRequest, GetBidirectionalBlockViaListResponse, GetBlobTakedownRequest, GetBlobTakedownResponse, GetBlockExistenceRequest, GetBlockExistenceResponse, GetBlocklistSubscriptionRequest, GetBlocklistSubscriptionResponse, GetBlocklistSubscriptionsRequest, GetBlocklistSubscriptionsResponse, GetBlockRecordsRequest, GetBlockRecordsResponse, GetBlocksRequest, GetBlocksResponse, GetCountsForUsersRequest, GetCountsForUsersResponse, GetDidsByHandlesRequest, GetDidsByHandlesResponse, GetFeedGeneratorRecordsRequest, GetFeedGeneratorRecordsResponse, GetFeedGeneratorStatusRequest, GetFeedGeneratorStatusResponse, GetFollowersRequest, GetFollowersResponse, GetFollowRecordsRequest, GetFollowRecordsResponse, GetFollowsRequest, GetFollowsResponse, GetFollowSuggestionsRequest, GetFollowSuggestionsResponse, GetInteractionCountsRequest, GetInteractionCountsResponse, GetLabelsRequest, GetLabelsResponse, GetLatestRevRequest, GetLatestRevResponse, GetLikeRecordsRequest, GetLikeRecordsResponse, GetLikesByActorAndSubjectsRequest, GetLikesByActorAndSubjectsResponse, GetLikesBySubjectRequest, GetLikesBySubjectResponse, GetListBlockRecordsRequest, GetListBlockRecordsResponse, GetListCountRequest, GetListCountResponse, GetListFeedRequest, GetListFeedResponse, GetListItemRecordsRequest, GetListItemRecordsResponse, GetListMembershipRequest, GetListMembershipResponse, GetListMembersRequest, GetListMembersResponse, GetListRecordsRequest, GetListRecordsResponse, GetMutelistSubscriptionRequest, GetMutelistSubscriptionResponse, GetMutelistSubscriptionsRequest, GetMutelistSubscriptionsResponse, GetMutesRequest, GetMutesResponse, GetNotificationSeenRequest, GetNotificationSeenResponse, GetNotificationsRequest, GetNotificationsResponse, GetPostRecordsRequest, GetPostRecordsResponse, GetPostReplyCountsRequest, GetPostReplyCountsResponse, GetProfileRecordsRequest, GetProfileRecordsResponse, GetRecordTakedownRequest, GetRecordTakedownResponse, GetRelationshipsRequest, GetRelationshipsResponse, GetRepostRecordsRequest, GetRepostRecordsResponse, GetRepostsByActorAndSubjectsRequest, GetRepostsByActorAndSubjectsResponse, GetRepostsBySubjectRequest, GetRepostsBySubjectResponse, GetSuggestedFeedsRequest, GetSuggestedFeedsResponse, GetThreadGateRecordsRequest, GetThreadGateRecordsResponse, GetThreadRequest, GetThreadResponse, GetTimelineRequest, GetTimelineResponse, GetUnreadNotificationCountRequest, GetUnreadNotificationCountResponse, PingRequest, PingResponse, SearchActorsRequest, SearchActorsResponse, SearchPostsRequest, SearchPostsResponse, TakedownActorRequest, TakedownActorResponse, TakedownBlobRequest, TakedownBlobResponse, TakedownRecordRequest, TakedownRecordResponse, UntakedownActorRequest, UntakedownActorResponse, UntakedownBlobRequest, UntakedownBlobResponse, UntakedownRecordRequest, UntakedownRecordResponse, UpdateNotificationSeenRequest, UpdateNotificationSeenResponse } from "./bsky_pb.ts";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
+ *
+ * Read Path
+ *
+ *
  * @generated from service bsky.Service
  */
 export const Service = {
@@ -143,24 +147,6 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetFollowerCounts
-     */
-    getFollowerCounts: {
-      name: "GetFollowerCounts",
-      I: GetFollowerCountsRequest,
-      O: GetFollowerCountsResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * @generated from rpc bsky.Service.GetFollowCounts
-     */
-    getFollowCounts: {
-      name: "GetFollowCounts",
-      I: GetFollowCountsRequest,
-      O: GetFollowCountsResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
      * Likes
      *
      * @generated from rpc bsky.Service.GetLikesBySubject
@@ -190,15 +176,6 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetLikeCounts
-     */
-    getLikeCounts: {
-      name: "GetLikeCounts",
-      I: GetLikeCountsRequest,
-      O: GetLikeCountsResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
      * Reposts
      *
      * @generated from rpc bsky.Service.GetRepostsBySubject
@@ -225,15 +202,6 @@ export const Service = {
       name: "GetActorReposts",
       I: GetActorRepostsRequest,
       O: GetActorRepostsResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * @generated from rpc bsky.Service.GetRepostCounts
-     */
-    getRepostCounts: {
-      name: "GetRepostCounts",
-      I: GetRepostCountsRequest,
-      O: GetRepostCountsResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -355,24 +323,6 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.MuteActor
-     */
-    muteActor: {
-      name: "MuteActor",
-      I: MuteActorRequest,
-      O: MuteActorResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * @generated from rpc bsky.Service.UnmuteActor
-     */
-    unmuteActor: {
-      name: "UnmuteActor",
-      I: UnmuteActorRequest,
-      O: UnmuteActorResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
      * Mutelists
      *
      * @generated from rpc bsky.Service.GetActorMutesActorViaList
@@ -399,24 +349,6 @@ export const Service = {
       name: "GetMutelistSubscriptions",
       I: GetMutelistSubscriptionsRequest,
       O: GetMutelistSubscriptionsResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * @generated from rpc bsky.Service.MuteActorList
-     */
-    muteActorList: {
-      name: "MuteActorList",
-      I: MuteActorListRequest,
-      O: MuteActorListResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
-     * @generated from rpc bsky.Service.UnmuteActorList
-     */
-    unmuteActorList: {
-      name: "UnmuteActorList",
-      I: UnmuteActorListRequest,
-      O: UnmuteActorListResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -618,15 +550,6 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.GetPostCounts
-     */
-    getPostCounts: {
-      name: "GetPostCounts",
-      I: GetPostCountsRequest,
-      O: GetPostCountsResponse,
-      kind: MethodKind.Unary,
-    },
-    /**
      * Labels
      *
      * @generated from rpc bsky.Service.GetLabels
@@ -660,12 +583,21 @@ export const Service = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc bsky.Service.UpdateTakedown
+     * @generated from rpc bsky.Service.GetRecordTakedown
      */
-    updateTakedown: {
-      name: "UpdateTakedown",
-      I: UpdateTakedownRequest,
-      O: UpdateTakedownResponse,
+    getRecordTakedown: {
+      name: "GetRecordTakedown",
+      I: GetRecordTakedownRequest,
+      O: GetRecordTakedownResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetActorTakedown
+     */
+    getActorTakedown: {
+      name: "GetActorTakedown",
+      I: GetActorTakedownRequest,
+      O: GetActorTakedownResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -677,6 +609,118 @@ export const Service = {
       name: "Ping",
       I: PingRequest,
       O: PingResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Moderation
+     *
+     * @generated from rpc bsky.Service.TakedownBlob
+     */
+    takedownBlob: {
+      name: "TakedownBlob",
+      I: TakedownBlobRequest,
+      O: TakedownBlobResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.TakedownRecord
+     */
+    takedownRecord: {
+      name: "TakedownRecord",
+      I: TakedownRecordRequest,
+      O: TakedownRecordResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.TakedownActor
+     */
+    takedownActor: {
+      name: "TakedownActor",
+      I: TakedownActorRequest,
+      O: TakedownActorResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.UntakedownBlob
+     */
+    untakedownBlob: {
+      name: "UntakedownBlob",
+      I: UntakedownBlobRequest,
+      O: UntakedownBlobResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.UntakedownRecord
+     */
+    untakedownRecord: {
+      name: "UntakedownRecord",
+      I: UntakedownRecordRequest,
+      O: UntakedownRecordResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.UntakedownActor
+     */
+    untakedownActor: {
+      name: "UntakedownActor",
+      I: UntakedownActorRequest,
+      O: UntakedownActorResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Ingestion
+     *
+     * @generated from rpc bsky.Service.CreateActorMute
+     */
+    createActorMute: {
+      name: "CreateActorMute",
+      I: CreateActorMuteRequest,
+      O: CreateActorMuteResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.DeleteActorMute
+     */
+    deleteActorMute: {
+      name: "DeleteActorMute",
+      I: DeleteActorMuteRequest,
+      O: DeleteActorMuteResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.ClearActorMutes
+     */
+    clearActorMutes: {
+      name: "ClearActorMutes",
+      I: ClearActorMutesRequest,
+      O: ClearActorMutesResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.CreateActorMutelistSubscription
+     */
+    createActorMutelistSubscription: {
+      name: "CreateActorMutelistSubscription",
+      I: CreateActorMutelistSubscriptionRequest,
+      O: CreateActorMutelistSubscriptionResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.DeleteActorMutelistSubscription
+     */
+    deleteActorMutelistSubscription: {
+      name: "DeleteActorMutelistSubscription",
+      I: DeleteActorMutelistSubscriptionRequest,
+      O: DeleteActorMutelistSubscriptionResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.ClearActorMutelistSubscriptions
+     */
+    clearActorMutelistSubscriptions: {
+      name: "ClearActorMutelistSubscriptions",
+      I: ClearActorMutelistSubscriptionsRequest,
+      O: ClearActorMutelistSubscriptionsResponse,
       kind: MethodKind.Unary,
     },
   }
