@@ -377,7 +377,7 @@ export class ModerationService {
         )
         .returning('id')
         .execute(),
-      this.formatAndCreateLabels(subject.did, null, { create: ['!purge'] }),
+      this.formatAndCreateLabels(subject.did, null, { create: ['!takedown'] }),
     ])
 
     this.db.onCommit(() => {
@@ -403,7 +403,7 @@ export class ModerationService {
         })
         .returning('id')
         .execute(),
-      this.formatAndCreateLabels(subject.did, null, { negate: ['!purge'] }),
+      this.formatAndCreateLabels(subject.did, null, { negate: ['!takedown'] }),
     ])
 
     this.db.onCommit(() => {
@@ -426,9 +426,9 @@ export class ModerationService {
       takedownRef,
     }))
     const blobCids = subject.blobCids
-    const labels: string[] = ['!purge']
+    const labels: string[] = ['!takedown']
     if (blobCids && blobCids.length > 0) {
-      labels.push('!blob-purge')
+      labels.push('!takedown-blobs')
     }
     const [recordEvts] = await Promise.all([
       this.db.db
@@ -495,10 +495,10 @@ export class ModerationService {
 
   async reverseTakedownRecord(subject: RecordSubject) {
     this.db.assertTransaction()
-    const labels: string[] = ['!purge']
+    const labels: string[] = ['!takedown']
     const blobCids = subject.blobCids
     if (blobCids && blobCids.length > 0) {
-      labels.push('!blob-purge')
+      labels.push('!takedown-blobs')
     }
     const [recordEvts] = await Promise.all([
       this.db.db

@@ -14,7 +14,7 @@ Object {
       "neg": false,
       "src": "user(1)",
       "uri": "user(0)",
-      "val": "!purge",
+      "val": "!takedown",
     },
   ],
   "moderation": Object {

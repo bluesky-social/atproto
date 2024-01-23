@@ -13,7 +13,7 @@ Object {
       "neg": false,
       "src": "user(1)",
       "uri": "record(0)",
-      "val": "!purge",
+      "val": "!takedown",
     },
     Object {
       "cid": "cids(0)",
@@ -107,7 +107,7 @@ Object {
       "neg": false,
       "src": "user(1)",
       "uri": "record(0)",
-      "val": "!purge",
+      "val": "!takedown",
     },
     Object {
       "cid": "cids(0)",

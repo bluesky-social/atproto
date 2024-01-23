@@ -654,8 +654,8 @@ describe('moderation', () => {
       )
       expect(bskyRes1.data.takedown?.applied).toBe(true)
 
-      const purgeLabel1 = await getLabel(sc.dids.bob, '!purge')
-      expect(purgeLabel1).toBeDefined()
+      const takedownLabel1 = await getLabel(sc.dids.bob, '!takedown')
+      expect(takedownLabel1).toBeDefined()
 
       // cleanup
       await performReverseTakedown({ account: sc.dids.bob })
@@ -677,8 +677,8 @@ describe('moderation', () => {
       )
       expect(bskyRes2.data.takedown?.applied).toBe(false)
 
-      const purgeLabel2 = await getLabel(sc.dids.bob, '!purge')
-      expect(purgeLabel2).toBeUndefined()
+      const takedownLabel2 = await getLabel(sc.dids.bob, '!takedown')
+      expect(takedownLabel2).toBeUndefined()
     })
 
     it('fans out record takedowns', async () => {
@@ -702,8 +702,8 @@ describe('moderation', () => {
       )
       expect(bskyRes1.data.takedown?.applied).toBe(true)
 
-      const purgeLabel1 = await getLabel(uri, '!purge')
-      expect(purgeLabel1).toBeDefined()
+      const takedownLabel1 = await getLabel(uri, '!takedown')
+      expect(takedownLabel1).toBeDefined()
 
       // cleanup
       await performReverseTakedown({ content: { uri, cid } })
@@ -720,8 +720,8 @@ describe('moderation', () => {
       )
       expect(bskyRes2.data.takedown?.applied).toBe(false)
 
-      const purgeLabel2 = await getLabel(uri, '!purge')
-      expect(purgeLabel2).toBeUndefined()
+      const takedownLabel2 = await getLabel(uri, '!takedown')
+      expect(takedownLabel2).toBeUndefined()
     })
 
     it('allows full moderators to takedown.', async () => {
@@ -965,8 +965,8 @@ describe('moderation', () => {
       expect(res.data.takedown?.applied).toBe(true)
     })
 
-    it('creates a blob purge label', async () => {
-      const label = await getLabel(post.ref.uriStr, '!blob-purge')
+    it('creates a takedown blobs label', async () => {
+      const label = await getLabel(post.ref.uriStr, '!takedown-blobs')
       expect(label).toBeDefined()
     })
 
@@ -1004,8 +1004,8 @@ describe('moderation', () => {
       expect(res.data.takedown?.applied).toBe(false)
     })
 
-    it('negates blob purge label on reversal', async () => {
-      const label = await getLabel(post.ref.uriStr, '!blob-purge')
+    it('negates takedown blobs label on reversal', async () => {
+      const label = await getLabel(post.ref.uriStr, '!takedown-blobs')
       expect(label).toBeUndefined()
     })
   })
