@@ -14,6 +14,7 @@ import { NotificationServer } from './notifications'
 import { Redis } from './redis'
 import { AuthVerifier } from './auth-verifier'
 import { BsyncClient } from './bsync'
+import { CourierClient } from './courier'
 
 export class AppContext {
   constructor(
@@ -29,6 +30,7 @@ export class AppContext {
       backgroundQueue: BackgroundQueue
       searchAgent?: AtpAgent
       bsyncClient?: BsyncClient
+      courierClient?: CourierClient
       algos: MountedAlgos
       notifServer: NotificationServer
       authVerifier: AuthVerifier
@@ -81,6 +83,10 @@ export class AppContext {
 
   get bsyncClient(): BsyncClient | undefined {
     return this.opts.bsyncClient
+  }
+
+  get courierClient(): CourierClient | undefined {
+    return this.opts.courierClient
   }
 
   get authVerifier(): AuthVerifier {

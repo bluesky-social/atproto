@@ -34,7 +34,8 @@ import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { Redis } from './redis'
 import { AuthVerifier } from './auth-verifier'
-import { authWithApiKey, createBsyncClient } from './bsync'
+import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
+import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
@@ -142,7 +143,18 @@ export class BskyAppView {
           httpVersion: config.bsyncHttpVersion ?? '2',
           nodeOptions: { rejectUnauthorized: !config.bsyncIgnoreBadTls },
           interceptors: config.bsyncApiKey
-            ? [authWithApiKey(config.bsyncApiKey)]
+            ? [bsyncAuth(config.bsyncApiKey)]
+            : [],
+        })
+      : undefined
+
+    const courierClient = config.bsyncUrl
+      ? createCourierClient({
+          baseUrl: config.bsyncUrl,
+          httpVersion: config.bsyncHttpVersion ?? '2',
+          nodeOptions: { rejectUnauthorized: !config.bsyncIgnoreBadTls },
+          interceptors: config.bsyncApiKey
+            ? [courierAuth(config.bsyncApiKey)]
             : [],
         })
       : undefined
@@ -159,6 +171,7 @@ export class BskyAppView {
       backgroundQueue,
       searchAgent,
       bsyncClient,
+      courierClient,
       algos,
       notifServer,
       authVerifier,
