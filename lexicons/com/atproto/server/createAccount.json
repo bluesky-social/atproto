@@ -44,8 +44,7 @@
         { "name": "HandleNotAvailable" },
         { "name": "UnsupportedDomain" },
         { "name": "UnresolvableDid" },
-        { "name": "IncompatibleDidDoc" },
-        { "name": "SignupCapacity" }
+        { "name": "IncompatibleDidDoc" }
       ]
     }
   }

@@ -7,14 +7,14 @@ import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
 
-export interface QueryParams {
-  email: string
-}
+export interface QueryParams {}
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  hasAvailability: boolean
+  activated: boolean
+  placeInQueue?: number
+  estimatedTimeMs?: number
   [k: string]: unknown
 }
 

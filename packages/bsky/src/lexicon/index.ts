@@ -78,12 +78,11 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
-import * as ComAtprotoTempCheckSignupAvailability from './types/com/atproto/temp/checkSignupAvailability'
+import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
-import * as ComAtprotoTempSendSignupQueueEmails from './types/com/atproto/temp/sendSignupQueueEmails'
 import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
 import * as AppBskyActorGetProfile from './types/app/bsky/actor/getProfile'
@@ -1022,14 +1021,14 @@ export class ComAtprotoTempNS {
     this._server = server
   }
 
-  checkSignupAvailability<AV extends AuthVerifier>(
+  checkSignupQueue<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
-      ComAtprotoTempCheckSignupAvailability.Handler<ExtractAuth<AV>>,
-      ComAtprotoTempCheckSignupAvailability.HandlerReqCtx<ExtractAuth<AV>>
+      ComAtprotoTempCheckSignupQueue.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempCheckSignupQueue.HandlerReqCtx<ExtractAuth<AV>>
     >,
   ) {
-    const nsid = 'com.atproto.temp.checkSignupAvailability' // @ts-ignore
+    const nsid = 'com.atproto.temp.checkSignupQueue' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -1074,17 +1073,6 @@ export class ComAtprotoTempNS {
     >,
   ) {
     const nsid = 'com.atproto.temp.requestPhoneVerification' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  sendSignupQueueEmails<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      ComAtprotoTempSendSignupQueueEmails.Handler<ExtractAuth<AV>>,
-      ComAtprotoTempSendSignupQueueEmails.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'com.atproto.temp.sendSignupQueueEmails' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

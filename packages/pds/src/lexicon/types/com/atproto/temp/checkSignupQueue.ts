@@ -8,19 +8,31 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
-export interface QueryParams {
-  count: number
-}
+export interface QueryParams {}
 
 export type InputSchema = undefined
+
+export interface OutputSchema {
+  activated: boolean
+  placeInQueue?: number
+  estimatedTimeMs?: number
+  [k: string]: unknown
+}
+
 export type HandlerInput = undefined
+
+export interface HandlerSuccess {
+  encoding: 'application/json'
+  body: OutputSchema
+  headers?: { [key: string]: string }
+}
 
 export interface HandlerError {
   status: number
   message?: string
 }
 
-export type HandlerOutput = HandlerError | void
+export type HandlerOutput = HandlerError | HandlerSuccess
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

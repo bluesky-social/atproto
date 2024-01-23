@@ -26,12 +26,6 @@ export default function (server: Server, ctx: AppContext) {
     },
     handler: async ({ input, req }) => {
       const hasAvailability = ctx.signupLimiter.hasAvailability()
-      if (!hasAvailability) {
-        throw new InvalidRequestError(
-          'Service at signup capacity, please check back later.',
-          'SignupCapacity',
-        )
-      }
 
       const {
         did,
@@ -95,6 +89,7 @@ export default function (server: Server, ctx: AppContext) {
             did,
             pdsId: entrywayAssignedPds?.id,
             passwordScrypt,
+            activated: hasAvailability,
           })
         } catch (err) {
           if (err instanceof UserAlreadyExistsError) {
@@ -149,6 +144,7 @@ export default function (server: Server, ctx: AppContext) {
             did,
             pdsDid: entrywayAssignedPds?.did ?? null,
             appPasswordName: null,
+            deactivated: !hasAvailability,
           })
 
         if (entrywayAssignedPds) {

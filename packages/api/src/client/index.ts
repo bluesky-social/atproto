@@ -81,12 +81,11 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
-import * as ComAtprotoTempCheckSignupAvailability from './types/com/atproto/temp/checkSignupAvailability'
+import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
-import * as ComAtprotoTempSendSignupQueueEmails from './types/com/atproto/temp/sendSignupQueueEmails'
 import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
@@ -228,12 +227,11 @@ export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
-export * as ComAtprotoTempCheckSignupAvailability from './types/com/atproto/temp/checkSignupAvailability'
+export * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 export * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 export * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
 export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
-export * as ComAtprotoTempSendSignupQueueEmails from './types/com/atproto/temp/sendSignupQueueEmails'
 export * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 export * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
@@ -1209,14 +1207,14 @@ export class ComAtprotoTempNS {
     this._service = service
   }
 
-  checkSignupAvailability(
-    params?: ComAtprotoTempCheckSignupAvailability.QueryParams,
-    opts?: ComAtprotoTempCheckSignupAvailability.CallOptions,
-  ): Promise<ComAtprotoTempCheckSignupAvailability.Response> {
+  checkSignupQueue(
+    params?: ComAtprotoTempCheckSignupQueue.QueryParams,
+    opts?: ComAtprotoTempCheckSignupQueue.CallOptions,
+  ): Promise<ComAtprotoTempCheckSignupQueue.Response> {
     return this._service.xrpc
-      .call('com.atproto.temp.checkSignupAvailability', params, undefined, opts)
+      .call('com.atproto.temp.checkSignupQueue', params, undefined, opts)
       .catch((e) => {
-        throw ComAtprotoTempCheckSignupAvailability.toKnownErr(e)
+        throw ComAtprotoTempCheckSignupQueue.toKnownErr(e)
       })
   }
 
@@ -1261,17 +1259,6 @@ export class ComAtprotoTempNS {
       .call('com.atproto.temp.requestPhoneVerification', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoTempRequestPhoneVerification.toKnownErr(e)
-      })
-  }
-
-  sendSignupQueueEmails(
-    params?: ComAtprotoTempSendSignupQueueEmails.QueryParams,
-    opts?: ComAtprotoTempSendSignupQueueEmails.CallOptions,
-  ): Promise<ComAtprotoTempSendSignupQueueEmails.Response> {
-    return this._service.xrpc
-      .call('com.atproto.temp.sendSignupQueueEmails', params, undefined, opts)
-      .catch((e) => {
-        throw ComAtprotoTempSendSignupQueueEmails.toKnownErr(e)
       })
   }
 

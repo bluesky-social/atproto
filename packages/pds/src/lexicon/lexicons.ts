@@ -2921,9 +2921,6 @@ export const schemaDict = {
           {
             name: 'IncompatibleDidDoc',
           },
-          {
-            name: 'SignupCapacity',
-          },
         ],
       },
     },
@@ -4249,31 +4246,27 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoTempCheckSignupAvailability: {
+  ComAtprotoTempCheckSignupQueue: {
     lexicon: 1,
-    id: 'com.atproto.temp.checkSignupAvailability',
+    id: 'com.atproto.temp.checkSignupQueue',
     defs: {
       main: {
         type: 'query',
-        description:
-          'Check if the service has availability for new accounts and submit email for waitlist queue.',
-        parameters: {
-          type: 'params',
-          required: ['email'],
-          properties: {
-            email: {
-              type: 'string',
-            },
-          },
-        },
+        description: 'Check accounts location in signup queue.',
         output: {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['hasAvailability'],
+            required: ['activated'],
             properties: {
-              hasAvailability: {
+              activated: {
                 type: 'boolean',
+              },
+              placeInQueue: {
+                type: 'integer',
+              },
+              estimatedTimeMs: {
+                type: 'integer',
               },
             },
           },
@@ -4392,26 +4385,6 @@ export const schemaDict = {
               phoneNumber: {
                 type: 'string',
               },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoTempSendSignupQueueEmails: {
-    lexicon: 1,
-    id: 'com.atproto.temp.sendSignupQueueEmails',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Fetch all labels from a labeler created after a certain date.',
-        parameters: {
-          type: 'params',
-          required: ['count'],
-          properties: {
-            count: {
-              type: 'integer',
             },
           },
         },
@@ -8275,14 +8248,12 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
-  ComAtprotoTempCheckSignupAvailability:
-    'com.atproto.temp.checkSignupAvailability',
+  ComAtprotoTempCheckSignupQueue: 'com.atproto.temp.checkSignupQueue',
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   ComAtprotoTempImportRepo: 'com.atproto.temp.importRepo',
   ComAtprotoTempPushBlob: 'com.atproto.temp.pushBlob',
   ComAtprotoTempRequestPhoneVerification:
     'com.atproto.temp.requestPhoneVerification',
-  ComAtprotoTempSendSignupQueueEmails: 'com.atproto.temp.sendSignupQueueEmails',
   ComAtprotoTempTransferAccount: 'com.atproto.temp.transferAccount',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',

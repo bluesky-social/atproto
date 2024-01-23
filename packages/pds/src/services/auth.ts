@@ -84,13 +84,14 @@ export class AuthService {
     did: string
     pdsDid: string | null
     appPasswordName: string | null
+    deactivated: boolean
   }) {
-    const { did, pdsDid, appPasswordName } = opts
+    const { did, pdsDid, appPasswordName, deactivated } = opts
     const [access, refresh] = await Promise.all([
       this.createAccessToken({
         did,
         pdsDid,
-        scope: appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
+        scope: determineScope(appPasswordName, deactivated),
       }),
       this.createRefreshToken({ did }),
     ])
@@ -115,7 +116,11 @@ export class AuthService {
       .executeTakeFirst()
   }
 
-  async rotateRefreshToken(opts: { id: string; pdsDid: string | null }) {
+  async rotateRefreshToken(opts: {
+    id: string
+    pdsDid: string | null
+    deactived: boolean
+  }) {
     this.db.assertTransaction()
     const { id, pdsDid } = opts
     const token = await this.db.db
@@ -167,8 +172,7 @@ export class AuthService {
       this.createAccessToken({
         did: token.did,
         pdsDid,
-        scope:
-          token.appPasswordName === null ? AuthScope.Access : AuthScope.AppPass,
+        scope: determineScope(token.appPasswordName, opts.deactived),
       }),
     ])
 
@@ -213,4 +217,13 @@ const decodeRefreshToken = (jwt: string) => {
   const token = jose.decodeJwt(jwt)
   assert.ok(token.scope === AuthScope.Refresh, 'not a refresh token')
   return token as RefreshToken
+}
+
+const determineScope = (
+  appPasswordName: string | null,
+  deactivated: boolean,
+): AuthScope => {
+  if (deactivated) return AuthScope.Deactivated
+  if (appPasswordName !== null) return AuthScope.AppPass
+  return AuthScope.Access
 }

@@ -60,6 +60,7 @@ export default function (server: Server, ctx: AppContext) {
           did: user.did,
           pdsDid: user.pdsDid,
           appPasswordName,
+          deactivated: !user.activatedAt,
         }),
         didDocForSession(ctx, user),
       ])

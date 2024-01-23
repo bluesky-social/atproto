@@ -28,6 +28,7 @@ export default function (server: Server, ctx: AppContext) {
           return ctx.services.auth(dbTxn).rotateRefreshToken({
             id: auth.credentials.tokenId,
             pdsDid: user.pdsDid,
+            deactived: !user.activatedAt,
           })
         }),
       ])

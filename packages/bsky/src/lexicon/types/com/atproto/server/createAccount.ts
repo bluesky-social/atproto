@@ -54,7 +54,6 @@ export interface HandlerError {
     | 'UnsupportedDomain'
     | 'UnresolvableDid'
     | 'IncompatibleDidDoc'
-    | 'SignupCapacity'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

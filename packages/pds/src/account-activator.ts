@@ -2,6 +2,7 @@ import { SECOND } from '@atproto/common'
 import { limiterLogger as log } from './logger'
 import Database from './db'
 import { countAll } from './db/util'
+import { Leader } from './db/leader'
 
 type LimiterFlags = {
   disableSignups: boolean
@@ -13,13 +14,19 @@ type LimiterStatus = LimiterFlags & {
   accountsInPeriod: number
 }
 
-export class SignupLimiter {
+export const ACCOUNT_ACTIVATOR_ID = 1010
+
+export class AccountActivator {
+  leader: Leader
+
   destroyed = false
   promise: Promise<void> = Promise.resolve()
   timer: NodeJS.Timer | undefined
   status: LimiterStatus
 
-  constructor(private db: Database) {}
+  constructor(private db: Database, lockId = ACCOUNT_ACTIVATOR_ID) {
+    this.leader = new Leader(lockId, this.db)
+  }
 
   hasAvailability(): boolean {
     if (this.status.disableSignups) return false

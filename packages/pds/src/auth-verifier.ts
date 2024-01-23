@@ -29,6 +29,7 @@ export enum AuthScope {
   Access = 'com.atproto.access',
   Refresh = 'com.atproto.refresh',
   AppPass = 'com.atproto.appPass',
+  Deactivated = 'com.atproto.deactived',
 }
 
 export enum RoleStatus {
@@ -164,6 +165,14 @@ export class AuthVerifier {
 
   accessNotAppPassword = (ctx: ReqCtx): Promise<AccessOutput> => {
     return this.validateAccessToken(ctx.req, [AuthScope.Access])
+  }
+
+  accessDeactived = (ctx: ReqCtx): Promise<AccessOutput> => {
+    return this.validateAccessToken(ctx.req, [
+      AuthScope.Access,
+      AuthScope.AppPass,
+      AuthScope.Deactivated,
+    ])
   }
 
   // @TODO additional check on aud when set
