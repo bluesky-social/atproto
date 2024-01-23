@@ -146,13 +146,13 @@ export class BskyAppView {
         })
       : undefined
 
-    const courierClient = config.bsyncUrl
+    const courierClient = config.courierUrl
       ? createCourierClient({
-          baseUrl: config.bsyncUrl,
-          httpVersion: config.bsyncHttpVersion ?? '2',
-          nodeOptions: { rejectUnauthorized: !config.bsyncIgnoreBadTls },
-          interceptors: config.bsyncApiKey
-            ? [courierAuth(config.bsyncApiKey)]
+          baseUrl: config.courierUrl,
+          httpVersion: config.courierHttpVersion ?? '2',
+          nodeOptions: { rejectUnauthorized: !config.courierIgnoreBadTls },
+          interceptors: config.courierApiKey
+            ? [courierAuth(config.courierApiKey)]
             : [],
         })
       : undefined

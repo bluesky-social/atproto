@@ -47,9 +47,7 @@ export abstract class NotificationServer<N = unknown> {
 
   abstract processNotifications(prepared: N[]): Promise<void>
 
-  protected async getNotificationViews(
-    notifs: NotifRow[],
-  ): Promise<NotifView[]> {
+  async getNotificationViews(notifs: NotifRow[]): Promise<NotifView[]> {
     const { ref } = this.db.db.dynamic
     const authorDids = notifs.map((n) => n.author)
     const subjectUris = notifs.flatMap((n) => n.reasonSubject ?? [])
@@ -222,7 +220,7 @@ export abstract class NotificationServer<N = unknown> {
   }
 }
 
-export class GorushNotificationService extends NotificationServer<GorushNotification> {
+export class GorushNotificationServer extends NotificationServer<GorushNotification> {
   private rateLimiter = new RateLimiter(1, 30 * MINUTE)
 
   constructor(public db: Database, public pushEndpoint: string) {
@@ -277,7 +275,7 @@ export class GorushNotificationService extends NotificationServer<GorushNotifica
     return notifsToSend
   }
 
-  private async getTokensByDid(dids: string[]) {
+  async getTokensByDid(dids: string[]) {
     if (!dids.length) return {}
     const tokens = await this.db.db
       .selectFrom('notification_push_token')
@@ -322,7 +320,7 @@ export class GorushNotificationService extends NotificationServer<GorushNotifica
   }
 }
 
-export class CourierNotificationService extends NotificationServer<CourierNotification> {
+export class CourierNotificationServer extends NotificationServer<CourierNotification> {
   constructor(public db: Database, public courierClient: CourierClient) {
     super(db)
   }

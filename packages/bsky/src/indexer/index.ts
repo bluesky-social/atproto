@@ -11,8 +11,13 @@ import { createServices } from './services'
 import { IndexerSubscription } from './subscription'
 import { AutoModerator } from '../auto-moderator'
 import { Redis } from '../redis'
-import { GorushNotificationService, NotificationServer } from '../notifications'
+import {
+  CourierNotificationServer,
+  GorushNotificationServer,
+  NotificationServer,
+} from '../notifications'
 import { CloseFn, createServer, startServer } from './server'
+import { authWithApiKey as courierAuth, createCourierClient } from '../courier'
 
 export { IndexerConfig } from './config'
 export type { IndexerConfigValues } from './config'
@@ -60,9 +65,22 @@ export class BskyIndexer {
       backgroundQueue,
     })
 
+    const courierClient = cfg.courierUrl
+      ? createCourierClient({
+          baseUrl: cfg.courierUrl,
+          httpVersion: cfg.courierHttpVersion ?? '2',
+          nodeOptions: { rejectUnauthorized: !cfg.courierIgnoreBadTls },
+          interceptors: cfg.courierApiKey
+            ? [courierAuth(cfg.courierApiKey)]
+            : [],
+        })
+      : undefined
+
     let notifServer: NotificationServer | undefined
-    if (cfg.pushNotificationEndpoint) {
-      notifServer = new GorushNotificationService(
+    if (courierClient) {
+      notifServer = new CourierNotificationServer(db, courierClient)
+    } else if (cfg.pushNotificationEndpoint) {
+      notifServer = new GorushNotificationServer(
         db,
         cfg.pushNotificationEndpoint,
       )
@@ -84,6 +102,7 @@ export class BskyIndexer {
       didCache,
       backgroundQueue,
       autoMod,
+      notifServer,
     })
     const sub = new IndexerSubscription(ctx, {
       partitionIds: cfg.indexerPartitionIds,

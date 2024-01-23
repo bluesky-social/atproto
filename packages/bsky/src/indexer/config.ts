@@ -22,6 +22,10 @@ export interface IndexerConfigValues {
   fuzzyFalsePositiveB64?: string
   labelerKeywords: Record<string, string>
   moderationPushUrl: string
+  courierUrl?: string
+  courierApiKey?: string
+  courierHttpVersion?: '1.1' | '2'
+  courierIgnoreBadTls?: boolean
   indexerConcurrency?: number
   indexerPartitionIds: number[]
   indexerPartitionBatchSize?: number
@@ -72,6 +76,18 @@ export class IndexerConfig {
       process.env.MODERATION_PUSH_URL ||
       undefined
     assert(moderationPushUrl)
+    const courierUrl =
+      overrides?.courierUrl || process.env.BSKY_COURIER_URL || undefined
+    const courierApiKey =
+      overrides?.courierApiKey || process.env.BSKY_COURIER_API_KEY || undefined
+    const courierHttpVersion =
+      overrides?.courierHttpVersion ||
+      process.env.BSKY_COURIER_HTTP_VERSION ||
+      '2'
+    const courierIgnoreBadTls =
+      overrides?.courierIgnoreBadTls ||
+      process.env.BSKY_COURIER_IGNORE_BAD_TLS === 'true'
+    assert(courierHttpVersion === '1.1' || courierHttpVersion === '2')
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
     const abyssEndpoint = process.env.ABYSS_ENDPOINT
     const abyssPassword = process.env.ABYSS_PASSWORD
@@ -114,6 +130,10 @@ export class IndexerConfig {
       didCacheMaxTTL,
       handleResolveNameservers,
       moderationPushUrl,
+      courierUrl,
+      courierApiKey,
+      courierHttpVersion,
+      courierIgnoreBadTls,
       hiveApiKey,
       abyssEndpoint,
       abyssPassword,
@@ -183,6 +203,22 @@ export class IndexerConfig {
 
   get moderationPushUrl() {
     return this.cfg.moderationPushUrl
+  }
+
+  get courierUrl() {
+    return this.cfg.courierUrl
+  }
+
+  get courierApiKey() {
+    return this.cfg.courierApiKey
+  }
+
+  get courierHttpVersion() {
+    return this.cfg.courierHttpVersion
+  }
+
+  get courierIgnoreBadTls() {
+    return this.cfg.courierIgnoreBadTls
   }
 
   get hiveApiKey() {
