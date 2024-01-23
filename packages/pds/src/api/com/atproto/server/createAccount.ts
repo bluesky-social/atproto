@@ -25,6 +25,14 @@ export default function (server: Server, ctx: AppContext) {
       points: 100,
     },
     handler: async ({ input, req }) => {
+      const hasAvailability = ctx.signupLimiter.hasAvailability()
+      if (!hasAvailability) {
+        throw new InvalidRequestError(
+          'Service at signup capacity, please check back later.',
+          'SignupCapacity',
+        )
+      }
+
       const {
         did,
         handle,
