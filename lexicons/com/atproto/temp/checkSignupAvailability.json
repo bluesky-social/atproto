@@ -1,0 +1,27 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.temp.checkSignupAvailability",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Check if the service has availability for new accounts and submit email for waitlist queue.",
+      "parameters": {
+        "type": "params",
+        "required": ["email"],
+        "properties": {
+          "email": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["hasAvailability"],
+          "properties": {
+            "hasAvailability": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
+}
