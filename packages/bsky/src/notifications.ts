@@ -11,7 +11,7 @@ import { NotificationPushToken as PushToken } from './db/tables/notification-pus
 import logger from './indexer/logger'
 import { notSoftDeletedClause, valuesList } from './db/util'
 import { ids } from './lexicon/lexicons'
-import { retryHttp } from './util/retry'
+import { retryConnect, retryHttp } from './util/retry'
 import { Notification as CourierNotification } from './proto/courier_pb'
 import { CourierClient } from './courier'
 
@@ -339,8 +339,8 @@ export class CourierNotificationServer extends NotificationServer<CourierNotific
         alwaysDeliver: !n.rateLimit,
         timestamp: Timestamp.fromDate(new Date(n.notif.sortAt)),
         additional: Struct.fromJson({
-          uri: n.notif.recordUri || '',
-          reason: n.notif.reason || '',
+          uri: n.notif.recordUri,
+          reason: n.notif.reason,
           subject: n.notif.reasonSubject || '',
         }),
       })
@@ -350,7 +350,9 @@ export class CourierNotificationServer extends NotificationServer<CourierNotific
 
   async processNotifications(prepared: CourierNotification[]): Promise<void> {
     try {
-      await this.courierClient.pushNotifications({ notifications: prepared })
+      await retryConnect(() =>
+        this.courierClient.pushNotifications({ notifications: prepared }),
+      )
     } catch (err) {
       logger.error({ err }, 'notification push to courier failed')
     }
