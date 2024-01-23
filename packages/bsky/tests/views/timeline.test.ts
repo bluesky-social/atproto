@@ -190,10 +190,7 @@ describe('timeline views', () => {
   it('blocks posts, reposts, replies by actor takedown', async () => {
     await Promise.all(
       [bob, carol].map((did) =>
-        network.bsky.ctx.dataplane.updateTakedown({
-          actorDid: did,
-          takenDown: true,
-        }),
+        network.bsky.ctx.dataplane.takedownActor({ did }),
       ),
     )
 
@@ -207,10 +204,7 @@ describe('timeline views', () => {
     // Cleanup
     await Promise.all(
       [bob, carol].map((did) =>
-        network.bsky.ctx.dataplane.updateTakedown({
-          actorDid: did,
-          takenDown: false,
-        }),
+        network.bsky.ctx.dataplane.untakedownActor({ did }),
       ),
     )
   })
@@ -220,9 +214,8 @@ describe('timeline views', () => {
     const postRef2 = sc.replies[bob][0].ref // Post and reply parent
     await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        network.bsky.ctx.dataplane.updateTakedown({
+        network.bsky.ctx.dataplane.takedownRecord({
           recordUri: postRef.uriStr,
-          takenDown: true,
         }),
       ),
     )
@@ -237,9 +230,8 @@ describe('timeline views', () => {
     // Cleanup
     await Promise.all(
       [postRef1, postRef2].map((postRef) =>
-        network.bsky.ctx.dataplane.updateTakedown({
+        network.bsky.ctx.dataplane.untakedownRecord({
           recordUri: postRef.uriStr,
-          takenDown: false,
         }),
       ),
     )

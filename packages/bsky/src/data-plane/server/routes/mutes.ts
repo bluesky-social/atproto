@@ -106,7 +106,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     }
   },
 
-  async muteActor(req) {
+  async createActorMute(req) {
     const { actorDid, subjectDid } = req
     assert(actorDid !== subjectDid, 'cannot mute yourself') // @TODO pass message through in http error
     await db.db
@@ -120,7 +120,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .execute()
   },
 
-  async unmuteActor(req) {
+  async deleteActorMute(req) {
     const { actorDid, subjectDid } = req
     assert(actorDid !== subjectDid, 'cannot mute yourself')
     await db.db
@@ -130,13 +130,18 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .execute()
   },
 
-  async muteActorList(req) {
-    const { actorDid, listUri } = req
-    assert(isListUri(listUri), 'must mute a list')
+  async clearActorMutes(req) {
+    const { actorDid } = req
+    await db.db.deleteFrom('mute').where('mutedByDid', '=', actorDid).execute()
+  },
+
+  async createActorMutelistSubscription(req) {
+    const { actorDid, subjectUri } = req
+    assert(isListUri(subjectUri), 'must mute a list')
     await db.db
       .insertInto('list_mute')
       .values({
-        listUri,
+        listUri: subjectUri,
         mutedByDid: actorDid,
         createdAt: new Date().toISOString(),
       })
@@ -144,12 +149,20 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .execute()
   },
 
-  async unmuteActorList(req) {
-    const { actorDid, listUri } = req
-    assert(isListUri(listUri), 'must mute a list')
+  async deleteActorMutelistSubscription(req) {
+    const { actorDid, subjectUri } = req
+    assert(isListUri(subjectUri), 'must mute a list')
     await db.db
       .deleteFrom('list_mute')
-      .where('listUri', '=', listUri)
+      .where('listUri', '=', subjectUri)
+      .where('mutedByDid', '=', actorDid)
+      .execute()
+  },
+
+  async clearActorMutelistSubscriptions(req) {
+    const { actorDid } = req
+    await db.db
+      .deleteFrom('list_mute')
       .where('mutedByDid', '=', actorDid)
       .execute()
   },

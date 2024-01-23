@@ -183,9 +183,8 @@ describe('pds profile views', () => {
   })
 
   it('blocked by actor takedown', async () => {
-    await network.bsky.ctx.dataplane.updateTakedown({
-      actorDid: alice,
-      takenDown: true,
+    await network.bsky.ctx.dataplane.takedownActor({
+      did: alice,
     })
     const promise = agent.api.app.bsky.actor.getProfile(
       { actor: alice },
@@ -195,17 +194,15 @@ describe('pds profile views', () => {
     await expect(promise).rejects.toThrow('Account has been taken down')
 
     // Cleanup
-    await network.bsky.ctx.dataplane.updateTakedown({
-      actorDid: alice,
-      takenDown: false,
+    await network.bsky.ctx.dataplane.untakedownActor({
+      did: alice,
     })
   })
 
   // @TODO reimplement suspension?
   it.skip('blocked by actor suspension', async () => {
-    await network.bsky.ctx.dataplane.updateTakedown({
-      actorDid: alice,
-      takenDown: true,
+    await network.bsky.ctx.dataplane.takedownActor({
+      did: alice,
     })
     await network.processAll()
     const promise = agent.api.app.bsky.actor.getProfile(
@@ -218,9 +215,8 @@ describe('pds profile views', () => {
     )
 
     // Cleanup
-    await network.bsky.ctx.dataplane.updateTakedown({
-      actorDid: alice,
-      takenDown: false,
+    await network.bsky.ctx.dataplane.untakedownActor({
+      did: alice,
     })
   })
 

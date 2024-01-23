@@ -79,7 +79,7 @@ export async function resolveBlob(ctx: AppContext, did: string, cid: CID) {
 
   const [{ pds }, { takenDown }] = await Promise.all([
     ctx.idResolver.did.resolveAtprotoData(did),
-    ctx.dataplane.getBlobTakedown({ actorDid: did, cid: cid.toString() }),
+    ctx.dataplane.getBlobTakedown({ did, cid: cid.toString() }),
   ])
   if (takenDown) {
     throw createError(404, 'Blob not found')
