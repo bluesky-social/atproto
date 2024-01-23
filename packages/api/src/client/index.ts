@@ -81,10 +81,12 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoTempCheckSignupAvailability from './types/com/atproto/temp/checkSignupAvailability'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
+import * as ComAtprotoTempSendSignupQueueEmails from './types/com/atproto/temp/sendSignupQueueEmails'
 import * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 import * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 import * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
@@ -226,10 +228,12 @@ export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+export * as ComAtprotoTempCheckSignupAvailability from './types/com/atproto/temp/checkSignupAvailability'
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 export * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 export * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
 export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification'
+export * as ComAtprotoTempSendSignupQueueEmails from './types/com/atproto/temp/sendSignupQueueEmails'
 export * as ComAtprotoTempTransferAccount from './types/com/atproto/temp/transferAccount'
 export * as AppBskyActorDefs from './types/app/bsky/actor/defs'
 export * as AppBskyActorGetPreferences from './types/app/bsky/actor/getPreferences'
@@ -348,39 +352,39 @@ export class AtpServiceClient {
 
 export class ComNS {
   _service: AtpServiceClient
-  atproto: AtprotoNS
+  atproto: ComAtprotoNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.atproto = new AtprotoNS(service)
+    this.atproto = new ComAtprotoNS(service)
   }
 }
 
-export class AtprotoNS {
+export class ComAtprotoNS {
   _service: AtpServiceClient
-  admin: AdminNS
-  identity: IdentityNS
-  label: LabelNS
-  moderation: ModerationNS
-  repo: RepoNS
-  server: ServerNS
-  sync: SyncNS
-  temp: TempNS
+  admin: ComAtprotoAdminNS
+  identity: ComAtprotoIdentityNS
+  label: ComAtprotoLabelNS
+  moderation: ComAtprotoModerationNS
+  repo: ComAtprotoRepoNS
+  server: ComAtprotoServerNS
+  sync: ComAtprotoSyncNS
+  temp: ComAtprotoTempNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.admin = new AdminNS(service)
-    this.identity = new IdentityNS(service)
-    this.label = new LabelNS(service)
-    this.moderation = new ModerationNS(service)
-    this.repo = new RepoNS(service)
-    this.server = new ServerNS(service)
-    this.sync = new SyncNS(service)
-    this.temp = new TempNS(service)
+    this.admin = new ComAtprotoAdminNS(service)
+    this.identity = new ComAtprotoIdentityNS(service)
+    this.label = new ComAtprotoLabelNS(service)
+    this.moderation = new ComAtprotoModerationNS(service)
+    this.repo = new ComAtprotoRepoNS(service)
+    this.server = new ComAtprotoServerNS(service)
+    this.sync = new ComAtprotoSyncNS(service)
+    this.temp = new ComAtprotoTempNS(service)
   }
 }
 
-export class AdminNS {
+export class ComAtprotoAdminNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -666,7 +670,7 @@ export class AdminNS {
   }
 }
 
-export class IdentityNS {
+export class ComAtprotoIdentityNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -696,7 +700,7 @@ export class IdentityNS {
   }
 }
 
-export class LabelNS {
+export class ComAtprotoLabelNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -715,7 +719,7 @@ export class LabelNS {
   }
 }
 
-export class ModerationNS {
+export class ComAtprotoModerationNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -734,7 +738,7 @@ export class ModerationNS {
   }
 }
 
-export class RepoNS {
+export class ComAtprotoRepoNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -830,7 +834,7 @@ export class RepoNS {
   }
 }
 
-export class ServerNS {
+export class ComAtprotoServerNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -1069,7 +1073,7 @@ export class ServerNS {
   }
 }
 
-export class SyncNS {
+export class ComAtprotoSyncNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -1198,11 +1202,22 @@ export class SyncNS {
   }
 }
 
-export class TempNS {
+export class ComAtprotoTempNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  checkSignupAvailability(
+    params?: ComAtprotoTempCheckSignupAvailability.QueryParams,
+    opts?: ComAtprotoTempCheckSignupAvailability.CallOptions,
+  ): Promise<ComAtprotoTempCheckSignupAvailability.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.checkSignupAvailability', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoTempCheckSignupAvailability.toKnownErr(e)
+      })
   }
 
   fetchLabels(
@@ -1249,6 +1264,17 @@ export class TempNS {
       })
   }
 
+  sendSignupQueueEmails(
+    params?: ComAtprotoTempSendSignupQueueEmails.QueryParams,
+    opts?: ComAtprotoTempSendSignupQueueEmails.CallOptions,
+  ): Promise<ComAtprotoTempSendSignupQueueEmails.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.sendSignupQueueEmails', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoTempSendSignupQueueEmails.toKnownErr(e)
+      })
+  }
+
   transferAccount(
     data?: ComAtprotoTempTransferAccount.InputSchema,
     opts?: ComAtprotoTempTransferAccount.CallOptions,
@@ -1263,37 +1289,37 @@ export class TempNS {
 
 export class AppNS {
   _service: AtpServiceClient
-  bsky: BskyNS
+  bsky: AppBskyNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.bsky = new BskyNS(service)
+    this.bsky = new AppBskyNS(service)
   }
 }
 
-export class BskyNS {
+export class AppBskyNS {
   _service: AtpServiceClient
-  actor: ActorNS
-  embed: EmbedNS
-  feed: FeedNS
-  graph: GraphNS
-  notification: NotificationNS
-  richtext: RichtextNS
-  unspecced: UnspeccedNS
+  actor: AppBskyActorNS
+  embed: AppBskyEmbedNS
+  feed: AppBskyFeedNS
+  graph: AppBskyGraphNS
+  notification: AppBskyNotificationNS
+  richtext: AppBskyRichtextNS
+  unspecced: AppBskyUnspeccedNS
 
   constructor(service: AtpServiceClient) {
     this._service = service
-    this.actor = new ActorNS(service)
-    this.embed = new EmbedNS(service)
-    this.feed = new FeedNS(service)
-    this.graph = new GraphNS(service)
-    this.notification = new NotificationNS(service)
-    this.richtext = new RichtextNS(service)
-    this.unspecced = new UnspeccedNS(service)
+    this.actor = new AppBskyActorNS(service)
+    this.embed = new AppBskyEmbedNS(service)
+    this.feed = new AppBskyFeedNS(service)
+    this.graph = new AppBskyGraphNS(service)
+    this.notification = new AppBskyNotificationNS(service)
+    this.richtext = new AppBskyRichtextNS(service)
+    this.unspecced = new AppBskyUnspeccedNS(service)
   }
 }
 
-export class ActorNS {
+export class AppBskyActorNS {
   _service: AtpServiceClient
   profile: ProfileRecord
 
@@ -1441,7 +1467,7 @@ export class ProfileRecord {
   }
 }
 
-export class EmbedNS {
+export class AppBskyEmbedNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -1449,7 +1475,7 @@ export class EmbedNS {
   }
 }
 
-export class FeedNS {
+export class AppBskyFeedNS {
   _service: AtpServiceClient
   generator: GeneratorRecord
   like: LikeRecord
@@ -1952,7 +1978,7 @@ export class ThreadgateRecord {
   }
 }
 
-export class GraphNS {
+export class AppBskyGraphNS {
   _service: AtpServiceClient
   block: BlockRecord
   follow: FollowRecord
@@ -2427,7 +2453,7 @@ export class ListitemRecord {
   }
 }
 
-export class NotificationNS {
+export class AppBskyNotificationNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -2479,7 +2505,7 @@ export class NotificationNS {
   }
 }
 
-export class RichtextNS {
+export class AppBskyRichtextNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {
@@ -2487,7 +2513,7 @@ export class RichtextNS {
   }
 }
 
-export class UnspeccedNS {
+export class AppBskyUnspeccedNS {
   _service: AtpServiceClient
 
   constructor(service: AtpServiceClient) {

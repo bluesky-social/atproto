@@ -8,34 +8,18 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
 
-export interface QueryParams {}
-
-export interface InputSchema {
-  email?: string
-  handle: string
-  did?: string
-  inviteCode?: string
-  verificationCode?: string
-  verificationPhone?: string
-  password?: string
-  recoveryKey?: string
-  plcOp?: {}
-  [k: string]: unknown
+export interface QueryParams {
+  email: string
 }
+
+export type InputSchema = undefined
 
 export interface OutputSchema {
-  accessJwt: string
-  refreshJwt: string
-  handle: string
-  did: string
-  didDoc?: {}
+  hasAvailability: boolean
   [k: string]: unknown
 }
 
-export interface HandlerInput {
-  encoding: 'application/json'
-  body: InputSchema
-}
+export type HandlerInput = undefined
 
 export interface HandlerSuccess {
   encoding: 'application/json'
@@ -46,15 +30,6 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?:
-    | 'InvalidHandle'
-    | 'InvalidPassword'
-    | 'InvalidInviteCode'
-    | 'HandleNotAvailable'
-    | 'UnsupportedDomain'
-    | 'UnresolvableDid'
-    | 'IncompatibleDidDoc'
-    | 'SignupCapacity'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

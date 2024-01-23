@@ -85,6 +85,12 @@ export class IncompatibleDidDocError extends XRPCError {
   }
 }
 
+export class SignupCapacityError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers)
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'InvalidHandle') return new InvalidHandleError(e)
@@ -94,6 +100,7 @@ export function toKnownErr(e: any) {
     if (e.error === 'UnsupportedDomain') return new UnsupportedDomainError(e)
     if (e.error === 'UnresolvableDid') return new UnresolvableDidError(e)
     if (e.error === 'IncompatibleDidDoc') return new IncompatibleDidDocError(e)
+    if (e.error === 'SignupCapacity') return new SignupCapacityError(e)
   }
   return e
 }

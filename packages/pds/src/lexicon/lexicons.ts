@@ -2921,6 +2921,9 @@ export const schemaDict = {
           {
             name: 'IncompatibleDidDoc',
           },
+          {
+            name: 'SignupCapacity',
+          },
         ],
       },
     },
@@ -4246,6 +4249,38 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoTempCheckSignupAvailability: {
+    lexicon: 1,
+    id: 'com.atproto.temp.checkSignupAvailability',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Check if the service has availability for new accounts and submit email for waitlist queue.',
+        parameters: {
+          type: 'params',
+          required: ['email'],
+          properties: {
+            email: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['hasAvailability'],
+            properties: {
+              hasAvailability: {
+                type: 'boolean',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoTempFetchLabels: {
     lexicon: 1,
     id: 'com.atproto.temp.fetchLabels',
@@ -4357,6 +4392,26 @@ export const schemaDict = {
               phoneNumber: {
                 type: 'string',
               },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoTempSendSignupQueueEmails: {
+    lexicon: 1,
+    id: 'com.atproto.temp.sendSignupQueueEmails',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Fetch all labels from a labeler created after a certain date.',
+        parameters: {
+          type: 'params',
+          required: ['count'],
+          properties: {
+            count: {
+              type: 'integer',
             },
           },
         },
@@ -8220,11 +8275,14 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
+  ComAtprotoTempCheckSignupAvailability:
+    'com.atproto.temp.checkSignupAvailability',
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   ComAtprotoTempImportRepo: 'com.atproto.temp.importRepo',
   ComAtprotoTempPushBlob: 'com.atproto.temp.pushBlob',
   ComAtprotoTempRequestPhoneVerification:
     'com.atproto.temp.requestPhoneVerification',
+  ComAtprotoTempSendSignupQueueEmails: 'com.atproto.temp.sendSignupQueueEmails',
   ComAtprotoTempTransferAccount: 'com.atproto.temp.transferAccount',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
