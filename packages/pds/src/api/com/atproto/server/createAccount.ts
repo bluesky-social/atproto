@@ -44,12 +44,12 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.cfg.phoneVerification.required && ctx.twilio) {
         if (!input.body.verificationPhone) {
           throw new InvalidRequestError(
-            'Phone number verification is required on this server and none was provided.',
+            `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
             'InvalidPhoneVerification',
           )
         } else if (!input.body.verificationCode) {
           throw new InvalidRequestError(
-            'Phone number verification is required on this server and none was provided.',
+            `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
             'InvalidPhoneVerification',
           )
         }
