@@ -40,6 +40,7 @@ import updateSeen from './app/bsky/notification/updateSeen'
 import registerPush from './app/bsky/notification/registerPush'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
 import getTimelineSkeleton from './app/bsky/unspecced/getTimelineSkeleton'
+import getTaggedSuggestions from './app/bsky/unspecced/getTaggedSuggestions'
 import getSubjectStatus from './com/atproto/admin/getSubjectStatus'
 import updateSubjectStatus from './com/atproto/admin/updateSubjectStatus'
 import getAccountInfos from './com/atproto/admin/getAccountInfos'
@@ -95,6 +96,7 @@ export default function (server: Server, ctx: AppContext) {
   registerPush(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTimelineSkeleton(server, ctx)
+  getTaggedSuggestions(server, ctx)
   // com.atproto
   getSubjectStatus(server, ctx)
   updateSubjectStatus(server, ctx)

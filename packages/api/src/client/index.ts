@@ -147,6 +147,7 @@ import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/up
 import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
+import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
@@ -291,6 +292,7 @@ export * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/up
 export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
+export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 export * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
@@ -2505,6 +2507,17 @@ export class AppBskyUnspeccedNS {
       )
       .catch((e) => {
         throw AppBskyUnspeccedGetPopularFeedGenerators.toKnownErr(e)
+      })
+  }
+
+  getTaggedSuggestions(
+    params?: AppBskyUnspeccedGetTaggedSuggestions.QueryParams,
+    opts?: AppBskyUnspeccedGetTaggedSuggestions.CallOptions,
+  ): Promise<AppBskyUnspeccedGetTaggedSuggestions.Response> {
+    return this._service.xrpc
+      .call('app.bsky.unspecced.getTaggedSuggestions', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyUnspeccedGetTaggedSuggestions.toKnownErr(e)
       })
   }
 

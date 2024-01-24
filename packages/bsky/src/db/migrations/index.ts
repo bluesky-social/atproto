@@ -33,3 +33,4 @@ export * as _20230929T192920807Z from './20230929T192920807Z-record-cursor-index
 export * as _20231003T202833377Z from './20231003T202833377Z-create-moderation-subject-status'
 export * as _20231205T000257238Z from './20231205T000257238Z-remove-did-cache'
 export * as _20231220T225126090Z from './20231220T225126090Z-blob-takedowns'
+export * as _20240124T023719200Z from './20240124T023719200Z-tagged-suggestions'

@@ -7908,6 +7908,54 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetTaggedSuggestions: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getTaggedSuggestions',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a list of suggestions (feeds and users) tagged with categories',
+        parameters: {
+          type: 'params',
+          properties: {},
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['suggestions'],
+            properties: {
+              suggestions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.unspecced.getTaggedSuggestions#suggestion',
+                },
+              },
+            },
+          },
+        },
+      },
+      suggestion: {
+        type: 'object',
+        required: ['tag', 'subjectType', 'subject'],
+        properties: {
+          tag: {
+            type: 'string',
+          },
+          subjectType: {
+            type: 'string',
+            knownValues: ['actor', 'feed'],
+          },
+          subject: {
+            type: 'string',
+            format: 'uri',
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetTimelineSkeleton: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getTimelineSkeleton',
@@ -8242,6 +8290,8 @@ export const ids = {
   AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
+  AppBskyUnspeccedGetTaggedSuggestions:
+    'app.bsky.unspecced.getTaggedSuggestions',
   AppBskyUnspeccedGetTimelineSkeleton: 'app.bsky.unspecced.getTimelineSkeleton',
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
