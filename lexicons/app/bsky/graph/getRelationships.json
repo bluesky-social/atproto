@@ -31,7 +31,10 @@
               "type": "array",
               "items": {
                 "type": "union",
-                "refs": ["#relationship", "app.bsky.graph.defs#notFoundActor"]
+                "refs": [
+                  "app.bsky.graph.def#relationship",
+                  "app.bsky.graph.defs#notFoundActor"
+                ]
               }
             }
           }
@@ -43,23 +46,6 @@
           "description": "the primary actor at-identifier could not be resolved"
         }
       ]
-    },
-    "relationship": {
-      "type": "object",
-      "required": ["did"],
-      "properties": {
-        "did": { "type": "string", "format": "did" },
-        "following": {
-          "type": "string",
-          "format": "at-uri",
-          "description": "if the actor follows this DID, this is the AT-URI of the follow record"
-        },
-        "followedBy": {
-          "type": "string",
-          "format": "at-uri",
-          "description": "if the actor is followed by this DID, contains the AT-URI of the follow record"
-        }
-      }
     }
   }
 }
