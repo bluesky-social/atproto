@@ -559,7 +559,7 @@ async function updatePreferences(
   if (newPrefs === false) {
     return
   }
-  if (newPrefs.find(p => p.tags)) {
+  if (newPrefs.find((p) => p.tags)) {
     console.log('found tags')
   }
   await agent.app.bsky.actor.putPreferences({
