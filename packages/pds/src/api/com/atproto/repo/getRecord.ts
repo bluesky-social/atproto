@@ -27,7 +27,9 @@ export default function (server: Server, ctx: AppContext) {
       }
     }
 
-    const res = await ctx.appViewAgent.api.com.atproto.repo.getRecord(params)
+    const res = await ctx
+      .getAppviewAgent(null)
+      .api.com.atproto.repo.getRecord(params)
     return {
       encoding: 'application/json',
       body: res.data,

@@ -30,10 +30,9 @@ export default function (server: Server, ctx: AppContext) {
         auth.credentials.type === 'access' ? auth.credentials.did : null
 
       if (!requester) {
-        const res = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
-          params,
-          authPassthru(req),
-        )
+        const res = await ctx
+          .getAppviewAgent(requester)
+          .api.app.bsky.feed.getPostThread(params, authPassthru(req))
 
         return {
           encoding: 'application/json',
@@ -42,10 +41,12 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       try {
-        const res = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
-          params,
-          await ctx.appviewAuthHeaders(requester),
-        )
+        const res = await ctx
+          .getAppviewAgent(requester)
+          .api.app.bsky.feed.getPostThread(
+            params,
+            await ctx.appviewAuthHeaders(requester),
+          )
 
         return await handleReadAfterWrite(
           ctx,
@@ -205,10 +206,12 @@ const readAfterWriteNotFound = async (
   const highestParent = getHighestParent(thread)
   if (highestParent) {
     try {
-      const parentsRes = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
-        { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
-        await ctx.appviewAuthHeaders(requester),
-      )
+      const parentsRes = await ctx
+        .getAppviewAgent(requester)
+        .api.app.bsky.feed.getPostThread(
+          { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
+          await ctx.appviewAuthHeaders(requester),
+        )
       thread.parent = parentsRes.data.thread
     } catch (err) {
       // do nothing

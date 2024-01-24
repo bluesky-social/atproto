@@ -17,13 +17,12 @@ export default function (server: Server, ctx: AppContext) {
       const authHeaders = await ctx.serviceAuthHeaders(did, serviceDid)
 
       if (ctx.cfg.bskyAppView.did === serviceDid) {
-        await ctx.appViewAgent.api.app.bsky.notification.registerPush(
-          input.body,
-          {
+        await ctx
+          .getAppviewAgent(did)
+          .api.app.bsky.notification.registerPush(input.body, {
             ...authHeaders,
             encoding: 'application/json',
-          },
-        )
+          })
         return
       }
 

@@ -8,8 +8,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ req, params, auth }) => {
       const requester = auth.credentials.did
 
-      const { data: feed } =
-        await ctx.appViewAgent.api.app.bsky.feed.getFeedGenerator(
+      const { data: feed } = await ctx
+        .getAppviewAgent(requester)
+        .api.app.bsky.feed.getFeedGenerator(
           { feed: params.feed },
           await ctx.appviewAuthHeaders(requester),
         )
@@ -20,10 +21,9 @@ export default function (server: Server, ctx: AppContext) {
       // forward accept-language header to upstream services
       serviceAuthHeaders.headers['accept-language'] =
         req.headers['accept-language']
-      const res = await ctx.appViewAgent.api.app.bsky.feed.getFeed(
-        params,
-        serviceAuthHeaders,
-      )
+      const res = await ctx
+        .getAppviewAgent(requester)
+        .api.app.bsky.feed.getFeed(params, serviceAuthHeaders)
 
       return {
         encoding: 'application/json',

@@ -7,10 +7,12 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
 
-      await ctx.appViewAgent.api.app.bsky.graph.unmuteActorList(input.body, {
-        ...(await ctx.appviewAuthHeaders(requester)),
-        encoding: 'application/json',
-      })
+      await ctx
+        .getAppviewAgent(requester)
+        .api.app.bsky.graph.unmuteActorList(input.body, {
+          ...(await ctx.appviewAuthHeaders(requester)),
+          encoding: 'application/json',
+        })
     },
   })
 }

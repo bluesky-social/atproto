@@ -12,10 +12,12 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.access,
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appViewAgent.api.app.bsky.actor.getProfiles(
-        params,
-        await ctx.appviewAuthHeaders(requester),
-      )
+      const res = await ctx
+        .getAppviewAgent(requester)
+        .api.app.bsky.actor.getProfiles(
+          params,
+          await ctx.appviewAuthHeaders(requester),
+        )
       const hasSelf = res.data.profiles.some((prof) => prof.did === requester)
       if (hasSelf) {
         return await handleReadAfterWrite(ctx, requester, res, getProfilesMunge)

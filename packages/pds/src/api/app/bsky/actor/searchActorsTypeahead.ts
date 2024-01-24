@@ -6,8 +6,9 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.access,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res =
-        await ctx.appViewAgent.api.app.bsky.actor.searchActorsTypeahead(
+      const res = await ctx
+        .getAppviewAgent(requester)
+        .api.app.bsky.actor.searchActorsTypeahead(
           params,
           await ctx.appviewAuthHeaders(requester),
         )

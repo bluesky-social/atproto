@@ -14,10 +14,14 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ req, auth, params }) => {
       const requester =
         auth.credentials.type === 'access' ? auth.credentials.did : null
-      const res = await ctx.appViewAgent.api.app.bsky.actor.getProfile(
-        params,
-        requester ? await ctx.appviewAuthHeaders(requester) : authPassthru(req),
-      )
+      const res = await ctx
+        .getAppviewAgent(requester)
+        .api.app.bsky.actor.getProfile(
+          params,
+          requester
+            ? await ctx.appviewAuthHeaders(requester)
+            : authPassthru(req),
+        )
       if (res.data.did === requester) {
         return await handleReadAfterWrite(ctx, requester, res, getProfileMunge)
       }

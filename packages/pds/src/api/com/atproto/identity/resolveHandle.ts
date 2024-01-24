@@ -34,7 +34,7 @@ export default function (server: Server, ctx: AppContext) {
 
     // this is not someone on our server, but we help with resolving anyway
     if (!did) {
-      did = await tryResolveFromAppView(ctx.appViewAgent, handle)
+      did = await tryResolveFromAppView(ctx.getAppviewAgent(null), handle)
     }
 
     if (!did) {

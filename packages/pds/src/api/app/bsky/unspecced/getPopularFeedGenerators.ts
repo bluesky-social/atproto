@@ -7,8 +7,9 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.access,
     handler: async ({ auth, params }) => {
       const requester = auth.credentials.did
-      const res =
-        await ctx.appViewAgent.api.app.bsky.unspecced.getPopularFeedGenerators(
+      const res = await ctx
+        .getAppviewAgent(requester)
+        .api.app.bsky.unspecced.getPopularFeedGenerators(
           params,
           await ctx.appviewAuthHeaders(requester),
         )

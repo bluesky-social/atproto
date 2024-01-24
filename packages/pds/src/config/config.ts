@@ -173,6 +173,12 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     url: env.bskyAppViewUrl,
     did: env.bskyAppViewDid,
     cdnUrlPattern: env.bskyAppViewCdnUrlPattern,
+    alternate: env.bskyAppviewAlternateUrl
+      ? {
+          url: env.bskyAppviewAlternateUrl,
+          users: env.bskyAppviewAlternateUsers ?? [],
+        }
+      : undefined,
   }
 
   assert(env.modServiceUrl)
@@ -336,6 +342,10 @@ export type BksyAppViewConfig = {
   url: string
   did: string
   cdnUrlPattern?: string
+  alternate?: {
+    url: string
+    users: string[]
+  }
 }
 
 export type ModServiceConfig = {

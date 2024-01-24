@@ -43,6 +43,8 @@ export type AppContextOptions = {
   redisScratch?: Redis
   crawlers: Crawlers
   appViewAgent: AtpAgent
+  alternateAppviewAgent?: AtpAgent
+  alternateAppviewUsers: Map<string, boolean>
   moderationAgent: AtpAgent
   entrywayAgent?: AtpAgent
   authVerifier: AuthVerifier
@@ -67,7 +69,9 @@ export class AppContext {
   public backgroundQueue: BackgroundQueue
   public redisScratch?: Redis
   public crawlers: Crawlers
-  public appViewAgent: AtpAgent
+  private appViewAgent: AtpAgent
+  private alternateAppviewAgent?: AtpAgent
+  public alternateAppviewUsers: Map<string, boolean>
   public moderationAgent: AtpAgent
   public entrywayAgent: AtpAgent | undefined
   public authVerifier: AuthVerifier
@@ -89,6 +93,8 @@ export class AppContext {
     this.redisScratch = opts.redisScratch
     this.crawlers = opts.crawlers
     this.appViewAgent = opts.appViewAgent
+    this.alternateAppviewAgent = opts.alternateAppviewAgent
+    this.alternateAppviewUsers = opts.alternateAppviewUsers
     this.moderationAgent = opts.moderationAgent
     this.entrywayAgent = opts.entrywayAgent
     this.authVerifier = opts.authVerifier
@@ -162,6 +168,16 @@ export class AppContext {
       : undefined
 
     const appViewAgent = new AtpAgent({ service: cfg.bskyAppView.url })
+
+    const alternateAppviewAgent = cfg.bskyAppView.alternate
+      ? new AtpAgent({ service: cfg.bskyAppView.alternate.url })
+      : undefined
+    const alternateAppviewUsers = (
+      cfg.bskyAppView.alternate?.users ?? []
+    ).reduce((acc, cur) => {
+      return acc.set(cur, true)
+    }, new Map<string, boolean>())
+
     const moderationAgent = new AtpAgent({ service: cfg.modService.url })
 
     const entrywayAgent = cfg.entryway
@@ -230,6 +246,8 @@ export class AppContext {
       redisScratch,
       crawlers,
       appViewAgent,
+      alternateAppviewAgent,
+      alternateAppviewUsers,
       moderationAgent,
       entrywayAgent,
       authVerifier,
@@ -237,6 +255,17 @@ export class AppContext {
       cfg,
       ...(overrides ?? {}),
     })
+  }
+
+  getAppviewAgent(requester: string | null): AtpAgent {
+    if (
+      requester &&
+      this.alternateAppviewAgent &&
+      this.alternateAppviewUsers.has(requester)
+    ) {
+      return this.alternateAppviewAgent
+    }
+    return this.appViewAgent
   }
 
   async appviewAuthHeaders(did: string) {

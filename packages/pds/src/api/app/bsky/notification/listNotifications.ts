@@ -6,8 +6,9 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.access,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res =
-        await ctx.appViewAgent.api.app.bsky.notification.listNotifications(
+      const res = await ctx
+        .getAppviewAgent(requester)
+        .api.app.bsky.notification.listNotifications(
           params,
           await ctx.appviewAuthHeaders(requester),
         )
