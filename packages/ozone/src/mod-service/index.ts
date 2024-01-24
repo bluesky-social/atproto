@@ -39,6 +39,8 @@ import {
 import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { BackgroundQueue } from '../background'
 import { EventPusher } from '../daemon'
+import { ImageInvalidator } from '../image-invalidator'
+import { httpLogger as log } from '../logger'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -49,6 +51,8 @@ export class ModerationService {
     public eventPusher: EventPusher,
     public appviewAgent: AtpAgent,
     private appviewAuth: AppviewAuth,
+    public imgInvalidator?: ImageInvalidator,
+    public cdnPaths?: string[],
   ) {}
 
   static creator(
@@ -56,6 +60,8 @@ export class ModerationService {
     eventPusher: EventPusher,
     appviewAgent: AtpAgent,
     appviewAuth: AppviewAuth,
+    imgInvalidator?: ImageInvalidator,
+    cdnPaths?: string[],
   ) {
     return (db: Database) =>
       new ModerationService(
@@ -64,6 +70,8 @@ export class ModerationService {
         eventPusher,
         appviewAgent,
         appviewAuth,
+        imgInvalidator,
+        cdnPaths,
       )
   }
 
@@ -463,14 +471,38 @@ export class ModerationService {
               lastAttempted: null,
             }),
         )
-        .returning('id')
+        .returning(['id', 'subjectDid', 'subjectBlobCid'])
         .execute()
 
       this.db.onCommit(() => {
         this.backgroundQueue.add(async () => {
-          await Promise.all(
-            blobEvts.map((evt) => this.eventPusher.attemptBlobEvent(evt.id)),
+          await Promise.allSettled(
+            blobEvts.map((evt) =>
+              this.eventPusher
+                .attemptBlobEvent(evt.id)
+                .catch((err) =>
+                  log.error({ err, ...evt }, 'failed to push blob event'),
+                ),
+            ),
           )
+
+          if (this.imgInvalidator) {
+            await Promise.allSettled(
+              blobEvts.map((evt) => {
+                const paths = (this.cdnPaths ?? []).map((path) =>
+                  path.replace('%s', evt.subjectDid),
+                )
+                return this.imgInvalidator
+                  ?.invalidate(evt.subjectBlobCid, paths)
+                  .catch((err) =>
+                    log.error(
+                      { err, paths, ...evt },
+                      'failed to invalidate blob on cdn',
+                    ),
+                  )
+              }),
+            )
+          }
         })
       })
     }

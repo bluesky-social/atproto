@@ -35,6 +35,10 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     did: env.pdsDid,
   }
 
+  const cdnCfg: OzoneConfig['cdn'] = {
+    paths: env.cdnPaths,
+  }
+
   assert(env.didPlcUrl)
   const identityCfg: OzoneConfig['identity'] = {
     plcUrl: env.didPlcUrl,
@@ -45,6 +49,7 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
     db: dbCfg,
     appview: appviewCfg,
     pds: pdsCfg,
+    cdn: cdnCfg,
     identity: identityCfg,
   }
 }
@@ -54,6 +59,7 @@ export type OzoneConfig = {
   db: DatabaseConfig
   appview: AppviewConfig
   pds: PdsConfig | null
+  cdn: CdnConfig
   identity: IdentityConfig
 }
 
@@ -81,4 +87,8 @@ export type PdsConfig = {
 
 export type IdentityConfig = {
   plcUrl: string
+}
+
+export type CdnConfig = {
+  paths?: string[]
 }
