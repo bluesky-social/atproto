@@ -7952,11 +7952,6 @@ export const schemaDict = {
             },
           },
         },
-        errors: [
-          {
-            name: 'UnknownFeed',
-          },
-        ],
       },
       suggestion: {
         type: 'object',

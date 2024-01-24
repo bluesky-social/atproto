@@ -28,7 +28,6 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'UnknownFeed'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
