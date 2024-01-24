@@ -44,7 +44,7 @@ export type AppContextOptions = {
   crawlers: Crawlers
   appViewAgent: AtpAgent
   alternateAppviewAgent?: AtpAgent
-  alternateAppviewUsers: Map<string, boolean>
+  alternateAppviewUsers: Set<string>
   moderationAgent: AtpAgent
   entrywayAgent?: AtpAgent
   authVerifier: AuthVerifier
@@ -71,7 +71,7 @@ export class AppContext {
   public crawlers: Crawlers
   private appViewAgent: AtpAgent
   private alternateAppviewAgent?: AtpAgent
-  public alternateAppviewUsers: Map<string, boolean>
+  public alternateAppviewUsers: Set<string>
   public moderationAgent: AtpAgent
   public entrywayAgent: AtpAgent | undefined
   public authVerifier: AuthVerifier
@@ -175,8 +175,8 @@ export class AppContext {
     const alternateAppviewUsers = (
       cfg.bskyAppView.alternate?.users ?? []
     ).reduce((acc, cur) => {
-      return acc.set(cur, true)
-    }, new Map<string, boolean>())
+      return acc.add(cur)
+    }, new Set<string>())
 
     const moderationAgent = new AtpAgent({ service: cfg.modService.url })
 
