@@ -207,6 +207,7 @@
       "properties": {
         "tags": {
           "type": "array",
+          "maxLength": 100,
           "items": { "type": "string", "maxLength": 640, "maxGraphemes": 64 },
           "description": "A list of tags which describe the account owner's interests."
         }
