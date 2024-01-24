@@ -1,8 +1,5 @@
-import { once } from 'events'
-import AtpAgent, { ComAtprotoServerResetPassword } from '@atproto/api'
-import * as crypto from '@atproto/crypto'
+import AtpAgent from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import Mail from 'nodemailer/lib/mailer'
 import { AppContext } from '../src'
 import {
   DISABLE_SIGNUPS_FLAG,
@@ -11,7 +8,6 @@ import {
 } from '../src/signup-queue'
 import { DAY } from '@atproto/common'
 import assert from 'assert'
-import { create } from 'domain'
 
 describe('signup queue', () => {
   let network: TestNetworkNoAppView

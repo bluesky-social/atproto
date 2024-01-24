@@ -347,6 +347,23 @@ export async function generateMockSetup(env: TestNetwork) {
       createdAt: date.next().value,
     },
   )
+
+  // uncomment to enable signup limits
+  // the following parameters for instance, will allow 2 signups after minute
+  // await env.pds.ctx.db.db
+  //   .insertInto('runtime_flag')
+  //   .values([
+  //     {
+  //       name: 'signup-limiter:periodMs',
+  //       value: (1000 * 60).toString(),
+  //     },
+  //     {
+  //       name: 'signup-limiter:periodAllowance',
+  //       value: '2',
+  //     },
+  //   ])
+  //   .execute()
+  // await env.pds.ctx.signupLimiter.refresh()
 }
 
 function ucfirst(str: string): string {
