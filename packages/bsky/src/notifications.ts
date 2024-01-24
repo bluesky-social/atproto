@@ -1,6 +1,8 @@
 import axios from 'axios'
 import { Insertable, sql } from 'kysely'
 import TTLCache from '@isaacs/ttlcache'
+import { Struct, Timestamp } from '@bufbuild/protobuf'
+import murmur from 'murmurhash'
 import { AtUri } from '@atproto/api'
 import { MINUTE, chunkArray } from '@atproto/common'
 import Database from './db/primary'
@@ -9,11 +11,13 @@ import { NotificationPushToken as PushToken } from './db/tables/notification-pus
 import logger from './indexer/logger'
 import { notSoftDeletedClause, valuesList } from './db/util'
 import { ids } from './lexicon/lexicons'
-import { retryHttp } from './util/retry'
+import { retryConnect, retryHttp } from './util/retry'
+import { Notification as CourierNotification } from './proto/courier_pb'
+import { CourierClient } from './courier'
 
 export type Platform = 'ios' | 'android' | 'web'
 
-type PushNotification = {
+type GorushNotification = {
   tokens: string[]
   platform: 1 | 2 // 1 = ios, 2 = android
   title: string
@@ -26,161 +30,24 @@ type PushNotification = {
   collapse_key?: string
 }
 
-type InsertableNotif = Insertable<Notification>
+type NotifRow = Insertable<Notification>
 
-type NotifDisplay = {
+type NotifView = {
   key: string
   rateLimit: boolean
   title: string
   body: string
-  notif: InsertableNotif
+  notif: NotifRow
 }
 
-export class NotificationServer {
-  private rateLimiter = new RateLimiter(1, 30 * MINUTE)
+export abstract class NotificationServer<N = unknown> {
+  constructor(public db: Database) {}
 
-  constructor(public db: Database, public pushEndpoint?: string) {}
+  abstract prepareNotifications(notifs: NotifRow[]): Promise<N[]>
 
-  async getTokensByDid(dids: string[]) {
-    if (!dids.length) return {}
-    const tokens = await this.db.db
-      .selectFrom('notification_push_token')
-      .where('did', 'in', dids)
-      .selectAll()
-      .execute()
-    return tokens.reduce((acc, token) => {
-      acc[token.did] ??= []
-      acc[token.did].push(token)
-      return acc
-    }, {} as Record<string, PushToken[]>)
-  }
+  abstract processNotifications(prepared: N[]): Promise<void>
 
-  async prepareNotifsToSend(notifications: InsertableNotif[]) {
-    const now = Date.now()
-    const notifsToSend: PushNotification[] = []
-    const tokensByDid = await this.getTokensByDid(
-      unique(notifications.map((n) => n.did)),
-    )
-    // views for all notifications that have tokens
-    const notificationViews = await this.getNotificationDisplayAttributes(
-      notifications.filter((n) => tokensByDid[n.did]),
-    )
-
-    for (const notifView of notificationViews) {
-      if (!isRecent(notifView.notif.sortAt, 10 * MINUTE)) {
-        continue // if the notif is from > 10 minutes ago, don't send push notif
-      }
-      const { did: userDid } = notifView.notif
-      const userTokens = tokensByDid[userDid] ?? []
-      for (const t of userTokens) {
-        const { appId, platform, token } = t
-        if (notifView.rateLimit && !this.rateLimiter.check(token, now)) {
-          continue
-        }
-        if (platform === 'ios' || platform === 'android') {
-          notifsToSend.push({
-            tokens: [token],
-            platform: platform === 'ios' ? 1 : 2,
-            title: notifView.title,
-            message: notifView.body,
-            topic: appId,
-            data: {
-              reason: notifView.notif.reason,
-              recordUri: notifView.notif.recordUri,
-              recordCid: notifView.notif.recordCid,
-            },
-            collapse_id: notifView.key,
-            collapse_key: notifView.key,
-          })
-        } else {
-          // @TODO: Handle web notifs
-          logger.warn({ did: userDid }, 'cannot send web notification to user')
-        }
-      }
-    }
-
-    return notifsToSend
-  }
-
-  /**
-   * The function `addNotificationsToQueue` adds push notifications to a queue, taking into account rate
-   * limiting and batching the notifications for efficient processing.
-   * @param {PushNotification[]} notifs - An array of PushNotification objects. Each PushNotification
-   * object has a "tokens" property which is an array of tokens.
-   * @returns void
-   */
-  async processNotifications(notifs: PushNotification[]) {
-    for (const batch of chunkArray(notifs, 20)) {
-      try {
-        await this.sendPushNotifications(batch)
-      } catch (err) {
-        logger.error({ err, batch }, 'notification push batch failed')
-      }
-    }
-  }
-
-  /**  1. Get the user's token (APNS or FCM for iOS and Android respectively) from the database
-    User token will be in the format:
-        did || token || platform (1 = iOS, 2 = Android, 3 = Web)
-    2. Send notification to `gorush` server with token
-    Notification will be in the format:
-    "notifications": [
-      {
-        "tokens": string[],
-        "platform": 1 | 2,
-        "message": string,
-        "title": string,
-        "priority": "normal" | "high",
-        "image": string, (Android only)
-        "expiration": number, (iOS only)
-        "badge": number, (iOS only)
-      }
-    ]
-    3. `gorush` will send notification to APNS or FCM
-    4.  store response from `gorush` which contains the ID of the notification
-    5. If notification needs to be updated or deleted, find the ID of the notification from the database and send a new notification to `gorush` with the ID (repeat step 2)
-  */
-  private async sendPushNotifications(notifications: PushNotification[]) {
-    // if pushEndpoint is not defined, we are not running in the indexer service, so we can't send push notifications
-    if (!this.pushEndpoint) {
-      throw new Error('Push endpoint not defined')
-    }
-    // if no notifications, skip and return early
-    if (notifications.length === 0) {
-      return
-    }
-    const pushEndpoint = this.pushEndpoint
-    await retryHttp(() =>
-      axios.post(
-        pushEndpoint,
-        { notifications },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            accept: 'application/json',
-          },
-        },
-      ),
-    )
-  }
-
-  async registerDeviceForPushNotifications(
-    did: string,
-    token: string,
-    platform: Platform,
-    appId: string,
-  ) {
-    // if token doesn't exist, insert it, on conflict do nothing
-    await this.db.db
-      .insertInto('notification_push_token')
-      .values({ did, token, platform, appId })
-      .onConflict((oc) => oc.doNothing())
-      .execute()
-  }
-
-  async getNotificationDisplayAttributes(
-    notifs: InsertableNotif[],
-  ): Promise<NotifDisplay[]> {
+  async getNotificationViews(notifs: NotifRow[]): Promise<NotifView[]> {
     const { ref } = this.db.db.dynamic
     const authorDids = notifs.map((n) => n.author)
     const subjectUris = notifs.flatMap((n) => n.reasonSubject ?? [])
@@ -219,7 +86,7 @@ export class NotificationServer {
       return acc
     }, {} as Record<string, { text: string }>)
 
-    const results: NotifDisplay[] = []
+    const results: NotifView[] = []
 
     for (const notif of notifs) {
       const {
@@ -310,7 +177,7 @@ export class NotificationServer {
     return results
   }
 
-  async findBlocksAndMutes(notifs: InsertableNotif[]) {
+  private async findBlocksAndMutes(notifs: NotifRow[]) {
     const pairs = notifs.map((n) => ({ author: n.author, receiver: n.did }))
     const { ref } = this.db.db.dynamic
     const blockQb = this.db.db
@@ -351,6 +218,155 @@ export class NotificationServer {
       .execute()
     return filterPairs as { author: string; receiver: string }[]
   }
+}
+
+export class GorushNotificationServer extends NotificationServer<GorushNotification> {
+  private rateLimiter = new RateLimiter(1, 30 * MINUTE)
+
+  constructor(public db: Database, public pushEndpoint: string) {
+    super(db)
+  }
+
+  async prepareNotifications(
+    notifs: NotifRow[],
+  ): Promise<GorushNotification[]> {
+    const now = Date.now()
+    const notifsToSend: GorushNotification[] = []
+    const tokensByDid = await this.getTokensByDid(
+      unique(notifs.map((n) => n.did)),
+    )
+    // views for all notifications that have tokens
+    const notificationViews = await this.getNotificationViews(
+      notifs.filter((n) => tokensByDid[n.did]),
+    )
+
+    for (const notifView of notificationViews) {
+      if (!isRecent(notifView.notif.sortAt, 10 * MINUTE)) {
+        continue // if the notif is from > 10 minutes ago, don't send push notif
+      }
+      const { did: userDid } = notifView.notif
+      const userTokens = tokensByDid[userDid] ?? []
+      for (const t of userTokens) {
+        const { appId, platform, token } = t
+        if (notifView.rateLimit && !this.rateLimiter.check(token, now)) {
+          continue
+        }
+        if (platform === 'ios' || platform === 'android') {
+          notifsToSend.push({
+            tokens: [token],
+            platform: platform === 'ios' ? 1 : 2,
+            title: notifView.title,
+            message: notifView.body,
+            topic: appId,
+            data: {
+              reason: notifView.notif.reason,
+              recordUri: notifView.notif.recordUri,
+              recordCid: notifView.notif.recordCid,
+            },
+            collapse_id: notifView.key,
+            collapse_key: notifView.key,
+          })
+        } else {
+          // @TODO: Handle web notifs
+          logger.warn({ did: userDid }, 'cannot send web notification to user')
+        }
+      }
+    }
+    return notifsToSend
+  }
+
+  async getTokensByDid(dids: string[]) {
+    if (!dids.length) return {}
+    const tokens = await this.db.db
+      .selectFrom('notification_push_token')
+      .where('did', 'in', dids)
+      .selectAll()
+      .execute()
+    return tokens.reduce((acc, token) => {
+      acc[token.did] ??= []
+      acc[token.did].push(token)
+      return acc
+    }, {} as Record<string, PushToken[]>)
+  }
+
+  async processNotifications(prepared: GorushNotification[]): Promise<void> {
+    for (const batch of chunkArray(prepared, 20)) {
+      try {
+        await this.sendToGorush(batch)
+      } catch (err) {
+        logger.error({ err, batch }, 'notification push batch failed')
+      }
+    }
+  }
+
+  private async sendToGorush(prepared: GorushNotification[]) {
+    // if no notifications, skip and return early
+    if (prepared.length === 0) {
+      return
+    }
+    const pushEndpoint = this.pushEndpoint
+    await retryHttp(() =>
+      axios.post(
+        pushEndpoint,
+        { notifications: prepared },
+        {
+          headers: {
+            'content-type': 'application/json',
+            accept: 'application/json',
+          },
+        },
+      ),
+    )
+  }
+}
+
+export class CourierNotificationServer extends NotificationServer<CourierNotification> {
+  constructor(public db: Database, public courierClient: CourierClient) {
+    super(db)
+  }
+
+  async prepareNotifications(
+    notifs: NotifRow[],
+  ): Promise<CourierNotification[]> {
+    const notificationViews = await this.getNotificationViews(notifs)
+    const notifsToSend = notificationViews.map((n) => {
+      return new CourierNotification({
+        id: getCourierId(n),
+        recipientDid: n.notif.did,
+        title: n.title,
+        message: n.body,
+        collapseKey: n.key,
+        alwaysDeliver: !n.rateLimit,
+        timestamp: Timestamp.fromDate(new Date(n.notif.sortAt)),
+        additional: Struct.fromJson({
+          uri: n.notif.recordUri,
+          reason: n.notif.reason,
+          subject: n.notif.reasonSubject || '',
+        }),
+      })
+    })
+    return notifsToSend
+  }
+
+  async processNotifications(prepared: CourierNotification[]): Promise<void> {
+    try {
+      await retryConnect(() =>
+        this.courierClient.pushNotifications({ notifications: prepared }),
+      )
+    } catch (err) {
+      logger.error({ err }, 'notification push to courier failed')
+    }
+  }
+}
+
+const getCourierId = (notif: NotifView) => {
+  const key = [
+    notif.notif.recordUri,
+    notif.notif.did,
+    notif.notif.reason,
+    notif.notif.reasonSubject || '',
+  ].join('::')
+  return murmur.v3(key).toString(16)
 }
 
 const isRecent = (isoTime: string, timeDiff: number): boolean => {

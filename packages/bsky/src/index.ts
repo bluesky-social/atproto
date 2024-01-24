@@ -29,12 +29,12 @@ import {
 } from './image/invalidator'
 import { BackgroundQueue } from './background'
 import { MountedAlgos } from './feed-gen/types'
-import { NotificationServer } from './notifications'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { Redis } from './redis'
 import { AuthVerifier } from './auth-verifier'
-import { authWithApiKey, createBsyncClient } from './bsync'
+import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
+import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 
 export type { ServerConfigValues } from './config'
 export type { MountedAlgos } from './feed-gen/types'
@@ -113,7 +113,6 @@ export class BskyAppView {
 
     const backgroundQueue = new BackgroundQueue(db.getPrimary())
 
-    const notifServer = new NotificationServer(db.getPrimary())
     const searchAgent = config.searchEndpoint
       ? new AtpAgent({ service: config.searchEndpoint })
       : undefined
@@ -142,7 +141,18 @@ export class BskyAppView {
           httpVersion: config.bsyncHttpVersion ?? '2',
           nodeOptions: { rejectUnauthorized: !config.bsyncIgnoreBadTls },
           interceptors: config.bsyncApiKey
-            ? [authWithApiKey(config.bsyncApiKey)]
+            ? [bsyncAuth(config.bsyncApiKey)]
+            : [],
+        })
+      : undefined
+
+    const courierClient = config.courierUrl
+      ? createCourierClient({
+          baseUrl: config.courierUrl,
+          httpVersion: config.courierHttpVersion ?? '2',
+          nodeOptions: { rejectUnauthorized: !config.courierIgnoreBadTls },
+          interceptors: config.courierApiKey
+            ? [courierAuth(config.courierApiKey)]
             : [],
         })
       : undefined
@@ -159,8 +169,8 @@ export class BskyAppView {
       backgroundQueue,
       searchAgent,
       bsyncClient,
+      courierClient,
       algos,
-      notifServer,
       authVerifier,
     })
 

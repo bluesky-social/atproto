@@ -29,16 +29,16 @@
     "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "jest --updateSnapshot",
     "migration:create": "ts-node ./bin/migration-create.ts",
-    "buf:gen": "buf generate ../bsync/proto"
+    "buf:gen": "buf generate ../bsync/proto && buf generate ./proto"
   },
   "dependencies": {
     "@atproto/api": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
-    "@atproto/syntax": "workspace:^",
     "@atproto/identity": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/repo": "workspace:^",
+    "@atproto/syntax": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "@bufbuild/protobuf": "^1.5.0",
     "@connectrpc/connect": "^1.1.4",
@@ -55,6 +55,7 @@
     "ioredis": "^5.3.2",
     "kysely": "^0.22.0",
     "multiformats": "^9.9.0",
+    "murmurhash": "^2.0.1",
     "p-queue": "^6.6.2",
     "pg": "^8.10.0",
     "pino": "^8.15.0",

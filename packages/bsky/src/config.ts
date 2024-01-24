@@ -36,6 +36,11 @@ export interface ServerConfigValues {
   bsyncHttpVersion?: '1.1' | '2'
   bsyncIgnoreBadTls?: boolean
   bsyncOnlyMutes?: boolean
+  courierUrl?: string
+  courierApiKey?: string
+  courierHttpVersion?: '1.1' | '2'
+  courierIgnoreBadTls?: boolean
+  courierOnlyRegistration?: boolean
   adminPassword: string
   moderatorPassword: string
   triagePassword: string
@@ -100,6 +105,18 @@ export class ServerConfig {
     const bsyncOnlyMutes = process.env.BSKY_BSYNC_ONLY_MUTES === 'true'
     assert(!bsyncOnlyMutes || bsyncUrl, 'bsync-only mutes requires a bsync url')
     assert(bsyncHttpVersion === '1.1' || bsyncHttpVersion === '2')
+    const courierUrl = process.env.BSKY_COURIER_URL || undefined
+    const courierApiKey = process.env.BSKY_COURIER_API_KEY || undefined
+    const courierHttpVersion = process.env.BSKY_COURIER_HTTP_VERSION || '2'
+    const courierIgnoreBadTls =
+      process.env.BSKY_COURIER_IGNORE_BAD_TLS === 'true'
+    const courierOnlyRegistration =
+      process.env.BSKY_COURIER_ONLY_REGISTRATION === 'true'
+    assert(
+      !courierOnlyRegistration || courierUrl,
+      'courier-only registration requires a courier url',
+    )
+    assert(courierHttpVersion === '1.1' || courierHttpVersion === '2')
     const dbPrimaryPostgresUrl =
       overrides?.dbPrimaryPostgresUrl || process.env.DB_PRIMARY_POSTGRES_URL
     let dbReplicaPostgresUrls = overrides?.dbReplicaPostgresUrls
@@ -169,6 +186,11 @@ export class ServerConfig {
       bsyncHttpVersion,
       bsyncIgnoreBadTls,
       bsyncOnlyMutes,
+      courierUrl,
+      courierApiKey,
+      courierHttpVersion,
+      courierIgnoreBadTls,
+      courierOnlyRegistration,
       adminPassword,
       moderatorPassword,
       triagePassword,
@@ -303,6 +325,26 @@ export class ServerConfig {
 
   get bsyncIgnoreBadTls() {
     return this.cfg.bsyncIgnoreBadTls
+  }
+
+  get courierUrl() {
+    return this.cfg.courierUrl
+  }
+
+  get courierApiKey() {
+    return this.cfg.courierApiKey
+  }
+
+  get courierHttpVersion() {
+    return this.cfg.courierHttpVersion
+  }
+
+  get courierIgnoreBadTls() {
+    return this.cfg.courierIgnoreBadTls
+  }
+
+  get courierOnlyRegistration() {
+    return this.cfg.courierOnlyRegistration
   }
 
   get adminPassword() {

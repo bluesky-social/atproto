@@ -1,14 +1,18 @@
 import AtpAgent, { AtUri } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import { NotificationServer } from '../src/notifications'
+import {
+  CourierNotificationServer,
+  GorushNotificationServer,
+} from '../src/notifications'
 import { Database } from '../src'
+import { createCourierClient } from '../src/courier'
 
 describe('notification server', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
-  let notifServer: NotificationServer
+  let notifServer: GorushNotificationServer
 
   // account dids, for convenience
   let alice: string
@@ -24,14 +28,17 @@ describe('notification server', () => {
     await network.processAll()
     await network.bsky.processAll()
     alice = sc.dids.alice
-    notifServer = network.bsky.ctx.notifServer
+    notifServer = new GorushNotificationServer(
+      network.bsky.ctx.db.getPrimary(),
+      'http://mock',
+    )
   })
 
   afterAll(async () => {
     await network.close()
   })
 
-  describe('registerPushNotification', () => {
+  describe('registerPush', () => {
     it('registers push notification token and device.', async () => {
       const res = await agent.api.app.bsky.notification.registerPush(
         {
@@ -95,19 +102,14 @@ describe('notification server', () => {
   })
 
   describe('NotificationServer', () => {
-    it('gets user tokens from db', async () => {
-      const tokens = await notifServer.getTokensByDid([alice])
-      expect(tokens[alice][0].token).toEqual('123')
-    })
-
     it('gets notification display attributes: title and body', async () => {
       const db = network.bsky.ctx.db.getPrimary()
       const notif = await getLikeNotification(db, alice)
       if (!notif) throw new Error('no notification found')
-      const attrs = await notifServer.getNotificationDisplayAttributes([notif])
-      if (!attrs.length)
+      const views = await notifServer.getNotificationViews([notif])
+      if (!views.length)
         throw new Error('no notification display attributes found')
-      expect(attrs[0].title).toEqual('bobby liked your post')
+      expect(views[0].title).toEqual('bobby liked your post')
     })
 
     it('filters notifications that violate blocks', async () => {
@@ -126,11 +128,11 @@ describe('notification server', () => {
         did: notif.author,
         author: notif.did,
       }
-      const attrs = await notifServer.getNotificationDisplayAttributes([
+      const views = await notifServer.getNotificationViews([
         notif,
         flippedNotif,
       ])
-      expect(attrs.length).toBe(0)
+      expect(views.length).toBe(0)
       const uri = new AtUri(blockRef.uri)
       await pdsAgent.api.app.bsky.graph.block.delete(
         { repo: alice, rkey: uri.rkey },
@@ -147,8 +149,8 @@ describe('notification server', () => {
         { actor: notif.author },
         { headers: sc.getHeaders(alice), encoding: 'application/json' },
       )
-      const attrs = await notifServer.getNotificationDisplayAttributes([notif])
-      expect(attrs.length).toBe(0)
+      const views = await notifServer.getNotificationViews([notif])
+      expect(views.length).toBe(0)
       await pdsAgent.api.app.bsky.graph.unmuteActor(
         { actor: notif.author },
         { headers: sc.getHeaders(alice), encoding: 'application/json' },
@@ -182,12 +184,19 @@ describe('notification server', () => {
         { list: listRef.uri },
         { headers: sc.getHeaders(alice), encoding: 'application/json' },
       )
-      const attrs = await notifServer.getNotificationDisplayAttributes([notif])
-      expect(attrs.length).toBe(0)
+      const views = await notifServer.getNotificationViews([notif])
+      expect(views.length).toBe(0)
       await pdsAgent.api.app.bsky.graph.unmuteActorList(
         { list: listRef.uri },
         { headers: sc.getHeaders(alice), encoding: 'application/json' },
       )
+    })
+  })
+
+  describe('GorushNotificationServer', () => {
+    it('gets user tokens from db', async () => {
+      const tokens = await notifServer.getTokensByDid([alice])
+      expect(tokens[alice][0].token).toEqual('123')
     })
 
     it('prepares notification to be sent', async () => {
@@ -198,7 +207,7 @@ describe('notification server', () => {
         notif,
         notif /* second one will get dropped by rate limit */,
       ]
-      const prepared = await notifServer.prepareNotifsToSend(notifAsArray)
+      const prepared = await notifServer.prepareNotifications(notifAsArray)
       expect(prepared).toEqual([
         {
           collapse_id: 'like',
@@ -213,6 +222,37 @@ describe('notification server', () => {
           title: 'bobby liked your post',
           tokens: ['123'],
           topic: 'xyz.blueskyweb.app',
+        },
+      ])
+    })
+  })
+
+  describe('CourierNotificationServer', () => {
+    it('prepares notification to be sent', async () => {
+      const db = network.bsky.ctx.db.getPrimary()
+      const notif = await getLikeNotification(db, alice)
+      if (!notif) throw new Error('no notification found')
+      const courierNotifServer = new CourierNotificationServer(
+        db,
+        createCourierClient({ baseUrl: 'http://mock', httpVersion: '2' }),
+      )
+      const prepared = await courierNotifServer.prepareNotifications([notif])
+      expect(prepared[0]?.id).toBeTruthy()
+      expect(prepared.map((p) => p.toJson())).toEqual([
+        {
+          id: prepared[0].id, // already ensured it exists
+          recipientDid: notif.did,
+          title: 'bobby liked your post',
+          message: 'again',
+          collapseKey: 'like',
+          timestamp: notif.sortAt,
+          // this is missing, appears to be a quirk of toJson()
+          // alwaysDeliver: false,
+          additional: {
+            reason: notif.reason,
+            uri: notif.recordUri,
+            subject: notif.reasonSubject,
+          },
         },
       ])
     })
