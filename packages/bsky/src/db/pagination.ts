@@ -27,6 +27,9 @@ export abstract class GenericKeyset<R, LR extends LabeledResult> {
   abstract labelResult(result: R): LR
   abstract labeledResultToCursor(labeled: LR): Cursor
   abstract cursorToLabeledResult(cursor: Cursor): LR
+  static clearlyBad(cursor?: string) {
+    return cursor !== undefined && !cursor.includes('::')
+  }
   packFromResult(results: R | R[]): string | undefined {
     const result = Array.isArray(results) ? results.at(-1) : results
     if (!result) return

@@ -51,6 +51,9 @@ const skeleton = async (
   if (params.seenAt) {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
   }
+  if (NotifsKeyset.clearlyBad(cursor)) {
+    return { params, notifs: [] }
+  }
   let notifBuilder = db.db
     .selectFrom('notification as notif')
     .where('notif.did', '=', viewer)

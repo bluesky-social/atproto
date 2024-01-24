@@ -43,6 +43,7 @@ export default function (server: Server, ctx: AppContext) {
         authorization: req.headers['authorization'],
         'accept-language': req.headers['accept-language'],
       })
+      // @NOTE feed cursors should not be affected by appview swap
       const { timerSkele, timerHydr, resHeaders, ...result } = await getFeed(
         { ...params, viewer },
         {
