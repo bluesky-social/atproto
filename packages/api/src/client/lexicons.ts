@@ -4725,6 +4725,7 @@ export const schemaDict = {
         properties: {
           tags: {
             type: 'array',
+            maxLength: 100,
             items: {
               type: 'string',
               maxLength: 640,
