@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.9.3
+
+### Patch Changes
+
+- [#2081](https://github.com/bluesky-social/atproto/pull/2081) [`5368245a`](https://github.com/bluesky-social/atproto/commit/5368245a6ef7095c86ad166fb04ff9bef27c3c3e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add unspecced route for new onboarding `app.bsky.unspecced.getTaggedSuggestions`
+
 ## 0.9.2
 
 ### Patch Changes
