@@ -19,7 +19,6 @@ import * as repoSeq from './tables/repo-seq'
 import * as appMigration from './tables/app-migration'
 import * as runtimeFlag from './tables/runtime-flag'
 import * as phoneVerification from './tables/phone-verification'
-import * as queuedAccount from './tables/queued-account'
 
 export type DatabaseSchemaType = appMigration.PartialDB &
   runtimeFlag.PartialDB &
@@ -40,8 +39,7 @@ export type DatabaseSchemaType = appMigration.PartialDB &
   emailToken.PartialDB &
   moderation.PartialDB &
   repoSeq.PartialDB &
-  phoneVerification.PartialDB &
-  queuedAccount.PartialDB
+  phoneVerification.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 
