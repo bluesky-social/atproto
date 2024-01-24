@@ -25,6 +25,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         handle: row?.handle ?? undefined,
         profile: profiles.records[i],
         takenDown: !!row?.takedownRef,
+        takedownRef: row?.takedownRef || undefined,
+        tombstonedAt: undefined, // in current implementation, tombstoned actors are deleted
       }
     })
     return { actors }

@@ -62,7 +62,7 @@ export const skeleton = async (inputs: {
   }
   const actors = await ctx.hydrator.actor.getActors([did])
   const actor = actors.get(did)
-  if (!actor || actor.takendown) {
+  if (!actor) {
     throw new InvalidRequestError('Profile not found')
   }
   const res = await ctx.dataplane.getAuthorFeed({

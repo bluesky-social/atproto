@@ -7,7 +7,10 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, input }) => {
       const { list } = input.body
       const viewer = auth.credentials.iss
-      await ctx.dataplane.unmuteActorList({ actorDid: viewer, listUri: list })
+      await ctx.dataplane.deleteActorMutelistSubscription({
+        actorDid: viewer,
+        subjectUri: list,
+      })
     },
   })
 }

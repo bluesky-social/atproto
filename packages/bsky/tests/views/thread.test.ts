@@ -161,9 +161,8 @@ describe('pds thread views', () => {
 
   describe('takedown', () => {
     it('blocks post by actor', async () => {
-      await network.bsky.ctx.dataplane.updateTakedown({
-        actorDid: alice,
-        takenDown: true,
+      await network.bsky.ctx.dataplane.takedownActor({
+        did: alice,
       })
 
       // Same as shallow post thread test, minus alice
@@ -177,16 +176,14 @@ describe('pds thread views', () => {
       )
 
       // Cleanup
-      await network.bsky.ctx.dataplane.updateTakedown({
-        actorDid: alice,
-        takenDown: false,
+      await network.bsky.ctx.dataplane.untakedownActor({
+        did: alice,
       })
     })
 
     it('blocks replies by actor', async () => {
-      await network.bsky.ctx.dataplane.updateTakedown({
-        actorDid: carol,
-        takenDown: true,
+      await network.bsky.ctx.dataplane.takedownActor({
+        did: carol,
       })
 
       // Same as deep post thread test, minus carol
@@ -198,16 +195,14 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await network.bsky.ctx.dataplane.updateTakedown({
-        actorDid: carol,
-        takenDown: false,
+      await network.bsky.ctx.dataplane.untakedownActor({
+        did: carol,
       })
     })
 
     it('blocks ancestors by actor', async () => {
-      await network.bsky.ctx.dataplane.updateTakedown({
-        actorDid: bob,
-        takenDown: true,
+      await network.bsky.ctx.dataplane.takedownActor({
+        did: bob,
       })
 
       // Same as ancestor post thread test, minus bob
@@ -219,17 +214,15 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await network.bsky.ctx.dataplane.updateTakedown({
-        actorDid: bob,
-        takenDown: false,
+      await network.bsky.ctx.dataplane.untakedownActor({
+        did: bob,
       })
     })
 
     it('blocks post by record', async () => {
       const postRef = sc.posts[alice][1].ref
-      await network.bsky.ctx.dataplane.updateTakedown({
+      await network.bsky.ctx.dataplane.takedownRecord({
         recordUri: postRef.uriStr,
-        takenDown: true,
       })
 
       const promise = agent.api.app.bsky.feed.getPostThread(
@@ -242,9 +235,8 @@ describe('pds thread views', () => {
       )
 
       // Cleanup
-      await network.bsky.ctx.dataplane.updateTakedown({
+      await network.bsky.ctx.dataplane.untakedownRecord({
         recordUri: postRef.uriStr,
-        takenDown: false,
       })
     })
 
@@ -256,9 +248,8 @@ describe('pds thread views', () => {
 
       const parent = threadPreTakedown.data.thread.parent?.['post']
 
-      await network.bsky.ctx.dataplane.updateTakedown({
+      await network.bsky.ctx.dataplane.takedownRecord({
         recordUri: parent.uri,
-        takenDown: true,
       })
 
       // Same as ancestor post thread test, minus parent post
@@ -270,9 +261,8 @@ describe('pds thread views', () => {
       expect(forSnapshot(thread.data.thread)).toMatchSnapshot()
 
       // Cleanup
-      await network.bsky.ctx.dataplane.updateTakedown({
+      await network.bsky.ctx.dataplane.untakedownRecord({
         recordUri: parent.uri,
-        takenDown: false,
       })
     })
 
@@ -286,9 +276,8 @@ describe('pds thread views', () => {
 
       await Promise.all(
         [post1, post2].map((post) =>
-          network.bsky.ctx.dataplane.updateTakedown({
+          network.bsky.ctx.dataplane.takedownRecord({
             recordUri: post.uri,
-            takenDown: true,
           }),
         ),
       )
@@ -304,9 +293,8 @@ describe('pds thread views', () => {
       // Cleanup
       await Promise.all(
         [post1, post2].map((post) =>
-          network.bsky.ctx.dataplane.updateTakedown({
+          network.bsky.ctx.dataplane.untakedownRecord({
             recordUri: post.uri,
-            takenDown: false,
           }),
         ),
       )

@@ -10,7 +10,8 @@ export default function (server: Server, ctx: AppContext) {
       const viewer = auth.credentials.iss
       const [did] = await ctx.hydrator.actor.getDids([actor])
       if (!did) throw new InvalidRequestError('Actor not found')
-      await ctx.dataplane.muteActor({ actorDid: viewer, subjectDid: did })
+      // @TODO switch to bsync
+      await ctx.dataplane.createActorMute({ actorDid: viewer, subjectDid: did })
     },
   })
 }

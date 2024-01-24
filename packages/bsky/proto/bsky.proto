@@ -6,11 +6,7 @@ option go_package = "./;bsky";
 import "google/protobuf/timestamp.proto";
 
 //
-// Bsky
-//
-
-//
-// Records
+// Read Path
 //
 
 message Record {
@@ -20,8 +16,8 @@ message Record {
   bool taken_down = 5;
   google.protobuf.Timestamp created_at = 6;
   google.protobuf.Timestamp sorted_at = 7;
+  string takedown_ref = 8;
 }
-
 
 message GetBlockRecordsRequest {
   repeated string uris = 1;
@@ -166,26 +162,6 @@ message GetFollowsResponse {
   string cursor = 2;
 }
 
-// - Return number of users who follow A
-//     - For `followersCount` on a profile
-message GetFollowerCountsRequest {
-  repeated string dids = 1;
-}
-
-message GetFollowerCountsResponse {
-  repeated int32 counts = 1;
-}
-
-// - Return number of users followed by A
-//     - For `followCount` on a profile
-message GetFollowCountsRequest {
-  repeated string dids = 1;
-}
-
-message GetFollowCountsResponse {
-  repeated int32 counts = 1;
-}
-
 //
 // Likes
 //
@@ -230,16 +206,6 @@ message LikeInfo {
 message GetActorLikesResponse {
   repeated LikeInfo likes = 1;
   string cursor = 2;
-}
-
-// - return number of likes on subjects A, B, C...
-//     - post or feed generator hydration `likeCount` field
-message GetLikeCountsRequest {
-  repeated RecordRef refs = 1;
-}
-
-message GetLikeCountsResponse {
-  repeated int32 counts = 1;
 }
 
 //
@@ -312,16 +278,6 @@ message GetActorRepostsResponse {
   string cursor = 2;
 }
 
-// - return number of reposts on subject A
-//     - post or feed generator hydration `repostCount` field
-message GetRepostCountsRequest {
-  repeated RecordRef refs = 1;
-}
-
-message GetRepostCountsResponse {
-  repeated int32 counts = 1;
-}
-
 //
 // Profile
 //
@@ -338,6 +294,8 @@ message ActorInfo {
   string handle = 2;
   Record profile = 3;
   bool taken_down = 4;
+  string takedown_ref = 5;
+  google.protobuf.Timestamp tombstoned_at = 6;
 }
 
 message GetActorsResponse {
@@ -483,22 +441,6 @@ message GetMutesResponse {
   string cursor = 2;
 }
 
-// mute another user
-message MuteActorRequest {
-  string actor_did = 1;
-  string subject_did = 2;
-}
-
-message MuteActorResponse {}
-
-// unmute another user
-message UnmuteActorRequest {
-  string actor_did = 1;
-  string subject_did = 2;
-}
-
-message UnmuteActorResponse {}
-
 //
 // Mutelists
 //
@@ -538,22 +480,6 @@ message GetMutelistSubscriptionsResponse {
   repeated string list_uris = 1;
   string cursor = 2;
 }
-
-// mute a list
-message MuteActorListRequest {
-  string actor_did = 1;
-  string list_uri = 2;
-}
-
-message MuteActorListResponse {}
-
-// unmute a list
-message UnmuteActorListRequest {
-  string actor_did = 1;
-  string list_uri = 2;
-}
-
-message UnmuteActorListResponse {}
 
 //
 // Blocks
@@ -638,10 +564,11 @@ message GetNotificationsRequest {
 }
 
 message Notification {
-  string uri = 1;
-  string reason = 2;
-  string reason_subject = 3;
-  google.protobuf.Timestamp timestamp = 4;
+  string recipient_did = 1;
+  string uri = 2;
+  string reason = 3;
+  string reason_subject = 4;
+  google.protobuf.Timestamp timestamp = 5;
 }
 
 message GetNotificationsResponse {
@@ -878,16 +805,6 @@ message GetPostReplyCountsResponse {
   repeated int32 counts = 1;
 }
 
-// - Return post count for users A, B, C…
-//     - Profile hydration
-message GetPostCountsRequest {
-  repeated string dids = 1;
-}
-
-message GetPostCountsResponse {
-  repeated int32 counts = 1;
-}
-
 //
 // Labels
 //
@@ -921,25 +838,35 @@ message GetLatestRevResponse {
 // Moderation
 //
 
-// - Return whether blob is taken down given DID and CID
 message GetBlobTakedownRequest {
-  string actor_did = 1;
+  string did = 1;
   string cid = 2;
 }
 
 message GetBlobTakedownResponse {
   bool taken_down = 1;
+  string takedown_ref = 2;
 }
 
-// - Update takedown state for actors, records, and blobs
-message UpdateTakedownRequest {
-  string actor_did = 1;
-  string record_uri = 2;
-  string blob_cid = 3;
-  bool taken_down = 4;
+
+
+message GetActorTakedownRequest {
+  string did = 1;
 }
 
-message UpdateTakedownResponse {}
+message GetActorTakedownResponse {
+  bool taken_down = 1;
+  string takedown_ref = 2;
+}
+
+message GetRecordTakedownRequest {
+  string record_uri = 1;
+}
+
+message GetRecordTakedownResponse {
+  bool taken_down = 1;
+  string takedown_ref = 2;
+}
 
 
 // Ping
@@ -948,7 +875,12 @@ message PingResponse {}
 
 
 
+
 service Service {
+  //
+  // Read Path
+  //
+
   // Records
   rpc GetBlockRecords(GetBlockRecordsRequest) returns (GetBlockRecordsResponse);
   rpc GetFeedGeneratorRecords(GetFeedGeneratorRecordsRequest) returns (GetFeedGeneratorRecordsResponse);
@@ -966,20 +898,16 @@ service Service {
   rpc GetActorFollowsActors(GetActorFollowsActorsRequest) returns (GetActorFollowsActorsResponse);
   rpc GetFollowers(GetFollowersRequest) returns (GetFollowersResponse);
   rpc GetFollows(GetFollowsRequest) returns (GetFollowsResponse);
-  rpc GetFollowerCounts(GetFollowerCountsRequest) returns (GetFollowerCountsResponse);
-  rpc GetFollowCounts(GetFollowCountsRequest) returns (GetFollowCountsResponse);
 
   // Likes
   rpc GetLikesBySubject(GetLikesBySubjectRequest) returns (GetLikesBySubjectResponse);
   rpc GetLikesByActorAndSubjects(GetLikesByActorAndSubjectsRequest) returns (GetLikesByActorAndSubjectsResponse);
   rpc GetActorLikes(GetActorLikesRequest) returns (GetActorLikesResponse);
-  rpc GetLikeCounts(GetLikeCountsRequest) returns (GetLikeCountsResponse);
 
   // Reposts
   rpc GetRepostsBySubject(GetRepostsBySubjectRequest) returns (GetRepostsBySubjectResponse);
   rpc GetRepostsByActorAndSubjects(GetRepostsByActorAndSubjectsRequest) returns (GetRepostsByActorAndSubjectsResponse);
   rpc GetActorReposts(GetActorRepostsRequest) returns (GetActorRepostsResponse);
-  rpc GetRepostCounts(GetRepostCountsRequest) returns (GetRepostCountsResponse);
 
   // Interaction Counts
   rpc GetInteractionCounts(GetInteractionCountsRequest) returns (GetInteractionCountsResponse);
@@ -1002,15 +930,11 @@ service Service {
   // Mutes
   rpc GetActorMutesActor(GetActorMutesActorRequest) returns (GetActorMutesActorResponse);
   rpc GetMutes(GetMutesRequest) returns (GetMutesResponse);
-  rpc MuteActor(MuteActorRequest) returns (MuteActorResponse);
-  rpc UnmuteActor(UnmuteActorRequest) returns (UnmuteActorResponse);
 
   // Mutelists
   rpc GetActorMutesActorViaList(GetActorMutesActorViaListRequest) returns (GetActorMutesActorViaListResponse);
   rpc GetMutelistSubscription(GetMutelistSubscriptionRequest) returns (GetMutelistSubscriptionResponse);
   rpc GetMutelistSubscriptions(GetMutelistSubscriptionsRequest) returns (GetMutelistSubscriptionsResponse);
-  rpc MuteActorList(MuteActorListRequest) returns (MuteActorListResponse);
-  rpc UnmuteActorList(UnmuteActorListRequest) returns (UnmuteActorListResponse);
 
   // Blocks
   rpc GetBidirectionalBlock(GetBidirectionalBlockRequest) returns (GetBidirectionalBlockResponse);
@@ -1049,7 +973,6 @@ service Service {
 
   // Posts
   rpc GetPostReplyCounts(GetPostReplyCountsRequest) returns (GetPostReplyCountsResponse);
-  rpc GetPostCounts(GetPostCountsRequest) returns (GetPostCountsResponse);
 
   // Labels
   rpc GetLabels(GetLabelsRequest) returns (GetLabelsResponse);
@@ -1059,8 +982,126 @@ service Service {
 
   // Moderation
   rpc GetBlobTakedown(GetBlobTakedownRequest) returns (GetBlobTakedownResponse);
-  rpc UpdateTakedown(UpdateTakedownRequest) returns (UpdateTakedownResponse);
+  rpc GetRecordTakedown(GetRecordTakedownRequest) returns (GetRecordTakedownResponse);
+  rpc GetActorTakedown(GetActorTakedownRequest) returns (GetActorTakedownResponse);
 
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);
+
+
+
+
+  //
+  // Write Path
+  //
+
+  // Moderation
+  rpc TakedownBlob(TakedownBlobRequest) returns (TakedownBlobResponse);
+  rpc TakedownRecord(TakedownRecordRequest) returns (TakedownRecordResponse);
+  rpc TakedownActor(TakedownActorRequest) returns (TakedownActorResponse);
+
+  rpc UntakedownBlob(UntakedownBlobRequest) returns (UntakedownBlobResponse);
+  rpc UntakedownRecord(UntakedownRecordRequest) returns (UntakedownRecordResponse);
+  rpc UntakedownActor(UntakedownActorRequest) returns (UntakedownActorResponse);
+
+  // Ingestion
+  rpc CreateActorMute(CreateActorMuteRequest) returns (CreateActorMuteResponse);
+  rpc DeleteActorMute(DeleteActorMuteRequest) returns (DeleteActorMuteResponse);
+  rpc ClearActorMutes(ClearActorMutesRequest) returns (ClearActorMutesResponse);
+
+  rpc CreateActorMutelistSubscription(CreateActorMutelistSubscriptionRequest) returns (CreateActorMutelistSubscriptionResponse);
+  rpc DeleteActorMutelistSubscription(DeleteActorMutelistSubscriptionRequest) returns (DeleteActorMutelistSubscriptionResponse);
+  rpc ClearActorMutelistSubscriptions(ClearActorMutelistSubscriptionsRequest) returns (ClearActorMutelistSubscriptionsResponse);
 }
+
+
+message TakedownActorRequest {
+  string did = 1;
+  string ref = 2;
+  google.protobuf.Timestamp seen = 3;
+}
+
+message TakedownActorResponse {
+}
+
+message UntakedownActorRequest {
+  string did = 1;
+  google.protobuf.Timestamp seen = 2;
+}
+
+message UntakedownActorResponse {
+}
+
+message TakedownBlobRequest {
+  string did = 1;
+  string cid = 2;
+  string ref = 3;
+  google.protobuf.Timestamp seen = 4;
+}
+
+message TakedownBlobResponse {}
+
+message UntakedownBlobRequest {
+  string did = 1;
+  string cid = 2;
+  google.protobuf.Timestamp seen = 3;
+}
+
+message UntakedownBlobResponse {}
+
+message TakedownRecordRequest {
+  string record_uri = 1;
+  string ref = 2;
+  google.protobuf.Timestamp seen = 3;
+}
+
+message TakedownRecordResponse {
+}
+
+message UntakedownRecordRequest {
+  string record_uri = 1;
+  google.protobuf.Timestamp seen = 2;
+}
+
+message UntakedownRecordResponse {
+}
+
+message CreateActorMuteRequest {
+  string actor_did = 1;
+  string subject_did = 2;
+}
+
+message CreateActorMuteResponse {}
+
+message DeleteActorMuteRequest {
+  string actor_did = 1;
+  string subject_did = 2;
+}
+
+message DeleteActorMuteResponse {}
+
+message ClearActorMutesRequest {
+  string actor_did = 1;
+}
+
+message ClearActorMutesResponse {}
+
+message CreateActorMutelistSubscriptionRequest {
+  string actor_did = 1;
+  string subject_uri = 2;
+}
+
+message CreateActorMutelistSubscriptionResponse {}
+
+message DeleteActorMutelistSubscriptionRequest {
+  string actor_did = 1;
+  string subject_uri = 2;
+}
+
+message DeleteActorMutelistSubscriptionResponse {}
+
+message ClearActorMutelistSubscriptionsRequest {
+  string actor_did = 1;
+}
+
+message ClearActorMutelistSubscriptionsResponse {}

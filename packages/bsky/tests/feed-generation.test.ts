@@ -156,9 +156,8 @@ describe('feed generation', () => {
       sc.getHeaders(alice),
     )
     await network.processAll()
-    await network.bsky.ctx.dataplane.updateTakedown({
+    await network.bsky.ctx.dataplane.takedownRecord({
       recordUri: prime.uri,
-      takenDown: true,
     })
 
     feedUriAll = all.uri
