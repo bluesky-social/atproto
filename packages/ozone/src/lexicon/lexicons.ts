@@ -4615,6 +4615,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#personalDetailsPref',
             'lex:app.bsky.actor.defs#feedViewPref',
             'lex:app.bsky.actor.defs#threadViewPref',
+            'lex:app.bsky.actor.defs#interestsPref',
           ],
         },
       },
@@ -4715,6 +4716,22 @@ export const schemaDict = {
           prioritizeFollowedUsers: {
             type: 'boolean',
             description: 'Show followed users at the top of all replies.',
+          },
+        },
+      },
+      interestsPref: {
+        type: 'object',
+        required: ['tags'],
+        properties: {
+          tags: {
+            type: 'array',
+            items: {
+              type: 'string',
+              maxLength: 640,
+              maxGraphemes: 64,
+            },
+            description:
+              "A list of tags which describe the account owner's interests.",
           },
         },
       },
@@ -6925,6 +6942,45 @@ export const schemaDict = {
           },
         },
       },
+      notFoundActor: {
+        type: 'object',
+        description: 'indicates that a handle or DID could not be resolved',
+        required: ['actor', 'notFound'],
+        properties: {
+          actor: {
+            type: 'string',
+            format: 'at-identifier',
+          },
+          notFound: {
+            type: 'boolean',
+            const: true,
+          },
+        },
+      },
+      relationship: {
+        type: 'object',
+        description:
+          'lists the bi-directional graph relationships between one actor (not indicated in the object), and the target actors (the DID included in the object)',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          following: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor follows this DID, this is the AT-URI of the follow record',
+          },
+          followedBy: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor is followed by this DID, contains the AT-URI of the follow record',
+          },
+        },
+      },
     },
   },
   AppBskyGraphFollow: {
@@ -7325,6 +7381,65 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyGraphGetRelationships: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getRelationships',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates public relationships between one account, and a list of other accounts',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            others: {
+              type: 'array',
+              maxLength: 30,
+              items: {
+                type: 'string',
+                format: 'at-identifier',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['relationships'],
+            properties: {
+              actor: {
+                type: 'string',
+                format: 'did',
+              },
+              relationships: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:app.bsky.graph.def#relationship',
+                    'lex:app.bsky.graph.defs#notFoundActor',
+                  ],
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ActorNotFound',
+            description:
+              'the primary actor at-identifier could not be resolved',
+          },
+        ],
       },
     },
   },
@@ -8272,6 +8387,7 @@ export const ids = {
   AppBskyGraphGetListMutes: 'app.bsky.graph.getListMutes',
   AppBskyGraphGetLists: 'app.bsky.graph.getLists',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
+  AppBskyGraphGetRelationships: 'app.bsky.graph.getRelationships',
   AppBskyGraphGetSuggestedFollowsByActor:
     'app.bsky.graph.getSuggestedFollowsByActor',
   AppBskyGraphList: 'app.bsky.graph.list',

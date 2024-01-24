@@ -114,6 +114,7 @@ import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
+import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
@@ -166,39 +167,39 @@ export class Server {
 
 export class ComNS {
   _server: Server
-  atproto: ComAtprotoNS
+  atproto: AtprotoNS
 
   constructor(server: Server) {
     this._server = server
-    this.atproto = new ComAtprotoNS(server)
+    this.atproto = new AtprotoNS(server)
   }
 }
 
-export class ComAtprotoNS {
+export class AtprotoNS {
   _server: Server
-  admin: ComAtprotoAdminNS
-  identity: ComAtprotoIdentityNS
-  label: ComAtprotoLabelNS
-  moderation: ComAtprotoModerationNS
-  repo: ComAtprotoRepoNS
-  server: ComAtprotoServerNS
-  sync: ComAtprotoSyncNS
-  temp: ComAtprotoTempNS
+  admin: AdminNS
+  identity: IdentityNS
+  label: LabelNS
+  moderation: ModerationNS
+  repo: RepoNS
+  server: ServerNS
+  sync: SyncNS
+  temp: TempNS
 
   constructor(server: Server) {
     this._server = server
-    this.admin = new ComAtprotoAdminNS(server)
-    this.identity = new ComAtprotoIdentityNS(server)
-    this.label = new ComAtprotoLabelNS(server)
-    this.moderation = new ComAtprotoModerationNS(server)
-    this.repo = new ComAtprotoRepoNS(server)
-    this.server = new ComAtprotoServerNS(server)
-    this.sync = new ComAtprotoSyncNS(server)
-    this.temp = new ComAtprotoTempNS(server)
+    this.admin = new AdminNS(server)
+    this.identity = new IdentityNS(server)
+    this.label = new LabelNS(server)
+    this.moderation = new ModerationNS(server)
+    this.repo = new RepoNS(server)
+    this.server = new ServerNS(server)
+    this.sync = new SyncNS(server)
+    this.temp = new TempNS(server)
   }
 }
 
-export class ComAtprotoAdminNS {
+export class AdminNS {
   _server: Server
 
   constructor(server: Server) {
@@ -459,7 +460,7 @@ export class ComAtprotoAdminNS {
   }
 }
 
-export class ComAtprotoIdentityNS {
+export class IdentityNS {
   _server: Server
 
   constructor(server: Server) {
@@ -489,7 +490,7 @@ export class ComAtprotoIdentityNS {
   }
 }
 
-export class ComAtprotoLabelNS {
+export class LabelNS {
   _server: Server
 
   constructor(server: Server) {
@@ -519,7 +520,7 @@ export class ComAtprotoLabelNS {
   }
 }
 
-export class ComAtprotoModerationNS {
+export class ModerationNS {
   _server: Server
 
   constructor(server: Server) {
@@ -538,7 +539,7 @@ export class ComAtprotoModerationNS {
   }
 }
 
-export class ComAtprotoRepoNS {
+export class RepoNS {
   _server: Server
 
   constructor(server: Server) {
@@ -634,7 +635,7 @@ export class ComAtprotoRepoNS {
   }
 }
 
-export class ComAtprotoServerNS {
+export class ServerNS {
   _server: Server
 
   constructor(server: Server) {
@@ -873,7 +874,7 @@ export class ComAtprotoServerNS {
   }
 }
 
-export class ComAtprotoSyncNS {
+export class SyncNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1013,7 +1014,7 @@ export class ComAtprotoSyncNS {
   }
 }
 
-export class ComAtprotoTempNS {
+export class TempNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1078,37 +1079,37 @@ export class ComAtprotoTempNS {
 
 export class AppNS {
   _server: Server
-  bsky: AppBskyNS
+  bsky: BskyNS
 
   constructor(server: Server) {
     this._server = server
-    this.bsky = new AppBskyNS(server)
+    this.bsky = new BskyNS(server)
   }
 }
 
-export class AppBskyNS {
+export class BskyNS {
   _server: Server
-  actor: AppBskyActorNS
-  embed: AppBskyEmbedNS
-  feed: AppBskyFeedNS
-  graph: AppBskyGraphNS
-  notification: AppBskyNotificationNS
-  richtext: AppBskyRichtextNS
-  unspecced: AppBskyUnspeccedNS
+  actor: ActorNS
+  embed: EmbedNS
+  feed: FeedNS
+  graph: GraphNS
+  notification: NotificationNS
+  richtext: RichtextNS
+  unspecced: UnspeccedNS
 
   constructor(server: Server) {
     this._server = server
-    this.actor = new AppBskyActorNS(server)
-    this.embed = new AppBskyEmbedNS(server)
-    this.feed = new AppBskyFeedNS(server)
-    this.graph = new AppBskyGraphNS(server)
-    this.notification = new AppBskyNotificationNS(server)
-    this.richtext = new AppBskyRichtextNS(server)
-    this.unspecced = new AppBskyUnspeccedNS(server)
+    this.actor = new ActorNS(server)
+    this.embed = new EmbedNS(server)
+    this.feed = new FeedNS(server)
+    this.graph = new GraphNS(server)
+    this.notification = new NotificationNS(server)
+    this.richtext = new RichtextNS(server)
+    this.unspecced = new UnspeccedNS(server)
   }
 }
 
-export class AppBskyActorNS {
+export class ActorNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1193,7 +1194,7 @@ export class AppBskyActorNS {
   }
 }
 
-export class AppBskyEmbedNS {
+export class EmbedNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1201,7 +1202,7 @@ export class AppBskyEmbedNS {
   }
 }
 
-export class AppBskyFeedNS {
+export class FeedNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1385,7 +1386,7 @@ export class AppBskyFeedNS {
   }
 }
 
-export class AppBskyGraphNS {
+export class GraphNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1480,6 +1481,17 @@ export class AppBskyGraphNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getRelationships<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetRelationships.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetRelationships.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getRelationships' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getSuggestedFollowsByActor<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1536,7 +1548,7 @@ export class AppBskyGraphNS {
   }
 }
 
-export class AppBskyNotificationNS {
+export class NotificationNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1588,7 +1600,7 @@ export class AppBskyNotificationNS {
   }
 }
 
-export class AppBskyRichtextNS {
+export class RichtextNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1596,7 +1608,7 @@ export class AppBskyRichtextNS {
   }
 }
 
-export class AppBskyUnspeccedNS {
+export class UnspeccedNS {
   _server: Server
 
   constructor(server: Server) {
@@ -1670,13 +1682,11 @@ type RouteRateLimitOpts<T> = {
   calcKey?: (ctx: T) => string
   calcPoints?: (ctx: T) => number
 }
-type HandlerOpts = { blobLimit?: number }
 type HandlerRateLimitOpts<T> = SharedRateLimitOpts<T> | RouteRateLimitOpts<T>
 type ConfigOf<Auth, Handler, ReqCtx> =
   | Handler
   | {
       auth?: Auth
-      opts?: HandlerOpts
       rateLimit?: HandlerRateLimitOpts<ReqCtx> | HandlerRateLimitOpts<ReqCtx>[]
       handler: Handler
     }
