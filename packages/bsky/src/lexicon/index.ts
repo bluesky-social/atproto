@@ -124,6 +124,7 @@ import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyUnspeccedGetPopular from './types/app/bsky/unspecced/getPopular'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
+import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
 import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
@@ -1613,6 +1614,17 @@ export class UnspeccedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getTaggedSuggestions<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyUnspeccedGetTaggedSuggestions.Handler<ExtractAuth<AV>>,
+      AppBskyUnspeccedGetTaggedSuggestions.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getTaggedSuggestions' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getTimelineSkeleton<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1658,13 +1670,11 @@ type RouteRateLimitOpts<T> = {
   calcKey?: (ctx: T) => string
   calcPoints?: (ctx: T) => number
 }
-type HandlerOpts = { blobLimit?: number }
 type HandlerRateLimitOpts<T> = SharedRateLimitOpts<T> | RouteRateLimitOpts<T>
 type ConfigOf<Auth, Handler, ReqCtx> =
   | Handler
   | {
       auth?: Auth
-      opts?: HandlerOpts
       rateLimit?: HandlerRateLimitOpts<ReqCtx> | HandlerRateLimitOpts<ReqCtx>[]
       handler: Handler
     }
