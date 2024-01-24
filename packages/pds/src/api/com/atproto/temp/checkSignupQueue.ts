@@ -29,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
       let estimatedTimeMs: number | undefined
       if (
         placeInQueue &&
-        limiterStatus.disableSignups &&
+        !limiterStatus.disableSignups &&
         limiterStatus.accountsInPeriod > 0
       ) {
         estimatedTimeMs =
