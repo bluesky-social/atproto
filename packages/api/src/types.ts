@@ -98,6 +98,14 @@ export interface BskyThreadViewPreference {
 }
 
 /**
+ * Bluesky interests preferences
+ */
+export interface BskyInterestsPreference {
+  tags: string[]
+  [key: string]: any
+}
+
+/**
  * Bluesky preferences
  */
 export interface BskyPreferences {

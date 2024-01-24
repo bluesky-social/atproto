@@ -705,6 +705,43 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
       })
+
+      await agent.setInterestsPref({ tags: ['foo', 'bar'] })
+      await expect(agent.getPreferences()).resolves.toStrictEqual({
+        feeds: {
+          pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
+          saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
+        },
+        adultContentEnabled: false,
+        contentLabels: {
+          impersonation: 'hide',
+          spam: 'ignore',
+        },
+        birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        feedViewPrefs: {
+          home: {
+            hideReplies: false,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+          other: {
+            hideReplies: true,
+            hideRepliesByUnfollowed: false,
+            hideRepliesByLikeCount: 0,
+            hideReposts: false,
+            hideQuotePosts: false,
+          },
+        },
+        threadViewPrefs: {
+          sort: 'oldest',
+          prioritizeFollowedUsers: true,
+        },
+        interestsPref: {
+          tags: ['foo', 'bar'],
+        },
+      })
     })
 
     it('resolves duplicates correctly', async () => {

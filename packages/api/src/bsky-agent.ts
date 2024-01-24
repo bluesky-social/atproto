@@ -11,6 +11,7 @@ import {
   BskyLabelPreference,
   BskyFeedViewPreference,
   BskyThreadViewPreference,
+  BskyInterestsPreference,
 } from './types'
 
 const FEED_VIEW_PREF_DEFAULTS = {
@@ -521,6 +522,22 @@ export class BskyAgent extends AtpAgent {
         .concat([{ ...pref, $type: 'app.bsky.actor.defs#threadViewPref' }])
     })
   }
+
+  async setInterestsPref(pref: Partial<BskyInterestsPreference>) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      const existing = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isInterestsPref(pref) &&
+          AppBskyActorDefs.validateInterestsPref(pref).success,
+      )
+      if (existing) {
+        pref = { ...existing, ...pref }
+      }
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isInterestsPref(p))
+        .concat([{ ...pref, $type: 'app.bsky.actor.defs#interestsPref' }])
+    })
+  }
 }
 
 /**
@@ -541,6 +558,9 @@ async function updatePreferences(
   const newPrefs = cb(res.data.preferences)
   if (newPrefs === false) {
     return
+  }
+  if (newPrefs.find(p => p.tags)) {
+    console.log('found tags')
   }
   await agent.app.bsky.actor.putPreferences({
     preferences: newPrefs,
