@@ -471,7 +471,7 @@ export class ModerationService {
               lastAttempted: null,
             }),
         )
-        .returning(['id', 'subjectDid', 'subjectBlobCid'])
+        .returning(['id', 'subjectDid', 'subjectBlobCid', 'eventType'])
         .execute()
 
       this.db.onCommit(() => {
@@ -488,15 +488,15 @@ export class ModerationService {
 
           if (this.imgInvalidator) {
             await Promise.allSettled(
-              blobEvts.map((evt) => {
+              (subject.blobCids ?? []).map((cid) => {
                 const paths = (this.cdnPaths ?? []).map((path) =>
-                  path.replace('%s', evt.subjectDid),
+                  path.replace('%s', subject.did),
                 )
                 return this.imgInvalidator
-                  ?.invalidate(evt.subjectBlobCid, paths)
+                  ?.invalidate(cid, paths)
                   .catch((err) =>
                     log.error(
-                      { err, paths, ...evt },
+                      { err, paths, cid },
                       'failed to invalidate blob on cdn',
                     ),
                   )

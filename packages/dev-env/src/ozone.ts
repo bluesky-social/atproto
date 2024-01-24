@@ -62,7 +62,9 @@ export class TestOzone {
     const secrets = ozone.envToSecrets(env)
 
     // api server
-    const server = await ozone.OzoneService.create(cfg, secrets)
+    const server = await ozone.OzoneService.create(cfg, secrets, {
+      imgInvalidator: config.imgInvalidator,
+    })
     await server.start()
 
     const daemon = await ozone.OzoneDaemon.create(cfg, secrets)
