@@ -23,7 +23,8 @@ import { RuntimeFlags } from './runtime-flags'
 import { PdsAgents } from './pds-agents'
 import { TwilioClient } from './twilio'
 import assert from 'assert'
-import { SignupLimiter } from './signup-limiter'
+import { SignupLimiter } from './signup-queue/limiter'
+import { SignupActivator } from './signup-queue/activator'
 
 export type AppContextOptions = {
   db: Database
@@ -48,6 +49,7 @@ export type AppContextOptions = {
   plcRotationKey: crypto.Keypair
   twilio?: TwilioClient
   signupLimiter: SignupLimiter
+  signupActivator: SignupActivator
   cfg: ServerConfig
 }
 
@@ -74,6 +76,7 @@ export class AppContext {
   public plcRotationKey: crypto.Keypair
   public twilio?: TwilioClient
   public signupLimiter: SignupLimiter
+  public signupActivator: SignupActivator
   public cfg: ServerConfig
 
   constructor(opts: AppContextOptions) {
@@ -99,6 +102,7 @@ export class AppContext {
     this.plcRotationKey = opts.plcRotationKey
     this.twilio = opts.twilio
     this.signupLimiter = opts.signupLimiter
+    this.signupActivator = opts.signupActivator
     this.cfg = opts.cfg
   }
 
@@ -227,6 +231,7 @@ export class AppContext {
     }
 
     const signupLimiter = new SignupLimiter(db)
+    const signupActivator = new SignupActivator(db)
 
     const pdsAgents = new PdsAgents()
 
@@ -253,6 +258,7 @@ export class AppContext {
       pdsAgents,
       twilio,
       signupLimiter,
+      signupActivator,
       cfg,
       ...(overrides ?? {}),
     })

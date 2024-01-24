@@ -1,6 +1,5 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { countAll } from '../../../../db/util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -14,6 +13,7 @@ export default function (server: Server, ctx: AppContext) {
         .where('did', '=', requester)
         .executeTakeFirstOrThrow()
       const activated = !!account.activatedAt
+
       let placeInQueue: number | undefined
       if (!activated) {
         const res = await ctx.db.db
@@ -24,6 +24,7 @@ export default function (server: Server, ctx: AppContext) {
           .executeTakeFirst()
         placeInQueue = res?.count
       }
+
       const limiterStatus = ctx.signupLimiter.status
       let estimatedTimeMs: number | undefined
       if (
