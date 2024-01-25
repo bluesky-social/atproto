@@ -8,7 +8,7 @@ import { authPassthru, proxy, proxyAppView } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.notification.registerPush({
-    auth: ctx.authVerifier.access,
+    auth: ctx.authVerifier.accessDeactived,
     handler: async ({ auth, input, req }) => {
       const proxied = await proxy(
         ctx,

@@ -5,7 +5,7 @@ import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.getSession({
-    auth: ctx.authVerifier.access,
+    auth: ctx.authVerifier.accessDeactived,
     handler: async ({ auth }) => {
       const did = auth.credentials.did
       const [account, didDoc] = await Promise.all([
