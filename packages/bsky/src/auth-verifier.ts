@@ -2,9 +2,16 @@ import {
   AuthRequiredError,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
-import { IdResolver } from '@atproto/identity'
 import * as ui8 from 'uint8arrays'
 import express from 'express'
+import {
+  Code,
+  DataPlaneClient,
+  getKeyAsDidKey,
+  isDataplaneError,
+  unpackIdentityKeys,
+} from './data-plane'
+import { GetIdentityByDidResponse } from './proto/bsky_pb'
 
 type ReqCtx = {
   req: express.Request
@@ -63,7 +70,7 @@ export class AuthVerifier {
   public ownDid: string
   public adminDid: string
 
-  constructor(public idResolver: IdResolver, opts: AuthVerifierOpts) {
+  constructor(public dataplane: DataPlaneClient, opts: AuthVerifierOpts) {
     this._adminPass = opts.adminPass
     this._moderatorPass = opts.moderatorPass
     this._triagePass = opts.triagePass
@@ -203,12 +210,26 @@ export class AuthVerifier {
   ) {
     const getSigningKey = async (
       did: string,
-      forceRefresh: boolean,
+      _forceRefresh: boolean, // @TODO consider propagating to dataplane
     ): Promise<string> => {
       if (opts.iss !== null && !opts.iss.includes(did)) {
         throw new AuthRequiredError('Untrusted issuer', 'UntrustedIss')
       }
-      return this.idResolver.did.resolveAtprotoKey(did, forceRefresh)
+      let identity: GetIdentityByDidResponse
+      try {
+        identity = await this.dataplane.getIdentityByDid({ did })
+      } catch (err) {
+        if (isDataplaneError(err, Code.NotFound)) {
+          throw new AuthRequiredError('identity unknown')
+        }
+        throw err
+      }
+      const keys = unpackIdentityKeys(identity.keys)
+      const didKey = getKeyAsDidKey(keys, { id: 'atproto' })
+      if (!didKey) {
+        throw new AuthRequiredError('missing or bad key')
+      }
+      return didKey
     }
 
     const jwtStr = bearerTokenFromReq(reqCtx.req)

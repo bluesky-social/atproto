@@ -1,7 +1,6 @@
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as bsky from '@atproto/bsky'
-import { DAY, HOUR } from '@atproto/common-web'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client as PlcClient } from '@did-plc/lib'
@@ -42,7 +41,11 @@ export class TestBsky {
     })
 
     const dataplanePort = await getPort()
-    const dataplane = await bsky.DataPlaneServer.create(db, dataplanePort)
+    const dataplane = await bsky.DataPlaneServer.create(
+      db,
+      dataplanePort,
+      cfg.plcUrl,
+    )
 
     const bsyncPort = await getPort()
     const bsync = await bsky.MockBsync.create(db, bsyncPort)
@@ -79,12 +82,9 @@ export class TestBsky {
     }
     await migrationDb.close()
 
-    const didCache = new bsky.DidSqlCache(db, HOUR, DAY)
-
     // api server
     const server = bsky.BskyAppView.create({
       config,
-      didCache,
       signingKey: serviceKeypair,
       algos: cfg.algos,
     })
@@ -92,7 +92,7 @@ export class TestBsky {
     const sub = new bsky.RepoSubscription({
       service: cfg.repoProvider,
       db,
-      idResolver: server.ctx.idResolver,
+      idResolver: dataplane.idResolver,
       background: new BackgroundQueue(db),
     })
 

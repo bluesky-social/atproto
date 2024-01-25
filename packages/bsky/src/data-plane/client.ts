@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { randomInt } from 'node:crypto'
-import { Service } from '../proto/bsky_connect'
+import * as ui8 from 'uint8arrays'
 import {
   Code,
   ConnectError,
@@ -9,6 +9,8 @@ import {
   makeAnyClient,
 } from '@connectrpc/connect'
 import { createGrpcTransport } from '@connectrpc/connect-node'
+import { getDidKeyFromMultibase } from '@atproto/identity'
+import { Service } from '../proto/bsky_connect'
 
 export type DataPlaneClient = PromiseClient<typeof Service>
 type HttpVersion = '1.1' | '2'
@@ -69,4 +71,57 @@ const createBaseClient = (
 const randomElement = <T>(arr: T[]): T | undefined => {
   if (arr.length === 0) return
   return arr[randomInt(arr.length)]
+}
+
+export const unpackIdentityServices = (servicesBytes: Uint8Array) => {
+  const servicesStr = ui8.toString(servicesBytes, 'utf8')
+  if (!servicesStr) return {}
+  return JSON.parse(servicesStr) as UnpackedServices
+}
+
+export const unpackIdentityKeys = (keysBytes: Uint8Array) => {
+  const keysStr = ui8.toString(keysBytes, 'utf8')
+  if (!keysStr) return {}
+  return JSON.parse(keysStr) as UnpackedKeys
+}
+
+export const getServiceEndpoint = (
+  services: UnpackedServices,
+  opts: { id: string; type: string },
+) => {
+  const endpoint =
+    services[opts.id] &&
+    services[opts.id].Type === opts.type &&
+    validateUrl(services[opts.id].URL)
+  return endpoint || undefined
+}
+
+export const getKeyAsDidKey = (keys: UnpackedKeys, opts: { id: string }) => {
+  const key =
+    keys[opts.id] &&
+    getDidKeyFromMultibase({
+      type: keys[opts.id].Type,
+      publicKeyMultibase: keys[opts.id].PublicKeyMultibase,
+    })
+  return key || undefined
+}
+
+type UnpackedServices = Record<string, { Type: string; URL: string }>
+
+type UnpackedKeys = Record<string, { Type: string; PublicKeyMultibase: string }>
+
+const validateUrl = (urlStr: string): string | undefined => {
+  let url
+  try {
+    url = new URL(urlStr)
+  } catch {
+    return undefined
+  }
+  if (!['http:', 'https:'].includes(url.protocol)) {
+    return undefined
+  } else if (!url.hostname) {
+    return undefined
+  } else {
+    return urlStr
+  }
 }

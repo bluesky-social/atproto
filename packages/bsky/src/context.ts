@@ -1,6 +1,6 @@
 import * as plc from '@did-plc/lib'
 import AtpAgent from '@atproto/api'
-import { DidCache, IdResolver } from '@atproto/identity'
+import { IdResolver } from '@atproto/identity'
 import { Keypair } from '@atproto/crypto'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { ServerConfig } from './config'
@@ -22,7 +22,6 @@ export class AppContext {
       views: Views
       signingKey: Keypair
       idResolver: IdResolver
-      didCache?: DidCache
       bsyncClient: BsyncClient
       courierClient: CourierClient
       algos: MountedAlgos
@@ -60,10 +59,6 @@ export class AppContext {
 
   get idResolver(): IdResolver {
     return this.opts.idResolver
-  }
-
-  get didCache(): DidCache | undefined {
-    return this.opts.didCache
   }
 
   get bsyncClient(): BsyncClient {
