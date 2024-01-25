@@ -110,6 +110,7 @@ export default function (server: Server, ctx: AppContext) {
 
         // insert invite code use
         if (ctx.cfg.invites.required && inviteCode) {
+          await ensureCodeIsAvailable(dbTxn, inviteCode, true)
           await dbTxn.db
             .insertInto('invite_code_use')
             .values({
