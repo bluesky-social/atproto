@@ -45,7 +45,18 @@ export class TwilioClient {
       })
     } catch (err) {
       log.error({ err, phoneNumber }, 'error sending twilio code')
-      throw new UpstreamFailureError('Could not send verification text')
+      const code = typeof err === 'object' ? err?.['code'] : undefined
+      if (code === 60200) {
+        throw new InvalidRequestError(
+          'Could not send verification text: invalid phone number',
+        )
+      } else if (code === 60220) {
+        throw new InvalidRequestError(
+          `We're sorry, we're not currently able to send verification messages to China. We're working with our providers to solve this as quickly as possible.`,
+        )
+      } else {
+        throw new UpstreamFailureError('Could not send verification text')
+      }
     }
   }
 
