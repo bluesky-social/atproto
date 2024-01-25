@@ -253,4 +253,14 @@ describe('pds follow views', () => {
     expect(res.data.relationships.length).toBe(3)
     expect(forSnapshot(res.data)).toMatchSnapshot()
   })
+
+  it('fetches relationships between users', async () => {
+    const res = await agent.api.app.bsky.graph.getRelationships({
+      actor: sc.dids.bob,
+      others: [sc.dids.alice, sc.dids.bob, sc.dids.carol, 'did:example:fake'],
+    })
+    expect(res.data.actor).toEqual(sc.dids.bob)
+    expect(res.data.relationships.length).toBe(4)
+    expect(forSnapshot(res.data)).toMatchSnapshot()
+  })
 })

@@ -38,7 +38,6 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standardOptionalAnyAud,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
-
       const headers = noUndefinedVals({
         authorization: req.headers['authorization'],
         'accept-language': req.headers['accept-language'],
