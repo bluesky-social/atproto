@@ -4,6 +4,7 @@ import express from 'express'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import createRoutes from './routes'
 import { Database } from './db'
+import { IdResolver, MemoryCache } from '@atproto/identity'
 
 export { DidSqlCache } from './did-cache'
 export { RepoSubscription } from './subscription'
@@ -11,9 +12,13 @@ export { RepoSubscription } from './subscription'
 export class DataPlaneServer {
   constructor(public server: http.Server) {}
 
-  static async create(db: Database, port: number) {
+  static async create(db: Database, port: number, plcUrl?: string) {
     const app = express()
-    const routes = createRoutes(db)
+    const idResolver = new IdResolver({
+      plcUrl,
+      didCache: new MemoryCache(),
+    })
+    const routes = createRoutes(db, idResolver)
     app.use(expressConnectMiddleware({ routes }))
     const server = app.listen(port)
     await events.once(server, 'listening')
