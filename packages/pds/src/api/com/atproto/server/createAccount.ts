@@ -11,7 +11,10 @@ import * as scrypt from '../../../../db/scrypt'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
 import { countAll } from '../../../../db/util'
-import { UserAlreadyExistsError } from '../../../../services/account'
+import {
+  AccountService,
+  UserAlreadyExistsError,
+} from '../../../../services/account'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
 import { didDocForSession } from './util'
@@ -36,8 +39,6 @@ export default function (server: Server, ctx: AppContext) {
       } = isInputForPdsViaEntryway(ctx, input.body)
         ? await validateInputsForPdsViaEntryway(ctx, input.body)
         : await validateInputsForPdsViaUser(ctx, input.body)
-
-      await ensureUnusedHandleAndEmail(ctx.db, handle, email)
 
       const now = new Date().toISOString()
       const passwordScrypt = await scrypt.genSaltAndHash(password)
@@ -266,7 +267,7 @@ const validateInputsForPdsViaUser = async (
     did: input.did,
   })
 
-  await ensureUnusedHandleAndEmail(ctx.db, handle, email)
+  await ensureUnusedHandleAndEmail(ctx.services.account(ctx.db), handle, email)
 
   // check that the invite code still has uses
   if (ctx.cfg.invites.required && inviteCode) {
@@ -470,21 +471,17 @@ const reserveSigningKey = async (ctx: AppContext, host: string) => {
 }
 
 const ensureUnusedHandleAndEmail = async (
-  db: Database,
+  accountSrvc: AccountService,
   handle: string,
   email: string,
 ) => {
-  const res = await db.db
-    .selectFrom('user_account')
-    .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
-    .select(['did_handle.handle', 'user_account.email'])
-    .where('user_account.email', '=', email)
-    .orWhere('did_handle.handle', '=', handle)
-    .executeTakeFirst()
-  if (!res) return
-  if (res.email === email) {
+  const [byHandle, byEmail] = await Promise.all([
+    accountSrvc.getAccount(handle, true),
+    accountSrvc.getAccountByEmail(email, true),
+  ])
+  if (byEmail) {
     throw new InvalidRequestError(`Email already taken: ${email}`)
-  } else {
+  } else if (byHandle) {
     throw new InvalidRequestError(`Handle already taken: ${handle}`)
   }
 }
