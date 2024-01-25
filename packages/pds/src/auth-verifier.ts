@@ -29,7 +29,7 @@ export enum AuthScope {
   Access = 'com.atproto.access',
   Refresh = 'com.atproto.refresh',
   AppPass = 'com.atproto.appPass',
-  Deactivated = 'com.atproto.deactived',
+  Deactivated = 'com.atproto.deactivated',
 }
 
 export enum RoleStatus {
