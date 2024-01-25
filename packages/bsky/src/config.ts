@@ -20,12 +20,10 @@ export interface ServerConfigValues {
   bsyncApiKey?: string
   bsyncHttpVersion?: '1.1' | '2'
   bsyncIgnoreBadTls?: boolean
-  bsyncOnlyMutes?: boolean
   courierUrl: string
   courierApiKey?: string
   courierHttpVersion?: '1.1' | '2'
   courierIgnoreBadTls?: boolean
-  courierOnlyRegistration?: boolean
   adminPassword: string
   moderatorPassword: string
   triagePassword: string
@@ -66,8 +64,6 @@ export class ServerConfig {
     const bsyncApiKey = process.env.BSKY_BSYNC_API_KEY || undefined
     const bsyncHttpVersion = process.env.BSKY_BSYNC_HTTP_VERSION || '2'
     const bsyncIgnoreBadTls = process.env.BSKY_BSYNC_IGNORE_BAD_TLS === 'true'
-    const bsyncOnlyMutes = process.env.BSKY_BSYNC_ONLY_MUTES === 'true'
-    assert(!bsyncOnlyMutes || bsyncUrl, 'bsync-only mutes requires a bsync url')
     assert(bsyncHttpVersion === '1.1' || bsyncHttpVersion === '2')
     const courierUrl = process.env.BSKY_COURIER_URL || undefined
     assert(courierUrl)
@@ -75,12 +71,6 @@ export class ServerConfig {
     const courierHttpVersion = process.env.BSKY_COURIER_HTTP_VERSION || '2'
     const courierIgnoreBadTls =
       process.env.BSKY_COURIER_IGNORE_BAD_TLS === 'true'
-    const courierOnlyRegistration =
-      process.env.BSKY_COURIER_ONLY_REGISTRATION === 'true'
-    assert(
-      !courierOnlyRegistration || courierUrl,
-      'courier-only registration requires a courier url',
-    )
     assert(courierHttpVersion === '1.1' || courierHttpVersion === '2')
     const adminPassword = process.env.ADMIN_PASSWORD || undefined
     assert(adminPassword)
@@ -113,12 +103,10 @@ export class ServerConfig {
       bsyncApiKey,
       bsyncHttpVersion,
       bsyncIgnoreBadTls,
-      bsyncOnlyMutes,
       courierUrl,
       courierApiKey,
       courierHttpVersion,
       courierIgnoreBadTls,
-      courierOnlyRegistration,
       adminPassword,
       moderatorPassword,
       triagePassword,
@@ -208,10 +196,6 @@ export class ServerConfig {
     return this.cfg.bsyncApiKey
   }
 
-  get bsyncOnlyMutes() {
-    return this.cfg.bsyncOnlyMutes
-  }
-
   get bsyncHttpVersion() {
     return this.cfg.bsyncHttpVersion
   }
@@ -234,10 +218,6 @@ export class ServerConfig {
 
   get courierIgnoreBadTls() {
     return this.cfg.courierIgnoreBadTls
-  }
-
-  get courierOnlyRegistration() {
-    return this.cfg.courierOnlyRegistration
   }
 
   get adminPassword() {
