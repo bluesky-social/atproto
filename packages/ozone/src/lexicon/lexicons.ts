@@ -4246,6 +4246,34 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoTempCheckSignupQueue: {
+    lexicon: 1,
+    id: 'com.atproto.temp.checkSignupQueue',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Check accounts location in signup queue.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['activated'],
+            properties: {
+              activated: {
+                type: 'boolean',
+              },
+              placeInQueue: {
+                type: 'integer',
+              },
+              estimatedTimeMs: {
+                type: 'integer',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoTempFetchLabels: {
     lexicon: 1,
     id: 'com.atproto.temp.fetchLabels',
@@ -8336,6 +8364,7 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
+  ComAtprotoTempCheckSignupQueue: 'com.atproto.temp.checkSignupQueue',
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   ComAtprotoTempImportRepo: 'com.atproto.temp.importRepo',
   ComAtprotoTempPushBlob: 'com.atproto.temp.pushBlob',

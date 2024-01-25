@@ -78,6 +78,7 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
@@ -1019,6 +1020,17 @@ export class ComAtprotoTempNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  checkSignupQueue<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempCheckSignupQueue.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempCheckSignupQueue.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.checkSignupQueue' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   fetchLabels<AV extends AuthVerifier>(

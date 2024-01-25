@@ -81,6 +81,7 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
@@ -227,6 +228,7 @@ export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+export * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 export * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 export * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
@@ -1205,6 +1207,17 @@ export class ComAtprotoTempNS {
 
   constructor(service: AtpServiceClient) {
     this._service = service
+  }
+
+  checkSignupQueue(
+    params?: ComAtprotoTempCheckSignupQueue.QueryParams,
+    opts?: ComAtprotoTempCheckSignupQueue.CallOptions,
+  ): Promise<ComAtprotoTempCheckSignupQueue.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.checkSignupQueue', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoTempCheckSignupQueue.toKnownErr(e)
+      })
   }
 
   fetchLabels(
