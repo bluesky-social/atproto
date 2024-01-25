@@ -236,6 +236,9 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          onboardingTags: [],
+        },
       })
 
       await agent.setAdultContentEnabled(true)
@@ -257,6 +260,9 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          onboardingTags: [],
+        },
       })
 
       await agent.setAdultContentEnabled(false)
@@ -277,6 +283,9 @@ describe('agent', () => {
         threadViewPrefs: {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
+        },
+        interests: {
+          onboardingTags: [],
         },
       })
 
@@ -300,6 +309,9 @@ describe('agent', () => {
         threadViewPrefs: {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
+        },
+        interests: {
+          onboardingTags: [],
         },
       })
 
@@ -325,6 +337,9 @@ describe('agent', () => {
         threadViewPrefs: {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
+        },
+        interests: {
+          onboardingTags: [],
         },
       })
 
@@ -353,6 +368,9 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          onboardingTags: [],
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -379,6 +397,9 @@ describe('agent', () => {
         threadViewPrefs: {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
+        },
+        interests: {
+          onboardingTags: [],
         },
       })
 
@@ -407,6 +428,9 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          onboardingTags: [],
+        },
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -434,6 +458,9 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          onboardingTags: [],
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -460,6 +487,9 @@ describe('agent', () => {
         threadViewPrefs: {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
+        },
+        interests: {
+          onboardingTags: [],
         },
       })
 
@@ -494,6 +524,9 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          onboardingTags: [],
+        },
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -520,6 +553,9 @@ describe('agent', () => {
         threadViewPrefs: {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
+        },
+        interests: {
+          onboardingTags: [],
         },
       })
 
@@ -548,6 +584,9 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          onboardingTags: [],
+        },
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: true })
@@ -575,6 +614,9 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          onboardingTags: [],
+        },
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: false })
@@ -601,6 +643,9 @@ describe('agent', () => {
         threadViewPrefs: {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
+        },
+        interests: {
+          onboardingTags: [],
         },
       })
 
@@ -636,6 +681,9 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          onboardingTags: [],
+        },
       })
 
       await agent.setThreadViewPrefs({ sort: 'random' })
@@ -669,6 +717,9 @@ describe('agent', () => {
         threadViewPrefs: {
           sort: 'random',
           prioritizeFollowedUsers: true,
+        },
+        interests: {
+          onboardingTags: [],
         },
       })
 
@@ -704,6 +755,9 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
+        interests: {
+          onboardingTags: [],
+        },
       })
 
       await agent.setInterestsPref({ onboardingTags: ['foo', 'bar'] })
@@ -738,7 +792,7 @@ describe('agent', () => {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
         },
-        interestsPref: {
+        interests: {
           onboardingTags: ['foo', 'bar'],
         },
       })
@@ -864,6 +918,9 @@ describe('agent', () => {
           sort: 'newest',
           prioritizeFollowedUsers: false,
         },
+        interests: {
+          onboardingTags: [],
+        },
       })
 
       await agent.setAdultContentEnabled(false)
@@ -889,6 +946,9 @@ describe('agent', () => {
         threadViewPrefs: {
           sort: 'newest',
           prioritizeFollowedUsers: false,
+        },
+        interests: {
+          onboardingTags: [],
         },
       })
 
@@ -916,6 +976,9 @@ describe('agent', () => {
           sort: 'newest',
           prioritizeFollowedUsers: false,
         },
+        interests: {
+          onboardingTags: [],
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -942,6 +1005,9 @@ describe('agent', () => {
           sort: 'newest',
           prioritizeFollowedUsers: false,
         },
+        interests: {
+          onboardingTags: [],
+        },
       })
 
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
@@ -967,6 +1033,9 @@ describe('agent', () => {
         threadViewPrefs: {
           sort: 'newest',
           prioritizeFollowedUsers: false,
+        },
+        interests: {
+          onboardingTags: [],
         },
       })
 
@@ -1004,6 +1073,9 @@ describe('agent', () => {
         threadViewPrefs: {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
+        },
+        interests: {
+          onboardingTags: [],
         },
       })
 
