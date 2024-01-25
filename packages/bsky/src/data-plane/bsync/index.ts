@@ -47,6 +47,7 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
               subjectDid: subject,
               createdAt: new Date().toISOString(),
             })
+            .onConflict((oc) => oc.doNothing())
             .execute()
         } else {
           await db.db
@@ -56,6 +57,7 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
               listUri: subject,
               createdAt: new Date().toISOString(),
             })
+            .onConflict((oc) => oc.doNothing())
             .execute()
         }
       } else if (type === MuteOperation_Type.REMOVE) {
@@ -82,6 +84,7 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
           .where('mutedByDid', '=', actorDid)
           .execute()
       }
+
       return {}
     },
 
