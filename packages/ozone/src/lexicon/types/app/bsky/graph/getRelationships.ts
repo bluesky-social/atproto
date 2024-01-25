@@ -7,7 +7,6 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyGraphDef from './def'
 import * as AppBskyGraphDefs from './defs'
 
 export interface QueryParams {
@@ -20,7 +19,7 @@ export type InputSchema = undefined
 export interface OutputSchema {
   actor?: string
   relationships: (
-    | AppBskyGraphDef.Relationship
+    | AppBskyGraphDefs.Relationship
     | AppBskyGraphDefs.NotFoundActor
     | { $type: string; [k: string]: unknown }
   )[]
