@@ -11,6 +11,7 @@ import {
 } from '../../../../pipeline'
 import { Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
+import { clearlyBadCursor } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getBlocks = createPipeline(skeleton, hydration, noRules, presentation)
@@ -29,6 +30,9 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
+  if (clearlyBadCursor(params.cursor)) {
+    return { blockedDids: [] }
+  }
   const { blockUris, cursor } = await ctx.hydrator.dataplane.getBlocks({
     actorDid: params.viewer,
     cursor: params.cursor,

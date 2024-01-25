@@ -8,6 +8,7 @@ import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { parseString } from '../../../../hydration/util'
 import { creatorFromUri } from '../../../../views/util'
+import { clearlyBadCursor } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getLikes = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -30,6 +31,9 @@ const skeleton = async (inputs: {
   params: Params
 }): Promise<Skeleton> => {
   const { ctx, params } = inputs
+  if (clearlyBadCursor(params.cursor)) {
+    return { likes: [] }
+  }
   const likesRes = await ctx.hydrator.dataplane.getLikesBySubject({
     subject: { uri: params.uri, cid: params.cid },
     cursor: params.cursor,

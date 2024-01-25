@@ -1,7 +1,7 @@
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getListFeed'
 import AppContext from '../../../../context'
-import { setRepoRev } from '../../../util'
+import { clearlyBadCursor, setRepoRev } from '../../../util'
 import { createPipeline } from '../../../../pipeline'
 import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
@@ -42,6 +42,9 @@ export const skeleton = async (inputs: {
   params: Params
 }): Promise<Skeleton> => {
   const { ctx, params } = inputs
+  if (clearlyBadCursor(params.cursor)) {
+    return { items: [] }
+  }
   const res = await ctx.dataplane.getListFeed({
     listUri: params.list,
     limit: params.limit,

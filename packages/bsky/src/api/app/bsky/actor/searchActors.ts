@@ -43,6 +43,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   // add hits total
 
   if (ctx.searchAgent) {
+    // @NOTE cursors wont change on appview swap
     const { data: res } =
       await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
         q: term,
