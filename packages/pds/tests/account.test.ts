@@ -169,7 +169,7 @@ describe('account', () => {
     const userKey = await crypto.Secp256k1Keypair.create()
     const baseDidInfo = {
       signingKey: ctx.repoSigningKey.did(),
-      handle: 'byo-did.test',
+      handle: 'byo-did2.test',
       rotationKeys: [
         userKey.did(),
         ctx.cfg.identity.recoveryDidKey ?? '',
@@ -179,9 +179,9 @@ describe('account', () => {
       signer: userKey,
     }
     const baseAccntInfo = {
-      email: 'byo-did@test.com',
-      handle: 'byo-did.test',
-      password: 'byo-did-pass',
+      email: 'byo-did2@test.com',
+      handle: 'byo-did2.test',
+      password: 'byo-did2-pass',
     }
 
     const did1 = await ctx.plcClient.createDid({
@@ -304,7 +304,7 @@ describe('account', () => {
         handle: 'carol.test',
         password,
       }),
-    ).rejects.toThrow('Email already taken: BOB@TEST.COM')
+    ).rejects.toThrow('Email already taken: bob@test.com')
 
     await expect(
       agent.api.com.atproto.server.createAccount({
