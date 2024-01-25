@@ -40,6 +40,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
 
   if (ctx.searchAgent) {
+    // @NOTE cursors wont change on appview swap
     const { data: res } =
       await ctx.searchAgent.api.app.bsky.unspecced.searchPostsSkeleton({
         q: params.q,

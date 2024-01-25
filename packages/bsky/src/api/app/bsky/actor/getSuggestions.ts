@@ -35,6 +35,7 @@ const skeleton = async (input: {
 }): Promise<Skeleton> => {
   const { ctx, params } = input
   let dids: string[] = []
+  // @NOTE for appview swap moving to rkey-based cursors which are somewhat permissive, should not hard-break pagination
   let cursor: string | undefined = params.cursor
   // filter out follows and re-fetch if left with an empty page
   while (dids.length === 0) {

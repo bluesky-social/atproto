@@ -11,6 +11,7 @@ import {
 } from '../../../../pipeline'
 import { Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
+import { clearlyBadCursor } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getListMutes = createPipeline(
@@ -36,6 +37,9 @@ const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
   const { ctx, params } = input
+  if (clearlyBadCursor(params.cursor)) {
+    return { listUris: [] }
+  }
   const { listUris, cursor } =
     await ctx.hydrator.dataplane.getMutelistSubscriptions({
       actorDid: params.viewer,
