@@ -13,7 +13,9 @@ import { getDidKeyFromMultibase } from '@atproto/identity'
 import { Service } from '../proto/bsky_connect'
 
 export type DataPlaneClient = PromiseClient<typeof Service>
+type BaseClient = { lib: DataPlaneClient; url: URL }
 type HttpVersion = '1.1' | '2'
+const MAX_RETRIES = 3
 
 export const createDataPlaneClient = (
   baseUrls: string[],
@@ -23,21 +25,26 @@ export const createDataPlaneClient = (
   assert(clients.length > 0, 'no clients available')
   return makeAnyClient(Service, (method) => {
     return async (...args) => {
-      let client = randomElement(clients)
-      assert(client, 'no clients available')
-      try {
-        return await client[method.localName](...args)
-      } catch (err) {
-        if (err instanceof ConnectError && err.code === Code.Unavailable) {
-          // retry immediately on a different client if the first was unavailable
-          const remainingClients = clients.filter((c) => c !== client)
-          client = randomElement(remainingClients)
-          if (client) {
-            return await client[method.localName](...args)
+      let tries = 0
+      let error: unknown
+      let remainingClients = clients
+      while (tries < MAX_RETRIES) {
+        const client = randomElement(remainingClients)
+        assert(client, 'no clients available')
+        try {
+          return await client.lib[method.localName](...args)
+        } catch (err) {
+          if (err instanceof ConnectError && err.code === Code.Unavailable) {
+            tries++
+            error = err
+            remainingClients = getRemainingClients(remainingClients, client)
+          } else {
+            throw err
           }
         }
-        throw err
       }
+      assert(error)
+      throw error
     }
   }) as DataPlaneClient
 }
@@ -57,7 +64,7 @@ export const isDataplaneError = (
 const createBaseClient = (
   baseUrl: string,
   opts: { httpVersion?: HttpVersion; rejectUnauthorized?: boolean },
-): DataPlaneClient => {
+): BaseClient => {
   const { httpVersion = '2', rejectUnauthorized = true } = opts
   const transport = createGrpcTransport({
     baseUrl,
@@ -65,7 +72,24 @@ const createBaseClient = (
     acceptCompression: [],
     nodeOptions: { rejectUnauthorized },
   })
-  return createPromiseClient(Service, transport)
+  return {
+    lib: createPromiseClient(Service, transport),
+    url: new URL(baseUrl),
+  }
+}
+
+const getRemainingClients = (clients: BaseClient[], lastClient: BaseClient) => {
+  if (clients.length < 2) return clients // no clients to choose from
+  if (lastClient.url.port) {
+    // if the last client had a port, we attempt to exclude its whole host.
+    const maybeRemaining = clients.filter(
+      (c) => c.url.hostname !== lastClient.url.hostname,
+    )
+    if (maybeRemaining.length) {
+      return maybeRemaining
+    }
+  }
+  return clients.filter((c) => c !== lastClient)
 }
 
 const randomElement = <T>(arr: T[]): T | undefined => {
