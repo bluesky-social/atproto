@@ -37,6 +37,8 @@ export default function (server: Server, ctx: AppContext) {
         ? await validateInputsForPdsViaEntryway(ctx, input.body)
         : await validateInputsForPdsViaUser(ctx, input.body)
 
+      await ensureUnusedHandleAndEmail(ctx.db, handle, email)
+
       const now = new Date().toISOString()
       const passwordScrypt = await scrypt.genSaltAndHash(password)
 
@@ -71,13 +73,6 @@ export default function (server: Server, ctx: AppContext) {
       const result = await ctx.db.transaction(async (dbTxn) => {
         const actorTxn = ctx.services.account(dbTxn)
         const repoTxn = ctx.services.repo(dbTxn)
-
-        // it's a bit goofy that we run this logic twice,
-        // but we run it once for a sanity check before doing scrypt & plc ops
-        // & a second time for locking + integrity check
-        if (ctx.cfg.invites.required && inviteCode) {
-          await ensureCodeIsAvailable(dbTxn, inviteCode, true)
-        }
 
         // Register user before going out to PLC to get a real did
         try {
@@ -238,7 +233,8 @@ const validateInputsForPdsViaUser = async (
   ctx: AppContext,
   input: CreateAccountInput,
 ) => {
-  const { email, password, inviteCode } = input
+  const { password, inviteCode } = input
+  const email = input.email?.toLowerCase()
   if (input.plcOp) {
     throw new InvalidRequestError('Unsupported input: "plcOp"')
   }
@@ -268,6 +264,8 @@ const validateInputsForPdsViaUser = async (
     handle: input.handle,
     did: input.did,
   })
+
+  await ensureUnusedHandleAndEmail(ctx.db, handle, email)
 
   // check that the invite code still has uses
   if (ctx.cfg.invites.required && inviteCode) {
@@ -467,6 +465,26 @@ const reserveSigningKey = async (ctx: AppContext, host: string) => {
       throw new InvalidRequestError('failed to reserve signing key')
     }
     throw err
+  }
+}
+
+const ensureUnusedHandleAndEmail = async (
+  db: Database,
+  handle: string,
+  email: string,
+) => {
+  const res = await db.db
+    .selectFrom('user_account')
+    .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
+    .select(['did_handle.handle', 'user_account.email'])
+    .where('user_account.email', '=', email)
+    .where('did_handle.handle', '=', handle)
+    .executeTakeFirst()
+  if (!res) return
+  if (res.email === email) {
+    throw new InvalidRequestError(`Email already taken: ${email}`)
+  } else {
+    throw new InvalidRequestError(`Handle already taken: ${handle}`)
   }
 }
 

@@ -1,5 +1,6 @@
 import { InvalidRequestError, UpstreamFailureError } from '@atproto/xrpc-server'
 import twilio from 'twilio'
+import { twilioLogger as log } from './logger'
 
 type Opts = {
   accountSid: string
@@ -20,7 +21,7 @@ export class TwilioClient {
   }
 
   normalizePhoneNumber(phoneNumber: string) {
-    let normalized = phoneNumber.replaceAll(/\(|\)|-| /g, '')
+    let normalized = phoneNumber.trim().replaceAll(/\(|\)|-| /g, '')
     if (!normalized.startsWith('+')) {
       if (normalized.length === 10) {
         normalized = '+1' + normalized
@@ -43,6 +44,7 @@ export class TwilioClient {
         channel: 'sms',
       })
     } catch (err) {
+      log.error({ err, phoneNumber }, 'error sending twilio code')
       throw new UpstreamFailureError('Could not send verification text')
     }
   }
@@ -55,7 +57,8 @@ export class TwilioClient {
       })
       return res.status === 'approved'
     } catch (err) {
-      throw new UpstreamFailureError('Could not send verification text')
+      log.error({ err, phoneNumber, code }, 'error verifying twilio code')
+      throw new UpstreamFailureError('Could not verify code. Please try again')
     }
   }
 }
