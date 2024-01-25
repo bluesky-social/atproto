@@ -569,3 +569,31 @@ Object {
   },
 }
 `;
+
+exports[`pds follow views fetches relationships between users 1`] = `
+Object {
+  "actor": "user(0)",
+  "relationships": Array [
+    Object {
+      "$type": "app.bsky.graph.defs#relationship",
+      "did": "user(1)",
+      "followedBy": "record(1)",
+      "following": "record(0)",
+    },
+    Object {
+      "$type": "app.bsky.graph.defs#relationship",
+      "did": "user(0)",
+    },
+    Object {
+      "$type": "app.bsky.graph.defs#relationship",
+      "did": "user(2)",
+      "following": "record(2)",
+    },
+    Object {
+      "$type": "app.bsky.graph.defs#notFoundActor",
+      "actor": "did:example:fake",
+      "notFound": true,
+    },
+  ],
+}
+`;

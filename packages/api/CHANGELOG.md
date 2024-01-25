@@ -1,5 +1,12 @@
 # @atproto/api
 
+## 0.9.4
+
+### Patch Changes
+
+- [#2086](https://github.com/bluesky-social/atproto/pull/2086) [`4171c04a`](https://github.com/bluesky-social/atproto/commit/4171c04ad81c5734a4558bc41fa1c4f3a1aba18c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `setInterestsPref` method to BskyAgent, and `interests` prop to
+  `getPreferences` response.
+
 ## 0.9.3
 
 ### Patch Changes
