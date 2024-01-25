@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { ServiceImpl } from '@connectrpc/connect'
 import { Timestamp } from '@bufbuild/protobuf'
-import { Service } from '../../gen/bsky_connect'
+import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { countAll, excluded, notSoftDeletedClause } from '../db/util'
 import { TimeCidKeyset, paginate } from '../db/pagination'

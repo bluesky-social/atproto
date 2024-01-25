@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { randomInt } from 'node:crypto'
-import { Service } from './gen/bsky_connect'
+import { Service } from '../proto/bsky_connect'
 import {
   Code,
   ConnectError,

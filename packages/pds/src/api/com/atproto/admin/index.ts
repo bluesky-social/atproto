@@ -18,6 +18,10 @@ import updateAccountEmail from './updateAccountEmail'
 import sendEmail from './sendEmail'
 import deleteAccount from './deleteAccount'
 import queryModerationStatuses from './queryModerationStatuses'
+import createCommunicationTemplate from './createCommunicationTemplate'
+import deleteCommunicationTemplate from './deleteCommunicationTemplate'
+import updateCommunicationTemplate from './updateCommunicationTemplate'
+import listCommunicationTemplates from './listCommunicationTemplates'
 
 export default function (server: Server, ctx: AppContext) {
   emitModerationEvent(server, ctx)
@@ -38,4 +42,8 @@ export default function (server: Server, ctx: AppContext) {
   updateAccountEmail(server, ctx)
   sendEmail(server, ctx)
   deleteAccount(server, ctx)
+  listCommunicationTemplates(server, ctx)
+  createCommunicationTemplate(server, ctx)
+  updateCommunicationTemplate(server, ctx)
+  deleteCommunicationTemplate(server, ctx)
 }

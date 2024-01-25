@@ -4,8 +4,8 @@ import { Timestamp } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import * as ui8 from 'uint8arrays'
 import { ids } from '../../../lexicon/lexicons'
-import { Service } from '../../gen/bsky_connect'
-import { PostRecordMeta, Record } from '../../gen/bsky_pb'
+import { Service } from '../../../proto/bsky_connect'
+import { PostRecordMeta, Record } from '../../../proto/bsky_pb'
 import { Database } from '../db'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({

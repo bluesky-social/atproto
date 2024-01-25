@@ -16,6 +16,7 @@ export class TestBsky {
     public db: bsky.Database,
     public server: bsky.BskyAppView,
     public dataplane: bsky.DataPlaneServer,
+    public bsync: bsky.MockBsync,
     public sub: bsky.RepoSubscription,
   ) {}
 
@@ -43,6 +44,9 @@ export class TestBsky {
     const dataplanePort = await getPort()
     const dataplane = await bsky.DataPlaneServer.create(db, dataplanePort)
 
+    const bsyncPort = await getPort()
+    const bsync = await bsky.MockBsync.create(db, bsyncPort)
+
     const config = new bsky.ServerConfig({
       version: 'unknown',
       port,
@@ -51,6 +55,9 @@ export class TestBsky {
       serverDid,
       dataplaneUrls: [`http://localhost:${dataplanePort}`],
       dataplaneHttpVersion: '1.1',
+      bsyncUrl: `http://localhost:${bsyncPort}`,
+      bsyncHttpVersion: '1.1',
+      courierUrl: 'https://fake.example',
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       labelsFromIssuerDids: ['did:example:labeler'], // this did is also used as the labeler in seeds
       ...cfg,
@@ -92,7 +99,7 @@ export class TestBsky {
     await server.start()
     sub.run()
 
-    return new TestBsky(url, port, db, server, dataplane, sub)
+    return new TestBsky(url, port, db, server, dataplane, bsync, sub)
   }
 
   get ctx(): bsky.AppContext {
@@ -124,6 +131,7 @@ export class TestBsky {
 
   async close() {
     await this.server.destroy()
+    await this.bsync.destroy()
     await this.dataplane.destroy()
     await this.sub.destroy()
     await this.db.close()

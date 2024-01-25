@@ -36,6 +36,7 @@ const run = async () => {
   console.log(
     `🌞 Personal Data server started http://localhost:${network.pds.port}`,
   )
+  console.log(`🗼 Ozone server started http://localhost:${network.ozone.port}`)
   console.log(`🌅 Bsky Appview started http://localhost:${network.bsky.port}`)
   for (const fg of network.feedGens) {
     console.log(`🤖 Feed Generator started http://localhost:${fg.port}`)

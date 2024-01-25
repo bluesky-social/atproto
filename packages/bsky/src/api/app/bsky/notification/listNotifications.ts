@@ -12,7 +12,7 @@ import {
 } from '../../../../pipeline'
 import { Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
-import { Notification } from '../../../../data-plane/gen/bsky_pb'
+import { Notification } from '../../../../proto/bsky_pb'
 import { didFromUri } from '../../../../hydration/util'
 import { clearlyBadCursor } from '../../../util'
 

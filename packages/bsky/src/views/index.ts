@@ -48,7 +48,7 @@ import {
 import { Label } from '../hydration/label'
 import { FeedItem, Repost } from '../hydration/feed'
 import { RecordInfo } from '../hydration/util'
-import { Notification } from '../data-plane/gen/bsky_pb'
+import { Notification } from '../proto/bsky_pb'
 
 export class Views {
   constructor(public imgUriBuilder: ImageUriBuilder) {}

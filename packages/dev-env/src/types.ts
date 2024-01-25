@@ -1,5 +1,6 @@
 import * as pds from '@atproto/pds'
 import * as bsky from '@atproto/bsky'
+import * as bsync from '@atproto/bsync'
 import * as ozone from '@atproto/ozone'
 import { ExportableKeypair } from '@atproto/crypto'
 
@@ -22,6 +23,10 @@ export type BskyConfig = Partial<bsky.ServerConfig> & {
   pdsPort: number
   migration?: string
   algos?: bsky.MountedAlgos
+}
+
+export type BsyncConfig = Partial<bsync.ServerEnvironment> & {
+  dbUrl: string
 }
 
 export type OzoneConfig = Partial<ozone.OzoneEnvironment> & {

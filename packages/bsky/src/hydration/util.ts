@@ -1,7 +1,7 @@
 import { AtUri } from '@atproto/syntax'
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
-import { Record } from '../data-plane/gen/bsky_pb'
+import { Record } from '../proto/bsky_pb'
 
 export class HydrationMap<T> extends Map<string, T | null> {
   merge(map: HydrationMap<T>): HydrationMap<T> {

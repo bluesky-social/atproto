@@ -9,6 +9,8 @@ import { DataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
 import { Views } from './views'
 import { AuthVerifier } from './auth-verifier'
+import { BsyncClient } from './bsync'
+import { CourierClient } from './courier'
 
 export class AppContext {
   constructor(
@@ -21,6 +23,8 @@ export class AppContext {
       signingKey: Keypair
       idResolver: IdResolver
       didCache?: DidCache
+      bsyncClient: BsyncClient
+      courierClient: CourierClient
       algos: MountedAlgos
       authVerifier: AuthVerifier
     },
@@ -62,7 +66,15 @@ export class AppContext {
     return this.opts.didCache
   }
 
-  get authVerifier() {
+  get bsyncClient(): BsyncClient {
+    return this.opts.bsyncClient
+  }
+
+  get courierClient(): CourierClient {
+    return this.opts.courierClient
+  }
+
+  get authVerifier(): AuthVerifier {
     return this.opts.authVerifier
   }
 

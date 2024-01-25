@@ -10,6 +10,7 @@ export type AlgoResponseItem = {
 
 export type AlgoResponse = {
   feedItems: AlgoResponseItem[]
+  resHeaders?: Record<string, string>
   cursor?: string
 }
 

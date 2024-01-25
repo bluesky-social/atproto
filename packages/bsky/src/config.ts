@@ -16,6 +16,14 @@ export interface ServerConfigValues {
   handleResolveNameservers?: string[]
   imgUriEndpoint?: string
   blobCacheLocation?: string
+  bsyncUrl: string
+  bsyncApiKey?: string
+  bsyncHttpVersion?: '1.1' | '2'
+  bsyncIgnoreBadTls?: boolean
+  courierUrl: string
+  courierApiKey?: string
+  courierHttpVersion?: '1.1' | '2'
+  courierIgnoreBadTls?: boolean
   adminPassword: string
   moderatorPassword: string
   triagePassword: string
@@ -51,7 +59,20 @@ export class ServerConfig {
     const labelsFromIssuerDids = process.env.BSKY_LABELS_FROM_ISSUER_DIDS
       ? process.env.BSKY_LABELS_FROM_ISSUER_DIDS.split(',')
       : []
-    const adminPassword = process.env.BSKY_ADMIN_PASSWORD
+    const bsyncUrl = process.env.BSKY_BSYNC_URL || undefined
+    assert(bsyncUrl)
+    const bsyncApiKey = process.env.BSKY_BSYNC_API_KEY || undefined
+    const bsyncHttpVersion = process.env.BSKY_BSYNC_HTTP_VERSION || '2'
+    const bsyncIgnoreBadTls = process.env.BSKY_BSYNC_IGNORE_BAD_TLS === 'true'
+    assert(bsyncHttpVersion === '1.1' || bsyncHttpVersion === '2')
+    const courierUrl = process.env.BSKY_COURIER_URL || undefined
+    assert(courierUrl)
+    const courierApiKey = process.env.BSKY_COURIER_API_KEY || undefined
+    const courierHttpVersion = process.env.BSKY_COURIER_HTTP_VERSION || '2'
+    const courierIgnoreBadTls =
+      process.env.BSKY_COURIER_IGNORE_BAD_TLS === 'true'
+    assert(courierHttpVersion === '1.1' || courierHttpVersion === '2')
+    const adminPassword = process.env.ADMIN_PASSWORD || undefined
     assert(adminPassword)
     const moderatorPassword = process.env.BSKY_MODERATOR_PASSWORD
     assert(moderatorPassword)
@@ -78,6 +99,14 @@ export class ServerConfig {
       handleResolveNameservers,
       imgUriEndpoint,
       blobCacheLocation,
+      bsyncUrl,
+      bsyncApiKey,
+      bsyncHttpVersion,
+      bsyncIgnoreBadTls,
+      courierUrl,
+      courierApiKey,
+      courierHttpVersion,
+      courierIgnoreBadTls,
       adminPassword,
       moderatorPassword,
       triagePassword,
@@ -157,6 +186,38 @@ export class ServerConfig {
 
   get blobCacheLocation() {
     return this.cfg.blobCacheLocation
+  }
+
+  get bsyncUrl() {
+    return this.cfg.bsyncUrl
+  }
+
+  get bsyncApiKey() {
+    return this.cfg.bsyncApiKey
+  }
+
+  get bsyncHttpVersion() {
+    return this.cfg.bsyncHttpVersion
+  }
+
+  get bsyncIgnoreBadTls() {
+    return this.cfg.bsyncIgnoreBadTls
+  }
+
+  get courierUrl() {
+    return this.cfg.courierUrl
+  }
+
+  get courierApiKey() {
+    return this.cfg.courierApiKey
+  }
+
+  get courierHttpVersion() {
+    return this.cfg.courierHttpVersion
+  }
+
+  get courierIgnoreBadTls() {
+    return this.cfg.courierIgnoreBadTls
   }
 
   get adminPassword() {
