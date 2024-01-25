@@ -479,7 +479,7 @@ const ensureUnusedHandleAndEmail = async (
     .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
     .select(['did_handle.handle', 'user_account.email'])
     .where('user_account.email', '=', email)
-    .where('did_handle.handle', '=', handle)
+    .orWhere('did_handle.handle', '=', handle)
     .executeTakeFirst()
   if (!res) return
   if (res.email === email) {
