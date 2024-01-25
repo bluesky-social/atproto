@@ -3,7 +3,7 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
 import AppContext from '../../../../context'
-import { setRepoRev } from '../../../util'
+import { clearlyBadCursor, setRepoRev } from '../../../util'
 import { createPipeline } from '../../../../pipeline'
 import {
   HydrationState,
@@ -64,6 +64,9 @@ export const skeleton = async (inputs: {
   const actor = actors.get(did)
   if (!actor) {
     throw new InvalidRequestError('Profile not found')
+  }
+  if (clearlyBadCursor(params.cursor)) {
+    return { actor, items: [] }
   }
   const res = await ctx.dataplane.getAuthorFeed({
     actorDid: did,

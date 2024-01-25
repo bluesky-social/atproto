@@ -2,6 +2,7 @@ import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { parseString } from '../../../../hydration/util'
+import { clearlyBadCursor } from '../../../util'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 // @TODO currently mirrors getSuggestedFeeds and ignores the "query" param.
@@ -11,6 +12,13 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params }) => {
       const viewer = auth.credentials.iss
+
+      if (clearlyBadCursor(params.cursor)) {
+        return {
+          encoding: 'application/json',
+          body: { feeds: [] },
+        }
+      }
 
       const suggestedRes = await ctx.dataplane.getSuggestedFeeds({
         actorDid: viewer ?? undefined,

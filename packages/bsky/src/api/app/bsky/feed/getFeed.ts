@@ -38,6 +38,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
 
+      // @NOTE feed cursors should not be affected by appview swap
       const { timerSkele, timerHydr, ...result } = await getFeed(
         { ...params, viewer, authorization: req.headers['authorization'] },
         ctx,

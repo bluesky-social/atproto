@@ -16,7 +16,7 @@ export type LabeledResult = {
  *  - LabeledResult: a Result processed such that the "primary" and "secondary" parts of the cursor are labeled.
  *    - E.g. { primary: '2022-01-01T12:00:00Z', secondary: 'bafyx' }
  *  - Cursor: the two string parts that make-up the packed/string cursor.
- *    - E.g. packed cursor '1641038400000::bafyx' in parts { primary: '1641038400000', secondary: 'bafyx' }
+ *    - E.g. packed cursor '1641038400000__bafyx' in parts { primary: '1641038400000', secondary: 'bafyx' }
  *
  * These types relate as such. Implementers define the relations marked with a *:
  *   Result -*-> LabeledResult <-*-> Cursor <--> packed/string cursor
@@ -44,11 +44,11 @@ export abstract class GenericKeyset<R, LR extends LabeledResult> {
   }
   packCursor(cursor?: Cursor): string | undefined {
     if (!cursor) return
-    return `${cursor.primary}::${cursor.secondary}`
+    return `${cursor.primary}__${cursor.secondary}`
   }
   unpackCursor(cursorStr?: string): Cursor | undefined {
     if (!cursorStr) return
-    const result = cursorStr.split('::')
+    const result = cursorStr.split('__')
     const [primary, secondary, ...others] = result
     if (!primary || !secondary || others.length > 0) {
       throw new InvalidRequestError('Malformed cursor')

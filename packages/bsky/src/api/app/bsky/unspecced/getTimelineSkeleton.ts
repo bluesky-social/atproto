@@ -9,6 +9,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, params }) => {
       const viewer = auth.credentials.iss
+      // @NOTE bad cursor during appview swap handled within skeleton()
       const result = await skeleton({ ctx, params: { ...params, viewer } })
       const feed = result.items.map((item) => {
         return toSkeletonItem({

@@ -14,6 +14,7 @@ import { Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
 import { Notification } from '../../../../data-plane/gen/bsky_pb'
 import { didFromUri } from '../../../../hydration/util'
+import { clearlyBadCursor } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const listNotifications = createPipeline(
@@ -41,6 +42,9 @@ const skeleton = async (
   const { params, ctx } = input
   if (params.seenAt) {
     throw new InvalidRequestError('The seenAt parameter is unsupported')
+  }
+  if (clearlyBadCursor(params.cursor)) {
+    return { notifs: [] }
   }
   const [res, lastSeenRes] = await Promise.all([
     ctx.hydrator.dataplane.getNotifications({

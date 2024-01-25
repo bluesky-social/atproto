@@ -3,7 +3,7 @@ import { mapDefined } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
 import AppContext from '../../../../context'
-import { setRepoRev } from '../../../util'
+import { clearlyBadCursor, setRepoRev } from '../../../util'
 import { createPipeline } from '../../../../pipeline'
 import { HydrationState, Hydrator } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
@@ -45,7 +45,9 @@ const skeleton = async (inputs: {
 }): Promise<Skeleton> => {
   const { ctx, params } = inputs
   const { actor, limit, cursor, viewer } = params
-
+  if (clearlyBadCursor(cursor)) {
+    return { items: [] }
+  }
   const [actorDid] = await ctx.hydrator.actor.getDids([actor])
   if (!actorDid || !viewer || viewer !== actorDid) {
     throw new InvalidRequestError('Profile not found')
