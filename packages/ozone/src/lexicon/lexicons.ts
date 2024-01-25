@@ -7436,7 +7436,7 @@ export const schemaDict = {
                 items: {
                   type: 'union',
                   refs: [
-                    'lex:app.bsky.graph.def#relationship',
+                    'lex:app.bsky.graph.defs#relationship',
                     'lex:app.bsky.graph.defs#notFoundActor',
                   ],
                 },
