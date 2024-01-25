@@ -50,9 +50,9 @@ export class TwilioClient {
         throw new InvalidRequestError(
           'Could not send verification text: invalid phone number',
         )
-      } else if (code === 60220) {
+      } else if (code === 60605 || code === 60220) {
         throw new InvalidRequestError(
-          `We're sorry, we're not currently able to send verification messages to China. We're working with our providers to solve this as quickly as possible.`,
+          `We're sorry, we're not currently able to send verification messages to your country. We're working with our providers to solve this as quickly as possible.`,
         )
       } else {
         throw new UpstreamFailureError('Could not send verification text')
