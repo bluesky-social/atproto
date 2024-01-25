@@ -1,0 +1,52 @@
+{
+  "name": "@atproto/bsync",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Sychronizing service for app.bsky App View (Bluesky API)",
+  "keywords": [
+    "atproto",
+    "bluesky"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/bsync"
+  },
+  "main": "src/index.ts",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts"
+  },
+  "scripts": {
+    "build": "node ./build.js",
+    "postbuild": "tsc --build tsconfig.build.json",
+    "update-main-to-dist": "node ../../update-main-to-dist.js packages/bsync",
+    "start": "node --enable-source-maps dist/bin.js",
+    "test": "../dev-infra/with-test-db.sh jest",
+    "test:log": "tail -50 test.log | pino-pretty",
+    "test:updateSnapshot": "jest --updateSnapshot",
+    "migration:create": "ts-node ./bin/migration-create.ts",
+    "buf:gen": "buf generate proto"
+  },
+  "dependencies": {
+    "@atproto/common": "workspace:^",
+    "@atproto/syntax": "workspace:^",
+    "@bufbuild/protobuf": "^1.5.0",
+    "@connectrpc/connect": "^1.1.4",
+    "@connectrpc/connect-express": "^1.1.4",
+    "@connectrpc/connect-node": "^1.1.4",
+    "http-terminator": "^3.2.0",
+    "kysely": "^0.22.0",
+    "pg": "^8.10.0",
+    "pino": "^8.15.0",
+    "pino-http": "^8.2.1",
+    "typed-emitter": "^2.1.0"
+  },
+  "devDependencies": {
+    "@bufbuild/buf": "^1.28.1",
+    "@bufbuild/protoc-gen-es": "^1.5.0",
+    "@connectrpc/protoc-gen-connect-es": "^1.1.4",
+    "@types/pg": "^8.6.6"
+  }
+}

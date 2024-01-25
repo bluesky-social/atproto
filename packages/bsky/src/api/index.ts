@@ -26,6 +26,7 @@ import getList from './app/bsky/graph/getList'
 import getLists from './app/bsky/graph/getLists'
 import getListMutes from './app/bsky/graph/getListMutes'
 import getMutes from './app/bsky/graph/getMutes'
+import getRelationships from './app/bsky/graph/getRelationships'
 import muteActor from './app/bsky/graph/muteActor'
 import unmuteActor from './app/bsky/graph/unmuteActor'
 import muteActorList from './app/bsky/graph/muteActorList'
@@ -40,6 +41,7 @@ import updateSeen from './app/bsky/notification/updateSeen'
 import registerPush from './app/bsky/notification/registerPush'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
 import getTimelineSkeleton from './app/bsky/unspecced/getTimelineSkeleton'
+import getTaggedSuggestions from './app/bsky/unspecced/getTaggedSuggestions'
 import getSubjectStatus from './com/atproto/admin/getSubjectStatus'
 import updateSubjectStatus from './com/atproto/admin/updateSubjectStatus'
 import getAccountInfos from './com/atproto/admin/getAccountInfos'
@@ -81,6 +83,7 @@ export default function (server: Server, ctx: AppContext) {
   getLists(server, ctx)
   getListMutes(server, ctx)
   getMutes(server, ctx)
+  getRelationships(server, ctx)
   muteActor(server, ctx)
   unmuteActor(server, ctx)
   muteActorList(server, ctx)
@@ -95,6 +98,7 @@ export default function (server: Server, ctx: AppContext) {
   registerPush(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTimelineSkeleton(server, ctx)
+  getTaggedSuggestions(server, ctx)
   // com.atproto
   getSubjectStatus(server, ctx)
   updateSubjectStatus(server, ctx)

@@ -56,7 +56,7 @@ export function moderateProfile(
     account.blur = true
   }
 
-  // dont give profile.filter because that is meaningless
+  // don't give profile.filter because that is meaningless
   profile.filter = false
 
   // downgrade based on authorship
@@ -67,7 +67,7 @@ export function moderateProfile(
     downgradeDecision(profile, 'alert')
   }
 
-  // derive avatar blurring from account & profile, but override for mutes because that shouldnt blur
+  // derive avatar blurring from account & profile, but override for mutes because that shouldn't blur
   let avatarBlur = false
   let avatarNoOverride = false
   if ((account.blur || account.blurMedia) && account.cause?.type !== 'muted') {
@@ -78,7 +78,7 @@ export function moderateProfile(
     avatarNoOverride = account.noOverride || profile.noOverride
   }
 
-  // dont blur the account for blocking & muting
+  // don't blur the account for blocking & muting
   if (
     account.cause?.type === 'blocking' ||
     account.cause?.type === 'blocked-by' ||
@@ -188,7 +188,7 @@ export function moderatePost(
   // derive embed blurring from the quoted post and the quoted post author's account
   const mergedQuote = takeHighestPriorityDecision(quote, quotedAccount)
 
-  // derive avatar blurring from account & profile, but override for mutes because that shouldnt blur
+  // derive avatar blurring from account & profile, but override for mutes because that shouldn't blur
   let blurAvatar = false
   if ((account.blur || account.blurMedia) && account.cause?.type !== 'muted') {
     blurAvatar = true

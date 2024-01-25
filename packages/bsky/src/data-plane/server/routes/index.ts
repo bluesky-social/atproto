@@ -1,5 +1,5 @@
 import { ConnectRouter } from '@connectrpc/connect'
-import { Service } from '../../gen/bsky_connect'
+import { Service } from '../../../proto/bsky_connect'
 
 import blocks from './blocks'
 import feedGens from './feed-gens'

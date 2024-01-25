@@ -39,16 +39,6 @@ export interface AtpAgentOpts {
 }
 
 /**
- * AtpAgent createAccount() opts
- */
-export interface AtpAgentCreateAccountOpts {
-  email: string
-  password: string
-  handle: string
-  inviteCode?: string
-}
-
-/**
  * AtpAgent login() opts
  */
 export interface AtpAgentLoginOpts {

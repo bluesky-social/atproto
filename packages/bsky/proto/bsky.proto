@@ -791,6 +791,23 @@ message GetFollowSuggestionsResponse {
   string cursor = 2;
 }
 
+message SuggestedEntity {
+  string tag = 1;
+  string subject = 2;
+  string subject_type = 3;
+  int64 priority = 4;
+}
+
+message GetSuggestedEntitiesRequest {
+  int32 limit = 1;
+  string cursor = 2;
+}
+
+message GetSuggestedEntitiesResponse {
+  repeated SuggestedEntity entities = 1;
+  string cursor = 2;
+}
+
 //
 // Posts
 //
@@ -970,6 +987,7 @@ service Service {
 
   // Suggestions
   rpc GetFollowSuggestions(GetFollowSuggestionsRequest) returns (GetFollowSuggestionsResponse);
+  rpc GetSuggestedEntities(GetSuggestedEntitiesRequest) returns (GetSuggestedEntitiesResponse);
 
   // Posts
   rpc GetPostReplyCounts(GetPostReplyCountsRequest) returns (GetPostReplyCountsResponse);

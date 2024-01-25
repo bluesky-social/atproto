@@ -15,7 +15,7 @@ import { DataPlaneClient } from '../../../../data-plane'
 import { parseString } from '../../../../hydration/util'
 import { Actor } from '../../../../hydration/actor'
 import { FeedItem } from '../../../../hydration/feed'
-import { FeedType } from '../../../../data-plane/gen/bsky_pb'
+import { FeedType } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
   const getAuthorFeed = createPipeline(

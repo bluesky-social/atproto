@@ -1,6 +1,6 @@
 import * as ui8 from 'uint8arrays'
 import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../gen/bsky_connect'
+import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
