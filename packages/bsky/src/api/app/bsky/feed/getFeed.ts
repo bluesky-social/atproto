@@ -183,9 +183,16 @@ const skeletonFromFeedGen = async (
   let resHeaders: Record<string, string> | undefined = undefined
   try {
     // @TODO currently passthrough auth headers from pds
-    const result = await agent.api.app.bsky.feed.getFeedSkeleton(params, {
-      headers,
-    })
+    const result = await agent.api.app.bsky.feed.getFeedSkeleton(
+      {
+        feed: params.feed,
+        limit: params.limit,
+        cursor: params.cursor,
+      },
+      {
+        headers,
+      },
+    )
     skeleton = result.data
     if (result.headers['content-language']) {
       resHeaders = {
