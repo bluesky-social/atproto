@@ -811,7 +811,10 @@ export class Views {
       reason: notif.reason,
       reasonSubject: notif.reasonSubject || undefined,
       record: recordInfo.record,
-      isRead: lastSeenAt ? lastSeenAt >= indexedAt : false,
+      // @NOTE works with a hack in listNotifications so that when there's no last-seen time,
+      // the user's first notification is marked unread, and all previous read. in this case,
+      // the last seen time will be equal to the first notification's indexed time.
+      isRead: lastSeenAt ? lastSeenAt > indexedAt : true,
       indexedAt: notif.timestamp.toDate().toISOString(),
       labels: [...labels, ...selfLabels],
     }

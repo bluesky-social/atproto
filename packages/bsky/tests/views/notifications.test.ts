@@ -129,7 +129,7 @@ describe('notification views', () => {
     expect(notifs.length).toBe(13)
 
     const readStates = notifs.map((notif) => notif.isRead)
-    expect(readStates).toEqual(notifs.map(() => false))
+    expect(readStates).toEqual(notifs.map((_, i) => i !== 0)) // only first appears unread
 
     expect(forSnapshot(sort(notifs))).toMatchSnapshot()
   })
@@ -221,7 +221,7 @@ describe('notification views', () => {
     expect(notifs.length).toBe(13)
 
     const readStates = notifs.map((notif) => notif.isRead)
-    expect(readStates).toEqual(notifs.map((n) => n.indexedAt <= seenAt))
+    expect(readStates).toEqual(notifs.map((n) => n.indexedAt < seenAt))
     // reset last-seen
     await agent.api.app.bsky.notification.updateSeen(
       { seenAt: new Date(0).toISOString() },
