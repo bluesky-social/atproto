@@ -71,6 +71,7 @@ export const readEnv = (): ServerEnvironment => {
     bskyAppViewDid: envStr('PDS_BSKY_APP_VIEW_DID'),
     bskyAppViewCdnUrlPattern: envStr('PDS_BSKY_APP_VIEW_CDN_URL_PATTERN'),
     bskyAppviewAlternateUrl: envStr('PDS_BSKY_APP_VIEW_ALTERNATE_URL'),
+    bskyAppviewAlternateDid: envStr('PDS_BSKY_APP_VIEW_ALTERNATE_DID'),
     bskyAppviewAlternateUsers: envList('PDS_BSKY_APP_VIEW_ALTERNATE_USERS'),
 
     // mod service
@@ -172,6 +173,7 @@ export type ServerEnvironment = {
   bskyAppViewDid?: string
   bskyAppViewCdnUrlPattern?: string
   bskyAppviewAlternateUrl?: string
+  bskyAppviewAlternateDid?: string
   bskyAppviewAlternateUsers?: string[]
 
   // mod service

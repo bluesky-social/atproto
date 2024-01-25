@@ -269,7 +269,11 @@ export class AppContext {
   }
 
   async appviewAuthHeaders(did: string) {
-    return this.serviceAuthHeaders(did, this.cfg.bskyAppView.did)
+    const appviewDid =
+      this.cfg.bskyAppView.alternate && this.alternateAppviewUsers.has(did)
+        ? this.cfg.bskyAppView.alternate.did
+        : this.cfg.bskyAppView.did
+    return this.serviceAuthHeaders(did, appviewDid)
   }
 
   async moderationAuthHeaders(did: string) {
