@@ -237,7 +237,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -261,7 +261,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -285,7 +285,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -311,7 +311,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -339,7 +339,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -369,7 +369,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -399,7 +399,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -429,7 +429,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -459,7 +459,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -489,7 +489,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -525,7 +525,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -555,7 +555,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -585,7 +585,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -615,7 +615,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -645,7 +645,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -682,7 +682,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -719,7 +719,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -756,11 +756,11 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
-      await agent.setInterestsPref({ onboardingTags: ['foo', 'bar'] })
+      await agent.setInterestsPref({ tags: ['foo', 'bar'] })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
@@ -793,7 +793,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: ['foo', 'bar'],
+          tags: ['foo', 'bar'],
         },
       })
     })
@@ -919,7 +919,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: false,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -948,7 +948,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: false,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -977,7 +977,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: false,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -1006,7 +1006,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: false,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -1035,7 +1035,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: false,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 
@@ -1075,7 +1075,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interests: {
-          onboardingTags: [],
+          tags: [],
         },
       })
 

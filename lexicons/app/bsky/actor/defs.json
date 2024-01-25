@@ -203,9 +203,9 @@
     },
     "interestsPref": {
       "type": "object",
-      "required": ["onboardingTags"],
+      "required": ["tags"],
       "properties": {
-        "onboardingTags": {
+        "tags": {
           "type": "array",
           "maxLength": 100,
           "items": { "type": "string", "maxLength": 640, "maxGraphemes": 64 },

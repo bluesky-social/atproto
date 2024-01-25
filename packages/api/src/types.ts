@@ -101,7 +101,7 @@ export interface BskyThreadViewPreference {
  * Bluesky interests preferences
  */
 export interface BskyInterestsPreference {
-  onboardingTags: string[]
+  tags: string[]
   [key: string]: any
 }
 

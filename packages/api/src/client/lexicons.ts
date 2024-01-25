@@ -4721,9 +4721,9 @@ export const schemaDict = {
       },
       interestsPref: {
         type: 'object',
-        required: ['onboardingTags'],
+        required: ['tags'],
         properties: {
-          onboardingTags: {
+          tags: {
             type: 'array',
             maxLength: 100,
             items: {

@@ -325,7 +325,7 @@ export class BskyAgent extends AtpAgent {
       contentLabels: {},
       birthDate: undefined,
       interests: {
-        onboardingTags: [],
+        tags: [],
       },
     }
     const res = await this.app.bsky.actor.getPreferences({})
