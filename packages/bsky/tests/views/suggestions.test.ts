@@ -108,9 +108,8 @@ describe('pds user search views', () => {
         subjectType: 'feed',
       },
     ]
-    await network.bsky.ctx.db
-      .getPrimary()
-      .db.insertInto('tagged_suggestion')
+    await network.bsky.db.db
+      .insertInto('tagged_suggestion')
       .values(suggestions)
       .execute()
     const res = await agent.api.app.bsky.unspecced.getTaggedSuggestions()

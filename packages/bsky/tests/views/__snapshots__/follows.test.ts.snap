@@ -589,11 +589,6 @@ Object {
       "did": "user(2)",
       "following": "record(2)",
     },
-    Object {
-      "$type": "app.bsky.graph.defs#notFoundActor",
-      "actor": "did:example:fake",
-      "notFound": true,
-    },
   ],
 }
 `;

@@ -26,6 +26,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         db.db
           .selectFrom('list_item')
           .innerJoin('list_mute', 'list_mute.listUri', 'list_item.listUri')
+          .innerJoin('list', 'list.uri', 'list_item.listUri')
+          .where('list.purpose', '=', 'app.bsky.graph.defs#modlist')
           .where('list_mute.mutedByDid', '=', actorDid)
           .whereRef('list_item.subjectDid', '=', ref('actor.did'))
           .select('list_item.listUri')
@@ -45,6 +47,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         db.db
           .selectFrom('list_item')
           .innerJoin('list_block', 'list_block.subjectUri', 'list_item.listUri')
+          .innerJoin('list', 'list.uri', 'list_item.listUri')
+          .where('list.purpose', '=', 'app.bsky.graph.defs#modlist')
           .where('list_block.creator', '=', actorDid)
           .whereRef('list_item.subjectDid', '=', ref('actor.did'))
           .select('list_item.listUri')
@@ -52,6 +56,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         db.db
           .selectFrom('list_item')
           .innerJoin('list_block', 'list_block.subjectUri', 'list_item.listUri')
+          .innerJoin('list', 'list.uri', 'list_item.listUri')
+          .where('list.purpose', '=', 'app.bsky.graph.defs#modlist')
           .where('list_item.subjectDid', '=', actorDid)
           .whereRef('list_block.creator', '=', ref('actor.did'))
           .select('list_item.listUri')
