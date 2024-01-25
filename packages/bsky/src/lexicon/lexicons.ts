@@ -4615,6 +4615,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#personalDetailsPref',
             'lex:app.bsky.actor.defs#feedViewPref',
             'lex:app.bsky.actor.defs#threadViewPref',
+            'lex:app.bsky.actor.defs#interestsPref',
           ],
         },
       },
@@ -4715,6 +4716,23 @@ export const schemaDict = {
           prioritizeFollowedUsers: {
             type: 'boolean',
             description: 'Show followed users at the top of all replies.',
+          },
+        },
+      },
+      interestsPref: {
+        type: 'object',
+        required: ['tags'],
+        properties: {
+          tags: {
+            type: 'array',
+            maxLength: 100,
+            items: {
+              type: 'string',
+              maxLength: 640,
+              maxGraphemes: 64,
+            },
+            description:
+              "A list of tags which describe the account owner's interests gathered during onboarding.",
           },
         },
       },
