@@ -102,3 +102,44 @@ export function isListViewerState(v: unknown): v is ListViewerState {
 export function validateListViewerState(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.graph.defs#listViewerState', v)
 }
+
+/** indicates that a handle or DID could not be resolved */
+export interface NotFoundActor {
+  actor: string
+  notFound: true
+  [k: string]: unknown
+}
+
+export function isNotFoundActor(v: unknown): v is NotFoundActor {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.graph.defs#notFoundActor'
+  )
+}
+
+export function validateNotFoundActor(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.graph.defs#notFoundActor', v)
+}
+
+/** lists the bi-directional graph relationships between one actor (not indicated in the object), and the target actors (the DID included in the object) */
+export interface Relationship {
+  did: string
+  /** if the actor follows this DID, this is the AT-URI of the follow record */
+  following?: string
+  /** if the actor is followed by this DID, contains the AT-URI of the follow record */
+  followedBy?: string
+  [k: string]: unknown
+}
+
+export function isRelationship(v: unknown): v is Relationship {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.graph.defs#relationship'
+  )
+}
+
+export function validateRelationship(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.graph.defs#relationship', v)
+}
