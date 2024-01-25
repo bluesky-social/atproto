@@ -1,16 +1,17 @@
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { MuteOperation_Type } from '../../../../proto/bsync_pb'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.muteActorList({
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, input }) => {
       const { list } = input.body
-      const viewer = auth.credentials.iss
-      // @TODO switch to bsync
-      await ctx.dataplane.createActorMutelistSubscription({
-        actorDid: viewer,
-        subjectUri: list,
+      const requester = auth.credentials.iss
+      await ctx.bsyncClient.addMuteOperation({
+        type: MuteOperation_Type.ADD,
+        actorDid: requester,
+        subject: list,
       })
     },
   })

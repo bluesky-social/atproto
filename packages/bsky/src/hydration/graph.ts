@@ -4,7 +4,7 @@ import { Record as ListRecord } from '../lexicon/types/app/bsky/graph/list'
 import { Record as ListItemRecord } from '../lexicon/types/app/bsky/graph/listitem'
 import { DataPlaneClient } from '../data-plane/client'
 import { HydrationMap, RecordInfo, parseRecord } from './util'
-import { FollowInfo } from '../data-plane/gen/bsky_pb'
+import { FollowInfo } from '../proto/bsky_pb'
 
 export type List = RecordInfo<ListRecord>
 export type Lists = HydrationMap<List>

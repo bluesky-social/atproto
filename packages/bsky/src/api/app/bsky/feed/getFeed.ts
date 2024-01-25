@@ -12,6 +12,7 @@ import {
   getFeedGen,
 } from '@atproto/identity'
 import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
+import { noUndefinedVals } from '@atproto/common'
 import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky/feed/getFeed'
 import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { Server } from '../../../../lexicon'
@@ -38,8 +39,13 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
 
-      const { timerSkele, timerHydr, ...result } = await getFeed(
-        { ...params, viewer, authorization: req.headers['authorization'] },
+      const headers = noUndefinedVals({
+        authorization: req.headers['authorization'],
+        'accept-language': req.headers['accept-language'],
+      })
+
+      const { timerSkele, timerHydr, resHeaders, ...result } = await getFeed(
+        { ...params, viewer, headers },
         ctx,
       )
 
@@ -47,6 +53,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: result,
         headers: {
+          ...(resHeaders ?? {}),
           'server-timing': serverTimingHeader([timerSkele, timerHydr]),
         },
       }
@@ -63,15 +70,18 @@ const skeleton = async (
   const {
     feedItems: algoItems,
     cursor,
+    resHeaders,
     ...passthrough
   } = localAlgo !== undefined
     ? await localAlgo(ctx, params, params.viewer)
     : await skeletonFromFeedGen(ctx, params)
+
   return {
     cursor,
     items: algoItems.map(toFeedItem),
     timerSkele: timerSkele.stop(),
     timerHydr: new ServerTimer('hydr').start(),
+    resHeaders,
     passthrough,
   }
 }
@@ -115,17 +125,22 @@ const presentation = (
     cursor: skeleton.cursor,
     timerSkele: skeleton.timerSkele,
     timerHydr: skeleton.timerHydr,
+    resHeaders: skeleton.resHeaders,
     ...skeleton.passthrough,
   }
 }
 
 type Context = AppContext
 
-type Params = GetFeedParams & { viewer: string | null; authorization?: string }
+type Params = GetFeedParams & {
+  viewer: string | null
+  headers: Record<string, string>
+}
 
 type Skeleton = {
   items: FeedItem[]
   passthrough: Record<string, unknown> // pass through additional items in feedgen response
+  resHeaders?: Record<string, string>
   cursor?: string
   timerSkele: ServerTimer
   timerHydr: ServerTimer
@@ -135,7 +150,7 @@ const skeletonFromFeedGen = async (
   ctx: Context,
   params: Params,
 ): Promise<AlgoResponse> => {
-  const { feed } = params
+  const { feed, headers } = params
   const found = await ctx.hydrator.feed.getFeedGens([feed], true)
   const feedDid = await found.get(feed)?.record.did
   if (!feedDid) {
@@ -165,22 +180,18 @@ const skeletonFromFeedGen = async (
   const agent = new AtpAgent({ service: fgEndpoint })
 
   let skeleton: SkeletonOutput
+  let resHeaders: Record<string, string> | undefined = undefined
   try {
     // @TODO currently passthrough auth headers from pds
-    const headers: Record<string, string> = params.authorization
-      ? { authorization: params.authorization }
-      : {}
-    const result = await agent.api.app.bsky.feed.getFeedSkeleton(
-      {
-        feed: params.feed,
-        limit: params.limit,
-        cursor: params.cursor,
-      },
-      {
-        headers,
-      },
-    )
+    const result = await agent.api.app.bsky.feed.getFeedSkeleton(params, {
+      headers,
+    })
     skeleton = result.data
+    if (result.headers['content-language']) {
+      resHeaders = {
+        'content-language': result.headers['content-language'],
+      }
+    }
   } catch (err) {
     if (err instanceof AppBskyFeedGetFeedSkeleton.UnknownFeedError) {
       throw new InvalidRequestError(err.message, 'UnknownFeed')
@@ -206,5 +217,5 @@ const skeletonFromFeedGen = async (
     postUri: item.post,
   }))
 
-  return { ...skele, feedItems }
+  return { ...skele, resHeaders, feedItems }
 }

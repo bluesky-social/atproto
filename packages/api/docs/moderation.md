@@ -85,7 +85,7 @@ import { moderatePost } from '@atproto/api'
 const postMod = moderatePost(postView, getOpts())
 
 if (postMod.content.filter) {
-  // dont render in feeds or similar
+  // don't render in feeds or similar
   // in contexts where this is disruptive (eg threads) you should ignore this and instead check blur
 }
 if (postMod.content.blur) {
@@ -123,8 +123,8 @@ import { moderateProfile } from '@atproto/api'
 
 const profileMod = moderateProfile(profileView, getOpts())
 
-if (profileMod.acount.filter) {
-  // dont render in discovery
+if (profileMod.account.filter) {
+  // don't render in discovery
 }
 if (profileMod.account.blur) {
   // render the whole account behind a cover (use profileMod.account.cause to explain)

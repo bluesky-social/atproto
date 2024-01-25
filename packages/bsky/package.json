@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsky",
-  "version": "0.0.22",
+  "version": "0.0.26",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
   "keywords": [
@@ -29,7 +29,7 @@
     "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "jest --updateSnapshot",
     "migration:create": "ts-node ./bin/migration-create.ts",
-    "buf:gen": "buf generate proto"
+    "buf:gen": "buf generate ../bsync/proto && buf generate ./proto"
   },
   "dependencies": {
     "@atproto/api": "workspace:^",
@@ -56,6 +56,7 @@
     "ioredis": "^5.3.2",
     "kysely": "^0.22.0",
     "multiformats": "^9.9.0",
+    "murmurhash": "^2.0.1",
     "p-queue": "^6.6.2",
     "pg": "^8.10.0",
     "pino": "^8.15.0",

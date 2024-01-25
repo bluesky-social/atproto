@@ -1,6 +1,7 @@
 import {
   DummyDriver,
   DynamicModule,
+  ExpressionBuilder,
   RawBuilder,
   SelectQueryBuilder,
   sql,
@@ -8,7 +9,7 @@ import {
   SqliteIntrospector,
   SqliteQueryCompiler,
 } from 'kysely'
-import DatabaseSchema from './database-schema'
+import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
 
 export const actorWhereClause = (actor: string) => {
   if (actor.startsWith('did:')) {
@@ -57,5 +58,7 @@ export const dummyDialect = {
 }
 
 export type DbRef = RawBuilder | ReturnType<DynamicModule['ref']>
+
+export type Subquery = ExpressionBuilder<DatabaseSchemaType, any>
 
 export type AnyQb = SelectQueryBuilder<any, any, any>

@@ -32,7 +32,7 @@ Going to remove pg-db_test-1
 
 ### `with-redis-and-test-db.sh`
 
-This script is similar to `with-test-db.sh`, but in addition to an ephemeral/single-use postgres database it also provies a single-use redis instance. When the script starts, Dockerized postgres and redis containers start-up, and when the script completes the containers are removed.
+This script is similar to `with-test-db.sh`, but in addition to an ephemeral/single-use postgres database it also provides a single-use redis instance. When the script starts, Dockerized postgres and redis containers start-up, and when the script completes the containers are removed.
 
 The environment variables `DB_POSTGRES_URL` and `REDIS_HOST` will be set with a connection strings that can be used to connect to postgres and redis respectively.
 

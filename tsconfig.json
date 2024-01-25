@@ -25,6 +25,7 @@
   "references": [
     { "path": "./packages/pds/tsconfig.build.json" },
     { "path": "./packages/bsky/tsconfig.build.json" },
+    { "path": "./packages/bsync/tsconfig.build.json" },
     { "path": "./packages/ozone/tsconfig.build.json" },
     { "path": "./packages/api/tsconfig.build.json" },
     { "path": "./packages/aws/tsconfig.build.json" },

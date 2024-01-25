@@ -12,7 +12,7 @@ import {
 } from '../../../../pipeline'
 import { Hydrator, mergeStates } from '../../../../hydration/hydrator'
 import { Views } from '../../../../views'
-import { ListItemInfo } from '../../../../data-plane/gen/bsky_pb'
+import { ListItemInfo } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
   const getList = createPipeline(skeleton, hydration, noRules, presentation)

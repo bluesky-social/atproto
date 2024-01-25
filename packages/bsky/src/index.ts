@@ -21,6 +21,8 @@ import { createDataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
 import { Views } from './views'
 import { AuthVerifier } from './auth-verifier'
+import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
+import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 
 export * from './data-plane'
 export type { ServerConfigValues } from './config'
@@ -93,6 +95,22 @@ export class BskyAppView {
     })
     const views = new Views(imgUriBuilder)
 
+    const bsyncClient = createBsyncClient({
+      baseUrl: config.bsyncUrl,
+      httpVersion: config.bsyncHttpVersion ?? '2',
+      nodeOptions: { rejectUnauthorized: !config.bsyncIgnoreBadTls },
+      interceptors: config.bsyncApiKey ? [bsyncAuth(config.bsyncApiKey)] : [],
+    })
+
+    const courierClient = createCourierClient({
+      baseUrl: config.courierUrl,
+      httpVersion: config.courierHttpVersion ?? '2',
+      nodeOptions: { rejectUnauthorized: !config.courierIgnoreBadTls },
+      interceptors: config.courierApiKey
+        ? [courierAuth(config.courierApiKey)]
+        : [],
+    })
+
     const ctx = new AppContext({
       cfg: config,
       dataplane,
@@ -102,6 +120,8 @@ export class BskyAppView {
       signingKey,
       idResolver,
       didCache,
+      bsyncClient,
+      courierClient,
       authVerifier,
       algos,
     })

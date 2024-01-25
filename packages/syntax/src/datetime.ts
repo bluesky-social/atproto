@@ -46,9 +46,9 @@ export const isValidDatetime = (dtStr: string): boolean => {
   return true
 }
 
-/* Takes a flexible datetime sting and normalizes representation.
+/* Takes a flexible datetime string and normalizes representation.
  *
- * This function will work with any valid atproto datetime (eg, anything which isValidDatetime() is true for). It *additinally* is more flexible about accepting datetimes that don't comply to RFC 3339, or are missing timezone information, and normalizing them to a valid datetime.
+ * This function will work with any valid atproto datetime (eg, anything which isValidDatetime() is true for). It *additionally* is more flexible about accepting datetimes that don't comply to RFC 3339, or are missing timezone information, and normalizing them to a valid datetime.
  *
  * One use-case is a consistent, sortable string. Another is to work with older invalid createdAt datetimes.
  *

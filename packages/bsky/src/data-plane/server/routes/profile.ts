@@ -1,5 +1,5 @@
 import { ServiceImpl } from '@connectrpc/connect'
-import { Service } from '../../gen/bsky_connect'
+import { Service } from '../../../proto/bsky_connect'
 import { keyBy } from '@atproto/common'
 import { getRecords } from './records'
 import { Database } from '../db'
