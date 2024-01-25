@@ -32,7 +32,7 @@
               "items": {
                 "type": "union",
                 "refs": [
-                  "app.bsky.graph.def#relationship",
+                  "app.bsky.graph.defs#relationship",
                   "app.bsky.graph.defs#notFoundActor"
                 ]
               }

@@ -6,7 +6,6 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyGraphDef from './def'
 import * as AppBskyGraphDefs from './defs'
 
 export interface QueryParams {
@@ -19,7 +18,7 @@ export type InputSchema = undefined
 export interface OutputSchema {
   actor?: string
   relationships: (
-    | AppBskyGraphDef.Relationship
+    | AppBskyGraphDefs.Relationship
     | AppBskyGraphDefs.NotFoundActor
     | { $type: string; [k: string]: unknown }
   )[]
