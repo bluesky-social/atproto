@@ -1,11 +1,13 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import {
-  DidDocument,
-  PoorlyFormattedDidDocumentError,
-  getFeedGen,
-} from '@atproto/identity'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
+import {
+  Code,
+  getServiceEndpoint,
+  isDataplaneError,
+  unpackIdentityServices,
+} from '../../../../data-plane'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedGenerator({
@@ -21,22 +23,23 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const feedDid = feedInfo.record.did
-      let resolved: DidDocument | null
+      let identity: GetIdentityByDidResponse
       try {
-        resolved = await ctx.idResolver.did.resolve(feedDid)
+        identity = await ctx.dataplane.getIdentityByDid({ did: feedDid })
       } catch (err) {
-        if (err instanceof PoorlyFormattedDidDocumentError) {
-          throw new InvalidRequestError(`invalid did document: ${feedDid}`)
+        if (isDataplaneError(err, Code.NotFound)) {
+          throw new InvalidRequestError(
+            `could not resolve identity: ${feedDid}`,
+          )
         }
         throw err
       }
-      if (!resolved) {
-        throw new InvalidRequestError(
-          `could not resolve did document: ${feedDid}`,
-        )
-      }
 
-      const fgEndpoint = getFeedGen(resolved)
+      const services = unpackIdentityServices(identity.services)
+      const fgEndpoint = getServiceEndpoint(services, {
+        id: 'bsky_fg',
+        type: 'BskyFeedGenerator',
+      })
       if (!fgEndpoint) {
         throw new InvalidRequestError(
           `invalid feed generator service details in did document: ${feedDid}`,

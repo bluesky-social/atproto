@@ -83,12 +83,9 @@ export class TestBsky {
     }
     await migrationDb.close()
 
-    const didCache = new bsky.DidSqlCache(db, HOUR, DAY)
-
     // api server
     const server = bsky.BskyAppView.create({
       config,
-      didCache,
       signingKey: serviceKeypair,
       algos: cfg.algos,
     })
@@ -96,7 +93,7 @@ export class TestBsky {
     const sub = new bsky.RepoSubscription({
       service: cfg.repoProvider,
       db,
-      idResolver: server.ctx.idResolver,
+      idResolver: dataplane.idResolver,
       background: new BackgroundQueue(db),
     })
 
