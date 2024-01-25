@@ -1,7 +1,6 @@
 import getPort from 'get-port'
 import * as ui8 from 'uint8arrays'
 import * as bsky from '@atproto/bsky'
-import { DAY, HOUR } from '@atproto/common-web'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { Client as PlcClient } from '@did-plc/lib'
