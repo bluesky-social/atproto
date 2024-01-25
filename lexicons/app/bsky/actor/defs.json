@@ -203,13 +203,13 @@
     },
     "interestsPref": {
       "type": "object",
-      "required": ["tags"],
+      "required": ["onboardingTags"],
       "properties": {
-        "tags": {
+        "onboardingTags": {
           "type": "array",
           "maxLength": 100,
           "items": { "type": "string", "maxLength": 640, "maxGraphemes": 64 },
-          "description": "A list of tags which describe the account owner's interests."
+          "description": "A list of tags which describe the account owner's interests gathered during onboarding."
         }
       }
     }

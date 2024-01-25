@@ -236,8 +236,8 @@ export function validateThreadViewPref(v: unknown): ValidationResult {
 }
 
 export interface InterestsPref {
-  /** A list of tags which describe the account owner's interests. */
-  tags: string[]
+  /** A list of tags which describe the account owner's interests gathered during onboarding. */
+  onboardingTags: string[]
   [k: string]: unknown
 }
 

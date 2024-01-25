@@ -4721,9 +4721,9 @@ export const schemaDict = {
       },
       interestsPref: {
         type: 'object',
-        required: ['tags'],
+        required: ['onboardingTags'],
         properties: {
-          tags: {
+          onboardingTags: {
             type: 'array',
             maxLength: 100,
             items: {
@@ -4732,7 +4732,7 @@ export const schemaDict = {
               maxGraphemes: 64,
             },
             description:
-              "A list of tags which describe the account owner's interests.",
+              "A list of tags which describe the account owner's interests gathered during onboarding.",
           },
         },
       },

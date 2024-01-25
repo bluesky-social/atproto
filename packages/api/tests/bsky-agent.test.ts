@@ -706,7 +706,7 @@ describe('agent', () => {
         },
       })
 
-      await agent.setInterestsPref({ tags: ['foo', 'bar'] })
+      await agent.setInterestsPref({ onboardingTags: ['foo', 'bar'] })
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
@@ -739,7 +739,7 @@ describe('agent', () => {
           prioritizeFollowedUsers: true,
         },
         interestsPref: {
-          tags: ['foo', 'bar'],
+          onboardingTags: ['foo', 'bar'],
         },
       })
     })

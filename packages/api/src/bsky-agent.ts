@@ -324,6 +324,9 @@ export class BskyAgent extends AtpAgent {
       adultContentEnabled: false,
       contentLabels: {},
       birthDate: undefined,
+      interests: {
+        onboardingTags: [],
+      },
     }
     const res = await this.app.bsky.actor.getPreferences({})
     for (const pref of res.data.preferences) {
@@ -370,6 +373,13 @@ export class BskyAgent extends AtpAgent {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, ...v } = pref
         prefs.threadViewPrefs = { ...prefs.threadViewPrefs, ...v }
+      } else if (
+        AppBskyActorDefs.isInterestsPref(pref) &&
+        AppBskyActorDefs.validateInterestsPref(pref).success
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { $type, ...v } = pref
+        prefs.interests = { ...prefs.interests, ...v }
       }
     }
     return prefs

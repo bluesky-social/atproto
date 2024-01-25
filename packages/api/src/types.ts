@@ -101,7 +101,7 @@ export interface BskyThreadViewPreference {
  * Bluesky interests preferences
  */
 export interface BskyInterestsPreference {
-  tags: string[]
+  onboardingTags: string[]
   [key: string]: any
 }
 
@@ -118,4 +118,5 @@ export interface BskyPreferences {
   adultContentEnabled: boolean
   contentLabels: Record<string, BskyLabelPreference>
   birthDate: Date | undefined
+  interests: BskyInterestsPreference
 }
