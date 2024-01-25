@@ -142,7 +142,11 @@ describe('proxies appview procedures', () => {
         { headers: sc.getHeaders(alice) },
       )
     expect(result1.notifications.length).toBeGreaterThanOrEqual(5)
-    expect(result1.notifications.every((n) => !n.isRead)).toBe(true)
+    expect(
+      result1.notifications.every((n, i) => {
+        return (i === 0 && !n.isRead) || (i !== 0 && n.isRead)
+      }),
+    ).toBe(true)
     // update last seen
     const { indexedAt: lastSeenAt } = result1.notifications[2]
     await agent.api.app.bsky.notification.updateSeen(
@@ -163,7 +167,7 @@ describe('proxies appview procedures', () => {
     expect(result2.notifications).toEqual(
       result1.notifications.map((n) => ({
         ...n,
-        isRead: n.indexedAt <= lastSeenAt,
+        isRead: n.indexedAt < lastSeenAt,
       })),
     )
   })

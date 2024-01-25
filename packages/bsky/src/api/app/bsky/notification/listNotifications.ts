@@ -56,10 +56,16 @@ const skeleton = async (
       actorDid: params.viewer,
     }),
   ])
+  // @NOTE for the first page of results if there's no last-seen time, consider top notification unread
+  // rather than all notifications. bit of a hack to be more graceful when seen times are out of sync.
+  let lastSeenDate = lastSeenRes.timestamp?.toDate()
+  if (!lastSeenDate && !params.cursor) {
+    lastSeenDate = res.notifications.at(0)?.timestamp?.toDate()
+  }
   return {
     notifs: res.notifications,
     cursor: res.cursor || undefined,
-    lastSeenNotifs: lastSeenRes.timestamp?.toDate().toISOString(),
+    lastSeenNotifs: lastSeenDate?.toISOString(),
   }
 }
 
