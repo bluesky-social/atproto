@@ -29,10 +29,6 @@ export type BsyncConfig = Partial<bsync.ServerEnvironment> & {
   dbUrl: string
 }
 
-export type BsyncConfig = Partial<bsync.ServerEnvironment> & {
-  dbUrl: string
-}
-
 export type OzoneConfig = Partial<ozone.OzoneEnvironment> & {
   plcUrl: string
   appviewUrl: string
