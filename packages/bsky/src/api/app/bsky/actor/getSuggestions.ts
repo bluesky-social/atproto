@@ -17,12 +17,12 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.actor.getSuggestions({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
       const db = ctx.db.getReplica()
       const actorService = ctx.services.actor(db)
       const graphService = ctx.services.graph(db)
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
 
       const result = await getSuggestions(
         { ...params, viewer },
@@ -43,7 +43,7 @@ const skeleton = async (
 ): Promise<SkeletonState> => {
   const { db } = ctx
   const { viewer } = params
-  const alreadyIncluded = parseCursor(params.cursor)
+  const alreadyIncluded = parseCursor(params.cursor) // @NOTE handles bad cursor e.g. on appview swap
   const { ref } = db.db.dynamic
   const suggestions = await db.db
     .selectFrom('suggested_follow')

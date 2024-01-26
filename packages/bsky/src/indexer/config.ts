@@ -3,6 +3,7 @@ import { DAY, HOUR, parseIntWithFallback } from '@atproto/common'
 
 export interface IndexerConfigValues {
   version: string
+  serverDid: string
   dbPostgresUrl: string
   dbPostgresSchema?: string
   redisHost?: string // either set redis host, or both sentinel name and hosts
@@ -13,7 +14,6 @@ export interface IndexerConfigValues {
   didCacheStaleTTL: number
   didCacheMaxTTL: number
   handleResolveNameservers?: string[]
-  labelerDid: string
   hiveApiKey?: string
   abyssEndpoint?: string
   abyssPassword?: string
@@ -21,7 +21,11 @@ export interface IndexerConfigValues {
   fuzzyMatchB64?: string
   fuzzyFalsePositiveB64?: string
   labelerKeywords: Record<string, string>
-  moderationPushUrl?: string
+  moderationPushUrl: string
+  courierUrl?: string
+  courierApiKey?: string
+  courierHttpVersion?: '1.1' | '2'
+  courierIgnoreBadTls?: boolean
   indexerConcurrency?: number
   indexerPartitionIds: number[]
   indexerPartitionBatchSize?: number
@@ -37,6 +41,7 @@ export class IndexerConfig {
 
   static readEnv(overrides?: Partial<IndexerConfigValues>) {
     const version = process.env.BSKY_VERSION || '0.0.0'
+    const serverDid = process.env.SERVER_DID || 'did:example:test'
     const dbPostgresUrl =
       overrides?.dbPostgresUrl || process.env.DB_PRIMARY_POSTGRES_URL
     const dbPostgresSchema =
@@ -66,11 +71,23 @@ export class IndexerConfig {
     const handleResolveNameservers = process.env.HANDLE_RESOLVE_NAMESERVERS
       ? process.env.HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
-    const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
     const moderationPushUrl =
       overrides?.moderationPushUrl ||
       process.env.MODERATION_PUSH_URL ||
       undefined
+    assert(moderationPushUrl)
+    const courierUrl =
+      overrides?.courierUrl || process.env.BSKY_COURIER_URL || undefined
+    const courierApiKey =
+      overrides?.courierApiKey || process.env.BSKY_COURIER_API_KEY || undefined
+    const courierHttpVersion =
+      overrides?.courierHttpVersion ||
+      process.env.BSKY_COURIER_HTTP_VERSION ||
+      '2'
+    const courierIgnoreBadTls =
+      overrides?.courierIgnoreBadTls ||
+      process.env.BSKY_COURIER_IGNORE_BAD_TLS === 'true'
+    assert(courierHttpVersion === '1.1' || courierHttpVersion === '2')
     const hiveApiKey = process.env.HIVE_API_KEY || undefined
     const abyssEndpoint = process.env.ABYSS_ENDPOINT
     const abyssPassword = process.env.ABYSS_PASSWORD
@@ -101,6 +118,7 @@ export class IndexerConfig {
     assert(indexerPartitionIds.length > 0)
     return new IndexerConfig({
       version,
+      serverDid,
       dbPostgresUrl,
       dbPostgresSchema,
       redisHost,
@@ -111,8 +129,11 @@ export class IndexerConfig {
       didCacheStaleTTL,
       didCacheMaxTTL,
       handleResolveNameservers,
-      labelerDid,
       moderationPushUrl,
+      courierUrl,
+      courierApiKey,
+      courierHttpVersion,
+      courierIgnoreBadTls,
       hiveApiKey,
       abyssEndpoint,
       abyssPassword,
@@ -134,6 +155,10 @@ export class IndexerConfig {
 
   get version() {
     return this.cfg.version
+  }
+
+  get serverDid() {
+    return this.cfg.serverDid
   }
 
   get dbPostgresUrl() {
@@ -176,12 +201,24 @@ export class IndexerConfig {
     return this.cfg.handleResolveNameservers
   }
 
-  get labelerDid() {
-    return this.cfg.labelerDid
-  }
-
   get moderationPushUrl() {
     return this.cfg.moderationPushUrl
+  }
+
+  get courierUrl() {
+    return this.cfg.courierUrl
+  }
+
+  get courierApiKey() {
+    return this.cfg.courierApiKey
+  }
+
+  get courierHttpVersion() {
+    return this.cfg.courierHttpVersion
+  }
+
+  get courierIgnoreBadTls() {
+    return this.cfg.courierIgnoreBadTls
   }
 
   get hiveApiKey() {

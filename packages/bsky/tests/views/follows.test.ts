@@ -1,7 +1,6 @@
 import AtpAgent from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, followsSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewer } from '../_util'
-import followsSeed from '../seeds/follows'
 
 describe('pds follow views', () => {
   let agent: AtpAgent
@@ -120,15 +119,16 @@ describe('pds follow views', () => {
   })
 
   it('blocks followers by actor takedown', async () => {
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.dan,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: true,
+          ref: 'test',
+        },
       },
       {
         encoding: 'application/json',
@@ -145,15 +145,15 @@ describe('pds follow views', () => {
       sc.dids.dan,
     )
 
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.dan,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: false,
+        },
       },
       {
         encoding: 'application/json',
@@ -252,15 +252,16 @@ describe('pds follow views', () => {
   })
 
   it('blocks follows by actor takedown', async () => {
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.dan,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: true,
+          ref: 'test',
+        },
       },
       {
         encoding: 'application/json',
@@ -277,20 +278,30 @@ describe('pds follow views', () => {
       sc.dids.dan,
     )
 
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventReverseTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.dan,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: false,
+        },
       },
       {
         encoding: 'application/json',
         headers: network.pds.adminAuthHeaders(),
       },
     )
+  })
+
+  it('fetches relationships between users', async () => {
+    const res = await agent.api.app.bsky.graph.getRelationships({
+      actor: sc.dids.bob,
+      others: [sc.dids.alice, sc.dids.bob, sc.dids.carol, 'did:example:fake'],
+    })
+    expect(res.data.actor).toEqual(sc.dids.bob)
+    expect(res.data.relationships.length).toBe(4)
+    expect(forSnapshot(res.data)).toMatchSnapshot()
   })
 })

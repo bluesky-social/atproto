@@ -1,6 +1,5 @@
 import AtpAgent, { AtUri } from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
-import basicSeed from '../seeds/basic'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { makeAlgos } from '../../src'
 
 describe('algo hot-classic', () => {
@@ -40,7 +39,7 @@ describe('algo hot-classic', () => {
   it('returns well liked posts', async () => {
     const img = await sc.uploadFile(
       alice,
-      'tests/sample-img/key-landscape-small.jpg',
+      '../dev-env/src/seed/img/key-landscape-small.jpg',
       'image/jpeg',
     )
     const one = await sc.post(alice, 'first post', undefined, [img])

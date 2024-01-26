@@ -1,8 +1,7 @@
 import AtpAgent from '@atproto/api'
 import { wait } from '@atproto/common'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, usersBulkSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll, stripViewer } from '../_util'
-import usersBulkSeed from '../seeds/users-bulk'
 
 // @NOTE skipped to help with CI failures
 // The search code is not used in production & we should switch it out for tests on the search proxy interface
@@ -239,15 +238,16 @@ describe.skip('pds actor search views', () => {
   })
 
   it('search blocks by actor takedown', async () => {
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids['cara-wiegand69.test'],
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: true,
+          ref: 'test',
+        },
       },
       {
         encoding: 'application/json',

@@ -3,7 +3,12 @@ import { LabelPreference } from './moderation/types'
 /**
  * Used by the PersistSessionHandler to indicate what change occurred
  */
-export type AtpSessionEvent = 'create' | 'create-failed' | 'update' | 'expired'
+export type AtpSessionEvent =
+  | 'create'
+  | 'create-failed'
+  | 'update'
+  | 'expired'
+  | 'network-error'
 
 /**
  * Used by AtpAgent to store active sessions
@@ -31,16 +36,6 @@ export type AtpPersistSessionHandler = (
 export interface AtpAgentOpts {
   service: string | URL
   persistSession?: AtpPersistSessionHandler
-}
-
-/**
- * AtpAgent createAccount() opts
- */
-export interface AtpAgentCreateAccountOpts {
-  email: string
-  password: string
-  handle: string
-  inviteCode?: string
 }
 
 /**
@@ -103,6 +98,14 @@ export interface BskyThreadViewPreference {
 }
 
 /**
+ * Bluesky interests preferences
+ */
+export interface BskyInterestsPreference {
+  tags: string[]
+  [key: string]: any
+}
+
+/**
  * Bluesky preferences
  */
 export interface BskyPreferences {
@@ -115,4 +118,5 @@ export interface BskyPreferences {
   adultContentEnabled: boolean
   contentLabels: Record<string, BskyLabelPreference>
   birthDate: Date | undefined
+  interests: BskyInterestsPreference
 }

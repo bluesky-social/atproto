@@ -44,12 +44,12 @@ export class TestBsky {
       didCacheMaxTTL: DAY,
       labelCacheStaleTTL: 30 * SECOND,
       labelCacheMaxTTL: MINUTE,
+      modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       ...cfg,
       // Each test suite gets its own lock id for the repo subscription
       adminPassword: ADMIN_PASSWORD,
       moderatorPassword: MOD_PASSWORD,
       triagePassword: TRIAGE_PASSWORD,
-      labelerDid: 'did:example:labeler',
       feedGenDid: 'did:example:feedGen',
       rateLimitsEnabled: false,
     })
@@ -98,9 +98,9 @@ export class TestBsky {
     // indexer
     const indexerCfg = new bsky.IndexerConfig({
       version: '0.0.0',
+      serverDid,
       didCacheStaleTTL: HOUR,
       didCacheMaxTTL: DAY,
-      labelerDid: 'did:example:labeler',
       redisHost: cfg.redisHost,
       dbPostgresUrl: cfg.dbPrimaryPostgresUrl,
       dbPostgresSchema: cfg.dbPostgresSchema,
@@ -109,7 +109,8 @@ export class TestBsky {
       abyssEndpoint: '',
       abyssPassword: '',
       imgUriEndpoint: 'img.example.com',
-      moderationPushUrl: `http://admin:${config.adminPassword}@localhost:${cfg.pdsPort}`,
+      moderationPushUrl:
+        cfg.indexer?.moderationPushUrl ?? 'https://modservice.invalid',
       indexerPartitionIds: [0],
       indexerNamespace: `ns${ns}`,
       indexerSubLockId: uniqueLockId(),
@@ -129,7 +130,6 @@ export class TestBsky {
       db: db.getPrimary(),
       redis: indexerRedis,
       redisCache,
-      imgInvalidator: cfg.imgInvalidator,
     })
     // ingester
     const ingesterCfg = new bsky.IngesterConfig({
@@ -138,6 +138,7 @@ export class TestBsky {
       dbPostgresUrl: cfg.dbPrimaryPostgresUrl,
       dbPostgresSchema: cfg.dbPostgresSchema,
       repoProvider: cfg.repoProvider,
+      labelProvider: cfg.labelProvider,
       ingesterNamespace: `ns${ns}`,
       ingesterSubLockId: uniqueLockId(),
       ingesterPartitionCount: 1,
@@ -156,6 +157,9 @@ export class TestBsky {
     await ingester.start()
     await indexer.start()
     await server.start()
+
+    // manually process labels in dev-env (in network.processAll)
+    ingester.ctx.labelSubscription?.destroy()
 
     return new TestBsky(url, port, server, indexer, ingester)
   }
@@ -219,6 +223,7 @@ export async function getIngester(
     dbPostgresUrl: process.env.DB_POSTGRES_URL || '',
     dbPostgresSchema: `appview_${name}`,
     repoProvider: network.pds.url.replace('http://', 'ws://'),
+    labelProvider: 'http://labeler.invalid',
     ingesterSubLockId: uniqueLockId(),
     ingesterPartitionCount: config.ingesterPartitionCount ?? 1,
     ingesterNamespace: `ns${ns}`,
@@ -234,7 +239,9 @@ export async function getIngester(
     namespace: cfg.ingesterNamespace,
   })
   await db.migrateToLatestOrThrow()
-  return bsky.BskyIngester.create({ cfg, db, redis })
+  const ingester = await bsky.BskyIngester.create({ cfg, db, redis })
+  await ingester.ctx.labelSubscription?.destroy()
+  return ingester
 }
 
 // get multiple indexers for separate partitions, sharing db and redis instance.
@@ -249,9 +256,9 @@ export async function getIndexers(
   const ns = name ? await randomIntFromSeed(name, 1000000) : undefined
   const baseCfg: bsky.IndexerConfigValues = {
     version: '0.0.0',
+    serverDid: 'did:example:bsky',
     didCacheStaleTTL: HOUR,
     didCacheMaxTTL: DAY,
-    labelerDid: 'did:example:labeler',
     labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
     redisHost: process.env.REDIS_HOST || '',
     dbPostgresUrl: process.env.DB_POSTGRES_URL || '',
@@ -263,6 +270,7 @@ export async function getIndexers(
     indexerPartitionIds: [0],
     indexerNamespace: `ns${ns}`,
     ingesterPartitionCount: config.ingesterPartitionCount ?? 1,
+    moderationPushUrl: config.moderationPushUrl ?? 'https://modservice.invalid',
     ...config,
   }
   const db = new bsky.PrimaryDatabase({

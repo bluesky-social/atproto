@@ -1,6 +1,8 @@
 import { PrimaryDatabase } from '../db'
 import { Redis } from '../redis'
 import { IngesterConfig } from './config'
+import { LabelSubscription } from './label-subscription'
+import { MuteSubscription } from './mute-subscription'
 
 export class IngesterContext {
   constructor(
@@ -8,6 +10,8 @@ export class IngesterContext {
       db: PrimaryDatabase
       redis: Redis
       cfg: IngesterConfig
+      labelSubscription?: LabelSubscription
+      muteSubscription?: MuteSubscription
     },
   ) {}
 
@@ -21,6 +25,14 @@ export class IngesterContext {
 
   get cfg(): IngesterConfig {
     return this.opts.cfg
+  }
+
+  get labelSubscription(): LabelSubscription | undefined {
+    return this.opts.labelSubscription
+  }
+
+  get muteSubscription(): MuteSubscription | undefined {
+    return this.opts.muteSubscription
   }
 }
 

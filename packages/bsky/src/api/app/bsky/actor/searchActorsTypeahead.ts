@@ -7,10 +7,10 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.searchActorsTypeahead({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
       const { limit } = params
-      const requester = auth.credentials.did
+      const requester = auth.credentials.iss
       const rawQuery = params.q ?? params.term
       const query = cleanQuery(rawQuery || '')
       const db = ctx.db.getReplica('search')

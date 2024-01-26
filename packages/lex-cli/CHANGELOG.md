@@ -1,5 +1,11 @@
 # @atproto/lex-cli
 
+## 0.3.0
+
+### Minor Changes
+
+- [#2039](https://github.com/bluesky-social/atproto/pull/2039) [`bf8d718c`](https://github.com/bluesky-social/atproto/commit/bf8d718cf918ac8d8a2cb1f57fde80535284642d) Thanks [@dholms](https://github.com/dholms)! - Namespace lexicon codegen
+
 ## 0.2.5
 
 ### Patch Changes

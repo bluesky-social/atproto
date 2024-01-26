@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       const res = await ctx.appViewAgent.api.app.bsky.actor.getProfiles(
         params,
-        await ctx.serviceAuthHeaders(requester),
+        await ctx.appviewAuthHeaders(requester),
       )
       const hasSelf = res.data.profiles.some((prof) => prof.did === requester)
       if (hasSelf) {

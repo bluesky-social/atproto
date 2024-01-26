@@ -6,8 +6,8 @@ import {
   getIngester,
   ingestAll,
   processAll,
+  usersSeed,
 } from '@atproto/dev-env'
-import usersSeed from '../seeds/users'
 import { BskyIngester } from '../../src'
 import { countAll } from '../../src/db/util'
 

@@ -1,6 +1,7 @@
 import {
   DummyDriver,
   DynamicModule,
+  ExpressionBuilder,
   RawBuilder,
   SelectQueryBuilder,
   sql,
@@ -8,7 +9,7 @@ import {
   SqliteIntrospector,
   SqliteQueryCompiler,
 } from 'kysely'
-import DatabaseSchema from './database-schema'
+import DatabaseSchema, { DatabaseSchemaType } from './database-schema'
 
 export const actorWhereClause = (actor: string) => {
   if (actor.startsWith('did:')) {
@@ -20,11 +21,11 @@ export const actorWhereClause = (actor: string) => {
 
 // Applies to actor or record table
 export const notSoftDeletedClause = (alias: DbRef) => {
-  return sql`${alias}."takedownId" is null`
+  return sql`${alias}."takedownRef" is null`
 }
 
-export const softDeleted = (actorOrRecord: { takedownId: number | null }) => {
-  return actorOrRecord.takedownId !== null
+export const softDeleted = (actorOrRecord: { takedownRef: string | null }) => {
+  return actorOrRecord.takedownRef !== null
 }
 
 export const countAll = sql<number>`count(*)`
@@ -57,5 +58,7 @@ export const dummyDialect = {
 }
 
 export type DbRef = RawBuilder | ReturnType<DynamicModule['ref']>
+
+export type Subquery = ExpressionBuilder<DatabaseSchemaType, any>
 
 export type AnyQb = SelectQueryBuilder<any, any, any>

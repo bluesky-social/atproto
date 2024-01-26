@@ -31,11 +31,20 @@ export interface ServerConfigValues {
   imgUriEndpoint?: string
   blobCacheLocation?: string
   searchEndpoint?: string
-  labelerDid: string
+  bsyncUrl?: string
+  bsyncApiKey?: string
+  bsyncHttpVersion?: '1.1' | '2'
+  bsyncIgnoreBadTls?: boolean
+  bsyncOnlyMutes?: boolean
+  courierUrl?: string
+  courierApiKey?: string
+  courierHttpVersion?: '1.1' | '2'
+  courierIgnoreBadTls?: boolean
+  courierOnlyRegistration?: boolean
   adminPassword: string
-  moderatorPassword?: string
-  triagePassword?: string
-  moderationPushUrl?: string
+  moderatorPassword: string
+  triagePassword: string
+  modServiceDid: string
   rateLimitsEnabled: boolean
   rateLimitBypassKey?: string
   rateLimitBypassIps?: string[]
@@ -89,6 +98,25 @@ export class ServerConfig {
     const imgUriEndpoint = process.env.IMG_URI_ENDPOINT
     const blobCacheLocation = process.env.BLOB_CACHE_LOC
     const searchEndpoint = process.env.SEARCH_ENDPOINT
+    const bsyncUrl = process.env.BSKY_BSYNC_URL || undefined
+    const bsyncApiKey = process.env.BSKY_BSYNC_API_KEY || undefined
+    const bsyncHttpVersion = process.env.BSKY_BSYNC_HTTP_VERSION || '2'
+    const bsyncIgnoreBadTls = process.env.BSKY_BSYNC_IGNORE_BAD_TLS === 'true'
+    const bsyncOnlyMutes = process.env.BSKY_BSYNC_ONLY_MUTES === 'true'
+    assert(!bsyncOnlyMutes || bsyncUrl, 'bsync-only mutes requires a bsync url')
+    assert(bsyncHttpVersion === '1.1' || bsyncHttpVersion === '2')
+    const courierUrl = process.env.BSKY_COURIER_URL || undefined
+    const courierApiKey = process.env.BSKY_COURIER_API_KEY || undefined
+    const courierHttpVersion = process.env.BSKY_COURIER_HTTP_VERSION || '2'
+    const courierIgnoreBadTls =
+      process.env.BSKY_COURIER_IGNORE_BAD_TLS === 'true'
+    const courierOnlyRegistration =
+      process.env.BSKY_COURIER_ONLY_REGISTRATION === 'true'
+    assert(
+      !courierOnlyRegistration || courierUrl,
+      'courier-only registration requires a courier url',
+    )
+    assert(courierHttpVersion === '1.1' || courierHttpVersion === '2')
     const dbPrimaryPostgresUrl =
       overrides?.dbPrimaryPostgresUrl || process.env.DB_PRIMARY_POSTGRES_URL
     let dbReplicaPostgresUrls = overrides?.dbReplicaPostgresUrls
@@ -110,14 +138,17 @@ export class ServerConfig {
     )
     const dbPostgresSchema = process.env.DB_POSTGRES_SCHEMA
     assert(dbPrimaryPostgresUrl)
-    const adminPassword = process.env.ADMIN_PASSWORD || 'admin'
+    const adminPassword = process.env.ADMIN_PASSWORD || undefined
+    assert(adminPassword)
     const moderatorPassword = process.env.MODERATOR_PASSWORD || undefined
+    assert(moderatorPassword)
     const triagePassword = process.env.TRIAGE_PASSWORD || undefined
-    const labelerDid = process.env.LABELER_DID || 'did:example:labeler'
-    const moderationPushUrl =
-      overrides?.moderationPushUrl ||
-      process.env.MODERATION_PUSH_URL ||
+    assert(triagePassword)
+    const modServiceDid =
+      overrides?.modServiceDid ||
+      process.env.MODERATION_SERVICE_DID ||
       undefined
+    assert(modServiceDid)
     const rateLimitsEnabled = process.env.RATE_LIMITS_ENABLED === 'true'
     const rateLimitBypassKey = process.env.RATE_LIMIT_BYPASS_KEY
     const rateLimitBypassIps = process.env.RATE_LIMIT_BYPASS_IPS
@@ -150,11 +181,20 @@ export class ServerConfig {
       imgUriEndpoint,
       blobCacheLocation,
       searchEndpoint,
-      labelerDid,
+      bsyncUrl,
+      bsyncApiKey,
+      bsyncHttpVersion,
+      bsyncIgnoreBadTls,
+      bsyncOnlyMutes,
+      courierUrl,
+      courierApiKey,
+      courierHttpVersion,
+      courierIgnoreBadTls,
+      courierOnlyRegistration,
       adminPassword,
       moderatorPassword,
       triagePassword,
-      moderationPushUrl,
+      modServiceDid,
       rateLimitsEnabled,
       rateLimitBypassKey,
       rateLimitBypassIps,
@@ -267,8 +307,44 @@ export class ServerConfig {
     return this.cfg.searchEndpoint
   }
 
-  get labelerDid() {
-    return this.cfg.labelerDid
+  get bsyncUrl() {
+    return this.cfg.bsyncUrl
+  }
+
+  get bsyncApiKey() {
+    return this.cfg.bsyncApiKey
+  }
+
+  get bsyncOnlyMutes() {
+    return this.cfg.bsyncOnlyMutes
+  }
+
+  get bsyncHttpVersion() {
+    return this.cfg.bsyncHttpVersion
+  }
+
+  get bsyncIgnoreBadTls() {
+    return this.cfg.bsyncIgnoreBadTls
+  }
+
+  get courierUrl() {
+    return this.cfg.courierUrl
+  }
+
+  get courierApiKey() {
+    return this.cfg.courierApiKey
+  }
+
+  get courierHttpVersion() {
+    return this.cfg.courierHttpVersion
+  }
+
+  get courierIgnoreBadTls() {
+    return this.cfg.courierIgnoreBadTls
+  }
+
+  get courierOnlyRegistration() {
+    return this.cfg.courierOnlyRegistration
   }
 
   get adminPassword() {
@@ -283,8 +359,8 @@ export class ServerConfig {
     return this.cfg.triagePassword
   }
 
-  get moderationPushUrl() {
-    return this.cfg.moderationPushUrl
+  get modServiceDid() {
+    return this.cfg.modServiceDid
   }
 
   get rateLimitsEnabled() {

@@ -26,6 +26,7 @@ import getList from './app/bsky/graph/getList'
 import getLists from './app/bsky/graph/getLists'
 import getListMutes from './app/bsky/graph/getListMutes'
 import getMutes from './app/bsky/graph/getMutes'
+import getRelationships from './app/bsky/graph/getRelationships'
 import muteActor from './app/bsky/graph/muteActor'
 import unmuteActor from './app/bsky/graph/unmuteActor'
 import muteActorList from './app/bsky/graph/muteActorList'
@@ -40,16 +41,12 @@ import updateSeen from './app/bsky/notification/updateSeen'
 import registerPush from './app/bsky/notification/registerPush'
 import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerators'
 import getTimelineSkeleton from './app/bsky/unspecced/getTimelineSkeleton'
-import createReport from './com/atproto/moderation/createReport'
-import emitModerationEvent from './com/atproto/admin/emitModerationEvent'
-import searchRepos from './com/atproto/admin/searchRepos'
-import adminGetRecord from './com/atproto/admin/getRecord'
-import getRepo from './com/atproto/admin/getRepo'
-import queryModerationStatuses from './com/atproto/admin/queryModerationStatuses'
+import getTaggedSuggestions from './app/bsky/unspecced/getTaggedSuggestions'
+import getSubjectStatus from './com/atproto/admin/getSubjectStatus'
+import updateSubjectStatus from './com/atproto/admin/updateSubjectStatus'
+import getAccountInfos from './com/atproto/admin/getAccountInfos'
 import resolveHandle from './com/atproto/identity/resolveHandle'
 import getRecord from './com/atproto/repo/getRecord'
-import queryModerationEvents from './com/atproto/admin/queryModerationEvents'
-import getModerationEvent from './com/atproto/admin/getModerationEvent'
 import fetchLabels from './com/atproto/temp/fetchLabels'
 
 export * as health from './health'
@@ -86,6 +83,7 @@ export default function (server: Server, ctx: AppContext) {
   getLists(server, ctx)
   getListMutes(server, ctx)
   getMutes(server, ctx)
+  getRelationships(server, ctx)
   muteActor(server, ctx)
   unmuteActor(server, ctx)
   muteActorList(server, ctx)
@@ -100,15 +98,11 @@ export default function (server: Server, ctx: AppContext) {
   registerPush(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTimelineSkeleton(server, ctx)
+  getTaggedSuggestions(server, ctx)
   // com.atproto
-  createReport(server, ctx)
-  emitModerationEvent(server, ctx)
-  searchRepos(server, ctx)
-  adminGetRecord(server, ctx)
-  getRepo(server, ctx)
-  getModerationEvent(server, ctx)
-  queryModerationEvents(server, ctx)
-  queryModerationStatuses(server, ctx)
+  getSubjectStatus(server, ctx)
+  updateSubjectStatus(server, ctx)
+  getAccountInfos(server, ctx)
   resolveHandle(server, ctx)
   getRecord(server, ctx)
   fetchLabels(server, ctx)

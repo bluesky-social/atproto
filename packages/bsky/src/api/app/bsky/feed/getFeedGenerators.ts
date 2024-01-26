@@ -14,10 +14,10 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.feed.getFeedGenerators({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
       const { feeds } = params
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       const db = ctx.db.getReplica()
       const feedService = ctx.services.feed(db)
       const actorService = ctx.services.actor(db)

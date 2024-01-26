@@ -6,10 +6,17 @@ import AppContext from '../../../../context'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.graph.getLists({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
       const { actor, limit, cursor } = params
-      const requester = auth.credentials.did
+      const requester = auth.credentials.iss
+      if (TimeCidKeyset.clearlyBad(cursor)) {
+        return {
+          encoding: 'application/json',
+          body: { lists: [] },
+        }
+      }
+
       const db = ctx.db.getReplica()
       const { ref } = db.db.dynamic
 

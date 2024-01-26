@@ -17,12 +17,12 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.app.bsky.graph.getListBlocks({
-    auth: ctx.authVerifier,
+    auth: ctx.authVerifier.standard,
     handler: async ({ params, auth }) => {
       const db = ctx.db.getReplica()
       const graphService = ctx.services.graph(db)
       const actorService = ctx.services.actor(db)
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
 
       const result = await getListBlocks(
         { ...params, viewer },
@@ -44,6 +44,10 @@ const skeleton = async (
   const { db, graphService } = ctx
   const { limit, cursor, viewer } = params
   const { ref } = db.db.dynamic
+
+  if (TimeCidKeyset.clearlyBad(cursor)) {
+    return { params, listInfos: [] }
+  }
 
   let listsReq = graphService
     .getListsQb(viewer)

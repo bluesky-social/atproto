@@ -167,16 +167,19 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     repoBackfillLimitMs: env.repoBackfillLimitMs ?? DAY,
   }
 
-  if (!env.bskyAppViewUrl) {
-    throw new Error('Must configure PDS_BSKY_APP_VIEW_URL')
-  } else if (!env.bskyAppViewDid) {
-    throw new Error('Must configure PDS_BSKY_APP_VIEW_DID')
-  }
+  assert(env.bskyAppViewUrl)
+  assert(env.bskyAppViewDid)
   const bskyAppViewCfg: ServerConfig['bskyAppView'] = {
     url: env.bskyAppViewUrl,
     did: env.bskyAppViewDid,
-    proxyModeration: env.bskyAppViewModeration ?? false,
     cdnUrlPattern: env.bskyAppViewCdnUrlPattern,
+  }
+
+  assert(env.modServiceUrl)
+  assert(env.modServiceDid)
+  const modServiceCfg: ServerConfig['modService'] = {
+    url: env.modServiceUrl,
+    did: env.modServiceDid,
   }
 
   const redisCfg: ServerConfig['redis'] = env.redisScratchAddress
@@ -211,6 +214,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     moderationEmail: moderationEmailCfg,
     subscription: subscriptionCfg,
     bskyAppView: bskyAppViewCfg,
+    modService: modServiceCfg,
     redis: redisCfg,
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
@@ -229,6 +233,7 @@ export type ServerConfig = {
   moderationEmail: EmailConfig | null
   subscription: SubscriptionConfig
   bskyAppView: BksyAppViewConfig
+  modService: ModServiceConfig
   redis: RedisScratchConfig | null
   rateLimits: RateLimitsConfig
   crawlers: string[]
@@ -330,6 +335,10 @@ export type RateLimitsConfig =
 export type BksyAppViewConfig = {
   url: string
   did: string
-  proxyModeration: boolean
   cdnUrlPattern?: string
+}
+
+export type ModServiceConfig = {
+  url: string
+  did: string
 }

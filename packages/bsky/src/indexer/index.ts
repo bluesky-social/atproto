@@ -11,10 +11,13 @@ import { createServices } from './services'
 import { IndexerSubscription } from './subscription'
 import { AutoModerator } from '../auto-moderator'
 import { Redis } from '../redis'
-import { NotificationServer } from '../notifications'
+import {
+  CourierNotificationServer,
+  GorushNotificationServer,
+  NotificationServer,
+} from '../notifications'
 import { CloseFn, createServer, startServer } from './server'
-import { ImageUriBuilder } from '../image/uri'
-import { ImageInvalidator } from '../image/invalidator'
+import { authWithApiKey as courierAuth, createCourierClient } from '../courier'
 
 export { IndexerConfig } from './config'
 export type { IndexerConfigValues } from './config'
@@ -42,7 +45,6 @@ export class BskyIndexer {
     redis: Redis
     redisCache: Redis
     cfg: IndexerConfig
-    imgInvalidator?: ImageInvalidator
   }): BskyIndexer {
     const { db, redis, redisCache, cfg } = opts
     const didCache = new DidRedisCache(redisCache.withNamespace('did-doc'), {
@@ -56,22 +58,34 @@ export class BskyIndexer {
     })
     const backgroundQueue = new BackgroundQueue(db)
 
-    const imgUriBuilder = cfg.imgUriEndpoint
-      ? new ImageUriBuilder(cfg.imgUriEndpoint)
-      : undefined
-    const imgInvalidator = opts.imgInvalidator
     const autoMod = new AutoModerator({
       db,
       idResolver,
       cfg,
       backgroundQueue,
-      imgUriBuilder,
-      imgInvalidator,
     })
 
-    const notifServer = cfg.pushNotificationEndpoint
-      ? new NotificationServer(db, cfg.pushNotificationEndpoint)
+    const courierClient = cfg.courierUrl
+      ? createCourierClient({
+          baseUrl: cfg.courierUrl,
+          httpVersion: cfg.courierHttpVersion ?? '2',
+          nodeOptions: { rejectUnauthorized: !cfg.courierIgnoreBadTls },
+          interceptors: cfg.courierApiKey
+            ? [courierAuth(cfg.courierApiKey)]
+            : [],
+        })
       : undefined
+
+    let notifServer: NotificationServer | undefined
+    if (courierClient) {
+      notifServer = new CourierNotificationServer(db, courierClient)
+    } else if (cfg.pushNotificationEndpoint) {
+      notifServer = new GorushNotificationServer(
+        db,
+        cfg.pushNotificationEndpoint,
+      )
+    }
+
     const services = createServices({
       idResolver,
       autoMod,
@@ -88,6 +102,7 @@ export class BskyIndexer {
       didCache,
       backgroundQueue,
       autoMod,
+      notifServer,
     })
     const sub = new IndexerSubscription(ctx, {
       partitionIds: cfg.indexerPartitionIds,

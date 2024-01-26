@@ -1,6 +1,5 @@
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { FuzzyMatcher, encode } from '../../src/auto-moderator/fuzzy-matcher'
-import basicSeed from '../seeds/basic'
 import { AtpAgent } from '@atproto/api'
 import { ImageInvalidator } from '../../src/image/invalidator'
 
@@ -35,9 +34,8 @@ describe('fuzzy matcher', () => {
   })
 
   const getAllReports = () => {
-    return network.bsky.ctx.db
-      .getPrimary()
-      .db.selectFrom('moderation_event')
+    return network.ozone.ctx.db.db
+      .selectFrom('moderation_event')
       .where('action', '=', 'com.atproto.admin.defs#modEventReport')
       .selectAll()
       .orderBy('id', 'asc')

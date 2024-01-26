@@ -11,6 +11,7 @@ import {
   BskyLabelPreference,
   BskyFeedViewPreference,
   BskyThreadViewPreference,
+  BskyInterestsPreference,
 } from './types'
 
 const FEED_VIEW_PREF_DEFAULTS = {
@@ -323,6 +324,9 @@ export class BskyAgent extends AtpAgent {
       adultContentEnabled: false,
       contentLabels: {},
       birthDate: undefined,
+      interests: {
+        tags: [],
+      },
     }
     const res = await this.app.bsky.actor.getPreferences({})
     for (const pref of res.data.preferences) {
@@ -369,6 +373,13 @@ export class BskyAgent extends AtpAgent {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { $type, ...v } = pref
         prefs.threadViewPrefs = { ...prefs.threadViewPrefs, ...v }
+      } else if (
+        AppBskyActorDefs.isInterestsPref(pref) &&
+        AppBskyActorDefs.validateInterestsPref(pref).success
+      ) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { $type, ...v } = pref
+        prefs.interests = { ...prefs.interests, ...v }
       }
     }
     return prefs
@@ -519,6 +530,22 @@ export class BskyAgent extends AtpAgent {
       return prefs
         .filter((p) => !AppBskyActorDefs.isThreadViewPref(p))
         .concat([{ ...pref, $type: 'app.bsky.actor.defs#threadViewPref' }])
+    })
+  }
+
+  async setInterestsPref(pref: Partial<BskyInterestsPreference>) {
+    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
+      const existing = prefs.findLast(
+        (pref) =>
+          AppBskyActorDefs.isInterestsPref(pref) &&
+          AppBskyActorDefs.validateInterestsPref(pref).success,
+      )
+      if (existing) {
+        pref = { ...existing, ...pref }
+      }
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isInterestsPref(p))
+        .concat([{ ...pref, $type: 'app.bsky.actor.defs#interestsPref' }])
     })
   }
 }

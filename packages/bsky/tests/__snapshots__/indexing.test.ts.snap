@@ -101,7 +101,7 @@ Array [
               "$type": "app.bsky.embed.images#view",
               "images": Array [
                 Object {
-                  "alt": "tests/sample-img/key-landscape-small.jpg",
+                  "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
                   "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(2)/cids(5)@jpeg",
                   "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(2)/cids(5)@jpeg",
                 },
@@ -113,7 +113,7 @@ Array [
                 "cid": "cids(3)",
                 "cts": "1970-01-01T00:00:00.000Z",
                 "neg": false,
-                "src": "did:example:labeler",
+                "src": "user(3)",
                 "uri": "record(3)",
                 "val": "test-label",
               },
@@ -121,7 +121,7 @@ Array [
                 "cid": "cids(3)",
                 "cts": "1970-01-01T00:00:00.000Z",
                 "neg": false,
-                "src": "did:example:labeler",
+                "src": "user(3)",
                 "uri": "record(3)",
                 "val": "test-label-2",
               },
@@ -134,7 +134,7 @@ Array [
                 "$type": "app.bsky.embed.images",
                 "images": Array [
                   Object {
-                    "alt": "tests/sample-img/key-landscape-small.jpg",
+                    "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
                     "image": Object {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -207,7 +207,7 @@ Array [
             "record": Object {
               "$type": "app.bsky.embed.record#viewRecord",
               "author": Object {
-                "did": "user(3)",
+                "did": "user(4)",
                 "handle": "dan.test",
                 "labels": Array [],
                 "viewer": Object {
@@ -223,7 +223,7 @@ Array [
                   "record": Object {
                     "$type": "app.bsky.embed.record#viewRecord",
                     "author": Object {
-                      "did": "user(4)",
+                      "did": "user(5)",
                       "handle": "carol.test",
                       "labels": Array [],
                       "viewer": Object {
@@ -245,7 +245,7 @@ Array [
                           "$type": "app.bsky.embed.images",
                           "images": Array [
                             Object {
-                              "alt": "tests/sample-img/key-landscape-small.jpg",
+                              "alt": "../dev-env/src/seed/img/key-landscape-small.jpg",
                               "image": Object {
                                 "$type": "blob",
                                 "mimeType": "image/jpeg",
@@ -256,7 +256,7 @@ Array [
                               },
                             },
                             Object {
-                              "alt": "tests/sample-img/key-alt.jpg",
+                              "alt": "../dev-env/src/seed/img/key-alt.jpg",
                               "image": Object {
                                 "$type": "blob",
                                 "mimeType": "image/jpeg",
@@ -317,7 +317,7 @@ Array [
               "cid": "cids(6)",
               "cts": "1970-01-01T00:00:00.000Z",
               "neg": false,
-              "src": "did:example:labeler",
+              "src": "user(3)",
               "uri": "record(6)",
               "val": "test-label",
             },
@@ -416,7 +416,7 @@ Array [
     "cursor": "0000000000000::bafycid",
     "follows": Array [
       Object {
-        "did": "user(3)",
+        "did": "user(4)",
         "handle": "dan.test",
         "labels": Array [],
         "viewer": Object {

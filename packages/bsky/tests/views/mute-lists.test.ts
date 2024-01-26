@@ -1,7 +1,6 @@
 import AtpAgent, { AtUri } from '@atproto/api'
-import { TestNetwork, SeedClient, RecordRef } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, RecordRef, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from '../_util'
-import basicSeed from '../seeds/basic'
 
 describe('bsky views with mutes from mute lists', () => {
   let network: TestNetwork
@@ -42,7 +41,7 @@ describe('bsky views with mutes from mute lists', () => {
   it('creates a list with some items', async () => {
     const avatar = await sc.uploadFile(
       alice,
-      'tests/sample-img/key-portrait-small.jpg',
+      '../dev-env/src/seed/img/key-portrait-small.jpg',
       'image/jpeg',
     )
     // alice creates mute list with bob & carol that dan uses
@@ -379,5 +378,51 @@ describe('bsky views with mutes from mute lists', () => {
     )
     expect(res.data.posts.length).toBe(1)
     expect(forSnapshot(res.data.posts[0])).toMatchSnapshot()
+  })
+
+  it('does not apply "curate" blocklists', async () => {
+    const parsedUri = new AtUri(listUri)
+    await pdsAgent.api.com.atproto.repo.putRecord(
+      {
+        repo: parsedUri.hostname,
+        collection: parsedUri.collection,
+        rkey: parsedUri.rkey,
+        record: {
+          name: 'curate list',
+          purpose: 'app.bsky.graph.defs#curatelist',
+          createdAt: new Date().toISOString(),
+        },
+      },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+    await network.processAll()
+
+    const res = await agent.api.app.bsky.feed.getTimeline(
+      { limit: 100 },
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(
+      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+    ).toBeTruthy()
+  })
+
+  it('does not apply deleted blocklists (whose items are still around)', async () => {
+    const parsedUri = new AtUri(listUri)
+    await pdsAgent.api.app.bsky.graph.list.delete(
+      {
+        repo: parsedUri.hostname,
+        rkey: parsedUri.rkey,
+      },
+      sc.getHeaders(alice),
+    )
+    await network.processAll()
+
+    const res = await agent.api.app.bsky.feed.getTimeline(
+      { limit: 100 },
+      { headers: await network.serviceHeaders(dan) },
+    )
+    expect(
+      res.data.feed.some((post) => [bob, carol].includes(post.post.author.did)),
+    ).toBeTruthy()
   })
 })

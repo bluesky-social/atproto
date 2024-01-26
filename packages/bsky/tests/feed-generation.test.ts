@@ -5,6 +5,7 @@ import {
   TestFeedGen,
   SeedClient,
   RecordRef,
+  basicSeed,
 } from '@atproto/dev-env'
 import { Handler as SkeletonHandler } from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { GeneratorView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
@@ -14,7 +15,6 @@ import {
   FeedViewPost,
   SkeletonFeedPost,
 } from '../src/lexicon/types/app/bsky/feed/defs'
-import basicSeed from './seeds/basic'
 import { forSnapshot, paginateAll } from './_util'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import assert from 'assert'
@@ -157,16 +157,17 @@ describe('feed generation', () => {
       sc.getHeaders(alice),
     )
     await network.processAll()
-    await agent.api.com.atproto.admin.emitModerationEvent(
+    await agent.api.com.atproto.admin.updateSubjectStatus(
       {
-        event: { $type: 'com.atproto.admin.defs#modEventTakedown' },
         subject: {
           $type: 'com.atproto.repo.strongRef',
           uri: prime.uri,
           cid: prime.cid,
         },
-        createdBy: 'did:example:admin',
-        reason: 'Y',
+        takedown: {
+          applied: true,
+          ref: 'test',
+        },
       },
       {
         encoding: 'application/json',

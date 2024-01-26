@@ -28,12 +28,13 @@ export function lexiconsToDefTree(lexicons: LexiconDoc[]): DefTreeNode[] {
 
 function getOrCreateNode(tree: DefTreeNode[], path: string[]): DefTreeNode {
   let node: DefTreeNode | undefined
-  for (const segment of path) {
+  for (let i = 0; i < path.length; i++) {
+    const segment = path[i]
     node = tree.find((v) => v.name === segment)
     if (!node) {
       node = {
         name: segment,
-        className: `${toTitleCase(segment)}NS`,
+        className: `${toTitleCase(path.slice(0, i + 1).join('-'))}NS`,
         propName: toCamelCase(segment),
         children: [],
         userTypes: [],

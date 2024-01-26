@@ -1,5 +1,4 @@
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
-import userSeed from './seeds/users'
+import { TestNetwork, SeedClient, usersSeed } from '@atproto/dev-env'
 import { IdResolver } from '@atproto/identity'
 import DidRedisCache from '../src/did-cache'
 import { wait } from '@atproto/common'
@@ -25,7 +24,7 @@ describe('did cache', () => {
     redis = network.bsky.indexer.ctx.redis
     didCache = network.bsky.indexer.ctx.didCache
     sc = network.getSeedClient()
-    await userSeed(sc)
+    await usersSeed(sc)
     await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob

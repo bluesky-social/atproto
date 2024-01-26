@@ -5,10 +5,10 @@ import { toSkeletonItem } from '../../../../feed-gen/types'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedSkeleton({
-    auth: ctx.authVerifierAnyAudience,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
       const { feed } = params
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
       const localAlgo = ctx.algos[feed]
 
       if (!localAlgo) {

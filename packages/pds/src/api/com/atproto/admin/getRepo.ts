@@ -6,7 +6,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.getRepo({
     auth: ctx.authVerifier.role,
     handler: async ({ req, params }) => {
-      const res = await ctx.appViewAgent.com.atproto.admin.getRepo(
+      const res = await ctx.moderationAgent.com.atproto.admin.getRepo(
         params,
         authPassthru(req),
       )

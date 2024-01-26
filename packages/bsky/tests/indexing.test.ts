@@ -11,10 +11,8 @@ import AtpAgent, {
   AppBskyFeedRepost,
   AppBskyGraphFollow,
 } from '@atproto/api'
-import { TestNetwork, SeedClient } from '@atproto/dev-env'
+import { TestNetwork, SeedClient, usersSeed, basicSeed } from '@atproto/dev-env'
 import { forSnapshot } from './_util'
-import usersSeed from './seeds/users'
-import basicSeed from './seeds/basic'
 import { ids } from '../src/lexicon/lexicons'
 import { Database } from '../src/db'
 

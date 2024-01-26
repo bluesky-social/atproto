@@ -159,7 +159,7 @@ describe('agent', () => {
 
     expect(events.length).toEqual(2)
     expect(events[0]).toEqual('create')
-    expect(events[1]).toEqual('create')
+    expect(events[1]).toEqual('update')
     expect(sessions.length).toEqual(2)
     expect(sessions[0]?.accessJwt).toEqual(agent1.session?.accessJwt)
     expect(sessions[1]?.accessJwt).toEqual(agent2.session?.accessJwt)
@@ -343,7 +343,7 @@ describe('agent', () => {
 
     expect(events.length).toEqual(2)
     expect(events[0]).toEqual('create-failed')
-    expect(events[1]).toEqual('create-failed')
+    expect(events[1]).toEqual('network-error')
     expect(sessions.length).toEqual(2)
     expect(typeof sessions[0]).toEqual('undefined')
     expect(typeof sessions[1]).toEqual('undefined')

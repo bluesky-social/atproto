@@ -12,6 +12,7 @@
           "required": ["availableUserDomains"],
           "properties": {
             "inviteCodeRequired": { "type": "boolean" },
+            "phoneVerificationRequired": { "type": "boolean" },
             "availableUserDomains": {
               "type": "array",
               "items": { "type": "string" }

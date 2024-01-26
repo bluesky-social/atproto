@@ -6,8 +6,8 @@ import {
   getIngester,
   processAll,
   SeedClient,
+  basicSeed,
 } from '@atproto/dev-env'
-import basicSeed from '../seeds/basic'
 import { BskyIngester } from '../../src'
 
 const TEST_NAME = 'pipeline_backpressure'

@@ -17,7 +17,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .columns(['subjectDid', 'sortAt', 'cid'])
     .execute()
 
-  // drop old indices that are superceded by these
+  // drop old indices that are superseded by these
   await db.schema.dropIndex('like_creator_idx').execute()
   await db.schema.dropIndex('follow_subjectdid_idx').execute()
 }

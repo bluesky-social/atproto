@@ -122,7 +122,7 @@ export class Lexicons {
     } else if (def.type === 'object') {
       return ComplexValidators.object(this, 'Object', def, value)
     } else {
-      // shouldnt happen
+      // shouldn't happen
       throw new InvalidLexiconError('Definition must be a record or object')
     }
   }

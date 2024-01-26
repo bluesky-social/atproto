@@ -10,6 +10,9 @@ import { SearchKeyset, getUserSearchQuery } from '../util/search'
 import { FromDb } from '../types'
 import { GraphService } from '../graph'
 import { LabelService } from '../label'
+import { AtUri } from '@atproto/syntax'
+import { ids } from '../../lexicon/lexicons'
+import { Platform } from '../../notifications'
 
 export * from './types'
 
@@ -19,8 +22,8 @@ export class ActorService {
   constructor(
     public db: Database,
     public imgUriBuilder: ImageUriBuilder,
-    private graph: FromDb<GraphService>,
-    private label: FromDb<LabelService>,
+    graph: FromDb<GraphService>,
+    label: FromDb<LabelService>,
   ) {
     this.views = new ActorViews(this.db, this.imgUriBuilder, graph, label)
   }
@@ -94,6 +97,26 @@ export class ActorService {
       const orderB = order[b.did] ?? order[b.handle?.toLowerCase() ?? '']
       return orderA - orderB
     })
+  }
+
+  async getProfileRecords(dids: string[], includeSoftDeleted = false) {
+    if (dids.length === 0) return new Map()
+    const profileUris = dids.map((did) =>
+      AtUri.make(did, ids.AppBskyActorProfile, 'self').toString(),
+    )
+    const { ref } = this.db.db.dynamic
+    const res = await this.db.db
+      .selectFrom('record')
+      .innerJoin('actor', 'actor.did', 'record.did')
+      .if(!includeSoftDeleted, (qb) =>
+        qb.where(notSoftDeletedClause(ref('actor'))),
+      )
+      .where('uri', 'in', profileUris)
+      .select(['record.did', 'record.json'])
+      .execute()
+    return res.reduce((acc, cur) => {
+      return acc.set(cur.did, JSON.parse(cur.json))
+    }, new Map<string, JSON>())
   }
 
   async getSearchResults({
@@ -191,6 +214,20 @@ export class ActorService {
         return
       }
     }
+  }
+
+  async registerPushDeviceToken(
+    did: string,
+    token: string,
+    platform: Platform,
+    appId: string,
+  ) {
+    await this.db
+      .asPrimary()
+      .db.insertInto('notification_push_token')
+      .values({ did, token, platform, appId })
+      .onConflict((oc) => oc.doNothing())
+      .execute()
   }
 }
 

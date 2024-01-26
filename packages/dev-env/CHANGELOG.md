@@ -1,5 +1,74 @@
 # @atproto/dev-env
 
+## 0.2.28
+
+### Patch Changes
+
+- Updated dependencies [[`8994d363`](https://github.com/bluesky-social/atproto/commit/8994d3633adad1c02569d6d44ae896e18195e8e2)]:
+  - @atproto/api@0.9.5
+  - @atproto/bsky@0.0.28
+  - @atproto/ozone@0.0.7
+  - @atproto/pds@0.3.16
+
+## 0.2.27
+
+### Patch Changes
+
+- Updated dependencies [[`4171c04a`](https://github.com/bluesky-social/atproto/commit/4171c04ad81c5734a4558bc41fa1c4f3a1aba18c)]:
+  - @atproto/api@0.9.4
+  - @atproto/bsky@0.0.27
+  - @atproto/ozone@0.0.6
+  - @atproto/pds@0.3.15
+
+## 0.2.26
+
+### Patch Changes
+
+- Updated dependencies [[`5368245a`](https://github.com/bluesky-social/atproto/commit/5368245a6ef7095c86ad166fb04ff9bef27c3c3e)]:
+  - @atproto/api@0.9.3
+  - @atproto/bsky@0.0.26
+  - @atproto/ozone@0.0.5
+  - @atproto/pds@0.3.14
+
+## 0.2.25
+
+### Patch Changes
+
+- Updated dependencies [[`15f38560`](https://github.com/bluesky-social/atproto/commit/15f38560b9e2dc3af8cf860826e7477234fe6a2d)]:
+  - @atproto/api@0.9.2
+  - @atproto/bsky@0.0.25
+  - @atproto/ozone@0.0.4
+  - @atproto/pds@0.3.13
+
+## 0.2.24
+
+### Patch Changes
+
+- Updated dependencies [[`c6fc73ae`](https://github.com/bluesky-social/atproto/commit/c6fc73aee6c245d12f876abd11889b8dbd0ce2ed)]:
+  - @atproto/api@0.9.1
+  - @atproto/bsky@0.0.24
+  - @atproto/ozone@0.0.3
+  - @atproto/pds@0.3.12
+
+## 0.2.23
+
+### Patch Changes
+
+- Updated dependencies [[`e43396af`](https://github.com/bluesky-social/atproto/commit/e43396af0973748dd2d034e88d35cf7ae8b4df2c), [`bf8d718c`](https://github.com/bluesky-social/atproto/commit/bf8d718cf918ac8d8a2cb1f57fde80535284642d), [`51fcba7a`](https://github.com/bluesky-social/atproto/commit/51fcba7a7945c604fc50e9545850a12ef0ee6da6)]:
+  - @atproto/api@0.9.0
+  - @atproto/bsky@0.0.23
+  - @atproto/pds@0.3.11
+  - @atproto/ozone@0.0.2
+
+## 0.2.22
+
+### Patch Changes
+
+- Updated dependencies [[`14067733`](https://github.com/bluesky-social/atproto/commit/140677335f76b99129c1f593d9e11d64624386c6)]:
+  - @atproto/api@0.8.0
+  - @atproto/bsky@0.0.22
+  - @atproto/pds@0.3.10
+
 ## 0.2.21
 
 ### Patch Changes

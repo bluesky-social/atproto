@@ -4,7 +4,7 @@ export interface Record {
   did: string
   json: string
   indexedAt: string
-  takedownId: number | null // @TODO(bsky)
+  takedownRef: string | null
 }
 
 export const tableName = 'record'

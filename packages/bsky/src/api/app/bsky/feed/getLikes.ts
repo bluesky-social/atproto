@@ -13,12 +13,12 @@ import { createPipeline } from '../../../../pipeline'
 export default function (server: Server, ctx: AppContext) {
   const getLikes = createPipeline(skeleton, hydration, noBlocks, presentation)
   server.app.bsky.feed.getLikes({
-    auth: ctx.authOptionalVerifier,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth }) => {
       const db = ctx.db.getReplica()
       const actorService = ctx.services.actor(db)
       const graphService = ctx.services.graph(db)
-      const viewer = auth.credentials.did
+      const viewer = auth.credentials.iss
 
       const result = await getLikes(
         { ...params, viewer },
@@ -40,6 +40,10 @@ const skeleton = async (
   const { db } = ctx
   const { uri, cid, limit, cursor } = params
   const { ref } = db.db.dynamic
+
+  if (TimeCidKeyset.clearlyBad(cursor)) {
+    return { params, likes: [] }
+  }
 
   let builder = db.db
     .selectFrom('like')

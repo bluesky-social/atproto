@@ -9,6 +9,11 @@ export interface IngesterConfigValues {
   redisSentinelHosts?: string[]
   redisPassword?: string
   repoProvider: string
+  labelProvider?: string
+  bsyncUrl?: string
+  bsyncApiKey?: string
+  bsyncHttpVersion?: '1.1' | '2'
+  bsyncIgnoreBadTls?: boolean
   ingesterPartitionCount: number
   ingesterNamespace?: string
   ingesterSubLockId?: number
@@ -40,6 +45,17 @@ export class IngesterConfig {
     const redisPassword =
       overrides?.redisPassword || process.env.REDIS_PASSWORD || undefined
     const repoProvider = overrides?.repoProvider || process.env.REPO_PROVIDER // E.g. ws://abc.com:4000
+    const labelProvider = overrides?.labelProvider || process.env.LABEL_PROVIDER
+    const bsyncUrl =
+      overrides?.bsyncUrl || process.env.BSKY_BSYNC_URL || undefined
+    const bsyncApiKey =
+      overrides?.bsyncApiKey || process.env.BSKY_BSYNC_API_KEY || undefined
+    const bsyncHttpVersion =
+      overrides?.bsyncHttpVersion || process.env.BSKY_BSYNC_HTTP_VERSION || '2'
+    const bsyncIgnoreBadTls =
+      overrides?.bsyncIgnoreBadTls ||
+      process.env.BSKY_BSYNC_IGNORE_BAD_TLS === 'true'
+    assert(bsyncHttpVersion === '1.1' || bsyncHttpVersion === '2')
     const ingesterPartitionCount =
       overrides?.ingesterPartitionCount ||
       maybeParseInt(process.env.INGESTER_PARTITION_COUNT)
@@ -69,6 +85,11 @@ export class IngesterConfig {
       redisSentinelHosts,
       redisPassword,
       repoProvider,
+      labelProvider,
+      bsyncUrl,
+      bsyncApiKey,
+      bsyncHttpVersion,
+      bsyncIgnoreBadTls,
       ingesterPartitionCount,
       ingesterSubLockId,
       ingesterNamespace,
@@ -108,6 +129,26 @@ export class IngesterConfig {
 
   get repoProvider() {
     return this.cfg.repoProvider
+  }
+
+  get labelProvider() {
+    return this.cfg.labelProvider
+  }
+
+  get bsyncUrl() {
+    return this.cfg.bsyncUrl
+  }
+
+  get bsyncApiKey() {
+    return this.cfg.bsyncApiKey
+  }
+
+  get bsyncHttpVersion() {
+    return this.cfg.bsyncHttpVersion
+  }
+
+  get bsyncIgnoreBadTls() {
+    return this.cfg.bsyncIgnoreBadTls
   }
 
   get ingesterPartitionCount() {

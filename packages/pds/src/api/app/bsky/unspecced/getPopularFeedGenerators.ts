@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
       const res =
         await ctx.appViewAgent.api.app.bsky.unspecced.getPopularFeedGenerators(
           params,
-          await ctx.serviceAuthHeaders(requester),
+          await ctx.appviewAuthHeaders(requester),
         )
       return {
         encoding: 'application/json',
