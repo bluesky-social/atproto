@@ -6,7 +6,7 @@ import { createHttpTerminator, HttpTerminator } from 'http-terminator'
 import cors from 'cors'
 import compression from 'compression'
 import AtpAgent from '@atproto/api'
-import { DidCache, IdResolver } from '@atproto/identity'
+import { IdResolver } from '@atproto/identity'
 import API, { health, wellKnown, blobResolver } from './api'
 import * as error from './error'
 import { loggerMiddleware } from './logger'
@@ -47,27 +47,18 @@ export class BskyAppView {
   static create(opts: {
     config: ServerConfig
     signingKey: Keypair
-    didCache?: DidCache
     algos?: MountedAlgos
   }): BskyAppView {
-    const { config, signingKey, didCache, algos = {} } = opts
+    const { config, signingKey, algos = {} } = opts
     const app = express()
     app.use(cors())
     app.use(loggerMiddleware)
     app.use(compression())
 
+    // used solely for handle resolution: identity lookups occur on dataplane
     const idResolver = new IdResolver({
       plcUrl: config.didPlcUrl,
-      didCache,
       backupNameservers: config.handleResolveNameservers,
-    })
-
-    const authVerifier = new AuthVerifier(idResolver, {
-      ownDid: config.serverDid,
-      adminDid: config.modServiceDid,
-      adminPass: config.adminPassword,
-      moderatorPass: config.moderatorPassword,
-      triagePass: config.triagePassword,
     })
 
     const imgUriBuilder = new ImageUriBuilder(
@@ -111,6 +102,14 @@ export class BskyAppView {
         : [],
     })
 
+    const authVerifier = new AuthVerifier(dataplane, {
+      ownDid: config.serverDid,
+      adminDid: config.modServiceDid,
+      adminPass: config.adminPassword,
+      moderatorPass: config.moderatorPassword,
+      triagePass: config.triagePassword,
+    })
+
     const ctx = new AppContext({
       cfg: config,
       dataplane,
@@ -119,7 +118,6 @@ export class BskyAppView {
       views,
       signingKey,
       idResolver,
-      didCache,
       bsyncClient,
       courierClient,
       authVerifier,

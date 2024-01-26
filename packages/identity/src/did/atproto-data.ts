@@ -20,7 +20,13 @@ export {
 export const getKey = (doc: DidDocument): string | undefined => {
   const key = getSigningKey(doc)
   if (!key) return undefined
+  return getDidKeyFromMultibase(key)
+}
 
+export const getDidKeyFromMultibase = (key: {
+  type: string
+  publicKeyMultibase: string
+}): string | undefined => {
   const keyBytes = crypto.multibaseToBytes(key.publicKeyMultibase)
   let didKey: string | undefined = undefined
   if (key.type === 'EcdsaSecp256r1VerificationKey2019') {

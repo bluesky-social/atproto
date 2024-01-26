@@ -8407,6 +8407,274 @@ export class GetLatestRevResponse extends Message<GetLatestRevResponse> {
 }
 
 /**
+ * @generated from message bsky.GetIdentityByDidRequest
+ */
+export class GetIdentityByDidRequest extends Message<GetIdentityByDidRequest> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  constructor(data?: PartialMessage<GetIdentityByDidRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetIdentityByDidRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetIdentityByDidRequest {
+    return new GetIdentityByDidRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetIdentityByDidRequest {
+    return new GetIdentityByDidRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetIdentityByDidRequest {
+    return new GetIdentityByDidRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetIdentityByDidRequest
+      | PlainMessage<GetIdentityByDidRequest>
+      | undefined,
+    b:
+      | GetIdentityByDidRequest
+      | PlainMessage<GetIdentityByDidRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetIdentityByDidRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetIdentityByDidResponse
+ */
+export class GetIdentityByDidResponse extends Message<GetIdentityByDidResponse> {
+  /**
+   * @generated from field: string did = 1;
+   */
+  did = ''
+
+  /**
+   * @generated from field: string handle = 2;
+   */
+  handle = ''
+
+  /**
+   * @generated from field: bytes keys = 3;
+   */
+  keys = new Uint8Array(0)
+
+  /**
+   * @generated from field: bytes services = 4;
+   */
+  services = new Uint8Array(0)
+
+  /**
+   * @generated from field: google.protobuf.Timestamp updated = 5;
+   */
+  updated?: Timestamp
+
+  constructor(data?: PartialMessage<GetIdentityByDidResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetIdentityByDidResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'handle', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'keys', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+    { no: 4, name: 'services', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+    { no: 5, name: 'updated', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetIdentityByDidResponse {
+    return new GetIdentityByDidResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetIdentityByDidResponse {
+    return new GetIdentityByDidResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetIdentityByDidResponse {
+    return new GetIdentityByDidResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetIdentityByDidResponse
+      | PlainMessage<GetIdentityByDidResponse>
+      | undefined,
+    b:
+      | GetIdentityByDidResponse
+      | PlainMessage<GetIdentityByDidResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetIdentityByDidResponse, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetIdentityByHandleRequest
+ */
+export class GetIdentityByHandleRequest extends Message<GetIdentityByHandleRequest> {
+  /**
+   * @generated from field: string handle = 1;
+   */
+  handle = ''
+
+  constructor(data?: PartialMessage<GetIdentityByHandleRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetIdentityByHandleRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'handle', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetIdentityByHandleRequest {
+    return new GetIdentityByHandleRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetIdentityByHandleRequest {
+    return new GetIdentityByHandleRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetIdentityByHandleRequest {
+    return new GetIdentityByHandleRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetIdentityByHandleRequest
+      | PlainMessage<GetIdentityByHandleRequest>
+      | undefined,
+    b:
+      | GetIdentityByHandleRequest
+      | PlainMessage<GetIdentityByHandleRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetIdentityByHandleRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.GetIdentityByHandleResponse
+ */
+export class GetIdentityByHandleResponse extends Message<GetIdentityByHandleResponse> {
+  /**
+   * @generated from field: string handle = 1;
+   */
+  handle = ''
+
+  /**
+   * @generated from field: string did = 2;
+   */
+  did = ''
+
+  /**
+   * @generated from field: bytes keys = 3;
+   */
+  keys = new Uint8Array(0)
+
+  /**
+   * @generated from field: bytes services = 4;
+   */
+  services = new Uint8Array(0)
+
+  /**
+   * @generated from field: google.protobuf.Timestamp updated = 5;
+   */
+  updated?: Timestamp
+
+  constructor(data?: PartialMessage<GetIdentityByHandleResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.GetIdentityByHandleResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'handle', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'did', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: 'keys', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+    { no: 4, name: 'services', kind: 'scalar', T: 12 /* ScalarType.BYTES */ },
+    { no: 5, name: 'updated', kind: 'message', T: Timestamp },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): GetIdentityByHandleResponse {
+    return new GetIdentityByHandleResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): GetIdentityByHandleResponse {
+    return new GetIdentityByHandleResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): GetIdentityByHandleResponse {
+    return new GetIdentityByHandleResponse().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | GetIdentityByHandleResponse
+      | PlainMessage<GetIdentityByHandleResponse>
+      | undefined,
+    b:
+      | GetIdentityByHandleResponse
+      | PlainMessage<GetIdentityByHandleResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(GetIdentityByHandleResponse, a, b)
+  }
+}
+
+/**
  * @generated from message bsky.GetBlobTakedownRequest
  */
 export class GetBlobTakedownRequest extends Message<GetBlobTakedownRequest> {

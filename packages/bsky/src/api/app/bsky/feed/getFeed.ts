@@ -6,11 +6,6 @@ import {
   serverTimingHeader,
 } from '@atproto/xrpc-server'
 import { ResponseType, XRPCError } from '@atproto/xrpc'
-import {
-  DidDocument,
-  PoorlyFormattedDidDocumentError,
-  getFeedGen,
-} from '@atproto/identity'
 import { AtpAgent, AppBskyFeedGetFeedSkeleton } from '@atproto/api'
 import { noUndefinedVals } from '@atproto/common'
 import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky/feed/getFeed'
@@ -26,6 +21,13 @@ import {
   createPipeline,
 } from '../../../../pipeline'
 import { FeedItem } from '../../../../hydration/feed'
+import { GetIdentityByDidResponse } from '../../../../proto/bsky_pb'
+import {
+  Code,
+  getServiceEndpoint,
+  isDataplaneError,
+  unpackIdentityServices,
+} from '../../../../data-plane'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeed = createPipeline(
@@ -157,20 +159,21 @@ const skeletonFromFeedGen = async (
     throw new InvalidRequestError('could not find feed')
   }
 
-  let resolved: DidDocument | null
+  let identity: GetIdentityByDidResponse
   try {
-    resolved = await ctx.idResolver.did.resolve(feedDid)
+    identity = await ctx.dataplane.getIdentityByDid({ did: feedDid })
   } catch (err) {
-    if (err instanceof PoorlyFormattedDidDocumentError) {
-      throw new InvalidRequestError(`invalid did document: ${feedDid}`)
+    if (isDataplaneError(err, Code.NotFound)) {
+      throw new InvalidRequestError(`could not resolve identity: ${feedDid}`)
     }
     throw err
   }
-  if (!resolved) {
-    throw new InvalidRequestError(`could not resolve did document: ${feedDid}`)
-  }
 
-  const fgEndpoint = getFeedGen(resolved)
+  const services = unpackIdentityServices(identity.services)
+  const fgEndpoint = getServiceEndpoint(services, {
+    id: 'bsky_fg',
+    type: 'BskyFeedGenerator',
+  })
   if (!fgEndpoint) {
     throw new InvalidRequestError(
       `invalid feed generator service details in did document: ${feedDid}`,

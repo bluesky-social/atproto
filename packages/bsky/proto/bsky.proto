@@ -851,6 +851,31 @@ message GetLatestRevResponse {
   string rev = 1;
 }
 
+
+message GetIdentityByDidRequest {
+  string did = 1;
+}
+message GetIdentityByDidResponse {
+  string did = 1;
+  string handle = 2;
+  bytes keys = 3;
+  bytes services = 4;
+  google.protobuf.Timestamp updated = 5;
+}
+
+message GetIdentityByHandleRequest {
+  string handle = 1;
+}
+message GetIdentityByHandleResponse {
+  string handle = 1;
+  string did = 2;
+  bytes keys = 3;
+  bytes services = 4;
+  google.protobuf.Timestamp updated = 5;
+}
+
+
+
 //
 // Moderation
 //
@@ -1002,6 +1027,10 @@ service Service {
   rpc GetBlobTakedown(GetBlobTakedownRequest) returns (GetBlobTakedownResponse);
   rpc GetRecordTakedown(GetRecordTakedownRequest) returns (GetRecordTakedownResponse);
   rpc GetActorTakedown(GetActorTakedownRequest) returns (GetActorTakedownResponse);
+
+  // Identity
+  rpc GetIdentityByDid(GetIdentityByDidRequest) returns (GetIdentityByDidResponse);
+  rpc GetIdentityByHandle(GetIdentityByHandleRequest) returns (GetIdentityByHandleResponse);
 
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);

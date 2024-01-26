@@ -22,7 +22,8 @@ describe('auth', () => {
     await network.close()
   })
 
-  it('handles signing key change for service auth.', async () => {
+  // @TODO invalidations do not originate from appview frontends: requires identity event on the repo stream.
+  it.skip('handles signing key change for service auth.', async () => {
     const issuer = sc.dids.alice
     const attemptWithKey = async (keypair: Keypair) => {
       const jwt = await createServiceJwt({

@@ -9,6 +9,12 @@ import { DidNotFoundError } from '@atproto/identity'
 import AppContext from '../context'
 import { httpLogger as log } from '../logger'
 import { retryHttp } from '../util/retry'
+import {
+  Code,
+  getServiceEndpoint,
+  isDataplaneError,
+  unpackIdentityServices,
+} from '../data-plane'
 
 // Resolve and verify blob from its origin host
 
@@ -77,10 +83,25 @@ export const createRouter = (ctx: AppContext): express.Router => {
 export async function resolveBlob(ctx: AppContext, did: string, cid: CID) {
   const cidStr = cid.toString()
 
-  const [{ pds }, { takenDown }] = await Promise.all([
-    ctx.idResolver.did.resolveAtprotoData(did),
+  const [identity, { takenDown }] = await Promise.all([
+    ctx.dataplane.getIdentityByDid({ did }).catch((err) => {
+      if (isDataplaneError(err, Code.NotFound)) {
+        return undefined
+      }
+      throw err
+    }),
     ctx.dataplane.getBlobTakedown({ did, cid: cid.toString() }),
   ])
+  const services = identity && unpackIdentityServices(identity.services)
+  const pds =
+    services &&
+    getServiceEndpoint(services, {
+      id: 'atproto_pds',
+      type: 'AtprotoPersonalDataServer',
+    })
+  if (!pds) {
+    throw createError(404, 'Origin not found')
+  }
   if (takenDown) {
     throw createError(404, 'Blob not found')
   }

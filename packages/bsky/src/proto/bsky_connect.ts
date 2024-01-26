@@ -68,6 +68,10 @@ import {
   GetFollowsResponse,
   GetFollowSuggestionsRequest,
   GetFollowSuggestionsResponse,
+  GetIdentityByDidRequest,
+  GetIdentityByDidResponse,
+  GetIdentityByHandleRequest,
+  GetIdentityByHandleResponse,
   GetInteractionCountsRequest,
   GetInteractionCountsResponse,
   GetLabelsRequest,
@@ -756,6 +760,26 @@ export const Service = {
       name: 'GetActorTakedown',
       I: GetActorTakedownRequest,
       O: GetActorTakedownResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Identity
+     *
+     * @generated from rpc bsky.Service.GetIdentityByDid
+     */
+    getIdentityByDid: {
+      name: 'GetIdentityByDid',
+      I: GetIdentityByDidRequest,
+      O: GetIdentityByDidResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.GetIdentityByHandle
+     */
+    getIdentityByHandle: {
+      name: 'GetIdentityByHandle',
+      I: GetIdentityByHandleRequest,
+      O: GetIdentityByHandleResponse,
       kind: MethodKind.Unary,
     },
     /**
