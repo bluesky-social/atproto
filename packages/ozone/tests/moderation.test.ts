@@ -25,6 +25,10 @@ import {
 } from '../src/lexicon/types/com/atproto/admin/defs'
 import { EventReverser } from '../src'
 import { TestOzone } from '@atproto/dev-env/src/ozone'
+import {
+  UNSPECCED_TAKEDOWN_BLOBS_LABEL,
+  UNSPECCED_TAKEDOWN_LABEL,
+} from '../src/mod-service/types'
 
 type BaseCreateReportParams =
   | { account: string }
@@ -654,7 +658,10 @@ describe('moderation', () => {
       )
       expect(bskyRes1.data.takedown?.applied).toBe(true)
 
-      const takedownLabel1 = await getLabel(sc.dids.bob, '!takedown')
+      const takedownLabel1 = await getLabel(
+        sc.dids.bob,
+        UNSPECCED_TAKEDOWN_LABEL,
+      )
       expect(takedownLabel1).toBeDefined()
 
       // cleanup
@@ -677,7 +684,10 @@ describe('moderation', () => {
       )
       expect(bskyRes2.data.takedown?.applied).toBe(false)
 
-      const takedownLabel2 = await getLabel(sc.dids.bob, '!takedown')
+      const takedownLabel2 = await getLabel(
+        sc.dids.bob,
+        UNSPECCED_TAKEDOWN_LABEL,
+      )
       expect(takedownLabel2).toBeUndefined()
     })
 
@@ -702,7 +712,7 @@ describe('moderation', () => {
       )
       expect(bskyRes1.data.takedown?.applied).toBe(true)
 
-      const takedownLabel1 = await getLabel(uri, '!takedown')
+      const takedownLabel1 = await getLabel(uri, UNSPECCED_TAKEDOWN_LABEL)
       expect(takedownLabel1).toBeDefined()
 
       // cleanup
@@ -720,7 +730,7 @@ describe('moderation', () => {
       )
       expect(bskyRes2.data.takedown?.applied).toBe(false)
 
-      const takedownLabel2 = await getLabel(uri, '!takedown')
+      const takedownLabel2 = await getLabel(uri, UNSPECCED_TAKEDOWN_LABEL)
       expect(takedownLabel2).toBeUndefined()
     })
 
@@ -830,6 +840,22 @@ describe('moderation', () => {
             '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
         },
       })
+    })
+
+    it('serves label when authed', async () => {
+      const { data: unauthed } = await agent.api.com.atproto.temp.fetchLabels(
+        {},
+      )
+      expect(unauthed.labels.map((l) => l.val)).not.toContain(
+        UNSPECCED_TAKEDOWN_LABEL,
+      )
+      const { data: authed } = await agent.api.com.atproto.temp.fetchLabels(
+        {},
+        { headers: network.bsky.adminAuthHeaders() },
+      )
+      expect(authed.labels.map((l) => l.val)).toContain(
+        UNSPECCED_TAKEDOWN_LABEL,
+      )
     })
 
     async function emitLabelEvent(
@@ -966,7 +992,10 @@ describe('moderation', () => {
     })
 
     it('creates a takedown blobs label', async () => {
-      const label = await getLabel(post.ref.uriStr, '!takedown-blobs')
+      const label = await getLabel(
+        post.ref.uriStr,
+        UNSPECCED_TAKEDOWN_BLOBS_LABEL,
+      )
       expect(label).toBeDefined()
     })
 
@@ -1004,8 +1033,27 @@ describe('moderation', () => {
       expect(res.data.takedown?.applied).toBe(false)
     })
 
+    it('serves label when authed', async () => {
+      const { data: unauthed } = await agent.api.com.atproto.temp.fetchLabels(
+        {},
+      )
+      expect(unauthed.labels.map((l) => l.val)).not.toContain(
+        UNSPECCED_TAKEDOWN_BLOBS_LABEL,
+      )
+      const { data: authed } = await agent.api.com.atproto.temp.fetchLabels(
+        {},
+        { headers: network.bsky.adminAuthHeaders() },
+      )
+      expect(authed.labels.map((l) => l.val)).toContain(
+        UNSPECCED_TAKEDOWN_BLOBS_LABEL,
+      )
+    })
+
     it('negates takedown blobs label on reversal', async () => {
-      const label = await getLabel(post.ref.uriStr, '!takedown-blobs')
+      const label = await getLabel(
+        post.ref.uriStr,
+        UNSPECCED_TAKEDOWN_BLOBS_LABEL,
+      )
       expect(label).toBeUndefined()
     })
   })
