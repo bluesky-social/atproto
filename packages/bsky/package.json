@@ -53,6 +53,7 @@
     "http-errors": "^2.0.0",
     "http-terminator": "^3.2.0",
     "ioredis": "^5.3.2",
+    "jose": "^5.0.1",
     "kysely": "^0.22.0",
     "multiformats": "^9.9.0",
     "murmurhash": "^2.0.1",
