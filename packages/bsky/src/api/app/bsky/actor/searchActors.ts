@@ -15,6 +15,7 @@ export default function (server: Server, ctx: AppContext) {
       let results: string[]
       let resCursor: string | undefined
       if (ctx.searchAgent) {
+        // @NOTE cursors wont change on appview swap
         const res =
           await ctx.searchAgent.api.app.bsky.unspecced.searchActorsSkeleton({
             q: query,

@@ -49,6 +49,7 @@ const skeleton = async (
   params: Params,
   ctx: Context,
 ): Promise<SkeletonState> => {
+  // @NOTE cursors wont change on appview swap
   const res = await ctx.searchAgent.api.app.bsky.unspecced.searchPostsSkeleton({
     q: params.q,
     cursor: params.cursor,

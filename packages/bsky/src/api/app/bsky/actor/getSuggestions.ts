@@ -43,7 +43,7 @@ const skeleton = async (
 ): Promise<SkeletonState> => {
   const { db } = ctx
   const { viewer } = params
-  const alreadyIncluded = parseCursor(params.cursor)
+  const alreadyIncluded = parseCursor(params.cursor) // @NOTE handles bad cursor e.g. on appview swap
   const { ref } = db.db.dynamic
   const suggestions = await db.db
     .selectFrom('suggested_follow')

@@ -6,8 +6,8 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getSuggestedFeeds({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth }) => {
+      // @NOTE ignores cursor, doesn't matter for appview swap
       const viewer = auth.credentials.iss
-
       const db = ctx.db.getReplica()
       const feedService = ctx.services.feed(db)
       const actorService = ctx.services.actor(db)

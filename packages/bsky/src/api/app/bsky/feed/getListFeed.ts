@@ -56,6 +56,10 @@ export const skeleton = async (
   const { db } = ctx
   const { ref } = db.db.dynamic
 
+  if (FeedKeyset.clearlyBad(cursor)) {
+    return { params, feedItems: [] }
+  }
+
   const keyset = new FeedKeyset(ref('post.sortAt'), ref('post.cid'))
   const sortFrom = keyset.unpack(cursor)?.primary
 

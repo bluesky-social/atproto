@@ -81,6 +81,10 @@ export const skeleton = async (
     }
   }
 
+  if (FeedKeyset.clearlyBad(cursor)) {
+    return { params, feedItems: [] }
+  }
+
   // defaults to posts, reposts, and replies
   let feedItemsQb = feedService
     .selectFeedItemQb()

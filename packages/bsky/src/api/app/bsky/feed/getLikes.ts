@@ -41,6 +41,10 @@ const skeleton = async (
   const { uri, cid, limit, cursor } = params
   const { ref } = db.db.dynamic
 
+  if (TimeCidKeyset.clearlyBad(cursor)) {
+    return { params, likes: [] }
+  }
+
   let builder = db.db
     .selectFrom('like')
     .where('like.subject', '=', uri)

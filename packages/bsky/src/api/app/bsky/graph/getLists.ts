@@ -10,6 +10,13 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth }) => {
       const { actor, limit, cursor } = params
       const requester = auth.credentials.iss
+      if (TimeCidKeyset.clearlyBad(cursor)) {
+        return {
+          encoding: 'application/json',
+          body: { lists: [] },
+        }
+      }
+
       const db = ctx.db.getReplica()
       const { ref } = db.db.dynamic
 

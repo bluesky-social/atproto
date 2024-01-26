@@ -12,6 +12,7 @@ export default function (server: Server, ctx: AppContext) {
       const feedService = ctx.services.feed(db)
       const viewer = auth.credentials.iss
 
+      // @NOTE bad cursor during appview swap handled within skeleton()
       const result = await skeleton({ ...params, viewer }, { db, feedService })
 
       return {
