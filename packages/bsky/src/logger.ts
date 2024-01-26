@@ -2,7 +2,7 @@ import pino from 'pino'
 import pinoHttp from 'pino-http'
 import * as jose from 'jose'
 import { subsystemLogger } from '@atproto/common'
-import { parseBasicAuth } from './auth'
+import { parseBasicAuth } from './auth-verifier'
 
 export const dbLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:db')
