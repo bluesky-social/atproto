@@ -23,7 +23,7 @@ export class LabelHydrator {
     const res = await this.dataplane.getLabels({ subjects, issuers })
     return res.labels.reduce((acc, cur) => {
       const label = parseJsonBytes(cur) as Label | undefined
-      if (!label) return acc
+      if (!label || label.neg) return acc
       const entry = acc.get(label.uri)
       if (entry) {
         entry.push(label)
