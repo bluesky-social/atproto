@@ -24,6 +24,8 @@ import {
   ModerationEventRow,
   ModerationSubjectStatusRow,
   ReversibleModerationEvent,
+  UNSPECCED_TAKEDOWN_BLOBS_LABEL,
+  UNSPECCED_TAKEDOWN_LABEL,
 } from './types'
 import { ModerationEvent } from '../db/schema/moderation_event'
 import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination'
@@ -377,7 +379,9 @@ export class ModerationService {
         )
         .returning('id')
         .execute(),
-      this.formatAndCreateLabels(subject.did, null, { create: ['!takedown'] }),
+      this.formatAndCreateLabels(subject.did, null, {
+        create: [UNSPECCED_TAKEDOWN_LABEL],
+      }),
     ])
 
     this.db.onCommit(() => {
@@ -403,7 +407,9 @@ export class ModerationService {
         })
         .returning('id')
         .execute(),
-      this.formatAndCreateLabels(subject.did, null, { negate: ['!takedown'] }),
+      this.formatAndCreateLabels(subject.did, null, {
+        negate: [UNSPECCED_TAKEDOWN_LABEL],
+      }),
     ])
 
     this.db.onCommit(() => {
@@ -426,9 +432,9 @@ export class ModerationService {
       takedownRef,
     }))
     const blobCids = subject.blobCids
-    const labels: string[] = ['!takedown']
+    const labels: string[] = [UNSPECCED_TAKEDOWN_LABEL]
     if (blobCids && blobCids.length > 0) {
-      labels.push('!takedown-blobs')
+      labels.push(UNSPECCED_TAKEDOWN_BLOBS_LABEL)
     }
     const [recordEvts] = await Promise.all([
       this.db.db
@@ -495,10 +501,10 @@ export class ModerationService {
 
   async reverseTakedownRecord(subject: RecordSubject) {
     this.db.assertTransaction()
-    const labels: string[] = ['!takedown']
+    const labels: string[] = [UNSPECCED_TAKEDOWN_LABEL]
     const blobCids = subject.blobCids
     if (blobCids && blobCids.length > 0) {
-      labels.push('!takedown-blobs')
+      labels.push(UNSPECCED_TAKEDOWN_BLOBS_LABEL)
     }
     const [recordEvts] = await Promise.all([
       this.db.db
