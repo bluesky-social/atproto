@@ -39,7 +39,7 @@ describe('moderation-appeals', () => {
 
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'ozone_moderation_statuses',
+      dbPostgresSchema: 'ozone_moderation_appeals',
     })
     agent = network.ozone.getClient()
     pdsAgent = network.pds.getClient()

@@ -24,6 +24,8 @@ import {
   ModerationEventRow,
   ModerationSubjectStatusRow,
   ReversibleModerationEvent,
+  UNSPECCED_TAKEDOWN_BLOBS_LABEL,
+  UNSPECCED_TAKEDOWN_LABEL,
 } from './types'
 import { ModerationEvent } from '../db/schema/moderation_event'
 import { StatusKeyset, TimeIdKeyset, paginate } from '../db/pagination'
@@ -49,6 +51,7 @@ export class ModerationService {
     public eventPusher: EventPusher,
     public appviewAgent: AtpAgent,
     private appviewAuth: AppviewAuth,
+    public serverDid: string,
   ) {}
 
   static creator(
@@ -56,6 +59,7 @@ export class ModerationService {
     eventPusher: EventPusher,
     appviewAgent: AtpAgent,
     appviewAuth: AppviewAuth,
+    serverDid: string,
   ) {
     return (db: Database) =>
       new ModerationService(
@@ -64,6 +68,7 @@ export class ModerationService {
         eventPusher,
         appviewAgent,
         appviewAuth,
+        serverDid,
       )
   }
 
@@ -359,19 +364,25 @@ export class ModerationService {
       subjectDid: subject.did,
       takedownRef,
     }))
-    const repoEvts = await this.db.db
-      .insertInto('repo_push_event')
-      .values(values)
-      .onConflict((oc) =>
-        oc.columns(['subjectDid', 'eventType']).doUpdateSet({
-          takedownRef,
-          confirmedAt: null,
-          attempts: 0,
-          lastAttempted: null,
-        }),
-      )
-      .returning('id')
-      .execute()
+
+    const [repoEvts] = await Promise.all([
+      this.db.db
+        .insertInto('repo_push_event')
+        .values(values)
+        .onConflict((oc) =>
+          oc.columns(['subjectDid', 'eventType']).doUpdateSet({
+            takedownRef,
+            confirmedAt: null,
+            attempts: 0,
+            lastAttempted: null,
+          }),
+        )
+        .returning('id')
+        .execute(),
+      this.formatAndCreateLabels(subject.did, null, {
+        create: [UNSPECCED_TAKEDOWN_LABEL],
+      }),
+    ])
 
     this.db.onCommit(() => {
       this.backgroundQueue.add(async () => {
@@ -383,18 +394,23 @@ export class ModerationService {
   }
 
   async reverseTakedownRepo(subject: RepoSubject) {
-    const repoEvts = await this.db.db
-      .updateTable('repo_push_event')
-      .where('eventType', 'in', TAKEDOWNS)
-      .where('subjectDid', '=', subject.did)
-      .set({
-        takedownRef: null,
-        confirmedAt: null,
-        attempts: 0,
-        lastAttempted: null,
-      })
-      .returning('id')
-      .execute()
+    const [repoEvts] = await Promise.all([
+      this.db.db
+        .updateTable('repo_push_event')
+        .where('eventType', 'in', TAKEDOWNS)
+        .where('subjectDid', '=', subject.did)
+        .set({
+          takedownRef: null,
+          confirmedAt: null,
+          attempts: 0,
+          lastAttempted: null,
+        })
+        .returning('id')
+        .execute(),
+      this.formatAndCreateLabels(subject.did, null, {
+        negate: [UNSPECCED_TAKEDOWN_LABEL],
+      }),
+    ])
 
     this.db.onCommit(() => {
       this.backgroundQueue.add(async () => {
@@ -415,19 +431,27 @@ export class ModerationService {
       subjectCid: subject.cid,
       takedownRef,
     }))
-    const recordEvts = await this.db.db
-      .insertInto('record_push_event')
-      .values(values)
-      .onConflict((oc) =>
-        oc.columns(['subjectUri', 'eventType']).doUpdateSet({
-          takedownRef,
-          confirmedAt: null,
-          attempts: 0,
-          lastAttempted: null,
-        }),
-      )
-      .returning('id')
-      .execute()
+    const blobCids = subject.blobCids
+    const labels: string[] = [UNSPECCED_TAKEDOWN_LABEL]
+    if (blobCids && blobCids.length > 0) {
+      labels.push(UNSPECCED_TAKEDOWN_BLOBS_LABEL)
+    }
+    const [recordEvts] = await Promise.all([
+      this.db.db
+        .insertInto('record_push_event')
+        .values(values)
+        .onConflict((oc) =>
+          oc.columns(['subjectUri', 'eventType']).doUpdateSet({
+            takedownRef,
+            confirmedAt: null,
+            attempts: 0,
+            lastAttempted: null,
+          }),
+        )
+        .returning('id')
+        .execute(),
+      this.formatAndCreateLabels(subject.uri, subject.cid, { create: labels }),
+    ])
 
     this.db.onCommit(() => {
       this.backgroundQueue.add(async () => {
@@ -437,7 +461,6 @@ export class ModerationService {
       })
     })
 
-    const blobCids = subject.blobCids
     if (blobCids && blobCids.length > 0) {
       const blobValues: Insertable<BlobPushEvent>[] = []
       for (const eventType of TAKEDOWNS) {
@@ -478,19 +501,27 @@ export class ModerationService {
 
   async reverseTakedownRecord(subject: RecordSubject) {
     this.db.assertTransaction()
-    const recordEvts = await this.db.db
-      .updateTable('record_push_event')
-      .where('eventType', 'in', TAKEDOWNS)
-      .where('subjectDid', '=', subject.did)
-      .where('subjectUri', '=', subject.uri)
-      .set({
-        takedownRef: null,
-        confirmedAt: null,
-        attempts: 0,
-        lastAttempted: null,
-      })
-      .returning('id')
-      .execute()
+    const labels: string[] = [UNSPECCED_TAKEDOWN_LABEL]
+    const blobCids = subject.blobCids
+    if (blobCids && blobCids.length > 0) {
+      labels.push(UNSPECCED_TAKEDOWN_BLOBS_LABEL)
+    }
+    const [recordEvts] = await Promise.all([
+      this.db.db
+        .updateTable('record_push_event')
+        .where('eventType', 'in', TAKEDOWNS)
+        .where('subjectDid', '=', subject.did)
+        .where('subjectUri', '=', subject.uri)
+        .set({
+          takedownRef: null,
+          confirmedAt: null,
+          attempts: 0,
+          lastAttempted: null,
+        })
+        .returning('id')
+        .execute(),
+      this.formatAndCreateLabels(subject.uri, subject.cid, { negate: labels }),
+    ])
     this.db.onCommit(() => {
       this.backgroundQueue.add(async () => {
         await Promise.all(
@@ -499,7 +530,6 @@ export class ModerationService {
       })
     })
 
-    const blobCids = subject.blobCids
     if (blobCids && blobCids.length > 0) {
       const blobEvts = await this.db.db
         .updateTable('blob_push_event')
@@ -695,14 +725,13 @@ export class ModerationService {
   }
 
   async formatAndCreateLabels(
-    src: string,
     uri: string,
     cid: string | null,
     labels: { create?: string[]; negate?: string[] },
   ): Promise<Label[]> {
     const { create = [], negate = [] } = labels
     const toCreate = create.map((val) => ({
-      src,
+      src: this.serverDid,
       uri,
       cid: cid ?? undefined,
       val,
@@ -710,7 +739,7 @@ export class ModerationService {
       cts: new Date().toISOString(),
     }))
     const toNegate = negate.map((val) => ({
-      src,
+      src: this.serverDid,
       uri,
       cid: cid ?? undefined,
       val,

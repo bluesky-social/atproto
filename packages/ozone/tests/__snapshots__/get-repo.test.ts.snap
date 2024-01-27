@@ -8,7 +8,15 @@ Object {
   "indexedAt": "1970-01-01T00:00:00.000Z",
   "invites": Array [],
   "invitesDisabled": false,
-  "labels": Array [],
+  "labels": Array [
+    Object {
+      "cts": "1970-01-01T00:00:00.000Z",
+      "neg": false,
+      "src": "user(1)",
+      "uri": "user(0)",
+      "val": "!unspecced-takedown",
+    },
+  ],
   "moderation": Object {
     "subjectStatus": Object {
       "createdAt": "1970-01-01T00:00:00.000Z",
