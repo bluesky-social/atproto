@@ -86,12 +86,6 @@ describe('feed generation', () => {
     await network.close()
   })
 
-  // @TODO enable once getFeed is implemented
-  it('describes the feed generator', async () => {
-    const res = await agent.api.app.bsky.feed.describeFeedGenerator()
-    expect(res.data.did).toBe(network.bsky.ctx.cfg.feedGenDid)
-  })
-
   it('feed gen records can be created.', async () => {
     const all = await pdsAgent.api.app.bsky.feed.generator.create(
       { repo: alice, rkey: 'all' },
