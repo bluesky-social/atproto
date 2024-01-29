@@ -1,6 +1,11 @@
 import { DataPlaneClient } from '../data-plane/client'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
-import { HydrationMap, parseRecordBytes, parseString } from './util'
+import {
+  HydrationMap,
+  parseRecordBytes,
+  parseString,
+  safeTakedownRef,
+} from './util'
 
 export type Actor = {
   did: string
@@ -92,9 +97,9 @@ export class ActorHydrator {
         handle: parseString(actor.handle),
         profile: parseRecordBytes<ProfileRecord>(profile?.record),
         profileCid: profile?.cid,
-        profileTakedownRef: profile?.takedownRef || undefined,
+        profileTakedownRef: safeTakedownRef(profile),
         sortedAt: profile?.sortedAt?.toDate(),
-        takedownRef: actor.takedownRef || undefined,
+        takedownRef: safeTakedownRef(actor),
       })
     }, new HydrationMap<Actor>())
   }

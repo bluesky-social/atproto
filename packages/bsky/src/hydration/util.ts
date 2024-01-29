@@ -34,7 +34,7 @@ export const parseRecord = <T>(
     record,
     cid,
     sortedAt,
-    takedownRef: entry.takedownRef || undefined,
+    takedownRef: safeTakedownRef(entry),
   }
 }
 
@@ -95,4 +95,13 @@ export const split = <T>(
     }
   }
   return [yes, no]
+}
+
+export const safeTakedownRef = (obj?: {
+  takenDown: boolean
+  takedownRef: string
+}): string | undefined => {
+  if (!obj) return
+  if (obj.takedownRef) return obj.takedownRef
+  if (obj.takenDown) return 'BSKY-TAKEDOWN-UNKNOWN'
 }
