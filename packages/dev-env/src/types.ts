@@ -24,7 +24,6 @@ export type BskyConfig = Partial<bsky.ServerConfig> & {
   pdsPort: number
   imgInvalidator?: ImageInvalidator
   migration?: string
-  algos?: bsky.MountedAlgos
   indexer?: Partial<bsky.IndexerConfig>
   ingester?: Partial<bsky.IngesterConfig>
 }

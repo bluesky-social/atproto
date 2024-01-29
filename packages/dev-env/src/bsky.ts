@@ -91,7 +91,6 @@ export class TestBsky {
       db,
       redis: redisCache,
       config,
-      algos: cfg.algos,
       imgInvalidator: cfg.imgInvalidator,
       signingKey: serviceKeypair,
     })
