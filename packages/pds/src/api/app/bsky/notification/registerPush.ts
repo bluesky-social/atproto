@@ -18,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
 
       if (ctx.cfg.bskyAppView.did === serviceDid) {
         await ctx
-          .getAppviewAgent(did)
+          .getAppviewAgent(null)
           .api.app.bsky.notification.registerPush(input.body, {
             ...authHeaders,
             encoding: 'application/json',
