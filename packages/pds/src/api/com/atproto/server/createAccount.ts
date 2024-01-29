@@ -11,7 +11,10 @@ import * as scrypt from '../../../../db/scrypt'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
 import { countAll } from '../../../../db/util'
-import { UserAlreadyExistsError } from '../../../../services/account'
+import {
+  AccountService,
+  UserAlreadyExistsError,
+} from '../../../../services/account'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
 import { didDocForSession } from './util'
@@ -46,12 +49,12 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.cfg.phoneVerification.required && ctx.twilio) {
         if (!input.body.verificationPhone) {
           throw new InvalidRequestError(
-            'Phone number verification is required on this server and none was provided.',
+            `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
             'InvalidPhoneVerification',
           )
         } else if (!input.body.verificationCode) {
           throw new InvalidRequestError(
-            'Phone number verification is required on this server and none was provided.',
+            `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
             'InvalidPhoneVerification',
           )
         }
@@ -73,13 +76,6 @@ export default function (server: Server, ctx: AppContext) {
       const result = await ctx.db.transaction(async (dbTxn) => {
         const actorTxn = ctx.services.account(dbTxn)
         const repoTxn = ctx.services.repo(dbTxn)
-
-        // it's a bit goofy that we run this logic twice,
-        // but we run it once for a sanity check before doing scrypt & plc ops
-        // & a second time for locking + integrity check
-        if (ctx.cfg.invites.required && inviteCode) {
-          await ensureCodeIsAvailable(dbTxn, inviteCode, true)
-        }
 
         // Register user before going out to PLC to get a real did
         try {
@@ -118,6 +114,7 @@ export default function (server: Server, ctx: AppContext) {
 
         // insert invite code use
         if (ctx.cfg.invites.required && inviteCode) {
+          await ensureCodeIsAvailable(dbTxn, inviteCode, true)
           await dbTxn.db
             .insertInto('invite_code_use')
             .values({
@@ -242,7 +239,8 @@ const validateInputsForPdsViaUser = async (
   ctx: AppContext,
   input: CreateAccountInput,
 ) => {
-  const { email, password, inviteCode } = input
+  const { password, inviteCode } = input
+  const email = input.email?.toLowerCase()
   if (input.plcOp) {
     throw new InvalidRequestError('Unsupported input: "plcOp"')
   }
@@ -272,6 +270,8 @@ const validateInputsForPdsViaUser = async (
     handle: input.handle,
     did: input.did,
   })
+
+  await ensureUnusedHandleAndEmail(ctx.services.account(ctx.db), handle, email)
 
   // check that the invite code still has uses
   if (ctx.cfg.invites.required && inviteCode) {
@@ -471,6 +471,22 @@ const reserveSigningKey = async (ctx: AppContext, host: string) => {
       throw new InvalidRequestError('failed to reserve signing key')
     }
     throw err
+  }
+}
+
+const ensureUnusedHandleAndEmail = async (
+  accountSrvc: AccountService,
+  handle: string,
+  email: string,
+) => {
+  const [byHandle, byEmail] = await Promise.all([
+    accountSrvc.getAccount(handle, true),
+    accountSrvc.getAccountByEmail(email, true),
+  ])
+  if (byEmail) {
+    throw new InvalidRequestError(`Email already taken: ${email}`)
+  } else if (byHandle) {
+    throw new InvalidRequestError(`Handle already taken: ${handle}`)
   }
 }
 

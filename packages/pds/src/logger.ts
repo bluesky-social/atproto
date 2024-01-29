@@ -12,6 +12,7 @@ export const limiterLogger = subsystemLogger('pds:limiter')
 export const mailerLogger = subsystemLogger('pds:mailer')
 export const labelerLogger = subsystemLogger('pds:labler')
 export const crawlerLogger = subsystemLogger('pds:crawler')
+export const twilioLogger = subsystemLogger('pds:twilio')
 export const httpLogger = subsystemLogger('pds')
 
 export const loggerMiddleware = pinoHttp({

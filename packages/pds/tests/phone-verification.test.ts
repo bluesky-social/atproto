@@ -116,7 +116,7 @@ describe('phone verification', () => {
   it('does not allow signup with out a code', async () => {
     const attempt = createAccountWithCode()
     await expect(attempt).rejects.toThrow(
-      'Phone number verification is required on this server and none was provided.',
+      `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
     )
   })
 
@@ -125,11 +125,11 @@ describe('phone verification', () => {
     const bobCode = await requestCode(bobNumber)
     const attempt = createAccountWithCode(undefined, bobCode)
     await expect(attempt).rejects.toThrow(
-      'Phone number verification is required on this server and none was provided.',
+      `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
     )
     const attempt2 = createAccountWithCode(bobNumber, undefined)
     await expect(attempt2).rejects.toThrow(
-      'Phone number verification is required on this server and none was provided.',
+      `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
     )
   })
 
