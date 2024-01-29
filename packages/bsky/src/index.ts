@@ -28,7 +28,6 @@ import {
   ImageProcessingServerInvalidator,
 } from './image/invalidator'
 import { BackgroundQueue } from './background'
-import { MountedAlgos } from './feed-gen/types'
 import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { Redis } from './redis'
@@ -37,14 +36,12 @@ import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
 import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 
 export type { ServerConfigValues } from './config'
-export type { MountedAlgos } from './feed-gen/types'
 export { ServerConfig } from './config'
 export { Database, PrimaryDatabase, DatabaseCoordinator } from './db'
 export { Redis } from './redis'
 export { ViewMaintainer } from './db/views'
 export { AppContext } from './context'
 export type { ImageInvalidator } from './image/invalidator'
-export { makeAlgos } from './feed-gen'
 export * from './daemon'
 export * from './indexer'
 export * from './ingester'
@@ -67,9 +64,8 @@ export class BskyAppView {
     config: ServerConfig
     signingKey: Keypair
     imgInvalidator?: ImageInvalidator
-    algos?: MountedAlgos
   }): BskyAppView {
-    const { db, redis, config, signingKey, algos = {} } = opts
+    const { db, redis, config, signingKey } = opts
     let maybeImgInvalidator = opts.imgInvalidator
     const app = express()
     app.set('trust proxy', true)
@@ -170,7 +166,6 @@ export class BskyAppView {
       searchAgent,
       bsyncClient,
       courierClient,
-      algos,
       authVerifier,
     })
 
