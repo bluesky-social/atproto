@@ -1,3 +1,4 @@
+import { ComAtprotoServerCreateAccount } from './client'
 import { LabelPreference } from './moderation/types'
 
 /**
@@ -36,12 +37,8 @@ export interface AtpAgentOpts {
 /**
  * AtpAgent createAccount() opts
  */
-export interface AtpAgentCreateAccountOpts {
-  email: string
-  password: string
-  handle: string
-  inviteCode?: string
-}
+export type AtpAgentCreateAccountOpts =
+  ComAtprotoServerCreateAccount.InputSchema
 
 /**
  * AtpAgent login() opts

@@ -10,6 +10,8 @@ import { uniqueLockId } from './util'
 import { ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD } from './const'
 
 export class TestPds {
+  mockedPhoneCodes: Record<string, string> = {}
+
   constructor(
     public url: string,
     public port: number,

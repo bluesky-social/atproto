@@ -11,24 +11,7 @@ import { HandlerAuth } from '@atproto/xrpc-server'
 export interface QueryParams {}
 
 export interface InputSchema {
-  email?: string
-  handle: string
-  did?: string
-  inviteCode?: string
-  verificationCode?: string
-  verificationPhone?: string
-  password?: string
-  recoveryKey?: string
-  plcOp?: {}
-  [k: string]: unknown
-}
-
-export interface OutputSchema {
-  accessJwt: string
-  refreshJwt: string
-  handle: string
-  did: string
-  didDoc?: {}
+  phoneNumber: string
   [k: string]: unknown
 }
 
@@ -37,26 +20,12 @@ export interface HandlerInput {
   body: InputSchema
 }
 
-export interface HandlerSuccess {
-  encoding: 'application/json'
-  body: OutputSchema
-  headers?: { [key: string]: string }
-}
-
 export interface HandlerError {
   status: number
   message?: string
-  error?:
-    | 'InvalidHandle'
-    | 'InvalidPassword'
-    | 'InvalidInviteCode'
-    | 'HandleNotAvailable'
-    | 'UnsupportedDomain'
-    | 'UnresolvableDid'
-    | 'IncompatibleDidDoc'
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type HandlerOutput = HandlerError | void
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams

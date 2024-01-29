@@ -1,7 +1,7 @@
 import './env'
 import { generateMockSetup } from './mock'
 import { TestNetwork } from './network'
-import { mockMailer } from './util'
+import { mockMailer, mockTwilio } from './util'
 
 const run = async () => {
   console.log(`
@@ -20,6 +20,10 @@ const run = async () => {
       hostname: 'localhost',
       dbPostgresSchema: 'pds',
       enableDidDocWithSession: true,
+      phoneVerificationRequired: true,
+      twilioAccountSid: 'ACXXXXXXX',
+      twilioAuthToken: 'AUTH',
+      twilioServiceSid: 'VAXXXXXXXX',
     },
     bsky: {
       dbPostgresSchema: 'bsky',
@@ -27,6 +31,7 @@ const run = async () => {
     plc: { port: 2582 },
   })
   mockMailer(network.pds)
+  mockTwilio(network.pds)
   await generateMockSetup(network)
 
   console.log(

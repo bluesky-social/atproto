@@ -15,6 +15,8 @@
             "handle": { "type": "string", "format": "handle" },
             "did": { "type": "string", "format": "did" },
             "inviteCode": { "type": "string" },
+            "verificationCode": { "type": "string" },
+            "verificationPhone": { "type": "string" },
             "password": { "type": "string" },
             "recoveryKey": { "type": "string" },
             "plcOp": { "type": "unknown" }

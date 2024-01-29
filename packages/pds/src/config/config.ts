@@ -126,6 +126,20 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
           epoch: env.inviteEpoch ?? 0,
         }
 
+  let phoneVerificationCfg: ServerConfig['phoneVerification'] = {
+    required: false,
+  }
+  if (env.phoneVerificationRequired) {
+    assert(env.twilioAccountSid)
+    assert(env.twilioServiceSid)
+    phoneVerificationCfg = {
+      required: true,
+      twilioAccountSid: env.twilioAccountSid,
+      twilioServiceSid: env.twilioServiceSid,
+      accountsPerPhoneNumber: env.accountsPerPhoneNumber ?? 3,
+    }
+  }
+
   let emailCfg: ServerConfig['email']
   if (!env.emailFromAddress && !env.emailSmtpUrl) {
     emailCfg = null
@@ -204,6 +218,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     blobstore: blobstoreCfg,
     identity: identityCfg,
     invites: invitesCfg,
+    phoneVerification: phoneVerificationCfg,
     email: emailCfg,
     moderationEmail: moderationEmailCfg,
     subscription: subscriptionCfg,
@@ -221,6 +236,7 @@ export type ServerConfig = {
   blobstore: S3BlobstoreConfig | DiskBlobstoreConfig
   identity: IdentityConfig
   invites: InvitesConfig
+  phoneVerification: PhoneVerificationConfig
   email: EmailConfig | null
   moderationEmail: EmailConfig | null
   subscription: SubscriptionConfig
@@ -295,6 +311,17 @@ export type InvitesConfig =
       required: true
       interval: number | null
       epoch: number
+    }
+  | {
+      required: false
+    }
+
+export type PhoneVerificationConfig =
+  | {
+      required: true
+      twilioAccountSid: string
+      twilioServiceSid: string
+      accountsPerPhoneNumber: number
     }
   | {
       required: false

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import { TestPds } from './pds'
 import { TestBsky } from './bsky'
@@ -75,4 +76,25 @@ export const uniqueLockId = () => {
   } while (usedLockIds.has(lockId))
   usedLockIds.add(lockId)
   return lockId
+}
+
+export const mockTwilio = (pds: TestPds) => {
+  if (!pds.ctx.twilio) return
+
+  pds.ctx.twilio.sendCode = async (number: string) => {
+    if (!pds.mockedPhoneCodes[number]) {
+      const code = crypto.randomStr(4, 'base10').slice(0, 6)
+      pds.mockedPhoneCodes[number] = code
+    }
+    const code = pds.mockedPhoneCodes[number]
+    console.log(`☎️ Phone verification code sent to ${number}: ${code}`)
+  }
+
+  pds.ctx.twilio.verifyCode = async (number: string, code: string) => {
+    if (pds.mockedPhoneCodes[number] === code) {
+      delete pds.mockedPhoneCodes[number]
+      return true
+    }
+    return false
+  }
 }

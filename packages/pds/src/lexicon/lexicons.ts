@@ -2855,6 +2855,12 @@ export const schemaDict = {
               inviteCode: {
                 type: 'string',
               },
+              verificationCode: {
+                type: 'string',
+              },
+              verificationPhone: {
+                type: 'string',
+              },
               password: {
                 type: 'string',
               },
@@ -3257,6 +3263,9 @@ export const schemaDict = {
             required: ['availableUserDomains'],
             properties: {
               inviteCodeRequired: {
+                type: 'boolean',
+              },
+              phoneVerificationRequired: {
                 type: 'boolean',
               },
               availableUserDomains: {
@@ -4327,6 +4336,29 @@ export const schemaDict = {
         },
         input: {
           encoding: '*/*',
+        },
+      },
+    },
+  },
+  ComAtprotoTempRequestPhoneVerification: {
+    lexicon: 1,
+    id: 'com.atproto.temp.requestPhoneVerification',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Request a verification code to be sent to the supplied phone number',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['phoneNumber'],
+            properties: {
+              phoneNumber: {
+                type: 'string',
+              },
+            },
+          },
         },
       },
     },
@@ -8239,6 +8271,8 @@ export const ids = {
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   ComAtprotoTempImportRepo: 'com.atproto.temp.importRepo',
   ComAtprotoTempPushBlob: 'com.atproto.temp.pushBlob',
+  ComAtprotoTempRequestPhoneVerification:
+    'com.atproto.temp.requestPhoneVerification',
   ComAtprotoTempTransferAccount: 'com.atproto.temp.transferAccount',
   AppBskyActorDefs: 'app.bsky.actor.defs',
   AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
