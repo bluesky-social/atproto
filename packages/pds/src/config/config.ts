@@ -210,6 +210,16 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       }
     : { enabled: false }
 
+  const courierHttpVersion = env.courierHttpVersion ?? '2'
+  assert(courierHttpVersion === '1.1' || courierHttpVersion === '2')
+  const activatorCfg: ServerConfig['activator'] = {
+    courierUrl: env.courierUrl,
+    courierHttpVersion,
+    courierIgnoreBadTls: env.courierIgnoreBadTls,
+    courierApiKey: env.courierApiKey,
+    emailsPerDay: env.activatorEmailsPerDay,
+  }
+
   const crawlersCfg: ServerConfig['crawlers'] = env.crawlers ?? []
 
   return {
@@ -226,6 +236,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     modService: modServiceCfg,
     redis: redisCfg,
     rateLimits: rateLimitsCfg,
+    activator: activatorCfg,
     crawlers: crawlersCfg,
   }
 }
@@ -244,6 +255,7 @@ export type ServerConfig = {
   modService: ModServiceConfig
   redis: RedisScratchConfig | null
   rateLimits: RateLimitsConfig
+  activator: ActivatorConfig
   crawlers: string[]
 }
 
@@ -352,6 +364,14 @@ export type RateLimitsConfig =
       bypassIps?: string[]
     }
   | { enabled: false }
+
+export type ActivatorConfig = {
+  courierUrl?: string
+  courierHttpVersion?: '1.1' | '2'
+  courierIgnoreBadTls?: boolean
+  courierApiKey?: string
+  emailsPerDay?: number
+}
 
 export type BksyAppViewConfig = {
   url: string

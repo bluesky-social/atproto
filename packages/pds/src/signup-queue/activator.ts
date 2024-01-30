@@ -1,9 +1,13 @@
-import { SECOND, jitter, wait } from '@atproto/common'
+import { RateLimiterAbstract } from 'rate-limiter-flexible'
+import { SECOND, chunkArray, jitter, wait } from '@atproto/common'
+import { DisconnectError } from '@atproto/xrpc-server'
+import { Timestamp } from '@bufbuild/protobuf'
 import { limiterLogger as log } from '../logger'
 import Database from '../db'
 import { Leader } from '../db/leader'
-import { DisconnectError } from '@atproto/xrpc-server'
 import { getQueueStatus } from './util'
+import { ServerMailer } from '../mailer'
+import { CourierClient } from '../courier'
 
 type LimiterFlags = {
   disableSignups: boolean
@@ -17,16 +21,32 @@ type LimiterStatus = LimiterFlags & {
 
 export const ACCOUNT_ACTIVATOR_ID = 1010
 
+export type ActivatorOpts = {
+  db: Database
+  mailer?: ServerMailer
+  courierClient?: CourierClient
+  limiter?: RateLimiterAbstract
+}
+
 export class SignupActivator {
   leader: Leader
+
+  db: Database
+  mailer?: ServerMailer
+  courierClient?: CourierClient
+  limiter?: RateLimiterAbstract
 
   destroyed = false
   promise: Promise<void> = Promise.resolve()
   timer: NodeJS.Timer | undefined
   status: LimiterStatus
 
-  constructor(private db: Database, lockId = ACCOUNT_ACTIVATOR_ID) {
-    this.leader = new Leader(lockId, this.db)
+  constructor(opts: ActivatorOpts, lockId = ACCOUNT_ACTIVATOR_ID) {
+    this.leader = new Leader(lockId, opts.db)
+    this.db = opts.db
+    this.mailer = opts.mailer
+    this.courierClient = opts.courierClient
+    this.limiter = opts.limiter
   }
 
   async run() {
@@ -99,6 +119,60 @@ export class SignupActivator {
       .execute()
 
     log.info({ count: activated.length }, 'activated accounts')
-    // @TODO send mail/push notifs
+
+    const dids = activated.map((row) => row.did)
+    await Promise.all([
+      this.sendActivationEmails(dids),
+      this.sendActivationPushNotifs(dids),
+    ])
+  }
+
+  async sendActivationEmails(dids: string[]) {
+    if (dids.length < 1 || !this.mailer) return
+    const users = await this.db.db
+      .selectFrom('user_account')
+      .innerJoin('did_handle', 'did_handle.did', 'user_account.did')
+      .where('did_handle.did', 'in', dids)
+      .select(['user_account.email', 'did_handle.handle'])
+      .execute()
+    for (const chunk of chunkArray(users, 100)) {
+      try {
+        await this.limiter?.consume('server-mailer-limit', chunk.length)
+      } catch (err) {
+        log.error({ err }, 'user activation email rate limit exceeded')
+      }
+      try {
+        await Promise.all(
+          chunk.map(({ email, handle }) =>
+            this.mailer?.sendAccountActivated({ handle }, { to: email }),
+          ),
+        )
+      } catch (err) {
+        log.error({ err, dids: chunk }, 'error sending activation emails')
+      }
+      await wait(SECOND)
+    }
+  }
+
+  async sendActivationPushNotifs(dids: string[]) {
+    if (dids.length < 1 || !this.courierClient) return
+    for (const chunk of chunkArray(dids, 100)) {
+      const notifications = chunk.map((did) => ({
+        id: `${did}-account-activated`,
+        recipientDid: did,
+        title: 'Great news!',
+        message: 'Your Bluesky account is ready to go',
+        collapseKey: 'account-activated',
+        alwaysDeliver: true,
+        timestamp: Timestamp.fromDate(new Date()),
+      }))
+      try {
+        await this.courierClient.pushNotifications({
+          notifications,
+        })
+      } catch (err) {
+        log.error({ err, dids: chunk }, 'error sending activation push notifs')
+      }
+    }
   }
 }
