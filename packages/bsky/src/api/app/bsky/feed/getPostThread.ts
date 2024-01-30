@@ -1,7 +1,10 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
+import {
+  QueryParams,
+  OutputSchema,
+} from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import AppContext from '../../../../context'
 import { setRepoRev } from '../../../util'
 import {
@@ -27,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, res }) => {
       const { viewer } = ctx.authVerifier.parseCreds(auth)
 
-      let result
+      let result: OutputSchema
       try {
         result = await getPostThread({ ...params, viewer }, ctx)
       } catch (err) {
@@ -41,7 +44,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: result.value,
+        body: result,
       }
     },
   })
