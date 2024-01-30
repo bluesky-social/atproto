@@ -57,6 +57,7 @@ export class TestPds {
     const secrets = pds.envToSecrets(env)
 
     const server = await pds.PDS.create(cfg, secrets)
+    await server.ctx.signupActivator.destroy()
 
     // Separate migration db on postgres in case migration changes some
     // connection state that we need in the tests, e.g. "alter database ... set ..."
