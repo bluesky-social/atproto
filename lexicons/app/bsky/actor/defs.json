@@ -1,7 +1,6 @@
 {
   "lexicon": 1,
   "id": "app.bsky.actor.defs",
-  "description": "A reference to an actor in the network.",
   "defs": {
     "profileViewBasic": {
       "type": "object",
@@ -78,6 +77,7 @@
     },
     "viewerState": {
       "type": "object",
+      "description": "Metadata about the requesting account's relationship with the subject account. Only has meaningful content for authed requests.",
       "properties": {
         "muted": { "type": "boolean" },
         "mutedByList": {

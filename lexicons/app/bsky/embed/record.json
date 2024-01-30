@@ -1,7 +1,7 @@
 {
   "lexicon": 1,
   "id": "app.bsky.embed.record",
-  "description": "A representation of a record embedded in another form of content.",
+  "description": "A representation of a record embedded in a Bluesky record (eg, a post). For example, a quote-post, or sharing a feed generator record.",
   "defs": {
     "main": {
       "type": "object",
@@ -36,7 +36,10 @@
           "type": "ref",
           "ref": "app.bsky.actor.defs#profileViewBasic"
         },
-        "value": { "type": "unknown" },
+        "value": {
+          "type": "unknown",
+          "description": "The record data itself."
+        },
         "labels": {
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }

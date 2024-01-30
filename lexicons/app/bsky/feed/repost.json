@@ -3,7 +3,7 @@
   "id": "app.bsky.feed.repost",
   "defs": {
     "main": {
-      "description": "A declaration of a repost.",
+      "description": "Record representing a 'repost' of an existing Bluesky post.",
       "type": "record",
       "key": "tid",
       "record": {

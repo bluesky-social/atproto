@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get the count of unread notifications.",
+      "description": "Count the number of unread notifications for the requesting account. Requires auth.",
       "parameters": {
         "type": "params",
         "properties": {
