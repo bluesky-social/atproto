@@ -105,8 +105,6 @@ export class TestBsky {
       dbPostgresSchema: cfg.dbPostgresSchema,
       didPlcUrl: cfg.plcUrl,
       labelerKeywords: { label_me: 'test-label', label_me_2: 'test-label-2' },
-      abyssEndpoint: '',
-      abyssPassword: '',
       imgUriEndpoint: 'img.example.com',
       moderationPushUrl:
         cfg.indexer?.moderationPushUrl ?? 'https://modservice.invalid',
@@ -264,8 +262,6 @@ export async function getIndexers(
     dbPostgresSchema: `appview_${name}`,
     didPlcUrl: network.plc.url,
     imgUriEndpoint: '',
-    abyssEndpoint: '',
-    abyssPassword: '',
     indexerPartitionIds: [0],
     indexerNamespace: `ns${ns}`,
     ingesterPartitionCount: config.ingesterPartitionCount ?? 1,
