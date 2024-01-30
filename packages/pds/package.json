@@ -29,7 +29,8 @@
     "test:sqlite": "jest --testPathIgnorePatterns /tests/proxied/*",
     "test:log": "tail -50 test.log | pino-pretty",
     "test:updateSnapshot": "jest --updateSnapshot",
-    "migration:create": "ts-node ./bin/migration-create.ts"
+    "migration:create": "ts-node ./bin/migration-create.ts",
+    "buf:gen": "buf generate ./proto"
   },
   "dependencies": {
     "@atproto/api": "workspace:^",
@@ -42,6 +43,9 @@
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
+    "@bufbuild/protobuf": "^1.5.0",
+    "@connectrpc/connect": "^1.1.4",
+    "@connectrpc/connect-node": "^1.1.4",
     "@did-plc/lib": "^0.0.1",
     "better-sqlite3": "^7.6.2",
     "bytes": "^3.1.2",
@@ -77,6 +81,9 @@
     "@atproto/bsky": "workspace:^",
     "@atproto/dev-env": "workspace:^",
     "@atproto/lex-cli": "workspace:^",
+    "@bufbuild/buf": "^1.28.1",
+    "@bufbuild/protoc-gen-es": "^1.5.0",
+    "@connectrpc/protoc-gen-connect-es": "^1.1.4",
     "@did-plc/server": "^0.0.1",
     "@types/cors": "^2.8.12",
     "@types/disposable-email": "^0.2.0",
