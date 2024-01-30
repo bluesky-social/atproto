@@ -29,11 +29,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, res }) => {
       const { viewer } = ctx.authVerifier.parseCreds(auth)
 
-      const [result, repoRev] = await Promise.all([
-        getAuthorFeed({ ...params, viewer }, ctx),
-        ctx.hydrator.actor.getRepoRevSafe(viewer),
-      ])
+      const result = await getAuthorFeed({ ...params, viewer }, ctx)
 
+      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
       setRepoRev(res, repoRev)
 
       return {
