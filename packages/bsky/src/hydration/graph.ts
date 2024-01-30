@@ -29,12 +29,13 @@ export type RelationshipPair = [didA: string, didB: string]
 
 const dedupePairs = (pairs: RelationshipPair[]): RelationshipPair[] => {
   const mapped = pairs.reduce((acc, cur) => {
-    const sorted = cur.sort()
+    const sorted = ([...cur] as RelationshipPair).sort()
     acc[sorted.join('-')] = sorted
     return acc
   }, {} as Record<string, RelationshipPair>)
   return Object.values(mapped)
 }
+
 export class Blocks {
   _blocks: Map<string, boolean> = new Map()
   constructor() {}
@@ -55,6 +56,7 @@ export class Blocks {
   }
 
   isBlocked(didA: string, didB: string): boolean {
+    if (didA === didB) return false // ignore self-blocks
     const key = Blocks.key(didA, didB)
     return this._blocks.get(key) ?? false
   }
