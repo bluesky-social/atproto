@@ -26,6 +26,7 @@ export class ServerMailer {
       deleteAccount: this.compile('delete-account'),
       confirmEmail: this.compile('confirm-email'),
       updateEmail: this.compile('update-email'),
+      accountActivated: this.compile('account-activated'),
     }
   }
 
@@ -61,6 +62,16 @@ export class ServerMailer {
   async sendUpdateEmail(params: { token: string }, mailOpts: Mail.Options) {
     return this.sendTemplate('updateEmail', params, {
       subject: 'Email Update Requested',
+      ...mailOpts,
+    })
+  }
+
+  async sendAccountActivated(
+    params: { handle: string },
+    mailOpts: Mail.Options,
+  ) {
+    return this.sendTemplate('accountActivated', params, {
+      subject: 'Your Bluesky Account is Activated!',
       ...mailOpts,
     })
   }
