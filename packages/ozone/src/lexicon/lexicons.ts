@@ -8100,55 +8100,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyUnspeccedGetTimelineSkeleton: {
-    lexicon: 1,
-    id: 'app.bsky.unspecced.getTimelineSkeleton',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'DEPRECATED: a skeleton of a timeline. Unspecced and will be unavailable soon.',
-        parameters: {
-          type: 'params',
-          properties: {
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['feed'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              feed: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#skeletonFeedPost',
-                },
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'UnknownFeed',
-          },
-        ],
-      },
-    },
-  },
   AppBskyUnspeccedSearchActorsSkeleton: {
     lexicon: 1,
     id: 'app.bsky.unspecced.searchActorsSkeleton',
@@ -8438,7 +8389,6 @@ export const ids = {
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetTaggedSuggestions:
     'app.bsky.unspecced.getTaggedSuggestions',
-  AppBskyUnspeccedGetTimelineSkeleton: 'app.bsky.unspecced.getTimelineSkeleton',
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',

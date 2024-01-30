@@ -26,7 +26,6 @@ const {
   Redis,
   ServerConfig,
   BskyAppView,
-  makeAlgos,
 } = require('@atproto/bsky')
 
 const main = async () => {
@@ -122,14 +121,12 @@ const main = async () => {
       ? new MultiImageInvalidator(imgInvalidators)
       : imgInvalidators[0]
 
-  const algos = env.feedPublisherDid ? makeAlgos(env.feedPublisherDid) : {}
   const bsky = BskyAppView.create({
     db,
     redis,
     signingKey,
     config: cfg,
     imgInvalidator,
-    algos,
   })
 
   await bsky.start()

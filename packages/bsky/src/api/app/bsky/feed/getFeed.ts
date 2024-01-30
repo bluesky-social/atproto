@@ -17,7 +17,6 @@ import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bs
 import { SkeletonFeedPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { AlgoResponse } from '../../../../feed-gen/types'
 import { Database } from '../../../../db'
 import {
   FeedHydrationState,
@@ -71,16 +70,13 @@ const skeleton = async (
   ctx: Context,
 ): Promise<SkeletonState> => {
   const timerSkele = new ServerTimer('skele').start()
-  const localAlgo = ctx.appCtx.algos[params.feed]
   const feedParams: GetFeedParams = {
     feed: params.feed,
     limit: params.limit,
     cursor: params.cursor,
   }
   const { feedItems, cursor, resHeaders, ...passthrough } =
-    localAlgo !== undefined
-      ? await localAlgo(ctx.appCtx, params, params.viewer)
-      : await skeletonFromFeedGen(ctx, feedParams)
+    await skeletonFromFeedGen(ctx, feedParams)
   return {
     params,
     cursor,
@@ -151,6 +147,12 @@ type SkeletonState = {
 
 type HydrationState = SkeletonState &
   FeedHydrationState & { feedItems: FeedRow[]; timerHydr: ServerTimer }
+
+type AlgoResponse = {
+  feedItems: FeedRow[]
+  resHeaders?: Record<string, string>
+  cursor?: string
+}
 
 const skeletonFromFeedGen = async (
   ctx: Context,
