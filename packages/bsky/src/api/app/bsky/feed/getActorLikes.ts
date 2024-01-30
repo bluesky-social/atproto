@@ -24,11 +24,9 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, res }) => {
       const viewer = auth.credentials.iss
 
-      const [result, repoRev] = await Promise.all([
-        getActorLikes({ ...params, viewer }, ctx),
-        ctx.hydrator.actor.getRepoRevSafe(viewer),
-      ])
+      const result = await getActorLikes({ ...params, viewer }, ctx)
 
+      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
       setRepoRev(res, repoRev)
 
       return {

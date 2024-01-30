@@ -27,17 +27,17 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, res }) => {
       const { viewer } = ctx.authVerifier.parseCreds(auth)
 
-      const [result, repoRev] = await Promise.allSettled([
-        getPostThread({ ...params, viewer }, ctx),
-        ctx.hydrator.actor.getRepoRevSafe(viewer),
-      ])
+      let result
+      try {
+        result = await getPostThread({ ...params, viewer }, ctx)
+      } catch (err) {
+        const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
+        setRepoRev(res, repoRev)
+        throw err
+      }
 
-      if (repoRev.status === 'fulfilled') {
-        setRepoRev(res, repoRev.value)
-      }
-      if (result.status === 'rejected') {
-        throw result.reason
-      }
+      const repoRev = await ctx.hydrator.actor.getRepoRevSafe(viewer)
+      setRepoRev(res, repoRev)
 
       return {
         encoding: 'application/json',
