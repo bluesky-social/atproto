@@ -164,6 +164,7 @@ export class PDS {
     await this.ctx.db.startListeningToChannels()
     await this.ctx.runtimeFlags.start()
     await this.ctx.signupLimiter.start()
+    await this.ctx.signupActivator.run()
     const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
     this.server.keepAliveTimeout = 90000
@@ -175,6 +176,7 @@ export class PDS {
   async destroy(): Promise<void> {
     await this.ctx.runtimeFlags.destroy()
     await this.ctx.signupLimiter.destroy()
+    await this.ctx.signupActivator.run()
     await this.ctx.sequencerLeader?.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
