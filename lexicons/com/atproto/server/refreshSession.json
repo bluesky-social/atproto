@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Refresh an authentication session.",
+      "description": "Refresh an authentication session. Requires auth using the 'refreshJwt' (not the 'accessJwt').",
       "output": {
         "encoding": "application/json",
         "schema": {
