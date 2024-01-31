@@ -636,6 +636,15 @@ message GetSuggestedFeedsResponse {
   string cursor = 2;
 }
 
+message SearchFeedGeneratorsRequest {
+  string query = 1;
+  int32 limit = 2;
+}
+
+message SearchFeedGeneratorsResponse {
+  repeated string uris = 1;
+}
+
 // - Returns feed generator validity and online status with uris A, B, C…
 //     - Not currently being used, but could be worhthwhile.
 message GetFeedGeneratorStatusRequest {
@@ -997,6 +1006,7 @@ service Service {
   rpc GetActorFeeds(GetActorFeedsRequest) returns (GetActorFeedsResponse);
   rpc GetSuggestedFeeds(GetSuggestedFeedsRequest) returns (GetSuggestedFeedsResponse);
   rpc GetFeedGeneratorStatus(GetFeedGeneratorStatusRequest) returns (GetFeedGeneratorStatusResponse);
+  rpc SearchFeedGenerators(SearchFeedGeneratorsRequest) returns (SearchFeedGeneratorsResponse);
 
   // Feeds
   rpc GetAuthorFeed(GetAuthorFeedRequest) returns (GetAuthorFeedResponse);

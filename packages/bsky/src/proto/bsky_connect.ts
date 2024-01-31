@@ -140,6 +140,8 @@ import {
   PingResponse,
   SearchActorsRequest,
   SearchActorsResponse,
+  SearchFeedGeneratorsRequest,
+  SearchFeedGeneratorsResponse,
   SearchPostsRequest,
   SearchPostsResponse,
   TakedownActorRequest,
@@ -618,6 +620,15 @@ export const Service = {
       name: 'GetFeedGeneratorStatus',
       I: GetFeedGeneratorStatusRequest,
       O: GetFeedGeneratorStatusResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc bsky.Service.SearchFeedGenerators
+     */
+    searchFeedGenerators: {
+      name: 'SearchFeedGenerators',
+      I: SearchFeedGeneratorsRequest,
+      O: SearchFeedGeneratorsResponse,
       kind: MethodKind.Unary,
     },
     /**

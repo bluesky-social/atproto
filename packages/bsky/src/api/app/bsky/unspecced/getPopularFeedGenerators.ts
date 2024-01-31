@@ -20,12 +20,26 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      const suggestedRes = await ctx.dataplane.getSuggestedFeeds({
-        actorDid: viewer ?? undefined,
-        limit: params.limit,
-        cursor: params.cursor,
-      })
-      const uris = suggestedRes.uris
+      let uris: string[]
+      let cursor: string | undefined
+
+      const query = params.query?.trim() ?? ''
+      if (query) {
+        const res = await ctx.dataplane.searchFeedGenerators({
+          query,
+          limit: params.limit,
+        })
+        uris = res.uris
+      } else {
+        const res = await ctx.dataplane.getSuggestedFeeds({
+          actorDid: viewer ?? undefined,
+          limit: params.limit,
+          cursor: params.cursor,
+        })
+        uris = res.uris
+        cursor = parseString(res.cursor)
+      }
+
       const hydration = await ctx.hydrator.hydrateFeedGens(uris, viewer)
       const feedViews = mapDefined(uris, (uri) =>
         ctx.views.feedGenerator(uri, hydration),
@@ -35,7 +49,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           feeds: feedViews,
-          cursor: parseString(suggestedRes.cursor),
+          cursor,
         },
       }
     },
