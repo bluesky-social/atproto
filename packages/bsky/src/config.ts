@@ -2,21 +2,17 @@ import assert from 'node:assert'
 import { envList } from '@atproto/common'
 
 export interface ServerConfigValues {
+  // service
   version?: string
   debugMode?: boolean
   port?: number
   publicUrl?: string
   serverDid: string
   feedGenDid?: string
+  // external services
   dataplaneUrls: string[]
   dataplaneHttpVersion?: '1.1' | '2'
   dataplaneIgnoreBadTls?: boolean
-  searchEndpoint?: string
-  didPlcUrl: string
-  labelsFromIssuerDids?: string[]
-  handleResolveNameservers?: string[]
-  imgUriEndpoint?: string
-  blobCacheLocation?: string
   bsyncUrl: string
   bsyncApiKey?: string
   bsyncHttpVersion?: '1.1' | '2'
@@ -25,8 +21,17 @@ export interface ServerConfigValues {
   courierApiKey?: string
   courierHttpVersion?: '1.1' | '2'
   courierIgnoreBadTls?: boolean
+  searchUrl?: string
+  cdnUrl?: string
+  // identity
+  didPlcUrl: string
+  handleResolveNameservers?: string[]
+  // moderation and administration
   modServiceDid: string
   adminPasswords: string[]
+  labelsFromIssuerDids?: string[]
+  // misc/dev
+  blobCacheLocation?: string
 }
 
 export class ServerConfig {
@@ -45,9 +50,12 @@ export class ServerConfig {
     const handleResolveNameservers = process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS
       ? process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS.split(',')
       : []
-    const imgUriEndpoint = process.env.BSKY_IMG_URI_ENDPOINT
+    const cdnUrl = process.env.BSKY_CDN_URL || process.env.BSKY_IMG_URI_ENDPOINT
     const blobCacheLocation = process.env.BSKY_BLOB_CACHE_LOC
-    const searchEndpoint = process.env.BSKY_SEARCH_ENDPOINT || undefined
+    const searchUrl =
+      process.env.BSKY_SEARCH_URL ||
+      process.env.BSKY_SEARCH_ENDPOINT ||
+      undefined
     let dataplaneUrls = overrides?.dataplaneUrls
     dataplaneUrls ??= process.env.BSKY_DATAPLANE_URLS
       ? process.env.BSKY_DATAPLANE_URLS.split(',')
@@ -78,7 +86,6 @@ export class ServerConfig {
     assert(modServiceDid)
     assert(dataplaneUrls.length)
     assert(dataplaneHttpVersion === '1.1' || dataplaneHttpVersion === '2')
-
     return new ServerConfig({
       version,
       debugMode,
@@ -89,11 +96,11 @@ export class ServerConfig {
       dataplaneUrls,
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
-      searchEndpoint,
+      searchUrl,
       didPlcUrl,
       labelsFromIssuerDids,
       handleResolveNameservers,
-      imgUriEndpoint,
+      cdnUrl,
       blobCacheLocation,
       bsyncUrl,
       bsyncApiKey,
@@ -158,30 +165,6 @@ export class ServerConfig {
     return this.cfg.dataplaneIgnoreBadTls
   }
 
-  get labelsFromIssuerDids() {
-    return this.cfg.labelsFromIssuerDids ?? []
-  }
-
-  get searchEndpoint() {
-    return this.cfg.searchEndpoint
-  }
-
-  get handleResolveNameservers() {
-    return this.cfg.handleResolveNameservers
-  }
-
-  get didPlcUrl() {
-    return this.cfg.didPlcUrl
-  }
-
-  get imgUriEndpoint() {
-    return this.cfg.imgUriEndpoint
-  }
-
-  get blobCacheLocation() {
-    return this.cfg.blobCacheLocation
-  }
-
   get bsyncUrl() {
     return this.cfg.bsyncUrl
   }
@@ -214,12 +197,36 @@ export class ServerConfig {
     return this.cfg.courierIgnoreBadTls
   }
 
+  get searchUrl() {
+    return this.cfg.searchUrl
+  }
+
+  get cdnUrl() {
+    return this.cfg.cdnUrl
+  }
+
+  get didPlcUrl() {
+    return this.cfg.didPlcUrl
+  }
+
+  get handleResolveNameservers() {
+    return this.cfg.handleResolveNameservers
+  }
+
   get adminPasswords() {
     return this.cfg.adminPasswords
   }
 
   get modServiceDid() {
     return this.cfg.modServiceDid
+  }
+
+  get labelsFromIssuerDids() {
+    return this.cfg.labelsFromIssuerDids ?? []
+  }
+
+  get blobCacheLocation() {
+    return this.cfg.blobCacheLocation
   }
 }
 

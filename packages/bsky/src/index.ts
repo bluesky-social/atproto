@@ -62,11 +62,11 @@ export class BskyAppView {
     })
 
     const imgUriBuilder = new ImageUriBuilder(
-      config.imgUriEndpoint || `${config.publicUrl}/img`,
+      config.cdnUrl || `${config.publicUrl}/img`,
     )
 
     let imgProcessingServer: ImageProcessingServer | undefined
-    if (!config.imgUriEndpoint) {
+    if (!config.cdnUrl) {
       const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
       imgProcessingServer = new ImageProcessingServer(
         config,
@@ -74,8 +74,8 @@ export class BskyAppView {
       )
     }
 
-    const searchAgent = config.searchEndpoint
-      ? new AtpAgent({ service: config.searchEndpoint })
+    const searchAgent = config.searchUrl
+      ? new AtpAgent({ service: config.searchUrl })
       : undefined
     const dataplane = createDataPlaneClient(config.dataplaneUrls, {
       httpVersion: config.dataplaneHttpVersion,
