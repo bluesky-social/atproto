@@ -65,7 +65,6 @@ export class TestBsky {
       labelsFromIssuerDids: ['did:example:labeler'], // this did is also used as the labeler in seeds
       ...cfg,
       adminPasswords: [ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD],
-      feedGenDid: 'did:example:feedGen',
     })
 
     // Separate migration db in case migration changes some connection state that we need in the tests, e.g. "alter database ... set ..."
@@ -84,7 +83,6 @@ export class TestBsky {
     const server = bsky.BskyAppView.create({
       config,
       signingKey: serviceKeypair,
-      algos: cfg.algos,
     })
 
     const sub = new bsky.RepoSubscription({

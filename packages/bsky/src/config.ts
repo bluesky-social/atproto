@@ -8,7 +8,6 @@ export interface ServerConfigValues {
   port?: number
   publicUrl?: string
   serverDid: string
-  feedGenDid?: string
   // external services
   dataplaneUrls: string[]
   dataplaneHttpVersion?: '1.1' | '2'
@@ -43,7 +42,6 @@ export class ServerConfig {
     const debugMode = process.env.NODE_ENV !== 'production'
     const publicUrl = process.env.BSKY_PUBLIC_URL || undefined
     const serverDid = process.env.BSKY_SERVER_DID || 'did:example:test'
-    const feedGenDid = process.env.BSKY_FEED_GEN_DID
     const envPort = parseInt(process.env.BSKY_PORT || '', 10)
     const port = isNaN(envPort) ? 2584 : envPort
     const didPlcUrl = process.env.BSKY_DID_PLC_URL || 'http://localhost:2582'
@@ -92,7 +90,6 @@ export class ServerConfig {
       port,
       publicUrl,
       serverDid,
-      feedGenDid,
       dataplaneUrls,
       dataplaneHttpVersion,
       dataplaneIgnoreBadTls,
@@ -147,10 +144,6 @@ export class ServerConfig {
 
   get serverDid() {
     return this.cfg.serverDid
-  }
-
-  get feedGenDid() {
-    return this.cfg.feedGenDid
   }
 
   get dataplaneUrls() {

@@ -15,7 +15,6 @@ import { createServer } from './lexicon'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import AppContext from './context'
-import { MountedAlgos } from './api/feed-gen/types'
 import { Keypair } from '@atproto/crypto'
 import { createDataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
@@ -26,12 +25,10 @@ import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 
 export * from './data-plane'
 export type { ServerConfigValues } from './config'
-export type { MountedAlgos } from './api/feed-gen/types'
 export { ServerConfig } from './config'
 export { Database } from './data-plane/server/db'
 export { Redis } from './redis'
 export { AppContext } from './context'
-export { makeAlgos } from './api/feed-gen'
 
 export class BskyAppView {
   public ctx: AppContext
@@ -47,9 +44,8 @@ export class BskyAppView {
   static create(opts: {
     config: ServerConfig
     signingKey: Keypair
-    algos?: MountedAlgos
   }): BskyAppView {
-    const { config, signingKey, algos = {} } = opts
+    const { config, signingKey } = opts
     const app = express()
     app.use(cors())
     app.use(loggerMiddleware)
@@ -119,7 +115,6 @@ export class BskyAppView {
       bsyncClient,
       courierClient,
       authVerifier,
-      algos,
     })
 
     let server = createServer({
