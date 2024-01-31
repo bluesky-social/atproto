@@ -46,7 +46,7 @@ import {
   isRecordWithMedia,
 } from './types'
 import { Label } from '../hydration/label'
-import { FeedItem, Repost } from '../hydration/feed'
+import { FeedItem, Post, Repost } from '../hydration/feed'
 import { RecordInfo } from '../hydration/util'
 import { Notification } from '../proto/bsky_pb'
 
@@ -494,7 +494,8 @@ export class Views {
   ): ThreadViewPost | NotFoundPost | BlockedPost {
     const { anchor, uris } = skele
     const post = this.post(anchor, state)
-    if (!post) return this.notFoundPost(anchor)
+    const postInfo = state.posts?.get(anchor)
+    if (!postInfo || !post) return this.notFoundPost(anchor)
     if (this.viewerBlockExists(post.author.did, state)) {
       return this.blockedPost(anchor, post.author.did, state)
     }
@@ -509,22 +510,30 @@ export class Views {
       childrenByParentUri[parentUri] ??= []
       childrenByParentUri[parentUri].push(uri)
     })
-    const violatesThreadGate = state.posts?.get(anchor)?.violatesThreadGate
+    const rootUri = getRootUri(anchor, postInfo)
+    const violatesThreadGate = postInfo.violatesThreadGate
 
     return {
       $type: 'app.bsky.feed.defs#threadViewPost',
       post,
       parent: !violatesThreadGate
-        ? this.threadParent(anchor, state, opts.height)
+        ? this.threadParent(anchor, rootUri, state, opts.height)
         : undefined,
       replies: !violatesThreadGate
-        ? this.threadReplies(anchor, childrenByParentUri, state, opts.depth)
+        ? this.threadReplies(
+            anchor,
+            rootUri,
+            childrenByParentUri,
+            state,
+            opts.depth,
+          )
         : undefined,
     }
   }
 
   threadParent(
     childUri: string,
+    rootUri: string,
     state: HydrationState,
     height: number,
   ): ThreadViewPost | NotFoundPost | BlockedPost | undefined {
@@ -535,19 +544,22 @@ export class Views {
       return this.blockedPost(parentUri, creatorFromUri(parentUri), state)
     }
     const post = this.post(parentUri, state)
-    if (!post) return this.notFoundPost(parentUri)
+    const postInfo = state.posts?.get(parentUri)
+    if (!postInfo || !post) return this.notFoundPost(parentUri)
+    if (rootUri !== getRootUri(parentUri, postInfo)) return // outside thread boundary
     if (this.viewerBlockExists(post.author.did, state)) {
       return this.blockedPost(parentUri, post.author.did, state)
     }
     return {
       $type: 'app.bsky.feed.defs#threadViewPost',
       post,
-      parent: this.threadParent(parentUri, state, height - 1),
+      parent: this.threadParent(parentUri, rootUri, state, height - 1),
     }
   }
 
   threadReplies(
     parentUri: string,
+    rootUri: string,
     childrenByParentUri: Record<string, string[]>,
     state: HydrationState,
     depth: number,
@@ -555,21 +567,29 @@ export class Views {
     if (depth < 1) return undefined
     const childrenUris = childrenByParentUri[parentUri] ?? []
     return mapDefined(childrenUris, (uri) => {
-      if (state.posts?.get(uri)?.violatesThreadGate) {
+      const postInfo = state.posts?.get(uri)
+      if (postInfo?.violatesThreadGate) {
         return undefined
       }
       if (state.postBlocks?.get(uri)?.reply) {
         return undefined
       }
       const post = this.post(uri, state)
-      if (!post) return this.notFoundPost(parentUri)
+      if (!postInfo || !post) return this.notFoundPost(parentUri)
+      if (rootUri !== getRootUri(uri, postInfo)) return // outside thread boundary
       if (this.viewerBlockExists(post.author.did, state)) {
         return this.blockedPost(parentUri, post.author.did, state)
       }
       return {
         $type: 'app.bsky.feed.defs#threadViewPost',
         post,
-        replies: this.threadReplies(uri, childrenByParentUri, state, depth - 1),
+        replies: this.threadReplies(
+          uri,
+          rootUri,
+          childrenByParentUri,
+          state,
+          depth - 1,
+        ),
       }
     })
   }
@@ -830,4 +850,8 @@ const postToGateUri = (uri: string) => {
     aturi.collection = ids.AppBskyFeedThreadgate
   }
   return aturi.toString()
+}
+
+const getRootUri = (uri: string, post: Post): string => {
+  return post.record.reply?.root.uri ?? uri
 }
