@@ -99,8 +99,10 @@ export class SignupActivator {
 
   async activateBatch() {
     const status = await getQueueStatus(this.db)
-    if (status.disableSignups) return
     const toAdmit = status.periodAllowance - status.accountsInPeriod
+    log.info({ ...status, toAdmit }, 'activating accounts')
+
+    if (status.disableSignups) return
     if (toAdmit < 1) return
 
     const activatedAt = new Date().toISOString()
