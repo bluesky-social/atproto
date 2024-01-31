@@ -105,9 +105,7 @@ export class BskyAppView {
     const authVerifier = new AuthVerifier(dataplane, {
       ownDid: config.serverDid,
       adminDid: config.modServiceDid,
-      adminPass: config.adminPassword,
-      moderatorPass: config.moderatorPassword,
-      triagePass: config.triagePassword,
+      adminPasses: config.adminPasswords,
     })
 
     const ctx = new AppContext({

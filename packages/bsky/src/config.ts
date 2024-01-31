@@ -1,4 +1,5 @@
-import assert from 'assert'
+import assert from 'node:assert'
+import { envList } from '@atproto/common'
 
 export interface ServerConfigValues {
   version?: string
@@ -24,10 +25,8 @@ export interface ServerConfigValues {
   courierApiKey?: string
   courierHttpVersion?: '1.1' | '2'
   courierIgnoreBadTls?: boolean
-  adminPassword: string
-  moderatorPassword: string
-  triagePassword: string
   modServiceDid: string
+  adminPasswords: string[]
 }
 
 export class ServerConfig {
@@ -72,12 +71,9 @@ export class ServerConfig {
     const courierIgnoreBadTls =
       process.env.BSKY_COURIER_IGNORE_BAD_TLS === 'true'
     assert(courierHttpVersion === '1.1' || courierHttpVersion === '2')
-    const adminPassword = process.env.ADMIN_PASSWORD || undefined
-    assert(adminPassword)
-    const moderatorPassword = process.env.BSKY_MODERATOR_PASSWORD
-    assert(moderatorPassword)
-    const triagePassword = process.env.BSKY_TRIAGE_PASSWORD
-    assert(triagePassword)
+    const adminPasswords = envList(
+      process.env.BSKY_ADMIN_PASSWORDS || process.env.BSKY_ADMIN_PASSWORD || '',
+    )
     const modServiceDid = process.env.MOD_SERVICE_DID
     assert(modServiceDid)
     assert(dataplaneUrls.length)
@@ -107,9 +103,7 @@ export class ServerConfig {
       courierApiKey,
       courierHttpVersion,
       courierIgnoreBadTls,
-      adminPassword,
-      moderatorPassword,
-      triagePassword,
+      adminPasswords,
       modServiceDid,
       ...stripUndefineds(overrides ?? {}),
     })
@@ -220,16 +214,8 @@ export class ServerConfig {
     return this.cfg.courierIgnoreBadTls
   }
 
-  get adminPassword() {
-    return this.cfg.adminPassword
-  }
-
-  get moderatorPassword() {
-    return this.cfg.moderatorPassword
-  }
-
-  get triagePassword() {
-    return this.cfg.triagePassword
+  get adminPasswords() {
+    return this.cfg.adminPasswords
   }
 
   get modServiceDid() {

@@ -64,9 +64,7 @@ export class TestBsky {
       modServiceDid: cfg.modServiceDid ?? 'did:example:invalidMod',
       labelsFromIssuerDids: ['did:example:labeler'], // this did is also used as the labeler in seeds
       ...cfg,
-      adminPassword: ADMIN_PASSWORD,
-      moderatorPassword: MOD_PASSWORD,
-      triagePassword: TRIAGE_PASSWORD,
+      adminPasswords: [ADMIN_PASSWORD, MOD_PASSWORD, TRIAGE_PASSWORD],
       feedGenDid: 'did:example:feedGen',
     })
 
@@ -110,22 +108,17 @@ export class TestBsky {
     return new AtpAgent({ service: this.url })
   }
 
-  adminAuth(role: 'admin' | 'moderator' | 'triage' = 'admin'): string {
-    const password =
-      role === 'triage'
-        ? this.ctx.cfg.triagePassword
-        : role === 'moderator'
-        ? this.ctx.cfg.moderatorPassword
-        : this.ctx.cfg.adminPassword
+  adminAuth(): string {
+    const [password] = this.ctx.cfg.adminPasswords
     return (
       'Basic ' +
       ui8.toString(ui8.fromString(`admin:${password}`, 'utf8'), 'base64pad')
     )
   }
 
-  adminAuthHeaders(role?: 'admin' | 'moderator' | 'triage') {
+  adminAuthHeaders() {
     return {
-      authorization: this.adminAuth(role),
+      authorization: this.adminAuth(),
     }
   }
 
