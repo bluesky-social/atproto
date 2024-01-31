@@ -43,33 +43,11 @@ export default function (server: Server, ctx: AppContext) {
       const now = new Date().toISOString()
       const passwordScrypt = await scrypt.genSaltAndHash(password)
 
-      let verificationPhone: string | undefined = undefined
-      if (ctx.cfg.phoneVerification.required && ctx.twilio) {
-        if (!input.body.verificationPhone) {
-          throw new InvalidRequestError(
-            `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
-            'InvalidPhoneVerification',
-          )
-        } else if (!input.body.verificationCode) {
-          throw new InvalidRequestError(
-            `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
-            'InvalidPhoneVerification',
-          )
-        }
-        verificationPhone = ctx.twilio.normalizePhoneNumber(
-          input.body.verificationPhone,
-        )
-        const verified = await ctx.twilio.verifyCode(
-          verificationPhone,
-          input.body.verificationCode.trim(),
-        )
-        if (!verified) {
-          throw new InvalidRequestError(
-            'Could not verify phone number. Please try again.',
-            'InvalidPhoneVerification',
-          )
-        }
-      }
+      const verificationPhone = await ensurePhoneVerification(
+        ctx,
+        input.body.verificationPhone,
+        input.body.verificationCode,
+      )
 
       const result = await ctx.db.transaction(async (dbTxn) => {
         const actorTxn = ctx.services.account(dbTxn)
@@ -484,6 +462,42 @@ const ensureUnusedHandleAndEmail = async (
   } else if (byHandle) {
     throw new InvalidRequestError(`Handle already taken: ${handle}`)
   }
+}
+
+const ensurePhoneVerification = async (
+  ctx: AppContext,
+  phone?: string,
+  code?: string,
+): Promise<string | undefined> => {
+  if (!ctx.cfg.phoneVerification.required || !ctx.twilio) {
+    return
+  }
+
+  if (!phone) {
+    throw new InvalidRequestError(
+      `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
+      'InvalidPhoneVerification',
+    )
+  }
+  if (ctx.cfg.phoneVerification.bypassPhoneNumber === phone) {
+    return undefined
+  }
+
+  if (!code) {
+    throw new InvalidRequestError(
+      `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
+      'InvalidPhoneVerification',
+    )
+  }
+  const normalizedPhone = ctx.twilio.normalizePhoneNumber(phone)
+  const verified = await ctx.twilio.verifyCode(normalizedPhone, code.trim())
+  if (!verified) {
+    throw new InvalidRequestError(
+      'Could not verify phone number. Please try again.',
+      'InvalidPhoneVerification',
+    )
+  }
+  return normalizedPhone
 }
 
 const randomIndexByWeight = (weights) => {
