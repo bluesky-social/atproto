@@ -6547,6 +6547,131 @@ export class GetSuggestedFeedsResponse extends Message<GetSuggestedFeedsResponse
 }
 
 /**
+ * @generated from message bsky.SearchFeedGeneratorsRequest
+ */
+export class SearchFeedGeneratorsRequest extends Message<SearchFeedGeneratorsRequest> {
+  /**
+   * @generated from field: string query = 1;
+   */
+  query = ''
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0
+
+  constructor(data?: PartialMessage<SearchFeedGeneratorsRequest>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.SearchFeedGeneratorsRequest'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: 'query', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'limit', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SearchFeedGeneratorsRequest {
+    return new SearchFeedGeneratorsRequest().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SearchFeedGeneratorsRequest {
+    return new SearchFeedGeneratorsRequest().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SearchFeedGeneratorsRequest {
+    return new SearchFeedGeneratorsRequest().fromJsonString(jsonString, options)
+  }
+
+  static equals(
+    a:
+      | SearchFeedGeneratorsRequest
+      | PlainMessage<SearchFeedGeneratorsRequest>
+      | undefined,
+    b:
+      | SearchFeedGeneratorsRequest
+      | PlainMessage<SearchFeedGeneratorsRequest>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(SearchFeedGeneratorsRequest, a, b)
+  }
+}
+
+/**
+ * @generated from message bsky.SearchFeedGeneratorsResponse
+ */
+export class SearchFeedGeneratorsResponse extends Message<SearchFeedGeneratorsResponse> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = []
+
+  constructor(data?: PartialMessage<SearchFeedGeneratorsResponse>) {
+    super()
+    proto3.util.initPartial(data, this)
+  }
+
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'bsky.SearchFeedGeneratorsResponse'
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    {
+      no: 1,
+      name: 'uris',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ])
+
+  static fromBinary(
+    bytes: Uint8Array,
+    options?: Partial<BinaryReadOptions>,
+  ): SearchFeedGeneratorsResponse {
+    return new SearchFeedGeneratorsResponse().fromBinary(bytes, options)
+  }
+
+  static fromJson(
+    jsonValue: JsonValue,
+    options?: Partial<JsonReadOptions>,
+  ): SearchFeedGeneratorsResponse {
+    return new SearchFeedGeneratorsResponse().fromJson(jsonValue, options)
+  }
+
+  static fromJsonString(
+    jsonString: string,
+    options?: Partial<JsonReadOptions>,
+  ): SearchFeedGeneratorsResponse {
+    return new SearchFeedGeneratorsResponse().fromJsonString(
+      jsonString,
+      options,
+    )
+  }
+
+  static equals(
+    a:
+      | SearchFeedGeneratorsResponse
+      | PlainMessage<SearchFeedGeneratorsResponse>
+      | undefined,
+    b:
+      | SearchFeedGeneratorsResponse
+      | PlainMessage<SearchFeedGeneratorsResponse>
+      | undefined,
+  ): boolean {
+    return proto3.util.equals(SearchFeedGeneratorsResponse, a, b)
+  }
+}
+
+/**
  * - Returns feed generator validity and online status with uris A, B, C…
  *     - Not currently being used, but could be worhthwhile.
  *
