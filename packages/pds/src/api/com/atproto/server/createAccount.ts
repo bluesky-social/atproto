@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
       points: 100,
     },
     handler: async ({ input, req }) => {
-      const hasAvailability = ctx.signupLimiter.hasAvailability()
+      const hasAvailability = await ctx.signupLimiter.hasAvailability()
 
       const {
         did,

@@ -25,17 +25,15 @@ export default function (server: Server, ctx: AppContext) {
         placeInQueue = res?.count
       }
 
-      const limiterStatus = ctx.signupLimiter.status
+      const limiter = ctx.signupLimiter
       let estimatedTimeMs: number | undefined
-      if (
-        placeInQueue &&
-        !limiterStatus.disableSignups &&
-        limiterStatus.accountsInPeriod > 0
-      ) {
-        estimatedTimeMs = Math.ceil(
-          (placeInQueue * limiterStatus.periodMs) /
-            limiterStatus.accountsInPeriod,
-        )
+      if (placeInQueue && !limiter.flags.disableSignups) {
+        const accountsInPeriod = await limiter.accountsInPeriod()
+        if (accountsInPeriod > 0) {
+          estimatedTimeMs = Math.ceil(
+            (placeInQueue * limiter.flags.periodMs) / accountsInPeriod,
+          )
+        }
       }
 
       return {

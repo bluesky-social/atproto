@@ -1,19 +1,20 @@
 import { SECOND } from '@atproto/common'
 import { limiterLogger as log } from '../logger'
 import Database from '../db'
-import { LimiterStatus, getQueueStatus } from './util'
+import { LimiterFlags, getAccountsInPeriod, getQueueStatus } from './util'
 
 export class SignupLimiter {
   destroyed = false
   promise: Promise<void> = Promise.resolve()
   timer: NodeJS.Timer | undefined
-  status: LimiterStatus
+  flags: LimiterFlags
 
   constructor(private db: Database) {}
 
-  hasAvailability(): boolean {
-    if (this.status.disableSignups) return false
-    return this.status.accountsInPeriod < this.status.periodAllowance
+  async hasAvailability(): Promise<boolean> {
+    if (this.flags.disableSignups) return false
+    const accountsInPeriod = await this.accountsInPeriod()
+    return accountsInPeriod < this.flags.periodAllowance
   }
 
   async start() {
@@ -38,9 +39,13 @@ export class SignupLimiter {
     await this.promise
   }
 
-  async refresh() {
-    this.status = await getQueueStatus(this.db)
+  async accountsInPeriod(): Promise<number> {
+    return getAccountsInPeriod(this.db, this.flags.periodMs)
+  }
 
-    log.info({ ...this.status }, 'limiter refresh')
+  async refresh() {
+    this.flags = await getQueueStatus(this.db)
+
+    log.info({ ...this.flags }, 'limiter refresh')
   }
 }
