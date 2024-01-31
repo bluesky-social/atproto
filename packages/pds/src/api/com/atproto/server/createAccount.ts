@@ -46,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
       const verificationPhone = await ensurePhoneVerification(
         ctx,
         input.body.verificationPhone,
-        input.body.verificationCode,
+        input.body.verificationCode?.trim(),
       )
 
       const result = await ctx.db.transaction(async (dbTxn) => {
@@ -490,7 +490,7 @@ const ensurePhoneVerification = async (
     )
   }
   const normalizedPhone = ctx.twilio.normalizePhoneNumber(phone)
-  const verified = await ctx.twilio.verifyCode(normalizedPhone, code.trim())
+  const verified = await ctx.twilio.verifyCode(normalizedPhone, code)
   if (!verified) {
     throw new InvalidRequestError(
       'Could not verify phone number. Please try again.',
