@@ -32,9 +32,10 @@ export default function (server: Server, ctx: AppContext) {
         !limiterStatus.disableSignups &&
         limiterStatus.accountsInPeriod > 0
       ) {
-        estimatedTimeMs =
+        estimatedTimeMs = Math.ceil(
           (placeInQueue * limiterStatus.periodMs) /
-          limiterStatus.accountsInPeriod
+            limiterStatus.accountsInPeriod,
+        )
       }
 
       return {
