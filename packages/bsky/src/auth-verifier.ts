@@ -103,7 +103,7 @@ export class AuthVerifier {
   standardOptional = async (
     ctx: ReqCtx,
   ): Promise<StandardOutput | NullOutput> => {
-    if (isBearerToken(ctx.req)) {
+    if (isBearerToken(ctx.req) || isBasicToken(ctx.req)) {
       return this.standard(ctx)
     }
     return this.nullCreds()
