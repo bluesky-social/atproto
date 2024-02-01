@@ -137,6 +137,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       twilioAccountSid: env.twilioAccountSid,
       twilioServiceSid: env.twilioServiceSid,
       accountsPerPhoneNumber: env.accountsPerPhoneNumber ?? 3,
+      bypassPhoneNumber: env.bypassPhoneNumber,
     }
   }
 
@@ -334,6 +335,7 @@ export type PhoneVerificationConfig =
       twilioAccountSid: string
       twilioServiceSid: string
       accountsPerPhoneNumber: number
+      bypassPhoneNumber?: string
     }
   | {
       required: false

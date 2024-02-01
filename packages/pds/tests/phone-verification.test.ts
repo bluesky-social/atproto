@@ -20,6 +20,7 @@ describe('phone verification', () => {
         twilioAccountSid: 'ACXXXXXXX',
         twilioAuthToken: 'AUTH',
         twilioServiceSid: 'VAXXXXXXXX',
+        bypassPhoneNumber: '+10000000000',
       },
     })
     ctx = network.pds.ctx
@@ -151,6 +152,11 @@ describe('phone verification', () => {
     await expect(attempt).rejects.toThrow(
       `There are too many accounts currently using this phone number. Max: 3`,
     )
+  })
+
+  it('bypasses phone number verification', async () => {
+    await requestCode('+10000000000')
+    await createAccountWithCode('+10000000000')
   })
 
   it('normalizes phone numbers', async () => {
