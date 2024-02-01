@@ -547,6 +547,7 @@ describe('entryway', () => {
         did: dan,
         pdsDid: pds.ctx.cfg.service.did,
         appPasswordName: null,
+        deactivated: false,
       })
       const expiredAccessToken = await authService.createAccessToken({
         did: dan,
@@ -580,6 +581,7 @@ describe('entryway', () => {
         did: session.did,
         pdsDid: pds.ctx.cfg.service.did, // not eve's pds
         appPasswordName: null,
+        deactivated: false,
       })
       const attempt = (agent: AtpAgent) =>
         agent.api.app.bsky.actor.putPreferences(
