@@ -20,6 +20,12 @@ export default function (server: Server, ctx: AppContext) {
       if (!ctx.twilio || !ctx.cfg.phoneVerification.required) {
         throw new InvalidRequestError('phone verification not enabled')
       }
+      if (
+        ctx.cfg.phoneVerification.bypassPhoneNumber &&
+        ctx.cfg.phoneVerification.bypassPhoneNumber === input.body.phoneNumber
+      ) {
+        return
+      }
       const accountsPerPhoneNumber =
         ctx.cfg.phoneVerification.accountsPerPhoneNumber
       const phoneNumber = ctx.twilio.normalizePhoneNumber(
