@@ -12,11 +12,17 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params }) => {
       const { limit, cursor, query } = params
       const requester = auth.credentials.iss
+      if (LikeCountKeyset.clearlyBad(cursor)) {
+        return {
+          encoding: 'application/json',
+          body: { feeds: [] },
+        }
+      }
+
       const db = ctx.db.getReplica()
       const { ref } = db.db.dynamic
       const feedService = ctx.services.feed(db)
       const actorService = ctx.services.actor(db)
-
       let inner = db.db
         .selectFrom('feed_generator')
         .select([

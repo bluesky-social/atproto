@@ -81,6 +81,7 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
@@ -132,6 +133,7 @@ import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
+import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphList from './types/app/bsky/graph/list'
 import * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
@@ -148,7 +150,6 @@ import * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 import * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
-import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
@@ -226,6 +227,7 @@ export * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 export * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 export * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 export * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+export * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 export * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 export * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
@@ -277,6 +279,7 @@ export * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks
 export * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 export * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 export * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
+export * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
 export * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 export * as AppBskyGraphList from './types/app/bsky/graph/list'
 export * as AppBskyGraphListblock from './types/app/bsky/graph/listblock'
@@ -293,7 +296,6 @@ export * as AppBskyRichtextFacet from './types/app/bsky/richtext/facet'
 export * as AppBskyUnspeccedDefs from './types/app/bsky/unspecced/defs'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
-export * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 export * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 export * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
@@ -1205,6 +1207,17 @@ export class ComAtprotoTempNS {
     this._service = service
   }
 
+  checkSignupQueue(
+    params?: ComAtprotoTempCheckSignupQueue.QueryParams,
+    opts?: ComAtprotoTempCheckSignupQueue.CallOptions,
+  ): Promise<ComAtprotoTempCheckSignupQueue.Response> {
+    return this._service.xrpc
+      .call('com.atproto.temp.checkSignupQueue', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoTempCheckSignupQueue.toKnownErr(e)
+      })
+  }
+
   fetchLabels(
     params?: ComAtprotoTempFetchLabels.QueryParams,
     opts?: ComAtprotoTempFetchLabels.CallOptions,
@@ -2057,6 +2070,17 @@ export class AppBskyGraphNS {
       })
   }
 
+  getRelationships(
+    params?: AppBskyGraphGetRelationships.QueryParams,
+    opts?: AppBskyGraphGetRelationships.CallOptions,
+  ): Promise<AppBskyGraphGetRelationships.Response> {
+    return this._service.xrpc
+      .call('app.bsky.graph.getRelationships', params, undefined, opts)
+      .catch((e) => {
+        throw AppBskyGraphGetRelationships.toKnownErr(e)
+      })
+  }
+
   getSuggestedFollowsByActor(
     params?: AppBskyGraphGetSuggestedFollowsByActor.QueryParams,
     opts?: AppBskyGraphGetSuggestedFollowsByActor.CallOptions,
@@ -2518,17 +2542,6 @@ export class AppBskyUnspeccedNS {
       .call('app.bsky.unspecced.getTaggedSuggestions', params, undefined, opts)
       .catch((e) => {
         throw AppBskyUnspeccedGetTaggedSuggestions.toKnownErr(e)
-      })
-  }
-
-  getTimelineSkeleton(
-    params?: AppBskyUnspeccedGetTimelineSkeleton.QueryParams,
-    opts?: AppBskyUnspeccedGetTimelineSkeleton.CallOptions,
-  ): Promise<AppBskyUnspeccedGetTimelineSkeleton.Response> {
-    return this._service.xrpc
-      .call('app.bsky.unspecced.getTimelineSkeleton', params, undefined, opts)
-      .catch((e) => {
-        throw AppBskyUnspeccedGetTimelineSkeleton.toKnownErr(e)
       })
   }
 

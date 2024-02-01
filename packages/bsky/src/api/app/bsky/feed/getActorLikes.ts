@@ -67,6 +67,10 @@ const skeleton = async (
     throw new InvalidRequestError('Profile not found')
   }
 
+  if (FeedKeyset.clearlyBad(cursor)) {
+    return { params, feedItems: [] }
+  }
+
   let feedItemsQb = feedService
     .selectFeedItemQb()
     .innerJoin('like', 'like.subject', 'feed_item.uri')

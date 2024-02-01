@@ -4246,6 +4246,34 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoTempCheckSignupQueue: {
+    lexicon: 1,
+    id: 'com.atproto.temp.checkSignupQueue',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Check accounts location in signup queue.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['activated'],
+            properties: {
+              activated: {
+                type: 'boolean',
+              },
+              placeInQueue: {
+                type: 'integer',
+              },
+              estimatedTimeMs: {
+                type: 'integer',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoTempFetchLabels: {
     lexicon: 1,
     id: 'com.atproto.temp.fetchLabels',
@@ -4615,6 +4643,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#personalDetailsPref',
             'lex:app.bsky.actor.defs#feedViewPref',
             'lex:app.bsky.actor.defs#threadViewPref',
+            'lex:app.bsky.actor.defs#interestsPref',
           ],
         },
       },
@@ -4715,6 +4744,23 @@ export const schemaDict = {
           prioritizeFollowedUsers: {
             type: 'boolean',
             description: 'Show followed users at the top of all replies.',
+          },
+        },
+      },
+      interestsPref: {
+        type: 'object',
+        required: ['tags'],
+        properties: {
+          tags: {
+            type: 'array',
+            maxLength: 100,
+            items: {
+              type: 'string',
+              maxLength: 640,
+              maxGraphemes: 64,
+            },
+            description:
+              "A list of tags which describe the account owner's interests gathered during onboarding.",
           },
         },
       },
@@ -6925,6 +6971,45 @@ export const schemaDict = {
           },
         },
       },
+      notFoundActor: {
+        type: 'object',
+        description: 'indicates that a handle or DID could not be resolved',
+        required: ['actor', 'notFound'],
+        properties: {
+          actor: {
+            type: 'string',
+            format: 'at-identifier',
+          },
+          notFound: {
+            type: 'boolean',
+            const: true,
+          },
+        },
+      },
+      relationship: {
+        type: 'object',
+        description:
+          'lists the bi-directional graph relationships between one actor (not indicated in the object), and the target actors (the DID included in the object)',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          following: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor follows this DID, this is the AT-URI of the follow record',
+          },
+          followedBy: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor is followed by this DID, contains the AT-URI of the follow record',
+          },
+        },
+      },
     },
   },
   AppBskyGraphFollow: {
@@ -7325,6 +7410,65 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyGraphGetRelationships: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getRelationships',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates public relationships between one account, and a list of other accounts',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+            },
+            others: {
+              type: 'array',
+              maxLength: 30,
+              items: {
+                type: 'string',
+                format: 'at-identifier',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['relationships'],
+            properties: {
+              actor: {
+                type: 'string',
+                format: 'did',
+              },
+              relationships: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:app.bsky.graph.defs#relationship',
+                    'lex:app.bsky.graph.defs#notFoundActor',
+                  ],
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ActorNotFound',
+            description:
+              'the primary actor at-identifier could not be resolved',
+          },
+        ],
       },
     },
   },
@@ -7956,55 +8100,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyUnspeccedGetTimelineSkeleton: {
-    lexicon: 1,
-    id: 'app.bsky.unspecced.getTimelineSkeleton',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'DEPRECATED: a skeleton of a timeline. Unspecced and will be unavailable soon.',
-        parameters: {
-          type: 'params',
-          properties: {
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['feed'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              feed: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#skeletonFeedPost',
-                },
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'UnknownFeed',
-          },
-        ],
-      },
-    },
-  },
   AppBskyUnspeccedSearchActorsSkeleton: {
     lexicon: 1,
     id: 'app.bsky.unspecced.searchActorsSkeleton',
@@ -8220,6 +8315,7 @@ export const ids = {
   ComAtprotoSyncNotifyOfUpdate: 'com.atproto.sync.notifyOfUpdate',
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
+  ComAtprotoTempCheckSignupQueue: 'com.atproto.temp.checkSignupQueue',
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   ComAtprotoTempImportRepo: 'com.atproto.temp.importRepo',
   ComAtprotoTempPushBlob: 'com.atproto.temp.pushBlob',
@@ -8272,6 +8368,7 @@ export const ids = {
   AppBskyGraphGetListMutes: 'app.bsky.graph.getListMutes',
   AppBskyGraphGetLists: 'app.bsky.graph.getLists',
   AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
+  AppBskyGraphGetRelationships: 'app.bsky.graph.getRelationships',
   AppBskyGraphGetSuggestedFollowsByActor:
     'app.bsky.graph.getSuggestedFollowsByActor',
   AppBskyGraphList: 'app.bsky.graph.list',
@@ -8292,7 +8389,6 @@ export const ids = {
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetTaggedSuggestions:
     'app.bsky.unspecced.getTaggedSuggestions',
-  AppBskyUnspeccedGetTimelineSkeleton: 'app.bsky.unspecced.getTimelineSkeleton',
   AppBskyUnspeccedSearchActorsSkeleton:
     'app.bsky.unspecced.searchActorsSkeleton',
   AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',

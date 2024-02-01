@@ -7,18 +7,22 @@ import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 import { HandlerAuth } from '@atproto/xrpc-server'
-import * as AppBskyFeedDefs from '../feed/defs'
+import * as AppBskyGraphDefs from './defs'
 
 export interface QueryParams {
-  limit: number
-  cursor?: string
+  actor: string
+  others?: string[]
 }
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor?: string
-  feed: AppBskyFeedDefs.SkeletonFeedPost[]
+  actor?: string
+  relationships: (
+    | AppBskyGraphDefs.Relationship
+    | AppBskyGraphDefs.NotFoundActor
+    | { $type: string; [k: string]: unknown }
+  )[]
   [k: string]: unknown
 }
 
@@ -33,7 +37,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'UnknownFeed'
+  error?: 'ActorNotFound'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

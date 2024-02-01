@@ -6,18 +6,15 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { isObj, hasProp } from '../../../../util'
 import { lexicons } from '../../../../lexicons'
 import { CID } from 'multiformats/cid'
-import * as AppBskyFeedDefs from '../feed/defs'
 
-export interface QueryParams {
-  limit?: number
-  cursor?: string
-}
+export interface QueryParams {}
 
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  cursor?: string
-  feed: AppBskyFeedDefs.SkeletonFeedPost[]
+  activated: boolean
+  placeInQueue?: number
+  estimatedTimeMs?: number
   [k: string]: unknown
 }
 
@@ -31,15 +28,8 @@ export interface Response {
   data: OutputSchema
 }
 
-export class UnknownFeedError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers)
-  }
-}
-
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'UnknownFeed') return new UnknownFeedError(e)
   }
   return e
 }

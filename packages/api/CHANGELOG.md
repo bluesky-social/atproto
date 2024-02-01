@@ -1,5 +1,18 @@
 # @atproto/api
 
+## 0.9.5
+
+### Patch Changes
+
+- [#2090](https://github.com/bluesky-social/atproto/pull/2090) [`8994d363`](https://github.com/bluesky-social/atproto/commit/8994d3633adad1c02569d6d44ae896e18195e8e2) Thanks [@dholms](https://github.com/dholms)! - add checkSignupQueue method and expose refreshSession on agent
+
+## 0.9.4
+
+### Patch Changes
+
+- [#2086](https://github.com/bluesky-social/atproto/pull/2086) [`4171c04a`](https://github.com/bluesky-social/atproto/commit/4171c04ad81c5734a4558bc41fa1c4f3a1aba18c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `setInterestsPref` method to BskyAgent, and `interests` prop to
+  `getPreferences` response.
+
 ## 0.9.3
 
 ### Patch Changes

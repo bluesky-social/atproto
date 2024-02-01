@@ -78,6 +78,7 @@ import * as ComAtprotoSyncListRepos from './types/com/atproto/sync/listRepos'
 import * as ComAtprotoSyncNotifyOfUpdate from './types/com/atproto/sync/notifyOfUpdate'
 import * as ComAtprotoSyncRequestCrawl from './types/com/atproto/sync/requestCrawl'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
+import * as ComAtprotoTempCheckSignupQueue from './types/com/atproto/temp/checkSignupQueue'
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels'
 import * as ComAtprotoTempImportRepo from './types/com/atproto/temp/importRepo'
 import * as ComAtprotoTempPushBlob from './types/com/atproto/temp/pushBlob'
@@ -114,6 +115,7 @@ import * as AppBskyGraphGetListBlocks from './types/app/bsky/graph/getListBlocks
 import * as AppBskyGraphGetListMutes from './types/app/bsky/graph/getListMutes'
 import * as AppBskyGraphGetLists from './types/app/bsky/graph/getLists'
 import * as AppBskyGraphGetMutes from './types/app/bsky/graph/getMutes'
+import * as AppBskyGraphGetRelationships from './types/app/bsky/graph/getRelationships'
 import * as AppBskyGraphGetSuggestedFollowsByActor from './types/app/bsky/graph/getSuggestedFollowsByActor'
 import * as AppBskyGraphMuteActor from './types/app/bsky/graph/muteActor'
 import * as AppBskyGraphMuteActorList from './types/app/bsky/graph/muteActorList'
@@ -125,7 +127,6 @@ import * as AppBskyNotificationRegisterPush from './types/app/bsky/notification/
 import * as AppBskyNotificationUpdateSeen from './types/app/bsky/notification/updateSeen'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions'
-import * as AppBskyUnspeccedGetTimelineSkeleton from './types/app/bsky/unspecced/getTimelineSkeleton'
 import * as AppBskyUnspeccedSearchActorsSkeleton from './types/app/bsky/unspecced/searchActorsSkeleton'
 import * as AppBskyUnspeccedSearchPostsSkeleton from './types/app/bsky/unspecced/searchPostsSkeleton'
 
@@ -1020,6 +1021,17 @@ export class ComAtprotoTempNS {
     this._server = server
   }
 
+  checkSignupQueue<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      ComAtprotoTempCheckSignupQueue.Handler<ExtractAuth<AV>>,
+      ComAtprotoTempCheckSignupQueue.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'com.atproto.temp.checkSignupQueue' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   fetchLabels<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1480,6 +1492,17 @@ export class AppBskyGraphNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getRelationships<AV extends AuthVerifier>(
+    cfg: ConfigOf<
+      AV,
+      AppBskyGraphGetRelationships.Handler<ExtractAuth<AV>>,
+      AppBskyGraphGetRelationships.HandlerReqCtx<ExtractAuth<AV>>
+    >,
+  ) {
+    const nsid = 'app.bsky.graph.getRelationships' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getSuggestedFollowsByActor<AV extends AuthVerifier>(
     cfg: ConfigOf<
       AV,
@@ -1622,17 +1645,6 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.getTaggedSuggestions' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getTimelineSkeleton<AV extends AuthVerifier>(
-    cfg: ConfigOf<
-      AV,
-      AppBskyUnspeccedGetTimelineSkeleton.Handler<ExtractAuth<AV>>,
-      AppBskyUnspeccedGetTimelineSkeleton.HandlerReqCtx<ExtractAuth<AV>>
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getTimelineSkeleton' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

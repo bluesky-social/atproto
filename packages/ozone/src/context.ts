@@ -67,6 +67,7 @@ export class AppContext {
       eventPusher,
       appviewAgent,
       appviewAuth,
+      cfg.service.did,
       overrides?.imgInvalidator,
       cfg.cdn.paths,
     )

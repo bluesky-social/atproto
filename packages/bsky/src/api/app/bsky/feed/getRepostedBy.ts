@@ -46,6 +46,10 @@ const skeleton = async (
   const { limit, cursor, uri, cid } = params
   const { ref } = db.db.dynamic
 
+  if (TimeCidKeyset.clearlyBad(cursor)) {
+    return { params, repostedBy: [] }
+  }
+
   let builder = db.db
     .selectFrom('repost')
     .where('repost.subject', '=', uri)

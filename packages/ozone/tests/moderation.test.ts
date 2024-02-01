@@ -26,6 +26,10 @@ import {
 import { EventReverser } from '../src'
 import { TestOzone } from '@atproto/dev-env/src/ozone'
 import { ImageInvalidator } from '../src/image-invalidator'
+import {
+  UNSPECCED_TAKEDOWN_BLOBS_LABEL,
+  UNSPECCED_TAKEDOWN_LABEL,
+} from '../src/mod-service/types'
 
 type BaseCreateReportParams =
   | { account: string }
@@ -42,6 +46,7 @@ describe('moderation', () => {
   let ozone: TestOzone
   let mockInvalidator: MockInvalidator
   let agent: AtpAgent
+  let bskyAgent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
 
@@ -141,6 +146,16 @@ describe('moderation', () => {
     return data
   }
 
+  const getLabel = async (uri: string, val: string, neg = false) => {
+    return ozone.ctx.db.db
+      .selectFrom('label')
+      .selectAll()
+      .where('uri', '=', uri)
+      .where('val', '=', val)
+      .where('neg', '=', neg)
+      .executeTakeFirst()
+  }
+
   beforeAll(async () => {
     mockInvalidator = new MockInvalidator()
     network = await TestNetwork.create({
@@ -152,6 +167,7 @@ describe('moderation', () => {
     })
     ozone = network.ozone
     agent = network.ozone.getClient()
+    bskyAgent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
@@ -451,12 +467,9 @@ describe('moderation', () => {
         cid: post.cidStr,
       }
       const modService = ctx.modService(ctx.db)
-      await modService.formatAndCreateLabels(
-        ctx.cfg.service.did,
-        post.uriStr,
-        post.cidStr,
-        { create: ['kittens'] },
-      )
+      await modService.formatAndCreateLabels(post.uriStr, post.cidStr, {
+        create: ['kittens'],
+      })
       await emitLabelEvent({
         negateLabelVals: ['kittens'],
         createLabelVals: [],
@@ -471,12 +484,9 @@ describe('moderation', () => {
       })
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['kittens'])
       // Cleanup
-      await modService.formatAndCreateLabels(
-        ctx.cfg.service.did,
-        post.uriStr,
-        post.cidStr,
-        { negate: ['kittens'] },
-      )
+      await modService.formatAndCreateLabels(post.uriStr, post.cidStr, {
+        negate: ['kittens'],
+      })
     })
 
     it('no-ops when negating an already-negated label and reverses.', async () => {
@@ -504,12 +514,9 @@ describe('moderation', () => {
       })
       await expect(getRecordLabels(post.uriStr)).resolves.toEqual(['bears'])
       // Cleanup
-      await modService.formatAndCreateLabels(
-        ctx.cfg.service.did,
-        post.uriStr,
-        post.cidStr,
-        { negate: ['bears'] },
-      )
+      await modService.formatAndCreateLabels(post.uriStr, post.cidStr, {
+        negate: ['bears'],
+      })
     })
 
     it('creates non-existing labels and reverses.', async () => {
@@ -566,12 +573,9 @@ describe('moderation', () => {
     it('creates and negates labels on a repo and reverses.', async () => {
       const { ctx } = ozone
       const modService = ctx.modService(ctx.db)
-      await modService.formatAndCreateLabels(
-        ctx.cfg.service.did,
-        sc.dids.bob,
-        null,
-        { create: ['kittens'] },
-      )
+      await modService.formatAndCreateLabels(sc.dids.bob, null, {
+        create: ['kittens'],
+      })
       await emitLabelEvent({
         createLabelVals: ['puppies'],
         negateLabelVals: ['kittens'],
@@ -639,34 +643,62 @@ describe('moderation', () => {
       ).rejects.toThrow('Subject is not taken down')
     })
 
-    it('fans out repo takedowns to pds', async () => {
+    it('fans out repo takedowns', async () => {
       await performTakedown({
         account: sc.dids.bob,
       })
       await ozone.processAll()
 
-      const res1 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
+      const pdsRes1 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         {
           did: sc.dids.bob,
         },
         { headers: network.pds.adminAuthHeaders() },
       )
-      expect(res1.data.takedown?.applied).toBe(true)
+      expect(pdsRes1.data.takedown?.applied).toBe(true)
+
+      const bskyRes1 = await bskyAgent.api.com.atproto.admin.getSubjectStatus(
+        {
+          did: sc.dids.bob,
+        },
+        { headers: network.pds.adminAuthHeaders() },
+      )
+      expect(bskyRes1.data.takedown?.applied).toBe(true)
+
+      const takedownLabel1 = await getLabel(
+        sc.dids.bob,
+        UNSPECCED_TAKEDOWN_LABEL,
+      )
+      expect(takedownLabel1).toBeDefined()
 
       // cleanup
       await performReverseTakedown({ account: sc.dids.bob })
       await ozone.processAll()
 
-      const res2 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
+      const pdsRes2 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         {
           did: sc.dids.bob,
         },
         { headers: network.pds.adminAuthHeaders() },
       )
-      expect(res2.data.takedown?.applied).toBe(false)
+      expect(pdsRes2.data.takedown?.applied).toBe(false)
+
+      const bskyRes2 = await bskyAgent.api.com.atproto.admin.getSubjectStatus(
+        {
+          did: sc.dids.bob,
+        },
+        { headers: network.bsky.adminAuthHeaders() },
+      )
+      expect(bskyRes2.data.takedown?.applied).toBe(false)
+
+      const takedownLabel2 = await getLabel(
+        sc.dids.bob,
+        UNSPECCED_TAKEDOWN_LABEL,
+      )
+      expect(takedownLabel2).toBeUndefined()
     })
 
-    it('fans out record takedowns to pds', async () => {
+    it('fans out record takedowns', async () => {
       const post = sc.posts[sc.dids.bob][0]
       const uri = post.ref.uriStr
       const cid = post.ref.cidStr
@@ -674,21 +706,39 @@ describe('moderation', () => {
         content: { uri, cid },
       })
       await ozone.processAll()
-      const res1 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
+
+      const pdsRes1 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         { uri },
         { headers: network.pds.adminAuthHeaders() },
       )
-      expect(res1.data.takedown?.applied).toBe(true)
+      expect(pdsRes1.data.takedown?.applied).toBe(true)
+
+      const bskyRes1 = await bskyAgent.api.com.atproto.admin.getSubjectStatus(
+        { uri },
+        { headers: network.bsky.adminAuthHeaders() },
+      )
+      expect(bskyRes1.data.takedown?.applied).toBe(true)
+
+      const takedownLabel1 = await getLabel(uri, UNSPECCED_TAKEDOWN_LABEL)
+      expect(takedownLabel1).toBeDefined()
 
       // cleanup
       await performReverseTakedown({ content: { uri, cid } })
       await ozone.processAll()
 
-      const res2 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
+      const pdsRes2 = await pdsAgent.api.com.atproto.admin.getSubjectStatus(
         { uri },
         { headers: network.pds.adminAuthHeaders() },
       )
-      expect(res2.data.takedown?.applied).toBe(false)
+      expect(pdsRes2.data.takedown?.applied).toBe(false)
+      const bskyRes2 = await bskyAgent.api.com.atproto.admin.getSubjectStatus(
+        { uri },
+        { headers: network.bsky.adminAuthHeaders() },
+      )
+      expect(bskyRes2.data.takedown?.applied).toBe(false)
+
+      const takedownLabel2 = await getLabel(uri, UNSPECCED_TAKEDOWN_LABEL)
+      expect(takedownLabel2).toBeUndefined()
     })
 
     it('allows full moderators to takedown.', async () => {
@@ -739,6 +789,7 @@ describe('moderation', () => {
         'Must be a full moderator to perform an account takedown',
       )
     })
+
     it('automatically reverses actions marked with duration', async () => {
       await createReport({
         reasonType: REASONSPAM,
@@ -796,6 +847,22 @@ describe('moderation', () => {
             '[SCHEDULED_REVERSAL] Reverting action as originally scheduled',
         },
       })
+    })
+
+    it('serves label when authed', async () => {
+      const { data: unauthed } = await agent.api.com.atproto.temp.fetchLabels(
+        {},
+      )
+      expect(unauthed.labels.map((l) => l.val)).not.toContain(
+        UNSPECCED_TAKEDOWN_LABEL,
+      )
+      const { data: authed } = await agent.api.com.atproto.temp.fetchLabels(
+        {},
+        { headers: network.bsky.adminAuthHeaders() },
+      )
+      expect(authed.labels.map((l) => l.val)).toContain(
+        UNSPECCED_TAKEDOWN_LABEL,
+      )
     })
 
     async function emitLabelEvent(
@@ -943,6 +1010,14 @@ describe('moderation', () => {
       expect(res.data.takedown?.applied).toBe(true)
     })
 
+    it('creates a takedown blobs label', async () => {
+      const label = await getLabel(
+        post.ref.uriStr,
+        UNSPECCED_TAKEDOWN_BLOBS_LABEL,
+      )
+      expect(label).toBeDefined()
+    })
+
     it('restores blob when action is reversed.', async () => {
       await performReverseTakedown({
         content: {
@@ -975,6 +1050,30 @@ describe('moderation', () => {
         { headers: network.pds.adminAuthHeaders() },
       )
       expect(res.data.takedown?.applied).toBe(false)
+    })
+
+    it('serves label when authed', async () => {
+      const { data: unauthed } = await agent.api.com.atproto.temp.fetchLabels(
+        {},
+      )
+      expect(unauthed.labels.map((l) => l.val)).not.toContain(
+        UNSPECCED_TAKEDOWN_BLOBS_LABEL,
+      )
+      const { data: authed } = await agent.api.com.atproto.temp.fetchLabels(
+        {},
+        { headers: network.bsky.adminAuthHeaders() },
+      )
+      expect(authed.labels.map((l) => l.val)).toContain(
+        UNSPECCED_TAKEDOWN_BLOBS_LABEL,
+      )
+    })
+
+    it('negates takedown blobs label on reversal', async () => {
+      const label = await getLabel(
+        post.ref.uriStr,
+        UNSPECCED_TAKEDOWN_BLOBS_LABEL,
+      )
+      expect(label).toBeUndefined()
     })
   })
 })

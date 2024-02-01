@@ -10,6 +10,12 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params }) => {
       const { actor, limit, cursor } = params
       const viewer = auth.credentials.iss
+      if (TimeCidKeyset.clearlyBad(cursor)) {
+        return {
+          encoding: 'application/json',
+          body: { feeds: [] },
+        }
+      }
 
       const db = ctx.db.getReplica()
       const actorService = ctx.services.actor(db)

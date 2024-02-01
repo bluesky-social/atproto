@@ -9,7 +9,6 @@ import { ImageUriBuilder } from './image/uri'
 import { Services } from './services'
 import DidRedisCache from './did-cache'
 import { BackgroundQueue } from './background'
-import { MountedAlgos } from './feed-gen/types'
 import { Redis } from './redis'
 import { AuthVerifier } from './auth-verifier'
 import { BsyncClient } from './bsync'
@@ -30,7 +29,6 @@ export class AppContext {
       searchAgent?: AtpAgent
       bsyncClient?: BsyncClient
       courierClient?: CourierClient
-      algos: MountedAlgos
       authVerifier: AuthVerifier
     },
   ) {}
@@ -98,10 +96,6 @@ export class AppContext {
 
   get backgroundQueue(): BackgroundQueue {
     return this.opts.backgroundQueue
-  }
-
-  get algos(): MountedAlgos {
-    return this.opts.algos
   }
 }
 
