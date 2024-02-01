@@ -22,7 +22,8 @@ export default function (server: Server, ctx: AppContext) {
       }
       if (
         ctx.cfg.phoneVerification.bypassPhoneNumber &&
-        ctx.cfg.phoneVerification.bypassPhoneNumber === input.body.phoneNumber
+        ctx.cfg.phoneVerification.bypassPhoneNumber ===
+          input.body.phoneNumber.trim()
       ) {
         return
       }
