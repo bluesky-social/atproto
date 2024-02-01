@@ -490,7 +490,7 @@ export class ModerationService {
             await Promise.allSettled(
               (subject.blobCids ?? []).map((cid) => {
                 const paths = (this.cdnPaths ?? []).map((path) =>
-                  path.replace('%s', subject.did),
+                  path.replace('%s', subject.did).replace('%s', cid),
                 )
                 return this.imgInvalidator
                   ?.invalidate(cid, paths)

@@ -147,7 +147,7 @@ describe('moderation', () => {
       dbPostgresSchema: 'ozone_moderation',
       ozone: {
         imgInvalidator: mockInvalidator,
-        cdnPaths: ['/path1/%s/', '/path2/%s/'],
+        cdnPaths: ['/path1/%s/%s', '/path2/%s/%s'],
       },
     })
     ozone = network.ozone
@@ -921,15 +921,14 @@ describe('moderation', () => {
     })
 
     it('invalidates the image in the cdn', async () => {
+      const blobCid = blob.image.ref.toString()
       expect(mockInvalidator.invalidated.length).toBe(1)
-      expect(mockInvalidator.invalidated.at(0)?.subject).toBe(
-        blob.image.ref.toString(),
-      )
+      expect(mockInvalidator.invalidated.at(0)?.subject).toBe(blobCid)
       expect(mockInvalidator.invalidated.at(0)?.paths.at(0)).toEqual(
-        `/path1/${sc.dids.carol}/`,
+        `/path1/${sc.dids.carol}/${blobCid}`,
       )
       expect(mockInvalidator.invalidated.at(0)?.paths.at(1)).toEqual(
-        `/path2/${sc.dids.carol}/`,
+        `/path2/${sc.dids.carol}/${blobCid}`,
       )
     })
 
