@@ -131,8 +131,7 @@ export default function (server: Server, ctx: AppContext) {
             handle: input.body.handle,
             recoveryKey: input.body.recoveryKey,
           })
-        } else {
-          assert(plcOp)
+        } else if (plcOp) {
           try {
             await ctx.plcClient.sendOperation(did, plcOp)
           } catch (err) {
