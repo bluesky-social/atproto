@@ -87,6 +87,33 @@ export class Hydrator {
   }
 
   // app.bsky.actor.defs#profileView
+  // - profile viewer
+  //   - list basic
+  // Note: builds on the naive profile viewer hydrator and removes references to lists that have been deleted
+  async hydrateProfileViewers(
+    dids: string[],
+    viewer: string,
+  ): Promise<HydrationState> {
+    const profileViewers = await this.actor.getProfileViewerStatesNaive(
+      dids,
+      viewer,
+    )
+    const listUris: string[] = []
+    profileViewers?.forEach((item) => {
+      listUris.push(...listUrisFromProfileViewer(item))
+    })
+    const listState = await this.hydrateListsBasic(listUris, viewer)
+    // if a list no longer exists or is not a mod list, then remove from viewer state
+    profileViewers?.forEach((item) => {
+      removeNonModListsFromProfileViewer(item, listState)
+    })
+    return mergeStates(listState, {
+      profileViewers,
+      viewer,
+    })
+  }
+
+  // app.bsky.actor.defs#profileView
   // - profile
   //   - list basic
   async hydrateProfiles(
@@ -94,20 +121,14 @@ export class Hydrator {
     viewer: string | null,
     includeTakedowns = false,
   ): Promise<HydrationState> {
-    const [actors, labels, profileViewers] = await Promise.all([
+    const [actors, labels, profileViewersState] = await Promise.all([
       this.actor.getActors(dids, includeTakedowns),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids)),
-      viewer ? this.actor.getProfileViewerStates(dids, viewer) : undefined,
+      viewer ? this.hydrateProfileViewers(dids, viewer) : undefined,
     ])
-    const listUris: string[] = []
-    profileViewers?.forEach((item) => {
-      listUris.push(...listUrisFromProfileViewer(item))
-    })
-    const listState = await this.hydrateListsBasic(listUris, viewer)
-    return mergeStates(listState, {
+    return mergeStates(profileViewersState ?? {}, {
       actors,
       labels,
-      profileViewers,
       viewer,
     })
   }
@@ -563,7 +584,35 @@ const listUrisFromProfileViewer = (item: ProfileViewerState | null) => {
   if (item?.blockingByList) {
     listUris.push(item.blockingByList)
   }
+  // blocked-by list does not appear in views, but will be used to evaluate the existence of a block between users.
+  if (item?.blockedByList) {
+    listUris.push(item.blockedByList)
+  }
   return listUris
+}
+
+const removeNonModListsFromProfileViewer = (
+  item: ProfileViewerState | null,
+  state: HydrationState,
+) => {
+  if (!isModList(item?.mutedByList, state)) {
+    delete item?.mutedByList
+  }
+  if (!isModList(item?.blockingByList, state)) {
+    delete item?.blockingByList
+  }
+  if (!isModList(item?.blockedByList, state)) {
+    delete item?.blockedByList
+  }
+}
+
+const isModList = (
+  listUri: string | undefined,
+  state: HydrationState,
+): boolean => {
+  if (!listUri) return false
+  const list = state.lists?.get(listUri)
+  return list?.record.purpose === 'app.bsky.graph.defs#modlist'
 }
 
 const labelSubjectsForDid = (dids: string[]) => {
