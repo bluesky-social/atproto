@@ -95,10 +95,7 @@ const hydration = async (inputs: {
   const [feedPostState, profileViewerState = {}] = await Promise.all([
     ctx.hydrator.hydrateFeedItems(skeleton.items, params.viewer),
     params.viewer
-      ? ctx.hydrator.actor.getProfileViewerStates(
-          [skeleton.actor.did],
-          params.viewer,
-        )
+      ? ctx.hydrator.hydrateProfileViewers([skeleton.actor.did], params.viewer)
       : undefined,
   ])
   return mergeStates(feedPostState, profileViewerState)

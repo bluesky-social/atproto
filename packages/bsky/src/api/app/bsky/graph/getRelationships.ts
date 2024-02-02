@@ -14,7 +14,10 @@ export default function (server: Server, ctx: AppContext) {
           },
         }
       }
-      const res = await ctx.hydrator.actor.getProfileViewerStates(others, actor)
+      const res = await ctx.hydrator.actor.getProfileViewerStatesNaive(
+        others,
+        actor,
+      )
       const relationships = others.map((did) => {
         const subject = res.get(did)
         return subject
