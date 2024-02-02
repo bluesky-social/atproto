@@ -25,7 +25,7 @@
         },
         "alt": {
           "type": "string",
-          "description": "Alt-text description of the image, for accessibility."
+          "description": "Alt text description of the image, for accessibility."
         },
         "aspectRatio": { "type": "ref", "ref": "#aspectRatio" }
       }
@@ -56,15 +56,15 @@
       "properties": {
         "thumb": {
           "type": "string",
-          "description": "Fully-qualified URL where a thumbnail of the image can be fetched. For example, CDN location provided by the AppView."
+          "description": "Fully-qualified URL where a thumbnail of the image can be fetched. For example, CDN location provided by the App View."
         },
         "fullsize": {
           "type": "string",
-          "description": "Fully-qualified URL where a large version of the image can be fetched. May or may not be the exact original blob. For example, CDN location provided by the AppView."
+          "description": "Fully-qualified URL where a large version of the image can be fetched. May or may not be the exact original blob. For example, CDN location provided by the App View."
         },
         "alt": {
           "type": "string",
-          "description": "Alt-text description of the image, for accessibility."
+          "description": "Alt text description of the image, for accessibility."
         },
         "aspectRatio": { "type": "ref", "ref": "#aspectRatio" }
       }
