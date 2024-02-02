@@ -22,7 +22,6 @@ export type BskyConfig = Partial<bsky.ServerConfig> & {
   redisHost: string
   pdsPort: number
   migration?: string
-  algos?: bsky.MountedAlgos
 }
 
 export type BsyncConfig = Partial<bsync.ServerEnvironment> & {

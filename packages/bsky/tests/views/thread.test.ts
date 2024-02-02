@@ -136,6 +136,56 @@ describe('pds thread views', () => {
     expect(forSnapshot(thread3.data.thread)).toMatchSnapshot()
   })
 
+  it('omits parents and replies w/ different root than anchor post.', async () => {
+    const badRoot = sc.posts[alice][0]
+    const goodRoot = await sc.post(alice, 'good root')
+    const goodReply1 = await sc.reply(
+      alice,
+      goodRoot.ref,
+      goodRoot.ref,
+      'good reply 1',
+    )
+    const goodReply2 = await sc.reply(
+      alice,
+      goodRoot.ref,
+      goodReply1.ref,
+      'good reply 2',
+    )
+    const badReply = await sc.reply(
+      alice,
+      badRoot.ref,
+      goodReply1.ref,
+      'bad reply',
+    )
+    await network.processAll()
+    // good reply doesn't have replies w/ different root
+    const { data: goodReply1Thread } =
+      await agent.api.app.bsky.feed.getPostThread(
+        { uri: goodReply1.ref.uriStr },
+        { headers: await network.serviceHeaders(alice) },
+      )
+    assert(isThreadViewPost(goodReply1Thread.thread))
+    assert(isThreadViewPost(goodReply1Thread.thread.parent))
+    expect(goodReply1Thread.thread.parent.post.uri).toEqual(goodRoot.ref.uriStr)
+    expect(
+      goodReply1Thread.thread.replies?.map((r) => {
+        assert(isThreadViewPost(r))
+        return r.post.uri
+      }),
+    ).toEqual([
+      goodReply2.ref.uriStr, // does not contain badReply
+    ])
+    expect(goodReply1Thread.thread.parent.replies).toBeUndefined()
+    // bad reply doesn't have a parent, which would have a different root
+    const { data: badReplyThread } =
+      await agent.api.app.bsky.feed.getPostThread(
+        { uri: badReply.ref.uriStr },
+        { headers: await network.serviceHeaders(alice) },
+      )
+    assert(isThreadViewPost(badReplyThread.thread))
+    expect(badReplyThread.thread.parent).toBeUndefined() // is not goodReply1
+  })
+
   it('reflects self-labels', async () => {
     const { data: thread } = await agent.api.app.bsky.feed.getPostThread(
       { uri: sc.posts[alice][0].ref.uriStr },

@@ -42,8 +42,6 @@ type RoleOutput = {
   credentials: {
     type: 'role'
     admin: boolean
-    moderator: boolean
-    triage: boolean
   }
 }
 
@@ -58,24 +56,18 @@ type AdminServiceOutput = {
 export type AuthVerifierOpts = {
   ownDid: string
   adminDid: string
-  adminPass: string
-  moderatorPass: string
-  triagePass: string
+  adminPasses: string[]
 }
 
 export class AuthVerifier {
-  private _adminPass: string
-  private _moderatorPass: string
-  private _triagePass: string
   public ownDid: string
   public adminDid: string
+  private adminPasses: Set<string>
 
   constructor(public dataplane: DataPlaneClient, opts: AuthVerifierOpts) {
-    this._adminPass = opts.adminPass
-    this._moderatorPass = opts.moderatorPass
-    this._triagePass = opts.triagePass
     this.ownDid = opts.ownDid
     this.adminDid = opts.adminDid
+    this.adminPasses = new Set(opts.adminPasses)
   }
 
   // verifiers (arrow fns to preserve scope)
@@ -192,16 +184,10 @@ export class AuthVerifier {
       return { status: Missing, admin: false, moderator: false, triage: false }
     }
     const { username, password } = parsed
-    if (username === 'admin' && password === this._adminPass) {
-      return { status: Valid, admin: true, moderator: true, triage: true }
+    if (username === 'admin' && this.adminPasses.has(password)) {
+      return { status: Valid, admin: true }
     }
-    if (username === 'admin' && password === this._moderatorPass) {
-      return { status: Valid, admin: false, moderator: true, triage: true }
-    }
-    if (username === 'admin' && password === this._triagePass) {
-      return { status: Valid, admin: false, moderator: false, triage: true }
-    }
-    return { status: Invalid, admin: false, moderator: false, triage: false }
+    return { status: Invalid, admin: false }
   }
 
   async verifyServiceJwt(
@@ -255,10 +241,10 @@ export class AuthVerifier {
     const viewer =
       creds.credentials.type === 'standard' ? creds.credentials.iss : null
     const canViewTakedowns =
-      (creds.credentials.type === 'role' && creds.credentials.triage) ||
+      (creds.credentials.type === 'role' && creds.credentials.admin) ||
       creds.credentials.type === 'admin_service'
     const canPerformTakedown =
-      (creds.credentials.type === 'role' && creds.credentials.moderator) ||
+      (creds.credentials.type === 'role' && creds.credentials.admin) ||
       creds.credentials.type === 'admin_service'
     return {
       viewer,

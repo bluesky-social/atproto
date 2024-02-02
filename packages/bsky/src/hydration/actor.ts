@@ -104,7 +104,10 @@ export class ActorHydrator {
     }, new HydrationMap<Actor>())
   }
 
-  async getProfileViewerStates(
+  // "naive" because this method does not verify the existence of the list itself
+  // a later check in the main hydrator will remove list uris that have been deleted or
+  // repurposed to "curate lists"
+  async getProfileViewerStatesNaive(
     dids: string[],
     viewer: string,
   ): Promise<ProfileViewerStates> {

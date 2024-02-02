@@ -4,7 +4,6 @@ import AtpAgent from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { ServerConfig } from './config'
-import { MountedAlgos } from './api/feed-gen/types'
 import { DataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
 import { Views } from './views'
@@ -24,7 +23,6 @@ export class AppContext {
       idResolver: IdResolver
       bsyncClient: BsyncClient
       courierClient: CourierClient
-      algos: MountedAlgos
       authVerifier: AuthVerifier
     },
   ) {}
@@ -80,10 +78,6 @@ export class AppContext {
       aud,
       keypair: this.signingKey,
     })
-  }
-
-  get algos(): MountedAlgos {
-    return this.opts.algos
   }
 }
 
