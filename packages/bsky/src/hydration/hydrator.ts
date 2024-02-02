@@ -567,6 +567,7 @@ const listUrisFromProfileViewer = (item: ProfileViewerState | null) => {
   if (item?.blockingByList) {
     listUris.push(item.blockingByList)
   }
+  // blocked-by list does not appear in views, but will be used to evaluate the existence of a block between users.
   if (item?.blockedByList) {
     listUris.push(item.blockedByList)
   }
