@@ -13,7 +13,11 @@ export default function (server: Server, ctx: AppContext) {
         sortDirection = 'desc',
         types,
         includeAllUserRecords = false,
+        hasComment,
+        commentKeyword,
         createdBy,
+        createdAfter,
+        createdBefore,
       } = params
       const db = ctx.db
       const modService = ctx.modService(db)
@@ -25,6 +29,10 @@ export default function (server: Server, ctx: AppContext) {
         cursor,
         sortDirection,
         includeAllUserRecords,
+        hasComment,
+        commentKeyword,
+        createdAfter,
+        createdBefore,
       })
       return {
         encoding: 'application/json',

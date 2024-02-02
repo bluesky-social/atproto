@@ -15,10 +15,18 @@ export interface QueryParams {
   createdBy?: string
   /** Sort direction for the events. Defaults to descending order of created at timestamp. */
   sortDirection: 'asc' | 'desc'
+  /** Retrieve events created after a given timestamp */
+  createdAfter?: string
+  /** Retrieve events created before a given timestamp */
+  createdBefore?: string
   subject?: string
   /** If true, events on all record types (posts, lists, profile etc.) owned by the did are returned */
   includeAllUserRecords: boolean
   limit: number
+  /** If true, only events with comments are returned */
+  hasComment?: boolean
+  /** If specified, only events with comments containing the keyword are returned */
+  commentKeyword?: string
   cursor?: string
 }
 

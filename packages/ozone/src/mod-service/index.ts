@@ -96,6 +96,10 @@ export class ModerationService {
     includeAllUserRecords: boolean
     types: ModerationEvent['action'][]
     sortDirection?: 'asc' | 'desc'
+    hasComment?: boolean
+    commentKeyword?: string
+    createdAfter?: string
+    createdBefore?: string
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -105,6 +109,10 @@ export class ModerationService {
       includeAllUserRecords,
       sortDirection = 'desc',
       types,
+      hasComment,
+      commentKeyword,
+      createdAfter,
+      createdBefore,
     } = opts
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
     if (subject) {
@@ -138,6 +146,20 @@ export class ModerationService {
     }
     if (createdBy) {
       builder = builder.where('createdBy', '=', createdBy)
+    }
+    if (createdAfter) {
+      builder = builder.where('createdAt', '>=', createdAfter)
+    }
+    if (createdBefore) {
+      builder = builder.where('createdAt', '<=', createdBefore)
+    }
+    if (hasComment) {
+      builder = builder.where((qb) => {
+        if (commentKeyword) {
+          return qb.where('comment', 'ilike', `%${commentKeyword}%`)
+        }
+        return qb.where('comment', 'is not', null)
+      })
     }
 
     const { ref } = this.db.db.dynamic
