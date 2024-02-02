@@ -12,7 +12,6 @@ import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky
 import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
-import { AlgoResponse, toFeedItem } from '../../../feed-gen/types'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -68,15 +67,12 @@ const skeleton = async (
 ): Promise<Skeleton> => {
   const { ctx, params } = inputs
   const timerSkele = new ServerTimer('skele').start()
-  const localAlgo = ctx.algos[params.feed]
   const {
     feedItems: algoItems,
     cursor,
     resHeaders,
     ...passthrough
-  } = localAlgo !== undefined
-    ? await localAlgo(ctx, params, params.viewer)
-    : await skeletonFromFeedGen(ctx, params)
+  } = await skeletonFromFeedGen(ctx, params)
 
   return {
     cursor,
@@ -229,3 +225,22 @@ const skeletonFromFeedGen = async (
 
   return { ...skele, resHeaders, feedItems }
 }
+
+export type AlgoResponse = {
+  feedItems: AlgoResponseItem[]
+  resHeaders?: Record<string, string>
+  cursor?: string
+}
+
+export type AlgoResponseItem = {
+  itemUri: string
+  postUri: string
+}
+
+export const toFeedItem = (feedItem: AlgoResponseItem): FeedItem => ({
+  post: { uri: feedItem.postUri },
+  repost:
+    feedItem.itemUri === feedItem.postUri
+      ? undefined
+      : { uri: feedItem.itemUri },
+})

@@ -15,7 +15,6 @@ import { createServer } from './lexicon'
 import { ImageUriBuilder } from './image/uri'
 import { BlobDiskCache, ImageProcessingServer } from './image/server'
 import AppContext from './context'
-import { MountedAlgos } from './api/feed-gen/types'
 import { Keypair } from '@atproto/crypto'
 import { createDataPlaneClient } from './data-plane/client'
 import { Hydrator } from './hydration/hydrator'
@@ -26,12 +25,10 @@ import { authWithApiKey as courierAuth, createCourierClient } from './courier'
 
 export * from './data-plane'
 export type { ServerConfigValues } from './config'
-export type { MountedAlgos } from './api/feed-gen/types'
 export { ServerConfig } from './config'
 export { Database } from './data-plane/server/db'
 export { Redis } from './redis'
 export { AppContext } from './context'
-export { makeAlgos } from './api/feed-gen'
 
 export class BskyAppView {
   public ctx: AppContext
@@ -47,9 +44,8 @@ export class BskyAppView {
   static create(opts: {
     config: ServerConfig
     signingKey: Keypair
-    algos?: MountedAlgos
   }): BskyAppView {
-    const { config, signingKey, algos = {} } = opts
+    const { config, signingKey } = opts
     const app = express()
     app.use(cors())
     app.use(loggerMiddleware)
@@ -62,11 +58,11 @@ export class BskyAppView {
     })
 
     const imgUriBuilder = new ImageUriBuilder(
-      config.imgUriEndpoint || `${config.publicUrl}/img`,
+      config.cdnUrl || `${config.publicUrl}/img`,
     )
 
     let imgProcessingServer: ImageProcessingServer | undefined
-    if (!config.imgUriEndpoint) {
+    if (!config.cdnUrl) {
       const imgProcessingCache = new BlobDiskCache(config.blobCacheLocation)
       imgProcessingServer = new ImageProcessingServer(
         config,
@@ -74,8 +70,8 @@ export class BskyAppView {
       )
     }
 
-    const searchAgent = config.searchEndpoint
-      ? new AtpAgent({ service: config.searchEndpoint })
+    const searchAgent = config.searchUrl
+      ? new AtpAgent({ service: config.searchUrl })
       : undefined
     const dataplane = createDataPlaneClient(config.dataplaneUrls, {
       httpVersion: config.dataplaneHttpVersion,
@@ -105,9 +101,7 @@ export class BskyAppView {
     const authVerifier = new AuthVerifier(dataplane, {
       ownDid: config.serverDid,
       adminDid: config.modServiceDid,
-      adminPass: config.adminPassword,
-      moderatorPass: config.moderatorPassword,
-      triagePass: config.triagePassword,
+      adminPasses: config.adminPasswords,
     })
 
     const ctx = new AppContext({
@@ -121,7 +115,6 @@ export class BskyAppView {
       bsyncClient,
       courierClient,
       authVerifier,
-      algos,
     })
 
     let server = createServer({

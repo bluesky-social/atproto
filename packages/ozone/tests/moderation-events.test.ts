@@ -15,13 +15,13 @@ describe('moderation-events', () => {
   const emitModerationEvent = async (eventData) => {
     return pdsAgent.api.com.atproto.admin.emitModerationEvent(eventData, {
       encoding: 'application/json',
-      headers: network.bsky.adminAuthHeaders('moderator'),
+      headers: network.ozone.adminAuthHeaders('moderator'),
     })
   }
 
   const queryModerationEvents = (eventQuery) =>
     agent.api.com.atproto.admin.queryModerationEvents(eventQuery, {
-      headers: network.bsky.adminAuthHeaders('moderator'),
+      headers: network.ozone.adminAuthHeaders('moderator'),
     })
 
   const seedEvents = async () => {
@@ -210,7 +210,7 @@ describe('moderation-events', () => {
           id: 1,
         },
         {
-          headers: network.bsky.adminAuthHeaders('moderator'),
+          headers: network.ozone.adminAuthHeaders('moderator'),
         },
       )
 
