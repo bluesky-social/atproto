@@ -104,6 +104,10 @@ export class Hydrator {
       listUris.push(...listUrisFromProfileViewer(item))
     })
     const listState = await this.hydrateListsBasic(listUris, viewer)
+    // if a list no longer exists or is not a mod list, then remove from viewer state
+    profileViewers?.forEach((item) => {
+      removeNonModListsFromProfileViewer(item, listState)
+    })
     return mergeStates(listState, {
       actors,
       labels,
@@ -563,7 +567,34 @@ const listUrisFromProfileViewer = (item: ProfileViewerState | null) => {
   if (item?.blockingByList) {
     listUris.push(item.blockingByList)
   }
+  if (item?.blockedByList) {
+    listUris.push(item.blockedByList)
+  }
   return listUris
+}
+
+const removeNonModListsFromProfileViewer = (
+  item: ProfileViewerState | null,
+  state: HydrationState,
+) => {
+  if (!isModList(item?.mutedByList, state)) {
+    delete item?.mutedByList
+  }
+  if (!isModList(item?.blockingByList, state)) {
+    delete item?.blockingByList
+  }
+  if (!isModList(item?.blockedByList, state)) {
+    delete item?.blockedByList
+  }
+}
+
+const isModList = (
+  listUri: string | undefined,
+  state: HydrationState,
+): boolean => {
+  if (!listUri) return false
+  const list = state.lists?.get(listUri)
+  return list?.record.purpose === 'app.bsky.graph.defs#modlist'
 }
 
 const labelSubjectsForDid = (dids: string[]) => {
