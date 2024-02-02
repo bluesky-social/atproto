@@ -87,18 +87,17 @@ export class Hydrator {
   }
 
   // app.bsky.actor.defs#profileView
-  // - profile
+  // - profile viewer
   //   - list basic
-  async hydrateProfiles(
+  // Note: builds on the naive profile viewer hydrator and removes references to lists that have been deleted
+  async hydrateProfileViewers(
     dids: string[],
-    viewer: string | null,
-    includeTakedowns = false,
+    viewer: string,
   ): Promise<HydrationState> {
-    const [actors, labels, profileViewers] = await Promise.all([
-      this.actor.getActors(dids, includeTakedowns),
-      this.label.getLabelsForSubjects(labelSubjectsForDid(dids)),
-      viewer ? this.actor.getProfileViewerStates(dids, viewer) : undefined,
-    ])
+    const profileViewers = await this.actor.getProfileViewerStatesNaive(
+      dids,
+      viewer,
+    )
     const listUris: string[] = []
     profileViewers?.forEach((item) => {
       listUris.push(...listUrisFromProfileViewer(item))
@@ -109,9 +108,27 @@ export class Hydrator {
       removeNonModListsFromProfileViewer(item, listState)
     })
     return mergeStates(listState, {
+      profileViewers,
+      viewer,
+    })
+  }
+
+  // app.bsky.actor.defs#profileView
+  // - profile
+  //   - list basic
+  async hydrateProfiles(
+    dids: string[],
+    viewer: string | null,
+    includeTakedowns = false,
+  ): Promise<HydrationState> {
+    const [actors, labels, profileViewersState] = await Promise.all([
+      this.actor.getActors(dids, includeTakedowns),
+      this.label.getLabelsForSubjects(labelSubjectsForDid(dids)),
+      viewer ? this.hydrateProfileViewers(dids, viewer) : undefined,
+    ])
+    return mergeStates(profileViewersState ?? {}, {
       actors,
       labels,
-      profileViewers,
       viewer,
     })
   }
