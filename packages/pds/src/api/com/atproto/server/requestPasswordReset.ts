@@ -1,4 +1,4 @@
-import { DAY } from '@atproto/common'
+import { DAY, HOUR } from '@atproto/common'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 
@@ -7,7 +7,12 @@ export default function (server: Server, ctx: AppContext) {
     rateLimit: [
       {
         durationMs: DAY,
-        points: 10,
+        points: 15,
+        calcKey: ({ input }) => input.body.email.toLowerCase(),
+      },
+      {
+        durationMs: HOUR,
+        points: 5,
         calcKey: ({ input }) => input.body.email.toLowerCase(),
       },
     ],

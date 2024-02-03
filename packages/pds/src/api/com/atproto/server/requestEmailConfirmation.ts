@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { DAY } from '@atproto/common'
+import { DAY, HOUR } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
@@ -8,7 +8,12 @@ export default function (server: Server, ctx: AppContext) {
     rateLimit: [
       {
         durationMs: DAY,
-        points: 10,
+        points: 15,
+        calcKey: ({ auth }) => auth.credentials.did,
+      },
+      {
+        durationMs: HOUR,
+        points: 5,
         calcKey: ({ auth }) => auth.credentials.did,
       },
     ],
