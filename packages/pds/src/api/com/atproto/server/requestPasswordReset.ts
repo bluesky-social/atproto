@@ -7,15 +7,11 @@ export default function (server: Server, ctx: AppContext) {
     rateLimit: [
       {
         durationMs: DAY,
-        points: 15,
-        calcKey: ({ input, req }) =>
-          `${input.body.email.toLowerCase()}-${req.ip}`,
+        points: 50,
       },
       {
         durationMs: HOUR,
-        points: 5,
-        calcKey: ({ input, req }) =>
-          `${input.body.email.toLowerCase()}-${req.ip}`,
+        points: 15,
       },
     ],
     handler: async ({ input }) => {
