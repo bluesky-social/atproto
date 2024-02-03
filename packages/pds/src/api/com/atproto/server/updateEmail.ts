@@ -35,9 +35,8 @@ export default function (server: Server, ctx: AppContext) {
       await ctx.db.transaction(async (dbTxn) => {
         const accntSrvce = ctx.services.account(dbTxn)
 
-        if (token) {
-          await accntSrvce.deleteEmailToken(did, 'update_email')
-        }
+        await accntSrvce.deleteAllEmailTokens(did)
+
         if (user.email !== email) {
           try {
             await accntSrvce.updateEmail(did, email)
