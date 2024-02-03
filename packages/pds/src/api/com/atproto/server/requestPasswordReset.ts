@@ -1,4 +1,4 @@
-import { DAY, HOUR } from '@atproto/common'
+import { DAY } from '@atproto/common'
 import AppContext from '../../../../context'
 import { Server } from '../../../../lexicon'
 
@@ -9,10 +9,6 @@ export default function (server: Server, ctx: AppContext) {
         durationMs: DAY,
         points: 10,
         calcKey: ({ input }) => input.body.email.toLowerCase(),
-      },
-      {
-        durationMs: HOUR,
-        points: 10,
       },
     ],
     handler: async ({ input }) => {

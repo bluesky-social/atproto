@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { DAY, HOUR } from '@atproto/common'
+import { DAY } from '@atproto/common'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 
@@ -10,10 +10,6 @@ export default function (server: Server, ctx: AppContext) {
         durationMs: DAY,
         points: 10,
         calcKey: ({ auth }) => auth.credentials.did,
-      },
-      {
-        durationMs: HOUR,
-        points: 10,
       },
     ],
     auth: ctx.authVerifier.accessCheckTakedown,
