@@ -321,18 +321,14 @@ export class AccountManager {
     )
   }
 
-  async updateEmail(opts: { did: string; email: string; token?: string }) {
-    const { did, email, token } = opts
-    if (token) {
-      await this.db.transaction((dbTxn) =>
-        Promise.all([
-          account.updateEmail(dbTxn, did, email),
-          emailToken.deleteAllEmailTokens(dbTxn, did),
-        ]),
-      )
-    } else {
-      return account.updateEmail(this.db, did, email)
-    }
+  async updateEmail(opts: { did: string; email: string }) {
+    const { did, email } = opts
+    await this.db.transaction((dbTxn) =>
+      Promise.all([
+        account.updateEmail(dbTxn, did, email),
+        emailToken.deleteAllEmailTokens(dbTxn, did),
+      ]),
+    )
   }
 
   async resetPassword(opts: { password: string; token: string }) {
