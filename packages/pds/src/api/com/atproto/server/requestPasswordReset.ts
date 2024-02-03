@@ -8,12 +8,14 @@ export default function (server: Server, ctx: AppContext) {
       {
         durationMs: DAY,
         points: 15,
-        calcKey: ({ input }) => input.body.email.toLowerCase(),
+        calcKey: ({ input, req }) =>
+          `${input.body.email.toLowerCase()}-${req.ip}`,
       },
       {
         durationMs: HOUR,
         points: 5,
-        calcKey: ({ input }) => input.body.email.toLowerCase(),
+        calcKey: ({ input, req }) =>
+          `${input.body.email.toLowerCase()}-${req.ip}`,
       },
     ],
     handler: async ({ input }) => {
