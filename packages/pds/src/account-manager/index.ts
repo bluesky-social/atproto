@@ -327,7 +327,7 @@ export class AccountManager {
       await this.db.transaction((dbTxn) =>
         Promise.all([
           account.updateEmail(dbTxn, did, email),
-          emailToken.deleteEmailToken(dbTxn, did, 'update_email'),
+          emailToken.deleteAllEmailTokens(dbTxn, did),
         ]),
       )
     } else {
