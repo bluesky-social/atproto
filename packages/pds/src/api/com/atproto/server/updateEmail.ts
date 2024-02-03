@@ -45,7 +45,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       try {
-        await ctx.accountManager.updateEmail({ did, email, token })
+        await ctx.accountManager.updateEmail({ did, email })
       } catch (err) {
         if (err instanceof UserAlreadyExistsError) {
           throw new InvalidRequestError(
