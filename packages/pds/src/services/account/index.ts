@@ -546,6 +546,13 @@ export class AccountService {
       .executeTakeFirst()
   }
 
+  async deleteAllEmailTokens(did: string) {
+    await this.db.db
+      .deleteFrom('email_token')
+      .where('did', '=', did)
+      .executeTakeFirst()
+  }
+
   async assertValidToken(
     did: string,
     purpose: EmailTokenPurpose,
