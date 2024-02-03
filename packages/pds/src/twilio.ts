@@ -1,5 +1,6 @@
 import { InvalidRequestError, UpstreamFailureError } from '@atproto/xrpc-server'
 import twilio from 'twilio'
+import { twilioLogger as log } from './logger'
 
 type Opts = {
   accountSid: string
@@ -20,7 +21,7 @@ export class TwilioClient {
   }
 
   normalizePhoneNumber(phoneNumber: string) {
-    let normalized = phoneNumber.replaceAll(/\(|\)|-| /g, '')
+    let normalized = phoneNumber.trim().replaceAll(/\(|\)|-| /g, '')
     if (!normalized.startsWith('+')) {
       if (normalized.length === 10) {
         normalized = '+1' + normalized
@@ -43,7 +44,19 @@ export class TwilioClient {
         channel: 'sms',
       })
     } catch (err) {
-      throw new UpstreamFailureError('Could not send verification text')
+      log.error({ err, phoneNumber }, 'error sending twilio code')
+      const code = typeof err === 'object' ? err?.['code'] : undefined
+      if (code === 60200) {
+        throw new InvalidRequestError(
+          'Could not send verification text: invalid phone number',
+        )
+      } else if (code === 60605 || code === 60220) {
+        throw new InvalidRequestError(
+          `We're sorry, we're not currently able to send verification messages to your country. We're working with our providers to solve this as quickly as possible.`,
+        )
+      } else {
+        throw new UpstreamFailureError('Could not send verification text')
+      }
     }
   }
 
@@ -55,7 +68,8 @@ export class TwilioClient {
       })
       return res.status === 'approved'
     } catch (err) {
-      throw new UpstreamFailureError('Could not send verification text')
+      log.error({ err, phoneNumber, code }, 'error verifying twilio code')
+      throw new UpstreamFailureError('Could not verify code. Please try again')
     }
   }
 }

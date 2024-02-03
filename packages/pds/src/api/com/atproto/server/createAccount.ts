@@ -11,12 +11,16 @@ import * as scrypt from '../../../../db/scrypt'
 import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
 import { countAll } from '../../../../db/util'
-import { UserAlreadyExistsError } from '../../../../services/account'
+import {
+  AccountService,
+  UserAlreadyExistsError,
+} from '../../../../services/account'
 import AppContext from '../../../../context'
 import Database from '../../../../db'
 import { didDocForSession } from './util'
 import { getPdsEndpoint } from '../../../../pds-agents'
 import { isThisPds } from '../../../proxy'
+import { dbLogger as log } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.createAccount({
@@ -48,44 +52,15 @@ export default function (server: Server, ctx: AppContext) {
       const now = new Date().toISOString()
       const passwordScrypt = await scrypt.genSaltAndHash(password)
 
-      let verificationPhone: string | undefined = undefined
-      if (ctx.cfg.phoneVerification.required && ctx.twilio) {
-        if (!input.body.verificationPhone) {
-          throw new InvalidRequestError(
-            'Phone number verification is required on this server and none was provided.',
-            'InvalidPhoneVerification',
-          )
-        } else if (!input.body.verificationCode) {
-          throw new InvalidRequestError(
-            'Phone number verification is required on this server and none was provided.',
-            'InvalidPhoneVerification',
-          )
-        }
-        verificationPhone = ctx.twilio.normalizePhoneNumber(
-          input.body.verificationPhone,
-        )
-        const verified = await ctx.twilio.verifyCode(
-          verificationPhone,
-          input.body.verificationCode.trim(),
-        )
-        if (!verified) {
-          throw new InvalidRequestError(
-            'Could not verify phone number. Please try again.',
-            'InvalidPhoneVerification',
-          )
-        }
-      }
+      const verificationPhone = await ensurePhoneVerification(
+        ctx,
+        input.body.verificationPhone,
+        input.body.verificationCode?.trim(),
+      )
 
       const result = await ctx.db.transaction(async (dbTxn) => {
         const actorTxn = ctx.services.account(dbTxn)
         const repoTxn = ctx.services.repo(dbTxn)
-
-        // it's a bit goofy that we run this logic twice,
-        // but we run it once for a sanity check before doing scrypt & plc ops
-        // & a second time for locking + integrity check
-        if (ctx.cfg.invites.required && inviteCode) {
-          await ensureCodeIsAvailable(dbTxn, inviteCode, true)
-        }
 
         // Register user before going out to PLC to get a real did
         try {
@@ -108,21 +83,9 @@ export default function (server: Server, ctx: AppContext) {
           throw err
         }
 
-        // Generate a real did with PLC
-        if (plcOp && !entrywayAssignedPds) {
-          try {
-            await ctx.plcClient.sendOperation(did, plcOp)
-          } catch (err) {
-            req.log.error(
-              { didKey: ctx.plcRotationKey.did(), handle },
-              'failed to create did:plc',
-            )
-            throw err
-          }
-        }
-
         // insert invite code use
         if (ctx.cfg.invites.required && inviteCode) {
+          await ensureCodeIsAvailable(dbTxn, inviteCode, true)
           await dbTxn.db
             .insertInto('invite_code_use')
             .values({
@@ -143,6 +106,10 @@ export default function (server: Server, ctx: AppContext) {
             .execute()
         }
 
+        if (!entrywayAssignedPds) {
+          await repoTxn.createRepo(did, [], now)
+        }
+
         const { access, refresh } = await ctx.services
           .auth(dbTxn)
           .createSession({
@@ -151,6 +118,15 @@ export default function (server: Server, ctx: AppContext) {
             appPasswordName: null,
           })
 
+        return {
+          did,
+          pdsDid: entrywayAssignedPds?.did ?? null,
+          accessJwt: access,
+          refreshJwt: refresh,
+        }
+      })
+
+      try {
         if (entrywayAssignedPds) {
           const agent = ctx.pdsAgents.get(entrywayAssignedPds.host)
           await agent.com.atproto.server.createAccount({
@@ -159,18 +135,21 @@ export default function (server: Server, ctx: AppContext) {
             handle: input.body.handle,
             recoveryKey: input.body.recoveryKey,
           })
-        } else {
-          // Setup repo root
-          await repoTxn.createRepo(did, [], now)
+        } else if (plcOp) {
+          try {
+            await ctx.plcClient.sendOperation(did, plcOp)
+          } catch (err) {
+            req.log.error(
+              { didKey: ctx.plcRotationKey.did(), handle },
+              'failed to create did:plc',
+            )
+            throw err
+          }
         }
-
-        return {
-          did,
-          pdsDid: entrywayAssignedPds?.did ?? null,
-          accessJwt: access,
-          refreshJwt: refresh,
-        }
-      })
+      } catch (err) {
+        await cleanupUncreatedAccount(ctx, did)
+        throw err
+      }
 
       const didDoc = await didDocForSession(ctx, result)
 
@@ -246,7 +225,8 @@ const validateInputsForPdsViaUser = async (
   ctx: AppContext,
   input: CreateAccountInput,
 ) => {
-  const { email, password, inviteCode } = input
+  const { password, inviteCode } = input
+  const email = input.email?.toLowerCase()
   if (input.plcOp) {
     throw new InvalidRequestError('Unsupported input: "plcOp"')
   }
@@ -276,6 +256,8 @@ const validateInputsForPdsViaUser = async (
     handle: input.handle,
     did: input.did,
   })
+
+  await ensureUnusedHandleAndEmail(ctx.services.account(ctx.db), handle, email)
 
   // check that the invite code still has uses
   if (ctx.cfg.invites.required && inviteCode) {
@@ -478,6 +460,58 @@ const reserveSigningKey = async (ctx: AppContext, host: string) => {
   }
 }
 
+const ensureUnusedHandleAndEmail = async (
+  accountSrvc: AccountService,
+  handle: string,
+  email: string,
+) => {
+  const [byHandle, byEmail] = await Promise.all([
+    accountSrvc.getAccount(handle, true),
+    accountSrvc.getAccountByEmail(email, true),
+  ])
+  if (byEmail) {
+    throw new InvalidRequestError(`Email already taken: ${email}`)
+  } else if (byHandle) {
+    throw new InvalidRequestError(`Handle already taken: ${handle}`)
+  }
+}
+
+const ensurePhoneVerification = async (
+  ctx: AppContext,
+  phone?: string,
+  code?: string,
+): Promise<string | undefined> => {
+  if (!ctx.cfg.phoneVerification.required || !ctx.twilio) {
+    return
+  }
+
+  if (!phone) {
+    throw new InvalidRequestError(
+      `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
+      'InvalidPhoneVerification',
+    )
+  }
+  if (ctx.cfg.phoneVerification.bypassPhoneNumber === phone) {
+    return undefined
+  }
+
+  if (!code) {
+    throw new InvalidRequestError(
+      `Text verification is now required on this server. Please make sure you're using the latest version of the Bluesky app.`,
+      'InvalidPhoneVerification',
+    )
+  }
+  const normalizedPhone = ctx.twilio.normalizePhoneNumber(phone)
+  const verified = await ctx.twilio.verifyCode(normalizedPhone, code)
+  if (!verified) {
+    throw new InvalidRequestError(
+      'Could not verify phone number. Please try again.',
+      'InvalidPhoneVerification',
+    )
+  }
+  return normalizedPhone
+}
+
 const randomIndexByWeight = (weights) => {
   let sum = 0
   const cumulative = weights.map((weight) => {
@@ -487,4 +521,22 @@ const randomIndexByWeight = (weights) => {
   if (!sum) return -1
   const rand = Math.random() * sum
   return cumulative.findIndex((item) => item >= rand)
+}
+
+const cleanupUncreatedAccount = async (
+  ctx: AppContext,
+  did: string,
+  tries = 0,
+) => {
+  if (tries > 3) return
+  try {
+    await Promise.all([
+      ctx.services.account(ctx.db).deleteAccount(did),
+      ctx.services.record(ctx.db).deleteForActor(did),
+      ctx.services.repo(ctx.db).deleteRepo(did),
+    ])
+  } catch (err) {
+    log.error({ err, did, tries }, 'failed to clean up partially created user')
+    return cleanupUncreatedAccount(ctx, did, tries + 1)
+  }
 }
