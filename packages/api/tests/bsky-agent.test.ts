@@ -226,7 +226,7 @@ describe('agent', () => {
 
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -247,6 +247,18 @@ describe('agent', () => {
             hideQuotePosts: false,
           },
         },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries(
+                DEFAULT_LABELGROUP_PREFERENCES,
+              ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
+        },
         threadViewPrefs: {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
@@ -256,7 +268,7 @@ describe('agent', () => {
       await agent.setAdultContentEnabled(true)
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: true,
           labelGroups: {},
@@ -277,6 +289,18 @@ describe('agent', () => {
             hideQuotePosts: false,
           },
         },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries(
+                DEFAULT_LABELGROUP_PREFERENCES,
+              ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
+        },
         threadViewPrefs: {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
@@ -286,7 +310,7 @@ describe('agent', () => {
       await agent.setAdultContentEnabled(false)
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -307,6 +331,18 @@ describe('agent', () => {
             hideQuotePosts: false,
           },
         },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries(
+                DEFAULT_LABELGROUP_PREFERENCES,
+              ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
+        },
         threadViewPrefs: {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
@@ -320,7 +356,7 @@ describe('agent', () => {
       )
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -344,6 +380,19 @@ describe('agent', () => {
             hideQuotePosts: false,
           },
         },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
+        },
         threadViewPrefs: {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
@@ -357,7 +406,7 @@ describe('agent', () => {
       )
       await expect(agent.getPreferences()).resolves.toStrictEqual({
         feeds: { pinned: undefined, saved: undefined },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -380,6 +429,19 @@ describe('agent', () => {
             hideReposts: false,
             hideQuotePosts: false,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'oldest',
@@ -393,7 +455,7 @@ describe('agent', () => {
           pinned: [],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -416,6 +478,19 @@ describe('agent', () => {
             hideReposts: false,
             hideQuotePosts: false,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'oldest',
@@ -429,7 +504,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -452,6 +527,19 @@ describe('agent', () => {
             hideReposts: false,
             hideQuotePosts: false,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'oldest',
@@ -465,7 +553,7 @@ describe('agent', () => {
           pinned: [],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -488,6 +576,19 @@ describe('agent', () => {
             hideReposts: false,
             hideQuotePosts: false,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'oldest',
@@ -501,7 +602,7 @@ describe('agent', () => {
           pinned: [],
           saved: [],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -524,6 +625,19 @@ describe('agent', () => {
             hideReposts: false,
             hideQuotePosts: false,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'oldest',
@@ -537,7 +651,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -560,6 +674,19 @@ describe('agent', () => {
             hideReposts: false,
             hideQuotePosts: false,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'oldest',
@@ -579,7 +706,7 @@ describe('agent', () => {
             'at://bob.com/app.bsky.feed.generator/fake2',
           ],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -602,6 +729,19 @@ describe('agent', () => {
             hideReposts: false,
             hideQuotePosts: false,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'oldest',
@@ -615,7 +755,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -639,6 +779,19 @@ describe('agent', () => {
             hideQuotePosts: false,
           },
         },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
+        },
         threadViewPrefs: {
           sort: 'oldest',
           prioritizeFollowedUsers: true,
@@ -651,7 +804,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -674,6 +827,19 @@ describe('agent', () => {
             hideReposts: false,
             hideQuotePosts: false,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'oldest',
@@ -687,7 +853,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -710,6 +876,19 @@ describe('agent', () => {
             hideReposts: false,
             hideQuotePosts: false,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'oldest',
@@ -723,7 +902,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -746,6 +925,19 @@ describe('agent', () => {
             hideReposts: false,
             hideQuotePosts: false,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'oldest',
@@ -759,7 +951,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -789,6 +981,19 @@ describe('agent', () => {
             hideReposts: false,
             hideQuotePosts: false,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'oldest',
@@ -802,7 +1007,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -832,6 +1037,19 @@ describe('agent', () => {
             hideReposts: false,
             hideQuotePosts: false,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'random',
@@ -845,7 +1063,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake2'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake2'],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid: res.data.did,
           adultContentEnabled: false,
           labelGroups: {},
@@ -875,6 +1093,19 @@ describe('agent', () => {
             hideReposts: false,
             hideQuotePosts: false,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ misinfo: 'hide', spam: 'ignore' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'oldest',
@@ -1015,7 +1246,7 @@ describe('agent', () => {
           pinned: [],
           saved: [],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid,
           adultContentEnabled: true,
           labelGroups: {},
@@ -1040,6 +1271,25 @@ describe('agent', () => {
             hideQuotePosts: true,
           },
         },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries(
+                DEFAULT_LABELGROUP_PREFERENCES,
+              ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+            {
+              did: 'did:plc:othermod',
+              enabled: true,
+              labelGroupSettings: Object.entries(
+                DEFAULT_LABELGROUP_PREFERENCES,
+              ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
+        },
         threadViewPrefs: {
           sort: 'newest',
           prioritizeFollowedUsers: false,
@@ -1052,7 +1302,7 @@ describe('agent', () => {
           pinned: [],
           saved: [],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid,
           adultContentEnabled: false,
           labelGroups: {},
@@ -1076,6 +1326,25 @@ describe('agent', () => {
             hideReposts: true,
             hideQuotePosts: true,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries(
+                DEFAULT_LABELGROUP_PREFERENCES,
+              ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+            {
+              did: 'did:plc:othermod',
+              enabled: true,
+              labelGroupSettings: Object.entries(
+                DEFAULT_LABELGROUP_PREFERENCES,
+              ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'newest',
@@ -1093,7 +1362,7 @@ describe('agent', () => {
           pinned: [],
           saved: [],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid,
           adultContentEnabled: false,
           labelGroups: {},
@@ -1121,6 +1390,26 @@ describe('agent', () => {
             hideQuotePosts: true,
           },
         },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ porn: 'ignore' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+            {
+              did: 'did:plc:othermod',
+              enabled: true,
+              labelGroupSettings: Object.entries(
+                DEFAULT_LABELGROUP_PREFERENCES,
+              ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
+        },
         threadViewPrefs: {
           sort: 'newest',
           prioritizeFollowedUsers: false,
@@ -1133,7 +1422,7 @@ describe('agent', () => {
           pinned: [],
           saved: [],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid,
           adultContentEnabled: false,
           labelGroups: {},
@@ -1157,6 +1446,19 @@ describe('agent', () => {
             hideQuotePosts: true,
           },
         },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries({
+                ...DEFAULT_LABELGROUP_PREFERENCES,
+                ...{ porn: 'ignore' },
+              }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
+        },
         threadViewPrefs: {
           sort: 'newest',
           prioritizeFollowedUsers: false,
@@ -1173,7 +1475,7 @@ describe('agent', () => {
           pinned: [],
           saved: [],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid,
           adultContentEnabled: false,
           labelGroups: {},
@@ -1193,6 +1495,18 @@ describe('agent', () => {
             hideReposts: true,
             hideQuotePosts: true,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries(
+                DEFAULT_LABELGROUP_PREFERENCES,
+              ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'newest',
@@ -1206,7 +1520,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid,
           adultContentEnabled: false,
           labelGroups: {},
@@ -1227,6 +1541,18 @@ describe('agent', () => {
             hideQuotePosts: true,
           },
         },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries(
+                DEFAULT_LABELGROUP_PREFERENCES,
+              ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
+        },
         threadViewPrefs: {
           sort: 'newest',
           prioritizeFollowedUsers: false,
@@ -1239,7 +1565,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid,
           adultContentEnabled: false,
           labelGroups: {},
@@ -1259,6 +1585,18 @@ describe('agent', () => {
             hideReposts: true,
             hideQuotePosts: true,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries(
+                DEFAULT_LABELGROUP_PREFERENCES,
+              ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'newest',
@@ -1283,7 +1621,7 @@ describe('agent', () => {
           pinned: ['at://bob.com/app.bsky.feed.generator/fake'],
           saved: ['at://bob.com/app.bsky.feed.generator/fake'],
         },
-        moderationPrefs: {
+        moderationOpts: {
           userDid,
           adultContentEnabled: false,
           labelGroups: {},
@@ -1303,6 +1641,18 @@ describe('agent', () => {
             hideReposts: false,
             hideQuotePosts: false,
           },
+        },
+        modsPref: {
+          $type: 'app.bsky.actor.defs#modsPref',
+          mods: [
+            {
+              did: BSKY_MODSERVICE_DID,
+              enabled: true,
+              labelGroupSettings: Object.entries(
+                DEFAULT_LABELGROUP_PREFERENCES,
+              ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+            },
+          ],
         },
         threadViewPrefs: {
           sort: 'oldest',

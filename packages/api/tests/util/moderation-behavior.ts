@@ -177,14 +177,13 @@ export class ModerationBehaviorSuiteRunner {
       adultContentEnabled: Boolean(
         this.suite.configurations[scenario.cfg].adultContentEnabled,
       ),
-      labels: this.suite.configurations[scenario.cfg].settings,
+      labelGroups: this.suite.configurations[scenario.cfg].settings,
       labelers: [
         {
           labeler: {
             did: 'did:plc:fake-labeler',
-            displayName: 'Fake Labeler',
           },
-          labels: this.suite.configurations[scenario.cfg].settings,
+          labelGroups: this.suite.configurations[scenario.cfg].settings,
         },
       ],
     }

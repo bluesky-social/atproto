@@ -1,3 +1,4 @@
+import { AppBskyActorDefs } from './client'
 import { ModerationOpts } from './moderation/types'
 
 /**
@@ -111,6 +112,7 @@ export interface BskyPreferences {
   }
   feedViewPrefs: Record<string, BskyFeedViewPreference>
   threadViewPrefs: BskyThreadViewPreference
-  moderationPrefs: ModerationOpts
+  modsPref: AppBskyActorDefs.ModsPref
+  moderationOpts: ModerationOpts
   birthDate: Date | undefined
 }

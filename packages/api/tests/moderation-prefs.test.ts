@@ -72,7 +72,7 @@ describe('agent', () => {
         pinned: undefined,
         saved: undefined,
       },
-      moderationPrefs: {
+      moderationOpts: {
         userDid,
         adultContentEnabled: false,
         labelGroups: {},
@@ -100,6 +100,24 @@ describe('agent', () => {
           hideRepliesByUnfollowed: false,
           hideReposts: false,
         },
+      },
+      modsPref: {
+        $type: 'app.bsky.actor.defs#modsPref',
+        mods: [
+          {
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
+            labelGroupSettings: Object.entries({
+              porn: 'ignore',
+              nudity: 'ignore',
+              suggestive: 'ignore',
+              violence: 'ignore',
+              intolerance: 'ignore',
+              spam: 'ignore',
+              misinfo: 'ignore',
+            }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+        ],
       },
       threadViewPrefs: {
         prioritizeFollowedUsers: true,
@@ -163,7 +181,7 @@ describe('agent', () => {
         pinned: undefined,
         saved: undefined,
       },
-      moderationPrefs: {
+      moderationOpts: {
         userDid,
         adultContentEnabled: false,
         labelGroups: {},
@@ -192,6 +210,24 @@ describe('agent', () => {
           hideReposts: false,
         },
       },
+      modsPref: {
+        $type: 'app.bsky.actor.defs#modsPref',
+        mods: [
+          {
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
+            labelGroupSettings: Object.entries({
+              porn: 'ignore',
+              nudity: 'ignore',
+              suggestive: 'ignore',
+              violence: 'ignore',
+              intolerance: 'ignore',
+              spam: 'ignore',
+              misinfo: 'ignore',
+            }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+        ],
+      },
       threadViewPrefs: {
         prioritizeFollowedUsers: true,
         sort: 'oldest',
@@ -207,7 +243,7 @@ describe('agent', () => {
         pinned: undefined,
         saved: undefined,
       },
-      moderationPrefs: {
+      moderationOpts: {
         userDid,
         adultContentEnabled: false,
         labelGroups: {},
@@ -235,6 +271,24 @@ describe('agent', () => {
           hideRepliesByUnfollowed: false,
           hideReposts: false,
         },
+      },
+      modsPref: {
+        $type: 'app.bsky.actor.defs#modsPref',
+        mods: [
+          {
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
+            labelGroupSettings: Object.entries({
+              porn: 'ignore',
+              nudity: 'ignore',
+              suggestive: 'ignore',
+              violence: 'ignore',
+              intolerance: 'hide',
+              spam: 'ignore',
+              misinfo: 'ignore',
+            }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+        ],
       },
       threadViewPrefs: {
         prioritizeFollowedUsers: true,
@@ -298,7 +352,7 @@ describe('agent', () => {
         pinned: undefined,
         saved: undefined,
       },
-      moderationPrefs: {
+      moderationOpts: {
         userDid,
         adultContentEnabled: false,
         labelGroups: {},
@@ -330,6 +384,31 @@ describe('agent', () => {
           hideRepliesByUnfollowed: false,
           hideReposts: false,
         },
+      },
+      modsPref: {
+        $type: 'app.bsky.actor.defs#modsPref',
+        mods: [
+          {
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
+            labelGroupSettings: Object.entries({
+              porn: 'ignore',
+              nudity: 'ignore',
+              suggestive: 'ignore',
+              violence: 'ignore',
+              intolerance: 'ignore',
+              spam: 'ignore',
+              misinfo: 'ignore',
+            }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+          {
+            did: 'did:plc:other',
+            enabled: true,
+            labelGroupSettings: Object.entries(
+              DEFAULT_LABELGROUP_PREFERENCES,
+            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+        ],
       },
       threadViewPrefs: {
         prioritizeFollowedUsers: true,
@@ -397,7 +476,7 @@ describe('agent', () => {
         pinned: undefined,
         saved: undefined,
       },
-      moderationPrefs: {
+      moderationOpts: {
         userDid,
         adultContentEnabled: false,
         labelGroups: {},
@@ -426,6 +505,24 @@ describe('agent', () => {
           hideReposts: false,
         },
       },
+      modsPref: {
+        $type: 'app.bsky.actor.defs#modsPref',
+        mods: [
+          {
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
+            labelGroupSettings: Object.entries({
+              porn: 'ignore',
+              nudity: 'ignore',
+              suggestive: 'ignore',
+              violence: 'ignore',
+              intolerance: 'hide',
+              spam: 'ignore',
+              misinfo: 'ignore',
+            }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+        ],
+      },
       threadViewPrefs: {
         prioritizeFollowedUsers: true,
         sort: 'oldest',
@@ -446,7 +543,7 @@ describe('agent', () => {
     await agent.setModServiceLabelGroupPref('did:plc:other', 'spam', 'ignore')
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
-      moderationPrefs: {
+      moderationOpts: {
         userDid,
         adultContentEnabled: false,
         labelGroups: {},
@@ -473,6 +570,26 @@ describe('agent', () => {
           hideReposts: false,
           hideQuotePosts: false,
         },
+      },
+      modsPref: {
+        $type: 'app.bsky.actor.defs#modsPref',
+        mods: [
+          {
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
+            labelGroupSettings: Object.entries(
+              DEFAULT_LABELGROUP_PREFERENCES,
+            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+          {
+            did: 'did:plc:other',
+            enabled: true,
+            labelGroupSettings: Object.entries({
+              ...DEFAULT_LABELGROUP_PREFERENCES,
+              ...{ spam: 'ignore' },
+            }).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+        ],
       },
       threadViewPrefs: {
         sort: 'oldest',
