@@ -597,4 +597,287 @@ describe('agent', () => {
       },
     })
   })
+
+  it('enables/disables moderation services', async () => {
+    const agent = new BskyAgent({ service: network.pds.url })
+
+    const userRes = await agent.createAccount({
+      handle: 'user5.test',
+      email: 'user5@test.com',
+      password: 'password',
+    })
+    const userDid = userRes.data.did
+
+    await agent.addModService('did:plc:other')
+    await expect(agent.getPreferences()).resolves.toStrictEqual({
+      feeds: { pinned: undefined, saved: undefined },
+      moderationOpts: {
+        userDid,
+        adultContentEnabled: false,
+        labelGroups: {},
+        labelers: [
+          {
+            labeler: { did: 'did:plc:other' },
+            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+          },
+          {
+            labeler: { did: BSKY_MODSERVICE_DID },
+            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+          },
+        ],
+      },
+      birthDate: undefined,
+      feedViewPrefs: {
+        home: {
+          hideReplies: false,
+          hideRepliesByUnfollowed: false,
+          hideRepliesByLikeCount: 0,
+          hideReposts: false,
+          hideQuotePosts: false,
+        },
+      },
+      modsPref: {
+        $type: 'app.bsky.actor.defs#modsPref',
+        mods: [
+          {
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
+            labelGroupSettings: Object.entries(
+              DEFAULT_LABELGROUP_PREFERENCES,
+            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+          {
+            did: 'did:plc:other',
+            enabled: true,
+            labelGroupSettings: Object.entries(
+              DEFAULT_LABELGROUP_PREFERENCES,
+            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+        ],
+      },
+      threadViewPrefs: {
+        sort: 'oldest',
+        prioritizeFollowedUsers: true,
+      },
+    })
+
+    await agent.setModServiceEnabled('did:plc:other', false)
+    await expect(agent.getPreferences()).resolves.toStrictEqual({
+      feeds: { pinned: undefined, saved: undefined },
+      moderationOpts: {
+        userDid,
+        adultContentEnabled: false,
+        labelGroups: {},
+        labelers: [
+          {
+            labeler: { did: BSKY_MODSERVICE_DID },
+            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+          },
+        ],
+      },
+      birthDate: undefined,
+      feedViewPrefs: {
+        home: {
+          hideReplies: false,
+          hideRepliesByUnfollowed: false,
+          hideRepliesByLikeCount: 0,
+          hideReposts: false,
+          hideQuotePosts: false,
+        },
+      },
+      modsPref: {
+        $type: 'app.bsky.actor.defs#modsPref',
+        mods: [
+          {
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
+            labelGroupSettings: Object.entries(
+              DEFAULT_LABELGROUP_PREFERENCES,
+            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+          {
+            did: 'did:plc:other',
+            enabled: false,
+            labelGroupSettings: Object.entries(
+              DEFAULT_LABELGROUP_PREFERENCES,
+            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+        ],
+      },
+      threadViewPrefs: {
+        sort: 'oldest',
+        prioritizeFollowedUsers: true,
+      },
+    })
+
+    await agent.setModServiceEnabled('did:plc:other', true)
+    await expect(agent.getPreferences()).resolves.toStrictEqual({
+      feeds: { pinned: undefined, saved: undefined },
+      moderationOpts: {
+        userDid,
+        adultContentEnabled: false,
+        labelGroups: {},
+        labelers: [
+          {
+            labeler: { did: 'did:plc:other' },
+            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+          },
+          {
+            labeler: { did: BSKY_MODSERVICE_DID },
+            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+          },
+        ],
+      },
+      birthDate: undefined,
+      feedViewPrefs: {
+        home: {
+          hideReplies: false,
+          hideRepliesByUnfollowed: false,
+          hideRepliesByLikeCount: 0,
+          hideReposts: false,
+          hideQuotePosts: false,
+        },
+      },
+      modsPref: {
+        $type: 'app.bsky.actor.defs#modsPref',
+        mods: [
+          {
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
+            labelGroupSettings: Object.entries(
+              DEFAULT_LABELGROUP_PREFERENCES,
+            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+          {
+            did: 'did:plc:other',
+            enabled: true,
+            labelGroupSettings: Object.entries(
+              DEFAULT_LABELGROUP_PREFERENCES,
+            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+        ],
+      },
+      threadViewPrefs: {
+        sort: 'oldest',
+        prioritizeFollowedUsers: true,
+      },
+    })
+  })
+
+  it('cant disable the default moderation service', async () => {
+    const agent = new BskyAgent({ service: network.pds.url })
+
+    const userRes = await agent.createAccount({
+      handle: 'user6.test',
+      email: 'user6@test.com',
+      password: 'password',
+    })
+    const userDid = userRes.data.did
+
+    await agent.setModServiceEnabled(BSKY_MODSERVICE_DID, false)
+    await expect(agent.getPreferences()).resolves.toStrictEqual({
+      feeds: { pinned: undefined, saved: undefined },
+      moderationOpts: {
+        userDid,
+        adultContentEnabled: false,
+        labelGroups: {},
+        labelers: [
+          {
+            labeler: { did: BSKY_MODSERVICE_DID },
+            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+          },
+        ],
+      },
+      birthDate: undefined,
+      feedViewPrefs: {
+        home: {
+          hideReplies: false,
+          hideRepliesByUnfollowed: false,
+          hideRepliesByLikeCount: 0,
+          hideReposts: false,
+          hideQuotePosts: false,
+        },
+      },
+      modsPref: {
+        $type: 'app.bsky.actor.defs#modsPref',
+        mods: [
+          {
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
+            labelGroupSettings: Object.entries(
+              DEFAULT_LABELGROUP_PREFERENCES,
+            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+        ],
+      },
+      threadViewPrefs: {
+        sort: 'oldest',
+        prioritizeFollowedUsers: true,
+      },
+    })
+  })
+
+  it('adds a moderation service when first setting enabled', async () => {
+    const agent = new BskyAgent({ service: network.pds.url })
+
+    const userRes = await agent.createAccount({
+      handle: 'user7.test',
+      email: 'user7@test.com',
+      password: 'password',
+    })
+    const userDid = userRes.data.did
+
+    await agent.setModServiceEnabled('did:plc:other', true)
+    await expect(agent.getPreferences()).resolves.toStrictEqual({
+      feeds: { pinned: undefined, saved: undefined },
+      moderationOpts: {
+        userDid,
+        adultContentEnabled: false,
+        labelGroups: {},
+        labelers: [
+          {
+            labeler: { did: 'did:plc:other' },
+            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+          },
+          {
+            labeler: { did: BSKY_MODSERVICE_DID },
+            labelGroups: DEFAULT_LABELGROUP_PREFERENCES,
+          },
+        ],
+      },
+      birthDate: undefined,
+      feedViewPrefs: {
+        home: {
+          hideReplies: false,
+          hideRepliesByUnfollowed: false,
+          hideRepliesByLikeCount: 0,
+          hideReposts: false,
+          hideQuotePosts: false,
+        },
+      },
+      modsPref: {
+        $type: 'app.bsky.actor.defs#modsPref',
+        mods: [
+          {
+            did: BSKY_MODSERVICE_DID,
+            enabled: true,
+            labelGroupSettings: Object.entries(
+              DEFAULT_LABELGROUP_PREFERENCES,
+            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+          {
+            did: 'did:plc:other',
+            enabled: true,
+            labelGroupSettings: Object.entries(
+              DEFAULT_LABELGROUP_PREFERENCES,
+            ).map(([labelGroup, setting]) => ({ labelGroup, setting })),
+          },
+        ],
+      },
+      threadViewPrefs: {
+        sort: 'oldest',
+        prioritizeFollowedUsers: true,
+      },
+    })
+  })
 })
