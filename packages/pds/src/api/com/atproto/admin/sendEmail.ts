@@ -40,7 +40,7 @@ export default function (server: Server, ctx: AppContext) {
         { content },
         { subject, to: account.email },
       )
-      await ctx.appViewAgent.api.com.atproto.admin.emitModerationEvent(
+      await ctx.moderationAgent.api.com.atproto.admin.emitModerationEvent(
         {
           event: {
             $type: 'com.atproto.admin.defs#modEventEmail',
