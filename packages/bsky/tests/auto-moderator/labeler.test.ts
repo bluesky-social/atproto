@@ -103,6 +103,8 @@ describe('labeler', () => {
       subject: uri.toString(),
       limit: 10,
       types: [],
+      addedLabels: [],
+      removedLabels: [],
     })
     expect(events.length).toBe(1)
     expect(events[0]).toMatchObject({
