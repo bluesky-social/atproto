@@ -49,13 +49,13 @@
       "adultContentEnabled": false
     },
     "intolerant-hide": {
-      "settings": { "intolerant": "hide" }
+      "settings": { "intolerance": "hide" }
     },
     "intolerant-warn": {
-      "settings": { "intolerant": "warn" }
+      "settings": { "intolerance": "warn" }
     },
     "intolerant-ignore": {
-      "settings": { "intolerant": "ignore" }
+      "settings": { "intolerance": "ignore" }
     },
     "porn-hide": {
       "adultContentEnabled": true,
@@ -70,25 +70,25 @@
       "settings": { "porn": "ignore" }
     },
     "scam-hide": {
-      "settings": { "scam": "hide" }
+      "settings": { "misrepresentation": "hide" }
     },
     "scam-warn": {
-      "settings": { "scam": "warn" }
+      "settings": { "misrepresentation": "warn" }
     },
     "scam-ignore": {
-      "settings": { "scam": "ignore" }
+      "settings": { "misrepresentation": "ignore" }
     },
     "porn-hide-intolerant-hide": {
       "adultContentEnabled": true,
-      "settings": { "porn": "hide", "intolerant": "hide" }
+      "settings": { "porn": "hide", "intolerance": "hide" }
     },
     "porn-hide-intolerant-warn": {
       "adultContentEnabled": true,
-      "settings": { "porn": "hide", "intolerant": "warn" }
+      "settings": { "porn": "hide", "intolerance": "warn" }
     },
     "porn-warn-intolerant-hide": {
       "adultContentEnabled": true,
-      "settings": { "porn": "warn", "intolerant": "hide" }
+      "settings": { "porn": "warn", "intolerance": "hide" }
     },
     "logged-out": {
       "authed": false

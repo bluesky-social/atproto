@@ -63,13 +63,13 @@
       "adultContentEnabled": false
     },
     "intolerant-hide": {
-      "settings": { "intolerant": "hide" }
+      "settings": { "intolerance": "hide" }
     },
     "intolerant-warn": {
-      "settings": { "intolerant": "warn" }
+      "settings": { "intolerance": "warn" }
     },
     "intolerant-ignore": {
-      "settings": { "intolerant": "ignore" }
+      "settings": { "intolerance": "ignore" }
     },
     "porn-hide": {
       "adultContentEnabled": true,
@@ -84,16 +84,16 @@
       "settings": { "porn": "ignore" }
     },
     "scam-hide": {
-      "settings": { "scam": "hide" }
+      "settings": { "misrepresentation": "hide" }
     },
     "scam-warn": {
-      "settings": { "scam": "warn" }
+      "settings": { "misrepresentation": "warn" }
     },
     "scam-ignore": {
-      "settings": { "scam": "ignore" }
+      "settings": { "misrepresentation": "ignore" }
     },
     "intolerant-hide-scam-warn": {
-      "settings": { "intolerant": "hide", "scam": "hide" }
+      "settings": { "intolerance": "hide", "misrepresentation": "hide" }
     },
     "logged-out": {
       "authed": false
