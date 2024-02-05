@@ -19,6 +19,7 @@ export interface ModerationEvent {
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
+  subjectBlobCids: string[] | null
   createLabelVals: string | null
   negateLabelVals: string | null
   comment: string | null

@@ -1,5 +1,9 @@
+import assert from 'node:assert'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
-import AtpAgent, { ComAtprotoAdminDefs } from '@atproto/api'
+import AtpAgent, {
+  ComAtprotoAdminDefs,
+  ComAtprotoAdminEmitModerationEvent,
+} from '@atproto/api'
 import { forSnapshot } from './_util'
 import {
   REASONMISLEADING,
@@ -12,7 +16,9 @@ describe('moderation-events', () => {
   let pdsAgent: AtpAgent
   let sc: SeedClient
 
-  const emitModerationEvent = async (eventData) => {
+  const emitModerationEvent = async (
+    eventData: ComAtprotoAdminEmitModerationEvent.InputSchema,
+  ) => {
     return pdsAgent.api.com.atproto.admin.emitModerationEvent(eventData, {
       encoding: 'application/json',
       headers: network.bsky.adminAuthHeaders('moderator'),
@@ -206,15 +212,68 @@ describe('moderation-events', () => {
   describe('get event', () => {
     it('gets an event by specific id', async () => {
       const { data } = await pdsAgent.api.com.atproto.admin.getModerationEvent(
-        {
-          id: 1,
-        },
-        {
-          headers: network.bsky.adminAuthHeaders('moderator'),
-        },
+        { id: 1 },
+        { headers: network.bsky.adminAuthHeaders('moderator') },
       )
-
       expect(forSnapshot(data)).toMatchSnapshot()
+    })
+  })
+
+  describe('blobs', () => {
+    it('are tracked on takedown event', async () => {
+      const post = sc.posts[sc.dids.carol][0]
+      assert(post.images.length > 1)
+      await emitModerationEvent({
+        event: {
+          $type: 'com.atproto.admin.defs#modEventTakedown',
+        },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.ref.uriStr,
+          cid: post.ref.cidStr,
+        },
+        subjectBlobCids: [post.images[0].image.ref.toString()],
+        createdBy: sc.dids.alice,
+      })
+      const { data: result } =
+        await pdsAgent.api.com.atproto.admin.queryModerationEvents(
+          { subject: post.ref.uriStr },
+          { headers: network.ozone.adminAuthHeaders('moderator') },
+        )
+      expect(result.events[0]).toMatchObject({
+        createdBy: sc.dids.alice,
+        event: {
+          $type: 'com.atproto.admin.defs#modEventTakedown',
+        },
+        subjectBlobCids: [post.images[0].image.ref.toString()],
+      })
+    })
+
+    it("are tracked on reverse-takedown event even if they aren't specified", async () => {
+      const post = sc.posts[sc.dids.carol][0]
+      await emitModerationEvent({
+        event: {
+          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+        },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.ref.uriStr,
+          cid: post.ref.cidStr,
+        },
+        createdBy: sc.dids.alice,
+      })
+      const { data: result } =
+        await pdsAgent.api.com.atproto.admin.queryModerationEvents(
+          { subject: post.ref.uriStr },
+          { headers: network.ozone.adminAuthHeaders('moderator') },
+        )
+      expect(result.events[0]).toMatchObject({
+        createdBy: sc.dids.alice,
+        event: {
+          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+        },
+        subjectBlobCids: [post.images[0].image.ref.toString()],
+      })
     })
   })
 })

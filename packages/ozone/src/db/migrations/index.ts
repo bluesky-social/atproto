@@ -4,3 +4,4 @@
 
 export * as _20231219T205730722Z from './20231219T205730722Z-init'
 export * as _20240116T085607200Z from './20240116T085607200Z-communication-template'
+export * as _20240201T051104136Z from './20240201T051104136Z-mod-event-blobs'
