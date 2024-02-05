@@ -1,5 +1,6 @@
 import * as nodemailer from 'nodemailer'
 import { Redis } from 'ioredis'
+import { RateLimiterRedis } from 'rate-limiter-flexible'
 import * as plc from '@did-plc/lib'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
@@ -25,6 +26,8 @@ import { TwilioClient } from './twilio'
 import assert from 'assert'
 import { SignupLimiter } from './signup-queue/limiter'
 import { SignupActivator } from './signup-queue/activator'
+import { createCourierClient, authWithApiKey as courierAuth } from './courier'
+import { DAY } from '@atproto/common'
 
 export type AppContextOptions = {
   db: Database
@@ -231,7 +234,33 @@ export class AppContext {
     }
 
     const signupLimiter = new SignupLimiter(db)
-    const signupActivator = new SignupActivator(db)
+    const courierClient = cfg.activator.courierUrl
+      ? createCourierClient({
+          baseUrl: cfg.activator.courierUrl,
+          httpVersion: cfg.activator.courierHttpVersion ?? '2',
+          nodeOptions: {
+            rejectUnauthorized: !cfg.activator.courierIgnoreBadTls,
+          },
+          interceptors: cfg.activator.courierApiKey
+            ? [courierAuth(cfg.activator.courierApiKey)]
+            : [],
+        })
+      : undefined
+    const limiter =
+      cfg.activator.emailsPerDay && redisScratch
+        ? new RateLimiterRedis({
+            storeClient: redisScratch,
+            duration: DAY / 1000,
+            points: cfg.activator.emailsPerDay,
+          })
+        : undefined
+
+    const signupActivator = new SignupActivator({
+      db,
+      mailer,
+      courierClient,
+      limiter,
+    })
 
     const pdsAgents = new PdsAgents()
 

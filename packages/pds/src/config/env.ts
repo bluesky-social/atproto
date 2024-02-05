@@ -87,6 +87,13 @@ export const readEnv = (): ServerEnvironment => {
     redisScratchAddress: envStr('PDS_REDIS_SCRATCH_ADDRESS'),
     redisScratchPassword: envStr('PDS_REDIS_SCRATCH_PASSWORD'),
 
+    // activator
+    courierUrl: envStr('PDS_COURIER_URL'),
+    courierHttpVersion: envStr('PDS_COURIER_HTTP_VERSION'),
+    courierIgnoreBadTls: envBool('PDS_COURIER_IGNORE_BAD_TLS'),
+    courierApiKey: envStr('PDS_COURIER_API_KEY'),
+    activatorEmailsPerDay: envInt('PDS_ACTIVATOR_EMAILS_PER_DAY'),
+
     // crawlers
     crawlers: envList('PDS_CRAWLERS'),
 
@@ -201,6 +208,13 @@ export type ServerEnvironment = {
   // redis
   redisScratchAddress?: string
   redisScratchPassword?: string
+
+  // activator
+  courierUrl?: string
+  courierHttpVersion?: string
+  courierIgnoreBadTls?: boolean
+  courierApiKey?: string
+  activatorEmailsPerDay?: number
 
   // crawler
   crawlers?: string[]

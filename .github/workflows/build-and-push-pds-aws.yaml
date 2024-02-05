@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - signup-queueing-take2
+      - signup-queue-notify
 env:
   REGISTRY: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_REGISTRY }}
   USERNAME: ${{ secrets.AWS_ECR_REGISTRY_USEAST2_PACKAGES_USERNAME }}
