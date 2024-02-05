@@ -1,5 +1,4 @@
 import assert from 'node:assert'
-import { envList } from '@atproto/common'
 
 export interface ServerConfigValues {
   // service
@@ -78,7 +77,7 @@ export class ServerConfig {
       process.env.BSKY_COURIER_IGNORE_BAD_TLS === 'true'
     assert(courierHttpVersion === '1.1' || courierHttpVersion === '2')
     const adminPasswords = envList(
-      process.env.BSKY_ADMIN_PASSWORDS || process.env.BSKY_ADMIN_PASSWORD || '',
+      process.env.BSKY_ADMIN_PASSWORDS || process.env.BSKY_ADMIN_PASSWORD,
     )
     const modServiceDid = process.env.MOD_SERVICE_DID
     assert(modServiceDid)
@@ -233,4 +232,9 @@ function stripUndefineds(
     }
   })
   return result
+}
+
+function envList(str: string | undefined): string[] {
+  if (str === undefined || str.length === 0) return []
+  return str.split(',')
 }
