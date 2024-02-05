@@ -168,18 +168,14 @@ export class ModerationService {
 
     // If multiple labels are passed, then only retrieve events where all those labels exist
     if (addedLabels.length) {
-      builder = builder.where(
-        'createLabelVals',
-        'ilike',
-        `%${addedLabels.join('%')}%`,
-      )
+      addedLabels.forEach((label) => {
+        builder = builder.where('createLabelVals', 'ilike', `%${label}%`)
+      })
     }
     if (removedLabels.length) {
-      builder = builder.where(
-        'negateLabelVals',
-        'ilike',
-        `%${removedLabels.join('%')}%`,
-      )
+      removedLabels.forEach((label) => {
+        builder = builder.where('negateLabelVals', 'ilike', `%${label}%`)
+      })
     }
     if (reportTypes?.length) {
       builder = builder.where(sql`meta->>'reportType'`, 'in', reportTypes)
