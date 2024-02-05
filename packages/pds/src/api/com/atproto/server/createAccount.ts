@@ -29,6 +29,8 @@ export default function (server: Server, ctx: AppContext) {
       points: 100,
     },
     handler: async ({ input, req }) => {
+      const hasAvailability = await ctx.signupLimiter.hasAvailability()
+
       const {
         did,
         handle,
@@ -62,6 +64,7 @@ export default function (server: Server, ctx: AppContext) {
             did,
             pdsId: entrywayAssignedPds?.id,
             passwordScrypt,
+            activated: hasAvailability,
           })
         } catch (err) {
           if (err instanceof UserAlreadyExistsError) {
@@ -108,6 +111,7 @@ export default function (server: Server, ctx: AppContext) {
             did,
             pdsDid: entrywayAssignedPds?.did ?? null,
             appPasswordName: null,
+            deactivated: !hasAvailability,
           })
 
         return {

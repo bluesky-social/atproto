@@ -129,10 +129,12 @@ export class AccountService {
     did: string
     pdsId?: number
     passwordScrypt: string
+    activated: boolean
   }) {
     this.db.assertTransaction()
-    const { email, handle, did, pdsId, passwordScrypt } = opts
+    const { email, handle, did, pdsId, passwordScrypt, activated } = opts
     log.debug({ handle, email }, 'registering user')
+    const createdAt = new Date().toISOString()
     const registerUserAccnt = this.db.db
       .insertInto('user_account')
       .values({
@@ -140,7 +142,8 @@ export class AccountService {
         did,
         pdsId,
         passwordScrypt,
-        createdAt: new Date().toISOString(),
+        createdAt,
+        activatedAt: activated ? createdAt : null,
       })
       .onConflict((oc) => oc.doNothing())
       .returning('did')

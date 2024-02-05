@@ -5,6 +5,7 @@ export interface UserAccount {
   email: string
   passwordScrypt: string
   createdAt: string
+  activatedAt: string | null
   emailConfirmedAt: string | null
   invitesDisabled: Generated<0 | 1>
   inviteNote: string | null
