@@ -100,6 +100,9 @@ export class ModerationService {
     commentKeyword?: string
     createdAfter?: string
     createdBefore?: string
+    addedLabels: string[]
+    removedLabels: string[]
+    reportTypes?: string[]
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -113,6 +116,9 @@ export class ModerationService {
       commentKeyword,
       createdAfter,
       createdBefore,
+      addedLabels,
+      removedLabels,
+      reportTypes,
     } = opts
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
     if (subject) {
@@ -160,6 +166,25 @@ export class ModerationService {
         }
         return qb.where('comment', 'is not', null)
       })
+    }
+
+    // If multiple labels are passed, then only retrieve events where all those labels exist
+    if (addedLabels.length) {
+      builder = builder.where(
+        'createLabelVals',
+        'ilike',
+        `%${addedLabels.join('%')}%`,
+      )
+    }
+    if (removedLabels.length) {
+      builder = builder.where(
+        'negateLabelVals',
+        'ilike',
+        `%${removedLabels.join('%')}%`,
+      )
+    }
+    if (reportTypes?.length) {
+      builder = builder.where(sql`meta->>'reportType'`, 'in', reportTypes)
     }
 
     const { ref } = this.db.db.dynamic

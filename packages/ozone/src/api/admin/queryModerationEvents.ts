@@ -18,6 +18,9 @@ export default function (server: Server, ctx: AppContext) {
         createdBy,
         createdAfter,
         createdBefore,
+        addedLabels = [],
+        removedLabels = [],
+        reportTypes,
       } = params
       const db = ctx.db
       const modService = ctx.modService(db)
@@ -33,6 +36,9 @@ export default function (server: Server, ctx: AppContext) {
         commentKeyword,
         createdAfter,
         createdBefore,
+        addedLabels,
+        removedLabels,
+        reportTypes,
       })
       return {
         encoding: 'application/json',

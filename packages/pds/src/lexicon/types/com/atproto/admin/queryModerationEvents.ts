@@ -27,6 +27,11 @@ export interface QueryParams {
   hasComment?: boolean
   /** If specified, only events with comments containing the keyword are returned */
   commentKeyword?: string
+  /** If specified, only events where one of these labels were added are returned */
+  addedLabels?: string[]
+  /** If specified, only events where one of these labels were removed are returned */
+  removedLabels?: string[]
+  reportTypes?: string[]
   cursor?: string
 }
 

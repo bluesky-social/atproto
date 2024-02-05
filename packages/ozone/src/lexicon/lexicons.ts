@@ -1487,6 +1487,28 @@ export const schemaDict = {
               description:
                 'If specified, only events with comments containing the keyword are returned',
             },
+            addedLabels: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where one of these labels were added are returned',
+            },
+            removedLabels: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where one of these labels were removed are returned',
+            },
+            reportTypes: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+            },
             cursor: {
               type: 'string',
             },
