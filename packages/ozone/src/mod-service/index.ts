@@ -97,7 +97,7 @@ export class ModerationService {
     types: ModerationEvent['action'][]
     sortDirection?: 'asc' | 'desc'
     hasComment?: boolean
-    commentKeyword?: string
+    comment?: string
     createdAfter?: string
     createdBefore?: string
     addedLabels: string[]
@@ -113,7 +113,7 @@ export class ModerationService {
       sortDirection = 'desc',
       types,
       hasComment,
-      commentKeyword,
+      comment,
       createdAfter,
       createdBefore,
       addedLabels,
@@ -159,13 +159,11 @@ export class ModerationService {
     if (createdBefore) {
       builder = builder.where('createdAt', '<=', createdBefore)
     }
+    if (comment) {
+      builder = builder.where('comment', 'ilike', `%${comment}%`)
+    }
     if (hasComment) {
-      builder = builder.where((qb) => {
-        if (commentKeyword) {
-          return qb.where('comment', 'ilike', `%${commentKeyword}%`)
-        }
-        return qb.where('comment', 'is not', null)
-      })
+      builder = builder.where('comment', 'is not', null)
     }
 
     // If multiple labels are passed, then only retrieve events where all those labels exist

@@ -26,7 +26,7 @@ export interface QueryParams {
   /** If true, only events with comments are returned */
   hasComment?: boolean
   /** If specified, only events with comments containing the keyword are returned */
-  commentKeyword?: string
+  comment?: string
   /** If specified, only events where one of these labels were added are returned */
   addedLabels?: string[]
   /** If specified, only events where one of these labels were removed are returned */

@@ -217,6 +217,25 @@ describe('moderation-events', () => {
       expect(spamEvents.data.events.length).toEqual(6)
     })
 
+    it('returns events matching keyword in comment', async () => {
+      const [eventsWithX, eventsWithTest, eventsWithComment] =
+        await Promise.all([
+          queryModerationEvents({
+            comment: 'X',
+          }),
+          queryModerationEvents({
+            comment: 'test',
+          }),
+          queryModerationEvents({
+            hasComment: true,
+          }),
+        ])
+
+      expect(eventsWithX.data.events.length).toEqual(10)
+      expect(eventsWithTest.data.events.length).toEqual(0)
+      expect(eventsWithComment.data.events.length).toEqual(12)
+    })
+
     it('returns events matching filter params for columns', async () => {
       const [negatedLabelEvent, createdLabelEvent] = await Promise.all([
         emitModerationEvent({

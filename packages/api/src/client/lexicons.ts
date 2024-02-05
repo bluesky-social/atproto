@@ -1482,7 +1482,7 @@ export const schemaDict = {
               type: 'boolean',
               description: 'If true, only events with comments are returned',
             },
-            commentKeyword: {
+            comment: {
               type: 'string',
               description:
                 'If specified, only events with comments containing the keyword are returned',
