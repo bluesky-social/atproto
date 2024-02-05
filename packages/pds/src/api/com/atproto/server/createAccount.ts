@@ -30,6 +30,11 @@ export default function (server: Server, ctx: AppContext) {
     },
     handler: async ({ input, req }) => {
       const hasAvailability = await ctx.signupLimiter.hasAvailability()
+      if (!hasAvailability && req.header('user-agent')?.startsWith('okhttp/')) {
+        throw new InvalidRequestError(
+          `We've had a burst of activity and are temporarily limiting signups. Please check back soon!`,
+        )
+      }
 
       const {
         did,
