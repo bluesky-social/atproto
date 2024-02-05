@@ -418,6 +418,9 @@ export class BskyAgent extends AtpAgent {
       })
     }
 
+    // automatically configure the client
+    this.configureLabelersHeader(prefsArrayToLabelerDids(res.data.preferences))
+
     return prefs
   }
 
@@ -478,40 +481,49 @@ export class BskyAgent extends AtpAgent {
   }
 
   async addModService(did: string) {
-    await configureModServicePref(this, did, (pref) => {
+    const prefs = await configureModServicePref(this, did, (pref) => {
       pref.enabled = true
     })
+    // automatically configure the client
+    this.configureLabelersHeader(prefsArrayToLabelerDids(prefs))
   }
 
   async setModServiceEnabled(did: string, enabled: boolean) {
     if (did === BSKY_MODSERVICE_DID) {
       enabled = true
     }
-    await configureModServicePref(this, did, (pref) => {
+    const prefs = await configureModServicePref(this, did, (pref) => {
       pref.enabled = enabled
     })
+    // automatically configure the client
+    this.configureLabelersHeader(prefsArrayToLabelerDids(prefs))
   }
 
   async removeModService(did: string) {
-    await updatePreferences(this, (prefs: AppBskyActorDefs.Preferences) => {
-      let modsPref = prefs.findLast(
-        (pref) =>
-          AppBskyActorDefs.isModsPref(pref) &&
-          AppBskyActorDefs.validateModsPref(pref).success,
-      )
-      if (!modsPref) {
-        modsPref = {
-          $type: 'app.bsky.actor.defs#modsPref',
-          mods: [],
+    const prefs = await updatePreferences(
+      this,
+      (prefs: AppBskyActorDefs.Preferences) => {
+        let modsPref = prefs.findLast(
+          (pref) =>
+            AppBskyActorDefs.isModsPref(pref) &&
+            AppBskyActorDefs.validateModsPref(pref).success,
+        )
+        if (!modsPref) {
+          modsPref = {
+            $type: 'app.bsky.actor.defs#modsPref',
+            mods: [],
+          }
         }
-      }
-      if (AppBskyActorDefs.isModsPref(modsPref)) {
-        modsPref.mods = modsPref.mods.filter((mod) => mod.did !== did)
-      }
-      return prefs
-        .filter((pref) => !AppBskyActorDefs.isModsPref(pref))
-        .concat([modsPref])
-    })
+        if (AppBskyActorDefs.isModsPref(modsPref)) {
+          modsPref.mods = modsPref.mods.filter((mod) => mod.did !== did)
+        }
+        return prefs
+          .filter((pref) => !AppBskyActorDefs.isModsPref(pref))
+          .concat([modsPref])
+      },
+    )
+    // automatically configure the client
+    this.configureLabelersHeader(prefsArrayToLabelerDids(prefs))
   }
 
   async setModServiceLabelGroupPref(
@@ -519,7 +531,7 @@ export class BskyAgent extends AtpAgent {
     labelGroup: string,
     setting: LabelPreference,
   ) {
-    await configureModServicePref(this, did, (pref) => {
+    const prefs = await configureModServicePref(this, did, (pref) => {
       const labelGroupSetting = pref.labelGroupSettings.find(
         (setting) => setting.labelGroup === labelGroup,
       )
@@ -529,6 +541,7 @@ export class BskyAgent extends AtpAgent {
         pref.labelGroupSettings.push({ labelGroup, setting })
       }
     })
+    this.configureLabelersHeader(prefsArrayToLabelerDids(prefs))
   }
 
   async setPersonalDetails({
@@ -610,11 +623,12 @@ async function updatePreferences(
   const res = await agent.app.bsky.actor.getPreferences({})
   const newPrefs = cb(res.data.preferences)
   if (newPrefs === false) {
-    return
+    return res.data.preferences
   }
   await agent.app.bsky.actor.putPreferences({
     preferences: newPrefs,
   })
+  return newPrefs
 }
 
 /**
@@ -757,4 +771,27 @@ function getDefaultLabelGroupSettings(
     labelGroup,
     setting,
   }))
+}
+
+/**
+ * A helper to get the currently enabled labelers from the full preferences array
+ */
+function prefsArrayToLabelerDids(
+  prefs: AppBskyActorDefs.Preferences,
+): string[] {
+  const modsPref = prefs.findLast(
+    (pref) =>
+      AppBskyActorDefs.isModsPref(pref) &&
+      AppBskyActorDefs.validateModsPref(pref).success,
+  )
+  let dids: string[] = []
+  if (modsPref) {
+    dids = (modsPref as AppBskyActorDefs.ModsPref).mods
+      .filter((mod) => mod.enabled || mod.did === BSKY_MODSERVICE_DID)
+      .map((mod) => mod.did)
+  }
+  if (!dids.includes(BSKY_MODSERVICE_DID)) {
+    dids.unshift(BSKY_MODSERVICE_DID)
+  }
+  return dids
 }

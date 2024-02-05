@@ -19,6 +19,7 @@ import {
   AtpPersistSessionHandler,
   AtpAgentOpts,
 } from './types'
+import { BSKY_MODSERVICE_DID } from './const'
 
 const REFRESH_SESSION = 'com.atproto.server.refreshSession'
 
@@ -30,6 +31,7 @@ export class AtpAgent {
   service: URL
   api: AtpServiceClient
   session?: AtpSessionData
+  labelersHeader: string[] = [BSKY_MODSERVICE_DID]
 
   /**
    * The PDS URL, driven by the did doc. May be undefined.
@@ -80,6 +82,15 @@ export class AtpAgent {
    */
   setPersistSessionHandler(handler?: AtpPersistSessionHandler) {
     this._persistSession = handler
+  }
+
+  /**
+   * Configures the moderation services to be applied on requests.
+   * NOTE: this is called automatically by getPreferences() and the relevant moderation config
+   * methods in BskyAgent instances.
+   */
+  configureLabelersHeader(labelerDids: string[]) {
+    this.labelersHeader = labelerDids
   }
 
   /**
@@ -200,11 +211,20 @@ export class AtpAgent {
   /**
    * Internal helper to add authorization headers to requests.
    */
-  private _addAuthHeader(reqHeaders: Record<string, string>) {
+  private _addHeaders(reqHeaders: Record<string, string>) {
     if (!reqHeaders.authorization && this.session?.accessJwt) {
-      return {
+      reqHeaders = {
         ...reqHeaders,
         authorization: `Bearer ${this.session.accessJwt}`,
+      }
+    }
+    if (this.labelersHeader.length) {
+      reqHeaders = {
+        ...reqHeaders,
+        'atproto-labelers': this.labelersHeader
+          .filter((str) => str.startsWith('did:'))
+          .slice(0, 10)
+          .join(','),
       }
     }
     return reqHeaders
@@ -230,7 +250,7 @@ export class AtpAgent {
     let res = await AtpAgent.fetch(
       reqUri,
       reqMethod,
-      this._addAuthHeader(reqHeaders),
+      this._addHeaders(reqHeaders),
       reqBody,
     )
 
@@ -243,7 +263,7 @@ export class AtpAgent {
       res = await AtpAgent.fetch(
         reqUri,
         reqMethod,
-        this._addAuthHeader(reqHeaders),
+        this._addHeaders(reqHeaders),
         reqBody,
       )
     }

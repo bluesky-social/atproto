@@ -124,6 +124,7 @@ describe('agent', () => {
         sort: 'oldest',
       },
     })
+    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
   })
 
   it('migrates legacy content-label prefs (default service added)', async () => {
@@ -233,11 +234,14 @@ describe('agent', () => {
         sort: 'oldest',
       },
     })
+    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
+
     await agent.setModServiceLabelGroupPref(
       BSKY_MODSERVICE_DID,
       'intolerance',
       'hide',
     )
+    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: {
         pinned: undefined,
@@ -295,6 +299,7 @@ describe('agent', () => {
         sort: 'oldest',
       },
     })
+    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
   })
 
   it('migrates legacy content-label prefs (other service added)', async () => {
@@ -347,6 +352,10 @@ describe('agent', () => {
       ],
     })
     await agent.addModService('did:plc:other')
+    expect(agent.labelersHeader).toStrictEqual([
+      BSKY_MODSERVICE_DID,
+      'did:plc:other',
+    ])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: {
         pinned: undefined,
@@ -415,6 +424,10 @@ describe('agent', () => {
         sort: 'oldest',
       },
     })
+    expect(agent.labelersHeader).toStrictEqual([
+      BSKY_MODSERVICE_DID,
+      'did:plc:other',
+    ])
   })
 
   it('migrates legacy content-label prefs (modify default service settings)', async () => {
@@ -471,6 +484,7 @@ describe('agent', () => {
       'intolerance',
       'hide',
     )
+    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: {
         pinned: undefined,
@@ -528,6 +542,7 @@ describe('agent', () => {
         sort: 'oldest',
       },
     })
+    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
   })
 
   it('adds a moderation service when first setting a label pref', async () => {
@@ -541,6 +556,10 @@ describe('agent', () => {
     const userDid = userRes.data.did
 
     await agent.setModServiceLabelGroupPref('did:plc:other', 'spam', 'ignore')
+    expect(agent.labelersHeader).toStrictEqual([
+      BSKY_MODSERVICE_DID,
+      'did:plc:other',
+    ])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
       moderationOpts: {
@@ -596,6 +615,10 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
       },
     })
+    expect(agent.labelersHeader).toStrictEqual([
+      BSKY_MODSERVICE_DID,
+      'did:plc:other',
+    ])
   })
 
   it('enables/disables moderation services', async () => {
@@ -609,6 +632,10 @@ describe('agent', () => {
     const userDid = userRes.data.did
 
     await agent.addModService('did:plc:other')
+    expect(agent.labelersHeader).toStrictEqual([
+      BSKY_MODSERVICE_DID,
+      'did:plc:other',
+    ])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
       moderationOpts: {
@@ -660,8 +687,13 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
       },
     })
+    expect(agent.labelersHeader).toStrictEqual([
+      BSKY_MODSERVICE_DID,
+      'did:plc:other',
+    ])
 
     await agent.setModServiceEnabled('did:plc:other', false)
+    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
       moderationOpts: {
@@ -709,8 +741,13 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
       },
     })
+    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
 
     await agent.setModServiceEnabled('did:plc:other', true)
+    expect(agent.labelersHeader).toStrictEqual([
+      BSKY_MODSERVICE_DID,
+      'did:plc:other',
+    ])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
       moderationOpts: {
@@ -762,6 +799,10 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
       },
     })
+    expect(agent.labelersHeader).toStrictEqual([
+      BSKY_MODSERVICE_DID,
+      'did:plc:other',
+    ])
   })
 
   it('cant disable the default moderation service', async () => {
@@ -775,6 +816,7 @@ describe('agent', () => {
     const userDid = userRes.data.did
 
     await agent.setModServiceEnabled(BSKY_MODSERVICE_DID, false)
+    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
       moderationOpts: {
@@ -815,6 +857,7 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
       },
     })
+    expect(agent.labelersHeader).toStrictEqual([BSKY_MODSERVICE_DID])
   })
 
   it('adds a moderation service when first setting enabled', async () => {
@@ -828,6 +871,10 @@ describe('agent', () => {
     const userDid = userRes.data.did
 
     await agent.setModServiceEnabled('did:plc:other', true)
+    expect(agent.labelersHeader).toStrictEqual([
+      BSKY_MODSERVICE_DID,
+      'did:plc:other',
+    ])
     await expect(agent.getPreferences()).resolves.toStrictEqual({
       feeds: { pinned: undefined, saved: undefined },
       moderationOpts: {
@@ -879,5 +926,9 @@ describe('agent', () => {
         prioritizeFollowedUsers: true,
       },
     })
+    expect(agent.labelersHeader).toStrictEqual([
+      BSKY_MODSERVICE_DID,
+      'did:plc:other',
+    ])
   })
 })
