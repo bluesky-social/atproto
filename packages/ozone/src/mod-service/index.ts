@@ -41,6 +41,7 @@ import {
 import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { BackgroundQueue } from '../background'
 import { EventPusher } from '../daemon'
+import { jsonb } from '../db/types'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -223,6 +224,8 @@ export class ModerationService {
       meta.subjectLine = event.subjectLine
     }
 
+    const subjectInfo = subject.info()
+
     const modEvent = await this.db.db
       .insertInto('moderation_event')
       .values({
@@ -241,7 +244,11 @@ export class ModerationService {
           event.durationInHours
             ? addHoursToDate(event.durationInHours, createdAt).toISOString()
             : undefined,
-        ...subject.info(),
+        subjectType: subjectInfo.subjectType,
+        subjectDid: subjectInfo.subjectDid,
+        subjectUri: subjectInfo.subjectUri,
+        subjectCid: subjectInfo.subjectCid,
+        subjectBlobCids: jsonb(subjectInfo.subjectBlobCids),
       })
       .returningAll()
       .executeTakeFirstOrThrow()
@@ -713,15 +720,16 @@ export class ModerationService {
     }
   }
 
-  async isSubjectTakendown(subject: ModSubject): Promise<boolean> {
-    const builder = this.db.db
+  async getStatus(
+    subject: ModSubject,
+  ): Promise<ModerationSubjectStatusRow | null> {
+    const result = await this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', subject.did)
-      .where('recordPath', '=', subject.recordPath || '')
-
-    const result = await builder.select('takendown').executeTakeFirst()
-
-    return !!result?.takendown
+      .where('recordPath', '=', subject.recordPath ?? '')
+      .selectAll()
+      .executeTakeFirst()
+    return result ?? null
   }
 
   async formatAndCreateLabels(

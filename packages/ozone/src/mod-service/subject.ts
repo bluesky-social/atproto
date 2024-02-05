@@ -37,7 +37,11 @@ export const subjectFromEventRow = (row: ModerationEventRow): ModSubject => {
     row.subjectUri &&
     row.subjectCid
   ) {
-    return new RecordSubject(row.subjectUri, row.subjectCid)
+    return new RecordSubject(
+      row.subjectUri,
+      row.subjectCid,
+      row.subjectBlobCids ?? [],
+    )
   } else {
     return new RepoSubject(row.subjectDid)
   }
@@ -50,7 +54,7 @@ export const subjectFromStatusRow = (
     // Not too intuitive but the recordpath is basically <collection>/<rkey>
     // which is what the last 2 params of .make() arguments are
     const uri = AtUri.make(row.did, ...row.recordPath.split('/')).toString()
-    return new RecordSubject(uri.toString(), row.recordCid)
+    return new RecordSubject(uri.toString(), row.recordCid, row.blobCids ?? [])
   } else {
     return new RepoSubject(row.did)
   }
@@ -61,6 +65,7 @@ type SubjectInfo = {
   subjectDid: string
   subjectUri: string | null
   subjectCid: string | null
+  subjectBlobCids: string[] | null
 }
 
 export interface ModSubject {
@@ -89,6 +94,7 @@ export class RepoSubject implements ModSubject {
       subjectDid: this.did,
       subjectUri: null,
       subjectCid: null,
+      subjectBlobCids: null,
     }
   }
   lex(): RepoRef {
@@ -124,6 +130,7 @@ export class RecordSubject implements ModSubject {
       subjectDid: this.did,
       subjectUri: this.uri,
       subjectCid: this.cid,
+      subjectBlobCids: this.blobCids ?? [],
     }
   }
   lex(): StrongRef {
