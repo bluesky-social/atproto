@@ -30,6 +30,7 @@ export default function (server: Server, ctx: AppContext) {
     },
     handler: async ({ input, req }) => {
       const hasAvailability = await ctx.signupLimiter.hasAvailability()
+      // temporary hack: don't queue android users (user-agent `okhttp/*`) since the latest version of app isn't rolled out on that platform yet
       if (!hasAvailability && req.header('user-agent')?.startsWith('okhttp/')) {
         throw new InvalidRequestError(
           `We've had a burst of activity and are temporarily limiting signups. Please check back soon!`,
