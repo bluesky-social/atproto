@@ -181,6 +181,36 @@ export const LABELS: LabelDefinitionMap = {
       },
     },
   },
+  plagiarism: {
+    id: 'plagiarism',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'warn',
+    groupId: 'intellectual-property',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Plagiarism',
+          description:
+            'Content that appears to have been taken from another creator without attribution.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Plagiarism',
+          description:
+            'The moderators believe this account has published content which is plagiarized.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Plagiarism',
+          description: 'The moderators believe this content is plagiarized.',
+        },
+      },
+    },
+  },
   porn: {
     id: 'porn',
     preferences: ['ignore', 'warn', 'hide'],
@@ -398,12 +428,41 @@ export const LABELS: LabelDefinitionMap = {
       },
     },
   },
+  'substance-abuse': {
+    id: 'substance-abuse',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'blur',
+    groupId: 'drugs-alcohol',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Substance Abuse',
+          description: 'Abuse of drugs or alcohol.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Substance Abuse',
+          description:
+            'This account has published content which includes drug or alcohol abuse.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Substance Abuse',
+          description: 'This content includes drug or alcohol abuse.',
+        },
+      },
+    },
+  },
   'self-harm': {
     id: 'self-harm',
     preferences: ['ignore', 'warn', 'hide'],
-    flags: ['adult'],
-    onwarn: 'blur-media',
-    groupId: 'violence',
+    flags: [],
+    onwarn: 'blur',
+    groupId: 'self-harm',
     configurable: true,
     strings: {
       settings: {
@@ -425,6 +484,37 @@ export const LABELS: LabelDefinitionMap = {
           name: 'Graphic Imagery (Self-Harm)',
           description:
             'This content includes depictions of cutting, suicide, or other forms of self-harm.',
+        },
+      },
+    },
+  },
+  'eating-disorder': {
+    id: 'eating-disorder',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'blur',
+    groupId: 'self-harm',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Eating Disorder',
+          description:
+            'Discussion of anorexia, bulimia, or other forms of eating disorders.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Eating Disorder',
+          description:
+            'This account has published content which discusses anorexia, bulimia, or other forms of eating disorders.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Eating Disorder',
+          description:
+            'This content discusses anorexia, bulimia, or other forms of eating disorders.',
         },
       },
     },
@@ -581,33 +671,62 @@ export const LABELS: LabelDefinitionMap = {
       },
     },
   },
-  'icon-intolerant': {
-    id: 'icon-intolerant',
+  harassment: {
+    id: 'harassment',
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
-    onwarn: 'blur-media',
-    groupId: 'intolerance',
+    onwarn: 'blur',
+    groupId: 'bad-behavior',
     configurable: true,
     strings: {
       settings: {
         en: {
-          name: 'Intolerant Iconography',
+          name: 'Harassment',
           description:
-            'Visual imagery associated with a hate group, such as the KKK or Nazi, in any context (supportive, critical, documentary, etc).',
+            'Frequent unwanted interactions, commentary, or negativity toward other users.',
         },
       },
       account: {
         en: {
-          name: 'Intolerant Iconography',
+          name: 'Harassment',
           description:
-            'This account includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes.',
+            'This account has engaged in frequent unwanted interactions, commentary, or negativity toward other users.',
         },
       },
       content: {
         en: {
-          name: 'Intolerant Iconography',
+          name: 'Harassment',
           description:
-            'This content includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes.',
+            'This content is part of frequent unwanted interactions, commentary, or negativity toward other users.',
+        },
+      },
+    },
+  },
+  bullying: {
+    id: 'bullying',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'blur',
+    groupId: 'bad-behavior',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Bullying',
+          description: 'Needless negativity or cruelty toward another user.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Bullying',
+          description:
+            'This account has engaged in needless negativity or cruelty toward other users.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Bullying',
+          description: 'Needless negativity or cruelty toward another user.',
         },
       },
     },
@@ -617,7 +736,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'blur',
-    groupId: 'rude',
+    groupId: 'bad-behavior',
     configurable: true,
     strings: {
       settings: {
@@ -643,8 +762,282 @@ export const LABELS: LabelDefinitionMap = {
       },
     },
   },
-  spoiler: {
-    id: 'spoiler',
+  rude: {
+    id: 'rude',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'blur',
+    groupId: 'rude',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Rude',
+          description:
+            'Unkind, impolite, or uncharitable behavior toward another user.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Rude',
+          description:
+            'This account has been unkind, impolite, or uncharitable toward another user.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Rude',
+          description:
+            'Unkind, impolite, or uncharitable behavior toward another user.',
+        },
+      },
+    },
+  },
+  disgusting: {
+    id: 'disgusting',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'blur',
+    groupId: 'upsetting',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Disgusting',
+          description: 'Gross or disgusting, such as pictures of poop.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Disgusting',
+          description:
+            'This account includes content which is gross or disgusting, such as pictures of poop.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Disgusting',
+          description:
+            'This includes content which is gross or disgusting, such as pictures of poop.',
+        },
+      },
+    },
+  },
+  upsetting: {
+    id: 'upsetting',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'blur',
+    groupId: 'upsetting',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Upsetting',
+          description: 'Upsetting to read or see.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Upsetting',
+          description:
+            'This account includes content which might ruin your day.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Upsetting',
+          description: 'This includes content which might ruin your day.',
+        },
+      },
+    },
+  },
+  troubling: {
+    id: 'troubling',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'blur',
+    groupId: 'troubling',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Troubling',
+          description:
+            'Information which is difficult to process and may affect your mood.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Troubling',
+          description:
+            'This account publishes information which is difficult to process and may affect your mood.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Troubling',
+          description:
+            'Information which is difficult to process and may affect your mood.',
+        },
+      },
+    },
+  },
+  dispiriting: {
+    id: 'dispiriting',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'blur',
+    groupId: 'troubling',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Dispiriting',
+          description: 'Content which is pessimistic, cynical, or sad.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Dispiriting',
+          description:
+            'This account publishes content which is pessimistic, cynical, or sad.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Dispiriting',
+          description:
+            'Includes content which is pessimistic, cynical, or sad.',
+        },
+      },
+    },
+  },
+  'bad-news': {
+    id: 'bad-news',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'blur',
+    groupId: 'troubling',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Bad News',
+          description:
+            'Recent events which involve death, harm, loss, or bad outcomes.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Bad News',
+          description:
+            'This account publishes about recent events which involve death, harm, loss, or bad outcomes.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Bad News',
+          description:
+            'Discusses recent events which involve death, harm, loss, or bad outcomes.',
+        },
+      },
+    },
+  },
+  'icon-intolerant': {
+    id: 'icon-intolerant',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'blur-media',
+    groupId: 'hate-group-mention',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Intolerant Iconography',
+          description:
+            'Visual imagery associated with a hate group, such as the KKK or Nazi, in any context (supportive, critical, documentary, etc).',
+        },
+      },
+      account: {
+        en: {
+          name: 'Intolerant Iconography',
+          description:
+            'This account includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Intolerant Iconography',
+          description:
+            'This content includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes.',
+        },
+      },
+    },
+  },
+  discourse: {
+    id: 'discourse',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'blur',
+    groupId: 'discourse',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Discourse',
+          description:
+            'Lengthy debate about a topic which may stir strong emotions.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Discourse',
+          description:
+            'This account engages in lengthy debate about a topic which may stir strong emotions.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Discourse',
+          description:
+            'This content is a part of lengthy debate about a topic which may stir strong emotions.',
+        },
+      },
+    },
+  },
+  drama: {
+    id: 'drama',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'blur',
+    groupId: 'discourse',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Drama',
+          description: 'A debate, argument, or controversy within a community.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Drama',
+          description:
+            'This account engages in debate, argument, or controversy within a community.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Drama',
+          description:
+            'This content is a part of debate, argument, or controversy within a community.',
+        },
+      },
+    },
+  },
+  curation: {
+    id: 'curation',
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'blur',
@@ -653,23 +1046,23 @@ export const LABELS: LabelDefinitionMap = {
     strings: {
       settings: {
         en: {
-          name: 'Spoiler',
+          name: 'Curation',
           description:
-            'Discussion about film, TV, etc which gives away plot points.',
+            'Judgment of the moderators to remove content they feel does not meet their standards of quality, however they choose to define it.',
         },
       },
       account: {
         en: {
-          name: 'Spoiler Warning',
+          name: 'Curation',
           description:
-            'This account contains discussion about film, TV, etc which gives away plot points.',
+            'The moderators feel this account does not meet their standards of quality.',
         },
       },
       content: {
         en: {
-          name: 'Spoiler Warning',
+          name: 'Curation',
           description:
-            'This content contains discussion about film, TV, etc which gives away plot points.',
+            'The moderators feel this content does not meet their standards of quality.',
         },
       },
     },
@@ -705,12 +1098,192 @@ export const LABELS: LabelDefinitionMap = {
       },
     },
   },
+  'interaction-noise': {
+    id: 'interaction-noise',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'blur',
+    groupId: 'spam',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Interaction Noise',
+          description:
+            'Repeat low-quality interactions designed to get your attention, such as repeatedly following and unfollowing.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Interaction Noise',
+          description:
+            'This account engages in repeated low-quality interactions designed to get your attention, such as repeatedly following and unfollowing.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Interaction Noise',
+          description:
+            'This content is a part of repeated low-quality interactions designed to get your attention, such as repeatedly following and unfollowing.',
+        },
+      },
+    },
+  },
+  'engagement-farming': {
+    id: 'engagement-farming',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'blur',
+    groupId: 'spam',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Engagement Farming',
+          description:
+            'Automated interactions designed to drive up engagement with an account or some content.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Engagement Farming',
+          description:
+            'This account engages in automated interactions designed to drive up engagement with an account or some content.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Engagement Farming',
+          description:
+            'This content is an automated interaction designed to drive up engagement with an account or some content.',
+        },
+      },
+    },
+  },
+  shilling: {
+    id: 'shilling',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'blur',
+    groupId: 'spam',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Shilling',
+          description:
+            'Unwanted promotion, shilling, or advertisement for some product or service.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Shilling',
+          description:
+            'This account engages in unwanted promotion, shilling, or advertisement for some product or service.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Shilling',
+          description:
+            'This content is unwanted promotion, shilling, or advertisement for some product or service.',
+        },
+      },
+    },
+  },
+  bot: {
+    id: 'bot',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'warn',
+    groupId: 'bots',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Bot',
+          description: 'An automated account.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Bot',
+          description: 'This account is automated.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Bot',
+          description: 'This content is produced by an automated system.',
+        },
+      },
+    },
+  },
+  impersonation: {
+    id: 'impersonation',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'alert',
+    groupId: 'misrepresentation',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Impersonation',
+          description: 'Accounts which falsely assert some identity.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Impersonation Warning',
+          description:
+            'The moderators believe this account is lying about their identity.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Impersonation Warning',
+          description:
+            'The moderators believe this account is lying about their identity.',
+        },
+      },
+    },
+  },
+  scam: {
+    id: 'scam',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'alert',
+    groupId: 'misrepresentation',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Scam',
+          description: 'Fraudulent content.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Scam Warning',
+          description:
+            'The moderators believe this account publishes fraudulent content.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Scam Warning',
+          description: 'The moderators believe this is fraudulent content.',
+        },
+      },
+    },
+  },
   'account-security': {
     id: 'account-security',
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'blur',
-    groupId: 'misinfo',
+    groupId: 'security',
     configurable: true,
     strings: {
       settings: {
@@ -741,7 +1314,7 @@ export const LABELS: LabelDefinitionMap = {
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'blur',
-    groupId: 'misinfo',
+    groupId: 'security',
     configurable: true,
     strings: {
       settings: {
@@ -767,8 +1340,8 @@ export const LABELS: LabelDefinitionMap = {
       },
     },
   },
-  impersonation: {
-    id: 'impersonation',
+  misinfo: {
+    id: 'misinfo',
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
     onwarn: 'alert',
@@ -777,51 +1350,22 @@ export const LABELS: LabelDefinitionMap = {
     strings: {
       settings: {
         en: {
-          name: 'Impersonation',
-          description: 'Accounts which falsely assert some identity.',
+          name: 'Misinformation',
+          description: 'False information.',
         },
       },
       account: {
         en: {
-          name: 'Impersonation Warning',
+          name: 'Misinformation',
           description:
-            'The moderators believe this account is lying about their identity.',
+            'The moderators believe this account is spreading false information.',
         },
       },
       content: {
         en: {
-          name: 'Impersonation Warning',
+          name: 'Misinformation',
           description:
-            'The moderators believe this account is lying about their identity.',
-        },
-      },
-    },
-  },
-  scam: {
-    id: 'scam',
-    preferences: ['ignore', 'warn', 'hide'],
-    flags: [],
-    onwarn: 'alert',
-    groupId: 'misinfo',
-    configurable: true,
-    strings: {
-      settings: {
-        en: {
-          name: 'Scam',
-          description: 'Fraudulent content.',
-        },
-      },
-      account: {
-        en: {
-          name: 'Scam Warning',
-          description:
-            'The moderators believe this account publishes fraudulent content.',
-        },
-      },
-      content: {
-        en: {
-          name: 'Scam Warning',
-          description: 'The moderators believe this is fraudulent content.',
+            'The moderators believe this includes false information.',
         },
       },
     },
@@ -852,6 +1396,156 @@ export const LABELS: LabelDefinitionMap = {
           name: 'Misleading',
           description:
             'The moderators believe this account is spreading misleading information.',
+        },
+      },
+    },
+  },
+  unverified: {
+    id: 'unverified',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'alert',
+    groupId: 'misinfo',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Unverified',
+          description: 'Information which is not certain to be true or false.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Unverified',
+          description:
+            'The moderators believe this account is spreading information which is not certain to be true or false.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Unverified',
+          description:
+            'The moderators believe this includes information which is not certain to be true or false.',
+        },
+      },
+    },
+  },
+  manipulated: {
+    id: 'manipulated',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'alert',
+    groupId: 'misinfo',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Manipulated',
+          description: 'Media which has been modified from its original form.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Manipulated',
+          description:
+            'The moderators believe this account is spreading media which has been modified from its original form.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Manipulated',
+          description:
+            'The moderators believe this includes media which has been modified from its original form.',
+        },
+      },
+    },
+  },
+  fringe: {
+    id: 'fringe',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'alert',
+    groupId: 'misinfo',
+    configurable: true,
+    strings: {
+      settings: {
+        en: {
+          name: 'Fringe / Conspiracy',
+          description:
+            'Explanations for events that assert a conspiracy by powerful groups instead of other more probable explanations.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Fringe / Conspiracy',
+          description:
+            'The moderators believe this account is engaged in spreading conspiracy theories.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Fringe / Conspiracy',
+          description:
+            'The moderators believe this asserts a conspiracy instead of other more probable explanations.',
+        },
+      },
+    },
+  },
+  satire: {
+    id: 'satire',
+    preferences: ['warn'],
+    flags: [],
+    onwarn: 'alert',
+    groupId: 'context',
+    configurable: false,
+    strings: {
+      settings: {
+        en: {
+          name: 'Satire',
+          description: 'Content which is not intended to be taken seriously.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Satire',
+          description: 'This account is not intended to be taken seriously.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Satire',
+          description: 'This is not intended to be taken seriously.',
+        },
+      },
+    },
+  },
+  parody: {
+    id: 'parody',
+    preferences: ['warn'],
+    flags: [],
+    onwarn: 'alert',
+    groupId: 'context',
+    configurable: false,
+    strings: {
+      settings: {
+        en: {
+          name: 'Parody',
+          description:
+            'Content which is poking fun at something else through imitation.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Parody',
+          description:
+            'This account is poking fun at something else through imitation.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Parody',
+          description:
+            'This is poking fun at something else through imitation.',
         },
       },
     },

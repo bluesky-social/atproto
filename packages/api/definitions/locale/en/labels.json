@@ -83,6 +83,20 @@
       "description": "This content has been reported to include private information about someone without their consent."
     }
   },
+  "plagiarism": {
+    "settings": {
+      "name": "Plagiarism",
+      "description": "Content that appears to have been taken from another creator without attribution."
+    },
+    "account": {
+      "name": "Plagiarism",
+      "description": "The moderators believe this account has published content which is plagiarized."
+    },
+    "content": {
+      "name": "Plagiarism",
+      "description": "The moderators believe this content is plagiarized."
+    }
+  },
   "porn": {
     "settings": {
       "name": "Pornography",
@@ -181,6 +195,20 @@
       "description": "This content contains depictions of torture of a human or animal."
     }
   },
+  "substance-abuse": {
+    "settings": {
+      "name": "Substance Abuse",
+      "description": "Abuse of drugs or alcohol."
+    },
+    "account": {
+      "name": "Substance Abuse",
+      "description": "This account has published content which includes drug or alcohol abuse."
+    },
+    "content": {
+      "name": "Substance Abuse",
+      "description": "This content includes drug or alcohol abuse."
+    }
+  },
   "self-harm": {
     "settings": {
       "name": "Self-Harm",
@@ -193,6 +221,20 @@
     "content": {
       "name": "Graphic Imagery (Self-Harm)",
       "description": "This content includes depictions of cutting, suicide, or other forms of self-harm."
+    }
+  },
+  "eating-disorder": {
+    "settings": {
+      "name": "Eating Disorder",
+      "description": "Discussion of anorexia, bulimia, or other forms of eating disorders."
+    },
+    "account": {
+      "name": "Eating Disorder",
+      "description": "This account has published content which discusses anorexia, bulimia, or other forms of eating disorders."
+    },
+    "content": {
+      "name": "Eating Disorder",
+      "description": "This content discusses anorexia, bulimia, or other forms of eating disorders."
     }
   },
   "intolerant-race": {
@@ -265,18 +307,46 @@
       "description": "This content includes hateful or intolerant views."
     }
   },
-  "icon-intolerant": {
+  "harassment": {
     "settings": {
-      "name": "Intolerant Iconography",
-      "description": "Visual imagery associated with a hate group, such as the KKK or Nazi, in any context (supportive, critical, documentary, etc)."
+      "name": "Harassment",
+      "description": "Frequent unwanted interactions, commentary, or negativity toward other users."
     },
     "account": {
-      "name": "Intolerant Iconography",
-      "description": "This account includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes."
+      "name": "Harassment",
+      "description": "This account has engaged in frequent unwanted interactions, commentary, or negativity toward other users."
     },
     "content": {
-      "name": "Intolerant Iconography",
-      "description": "This content includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes."
+      "name": "Harassment",
+      "description": "This content is part of frequent unwanted interactions, commentary, or negativity toward other users."
+    }
+  },
+  "bullying": {
+    "settings": {
+      "name": "Bullying",
+      "description": "Needless negativity or cruelty toward another user."
+    },
+    "account": {
+      "name": "Bullying",
+      "description": "This account has engaged in needless negativity or cruelty toward other users."
+    },
+    "content": {
+      "name": "Bullying",
+      "description": "Needless negativity or cruelty toward another user."
+    }
+  },
+  "rude": {
+    "settings": {
+      "name": "Rude",
+      "description": "Unkind, impolite, or uncharitable behavior toward another user."
+    },
+    "account": {
+      "name": "Rude",
+      "description": "This account has been unkind, impolite, or uncharitable toward another user."
+    },
+    "content": {
+      "name": "Rude",
+      "description": "Unkind, impolite, or uncharitable behavior toward another user."
     }
   },
   "threat": {
@@ -293,18 +363,130 @@
       "description": "The moderators believe this content was published with the intent to threaten, intimidate, or harm others."
     }
   },
-  "spoiler": {
+  "disgusting": {
     "settings": {
-      "name": "Spoiler",
-      "description": "Discussion about film, TV, etc which gives away plot points."
+      "name": "Disgusting",
+      "description": "Gross or disgusting, such as pictures of poop."
     },
     "account": {
-      "name": "Spoiler Warning",
-      "description": "This account contains discussion about film, TV, etc which gives away plot points."
+      "name": "Disgusting",
+      "description": "This account includes content which is gross or disgusting, such as pictures of poop."
     },
     "content": {
-      "name": "Spoiler Warning",
-      "description": "This content contains discussion about film, TV, etc which gives away plot points."
+      "name": "Disgusting",
+      "description": "This includes content which is gross or disgusting, such as pictures of poop."
+    }
+  },
+  "upsetting": {
+    "settings": {
+      "name": "Upsetting",
+      "description": "Upsetting to read or see."
+    },
+    "account": {
+      "name": "Upsetting",
+      "description": "This account includes content which might ruin your day."
+    },
+    "content": {
+      "name": "Upsetting",
+      "description": "This includes content which might ruin your day."
+    }
+  },
+  "troubling": {
+    "settings": {
+      "name": "Troubling",
+      "description": "Information which is difficult to process and may affect your mood."
+    },
+    "account": {
+      "name": "Troubling",
+      "description": "This account publishes information which is difficult to process and may affect your mood."
+    },
+    "content": {
+      "name": "Troubling",
+      "description": "Information which is difficult to process and may affect your mood."
+    }
+  },
+  "dispiriting": {
+    "settings": {
+      "name": "Dispiriting",
+      "description": "Content which is pessimistic, cynical, or sad."
+    },
+    "account": {
+      "name": "Dispiriting",
+      "description": "This account publishes content which is pessimistic, cynical, or sad."
+    },
+    "content": {
+      "name": "Dispiriting",
+      "description": "Includes content which is pessimistic, cynical, or sad."
+    }
+  },
+  "bad-news": {
+    "settings": {
+      "name": "Bad News",
+      "description": "Recent events which involve death, harm, loss, or bad outcomes."
+    },
+    "account": {
+      "name": "Bad News",
+      "description": "This account publishes about recent events which involve death, harm, loss, or bad outcomes."
+    },
+    "content": {
+      "name": "Bad News",
+      "description": "Discusses recent events which involve death, harm, loss, or bad outcomes."
+    }
+  },
+  "icon-intolerant": {
+    "settings": {
+      "name": "Intolerant Iconography",
+      "description": "Visual imagery associated with a hate group, such as the KKK or Nazi, in any context (supportive, critical, documentary, etc)."
+    },
+    "account": {
+      "name": "Intolerant Iconography",
+      "description": "This account includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes."
+    },
+    "content": {
+      "name": "Intolerant Iconography",
+      "description": "This content includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes."
+    }
+  },
+  "discourse": {
+    "settings": {
+      "name": "Discourse",
+      "description": "Lengthy debate about a topic which may stir strong emotions."
+    },
+    "account": {
+      "name": "Discourse",
+      "description": "This account engages in lengthy debate about a topic which may stir strong emotions."
+    },
+    "content": {
+      "name": "Discourse",
+      "description": "This content is a part of lengthy debate about a topic which may stir strong emotions."
+    }
+  },
+  "drama": {
+    "settings": {
+      "name": "Drama",
+      "description": "A debate, argument, or controversy within a community."
+    },
+    "account": {
+      "name": "Drama",
+      "description": "This account engages in debate, argument, or controversy within a community."
+    },
+    "content": {
+      "name": "Drama",
+      "description": "This content is a part of debate, argument, or controversy within a community."
+    }
+  },
+  "curation": {
+    "settings": {
+      "name": "Curation",
+      "description": "Judgment of the moderators to remove content they feel does not meet their standards of quality, however they choose to define it."
+    },
+    "account": {
+      "name": "Curation",
+      "description": "The moderators feel this account does not meet their standards of quality."
+    },
+    "content": {
+      "name": "Curation",
+      "description": "The moderators feel this content does not meet their standards of quality."
     }
   },
   "spam": {
@@ -321,32 +503,60 @@
       "description": "This content is a part of repeat, low-quality messages which are clearly not designed to add to a conversation or space."
     }
   },
-  "account-security": {
+  "interaction-noise": {
     "settings": {
-      "name": "Security Concerns",
-      "description": "Content designed to hijack user accounts such as a phishing attack."
+      "name": "Interaction Noise",
+      "description": "Repeat low-quality interactions designed to get your attention, such as repeatedly following and unfollowing."
     },
     "account": {
-      "name": "Security Warning",
-      "description": "This account has published content designed to hijack user accounts such as a phishing attack."
+      "name": "Interaction Noise",
+      "description": "This account engages in repeated low-quality interactions designed to get your attention, such as repeatedly following and unfollowing."
     },
     "content": {
-      "name": "Security Warning",
-      "description": "This content is designed to hijack user accounts such as a phishing attack."
+      "name": "Interaction Noise",
+      "description": "This content is a part of repeated low-quality interactions designed to get your attention, such as repeatedly following and unfollowing."
     }
   },
-  "net-abuse": {
+  "engagement-farming": {
     "settings": {
-      "name": "Network Attacks",
-      "description": "Content designed to attack network systems such as denial-of-service attacks."
+      "name": "Engagement Farming",
+      "description": "Automated interactions designed to drive up engagement with an account or some content."
     },
     "account": {
-      "name": "Network Attack Warning",
-      "description": "This account has published content designed to attack network systems such as denial-of-service attacks."
+      "name": "Engagement Farming",
+      "description": "This account engages in automated interactions designed to drive up engagement with an account or some content."
     },
     "content": {
-      "name": "Network Attack Warning",
-      "description": "This content is designed to attack network systems such as denial-of-service attacks."
+      "name": "Engagement Farming",
+      "description": "This content is an automated interaction designed to drive up engagement with an account or some content."
+    }
+  },
+  "shilling": {
+    "settings": {
+      "name": "Shilling",
+      "description": "Unwanted promotion, shilling, or advertisement for some product or service."
+    },
+    "account": {
+      "name": "Shilling",
+      "description": "This account engages in unwanted promotion, shilling, or advertisement for some product or service."
+    },
+    "content": {
+      "name": "Shilling",
+      "description": "This content is unwanted promotion, shilling, or advertisement for some product or service."
+    }
+  },
+  "bot": {
+    "settings": {
+      "name": "Bot",
+      "description": "An automated account."
+    },
+    "account": {
+      "name": "Bot",
+      "description": "This account is automated."
+    },
+    "content": {
+      "name": "Bot",
+      "description": "This content is produced by an automated system."
     }
   },
   "impersonation": {
@@ -377,6 +587,48 @@
       "description": "The moderators believe this is fraudulent content."
     }
   },
+  "account-security": {
+    "settings": {
+      "name": "Security Concerns",
+      "description": "Content designed to hijack user accounts such as a phishing attack."
+    },
+    "account": {
+      "name": "Security Warning",
+      "description": "This account has published content designed to hijack user accounts such as a phishing attack."
+    },
+    "content": {
+      "name": "Security Warning",
+      "description": "This content is designed to hijack user accounts such as a phishing attack."
+    }
+  },
+  "net-abuse": {
+    "settings": {
+      "name": "Network Attacks",
+      "description": "Content designed to attack network systems such as denial-of-service attacks."
+    },
+    "account": {
+      "name": "Network Attack Warning",
+      "description": "This account has published content designed to attack network systems such as denial-of-service attacks."
+    },
+    "content": {
+      "name": "Network Attack Warning",
+      "description": "This content is designed to attack network systems such as denial-of-service attacks."
+    }
+  },
+  "misinfo": {
+    "settings": {
+      "name": "Misinformation",
+      "description": "False information."
+    },
+    "account": {
+      "name": "Misinformation",
+      "description": "The moderators believe this account is spreading false information."
+    },
+    "content": {
+      "name": "Misinformation",
+      "description": "The moderators believe this includes false information."
+    }
+  },
   "misleading": {
     "settings": {
       "name": "Misleading",
@@ -389,6 +641,76 @@
     "content": {
       "name": "Misleading",
       "description": "The moderators believe this account is spreading misleading information."
+    }
+  },
+  "unverified": {
+    "settings": {
+      "name": "Unverified",
+      "description": "Information which is not certain to be true or false."
+    },
+    "account": {
+      "name": "Unverified",
+      "description": "The moderators believe this account is spreading information which is not certain to be true or false."
+    },
+    "content": {
+      "name": "Unverified",
+      "description": "The moderators believe this includes information which is not certain to be true or false."
+    }
+  },
+  "manipulated": {
+    "settings": {
+      "name": "Manipulated",
+      "description": "Media which has been modified from its original form."
+    },
+    "account": {
+      "name": "Manipulated",
+      "description": "The moderators believe this account is spreading media which has been modified from its original form."
+    },
+    "content": {
+      "name": "Manipulated",
+      "description": "The moderators believe this includes media which has been modified from its original form."
+    }
+  },
+  "fringe": {
+    "settings": {
+      "name": "Fringe / Conspiracy",
+      "description": "Explanations for events that assert a conspiracy by powerful groups instead of other more probable explanations."
+    },
+    "account": {
+      "name": "Fringe / Conspiracy",
+      "description": "The moderators believe this account is engaged in spreading conspiracy theories."
+    },
+    "content": {
+      "name": "Fringe / Conspiracy",
+      "description": "The moderators believe this asserts a conspiracy instead of other more probable explanations."
+    }
+  },
+  "satire": {
+    "settings": {
+      "name": "Satire",
+      "description": "Content which is not intended to be taken seriously."
+    },
+    "account": {
+      "name": "Satire",
+      "description": "This account is not intended to be taken seriously."
+    },
+    "content": {
+      "name": "Satire",
+      "description": "This is not intended to be taken seriously."
+    }
+  },
+  "parody": {
+    "settings": {
+      "name": "Parody",
+      "description": "Content which is poking fun at something else through imitation."
+    },
+    "account": {
+      "name": "Parody",
+      "description": "This account is poking fun at something else through imitation."
+    },
+    "content": {
+      "name": "Parody",
+      "description": "This is poking fun at something else through imitation."
     }
   }
 }

@@ -34,6 +34,12 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
       },
     },
   },
+  'intellectual-property': {
+    id: 'intellectual-property',
+    configurable: true,
+    labels: [LABELS['plagiarism']],
+    strings: { settings: { en: undefined } },
+  },
   porn: {
     id: 'porn',
     configurable: true,
@@ -81,13 +87,38 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
       LABELS['corpse'],
       LABELS['gore'],
       LABELS['torture'],
-      LABELS['self-harm'],
     ],
     strings: {
       settings: {
         en: {
-          name: 'Violence',
-          description: 'Content which is violent or deeply disturbing.',
+          name: 'Violent / Bloody',
+          description: 'Gore, self-harm, torture.',
+        },
+      },
+    },
+  },
+  'drugs-alcohol': {
+    id: 'drugs-alcohol',
+    configurable: true,
+    labels: [LABELS['substance-abuse']],
+    strings: {
+      settings: {
+        en: {
+          name: 'Substance Abuse',
+          description: 'Use of drugs or alcohol.',
+        },
+      },
+    },
+  },
+  'self-harm': {
+    id: 'self-harm',
+    configurable: true,
+    labels: [LABELS['self-harm'], LABELS['eating-disorder']],
+    strings: {
+      settings: {
+        en: {
+          name: 'Self Harm',
+          description: 'Suicide, self-harm, eating disorders.',
         },
       },
     },
@@ -101,7 +132,6 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
       LABELS['intolerant-sexual-orientation'],
       LABELS['intolerant-religion'],
       LABELS['intolerant'],
-      LABELS['icon-intolerant'],
     ],
     strings: {
       settings: {
@@ -113,10 +143,23 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
       },
     },
   },
+  'bad-behavior': {
+    id: 'bad-behavior',
+    configurable: true,
+    labels: [LABELS['harassment'], LABELS['bullying'], LABELS['threat']],
+    strings: {
+      settings: {
+        en: {
+          name: 'Bad Behavior',
+          description: 'Harassment, bullying, and threats toward other users.',
+        },
+      },
+    },
+  },
   rude: {
     id: 'rude',
     configurable: true,
-    labels: [LABELS['threat']],
+    labels: [LABELS['rude']],
     strings: {
       settings: {
         en: {
@@ -126,16 +169,71 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
       },
     },
   },
-  curation: {
-    id: 'curation',
+  upsetting: {
+    id: 'upsetting',
     configurable: true,
-    labels: [LABELS['spoiler']],
+    labels: [LABELS['disgusting'], LABELS['upsetting']],
     strings: {
       settings: {
         en: {
-          name: 'Curational',
+          name: 'Upsetting',
+          description: 'Shocking, disgusting, or generally upsetting content.',
+        },
+      },
+    },
+  },
+  troubling: {
+    id: 'troubling',
+    configurable: true,
+    labels: [LABELS['troubling'], LABELS['dispiriting'], LABELS['bad-news']],
+    strings: {
+      settings: {
+        en: {
+          name: 'Troubling',
           description:
-            'Subjective moderation geared towards curating a more positive environment.',
+            'Bad news, troubling information, or dispiriting content.',
+        },
+      },
+    },
+  },
+  'hate-group-mention': {
+    id: 'hate-group-mention',
+    configurable: true,
+    labels: [LABELS['icon-intolerant']],
+    strings: {
+      settings: {
+        en: {
+          name: 'Hate Group Coverage',
+          description:
+            'Images of terror groups, articles covering events, etc.',
+        },
+      },
+    },
+  },
+  discourse: {
+    id: 'discourse',
+    configurable: true,
+    labels: [LABELS['discourse'], LABELS['drama']],
+    strings: {
+      settings: {
+        en: {
+          name: 'Discourse / Drama',
+          description:
+            'On-going discussions or debates that may be frustrating.',
+        },
+      },
+    },
+  },
+  curation: {
+    id: 'curation',
+    configurable: true,
+    labels: [LABELS['curation']],
+    strings: {
+      settings: {
+        en: {
+          name: 'Curation',
+          description:
+            'Judgment of the moderators to remove content not worth showing.',
         },
       },
     },
@@ -143,7 +241,12 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
   spam: {
     id: 'spam',
     configurable: true,
-    labels: [LABELS['spam']],
+    labels: [
+      LABELS['spam'],
+      LABELS['interaction-noise'],
+      LABELS['engagement-farming'],
+      LABELS['shilling'],
+    ],
     strings: {
       settings: {
         en: {
@@ -153,21 +256,63 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
       },
     },
   },
+  bots: {
+    id: 'bots',
+    configurable: true,
+    labels: [LABELS['bot']],
+    strings: {
+      settings: { en: { name: 'Bots', description: 'Automated accounts.' } },
+    },
+  },
+  misrepresentation: {
+    id: 'misrepresentation',
+    configurable: true,
+    labels: [LABELS['impersonation'], LABELS['scam']],
+    strings: {
+      settings: {
+        en: { name: 'Security', description: 'Impersonations, scams.' },
+      },
+    },
+  },
+  security: {
+    id: 'security',
+    configurable: true,
+    labels: [LABELS['account-security'], LABELS['net-abuse']],
+    strings: {
+      settings: {
+        en: { name: 'Security', description: 'Potential security attacks.' },
+      },
+    },
+  },
   misinfo: {
     id: 'misinfo',
     configurable: true,
     labels: [
-      LABELS['account-security'],
-      LABELS['net-abuse'],
-      LABELS['impersonation'],
-      LABELS['scam'],
+      LABELS['misinfo'],
       LABELS['misleading'],
+      LABELS['unverified'],
+      LABELS['manipulated'],
+      LABELS['fringe'],
     ],
     strings: {
       settings: {
         en: {
           name: 'Misinformation',
           description: 'Content which misleads or defrauds users.',
+        },
+      },
+    },
+  },
+  context: {
+    id: 'context',
+    configurable: false,
+    labels: [LABELS['satire'], LABELS['parody']],
+    strings: {
+      settings: {
+        en: {
+          name: 'Context',
+          description:
+            'Helpful annotations to explain intent, such as satire or parody.',
         },
       },
     },

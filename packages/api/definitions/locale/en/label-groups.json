@@ -7,6 +7,10 @@
     "name": "Legal",
     "description": "Content removed for legal reasons."
   },
+  "intellectual-propery": {
+    "name": "Intellectual Property",
+    "description": "Plagiarism, copying without attribution."
+  },
   "porn": {
     "name": "Explicit Sexual Images",
     "description": "i.e. pornography."
@@ -27,9 +31,9 @@
     "name": "Substance Abuse",
     "description": "Use of drugs or alcohol."
   },
-  "eating-disorder": {
-    "name": "Eating Disorders",
-    "description": "Discussion of eating disorders."
+  "self-harm": {
+    "name": "Self Harm",
+    "description": "Suicide, self-harm, eating disorders."
   },
   "intolerance": {
     "name": "Intolerance",
@@ -51,8 +55,8 @@
     "name": "Troubling",
     "description": "Bad news, troubling information, or dispiriting content."
   },
-  "hate-group-reference": {
-    "name": "Hate Group Coverge",
+  "hate-group-mention": {
+    "name": "Hate Group Coverage",
     "description": "Images of terror groups, articles covering events, etc."
   },
   "discourse": {
@@ -67,9 +71,17 @@
     "name": "Spam",
     "description": "Content which doesn't add to the conversation."
   },
+  "bots": {
+    "name": "Bots",
+    "description": "Automated accounts."
+  },
   "misrepresentation": {
     "name": "Security",
-    "description": "Impersonations, scams, and potential security attacks."
+    "description": "Impersonations, scams."
+  },
+  "security": {
+    "name": "Security",
+    "description": "Potential security attacks."
   },
   "misinfo": {
     "name": "Misinformation",

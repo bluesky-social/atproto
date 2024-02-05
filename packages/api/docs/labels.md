@@ -98,6 +98,14 @@ The kind of UI behavior used when a warning must be applied.
   <td>blur</td>
 </tr>
 <tr>
+  <td>plagiarism</td>
+  <td>intellectual-property</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>warn</td>
+</tr>
+<tr>
   <td>porn</td>
   <td>porn</td>
   <td>ignore, warn, hide</td>
@@ -154,12 +162,28 @@ The kind of UI behavior used when a warning must be applied.
   <td>blur</td>
 </tr>
 <tr>
-  <td>self-harm</td>
-  <td>violence</td>
+  <td>substance-abuse</td>
+  <td>drugs-alcohol</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
-  <td>adult</td>
-  <td>blur-media</td>
+  <td></td>
+  <td>blur</td>
+</tr>
+<tr>
+  <td>self-harm</td>
+  <td>self-harm</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>blur</td>
+</tr>
+<tr>
+  <td>eating-disorder</td>
+  <td>self-harm</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>blur</td>
 </tr>
 <tr>
   <td>intolerant-race</td>
@@ -202,15 +226,31 @@ The kind of UI behavior used when a warning must be applied.
   <td>blur</td>
 </tr>
 <tr>
-  <td>icon-intolerant</td>
-  <td>intolerance</td>
+  <td>harassment</td>
+  <td>bad-behavior</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
-  <td>blur-media</td>
+  <td>blur</td>
+</tr>
+<tr>
+  <td>bullying</td>
+  <td>bad-behavior</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>blur</td>
 </tr>
 <tr>
   <td>threat</td>
+  <td>bad-behavior</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>blur</td>
+</tr>
+<tr>
+  <td>rude</td>
   <td>rude</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
@@ -218,7 +258,71 @@ The kind of UI behavior used when a warning must be applied.
   <td>blur</td>
 </tr>
 <tr>
-  <td>spoiler</td>
+  <td>disgusting</td>
+  <td>upsetting</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>blur</td>
+</tr>
+<tr>
+  <td>upsetting</td>
+  <td>upsetting</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>blur</td>
+</tr>
+<tr>
+  <td>troubling</td>
+  <td>troubling</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>blur</td>
+</tr>
+<tr>
+  <td>dispiriting</td>
+  <td>troubling</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>blur</td>
+</tr>
+<tr>
+  <td>bad-news</td>
+  <td>troubling</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>blur</td>
+</tr>
+<tr>
+  <td>icon-intolerant</td>
+  <td>hate-group-mention</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>blur-media</td>
+</tr>
+<tr>
+  <td>discourse</td>
+  <td>discourse</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>blur</td>
+</tr>
+<tr>
+  <td>drama</td>
+  <td>discourse</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>blur</td>
+</tr>
+<tr>
+  <td>curation</td>
   <td>curation</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
@@ -234,24 +338,40 @@ The kind of UI behavior used when a warning must be applied.
   <td>blur</td>
 </tr>
 <tr>
-  <td>account-security</td>
-  <td>misinfo</td>
+  <td>interaction-noise</td>
+  <td>spam</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
 </tr>
 <tr>
-  <td>net-abuse</td>
-  <td>misinfo</td>
+  <td>engagement-farming</td>
+  <td>spam</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
   <td>blur</td>
+</tr>
+<tr>
+  <td>shilling</td>
+  <td>spam</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>blur</td>
+</tr>
+<tr>
+  <td>bot</td>
+  <td>bots</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>warn</td>
 </tr>
 <tr>
   <td>impersonation</td>
-  <td>misinfo</td>
+  <td>misrepresentation</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
@@ -259,6 +379,30 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>scam</td>
+  <td>misrepresentation</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>alert</td>
+</tr>
+<tr>
+  <td>account-security</td>
+  <td>security</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>blur</td>
+</tr>
+<tr>
+  <td>net-abuse</td>
+  <td>security</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>blur</td>
+</tr>
+<tr>
+  <td>misinfo</td>
   <td>misinfo</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
@@ -270,6 +414,46 @@ The kind of UI behavior used when a warning must be applied.
   <td>misinfo</td>
   <td>ignore, warn, hide</td>
   <td>✅</td>
+  <td></td>
+  <td>alert</td>
+</tr>
+<tr>
+  <td>unverified</td>
+  <td>misinfo</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>alert</td>
+</tr>
+<tr>
+  <td>manipulated</td>
+  <td>misinfo</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>alert</td>
+</tr>
+<tr>
+  <td>fringe</td>
+  <td>misinfo</td>
+  <td>ignore, warn, hide</td>
+  <td>✅</td>
+  <td></td>
+  <td>alert</td>
+</tr>
+<tr>
+  <td>satire</td>
+  <td>context</td>
+  <td>warn</td>
+  <td>❌</td>
+  <td></td>
+  <td>alert</td>
+</tr>
+<tr>
+  <td>parody</td>
+  <td>context</td>
+  <td>warn</td>
+  <td>❌</td>
   <td></td>
   <td>alert</td>
 </tr>
@@ -291,6 +475,10 @@ The kind of UI behavior used when a warning must be applied.
   <td><code>general</code><br><strong>Legal</strong><br>Content removed for legal reasons.</td>
 </tr>
 <tr>
+  <td>intellectual-propery</td>
+  <td><code>general</code><br><strong>Intellectual Property</strong><br>Plagiarism, copying without attribution.</td>
+</tr>
+<tr>
   <td>porn</td>
   <td><code>general</code><br><strong>Explicit Sexual Images</strong><br>i.e. pornography.</td>
 </tr>
@@ -304,27 +492,71 @@ The kind of UI behavior used when a warning must be applied.
 </tr>
 <tr>
   <td>violence</td>
-  <td><code>general</code><br><strong>Violence</strong><br>Content which is violent or deeply disturbing.</td>
+  <td><code>general</code><br><strong>Violent / Bloody</strong><br>Gore, self-harm, torture.</td>
+</tr>
+<tr>
+  <td>drugs-alcohol</td>
+  <td><code>general</code><br><strong>Substance Abuse</strong><br>Use of drugs or alcohol.</td>
+</tr>
+<tr>
+  <td>self-harm</td>
+  <td><code>general</code><br><strong>Self Harm</strong><br>Suicide, self-harm, eating disorders.</td>
 </tr>
 <tr>
   <td>intolerance</td>
   <td><code>general</code><br><strong>Intolerance</strong><br>Content or behavior which is hateful or intolerant toward a group of people.</td>
 </tr>
 <tr>
+  <td>bad-behavior</td>
+  <td><code>general</code><br><strong>Bad Behavior</strong><br>Harassment, bullying, and threats toward other users.</td>
+</tr>
+<tr>
   <td>rude</td>
   <td><code>general</code><br><strong>Rude</strong><br>Behavior which is rude toward other users.</td>
 </tr>
 <tr>
+  <td>upsetting</td>
+  <td><code>general</code><br><strong>Upsetting</strong><br>Shocking, disgusting, or generally upsetting content.</td>
+</tr>
+<tr>
+  <td>troubling</td>
+  <td><code>general</code><br><strong>Troubling</strong><br>Bad news, troubling information, or dispiriting content.</td>
+</tr>
+<tr>
+  <td>hate-group-mention</td>
+  <td><code>general</code><br><strong>Hate Group Coverage</strong><br>Images of terror groups, articles covering events, etc.</td>
+</tr>
+<tr>
+  <td>discourse</td>
+  <td><code>general</code><br><strong>Discourse / Drama</strong><br>On-going discussions or debates that may be frustrating.</td>
+</tr>
+<tr>
   <td>curation</td>
-  <td><code>general</code><br><strong>Curational</strong><br>Subjective moderation geared towards curating a more positive environment.</td>
+  <td><code>general</code><br><strong>Curation</strong><br>Judgment of the moderators to remove content not worth showing.</td>
 </tr>
 <tr>
   <td>spam</td>
   <td><code>general</code><br><strong>Spam</strong><br>Content which doesn't add to the conversation.</td>
 </tr>
 <tr>
+  <td>bots</td>
+  <td><code>general</code><br><strong>Bots</strong><br>Automated accounts.</td>
+</tr>
+<tr>
+  <td>misrepresentation</td>
+  <td><code>general</code><br><strong>Security</strong><br>Impersonations, scams.</td>
+</tr>
+<tr>
+  <td>security</td>
+  <td><code>general</code><br><strong>Security</strong><br>Potential security attacks.</td>
+</tr>
+<tr>
   <td>misinfo</td>
   <td><code>general</code><br><strong>Misinformation</strong><br>Content which misleads or defrauds users.</td>
+</tr>
+<tr>
+  <td>context</td>
+  <td><code>general</code><br><strong>Context</strong><br>Helpful annotations to explain intent, such as satire or parody.</td>
 </tr>
   </table>
 
@@ -384,6 +616,14 @@ The kind of UI behavior used when a warning must be applied.
   </td>
 </tr>
 <tr>
+  <td>plagiarism</td>
+  <td>
+    <code>general</code><br><strong>Plagiarism</strong><br>Content that appears to have been taken from another creator without attribution.<br><br>
+    <code>on an account</code><br><strong>Plagiarism</strong><br>The moderators believe this account has published content which is plagiarized.<br><br>
+    <code>on content</code><br><strong>Plagiarism</strong><br>The moderators believe this content is plagiarized.<br><br>
+  </td>
+</tr>
+<tr>
   <td>porn</td>
   <td>
     <code>general</code><br><strong>Pornography</strong><br>Images of full-frontal nudity (genitalia) in any sexualized context, or explicit sexual activity (meaning contact with genitalia or breasts) even if partially covered. Includes graphic sexual cartoons (often jokes/memes).<br><br>
@@ -440,11 +680,27 @@ The kind of UI behavior used when a warning must be applied.
   </td>
 </tr>
 <tr>
+  <td>substance-abuse</td>
+  <td>
+    <code>general</code><br><strong>Substance Abuse</strong><br>Abuse of drugs or alcohol.<br><br>
+    <code>on an account</code><br><strong>Substance Abuse</strong><br>This account has published content which includes drug or alcohol abuse.<br><br>
+    <code>on content</code><br><strong>Substance Abuse</strong><br>This content includes drug or alcohol abuse.<br><br>
+  </td>
+</tr>
+<tr>
   <td>self-harm</td>
   <td>
     <code>general</code><br><strong>Self-Harm</strong><br>A visual depiction (photo or figurative) of cutting, suicide, or similar.<br><br>
     <code>on an account</code><br><strong>Graphic Imagery (Self-Harm)</strong><br>This account includes depictions of cutting, suicide, or other forms of self-harm.<br><br>
     <code>on content</code><br><strong>Graphic Imagery (Self-Harm)</strong><br>This content includes depictions of cutting, suicide, or other forms of self-harm.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>eating-disorder</td>
+  <td>
+    <code>general</code><br><strong>Eating Disorder</strong><br>Discussion of anorexia, bulimia, or other forms of eating disorders.<br><br>
+    <code>on an account</code><br><strong>Eating Disorder</strong><br>This account has published content which discusses anorexia, bulimia, or other forms of eating disorders.<br><br>
+    <code>on content</code><br><strong>Eating Disorder</strong><br>This content discusses anorexia, bulimia, or other forms of eating disorders.<br><br>
   </td>
 </tr>
 <tr>
@@ -488,11 +744,27 @@ The kind of UI behavior used when a warning must be applied.
   </td>
 </tr>
 <tr>
-  <td>icon-intolerant</td>
+  <td>harassment</td>
   <td>
-    <code>general</code><br><strong>Intolerant Iconography</strong><br>Visual imagery associated with a hate group, such as the KKK or Nazi, in any context (supportive, critical, documentary, etc).<br><br>
-    <code>on an account</code><br><strong>Intolerant Iconography</strong><br>This account includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes.<br><br>
-    <code>on content</code><br><strong>Intolerant Iconography</strong><br>This content includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes.<br><br>
+    <code>general</code><br><strong>Harassment</strong><br>Frequent unwanted interactions, commentary, or negativity toward other users.<br><br>
+    <code>on an account</code><br><strong>Harassment</strong><br>This account has engaged in frequent unwanted interactions, commentary, or negativity toward other users.<br><br>
+    <code>on content</code><br><strong>Harassment</strong><br>This content is part of frequent unwanted interactions, commentary, or negativity toward other users.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>bullying</td>
+  <td>
+    <code>general</code><br><strong>Bullying</strong><br>Needless negativity or cruelty toward another user.<br><br>
+    <code>on an account</code><br><strong>Bullying</strong><br>This account has engaged in needless negativity or cruelty toward other users.<br><br>
+    <code>on content</code><br><strong>Bullying</strong><br>Needless negativity or cruelty toward another user.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>rude</td>
+  <td>
+    <code>general</code><br><strong>Rude</strong><br>Unkind, impolite, or uncharitable behavior toward another user.<br><br>
+    <code>on an account</code><br><strong>Rude</strong><br>This account has been unkind, impolite, or uncharitable toward another user.<br><br>
+    <code>on content</code><br><strong>Rude</strong><br>Unkind, impolite, or uncharitable behavior toward another user.<br><br>
   </td>
 </tr>
 <tr>
@@ -504,11 +776,75 @@ The kind of UI behavior used when a warning must be applied.
   </td>
 </tr>
 <tr>
-  <td>spoiler</td>
+  <td>disgusting</td>
   <td>
-    <code>general</code><br><strong>Spoiler</strong><br>Discussion about film, TV, etc which gives away plot points.<br><br>
-    <code>on an account</code><br><strong>Spoiler Warning</strong><br>This account contains discussion about film, TV, etc which gives away plot points.<br><br>
-    <code>on content</code><br><strong>Spoiler Warning</strong><br>This content contains discussion about film, TV, etc which gives away plot points.<br><br>
+    <code>general</code><br><strong>Disgusting</strong><br>Gross or disgusting, such as pictures of poop.<br><br>
+    <code>on an account</code><br><strong>Disgusting</strong><br>This account includes content which is gross or disgusting, such as pictures of poop.<br><br>
+    <code>on content</code><br><strong>Disgusting</strong><br>This includes content which is gross or disgusting, such as pictures of poop.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>upsetting</td>
+  <td>
+    <code>general</code><br><strong>Upsetting</strong><br>Upsetting to read or see.<br><br>
+    <code>on an account</code><br><strong>Upsetting</strong><br>This account includes content which might ruin your day.<br><br>
+    <code>on content</code><br><strong>Upsetting</strong><br>This includes content which might ruin your day.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>troubling</td>
+  <td>
+    <code>general</code><br><strong>Troubling</strong><br>Information which is difficult to process and may affect your mood.<br><br>
+    <code>on an account</code><br><strong>Troubling</strong><br>This account publishes information which is difficult to process and may affect your mood.<br><br>
+    <code>on content</code><br><strong>Troubling</strong><br>Information which is difficult to process and may affect your mood.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>dispiriting</td>
+  <td>
+    <code>general</code><br><strong>Dispiriting</strong><br>Content which is pessimistic, cynical, or sad.<br><br>
+    <code>on an account</code><br><strong>Dispiriting</strong><br>This account publishes content which is pessimistic, cynical, or sad.<br><br>
+    <code>on content</code><br><strong>Dispiriting</strong><br>Includes content which is pessimistic, cynical, or sad.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>bad-news</td>
+  <td>
+    <code>general</code><br><strong>Bad News</strong><br>Recent events which involve death, harm, loss, or bad outcomes.<br><br>
+    <code>on an account</code><br><strong>Bad News</strong><br>This account publishes about recent events which involve death, harm, loss, or bad outcomes.<br><br>
+    <code>on content</code><br><strong>Bad News</strong><br>Discusses recent events which involve death, harm, loss, or bad outcomes.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>icon-intolerant</td>
+  <td>
+    <code>general</code><br><strong>Intolerant Iconography</strong><br>Visual imagery associated with a hate group, such as the KKK or Nazi, in any context (supportive, critical, documentary, etc).<br><br>
+    <code>on an account</code><br><strong>Intolerant Iconography</strong><br>This account includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes.<br><br>
+    <code>on content</code><br><strong>Intolerant Iconography</strong><br>This content includes imagery associated with a hate group such as the KKK or Nazis. This warning may apply to content any context, including critical or documentary purposes.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>discourse</td>
+  <td>
+    <code>general</code><br><strong>Discourse</strong><br>Lengthy debate about a topic which may stir strong emotions.<br><br>
+    <code>on an account</code><br><strong>Discourse</strong><br>This account engages in lengthy debate about a topic which may stir strong emotions.<br><br>
+    <code>on content</code><br><strong>Discourse</strong><br>This content is a part of lengthy debate about a topic which may stir strong emotions.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>drama</td>
+  <td>
+    <code>general</code><br><strong>Drama</strong><br>A debate, argument, or controversy within a community.<br><br>
+    <code>on an account</code><br><strong>Drama</strong><br>This account engages in debate, argument, or controversy within a community.<br><br>
+    <code>on content</code><br><strong>Drama</strong><br>This content is a part of debate, argument, or controversy within a community.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>curation</td>
+  <td>
+    <code>general</code><br><strong>Curation</strong><br>Judgment of the moderators to remove content they feel does not meet their standards of quality, however they choose to define it.<br><br>
+    <code>on an account</code><br><strong>Curation</strong><br>The moderators feel this account does not meet their standards of quality.<br><br>
+    <code>on content</code><br><strong>Curation</strong><br>The moderators feel this content does not meet their standards of quality.<br><br>
   </td>
 </tr>
 <tr>
@@ -520,19 +856,35 @@ The kind of UI behavior used when a warning must be applied.
   </td>
 </tr>
 <tr>
-  <td>account-security</td>
+  <td>interaction-noise</td>
   <td>
-    <code>general</code><br><strong>Security Concerns</strong><br>Content designed to hijack user accounts such as a phishing attack.<br><br>
-    <code>on an account</code><br><strong>Security Warning</strong><br>This account has published content designed to hijack user accounts such as a phishing attack.<br><br>
-    <code>on content</code><br><strong>Security Warning</strong><br>This content is designed to hijack user accounts such as a phishing attack.<br><br>
+    <code>general</code><br><strong>Interaction Noise</strong><br>Repeat low-quality interactions designed to get your attention, such as repeatedly following and unfollowing.<br><br>
+    <code>on an account</code><br><strong>Interaction Noise</strong><br>This account engages in repeated low-quality interactions designed to get your attention, such as repeatedly following and unfollowing.<br><br>
+    <code>on content</code><br><strong>Interaction Noise</strong><br>This content is a part of repeated low-quality interactions designed to get your attention, such as repeatedly following and unfollowing.<br><br>
   </td>
 </tr>
 <tr>
-  <td>net-abuse</td>
+  <td>engagement-farming</td>
   <td>
-    <code>general</code><br><strong>Network Attacks</strong><br>Content designed to attack network systems such as denial-of-service attacks.<br><br>
-    <code>on an account</code><br><strong>Network Attack Warning</strong><br>This account has published content designed to attack network systems such as denial-of-service attacks.<br><br>
-    <code>on content</code><br><strong>Network Attack Warning</strong><br>This content is designed to attack network systems such as denial-of-service attacks.<br><br>
+    <code>general</code><br><strong>Engagement Farming</strong><br>Automated interactions designed to drive up engagement with an account or some content.<br><br>
+    <code>on an account</code><br><strong>Engagement Farming</strong><br>This account engages in automated interactions designed to drive up engagement with an account or some content.<br><br>
+    <code>on content</code><br><strong>Engagement Farming</strong><br>This content is an automated interaction designed to drive up engagement with an account or some content.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>shilling</td>
+  <td>
+    <code>general</code><br><strong>Shilling</strong><br>Unwanted promotion, shilling, or advertisement for some product or service.<br><br>
+    <code>on an account</code><br><strong>Shilling</strong><br>This account engages in unwanted promotion, shilling, or advertisement for some product or service.<br><br>
+    <code>on content</code><br><strong>Shilling</strong><br>This content is unwanted promotion, shilling, or advertisement for some product or service.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>bot</td>
+  <td>
+    <code>general</code><br><strong>Bot</strong><br>An automated account.<br><br>
+    <code>on an account</code><br><strong>Bot</strong><br>This account is automated.<br><br>
+    <code>on content</code><br><strong>Bot</strong><br>This content is produced by an automated system.<br><br>
   </td>
 </tr>
 <tr>
@@ -552,11 +904,75 @@ The kind of UI behavior used when a warning must be applied.
   </td>
 </tr>
 <tr>
+  <td>account-security</td>
+  <td>
+    <code>general</code><br><strong>Security Concerns</strong><br>Content designed to hijack user accounts such as a phishing attack.<br><br>
+    <code>on an account</code><br><strong>Security Warning</strong><br>This account has published content designed to hijack user accounts such as a phishing attack.<br><br>
+    <code>on content</code><br><strong>Security Warning</strong><br>This content is designed to hijack user accounts such as a phishing attack.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>net-abuse</td>
+  <td>
+    <code>general</code><br><strong>Network Attacks</strong><br>Content designed to attack network systems such as denial-of-service attacks.<br><br>
+    <code>on an account</code><br><strong>Network Attack Warning</strong><br>This account has published content designed to attack network systems such as denial-of-service attacks.<br><br>
+    <code>on content</code><br><strong>Network Attack Warning</strong><br>This content is designed to attack network systems such as denial-of-service attacks.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>misinfo</td>
+  <td>
+    <code>general</code><br><strong>Misinformation</strong><br>False information.<br><br>
+    <code>on an account</code><br><strong>Misinformation</strong><br>The moderators believe this account is spreading false information.<br><br>
+    <code>on content</code><br><strong>Misinformation</strong><br>The moderators believe this includes false information.<br><br>
+  </td>
+</tr>
+<tr>
   <td>misleading</td>
   <td>
     <code>general</code><br><strong>Misleading</strong><br>Accounts which share misleading information.<br><br>
     <code>on an account</code><br><strong>Misleading</strong><br>The moderators believe this account is spreading misleading information.<br><br>
     <code>on content</code><br><strong>Misleading</strong><br>The moderators believe this account is spreading misleading information.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>unverified</td>
+  <td>
+    <code>general</code><br><strong>Unverified</strong><br>Information which is not certain to be true or false.<br><br>
+    <code>on an account</code><br><strong>Unverified</strong><br>The moderators believe this account is spreading information which is not certain to be true or false.<br><br>
+    <code>on content</code><br><strong>Unverified</strong><br>The moderators believe this includes information which is not certain to be true or false.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>manipulated</td>
+  <td>
+    <code>general</code><br><strong>Manipulated</strong><br>Media which has been modified from its original form.<br><br>
+    <code>on an account</code><br><strong>Manipulated</strong><br>The moderators believe this account is spreading media which has been modified from its original form.<br><br>
+    <code>on content</code><br><strong>Manipulated</strong><br>The moderators believe this includes media which has been modified from its original form.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>fringe</td>
+  <td>
+    <code>general</code><br><strong>Fringe / Conspiracy</strong><br>Explanations for events that assert a conspiracy by powerful groups instead of other more probable explanations.<br><br>
+    <code>on an account</code><br><strong>Fringe / Conspiracy</strong><br>The moderators believe this account is engaged in spreading conspiracy theories.<br><br>
+    <code>on content</code><br><strong>Fringe / Conspiracy</strong><br>The moderators believe this asserts a conspiracy instead of other more probable explanations.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>satire</td>
+  <td>
+    <code>general</code><br><strong>Satire</strong><br>Content which is not intended to be taken seriously.<br><br>
+    <code>on an account</code><br><strong>Satire</strong><br>This account is not intended to be taken seriously.<br><br>
+    <code>on content</code><br><strong>Satire</strong><br>This is not intended to be taken seriously.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>parody</td>
+  <td>
+    <code>general</code><br><strong>Parody</strong><br>Content which is poking fun at something else through imitation.<br><br>
+    <code>on an account</code><br><strong>Parody</strong><br>This account is poking fun at something else through imitation.<br><br>
+    <code>on content</code><br><strong>Parody</strong><br>This is poking fun at something else through imitation.<br><br>
   </td>
 </tr>
   </table>

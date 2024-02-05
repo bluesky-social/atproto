@@ -48,6 +48,18 @@
     ]
   },
   {
+    "id": "intellectual-property",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "plagiarism",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "warn"
+      }
+    ]
+  },
+  {
     "id": "porn",
     "configurable": true,
     "labels": [
@@ -110,12 +122,6 @@
         "preferences": ["ignore", "warn", "hide"],
         "flags": ["adult"],
         "onwarn": "blur"
-      },
-      {
-        "id": "self-harm",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": ["adult"],
-        "onwarn": "blur-media"
       }
     ]
   },
@@ -132,9 +138,15 @@
     ]
   },
   {
-    "id": "eating-disorder",
+    "id": "self-harm",
     "configurable": true,
     "labels": [
+      {
+        "id": "self-harm",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
       {
         "id": "eating-disorder",
         "preferences": ["ignore", "warn", "hide"],
@@ -258,23 +270,11 @@
     ]
   },
   {
-    "id": "hate-group-reference",
+    "id": "hate-group-mention",
     "configurable": true,
     "labels": [
       {
         "id": "icon-intolerant",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "blur-media"
-      },
-      {
-        "id": "icon-kkk",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "blur-media"
-      },
-      {
-        "id": "icon-nazi",
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur-media"
@@ -304,7 +304,7 @@
     "configurable": true,
     "labels": [
       {
-        "id": "dislike",
+        "id": "curation",
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
@@ -320,6 +320,54 @@
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
+      },
+      {
+        "id": "interaction-noise",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "engagement-farming",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      },
+      {
+        "id": "shilling",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "blur"
+      }
+    ]
+  },
+  {
+    "id": "bots",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "bot",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "warn"
+      }
+    ]
+  },
+  {
+    "id": "misrepresentation",
+    "configurable": true,
+    "labels": [
+      {
+        "id": "impersonation",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
+      },
+      {
+        "id": "scam",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
       }
     ]
   },
@@ -338,18 +386,6 @@
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "blur"
-      },
-      {
-        "id": "impersonation",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "alert"
-      },
-      {
-        "id": "scam",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "alert"
       }
     ]
   },
