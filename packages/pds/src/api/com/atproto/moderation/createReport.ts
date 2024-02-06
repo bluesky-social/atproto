@@ -4,6 +4,10 @@ import AppContext from '../../../../context'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
     auth: ctx.authVerifier.accessCheckTakedown,
+    rateLimit: {
+      durationMs: DAY,
+      points: 100,
+    },
     handler: async ({ input, auth }) => {
       const requester = auth.credentials.did
       const { data: result } =
