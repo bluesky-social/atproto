@@ -12,8 +12,11 @@ export interface QueryParams {}
 export type InputSchema = undefined
 
 export interface OutputSchema {
+  /** If true, an invite code must be supplied to create an account on this instance. */
   inviteCodeRequired?: boolean
+  /** If true, a phone verification token must be supplied to create an account on this instance. */
   phoneVerificationRequired?: boolean
+  /** List of domain suffixes that can be used in account handles. */
   availableUserDomains: string[]
   links?: Links
   [k: string]: unknown

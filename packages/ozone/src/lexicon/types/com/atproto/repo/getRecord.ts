@@ -13,7 +13,7 @@ export interface QueryParams {
   repo: string
   /** The NSID of the record collection. */
   collection: string
-  /** The key of the record. */
+  /** The Record Key. */
   rkey: string
   /** The CID of the version of the record. If not specified, then return the most recent version. */
   cid?: string

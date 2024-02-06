@@ -13,6 +13,7 @@ export interface QueryParams {
   /** The DID of the repo. */
   did: string
   collection: string
+  /** Record Key */
   rkey: string
   /** An optional past commit CID. */
   commit?: string

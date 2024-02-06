@@ -15,6 +15,7 @@ export interface QueryParams {}
 
 export interface InputSchema {
   reasonType: ComAtprotoModerationDefs.ReasonType
+  /** Additional context about the content and violation. */
   reason?: string
   subject:
     | ComAtprotoAdminDefs.RepoRef

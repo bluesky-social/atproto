@@ -7,6 +7,7 @@ import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
 
 export interface Record {
+  /** Reference (AT-URI) to the mod list record. */
   subject: string
   createdAt: string
   [k: string]: unknown
