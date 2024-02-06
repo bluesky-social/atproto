@@ -6,6 +6,7 @@ import AtpAgent, {
 } from '@atproto/api'
 import { forSnapshot } from './_util'
 import {
+  REASONAPPEAL,
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
@@ -206,6 +207,99 @@ describe('moderation-events', () => {
       expect(defaultEvents.length).toEqual(allEvents.data.events.length)
       expect(reversedEvents.length).toEqual(allEvents.data.events.length)
       expect(reversedEvents[0].id).toEqual(defaultEvents[4].id)
+    })
+
+    it('returns report events matching reportType filters', async () => {
+      const [spamEvents, misleadingEvents] = await Promise.all([
+        queryModerationEvents({
+          reportTypes: [REASONSPAM],
+        }),
+        queryModerationEvents({
+          reportTypes: [REASONMISLEADING, REASONAPPEAL],
+        }),
+      ])
+
+      expect(misleadingEvents.data.events.length).toEqual(2)
+      expect(spamEvents.data.events.length).toEqual(6)
+    })
+
+    it('returns events matching keyword in comment', async () => {
+      const [eventsWithX, eventsWithTest, eventsWithComment] =
+        await Promise.all([
+          queryModerationEvents({
+            comment: 'X',
+          }),
+          queryModerationEvents({
+            comment: 'test',
+          }),
+          queryModerationEvents({
+            hasComment: true,
+          }),
+        ])
+
+      expect(eventsWithX.data.events.length).toEqual(10)
+      expect(eventsWithTest.data.events.length).toEqual(0)
+      expect(eventsWithComment.data.events.length).toEqual(12)
+    })
+
+    it('returns events matching filter params for columns', async () => {
+      const [negatedLabelEvent, createdLabelEvent] = await Promise.all([
+        emitModerationEvent({
+          event: {
+            $type: 'com.atproto.admin.defs#modEventLabel',
+            comment: 'X',
+            negateLabelVals: ['L1', 'L2'],
+            createLabelVals: [],
+          },
+          //   Report bob's account by alice and vice versa
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.alice,
+          },
+          createdBy: sc.dids.bob,
+        }),
+        emitModerationEvent({
+          event: {
+            $type: 'com.atproto.admin.defs#modEventLabel',
+            comment: 'X',
+            createLabelVals: ['L1', 'L2'],
+            negateLabelVals: [],
+          },
+          //   Report bob's account by alice and vice versa
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.bob,
+          },
+          createdBy: sc.dids.alice,
+        }),
+      ])
+      const [withTwoLabels, withoutTwoLabels, withOneLabel, withoutOneLabel] =
+        await Promise.all([
+          queryModerationEvents({
+            addedLabels: ['L1', 'L3'],
+          }),
+          queryModerationEvents({
+            removedLabels: ['L1', 'L2'],
+          }),
+          queryModerationEvents({
+            addedLabels: ['L1'],
+          }),
+          queryModerationEvents({
+            removedLabels: ['L2'],
+          }),
+        ])
+
+      // Verify that when querying for events where 2 different labels were added
+      // events where all of the labels from the list was added are returned
+      expect(withTwoLabels.data.events.length).toEqual(0)
+      expect(negatedLabelEvent.data.id).toEqual(
+        withoutTwoLabels.data.events[0].id,
+      )
+
+      expect(createdLabelEvent.data.id).toEqual(withOneLabel.data.events[0].id)
+      expect(negatedLabelEvent.data.id).toEqual(
+        withoutOneLabel.data.events[0].id,
+      )
     })
   })
 

@@ -97,6 +97,13 @@ export class ModerationService {
     includeAllUserRecords: boolean
     types: ModerationEvent['action'][]
     sortDirection?: 'asc' | 'desc'
+    hasComment?: boolean
+    comment?: string
+    createdAfter?: string
+    createdBefore?: string
+    addedLabels: string[]
+    removedLabels: string[]
+    reportTypes?: string[]
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -106,6 +113,13 @@ export class ModerationService {
       includeAllUserRecords,
       sortDirection = 'desc',
       types,
+      hasComment,
+      comment,
+      createdAfter,
+      createdBefore,
+      addedLabels,
+      removedLabels,
+      reportTypes,
     } = opts
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
     if (subject) {
@@ -139,6 +153,33 @@ export class ModerationService {
     }
     if (createdBy) {
       builder = builder.where('createdBy', '=', createdBy)
+    }
+    if (createdAfter) {
+      builder = builder.where('createdAt', '>=', createdAfter)
+    }
+    if (createdBefore) {
+      builder = builder.where('createdAt', '<=', createdBefore)
+    }
+    if (comment) {
+      builder = builder.where('comment', 'ilike', `%${comment}%`)
+    }
+    if (hasComment) {
+      builder = builder.where('comment', 'is not', null)
+    }
+
+    // If multiple labels are passed, then only retrieve events where all those labels exist
+    if (addedLabels.length) {
+      addedLabels.forEach((label) => {
+        builder = builder.where('createLabelVals', 'ilike', `%${label}%`)
+      })
+    }
+    if (removedLabels.length) {
+      removedLabels.forEach((label) => {
+        builder = builder.where('negateLabelVals', 'ilike', `%${label}%`)
+      })
+    }
+    if (reportTypes?.length) {
+      builder = builder.where(sql`meta->>'reportType'`, 'in', reportTypes)
     }
 
     const { ref } = this.db.db.dynamic
