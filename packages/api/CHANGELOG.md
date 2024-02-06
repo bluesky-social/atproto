@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.9.6
+
+### Patch Changes
+
+- [#2124](https://github.com/bluesky-social/atproto/pull/2124) [`e4ec7af03`](https://github.com/bluesky-social/atproto/commit/e4ec7af03608949fc3b00a845f547a77599b5ad0) Thanks [@foysalit](https://github.com/foysalit)! - Allow filtering for comment, label, report type and date range on queryModerationEvents endpoint.
+
 ## 0.9.5
 
 ### Patch Changes
