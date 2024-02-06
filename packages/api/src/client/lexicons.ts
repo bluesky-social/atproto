@@ -1493,7 +1493,7 @@ export const schemaDict = {
                 type: 'string',
               },
               description:
-                'If specified, only events where one of these labels were added are returned',
+                'If specified, only events where all of these labels were added are returned',
             },
             removedLabels: {
               type: 'array',
@@ -1501,7 +1501,7 @@ export const schemaDict = {
                 type: 'string',
               },
               description:
-                'If specified, only events where one of these labels were removed are returned',
+                'If specified, only events where all of these labels were removed are returned',
             },
             reportTypes: {
               type: 'array',
