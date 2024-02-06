@@ -15,19 +15,14 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/syntax"
   },
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts"
-  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/syntax"
+    "test": "jest"
   },
   "dependencies": {
-    "@atproto/common-web": "workspace:^"
+    "tslib": "^2.6.2"
   },
   "browser": {
     "dns/promises": false

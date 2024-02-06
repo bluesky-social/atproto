@@ -1,3 +1,4 @@
+import { mailer as templates } from '@atproto/pds-templates'
 import { Transporter } from 'nodemailer'
 import { htmlToText } from 'nodemailer-html-to-text'
 import Mail from 'nodemailer/lib/mailer'
@@ -5,11 +6,7 @@ import SMTPTransport from 'nodemailer/lib/smtp-transport'
 import { ServerConfig } from '../config'
 import { mailerLogger } from '../logger'
 
-import * as templates from './templates'
-
 export class ServerMailer {
-  private readonly templates = templates
-
   constructor(
     public readonly transporter: Transporter<SMTPTransport.SentMessageInfo>,
     private readonly config: ServerConfig,
@@ -53,8 +50,12 @@ export class ServerMailer {
     })
   }
 
-  private async sendTemplate(templateName, params, mailOpts: Mail.Options) {
-    const html = this.templates[templateName]({
+  private async sendTemplate(
+    templateName: keyof typeof templates,
+    params,
+    mailOpts: Mail.Options,
+  ) {
+    const html = templates[templateName]({
       ...params,
       config: ServerMailer.getEmailConfig(this.config),
     })

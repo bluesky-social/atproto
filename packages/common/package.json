@@ -12,16 +12,11 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/common"
   },
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts"
-  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/common"
+    "test": "jest"
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
@@ -30,6 +25,9 @@
     "iso-datestring-validator": "^2.2.2",
     "multiformats": "^9.9.0",
     "pino": "^8.15.0",
-    "zod": "3.21.4"
+    "tslib": "^2.6.2"
+  },
+  "devDependencies": {
+    "uint8arrays": "3.0.0"
   }
 }

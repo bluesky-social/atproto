@@ -1,18 +1,4 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist", // Your outDir,
-    "emitDeclarationOnly": true
-  },
-  "module": "esnext",
-  "include": ["./src", "__tests__/**/**.ts"],
-  "references": [
-    { "path": "../api/tsconfig.build.json" },
-    { "path": "../bsky/tsconfig.build.json" },
-    { "path": "../crypto/tsconfig.build.json" },
-    { "path": "../identity/tsconfig.build.json" },
-    { "path": "../pds/tsconfig.json" },
-    { "path": "../uri/tsconfig.build.json" }
-  ]
+  "include": [],
+  "references": [{ "path": "./tsconfig.build.json" }]
 }

@@ -8,8 +8,8 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { Handler as SkeletonHandler } from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { GeneratorView } from '@atproto/api/src/client/types/app/bsky/feed/defs'
-import { UnknownFeedError } from '@atproto/api/src/client/types/app/bsky/feed/getFeed'
+import { GeneratorView } from '@atproto/api/dist/client/types/app/bsky/feed/defs'
+import { UnknownFeedError } from '@atproto/api/dist/client/types/app/bsky/feed/getFeed'
 import { ids } from '../src/lexicon/lexicons'
 import {
   FeedViewPost,

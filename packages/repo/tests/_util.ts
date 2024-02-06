@@ -24,7 +24,7 @@ type IdMapping = Record<string, CID>
 export const randomCid = async (storage?: RepoStorage): Promise<CID> => {
   const block = await dataToCborBlock({ test: randomStr(50) })
   if (storage) {
-    await storage.putBlock(block.cid, block.bytes)
+    await storage.putBlock(block.cid, block.bytes, 'rev')
   }
   return block.cid
 }
@@ -189,7 +189,7 @@ export const pathsForOps = (ops: RecordWriteOp[]): RecordPath[] =>
 
 export const saveMst = async (storage: RepoStorage, mst: MST): Promise<CID> => {
   const diff = await mst.getUnstoredBlocks()
-  await storage.putMany(diff.blocks)
+  await storage.putMany(diff.blocks, 'rev')
   return diff.root
 }
 
@@ -221,6 +221,7 @@ export const addBadCommit = async (
     prev: repo.cid,
     newBlocks,
     removedCids: diff.removedCids,
+    since: '',
   })
   return await Repo.load(repo.storage, commitCid)
 }

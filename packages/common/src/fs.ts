@@ -1,10 +1,11 @@
+import { constants } from 'node:fs'
+import { access, readFile, rm } from 'node:fs/promises'
+
 import { isErrnoException } from '@atproto/common-web'
-import { constants } from 'fs'
-import fs from 'fs/promises'
 
 export const fileExists = async (location: string): Promise<boolean> => {
   try {
-    await fs.access(location, constants.F_OK)
+    await access(location, constants.F_OK)
     return true
   } catch (err) {
     if (isErrnoException(err) && err.code === 'ENOENT') {
@@ -18,7 +19,7 @@ export const readIfExists = async (
   filepath: string,
 ): Promise<Uint8Array | undefined> => {
   try {
-    return await fs.readFile(filepath)
+    return await readFile(filepath)
   } catch (err) {
     if (isErrnoException(err) && err.code === 'ENOENT') {
       return
@@ -32,7 +33,7 @@ export const rmIfExists = async (
   recursive = false,
 ): Promise<void> => {
   try {
-    await fs.rm(filepath, { recursive })
+    await rm(filepath, { recursive })
   } catch (err) {
     if (isErrnoException(err) && err.code === 'ENOENT') {
       return

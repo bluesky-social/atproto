@@ -1,4 +1,11 @@
 {
-  "extends": "./tsconfig.json",
-  "exclude": ["**/*.spec.ts", "**/*.test.ts"]
+  "extends": "../../tsconfig/base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist"
+  },
+  "include": ["./src"],
+  "references": [
+    { "path": "../pds-templates/tsconfig.build.json" }
+  ]
 }

@@ -51,8 +51,8 @@ export function createServer(lexicons?: LexiconDoc[], options?: Options) {
 }
 
 export class Server {
-  router = express()
-  routes = express.Router()
+  router: express.Express = express()
+  routes: express.Router = express.Router()
   subscriptions = new Map<string, XrpcStreamServer>()
   lex = new Lexicons()
   options: Options

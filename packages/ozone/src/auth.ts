@@ -7,6 +7,11 @@ import { OzoneSecrets } from './config'
 const BASIC = 'Basic '
 const BEARER = 'Bearer '
 
+export type RequestContext = {
+  req: express.Request
+  res: express.Response
+}
+
 export const authVerifier = (
   idResolver: IdResolver,
   opts: { aud: string | null },
@@ -22,7 +27,7 @@ export const authVerifier = (
     return atprotoData.signingKey
   }
 
-  return async (reqCtx: { req: express.Request; res: express.Response }) => {
+  return async (reqCtx: RequestContext) => {
     const jwtStr = getJwtStrFromReq(reqCtx.req)
     if (!jwtStr) {
       throw new AuthRequiredError('missing jwt', 'MissingJwt')
@@ -37,7 +42,7 @@ export const authOptionalVerifier = (
   opts: { aud: string | null },
 ) => {
   const verifyAccess = authVerifier(idResolver, opts)
-  return async (reqCtx: { req: express.Request; res: express.Response }) => {
+  return async (reqCtx: RequestContext) => {
     if (!reqCtx.req.headers.authorization) {
       return { credentials: { did: null } }
     }
@@ -52,7 +57,7 @@ export const authOptionalAccessOrRoleVerifier = (
 ) => {
   const verifyAccess = authVerifier(idResolver, { aud: serverDid })
   const verifyRole = roleVerifier(secrets)
-  return async (ctx: { req: express.Request; res: express.Response }) => {
+  return async (ctx: RequestContext) => {
     const defaultUnAuthorizedCredentials = {
       credentials: { did: null, type: 'unauthed' as const },
     }
@@ -84,7 +89,7 @@ export const authOptionalAccessOrRoleVerifier = (
 
 export const roleVerifier =
   (secrets: OzoneSecrets) =>
-  async (reqCtx: { req: express.Request; res: express.Response }) => {
+  async (reqCtx: RequestContext) => {
     const credentials = getRoleCredentials(secrets, reqCtx.req)
     if (!credentials.valid) {
       throw new AuthRequiredError()

@@ -13,17 +13,12 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/bsky"
   },
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts"
-  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": "dist/bin.js",
   "scripts": {
     "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/bsky",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "../dev-infra/with-test-redis-and-db.sh jest",
     "test:log": "tail -50 test.log | pino-pretty",
@@ -62,6 +57,7 @@
     "pino": "^8.15.0",
     "pino-http": "^8.2.1",
     "sharp": "^0.32.6",
+    "tslib": "^2.6.2",
     "typed-emitter": "^2.1.0",
     "uint8arrays": "3.0.0"
   },
@@ -80,6 +76,7 @@
     "@types/express-serve-static-core": "^4.17.36",
     "@types/pg": "^8.6.6",
     "@types/qs": "^6.9.7",
-    "axios": "^0.27.2"
+    "axios": "^0.27.2",
+    "dotenv": "^16.0.3"
   }
 }

@@ -1,13 +1,8 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist", // Your outDir,
-    "emitDeclarationOnly": true
-  },
-  "include": ["./src"],
+  "include": [],
   "references": [
-    { "path": "../xrpc/tsconfig.build.json" },
-    { "path": "../lex-cli/tsconfig.build.json" }
+    { "path": "./tsconfig.build.json" },
+    { "path": "./tsconfig.scripts.json" },
+    { "path": "./tsconfig.test.json" }
   ]
 }

@@ -4,9 +4,9 @@ import basicSeed from '../seeds/basic'
 import {
   REASONOTHER,
   REASONSPAM,
-} from '@atproto/api/src/client/types/com/atproto/moderation/defs'
+} from '@atproto/api/dist/client/types/com/atproto/moderation/defs'
 import { forSnapshot } from '../_util'
-import { NotFoundError } from '@atproto/api/src/client/types/app/bsky/feed/getPostThread'
+import { NotFoundError } from '@atproto/api/dist/client/types/app/bsky/feed/getPostThread'
 
 describe('proxies admin requests', () => {
   let network: TestNetwork

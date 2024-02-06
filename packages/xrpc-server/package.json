@@ -13,16 +13,11 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/xrpc-server"
   },
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts"
-  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/xrpc-server"
+    "test": "jest"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
@@ -33,6 +28,7 @@
     "http-errors": "^2.0.0",
     "mime-types": "^2.1.35",
     "rate-limiter-flexible": "^2.4.1",
+    "tslib": "^2.6.2",
     "uint8arrays": "3.0.0",
     "ws": "^8.12.0",
     "zod": "^3.21.4"

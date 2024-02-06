@@ -1,12 +1,13 @@
-import crypto from 'crypto'
-import { Transform, TransformCallback } from 'stream'
+import * as crypto from 'node:crypto'
+import { Transform, TransformCallback } from 'node:stream'
+
 import { check, schema } from '@atproto/common-web'
-import { CID } from 'multiformats/cid'
+import * as cborCodec from '@ipld/dag-cbor'
+import * as mf from 'multiformats'
 import * as Block from 'multiformats/block'
+import { CID } from 'multiformats/cid'
 import * as rawCodec from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
-import * as mf from 'multiformats'
-import * as cborCodec from '@ipld/dag-cbor'
 
 export const cborEncode = cborCodec.encode
 export const cborDecode = cborCodec.decode

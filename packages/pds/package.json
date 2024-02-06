@@ -13,24 +13,18 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/pds"
   },
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts"
-  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": "dist/bin.js",
   "scripts": {
     "codegen": "lex gen-server ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
     "test": "../dev-infra/with-test-redis-and-db.sh jest",
     "test:sqlite": "jest",
     "test:sqlite-only": "jest --testPathIgnorePatterns /tests/proxied/*",
     "test:log": "tail -50 test.log | pino-pretty",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/pds",
-    "bench": "../dev-infra/with-test-redis-and-db.sh jest --config jest.bench.config.js",
     "test:updateSnapshot": "jest --updateSnapshot",
-    "migration:create": "ts-node ./bin/migration-create.ts"
+    "migration:create": "node ./bin/migration-create.mjs"
   },
   "dependencies": {
     "@atproto/api": "workspace:^",
@@ -39,6 +33,7 @@
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",
     "@atproto/lexicon": "workspace:^",
+    "@atproto/pds-templates": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc": "workspace:^",
@@ -53,7 +48,6 @@
     "express-async-errors": "^3.1.1",
     "file-type": "^16.5.4",
     "form-data": "^4.0.0",
-    "handlebars": "^4.7.7",
     "http-errors": "^2.0.0",
     "http-terminator": "^3.2.0",
     "ioredis": "^5.3.2",
@@ -68,6 +62,7 @@
     "pino": "^8.15.0",
     "pino-http": "^8.2.1",
     "sharp": "^0.32.6",
+    "tslib": "^2.6.2",
     "typed-emitter": "^2.1.0",
     "uint8arrays": "3.0.0",
     "zod": "^3.21.4"
@@ -87,6 +82,7 @@
     "@types/pg": "^8.6.6",
     "@types/qs": "^6.9.7",
     "axios": "^0.27.2",
+    "dotenv": "^16.0.3",
     "get-port": "^6.1.2",
     "ws": "^8.12.0"
   }

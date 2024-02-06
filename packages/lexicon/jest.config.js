@@ -1,6 +1,7 @@
-const base = require('../../jest.config.base.js')
-
+/** @type {import('jest').Config} */
 module.exports = {
-  ...base,
   displayName: 'Lexicon',
+  transform: {
+    '^.+\\.(t|j)s?$': '@swc/jest',
+  },
 }

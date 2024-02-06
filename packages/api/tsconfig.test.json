@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig/test.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "types": ["node", "jest", "./jest.d.ts"]
+  },
+  "include": ["./tests", "./jest.setup.ts"],
+  "exclude": [
+    "node_modules",
+    "./tests/agent.test.ts",
+    "./tests/bsky-agent.test.ts",
+    "./tests/error.test.ts"
+  ]
+}

@@ -12,21 +12,17 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/common-web"
   },
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts"
-  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/common-web"
+    "test": "jest"
   },
   "dependencies": {
     "graphemer": "^1.4.0",
     "multiformats": "^9.9.0",
     "uint8arrays": "3.0.0",
+    "tslib": "^2.6.2",
     "zod": "^3.21.4"
   }
 }

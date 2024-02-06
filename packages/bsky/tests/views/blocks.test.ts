@@ -1,13 +1,13 @@
 import assert from 'assert'
 import { TestNetwork, RecordRef, SeedClient, basicSeed } from '@atproto/dev-env'
 import AtpAgent, { AtUri } from '@atproto/api'
-import { BlockedActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
-import { BlockedByActorError } from '@atproto/api/src/client/types/app/bsky/feed/getAuthorFeed'
-import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
+import { BlockedActorError } from '@atproto/api/dist/client/types/app/bsky/feed/getAuthorFeed'
+import { BlockedByActorError } from '@atproto/api/dist/client/types/app/bsky/feed/getAuthorFeed'
+import { isThreadViewPost } from '@atproto/api/dist/client/types/app/bsky/feed/defs'
 import {
   isViewRecord as isEmbedViewRecord,
   isViewBlocked as isEmbedViewBlocked,
-} from '@atproto/api/src/client/types/app/bsky/embed/record'
+} from '@atproto/api/dist/client/types/app/bsky/embed/record'
 import { forSnapshot } from '../_util'
 
 describe('pds views with blocking', () => {

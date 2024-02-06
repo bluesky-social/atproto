@@ -1,10 +1,11 @@
 import { wait } from '@atproto/common'
+import { randomStr } from '@atproto/crypto'
+
 import {
   ConsecutiveList,
   LatestQueue,
   PartitionedQueue,
 } from '../../src/subscription/util'
-import { randomStr } from '../../../crypto/src'
 
 describe('subscription utils', () => {
   describe('ConsecutiveList', () => {

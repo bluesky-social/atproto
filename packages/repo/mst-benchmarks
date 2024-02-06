@@ -1,0 +1,44 @@
+Fanout: 16
+----------------------
+Time to add 5000 leaves: 0.155s
+Time to save tree with 5000 leaves: 0.449s
+Time to reconstruct & walk 5000 leaves: 0.245s
+Tree depth: 5
+Max Node Width (only counting leaves): 25
+The total blockstore size is: 385289 bytes
+Largest proof size: 4520 bytes
+Average proof size: 2652 bytes
+Nodes with >= 0 leaves: 1332
+Nodes with >= 16 leaves: 18
+Nodes with >= 32 leaves: 0
+Nodes with >= 48 leaves: 0
+Nodes with >= 64 leaves: 0
+Nodes with >= 96 leaves: 0
+Nodes with >= 128 leaves: 0
+Nodes with >= 160 leaves: 0
+Nodes with >= 192 leaves: 0
+Nodes with >= 224 leaves: 0
+Nodes with >= 256 leaves: 0
+
+Fanout: 32
+----------------------
+Time to add 5000 leaves: 0.129s
+Time to save tree with 5000 leaves: 0.405s
+Time to reconstruct & walk 5000 leaves: 0.221s
+Tree depth: 5
+Max Node Width (only counting leaves): 25
+The total blockstore size is: 385289 bytes
+Largest proof size: 4520 bytes
+Average proof size: 2652 bytes
+Nodes with >= 0 leaves: 1332
+Nodes with >= 16 leaves: 18
+Nodes with >= 32 leaves: 0
+Nodes with >= 48 leaves: 0
+Nodes with >= 64 leaves: 0
+Nodes with >= 96 leaves: 0
+Nodes with >= 128 leaves: 0
+Nodes with >= 160 leaves: 0
+Nodes with >= 192 leaves: 0
+Nodes with >= 224 leaves: 0
+Nodes with >= 256 leaves: 0
+

@@ -1,4 +1,15 @@
 {
-  "extends": "./tsconfig.json",
-  "exclude": ["**/*.spec.ts", "**/*.test.ts"]
+  "extends": "../../tsconfig/base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "noEmit": true,
+    "declarationMap": false
+  },
+  "include": ["./src"],
+  "references": [
+    { "path": "../api/tsconfig.build.json" },
+    { "path": "../bsky/tsconfig.build.json" },
+    { "path": "../pds/tsconfig.build.json" }
+  ]
 }

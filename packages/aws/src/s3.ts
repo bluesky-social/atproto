@@ -1,9 +1,9 @@
+import { Readable } from 'node:stream'
 import * as aws from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
 import { BlobStore, BlobNotFoundError } from '@atproto/repo'
 import { randomStr } from '@atproto/crypto'
 import { CID } from 'multiformats/cid'
-import stream from 'stream'
 
 export type S3Config = { bucket: string } & Omit<
   aws.S3ClientConfig,
@@ -48,7 +48,7 @@ export class S3BlobStore implements BlobStore {
     return `quarantine/${this.did}/${cid.toString()}`
   }
 
-  async putTemp(bytes: Uint8Array | stream.Readable): Promise<string> {
+  async putTemp(bytes: Uint8Array | Readable): Promise<string> {
     const key = this.genKey()
     await new Upload({
       client: this.client,
@@ -74,10 +74,7 @@ export class S3BlobStore implements BlobStore {
     }
   }
 
-  async putPermanent(
-    cid: CID,
-    bytes: Uint8Array | stream.Readable,
-  ): Promise<void> {
+  async putPermanent(cid: CID, bytes: Uint8Array | Readable): Promise<void> {
     await new Upload({
       client: this.client,
       params: {
@@ -119,9 +116,9 @@ export class S3BlobStore implements BlobStore {
     return res.transformToByteArray()
   }
 
-  async getStream(cid: CID): Promise<stream.Readable> {
+  async getStream(cid: CID): Promise<Readable> {
     const res = await this.getObject(cid)
-    return res as stream.Readable
+    return res as Readable
   }
 
   async delete(cid: CID): Promise<void> {

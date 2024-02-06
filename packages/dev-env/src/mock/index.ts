@@ -3,7 +3,7 @@ import AtpAgent from '@atproto/api'
 import {
   REASONSPAM,
   REASONOTHER,
-} from '@atproto/api/src/client/types/com/atproto/moderation/defs'
+} from '@atproto/api/dist/client/types/com/atproto/moderation/defs'
 import { TestNetwork } from '../index'
 import { postTexts, replyTexts } from './data'
 import labeledImgB64 from './img/labeled-img-b64'

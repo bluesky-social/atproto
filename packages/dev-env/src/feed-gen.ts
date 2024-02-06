@@ -4,8 +4,8 @@ import express from 'express'
 import getPort from 'get-port'
 import * as plc from '@did-plc/lib'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { Handler as SkeletonHandler } from '@atproto/pds/src/lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { createServer } from '@atproto/pds/src/lexicon'
+import { Handler as SkeletonHandler } from '@atproto/pds/dist/lexicon/types/app/bsky/feed/getFeedSkeleton'
+import { createServer } from '@atproto/pds/dist/lexicon'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 
 export class TestFeedGen {

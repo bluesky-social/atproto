@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig/scripts.json",
+  "compilerOptions": {
+    "rootDir": "."
+  },
+  "include": ["./bin", "./*.js", "./*.ts"],
+  "exclude": ["node_modules", "./jest.setup.ts"]
+}

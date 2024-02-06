@@ -14,17 +14,12 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/api"
   },
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts"
-  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "codegen": "pnpm docgen && node ./scripts/generate-code.mjs && lex gen-api ./src/client ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/*",
     "docgen": "node ./scripts/generate-docs.mjs",
-    "build": "node ./build.js",
-    "postbuild": "tsc --build tsconfig.build.json",
-    "update-main-to-dist": "node ../../update-main-to-dist.js packages/api",
     "test": "jest",
     "bench": "jest --config jest.bench.config.js",
     "bench:profile": "node --inspect-brk ../../node_modules/.bin/jest --config jest.bench.config.js"
@@ -36,11 +31,11 @@
     "@atproto/xrpc": "workspace:^",
     "multiformats": "^9.9.0",
     "tlds": "^1.234.0",
+    "tslib": "^2.6.2",
     "typed-emitter": "^2.1.0",
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "@atproto/lex-cli": "workspace:^",
     "@atproto/dev-env": "workspace:^",
     "common-tags": "^1.8.2"
   }

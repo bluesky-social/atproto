@@ -1,27 +1,5 @@
 {
-  "compilerOptions": {
-    "declaration": true,
-    "noImplicitAny": false,
-    "removeComments": true,
-    "noLib": false,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "target": "es2020",
-    "sourceMap": true,
-    "module": "commonjs",
-    "jsx": "preserve",
-    "strict": true,
-    "strictPropertyInitialization": false,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "lib": ["dom", "dom.iterable", "esnext", "webworker"],
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true
-  },
-  "exclude": ["node_modules", "**/*/dist"],
+  "include": [],
   "references": [
     { "path": "./packages/pds/tsconfig.build.json" },
     { "path": "./packages/bsky/tsconfig.build.json" },
@@ -33,14 +11,14 @@
     { "path": "./packages/common-web/tsconfig.build.json" },
     { "path": "./packages/crypto/tsconfig.build.json" },
     { "path": "./packages/dev-env" },
-    { "path": "./packages/identity/tsconfig.build.json" },
-    { "path": "./packages/identifier/tsconfig.build.json" },
-    { "path": "./packages/syntax/tsconfig.build.json" },
-    { "path": "./packages/lexicon/tsconfig.build.json" },
-    { "path": "./packages/lex-cli/tsconfig.build.json" },
-    { "path": "./packages/nsid/tsconfig.build.json" },
-    { "path": "./packages/uri/tsconfig.build.json" },
-    { "path": "./packages/xrpc/tsconfig.build.json" },
-    { "path": "./packages/xrpc-server/tsconfig.build.json" }
+    { "path": "./packages/identity" },
+    { "path": "./packages/lex-cli" },
+    { "path": "./packages/lexicon" },
+    { "path": "./packages/pds" },
+    { "path": "./packages/pds-templates" },
+    { "path": "./packages/repo" },
+    { "path": "./packages/syntax" },
+    { "path": "./packages/xrpc" },
+    { "path": "./packages/xrpc-server" }
   ]
 }

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "noImplicitAny": false,
+    "forceConsistentCasingInFileNames": true,
+
+    "isolatedModules": true,
+
+    "checkJs": true,
+
+    "jsx": "preserve",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+
+    "resolveJsonModule": true,
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+
+    "composite": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+
+    "importHelpers": true,
+    "sourceMap": true,
+    "declarationMap": true
+  },
+  "typeAcquisition": {
+    "enable": false
+  },
+  "exclude": ["node_modules", "dist"]
+}

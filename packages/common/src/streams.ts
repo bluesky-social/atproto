@@ -4,7 +4,7 @@ import {
   PassThrough,
   Transform,
   TransformCallback,
-} from 'stream'
+} from 'node:stream'
 
 export const forwardStreamErrors = (...streams: Stream[]) => {
   for (let i = 0; i < streams.length; ++i) {

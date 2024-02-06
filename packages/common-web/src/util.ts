@@ -87,8 +87,8 @@ export const asyncFilter = async <T>(
 
 export const isErrnoException = (
   err: unknown,
-): err is NodeJS.ErrnoException => {
-  return !!err && err['code']
+): err is typeof err & { code: string } => {
+  return typeof err?.['code'] === 'string'
 }
 
 export const errHasMsg = (err: unknown, msg: string): boolean => {

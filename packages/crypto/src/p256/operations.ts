@@ -1,6 +1,7 @@
 import { p256 } from '@noble/curves/p256'
 import { sha256 } from '@noble/hashes/sha256'
-import * as ui8 from 'uint8arrays'
+import { equals as ui8equals } from 'uint8arrays'
+
 import { P256_JWT_ALG } from '../const'
 import { parseDidKey } from '../did'
 import { VerifyOptions } from '../types'
@@ -39,7 +40,7 @@ export const verifySig = async (
 export const isCompactFormat = (sig: Uint8Array) => {
   try {
     const parsed = p256.Signature.fromCompact(sig)
-    return ui8.equals(parsed.toCompactRawBytes(), sig)
+    return ui8equals(parsed.toCompactRawBytes(), sig)
   } catch {
     return false
   }

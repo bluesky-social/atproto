@@ -39,6 +39,7 @@ describe('Repo Benchmarks', () => {
             createdAt: new Date().toISOString(),
           },
         },
+        // @ts-ignore: this test is broken
         keypair,
       )
     }

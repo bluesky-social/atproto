@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { cidForCbor, TID } from '@atproto/common'
-import * as pdsRepo from '@atproto/pds/src/repo/prepare'
+import * as pdsRepo from '@atproto/pds/dist/repo/prepare'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import AtpAgent, {

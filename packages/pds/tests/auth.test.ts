@@ -1,8 +1,8 @@
 import * as jose from 'jose'
 import AtpAgent from '@atproto/api'
 import { TestNetworkNoAppView, SeedClient } from '@atproto/dev-env'
-import * as CreateSession from '@atproto/api/src/client/types/com/atproto/server/createSession'
-import * as RefreshSession from '@atproto/api/src/client/types/com/atproto/server/refreshSession'
+import * as CreateSession from '@atproto/api/dist/client/types/com/atproto/server/createSession'
+import * as RefreshSession from '@atproto/api/dist/client/types/com/atproto/server/refreshSession'
 import { createRefreshToken } from '../src/account-manager/helpers/auth'
 
 describe('auth', () => {

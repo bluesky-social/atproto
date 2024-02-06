@@ -1,5 +1,5 @@
 import { CID } from 'multiformats'
-import { Fanout, MemoryBlockstore, MST, NodeEntry } from '../src'
+import { MemoryBlockstore, MST, NodeEntry } from '../src'
 import * as util from '../tests/_util'
 import fs from 'fs'
 
@@ -29,12 +29,13 @@ describe('MST Benchmarks', () => {
   })
 
   // const fanouts: Fanout[] = [8, 16, 32]
-  const fanouts: Fanout[] = [16, 32]
+  const fanouts = [16, 32]
   it('benchmarks various fanouts', async () => {
     const benches: BenchmarkData[] = []
+    // FIXME: fanout is not actually used here
     for (const fanout of fanouts) {
       const blockstore = new MemoryBlockstore()
-      let mst = await MST.create(blockstore, [], { fanout })
+      let mst = await MST.create(blockstore, [])
 
       const start = Date.now()
 
@@ -48,7 +49,7 @@ describe('MST Benchmarks', () => {
 
       const doneSaving = Date.now()
 
-      const reloaded = await MST.load(blockstore, root, { fanout })
+      const reloaded = await MST.load(blockstore, root)
       const widthTracker = new NodeWidths()
       for await (const entry of reloaded.walk()) {
         await widthTracker.trackEntry(entry)

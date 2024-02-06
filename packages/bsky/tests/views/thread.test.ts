@@ -2,7 +2,7 @@ import AtpAgent, { AppBskyFeedGetPostThread } from '@atproto/api'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, stripViewerFromThread } from '../_util'
 import assert from 'assert'
-import { isThreadViewPost } from '@atproto/api/src/client/types/app/bsky/feed/defs'
+import { isThreadViewPost } from '@atproto/api/dist/client/types/app/bsky/feed/defs'
 
 describe('pds thread views', () => {
   let network: TestNetwork
