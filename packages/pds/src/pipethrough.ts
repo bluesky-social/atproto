@@ -55,7 +55,7 @@ export const constructUrl = (
       continue
     } else if (Array.isArray(value)) {
       for (const item of value) {
-        uri.searchParams.set(key, String(item))
+        uri.searchParams.append(key, String(item))
       }
     } else {
       uri.searchParams.set(key, String(value))

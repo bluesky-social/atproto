@@ -9,7 +9,7 @@ export default function (server: Server, ctx: AppContext) {
       const requester = auth.credentials.did
       return pipethrough(
         ctx.cfg.bskyAppView.url,
-        'app.bsky.feed.searchActorsTypeahead',
+        'app.bsky.actor.searchActorsTypeahead',
         params,
         await ctx.appviewAuthHeaders(requester),
       )
