@@ -4,6 +4,7 @@ import { HandlerPipeThrough } from '@atproto/xrpc-server'
 import { CallOptions, ResponseType, XRPCError } from '@atproto/xrpc'
 import { lexicons } from './lexicon/lexicons'
 import { httpLogger } from './logger'
+import { noUndefinedVals } from '@atproto/common'
 
 export const pipethrough = async (
   serviceUrl: string,
@@ -33,9 +34,11 @@ export const pipethrough = async (
   }
   const encoding = res.headers.get('content-type') ?? 'application/json'
   const repoRevHeader = res.headers.get('atproto-repo-rev')
-  const headers = repoRevHeader
-    ? { ['atproto-repo-rev']: repoRevHeader }
-    : undefined
+  const contentLanguage = res.headers.get('content-language')
+  const headers = noUndefinedVals({
+    ['atproto-repo-rev']: repoRevHeader ?? undefined,
+    ['content-language']: contentLanguage ?? undefined,
+  })
   return { encoding, buffer, headers }
 }
 
