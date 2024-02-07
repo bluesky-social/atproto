@@ -39,3 +39,7 @@ export const constructUrl = (
 
   return uri.toString()
 }
+
+export const parseRes = <T>(nsid: string, res: HandlerPipeThrough): T => {
+  return {} as any
+}

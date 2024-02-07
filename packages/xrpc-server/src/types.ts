@@ -49,6 +49,7 @@ export type HandlerSuccess = zod.infer<typeof handlerSuccess>
 export const handlerPipeThrough = zod.object({
   encoding: zod.string(),
   buffer: zod.instanceof(ArrayBuffer),
+  headers: zod.record(zod.string()).optional(),
 })
 export type HandlerPipeThrough = zod.infer<typeof handlerPipeThrough>
 
