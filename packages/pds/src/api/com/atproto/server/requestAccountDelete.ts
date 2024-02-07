@@ -1,3 +1,4 @@
+import { DAY, HOUR } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
@@ -5,6 +6,18 @@ import { authPassthru } from '../../../proxy'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.requestAccountDelete({
+    rateLimit: [
+      {
+        durationMs: DAY,
+        points: 15,
+        calcKey: ({ auth }) => auth.credentials.did,
+      },
+      {
+        durationMs: HOUR,
+        points: 5,
+        calcKey: ({ auth }) => auth.credentials.did,
+      },
+    ],
     auth: ctx.authVerifier.accessCheckTakedown,
     handler: async ({ auth, req }) => {
       const did = auth.credentials.did

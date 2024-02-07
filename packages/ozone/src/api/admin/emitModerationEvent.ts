@@ -51,16 +51,20 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (isTakedownEvent || isReverseTakedownEvent) {
-        const isSubjectTakendown = await moderationService.isSubjectTakendown(
-          subject,
-        )
+        const status = await moderationService.getStatus(subject)
 
-        if (isSubjectTakendown && isTakedownEvent) {
+        if (status?.takendown && isTakedownEvent) {
           throw new InvalidRequestError(`Subject is already taken down`)
         }
 
-        if (!isSubjectTakendown && isReverseTakedownEvent) {
+        if (!status?.takendown && isReverseTakedownEvent) {
           throw new InvalidRequestError(`Subject is not taken down`)
+        }
+
+        if (status?.takendown && isReverseTakedownEvent && subject.isRecord()) {
+          // due to the way blob status is modeled, we should reverse takedown on all
+          // blobs for the record being restored, which aren't taken down on another record.
+          subject.blobCids = status.blobCids ?? []
         }
       }
 

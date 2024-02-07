@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { TestNetwork, SeedClient, basicSeed } from '@atproto/dev-env'
 import AtpAgent, {
   ComAtprotoAdminDefs,
@@ -139,6 +140,60 @@ describe('moderation-statuses', () => {
       // while the result set always contains same number of items regardless of sorting
       expect(listReviewedFirst[0].id).toEqual(list[1].id)
       expect(listReviewedFirst.length).toEqual(list.length)
+    })
+  })
+
+  describe('blobs', () => {
+    it('are tracked on takendown subject', async () => {
+      const post = sc.posts[sc.dids.carol][0]
+      assert(post.images.length > 1)
+      await emitModerationEvent({
+        event: {
+          $type: 'com.atproto.admin.defs#modEventTakedown',
+        },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.ref.uriStr,
+          cid: post.ref.cidStr,
+        },
+        subjectBlobCids: [post.images[0].image.ref.toString()],
+        createdBy: sc.dids.alice,
+      })
+      const { data: result } =
+        await pdsAgent.api.com.atproto.admin.queryModerationStatuses(
+          { subject: post.ref.uriStr },
+          { headers: network.ozone.adminAuthHeaders('moderator') },
+        )
+      expect(result.subjectStatuses.length).toBe(1)
+      expect(result.subjectStatuses[0]).toMatchObject({
+        takendown: true,
+        subjectBlobCids: [post.images[0].image.ref.toString()],
+      })
+    })
+
+    it('are tracked on reverse-takendown subject based on previous status', async () => {
+      const post = sc.posts[sc.dids.carol][0]
+      await emitModerationEvent({
+        event: {
+          $type: 'com.atproto.admin.defs#modEventReverseTakedown',
+        },
+        subject: {
+          $type: 'com.atproto.repo.strongRef',
+          uri: post.ref.uriStr,
+          cid: post.ref.cidStr,
+        },
+        createdBy: sc.dids.alice,
+      })
+      const { data: result } =
+        await pdsAgent.api.com.atproto.admin.queryModerationStatuses(
+          { subject: post.ref.uriStr },
+          { headers: network.ozone.adminAuthHeaders('moderator') },
+        )
+      expect(result.subjectStatuses.length).toBe(1)
+      expect(result.subjectStatuses[0]).toMatchObject({
+        takendown: false,
+        subjectBlobCids: [post.images[0].image.ref.toString()],
+      })
     })
   })
 })

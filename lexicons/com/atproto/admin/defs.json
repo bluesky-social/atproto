@@ -33,7 +33,8 @@
             "#modEventAcknowledge",
             "#modEventEscalate",
             "#modEventMute",
-            "#modEventEmail"
+            "#modEventEmail",
+            "#modEventResolveAppeal"
           ]
         },
         "subject": {
@@ -70,6 +71,7 @@
             "#modEventAcknowledge",
             "#modEventEscalate",
             "#modEventMute",
+            "#modEventEmail",
             "#modEventResolveAppeal"
           ]
         },

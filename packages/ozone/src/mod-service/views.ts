@@ -88,7 +88,7 @@ export class ModerationViews {
         comment: event.comment ?? undefined,
       },
       subject: subjectFromEventRow(event).lex(),
-      subjectBlobCids: [],
+      subjectBlobCids: event.subjectBlobCids ?? [],
       createdBy: event.createdBy,
       createdAt: event.createdAt,
       subjectHandle: event.subjectHandle ?? undefined,

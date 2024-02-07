@@ -12,6 +12,7 @@ import { ModerationEventRow, ModerationSubjectStatusRow } from './types'
 import { HOUR } from '@atproto/common'
 import { sql } from 'kysely'
 import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
+import { jsonb } from '../db/types'
 
 const getSubjectStatusForModerationEvent = ({
   action,
@@ -191,9 +192,9 @@ export const adjustModerationSubjectStatus = async (
   }
 
   if (blobCids?.length) {
-    const newBlobCids = sql<string[]>`${JSON.stringify(
+    const newBlobCids = jsonb(
       blobCids,
-    )}` as unknown as ModerationSubjectStatusRow['blobCids']
+    ) as unknown as ModerationSubjectStatusRow['blobCids']
     newStatus.blobCids = newBlobCids
     subjectStatus.blobCids = newBlobCids
   }

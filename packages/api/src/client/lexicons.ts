@@ -91,6 +91,7 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#modEventEscalate',
               'lex:com.atproto.admin.defs#modEventMute',
               'lex:com.atproto.admin.defs#modEventEmail',
+              'lex:com.atproto.admin.defs#modEventResolveAppeal',
             ],
           },
           subject: {
@@ -147,6 +148,7 @@ export const schemaDict = {
               'lex:com.atproto.admin.defs#modEventAcknowledge',
               'lex:com.atproto.admin.defs#modEventEscalate',
               'lex:com.atproto.admin.defs#modEventMute',
+              'lex:com.atproto.admin.defs#modEventEmail',
               'lex:com.atproto.admin.defs#modEventResolveAppeal',
             ],
           },
@@ -1450,6 +1452,16 @@ export const schemaDict = {
               description:
                 'Sort direction for the events. Defaults to descending order of created at timestamp.',
             },
+            createdAfter: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Retrieve events created after a given timestamp',
+            },
+            createdBefore: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Retrieve events created before a given timestamp',
+            },
             subject: {
               type: 'string',
               format: 'uri',
@@ -1465,6 +1477,37 @@ export const schemaDict = {
               minimum: 1,
               maximum: 100,
               default: 50,
+            },
+            hasComment: {
+              type: 'boolean',
+              description: 'If true, only events with comments are returned',
+            },
+            comment: {
+              type: 'string',
+              description:
+                'If specified, only events with comments containing the keyword are returned',
+            },
+            addedLabels: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where all of these labels were added are returned',
+            },
+            removedLabels: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where all of these labels were removed are returned',
+            },
+            reportTypes: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
             },
             cursor: {
               type: 'string',

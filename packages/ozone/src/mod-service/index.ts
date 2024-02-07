@@ -41,6 +41,7 @@ import {
 import { BlobPushEvent } from '../db/schema/blob_push_event'
 import { BackgroundQueue } from '../background'
 import { EventPusher } from '../daemon'
+import { jsonb } from '../db/types'
 
 export type ModerationServiceCreator = (db: Database) => ModerationService
 
@@ -96,6 +97,13 @@ export class ModerationService {
     includeAllUserRecords: boolean
     types: ModerationEvent['action'][]
     sortDirection?: 'asc' | 'desc'
+    hasComment?: boolean
+    comment?: string
+    createdAfter?: string
+    createdBefore?: string
+    addedLabels: string[]
+    removedLabels: string[]
+    reportTypes?: string[]
   }): Promise<{ cursor?: string; events: ModerationEventRow[] }> {
     const {
       subject,
@@ -105,6 +113,13 @@ export class ModerationService {
       includeAllUserRecords,
       sortDirection = 'desc',
       types,
+      hasComment,
+      comment,
+      createdAfter,
+      createdBefore,
+      addedLabels,
+      removedLabels,
+      reportTypes,
     } = opts
     let builder = this.db.db.selectFrom('moderation_event').selectAll()
     if (subject) {
@@ -138,6 +153,33 @@ export class ModerationService {
     }
     if (createdBy) {
       builder = builder.where('createdBy', '=', createdBy)
+    }
+    if (createdAfter) {
+      builder = builder.where('createdAt', '>=', createdAfter)
+    }
+    if (createdBefore) {
+      builder = builder.where('createdAt', '<=', createdBefore)
+    }
+    if (comment) {
+      builder = builder.where('comment', 'ilike', `%${comment}%`)
+    }
+    if (hasComment) {
+      builder = builder.where('comment', 'is not', null)
+    }
+
+    // If multiple labels are passed, then only retrieve events where all those labels exist
+    if (addedLabels.length) {
+      addedLabels.forEach((label) => {
+        builder = builder.where('createLabelVals', 'ilike', `%${label}%`)
+      })
+    }
+    if (removedLabels.length) {
+      removedLabels.forEach((label) => {
+        builder = builder.where('negateLabelVals', 'ilike', `%${label}%`)
+      })
+    }
+    if (reportTypes?.length) {
+      builder = builder.where(sql`meta->>'reportType'`, 'in', reportTypes)
     }
 
     const { ref } = this.db.db.dynamic
@@ -223,6 +265,8 @@ export class ModerationService {
       meta.subjectLine = event.subjectLine
     }
 
+    const subjectInfo = subject.info()
+
     const modEvent = await this.db.db
       .insertInto('moderation_event')
       .values({
@@ -241,7 +285,11 @@ export class ModerationService {
           event.durationInHours
             ? addHoursToDate(event.durationInHours, createdAt).toISOString()
             : undefined,
-        ...subject.info(),
+        subjectType: subjectInfo.subjectType,
+        subjectDid: subjectInfo.subjectDid,
+        subjectUri: subjectInfo.subjectUri,
+        subjectCid: subjectInfo.subjectCid,
+        subjectBlobCids: jsonb(subjectInfo.subjectBlobCids),
       })
       .returningAll()
       .executeTakeFirstOrThrow()
@@ -713,15 +761,16 @@ export class ModerationService {
     }
   }
 
-  async isSubjectTakendown(subject: ModSubject): Promise<boolean> {
-    const builder = this.db.db
+  async getStatus(
+    subject: ModSubject,
+  ): Promise<ModerationSubjectStatusRow | null> {
+    const result = await this.db.db
       .selectFrom('moderation_subject_status')
       .where('did', '=', subject.did)
-      .where('recordPath', '=', subject.recordPath || '')
-
-    const result = await builder.select('takendown').executeTakeFirst()
-
-    return !!result?.takendown
+      .where('recordPath', '=', subject.recordPath ?? '')
+      .selectAll()
+      .executeTakeFirst()
+    return result ?? null
   }
 
   async formatAndCreateLabels(
