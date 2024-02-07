@@ -1,15 +1,14 @@
 import { HandlerPipeThrough } from '@atproto/xrpc-server'
-import AppContext from './context'
+import { CallOptions } from '@atproto/xrpc'
 
 export const pipethrough = async (
-  ctx: AppContext,
+  serviceUrl: string,
   nsid: string,
-  requester: string,
-  params?: Record<string, any>,
+  params: Record<string, any>,
+  opts?: CallOptions,
 ): Promise<HandlerPipeThrough> => {
-  const url = constructUrl(ctx.cfg.bskyAppView.url, nsid, params)
-  const headers = await ctx.appviewAuthHeaders(requester)
-  const res = await fetch(url, { ...headers })
+  const url = constructUrl(serviceUrl, nsid, params)
+  const res = await fetch(url, opts)
   const encoding = res.headers.get('content-type') ?? 'application/json'
   const buffer = await res.arrayBuffer()
   return {

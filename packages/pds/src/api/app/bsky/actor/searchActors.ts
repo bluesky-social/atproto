@@ -7,7 +7,12 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.access,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      return pipethrough(ctx, 'app.bsky.actor.searchActors', requester, params)
+      return pipethrough(
+        ctx.cfg.bskyAppView.url,
+        'app.bsky.actor.searchActors',
+        params,
+        await ctx.appviewAuthHeaders(requester),
+      )
     },
   })
 }
