@@ -6,7 +6,7 @@ import { ValidationResult, BlobRef } from '@atproto/lexicon'
 import { lexicons } from '../../../../lexicons'
 import { isObj, hasProp } from '../../../../util'
 import { CID } from 'multiformats/cid'
-import { HandlerAuth } from '@atproto/xrpc-server'
+import { HandlerAuth, HandlerPipeThrough } from '@atproto/xrpc-server'
 
 export interface QueryParams {
   /** The handle or DID of the repo. */
@@ -30,11 +30,6 @@ export interface HandlerSuccess {
   encoding: 'application/json'
   body: OutputSchema
   headers?: { [key: string]: string }
-}
-
-export interface HandlerPipeThrough {
-  buffer: ArrayBuffer
-  encoding: 'application/json'
 }
 
 export interface HandlerError {
