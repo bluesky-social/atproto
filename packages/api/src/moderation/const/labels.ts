@@ -185,7 +185,7 @@ export const LABELS: LabelDefinitionMap = {
     id: 'plagiarism',
     preferences: ['ignore', 'warn', 'hide'],
     flags: [],
-    onwarn: 'warn',
+    onwarn: 'alert',
     groupId: 'intellectual-property',
     configurable: true,
     strings: {
@@ -1191,34 +1191,6 @@ export const LABELS: LabelDefinitionMap = {
       },
     },
   },
-  bot: {
-    id: 'bot',
-    preferences: ['ignore', 'warn', 'hide'],
-    flags: [],
-    onwarn: 'warn',
-    groupId: 'bots',
-    configurable: true,
-    strings: {
-      settings: {
-        en: {
-          name: 'Bot',
-          description: 'An automated account.',
-        },
-      },
-      account: {
-        en: {
-          name: 'Bot',
-          description: 'This account is automated.',
-        },
-      },
-      content: {
-        en: {
-          name: 'Bot',
-          description: 'This content is produced by an automated system.',
-        },
-      },
-    },
-  },
   impersonation: {
     id: 'impersonation',
     preferences: ['ignore', 'warn', 'hide'],
@@ -1546,6 +1518,62 @@ export const LABELS: LabelDefinitionMap = {
           name: 'Parody',
           description:
             'This is poking fun at something else through imitation.',
+        },
+      },
+    },
+  },
+  bot: {
+    id: 'bot',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'alert',
+    groupId: 'context',
+    configurable: false,
+    strings: {
+      settings: {
+        en: {
+          name: 'Bot',
+          description: 'An automated account.',
+        },
+      },
+      account: {
+        en: {
+          name: 'Bot',
+          description: 'This account is automated.',
+        },
+      },
+      content: {
+        en: {
+          name: 'Bot',
+          description: 'This content is produced by an automated system.',
+        },
+      },
+    },
+  },
+  'ai-generated': {
+    id: 'ai-generated',
+    preferences: ['ignore', 'warn', 'hide'],
+    flags: [],
+    onwarn: 'alert',
+    groupId: 'context',
+    configurable: false,
+    strings: {
+      settings: {
+        en: {
+          name: 'TODO',
+          description: 'TODO.',
+        },
+      },
+      account: {
+        en: {
+          name: 'TODO',
+          description: 'TODO.',
+        },
+      },
+      content: {
+        en: {
+          name: 'TODO',
+          description: 'TODO.',
         },
       },
     },

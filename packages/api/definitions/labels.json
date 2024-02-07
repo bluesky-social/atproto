@@ -55,7 +55,7 @@
         "id": "plagiarism",
         "preferences": ["ignore", "warn", "hide"],
         "flags": [],
-        "onwarn": "warn"
+        "onwarn": "alert"
       }
     ]
   },
@@ -342,18 +342,6 @@
     ]
   },
   {
-    "id": "bots",
-    "configurable": true,
-    "labels": [
-      {
-        "id": "bot",
-        "preferences": ["ignore", "warn", "hide"],
-        "flags": [],
-        "onwarn": "warn"
-      }
-    ]
-  },
-  {
     "id": "misrepresentation",
     "configurable": true,
     "labels": [
@@ -438,6 +426,18 @@
       {
         "id": "parody",
         "preferences": ["warn"],
+        "flags": [],
+        "onwarn": "alert"
+      },
+      {
+        "id": "bot",
+        "preferences": ["ignore", "warn", "hide"],
+        "flags": [],
+        "onwarn": "alert"
+      },
+      {
+        "id": "ai-generated",
+        "preferences": ["ignore", "warn", "hide"],
         "flags": [],
         "onwarn": "alert"
       }

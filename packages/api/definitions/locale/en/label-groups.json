@@ -7,7 +7,7 @@
     "name": "Legal",
     "description": "Content removed for legal reasons."
   },
-  "intellectual-propery": {
+  "intellectual-property": {
     "name": "Intellectual Property",
     "description": "Plagiarism, copying without attribution."
   },
@@ -70,10 +70,6 @@
   "spam": {
     "name": "Spam",
     "description": "Content which doesn't add to the conversation."
-  },
-  "bots": {
-    "name": "Bots",
-    "description": "Automated accounts."
   },
   "misrepresentation": {
     "name": "Security",

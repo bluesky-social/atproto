@@ -545,20 +545,6 @@
       "description": "This content is unwanted promotion, shilling, or advertisement for some product or service."
     }
   },
-  "bot": {
-    "settings": {
-      "name": "Bot",
-      "description": "An automated account."
-    },
-    "account": {
-      "name": "Bot",
-      "description": "This account is automated."
-    },
-    "content": {
-      "name": "Bot",
-      "description": "This content is produced by an automated system."
-    }
-  },
   "impersonation": {
     "settings": {
       "name": "Impersonation",
@@ -711,6 +697,34 @@
     "content": {
       "name": "Parody",
       "description": "This is poking fun at something else through imitation."
+    }
+  },
+  "bot": {
+    "settings": {
+      "name": "Bot",
+      "description": "An automated account."
+    },
+    "account": {
+      "name": "Bot",
+      "description": "This account is automated."
+    },
+    "content": {
+      "name": "Bot",
+      "description": "This content is produced by an automated system."
+    }
+  },
+  "ai-generated": {
+    "settings": {
+      "name": "TODO",
+      "description": "TODO."
+    },
+    "account": {
+      "name": "TODO",
+      "description": "TODO."
+    },
+    "content": {
+      "name": "TODO",
+      "description": "TODO."
     }
   }
 }

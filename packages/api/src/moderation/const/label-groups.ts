@@ -38,7 +38,14 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
     id: 'intellectual-property',
     configurable: true,
     labels: [LABELS['plagiarism']],
-    strings: { settings: { en: undefined } },
+    strings: {
+      settings: {
+        en: {
+          name: 'Intellectual Property',
+          description: 'Plagiarism, copying without attribution.',
+        },
+      },
+    },
   },
   porn: {
     id: 'porn',
@@ -256,14 +263,6 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
       },
     },
   },
-  bots: {
-    id: 'bots',
-    configurable: true,
-    labels: [LABELS['bot']],
-    strings: {
-      settings: { en: { name: 'Bots', description: 'Automated accounts.' } },
-    },
-  },
   misrepresentation: {
     id: 'misrepresentation',
     configurable: true,
@@ -306,7 +305,12 @@ export const LABEL_GROUPS: LabelGroupDefinitionMap = {
   context: {
     id: 'context',
     configurable: false,
-    labels: [LABELS['satire'], LABELS['parody']],
+    labels: [
+      LABELS['satire'],
+      LABELS['parody'],
+      LABELS['bot'],
+      LABELS['ai-generated'],
+    ],
     strings: {
       settings: {
         en: {

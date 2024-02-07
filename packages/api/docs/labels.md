@@ -103,7 +103,7 @@ The kind of UI behavior used when a warning must be applied.
   <td>ignore, warn, hide</td>
   <td>✅</td>
   <td></td>
-  <td>warn</td>
+  <td>alert</td>
 </tr>
 <tr>
   <td>porn</td>
@@ -362,14 +362,6 @@ The kind of UI behavior used when a warning must be applied.
   <td>blur</td>
 </tr>
 <tr>
-  <td>bot</td>
-  <td>bots</td>
-  <td>ignore, warn, hide</td>
-  <td>✅</td>
-  <td></td>
-  <td>warn</td>
-</tr>
-<tr>
   <td>impersonation</td>
   <td>misrepresentation</td>
   <td>ignore, warn, hide</td>
@@ -457,6 +449,22 @@ The kind of UI behavior used when a warning must be applied.
   <td></td>
   <td>alert</td>
 </tr>
+<tr>
+  <td>bot</td>
+  <td>context</td>
+  <td>ignore, warn, hide</td>
+  <td>❌</td>
+  <td></td>
+  <td>alert</td>
+</tr>
+<tr>
+  <td>ai-generated</td>
+  <td>context</td>
+  <td>ignore, warn, hide</td>
+  <td>❌</td>
+  <td></td>
+  <td>alert</td>
+</tr>
   </table>
 
 ## Label Group Descriptions
@@ -475,7 +483,7 @@ The kind of UI behavior used when a warning must be applied.
   <td><code>general</code><br><strong>Legal</strong><br>Content removed for legal reasons.</td>
 </tr>
 <tr>
-  <td>intellectual-propery</td>
+  <td>intellectual-property</td>
   <td><code>general</code><br><strong>Intellectual Property</strong><br>Plagiarism, copying without attribution.</td>
 </tr>
 <tr>
@@ -537,10 +545,6 @@ The kind of UI behavior used when a warning must be applied.
 <tr>
   <td>spam</td>
   <td><code>general</code><br><strong>Spam</strong><br>Content which doesn't add to the conversation.</td>
-</tr>
-<tr>
-  <td>bots</td>
-  <td><code>general</code><br><strong>Bots</strong><br>Automated accounts.</td>
 </tr>
 <tr>
   <td>misrepresentation</td>
@@ -880,14 +884,6 @@ The kind of UI behavior used when a warning must be applied.
   </td>
 </tr>
 <tr>
-  <td>bot</td>
-  <td>
-    <code>general</code><br><strong>Bot</strong><br>An automated account.<br><br>
-    <code>on an account</code><br><strong>Bot</strong><br>This account is automated.<br><br>
-    <code>on content</code><br><strong>Bot</strong><br>This content is produced by an automated system.<br><br>
-  </td>
-</tr>
-<tr>
   <td>impersonation</td>
   <td>
     <code>general</code><br><strong>Impersonation</strong><br>Accounts which falsely assert some identity.<br><br>
@@ -973,6 +969,22 @@ The kind of UI behavior used when a warning must be applied.
     <code>general</code><br><strong>Parody</strong><br>Content which is poking fun at something else through imitation.<br><br>
     <code>on an account</code><br><strong>Parody</strong><br>This account is poking fun at something else through imitation.<br><br>
     <code>on content</code><br><strong>Parody</strong><br>This is poking fun at something else through imitation.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>bot</td>
+  <td>
+    <code>general</code><br><strong>Bot</strong><br>An automated account.<br><br>
+    <code>on an account</code><br><strong>Bot</strong><br>This account is automated.<br><br>
+    <code>on content</code><br><strong>Bot</strong><br>This content is produced by an automated system.<br><br>
+  </td>
+</tr>
+<tr>
+  <td>ai-generated</td>
+  <td>
+    <code>general</code><br><strong>TODO</strong><br>TODO.<br><br>
+    <code>on an account</code><br><strong>TODO</strong><br>TODO.<br><br>
+    <code>on content</code><br><strong>TODO</strong><br>TODO.<br><br>
   </td>
 </tr>
   </table>
