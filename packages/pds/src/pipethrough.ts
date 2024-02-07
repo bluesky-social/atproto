@@ -1,5 +1,9 @@
+import * as ui8 from 'uint8arrays'
+import { jsonToLex } from '@atproto/lexicon'
 import { HandlerPipeThrough } from '@atproto/xrpc-server'
-import { CallOptions } from '@atproto/xrpc'
+import { CallOptions, ResponseType, XRPCError } from '@atproto/xrpc'
+import { lexicons } from './lexicon/lexicons'
+import { httpLogger } from './logger'
 
 export const pipethrough = async (
   serviceUrl: string,
@@ -8,13 +12,27 @@ export const pipethrough = async (
   opts?: CallOptions,
 ): Promise<HandlerPipeThrough> => {
   const url = constructUrl(serviceUrl, nsid, params)
-  const res = await fetch(url, opts)
-  const encoding = res.headers.get('content-type') ?? 'application/json'
-  const buffer = await res.arrayBuffer()
-  return {
-    encoding,
-    buffer,
+  let res: Response
+  let buffer: ArrayBuffer
+  try {
+    res = await fetch(url, opts)
+    buffer = await res.arrayBuffer()
+  } catch (err) {
+    httpLogger.warn({ err }, 'pipethrough network error')
+    throw new XRPCError(ResponseType.UpstreamFailure)
   }
+  if (res.status !== ResponseType.Success) {
+    const ui8Buffer = new Uint8Array(buffer)
+    const errInfo = safeParseJson(ui8.toString(ui8Buffer, 'utf8'))
+    throw new XRPCError(
+      res.status,
+      safeString(errInfo?.['error']),
+      safeString(errInfo?.['message']),
+      simpleHeaders(res.headers),
+    )
+  }
+  const encoding = res.headers.get('content-type') ?? 'application/json'
+  return { encoding, buffer }
 }
 
 export const constructUrl = (
@@ -41,5 +59,28 @@ export const constructUrl = (
 }
 
 export const parseRes = <T>(nsid: string, res: HandlerPipeThrough): T => {
-  return {} as any
+  const buffer = new Uint8Array(res.buffer)
+  const json = safeParseJson(ui8.toString(buffer, 'utf8'))
+  const lex = json && jsonToLex(json)
+  return lexicons.assertValidXrpcOutput(nsid, lex) as T
+}
+
+const safeString = (str: string): string | undefined => {
+  return typeof str === 'string' ? str : undefined
+}
+
+const safeParseJson = (json: string): unknown => {
+  try {
+    return JSON.parse(json)
+  } catch {
+    return null
+  }
+}
+
+const simpleHeaders = (headers: Headers): Record<string, string> => {
+  const result = {}
+  for (const [key, val] of headers) {
+    result[key] = val
+  }
+  return result
 }
