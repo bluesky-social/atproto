@@ -1,11 +1,12 @@
 import assert from 'node:assert'
-import { MINUTE, check } from '@atproto/common'
+import { HOUR, MINUTE, check } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { XRPCError } from '@atproto/xrpc'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as plc from '@did-plc/lib'
 import disposable from 'disposable-email'
+import { RateLimiterRedis } from 'rate-limiter-flexible'
 import { normalizeAndValidateHandle } from '../../../../handle'
 import * as scrypt from '../../../../db/scrypt'
 import { Server } from '../../../../lexicon'
@@ -23,6 +24,13 @@ import { isThisPds } from '../../../proxy'
 import { dbLogger as log } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
+  const accountRl = new RateLimiterRedis({
+    storeClient: ctx.redisScratch,
+    keyPrefix: 'account-limiter-ip',
+    duration: HOUR,
+    points: 2,
+  })
+
   server.com.atproto.server.createAccount({
     rateLimit: {
       durationMs: 5 * MINUTE,
@@ -34,6 +42,13 @@ export default function (server: Server, ctx: AppContext) {
       if (!hasAvailability && req.header('user-agent')?.startsWith('okhttp/')) {
         throw new InvalidRequestError(
           `We've had a burst of activity and are temporarily limiting signups. Please check back soon!`,
+        )
+      }
+      const ip = req.ip
+      const rlStatus = await accountRl.get(ip)
+      if ((rlStatus?.remainingPoints ?? 0) < 1) {
+        throw new InvalidRequestError(
+          'Sorry! We are temporarily only allowing 2 signups per IP address.',
         )
       }
 
@@ -120,6 +135,14 @@ export default function (server: Server, ctx: AppContext) {
             deactivated: !hasAvailability,
           })
 
+        try {
+          await accountRl.consume(ip, 1)
+        } catch {
+          throw new InvalidRequestError(
+            'Sorry! We are temporarily only allowing 2 signups per IP address.',
+          )
+        }
+
         return {
           did,
           pdsDid: entrywayAssignedPds?.did ?? null,
@@ -150,6 +173,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       } catch (err) {
         await cleanupUncreatedAccount(ctx, did)
+        await accountRl.reward(ip, 1)
         throw err
       }
 
@@ -540,5 +564,11 @@ const cleanupUncreatedAccount = async (
   } catch (err) {
     log.error({ err, did, tries }, 'failed to clean up partially created user')
     return cleanupUncreatedAccount(ctx, did, tries + 1)
+  }
+}
+
+export class LimitedSignupError extends Error {
+  constructor() {
+    super('Sorry! We are temporarily only allowing 2 signups per IP address.')
   }
 }
