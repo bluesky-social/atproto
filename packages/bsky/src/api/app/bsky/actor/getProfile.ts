@@ -68,17 +68,10 @@ const presentation = (input: {
     !params.canViewTakedowns &&
     ctx.views.actorIsTakendown(skeleton.did, hydration)
   ) {
-    if (ctx.views.actorIsSuspended(skeleton.did, hydration)) {
-      throw new InvalidRequestError(
-        'Account has been temporarily suspended',
-        'AccountTakedown',
-      )
-    } else {
-      throw new InvalidRequestError(
-        'Account has been taken down',
-        'AccountTakedown',
-      )
-    }
+    throw new InvalidRequestError(
+      'Account has been suspended',
+      'AccountTakedown',
+    )
   }
   return profile
 }

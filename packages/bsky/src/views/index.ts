@@ -60,13 +60,6 @@ export class Views {
     return !!state.actors?.get(did)?.takedownRef
   }
 
-  actorIsSuspended(did: string, state: HydrationState): boolean {
-    return !!state.actors
-      ?.get(did)
-      ?.takedownRef?.toLowerCase()
-      .includes('suspend')
-  }
-
   viewerBlockExists(did: string, state: HydrationState): boolean {
     const actor = state.profileViewers?.get(did)
     if (!actor) return false

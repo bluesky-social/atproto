@@ -191,28 +191,7 @@ describe('pds profile views', () => {
       { headers: await network.serviceHeaders(bob) },
     )
 
-    await expect(promise).rejects.toThrow('Account has been taken down')
-
-    // Cleanup
-    await network.bsky.ctx.dataplane.untakedownActor({
-      did: alice,
-    })
-  })
-
-  // @TODO reimplement suspension?
-  it.skip('blocked by actor suspension', async () => {
-    await network.bsky.ctx.dataplane.takedownActor({
-      did: alice,
-    })
-    await network.processAll()
-    const promise = agent.api.app.bsky.actor.getProfile(
-      { actor: alice },
-      { headers: await network.serviceHeaders(bob) },
-    )
-
-    await expect(promise).rejects.toThrow(
-      'Account has been temporarily suspended',
-    )
+    await expect(promise).rejects.toThrow('Account has been suspended')
 
     // Cleanup
     await network.bsky.ctx.dataplane.untakedownActor({
