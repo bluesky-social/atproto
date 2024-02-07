@@ -1,6 +1,5 @@
 import { AtUri } from '@atproto/syntax'
-import { AppBskyFeedGetPostThread } from '@atproto/api'
-import { Headers } from '@atproto/xrpc'
+import { Headers, XRPCError } from '@atproto/xrpc'
 import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
 import { authPassthru } from '../../../proxy'
@@ -58,7 +57,7 @@ export default function (server: Server, ctx: AppContext) {
           getPostThreadMunge,
         )
       } catch (err) {
-        if (err instanceof AppBskyFeedGetPostThread.NotFoundError) {
+        if (err instanceof XRPCError && err.error === 'NotFound') {
           const headers = err.headers
           const keypair = await ctx.actorStore.keypair(requester)
           const local = await ctx.actorStore.read(requester, (store) => {

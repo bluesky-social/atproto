@@ -10,7 +10,7 @@ import {
 } from '../../../../read-after-write'
 import { pipethrough } from '../../../../pipethrough'
 
-const METHOD_NSID = 'app.bsky.actor.getProfile'
+const METHOD_NSID = 'app.bsky.feed.getAuthorFeed'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getAuthorFeed({
