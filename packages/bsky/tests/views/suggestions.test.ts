@@ -59,21 +59,21 @@ describe('pds user search views', () => {
 
   it('paginates', async () => {
     const result1 = await agent.api.app.bsky.actor.getSuggestions(
-      { limit: 1 },
+      { limit: 2 },
       { headers: await network.serviceHeaders(sc.dids.carol) },
     )
     expect(result1.data.actors.length).toBe(1)
     expect(result1.data.actors[0].handle).toEqual('bob.test')
 
     const result2 = await agent.api.app.bsky.actor.getSuggestions(
-      { limit: 1, cursor: result1.data.cursor },
+      { limit: 2, cursor: result1.data.cursor },
       { headers: await network.serviceHeaders(sc.dids.carol) },
     )
     expect(result2.data.actors.length).toBe(1)
     expect(result2.data.actors[0].handle).toEqual('dan.test')
 
     const result3 = await agent.api.app.bsky.actor.getSuggestions(
-      { limit: 1, cursor: result2.data.cursor },
+      { limit: 2, cursor: result2.data.cursor },
       { headers: await network.serviceHeaders(sc.dids.carol) },
     )
     expect(result3.data.actors.length).toBe(0)
