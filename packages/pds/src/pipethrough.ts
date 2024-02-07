@@ -32,7 +32,11 @@ export const pipethrough = async (
     )
   }
   const encoding = res.headers.get('content-type') ?? 'application/json'
-  return { encoding, buffer }
+  const repoRevHeader = res.headers.get('atproto-repo-rev')
+  const headers = repoRevHeader
+    ? { ['atproto-repo-rev']: repoRevHeader }
+    : undefined
+  return { encoding, buffer, headers }
 }
 
 export const constructUrl = (
