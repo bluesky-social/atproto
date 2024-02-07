@@ -43,6 +43,11 @@ export interface HandlerSuccess {
   headers?: { [key: string]: string }
 }
 
+export interface HandlerPipeThrough {
+  buffer: ArrayBuffer
+  encoding: 'application/json'
+}
+
 export interface HandlerError {
   status: number
   message?: string
@@ -56,7 +61,7 @@ export interface HandlerError {
     | 'IncompatibleDidDoc'
 }
 
-export type HandlerOutput = HandlerError | HandlerSuccess
+export type HandlerOutput = HandlerError | HandlerSuccess | HandlerPipeThrough
 export type HandlerReqCtx<HA extends HandlerAuth = never> = {
   auth: HA
   params: QueryParams
