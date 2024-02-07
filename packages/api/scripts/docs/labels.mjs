@@ -11,26 +11,6 @@ const labelsDef = JSON.parse(
     'utf8',
   ),
 )
-const labelGroupsEn = JSON.parse(
-  readFileSync(
-    join(
-      __dirname,
-      '..',
-      '..',
-      'definitions',
-      'locale',
-      'en',
-      'label-groups.json',
-    ),
-    'utf8',
-  ),
-)
-const labelsEn = JSON.parse(
-  readFileSync(
-    join(__dirname, '..', '..', 'definitions', 'locale', 'en', 'labels.json'),
-    'utf8',
-  ),
-)
 
 writeFileSync(join(__dirname, '..', '..', 'docs', 'labels.md'), doc(), 'utf8')
 
@@ -88,28 +68,7 @@ The kind of UI behavior used when a warning must be applied.
       <th>On Warn</th>
     </tr>
     ${labelsRef()}
-  </table>
-
-## Label Group Descriptions
-
-  <table>
-    <tr>
-      <th>ID</th>
-      <th>Description</th>
-    </tr>
-    ${labelGroupsDesc()}
-  </table>
-
-## Label Descriptions
-
-  <table>
-    <tr>
-      <th>ID</th>
-      <th>Description</th>
-    </tr>
-    ${labelsDesc()}
-  </table>
-  `
+  </table>`
 }
 
 function labelsRef() {
@@ -127,36 +86,6 @@ function labelsRef() {
         </tr>
       `)
     }
-  }
-  return lines.join('\n')
-}
-
-function labelGroupsDesc() {
-  const lines = []
-  for (const id in labelGroupsEn) {
-    lines.push(stripIndent`
-      <tr>
-        <td>${id}</td>
-        <td><code>general</code><br><strong>${labelGroupsEn[id].name}</strong><br>${labelGroupsEn[id].description}</td>
-      </tr>
-    `)
-  }
-  return lines.join('\n')
-}
-
-function labelsDesc() {
-  const lines = []
-  for (const id in labelsEn) {
-    lines.push(stripIndent`
-      <tr>
-        <td>${id}</td>
-        <td>
-          <code>general</code><br><strong>${labelsEn[id].settings.name}</strong><br>${labelsEn[id].settings.description}<br><br>
-          <code>on an account</code><br><strong>${labelsEn[id].account.name}</strong><br>${labelsEn[id].account.description}<br><br>
-          <code>on content</code><br><strong>${labelsEn[id].content.name}</strong><br>${labelsEn[id].content.description}<br><br>
-        </td>
-      </tr>
-    `)
   }
   return lines.join('\n')
 }

@@ -4,6 +4,8 @@ import {
   AppBskyGraphDefs,
   ComAtprotoLabelDefs,
 } from '../client/index'
+import { LabelGroupId } from './const/label-groups'
+import { KnownLabelValue } from './const/labels'
 
 // labels
 // =
@@ -35,24 +37,16 @@ export interface LabelDefinition {
   preferences: LabelPreference[]
   flags: LabelDefinitionFlag[]
   onwarn: LabelDefinitionOnWarnBehavior
-  strings: {
-    settings: LabelDefinitionLocalizedStringsMap
-    account: LabelDefinitionLocalizedStringsMap
-    content: LabelDefinitionLocalizedStringsMap
-  }
 }
 
 export interface LabelGroupDefinition {
   id: string
   configurable: boolean
   labels: LabelDefinition[]
-  strings: {
-    settings: LabelDefinitionLocalizedStringsMap
-  }
 }
 
-export type LabelDefinitionMap = Record<string, LabelDefinition>
-export type LabelGroupDefinitionMap = Record<string, LabelGroupDefinition>
+export type LabelDefinitionMap = Record<KnownLabelValue, LabelDefinition>
+export type LabelGroupDefinitionMap = Record<LabelGroupId, LabelGroupDefinition>
 
 // labelers
 // =
