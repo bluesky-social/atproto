@@ -112,6 +112,7 @@ export type Preferences = (
   | PersonalDetailsPref
   | FeedViewPref
   | ThreadViewPref
+  | InterestsPref
   | { $type: string; [k: string]: unknown }
 )[]
 
@@ -232,4 +233,22 @@ export function isThreadViewPref(v: unknown): v is ThreadViewPref {
 
 export function validateThreadViewPref(v: unknown): ValidationResult {
   return lexicons.validate('app.bsky.actor.defs#threadViewPref', v)
+}
+
+export interface InterestsPref {
+  /** A list of tags which describe the account owner's interests gathered during onboarding. */
+  tags: string[]
+  [k: string]: unknown
+}
+
+export function isInterestsPref(v: unknown): v is InterestsPref {
+  return (
+    isObj(v) &&
+    hasProp(v, '$type') &&
+    v.$type === 'app.bsky.actor.defs#interestsPref'
+  )
+}
+
+export function validateInterestsPref(v: unknown): ValidationResult {
+  return lexicons.validate('app.bsky.actor.defs#interestsPref', v)
 }

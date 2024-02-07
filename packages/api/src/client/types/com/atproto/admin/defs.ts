@@ -40,6 +40,7 @@ export interface ModEventView {
     | ModEventEscalate
     | ModEventMute
     | ModEventEmail
+    | ModEventResolveAppeal
     | { $type: string; [k: string]: unknown }
   subject:
     | RepoRef
@@ -76,6 +77,7 @@ export interface ModEventViewDetail {
     | ModEventAcknowledge
     | ModEventEscalate
     | ModEventMute
+    | ModEventEmail
     | ModEventResolveAppeal
     | { $type: string; [k: string]: unknown }
   subject:
