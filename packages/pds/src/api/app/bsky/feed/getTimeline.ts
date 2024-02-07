@@ -6,17 +6,28 @@ import {
   handleReadAfterWrite,
   LocalRecords,
 } from '../../../../read-after-write'
+import { pipethrough } from '../../../../pipethrough'
+
+const METHOD_NSID = 'app.bsky.feed.getTimeline'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getTimeline({
     auth: ctx.authVerifier.access,
     handler: async ({ params, auth }) => {
       const requester = auth.credentials.did
-      const res = await ctx.appViewAgent.api.app.bsky.feed.getTimeline(
+      const res = await pipethrough(
+        ctx.cfg.bskyAppView.url,
+        METHOD_NSID,
         params,
         await ctx.appviewAuthHeaders(requester),
       )
-      return await handleReadAfterWrite(ctx, requester, res, getTimelineMunge)
+      return await handleReadAfterWrite(
+        ctx,
+        METHOD_NSID,
+        requester,
+        res,
+        getTimelineMunge,
+      )
     },
   })
 }

@@ -1,7 +1,7 @@
 import { Headers } from '@atproto/xrpc'
 import { readStickyLogger as log } from '../logger'
 import AppContext from '../context'
-import { ApiRes, HandlerResponse, LocalRecords, MungeFn } from './types'
+import { HandlerResponse, LocalRecords, MungeFn } from './types'
 import { getRecordsSinceRev } from './viewer'
 import { HandlerPipeThrough } from '@atproto/xrpc-server'
 import { parseRes } from '../pipethrough'
@@ -25,60 +25,20 @@ export const getLocalLag = (local: LocalRecords): number | undefined => {
 
 export const handleReadAfterWrite = async <T>(
   ctx: AppContext,
-  requester: string,
-  res: ApiRes<T>,
-  munge: MungeFn<T>,
-): Promise<HandlerResponse<T>> => {
-  try {
-    return await readAfterWriteInternal(ctx, requester, res, munge)
-  } catch (err) {
-    log.warn({ err, requester }, 'error in read after write munge')
-    return formatResponse(res.data)
-  }
-}
-
-export const readAfterWriteInternal = async <T>(
-  ctx: AppContext,
-  requester: string,
-  res: ApiRes<T>,
-  munge: MungeFn<T>,
-): Promise<HandlerResponse<T>> => {
-  const rev = getRepoRev(res.headers)
-  if (!rev) return formatResponse(res.data)
-  return ctx.actorStore.read(requester, async (store) => {
-    const local = await getRecordsSinceRev(store, rev)
-    if (local.count === 0) {
-      return formatResponse(res.data)
-    }
-    const keypair = await ctx.actorStore.keypair(requester)
-    const localViewer = ctx.localViewer(store, keypair)
-    const data = await munge(localViewer, res.data, local, requester)
-    return formatResponse(data, getLocalLag(local))
-  })
-}
-
-export const handleReadAfterWritePipeThrough = async <T>(
-  ctx: AppContext,
   nsid: string,
   requester: string,
   res: HandlerPipeThrough,
   munge: MungeFn<T>,
 ): Promise<HandlerResponse<T> | HandlerPipeThrough> => {
   try {
-    return await readAfterWritePipethroughInternal(
-      ctx,
-      nsid,
-      requester,
-      res,
-      munge,
-    )
+    return await readAfterWriteInternal(ctx, nsid, requester, res, munge)
   } catch (err) {
     log.warn({ err, requester }, 'error in read after write munge')
     return res
   }
 }
 
-export const readAfterWritePipethroughInternal = async <T>(
+export const readAfterWriteInternal = async <T>(
   ctx: AppContext,
   nsid: string,
   requester: string,
@@ -96,11 +56,11 @@ export const readAfterWritePipethroughInternal = async <T>(
     const localViewer = ctx.localViewer(store, keypair)
     const parsedRes = parseRes<T>(nsid, res)
     const data = await munge(localViewer, parsedRes, local, requester)
-    return formatResponse(data, getLocalLag(local))
+    return formatMungedResponse(data, getLocalLag(local))
   })
 }
 
-export const formatResponse = <T>(
+export const formatMungedResponse = <T>(
   body: T,
   lag?: number,
 ): HandlerResponse<T> => ({

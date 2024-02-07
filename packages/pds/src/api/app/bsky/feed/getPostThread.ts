@@ -17,10 +17,14 @@ import {
   LocalViewer,
   getLocalLag,
   getRepoRev,
-  handleReadAfterWrite,
   LocalRecords,
   RecordDescript,
+  handleReadAfterWrite,
+  formatMungedResponse,
 } from '../../../../read-after-write'
+import { pipethrough } from '../../../../pipethrough'
+
+const METHOD_NSID = 'app.bsky.feed.getPostThread'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getPostThread({
@@ -30,25 +34,25 @@ export default function (server: Server, ctx: AppContext) {
         auth.credentials.type === 'access' ? auth.credentials.did : null
 
       if (!requester) {
-        const res = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
+        return pipethrough(
+          ctx.cfg.bskyAppView.url,
+          METHOD_NSID,
           params,
           authPassthru(req),
         )
-
-        return {
-          encoding: 'application/json',
-          body: res.data,
-        }
       }
 
       try {
-        const res = await ctx.appViewAgent.api.app.bsky.feed.getPostThread(
+        const res = await pipethrough(
+          ctx.cfg.bskyAppView.url,
+          METHOD_NSID,
           params,
           await ctx.appviewAuthHeaders(requester),
         )
 
         return await handleReadAfterWrite(
           ctx,
+          METHOD_NSID,
           requester,
           res,
           getPostThreadMunge,
@@ -70,15 +74,7 @@ export default function (server: Server, ctx: AppContext) {
           if (local === null) {
             throw err
           } else {
-            return {
-              encoding: 'application/json',
-              body: local.data,
-              headers: local.lag
-                ? {
-                    'Atproto-Upstream-Lag': local.lag.toString(10),
-                  }
-                : undefined,
-            }
+            return formatMungedResponse(local.data, local.lag)
           }
         } else {
           throw err

@@ -5,9 +5,11 @@ import { OutputSchema } from '../../../../lexicon/types/app/bsky/actor/getProfil
 import {
   LocalViewer,
   LocalRecords,
-  handleReadAfterWritePipeThrough,
+  handleReadAfterWrite,
 } from '../../../../read-after-write'
 import { pipethrough } from '../../../../pipethrough'
+
+const METHOD_NSID = 'app.bsky.actor.getProfile'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.actor.getProfile({
@@ -17,16 +19,16 @@ export default function (server: Server, ctx: AppContext) {
         auth.credentials.type === 'access' ? auth.credentials.did : null
       const res = await pipethrough(
         ctx.cfg.bskyAppView.url,
-        'app.bsky.actor.getProfile',
+        METHOD_NSID,
         params,
         requester ? await ctx.appviewAuthHeaders(requester) : authPassthru(req),
       )
       if (!requester) {
         return res
       }
-      return handleReadAfterWritePipeThrough(
+      return handleReadAfterWrite(
         ctx,
-        'app.bsky.actor.getProfile',
+        METHOD_NSID,
         requester,
         res,
         getProfileMunge,
