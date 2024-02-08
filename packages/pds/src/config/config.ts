@@ -131,7 +131,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   }
   if (env.phoneVerificationRequired) {
     const provider = env.phoneVerificationProvider
-    let providerCfg: TwilioConfig | PlivoConfig
+    let providerCfg: TwilioConfig | PlivoConfig | MultiVerifierConfig
     if (provider === 'twilio') {
       assert(env.twilioAccountSid)
       assert(env.twilioServiceSid)
@@ -147,6 +147,25 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         provider,
         authId: env.plivoAuthId,
         appId: env.plivoAppId,
+      }
+    } else if (provider === 'multi') {
+      assert(env.twilioAccountSid)
+      assert(env.twilioServiceSid)
+      assert(env.plivoAuthId)
+      assert(env.plivoAppId)
+
+      providerCfg = {
+        provider,
+        twilio: {
+          provider: 'twilio',
+          accountSid: env.twilioAccountSid,
+          serviceSid: env.twilioServiceSid,
+        },
+        plivo: {
+          provider: 'plivo',
+          authId: env.plivoAuthId,
+          appId: env.plivoAppId,
+        },
       }
     } else {
       throw new Error(`invalid phone verification provider: ${provider}`)
@@ -350,7 +369,7 @@ export type InvitesConfig =
 export type PhoneVerificationConfig =
   | {
       required: true
-      provider: TwilioConfig | PlivoConfig
+      provider: TwilioConfig | PlivoConfig | MultiVerifierConfig
       accountsPerPhoneNumber: number
       bypassPhoneNumber?: string
     }
@@ -368,6 +387,12 @@ export type PlivoConfig = {
   provider: 'plivo'
   authId: string
   appId: string
+}
+
+export type MultiVerifierConfig = {
+  provider: 'multi'
+  twilio: TwilioConfig
+  plivo: PlivoConfig
 }
 
 export type EmailConfig = {

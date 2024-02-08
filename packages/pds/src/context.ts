@@ -30,6 +30,7 @@ import { DAY } from '@atproto/common'
 import { PhoneVerifier } from './phone-verification/util'
 import { TwilioClient } from './phone-verification/twilio'
 import { PlivoClient } from './phone-verification/plivo'
+import { MultiVerifier } from './phone-verification/multi'
 
 export type AppContextOptions = {
   db: Database
@@ -241,6 +242,20 @@ export class AppContext {
           appId: cfg.phoneVerification.provider.appId,
           authToken: secrets.plivoAuthToken,
         })
+      } else if (cfg.phoneVerification.provider.provider === 'multi') {
+        assert(secrets.twilioAuthToken, 'expected twilio auth token')
+        assert(secrets.plivoAuthToken, 'expected plivo auth token')
+        const twilio = new TwilioClient({
+          accountSid: cfg.phoneVerification.provider.twilio.accountSid,
+          serviceSid: cfg.phoneVerification.provider.twilio.serviceSid,
+          authToken: secrets.twilioAuthToken,
+        })
+        const plivo = new PlivoClient(db, {
+          authId: cfg.phoneVerification.provider.plivo.authId,
+          appId: cfg.phoneVerification.provider.plivo.appId,
+          authToken: secrets.plivoAuthToken,
+        })
+        phoneVerifier = new MultiVerifier(db, twilio, plivo)
       }
     }
 
